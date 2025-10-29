@@ -1,0 +1,3306 @@
+{
+  "aaron": [
+    "aaron.png"
+  ],
+  "aarune": [
+    "aarune.png"
+  ],
+  "acerola": [
+    "acerola-masters.png",
+    "acerola-masters2.png",
+    "acerola-masters3.png",
+    "acerola.png"
+  ],
+  "acetrainer": [
+    {
+      "file": "acetrainer-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "acetrainer-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "acetrainer-gen2.png",
+      "disabled": true
+    },
+    "acetrainer-gen3.png",
+    "acetrainer-gen3jp.png",
+    "acetrainer-gen3rs.png",
+    "acetrainer-gen4.png",
+    "acetrainer-gen4dp.png",
+    "acetrainer-gen6.png",
+    "acetrainer-gen6xy.png",
+    "acetrainer-gen7.png",
+    "acetrainer.png",
+    "acetrainerf.png"
+  ],
+  "acetrainercouple": [
+    "acetrainercouple-gen3.png",
+    "acetrainercouple.png"
+  ],
+  "acetrainerf": [
+    {
+      "file": "acetrainerf-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "acetrainerf-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "acetrainerf-gen2.png",
+      "disabled": true
+    },
+    "acetrainerf-gen3.png",
+    "acetrainerf-gen3rs.png",
+    "acetrainerf-gen4.png",
+    "acetrainerf-gen4dp.png",
+    "acetrainerf-gen6.png",
+    "acetrainerf-gen6xy.png",
+    "acetrainerf-gen7.png"
+  ],
+  "acetrainersnow": [
+    "acetrainersnow.png",
+    "acetrainersnowf.png"
+  ],
+  "adaman": [
+    "adaman-masters.png",
+    "adaman.png"
+  ],
+  "aetheremployee": [
+    "aetheremployee.png",
+    "aetheremployeef.png"
+  ],
+  "aetherfoundation": [
+    "aetherfoundation.png",
+    "aetherfoundation2.png",
+    "aetherfoundationf.png"
+  ],
+  "agatha": [
+    {
+      "file": "agatha-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "agatha-gen1rb.png",
+      "disabled": true
+    },
+    "agatha-gen3.png",
+    "agatha-lgpe.png"
+  ],
+  "akari": [
+    "akari-isekai.png",
+    "akari.png"
+  ],
+  "alain": [
+    "alain.png"
+  ],
+  "alder": [
+    "alder.png"
+  ],
+  "alec": [
+    "alec-anime.png"
+  ],
+  "allister": [
+    "allister-masters.png",
+    "allister-unmasked.png",
+    "allister.png"
+  ],
+  "amarys": [
+    "amarys.png"
+  ],
+  "amelia-shuffle": [
+    "amelia-shuffle.png"
+  ],
+  "anabel": [
+    "anabel-gen3.png",
+    "anabel-gen7.png",
+    "anabel.png"
+  ],
+  "anthe": [
+    "anthe.png"
+  ],
+  "anthea": [
+    "anthea.png"
+  ],
+  "anvin": [
+    "anvin.png"
+  ],
+  "aquagrunt": [
+    "aquagrunt.png",
+    "aquagruntf.png"
+  ],
+  "aquagrunt-rse": [
+    "aquagrunt-rse.png"
+  ],
+  "aquagruntf-rse": [
+    "aquagruntf-rse.png"
+  ],
+  "aquasuit": [
+    "aquasuit.png"
+  ],
+  "archer": [
+    "archer.png"
+  ],
+  "archie": [
+    "archie-gen3.png",
+    "archie-gen6.png",
+    "archie-usum.png"
+  ],
+  "arezu": [
+    "arezu.png"
+  ],
+  "argenta": [
+    "argenta.png"
+  ],
+  "ariana": [
+    "ariana.png"
+  ],
+  "arlo": [
+    "arlo.png"
+  ],
+  "aromalady": [
+    "aromalady-gen3.png",
+    "aromalady-gen3rs.png",
+    "aromalady-gen6.png",
+    "aromalady.png"
+  ],
+  "artist": [
+    "artist-gen4.png",
+    "artist-gen6.png",
+    "artist-gen8.png",
+    "artist-gen9.png",
+    "artist.png"
+  ],
+  "artistf": [
+    "artistf-gen6.png"
+  ],
+  "arven": [
+    "arven-s.png",
+    "arven-v.png"
+  ],
+  "ash": [
+    "ash.png"
+  ],
+  "ash-alola": [
+    "ash-alola.png"
+  ],
+  "ash-capbackward": [
+    "ash-capbackward.png"
+  ],
+  "ash-hoenn": [
+    "ash-hoenn.png"
+  ],
+  "ash-johto": [
+    "ash-johto.png"
+  ],
+  "ash-kalos": [
+    "ash-kalos.png"
+  ],
+  "ash-sinnoh": [
+    "ash-sinnoh.png"
+  ],
+  "ash-unova": [
+    "ash-unova.png"
+  ],
+  "atticus": [
+    "atticus.png"
+  ],
+  "avery": [
+    "avery.png"
+  ],
+  "az": [
+    "az.png"
+  ],
+  "az-lza": [
+    "az-lza.png"
+  ],
+  "backers": [
+    "backers.png",
+    "backersf.png"
+  ],
+  "backpacker": [
+    "backpacker-gen6.png",
+    "backpacker-gen8.png",
+    "backpacker-gen9.png",
+    "backpacker.png",
+    "backpackerf.png"
+  ],
+  "baker": [
+    "baker.png"
+  ],
+  "ballguy": [
+    "ballguy.png"
+  ],
+  "baoba": [
+    "baoba.png"
+  ],
+  "barry": [
+    "barry-masters.png",
+    "barry.png"
+  ],
+  "battlegirl": [
+    "battlegirl-gen3.png",
+    "battlegirl-gen4.png",
+    "battlegirl-gen6.png",
+    "battlegirl-gen6xy.png",
+    "battlegirl.png"
+  ],
+  "bea": [
+    "bea-masters.png",
+    "bea.png"
+  ],
+  "beauty": [
+    {
+      "file": "beauty-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "beauty-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "beauty-gen2.png",
+      "disabled": true
+    },
+    {
+      "file": "beauty-gen2jp.png",
+      "disabled": true
+    },
+    "beauty-gen3.png",
+    "beauty-gen3rs.png",
+    "beauty-gen4dp.png",
+    "beauty-gen5bw2.png",
+    "beauty-gen6.png",
+    "beauty-gen6xy.png",
+    "beauty-gen7.png",
+    "beauty-gen8.png",
+    "beauty-gen9.png",
+    "beauty-masters.png",
+    "beauty.png"
+  ],
+  "bede": [
+    "bede-masters.png",
+    "bede.png"
+  ],
+  "bede-leader": [
+    "bede-leader.png"
+  ],
+  "bellelba": [
+    "bellelba.png"
+  ],
+  "bellepa": [
+    "bellepa.png"
+  ],
+  "bellhop": [
+    "bellhop.png"
+  ],
+  "bellis": [
+    "bellis.png"
+  ],
+  "benga": [
+    "benga.png"
+  ],
+  "beni": [
+    "beni-ninja.png",
+    "beni.png"
+  ],
+  "bertha": [
+    "bertha.png"
+  ],
+  "bianca": [
+    "bianca-masters.png",
+    "bianca-pwt.png",
+    "bianca.png"
+  ],
+  "biker": [
+    {
+      "file": "biker-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "biker-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "biker-gen2.png",
+      "disabled": true
+    },
+    "biker-gen3.png",
+    "biker-gen4.png",
+    "biker.png"
+  ],
+  "bill": [
+    "bill-gen3.png",
+    "bill.png"
+  ],
+  "birch": [
+    "birch-gen3.png",
+    "birch.png"
+  ],
+  "birdkeeper": [
+    {
+      "file": "birdkeeper-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "birdkeeper-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "birdkeeper-gen2.png",
+      "disabled": true
+    },
+    "birdkeeper-gen3.png",
+    "birdkeeper-gen3rs.png",
+    "birdkeeper-gen4dp.png",
+    "birdkeeper-gen6.png",
+    "birdkeeper.png"
+  ],
+  "blackbelt": [
+    {
+      "file": "blackbelt-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "blackbelt-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "blackbelt-gen2.png",
+      "disabled": true
+    },
+    "blackbelt-gen3.png",
+    "blackbelt-gen3rs.png",
+    "blackbelt-gen4.png",
+    "blackbelt-gen4dp.png",
+    "blackbelt-gen6.png",
+    "blackbelt-gen7.png",
+    "blackbelt-gen8.png",
+    "blackbelt-gen9.png",
+    "blackbelt.png"
+  ],
+  "blaine": [
+    {
+      "file": "blaine-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "blaine-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "blaine-gen2.png",
+      "disabled": true
+    },
+    "blaine-gen3.png",
+    "blaine-lgpe.png",
+    "blaine.png"
+  ],
+  "blanche": [
+    "blanche-casual.png",
+    "blanche.png"
+  ],
+  "blue": [
+    {
+      "file": "blue-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "blue-gen1champion.png",
+      "disabled": true
+    },
+    {
+      "file": "blue-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "blue-gen1rbchampion.png",
+      "disabled": true
+    },
+    {
+      "file": "blue-gen1rbtwo.png",
+      "disabled": true
+    },
+    {
+      "file": "blue-gen1two.png",
+      "disabled": true
+    },
+    {
+      "file": "blue-gen2.png",
+      "disabled": true
+    },
+    "blue-gen3.png",
+    "blue-gen3champion.png",
+    "blue-gen3two.png",
+    "blue-gen7.png",
+    "blue-lgpe.png",
+    "blue-masters.png",
+    "blue-masters2.png",
+    "blue.png"
+  ],
+  "boarder": [
+    {
+      "file": "boarder-gen2.png",
+      "disabled": true
+    },
+    "boarder.png"
+  ],
+  "bodybuilder": [
+    "bodybuilder-gen9.png"
+  ],
+  "bodybuilderf": [
+    "bodybuilderf-gen9.png"
+  ],
+  "brandon": [
+    "brandon-gen3.png",
+    "brandon.png"
+  ],
+  "brassius": [
+    "brassius.png"
+  ],
+  "brawly": [
+    "brawly-gen3.png",
+    "brawly-gen6.png",
+    "brawly.png"
+  ],
+  "brendan": [
+    "brendan-gen3.png",
+    "brendan-gen3rs.png",
+    "brendan-masters.png",
+    "brendan-masters2.png",
+    "brendan.png"
+  ],
+  "brendan-contest": [
+    "brendan-contest.png"
+  ],
+  "brendan-e": [
+    "brendan-e.png"
+  ],
+  "brendan-rs": [
+    "brendan-rs.png"
+  ],
+  "briar": [
+    "briar.png"
+  ],
+  "brigette": [
+    "brigette.png"
+  ],
+  "brock": [
+    {
+      "file": "brock-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "brock-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "brock-gen2.png",
+      "disabled": true
+    },
+    "brock-gen3.png",
+    "brock-lgpe.png",
+    "brock-masters.png",
+    "brock.png"
+  ],
+  "bruno": [
+    {
+      "file": "bruno-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "bruno-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "bruno-gen2.png",
+      "disabled": true
+    },
+    "bruno-gen3.png",
+    "bruno.png"
+  ],
+  "brycen": [
+    "brycen.png"
+  ],
+  "brycenman": [
+    "brycenman.png"
+  ],
+  "bryony": [
+    "bryony.png"
+  ],
+  "buck": [
+    "buck.png"
+  ],
+  "bugcatcher": [
+    {
+      "file": "bugcatcher-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "bugcatcher-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "bugcatcher-gen2.png",
+      "disabled": true
+    },
+    "bugcatcher-gen3.png",
+    "bugcatcher-gen3rs.png",
+    "bugcatcher-gen4dp.png",
+    "bugcatcher-gen6.png",
+    "bugcatcher.png"
+  ],
+  "bugmaniac": [
+    "bugmaniac-gen3.png",
+    "bugmaniac-gen6.png"
+  ],
+  "bugsy": [
+    {
+      "file": "bugsy-gen2.png",
+      "disabled": true
+    },
+    "bugsy-masters.png",
+    "bugsy.png"
+  ],
+  "burgh": [
+    "burgh-masters.png",
+    "burgh.png"
+  ],
+  "burglar": [
+    {
+      "file": "burglar-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "burglar-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "burglar-gen2.png",
+      "disabled": true
+    },
+    "burglar-gen3.png",
+    "burglar-lgpe.png",
+    "burglar.png"
+  ],
+  "burnet": [
+    "burnet-radar.png",
+    "burnet.png"
+  ],
+  "butler": [
+    "butler.png"
+  ],
+  "byron": [
+    "byron.png"
+  ],
+  "cabbie": [
+    "cabbie-gen9.png",
+    "cabbie.png"
+  ],
+  "cafemaster": [
+    "cafemaster.png"
+  ],
+  "caitlin": [
+    "caitlin-gen4.png",
+    "caitlin-masters.png",
+    "caitlin.png"
+  ],
+  "calaba": [
+    "calaba.png"
+  ],
+  "calem": [
+    "calem-masters.png",
+    "calem.png"
+  ],
+  "cameraman": [
+    "cameraman-gen6.png",
+    "cameraman-gen8.png",
+    "cameraman.png"
+  ],
+  "camper": [
+    {
+      "file": "camper-gen2.png",
+      "disabled": true
+    },
+    "camper-gen3.png",
+    "camper-gen3rs.png",
+    "camper-gen6.png",
+    "camper.png"
+  ],
+  "candela": [
+    "candela-casual.png",
+    "candela.png"
+  ],
+  "candice": [
+    "candice-masters.png",
+    "candice.png"
+  ],
+  "caraliss": [
+    "caraliss.png"
+  ],
+  "caretaker": [
+    "caretaker.png"
+  ],
+  "carmine": [
+    "carmine-festival.png",
+    "carmine.png"
+  ],
+  "cedricjuniper": [
+    "cedricjuniper.png"
+  ],
+  "celio": [
+    "celio.png"
+  ],
+  "channeler": [
+    {
+      "file": "channeler-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "channeler-gen1rb.png",
+      "disabled": true
+    },
+    "channeler-gen3.png",
+    "channeler-lgpe.png"
+  ],
+  "charm": [
+    "charm.png"
+  ],
+  "charon": [
+    "charon.png"
+  ],
+  "chase": [
+    "chase.png"
+  ],
+  "che": [
+    "chef.png"
+  ],
+  "cheren": [
+    "cheren-gen5bw2.png",
+    "cheren-masters.png",
+    "cheren.png"
+  ],
+  "cheryl": [
+    "cheryl.png"
+  ],
+  "chili": [
+    "chili.png"
+  ],
+  "choy": [
+    "choy.png"
+  ],
+  "christoph": [
+    "christoph.png"
+  ],
+  "chuck": [
+    {
+      "file": "chuck-gen2.png",
+      "disabled": true
+    },
+    "chuck.png"
+  ],
+  "cilan": [
+    "cilan.png"
+  ],
+  "clair": [
+    {
+      "file": "clair-gen2.png",
+      "disabled": true
+    },
+    "clair-masters.png",
+    "clair.png"
+  ],
+  "clavell": [
+    "clavell-s.png"
+  ],
+  "clay": [
+    "clay.png"
+  ],
+  "clemont": [
+    "clemont.png"
+  ],
+  "clerk": [
+    "clerk-gen8.png",
+    "clerk.png",
+    "clerkf.png"
+  ],
+  "clerk-boss": [
+    "clerk-boss.png"
+  ],
+  "clerk-unite": [
+    "clerk-unite.png"
+  ],
+  "clerkf": [
+    "clerkf-gen8.png"
+  ],
+  "clif": [
+    "cliff.png"
+  ],
+  "clive": [
+    "clive-v.png"
+  ],
+  "clover": [
+    "clover.png"
+  ],
+  "clown": [
+    "clown.png"
+  ],
+  "cogita": [
+    "cogita.png"
+  ],
+  "coin": [
+    "coin.png"
+  ],
+  "collector": [
+    "collector-gen3.png",
+    "collector-gen6.png",
+    "collector-gen7.png",
+    "collector-masters.png",
+    "collector.png"
+  ],
+  "colress": [
+    "colress-gen7.png",
+    "colress.png"
+  ],
+  "colza": [
+    "colza.png"
+  ],
+  "concordia": [
+    "concordia.png"
+  ],
+  "cook": [
+    "cook-gen7.png",
+    "cook-gen9.png",
+    "cook.png"
+  ],
+  "courier": [
+    "courier.png"
+  ],
+  "courtney": [
+    "courtney-gen3.png",
+    "courtney.png"
+  ],
+  "cowgirl": [
+    "cowgirl.png"
+  ],
+  "crasherwake": [
+    "crasherwake.png"
+  ],
+  "cress": [
+    "cress.png"
+  ],
+  "crispin": [
+    "crispin.png"
+  ],
+  "crushgirl": [
+    "crushgirl-gen3.png"
+  ],
+  "crushkin": [
+    "crushkin-gen3.png"
+  ],
+  "cueball": [
+    {
+      "file": "cueball-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "cueball-gen1rb.png",
+      "disabled": true
+    },
+    "cueball-gen3.png"
+  ],
+  "curtis": [
+    "curtis.png"
+  ],
+  "cyclist": [
+    "cyclist-gen4.png",
+    "cyclist.png",
+    "cyclistf.png"
+  ],
+  "cyclistf": [
+    "cyclistf-gen4.png"
+  ],
+  "cyllene": [
+    "cyllene.png"
+  ],
+  "cynthia": [
+    "cynthia-anime.png",
+    "cynthia-anime2.png",
+    "cynthia-gen4.png",
+    "cynthia-gen7.png",
+    "cynthia-masters.png",
+    "cynthia-masters2.png",
+    "cynthia-masters3.png",
+    "cynthia-masters4.png",
+    "cynthia.png"
+  ],
+  "cyrano": [
+    "cyrano.png"
+  ],
+  "cyrus": [
+    "cyrus-masters.png",
+    "cyrus.png"
+  ],
+  "dagero": [
+    "dagero.png"
+  ],
+  "dahlia": [
+    "dahlia.png"
+  ],
+  "daisy": [
+    "daisy-gen3.png",
+    "daisy.png"
+  ],
+  "dana": [
+    "dana.png"
+  ],
+  "dancer": [
+    "dancer-gen7.png",
+    "dancer-gen8.png",
+    "dancer.png"
+  ],
+  "darach": [
+    "darach.png"
+  ],
+  "darach-caitlin": [
+    "darach-caitlin.png"
+  ],
+  "dawn": [
+    "dawn-gen4pt.png",
+    "dawn-masters.png",
+    "dawn-masters2.png",
+    "dawn-masters3.png",
+    "dawn.png"
+  ],
+  "dawn-contest": [
+    "dawn-contest.png"
+  ],
+  "delinquent": [
+    "delinquent-gen9.png",
+    "delinquent.png"
+  ],
+  "delinquentf": [
+    "delinquentf-gen9.png"
+  ],
+  "delinquentf2": [
+    "delinquentf2-gen9.png"
+  ],
+  "dendra": [
+    "dendra.png"
+  ],
+  "depotagent": [
+    "depotagent.png"
+  ],
+  "dexio": [
+    "dexio-gen6.png",
+    "dexio.png"
+  ],
+  "diamondclanmember": [
+    "diamondclanmember.png"
+  ],
+  "diantha": [
+    "diantha-masters.png",
+    "diantha-masters2.png",
+    "diantha.png"
+  ],
+  "doctor": [
+    "doctor-gen8.png",
+    "doctor.png"
+  ],
+  "doctorf": [
+    "doctorf-gen8.png"
+  ],
+  "doubleteam": [
+    "doubleteam.png"
+  ],
+  "dragontamer": [
+    "dragontamer-gen3.png",
+    "dragontamer-gen6.png",
+    "dragontamer-gen9.png",
+    "dragontamer.png"
+  ],
+  "drake": [
+    "drake-gen3.png"
+  ],
+  "drasna": [
+    "drasna.png"
+  ],
+  "drayden": [
+    "drayden.png"
+  ],
+  "drayton": [
+    "drayton.png"
+  ],
+  "dulse": [
+    "dulse.png"
+  ],
+  "elaine": [
+    "elaine.png"
+  ],
+  "elesa": [
+    "elesa-gen5bw2.png",
+    "elesa-masters.png",
+    "elesa-masters2.png",
+    "elesa-masters3.png",
+    "elesa.png"
+  ],
+  "elio": [
+    "elio-masters.png",
+    "elio-usum.png",
+    "elio.png"
+  ],
+  "elm": [
+    "elm.png"
+  ],
+  "emma": [
+    "emma.png"
+  ],
+  "emma-lza": [
+    "emma-lza.png"
+  ],
+  "emmet": [
+    "emmet-masters.png",
+    "emmet.png"
+  ],
+  "engineer": [
+    {
+      "file": "engineer-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "engineer-gen1rb.png",
+      "disabled": true
+    },
+    "engineer-gen3.png"
+  ],
+  "erbie-unite": [
+    "erbie-unite.png"
+  ],
+  "eri": [
+    "eri.png"
+  ],
+  "erika": [
+    {
+      "file": "erika-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "erika-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "erika-gen2.png",
+      "disabled": true
+    },
+    "erika-gen3.png",
+    "erika-lgpe.png",
+    "erika-masters.png",
+    "erika-masters2.png",
+    "erika-masters3.png",
+    "erika.png"
+  ],
+  "essentia": [
+    "essentia.png"
+  ],
+  "ethan": [
+    {
+      "file": "ethan-gen2.png",
+      "disabled": true
+    },
+    {
+      "file": "ethan-gen2c.png",
+      "disabled": true
+    },
+    "ethan-masters.png",
+    "ethan.png"
+  ],
+  "ethan-pokeathlon": [
+    "ethan-pokeathlon.png"
+  ],
+  "eusine": [
+    {
+      "file": "eusine-gen2.png",
+      "disabled": true
+    },
+    "eusine.png"
+  ],
+  "evelyn": [
+    "evelyn.png"
+  ],
+  "expert": [
+    "expert-gen3.png",
+    "expert-gen6.png"
+  ],
+  "expertf": [
+    "expertf-gen3.png",
+    "expertf-gen6.png"
+  ],
+  "faba": [
+    "faba.png"
+  ],
+  "fairytalegirl": [
+    "fairytalegirl.png"
+  ],
+  "falkner": [
+    {
+      "file": "falkner-gen2.png",
+      "disabled": true
+    },
+    "falkner.png"
+  ],
+  "fantina": [
+    "fantina.png"
+  ],
+  "fennel": [
+    "fennel.png"
+  ],
+  "firebreather": [
+    {
+      "file": "firebreather-gen2.png",
+      "disabled": true
+    },
+    "firebreather.png"
+  ],
+  "firefighter": [
+    "firefighter.png"
+  ],
+  "fisher": [
+    "fisher-gen8.png"
+  ],
+  "fisherman": [
+    {
+      "file": "fisherman-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "fisherman-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "fisherman-gen2jp.png",
+      "disabled": true
+    },
+    "fisherman-gen3.png",
+    "fisherman-gen3rs.png",
+    "fisherman-gen4.png",
+    "fisherman-gen6.png",
+    "fisherman-gen6xy.png",
+    "fisherman-gen7.png",
+    "fisherman.png"
+  ],
+  "flannery": [
+    "flannery-gen3.png",
+    "flannery-gen6.png",
+    "flannery.png"
+  ],
+  "flaregrunt": [
+    "flaregrunt.png",
+    "flaregruntf.png"
+  ],
+  "flint": [
+    "flint.png"
+  ],
+  "florian": [
+    "florian-festival.png",
+    "florian-s.png"
+  ],
+  "florian-bb": [
+    "florian-bb.png"
+  ],
+  "freediver": [
+    "freediver.png"
+  ],
+  "furisodegirl-black": [
+    "furisodegirl-black.png"
+  ],
+  "furisodegirl-blue": [
+    "furisodegirl-blue.png"
+  ],
+  "furisodegirl-pink": [
+    "furisodegirl-pink.png"
+  ],
+  "furisodegirl-white": [
+    "furisodegirl-white.png"
+  ],
+  "gaeric": [
+    "gaeric.png"
+  ],
+  "galacticgrunt": [
+    "galacticgrunt.png",
+    "galacticgruntf.png"
+  ],
+  "gambler": [
+    {
+      "file": "gambler-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "gambler-gen1rb.png",
+      "disabled": true
+    },
+    "gambler.png"
+  ],
+  "gamer": [
+    "gamer-gen3.png"
+  ],
+  "garcon": [
+    "garcon.png"
+  ],
+  "gardener": [
+    "gardener.png"
+  ],
+  "gardenia": [
+    "gardenia-masters.png",
+    "gardenia.png"
+  ],
+  "geeta": [
+    "geeta.png"
+  ],
+  "gentleman": [
+    {
+      "file": "gentleman-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "gentleman-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "gentleman-gen2.png",
+      "disabled": true
+    },
+    "gentleman-gen3.png",
+    "gentleman-gen3rs.png",
+    "gentleman-gen4.png",
+    "gentleman-gen4dp.png",
+    "gentleman-gen6.png",
+    "gentleman-gen6xy.png",
+    "gentleman-gen7.png",
+    "gentleman-gen8.png",
+    "gentleman-lgpe.png",
+    "gentleman.png"
+  ],
+  "ghetsis": [
+    "ghetsis-gen5bw.png",
+    "ghetsis.png"
+  ],
+  "giacomo": [
+    "giacomo.png"
+  ],
+  "ginchiyo": [
+    "ginchiyo-conquest.png"
+  ],
+  "ginter": [
+    "ginter.png"
+  ],
+  "giovanni": [
+    {
+      "file": "giovanni-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "giovanni-gen1rb.png",
+      "disabled": true
+    },
+    "giovanni-gen3.png",
+    "giovanni-lgpe.png",
+    "giovanni-masters.png",
+    "giovanni.png"
+  ],
+  "glacia": [
+    "glacia-gen3.png",
+    "glacia.png"
+  ],
+  "gladion": [
+    "gladion-masters.png",
+    "gladion.png"
+  ],
+  "gladion-stance": [
+    "gladion-stance.png"
+  ],
+  "gloria": [
+    "gloria-dojo.png",
+    "gloria-league.png",
+    "gloria-masters.png",
+    "gloria-tundra.png",
+    "gloria.png"
+  ],
+  "golfer": [
+    "golfer.png"
+  ],
+  "gordie": [
+    "gordie.png"
+  ],
+  "grace": [
+    "grace.png"
+  ],
+  "grant": [
+    "grant.png"
+  ],
+  "green": [
+    "green.png"
+  ],
+  "greta": [
+    "greta-gen3.png",
+    "greta.png"
+  ],
+  "grimsley": [
+    "grimsley-gen7.png",
+    "grimsley-masters.png",
+    "grimsley.png"
+  ],
+  "grusha": [
+    "grusha.png"
+  ],
+  "guitarist": [
+    {
+      "file": "guitarist-gen2.png",
+      "disabled": true
+    },
+    "guitarist-gen3.png",
+    "guitarist-gen4.png",
+    "guitarist-gen6.png",
+    "guitarist.png"
+  ],
+  "gurkinn": [
+    "gurkinn.png"
+  ],
+  "guzma": [
+    "guzma-masters.png",
+    "guzma.png"
+  ],
+  "hala": [
+    "hala.png"
+  ],
+  "hanbei": [
+    "hanbei-conquest.png"
+  ],
+  "hapu": [
+    "hapu.png"
+  ],
+  "harlequin": [
+    "harlequin.png"
+  ],
+  "harmony": [
+    "harmony.png"
+  ],
+  "hassel": [
+    "hassel.png"
+  ],
+  "hau": [
+    "hau-masters.png",
+    "hau.png"
+  ],
+  "hau-stance": [
+    "hau-stance.png"
+  ],
+  "hayley": [
+    "hayley.png"
+  ],
+  "heath": [
+    "heath.png"
+  ],
+  "hero": [
+    "hero-conquest.png"
+  ],
+  "hero2": [
+    "hero2-conquest.png"
+  ],
+  "heroine": [
+    "heroine-conquest.png"
+  ],
+  "heroine2": [
+    "heroine2-conquest.png"
+  ],
+  "hexmaniac": [
+    "hexmaniac-gen3.png",
+    "hexmaniac-gen3jp.png",
+    "hexmaniac-gen6.png"
+  ],
+  "hiker": [
+    {
+      "file": "hiker-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "hiker-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "hiker-gen2.png",
+      "disabled": true
+    },
+    "hiker-gen3.png",
+    "hiker-gen3rs.png",
+    "hiker-gen4.png",
+    "hiker-gen6.png",
+    "hiker-gen7.png",
+    "hiker-gen8.png",
+    "hiker-gen9.png",
+    "hiker.png"
+  ],
+  "hilbert": [
+    "hilbert-masters.png",
+    "hilbert-masters2.png",
+    "hilbert-wonderlauncher.png",
+    "hilbert.png"
+  ],
+  "hilda": [
+    "hilda-masters.png",
+    "hilda-masters2.png",
+    "hilda-masters3.png",
+    "hilda-wonderlauncher.png",
+    "hilda.png"
+  ],
+  "hooligans": [
+    "hooligans.png"
+  ],
+  "hoopster": [
+    "hoopster.png"
+  ],
+  "hop": [
+    "hop-masters.png",
+    "hop.png"
+  ],
+  "hugh": [
+    "hugh.png"
+  ],
+  "hyde": [
+    "hyde.png"
+  ],
+  "idol": [
+    "idol.png"
+  ],
+  "ilima": [
+    "ilima.png"
+  ],
+  "infielder": [
+    "infielder.png"
+  ],
+  "ingo": [
+    "ingo-masters.png",
+    "ingo.png"
+  ],
+  "ingo-hisui": [
+    "ingo-hisui.png"
+  ],
+  "interviewers": [
+    "interviewers-gen3.png",
+    "interviewers-gen6.png",
+    "interviewers.png"
+  ],
+  "iono": [
+    "iono-masters.png",
+    "iono-masters2.png",
+    "iono.png"
+  ],
+  "irida": [
+    "irida-masters.png",
+    "irida.png"
+  ],
+  "iris": [
+    "iris-gen5bw2.png",
+    "iris-masters.png",
+    "iris.png"
+  ],
+  "iscan": [
+    "iscan.png"
+  ],
+  "jacq": [
+    "jacq.png"
+  ],
+  "jamie": [
+    "jamie.png"
+  ],
+  "janine": [
+    {
+      "file": "janine-gen2.png",
+      "disabled": true
+    },
+    "janine.png"
+  ],
+  "janitor": [
+    "janitor-gen7.png",
+    "janitor-gen9.png",
+    "janitor.png"
+  ],
+  "jasmine": [
+    {
+      "file": "jasmine-gen2.png",
+      "disabled": true
+    },
+    "jasmine-masters.png",
+    "jasmine-masters2.png",
+    "jasmine.png"
+  ],
+  "jasmine-contest": [
+    "jasmine-contest.png"
+  ],
+  "jessiejames": [
+    {
+      "file": "jessiejames-gen1.png",
+      "disabled": true
+    }
+  ],
+  "jogger": [
+    "jogger.png"
+  ],
+  "johanna": [
+    "johanna.png"
+  ],
+  "johanna-contest": [
+    "johanna-contest.png"
+  ],
+  "jrtrainer": [
+    {
+      "file": "jrtrainer-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "jrtrainer-gen1rb.png",
+      "disabled": true
+    }
+  ],
+  "jrtrainerf": [
+    {
+      "file": "jrtrainerf-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "jrtrainerf-gen1rb.png",
+      "disabled": true
+    }
+  ],
+  "juan": [
+    "juan-gen3.png",
+    "juan.png"
+  ],
+  "juggler": [
+    {
+      "file": "juggler-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "juggler-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "juggler-gen2.png",
+      "disabled": true
+    },
+    "juggler-gen3.png",
+    "juggler.png"
+  ],
+  "juliana": [
+    "juliana-festival.png",
+    "juliana-s.png"
+  ],
+  "juliana-bb": [
+    "juliana-bb.png"
+  ],
+  "juniper": [
+    "juniper.png"
+  ],
+  "jupiter": [
+    "jupiter.png"
+  ],
+  "kabu": [
+    "kabu.png"
+  ],
+  "kahili": [
+    "kahili.png"
+  ],
+  "kamado": [
+    "kamado.png"
+  ],
+  "kamado-armor": [
+    "kamado-armor.png"
+  ],
+  "karen": [
+    {
+      "file": "karen-gen2.png",
+      "disabled": true
+    },
+    "karen.png"
+  ],
+  "katy": [
+    "katy.png"
+  ],
+  "kiawe": [
+    "kiawe.png"
+  ],
+  "kieran": [
+    "kieran-festival.png",
+    "kieran.png"
+  ],
+  "kieran-champion": [
+    "kieran-champion.png"
+  ],
+  "kimonogirl": [
+    {
+      "file": "kimonogirl-gen2.png",
+      "disabled": true
+    },
+    "kimonogirl.png"
+  ],
+  "kindler": [
+    "kindler-gen3.png",
+    "kindler-gen6.png"
+  ],
+  "klara": [
+    "klara.png"
+  ],
+  "kofu": [
+    "kofu.png"
+  ],
+  "koga": [
+    {
+      "file": "koga-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "koga-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "koga-gen2.png",
+      "disabled": true
+    },
+    "koga-gen3.png",
+    "koga-lgpe.png",
+    "koga.png"
+  ],
+  "korrina": [
+    "korrina-masters.png",
+    "korrina.png"
+  ],
+  "kris": [
+    {
+      "file": "kris-gen2.png",
+      "disabled": true
+    },
+    "kris-masters.png",
+    "kris.png"
+  ],
+  "kukui": [
+    "kukui.png"
+  ],
+  "kukui-stand": [
+    "kukui-stand.png"
+  ],
+  "kunoichi": [
+    "kunoichi-conquest.png"
+  ],
+  "kunoichi2": [
+    "kunoichi2-conquest.png"
+  ],
+  "kurt": [
+    "kurt.png"
+  ],
+  "lacey": [
+    "lacey.png"
+  ],
+  "lady": [
+    "lady-gen3.png",
+    "lady-gen3rs.png",
+    "lady-gen4.png",
+    "lady-gen6.png",
+    "lady-gen6oras.png",
+    "lady.png"
+  ],
+  "lana": [
+    "lana-masters.png",
+    "lana.png"
+  ],
+  "lance": [
+    {
+      "file": "lance-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "lance-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "lance-gen2.png",
+      "disabled": true
+    },
+    "lance-gen3.png",
+    "lance-lgpe.png",
+    "lance-masters.png",
+    "lance-masters2.png",
+    "lance.png"
+  ],
+  "lanette": [
+    "lanette.png"
+  ],
+  "larry": [
+    "larry.png"
+  ],
+  "lass": [
+    {
+      "file": "lass-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "lass-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "lass-gen2.png",
+      "disabled": true
+    },
+    "lass-gen3.png",
+    "lass-gen3rs.png",
+    "lass-gen4.png",
+    "lass-gen4dp.png",
+    "lass-gen6.png",
+    "lass-gen6oras.png",
+    "lass-gen7.png",
+    "lass-gen8.png",
+    "lass.png"
+  ],
+  "laventon": [
+    "laventon.png",
+    "laventon2.png"
+  ],
+  "leaf": [
+    "leaf-gen3.png",
+    "leaf-masters.png",
+    "leaf-masters2.png"
+  ],
+  "leaguestaf": [
+    "leaguestaff.png"
+  ],
+  "leaguestaff": [
+    "leaguestafff.png"
+  ],
+  "lenora": [
+    "lenora.png"
+  ],
+  "leon": [
+    "leon-masters.png",
+    "leon-masters2.png",
+    "leon.png"
+  ],
+  "leon-tower": [
+    "leon-tower.png"
+  ],
+  "li": [
+    "li.png"
+  ],
+  "lian": [
+    "lian.png"
+  ],
+  "lida": [
+    "lida.png"
+  ],
+  "liko": [
+    "liko.png"
+  ],
+  "lillie": [
+    "lillie-masters.png",
+    "lillie-masters2.png",
+    "lillie-masters3.png",
+    "lillie.png"
+  ],
+  "lillie-z": [
+    "lillie-z.png"
+  ],
+  "linebacker": [
+    "linebacker.png"
+  ],
+  "lisia": [
+    "lisia-masters.png",
+    "lisia.png"
+  ],
+  "liza": [
+    "liza-gen6.png",
+    "liza-masters.png",
+    "liza.png"
+  ],
+  "lorelei": [
+    {
+      "file": "lorelei-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "lorelei-gen1rb.png",
+      "disabled": true
+    },
+    "lorelei-gen3.png",
+    "lorelei-lgpe.png"
+  ],
+  "ltsurge": [
+    {
+      "file": "ltsurge-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "ltsurge-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "ltsurge-gen2.png",
+      "disabled": true
+    },
+    "ltsurge-gen3.png",
+    "ltsurge.png"
+  ],
+  "lucas": [
+    "lucas-gen4pt.png",
+    "lucas.png"
+  ],
+  "lucas-contest": [
+    "lucas-contest.png"
+  ],
+  "lucian": [
+    "lucian.png"
+  ],
+  "lucy": [
+    "lucy-gen3.png",
+    "lucy.png"
+  ],
+  "lusamine": [
+    "lusamine-masters.png",
+    "lusamine.png"
+  ],
+  "lusamine-nihilego": [
+    "lusamine-nihilego.png"
+  ],
+  "lyra": [
+    "lyra-masters.png",
+    "lyra-masters2.png",
+    "lyra.png"
+  ],
+  "lyra-pokeathlon": [
+    "lyra-pokeathlon.png"
+  ],
+  "lysandre": [
+    "lysandre-masters.png",
+    "lysandre.png"
+  ],
+  "mable": [
+    "mable.png"
+  ],
+  "madame": [
+    "madame-gen4.png",
+    "madame-gen4dp.png",
+    "madame-gen6.png",
+    "madame-gen7.png",
+    "madame-gen8.png",
+    "madame.png"
+  ],
+  "magmagrunt": [
+    "magmagrunt.png",
+    "magmagruntf.png"
+  ],
+  "magmagrunt-rse": [
+    "magmagrunt-rse.png"
+  ],
+  "magmagruntf-rse": [
+    "magmagruntf-rse.png"
+  ],
+  "magmasuit": [
+    "magmasuit.png"
+  ],
+  "magnolia": [
+    "magnolia.png"
+  ],
+  "magnus": [
+    "magnus.png"
+  ],
+  "mai": [
+    "mai.png"
+  ],
+  "maid": [
+    "maid-gen4.png",
+    "maid-gen6.png",
+    "maid.png"
+  ],
+  "mallow": [
+    "mallow-masters.png",
+    "mallow.png"
+  ],
+  "malva": [
+    "malva.png"
+  ],
+  "marley": [
+    "marley-masters.png",
+    "marley.png"
+  ],
+  "marlon": [
+    "marlon.png"
+  ],
+  "marnie": [
+    "marnie-league.png",
+    "marnie-masters.png",
+    "marnie-masters2.png",
+    "marnie-masters3.png",
+    "marnie.png"
+  ],
+  "mars": [
+    "mars.png"
+  ],
+  "marshal": [
+    "marshal.png"
+  ],
+  "masamune": [
+    "masamune-conquest.png"
+  ],
+  "mateo": [
+    "mateo.png"
+  ],
+  "matt": [
+    "matt-gen3.png",
+    "matt.png"
+  ],
+  "maxie": [
+    "maxie-gen3.png",
+    "maxie-gen6.png"
+  ],
+  "may": [
+    "may-gen3.png",
+    "may-gen3rs.png",
+    "may-masters.png",
+    "may-masters2.png",
+    "may-masters3.png",
+    "may-masters4.png",
+    "may.png"
+  ],
+  "may-contest": [
+    "may-contest.png"
+  ],
+  "may-e": [
+    "may-e.png"
+  ],
+  "may-rs": [
+    "may-rs.png"
+  ],
+  "maylene": [
+    "maylene.png"
+  ],
+  "medium": [
+    {
+      "file": "medium-gen2jp.png",
+      "disabled": true
+    },
+    "medium.png"
+  ],
+  "mela": [
+    "mela.png"
+  ],
+  "melli": [
+    "melli.png"
+  ],
+  "melony": [
+    "melony.png"
+  ],
+  "miku-fairy": [
+    "miku-fairy.png"
+  ],
+  "miku-fire": [
+    "miku-fire.png"
+  ],
+  "miku-flying": [
+    "miku-flying.png"
+  ],
+  "miku-ghost": [
+    "miku-ghost.png"
+  ],
+  "miku-grass": [
+    "miku-grass.png"
+  ],
+  "miku-ground": [
+    "miku-ground.png"
+  ],
+  "miku-ice": [
+    "miku-ice.png"
+  ],
+  "miku-psychic": [
+    "miku-psychic.png"
+  ],
+  "miku-water": [
+    "miku-water.png"
+  ],
+  "milo": [
+    "milo.png"
+  ],
+  "mina": [
+    "mina-lgpe.png",
+    "mina-masters.png",
+    "mina.png"
+  ],
+  "mira": [
+    "mira.png"
+  ],
+  "miriam": [
+    "miriam.png"
+  ],
+  "mirror": [
+    "mirror.png"
+  ],
+  "misty": [
+    {
+      "file": "misty-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "misty-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "misty-gen2.png",
+      "disabled": true
+    },
+    "misty-gen3.png",
+    "misty-lgpe.png",
+    "misty-masters.png",
+    "misty.png"
+  ],
+  "model": [
+    "model-gen8.png"
+  ],
+  "mohn": [
+    "mohn-anime.png",
+    "mohn.png"
+  ],
+  "molayne": [
+    "molayne.png"
+  ],
+  "mom-alola": [
+    "mom-alola.png"
+  ],
+  "mom-hoenn": [
+    "mom-hoenn.png"
+  ],
+  "mom-johto": [
+    "mom-johto.png"
+  ],
+  "mom-paldea": [
+    "mom-paldea.png"
+  ],
+  "mom-unova": [
+    "mom-unova.png",
+    "mom-unova2.png"
+  ],
+  "morgan": [
+    "morgan.png"
+  ],
+  "morty": [
+    {
+      "file": "morty-gen2.png",
+      "disabled": true
+    },
+    "morty-masters.png",
+    "morty-masters2.png",
+    "morty-masters3.png",
+    "morty.png"
+  ],
+  "mrbriney": [
+    "mrbriney.png"
+  ],
+  "mrfuji": [
+    "mrfuji-gen3.png"
+  ],
+  "mrstone": [
+    "mrstone.png"
+  ],
+  "musician": [
+    "musician-gen8.png",
+    "musician-gen9.png",
+    "musician.png"
+  ],
+  "mustard": [
+    "mustard.png"
+  ],
+  "mustard-champion": [
+    "mustard-champion.png"
+  ],
+  "mustard-master": [
+    "mustard-master.png"
+  ],
+  "n": [
+    "n-masters.png",
+    "n-masters2.png",
+    "n-masters3.png",
+    "n.png"
+  ],
+  "nancy": [
+    "nancy.png"
+  ],
+  "nanu": [
+    "nanu.png"
+  ],
+  "nate": [
+    "nate-masters.png",
+    "nate-pokestar.png",
+    "nate-pokestar3.png",
+    "nate-wonderlauncher.png",
+    "nate.png"
+  ],
+  "naveen": [
+    "naveen.png"
+  ],
+  "nemona": [
+    "nemona-masters.png",
+    "nemona-s.png",
+    "nemona-v.png"
+  ],
+  "neroli": [
+    "neroli.png"
+  ],
+  "nessa": [
+    "nessa-masters.png",
+    "nessa.png"
+  ],
+  "ninjaboy": [
+    "ninjaboy-gen3.png",
+    "ninjaboy-gen6.png",
+    "ninjaboy.png"
+  ],
+  "nita": [
+    "nita.png"
+  ],
+  "nobunaga": [
+    "nobunaga-conquest.png"
+  ],
+  "noland": [
+    "noland-gen3.png",
+    "noland.png"
+  ],
+  "norman": [
+    "norman-gen3.png",
+    "norman-gen6.png",
+    "norman.png"
+  ],
+  "nurse": [
+    "nurse.png"
+  ],
+  "nurseryaide": [
+    "nurseryaide.png"
+  ],
+  "oak": [
+    {
+      "file": "oak-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "oak-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "oak-gen2.png",
+      "disabled": true
+    },
+    "oak-gen3.png",
+    "oak.png"
+  ],
+  "officer": [
+    {
+      "file": "officer-gen2.png",
+      "disabled": true
+    }
+  ],
+  "officeworker": [
+    "officeworker-gen9.png",
+    "officeworker.png",
+    "officeworkerf.png"
+  ],
+  "officeworkerf": [
+    "officeworkerf-gen9.png"
+  ],
+  "ogreclan": [
+    "ogreclan.png"
+  ],
+  "oichi": [
+    "oichi-conquest.png"
+  ],
+  "oldcouple": [
+    "oldcouple-gen3.png"
+  ],
+  "oleana": [
+    "oleana.png"
+  ],
+  "olivia": [
+    "olivia.png"
+  ],
+  "olympia": [
+    "olympia.png"
+  ],
+  "opal": [
+    "opal.png"
+  ],
+  "ortega": [
+    "ortega.png"
+  ],
+  "owner": [
+    "owner.png"
+  ],
+  "painter": [
+    "painter-gen3.png"
+  ],
+  "palina": [
+    "palina.png"
+  ],
+  "palmer": [
+    "palmer.png"
+  ],
+  "parasollady": [
+    "parasollady-gen3.png",
+    "parasollady-gen4.png",
+    "parasollady-gen6.png",
+    "parasollady.png"
+  ],
+  "paulo": [
+    "paulo-masters.png"
+  ],
+  "paxton": [
+    "paxton.png"
+  ],
+  "pearlclanmember": [
+    "pearlclanmember.png"
+  ],
+  "penny": [
+    "penny.png"
+  ],
+  "peonia": [
+    "peonia.png"
+  ],
+  "peony": [
+    "peony-league.png",
+    "peony.png"
+  ],
+  "perrin": [
+    "perrin.png"
+  ],
+  "pesselle": [
+    "pesselle.png"
+  ],
+  "petrel": [
+    "petrel.png"
+  ],
+  "phil": [
+    "phil.png"
+  ],
+  "phoebe": [
+    "phoebe-gen3.png",
+    "phoebe-gen6.png",
+    "phoebe-masters.png"
+  ],
+  "phorus-unite": [
+    "phorus-unite.png"
+  ],
+  "phyco": [
+    "phyco.png"
+  ],
+  "picnicker": [
+    {
+      "file": "picnicker-gen2.png",
+      "disabled": true
+    },
+    "picnicker-gen3.png",
+    "picnicker-gen3rs.png",
+    "picnicker-gen6.png",
+    "picnicker.png"
+  ],
+  "piers": [
+    "piers-league.png",
+    "piers-masters.png",
+    "piers.png"
+  ],
+  "pilot": [
+    "pilot.png"
+  ],
+  "plasmagrunt": [
+    "plasmagrunt-gen5bw.png",
+    "plasmagrunt.png",
+    "plasmagruntf.png"
+  ],
+  "plasmagruntf": [
+    "plasmagruntf-gen5bw.png"
+  ],
+  "player-go": [
+    "player-go.png"
+  ],
+  "playerf-go": [
+    "playerf-go.png"
+  ],
+  "plumeria": [
+    "plumeria-league.png",
+    "plumeria.png"
+  ],
+  "pokefan": [
+    {
+      "file": "pokefan-gen2.png",
+      "disabled": true
+    },
+    "pokefan-gen3.png",
+    "pokefan-gen4.png",
+    "pokefan-gen6.png",
+    "pokefan-gen6xy.png",
+    "pokefan.png",
+    "pokefanf.png"
+  ],
+  "pokefanf": [
+    {
+      "file": "pokefanf-gen2.png",
+      "disabled": true
+    },
+    "pokefanf-gen3.png",
+    "pokefanf-gen4.png",
+    "pokefanf-gen6.png",
+    "pokefanf-gen6xy.png"
+  ],
+  "pokekid": [
+    "pokekid-gen8.png",
+    "pokekid.png"
+  ],
+  "pokekidf": [
+    "pokekidf-gen8.png"
+  ],
+  "pokemaniac": [
+    {
+      "file": "pokemaniac-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "pokemaniac-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "pokemaniac-gen2.png",
+      "disabled": true
+    },
+    "pokemaniac-gen3.png",
+    "pokemaniac-gen3rs.png",
+    "pokemaniac-gen6.png",
+    "pokemaniac-gen9.png",
+    "pokemaniac.png"
+  ],
+  "pokemonbreeder": [
+    "pokemonbreeder-gen3.png",
+    "pokemonbreeder-gen4.png",
+    "pokemonbreeder-gen6.png",
+    "pokemonbreeder-gen6xy.png",
+    "pokemonbreeder-gen7.png",
+    "pokemonbreeder-gen8.png",
+    "pokemonbreeder.png",
+    "pokemonbreederf.png"
+  ],
+  "pokemonbreederf": [
+    "pokemonbreederf-gen3.png",
+    "pokemonbreederf-gen3frlg.png",
+    "pokemonbreederf-gen4.png",
+    "pokemonbreederf-gen6.png",
+    "pokemonbreederf-gen6xy.png",
+    "pokemonbreederf-gen7.png",
+    "pokemonbreederf-gen8.png"
+  ],
+  "pokemoncenterlady": [
+    "pokemoncenterlady.png"
+  ],
+  "pokemonranger": [
+    "pokemonranger-gen3.png",
+    "pokemonranger-gen3rs.png",
+    "pokemonranger-gen4.png",
+    "pokemonranger-gen6.png",
+    "pokemonranger-gen6xy.png",
+    "pokemonranger.png",
+    "pokemonrangerf.png"
+  ],
+  "pokemonrangerf": [
+    "pokemonrangerf-gen3.png",
+    "pokemonrangerf-gen3rs.png",
+    "pokemonrangerf-gen4.png",
+    "pokemonrangerf-gen6.png",
+    "pokemonrangerf-gen6xy.png"
+  ],
+  "policeman": [
+    "policeman-gen4.png",
+    "policeman-gen7.png",
+    "policeman-gen8.png",
+    "policeman.png"
+  ],
+  "poppy": [
+    "poppy.png"
+  ],
+  "postman": [
+    "postman.png"
+  ],
+  "preschooler": [
+    "preschooler-gen6.png",
+    "preschooler-gen7.png",
+    "preschooler.png",
+    "preschoolerf.png"
+  ],
+  "preschoolerf": [
+    "preschoolerf-gen6.png",
+    "preschoolerf-gen7.png"
+  ],
+  "preschoolers": [
+    "preschoolers.png"
+  ],
+  "proton": [
+    "proton.png"
+  ],
+  "pryce": [
+    {
+      "file": "pryce-gen2.png",
+      "disabled": true
+    },
+    "pryce.png"
+  ],
+  "psychic": [
+    {
+      "file": "psychic-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "psychic-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "psychic-gen2.png",
+      "disabled": true
+    },
+    "psychic-gen3.png",
+    "psychic-gen3rs.png",
+    "psychic-gen4.png",
+    "psychic-gen6.png",
+    "psychic-lgpe.png",
+    "psychic.png",
+    "psychicf.png"
+  ],
+  "psychicf": [
+    "psychicf-gen3.png",
+    "psychicf-gen3rs.png",
+    "psychicf-gen4.png"
+  ],
+  "psychicfjp": [
+    "psychicfjp-gen3.png"
+  ],
+  "punkgirl": [
+    "punkgirl-gen7.png",
+    "punkgirl-masters.png",
+    "punkgirl.png"
+  ],
+  "punkguy": [
+    "punkguy-gen7.png",
+    "punkguy.png"
+  ],
+  "raifort": [
+    "raifort.png"
+  ],
+  "raihan": [
+    "raihan-masters.png",
+    "raihan.png"
+  ],
+  "railstaf": [
+    "railstaff.png"
+  ],
+  "ramos": [
+    "ramos.png"
+  ],
+  "rancher": [
+    "rancher.png"
+  ],
+  "ranmaru": [
+    "ranmaru-conquest.png"
+  ],
+  "red": [
+    {
+      "file": "red-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "red-gen1main.png",
+      "disabled": true
+    },
+    {
+      "file": "red-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "red-gen1title.png",
+      "disabled": true
+    },
+    {
+      "file": "red-gen2.png",
+      "disabled": true
+    },
+    "red-gen3.png",
+    "red-gen7.png",
+    "red-lgpe.png",
+    "red-masters.png",
+    "red-masters2.png",
+    "red-masters3.png",
+    "red.png"
+  ],
+  "rei": [
+    "rei-isekai.png",
+    "rei.png"
+  ],
+  "reporter": [
+    "reporter-gen6.png",
+    "reporter-gen8.png",
+    "reporter.png"
+  ],
+  "rhi": [
+    "rhi.png"
+  ],
+  "richboy": [
+    "richboy-gen3.png",
+    "richboy-gen4.png",
+    "richboy-gen6.png",
+    "richboy-gen6xy.png",
+    "richboy.png"
+  ],
+  "rika": [
+    "rika.png"
+  ],
+  "riley": [
+    "riley.png"
+  ],
+  "risingstar": [
+    "risingstar-gen6.png",
+    "risingstar.png",
+    "risingstarf.png"
+  ],
+  "risingstarf": [
+    "risingstarf-gen6.png"
+  ],
+  "rita": [
+    "rita.png"
+  ],
+  "river": [
+    "river.png"
+  ],
+  "roark": [
+    "roark.png"
+  ],
+  "rocker": [
+    {
+      "file": "rocker-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "rocker-gen1rb.png",
+      "disabled": true
+    },
+    "rocker-gen3.png"
+  ],
+  "rocket": [
+    {
+      "file": "rocket-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "rocket-gen1rb.png",
+      "disabled": true
+    }
+  ],
+  "rocketexecutive": [
+    {
+      "file": "rocketexecutive-gen2.png",
+      "disabled": true
+    }
+  ],
+  "rocketexecutivef": [
+    {
+      "file": "rocketexecutivef-gen2.png",
+      "disabled": true
+    }
+  ],
+  "rocketgrunt": [
+    {
+      "file": "rocketgrunt-gen2.png",
+      "disabled": true
+    },
+    "rocketgrunt.png",
+    "rocketgruntf.png"
+  ],
+  "rocketgruntf": [
+    {
+      "file": "rocketgruntf-gen2.png",
+      "disabled": true
+    }
+  ],
+  "rollerskater": [
+    "rollerskater.png",
+    "rollerskaterf.png"
+  ],
+  "rood": [
+    "rood.png"
+  ],
+  "rosa": [
+    "rosa-masters.png",
+    "rosa-masters2.png",
+    "rosa-masters3.png",
+    "rosa-pokestar.png",
+    "rosa-pokestar2.png",
+    "rosa-pokestar3.png",
+    "rosa-wonderlauncher.png",
+    "rosa.png"
+  ],
+  "rose": [
+    "rose-zerosuit.png",
+    "rose.png"
+  ],
+  "roughneck": [
+    "roughneck-gen4.png",
+    "roughneck.png"
+  ],
+  "rowan": [
+    "rowan.png"
+  ],
+  "roxanne": [
+    "roxanne-gen3.png",
+    "roxanne-gen6.png",
+    "roxanne-masters.png",
+    "roxanne.png"
+  ],
+  "roxie": [
+    "roxie-masters.png",
+    "roxie.png"
+  ],
+  "roy": [
+    "roy.png"
+  ],
+  "ruffian": [
+    "ruffian.png"
+  ],
+  "ruinmaniac": [
+    "ruinmaniac-gen3.png",
+    "ruinmaniac-gen3rs.png",
+    "ruinmaniac-gen6.png",
+    "ruinmaniac.png"
+  ],
+  "rye": [
+    "rye.png"
+  ],
+  "ryme": [
+    "ryme.png"
+  ],
+  "ryuki": [
+    "ryuki.png"
+  ],
+  "sabi": [
+    "sabi.png"
+  ],
+  "sabrina": [
+    "sabrina-frlg.png",
+    {
+      "file": "sabrina-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "sabrina-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "sabrina-gen2.png",
+      "disabled": true
+    },
+    "sabrina-gen3.png",
+    "sabrina-lgpe.png",
+    "sabrina-masters.png",
+    "sabrina.png"
+  ],
+  "sada": [
+    "sada-ai.png",
+    "sada.png"
+  ],
+  "sage": [
+    {
+      "file": "sage-gen2.png",
+      "disabled": true
+    },
+    {
+      "file": "sage-gen2jp.png",
+      "disabled": true
+    },
+    "sage.png"
+  ],
+  "saguaro": [
+    "saguaro.png"
+  ],
+  "sailor": [
+    {
+      "file": "sailor-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "sailor-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "sailor-gen2.png",
+      "disabled": true
+    },
+    "sailor-gen3.png",
+    "sailor-gen3jp.png",
+    "sailor-gen3rs.png",
+    "sailor-gen6.png",
+    "sailor.png"
+  ],
+  "salvatore": [
+    "salvatore.png"
+  ],
+  "samsonoak": [
+    "samsonoak.png"
+  ],
+  "sanqua": [
+    "sanqua.png"
+  ],
+  "saturn": [
+    "saturn.png"
+  ],
+  "schoolboy": [
+    {
+      "file": "schoolboy-gen2.png",
+      "disabled": true
+    },
+    "schoolboy.png"
+  ],
+  "schoolgirl": [
+    "schoolgirl.png"
+  ],
+  "schoolkid": [
+    "schoolkid-gen3.png",
+    "schoolkid-gen4.png",
+    "schoolkid-gen4dp.png",
+    "schoolkid-gen6.png",
+    "schoolkid-gen8.png",
+    "schoolkid.png",
+    "schoolkidf.png"
+  ],
+  "schoolkidf": [
+    "schoolkidf-gen3.png",
+    "schoolkidf-gen4.png",
+    "schoolkidf-gen6.png",
+    "schoolkidf-gen8.png"
+  ],
+  "scientist": [
+    {
+      "file": "scientist-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "scientist-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "scientist-gen2.png",
+      "disabled": true
+    },
+    "scientist-gen3.png",
+    "scientist-gen4.png",
+    "scientist-gen4dp.png",
+    "scientist-gen6.png",
+    "scientist-gen7.png",
+    "scientist-gen9.png",
+    "scientist.png",
+    "scientistf.png"
+  ],
+  "scientistf": [
+    "scientistf-gen6.png"
+  ],
+  "scott": [
+    "scott.png"
+  ],
+  "scottie": [
+    "scottie-masters.png"
+  ],
+  "scubadiver": [
+    "scubadiver.png"
+  ],
+  "securitycorps": [
+    "securitycorps.png",
+    "securitycorpsf.png"
+  ],
+  "selene": [
+    "selene-masters.png",
+    "selene-masters2.png",
+    "selene-usum.png",
+    "selene.png"
+  ],
+  "serena": [
+    "serena-anime.png",
+    "serena-masters.png",
+    "serena-masters2.png",
+    "serena-masters3.png",
+    "serena.png"
+  ],
+  "shadowtriad": [
+    "shadowtriad.png"
+  ],
+  "shauna": [
+    "shauna-masters.png",
+    "shauna.png"
+  ],
+  "shauntal": [
+    "shauntal-masters.png",
+    "shauntal.png"
+  ],
+  "shelly": [
+    "shelly-gen3.png",
+    "shelly.png"
+  ],
+  "shielbert": [
+    "shielbert.png"
+  ],
+  "sidney": [
+    "sidney-gen3.png",
+    "sidney.png"
+  ],
+  "siebold": [
+    "siebold-masters.png",
+    "siebold.png"
+  ],
+  "sierra": [
+    "sierra.png"
+  ],
+  "sightseer": [
+    "sightseer.png",
+    "sightseerf.png"
+  ],
+  "silver": [
+    {
+      "file": "silver-gen2.png",
+      "disabled": true
+    },
+    {
+      "file": "silver-gen2kanto.png",
+      "disabled": true
+    },
+    "silver-masters.png",
+    "silver.png"
+  ],
+  "sina": [
+    "sina-gen6.png",
+    "sina.png"
+  ],
+  "sisandbro": [
+    "sisandbro-gen3.png",
+    "sisandbro-gen3rs.png",
+    "sisandbro.png"
+  ],
+  "skier": [
+    {
+      "file": "skier-gen2.png",
+      "disabled": true
+    },
+    "skier.png",
+    "skierf.png"
+  ],
+  "skierf": [
+    "skierf-gen4dp.png"
+  ],
+  "skullgrunt": [
+    "skullgrunt.png",
+    "skullgruntf.png"
+  ],
+  "skyla": [
+    "skyla-masters.png",
+    "skyla-masters2.png",
+    "skyla.png"
+  ],
+  "skytrainer": [
+    "skytrainer.png",
+    "skytrainerf.png"
+  ],
+  "smasher": [
+    "smasher.png"
+  ],
+  "soliera": [
+    "soliera.png"
+  ],
+  "sonia": [
+    "sonia-masters.png",
+    "sonia.png"
+  ],
+  "sonia-professor": [
+    "sonia-professor.png"
+  ],
+  "sophocles": [
+    "sophocles.png"
+  ],
+  "sordward": [
+    "sordward.png"
+  ],
+  "sordward-shielbert": [
+    "sordward-shielbert.png"
+  ],
+  "spark": [
+    "spark-casual.png",
+    "spark.png"
+  ],
+  "spenser": [
+    "spenser-gen3.png",
+    "spenser.png"
+  ],
+  "srandjr": [
+    "srandjr-gen3.png"
+  ],
+  "stargrunt": [
+    "stargrunt-s.png",
+    "stargrunt-v.png"
+  ],
+  "stargruntf": [
+    "stargruntf-s.png",
+    "stargruntf-v.png"
+  ],
+  "steven": [
+    "steven-gen3.png",
+    "steven-gen6.png",
+    "steven-masters.png",
+    "steven-masters2.png",
+    "steven-masters3.png",
+    "steven-masters4.png",
+    "steven.png"
+  ],
+  "streetthug": [
+    "streetthug-masters.png",
+    "streetthug.png"
+  ],
+  "striker": [
+    "striker.png"
+  ],
+  "supernerd": [
+    {
+      "file": "supernerd-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "supernerd-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "supernerd-gen2.png",
+      "disabled": true
+    },
+    "supernerd-gen3.png",
+    "supernerd.png"
+  ],
+  "surfer": [
+    "surfer.png"
+  ],
+  "swimmer": [
+    {
+      "file": "swimmer-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "swimmer-gen1rb.png",
+      "disabled": true
+    },
+    "swimmer-gen4.png",
+    "swimmer-gen4dp.png",
+    "swimmer-gen4jp.png",
+    "swimmer-gen6.png",
+    "swimmer-gen7.png",
+    "swimmer-gen8.png",
+    "swimmer-masters.png",
+    "swimmer.png",
+    "swimmerf.png"
+  ],
+  "swimmerf": [
+    {
+      "file": "swimmerf-gen2.png",
+      "disabled": true
+    },
+    "swimmerf-gen3.png",
+    "swimmerf-gen3rs.png",
+    "swimmerf-gen4.png",
+    "swimmerf-gen4dp.png",
+    "swimmerf-gen6.png",
+    "swimmerf-gen7.png",
+    "swimmerf-gen8.png"
+  ],
+  "swimmerf2": [
+    "swimmerf2-gen6.png",
+    "swimmerf2-gen7.png"
+  ],
+  "swimmerfjp": [
+    {
+      "file": "swimmerfjp-gen2.png",
+      "disabled": true
+    }
+  ],
+  "swimmerm": [
+    {
+      "file": "swimmerm-gen2.png",
+      "disabled": true
+    },
+    "swimmerm-gen3.png",
+    "swimmerm-gen3rs.png"
+  ],
+  "sycamore": [
+    "sycamore-masters.png",
+    "sycamore.png"
+  ],
+  "tabitha": [
+    "tabitha-gen3.png",
+    "tabitha.png"
+  ],
+  "tamer": [
+    {
+      "file": "tamer-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "tamer-gen1rb.png",
+      "disabled": true
+    },
+    "tamer-gen3.png"
+  ],
+  "taohua": [
+    "taohua.png"
+  ],
+  "tate": [
+    "tate-gen6.png",
+    "tate-masters.png",
+    "tate.png"
+  ],
+  "tateandliza": [
+    "tateandliza-gen3.png",
+    "tateandliza-gen6.png"
+  ],
+  "teacher": [
+    {
+      "file": "teacher-gen2.png",
+      "disabled": true
+    },
+    "teacher-gen7.png",
+    "teacher.png"
+  ],
+  "teamaquabeta": [
+    "teamaquabeta-gen3.png"
+  ],
+  "teamaquagruntf": [
+    "teamaquagruntf-gen3.png"
+  ],
+  "teamaquagruntm": [
+    "teamaquagruntm-gen3.png"
+  ],
+  "teammagmagruntf": [
+    "teammagmagruntf-gen3.png"
+  ],
+  "teammagmagruntm": [
+    "teammagmagruntm-gen3.png"
+  ],
+  "teammates": [
+    "teammates.png"
+  ],
+  "teamrocket": [
+    "teamrocket.png"
+  ],
+  "teamrocketgruntf": [
+    "teamrocketgruntf-gen3.png"
+  ],
+  "teamrocketgruntm": [
+    "teamrocketgruntm-gen3.png"
+  ],
+  "theroyal": [
+    "theroyal.png"
+  ],
+  "thorton": [
+    "thorton.png"
+  ],
+  "tierno": [
+    "tierno.png"
+  ],
+  "tina": [
+    "tina-masters.png"
+  ],
+  "toddsnap": [
+    "toddsnap.png",
+    "toddsnap2.png"
+  ],
+  "tourist": [
+    "tourist.png",
+    "touristf.png"
+  ],
+  "touristf": [
+    "touristf2.png"
+  ],
+  "trace": [
+    "trace.png"
+  ],
+  "trevor": [
+    "trevor.png"
+  ],
+  "trialguide": [
+    "trialguide.png",
+    "trialguidef.png"
+  ],
+  "triathletebiker": [
+    "triathletebiker-gen6.png"
+  ],
+  "triathletebikerf": [
+    "triathletebikerf-gen3.png"
+  ],
+  "triathletebikerm": [
+    "triathletebikerm-gen3.png"
+  ],
+  "triathleterunner": [
+    "triathleterunner-gen6.png"
+  ],
+  "triathleterunnerf": [
+    "triathleterunnerf-gen3.png"
+  ],
+  "triathleterunnerm": [
+    "triathleterunnerm-gen3.png"
+  ],
+  "triathleteswimmer": [
+    "triathleteswimmer-gen6.png"
+  ],
+  "triathleteswimmerf": [
+    "triathleteswimmerf-gen3.png"
+  ],
+  "triathleteswimmerm": [
+    "triathleteswimmerm-gen3.png"
+  ],
+  "tuber": [
+    "tuber-gen3.png",
+    "tuber-gen6.png",
+    "tuber.png",
+    "tuberf.png"
+  ],
+  "tuberf": [
+    "tuberf-gen3.png",
+    "tuberf-gen3rs.png",
+    "tuberf-gen6.png"
+  ],
+  "tucker": [
+    "tucker-gen3.png",
+    "tucker.png"
+  ],
+  "tuli": [
+    "tuli.png"
+  ],
+  "tulip": [
+    "tulip.png"
+  ],
+  "turo": [
+    "turo-ai.png",
+    "turo.png"
+  ],
+  "twins": [
+    {
+      "file": "twins-gen2.png",
+      "disabled": true
+    },
+    "twins-gen3.png",
+    "twins-gen3rs.png",
+    "twins-gen4.png",
+    "twins-gen4dp.png",
+    "twins-gen6.png",
+    "twins.png"
+  ],
+  "tyme": [
+    "tyme.png"
+  ],
+  "ultraforestkartenvoy": [
+    "ultraforestkartenvoy.png"
+  ],
+  "unknown": [
+    "unknown.png",
+    "unknownf.png"
+  ],
+  "valerie": [
+    "valerie.png"
+  ],
+  "vessa": [
+    "vessa.png"
+  ],
+  "veteran": [
+    "veteran-gen4.png",
+    "veteran-gen6.png",
+    "veteran-gen7.png",
+    "veteran.png",
+    "veteranf.png"
+  ],
+  "veteranf": [
+    "veteranf-gen6.png",
+    "veteranf-gen7.png"
+  ],
+  "victor": [
+    "victor-dojo.png",
+    "victor-league.png",
+    "victor-masters.png",
+    "victor-tundra.png",
+    "victor.png"
+  ],
+  "vince": [
+    "vince.png"
+  ],
+  "viola": [
+    "viola-masters.png",
+    "viola.png"
+  ],
+  "volkner": [
+    "volkner-masters.png",
+    "volkner.png"
+  ],
+  "volo": [
+    "volo-ginkgo.png",
+    "volo.png"
+  ],
+  "waiter": [
+    "waiter-gen4.png",
+    "waiter-gen4dp.png",
+    "waiter-gen9.png",
+    "waiter.png"
+  ],
+  "waitress": [
+    "waitress-gen4.png",
+    "waitress-gen6.png",
+    "waitress-gen9.png",
+    "waitress.png"
+  ],
+  "wallace": [
+    "wallace-gen3.png",
+    "wallace-gen3rs.png",
+    "wallace-gen6.png",
+    "wallace-masters.png",
+    "wallace.png"
+  ],
+  "wally": [
+    "wally-gen3.png",
+    "wally-masters.png",
+    "wally.png"
+  ],
+  "wally-rse": [
+    "wally-rse.png"
+  ],
+  "wattson": [
+    "wattson-gen3.png",
+    "wattson.png"
+  ],
+  "whitney": [
+    {
+      "file": "whitney-gen2.png",
+      "disabled": true
+    },
+    "whitney-masters.png",
+    "whitney.png"
+  ],
+  "wicke": [
+    "wicke.png"
+  ],
+  "wikstrom": [
+    "wikstrom.png"
+  ],
+  "will": [
+    {
+      "file": "will-gen2.png",
+      "disabled": true
+    },
+    "will.png"
+  ],
+  "willow": [
+    "willow-casual.png",
+    "willow.png"
+  ],
+  "winona": [
+    "winona-gen3.png",
+    "winona-gen6.png",
+    "winona.png"
+  ],
+  "worker": [
+    "worker-gen4.png",
+    "worker-gen6.png",
+    "worker-gen7.png",
+    "worker-gen8.png",
+    "worker-gen9.png",
+    "worker-lgpe.png",
+    "worker.png"
+  ],
+  "worker2": [
+    "worker2-gen6.png"
+  ],
+  "workerf": [
+    "workerf-gen8.png"
+  ],
+  "workerice": [
+    "workerice.png"
+  ],
+  "wulfric": [
+    "wulfric.png"
+  ],
+  "xerosic": [
+    "xerosic.png"
+  ],
+  "yancy": [
+    "yancy.png"
+  ],
+  "yellgrunt": [
+    "yellgrunt.png",
+    "yellgruntf.png"
+  ],
+  "yellow": [
+    "yellow.png"
+  ],
+  "youngathlete": [
+    "youngathlete.png",
+    "youngathletef.png"
+  ],
+  "youngcouple": [
+    "youngcouple-gen3.png",
+    "youngcouple-gen3rs.png",
+    "youngcouple-gen4dp.png",
+    "youngcouple-gen6.png",
+    "youngcouple.png"
+  ],
+  "youngn": [
+    "youngn.png"
+  ],
+  "youngster": [
+    {
+      "file": "youngster-gen1.png",
+      "disabled": true
+    },
+    {
+      "file": "youngster-gen1rb.png",
+      "disabled": true
+    },
+    {
+      "file": "youngster-gen2.png",
+      "disabled": true
+    },
+    "youngster-gen3.png",
+    "youngster-gen3rs.png",
+    "youngster-gen4.png",
+    "youngster-gen4dp.png",
+    "youngster-gen6.png",
+    "youngster-gen6xy.png",
+    "youngster-gen7.png",
+    "youngster-gen8.png",
+    "youngster-gen9.png",
+    "youngster-masters.png",
+    "youngster.png"
+  ],
+  "yukito-hideko": [
+    "yukito-hideko.png"
+  ],
+  "zinnia": [
+    "zinnia-masters.png",
+    "zinnia.png"
+  ],
+  "zinzolin": [
+    "zinzolin.png"
+  ],
+  "zirco-unite": [
+    "zirco-unite.png"
+  ],
+  "zisu": [
+    "zisu.png"
+  ],
+  "zossie": [
+    "zossie.png"
+  ]
+}

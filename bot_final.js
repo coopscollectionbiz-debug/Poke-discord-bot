@@ -1,6 +1,6 @@
 /**
- * CoopBot v1.3 — Integrated Build (with TP Role Sync)
- * Includes: Core startup, autosave, affiliate converter, PokéBeach, and TP helpers.
+ * CoopBot v1.4 — Passive TP Edition
+ * Includes: autosave, PokéBeach, affiliate links, slash commands, and passive TP gain.
  */
 
 import fs from 'fs';
@@ -24,11 +24,11 @@ const __dirname = path.dirname(__filename);
 // -----------------------------
 const dataPath = path.join(__dirname, 'data');
 const trainerDataPath = path.join(dataPath, 'trainerData.json');
-const storageChannelId = process.env.STORAGE_CHANNEL_ID;
+const storageChannelId = process.env.STORAGE_CHANNEL_ID || '1242750037109248093';
 const pokebeachChannelId = '1432007350604271797';
-const AUTOSAVE_INTERVAL = 15 * 60 * 1000; // 15 min
+const AUTOSAVE_INTERVAL = 15 * 60 * 1000; // 15 minutes
 let trainerData = {};
-let autosaveTimeout = null;
+const tpCooldowns = new Map(); // store userId -> lastTPtimestamp
 
 // -----------------------------
 // 🤖 CLIENT INIT
@@ -37,13 +37,13 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
   ]
 });
 client.commands = new Collection();
 
 // -----------------------------
-// 🧠 LOGGER HELPERS
+// 🧠 LOGGER
 // -----------------------------
 const log = {
   info: (msg) => console.log(`🟢 [INFO] ${msg}`),
@@ -63,7 +63,7 @@ async function loadCommands() {
       client.commands.set(cmd.default.data.name, cmd.default);
       log.info(`Registered /${cmd.default.data.name}`);
     } catch (err) {
-      log.error(`Failed loading command ${file}: ${err.message}`);
+      log.error(`Failed to load command ${file}: ${err.message}`);
     }
   }
   log.info(`✅ ${client.commands.size} slash commands loaded.`);
@@ -76,7 +76,6 @@ function compressData(obj) {
   const json = JSON.stringify(obj);
   return zlib.deflateSync(json).toString('base64');
 }
-
 function decompressData(str) {
   try {
     const buf = Buffer.from(str, 'base64');
@@ -100,7 +99,7 @@ async function loadTrainerDataFromStorage() {
       trainerData = decompressData(encoded);
       log.info(`Loaded trainer data for ${Object.keys(trainerData).length} users.`);
     } else {
-      log.warn('No previous backups found. Starting fresh.');
+      log.warn('No previous backups found. Starting new trainerData.');
       trainerData = {};
     }
   } catch (err) {
@@ -122,17 +121,16 @@ async function autosaveTrainerData() {
     if (last) await last.edit(formatted);
     else await channel.send(formatted);
     fs.writeFileSync(trainerDataPath, JSON.stringify(trainerData, null, 2));
-    log.info(`Autosaved trainerData.json (${Object.keys(trainerData).length} users)`);
+    log.info(`Autosaved trainerData (${Object.keys(trainerData).length} users)`);
   } catch (err) {
     log.error(`Autosave failed: ${err.message}`);
   }
 }
 
-
 // -----------------------------
-// 🏅 TP ROLE SYSTEM
+// 🏅 ROLE SYSTEM
 // -----------------------------
-export function getRoleForTP(tp) {
+function getRoleForTP(tp) {
   const tiers = [
     { min: 250000, role: 'Legend' },
     { min: 175000, role: 'Champion' },
@@ -146,38 +144,33 @@ export function getRoleForTP(tp) {
     { min: 2500, role: 'Experienced Trainer' },
     { min: 1000, role: 'Skilled Trainer' },
     { min: 500, role: 'Junior Trainer' },
-    { min: 0, role: 'Novice Trainer' },
+    { min: 0, role: 'Novice Trainer' }
   ];
   return tiers.find(t => tp >= t.min)?.role || 'Novice Trainer';
 }
 
-export async function grantTP(interaction, userId, amount) {
-  if (!trainerData[userId]) return;
-  trainerData[userId].tp = (trainerData[userId].tp || 0) + amount;
-
-  const tp = trainerData[userId].tp;
-  const newRoleName = getRoleForTP(tp);
-  const tierRoles = [
-    'Novice Trainer', 'Junior Trainer', 'Skilled Trainer', 'Experienced Trainer',
-    'Advanced Trainer', 'Expert Trainer', 'Veteran Trainer', 'Elite Trainer',
-    'Master Trainer', 'Gym Leader', 'Elite Four Member', 'Champion', 'Legend'
-  ];
-
+async function updateUserRole(msg, userId) {
   try {
-    const member = await interaction.guild.members.fetch(userId);
-    const newRole = interaction.guild.roles.cache.find(r => r.name === newRoleName);
-    if (newRole) {
-      await member.roles.remove(member.roles.cache.filter(r => tierRoles.includes(r.name)));
-      await member.roles.add(newRole);
-      log.info(`Updated ${interaction.user.username} → ${newRoleName}`);
-    }
+    const member = await msg.guild.members.fetch(userId);
+    const tp = trainerData[userId].tp || 0;
+    const newRoleName = getRoleForTP(tp);
+    const newRole = msg.guild.roles.cache.find(r => r.name === newRoleName);
+    if (!newRole) return;
+
+    const tierRoles = [
+      'Novice Trainer', 'Junior Trainer', 'Skilled Trainer', 'Experienced Trainer',
+      'Advanced Trainer', 'Expert Trainer', 'Veteran Trainer', 'Elite Trainer',
+      'Master Trainer', 'Gym Leader', 'Elite Four Member', 'Champion', 'Legend'
+    ];
+    await member.roles.remove(member.roles.cache.filter(r => tierRoles.includes(r.name)));
+    await member.roles.add(newRole);
   } catch (err) {
-    log.warn(`Role sync skipped for ${userId}: ${err.message}`);
+    // silently ignore if role sync fails (bot perms, missing role, etc.)
   }
 }
 
 // -----------------------------
-// 💬 INTERACTION HANDLER
+// 💬 INTERACTIONS
 // -----------------------------
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
@@ -194,41 +187,58 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 // -----------------------------
-// 🔗 AFFILIATE LINK CONVERTER
+// 💬 MESSAGE EVENT — Passive TP gain + Affiliate conversion
 // -----------------------------
 const URL_REGEX = /(https?:\/\/[^\s]+)/gi;
+
 client.on('messageCreate', async (msg) => {
   try {
+    // ignore bots and DMs
     if (msg.author.bot || !msg.guild) return;
-    const urls = (msg.content.match(URL_REGEX) || []).slice(0, 5);
-    if (!urls.length) return;
 
-    const converted = [];
-    for (const url of urls) {
-      try { new URL(url); } catch { continue; }
-      const newUrl = convertAffiliate(url);
-      if (newUrl && newUrl !== url)
-        converted.push({ original: url, affiliate: newUrl });
+    const userId = msg.author.id;
+
+    // === Passive TP Gain (+1 every 5 seconds) ===
+    const now = Date.now();
+    const last = tpCooldowns.get(userId) || 0;
+    if (now - last >= 5000) { // 5s cooldown
+      if (!trainerData[userId]) trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
+      trainerData[userId].tp = (trainerData[userId].tp || 0) + 1;
+      tpCooldowns.set(userId, now);
     }
-    if (!converted.length) return;
 
-    const lines = converted.map(c => `• <${c.affiliate}>`).join('\n');
-    const embed = new EmbedBuilder()
-      .setColor(0x00AE86)
-      .setTitle('Affiliate-Safe Link Conversion')
-      .setDescription(`${lines}\n\nYour original message was removed to ensure affiliate compliance.`)
-      .setFooter({ text: `Coop's Collection Bot • ${new Date().toLocaleTimeString()}` });
+    // Always update role based on current TP
+    await updateUserRole(msg, userId);
 
-    await msg.delete();
-    await msg.channel.send({ embeds: [embed] });
-    log.info(`Affiliate link converted for ${msg.author.tag} in #${msg.channel.name}`);
+    // === Affiliate link handler ===
+    const urls = (msg.content.match(URL_REGEX) || []).slice(0, 5);
+    if (urls.length) {
+      const converted = [];
+      for (const url of urls) {
+        try { new URL(url); } catch { continue; }
+        const newUrl = convertAffiliate(url);
+        if (newUrl && newUrl !== url)
+          converted.push({ original: url, affiliate: newUrl });
+      }
+      if (converted.length) {
+        const lines = converted.map(c => `• <${c.affiliate}>`).join('\n');
+        const embed = new EmbedBuilder()
+          .setColor(0x00AE86)
+          .setTitle('Affiliate-Safe Link Conversion')
+          .setDescription(`${lines}\n\nYour original message was removed to ensure affiliate compliance.`)
+          .setFooter({ text: `Coop's Collection Bot • ${new Date().toLocaleTimeString()}` });
+        await msg.delete();
+        await msg.channel.send({ embeds: [embed] });
+        log.info(`Affiliate link converted for ${msg.author.tag} in #${msg.channel.name}`);
+      }
+    }
   } catch (err) {
-    log.error(`Affiliate conversion failed: ${err.message}`);
+    log.error(`Message event failed: ${err.message}`);
   }
 });
 
 // -----------------------------
-// 📰 POKÉBEACH SCRAPER (unchanged)
+// 📰 POKÉBEACH SCRAPER
 // -----------------------------
 const pokebeachStatePath = path.join(dataPath, 'pokebeachState.json');
 function loadPokeBeachState() {
@@ -243,7 +253,6 @@ function savePokeBeachState(state) {
   catch (e) { log.error(`Failed saving pokebeachState.json: ${e.message}`); }
 }
 
-// Core fetcher
 async function fetchPokeBeachAndPost() {
   const state = loadPokeBeachState();
   const lastLink = state.lastLink || '';
@@ -289,7 +298,7 @@ async function fetchPokeBeachAndPost() {
     log.error(`PokéBeach fetch failed: ${err.message}`);
   }
 }
-cron.schedule('*/15 * * * *', fetchPokeBeachAndPost); // every 15 min
+cron.schedule('*/15 * * * *', fetchPokeBeachAndPost); // every 15 minutes
 
 // -----------------------------
 // 🧭 STARTUP
@@ -303,8 +312,8 @@ client.once('ready', async () => {
 });
 
 // -----------------------------
-// 🌐 RENDER HEARTBEAT
-// -----------------------------
+// 🌐 HEARTBEAT (Render)
+—-----------------------------
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
   res.writeHead(200);

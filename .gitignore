@@ -1,31 +1,23 @@
-# === Node.js dependencies ===
+# Ignore node dependencies
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# === Environment ===
 .env
-.env.local
-.env.*.local
 
-# === Bot data ===
-# local backups or cache files
-data/trainerData.json
-data/pokebeachState.json
+# Ignore sprite directories (large binary assets)
+public/sprites/
+sprites/
+assets/
+images/
 
-# === Logs ===
-logs/
+# Ignore backups and generated files
+trainerData_backup*.json
+*.zip
 *.log
-log.txt
 
-# === OS / Editor files ===
+# Ignore OS / IDE junk
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-*.swp
 
-# === Build / Deployment ===
-dist/
-tmp/
+# Ignore Render cache
+.cache/

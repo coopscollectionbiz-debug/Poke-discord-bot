@@ -1,37 +1,28 @@
-// commands/recruit.js
-// ==========================================================
-// 🎯 Recruit Command with Selection (Pokémon or Trainer) + Shiny Integration
-// ==========================================================
-
 import {
   SlashCommandBuilder,
   EmbedBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
   ButtonBuilder,
-  ButtonStyle,
+  ButtonStyle
 } from 'discord.js';
 import pokemonData from '../pokemonData.json' assert { type: 'json' };
 import trainerSprites from '../trainerSprites.json' assert { type: 'json' };
 import { spritePaths } from '../spriteconfig.js';
 import { rollForShiny } from '../helpers/shinyOdds.js';
 
-// Helper for dynamic Pokémon sprites
-const getPokemonSprite = (id, shiny = false) =>
-  shiny
-    ? `${spritePaths.shiny}${id}.gif`
-    : `${spritePaths.pokemon}${id}.png`;
+const POKEMON_RARITY_WEIGHTS = { common: 60, uncommon: 24, rare: 10, epic: 4, legendary: 1.5, mythic: 0.5 };
+const TRAINER_RARITY_WEIGHTS = { common: 65, uncommon: 22, rare: 8, epic: 3, legendary: 1, mythic: 1 };
 
 export default {
   data: new SlashCommandBuilder()
     .setName('recruit')
     .setDescription('Recruit a Pokémon or Trainer to your collection!'),
 
-  async execute(interaction, trainerData) {
+  async execute(interaction, trainerData, saveTrainerData) {
     const userId = interaction.user.id;
-    if (!trainerData[userId]) {
-      trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
-    }
+    if (!trainerData[userId]) trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
+    const user = trainerData[userId];
 
     const typeMenu = new StringSelectMenuBuilder()
       .setCustomId('recruit_type')
@@ -40,14 +31,10 @@ export default {
         { label: 'Recruit Pokémon', value: 'pokemon', emoji: '🐾' },
         { label: 'Recruit Trainer', value: 'trainer', emoji: '🎓' },
       ]);
-
     const cancelButton = new ButtonBuilder()
       .setCustomId('cancel_recruit')
       .setLabel('Cancel')
       .setStyle(ButtonStyle.Secondary);
-
-    const row = new ActionRowBuilder().addComponents(typeMenu);
-    const cancelRow = new ActionRowBuilder().addComponents(cancelButton);
 
     await interaction.reply({
       embeds: [
@@ -56,13 +43,16 @@ export default {
           .setTitle('🎯 Recruitment Time!')
           .setDescription('What would you like to recruit today?'),
       ],
-      components: [row, cancelRow],
+      components: [
+        new ActionRowBuilder().addComponents(typeMenu),
+        new ActionRowBuilder().addComponents(cancelButton)
+      ],
       ephemeral: true,
     });
 
     const collector = interaction.channel.createMessageComponentCollector({
       filter: (i) => i.user.id === userId,
-      time: 120000, // 2 minutes
+      time: 120000
     });
 
     collector.on('collect', async (i) => {
@@ -74,15 +64,13 @@ export default {
           components: [],
         });
       }
-
       if (i.customId === 'recruit_type') {
         const choice = i.values[0];
         collector.stop();
-
         if (choice === 'pokemon') {
-          await handlePokemonRecruit(i, trainerData, userId);
-        } else if (choice === 'trainer') {
-          await handleTrainerRecruit(i, trainerData, userId);
+          await handlePokemonRecruit(i, user, saveTrainerData);
+        } else {
+          await handleTrainerRecruit(i, user, saveTrainerData);
         }
       }
     });
@@ -96,71 +84,59 @@ export default {
         });
       }
     });
-  },
+  }
 };
 
-// ==========================================================
-// 🐾 Pokémon Recruit Flow
-// ==========================================================
-async function handlePokemonRecruit(interaction, trainerData, userId) {
-  const user = trainerData[userId];
-  const randomPokemon = getRandomPokemon();
-  const pokemonInfo = pokemonData[randomPokemon];
-  const id = pokemonInfo.id;
+async function handlePokemonRecruit(interaction, user, saveTrainerData) {
+  const candidates = Object.values(pokemonData).filter(p => p.generation <= 5);
+  const pokemon = weightedRandomChoice(candidates, POKEMON_RARITY_WEIGHTS);
   const isShiny = rollForShiny(user.tp);
+  user.pokemon[pokemon.name] = { owned: true, shiny: isShiny };
+  await saveTrainerData();
 
-  trainerData[userId].pokemon[randomPokemon] = { owned: true, shiny: isShiny };
-
-  const sprite = getPokemonSprite(id, isShiny);
-  const embed = new EmbedBuilder()
-    .setColor(isShiny ? 0xffd700 : 0x00ae86)
-    .setTitle('🎯 Pokémon Recruited!')
-    .setDescription(
-      isShiny
-        ? `✨ You successfully recruited a **Shiny ${randomPokemon}!**`
-        : `You recruited a **${randomPokemon}!**`
-    )
-    .setThumbnail(sprite)
-    .setFooter({ text: 'Keep building your team!' });
+  const sprite = isShiny
+    ? `${spritePaths.shiny}${pokemon.id}.gif`
+    : `${spritePaths.pokemon}${pokemon.id}.png`;
 
   await interaction.update({
-    embeds: [embed],
+    embeds: [
+      new EmbedBuilder()
+        .setColor(isShiny ? 0xffd700 : 0x00ae86)
+        .setTitle('🎯 Pokémon Recruited!')
+        .setDescription(isShiny
+          ? `✨ You successfully recruited a **Shiny ${pokemon.name}!**`
+          : `You recruited a **${pokemon.name}!**`)
+        .setThumbnail(sprite)
+        .setFooter({ text: 'Keep building your team!' })
+    ],
     components: [],
-    ephemeral: !isShiny, // shiny = public, normal = ephemeral
+    ephemeral: !isShiny,
   });
 }
 
-// ==========================================================
-// 🎓 Trainer Recruit Flow
-// ==========================================================
-async function handleTrainerRecruit(interaction, trainerData, userId) {
-  const allTrainerSprites = Object.values(trainerSprites)
-    .flatMap((t) => t.sprites || [])
-    .filter((f) => f.endsWith('.png'));
-
-  const randomTrainer =
-    allTrainerSprites[Math.floor(Math.random() * allTrainerSprites.length)];
-  trainerData[userId].trainers[randomTrainer] = true;
-
-  const embed = new EmbedBuilder()
-    .setColor(0x00ae86)
-    .setTitle('🎓 Trainer Recruited!')
-    .setDescription(`You recruited a new **Trainer Sprite**: ${randomTrainer}`)
-    .setThumbnail(`${spritePaths.trainers}${randomTrainer}`)
-    .setFooter({ text: 'View it later with /showtrainers!' });
+async function handleTrainerRecruit(interaction, user, saveTrainerData) {
+  const trainer = weightedRandomChoice(Object.values(trainerSprites), TRAINER_RARITY_WEIGHTS);
+  user.trainers[trainer.filename] = true;
+  await saveTrainerData();
 
   await interaction.update({
-    embeds: [embed],
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0x00ae86)
+        .setTitle('🎓 Trainer Recruited!')
+        .setDescription(`You recruited a new **Trainer Sprite**: ${trainer.name}`)
+        .setThumbnail(`${spritePaths.trainers}${trainer.filename}`)
+        .setFooter({ text: 'View it later with /showtrainers!' })
+    ],
     components: [],
     ephemeral: true,
   });
 }
 
-// ==========================================================
-// 🎲 Helpers
-// ==========================================================
-function getRandomPokemon() {
-  const candidates = Object.values(pokemonData).filter((p) => p.generation <= 5);
-  const random = Math.floor(Math.random() * candidates.length);
-  return candidates[random].name;
+function weightedRandomChoice(items, weights) {
+  const weighted = [];
+  for (const item of items) {
+    weighted.push(...Array(Math.round(weights[item.rarity?.toLowerCase()] || 1)).fill(item));
+  }
+  return weighted[Math.floor(Math.random() * weighted.length)];
 }

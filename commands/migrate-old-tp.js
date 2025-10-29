@@ -1,13 +1,16 @@
 import zlib from 'zlib';
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { autosaveTrainerData } from '../bot_final.js'; // optional, if exported
 
 export default {
   data: new SlashCommandBuilder()
     .setName('migrate-old-tp')
     .setDescription('Admin: import TP values from the most recent COMPRESSED_BACKUP in storage channel.')
     .setDefaultMemberPermissions(0),
-  async execute(interaction, trainerData) {
+  async execute(interaction, trainerData, saveTrainerData) {
+    // Permission check (admin only)
+    if (!interaction.member.permissions.has('ADMINISTRATOR'))
+      return interaction.reply({ content: '❌ Only admins can run this command.', ephemeral: true });
+
     await interaction.reply({ content: '⏳ Fetching old trainer data from storage...', ephemeral: true });
 
     const STORAGE_CHANNEL_ID = process.env.STORAGE_CHANNEL_ID || '1242750037109248093';
@@ -45,8 +48,7 @@ export default {
       migrated++;
     }
 
-    // Optional: autosave after migration
-    // await autosaveTrainerData();
+    await saveTrainerData();
 
     const embed = new EmbedBuilder()
       .setColor(0x00AE86)

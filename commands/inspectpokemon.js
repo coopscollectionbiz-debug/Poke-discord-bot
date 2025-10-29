@@ -1,8 +1,3 @@
-/**
- * /inspectpokemon — View a Pokémon in detail (similar to Pokédex view)
- * Standalone command with shiny toggle, evolutions, and inline type icons.
- */
-
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -10,18 +5,15 @@ import {
   ButtonBuilder,
   ButtonStyle
 } from 'discord.js';
-import { spritePaths, rarityEmojis } from '../spriteConfig.js';
-import pokemonData from '../data/pokemonData.json' assert { type: 'json' };
+import { spritePaths, rarityEmojis } from '../spriteconfig.js';
+import pokemonData from '../pokemonData.json' assert { type: 'json' };
 
 export default {
   data: new SlashCommandBuilder()
     .setName('inspectpokemon')
     .setDescription('Inspect a specific Pokémon in detail.')
     .addStringOption(opt =>
-      opt
-        .setName('name')
-        .setDescription('Enter the Pokémon name')
-        .setRequired(true)
+      opt.setName('name').setDescription('Enter the Pokémon name').setRequired(true)
     ),
 
   async execute(interaction, trainerData) {
@@ -47,7 +39,7 @@ export default {
     const renderEmbed = () => {
       const sprite = shinyMode
         ? `${spritePaths.shiny}${id}.gif`
-        : `${spritePaths.pokemon}${id}.gif`;
+        : `${spritePaths.pokemon}${id}.png`;
 
       const rarityEmoji = rarityEmojis[data.rarity.toLowerCase()] || '⚪';
       const isOwned = !!owned[id];
@@ -111,9 +103,7 @@ export default {
     });
 
     collector.on('end', async () => {
-      try {
-        await msg.edit({ components: [] });
-      } catch {}
+      try { await msg.edit({ components: [] }); } catch {}
     });
   }
 };

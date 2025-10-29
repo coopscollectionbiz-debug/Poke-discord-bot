@@ -1,8 +1,3 @@
-// commands/trainercard.js
-// ==========================================================
-// 🧭 Trainer Card Command (Full Version with Onboarding + Shiny Starters)
-// ==========================================================
-
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -16,29 +11,21 @@ import { rollForShiny } from '../helpers/shinyOdds.js';
 import pokemonData from '../pokemonData.json' assert { type: 'json' };
 import trainerSprites from '../trainerSprites.json' assert { type: 'json' };
 
-// Helper for dynamic Pokémon sprites
-const getPokemonSprite = (id, shiny = false) =>
-  shiny
-    ? `${spritePaths.shiny}${id}.gif`
-    : `${spritePaths.pokemon}${id}.png`;
-
 export default {
   data: new SlashCommandBuilder()
     .setName('trainercard')
     .setDescription('View your trainer card or start your journey if new!'),
 
-  async execute(interaction, trainerData) {
+  async execute(interaction, trainerData, saveTrainerData) {
     const userId = interaction.user.id;
     const user = trainerData[userId];
 
+    // Onboarding flow for new users
     if (!user || !user.starter || !user.trainerSprite) {
-      return startOnboardingFlow(interaction, trainerData);
+      return startOnboardingFlow(interaction, trainerData, saveTrainerData);
     }
 
-    // ==========================================================
-    // 🪪 EXISTING USER DISPLAY (FULL TRAINER CARD)
-    // ==========================================================
-
+    // Existing user display
     const tp = user.tp || 0;
     const cc = user.cc || 0;
     const starter = user.starter || 'Unknown';
@@ -46,13 +33,22 @@ export default {
     const starterId = pokemonData[starter]?.id || 0;
     const starterIsShiny = user.pokemon?.[starter]?.shiny;
 
-    const starterSprite = getPokemonSprite(starterId, starterIsShiny);
-    const trainerSprite = `${spritePaths.trainers}${sprite}`;
+    const starterSprite = starterId
+      ? (starterIsShiny
+        ? `${spritePaths.shiny}${starterId}.gif`
+        : `${spritePaths.pokemon}${starterId}.png`)
+      : null;
+    const trainerSprite = sprite !== 'Unknown'
+      ? `${spritePaths.trainers}${sprite}`
+      : null;
 
     const embed = new EmbedBuilder()
       .setColor(0x00ae86)
       .setTitle(`${interaction.user.username}’s Trainer Card`)
-      .setDescription(`**Starter Pokémon:** ${starterIsShiny ? '✨ Shiny ' : ''}${starter}\n**Trainer Sprite:** ${sprite}\n**TP:** ${tp}\n**CC:** ${cc}`)
+      .setDescription(
+        `**Starter Pokémon:** ${starterIsShiny ? '✨ Shiny ' : ''}${starter}\n` +
+        `**Trainer Sprite:** ${sprite}\n**TP:** ${tp}\n**CC:** ${cc}`
+      )
       .setThumbnail(starterSprite)
       .setImage(trainerSprite)
       .setFooter({ text: "Use /showpokemon or /showtrainers to view your collection!" });
@@ -61,22 +57,20 @@ export default {
   },
 };
 
-// ==========================================================
-// 🧭 ONBOARDING FLOW
-// ==========================================================
-
-async function startOnboardingFlow(interaction, trainerData) {
+async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
   const userId = interaction.user.id;
   const user = trainerData[userId] || { tp: 0, cc: 0, pokemon: {}, trainers: {} };
   trainerData[userId] = user;
 
-  // Step 1: Choose Starter Pokémon (Gen 1–5)
+  // Step 1: Choose Starter Pokémon (Gen 1–5, rarity-weighted)
   const starters = Object.values(pokemonData).filter(p => p.generation <= 5);
-  const starterOptions = starters.slice(0, 25).map(p => ({
-    label: p.name,
-    value: p.name,
-    emoji: p.emoji || '✨',
-  }));
+  const weightedStarters = weightedRandomArray(starters, {
+    common: 60, uncommon: 24, rare: 10, epic: 4, legendary: 1.5, mythic: 0.5
+  });
+  const starterOptions = Array.from(new Set(weightedStarters.map(p => p.name))).slice(0, 25).map(pname => {
+    const p = pokemonData[pname];
+    return { label: p.name, value: p.name, emoji: p.emoji || '✨' };
+  });
 
   const starterMenu = new StringSelectMenuBuilder()
     .setCustomId('select_starter')
@@ -112,7 +106,7 @@ async function startOnboardingFlow(interaction, trainerData) {
     if (i.customId === 'select_starter') {
       const starter = i.values[0];
       starterCollector.stop();
-      await chooseTrainerSprite(i, trainerData, starter);
+      await chooseTrainerSprite(i, trainerData, saveTrainerData, starter);
     }
   });
 
@@ -123,16 +117,14 @@ async function startOnboardingFlow(interaction, trainerData) {
   });
 }
 
-async function chooseTrainerSprite(interaction, trainerData, starter) {
+async function chooseTrainerSprite(interaction, trainerData, saveTrainerData, starter) {
   const userId = interaction.user.id;
-
   const spriteMenu = new StringSelectMenuBuilder()
     .setCustomId('select_trainer_sprite')
     .setPlaceholder('Choose your trainer appearance!')
-    .addOptions([
-      { label: 'Youngster', value: 'youngster-gen4.png', emoji: '👦' },
-      { label: 'Lass', value: 'lass-gen4.png', emoji: '👧' },
-    ]);
+    .addOptions(Object.values(trainerSprites).slice(0, 10).map(t =>
+      ({ label: t.name, value: t.filename, emoji: t.emoji || '🧑' })
+    ));
 
   const spriteRow = new ActionRowBuilder().addComponents(spriteMenu);
   const cancelRow = new ActionRowBuilder().addComponents(
@@ -162,7 +154,7 @@ async function chooseTrainerSprite(interaction, trainerData, starter) {
     if (i.customId === 'select_trainer_sprite') {
       const sprite = i.values[0];
       spriteCollector.stop();
-      await confirmSetup(i, trainerData, starter, sprite);
+      await confirmSetup(i, trainerData, saveTrainerData, starter, sprite);
     }
   });
 
@@ -173,13 +165,13 @@ async function chooseTrainerSprite(interaction, trainerData, starter) {
   });
 }
 
-async function confirmSetup(interaction, trainerData, starter, sprite) {
+async function confirmSetup(interaction, trainerData, saveTrainerData, starter, sprite) {
   const userId = interaction.user.id;
   const user = trainerData[userId] || { tp: 0, cc: 0, pokemon: {}, trainers: {} };
 
   const starterId = pokemonData[starter]?.id;
   const isShiny = rollForShiny(user.tp);
-  const starterSprite = getPokemonSprite(starterId, isShiny);
+  const starterSprite = starterId ? (isShiny ? `${spritePaths.shiny}${starterId}.gif` : `${spritePaths.pokemon}${starterId}.png`) : null;
   const trainerSprite = `${spritePaths.trainers}${sprite}`;
 
   const confirmRow = new ActionRowBuilder().addComponents(
@@ -215,6 +207,7 @@ async function confirmSetup(interaction, trainerData, starter, sprite) {
       user.pokemon[starter] = { owned: true, shiny: isShiny };
       user.trainers[sprite] = true;
       trainerData[userId] = user;
+      await saveTrainerData();
 
       const nickname = i.member?.nickname || i.user.username;
       await i.update({
@@ -239,4 +232,12 @@ async function confirmSetup(interaction, trainerData, starter, sprite) {
       interaction.editReply({ content: '⏳ Time’s up! Run `/trainercard` again to restart onboarding.', components: [], embeds: [] });
     }
   });
+}
+
+function weightedRandomArray(items, weights) {
+  const weighted = [];
+  for (const item of items) {
+    weighted.push(...Array(Math.round(weights[item.rarity?.toLowerCase()] || 1)).fill(item));
+  }
+  return weighted;
 }

@@ -1,8 +1,3 @@
-/**
- * /inspecttrainer — View a detailed Trainer card with rarity and ownership status.
- * Standalone command that mirrors the inspect view in /showtrainers.
- */
-
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -10,18 +5,15 @@ import {
   ButtonBuilder,
   ButtonStyle
 } from 'discord.js';
-import { spritePaths, rarityEmojis } from '../spriteConfig.js';
-import trainerSprites from '../data/trainerSprites.json' assert { type: 'json' };
+import { spritePaths, rarityEmojis } from '../spriteconfig.js';
+import trainerSprites from '../trainerSprites.json' assert { type: 'json' };
 
 export default {
   data: new SlashCommandBuilder()
     .setName('inspecttrainer')
     .setDescription('Inspect a specific Trainer in full size.')
     .addStringOption(opt =>
-      opt
-        .setName('name')
-        .setDescription('Enter the Trainer name')
-        .setRequired(true)
+      opt.setName('name').setDescription('Enter the Trainer name').setRequired(true)
     ),
 
   async execute(interaction, trainerData) {
@@ -80,9 +72,7 @@ export default {
     });
 
     collector.on('end', async () => {
-      try {
-        await msg.edit({ components: [] });
-      } catch {}
+      try { await msg.edit({ components: [] }); } catch {}
     });
   }
 };

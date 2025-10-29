@@ -1,8 +1,3 @@
-/**
- * /showpokemon — View your Pokémon collection (Hybrid Grid + Search)
- * Features: 3x4 grid (12 per page), Inspect buttons, Search modal, Pagination
- */
-
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -13,8 +8,8 @@ import {
   TextInputBuilder,
   TextInputStyle
 } from 'discord.js';
-import { spritePaths, rarityEmojis } from '../spriteConfig.js';
-import pokemonData from '../data/pokemonData.json' assert { type: 'json' };
+import { spritePaths, rarityEmojis } from '../spriteconfig.js';
+import pokemonData from '../pokemonData.json' assert { type: 'json' };
 
 const PAGE_SIZE = 12;
 
@@ -48,7 +43,6 @@ export default {
           { name: 'Unowned only', value: 'unowned' }
         )
     ),
-
   async execute(interaction, trainerData) {
     const userId = interaction.user.id;
     const user = trainerData[userId] || { pokemon: {} };

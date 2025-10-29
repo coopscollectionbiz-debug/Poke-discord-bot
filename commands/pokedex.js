@@ -1,8 +1,3 @@
-/**
- * /pokedex — Detailed Pokédex entry with shiny toggle and back navigation
- * Integrated with /showpokemon's "Inspect" button system.
- */
-
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -10,8 +5,8 @@ import {
   ButtonBuilder,
   ButtonStyle
 } from 'discord.js';
-import { spritePaths, rarityEmojis } from '../spriteConfig.js';
-import pokemonData from '../data/pokemonData.json' assert { type: 'json' };
+import { spritePaths, rarityEmojis } from '../spriteconfig.js';
+import pokemonData from '../pokemonData.json' assert { type: 'json' };
 
 export default {
   data: new SlashCommandBuilder()
@@ -43,7 +38,7 @@ export default {
     const renderEmbed = () => {
       const sprite = shinyMode
         ? `${spritePaths.shiny}${id}.gif`
-        : `${spritePaths.pokemon}${id}.gif`;
+        : `${spritePaths.pokemon}${id}.png`;
 
       // Inline type icons
       const typeIcons = data.type
@@ -127,9 +122,7 @@ export default {
     });
 
     collector.on('end', async () => {
-      try {
-        await msg.edit({ components: [] });
-      } catch {}
+      try { await msg.edit({ components: [] }); } catch {}
     });
   }
 };

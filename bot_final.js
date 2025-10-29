@@ -13,11 +13,15 @@ import fetch from 'node-fetch';
 import cheerio from 'cheerio';
 import cron from 'node-cron';
 import { Client, GatewayIntentBits, Collection, EmbedBuilder } from 'discord.js';
-import { convertAffiliate } from './affiliateConfig.js';
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// ==================== AFFILIATE IDS ====================
+const AFFILIATES = {
+  amazonAffiliateTag: 'coopscolle02b-20',
+  ebayAffiliateId: '2390378'
+
 
 // -----------------------------
 // 💾 PATHS & CONSTANTS
@@ -191,46 +195,128 @@ client.on('interactionCreate', async (interaction) => {
 // -----------------------------
 const URL_REGEX = /(https?:\/\/[^\s]+)/gi;
 
+// === Affiliate Helper Functions ===
+async function expandShortenedUrl(shortUrl) {
+  try {
+    const response = await fetch(shortUrl, { method: 'HEAD', redirect: 'follow' });
+    return response.url;
+  } catch (error) {
+    console.error('Error expanding shortened URL:', error);
+    return shortUrl;
+  }
+}
+
+async function extractAmazonProductId(url) {
+  let fullUrl = url;
+
+  if (url.includes('amzn.to') || url.includes('amzn.com')) {
+    console.log(`🔗 Expanding shortened URL: ${url}`);
+    fullUrl = await expandShortenedUrl(url);
+    console.log(`   → Expanded to: ${fullUrl}`);
+  }
+
+  const dpMatch = fullUrl.match(/\/dp\/([A-Z0-9]{10})/i);
+  if (dpMatch) return dpMatch[1];
+
+  const gpMatch = fullUrl.match(/\/gp\/product\/([A-Z0-9]{10})/i);
+  if (gpMatch) return gpMatch[1];
+
+  return null;
+}
+
+function extractEbayItemId(url) {
+  const itmMatch = url.match(/\/itm\/(\d+)/);
+  if (itmMatch) return itmMatch[1];
+
+  const itemMatch = url.match(/[?&]item=(\d+)/);
+  if (itemMatch) return itemMatch[1];
+
+  return null;
+}
+
+function createAmazonAffiliateLink(productId) {
+  return `https://www.amazon.com/dp/${productId}?tag=${CONFIG.amazonAffiliateTag}`;
+}
+
+function createEbayAffiliateLink(itemId) {
+  return `https://www.ebay.com/itm/${itemId}?mkcid=1&mkrid=711-53200-19255-0&siteid=0&campid=${CONFIG.ebayAffiliateId}&toolid=11800`;
+}
+
+async function detectAndConvertLinks(messageContent) {
+  const conversions = [];
+
+  const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.com|amzn\.to|amzn\.com)([^\s]*)/gi;
+  for (const match of messageContent.matchAll(amazonRegex)) {
+    const fullUrl = match[0];
+    const productId = await extractAmazonProductId(fullUrl);
+    if (productId) {
+      conversions.push({
+        type: 'Amazon',
+        original: fullUrl,
+        affiliate: createAmazonAffiliateLink(productId)
+      });
+    }
+  }
+
+  const ebayRegex = /(https?:\/\/)?(www\.)?ebay\.com([^\s]*)/gi;
+  for (const match of messageContent.matchAll(ebayRegex)) {
+    const fullUrl = match[0];
+    const itemId = extractEbayItemId(fullUrl);
+    if (itemId) {
+      conversions.push({
+        type: 'eBay',
+        original: fullUrl,
+        affiliate: createEbayAffiliateLink(itemId)
+      });
+    }
+  }
+
+  return conversions;
+}
+
+function extractNonLinkText(messageContent) {
+  let textOnly = messageContent
+    .replace(/(https?:\/\/)?(www\.)?(amazon\.com|amzn\.to|amzn\.com)([^\s]*)/gi, '')
+    .replace(/(https?:\/\/)?(www\.)?ebay\.com([^\s]*)/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return textOnly;
+}
+
+// === Discord Message Event ===
 client.on('messageCreate', async (msg) => {
   try {
-    // ignore bots and DMs
     if (msg.author.bot || !msg.guild) return;
-
     const userId = msg.author.id;
 
-    // === Passive TP Gain (+1 every 5 seconds) ===
+    // Passive TP Gain (+1 every 5 seconds)
     const now = Date.now();
     const last = tpCooldowns.get(userId) || 0;
-    if (now - last >= 5000) { // 5s cooldown
-      if (!trainerData[userId]) trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
+    if (now - last >= 5000) {
+      if (!trainerData[userId])
+        trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
       trainerData[userId].tp = (trainerData[userId].tp || 0) + 1;
       tpCooldowns.set(userId, now);
     }
 
-    // Always update role based on current TP
+    // Update role
     await updateUserRole(msg, userId);
 
-    // === Affiliate link handler ===
-    const urls = (msg.content.match(URL_REGEX) || []).slice(0, 5);
-    if (urls.length) {
-      const converted = [];
-      for (const url of urls) {
-        try { new URL(url); } catch { continue; }
-        const newUrl = convertAffiliate(url);
-        if (newUrl && newUrl !== url)
-          converted.push({ original: url, affiliate: newUrl });
-      }
-      if (converted.length) {
-        const lines = converted.map(c => `• <${c.affiliate}>`).join('\n');
-        const embed = new EmbedBuilder()
-          .setColor(0x00AE86)
-          .setTitle('Affiliate-Safe Link Conversion')
-          .setDescription(`${lines}\n\nYour original message was removed to ensure affiliate compliance.`)
-          .setFooter({ text: `Coop's Collection Bot • ${new Date().toLocaleTimeString()}` });
-        await msg.delete();
-        await msg.channel.send({ embeds: [embed] });
-        log.info(`Affiliate link converted for ${msg.author.tag} in #${msg.channel.name}`);
-      }
+    // Affiliate Conversion
+    const conversions = await detectAndConvertLinks(msg.content);
+    if (conversions.length) {
+      const nonLinkText = extractNonLinkText(msg.content);
+      const lines = conversions.map(c => `• ${c.affiliate}`).join('\n');
+
+      const embed = new EmbedBuilder()
+        .setColor(0xffcc00)
+        .setTitle('Affiliate-Safe Link Conversion')
+        .setDescription(`${nonLinkText}\n\n${lines}\n\n_Original message replaced with affiliate link(s). Coop may be compensated for purchases made through these links._`)
+        .setFooter({ text: `Coop's Collection Bot • ${new Date().toLocaleTimeString()}` });
+
+      await msg.delete();
+      await msg.channel.send({ embeds: [embed] });
+      log.info(`Affiliate link converted for ${msg.author.tag} in #${msg.channel.name}`);
     }
   } catch (err) {
     log.error(`Message event failed: ${err.message}`);

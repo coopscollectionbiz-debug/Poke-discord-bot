@@ -2,8 +2,15 @@ import fs from 'fs/promises';
 import path from 'path';
 import zlib from 'zlib';
 import fetch from 'node-fetch';
-import { Client, GatewayIntentBits, EmbedBuilder, Collection, PermissionsBitField } from 'discord.js';
+import {
+  Client,
+  GatewayIntentBits,
+  EmbedBuilder,
+  Collection,
+  PermissionsBitField
+} from 'discord.js';
 
+// ---- Config ----
 const RANKS = [
   { tp: 100, roleName: 'Novice Trainer' },
   { tp: 500, roleName: 'Junior Trainer' },
@@ -27,6 +34,7 @@ const EBAY_ID = '2390378';
 let trainerData = {};
 const trainerDataPath = './trainerData.json';
 
+// ---- Data load/save ----
 async function loadTrainerData() {
   try {
     trainerData = JSON.parse(await fs.readFile(trainerDataPath, 'utf8'));
@@ -65,6 +73,7 @@ setInterval(async () => {
   await saveDataToDiscord();
 }, 15 * 60 * 1000);
 
+// ---- Discord client ----
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -74,6 +83,7 @@ const client = new Client({
   ],
 });
 
+// ---- Affiliate links ----
 async function expandShortenedUrl(url) {
   try {
     const response = await fetch(url, { method: 'HEAD', redirect: 'follow' });
@@ -149,6 +159,7 @@ function extractNonLinkText(messageContent) {
   return textOnly;
 }
 
+// ---- Rank system ----
 function getRank(tp) {
   let role = RANKS[0].roleName;
   for (const r of RANKS) if (tp >= r.tp) role = r.roleName;
@@ -162,6 +173,7 @@ async function updateUserRole(member, newRankName) {
   if (role) await member.roles.add(role);
 }
 
+// ---- Pokebeach news ----
 async function scrapePokebeach() {
   if (!NEWS_CHANNEL_ID) return;
   try {
@@ -202,6 +214,7 @@ async function scrapePokebeach() {
 }
 setInterval(scrapePokebeach, 6 * 60 * 60 * 1000);
 
+// ---- Command loading ----
 const commands = new Collection();
 
 async function loadCommands() {
@@ -224,12 +237,14 @@ async function loadCommands() {
   }
 }
 
-client.once('clientReady', async () => {
+// ---- Event listeners ----
+// Correct for discord.js v14:
+client.once('ready', async () => {
   console.log(`✅ Bot logged in as ${client.user.tag}`);
   await loadTrainerData();
   await loadCommands();
 
-  // Register all slash commands (Discord.js v15+)
+  // Register all slash commands
   const restModule = await import('@discordjs/rest');
   const { REST } = restModule;
   const { Routes } = await import('discord-api-types/v10');

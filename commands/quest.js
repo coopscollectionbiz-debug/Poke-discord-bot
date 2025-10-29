@@ -1,14 +1,10 @@
-// commands/quest.js
-// ==========================================================
-// 🧭 Quest Command with Shiny System Integration
-// ==========================================================
-
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import pokemonData from '../pokemonData.json' assert { type: 'json' };
+import fs from 'fs/promises';
 import { spritePaths } from '../spriteconfig.js';
 import { rollForShiny } from '../helpers/shinyOdds.js';
 
-// Helper for dynamic Pokémon sprites
+const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
+
 const getPokemonSprite = (id, shiny = false) =>
   shiny
     ? `${spritePaths.shiny}${id}.gif`
@@ -66,9 +62,6 @@ export default {
   },
 };
 
-// ==========================================================
-// 🎲 Helpers
-// ==========================================================
 function getRandomPokemon() {
   const candidates = Object.values(pokemonData).filter(p => p.generation <= 5);
   const random = Math.floor(Math.random() * candidates.length);
@@ -76,6 +69,7 @@ function getRandomPokemon() {
 }
 
 function getRandomTrainerSprite() {
+  // You may want to load this from trainerSprites.json instead
   const sprites = ['youngster-gen4.png', 'lass-gen4.png'];
   const random = Math.floor(Math.random() * sprites.length);
   return sprites[random];

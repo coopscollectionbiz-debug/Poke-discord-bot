@@ -8,9 +8,10 @@ import {
   TextInputBuilder,
   TextInputStyle
 } from 'discord.js';
+import fs from 'fs/promises';
 import { spritePaths, rarityEmojis } from '../spriteconfig.js';
-import pokemonData from '../pokemonData.json' assert { type: 'json' };
 
+const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
 const PAGE_SIZE = 12;
 
 export default {
@@ -54,7 +55,6 @@ export default {
     const shiny = interaction.options.getBoolean('shiny') || false;
     const ownershipFilter = interaction.options.getString('ownership');
 
-    // Filter dataset
     let filtered = Object.entries(pokemonData);
     if (typeFilter) {
       filtered = filtered.filter(([_, data]) =>
@@ -72,7 +72,7 @@ export default {
       filtered = filtered.filter(([id]) => !owned[id]);
     }
 
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     let page = 0;
     let highlightId = null;
 
@@ -84,14 +84,13 @@ export default {
         .setFooter({ text: `Page ${page + 1}/${totalPages}` });
 
       let desc = '';
-
       slice.forEach(([id, data]) => {
         const isOwned = !!owned[id];
         const spriteBase = shiny
           ? spritePaths.shiny
           : isOwned
-          ? spritePaths.pokemon
-          : spritePaths.grayscale;
+            ? spritePaths.pokemon
+            : spritePaths.grayscale;
         const sprite = `${spriteBase}${id}.gif`;
         const rarity = rarityEmojis[data.rarity.toLowerCase()] || '⚪';
         const highlight = id === highlightId ? '⭐ ' : '';
@@ -110,14 +109,14 @@ export default {
           .setCustomId('next')
           .setEmoji('➡️')
           .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === totalPages - 1),
+          .setDisabled(page === totalPages - 1 || totalPages <= 1),
         new ButtonBuilder()
           .setCustomId('search')
           .setLabel('🔍 Search Pokémon')
           .setStyle(ButtonStyle.Primary)
       );
 
-      // Create inspect buttons per Pokémon (max 12)
+      // Inspect buttons for the slice
       const inspectRows = [];
       for (const [id, data] of slice) {
         inspectRows.push(
@@ -127,8 +126,6 @@ export default {
             .setStyle(ButtonStyle.Secondary)
         );
       }
-
-      // Group in rows of up to 5 buttons
       const buttonRows = [];
       for (let i = 0; i < inspectRows.length; i += 5) {
         buttonRows.push(new ActionRowBuilder().addComponents(inspectRows.slice(i, i + 5)));
@@ -157,16 +154,13 @@ export default {
       if (i.user.id !== userId)
         return i.reply({ content: '❌ This is not your collection.', ephemeral: true });
 
-      // Pagination
       if (i.customId === 'prev' && page > 0) page--;
       else if (i.customId === 'next' && page < totalPages - 1) page++;
 
-      // Search button
       if (i.customId === 'search') {
         const modal = new ModalBuilder()
           .setCustomId('search_modal')
           .setTitle('Search Pokémon');
-
         const searchInput = new TextInputBuilder()
           .setCustomId('search_name')
           .setLabel('Enter Pokémon name')
@@ -202,14 +196,12 @@ export default {
         return;
       }
 
-      // Inspect Pokémon
       if (i.customId.startsWith('inspect_')) {
         const pokeId = i.customId.split('_')[1];
         const data = pokemonData[pokeId];
         if (!data)
           return i.reply({ content: 'Pokémon not found.', ephemeral: true });
 
-        // call your future /pokedex renderer here
         return i.reply({
           content: `📖 Opening Pokédex entry for **${data.name}**... (placeholder)`,
           ephemeral: true

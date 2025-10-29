@@ -6,10 +6,12 @@ import {
   ButtonBuilder,
   ButtonStyle
 } from 'discord.js';
-import pokemonData from '../pokemonData.json' assert { type: 'json' };
-import trainerSprites from '../trainerSprites.json' assert { type: 'json' };
+import fs from 'fs/promises';
 import { spritePaths } from '../spriteconfig.js';
 import { rollForShiny } from '../helpers/shinyOdds.js';
+
+const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
+const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
 
 const POKEMON_RARITY_WEIGHTS = { common: 60, uncommon: 24, rare: 10, epic: 4, legendary: 1.5, mythic: 0.5 };
 const TRAINER_RARITY_WEIGHTS = { common: 65, uncommon: 22, rare: 8, epic: 3, legendary: 1, mythic: 1 };

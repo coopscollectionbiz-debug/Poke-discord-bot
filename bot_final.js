@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import zlib from 'zlib';
 import fetch from 'node-fetch';
-import { Client, GatewayIntentBits, EmbedBuilder, Collection } from 'discord.js';
+import { Client, GatewayIntentBits, EmbedBuilder, Collection, PermissionsBitField } from 'discord.js';
 
 const RANKS = [
   { tp: 100, roleName: 'Novice Trainer' },
@@ -210,9 +210,7 @@ async function loadCommands() {
   for (const file of files) {
     if (file.endsWith('.js')) {
       const { default: command } = await import(path.join(commandsPath, file));
-      // Pass saveTrainerData/saveDataToDiscord to adminsave
       if (command.data.name === 'adminsave') {
-        // Wrap the execute function so it receives saveDataToDiscord
         commands.set(command.data.name, {
           ...command,
           async execute(interaction, trainerData, saveTrainerData) {
@@ -226,12 +224,12 @@ async function loadCommands() {
   }
 }
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   console.log(`✅ Bot logged in as ${client.user.tag}`);
   await loadTrainerData();
   await loadCommands();
 
-  // Register all slash commands
+  // Register all slash commands (Discord.js v15+)
   const restModule = await import('@discordjs/rest');
   const { REST } = restModule;
   const { Routes } = await import('discord-api-types/v10');

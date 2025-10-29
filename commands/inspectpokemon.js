@@ -5,8 +5,10 @@ import {
   ButtonBuilder,
   ButtonStyle
 } from 'discord.js';
+import fs from 'fs/promises';
 import { spritePaths, rarityEmojis } from '../spriteconfig.js';
-import pokemonData from '../pokemonData.json' assert { type: 'json' };
+
+const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
 
 export default {
   data: new SlashCommandBuilder()
@@ -54,7 +56,7 @@ export default {
         .map(tid => `![${tid}](${spritePaths.types}${tid}.png)`)
         .join(' ');
 
-      const embed = new EmbedBuilder()
+      return new EmbedBuilder()
         .setColor(shinyMode ? 0xffcc00 : 0x0099ff)
         .setTitle(`${rarityEmoji} ${data.name} — ${data.rarity}`)
         .setDescription(`${typeIcons}\n\n${data.entry}\n\n${evoFrom}\n${evoTo}`)
@@ -62,8 +64,6 @@ export default {
         .setFooter({
           text: `${ownedText} • Region: ${data.region} • Click ✨ to view shiny form`
         });
-
-      return embed;
     };
 
     const row = new ActionRowBuilder().addComponents(

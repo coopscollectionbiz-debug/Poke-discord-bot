@@ -1,17 +1,17 @@
-//Daily Reward system using slash command
-
 import {
   SlashCommandBuilder,
   EmbedBuilder,
   ActionRowBuilder,
-  StringSelectMenuBuilder
+  StringSelectMenuBuilder,
+  PermissionsBitField
 } from 'discord.js';
-import pokemonData from '../pokemonData.json' assert { type: 'json' };
-import trainerSprites from '../trainerSprites.json' assert { type: 'json' };
+import fs from 'fs/promises';
 import { spritePaths } from '../spriteconfig.js';
 import { rollForShiny } from '../helpers/shinyOdds.js';
 
-// Rarity tier weights
+const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
+const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
+
 const POKEMON_RARITY_WEIGHTS = {
   common: 60,
   uncommon: 24,
@@ -159,3 +159,18 @@ async function awardRandomTrainer(interaction, user, saveTrainerData) {
   const candidates = Object.values(trainerSprites);
   const trainer = weightedRandomChoice(candidates, TRAINER_RARITY_WEIGHTS);
   user.trainers[trainer.filename] = true;
+  await saveTrainerData();
+
+  await interaction.update({
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0x00ae86)
+        .setTitle('🎁 Daily Trainer Reward!')
+        .setDescription(`You received a **${trainer.name}!**`)
+        .setThumbnail(`${spritePaths.trainers}${trainer.filename}`)
+        .setFooter({ text: 'Come back tomorrow for another reward!' })
+    ],
+    components: [],
+    ephemeral: false
+  });
+}

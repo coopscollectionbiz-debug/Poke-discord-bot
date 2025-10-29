@@ -14,7 +14,6 @@ import cheerio from 'cheerio';
 import cron from 'node-cron';
 import { Client, GatewayIntentBits, Collection, EmbedBuilder } from 'discord.js';
 dotenv.config();
-import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);

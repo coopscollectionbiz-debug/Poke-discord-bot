@@ -3,8 +3,11 @@
  * Includes: autosave, PokéBeach, affiliate links, slash commands, and passive TP gain.
  */
 
+// -----------------------------
+// 🧩 Module Imports
+// -----------------------------
 import fs from 'fs';
-import path from 'path';
+import path, { dirname, join } from 'path';
 import http from 'http';
 import zlib from 'zlib';
 import { fileURLToPath } from 'url';
@@ -13,11 +16,18 @@ import fetch from 'node-fetch';
 import cheerio from 'cheerio';
 import cron from 'node-cron';
 import { Client, GatewayIntentBits, Collection, EmbedBuilder } from 'discord.js';
-dotenv.config();
-import { dirname } from 'path';
 
+dotenv.config();
+
+// -----------------------------
+// 🗂️ ESM-safe __dirname Setup
+// -----------------------------
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
+
+// ✅ Example: construct data paths safely
+const dataPath = join(__dirname, 'data');
+
 // ==================== AFFILIATE IDS ====================
 const AFFILIATES = {
   amazonAffiliateTag: 'coopscolle02b-20',

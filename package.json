@@ -5,12 +5,10 @@
   "main": "bot_final.js",
   "type": "module",
   "scripts": {
-    "start": "node bot_final.js",
-    "lint": "npx eslint . --ext .js",
-    "test": "echo \"No tests specified\" && exit 0"
+    "start": "node bot_final.js"
   },
   "dependencies": {
-    "discord.js": "^15.13.0",
+    "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "node-fetch": "^3.3.2",
     "cheerio": "^1.0.0-rc.12"
@@ -25,6 +23,6 @@
     "bot",
     "coops-collection"
   ],
-  "author": "Coop",
+  "author": "Ross 'Coop' Cooper",
   "license": "MIT"
 }

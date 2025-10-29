@@ -10,7 +10,7 @@
     "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
-    "discord.js": "^15.13.0",
+    "discord.js": "^16.1.0",
     "dotenv": "^16.3.1",
     "node-fetch": "^3.3.2",
     "cheerio": "^1.0.0-rc.12"

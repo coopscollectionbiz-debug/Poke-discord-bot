@@ -226,7 +226,7 @@ process.on('beforeExit', async () => {
 });
 
 // Keep Render's free tier happy with a simple web server
-const http = require('http');
+import http from 'http';
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
   res.writeHead(200);

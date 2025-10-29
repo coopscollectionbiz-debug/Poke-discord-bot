@@ -3,7 +3,6 @@
 // -----------------------------
 import fs from 'fs';
 import path, { dirname, join } from 'path';
-import http from 'http';
 import zlib from 'zlib';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';

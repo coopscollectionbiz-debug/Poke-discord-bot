@@ -7,7 +7,7 @@ import http from 'http';
 import zlib from 'zlib';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 import cron from 'node-cron';
 import { fileURLToPath } from 'url';
 import { Client, GatewayIntentBits, Collection, EmbedBuilder } from 'discord.js';

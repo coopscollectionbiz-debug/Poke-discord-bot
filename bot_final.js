@@ -24,14 +24,6 @@ const dataPath = join(__dirname, 'data');
 // Create data directory if not exists
 if (!fs.existsSync(dataPath)) fs.mkdirSync(dataPath, { recursive: true });
 
-// -----------------------------
-// 🌐 KEEP RENDER ACTIVE
-// -----------------------------
-const PORT = process.env.PORT || 3000;
-http.createServer((req, res) => {
-  res.writeHead(200);
-  res.end('Bot is running!');
-}).listen(PORT, () => console.log(`✅ Server listening on port ${PORT}`));
 
 // -----------------------------
 // 🤖 DISCORD CLIENT
@@ -211,11 +203,33 @@ async function fetchPokebeachArticles() {
 // Run every 6 hours
 cron.schedule('0 */6 * * *', fetchPokebeachArticles);
 
-// -----------------------------
-// 🤖 BOT LOGIN
-// -----------------------------
-client.once('ready', () => {
-  console.log(`✨ Logged in as ${client.user.tag}`);
+// ==================== START BOT ====================
+client.login(CONFIG.botToken);
+
+// Save data before shutdown (multiple signals for different scenarios)
+const gracefulShutdown = async (signal) => {
+  console.log(`\n🛑 Received ${signal}... saving data first`);
+  try {
+    await saveDataToDiscord();
+    console.log('✅ Data saved. Goodbye!');
+  } catch (error) {
+    console.error('❌ Error saving on shutdown:', error);
+  }
+  process.exit(0);
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // Nodemon/hot reload
+process.on('beforeExit', async () => {
+  console.log('🛑 Process ending... final save attempt');
+  await saveDataToDiscord();
 });
-console.log('Loaded TOKEN:', process.env.TOKEN ? '✅ Exists' : '❌ Missing');
-client.login(process.env.TOKEN);
+
+// Keep Render's free tier happy with a simple web server
+const http = require('http');
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('Bot is running!');
+}).listen(PORT, () => console.log(`Server listening on port ${PORT}`));

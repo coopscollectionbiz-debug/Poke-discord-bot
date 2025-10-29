@@ -1,0 +1,31 @@
+{
+  "name": "coopbot",
+  "version": "1.3.0",
+  "description": "Coop's Collection Discord Bot — Pokémon Trainer & Collector System",
+  "main": "bot_final.js",
+  "type": "module",
+  "scripts": {
+    "start": "node bot_final.js",
+    "register": "node registerCommands.js",
+    "lint": "npx eslint . --ext .js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2",
+    "zlib": "^1.0.5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "discord",
+    "pokemon",
+    "trainer",
+    "bot",
+    "coops-collection"
+  ],
+  "author": "Ross 'Coop' Cooper",
+  "license": "MIT"
+}

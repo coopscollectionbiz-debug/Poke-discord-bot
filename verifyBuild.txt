@@ -1,0 +1,20 @@
+import { REST, Routes } from 'discord.js';
+import 'dotenv/config';
+
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+const clientId = process.env.CLIENT_ID;
+const guildId = process.env.GUILD_ID;
+
+(async () => {
+  try {
+    console.log('🔍 Verifying slash command registration...');
+    const guildCommands = await rest.get(Routes.applicationGuildCommands(clientId, guildId));
+    const globalCommands = await rest.get(Routes.applicationCommands(clientId));
+
+    console.log(`✅ Guild Commands (${guildCommands.length}): ${guildCommands.map(c => c.name).join(', ')}`);
+    console.log(`🌐 Global Commands (${globalCommands.length}): ${globalCommands.map(c => c.name).join(', ')}`);
+    console.log('✅ Verification complete.');
+  } catch (error) {
+    console.error('❌ Verification failed:', error);
+  }
+})();

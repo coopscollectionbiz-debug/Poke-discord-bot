@@ -1,0 +1,37 @@
+import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { grantTP } from '../bot_final_integrated.js';
+
+export default {
+  data: new SlashCommandBuilder()
+    .setName('daily')
+    .setDescription('Claim your daily CC and TP reward!'),
+  async execute(interaction, trainerData) {
+    const userId = interaction.user.id;
+    if (!trainerData[userId]) trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
+    const user = trainerData[userId];
+
+    const now = Date.now();
+    const lastClaim = user.lastDaily || 0;
+    if (now - lastClaim < 24 * 60 * 60 * 1000) {
+      const remaining = 24 - Math.floor((now - lastClaim) / (60 * 60 * 1000));
+      return interaction.reply({ content: `🕓 You can claim again in ${remaining} hours.`, ephemeral: true });
+    }
+
+    user.lastDaily = now;
+    user.cc += 200;
+    await grantTP(interaction, userId, 100);
+
+    const embed = new EmbedBuilder()
+      .setColor(0xffd700)
+      .setTitle('🌞 Daily Reward Claimed!')
+      .setDescription('You received 200 CC and 100 TP.\nChoose one bonus:')
+      .setFooter({ text: 'You can claim again in 24 hours.' });
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('daily_pokemon').setLabel('🎁 Pokémon').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('daily_trainer').setLabel('🧑‍🏫 Trainer').setStyle(ButtonStyle.Secondary)
+    );
+
+    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+  }
+};

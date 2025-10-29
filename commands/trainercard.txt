@@ -1,0 +1,130 @@
+/**
+ * /trainercard — Displays a user’s Trainer Card (horizontal layout)
+ * Ephemeral by default; reused by /sharetrainercard and /showtrainercard.
+ */
+
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
+} from 'discord.js';
+import { spritePaths } from '../spriteConfig.js';
+import { getRoleForTP } from '../bot_final_integrated.js';
+import pokemonData from '../data/pokemonData.json' assert { type: 'json' };
+import trainerSprites from '../data/trainerSprites.json' assert { type: 'json' };
+
+const CARD_TIMEOUT = 30 * 1000;
+
+export default {
+  data: new SlashCommandBuilder()
+    .setName('trainercard')
+    .setDescription('View or edit your Trainer Card.'),
+  async execute(interaction, trainerData) {
+    const userId = interaction.user.id;
+    if (!trainerData[userId])
+      trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
+
+    const user = trainerData[userId];
+    const trainerKey = user.selectedTrainer || Object.keys(trainerSprites)[0];
+    const trainer = trainerSprites[trainerKey];
+    const trainerSprite = `${spritePaths.trainers}${trainer.sprite}`;
+
+    // get first 6 Pokémon for card
+    const owned = Object.keys(user.pokemon || {});
+    const slots = 6;
+    const shown = owned.slice(0, slots);
+    const placeholders = slots - shown.length;
+    const images = [];
+
+    for (const id of shown) {
+      const data = pokemonData[id];
+      if (data)
+        images.push(
+          `[‎](${data.sprite})` +
+            `<:poke_${id}:${data.id || id}>` // invisible link trick for alignment
+        );
+    }
+
+    for (let i = 0; i < placeholders; i++) {
+      images.push(`[‎](${spritePaths.items}pokeball.png)`);
+    }
+
+    const row1 = images.slice(0, 3).join(' ');
+    const row2 = images.slice(3, 6).join(' ');
+
+    const tp = user.tp || 0;
+    const cc = user.cc || 0;
+    const rank = getRoleForTP(tp);
+
+    const embed = new EmbedBuilder()
+      .setColor(0xffcb05)
+      .setAuthor({
+        name: `${interaction.user.username}'s Trainer Card`,
+        iconURL: interaction.user.displayAvatarURL()
+      })
+      .setThumbnail(trainerSprite)
+      .setDescription(
+        `🏅 **Rank:** ${rank}\n` +
+          `⭐ **Trainer Points:** ${tp.toLocaleString()}\n` +
+          `💰 **Coop Coins:** ${cc.toLocaleString()}\n` +
+          `🐾 **Pokémon Owned:** ${Object.keys(user.pokemon || {}).length}\n` +
+          `🧑‍🏫 **Trainers Owned:** ${Object.keys(user.trainers || {}).length}\n\n` +
+          `${row1}\n${row2}`
+      )
+      .setFooter({
+        text: `You can edit your displayed trainer or Pokémon for ${CARD_TIMEOUT /
+          1000}s.`
+      });
+
+    // Buttons for edit preview
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('confirm_edit')
+        .setLabel('🖋 Edit Display')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId('cancel_edit')
+        .setLabel('❌ Cancel')
+        .setStyle(ButtonStyle.Secondary)
+    );
+
+    const msg = await interaction.reply({
+      embeds: [embed],
+      components: [row],
+      ephemeral: true
+    });
+
+    // collector for confirm/cancel
+    const collector = msg.createMessageComponentCollector({
+      time: CARD_TIMEOUT
+    });
+
+    collector.on('collect', async (i) => {
+      if (i.user.id !== userId)
+        return i.reply({ content: 'Not your card!', ephemeral: true });
+
+      if (i.customId === 'confirm_edit') {
+        await i.update({
+          content:
+            '✏️ Trainer Card editing coming soon — customization will include trainer and Pokémon selection.',
+          components: [],
+          embeds: []
+        });
+      } else if (i.customId === 'cancel_edit') {
+        await i.update({
+          content: '❌ Trainer Card editing cancelled.',
+          components: [],
+          embeds: []
+        });
+      }
+    });
+
+    collector.on('end', async () => {
+      try {
+        await msg.edit({ components: [] });
+      } catch {}
+    });
+  }
+};

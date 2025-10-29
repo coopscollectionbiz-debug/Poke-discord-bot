@@ -14,7 +14,6 @@
     "discord.js": "^14.15.3",
     "dotenv": "^16.3.1",
     "node-fetch": "^3.3.2",
-    "zlib": "^1.0.5"
   },
   "engines": {
     "node": ">=20"

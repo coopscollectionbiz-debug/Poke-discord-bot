@@ -217,5 +217,5 @@ cron.schedule('0 */6 * * *', fetchPokebeachArticles);
 client.once('ready', () => {
   console.log(`✨ Logged in as ${client.user.tag}`);
 });
-
+console.log('Loaded TOKEN:', process.env.TOKEN ? '✅ Exists' : '❌ Missing');
 client.login(process.env.TOKEN);

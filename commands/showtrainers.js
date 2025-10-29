@@ -7,9 +7,10 @@ import {
   TextInputBuilder,
   TextInputStyle
 } from 'discord.js';
+import fs from 'fs/promises';
 import { spritePaths, rarityEmojis } from '../spriteconfig.js';
-import trainerSprites from '../trainerSprites.json' assert { type: 'json' };
 
+const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
 const PAGE_SIZE = 12;
 
 export default {
@@ -43,7 +44,6 @@ export default {
     const user = trainerData[userId] || { trainers: {} };
     const owned = user.trainers || {};
 
-    // Filters
     const rarityFilter = interaction.options.getString('rarity');
     const ownershipFilter = interaction.options.getString('ownership');
     let filtered = Object.entries(trainerSprites);
@@ -59,7 +59,7 @@ export default {
       filtered = filtered.filter(([id]) => !owned[id]);
     }
 
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     let page = 0;
     let highlightId = null;
 
@@ -94,7 +94,7 @@ export default {
           .setCustomId('next')
           .setEmoji('➡️')
           .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === totalPages - 1),
+          .setDisabled(page === totalPages - 1 || totalPages <= 1),
         new ButtonBuilder()
           .setCustomId('search')
           .setLabel('🔍 Search Trainer')
@@ -110,7 +110,6 @@ export default {
             .setStyle(ButtonStyle.Secondary)
         );
       }
-
       const buttonRows = [];
       for (let i = 0; i < inspectRows.length; i += 5) {
         buttonRows.push(
@@ -159,4 +158,46 @@ export default {
         await i.showModal(modal);
 
         try {
-         
+          const submitted = await i.awaitModalSubmit({
+            filter: (m) => m.user.id === userId,
+            time: 30000
+          });
+          const searchName = submitted.fields.getTextInputValue('search_name').trim().toLowerCase();
+
+          const match = filtered.find(([_, data]) => data.name.toLowerCase() === searchName);
+          if (match) {
+            const matchIndex = filtered.findIndex(([id]) => id === match[0]);
+            page = Math.floor(matchIndex / PAGE_SIZE);
+            highlightId = match[0];
+            await submitted.reply({ content: `⭐ Found ${match[1].name}!`, ephemeral: true });
+            await renderPage();
+          } else {
+            await submitted.reply({ content: '❌ No Trainer found by that name.', ephemeral: true });
+          }
+        } catch {
+          await i.followUp({ content: '⏱️ Search timed out.', ephemeral: true });
+        }
+        return;
+      }
+
+      if (i.customId.startsWith('inspect_')) {
+        const trainerId = i.customId.split('_')[1];
+        const data = trainerSprites[trainerId];
+        if (!data)
+          return i.reply({ content: 'Trainer not found.', ephemeral: true });
+
+        return i.reply({
+          content: `👁️ Opening Trainer entry for **${data.name}**... (placeholder)`,
+          ephemeral: true
+        });
+      }
+
+      await i.deferUpdate();
+      await renderPage();
+    });
+
+    collector.on('end', async () => {
+      try { await msg.edit({ components: [] }); } catch {}
+    });
+  }
+};

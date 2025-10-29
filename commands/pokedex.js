@@ -5,8 +5,10 @@ import {
   ButtonBuilder,
   ButtonStyle
 } from 'discord.js';
+import fs from 'fs/promises';
 import { spritePaths, rarityEmojis } from '../spriteconfig.js';
-import pokemonData from '../pokemonData.json' assert { type: 'json' };
+
+const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
 
 export default {
   data: new SlashCommandBuilder()
@@ -40,7 +42,6 @@ export default {
         ? `${spritePaths.shiny}${id}.gif`
         : `${spritePaths.pokemon}${id}.png`;
 
-      // Inline type icons
       const typeIcons = data.type
         .map(tid => `![${tid}](${spritePaths.types}${tid}.png)`)
         .join(' ');

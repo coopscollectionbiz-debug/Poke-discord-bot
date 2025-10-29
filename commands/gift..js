@@ -24,14 +24,12 @@ export default {
 
     if (!trainerData[target.id]) trainerData[target.id] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
 
-    // Confirm for large gifts
     if (amount >= LARGE_GIFT_THRESHOLD) {
+      // Confirmation logic could go here (button), but for brevity, auto-confirm
       await interaction.reply({
-        content: `⚠️ You are gifting a large amount (${amount} CC) to ${target.username}. Confirm?`,
-        components: [],
+        content: `⚠️ You are gifting a large amount (${amount} CC) to ${target.username}. Confirmed.`,
         ephemeral: true
       });
-      // Could implement confirmation button here; for brevity, auto-confirm.
     }
 
     trainerData[senderId].cc -= amount;

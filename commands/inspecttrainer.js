@@ -5,8 +5,10 @@ import {
   ButtonBuilder,
   ButtonStyle
 } from 'discord.js';
+import fs from 'fs/promises';
 import { spritePaths, rarityEmojis } from '../spriteconfig.js';
-import trainerSprites from '../trainerSprites.json' assert { type: 'json' };
+
+const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
 
 export default {
   data: new SlashCommandBuilder()

@@ -203,7 +203,7 @@ async function fetchPokebeachArticles() {
 cron.schedule('0 */6 * * *', fetchPokebeachArticles);
 
 // ==================== START BOT ====================
-client.login(CONFIG.botToken);
+client.login(process.env.BOT_TOKEN);
 
 // Save data before shutdown (multiple signals for different scenarios)
 const gracefulShutdown = async (signal) => {

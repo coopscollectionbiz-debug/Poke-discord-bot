@@ -19,11 +19,10 @@ Thumbs.db
 trainerData_backup*.json
 *.zip
 
-# ✅ Do NOT ignore sprites (Render needs them!)
-#public/sprites/
-#sprites/
-#assets/
-#images/
+# keep sprites folder in deploys
+!public/sprites/
+!public/sprites/**
+!public/
 
 # Optional: ignore large raw assets not used at runtime
 raw_assets/

@@ -1,75 +1,63 @@
 // ==========================================================
-// 🔍 /inspectpokemon — view full Pokédex entry + shiny toggle
+// inspectpokemon.js — Inspect details about a specific Pokémon
 // ==========================================================
-import {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle
-} from "discord.js";
-import fs from "fs/promises";
-import { spritePaths } from "../spriteconfig.js";
-const pokemonData = JSON.parse(await fs.readFile(new URL("../pokemonData.json", import.meta.url)));
 
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import fs from "fs/promises";
+
+// ✅ JSON-safe import for Render (no assert { type: "json" })
+const pokemonData = JSON.parse(
+  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
+);
+
+// ==========================================================
+// 🧩 Command Definition
+// ==========================================================
 export default {
   data: new SlashCommandBuilder()
     .setName("inspectpokemon")
-    .setDescription("Inspect a Pokémon by name.")
-    .addStringOption(o => o.setName("name").setDescription("Pokémon name").setRequired(true)),
+    .setDescription("Inspect details about a specific Pokémon by name or ID.")
+    .addStringOption(option =>
+      option
+        .setName("name")
+        .setDescription("Pokémon name or Pokédex ID.")
+        .setRequired(true)
+    ),
 
-  async execute(interaction, trainerData) {
-    const name = interaction.options.getString("name", true).toLowerCase();
-    const user = trainerData[interaction.user.id] || { pokemon: {} };
+  // ==========================================================
+  // ⚙️ Command Execution
+  // ==========================================================
+  async execute(interaction) {
+    await interaction.deferReply({ flags: 64 });
 
-    // find Pokémon by name
-    const entry = Object.entries(pokemonData).find(([, p]) => p.name.toLowerCase() === name);
-    if (!entry)
-      return interaction.reply({ content: "❌ Pokémon not found.", flags: 64 });
+    const input = interaction.options.getString("name").trim().toLowerCase();
+    const pokemon =
+      pokemonData.find(
+        p =>
+          p.name.toLowerCase() === input ||
+          p.id.toString() === input ||
+          (p.aliases && p.aliases.includes(input))
+      ) || null;
 
-    const [id, data] = entry;
-    let shiny = false;
+    if (!pokemon) {
+      return interaction.editReply({
+        content: `❌ Pokémon **${input}** not found.`,
+      });
+    }
 
-    // function to render the embed
-    const makeEmbed = () => {
-      const sprite = shiny
-        ? `${spritePaths.shiny}${id}.gif`
-        : `${spritePaths.pokemon}${id}.png`;
-      const owned = user.pokemon[id];
-      const ownedText = owned
-        ? `✅ Owned ×${owned.normal + owned.shiny} (${owned.shiny} shiny)`
-        : "❌ Not owned";
+    // Build detailed embed
+    const embed = new EmbedBuilder()
+      .setTitle(`${pokemon.name}  #${pokemon.id}`)
+      .setDescription(
+        `**Rarity:** ${pokemon.rarity.toUpperCase()}\n` +
+          (pokemon.type ? `**Type:** ${pokemon.type}\n` : "") +
+          (pokemon.generation ? `**Generation:** ${pokemon.generation}\n` : "")
+      )
+      .setImage(pokemon.sprite)
+      .setColor(0x1abc9c)
+      .setFooter({ text: "Pokémon data sourced from Coop's Collection database" })
+      .setTimestamp();
 
-      return new EmbedBuilder()
-        .setColor(shiny ? 0xffd700 : 0x0099ff)
-        .setTitle(`${data.name} — ${data.rarity}`)
-        .setDescription(
-          `${data.entry}\n\nRegion: ${data.region}\nEvolves from: ${data.evolves_from ?? "—"}`
-        )
-        .setImage(sprite)
-        .setFooter({ text: ownedText });
-    };
-
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("toggle_shiny").setLabel("✨ Toggle Shiny").setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId("close").setLabel("❌ Close").setStyle(ButtonStyle.Secondary)
-    );
-
-    await interaction.reply({ embeds: [makeEmbed()], components: [row], flags: 64 });
-
-    const msg = await interaction.fetchReply();
-    const collector = msg.createMessageComponentCollector({ time: 120000 });
-    collector.on("collect", async i => {
-      if (i.user.id !== interaction.user.id)
-        return i.reply({ content: "Not your session.", flags: 64 });
-      if (i.customId === "toggle_shiny") {
-        shiny = !shiny;
-        await i.update({ embeds: [makeEmbed()], components: [row] });
-      } else if (i.customId === "close") {
-        await i.update({ content: "Closed.", embeds: [], components: [] });
-        collector.stop();
-      }
-    });
-    collector.on("end", async () => { try { await msg.edit({ components: [] }); } catch {} });
+    await interaction.editReply({ embeds: [embed] });
   }
 };

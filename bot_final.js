@@ -183,7 +183,7 @@ async function loadCommands() {
   const files = (await fs.readdir(commandsPath)).filter(f => f.endsWith(".js"));
 
   for (const file of files) {
-    const command = (await import(`./commands/${file}`)).default;
+    const command = await import(`./commands/${file}`);
     client.commands.set(command.data.name, command);
   }
 

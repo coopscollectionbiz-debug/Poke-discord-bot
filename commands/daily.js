@@ -22,6 +22,18 @@ const trainerSprites = JSON.parse(
   await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
 );
 
+// ✅ Iterable Pokémon + flattened trainers
+const allPokemon = Object.values(pokemonData);
+const flatTrainers = Object.entries(trainerSprites).flatMap(([name, variants]) =>
+  variants
+    .filter(v => typeof v === "string" || (v.file && !v.disabled))
+    .map(v => ({
+      name,
+      filename: typeof v === "string" ? v : v.file,
+      rarity: v.rarity || "common"
+    }))
+);
+
 // ==========================================================
 // ⚖️ Weight tables & constants
 // ==========================================================
@@ -33,6 +45,7 @@ const POKEMON_RARITY_WEIGHTS = {
   legendary: 1.5,
   mythic: 0.5
 };
+
 const TRAINER_RARITY_WEIGHTS = {
   common: 65,
   uncommon: 22,
@@ -57,7 +70,7 @@ export default {
   async execute(interaction, trainerData, saveTrainerData) {
     const id = interaction.user.id;
 
-    // Initialize schema if missing
+    // Initialize schema
     trainerData[id] ??= {
       tp: 0,
       cc: 0,
@@ -81,9 +94,9 @@ export default {
     user.tp += DAILY_TP_REWARD;
     user.cc += DAILY_CC_REWARD;
     user.lastDaily = now;
-    await saveTrainerData();
+    await saveTrainerData(trainerData);
 
-    // 🎁 Prompt for bonus type
+    // 🎁 Prompt for bonus
     const menu = new StringSelectMenuBuilder()
       .setCustomId("daily_type")
       .setPlaceholder("Choose your bonus!")
@@ -105,18 +118,18 @@ export default {
       ephemeral: true
     });
 
-    // 🎮 Wait for selection
+    // 🎮 Selection handler
     const collector = interaction.channel.createMessageComponentCollector({
-      filter: (i) => i.user.id === id,
+      filter: i => i.user.id === id,
       time: 120000
     });
 
-    collector.on("collect", async (i) => {
+    collector.on("collect", async i => {
       collector.stop();
       if (i.values[0] === "pokemon") {
-        await giveRandomPokemon(i, user, saveTrainerData);
+        await giveRandomPokemon(i, user, trainerData, saveTrainerData);
       } else {
-        await giveRandomTrainer(i, user, saveTrainerData);
+        await giveRandomTrainer(i, user, trainerData, saveTrainerData);
       }
     });
 
@@ -126,7 +139,7 @@ export default {
           content: "⌛ Time’s up — try again later!",
           embeds: [],
           components: []
-        });
+        }).catch(() => {});
       }
     });
   }
@@ -139,7 +152,8 @@ function weightedRandomChoice(list, weights) {
   const bag = [];
   for (const item of list) {
     const rarity = item.rarity?.toLowerCase() || "common";
-    bag.push(...Array(Math.round(weights[rarity] || 1)).fill(item));
+    const weight = weights[rarity] || 1;
+    for (let n = 0; n < Math.round(weight); n++) bag.push(item);
   }
   return bag[Math.floor(Math.random() * bag.length)];
 }
@@ -147,15 +161,16 @@ function weightedRandomChoice(list, weights) {
 // ==========================================================
 // 🐾 Pokémon reward
 // ==========================================================
-async function giveRandomPokemon(i, user, saveTrainerData) {
-  const pool = Object.values(pokemonData).filter((p) => p.generation <= 5);
+async function giveRandomPokemon(i, user, trainerData, saveTrainerData) {
+  const pool = allPokemon.filter(p => p.generation <= 5);
   const pick = weightedRandomChoice(pool, POKEMON_RARITY_WEIGHTS);
   const shiny = rollForShiny(user.tp);
 
   const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
   shiny ? record.shiny++ : record.normal++;
   user.pokemon[pick.id] = record;
-  await saveTrainerData();
+
+  await saveTrainerData(trainerData);
 
   await i.update({
     embeds: [
@@ -178,18 +193,16 @@ async function giveRandomPokemon(i, user, saveTrainerData) {
 // ==========================================================
 // 🎓 Trainer reward
 // ==========================================================
-async function giveRandomTrainer(i, user, saveTrainerData) {
-  const pick = weightedRandomChoice(
-    Object.values(trainerSprites),
-    TRAINER_RARITY_WEIGHTS
-  );
+async function giveRandomTrainer(i, user, trainerData, saveTrainerData) {
+  const pick = weightedRandomChoice(flatTrainers, TRAINER_RARITY_WEIGHTS);
   user.trainers[pick.filename] = (user.trainers[pick.filename] || 0) + 1;
-  await saveTrainerData();
+
+  await saveTrainerData(trainerData);
 
   await i.update({
     embeds: [
       new EmbedBuilder()
-        .setColor(0x00ae86)
+        .setColor(0x5865f2)
         .setTitle("🎁 Trainer Reward!")
         .setDescription(`You unlocked **${pick.name}**!`)
         .setThumbnail(`${spritePaths.trainers}${pick.filename}`)

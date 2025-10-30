@@ -26,8 +26,7 @@ const pokemonData = JSON.parse(
 const trainerSprites = JSON.parse(
   await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
 );
-
-const TRAINER_DATA_PATH = new URL("../trainerData.json", import.meta.url);
+const allPokemon = Object.values(pokemonData);
 
 // ================================
 // RANK TIERS
@@ -48,22 +47,10 @@ const rankTiers = [
   { tp: 250000, roleName: "Legend" }
 ];
 
-// ================================
-// HELPERS
-// ================================
 function getRank(tp) {
   let rank = "Novice Trainer";
   for (const tier of rankTiers) if (tp >= tier.tp) rank = tier.roleName;
   return rank;
-}
-
-async function saveTrainerData(trainerData) {
-  try {
-    await fs.writeFile(TRAINER_DATA_PATH, JSON.stringify(trainerData, null, 2));
-    console.log("✅ Trainer data saved locally.");
-  } catch (err) {
-    console.error("❌ Error saving trainerData:", err);
-  }
 }
 
 // ================================
@@ -73,27 +60,32 @@ async function renderTrainerCard(userData, username) {
   const canvas = createCanvas(800, 450);
   const ctx = canvas.getContext("2d");
 
-  // background
-  ctx.fillStyle = "#f8f8f8";
+  // Background
+  ctx.fillStyle = "#f9f9f9";
   ctx.fillRect(0, 0, 800, 450);
 
   ctx.fillStyle = "#111";
   ctx.font = "bold 26px Sans";
   ctx.fillText(`${username}'s Trainer Card`, 40, 40);
 
-  // trainer sprite
+  // Trainer sprite
   if (userData.displayedTrainer) {
     try {
       const trainerURL = `${spritePaths.trainers}${userData.displayedTrainer}`;
       const trainerImg = await loadImage(trainerURL);
       ctx.drawImage(trainerImg, 50, 100, 200, 250);
     } catch {
-      ctx.fillText("Trainer Missing", 70, 250);
+      ctx.fillText("Trainer Missing", 80, 250);
     }
+  } else {
+    ctx.fillText("No Trainer Selected", 70, 250);
   }
 
   // Pokémon grid (3x2)
-  const gridX = 300, gridY = 100, size = 100, gap = 20;
+  const gridX = 300,
+    gridY = 100,
+    size = 100,
+    gap = 20;
   const displayed = userData.displayedPokemon?.slice(0, 6) || [];
 
   for (let i = 0; i < displayed.length; i++) {
@@ -104,27 +96,31 @@ async function renderTrainerCard(userData, username) {
     const y = gridY + row * (size + gap);
 
     try {
-      const isShiny = userData.ownedPokemon?.[id]?.shiny || false;
+      const record = userData.pokemon?.[id] || userData.ownedPokemon?.[id];
+      const isShiny = record?.shiny > 0;
       const base = isShiny ? spritePaths.shiny : spritePaths.pokemon;
       const img = await loadImage(`${base}${id}.gif`);
       ctx.drawImage(img, x, y, size, size);
     } catch {
-      ctx.strokeStyle = "#999";
+      ctx.strokeStyle = "#aaa";
       ctx.strokeRect(x, y, size, size);
+      ctx.fillStyle = "#888";
       ctx.fillText("?", x + 40, y + 60);
     }
   }
 
-  // stats
+  // Stats
   const rank = getRank(userData.tp);
-  const pokemonOwned = Object.keys(userData.ownedPokemon || {}).length;
-  const shinyCount = Object.values(userData.ownedPokemon || {}).filter(p => p.shiny).length;
+  const pokemonOwned = Object.keys(userData.pokemon || userData.ownedPokemon || {}).length;
+  const shinyCount = Object.values(userData.pokemon || userData.ownedPokemon || {}).filter(
+    (p) => p.shiny > 0
+  ).length;
   const trainerCount = Object.keys(userData.trainers || {}).length;
 
   ctx.fillStyle = "#000";
   ctx.font = "18px Sans";
   ctx.fillText(`Rank: ${rank}`, 40, 380);
-  ctx.fillText(`TP: ${userData.tp} | Coins: ${userData.coins}`, 40, 405);
+  ctx.fillText(`TP: ${userData.tp} | CC: ${userData.cc || 0}`, 40, 405);
   ctx.fillText(
     `Pokémon: ${pokemonOwned} | Shiny: ${shinyCount} | Trainers: ${trainerCount}`,
     40,
@@ -137,61 +133,69 @@ async function renderTrainerCard(userData, username) {
 // ================================
 // ONBOARDING HELPERS
 // ================================
-const starterIDs = [1, 4, 7, 152, 155, 158, 252, 255, 258, 387, 390, 393, 495, 498, 501];
+const starterIDs = [
+  1, 4, 7, 152, 155, 158, 252, 255, 258, 387, 390, 393, 495, 498, 501
+];
 
-async function starterSelection(interaction, user, trainerData) {
-  const starters = pokemonData.filter(p => starterIDs.includes(p.id));
+async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
+  const starters = allPokemon.filter((p) => starterIDs.includes(p.id));
 
   const embed = new EmbedBuilder()
     .setTitle("🌱 Choose Your Starter Pokémon")
     .setDescription(
-      starters.map(p => `**${p.name}** (${p.type.join("/")})`).join("\n")
+      starters.map((p) => `**${p.name}** (${p.type?.join("/")})`).join("\n")
     )
     .setColor(0x43b581);
 
-  const buttons = starters.slice(0, 5).map(p =>
-    new ButtonBuilder()
-      .setCustomId(`starter_${p.id}`)
-      .setLabel(p.name)
-      .setStyle(ButtonStyle.Primary)
+  const row = new ActionRowBuilder().addComponents(
+    starters.slice(0, 5).map((p) =>
+      new ButtonBuilder()
+        .setCustomId(`starter_${p.id}`)
+        .setLabel(p.name)
+        .setStyle(ButtonStyle.Primary)
+    )
   );
 
-  const row = new ActionRowBuilder().addComponents(buttons);
-  await interaction.reply({
-    embeds: [embed],
-    components: [row],
-    ephemeral: true
-  });
+  await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
 
   const collector = interaction.channel.createMessageComponentCollector({
     componentType: ComponentType.Button,
     time: 30000
   });
 
-  collector.on("collect", async i => {
+  collector.on("collect", async (i) => {
     if (!i.customId.startsWith("starter_")) return;
     if (i.user.id !== interaction.user.id)
       return i.reply({ content: "Not your onboarding!", ephemeral: true });
 
     const starterId = parseInt(i.customId.split("_")[1]);
     const isShiny = rollForShiny();
-    user.ownedPokemon[starterId] = { shiny: isShiny, count: 1 };
+
+    user.pokemon[starterId] = { normal: isShiny ? 0 : 1, shiny: isShiny ? 1 : 0 };
     user.displayedPokemon = [starterId];
 
     await i.update({
-      content: `✅ You chose **${pokemonData.find(p => p.id === starterId).name}** ${
-        isShiny ? "✨" : ""
+      content: `✅ You chose **${allPokemon.find((p) => p.id === starterId).name}**${
+        isShiny ? " ✨" : ""
       } as your starter!`,
       embeds: [],
       components: []
     });
 
-    await saveTrainerData(trainerData);
-    await trainerSelection(i, user, trainerData);
+    await saveDataToDiscord(trainerData);
+    collector.stop();
+
+    await trainerSelection(i, user, trainerData, saveDataToDiscord);
+  });
+
+  collector.on("end", async () => {
+    if (!interaction.replied) {
+      await interaction.editReply({ content: "⏰ Starter selection expired.", components: [] });
+    }
   });
 }
 
-async function trainerSelection(interaction, user, trainerData) {
+async function trainerSelection(interaction, user, trainerData, saveDataToDiscord) {
   const embed = new EmbedBuilder()
     .setTitle("🧍 Choose Your Trainer Sprite")
     .setDescription("Pick your trainer appearance!")
@@ -215,16 +219,16 @@ async function trainerSelection(interaction, user, trainerData) {
     time: 30000
   });
 
-  collector.on("collect", async i => {
+  collector.on("collect", async (i) => {
     if (!i.customId.startsWith("trainer_")) return;
     if (i.user.id !== interaction.user.id)
       return i.reply({ content: "Not your onboarding!", ephemeral: true });
 
     const choice = i.customId === "trainer_youngster" ? "youngster-gen4.png" : "lass-gen4.png";
-    user.trainers[choice] = { count: 1 };
+    user.trainers[choice] = true;
     user.displayedTrainer = choice;
 
-    await saveTrainerData(trainerData);
+    await saveDataToDiscord(trainerData);
 
     await i.update({
       content: `✅ You chose ${choice.replace(".png", "")} as your trainer!`,
@@ -232,61 +236,44 @@ async function trainerSelection(interaction, user, trainerData) {
       components: []
     });
 
-    await showTrainerCard(i, user, trainerData);
+    collector.stop();
+    await showTrainerCard(i, user);
+  });
+
+  collector.on("end", async () => {
+    await interaction.editReply({ components: [] }).catch(() => {});
   });
 }
 
 // ================================
 // MAIN CARD DISPLAY
 // ================================
-async function showTrainerCard(interaction, user, trainerData) {
+async function showTrainerCard(interaction, user) {
   const username = interaction.user.username;
   const canvas = await renderTrainerCard(user, username);
   const buffer = await canvas.encode("png");
   const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
 
   const rank = getRank(user.tp);
-  const pokemonOwned = Object.keys(user.ownedPokemon || {}).length;
-  const shinyCount = Object.values(user.ownedPokemon || {}).filter(p => p.shiny).length;
+  const pokemonOwned = Object.keys(user.pokemon || {}).length;
+  const shinyCount = Object.values(user.pokemon || {}).filter((p) => p.shiny > 0).length;
   const trainerCount = Object.keys(user.trainers || {}).length;
 
   const embed = new EmbedBuilder()
     .setTitle(`🧑 ${username}'s Trainer Card`)
     .setColor(0xffcb05)
     .setDescription(
-      `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **Coins:** ${user.coins}\n\n📊 **Progress:**\n• Pokémon Owned: ${pokemonOwned}\n• Shiny Pokémon: ${shinyCount} ✨\n• Trainers Recruited: ${trainerCount}`
+      `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}\n\n📊 **Progress:**\n• Pokémon Owned: ${pokemonOwned}\n• Shiny Pokémon: ${shinyCount} ✨\n• Trainers Recruited: ${trainerCount}`
     )
     .setImage("attachment://trainercard.png")
-    .setFooter({
-      text: "Coop’s Collection • View your card anytime with /trainercard"
-    });
+    .setFooter({ text: "Coop’s Collection • /trainercard" });
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("change_trainer")
-      .setLabel("Change Trainer Sprite")
-      .setEmoji("🧍")
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId("change_pokemon")
-      .setLabel("Change Displayed Pokémon")
-      .setEmoji("🧬")
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId("refresh_card")
-      .setLabel("Refresh Card")
-      .setEmoji("🔄")
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId("share_public")
-      .setLabel("Share Publicly")
-      .setEmoji("🌐")
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId("close_card")
-      .setLabel("Close")
-      .setEmoji("❌")
-      .setStyle(ButtonStyle.Danger)
+    new ButtonBuilder().setCustomId("change_trainer").setLabel("Change Trainer").setEmoji("🧍").setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId("change_pokemon").setLabel("Change Pokémon").setEmoji("🧬").setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId("refresh_card").setLabel("Refresh").setEmoji("🔄").setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("share_public").setLabel("Share Public").setEmoji("🌐").setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId("close_card").setLabel("Close").setEmoji("❌").setStyle(ButtonStyle.Danger)
   );
 
   await interaction.followUp({
@@ -304,45 +291,46 @@ export const data = new SlashCommandBuilder()
   .setName("trainercard")
   .setDescription("View or create your Trainer Card!");
 
-export async function execute(interaction, trainerData) {
+export async function execute(interaction, trainerData, saveDataToDiscord) {
   const userId = interaction.user.id;
   const username = interaction.user.username;
   let user = trainerData[userId];
 
+  // Schema defaults
   if (!user) {
     user = trainerData[userId] = {
       id: userId,
       name: username,
-      coins: 0,
+      cc: 0,
       tp: 0,
       rank: "Novice Trainer",
       trainers: {},
-      ownedPokemon: {},
+      pokemon: {},
       displayedPokemon: [],
       displayedTrainer: null
     };
   }
 
-  if (!user.displayedTrainer || Object.keys(user.ownedPokemon || {}).length === 0)
-    return starterSelection(interaction, user, trainerData);
+  if (!user.displayedTrainer || Object.keys(user.pokemon || {}).length === 0) {
+    return starterSelection(interaction, user, trainerData, saveDataToDiscord);
+  }
 
-  await showTrainerCard(interaction, user, trainerData);
+  await showTrainerCard(interaction, user);
 }
 
 // ================================
-// BUTTON INTERACTION HANDLER
+// BUTTON HANDLER
 // ================================
 export async function handleTrainerCardButtons(interaction, trainerData) {
   const userId = interaction.user.id;
   const username = interaction.user.username;
   const user = trainerData[userId];
 
-  if (!user) {
+  if (!user)
     return interaction.reply({
-      content: "❌ Could not find your trainer data. Try running /trainercard again.",
+      content: "❌ Could not find your trainer data. Try /trainercard again.",
       ephemeral: true
     });
-  }
 
   switch (interaction.customId) {
     case "refresh_card": {
@@ -350,24 +338,20 @@ export async function handleTrainerCardButtons(interaction, trainerData) {
       const buffer = await canvas.encode("png");
       const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
       const rank = getRank(user.tp);
-      const pokemonOwned = Object.keys(user.ownedPokemon || {}).length;
-      const shinyCount = Object.values(user.ownedPokemon || {}).filter(p => p.shiny).length;
-      const trainerCount = Object.keys(user.trainers || {}).length;
 
       const embed = new EmbedBuilder()
         .setTitle(`🧑 ${username}'s Trainer Card`)
         .setColor(0xffcb05)
         .setDescription(
-          `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **Coins:** ${user.coins}\n\n📊 **Progress:**\n• Pokémon Owned: ${pokemonOwned}\n• Shiny Pokémon: ${shinyCount} ✨\n• Trainers Recruited: ${trainerCount}`
+          `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}`
         )
         .setImage("attachment://trainercard.png");
 
-      await interaction.update({
+      return interaction.update({
         embeds: [embed],
         files: [attachment],
         components: interaction.message.components
       });
-      break;
     }
 
     case "share_public": {
@@ -375,40 +359,30 @@ export async function handleTrainerCardButtons(interaction, trainerData) {
       const buffer = await canvas.encode("png");
       const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
       const rank = getRank(user.tp);
-      const pokemonOwned = Object.keys(user.ownedPokemon || {}).length;
-      const shinyCount = Object.values(user.ownedPokemon || {}).filter(p => p.shiny).length;
-      const trainerCount = Object.keys(user.trainers || {}).length;
 
       const publicEmbed = new EmbedBuilder()
         .setTitle(`🌐 ${username}'s Trainer Card`)
         .setColor(0x00ae86)
         .setDescription(
-          `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **Coins:** ${user.coins}\n\n📊 **Progress:**\n• Pokémon Owned: ${pokemonOwned}\n• Shiny Pokémon: ${shinyCount} ✨\n• Trainers Recruited: ${trainerCount}`
+          `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}`
         )
         .setImage("attachment://trainercard.png")
         .setFooter({ text: "Shared via Coop’s Collection Bot" });
 
-      await interaction.reply({
-        content: "✅ Your Trainer Card has been shared publicly!",
-        ephemeral: true
-      });
-
-      await interaction.channel.send({
-        embeds: [publicEmbed],
-        files: [attachment]
-      });
+      await interaction.reply({ content: "✅ Shared publicly!", ephemeral: true });
+      await interaction.channel.send({ embeds: [publicEmbed], files: [attachment] });
       break;
     }
 
     case "change_trainer":
       return interaction.reply({
-        content: "Feature coming soon: choose from your owned trainer sprites!",
+        content: "Feature coming soon: choose from your owned trainer sprites.",
         ephemeral: true
       });
 
     case "change_pokemon":
       return interaction.reply({
-        content: "Feature coming soon: choose which Pokémon appear on your card!",
+        content: "Feature coming soon: choose which Pokémon appear on your card.",
         ephemeral: true
       });
 

@@ -1,5 +1,6 @@
 // ==========================================================
 // gift.js — Gift Coins, Pokémon, or Trainers to another user
+// Coop’s Collection Discord Bot
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
@@ -12,6 +13,10 @@ const pokemonData = JSON.parse(
 const trainerSprites = JSON.parse(
   await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
 );
+
+// ✅ NEW — ensure iterable arrays for lookups
+const allPokemon = Object.values(pokemonData);
+const allTrainers = Object.values(trainerSprites);
 
 // ==========================================================
 // 🧩 Command Definition
@@ -100,7 +105,8 @@ export default {
         });
       }
 
-      const targetPokemon = pokemonData.find(
+      // ✅ FIXED: use iterable `allPokemon`
+      const targetPokemon = allPokemon.find(
         p => p.name.toLowerCase() === itemName.toLowerCase()
       );
       if (!targetPokemon) {
@@ -143,7 +149,8 @@ export default {
         });
       }
 
-      const targetTrainer = trainerSprites.find(
+      // ✅ FIXED: use iterable `allTrainers`
+      const targetTrainer = allTrainers.find(
         t => t.name.toLowerCase() === itemName.toLowerCase()
       );
       if (!targetTrainer) {
@@ -152,7 +159,7 @@ export default {
         });
       }
 
-      const spriteKey = targetTrainer.file;
+      const spriteKey = targetTrainer.filename;
       if (!sender.trainers[spriteKey]) {
         return interaction.editReply({
           content: `❌ You don’t own ${targetTrainer.name}.`

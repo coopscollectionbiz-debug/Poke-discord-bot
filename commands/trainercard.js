@@ -1,4 +1,4 @@
-// ================================
+/ ================================
 // /trainercard.js
 // Coop's Collection Discord Bot
 // ================================
@@ -27,6 +27,16 @@ const trainerSprites = JSON.parse(
   await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
 );
 const allPokemon = Object.values(pokemonData);
+
+// ================================
+// TYPE MAP
+// ================================
+const typeMap = {
+  1: "Normal", 2: "Fighting", 3: "Flying", 4: "Poison", 5: "Ground",
+  6: "Rock", 7: "Bug", 8: "Ghost", 9: "Steel", 10: "Fire",
+  11: "Water", 12: "Grass", 13: "Electric", 14: "Psychic",
+  15: "Ice", 16: "Dragon", 17: "Dark"
+};
 
 // ================================
 // RANK TIERS
@@ -140,60 +150,123 @@ const starterIDs = [
 async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
   const starters = allPokemon.filter((p) => starterIDs.includes(p.id));
 
-  const embed = new EmbedBuilder()
-    .setTitle("🌱 Choose Your Starter Pokémon")
-    .setDescription(
-      starters.map((p) => `**${p.name}** (${p.type?.join("/")})`).join("\n")
-    )
-    .setColor(0x43b581);
+  // Group starters by primary type
+  const grouped = {};
+  for (const p of starters) {
+    const primaryType = p.types?.[0];
+    if (!grouped[primaryType]) grouped[primaryType] = [];
+    grouped[primaryType].push(p);
+  }
 
-  const row = new ActionRowBuilder().addComponents(
-    starters.slice(0, 5).map((p) =>
+  // Sort type groups (Grass, Fire, Water order)
+  const typeOrder = [12, 10, 11];
+  const sortedTypes = Object.keys(grouped)
+    .map(Number)
+    .sort((a, b) => (typeOrder.indexOf(a) + 1 || 99) - (typeOrder.indexOf(b) + 1 || 99));
+
+  // Utility to build a page embed + buttons
+  const buildPage = (index) => {
+    const typeId = sortedTypes[index];
+    const typeName = typeMap[typeId];
+    const typeStarters = grouped[typeId];
+    const spriteUrl = `${spritePaths.types}${typeId}.png`;
+
+    const embed = new EmbedBuilder()
+      .setTitle(`🌱 Choose Your Starter Pokémon`)
+      .setDescription(
+        `**Type:** ${typeName}\n\n${typeStarters
+          .map((p) => {
+            const types = p.types?.map((id) => typeMap[id]).join("/") || "Unknown";
+            return `• **${p.name}** (${types})`;
+          })
+          .join("\n")}`
+      )
+      .setColor(0x43b581)
+      .setThumbnail(spriteUrl)
+      .setFooter({
+        text: `Page ${index + 1} / ${sortedTypes.length} (${typeName} starters)`
+      });
+
+    // Create buttons for each Pokémon (max 5 per row)
+    const pokemonRow = new ActionRowBuilder().addComponents(
+      typeStarters.map((p) =>
+        new ButtonBuilder()
+          .setCustomId(`starter_${p.id}`)
+          .setLabel(p.name)
+          .setStyle(ButtonStyle.Primary)
+      )
+    );
+
+    // Navigation row
+    const navRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`starter_${p.id}`)
-        .setLabel(p.name)
-        .setStyle(ButtonStyle.Primary)
-    )
-  );
+        .setCustomId("prev_page")
+        .setEmoji("⬅️")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(index === 0),
+      new ButtonBuilder()
+        .setCustomId("next_page")
+        .setEmoji("➡️")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(index === sortedTypes.length - 1)
+    );
 
-  await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    return { embed, components: [pokemonRow, navRow] };
+  };
+
+  // Start with first page (Grass)
+  let pageIndex = 0;
+  const { embed, components } = buildPage(pageIndex);
+  await interaction.reply({ embeds: [embed], components, ephemeral: true });
 
   const collector = interaction.channel.createMessageComponentCollector({
     componentType: ComponentType.Button,
-    time: 30000
+    time: 60000 // 1 min before timeout
   });
 
   collector.on("collect", async (i) => {
-    if (!i.customId.startsWith("starter_")) return;
     if (i.user.id !== interaction.user.id)
       return i.reply({ content: "Not your onboarding!", ephemeral: true });
 
-    const starterId = parseInt(i.customId.split("_")[1]);
-    const isShiny = rollForShiny();
+    // Navigation buttons
+    if (i.customId === "next_page" || i.customId === "prev_page") {
+      pageIndex += i.customId === "next_page" ? 1 : -1;
+      const { embed: newEmbed, components: newRows } = buildPage(pageIndex);
+      await i.update({ embeds: [newEmbed], components: newRows });
+      return;
+    }
 
-    user.pokemon[starterId] = { normal: isShiny ? 0 : 1, shiny: isShiny ? 1 : 0 };
-    user.displayedPokemon = [starterId];
+    // Starter selection
+    if (i.customId.startsWith("starter_")) {
+      const starterId = parseInt(i.customId.split("_")[1]);
+      const isShiny = rollForShiny();
 
-    await i.update({
-      content: `✅ You chose **${allPokemon.find((p) => p.id === starterId).name}**${
-        isShiny ? " ✨" : ""
-      } as your starter!`,
-      embeds: [],
-      components: []
-    });
+      user.pokemon[starterId] = { normal: isShiny ? 0 : 1, shiny: isShiny ? 1 : 0 };
+      user.displayedPokemon = [starterId];
 
-    await saveDataToDiscord(trainerData);
-    collector.stop();
+      await i.update({
+        content: `✅ You chose **${
+          allPokemon.find((p) => p.id === starterId).name
+        }**${isShiny ? " ✨" : ""} as your starter!`,
+        embeds: [],
+        components: []
+      });
 
-    await trainerSelection(i, user, trainerData, saveDataToDiscord);
+      await saveDataToDiscord(trainerData);
+      collector.stop();
+
+      await trainerSelection(i, user, trainerData, saveDataToDiscord);
+    }
   });
 
   collector.on("end", async () => {
-    if (!interaction.replied) {
-      await interaction.editReply({ content: "⏰ Starter selection expired.", components: [] });
-    }
+    try {
+      await interaction.editReply({ components: [] });
+    } catch {}
   });
 }
+
+
 
 async function trainerSelection(interaction, user, trainerData, saveDataToDiscord) {
   const embed = new EmbedBuilder()

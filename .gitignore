@@ -1,25 +1,29 @@
-# Ignore node dependencies
+# ==========================================================
+# Coop's Collection Bot - Safe .gitignore for Render
+# ==========================================================
+
+# Node dependencies
 node_modules/
 .env
 
-# Ignore sprite directories (large binary assets)
-# public/sprites/
-# sprites/
-# assets/
-# images/
-
-# Ignore backups and generated files
-trainerData_backup*.json
-*.zip
+# Logs, cache, temp files
 *.log
-
-# Ignore OS / IDE junk
-.DS_Store
-Thumbs.db
+.cache/
+tmp/
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
 
-# Ignore Render cache
-.cache/
+# Local training data / backups
+trainerData_backup*.json
+*.zip
 
-!public/sprites/**
+# ✅ Do NOT ignore sprites (Render needs them!)
+#public/sprites/
+#sprites/
+#assets/
+#images/
+
+# Optional: ignore large raw assets not used at runtime
+raw_assets/

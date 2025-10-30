@@ -64,12 +64,35 @@ function getRank(tp = 0) {
   return role;
 }
 
+// ==========================================================
+// 🧮 Rank Role Assignment Helper (Optimized)
+// ==========================================================
 async function updateUserRole(member, newRankName) {
-  const guild = member.guild;
-  const allRanks = RANKS.map(r => r.roleName);
-  await member.roles.remove(member.roles.cache.filter(role => allRanks.includes(role.name)));
-  const role = guild.roles.cache.find(r => r.name === newRankName);
-  if (role) await member.roles.add(role);
+  try {
+    const guild = member.guild;
+    const allRanks = RANKS.map(r => r.roleName);
+
+    // ✅ Skip if user already has the desired rank
+    if (member.roles.cache.some(r => r.name === newRankName)) return;
+
+    // Remove any old rank roles that belong to this ladder
+    const rolesToRemove = member.roles.cache.filter(r => allRanks.includes(r.name));
+    if (rolesToRemove.size > 0) {
+      await member.roles.remove(rolesToRemove).catch(err =>
+        console.warn(`⚠️ Failed to remove old roles from ${member.user.tag}:`, err.message)
+      );
+    }
+
+    // Add the new rank role if it exists in the guild
+    const role = guild.roles.cache.find(r => r.name === newRankName);
+    if (role) {
+      await member.roles.add(role).catch(err =>
+        console.warn(`⚠️ Failed to assign ${newRankName} to ${member.user.tag}:`, err.message)
+      );
+    }
+  } catch (err) {
+    console.error(`❌ Error updating roles for ${member.user.tag}:`, err);
+  }
 }
 
 // ==========================================================
@@ -106,25 +129,77 @@ async function saveDataToDiscord() {
   }
 }
 
+// ==========================================================
+// 🧩 Safe Merge Trainer Data Loader
+// Replaces full overwrite with schema-aware merging
+// ==========================================================
 async function loadTrainerData() {
   try {
-    if (!STORAGE_CHANNEL_ID) return;
+    if (!STORAGE_CHANNEL_ID) {
+      console.log("⚠️ STORAGE_CHANNEL_ID not defined; skipping remote load.");
+      return;
+    }
+
     const channel = await client.channels.fetch(STORAGE_CHANNEL_ID);
-    if (!channel) return;
-    console.log('📥 Loading trainerData.json from Discord...');
+    if (!channel) {
+      console.log("⚠️ Could not fetch storage channel; skipping.");
+      return;
+    }
+
+    console.log("📥 Loading trainerData.json from Discord...");
     const messages = await channel.messages.fetch({ limit: 50 });
+    let backupData = null;
+
     for (const msg of messages.values()) {
-      const att = msg.attachments.find(a => a.name === 'trainerData.json');
+      const att = msg.attachments.find(a => a.name === "trainerData.json");
       if (att) {
         const res = await fetch(att.url);
-        trainerData = await res.json();
-        console.log(`✅ Loaded trainerData.json (${Object.keys(trainerData).length} users)`);
-        return;
+        backupData = await res.json();
+        console.log(
+          `✅ Found trainerData.json (${Object.keys(backupData).length} users) in storage channel.`
+        );
+        break;
       }
     }
-    console.log('⚠️ No trainerData.json found in storage channel.');
+
+    if (!backupData) {
+      console.log("⚠️ No trainerData.json found in storage channel.");
+      return;
+    }
+
+    // ✅ Merge backupData into current trainerData instead of replacing it
+    for (const [userId, data] of Object.entries(backupData)) {
+      // define new schema defaults
+      const defaultSchema = {
+        tp: 0,
+        cc: 0,
+        pokemon: {},
+        trainers: {},
+        trainer: "youngster-gen4.png",
+        displayedPokemon: [],
+      };
+
+      // normalize and merge
+      trainerData[userId] = {
+        ...defaultSchema,
+        ...trainerData[userId], // existing local fields (if any)
+        ...data, // remote fields overwrite duplicates
+      };
+
+      // ensure nested object safety
+      if (typeof trainerData[userId].pokemon !== "object")
+        trainerData[userId].pokemon = {};
+      if (typeof trainerData[userId].trainers !== "object")
+        trainerData[userId].trainers = {};
+      if (!Array.isArray(trainerData[userId].displayedPokemon))
+        trainerData[userId].displayedPokemon = [];
+    }
+
+    console.log(
+      `✅ Trainer data loaded safely with merged schema (${Object.keys(trainerData).length} users).`
+    );
   } catch (e) {
-    console.error('❌ Error loading trainerData.json:', e);
+    console.error("❌ Error loading trainerData.json:", e);
   }
 }
 
@@ -278,37 +353,50 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.on('messageCreate', async msg => {
-  if (msg.author.bot || !msg.guild) return;
+// ==========================================================
+// 🧩 MessageCreate Handler (Rank + TP Increment Optimized)
+// ==========================================================
+client.on("messageCreate", async msg => {
+  try {
+    if (msg.author.bot || !msg.guild) return;
 
-  const conversions = await detectAndConvertLinks(msg.content);
-  if (conversions.length) {
-    try {
-      await msg.delete();
-      let out = `**${msg.author.username}** shared:\n`;
-      for (const c of conversions) out += `${c.affiliate}\n`;
-      out +=
-        '\n_Original message replaced with affiliate link(s). Coop may be compensated for purchases made through these links._';
-      await msg.channel.send(out);
-      console.log(`🔗 Converted ${conversions.length} link(s) from ${msg.author.tag}`);
-      return;
-    } catch (e) {
-      console.error('Link conversion error:', e);
+    // 🔗 Convert affiliate links if present
+    const conversions = await detectAndConvertLinks(msg.content);
+    if (conversions.length) {
+      try {
+        await msg.delete();
+        let out = `**${msg.author.username}** shared:\n`;
+        for (const c of conversions) out += `${c.affiliate}\n`;
+        out += "\n_Original message replaced with affiliate link(s). Coop may be compensated for purchases made through these links._";
+        await msg.channel.send(out);
+        console.log(`🔗 Converted ${conversions.length} link(s) from ${msg.author.tag}`);
+      } catch (e) {
+        console.error("Link conversion error:", e);
+      }
+      return; // stop further processing
     }
-  }
 
-  // ---- TP tracking ----
-  if (!trainerData[msg.author.id]) trainerData[msg.author.id] = { tp: 0, cc: 0 };
-  trainerData[msg.author.id].tp += 1;
+    // 🎯 Initialize user record
+    if (!trainerData[msg.author.id]) trainerData[msg.author.id] = { tp: 0, cc: 0, pokemon: [], trainers: [] };
 
-  const member = await msg.guild.members.fetch(msg.author.id);
-  const rank = getRank(trainerData[msg.author.id].tp);
-  const alreadyHas = member.roles.cache.some(r => r.name === rank);
-  await updateUserRole(member, rank);
-  if (!alreadyHas && rank !== 'Novice Trainer') {
-    msg.channel.send(
-      `🎉 ${msg.author} reached **${rank}** rank with ${trainerData[msg.author.id].tp.toLocaleString()} TP!`
-    );
+    // 🌀 Increment Trainer Points
+    trainerData[msg.author.id].tp += 1;
+
+    // 🏅 Rank update
+    const member = await msg.guild.members.fetch(msg.author.id);
+    const rank = getRank(trainerData[msg.author.id].tp);
+    const hadRank = member.roles.cache.some(r => r.name === rank);
+
+    await updateUserRole(member, rank);
+
+    // 🎉 Announce promotion only if newly promoted
+    if (!hadRank && rank !== "Novice Trainer") {
+      await msg.channel.send(
+        `🎉 ${msg.author} reached **${rank}** rank with ${trainerData[msg.author.id].tp.toLocaleString()} TP!`
+      );
+    }
+  } catch (err) {
+    console.error("❌ Error in messageCreate handler:", err);
   }
 });
 

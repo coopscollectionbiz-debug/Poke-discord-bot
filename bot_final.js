@@ -17,8 +17,6 @@ app.use('/public', express.static(path.join(process.cwd(), 'public')));
 app.get('/', (req, res) => {
   res.send('Bot is running!');
 });
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
 
 // ---- Config ----
 const RANKS = [

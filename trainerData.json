@@ -30591,5 +30591,25 @@
     "trainer": "Youngster",
     "guildId": "1242747097267310653",
     "lastClaim": 0
+  },
+  "global": {
+    "tp": 0,
+    "cc": 0,
+    "coins": 0,
+    "pokemon": [],
+    "trainers": {},
+    "questProgress": {},
+    "guildId": "",
+    "lastClaim": 0
+  },
+  "users": {
+    "tp": 0,
+    "cc": 0,
+    "coins": 0,
+    "pokemon": [],
+    "trainers": {},
+    "questProgress": {},
+    "guildId": "",
+    "lastClaim": 0
   }
 }

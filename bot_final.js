@@ -33,48 +33,43 @@ const AMAZON_TAG = 'coopscolle02b-20';
 const EBAY_ID = '2390378';
 
 let trainerData = {};
-const trainerDataPath = './trainerData.json';
 
-// ---- Robust Discord Backup Load/Save ----
+// ---- Updated Save and Load Functionality ----
 
-async function saveDataToDiscord(interaction = null) {
+// Save data to Discord channel
+async function saveDataToDiscord() {
   if (!STORAGE_CHANNEL_ID) return;
   try {
     const channel = await client.channels.fetch(STORAGE_CHANNEL_ID);
     if (!channel) return;
+
     // Clean up old backups before saving new one
     await deleteOldBackups(channel);
 
-    const backupId = uuidv4();
-    const compressed = zlib.deflateSync(Buffer.from(JSON.stringify(trainerData))).toString('base64');
-    const maxLen = 4000 - 50; // leave room for metadata
-    const totalChunks = Math.ceil(compressed.length / maxLen);
+    const jsonString = JSON.stringify(trainerData, null, 2);
+    const buffer = Buffer.from(jsonString, 'utf-8');
+    const attachment = new AttachmentBuilder(buffer, { name: 'trainerData.json' });
 
-    for (let i = 0; i < totalChunks; i++) {
-      const chunkData = compressed.slice(i * maxLen, (i + 1) * maxLen);
-      // Format: COMPRESSED_BACKUP:<backupId>:<chunkNum>/<totalChunks>:<data>
-      await channel.send(`COMPRESSED_BACKUP:${backupId}:${i + 1}/${totalChunks}:${chunkData}`);
-    }
-    console.log(`✅ Trainer data backed up to Discord in ${totalChunks} chunks. Backup ID: ${backupId}`);
-    if (interaction) {
-      await interaction.reply({ content: '✅ Trainer data manually backed up to Discord!', ephemeral: true });
-    }
-  } catch (e) {
-    console.error('❌ Error saving data to Discord:', e);
-    if (interaction) {
-      await interaction.reply({ content: '❌ Error saving data to Discord.', ephemeral: true });
-    }
+    await channel.send({
+      content: `💾 Data backup - ${new Date().toLocaleString()}`,
+      files: [attachment]
+    });
+
+    console.log('✅ Trainer data backed up to Discord.');
+  } catch (error) {
+    console.error('❌ Error saving data to Discord:', error);
   }
 }
 
+// Delete old backups in Discord channel
 async function deleteOldBackups(channel) {
   let lastId;
   while (true) {
     const options = { limit: 100 };
     if (lastId) options.before = lastId;
     const messages = await channel.messages.fetch(options);
-    const backupMsgs = Array.from(messages.values()).filter(m =>
-      m.content.startsWith('COMPRESSED_BACKUP:')
+    const backupMsgs = Array.from(messages.values()).filter((m) =>
+      m.attachments.some((att) => att.name === 'trainerData.json')
     );
     for (const msg of backupMsgs) {
       await msg.delete().catch(() => {});
@@ -85,81 +80,40 @@ async function deleteOldBackups(channel) {
   }
 }
 
+// Load data from Discord channel
 async function loadTrainerData() {
   if (STORAGE_CHANNEL_ID) {
     try {
       const channel = await client.channels.fetch(STORAGE_CHANNEL_ID);
       if (channel) {
-        // Fetch up to 1000 messages for robustness
-        let allMsgs = [];
-        let lastId;
-        for (let i = 0; i < 10; i++) {
-          const options = { limit: 100 };
-          if (lastId) options.before = lastId;
-          const messages = await channel.messages.fetch(options);
-          allMsgs = allMsgs.concat(Array.from(messages.values())
-            .filter(m => m.content.startsWith('COMPRESSED_BACKUP:')));
-          if (messages.size < 100) break;
-          lastId = messages.last()?.id;
-          if (!lastId) break;
-        }
-        // Group by backupId
-        const backupGroups = {};
-        for (const msg of allMsgs) {
-          const match = msg.content.match(/^COMPRESSED_BACKUP:([a-f0-9\-]+):(\d+)\/(\d+):(.*)$/s);
-          if (match) {
-            const [, backupId, chunkNum, totalChunks, chunkData] = match;
-            if (!backupGroups[backupId]) backupGroups[backupId] = { totalChunks: Number(totalChunks), chunks: {}, latest: 0 };
-            backupGroups[backupId].chunks[Number(chunkNum)] = chunkData;
-            backupGroups[backupId].latest = Math.max(backupGroups[backupId].latest || 0, msg.createdTimestamp);
+        console.log('📥 Loading data from Discord...');
+        const messages = await channel.messages.fetch({ limit: 100 });
+
+        // Find the most recent trainerData.json file
+        for (const message of messages.values()) {
+          if (message.attachments.size > 0) {
+            const attachment = message.attachments.find((att) => att.name === 'trainerData.json');
+            if (attachment) {
+              const response = await fetch(attachment.url);
+              const data = await response.json();
+              trainerData = data;
+              console.log(
+                `✅ Loaded trainerData.json from Discord (${Object.keys(trainerData).length} users)`
+              );
+              return;
+            }
           }
         }
-        // Find most recent complete backup
-        let latestCompleteBackup = null;
-        let latestTimestamp = 0;
-        for (const [backupId, group] of Object.entries(backupGroups)) {
-          if (Object.keys(group.chunks).length === group.totalChunks && group.latest > latestTimestamp) {
-            latestCompleteBackup = group;
-            latestTimestamp = group.latest;
-          }
-        }
-        if (latestCompleteBackup) {
-          const orderedChunks = [];
-          for (let i = 1; i <= latestCompleteBackup.totalChunks; i++) {
-            orderedChunks.push(latestCompleteBackup.chunks[i]);
-          }
-          const compressedBackup = orderedChunks.join('');
-          const decompressed = zlib.inflateSync(Buffer.from(compressedBackup, 'base64')).toString();
-          trainerData = JSON.parse(decompressed);
-          console.log('✅ Trainer data loaded from Discord backup');
-          return;
-        } else {
-          console.warn('⚠️ No complete backup found in Discord messages.');
-        }
+
+        console.log('⚠️ No trainerData.json found in the storage channel.');
       }
-    } catch (err) {
-      console.error('❌ Error loading Discord backup:', err);
-      // Will fall back to local disk below
+    } catch (error) {
+      console.error('❌ Error loading data from Discord:', error);
     }
-  }
-  // Fallback: Load from local disk
-  try {
-    trainerData = JSON.parse(await fs.readFile(trainerDataPath, 'utf8'));
-    console.log('✅ Trainer data loaded from disk');
-  } catch {
-    trainerData = {};
-    console.log('ℹ️ No trainer data found, starting fresh');
   }
 }
 
-async function saveTrainerData() {
-  await fs.writeFile(trainerDataPath, JSON.stringify(trainerData, null, 2));
-  console.log('✅ Trainer data saved to disk');
-}
-setInterval(async () => {
-  await saveTrainerData();
-  await saveDataToDiscord();
-}, 15 * 60 * 1000);
+// ---- Other Features Remain Unchanged ----
 
 // ---- Discord client ----
 const client = new Client({
@@ -167,8 +121,8 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-  ],
+    GatewayIntentBits.GuildMembers
+  ]
 });
 
 // ---- Affiliate links ----
@@ -255,9 +209,9 @@ function getRank(tp) {
 }
 async function updateUserRole(member, newRankName) {
   const guild = member.guild;
-  const allRankNames = RANKS.map(r => r.roleName);
-  await member.roles.remove(member.roles.cache.filter(role => allRankNames.includes(role.name)));
-  const role = guild.roles.cache.find(r => r.name === newRankName);
+  const allRankNames = RANKS.map((r) => r.roleName);
+  await member.roles.remove(member.roles.cache.filter((role) => allRankNames.includes(role.name)));
+  const role = guild.roles.cache.find((r) => r.name === newRankName);
   if (role) await member.roles.add(role);
 }
 
@@ -292,7 +246,6 @@ async function scrapePokebeach() {
         .setTimestamp(new Date());
       await channel.send({ embeds: [embed] });
       trainerData[lastPostedKey] = newArticle.link;
-      await saveTrainerData();
       await saveDataToDiscord();
       console.log('✅ New PokéBeach article posted');
     }
@@ -314,8 +267,8 @@ async function loadCommands() {
       if (command.data.name === 'adminsave') {
         commands.set(command.data.name, {
           ...command,
-          async execute(interaction, trainerData, saveTrainerData) {
-            await command.execute(interaction, trainerData, saveTrainerData, saveDataToDiscord);
+          async execute(interaction, trainerData) {
+            await command.execute(interaction, trainerData, saveDataToDiscord);
           }
         });
       } else {
@@ -338,18 +291,15 @@ client.once('ready', async () => {
   const restClient = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
 
   try {
-    const dataArray = Array.from(commands.values()).map(cmd => cmd.data.toJSON());
-    await restClient.put(
-      Routes.applicationCommands(client.user.id),
-      { body: dataArray }
-    );
+    const dataArray = Array.from(commands.values()).map((cmd) => cmd.data.toJSON());
+    await restClient.put(Routes.applicationCommands(client.user.id), { body: dataArray });
     console.log(`✅ Registered ${commands.size} slash commands`);
   } catch (err) {
     console.error('❌ Error registering slash commands:', err);
   }
 });
 
-client.on('interactionCreate', async interaction => {
+client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const command = commands.get(interaction.commandName);
   if (!command) {
@@ -357,18 +307,21 @@ client.on('interactionCreate', async interaction => {
     return;
   }
   try {
-    await command.execute(interaction, trainerData, saveTrainerData);
+    await command.execute(interaction, trainerData, saveDataToDiscord);
   } catch (error) {
     console.error(error);
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: '❌ There was an error executing that command.', ephemeral: true });
+      await interaction.followUp({
+        content: '❌ There was an error executing that command.',
+        ephemeral: true
+      });
     } else {
       await interaction.reply({ content: '❌ There was an error executing that command.', ephemeral: true });
     }
   }
 });
 
-client.on('messageCreate', async msg => {
+client.on('messageCreate', async (msg) => {
   if (msg.author.bot || !msg.guild) return;
   const linkConversions = await detectAndConvertLinks(msg.content);
   if (linkConversions.length > 0) {
@@ -377,7 +330,7 @@ client.on('messageCreate', async msg => {
       await msg.delete();
       let affiliateMessage = `**${msg.author.username}** shared:\n`;
       if (nonLinkText) affiliateMessage += `${nonLinkText}\n\n`;
-      linkConversions.forEach(conversion => {
+      linkConversions.forEach((conversion) => {
         affiliateMessage += `${conversion.affiliate}\n`;
       });
       affiliateMessage += `\n_Original message replaced with affiliate link(s). Coop may be compensated for purchases made through these links._`;
@@ -392,11 +345,10 @@ client.on('messageCreate', async msg => {
 
   if (!trainerData[msg.author.id]) trainerData[msg.author.id] = { tp: 0, cc: 0 };
   trainerData[msg.author.id].tp += 1;
-  await saveTrainerData();
 
   const member = await msg.guild.members.fetch(msg.author.id);
   const rankName = getRank(trainerData[msg.author.id].tp);
-  const hadRank = member.roles.cache.some(role => role.name === rankName);
+  const hadRank = member.roles.cache.some((role) => role.name === rankName);
   await updateUserRole(member, rankName);
   // Only send rank up message if new rank is NOT "Novice Trainer"
   if (!hadRank && rankName !== 'Novice Trainer') {
@@ -407,10 +359,10 @@ client.on('messageCreate', async msg => {
 });
 
 const gracefulShutdown = async () => {
-  await saveTrainerData();
   await saveDataToDiscord();
   process.exit(0);
 };
+
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
 

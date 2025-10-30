@@ -24,6 +24,14 @@ const pokemonData = JSON.parse(
 // ✅ Convert to iterable array
 const allPokemon = Object.values(pokemonData);
 
+// Convert numeric type IDs into readable names
+const typeMap = {
+  1: "Normal", 2: "Fighting", 3: "Flying", 4: "Poison", 5: "Ground",
+  6: "Rock", 7: "Bug", 8: "Ghost", 9: "Steel", 10: "Fire",
+  11: "Water", 12: "Grass", 13: "Electric", 14: "Psychic",
+  15: "Ice", 16: "Dragon", 17: "Dark"
+};
+
 // =============================================
 // Helper: find Pokémon by name or ID (case-insensitive)
 // =============================================
@@ -81,18 +89,18 @@ export async function execute(interaction) {
   // Embed for Pokémon Info
   // =============================================
   const embed = new EmbedBuilder()
-    .setTitle(`${pokemon.name} — #${pokemon.id}`)
-    .setColor(0xffcb05)
-    .setDescription(
-      `🗒️ **Type:** ${pokemon.type?.join("/") ?? "Unknown"}\n⭐ **Rarity:** ${
-        pokemon.rarity ?? "Unknown"
-      }\n📘 **Description:** ${
-        pokemon.description || "No Pokédex entry available."
-      }`
-    )
-    .setThumbnail(normalSprite)
-    .setFooter({ text: "Coop’s Collection Pokédex" })
-    .setTimestamp();
+  .setTitle(`${pokemon.name} — #${pokemon.id}`)
+  .setColor(0xffcb05)
+  .setDescription(
+    `🗒️ **Type:** ${pokemon.types
+      .map((id) => typeMap[id] || "Unknown")
+      .join("/")}\n⭐ **Rarity:** ${pokemon.tier || "Unknown"}\n📘 **Description:** ${
+      pokemon.flavor || "No Pokédex entry available."
+    }`
+  )
+  .setThumbnail(normalSprite)
+  .setFooter({ text: "Coop’s Collection Pokédex" })
+  .setTimestamp();
 
   // =============================================
   // Buttons: toggle shiny, close

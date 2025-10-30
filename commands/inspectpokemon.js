@@ -24,7 +24,6 @@ export default {
     const owned = user.pokemon || {};
     const input = interaction.options.getString('name').trim().toLowerCase();
 
-    // find Pokémon (case-insensitive)
     const entry = Object.entries(pokemonData).find(
       ([, data]) => data.name.toLowerCase() === input
     );
@@ -51,7 +50,6 @@ export default {
         : '';
       const evoTo = data.evolves_to ? `⬇️ Evolves to **${data.evolves_to}**` : '';
 
-      // Inline type icons
       const typeIcons = data.type
         .map(tid => `![${tid}](${spritePaths.types}${tid}.png)`)
         .join(' ');

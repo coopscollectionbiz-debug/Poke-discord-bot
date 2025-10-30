@@ -116,7 +116,6 @@ export default {
           .setStyle(ButtonStyle.Primary)
       );
 
-      // Inspect buttons for the slice
       const inspectRows = [];
       for (const [id, data] of slice) {
         inspectRows.push(
@@ -143,7 +142,6 @@ export default {
       });
     };
 
-    // initial render
     await interaction.deferReply({ ephemeral: true });
     await renderPage();
 

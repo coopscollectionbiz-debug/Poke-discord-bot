@@ -1,11 +1,16 @@
 // ==========================================================
-// 🗺️ /quest — simulate completing a quest for a reward
+// 🗺️ /quest — complete a quest for a random reward
 // ==========================================================
+
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js";
-import { rollForShiny } from "../helpers/shinyOdds.js";
-const pokemonData = JSON.parse(await fs.readFile(new URL("../pokemonData.json", import.meta.url)));
+import { rollForShiny } from "../shinyOdds.js"; // ✅ fixed import path to match your structure
+
+// Load Pokémon data safely
+const pokemonData = JSON.parse(
+  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
+);
 
 export default {
   data: new SlashCommandBuilder()
@@ -15,42 +20,67 @@ export default {
   async execute(interaction, trainerData, saveTrainerData) {
     await interaction.deferReply({ flags: 64 });
     const id = interaction.user.id;
-    trainerData[id] ??= { tp: 0, cc: 0, pokemon: {}, trainers: {} };
+
+    // ✅ Ensure user schema exists
+    trainerData[id] ??= {
+      tp: 0,
+      cc: 0,
+      pokemon: {},
+      trainers: {}
+    };
+
     const user = trainerData[id];
 
-    // 70% chance Pokémon, 30% trainer
+    // ✅ 70% Pokémon reward, 30% Trainer reward
     const rewardType = Math.random() < 0.7 ? "pokemon" : "trainer";
 
     if (rewardType === "pokemon") {
-      const pool = Object.values(pokemonData).filter(p => p.generation <= 5);
+      // 🎲 Random Pokémon from Gen 1–5
+      const pool = pokemonData.filter(p => p.generation <= 5);
       const pick = pool[Math.floor(Math.random() * pool.length)];
+
+      // ✨ Shiny roll
       const shiny = rollForShiny(user.tp);
+
+      // ✅ Increment owned count
       const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
       shiny ? record.shiny++ : record.normal++;
       user.pokemon[pick.id] = record;
-      await saveTrainerData();
+
+      await saveTrainerData(trainerData);
+
+      // ✅ Embed (unified sprite path)
+      const spriteUrl = shiny
+        ? `${spritePaths.shiny}${pick.id}.png`
+        : `${spritePaths.pokemon}${pick.id}.png`;
 
       const embed = new EmbedBuilder()
         .setColor(shiny ? 0xffd700 : 0x00ae86)
         .setTitle("🏆 Quest Complete!")
-        .setDescription(shiny
-          ? `✨ You earned a **Shiny ${pick.name}!**`
-          : `You earned a **${pick.name}!**`)
-        .setThumbnail(`${shiny ? spritePaths.shiny : spritePaths.pokemon}${pick.id}.${shiny ? "gif" : "png"}`)
+        .setDescription(
+          shiny
+            ? `✨ You discovered a **Shiny ${pick.name}!**`
+            : `You found a **${pick.name}!**`
+        )
+        .setThumbnail(spriteUrl)
         .setFooter({ text: "Complete more quests for rarer rewards!" });
+
       await interaction.editReply({ embeds: [embed] });
     } else {
-      const sprites = ["youngster-gen4.png", "lass-gen4.png"];
-      const file = sprites[Math.floor(Math.random() * sprites.length)];
+      // 🧍 Trainer sprite reward
+      const trainerPool = ["youngster-gen4.png", "lass-gen4.png"];
+      const file = trainerPool[Math.floor(Math.random() * trainerPool.length)];
+
       user.trainers[file] = (user.trainers[file] || 0) + 1;
-      await saveTrainerData();
+      await saveTrainerData(trainerData);
 
       const embed = new EmbedBuilder()
-        .setColor(0x00ae86)
+        .setColor(0x5865f2)
         .setTitle("🏆 Quest Complete!")
-        .setDescription(`You unlocked new trainer sprite: **${file}**`)
+        .setDescription(`You recruited a new trainer: **${file.replace(".png", "")}!**`)
         .setThumbnail(`${spritePaths.trainers}${file}`)
-        .setFooter({ text: "Equip it with /trainercard!" });
+        .setFooter({ text: "Equip it anytime with /trainercard!" });
+
       await interaction.editReply({ embeds: [embed] });
     }
   }

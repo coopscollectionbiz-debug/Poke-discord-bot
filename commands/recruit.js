@@ -11,12 +11,34 @@ import {
 } from "discord.js";
 import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js";
-import { rollForShiny } from "../helpers/shinyOdds.js";
-const pokemonData = JSON.parse(await fs.readFile(new URL("../pokemonData.json", import.meta.url)));
-const trainerSprites = JSON.parse(await fs.readFile(new URL("../trainerSprites.json", import.meta.url)));
+import { rollForShiny } from "../shinyOdds.js";
 
-const POKEMON_RARITY_WEIGHTS = { common: 60, uncommon: 24, rare: 10, epic: 4, legendary: 1.5, mythic: 0.5 };
-const TRAINER_RARITY_WEIGHTS = { common: 65, uncommon: 22, rare: 8, epic: 3, legendary: 1, mythic: 1 };
+// Load Pokémon + Trainer data safely
+const pokemonData = JSON.parse(
+  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
+);
+const trainerSprites = JSON.parse(
+  await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
+);
+
+// Rarity weight distributions
+const POKEMON_RARITY_WEIGHTS = {
+  common: 60,
+  uncommon: 24,
+  rare: 10,
+  epic: 4,
+  legendary: 1.5,
+  mythic: 0.5
+};
+
+const TRAINER_RARITY_WEIGHTS = {
+  common: 65,
+  uncommon: 22,
+  rare: 8,
+  epic: 3,
+  legendary: 1,
+  mythic: 1
+};
 
 export default {
   data: new SlashCommandBuilder()
@@ -26,9 +48,12 @@ export default {
   async execute(interaction, trainerData, saveTrainerData) {
     await interaction.deferReply({ flags: 64 });
     const id = interaction.user.id;
+
+    // Initialize user schema if missing
     trainerData[id] ??= { tp: 0, cc: 0, pokemon: {}, trainers: {} };
     const user = trainerData[id];
 
+    // Recruitment menu
     const menu = new StringSelectMenuBuilder()
       .setCustomId("recruit_type")
       .setPlaceholder("Choose what to recruit")
@@ -36,71 +61,126 @@ export default {
         { label: "Pokémon", value: "pokemon", emoji: "🐾" },
         { label: "Trainer", value: "trainer", emoji: "🎓" }
       );
-    const cancel = new ButtonBuilder().setCustomId("cancel_recruit").setLabel("Cancel").setStyle(ButtonStyle.Secondary);
+
+    const cancel = new ButtonBuilder()
+      .setCustomId("cancel_recruit")
+      .setLabel("Cancel")
+      .setStyle(ButtonStyle.Secondary);
 
     await interaction.editReply({
-      embeds: [new EmbedBuilder().setColor(0x00ae86).setTitle("Recruitment Time!").setDescription("Pick your target:")],
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0x00ae86)
+          .setTitle("🎯 Recruitment Time!")
+          .setDescription("Select what type of recruit you want to attempt:")
+      ],
       components: [
         new ActionRowBuilder().addComponents(menu),
         new ActionRowBuilder().addComponents(cancel)
       ]
     });
 
-    const collector = interaction.channel.createMessageComponentCollector({ filter: i => i.user.id === id, time: 120000 });
+    // Collector setup
+    const collector = interaction.channel.createMessageComponentCollector({
+      filter: i => i.user.id === id,
+      time: 120000
+    });
+
     collector.on("collect", async i => {
       if (i.customId === "cancel_recruit") {
-        collector.stop(); return i.update({ content: "❌ Cancelled.", embeds: [], components: [] });
+        collector.stop();
+        return i.update({
+          content: "❌ Recruitment cancelled.",
+          embeds: [],
+          components: []
+        });
       }
+
       if (i.customId === "recruit_type") {
         const choice = i.values[0];
         collector.stop();
-        if (choice === "pokemon") await recruitPokemon(i, user, saveTrainerData);
-        else await recruitTrainer(i, user, saveTrainerData);
+
+        if (choice === "pokemon")
+          await recruitPokemon(i, user, trainerData, saveTrainerData);
+        else await recruitTrainer(i, user, trainerData, saveTrainerData);
       }
     });
   }
 };
 
+// ==========================================================
+// 🧮 Weighted random helper
+// ==========================================================
 function weightedRandomChoice(list, weights) {
   const bag = [];
-  for (const item of list) bag.push(...Array(Math.round(weights[item.rarity?.toLowerCase()] || 1)).fill(item));
+  for (const item of list) {
+    const rarity = item.rarity?.toLowerCase() || "common";
+    const weight = weights[rarity] || 1;
+    for (let n = 0; n < Math.round(weight); n++) bag.push(item);
+  }
   return bag[Math.floor(Math.random() * bag.length)];
 }
 
-async function recruitPokemon(i, user, saveTrainerData) {
-  const pool = Object.values(pokemonData).filter(p => p.generation <= 5);
+// ==========================================================
+// 🐾 Pokémon Recruitment (uses .gif sprites)
+// ==========================================================
+async function recruitPokemon(i, user, trainerData, saveTrainerData) {
+  const pool = pokemonData.filter(p => p.generation <= 5);
   const pick = weightedRandomChoice(pool, POKEMON_RARITY_WEIGHTS);
+
   const shiny = rollForShiny(user.tp);
   const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
   shiny ? record.shiny++ : record.normal++;
   user.pokemon[pick.id] = record;
-  await saveTrainerData();
 
-  await i.update({
-    embeds: [
-      new EmbedBuilder()
-        .setColor(shiny ? 0xffd700 : 0x00ae86)
-        .setTitle("🎯 Pokémon Recruited!")
-        .setDescription(shiny ? `✨ You recruited a **Shiny ${pick.name}!**` : `You recruited a **${pick.name}!**`)
-        .setThumbnail(`${shiny ? spritePaths.shiny : spritePaths.pokemon}${pick.id}.${shiny ? "gif" : "png"}`)
-    ],
-    components: []
-  });
+  await saveTrainerData(trainerData);
+
+  const spriteUrl = shiny
+    ? `${spritePaths.shiny}${pick.id}.gif`
+    : `${spritePaths.pokemon}${pick.id}.gif`;
+
+  const embed = new EmbedBuilder()
+    .setColor(shiny ? 0xffd700 : 0x00ae86)
+    .setTitle("🎯 Pokémon Recruited!")
+    .setDescription(
+      shiny
+        ? `✨ You recruited a **Shiny ${pick.name}!**`
+        : `You recruited a **${pick.name}!**`
+    )
+    .setThumbnail(spriteUrl)
+    .setFooter({ text: "Keep recruiting to expand your team!" });
+
+  await i.update({ embeds: [embed], components: [] });
 }
 
-async function recruitTrainer(i, user, saveTrainerData) {
-  const pick = weightedRandomChoice(Object.values(trainerSprites), TRAINER_RARITY_WEIGHTS);
-  user.trainers[pick.filename] = (user.trainers[pick.filename] || 0) + 1;
-  await saveTrainerData();
+// ==========================================================
+// 🎓 Trainer Recruitment (uses .png sprites)
+// ==========================================================
+async function recruitTrainer(i, user, trainerData, saveTrainerData) {
+  // Flatten available trainer sprites from nested JSON
+  const availableSprites = Object.entries(trainerSprites)
+    .flatMap(([name, variants]) =>
+      variants
+        .filter(v => typeof v === "string" || (v.file && !v.disabled))
+        .map(v => ({
+          name,
+          file: typeof v === "string" ? v : v.file
+        }))
+    );
 
-  await i.update({
-    embeds: [
-      new EmbedBuilder()
-        .setColor(0x00ae86)
-        .setTitle("🎓 Trainer Recruited!")
-        .setDescription(`You recruited **${pick.name}**`)
-        .setThumbnail(`${spritePaths.trainers}${pick.filename}`)
-    ],
-    components: []
-  });
+  // Pick a random trainer (equal weighting for now)
+  const pick = availableSprites[Math.floor(Math.random() * availableSprites.length)];
+  const file = pick.file;
+
+  user.trainers[file] = (user.trainers[file] || 0) + 1;
+  await saveTrainerData(trainerData);
+
+  const embed = new EmbedBuilder()
+    .setColor(0x5865f2)
+    .setTitle("🎓 Trainer Recruited!")
+    .setDescription(`You recruited **${pick.name}**!`)
+    .setThumbnail(`${spritePaths.trainers}${file}`)
+    .setFooter({ text: "Equip it with /trainercard!" });
+
+  await i.update({ embeds: [embed], components: [] });
 }

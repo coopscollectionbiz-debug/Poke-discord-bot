@@ -13,9 +13,9 @@ import {
   ComponentType
 } from "discord.js";
 import fs from "fs/promises";
-import fetch from "node-fetch";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { rollForShiny } from "../shinyOdds.js";
+import { spritePaths } from "../spriteconfig.js";
 
 // ================================
 // SAFE JSON LOADERS
@@ -27,13 +27,6 @@ const trainerSprites = JSON.parse(
   await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
 );
 
-// ================================
-// CONSTANTS
-// ================================
-const TRAINER_BASE_URL =
-  "https://poke-discord-bot.onrender.com/public/sprites/trainers_2/";
-const POKEMON_BASE_URL =
-  "https://poke-discord-bot.onrender.com/public/sprites/pokemon/";
 const TRAINER_DATA_PATH = new URL("../trainerData.json", import.meta.url);
 
 // ================================
@@ -91,7 +84,7 @@ async function renderTrainerCard(userData, username) {
   // trainer sprite
   if (userData.displayedTrainer) {
     try {
-      const trainerURL = `${TRAINER_BASE_URL}${userData.displayedTrainer}`;
+      const trainerURL = `${spritePaths.trainers}${userData.displayedTrainer}`;
       const trainerImg = await loadImage(trainerURL);
       ctx.drawImage(trainerImg, 50, 100, 200, 250);
     } catch {
@@ -111,7 +104,9 @@ async function renderTrainerCard(userData, username) {
     const y = gridY + row * (size + gap);
 
     try {
-      const img = await loadImage(`${POKEMON_BASE_URL}${id}.gif`);
+      const isShiny = userData.ownedPokemon?.[id]?.shiny || false;
+      const base = isShiny ? spritePaths.shiny : spritePaths.pokemon;
+      const img = await loadImage(`${base}${id}.gif`);
       ctx.drawImage(img, x, y, size, size);
     } catch {
       ctx.strokeStyle = "#999";
@@ -314,7 +309,6 @@ export async function execute(interaction, trainerData) {
   const username = interaction.user.username;
   let user = trainerData[userId];
 
-  // initialize schema
   if (!user) {
     user = trainerData[userId] = {
       id: userId,
@@ -329,11 +323,9 @@ export async function execute(interaction, trainerData) {
     };
   }
 
-  // onboarding condition
   if (!user.displayedTrainer || Object.keys(user.ownedPokemon || {}).length === 0)
     return starterSelection(interaction, user, trainerData);
 
-  // show trainer card
   await showTrainerCard(interaction, user, trainerData);
 }
 
@@ -345,7 +337,6 @@ export async function handleTrainerCardButtons(interaction, trainerData) {
   const username = interaction.user.username;
   const user = trainerData[userId];
 
-  // Defensive guard
   if (!user) {
     return interaction.reply({
       content: "❌ Could not find your trainer data. Try running /trainercard again.",
@@ -354,7 +345,6 @@ export async function handleTrainerCardButtons(interaction, trainerData) {
   }
 
   switch (interaction.customId) {
-    // 🔄 Refresh the current card
     case "refresh_card": {
       const canvas = await renderTrainerCard(user, username);
       const buffer = await canvas.encode("png");
@@ -380,7 +370,6 @@ export async function handleTrainerCardButtons(interaction, trainerData) {
       break;
     }
 
-    // 🌐 Share publicly to the same channel
     case "share_public": {
       const canvas = await renderTrainerCard(user, username);
       const buffer = await canvas.encode("png");
@@ -411,30 +400,23 @@ export async function handleTrainerCardButtons(interaction, trainerData) {
       break;
     }
 
-    // 🧍 Placeholder for changing trainer (implemented separately)
-    case "change_trainer": {
+    case "change_trainer":
       return interaction.reply({
         content: "Feature coming soon: choose from your owned trainer sprites!",
         ephemeral: true
       });
-    }
 
-    // 🧬 Placeholder for changing Pokémon (implemented separately)
-    case "change_pokemon": {
+    case "change_pokemon":
       return interaction.reply({
         content: "Feature coming soon: choose which Pokémon appear on your card!",
         ephemeral: true
       });
-    }
 
-    // ❌ Close ephemeral card
-    case "close_card": {
+    case "close_card":
       await interaction.message.delete().catch(() => {});
       break;
-    }
 
     default:
       await interaction.reply({ content: "Unknown button action.", ephemeral: true });
   }
 }
-

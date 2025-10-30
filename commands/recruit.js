@@ -22,6 +22,7 @@ export default {
     .setDescription('Recruit a Pokémon or Trainer to your collection!'),
 
   async execute(interaction, trainerData, saveTrainerData) {
+    await interaction.deferReply({ flags: 64 });
     const userId = interaction.user.id;
     if (!trainerData[userId]) trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
     const user = trainerData[userId];

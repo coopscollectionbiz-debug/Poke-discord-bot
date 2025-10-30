@@ -16,7 +16,8 @@ export default {
     .setDescription('Complete a quest and earn a Pokémon or trainer reward!'),
 
   async execute(interaction, trainerData) {
-    const userId = interaction.user.id;
+  await interaction.deferReply({ flags: 64 });  
+  const userId = interaction.user.id;
     if (!trainerData[userId]) {
       trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
     }

@@ -1,142 +1,127 @@
+// ==========================================================
+// 🧩 /showtrainers — Displays owned Trainer sprites with rarity filter
+// ==========================================================
+
 import {
   SlashCommandBuilder,
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ComponentType,
 } from "discord.js";
+import trainerSprites from "../trainerSprites.json" with { type: "json" };
 
-const TRAINER_BASE_URL = "https://poke-discord-bot.onrender.com/public/sprites/trainers_2/";
-const PAGE_SIZE = 12;
 const RARITY_ORDER = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
+const normalizeRarity = r =>
+  RARITY_ORDER.includes(String(r).toLowerCase()) ? String(r).toLowerCase() : "common";
+
+function paginate(arr, per = 12) {
+  const pages = [];
+  for (let i = 0; i < arr.length; i += per) pages.push(arr.slice(i, i + per));
+  return pages.length ? pages : [[]];
+}
+
+function buildEmbed(ownedList, page, rarity) {
+  const pages = paginate(ownedList, 12);
+  const current = pages[page] ?? [];
+  const total = pages.length;
+
+  const embed = new EmbedBuilder()
+    .setTitle("Your Trainer Sprites")
+    .setDescription(`Filter → **Rarity:** ${rarity || "all"}\nPage ${page + 1}/${total}`)
+    .setColor("#81C784");
+
+  if (!current.length) {
+    embed.addFields([{ name: "Empty", value: "No trainers match your filter." }]);
+  } else {
+    for (const t of current) {
+      const data = trainerSprites[t.filename] || {};
+      embed.addFields([
+        {
+          name: data.name || t.filename,
+          value: `Rarity: ${normalizeRarity(data.rarity)}\nCount: ${t.count}`,
+          inline: true,
+        },
+      ]);
+    }
+  }
+  return embed;
+}
 
 export default {
   data: new SlashCommandBuilder()
     .setName("showtrainers")
-    .setDescription("Browse your trainer sprites (filtered by rarity tiers)."),
+    .setDescription("View your owned Trainer sprites.")
+    .addStringOption(opt =>
+      opt
+        .setName("rarity")
+        .setDescription("Filter by rarity")
+        .addChoices(...RARITY_ORDER.map(r => ({ name: r, value: r })))
+    ),
 
-  async execute(interaction, trainerData, saveTrainerData) {
-    await interaction.deferReply({ flags: 64 }); // ✅ Ephemeral
-
-    const userId = interaction.user.id;
-    const user = trainerData[userId];
-    if (!user?.trainers || Object.keys(user.trainers).length === 0) {
-      await interaction.editReply("You don't own any trainer sprites yet!");
-      return;
-    }
-
-    let page = 0;
-    let sortMode = "name"; // ✅ Sorting
-    let rarityFilter = "all"; // ✅ Rarity filter
-
-    // ✅ Mock rarity lookup (adjust if you have a trainer rarity dataset)
-    const getTrainerRarity = (file) => {
-      const lower = file.toLowerCase();
-      if (lower.includes("grunt")) return "common";
-      if (lower.includes("ace") || lower.includes("lass")) return "uncommon";
-      if (lower.includes("elite")) return "rare";
-      if (lower.includes("champion")) return "legendary";
-      return "common";
-    };
-
-    const getList = () => {
-      const entries = Object.entries(user.trainers);
-      let rows = entries.map(([file, count]) => ({
-        file,
-        count,
-        rarity: getTrainerRarity(file),
-        url: `${TRAINER_BASE_URL}${file}`,
-      }));
-      if (rarityFilter !== "all") rows = rows.filter(r => r.rarity === rarityFilter);
-      if (sortMode === "name") rows.sort((a, b) => a.file.localeCompare(b.file));
-      else if (sortMode === "count") rows.sort((a, b) => b.count - a.count);
-      else if (sortMode === "rarity")
-        rows.sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity));
-      return rows;
-    };
-
-    const paginate = (list) => list.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
-
-    const buildEmbed = () => {
-      const all = getList();
-      const shown = paginate(all);
-      const embed = new EmbedBuilder()
-        .setColor(0xffcc00)
-        .setTitle(`${interaction.user.username}'s Trainers`)
-        .setDescription(
-          `📊 Sort: **${sortMode}** | 💎 Rarity: **${rarityFilter}**\n` +
-          `Results: **${all.length}** • Page ${page + 1}/${Math.max(1, Math.ceil(all.length / PAGE_SIZE))}\n` +
-          `Active Trainer: **${user.trainer || "none"}**`
-        );
-
-      if (shown.length === 0) embed.addFields({ name: "No results", value: "Try changing filters." });
-      else {
-        for (const t of shown) {
-          embed.addFields({
-            name: `${t.file} (${t.rarity})`,
-            value: `Owned ×**${t.count}** • [Preview](${t.url})${user.trainer === t.file ? " • ✅ Active" : ""}`,
-            inline: true,
-          });
-        }
+  async execute(interaction, trainerData) {
+    try {
+      const user = trainerData[interaction.user.id];
+      if (!user || !user.trainers || !Object.keys(user.trainers).length) {
+        return await interaction.reply({
+          content: "❌ You don't own any trainer sprites yet.",
+          flags: 64,
+        });
       }
-      return embed;
-    };
 
-    const buildRow = () =>
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId("prev").setLabel("◀ Prev").setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId("next").setLabel("Next ▶").setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId("sort").setLabel(`Sort: ${sortMode}`).setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId("rarity").setLabel(`Rarity: ${rarityFilter}`).setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId("set_active").setLabel("Set Active").setStyle(ButtonStyle.Primary),
+      const rarity = normalizeRarity(interaction.options.getString("rarity"));
+      const owned = [];
+
+      // Stored structure: { "lass-gen4.png": count }
+      for (const [filename, count] of Object.entries(user.trainers)) {
+        const meta = trainerSprites[filename];
+        if (!meta) continue;
+        if (rarity && RARITY_ORDER.includes(rarity)) {
+          if (normalizeRarity(meta.rarity) !== rarity) continue;
+        }
+        owned.push({ filename, count });
+      }
+
+      owned.sort((a, b) => {
+        const r1 = RARITY_ORDER.indexOf(normalizeRarity(trainerSprites[a.filename]?.rarity));
+        const r2 = RARITY_ORDER.indexOf(normalizeRarity(trainerSprites[b.filename]?.rarity));
+        return r1 === r2 ? a.filename.localeCompare(b.filename) : r1 - r2;
+      });
+
+      let page = 0;
+      const embed = buildEmbed(owned, page, rarity);
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId("prev").setLabel("⬅️").setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId("next").setLabel("➡️").setStyle(ButtonStyle.Secondary)
       );
 
-    const render = async () =>
-      await interaction.editReply({ embeds: [buildEmbed()], components: [buildRow()] });
+      const reply = await interaction.reply({
+        embeds: [embed],
+        components: [row],
+        flags: 64,
+      });
 
-    await render();
+      const collector = reply.createMessageComponentCollector({ time: 60_000 });
+      collector.on("collect", async i => {
+        if (i.user.id !== interaction.user.id)
+          return i.reply({ content: "Not your menu.", flags: 64 });
+        const max = paginate(owned).length;
+        if (i.customId === "next") page = (page + 1) % max;
+        if (i.customId === "prev") page = (page - 1 + max) % max;
+        await i.update({ embeds: [buildEmbed(owned, page, rarity)], components: [row] });
+      });
 
-    const msg = await interaction.fetchReply();
-    const collector = msg.createMessageComponentCollector({
-      componentType: ComponentType.Button,
-      time: 120000,
-    });
-
-    collector.on("collect", async (i) => {
-      if (i.user.id !== userId)
-        return i.reply({ content: "❌ Not your session.", flags: 64 });
-
-      switch (i.customId) {
-        case "prev": if (page > 0) page--; break;
-        case "next":
-          const max = Math.max(0, Math.ceil(getList().length / PAGE_SIZE) - 1);
-          if (page < max) page++;
-          break;
-        case "sort":
-          sortMode = sortMode === "name" ? "count" : sortMode === "count" ? "rarity" : "name";
-          page = 0;
-          break;
-        case "rarity":
-          const next = RARITY_ORDER.concat(["all"]);
-          rarityFilter = next[(next.indexOf(rarityFilter) + 1) % next.length];
-          page = 0;
-          break;
-        case "set_active":
-          const visible = paginate(getList());
-          if (visible.length > 0) {
-            user.trainer = visible[0].file;
-            await saveTrainerData();
-          }
-          break;
-      }
-
-      await i.deferUpdate();
-      await render();
-    });
-
-    collector.on("end", async () => {
-      try { await interaction.editReply({ components: [] }); } catch {}
-    });
+      collector.on("end", async () => {
+        const disabled = row.components.map(b => b.setDisabled(true));
+        await interaction.editReply({
+          embeds: [buildEmbed(owned, page, rarity)],
+          components: [new ActionRowBuilder().addComponents(...disabled)],
+        });
+      });
+    } catch (e) {
+      console.error("❌ Error in /showtrainers:", e);
+      if (!interaction.replied)
+        await interaction.reply({ content: "Error showing trainers.", flags: 64 });
+    }
   },
 };

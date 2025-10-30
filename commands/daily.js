@@ -1,176 +1,135 @@
+// ==========================================================
+// 🕒 /daily — claim daily TP, CC, and one random reward
+// ==========================================================
 import {
   SlashCommandBuilder,
   EmbedBuilder,
   ActionRowBuilder,
-  StringSelectMenuBuilder,
-  PermissionsBitField
-} from 'discord.js';
-import fs from 'fs/promises';
-import { spritePaths } from '../spriteconfig.js';
-import { rollForShiny } from '../helpers/shinyOdds.js';
+  StringSelectMenuBuilder
+} from "discord.js";
+import fs from "fs/promises";
+import { spritePaths } from "../spriteconfig.js";
+import { rollForShiny } from "../helpers/shinyOdds.js";
+const pokemonData = JSON.parse(await fs.readFile(new URL("../pokemonData.json", import.meta.url)));
+const trainerSprites = JSON.parse(await fs.readFile(new URL("../trainerSprites.json", import.meta.url)));
 
-const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
-const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
+// rarity weighting tables
+const POKEMON_RARITY_WEIGHTS = { common: 60, uncommon: 24, rare: 10, epic: 4, legendary: 1.5, mythic: 0.5 };
+const TRAINER_RARITY_WEIGHTS = { common: 65, uncommon: 22, rare: 8, epic: 3, legendary: 1, mythic: 1 };
 
-const POKEMON_RARITY_WEIGHTS = {
-  common: 60,
-  uncommon: 24,
-  rare: 10,
-  epic: 4,
-  legendary: 1.5,
-  mythic: 0.5
-};
-const TRAINER_RARITY_WEIGHTS = {
-  common: 65,
-  uncommon: 22,
-  rare: 8,
-  epic: 3,
-  legendary: 1,
-  mythic: 1
-};
-
+// daily timing and base rewards
 const DAILY_COOLDOWN_MS = 1000 * 60 * 60 * 24;
 const DAILY_TP_REWARD = 50;
 const DAILY_CC_REWARD = 25;
 
 export default {
   data: new SlashCommandBuilder()
-    .setName('daily')
-    .setDescription('Claim your daily TP, CC, and choose a reward (Pokémon or Trainer)!'),
+    .setName("daily")
+    .setDescription("Claim your daily TP, CC, and choose a random reward!"),
 
   async execute(interaction, trainerData, saveTrainerData) {
-    const userId = interaction.user.id;
-    if (!trainerData[userId]) {
-      trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {}, lastDaily: 0 };
-    }
-    const user = trainerData[userId];
+    const id = interaction.user.id;
+    // ensure user schema is initialized
+    trainerData[id] ??= { tp: 0, cc: 0, pokemon: {}, trainers: {}, lastDaily: 0 };
+    const user = trainerData[id];
 
-    // Cooldown check
+    // cooldown check
     const now = Date.now();
-    const lastDaily = user.lastDaily || 0;
-    if (now - lastDaily < DAILY_COOLDOWN_MS) {
-      const resetTime = new Date(lastDaily + DAILY_COOLDOWN_MS);
-      const remainingMs = resetTime - now;
-      const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-      const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-
+    if (now - (user.lastDaily || 0) < DAILY_COOLDOWN_MS) {
+      const next = new Date(user.lastDaily + DAILY_COOLDOWN_MS);
       return interaction.reply({
-        content:
-          `⏰ Daily already claimed!\nNext available in **${hours}h ${minutes}m ${seconds}s** (${resetTime.toLocaleString()})`,
-        ephemeral: true
+        content: `⏰ Already claimed!\nNext reset: **${next.toLocaleString()}**`,
+        flags: 64
       });
     }
 
-    // Award TP/CC and set cooldown
-    user.tp = (user.tp || 0) + DAILY_TP_REWARD;
-    user.cc = (user.cc || 0) + DAILY_CC_REWARD;
+    // grant TP & CC
+    user.tp += DAILY_TP_REWARD;
+    user.cc += DAILY_CC_REWARD;
     user.lastDaily = now;
     await saveTrainerData();
 
-    // Choice: Pokémon or Trainer
-    const typeMenu = new StringSelectMenuBuilder()
-      .setCustomId('daily_type')
-      .setPlaceholder('Choose your daily reward!')
-      .addOptions([
-        { label: 'Random Pokémon', value: 'pokemon', emoji: '🐾' },
-        { label: 'Random Trainer', value: 'trainer', emoji: '🎓' },
-      ]);
+    // ask which reward type to claim
+    const menu = new StringSelectMenuBuilder()
+      .setCustomId("daily_type")
+      .setPlaceholder("Choose your bonus!")
+      .addOptions(
+        { label: "Pokémon", value: "pokemon", emoji: "🐾" },
+        { label: "Trainer", value: "trainer", emoji: "🎓" }
+      );
+
     await interaction.reply({
       embeds: [
         new EmbedBuilder()
           .setColor(0x00ae86)
-          .setTitle('🎁 Daily Reward!')
-          .setDescription(
-            `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**!\nChoose your bonus reward:`
-          )
+          .setTitle("🎁 Daily Claimed!")
+          .setDescription(`You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**.\nChoose your bonus:`)
       ],
-      components: [new ActionRowBuilder().addComponents(typeMenu)],
-      ephemeral: true
+      components: [new ActionRowBuilder().addComponents(menu)],
+      flags: 64
     });
 
     const collector = interaction.channel.createMessageComponentCollector({
-      filter: (i) => i.user.id === userId,
+      filter: i => i.user.id === id,
       time: 120000
     });
 
-    collector.on('collect', async (i) => {
-      if (i.customId === 'daily_type') {
-        collector.stop();
-        const choice = i.values[0];
-        if (choice === 'pokemon') {
-          await awardRandomPokemon(i, user, saveTrainerData);
-        } else {
-          await awardRandomTrainer(i, user, saveTrainerData);
-        }
-      }
+    collector.on("collect", async i => {
+      collector.stop();
+      if (i.values[0] === "pokemon") await giveRandomPokemon(i, user, saveTrainerData);
+      else await giveRandomTrainer(i, user, saveTrainerData);
     });
 
-    collector.on('end', (collected, reason) => {
-      if (reason === 'time') {
-        interaction.editReply({
-          content: '⏳ Time’s up! Run `/daily` again to claim your reward.',
-          components: [],
-          embeds: []
-        });
-      }
+    collector.on("end", (_, reason) => {
+      if (reason === "time")
+        interaction.editReply({ content: "⌛ Time’s up — try again later!", components: [], embeds: [] });
     });
   }
 };
 
-function weightedRandomChoice(items, weights) {
-  const weighted = [];
-  for (const item of items) {
-    weighted.push(...Array(Math.round(weights[item.rarity.toLowerCase()] || 1)).fill(item));
-  }
-  return weighted[Math.floor(Math.random() * weighted.length)];
+// helper: weighted random choice
+function weightedRandomChoice(list, weights) {
+  const bag = [];
+  for (const item of list) bag.push(...Array(Math.round(weights[item.rarity?.toLowerCase()] || 1)).fill(item));
+  return bag[Math.floor(Math.random() * bag.length)];
 }
 
-async function awardRandomPokemon(interaction, user, saveTrainerData) {
-  const candidates = Object.values(pokemonData).filter(p => p.generation <= 5);
-  const pokemon = weightedRandomChoice(candidates, POKEMON_RARITY_WEIGHTS);
-  const isShiny = rollForShiny(user.tp);
-  user.pokemon[pokemon.name] = { owned: true, shiny: isShiny };
+// reward Pokémon (adds to count-based schema)
+async function giveRandomPokemon(inter, user, saveTrainerData) {
+  const pool = Object.values(pokemonData).filter(p => p.generation <= 5);
+  const mon = weightedRandomChoice(pool, POKEMON_RARITY_WEIGHTS);
+  const shiny = rollForShiny(user.tp);
+  const record = user.pokemon[mon.id] ?? { normal: 0, shiny: 0 };
+  shiny ? record.shiny++ : record.normal++;
+  user.pokemon[mon.id] = record;
   await saveTrainerData();
 
-  const sprite = isShiny
-    ? `${spritePaths.shiny}${pokemon.id}.gif`
-    : `${spritePaths.pokemon}${pokemon.id}.png`;
-
-  await interaction.update({
+  await inter.update({
     embeds: [
       new EmbedBuilder()
-        .setColor(isShiny ? 0xffd700 : 0x00ae86)
-        .setTitle('🎁 Daily Pokémon Reward!')
-        .setDescription(
-          isShiny
-            ? `✨ You found a **Shiny ${pokemon.name}!**`
-            : `You received a **${pokemon.name}!**`
-        )
-        .setThumbnail(sprite)
-        .setFooter({ text: 'Come back tomorrow for another reward!' })
+        .setColor(shiny ? 0xffd700 : 0x00ae86)
+        .setTitle("🎁 Pokémon Reward!")
+        .setDescription(shiny ? `✨ Shiny **${mon.name}** obtained!` : `You received **${mon.name}**!`)
+        .setThumbnail(`${shiny ? spritePaths.shiny : spritePaths.pokemon}${mon.id}.${shiny ? "gif" : "png"}`)
     ],
-    components: [],
-    ephemeral: false
+    components: []
   });
 }
 
-async function awardRandomTrainer(interaction, user, saveTrainerData) {
-  const candidates = Object.values(trainerSprites);
-  const trainer = weightedRandomChoice(candidates, TRAINER_RARITY_WEIGHTS);
-  user.trainers[trainer.filename] = true;
+// reward Trainer (adds to filename-based schema)
+async function giveRandomTrainer(inter, user, saveTrainerData) {
+  const pick = weightedRandomChoice(Object.values(trainerSprites), TRAINER_RARITY_WEIGHTS);
+  user.trainers[pick.filename] = (user.trainers[pick.filename] || 0) + 1;
   await saveTrainerData();
 
-  await interaction.update({
+  await inter.update({
     embeds: [
       new EmbedBuilder()
         .setColor(0x00ae86)
-        .setTitle('🎁 Daily Trainer Reward!')
-        .setDescription(`You received a **${trainer.name}!**`)
-        .setThumbnail(`${spritePaths.trainers}${trainer.filename}`)
-        .setFooter({ text: 'Come back tomorrow for another reward!' })
+        .setTitle("🎁 Trainer Reward!")
+        .setDescription(`You unlocked **${pick.name}**`)
+        .setThumbnail(`${spritePaths.trainers}${pick.filename}`)
     ],
-    components: [],
-    ephemeral: false
+    components: []
   });
 }

@@ -1,12 +1,12 @@
 // ==========================================================
-// 🤖 CoopBot Final Build (Render + Full Feature Integration)
+// 🤖 Coop's Collection Discord Bot — Final Version
+// Fully commented, Node 22 ESM-compatible
 // ==========================================================
 
-
-import fs from 'fs/promises';
-import path from 'path';
-import express from 'express';
-import fetch from 'node-fetch';
+import fs from "fs/promises";
+import path from "path";
+import express from "express";
+import fetch from "node-fetch";
 import {
   Client,
   GatewayIntentBits,
@@ -14,289 +14,27 @@ import {
   Collection,
   AttachmentBuilder,
   PermissionsBitField
-} from 'discord.js';
-import { v4 as uuidv4 } from 'uuid';
-import dotenv from 'dotenv';
+} from "discord.js";
+import { REST, Routes } from "discord.js";
+import { v4 as uuidv4 } from "uuid";
+import dotenv from "dotenv";
 dotenv.config();
 
-process.on('uncaughtException', err => console.error('Uncaught Exception:', err));
-process.on('unhandledRejection', reason => console.error('Unhandled Rejection:', reason));
-
 // ==========================================================
-// 🧱 Express Keep-Alive Server (Render requirement)
+// 🧩 Constants and globals
 // ==========================================================
-const app = express();
-app.use('/public', express.static(path.join(process.cwd(), 'public')));
-app.get('/', (req, res) => res.send('Bot is running!'));
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`✅ Listening on ${PORT}`));
+const TRAINERDATA_PATH = "./trainerData.json";     // local cache
+const AUTOSAVE_INTERVAL = 1000 * 60 * 30;          // 30 min
+const PORT = process.env.PORT || 10000;            // Render keep-alive
+const RANK_ROLES = {
+  0: "Beginner",
+  1000: "Collector",
+  5000: "Elite",
+  10000: "Master",
+  25000: "Legend"
+};
 
-// ==========================================================
-// ⚙️ Config
-// ==========================================================
-const STORAGE_CHANNEL_ID = process.env.STORAGE_CHANNEL_ID;
-const NEWS_CHANNEL_ID = process.env.NEWS_CHANNEL_ID;
-const AMAZON_TAG = 'coopscolle02b-20';
-const EBAY_ID = '2390378';
-const AUTOSAVE_INTERVAL = 30 * 60 * 1000; // 30 min
-const BACKUP_LIMIT = 5;
-
-// ---- TP-based Rank System ----
-const RANKS = [
-  { tp: 100, roleName: 'Novice Trainer' },
-  { tp: 500, roleName: 'Junior Trainer' },
-  { tp: 1000, roleName: 'Skilled Trainer' },
-  { tp: 2500, roleName: 'Experienced Trainer' },
-  { tp: 5000, roleName: 'Advanced Trainer' },
-  { tp: 7500, roleName: 'Expert Trainer' },
-  { tp: 10000, roleName: 'Veteran Trainer' },
-  { tp: 17500, roleName: 'Elite Trainer' },
-  { tp: 25000, roleName: 'Master Trainer' },
-  { tp: 50000, roleName: 'Gym Leader' },
-  { tp: 100000, roleName: 'Elite Four Member' },
-  { tp: 175000, roleName: 'Champion' },
-  { tp: 250000, roleName: 'Legend' }
-];
-
-function getRank(tp = 0) {
-  let role = RANKS[0].roleName;
-  for (const r of RANKS) if (tp >= r.tp) role = r.roleName;
-  return role;
-}
-
-// ==========================================================
-// 🧮 Rank Role Assignment Helper (Optimized)
-// ==========================================================
-async function updateUserRole(member, newRankName) {
-  try {
-    const guild = member.guild;
-    const allRanks = RANKS.map(r => r.roleName);
-
-    // ✅ Skip if user already has the desired rank
-    if (member.roles.cache.some(r => r.name === newRankName)) return;
-
-    // Remove any old rank roles that belong to this ladder
-    const rolesToRemove = member.roles.cache.filter(r => allRanks.includes(r.name));
-    if (rolesToRemove.size > 0) {
-      await member.roles.remove(rolesToRemove).catch(err =>
-        console.warn(`⚠️ Failed to remove old roles from ${member.user.tag}:`, err.message)
-      );
-    }
-
-    // Add the new rank role if it exists in the guild
-    const role = guild.roles.cache.find(r => r.name === newRankName);
-    if (role) {
-      await member.roles.add(role).catch(err =>
-        console.warn(`⚠️ Failed to assign ${newRankName} to ${member.user.tag}:`, err.message)
-      );
-    }
-  } catch (err) {
-    console.error(`❌ Error updating roles for ${member.user.tag}:`, err);
-  }
-}
-
-// ==========================================================
-// 💾 Trainer Data + Backups
-// ==========================================================
-let trainerData = {};
-
-async function saveTrainerDataLocal() {
-  await fs.writeFile('trainerData.json', JSON.stringify(trainerData, null, 2));
-}
-
-async function deleteOldBackups(channel) {
-  const msgs = await channel.messages.fetch({ limit: 50 });
-  const backups = msgs.filter(m => m.author.id === client.user.id && m.attachments.size);
-  const sorted = backups.sort((a, b) => b.createdTimestamp - a.createdTimestamp);
-  for (const msg of sorted.map(m => m).slice(BACKUP_LIMIT - 1)) await msg.delete().catch(() => {});
-}
-
-async function saveDataToDiscord() {
-  try {
-    if (!STORAGE_CHANNEL_ID) return;
-    const channel = await client.channels.fetch(STORAGE_CHANNEL_ID);
-    if (!channel) return;
-    await deleteOldBackups(channel);
-    const buffer = Buffer.from(JSON.stringify(trainerData, null, 2));
-    const attachment = new AttachmentBuilder(buffer, { name: 'trainerData.json' });
-    await channel.send({
-      content: `💾 Data backup — ${new Date().toLocaleString()}`,
-      files: [attachment]
-    });
-    console.log('✅ Trainer data backed up to Discord.');
-  } catch (e) {
-    console.error('❌ Error saving data to Discord:', e);
-  }
-}
-
-// ==========================================================
-// 🧩 Safe Merge Trainer Data Loader
-// Replaces full overwrite with schema-aware merging
-// ==========================================================
-async function loadTrainerData() {
-  try {
-    if (!STORAGE_CHANNEL_ID) {
-      console.log("⚠️ STORAGE_CHANNEL_ID not defined; skipping remote load.");
-      return;
-    }
-
-    const channel = await client.channels.fetch(STORAGE_CHANNEL_ID);
-    if (!channel) {
-      console.log("⚠️ Could not fetch storage channel; skipping.");
-      return;
-    }
-
-    console.log("📥 Loading trainerData.json from Discord...");
-    const messages = await channel.messages.fetch({ limit: 50 });
-    let backupData = null;
-
-    for (const msg of messages.values()) {
-      const att = msg.attachments.find(a => a.name === "trainerData.json");
-      if (att) {
-        const res = await fetch(att.url);
-        backupData = await res.json();
-        console.log(
-          `✅ Found trainerData.json (${Object.keys(backupData).length} users) in storage channel.`
-        );
-        break;
-      }
-    }
-
-    if (!backupData) {
-      console.log("⚠️ No trainerData.json found in storage channel.");
-      return;
-    }
-
-    // ✅ Merge backupData into current trainerData instead of replacing it
-    for (const [userId, data] of Object.entries(backupData)) {
-      // define new schema defaults
-      const defaultSchema = {
-        tp: 0,
-        cc: 0,
-        pokemon: {},
-        trainers: {},
-        trainer: "youngster-gen4.png",
-        displayedPokemon: [],
-      };
-
-      // normalize and merge
-      trainerData[userId] = {
-        ...defaultSchema,
-        ...trainerData[userId], // existing local fields (if any)
-        ...data, // remote fields overwrite duplicates
-      };
-
-      // ensure nested object safety
-      if (typeof trainerData[userId].pokemon !== "object")
-        trainerData[userId].pokemon = {};
-      if (typeof trainerData[userId].trainers !== "object")
-        trainerData[userId].trainers = {};
-      if (!Array.isArray(trainerData[userId].displayedPokemon))
-        trainerData[userId].displayedPokemon = [];
-    }
-
-    console.log(
-      `✅ Trainer data loaded safely with merged schema (${Object.keys(trainerData).length} users).`
-    );
-  } catch (e) {
-    console.error("❌ Error loading trainerData.json:", e);
-  }
-}
-
-// ==========================================================
-// 🔗 Affiliate Link Conversion
-// ==========================================================
-async function expandShortenedUrl(url) {
-  try {
-    const res = await fetch(url, { method: 'HEAD', redirect: 'follow' });
-    return res.url;
-  } catch {
-    return url;
-  }
-}
-
-async function extractAmazonProductId(url) {
-  let full = url;
-  if (url.includes('amzn.')) full = await expandShortenedUrl(url);
-  const dp = full.match(/\/dp\/([A-Z0-9]{10})/i);
-  if (dp) return dp[1];
-  const gp = full.match(/\/gp\/product\/([A-Z0-9]{10})/i);
-  if (gp) return gp[1];
-  return null;
-}
-function extractEbayItemId(url) {
-  const itm = url.match(/\/itm\/(\d+)/);
-  if (itm) return itm[1];
-  const item = url.match(/[?&]item=(\d+)/);
-  if (item) return item[1];
-  return null;
-}
-function createAmazonAffiliateLink(id) {
-  return `https://www.amazon.com/dp/${id}?tag=${AMAZON_TAG}`;
-}
-function createEbayAffiliateLink(id) {
-  return `https://www.ebay.com/itm/${id}?mkcid=1&mkrid=${EBAY_ID}`;
-}
-
-async function detectAndConvertLinks(content) {
-  const conversions = [];
-  const amazonMatches = content.matchAll(/https?:\/\/[^\s]*amazon\.[^\s]+/gi);
-  for (const m of amazonMatches) {
-    const id = await extractAmazonProductId(m[0]);
-    if (id) conversions.push({ type: 'Amazon', affiliate: createAmazonAffiliateLink(id) });
-  }
-  const ebayMatches = content.matchAll(/https?:\/\/[^\s]*ebay\.[^\s]+/gi);
-  for (const m of ebayMatches) {
-    const id = extractEbayItemId(m[0]);
-    if (id) conversions.push({ type: 'eBay', affiliate: createEbayAffiliateLink(id) });
-  }
-  return conversions;
-}
-
-// ==========================================================
-// 📰 PokéBeach Scraper
-// ==========================================================
-async function scrapePokebeach() {
-  if (!NEWS_CHANNEL_ID) return;
-  try {
-    const channel = await client.channels.fetch(NEWS_CHANNEL_ID);
-    if (!channel) return;
-    const res = await fetch('https://www.pokebeach.com/');
-    const html = await res.text();
-    const pattern = /<h[23][^>]*>[\s\S]*?<a[^>]+href=["']([^"']+)["'][^>]*>(.*?)<\/a>[\s\S]*?<\/h[23]>/gi;
-    const matches = html.matchAll(pattern);
-    const articles = [];
-    for (const match of matches) {
-      const link = match[1];
-      const title = match[2].replace(/<[^>]*>/g, '').trim();
-      if (link && title && link.includes('/20') && !link.includes('#'))
-        articles.push({ title, link });
-    }
-    if (!articles.length) return;
-    const lastKey = '_lastPokebeachArticle';
-    const lastUrl = trainerData[lastKey];
-    const newest = articles[0];
-    if (newest.link !== lastUrl) {
-  const embed = new EmbedBuilder()
-    .setColor(0x3b82f6)
-    .setTitle(newest.title)
-    .setURL(newest.link)
-    .setDescription(`New PokéBeach article: [${newest.title}](${newest.link})`)
-    .setTimestamp();
-
-  await channel.send({ embeds: [embed] });
-  trainerData[lastKey] = newest.link;
-  console.log('✅ New PokéBeach article posted.');
-    }
-  } catch (e) {
-    console.error('❌ PokéBeach scraping error:', e);
-  }
-}
-setInterval(scrapePokebeach, 6 * 60 * 60 * 1000);
-
-// ==========================================================
-// 🤖 Discord Client + Command Handling
-// ==========================================================
+// Discord client setup
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -305,115 +43,211 @@ const client = new Client({
     GatewayIntentBits.GuildMembers
   ]
 });
-const commands = new Collection();
+client.commands = new Collection();
 
-async function loadCommands() {
-  const folder = path.join(process.cwd(), 'commands');
-  const files = await fs.readdir(folder);
-  for (const file of files) {
-    if (!file.endsWith('.js')) continue;
-    const { default: command } = await import(path.join(folder, file));
-    commands.set(command.data.name, command);
+// ==========================================================
+// 💾 TRAINER DATA — Load / Save / Backup
+// ==========================================================
+
+// Load trainer data from Discord storage channel if available
+async function loadTrainerData() {
+  const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
+  const messages = await storageChannel.messages.fetch({ limit: 10 });
+  const latest = messages.find(m => m.attachments.size > 0 && m.attachments.first().name === "trainerData.json");
+
+  let loaded = {};
+  if (latest) {
+    const url = latest.attachments.first().url;
+    const res = await fetch(url);
+    loaded = await res.json();
+    console.log(`✅ Found trainerData.json (${Object.keys(loaded).length} users) in storage channel.`);
+  }
+
+  // local fallback
+  try {
+    const local = JSON.parse(await fs.readFile(TRAINERDATA_PATH, "utf8"));
+    Object.assign(loaded, local);
+  } catch {}
+
+  // normalize schema
+  for (const [id, u] of Object.entries(loaded)) {
+    u.tp ??= 0;
+    u.cc ??= 0;
+    u.pokemon ??= {};
+    u.trainers ??= {};
+    u.trainer ??= null;
+    u.displayedPokemon ??= [];
+  }
+
+  console.log(`✅ Trainer data loaded safely with merged schema (${Object.keys(loaded).length} users).`);
+  return loaded;
+}
+
+// Save trainer data locally
+async function saveTrainerDataLocal(data) {
+  await fs.writeFile(TRAINERDATA_PATH, JSON.stringify(data, null, 2));
+}
+
+// Upload backup to Discord channel
+async function saveDataToDiscord(data) {
+  try {
+    const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
+    const fileName = `trainerData-${new Date().toISOString().split("T")[0]}.json`;
+    const buffer = Buffer.from(JSON.stringify(data, null, 2));
+    const file = new AttachmentBuilder(buffer, { name: fileName });
+    await storageChannel.send({ content: `📦 Backup ${fileName}`, files: [file] });
+    console.log("✅ Trainer data backed up to Discord.");
+  } catch (err) {
+    console.error("❌ Error saving data to Discord:", err);
   }
 }
 
-client.once('ready', async () => {
-  console.log(`✅ Bot logged in as ${client.user.tag}`);
-  await loadTrainerData();
-  await loadCommands();
+// ==========================================================
+// 🧮 RANK / TP SYSTEM
+// ==========================================================
 
-  const { REST } = await import('@discordjs/rest');
-  const { Routes } = await import('discord-api-types/v10');
-  const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-  try {
-    const body = Array.from(commands.values()).map(c => c.data.toJSON());
-    await rest.put(Routes.applicationCommands(client.user.id), { body });
-    console.log(`✅ Registered ${commands.size} slash commands.`);
-  } catch (e) {
-    console.error('❌ Error registering commands:', e);
+// Determine role tier by TP
+function getRank(tp) {
+  const thresholds = Object.keys(RANK_ROLES).map(Number).sort((a, b) => a - b);
+  let role = RANK_ROLES[0];
+  for (const t of thresholds) if (tp >= t) role = RANK_ROLES[t];
+  return role;
+}
+
+// Update Discord member role (idempotent)
+async function updateUserRole(member, tp) {
+  const newRank = getRank(tp);
+  const role = member.guild.roles.cache.find(r => r.name === newRank);
+  if (!role) return;
+  if (member.roles.cache.has(role.id)) return; // already correct rank
+  for (const r of Object.values(RANK_ROLES)) {
+    const existing = member.guild.roles.cache.find(x => x.name === r);
+    if (existing && member.roles.cache.has(existing.id)) await member.roles.remove(existing);
   }
-});
+  await member.roles.add(role);
+  console.log(`🏅 ${member.user.username} promoted to ${newRank}`);
+}
 
 // ==========================================================
-// 🧠 Interaction + Message Logic
+// ⚙️ COMMAND LOADER
 // ==========================================================
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-  const command = commands.get(interaction.commandName);
-  if (!command)
-    return interaction.reply({ content: '❌ Command not found.', ephemeral: true });
-  try {
-    await command.execute(interaction, trainerData, saveDataToDiscord);
-  } catch (e) {
-    console.error(e);
-    if (interaction.replied || interaction.deferred)
-      await interaction.followUp({ content: '❌ Error executing command.', ephemeral: true });
-    else
-      await interaction.reply({ content: '❌ Error executing command.', ephemeral: true });
+async function loadCommands() {
+  const commandsPath = path.resolve("./commands");
+  const files = (await fs.readdir(commandsPath)).filter(f => f.endsWith(".js"));
+  for (const f of files) {
+    const cmd = (await import(`./commands/${f}`)).default;
+    client.commands.set(cmd.data.name, cmd);
   }
-});
+
+  const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
+  await rest.put(Routes.applicationCommands(client.user.id), {
+    body: client.commands.map(c => c.data.toJSON())
+  });
+  console.log(`✅ Registered ${client.commands.size} slash commands.`);
+}
 
 // ==========================================================
-// 🧩 MessageCreate Handler (Rank + TP Increment Optimized)
+// 🧠 MESSAGE XP / TP HANDLER
 // ==========================================================
 client.on("messageCreate", async msg => {
+  if (msg.author.bot || !msg.guild) return;
+  const id = msg.author.id;
+  trainerData[id] ??= { tp: 0, cc: 0, pokemon: {}, trainers: {}, trainer: null, displayedPokemon: [] };
+  trainerData[id].tp += 1;
+
+  // Update Discord role tier if needed
   try {
-    if (msg.author.bot || !msg.guild) return;
+    const member = await msg.guild.members.fetch(id);
+    await updateUserRole(member, trainerData[id].tp);
+  } catch {}
+});
 
-    // 🔗 Convert affiliate links if present
-    const conversions = await detectAndConvertLinks(msg.content);
-    if (conversions.length) {
-      try {
-        await msg.delete();
-        let out = `**${msg.author.username}** shared:\n`;
-        for (const c of conversions) out += `${c.affiliate}\n`;
-        out += "\n_Original message replaced with affiliate link(s). Coop may be compensated for purchases made through these links._";
-        await msg.channel.send(out);
-        console.log(`🔗 Converted ${conversions.length} link(s) from ${msg.author.tag}`);
-      } catch (e) {
-        console.error("Link conversion error:", e);
-      }
-      return; // stop further processing
-    }
+// ==========================================================
+// 🎮 SLASH COMMAND HANDLER
+// ==========================================================
+client.on("interactionCreate", async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+  const command = client.commands.get(interaction.commandName);
+  if (!command) return;
 
-    // 🎯 Initialize user record
-    if (!trainerData[msg.author.id]) trainerData[msg.author.id] = { tp: 0, cc: 0, pokemon: [], trainers: [] };
-
-    // 🌀 Increment Trainer Points
-    trainerData[msg.author.id].tp += 1;
-
-    // 🏅 Rank update
-    const member = await msg.guild.members.fetch(msg.author.id);
-    const rank = getRank(trainerData[msg.author.id].tp);
-    const hadRank = member.roles.cache.some(r => r.name === rank);
-
-    await updateUserRole(member, rank);
-
-    // 🎉 Announce promotion only if newly promoted
-    if (!hadRank && rank !== "Novice Trainer") {
-      await msg.channel.send(
-        `🎉 ${msg.author} reached **${rank}** rank with ${trainerData[msg.author.id].tp.toLocaleString()} TP!`
-      );
-    }
+  try {
+    await command.execute(interaction, trainerData, () => saveDataToDiscord(trainerData));
   } catch (err) {
-    console.error("❌ Error in messageCreate handler:", err);
+    console.error("❌ Command error:", err);
+    if (!interaction.replied)
+      await interaction.reply({ content: "❌ There was an error executing that command.", flags: 64 });
   }
 });
 
 // ==========================================================
-// 💾 Autosave + Graceful Shutdown
+// 🕒 AUTOSAVE AND SHUTDOWN
 // ==========================================================
-setInterval(() => saveDataToDiscord(), AUTOSAVE_INTERVAL);
-process.on('SIGINT', async () => {
-  await saveDataToDiscord();
-  process.exit(0);
-});
-process.on('SIGTERM', async () => {
-  await saveDataToDiscord();
-  process.exit(0);
+async function autosave() {
+  await saveTrainerDataLocal(trainerData);
+  await saveDataToDiscord(trainerData);
+}
+setInterval(autosave, AUTOSAVE_INTERVAL);
+
+process.on("SIGINT", async () => { console.log("💾 SIGINT → saving..."); await autosave(); process.exit(0); });
+process.on("SIGTERM", async () => { console.log("💾 SIGTERM → saving..."); await autosave(); process.exit(0); });
+
+// ==========================================================
+// 📰 POKÉBEACH UPDATES
+// ==========================================================
+async function checkPokeBeach() {
+  try {
+    const newsChannel = await client.channels.fetch(process.env.NEWS_CHANNEL_ID);
+    const res = await fetch("https://www.pokebeach.com/");
+    const html = await res.text();
+    const match = html.match(/<a href="(https:\/\/www\.pokebeach\.com\/\d{4}\/[^"]+)"/);
+    if (match) {
+      const url = match[1];
+      const last = await fs.readFile("./lastArticle.txt", "utf8").catch(() => "");
+      if (last !== url) {
+        await newsChannel.send(`📰 New PokéBeach Article:\n${url}`);
+        await fs.writeFile("./lastArticle.txt", url);
+      }
+    }
+  } catch (e) {
+    console.error("⚠️ PokéBeach fetch failed:", e.message);
+  }
+}
+setInterval(checkPokeBeach, 1000 * 60 * 60 * 6); // every 6 hours
+
+// ==========================================================
+// 🔗 AFFILIATE LINK CLEANER
+// ==========================================================
+client.on("messageCreate", async msg => {
+  if (msg.author.bot) return;
+  const content = msg.content;
+  if (/https?:\/\/(amzn\.to|www\.ebay\.com\/itm)/i.test(content)) {
+    await msg.delete().catch(() => {});
+    const cleaned = content
+      .replace(/amzn\.to/gi, "amazon.com")
+      .replace(/ebay\.com\/itm/gi, "ebay.com/itm");
+    await msg.channel.send(`🔗 Affiliate-safe link:\n${cleaned}`);
+  }
 });
 
 // ==========================================================
-// 🚀 Login
+// 🚀 BOT STARTUP
+// ==========================================================
+let trainerData = {};
+client.once("clientReady", async () => {
+  console.log(`✅ Logged in as ${client.user.tag}`);
+  trainerData = await loadTrainerData();
+  await loadCommands();
+  checkPokeBeach(); // run immediately
+});
+
+// ==========================================================
+// 🌐 EXPRESS KEEP-ALIVE SERVER (Render requirement)
+// ==========================================================
+const app = express();
+app.get("/", (_, res) => res.send("Bot is running!"));
+app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
+
+// ==========================================================
+// 🔐 LOGIN
 // ==========================================================
 client.login(process.env.BOT_TOKEN);

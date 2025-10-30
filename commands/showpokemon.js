@@ -1,159 +1,164 @@
+// ==========================================================
+// 🧩 /showpokemon — Displays owned Pokémon in paginated grid
+// ==========================================================
+
 import {
   SlashCommandBuilder,
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  ComponentType,
 } from "discord.js";
-import pokemonData from "../pokemonData.json" assert { type: "json" };
+import pokemonData from "../pokemonData.json" with { type: "json" };
 
-// ✅ Feature constants
-const PAGE_SIZE = 12;
+// Normalized rarity order
 const RARITY_ORDER = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
+
+// Normalize rarity/type helpers
+const normalizeRarity = r =>
+  RARITY_ORDER.includes(String(r).toLowerCase()) ? String(r).toLowerCase() : "common";
+const normalizeType = t => String(t || "unknown").toLowerCase();
+
+// Pagination helper
+function paginate(arr, per = 12) {
+  const pages = [];
+  for (let i = 0; i < arr.length; i += per) pages.push(arr.slice(i, i + per));
+  return pages.length ? pages : [[]];
+}
+
+// Build embed page
+function buildEmbed(userPokemon, pageIndex, rarity, type, shiny) {
+  const pages = paginate(userPokemon, 12);
+  const current = pages[pageIndex] ?? [];
+  const totalPages = pages.length;
+
+  const embed = new EmbedBuilder()
+    .setTitle("Your Pokémon Collection")
+    .setDescription(
+      `Filters → **Rarity:** ${rarity || "all"}, **Type:** ${type || "all"}, **Shiny:** ${shiny || "all"}\nPage ${pageIndex + 1}/${totalPages}`
+    )
+    .setColor("#4FC3F7");
+
+  if (!current.length) {
+    embed.addFields([{ name: "Empty", value: "No Pokémon match your filters." }]);
+  } else {
+    for (const p of current) {
+      const mon = pokemonData[p.id];
+      if (!mon) continue;
+      const name = mon.name ?? "Unknown";
+      embed.addFields([
+        {
+          name: `${name}${p.shiny ? " ✨" : ""}`,
+          value: `ID: ${p.id}\nRarity: ${normalizeRarity(mon.rarity)}\nType: ${normalizeType(mon.type)}\nCount: ${p.count}`,
+          inline: true,
+        },
+      ]);
+    }
+  }
+  return embed;
+}
 
 export default {
   data: new SlashCommandBuilder()
     .setName("showpokemon")
-    .setDescription("Browse your Pokémon collection (with filters).")
+    .setDescription("View your owned Pokémon with filters.")
     .addStringOption(opt =>
-      opt.setName("search")
-        .setDescription("Search Pokémon by name substring.")
-        .setRequired(false)
+      opt
+        .setName("rarity")
+        .setDescription("Filter by rarity")
+        .addChoices(...RARITY_ORDER.map(r => ({ name: r, value: r })))
+    )
+    .addStringOption(opt =>
+      opt.setName("type").setDescription("Filter by type (fire, grass, etc.)")
+    )
+    .addStringOption(opt =>
+      opt
+        .setName("shiny")
+        .setDescription("Filter shiny Pokémon")
+        .addChoices(
+          { name: "Yes", value: "yes" },
+          { name: "No", value: "no" }
+        )
     ),
 
   async execute(interaction, trainerData) {
-    await interaction.deferReply({ flags: 64 }); // ✅ Ephemeral response
-
-    const userId = interaction.user.id;
-    const user = trainerData[userId];
-    if (!user?.pokemon || Object.keys(user.pokemon).length === 0) {
-      await interaction.editReply("You don't own any Pokémon yet!");
-      return;
-    }
-
-    // ---------- Working state ----------
-    let page = 0;
-    let shinyView = "both"; // ✅ Shiny toggle
-    let sortMode = "name";  // ✅ Sort mode
-    let rarityFilter = "all"; // ✅ Rarity filter
-    let search = (interaction.options.getString("search") || "").trim().toLowerCase();
-
-    // ✅ Helper to build filtered/sorted Pokémon list
-    const getOwnedList = () => {
-      const entries = Object.entries(user.pokemon);
-      let list = entries.map(([id, counts]) => {
-        const mon = pokemonData[id];
-        if (!mon) return null;
-        const total = (counts.normal || 0) + (counts.shiny || 0);
-        return {
-          id: Number(id),
-          name: mon.name,
-          rarity: mon.rarity?.toLowerCase() || "common",
-          counts,
-          total,
-        };
-      }).filter(Boolean);
-
-      if (search) list = list.filter(p => p.name.toLowerCase().includes(search));
-      if (rarityFilter !== "all") list = list.filter(p => p.rarity === rarityFilter);
-      if (shinyView === "normal") list = list.filter(p => (p.counts.normal || 0) > 0);
-      if (shinyView === "shiny") list = list.filter(p => (p.counts.shiny || 0) > 0);
-
-      if (sortMode === "name") list.sort((a, b) => a.name.localeCompare(b.name));
-      else if (sortMode === "count") list.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
-      else if (sortMode === "rarity")
-        list.sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity));
-
-      return list;
-    };
-
-    const paginate = (list) => list.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
-
-    // ✅ Embed builder
-    const buildEmbed = () => {
-      const all = getOwnedList();
-      const shown = paginate(all);
-      const embed = new EmbedBuilder()
-        .setColor(0x00ae86)
-        .setTitle(`${interaction.user.username}'s Pokémon`)
-        .setDescription(
-          `✨ View: **${shinyView}** | 📊 Sort: **${sortMode}** | 💎 Rarity: **${rarityFilter}**\n` +
-          `Results: **${all.length}** • Page ${page + 1}/${Math.max(1, Math.ceil(all.length / PAGE_SIZE))}` +
-          (search ? `\n🔍 Filter: *${search}*` : "")
-        );
-
-      if (shown.length === 0) {
-        embed.addFields({ name: "No results", value: "Try different filters." });
-      } else {
-        for (const p of shown) {
-          const normal = p.counts.normal ?? 0;
-          const shiny = p.counts.shiny ?? 0;
-          embed.addFields({
-            name: `${p.name} (${p.rarity})`,
-            value: `Normal: **${normal}**${shiny ? ` • Shiny: **${shiny}** ✨` : ""}`,
-            inline: true,
-          });
-        }
+    try {
+      const user = trainerData[interaction.user.id];
+      if (!user || !user.pokemon || !Object.keys(user.pokemon).length) {
+        return await interaction.reply({
+          content: "❌ You don't own any Pokémon yet.",
+          flags: 64,
+        });
       }
-      return embed;
-    };
 
-    // ✅ Button row (pagination + filters)
-    const buildRow = () =>
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId("prev").setLabel("◀ Prev").setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId("next").setLabel("Next ▶").setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId("toggle_shiny").setLabel(`View: ${shinyView}`).setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId("sort").setLabel(`Sort: ${sortMode}`).setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId("rarity").setLabel(`Rarity: ${rarityFilter}`).setStyle(ButtonStyle.Secondary),
+      const rarity = normalizeRarity(interaction.options.getString("rarity"));
+      const type = normalizeType(interaction.options.getString("type"));
+      const shiny = interaction.options.getString("shiny");
+
+      // Convert stored structure { id: { normal, shiny } } → flat list
+      const list = [];
+      for (const [id, data] of Object.entries(user.pokemon)) {
+        if (data.normal > 0) list.push({ id, shiny: false, count: data.normal });
+        if (data.shiny > 0) list.push({ id, shiny: true, count: data.shiny });
+      }
+
+      // Apply filters
+      let filtered = list.filter(p => pokemonData[p.id]);
+      if (rarity && RARITY_ORDER.includes(rarity)) {
+        filtered = filtered.filter(
+          p => normalizeRarity(pokemonData[p.id].rarity) === rarity
+        );
+      }
+      if (type && type !== "all" && type !== "unknown") {
+        filtered = filtered.filter(
+          p => normalizeType(pokemonData[p.id].type) === type
+        );
+      }
+      if (shiny === "yes") filtered = filtered.filter(p => p.shiny);
+      if (shiny === "no") filtered = filtered.filter(p => !p.shiny);
+
+      // Sort by rarity then ID
+      filtered.sort((a, b) => {
+        const r1 = RARITY_ORDER.indexOf(normalizeRarity(pokemonData[a.id].rarity));
+        const r2 = RARITY_ORDER.indexOf(normalizeRarity(pokemonData[b.id].rarity));
+        return r1 === r2 ? a.id - b.id : r1 - r2;
+      });
+
+      let page = 0;
+      const embed = buildEmbed(filtered, page, rarity, type, shiny);
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId("prev").setLabel("⬅️").setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId("next").setLabel("➡️").setStyle(ButtonStyle.Secondary)
       );
 
-    const render = async () =>
-      await interaction.editReply({ embeds: [buildEmbed()], components: [buildRow()] });
+      const reply = await interaction.reply({
+        embeds: [embed],
+        components: [row],
+        flags: 64,
+      });
 
-    await render();
+      const collector = reply.createMessageComponentCollector({ time: 60_000 });
+      collector.on("collect", async i => {
+        if (i.user.id !== interaction.user.id)
+          return i.reply({ content: "Not your menu.", flags: 64 });
 
-    // ✅ Collector logic
-    const msg = await interaction.fetchReply();
-    const collector = msg.createMessageComponentCollector({
-      componentType: ComponentType.Button,
-      time: 120000,
-    });
+        const max = paginate(filtered).length;
+        if (i.customId === "next") page = (page + 1) % max;
+        if (i.customId === "prev") page = (page - 1 + max) % max;
+        await i.update({ embeds: [buildEmbed(filtered, page, rarity, type, shiny)], components: [row] });
+      });
 
-    collector.on("collect", async (i) => {
-      if (i.user.id !== userId)
-        return i.reply({ content: "❌ Not your session.", flags: 64 });
-
-      switch (i.customId) {
-        case "prev": if (page > 0) page--; break;
-        case "next":
-          const max = Math.max(0, Math.ceil(getOwnedList().length / PAGE_SIZE) - 1);
-          if (page < max) page++;
-          break;
-        case "toggle_shiny":
-          shinyView = shinyView === "both" ? "normal" : shinyView === "normal" ? "shiny" : "both";
-          page = 0;
-          break;
-        case "sort":
-          sortMode = sortMode === "name" ? "count" : sortMode === "count" ? "rarity" : "name";
-          page = 0;
-          break;
-        case "rarity":
-          const current = RARITY_ORDER.concat(["all"]);
-          rarityFilter = current[(current.indexOf(rarityFilter) + 1) % current.length];
-          page = 0;
-          break;
-      }
-      await i.deferUpdate();
-      await render();
-    });
-
-    collector.on("end", async () => {
-      try { await interaction.editReply({ components: [] }); } catch {}
-    });
+      collector.on("end", async () => {
+        const disabled = row.components.map(b => b.setDisabled(true));
+        await interaction.editReply({
+          embeds: [buildEmbed(filtered, page, rarity, type, shiny)],
+          components: [new ActionRowBuilder().addComponents(...disabled)],
+        });
+      });
+    } catch (e) {
+      console.error("❌ Error in /showpokemon:", e);
+      if (!interaction.replied)
+        await interaction.reply({ content: "Error showing Pokémon.", flags: 64 });
+    }
   },
 };

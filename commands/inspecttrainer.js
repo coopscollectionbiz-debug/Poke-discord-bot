@@ -1,40 +1,36 @@
+// ==========================================================
+// 👀 /inspecttrainer — view details for owned trainer sprite
+// ==========================================================
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
-
-const TRAINER_BASE_URL = "https://poke-discord-bot.onrender.com/public/sprites/trainers_2/";
+import trainerSprites from "../trainerSprites.json" assert { type: "json" };
 
 export default {
   data: new SlashCommandBuilder()
     .setName("inspecttrainer")
-    .setDescription("Inspect a trainer sprite by filename.")
-    .addStringOption(opt =>
-      opt.setName("filename")
-        .setDescription("Trainer filename (e.g., 'lass-gen4.png')")
-        .setRequired(true)
+    .setDescription("Inspect a trainer sprite you own.")
+    .addStringOption(o =>
+      o.setName("filename").setDescription("Trainer filename (e.g. lass-gen4.png)").setRequired(true)
     ),
 
   async execute(interaction, trainerData) {
-    await interaction.deferReply({ flags: 64 }); // ✅ Ephemeral
-
+    const file = interaction.options.getString("filename", true);
     const user = trainerData[interaction.user.id];
-    const filename = interaction.options.getString("filename", true);
+    if (!user?.trainers?.[file])
+      return interaction.reply({ content: `❌ You don’t own **${file}**.`, flags: 64 });
 
-    if (!user?.trainers?.[filename]) {
-      await interaction.editReply(`You don't own **${filename}**.`);
-      return;
-    }
-
-    const count = user.trainers[filename];
-    const url = `${TRAINER_BASE_URL}${filename}`;
+    const meta = trainerSprites[file] || {};
+    const count = user.trainers[file];
+    const active = user.trainer === file;
 
     const embed = new EmbedBuilder()
       .setColor(0xff9900)
-      .setTitle(`Trainer: ${filename}`)
+      .setTitle(meta.name || file)
       .setDescription(
-        `Owned ×**${count}**${user.trainer === filename ? " • ✅ Active" : ""}`
+        `Rarity: ${meta.rarity ?? "unknown"}\nOwned ×${count}${active ? " • ✅ Active" : ""}`
       )
-      .setImage(url)
-      .setFooter({ text: "Use /showtrainers to browse all your sprites." });
+      .setImage(`https://poke-discord-bot.onrender.com/public/sprites/trainers_2/${file}`)
+      .setFooter({ text: "Use /showtrainers to browse all owned sprites." });
 
-    await interaction.editReply({ embeds: [embed] });
-  },
+    await interaction.reply({ embeds: [embed], flags: 64 });
+  }
 };

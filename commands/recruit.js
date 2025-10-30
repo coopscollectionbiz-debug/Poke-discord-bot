@@ -1,3 +1,6 @@
+// ==========================================================
+// 🎯 /recruit — manual random Pokémon/trainer recruitment
+// ==========================================================
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -5,141 +8,99 @@ import {
   StringSelectMenuBuilder,
   ButtonBuilder,
   ButtonStyle
-} from 'discord.js';
-import fs from 'fs/promises';
-import { spritePaths } from '../spriteconfig.js';
-import { rollForShiny } from '../helpers/shinyOdds.js';
-
-const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
-const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
+} from "discord.js";
+import fs from "fs/promises";
+import { spritePaths } from "../spriteconfig.js";
+import { rollForShiny } from "../helpers/shinyOdds.js";
+const pokemonData = JSON.parse(await fs.readFile(new URL("../pokemonData.json", import.meta.url)));
+const trainerSprites = JSON.parse(await fs.readFile(new URL("../trainerSprites.json", import.meta.url)));
 
 const POKEMON_RARITY_WEIGHTS = { common: 60, uncommon: 24, rare: 10, epic: 4, legendary: 1.5, mythic: 0.5 };
 const TRAINER_RARITY_WEIGHTS = { common: 65, uncommon: 22, rare: 8, epic: 3, legendary: 1, mythic: 1 };
 
 export default {
   data: new SlashCommandBuilder()
-    .setName('recruit')
-    .setDescription('Recruit a Pokémon or Trainer to your collection!'),
+    .setName("recruit")
+    .setDescription("Recruit a Pokémon or Trainer!"),
 
   async execute(interaction, trainerData, saveTrainerData) {
     await interaction.deferReply({ flags: 64 });
-    const userId = interaction.user.id;
-    if (!trainerData[userId]) trainerData[userId] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
-    const user = trainerData[userId];
+    const id = interaction.user.id;
+    trainerData[id] ??= { tp: 0, cc: 0, pokemon: {}, trainers: {} };
+    const user = trainerData[id];
 
-    const typeMenu = new StringSelectMenuBuilder()
-      .setCustomId('recruit_type')
-      .setPlaceholder('Choose what to recruit!')
-      .addOptions([
-        { label: 'Recruit Pokémon', value: 'pokemon', emoji: '🐾' },
-        { label: 'Recruit Trainer', value: 'trainer', emoji: '🎓' },
-      ]);
-    const cancelButton = new ButtonBuilder()
-      .setCustomId('cancel_recruit')
-      .setLabel('Cancel')
-      .setStyle(ButtonStyle.Secondary);
+    const menu = new StringSelectMenuBuilder()
+      .setCustomId("recruit_type")
+      .setPlaceholder("Choose what to recruit")
+      .addOptions(
+        { label: "Pokémon", value: "pokemon", emoji: "🐾" },
+        { label: "Trainer", value: "trainer", emoji: "🎓" }
+      );
+    const cancel = new ButtonBuilder().setCustomId("cancel_recruit").setLabel("Cancel").setStyle(ButtonStyle.Secondary);
 
-    await interaction.reply({
-      embeds: [
-        new EmbedBuilder()
-          .setColor(0x00ae86)
-          .setTitle('🎯 Recruitment Time!')
-          .setDescription('What would you like to recruit today?'),
-      ],
+    await interaction.editReply({
+      embeds: [new EmbedBuilder().setColor(0x00ae86).setTitle("Recruitment Time!").setDescription("Pick your target:")],
       components: [
-        new ActionRowBuilder().addComponents(typeMenu),
-        new ActionRowBuilder().addComponents(cancelButton)
-      ],
-      ephemeral: true,
+        new ActionRowBuilder().addComponents(menu),
+        new ActionRowBuilder().addComponents(cancel)
+      ]
     });
 
-    const collector = interaction.channel.createMessageComponentCollector({
-      filter: (i) => i.user.id === userId,
-      time: 120000
-    });
-
-    collector.on('collect', async (i) => {
-      if (i.customId === 'cancel_recruit') {
-        collector.stop();
-        return i.update({
-          content: '❌ Recruitment cancelled.',
-          embeds: [],
-          components: [],
-        });
+    const collector = interaction.channel.createMessageComponentCollector({ filter: i => i.user.id === id, time: 120000 });
+    collector.on("collect", async i => {
+      if (i.customId === "cancel_recruit") {
+        collector.stop(); return i.update({ content: "❌ Cancelled.", embeds: [], components: [] });
       }
-      if (i.customId === 'recruit_type') {
+      if (i.customId === "recruit_type") {
         const choice = i.values[0];
         collector.stop();
-        if (choice === 'pokemon') {
-          await handlePokemonRecruit(i, user, saveTrainerData);
-        } else {
-          await handleTrainerRecruit(i, user, saveTrainerData);
-        }
-      }
-    });
-
-    collector.on('end', (collected, reason) => {
-      if (reason === 'time') {
-        interaction.editReply({
-          content: '⏳ Time’s up! Run `/recruit` again to try recruiting.',
-          components: [],
-          embeds: [],
-        });
+        if (choice === "pokemon") await recruitPokemon(i, user, saveTrainerData);
+        else await recruitTrainer(i, user, saveTrainerData);
       }
     });
   }
 };
 
-async function handlePokemonRecruit(interaction, user, saveTrainerData) {
-  const candidates = Object.values(pokemonData).filter(p => p.generation <= 5);
-  const pokemon = weightedRandomChoice(candidates, POKEMON_RARITY_WEIGHTS);
-  const isShiny = rollForShiny(user.tp);
-  user.pokemon[pokemon.name] = { owned: true, shiny: isShiny };
+function weightedRandomChoice(list, weights) {
+  const bag = [];
+  for (const item of list) bag.push(...Array(Math.round(weights[item.rarity?.toLowerCase()] || 1)).fill(item));
+  return bag[Math.floor(Math.random() * bag.length)];
+}
+
+async function recruitPokemon(i, user, saveTrainerData) {
+  const pool = Object.values(pokemonData).filter(p => p.generation <= 5);
+  const pick = weightedRandomChoice(pool, POKEMON_RARITY_WEIGHTS);
+  const shiny = rollForShiny(user.tp);
+  const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
+  shiny ? record.shiny++ : record.normal++;
+  user.pokemon[pick.id] = record;
   await saveTrainerData();
 
-  const sprite = isShiny
-    ? `${spritePaths.shiny}${pokemon.id}.gif`
-    : `${spritePaths.pokemon}${pokemon.id}.png`;
-
-  await interaction.update({
+  await i.update({
     embeds: [
       new EmbedBuilder()
-        .setColor(isShiny ? 0xffd700 : 0x00ae86)
-        .setTitle('🎯 Pokémon Recruited!')
-        .setDescription(isShiny
-          ? `✨ You successfully recruited a **Shiny ${pokemon.name}!**`
-          : `You recruited a **${pokemon.name}!**`)
-        .setThumbnail(sprite)
-        .setFooter({ text: 'Keep building your team!' })
+        .setColor(shiny ? 0xffd700 : 0x00ae86)
+        .setTitle("🎯 Pokémon Recruited!")
+        .setDescription(shiny ? `✨ You recruited a **Shiny ${pick.name}!**` : `You recruited a **${pick.name}!**`)
+        .setThumbnail(`${shiny ? spritePaths.shiny : spritePaths.pokemon}${pick.id}.${shiny ? "gif" : "png"}`)
     ],
-    components: [],
-    ephemeral: !isShiny,
+    components: []
   });
 }
 
-async function handleTrainerRecruit(interaction, user, saveTrainerData) {
-  const trainer = weightedRandomChoice(Object.values(trainerSprites), TRAINER_RARITY_WEIGHTS);
-  user.trainers[trainer.filename] = true;
+async function recruitTrainer(i, user, saveTrainerData) {
+  const pick = weightedRandomChoice(Object.values(trainerSprites), TRAINER_RARITY_WEIGHTS);
+  user.trainers[pick.filename] = (user.trainers[pick.filename] || 0) + 1;
   await saveTrainerData();
 
-  await interaction.update({
+  await i.update({
     embeds: [
       new EmbedBuilder()
         .setColor(0x00ae86)
-        .setTitle('🎓 Trainer Recruited!')
-        .setDescription(`You recruited a new **Trainer Sprite**: ${trainer.name}`)
-        .setThumbnail(`${spritePaths.trainers}${trainer.filename}`)
-        .setFooter({ text: 'View it later with /showtrainers!' })
+        .setTitle("🎓 Trainer Recruited!")
+        .setDescription(`You recruited **${pick.name}**`)
+        .setThumbnail(`${spritePaths.trainers}${pick.filename}`)
     ],
-    components: [],
-    ephemeral: true,
+    components: []
   });
-}
-
-function weightedRandomChoice(items, weights) {
-  const weighted = [];
-  for (const item of items) {
-    weighted.push(...Array(Math.round(weights[item.rarity?.toLowerCase()] || 1)).fill(item));
-  }
-  return weighted[Math.floor(Math.random() * weighted.length)];
 }

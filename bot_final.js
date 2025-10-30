@@ -11,6 +11,15 @@ import {
 } from 'discord.js';
 import { v4 as uuidv4 } from 'uuid'; // install with: npm install uuid
 
+// ---- Express static file serving ----
+const app = express();
+app.use('/public', express.static(path.join(process.cwd(), 'public')));
+app.get('/', (req, res) => {
+  res.send('Bot is running!');
+});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+
 // ---- Config ----
 const RANKS = [
   { tp: 100, roleName: 'Novice Trainer' },

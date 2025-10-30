@@ -3,6 +3,7 @@
 // Fully commented, Node 22 compatible, and production ready
 // ==========================================================
 
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 import fs from "fs/promises";
 import path from "path";
 import express from "express";

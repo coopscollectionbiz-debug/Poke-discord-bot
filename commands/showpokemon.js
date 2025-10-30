@@ -12,6 +12,7 @@ import {
   ComponentType
 } from "discord.js";
 import fs from "fs/promises";
+import { spritePaths } from "../spriteconfig.js"; // ✅ unified sprite configuration
 
 // =============================================
 // SAFE JSON LOADERS
@@ -64,7 +65,7 @@ export async function execute(interaction, trainerData) {
   const filterOwnership = interaction.options.getString("ownership") || "owned";
   const filterShiny = interaction.options.getString("shiny");
 
-  // guard
+  // Guard
   if (!user) {
     return interaction.reply({
       content: "❌ You don't have a trainer profile yet. Run /trainercard first.",
@@ -74,12 +75,14 @@ export async function execute(interaction, trainerData) {
 
   await interaction.deferReply({ ephemeral: true });
 
-  // filter master list
+  // Filter Pokémon master list
   let filtered = [...pokemonData];
   if (filterRarity)
-    filtered = filtered.filter((p) => p.rarity?.toLowerCase() === filterRarity.toLowerCase());
+    filtered = filtered.filter(
+      (p) => p.rarity?.toLowerCase() === filterRarity.toLowerCase()
+    );
 
-  // map owned data
+  // Map ownership data
   const owned = user.ownedPokemon || {};
   filtered = filtered.filter((p) => {
     const has = owned[p.id];
@@ -92,12 +95,14 @@ export async function execute(interaction, trainerData) {
     filtered = filtered.filter((p) => owned[p.id]?.shiny);
   }
 
-  // layout control
+  // Layout / pagination control
   const pageSize = 15;
   let page = 0;
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
-  // renderer
+  // =============================================
+  // RENDER PAGE
+  // =============================================
   const renderPage = () => {
     const slice = filtered.slice(page * pageSize, page * pageSize + pageSize);
     const rows = slice.map((p) => {
@@ -115,16 +120,14 @@ export async function execute(interaction, trainerData) {
     const embed = new EmbedBuilder()
       .setTitle(`📜 Pokémon Collection — Page ${page + 1}/${totalPages}`)
       .setColor(0x43b581)
-      .setDescription(
-        rows.join("\n") || "No Pokémon match this filter."
-      )
+      .setDescription(rows.join("\n") || "No Pokémon match this filter.")
       .setFooter({
         text: `Owned Pokémon: ${ownedCount} • Shiny: ${shinyCount} • Filter: ${
           filterRarity || "All"
         }`
       });
 
-    // main navigation
+    // Pagination buttons
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("prev_page")
@@ -142,7 +145,7 @@ export async function execute(interaction, trainerData) {
         .setStyle(ButtonStyle.Danger)
     );
 
-    // pokedex row (max 5 per page to stay within button limit)
+    // Pokédex inspect buttons (max 5 per page)
     const pokedexRow = new ActionRowBuilder();
     slice.slice(0, 5).forEach((p) => {
       pokedexRow.addComponents(
@@ -162,7 +165,9 @@ export async function execute(interaction, trainerData) {
     components: [row, pokedexRow]
   });
 
-  // collector
+  // =============================================
+  // MAIN COLLECTOR (pagination + inspect)
+  // =============================================
   const collector = msg.createMessageComponentCollector({
     componentType: ComponentType.Button,
     time: 120000
@@ -180,6 +185,7 @@ export async function execute(interaction, trainerData) {
         components: [newView.row, newView.pokedexRow]
       });
     }
+
     if (i.customId === "prev_page") {
       page--;
       const newView = renderPage();
@@ -188,20 +194,27 @@ export async function execute(interaction, trainerData) {
         components: [newView.row, newView.pokedexRow]
       });
     }
+
     if (i.customId === "close_list") {
       collector.stop("closed");
-      return i.update({ content: "Pokémon list closed.", embeds: [], components: [] });
+      return i.update({
+        content: "Pokémon list closed.",
+        embeds: [],
+        components: []
+      });
     }
 
-    // Pokédex inspect button
+    // =============================================
+    // 🔍 Pokédex Inspect Entry
+    // =============================================
     if (i.customId.startsWith("inspect_")) {
       const id = parseInt(i.customId.replace("inspect_", ""));
       const p = pokemonData.find((x) => x.id === id);
       if (!p)
         return i.reply({ content: "Pokémon not found.", ephemeral: true });
 
-      const normalSprite = `https://poke-discord-bot.onrender.com/public/sprites/pokemon/${p.id}.gif`;
-      const shinySprite = `https://poke-discord-bot.onrender.com/public/sprites/pokemon/${p.id}_shiny.gif`;
+      const normalSprite = `${spritePaths.pokemon}${p.id}.gif`;
+      const shinySprite = `${spritePaths.shiny}${p.id}.gif`;
 
       let showingShiny = false;
       const entryEmbed = new EmbedBuilder()
@@ -231,6 +244,7 @@ export async function execute(interaction, trainerData) {
 
       await i.update({ embeds: [entryEmbed], components: [shinyRow] });
 
+      // Inner collector for shiny toggle
       const innerCollector = i.message.createMessageComponentCollector({
         componentType: ComponentType.Button,
         time: 60000

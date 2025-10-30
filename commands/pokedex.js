@@ -12,6 +12,7 @@ import {
   ComponentType
 } from "discord.js";
 import fs from "fs/promises";
+import { spritePaths } from "../spriteconfig.js"; // ✅ Unified sprite system
 
 // =============================================
 // Load Pokémon data safely (no assert needed)
@@ -24,9 +25,7 @@ const pokemonData = JSON.parse(
 // Helper: find Pokémon by name (case-insensitive)
 // =============================================
 function findPokemonByName(name) {
-  return pokemonData.find(
-    (p) => p.name.toLowerCase() === name.toLowerCase()
-  );
+  return pokemonData.find((p) => p.name.toLowerCase() === name.toLowerCase());
 }
 
 // =============================================
@@ -60,24 +59,29 @@ export async function execute(interaction) {
   await interaction.deferReply({ ephemeral: true });
 
   // =============================================
-  // Embed for Pokémon Info
+  // Hosted sprite URLs (normal + shiny)
   // =============================================
-  const normalSprite = `https://poke-discord-bot.onrender.com/public/sprites/pokemon/${pokemon.id}.gif`;
-  const shinySprite = `https://poke-discord-bot.onrender.com/public/sprites/pokemon/${pokemon.id}_shiny.gif`;
+  const normalSprite = `${spritePaths.pokemon}${pokemon.id}.png`;
+  const shinySprite = `${spritePaths.shiny}${pokemon.id}.png`;
 
   let showingShiny = false;
 
+  // =============================================
+  // Embed for Pokémon Info
+  // =============================================
   const embed = new EmbedBuilder()
     .setTitle(`${pokemon.name} — #${pokemon.id}`)
     .setColor(0xffcb05)
     .setDescription(
-      `🗒️ **Type:** ${pokemon.type.join(
-        "/"
-      )}\n⭐ **Rarity:** ${pokemon.rarity}\n📘 **Description:** ${
+      `🗒️ **Type:** ${pokemon.type.join("/")}\n⭐ **Rarity:** ${
+        pokemon.rarity
+      }\n📘 **Description:** ${
         pokemon.description || "No Pokédex entry available."
       }`
     )
-    .setThumbnail(normalSprite);
+    .setThumbnail(normalSprite)
+    .setFooter({ text: "Coop’s Collection Pokédex" })
+    .setTimestamp();
 
   // =============================================
   // Buttons: toggle shiny, close
@@ -124,7 +128,11 @@ export async function execute(interaction) {
 
       case "close_entry": {
         collector.stop("closed");
-        await i.update({ content: "Pokédex entry closed.", embeds: [], components: [] });
+        await i.update({
+          content: "Pokédex entry closed.",
+          embeds: [],
+          components: []
+        });
         break;
       }
 

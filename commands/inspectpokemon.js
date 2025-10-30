@@ -4,15 +4,13 @@
 
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import fs from "fs/promises";
+import { spritePaths } from "../spriteconfig.js"; // ✅ Use hosted URLs
 
 // ✅ JSON-safe import for Render (no assert { type: "json" })
 const pokemonData = JSON.parse(
   await fs.readFile(new URL("../pokemonData.json", import.meta.url))
 );
 
-// ==========================================================
-// 🧩 Command Definition
-// ==========================================================
 export default {
   data: new SlashCommandBuilder()
     .setName("inspectpokemon")
@@ -24,9 +22,6 @@ export default {
         .setRequired(true)
     ),
 
-  // ==========================================================
-  // ⚙️ Command Execution
-  // ==========================================================
   async execute(interaction) {
     await interaction.deferReply({ flags: 64 });
 
@@ -45,19 +40,24 @@ export default {
       });
     }
 
-    // Build detailed embed
+    // ✅ Use hosted sprite URL (supports shiny later if needed)
+    // Detect shiny if your data has a "shiny" flag (optional for now)
+  const spriteUrl = pokemon.shiny
+  ? `${spritePaths.shiny}${pokemon.id}.png`
+  : `${spritePaths.pokemon}${pokemon.id}.png`;
+
     const embed = new EmbedBuilder()
       .setTitle(`${pokemon.name}  #${pokemon.id}`)
       .setDescription(
-        `**Rarity:** ${pokemon.rarity.toUpperCase()}\n` +
+        `**Rarity:** ${pokemon.rarity?.toUpperCase() ?? "Unknown"}\n` +
           (pokemon.type ? `**Type:** ${pokemon.type}\n` : "") +
           (pokemon.generation ? `**Generation:** ${pokemon.generation}\n` : "")
       )
-      .setImage(pokemon.sprite)
+      .setImage(spriteUrl)
       .setColor(0x1abc9c)
-      .setFooter({ text: "Pokémon data sourced from Coop's Collection database" })
+      .setFooter({ text: "Pokémon data sourced from Coop's Collection" })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });
-  }
+  },
 };

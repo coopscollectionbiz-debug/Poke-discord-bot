@@ -10,6 +10,7 @@ import {
   ButtonStyle,
 } from "discord.js";
 import fs from "fs/promises";
+import { spritePaths } from "../spriteconfig.js";
 
 // ✅ JSON-safe imports (Render compatible)
 const trainerSprites = JSON.parse(
@@ -108,11 +109,12 @@ export default {
 
       // Build trainer grid (inline images)
       const grid = trainersToShow
-        .map(
-          t =>
-            `**${t.name}**\n[Sprite Link](${t.url || `https://poke-discord-bot.onrender.com/public/sprites/trainers_2/${t.file}`})`
-        )
-        .join("\n\n");
+  .map(t => {
+    const spriteUrl = t.url || 
+      (t.grayscale ? `${spritePaths.trainersGray}${t.file}` : `${spritePaths.trainers}${t.file}`);
+    return `**${t.name}**\n[Sprite Link](${spriteUrl})`;
+  })
+  .join("\n\n");
 
       embed.addFields({ name: "Owned Trainers", value: grid });
 

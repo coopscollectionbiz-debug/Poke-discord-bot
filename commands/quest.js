@@ -1,17 +1,26 @@
 // ==========================================================
 // 🗺️ /quest — complete a quest for a random reward
+// Coop's Collection Discord Bot
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js";
-import { rollForShiny } from "../shinyOdds.js"; // ✅ fixed import path to match your structure
+import { rollForShiny } from "../shinyOdds.js"; // ✅ fixed import path
 
-// Load Pokémon data safely
+// ==========================================================
+// 📦 Load Pokémon data safely (Render compatible)
+// ==========================================================
 const pokemonData = JSON.parse(
   await fs.readFile(new URL("../pokemonData.json", import.meta.url))
 );
 
+// ✅ Convert to iterable array
+const allPokemon = Object.values(pokemonData);
+
+// ==========================================================
+// 🧩 Command Definition
+// ==========================================================
 export default {
   data: new SlashCommandBuilder()
     .setName("quest")
@@ -34,9 +43,12 @@ export default {
     // ✅ 70% Pokémon reward, 30% Trainer reward
     const rewardType = Math.random() < 0.7 ? "pokemon" : "trainer";
 
+    // ==========================================================
+    // 🐾 Pokémon Reward
+    // ==========================================================
     if (rewardType === "pokemon") {
       // 🎲 Random Pokémon from Gen 1–5
-      const pool = pokemonData.filter(p => p.generation <= 5);
+      const pool = allPokemon.filter(p => p.generation <= 5);
       const pick = pool[Math.floor(Math.random() * pool.length)];
 
       // ✨ Shiny roll
@@ -51,8 +63,8 @@ export default {
 
       // ✅ Embed (unified sprite path)
       const spriteUrl = shiny
-        ? `${spritePaths.shiny}${pick.id}.png`
-        : `${spritePaths.pokemon}${pick.id}.png`;
+        ? `${spritePaths.shiny}${pick.id}.gif`
+        : `${spritePaths.pokemon}${pick.id}.gif`;
 
       const embed = new EmbedBuilder()
         .setColor(shiny ? 0xffd700 : 0x00ae86)
@@ -66,8 +78,12 @@ export default {
         .setFooter({ text: "Complete more quests for rarer rewards!" });
 
       await interaction.editReply({ embeds: [embed] });
-    } else {
-      // 🧍 Trainer sprite reward
+    }
+
+    // ==========================================================
+    // 🧍 Trainer Reward
+    // ==========================================================
+    else {
       const trainerPool = ["youngster-gen4.png", "lass-gen4.png"];
       const file = trainerPool[Math.floor(Math.random() * trainerPool.length)];
 

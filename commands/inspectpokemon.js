@@ -1,16 +1,25 @@
 // ==========================================================
 // inspectpokemon.js — Inspect details about a specific Pokémon
+// Coop’s Collection Discord Bot
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js"; // ✅ Use hosted URLs
 
-// ✅ JSON-safe import for Render (no assert { type: "json" })
+// ==========================================================
+// 📦 Safe JSON load (Render-compatible, no assert { type: "json" })
+// ==========================================================
 const pokemonData = JSON.parse(
   await fs.readFile(new URL("../pokemonData.json", import.meta.url))
 );
 
+// ✅ Convert object → array for iteration
+const allPokemon = Object.values(pokemonData);
+
+// ==========================================================
+// 🧩 Command definition
+// ==========================================================
 export default {
   data: new SlashCommandBuilder()
     .setName("inspectpokemon")
@@ -26,12 +35,14 @@ export default {
     await interaction.deferReply({ flags: 64 });
 
     const input = interaction.options.getString("name").trim().toLowerCase();
+
+    // ✅ Use allPokemon for lookups
     const pokemon =
-      pokemonData.find(
+      allPokemon.find(
         p =>
           p.name.toLowerCase() === input ||
           p.id.toString() === input ||
-          (p.aliases && p.aliases.includes(input))
+          (p.aliases && p.aliases.map(a => a.toLowerCase()).includes(input))
       ) || null;
 
     if (!pokemon) {
@@ -41,10 +52,7 @@ export default {
     }
 
     // ✅ Use hosted sprite URL (supports shiny later if needed)
-    // Detect shiny if your data has a "shiny" flag (optional for now)
-  const spriteUrl = pokemon.shiny
-  ? `${spritePaths.shiny}${pokemon.id}.png`
-  : `${spritePaths.pokemon}${pokemon.id}.png`;
+    const spriteUrl = `${spritePaths.pokemon}${pokemon.id}.gif`;
 
     const embed = new EmbedBuilder()
       .setTitle(`${pokemon.name}  #${pokemon.id}`)

@@ -1,5 +1,6 @@
 // ==========================================================
 // inspecttrainer.js — View another user's Trainer sprite collection
+// Coop’s Collection Discord Bot
 // ==========================================================
 
 import {
@@ -12,10 +13,15 @@ import {
 import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js";
 
-// ✅ JSON-safe imports (Render compatible)
+// ==========================================================
+// 📦 Safe JSON Load (Render-compatible)
+// ==========================================================
 const trainerSprites = JSON.parse(
   await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
 );
+
+// ✅ Convert to iterable array
+const allTrainers = Object.values(trainerSprites);
 
 // ==========================================================
 // 🧩 Command Definition
@@ -55,6 +61,7 @@ export default {
     const targetUser = interaction.options.getUser("user");
     const filterRarity = interaction.options.getString("rarity") || "all";
 
+    // Guard: no data
     if (!trainerData[targetUser.id]) {
       return interaction.editReply({
         content: `❌ ${targetUser.username} doesn’t have a trainer profile yet.`,
@@ -70,12 +77,15 @@ export default {
       });
     }
 
-    // Filter trainers based on rarity
-    const filtered = trainerSprites.filter(t => {
-      const owned = ownedTrainerKeys.includes(t.file);
+    // ==========================================================
+    // 🧮 Filter trainers by ownership + rarity
+    // ==========================================================
+    const filtered = allTrainers.filter(t => {
+      const key = t.filename || t.file; // accommodate both naming conventions
+      const owned = ownedTrainerKeys.includes(key);
       const rarityMatch =
         filterRarity === "all" ||
-        t.rarity?.toLowerCase() === filterRarity.toLowerCase();
+        (t.rarity && t.rarity.toLowerCase() === filterRarity.toLowerCase());
       return owned && rarityMatch;
     });
 
@@ -107,14 +117,18 @@ export default {
         .setFooter({ text: `Page ${page + 1} of ${totalPages}` })
         .setTimestamp();
 
-      // Build trainer grid (inline images)
+      // Build trainer grid
       const grid = trainersToShow
-  .map(t => {
-    const spriteUrl = t.url || 
-      (t.grayscale ? `${spritePaths.trainersGray}${t.file}` : `${spritePaths.trainers}${t.file}`);
-    return `**${t.name}**\n[Sprite Link](${spriteUrl})`;
-  })
-  .join("\n\n");
+        .map(t => {
+          const file = t.filename || t.file;
+          const spriteUrl = t.url
+            ? t.url
+            : t.grayscale
+            ? `${spritePaths.trainersGray}${file}`
+            : `${spritePaths.trainers}${file}`;
+          return `**${t.name}**\n[Sprite Link](${spriteUrl})`;
+        })
+        .join("\n\n");
 
       embed.addFields({ name: "Owned Trainers", value: grid });
 
@@ -141,7 +155,7 @@ export default {
     });
 
     // ==========================================================
-    // 🎮 Collector for pagination buttons
+    // 🎮 Pagination Collector
     // ==========================================================
     const collector = message.createMessageComponentCollector({
       time: 60000, // 1 minute timeout

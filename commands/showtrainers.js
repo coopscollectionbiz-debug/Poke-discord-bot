@@ -22,10 +22,10 @@ import {
   ButtonStyle
 } from "discord.js";
 import fs from "fs/promises";
-import { spritePaths } from "../spriteconfig.js"; // ✅ Use hosted paths
+import { spritePaths } from "../spriteconfig.js";
 
 // ==========================================================
-// 🧠 Load trainer sprite dataset
+// 🧠 Load trainer sprite dataset safely
 // ==========================================================
 const trainerSprites = JSON.parse(
   await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
@@ -36,12 +36,15 @@ function flattenTrainerSprites(json) {
   const flat = [];
   for (const [className, entries] of Object.entries(json)) {
     for (const entry of entries) {
-      if (!entry.file) continue;
-      flat.push({
-        name: className,
-        sprite: entry.file,
-        rarity: entry.rarity || "common"
-      });
+      if (typeof entry === "string") {
+        flat.push({ name: className, sprite: entry, rarity: "common" });
+      } else if (entry?.file && !entry.disabled) {
+        flat.push({
+          name: className,
+          sprite: entry.file,
+          rarity: entry.rarity || "common"
+        });
+      }
     }
   }
   return flat;
@@ -176,7 +179,7 @@ export default {
             "```"
           ].join("\n")
         )
-        .setColor(0xf39c12)
+        .setColor(0x43b581)
         .setFooter({ text: `Page ${page + 1} of ${totalPages}` })
         .setTimestamp();
 
@@ -238,7 +241,7 @@ export default {
             "```"
           ].join("\n")
         )
-        .setColor(0xf1c40f);
+        .setColor(0x3498db);
 
       const backRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -309,22 +312,20 @@ export default {
     // 🎮 Collector
     // ==========================================================
     const collector = message.createMessageComponentCollector({
-      time: 90000
+      time: 120000
     });
 
     collector.on("collect", async (i) => {
       if (i.user.id !== interaction.user.id)
         return i.reply({ content: "⚠️ You can’t control this menu.", ephemeral: true });
 
-      // Navigation logic
       if (i.customId === "prev" && currentPage > 0) currentPage--;
       else if (i.customId === "next" && currentPage < totalPages - 1) currentPage++;
       else if (i.customId === "close") {
         collector.stop();
-        return i.update({ components: [] });
+        return i.update({ content: "Trainer list closed.", embeds: [], components: [] });
       }
 
-      // Drill-down
       if (i.customId.startsWith("inspect_class_")) {
         const className = i.customId.replace("inspect_class_", "");
         const { embed, backRow, variantRow } = renderClass(className);

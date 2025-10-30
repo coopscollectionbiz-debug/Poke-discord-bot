@@ -15,17 +15,28 @@ import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js"; // ✅ Unified sprite system
 
 // =============================================
-// Load Pokémon data safely (no assert needed)
+// 📦 Safe JSON Load (Render compatible)
 // =============================================
 const pokemonData = JSON.parse(
   await fs.readFile(new URL("../pokemonData.json", import.meta.url))
 );
 
+// ✅ Convert to iterable array
+const allPokemon = Object.values(pokemonData);
+
 // =============================================
-// Helper: find Pokémon by name (case-insensitive)
+// Helper: find Pokémon by name or ID (case-insensitive)
 // =============================================
 function findPokemonByName(name) {
-  return pokemonData.find((p) => p.name.toLowerCase() === name.toLowerCase());
+  const input = name.toLowerCase();
+  return (
+    allPokemon.find(
+      (p) =>
+        p.name.toLowerCase() === input ||
+        p.id.toString() === input ||
+        (p.aliases && p.aliases.map((a) => a.toLowerCase()).includes(input))
+    ) || null
+  );
 }
 
 // =============================================
@@ -37,7 +48,7 @@ export const data = new SlashCommandBuilder()
   .addStringOption((option) =>
     option
       .setName("name")
-      .setDescription("Enter the Pokémon name")
+      .setDescription("Enter the Pokémon name or Pokédex ID")
       .setRequired(true)
   );
 
@@ -61,8 +72,8 @@ export async function execute(interaction) {
   // =============================================
   // Hosted sprite URLs (normal + shiny)
   // =============================================
-  const normalSprite = `${spritePaths.pokemon}${pokemon.id}.png`;
-  const shinySprite = `${spritePaths.shiny}${pokemon.id}.png`;
+  const normalSprite = `${spritePaths.pokemon}${pokemon.id}.gif`;
+  const shinySprite = `${spritePaths.shiny}${pokemon.id}.gif`;
 
   let showingShiny = false;
 
@@ -73,8 +84,8 @@ export async function execute(interaction) {
     .setTitle(`${pokemon.name} — #${pokemon.id}`)
     .setColor(0xffcb05)
     .setDescription(
-      `🗒️ **Type:** ${pokemon.type.join("/")}\n⭐ **Rarity:** ${
-        pokemon.rarity
+      `🗒️ **Type:** ${pokemon.type?.join("/") ?? "Unknown"}\n⭐ **Rarity:** ${
+        pokemon.rarity ?? "Unknown"
       }\n📘 **Description:** ${
         pokemon.description || "No Pokédex entry available."
       }`

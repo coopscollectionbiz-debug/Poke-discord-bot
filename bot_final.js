@@ -301,7 +301,16 @@ let trainerData = {};
 // 🌐 Express Keep-Alive (Render requirement)
 // ==========================================================
 const app = express();
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ✅ Serve static files from the /public directory
+app.use("/public", express.static(path.join(__dirname, "public")));
+
 app.get("/", (_, res) => res.send("Bot is running!"));
+
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
 
 // ==========================================================

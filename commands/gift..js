@@ -1,45 +1,44 @@
-import { SlashCommandBuilder } from 'discord.js';
+// ==========================================================
+// 💸 /gift — send CC to another user
+// ==========================================================
+import { SlashCommandBuilder } from "discord.js";
 
 const LARGE_GIFT_THRESHOLD = 1000;
 
 export default {
   data: new SlashCommandBuilder()
-    .setName('gift')
-    .setDescription('Gift CC to another user.')
-    .addUserOption(o => o.setName('target').setDescription('Recipient').setRequired(true))
-    .addIntegerOption(o => o.setName('amount').setDescription('Amount of CC to send').setRequired(true)),
+    .setName("gift")
+    .setDescription("Gift CC to another user.")
+    .addUserOption(o => o.setName("target").setDescription("Recipient").setRequired(true))
+    .addIntegerOption(o => o.setName("amount").setDescription("Amount of CC").setRequired(true)),
+
   async execute(interaction, trainerData, saveTrainerData) {
-    const senderId = interaction.user.id;
-    const target = interaction.options.getUser('target');
-    const amount = interaction.options.getInteger('amount');
+    const sender = interaction.user;
+    const recipient = interaction.options.getUser("target");
+    const amount = interaction.options.getInteger("amount");
 
-    if (senderId === target.id)
-      return interaction.reply({ content: '❌ You cannot gift yourself.', ephemeral: true });
-
+    // sanity checks
+    if (sender.id === recipient.id)
+      return interaction.reply({ content: "❌ You can’t gift yourself.", flags: 64 });
     if (amount <= 0)
-      return interaction.reply({ content: '❌ Amount must be positive.', ephemeral: true });
+      return interaction.reply({ content: "❌ Amount must be positive.", flags: 64 });
+    if (!trainerData[sender.id] || trainerData[sender.id].cc < amount)
+      return interaction.reply({ content: "💰 Insufficient CC.", flags: 64 });
 
-    if (!trainerData[senderId] || trainerData[senderId].cc < amount)
-      return interaction.reply({ content: '💰 You don’t have enough CC.', ephemeral: true });
+    // ensure recipient exists
+    trainerData[recipient.id] ??= { tp: 0, cc: 0, pokemon: {}, trainers: {} };
 
-    if (!trainerData[target.id]) trainerData[target.id] = { tp: 0, cc: 0, pokemon: {}, trainers: {} };
+    // log large transfers
+    if (amount >= LARGE_GIFT_THRESHOLD)
+      console.log(`[Gift] ${sender.username} → ${recipient.username} : ${amount} CC`);
 
-    if (amount >= LARGE_GIFT_THRESHOLD) {
-      await interaction.reply({
-        content: `⚠️ You are gifting a large amount (${amount} CC) to ${target.username}. Confirmed.`,
-        ephemeral: true
-      });
-    }
-
-    trainerData[senderId].cc -= amount;
-    trainerData[target.id].cc += amount;
+    // transfer
+    trainerData[sender.id].cc -= amount;
+    trainerData[recipient.id].cc += amount;
     await saveTrainerData();
 
-    console.log(`[GIFT] ${interaction.user.username} gifted ${amount} CC to ${target.username}`);
-
     await interaction.reply({
-      content: `🎁 ${interaction.user.username} gifted ${amount} CC to ${target.username}!`,
-      ephemeral: false
+      content: `🎁 **${sender.username}** gifted **${amount} CC** to **${recipient.username}**!`
     });
   }
 };

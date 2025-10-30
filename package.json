@@ -16,7 +16,7 @@
     "uuid": "^13.0.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "keywords": [
     "discord",

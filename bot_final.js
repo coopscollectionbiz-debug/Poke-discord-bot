@@ -9,6 +9,7 @@ import {
   Collection,
   PermissionsBitField
 } from 'discord.js';
+import { v4 as uuidv4 } from 'uuid'; // install with: npm install uuid
 
 // ---- Config ----
 const RANKS = [
@@ -34,29 +35,27 @@ const EBAY_ID = '2390378';
 let trainerData = {};
 const trainerDataPath = './trainerData.json';
 
-// ---- Data load/save ----
-async function loadTrainerData() {
-  try {
-    trainerData = JSON.parse(await fs.readFile(trainerDataPath, 'utf8'));
-    console.log('✅ Trainer data loaded from disk');
-  } catch {
-    trainerData = {};
-    console.log('ℹ️ No trainer data found, starting fresh');
-  }
-}
-async function saveTrainerData() {
-  await fs.writeFile(trainerDataPath, JSON.stringify(trainerData, null, 2));
-  console.log('✅ Trainer data saved to disk');
-}
+// ---- Robust Discord Backup Load/Save ----
 
 async function saveDataToDiscord(interaction = null) {
   if (!STORAGE_CHANNEL_ID) return;
   try {
     const channel = await client.channels.fetch(STORAGE_CHANNEL_ID);
     if (!channel) return;
+    // Clean up old backups before saving new one
+    await deleteOldBackups(channel);
+
+    const backupId = uuidv4();
     const compressed = zlib.deflateSync(Buffer.from(JSON.stringify(trainerData))).toString('base64');
-    await channel.send(`COMPRESSED_BACKUP: ${compressed}`);
-    console.log('✅ Trainer data backed up to Discord');
+    const maxLen = 4000 - 50; // leave room for metadata
+    const totalChunks = Math.ceil(compressed.length / maxLen);
+
+    for (let i = 0; i < totalChunks; i++) {
+      const chunkData = compressed.slice(i * maxLen, (i + 1) * maxLen);
+      // Format: COMPRESSED_BACKUP:<backupId>:<chunkNum>/<totalChunks>:<data>
+      await channel.send(`COMPRESSED_BACKUP:${backupId}:${i + 1}/${totalChunks}:${chunkData}`);
+    }
+    console.log(`✅ Trainer data backed up to Discord in ${totalChunks} chunks. Backup ID: ${backupId}`);
     if (interaction) {
       await interaction.reply({ content: '✅ Trainer data manually backed up to Discord!', ephemeral: true });
     }
@@ -68,6 +67,95 @@ async function saveDataToDiscord(interaction = null) {
   }
 }
 
+async function deleteOldBackups(channel) {
+  let lastId;
+  while (true) {
+    const options = { limit: 100 };
+    if (lastId) options.before = lastId;
+    const messages = await channel.messages.fetch(options);
+    const backupMsgs = Array.from(messages.values()).filter(m =>
+      m.content.startsWith('COMPRESSED_BACKUP:')
+    );
+    for (const msg of backupMsgs) {
+      await msg.delete().catch(() => {});
+    }
+    if (messages.size < 100) break;
+    lastId = messages.last()?.id;
+    if (!lastId) break;
+  }
+}
+
+async function loadTrainerData() {
+  if (STORAGE_CHANNEL_ID) {
+    try {
+      const channel = await client.channels.fetch(STORAGE_CHANNEL_ID);
+      if (channel) {
+        // Fetch up to 1000 messages for robustness
+        let allMsgs = [];
+        let lastId;
+        for (let i = 0; i < 10; i++) {
+          const options = { limit: 100 };
+          if (lastId) options.before = lastId;
+          const messages = await channel.messages.fetch(options);
+          allMsgs = allMsgs.concat(Array.from(messages.values())
+            .filter(m => m.content.startsWith('COMPRESSED_BACKUP:')));
+          if (messages.size < 100) break;
+          lastId = messages.last()?.id;
+          if (!lastId) break;
+        }
+        // Group by backupId
+        const backupGroups = {};
+        for (const msg of allMsgs) {
+          const match = msg.content.match(/^COMPRESSED_BACKUP:([a-f0-9\-]+):(\d+)\/(\d+):(.*)$/s);
+          if (match) {
+            const [, backupId, chunkNum, totalChunks, chunkData] = match;
+            if (!backupGroups[backupId]) backupGroups[backupId] = { totalChunks: Number(totalChunks), chunks: {}, latest: 0 };
+            backupGroups[backupId].chunks[Number(chunkNum)] = chunkData;
+            backupGroups[backupId].latest = Math.max(backupGroups[backupId].latest || 0, msg.createdTimestamp);
+          }
+        }
+        // Find most recent complete backup
+        let latestCompleteBackup = null;
+        let latestTimestamp = 0;
+        for (const [backupId, group] of Object.entries(backupGroups)) {
+          if (Object.keys(group.chunks).length === group.totalChunks && group.latest > latestTimestamp) {
+            latestCompleteBackup = group;
+            latestTimestamp = group.latest;
+          }
+        }
+        if (latestCompleteBackup) {
+          const orderedChunks = [];
+          for (let i = 1; i <= latestCompleteBackup.totalChunks; i++) {
+            orderedChunks.push(latestCompleteBackup.chunks[i]);
+          }
+          const compressedBackup = orderedChunks.join('');
+          const decompressed = zlib.inflateSync(Buffer.from(compressedBackup, 'base64')).toString();
+          trainerData = JSON.parse(decompressed);
+          console.log('✅ Trainer data loaded from Discord backup');
+          return;
+        } else {
+          console.warn('⚠️ No complete backup found in Discord messages.');
+        }
+      }
+    } catch (err) {
+      console.error('❌ Error loading Discord backup:', err);
+      // Will fall back to local disk below
+    }
+  }
+  // Fallback: Load from local disk
+  try {
+    trainerData = JSON.parse(await fs.readFile(trainerDataPath, 'utf8'));
+    console.log('✅ Trainer data loaded from disk');
+  } catch {
+    trainerData = {};
+    console.log('ℹ️ No trainer data found, starting fresh');
+  }
+}
+
+async function saveTrainerData() {
+  await fs.writeFile(trainerDataPath, JSON.stringify(trainerData, null, 2));
+  console.log('✅ Trainer data saved to disk');
+}
 setInterval(async () => {
   await saveTrainerData();
   await saveDataToDiscord();
@@ -238,7 +326,6 @@ async function loadCommands() {
 }
 
 // ---- Event listeners ----
-// Correct for discord.js v14:
 client.once('ready', async () => {
   console.log(`✅ Bot logged in as ${client.user.tag}`);
   await loadTrainerData();

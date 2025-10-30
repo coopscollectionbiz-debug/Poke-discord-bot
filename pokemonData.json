@@ -17,7 +17,7 @@
   "2": {
     "id": 2,
     "name": "Ivysaur",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Kanto",
     "types": [
       12,
@@ -34,7 +34,7 @@
   "3": {
     "id": 3,
     "name": "Venusaur",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       12,
@@ -63,7 +63,7 @@
   "5": {
     "id": 5,
     "name": "Charmeleon",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Kanto",
     "types": [
       10
@@ -79,7 +79,7 @@
   "6": {
     "id": 6,
     "name": "Charizard",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       10,
@@ -108,7 +108,7 @@
   "8": {
     "id": 8,
     "name": "Wartortle",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Kanto",
     "types": [
       11
@@ -124,7 +124,7 @@
   "9": {
     "id": 9,
     "name": "Blastoise",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       11
@@ -865,7 +865,7 @@
   "59": {
     "id": 59,
     "name": "Arcanine",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       10
@@ -955,7 +955,7 @@
   "65": {
     "id": 65,
     "name": "Alakazam",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       14
@@ -999,7 +999,7 @@
   "68": {
     "id": 68,
     "name": "Machamp",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       2
@@ -1389,7 +1389,7 @@
   "94": {
     "id": 94,
     "name": "Gengar",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       8,
@@ -1906,7 +1906,7 @@
   "130": {
     "id": 130,
     "name": "Gyarados",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       11,
@@ -1921,7 +1921,7 @@
   "131": {
     "id": 131,
     "name": "Lapras",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       11,
@@ -1966,7 +1966,7 @@
   "134": {
     "id": 134,
     "name": "Vaporeon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       11
@@ -1980,7 +1980,7 @@
   "135": {
     "id": 135,
     "name": "Jolteon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       13
@@ -1994,7 +1994,7 @@
   "136": {
     "id": 136,
     "name": "Flareon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       10
@@ -2037,7 +2037,7 @@
   "139": {
     "id": 139,
     "name": "Omastar",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       6,
@@ -2067,7 +2067,7 @@
   "141": {
     "id": 141,
     "name": "Kabutops",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       6,
@@ -2082,7 +2082,7 @@
   "142": {
     "id": 142,
     "name": "Aerodactyl",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       6,
@@ -2095,7 +2095,7 @@
   "143": {
     "id": 143,
     "name": "Snorlax",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       1
@@ -2178,7 +2178,7 @@
   "149": {
     "id": 149,
     "name": "Dragonite",
-    "tier": "legendary",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       16,
@@ -2231,7 +2231,7 @@
   "153": {
     "id": 153,
     "name": "Bayleef",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       12
@@ -2247,7 +2247,7 @@
   "154": {
     "id": 154,
     "name": "Meganium",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       12
@@ -2275,7 +2275,7 @@
   "156": {
     "id": 156,
     "name": "Quilava",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       10
@@ -2291,7 +2291,7 @@
   "157": {
     "id": 157,
     "name": "Typhlosion",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       10
@@ -2319,7 +2319,7 @@
   "159": {
     "id": 159,
     "name": "Croconaw",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       11
@@ -2335,7 +2335,7 @@
   "160": {
     "id": 160,
     "name": "Feraligatr",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       11
@@ -2866,7 +2866,7 @@
   "196": {
     "id": 196,
     "name": "Espeon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       14
@@ -2880,7 +2880,7 @@
   "197": {
     "id": 197,
     "name": "Umbreon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       17
@@ -3085,7 +3085,7 @@
   "212": {
     "id": 212,
     "name": "Scizor",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       7,
@@ -3342,7 +3342,7 @@
   "230": {
     "id": 230,
     "name": "Kingdra",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       11,
@@ -3592,7 +3592,7 @@
   "248": {
     "id": 248,
     "name": "Tyranitar",
-    "tier": "legendary",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       6,
@@ -3660,7 +3660,7 @@
   "253": {
     "id": 253,
     "name": "Grovyle",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       12
@@ -3676,7 +3676,7 @@
   "254": {
     "id": 254,
     "name": "Sceptile",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       12
@@ -3704,7 +3704,7 @@
   "256": {
     "id": 256,
     "name": "Combusken",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       10,
@@ -3721,7 +3721,7 @@
   "257": {
     "id": 257,
     "name": "Blaziken",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       10,
@@ -3750,7 +3750,7 @@
   "259": {
     "id": 259,
     "name": "Marshtomp",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       11,
@@ -3767,7 +3767,7 @@
   "260": {
     "id": 260,
     "name": "Swampert",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       11,
@@ -4520,7 +4520,7 @@
   "311": {
     "id": 311,
     "name": "Plusle",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       13
@@ -4532,7 +4532,7 @@
   "312": {
     "id": 312,
     "name": "Minun",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       13
@@ -5012,7 +5012,7 @@
   "346": {
     "id": 346,
     "name": "Cradily",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       6,
@@ -5042,7 +5042,7 @@
   "348": {
     "id": 348,
     "name": "Armaldo",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       6,
@@ -5071,7 +5071,7 @@
   "350": {
     "id": 350,
     "name": "Milotic",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       11
@@ -5394,7 +5394,7 @@
   "373": {
     "id": 373,
     "name": "Salamence",
-    "tier": "legendary",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       16,
@@ -5441,7 +5441,7 @@
   "376": {
     "id": 376,
     "name": "Metagross",
-    "tier": "legendary",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       9,
@@ -5594,7 +5594,7 @@
   "388": {
     "id": 388,
     "name": "Grotle",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Sinnoh",
     "types": [
       12
@@ -5610,7 +5610,7 @@
   "389": {
     "id": 389,
     "name": "Torterra",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       12,
@@ -5639,7 +5639,7 @@
   "391": {
     "id": 391,
     "name": "Monferno",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Sinnoh",
     "types": [
       10,
@@ -5656,7 +5656,7 @@
   "392": {
     "id": 392,
     "name": "Infernape",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       10,
@@ -5685,7 +5685,7 @@
   "394": {
     "id": 394,
     "name": "Prinplup",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Sinnoh",
     "types": [
       11
@@ -5701,7 +5701,7 @@
   "395": {
     "id": 395,
     "name": "Empoleon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       11,
@@ -5908,7 +5908,7 @@
   "409": {
     "id": 409,
     "name": "Rampardos",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       6
@@ -5937,7 +5937,7 @@
   "411": {
     "id": 411,
     "name": "Bastiodon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       6,
@@ -6379,7 +6379,7 @@
   "442": {
     "id": 442,
     "name": "Spiritomb",
-    "tier": "common",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       8,
@@ -6424,7 +6424,7 @@
   "445": {
     "id": 445,
     "name": "Garchomp",
-    "tier": "legendary",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       16,
@@ -6467,7 +6467,7 @@
   "448": {
     "id": 448,
     "name": "Lucario",
-    "tier": "common",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       2,
@@ -6756,7 +6756,7 @@
   "468": {
     "id": 468,
     "name": "Togekiss",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       3
@@ -6785,7 +6785,7 @@
   "470": {
     "id": 470,
     "name": "Leafeon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       12
@@ -6799,7 +6799,7 @@
   "471": {
     "id": 471,
     "name": "Glaceon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       15
@@ -6916,7 +6916,7 @@
   "479": {
     "id": 479,
     "name": "Rotom",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       13,
@@ -9141,7 +9141,7 @@
   "635": {
     "id": 635,
     "name": "Hydreigon",
-    "tier": "legendary",
+    "tier": "epic",
     "region": "Unova",
     "types": [
       17,

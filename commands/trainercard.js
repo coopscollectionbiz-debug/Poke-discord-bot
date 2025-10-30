@@ -69,14 +69,28 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
   trainerData[userId] = user;
 
   // Paginated starter picker
-  const starters = Object.values(pokemonData).filter(p => p.generation <= 5);
+  // FIX: Use correct filter for Gen 1-5 starters (most Pokémon have no 'generation', so let's fallback to region)
+  const starters = Object.values(pokemonData).filter(
+    p => ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova'].includes(p.region)
+  );
   const starterNames = Array.from(new Set(starters.map(p => p.name))).sort();
   let page = 0;
   const totalPages = Math.ceil(starterNames.length / PAGE_SIZE);
 
+  // Robust error handling: If no starters, show error and abort
+  if (starterNames.length === 0) {
+    await interaction.reply({
+      content: '❌ No starter Pokémon found! Please check your pokemonData.json for valid entries.',
+      ephemeral: true
+    });
+    return;
+  }
+
   async function renderStarterMenu() {
     const options = starterNames.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(pname => {
-      const p = pokemonData[pname];
+      const p = pokemonData[Object.keys(pokemonData).find(
+        k => pokemonData[k].name === pname
+      )];
       return {
         label: p.name,
         value: p.name,
@@ -86,7 +100,7 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
 
     const starterMenu = new StringSelectMenuBuilder()
       .setCustomId('select_starter')
-      .setPlaceholder('Choose your starter Pokémon (Gen 1–5)!')
+      .setPlaceholder('Choose your starter Pokémon!')
       .addOptions(options);
 
     const navRow = new ActionRowBuilder().addComponents(
@@ -99,7 +113,7 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
         .setCustomId('next_starter_page')
         .setLabel('Next ➡️')
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(page === totalPages - 1)
+        .setDisabled(page >= totalPages - 1)
     );
     const cancelRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -108,7 +122,6 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    // Discord.js v14: ephemeral is supported, but deprecated in v15.
     await interaction.editReply({
       embeds: [
         new EmbedBuilder()
@@ -216,7 +229,7 @@ async function confirmSetup(interaction, trainerData, saveTrainerData, starter, 
   const userId = interaction.user.id;
   const user = trainerData[userId] || { tp: 0, cc: 0, pokemon: {}, trainers: {} };
 
-  const starterId = pokemonData[starter]?.id;
+  const starterId = pokemonData[Object.keys(pokemonData).find(k => pokemonData[k].name === starter)]?.id;
   const isShiny = rollForShiny(user.tp);
   const starterSprite = starterId ? (isShiny ? `${spritePaths.shiny}${starterId}.gif` : `${spritePaths.pokemon}${starterId}.png`) : null;
   const trainerSprite = `${spritePaths.trainers}${sprite}`;
@@ -279,13 +292,4 @@ async function confirmSetup(interaction, trainerData, saveTrainerData, starter, 
       interaction.editReply({ content: '⏳ Time’s up! Run `/trainercard` again to restart onboarding.', components: [], embeds: [] });
     }
   });
-}
-
-// Utility for weighted rarity arrays (used for random picking elsewhere)
-function weightedRandomArray(items, weights) {
-  const weighted = [];
-  for (const item of items) {
-    weighted.push(...Array(Math.round(weights[item.rarity?.toLowerCase()] || 1)).fill(item));
-  }
-  return weighted;
 }

@@ -1,420 +1,338 @@
-// ==========================================================
-// 🧩 /trainercard Command
-// Trainer Profile Display + Pokémon & Trainer Selection
-// ==========================================================
-//
-// ✅ Supports:
-//    - Displaying trainer card with sprite + up to 6 chosen Pokémon
-//    - Paginated Pokémon selector with filters: rarity, type, shiny, search
-//    - Paginated trainer selector with filters: rarity, search
-//    - Ephemeral safe collectors and persistence
-//    - Lowercased rarity & type normalization
-//    - Fixed rarity order: common → uncommon → rare → epic → legendary → mythic
-//
-// ==========================================================
+// ================================
+// /trainercard.js
+// Coop's Collection Discord Bot
+// ================================
 
 import {
   SlashCommandBuilder,
   EmbedBuilder,
-  ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ComponentType,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
+  ActionRowBuilder,
+  AttachmentBuilder,
+  ComponentType
 } from "discord.js";
-import pokemonData from "../pokemonData.json" assert { type: "json" };
-import trainerSprites from "../trainerSprites.json" assert { type: "json" };
-import { spritePaths } from "../spriteconfig.js";
+import fs from "fs/promises";
+import fetch from "node-fetch";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { rollForShiny } from "../shinyOdds.js";
 
+// ================================
+// SAFE JSON LOADERS
+// ================================
+const pokemonData = JSON.parse(
+  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
+);
+const trainerSprites = JSON.parse(
+  await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
+);
+
+// ================================
+// CONSTANTS
+// ================================
 const TRAINER_BASE_URL =
   "https://poke-discord-bot.onrender.com/public/sprites/trainers_2/";
-const PAGE_SIZE = 12;
-const MAX_DISPLAY = 6;
-const RARITY_ORDER = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
+const POKEMON_BASE_URL =
+  "https://poke-discord-bot.onrender.com/public/sprites/pokemon/";
+const TRAINER_DATA_PATH = new URL("../trainerData.json", import.meta.url);
 
-// ==========================================================
-// 🧩 Slash Command Definition
-// ==========================================================
-export default {
-  data: new SlashCommandBuilder()
-    .setName("trainercard")
-    .setDescription("View or customize your Trainer Card."),
+// ================================
+// RANK TIERS
+// ================================
+const rankTiers = [
+  { tp: 100, roleName: "Novice Trainer" },
+  { tp: 500, roleName: "Junior Trainer" },
+  { tp: 1000, roleName: "Skilled Trainer" },
+  { tp: 2500, roleName: "Experienced Trainer" },
+  { tp: 5000, roleName: "Advanced Trainer" },
+  { tp: 7500, roleName: "Expert Trainer" },
+  { tp: 10000, roleName: "Veteran Trainer" },
+  { tp: 17500, roleName: "Elite Trainer" },
+  { tp: 25000, roleName: "Master Trainer" },
+  { tp: 50000, roleName: "Gym Leader" },
+  { tp: 100000, roleName: "Elite Four Member" },
+  { tp: 175000, roleName: "Champion" },
+  { tp: 250000, roleName: "Legend" }
+];
 
-  async execute(interaction, trainerData, saveTrainerData) {
-    await interaction.deferReply({ flags: 64 }); // ✅ Ephemeral response
-    const userId = interaction.user.id;
+// ================================
+// HELPERS
+// ================================
+function getRank(tp) {
+  let rank = "Novice Trainer";
+  for (const tier of rankTiers) if (tp >= tier.tp) rank = tier.roleName;
+  return rank;
+}
 
-    // ✅ Ensure user data exists
-    if (!trainerData[userId]) trainerData[userId] = {};
-    const user = trainerData[userId];
-    user.tp ??= 0;
-    user.cc ??= 0;
-    if (!user.pokemon) user.pokemon = {};
-    if (!user.trainers) user.trainers = {};
-    user.trainer ??= "youngster-gen4.png";
-    user.displayedPokemon ??= [];
+async function saveTrainerData(trainerData) {
+  try {
+    await fs.writeFile(TRAINER_DATA_PATH, JSON.stringify(trainerData, null, 2));
+    console.log("✅ Trainer data saved locally.");
+  } catch (err) {
+    console.error("❌ Error saving trainerData:", err);
+  }
+}
 
-    // ✅ Render trainer card
-    await renderTrainerCard(interaction, user, saveTrainerData);
-  },
-};
+// ================================
+// CANVAS RENDERER
+// ================================
+async function renderTrainerCard(userData, username) {
+  const canvas = createCanvas(800, 450);
+  const ctx = canvas.getContext("2d");
 
-// ==========================================================
-// 🧾 Render Trainer Card Embed
-// ==========================================================
-async function renderTrainerCard(interaction, user, saveTrainerData) {
+  // background
+  ctx.fillStyle = "#f8f8f8";
+  ctx.fillRect(0, 0, 800, 450);
+
+  ctx.fillStyle = "#111";
+  ctx.font = "bold 26px Sans";
+  ctx.fillText(`${username}'s Trainer Card`, 40, 40);
+
+  // trainer sprite
+  if (userData.displayedTrainer) {
+    try {
+      const trainerURL = `${TRAINER_BASE_URL}${userData.displayedTrainer}`;
+      const trainerImg = await loadImage(trainerURL);
+      ctx.drawImage(trainerImg, 50, 100, 200, 250);
+    } catch {
+      ctx.fillText("Trainer Missing", 70, 250);
+    }
+  }
+
+  // Pokémon grid (3x2)
+  const gridX = 300, gridY = 100, size = 100, gap = 20;
+  const displayed = userData.displayedPokemon?.slice(0, 6) || [];
+
+  for (let i = 0; i < displayed.length; i++) {
+    const id = displayed[i];
+    const col = i % 3;
+    const row = Math.floor(i / 3);
+    const x = gridX + col * (size + gap);
+    const y = gridY + row * (size + gap);
+
+    try {
+      const img = await loadImage(`${POKEMON_BASE_URL}${id}.gif`);
+      ctx.drawImage(img, x, y, size, size);
+    } catch {
+      ctx.strokeStyle = "#999";
+      ctx.strokeRect(x, y, size, size);
+      ctx.fillText("?", x + 40, y + 60);
+    }
+  }
+
+  // stats
+  const rank = getRank(userData.tp);
+  const pokemonOwned = Object.keys(userData.ownedPokemon || {}).length;
+  const shinyCount = Object.values(userData.ownedPokemon || {}).filter(p => p.shiny).length;
+  const trainerCount = Object.keys(userData.trainers || {}).length;
+
+  ctx.fillStyle = "#000";
+  ctx.font = "18px Sans";
+  ctx.fillText(`Rank: ${rank}`, 40, 380);
+  ctx.fillText(`TP: ${userData.tp} | Coins: ${userData.coins}`, 40, 405);
+  ctx.fillText(
+    `Pokémon: ${pokemonOwned} | Shiny: ${shinyCount} | Trainers: ${trainerCount}`,
+    40,
+    430
+  );
+
+  return canvas;
+}
+
+// ================================
+// ONBOARDING HELPERS
+// ================================
+const starterIDs = [1, 4, 7, 152, 155, 158, 252, 255, 258, 387, 390, 393, 495, 498, 501];
+
+async function starterSelection(interaction, user, trainerData) {
+  const starters = pokemonData.filter(p => starterIDs.includes(p.id));
+
   const embed = new EmbedBuilder()
-    .setColor(0x0099ff)
-    .setTitle(`${interaction.user.username}'s Trainer Card`)
+    .setTitle("🌱 Choose Your Starter Pokémon")
     .setDescription(
-      `🧍 **Trainer Sprite:** ${user.trainer}\n` +
-        `💎 **TP:** ${user.tp.toLocaleString()} | 💰 **CC:** ${user.cc.toLocaleString()}`
+      starters.map(p => `**${p.name}** (${p.type.join("/")})`).join("\n")
     )
-    .setImage(`${TRAINER_BASE_URL}${user.trainer}`);
+    .setColor(0x43b581);
 
-  // ✅ Display selected Pokémon in a 3x2 grid
-  const grid = buildPokemonGrid(user);
-  embed.addFields({
-    name: "Displayed Pokémon",
-    value: grid.length > 0 ? grid.join("\n") : "No Pokémon selected yet.",
+  const buttons = starters.slice(0, 5).map(p =>
+    new ButtonBuilder()
+      .setCustomId(`starter_${p.id}`)
+      .setLabel(p.name)
+      .setStyle(ButtonStyle.Primary)
+  );
+
+  const row = new ActionRowBuilder().addComponents(buttons);
+  await interaction.reply({
+    embeds: [embed],
+    components: [row],
+    ephemeral: true
   });
 
-  // ✅ Button controls
+  const collector = interaction.channel.createMessageComponentCollector({
+    componentType: ComponentType.Button,
+    time: 30000
+  });
+
+  collector.on("collect", async i => {
+    if (!i.customId.startsWith("starter_")) return;
+    if (i.user.id !== interaction.user.id)
+      return i.reply({ content: "Not your onboarding!", ephemeral: true });
+
+    const starterId = parseInt(i.customId.split("_")[1]);
+    const isShiny = rollForShiny();
+    user.ownedPokemon[starterId] = { shiny: isShiny, count: 1 };
+    user.displayedPokemon = [starterId];
+
+    await i.update({
+      content: `✅ You chose **${pokemonData.find(p => p.id === starterId).name}** ${
+        isShiny ? "✨" : ""
+      } as your starter!`,
+      embeds: [],
+      components: []
+    });
+
+    await saveTrainerData(trainerData);
+    await trainerSelection(i, user, trainerData);
+  });
+}
+
+async function trainerSelection(interaction, user, trainerData) {
+  const embed = new EmbedBuilder()
+    .setTitle("🧍 Choose Your Trainer Sprite")
+    .setDescription("Pick your trainer appearance!")
+    .setColor(0x5865f2);
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("trainer_youngster")
+      .setLabel("Youngster 👦")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId("trainer_lass")
+      .setLabel("Lass 👧")
+      .setStyle(ButtonStyle.Primary)
+  );
+
+  await interaction.followUp({ embeds: [embed], components: [row], ephemeral: true });
+
+  const collector = interaction.channel.createMessageComponentCollector({
+    componentType: ComponentType.Button,
+    time: 30000
+  });
+
+  collector.on("collect", async i => {
+    if (!i.customId.startsWith("trainer_")) return;
+    if (i.user.id !== interaction.user.id)
+      return i.reply({ content: "Not your onboarding!", ephemeral: true });
+
+    const choice = i.customId === "trainer_youngster" ? "youngster-gen4.png" : "lass-gen4.png";
+    user.trainers[choice] = { count: 1 };
+    user.displayedTrainer = choice;
+
+    await saveTrainerData(trainerData);
+
+    await i.update({
+      content: `✅ You chose ${choice.replace(".png", "")} as your trainer!`,
+      embeds: [],
+      components: []
+    });
+
+    await showTrainerCard(i, user, trainerData);
+  });
+}
+
+// ================================
+// MAIN CARD DISPLAY
+// ================================
+async function showTrainerCard(interaction, user, trainerData) {
+  const username = interaction.user.username;
+  const canvas = await renderTrainerCard(user, username);
+  const buffer = await canvas.encode("png");
+  const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
+
+  const rank = getRank(user.tp);
+  const pokemonOwned = Object.keys(user.ownedPokemon || {}).length;
+  const shinyCount = Object.values(user.ownedPokemon || {}).filter(p => p.shiny).length;
+  const trainerCount = Object.keys(user.trainers || {}).length;
+
+  const embed = new EmbedBuilder()
+    .setTitle(`🧑 ${username}'s Trainer Card`)
+    .setColor(0xffcb05)
+    .setDescription(
+      `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **Coins:** ${user.coins}\n\n📊 **Progress:**\n• Pokémon Owned: ${pokemonOwned}\n• Shiny Pokémon: ${shinyCount} ✨\n• Trainers Recruited: ${trainerCount}`
+    )
+    .setImage("attachment://trainercard.png")
+    .setFooter({
+      text: "Coop’s Collection • View your card anytime with /trainercard"
+    });
+
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("change_trainer")
       .setLabel("Change Trainer Sprite")
+      .setEmoji("🧍")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId("change_pokemon")
+      .setLabel("Change Displayed Pokémon")
+      .setEmoji("🧬")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId("refresh_card")
+      .setLabel("Refresh Card")
+      .setEmoji("🔄")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("change_displayed")
-      .setLabel("Change Displayed Pokémon")
-      .setStyle(ButtonStyle.Primary)
+      .setCustomId("share_public")
+      .setLabel("Share Publicly")
+      .setEmoji("🌐")
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId("close_card")
+      .setLabel("Close")
+      .setEmoji("❌")
+      .setStyle(ButtonStyle.Danger)
   );
 
-  await interaction.editReply({ embeds: [embed], components: [row] });
-
-  // ✅ Button collector
-  const msg = await interaction.fetchReply();
-  const collector = msg.createMessageComponentCollector({
-    componentType: ComponentType.Button,
-    time: 60000,
-  });
-
-  collector.on("collect", async (btnInt) => {
-    if (btnInt.user.id !== interaction.user.id)
-      return btnInt.reply({ content: "❌ Not your trainer card.", flags: 64 });
-
-    if (btnInt.customId === "change_displayed")
-      await openPokemonSelector(btnInt, user, saveTrainerData);
-    if (btnInt.customId === "change_trainer")
-      await openTrainerSelector(btnInt, user, saveTrainerData);
-  });
-
-  collector.on("end", async () => {
-    const disabled = row.components.map((b) => b.setDisabled(true));
-    await interaction.editReply({
-      embeds: [embed],
-      components: [new ActionRowBuilder().addComponents(...disabled)],
-    });
+  await interaction.followUp({
+    embeds: [embed],
+    files: [attachment],
+    components: [row],
+    ephemeral: true
   });
 }
 
-// ==========================================================
-// 🎴 Pokémon Grid Builder (3x2)
-// ==========================================================
-function buildPokemonGrid(user) {
-  const ids = user.displayedPokemon.slice(0, MAX_DISPLAY);
-  if (ids.length === 0) return [];
-  const lines = [];
-  for (let i = 0; i < ids.length; i += 3) {
-    const row = ids
-      .slice(i, i + 3)
-      .map((id) => {
-        const mon = pokemonData[id];
-        if (!mon) return "❓";
-        const shiny = (user.pokemon[id]?.shiny || 0) > 0;
-        const sprite = shiny
-          ? `${spritePaths.pokemon.shiny}${id}.gif`
-          : `${spritePaths.pokemon.normal}${id}.gif`;
-        return `[${mon.name}](${sprite})`;
-      })
-      .join("  ");
-    lines.push(row);
+// ================================
+// SLASH COMMAND EXECUTION
+// ================================
+export const data = new SlashCommandBuilder()
+  .setName("trainercard")
+  .setDescription("View or create your Trainer Card!");
+
+export async function execute(interaction, trainerData) {
+  const userId = interaction.user.id;
+  const username = interaction.user.username;
+  let user = trainerData[userId];
+
+  // initialize schema
+  if (!user) {
+    user = trainerData[userId] = {
+      id: userId,
+      name: username,
+      coins: 0,
+      tp: 0,
+      rank: "Novice Trainer",
+      trainers: {},
+      ownedPokemon: {},
+      displayedPokemon: [],
+      displayedTrainer: null
+    };
   }
-  return lines;
-}
 
-// ==========================================================
-// 🧩 Pokémon Selector (Pagination + Filters)
-// ==========================================================
-async function openPokemonSelector(interaction, user, saveTrainerData) {
-  let page = 0;
-  let rarity = "all";
-  let type = "all";
-  let shiny = "both";
-  let search = "";
+  // onboarding condition
+  if (!user.displayedTrainer || Object.keys(user.ownedPokemon || {}).length === 0)
+    return starterSelection(interaction, user, trainerData);
 
-  const allOwned = Object.entries(user.pokemon);
-  if (allOwned.length === 0)
-    return interaction.reply({ content: "You don’t own any Pokémon yet!", flags: 64 });
-
-  const getFiltered = () => {
-    let list = allOwned
-      .map(([id, counts]) => {
-        const mon = pokemonData[id];
-        if (!mon) return null;
-        return {
-          id: Number(id),
-          name: mon.name,
-          rarity: (mon.rarity || "common").toLowerCase(),
-          type: (Array.isArray(mon.type) ? mon.type[0] : mon.type || "unknown").toLowerCase(),
-          counts,
-        };
-      })
-      .filter(Boolean);
-
-    if (rarity !== "all") list = list.filter((m) => m.rarity === rarity);
-    if (type !== "all") list = list.filter((m) => m.type === type);
-    if (shiny === "normal") list = list.filter((m) => (m.counts.normal || 0) > 0);
-    if (shiny === "shiny") list = list.filter((m) => (m.counts.shiny || 0) > 0);
-    if (search) list = list.filter((m) => m.name.toLowerCase().includes(search));
-
-    return list.sort((a, b) => a.name.localeCompare(b.name));
-  };
-
-  const renderPage = async () => {
-    const filtered = getFiltered();
-    const start = page * PAGE_SIZE;
-    const slice = filtered.slice(start, start + PAGE_SIZE);
-    const embed = new EmbedBuilder()
-      .setColor(0x00ae86)
-      .setTitle("Select Displayed Pokémon")
-      .setDescription(
-        `Select up to **${MAX_DISPLAY}** Pokémon to display.\n` +
-          `Filters → Rarity: **${rarity}**, Type: **${type}**, Shiny: **${shiny}**\n` +
-          `Results: ${filtered.length}, Page ${page + 1}/${Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))}\n` +
-          `Currently selected: ${user.displayedPokemon.length}/${MAX_DISPLAY}`
-      );
-
-    if (slice.length === 0) embed.addFields({ name: "No results", value: "Adjust filters or search." });
-    else
-      for (const p of slice) {
-        const selected = user.displayedPokemon.includes(p.id);
-        embed.addFields({
-          name: `${selected ? "✅ " : ""}${p.name} (${p.rarity})`,
-          value: `Type: ${p.type} • Normal: ${p.counts.normal} • Shiny: ${p.counts.shiny}`,
-          inline: true,
-        });
-      }
-
-    const buttons = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("prev").setLabel("◀ Prev").setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("next").setLabel("Next ▶").setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("rarity").setLabel(`Rarity: ${rarity}`).setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("type").setLabel(`Type: ${type}`).setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("shiny").setLabel(`Shiny: ${shiny}`).setStyle(ButtonStyle.Secondary)
-    );
-
-    const confirmRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("search").setLabel("Search").setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("confirm").setLabel("✅ Confirm").setStyle(ButtonStyle.Primary)
-    );
-
-    await interaction.editReply({ embeds: [embed], components: [buttons, confirmRow] });
-  };
-
-  await renderPage();
-
-  const msg = await interaction.fetchReply();
-  const collector = msg.createMessageComponentCollector({
-    componentType: ComponentType.Button,
-    time: 90000,
-  });
-
-  collector.on("collect", async (i) => {
-    if (i.user.id !== interaction.user.id)
-      return i.reply({ content: "❌ Not your selection.", flags: 64 });
-
-    if (i.customId === "next") {
-      const max = Math.ceil(getFiltered().length / PAGE_SIZE);
-      if (page < max - 1) page++;
-    } else if (i.customId === "prev") {
-      if (page > 0) page--;
-    } else if (i.customId === "confirm") {
-      await saveTrainerData();
-      await i.update({ content: "✅ Displayed Pokémon updated!", components: [], embeds: [] });
-      collector.stop();
-      return renderTrainerCard(interaction, user, saveTrainerData);
-    } else if (i.customId === "search") {
-      // ✅ Modal search prompt
-      const modal = new ModalBuilder().setCustomId("search_modal").setTitle("Search Pokémon");
-      const input = new TextInputBuilder()
-        .setCustomId("search_query")
-        .setLabel("Search by name:")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(false);
-      modal.addComponents(new ActionRowBuilder().addComponents(input));
-      await i.showModal(modal);
-      try {
-        const submitted = await i.awaitModalSubmit({ time: 30000 });
-        search = submitted.fields.getTextInputValue("search_query").toLowerCase();
-        page = 0;
-        await submitted.deferUpdate();
-      } catch {}
-    } else if (i.customId === "rarity") {
-      const order = RARITY_ORDER.concat("all");
-      rarity = order[(order.indexOf(rarity) + 1) % order.length];
-      page = 0;
-    } else if (i.customId === "type") {
-      const types = ["all", "fire", "water", "grass", "electric", "psychic", "fighting", "normal"];
-      type = types[(types.indexOf(type) + 1) % types.length];
-      page = 0;
-    } else if (i.customId === "shiny") {
-      shiny = shiny === "both" ? "normal" : shiny === "normal" ? "shiny" : "both";
-      page = 0;
-    } else if (i.customId.startsWith("toggle_")) {
-      const id = Number(i.customId.replace("toggle_", ""));
-      const idx = user.displayedPokemon.indexOf(id);
-      if (idx >= 0) user.displayedPokemon.splice(idx, 1);
-      else if (user.displayedPokemon.length < MAX_DISPLAY) user.displayedPokemon.push(id);
-    }
-
-    await i.deferUpdate();
-    await renderPage();
-  });
-
-  collector.on("end", async () => {
-    try {
-      await interaction.editReply({ components: [] });
-    } catch {}
-  });
-}
-
-// ==========================================================
-// 🧍 Trainer Selector (Pagination + Rarity Filter + Search)
-// ==========================================================
-async function openTrainerSelector(interaction, user, saveTrainerData) {
-  let page = 0;
-  let rarity = "all";
-  let search = "";
-
-  const allOwned = Object.entries(user.trainers);
-  if (allOwned.length === 0)
-    return interaction.reply({ content: "You don’t own any trainer sprites!", flags: 64 });
-
-  const getFiltered = () => {
-    let list = allOwned
-      .map(([file, count]) => {
-        const sprite = trainerSprites[file];
-        return {
-          file,
-          count,
-          rarity: (sprite?.rarity || "common").toLowerCase(),
-          url: `${TRAINER_BASE_URL}${file}`,
-        };
-      })
-      .filter(Boolean);
-
-    if (rarity !== "all") list = list.filter((t) => t.rarity === rarity);
-    if (search) list = list.filter((t) => t.file.toLowerCase().includes(search));
-
-    return list.sort(
-      (a, b) =>
-        RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) ||
-        a.file.localeCompare(b.file)
-    );
-  };
-
-  const renderPage = async () => {
-    const filtered = getFiltered();
-    const start = page * PAGE_SIZE;
-    const slice = filtered.slice(start, start + PAGE_SIZE);
-    const embed = new EmbedBuilder()
-      .setColor(0xffcc00)
-      .setTitle("Select Trainer Sprite")
-      .setDescription(
-        `Filter → Rarity: **${rarity}** | Results: ${filtered.length} | Page ${page + 1}/${Math.max(
-          1,
-          Math.ceil(filtered.length / PAGE_SIZE)
-        )}`
-      );
-
-    if (slice.length === 0) embed.addFields({ name: "No results", value: "Adjust filters." });
-    else
-      for (const t of slice)
-        embed.addFields({
-          name: `${user.trainer === t.file ? "✅ " : ""}${t.file}`,
-          value: `Owned ×${t.count} • Rarity: ${t.rarity} • [Preview](${t.url})`,
-          inline: true,
-        });
-
-    const controls = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("prev").setLabel("◀ Prev").setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("next").setLabel("Next ▶").setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("rarity").setLabel(`Rarity: ${rarity}`).setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("search").setLabel("Search").setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("confirm").setLabel("✅ Confirm").setStyle(ButtonStyle.Primary)
-    );
-
-    await interaction.editReply({ embeds: [embed], components: [controls] });
-  };
-
-  await renderPage();
-
-  const msg = await interaction.fetchReply();
-  const collector = msg.createMessageComponentCollector({
-    componentType: ComponentType.Button,
-    time: 90000,
-  });
-
-  collector.on("collect", async (i) => {
-    if (i.user.id !== interaction.user.id)
-      return i.reply({ content: "❌ Not your selection.", flags: 64 });
-
-    if (i.customId === "next") {
-      const max = Math.ceil(getFiltered().length / PAGE_SIZE);
-      if (page < max - 1) page++;
-    } else if (i.customId === "prev") {
-      if (page > 0) page--;
-    } else if (i.customId === "rarity") {
-      const order = RARITY_ORDER.concat("all");
-      rarity = order[(order.indexOf(rarity) + 1) % order.length];
-      page = 0;
-    } else if (i.customId === "search") {
-      const modal = new ModalBuilder().setCustomId("search_modal").setTitle("Search Trainer");
-      const input = new TextInputBuilder()
-        .setCustomId("search_query")
-        .setLabel("Filename contains:")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(false);
-      modal.addComponents(new ActionRowBuilder().addComponents(input));
-      await i.showModal(modal);
-      try {
-        const submitted = await i.awaitModalSubmit({ time: 30000 });
-        search = submitted.fields.getTextInputValue("search_query").toLowerCase();
-        page = 0;
-        await submitted.deferUpdate();
-      } catch {}
-    } else if (i.customId === "confirm") {
-      await saveTrainerData();
-      await i.update({ content: "✅ Trainer sprite updated!", components: [], embeds: [] });
-      collector.stop();
-      return renderTrainerCard(interaction, user, saveTrainerData);
-    } else if (i.customId.startsWith("trainer_")) {
-      const chosen = i.customId.replace("trainer_", "");
-      user.trainer = chosen;
-      await saveTrainerData();
-    }
-
-    await i.deferUpdate();
-    await renderPage();
-  });
-
-  collector.on("end", async () => {
-    try {
-      await interaction.editReply({ components: [] });
-    } catch {}
-  });
+  // show trainer card
+  await showTrainerCard(interaction, user, trainerData);
 }

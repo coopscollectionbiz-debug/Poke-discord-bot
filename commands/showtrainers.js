@@ -1,5 +1,16 @@
 // ==========================================================
-// 🧩 /showtrainers — Displays owned Trainer sprites with rarity filter
+// showtrainers.js
+// ==========================================================
+// 🧩 Purpose:
+// Interactive trainer browser with drill-down navigation.
+//
+// Levels:
+// 1️⃣ Trainer Class List  →  2️⃣ Class Variants  →  3️⃣ Individual Sprite
+//
+// ✅ Ephemeral & paginated
+// ✅ Back/forward navigation
+// ✅ Full hosted image URLs for sprites
+// ✅ Safe JSON load (Node 22+, Render-ready)
 // ==========================================================
 
 import {
@@ -9,119 +20,364 @@ import {
   ButtonBuilder,
   ButtonStyle,
 } from "discord.js";
-import trainerSprites from "../trainerSprites.json" with { type: "json" };
+import fs from "fs/promises";
 
-const RARITY_ORDER = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
-const normalizeRarity = r =>
-  RARITY_ORDER.includes(String(r).toLowerCase()) ? String(r).toLowerCase() : "common";
+const SPRITE_BASE_URL =
+  "https://poke-discord-bot.onrender.com/public/sprites/trainers_2/";
 
-function paginate(arr, per = 12) {
-  const pages = [];
-  for (let i = 0; i < arr.length; i += per) pages.push(arr.slice(i, i + per));
-  return pages.length ? pages : [[]];
-}
+// ==========================================================
+// 🧠 Load trainer sprite dataset
+// ==========================================================
+const trainerSprites = JSON.parse(
+  await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
+);
 
-function buildEmbed(ownedList, page, rarity) {
-  const pages = paginate(ownedList, 12);
-  const current = pages[page] ?? [];
-  const total = pages.length;
-
-  const embed = new EmbedBuilder()
-    .setTitle("Your Trainer Sprites")
-    .setDescription(`Filter → **Rarity:** ${rarity || "all"}\nPage ${page + 1}/${total}`)
-    .setColor("#81C784");
-
-  if (!current.length) {
-    embed.addFields([{ name: "Empty", value: "No trainers match your filter." }]);
-  } else {
-    for (const t of current) {
-      const data = trainerSprites[t.filename] || {};
-      embed.addFields([
-        {
-          name: data.name || t.filename,
-          value: `Rarity: ${normalizeRarity(data.rarity)}\nCount: ${t.count}`,
-          inline: true,
-        },
-      ]);
-    }
-  }
-  return embed;
-}
-
+// ==========================================================
+// 🧩 Command definition
+// ==========================================================
 export default {
   data: new SlashCommandBuilder()
     .setName("showtrainers")
-    .setDescription("View your owned Trainer sprites.")
-    .addStringOption(opt =>
-      opt
+    .setDescription("View and inspect your trainer collection.")
+    .addStringOption((option) =>
+      option
         .setName("rarity")
-        .setDescription("Filter by rarity")
-        .addChoices(...RARITY_ORDER.map(r => ({ name: r, value: r })))
+        .setDescription("Filter trainers by rarity.")
+        .addChoices(
+          { name: "All", value: "all" },
+          { name: "Common", value: "common" },
+          { name: "Uncommon", value: "uncommon" },
+          { name: "Rare", value: "rare" },
+          { name: "Epic", value: "epic" },
+          { name: "Legendary", value: "legendary" },
+          { name: "Mythic", value: "mythic" }
+        )
+    )
+    .addStringOption((option) =>
+      option
+        .setName("owned")
+        .setDescription("Show only owned or unowned trainers.")
+        .addChoices(
+          { name: "All", value: "all" },
+          { name: "Owned Only", value: "owned" },
+          { name: "Unowned Only", value: "unowned" }
+        )
     ),
 
+  // ==========================================================
+  // ⚙️ Execution
+  // ==========================================================
   async execute(interaction, trainerData) {
-    try {
-      const user = trainerData[interaction.user.id];
-      if (!user || !user.trainers || !Object.keys(user.trainers).length) {
-        return await interaction.reply({
-          content: "❌ You don't own any trainer sprites yet.",
-          flags: 64,
-        });
-      }
+    await interaction.deferReply({ flags: 64 });
 
-      const rarity = normalizeRarity(interaction.options.getString("rarity"));
-      const owned = [];
+    const userId = interaction.user.id;
+    const user = trainerData[userId];
 
-      // Stored structure: { "lass-gen4.png": count }
-      for (const [filename, count] of Object.entries(user.trainers)) {
-        const meta = trainerSprites[filename];
-        if (!meta) continue;
-        if (rarity && RARITY_ORDER.includes(rarity)) {
-          if (normalizeRarity(meta.rarity) !== rarity) continue;
-        }
-        owned.push({ filename, count });
-      }
-
-      owned.sort((a, b) => {
-        const r1 = RARITY_ORDER.indexOf(normalizeRarity(trainerSprites[a.filename]?.rarity));
-        const r2 = RARITY_ORDER.indexOf(normalizeRarity(trainerSprites[b.filename]?.rarity));
-        return r1 === r2 ? a.filename.localeCompare(b.filename) : r1 - r2;
+    if (!user) {
+      return interaction.editReply({
+        content:
+          "❌ You don’t have a trainer profile yet. Use `/trainercard` first!",
       });
+    }
 
-      let page = 0;
-      const embed = buildEmbed(owned, page, rarity);
+    const owned = user.trainers || {};
+    const rarityFilter =
+      interaction.options.getString("rarity")?.toLowerCase() || "all";
+    const ownedFilter =
+      interaction.options.getString("owned")?.toLowerCase() || "owned";
+
+    // ==========================================================
+    // 🧮 Group sprites by trainer class
+    // ==========================================================
+    const grouped = {};
+    for (const t of trainerSprites) {
+      if (rarityFilter !== "all" && t.rarity?.toLowerCase() !== rarityFilter)
+        continue;
+      if (!grouped[t.name]) grouped[t.name] = [];
+      grouped[t.name].push(t);
+    }
+
+    // ==========================================================
+    // 🧱 Build top-level list
+    // ==========================================================
+    const rows = Object.entries(grouped)
+      .map(([name, variants]) => {
+        const ownedCount = variants.filter((v) => owned[v.sprite]?.count > 0)
+          .length;
+        const totalCount = variants.length;
+        const missingCount = totalCount - ownedCount;
+
+        const anyOwned = ownedCount > 0;
+        const allUnowned = ownedCount === 0;
+
+        if (ownedFilter === "owned" && !anyOwned) return null;
+        if (ownedFilter === "unowned" && !allUnowned) return null;
+
+        return {
+          name,
+          rarity: variants[0].rarity || "common",
+          total: totalCount,
+          owned: ownedCount,
+          missing: missingCount,
+        };
+      })
+      .filter(Boolean);
+
+    const totalOwned = Object.keys(owned).length;
+    const totalAvailable = trainerSprites.length;
+    const percentOwned = ((totalOwned / totalAvailable) * 100).toFixed(1);
+
+    if (rows.length === 0) {
+      return interaction.editReply({
+        content:
+          "⚠️ No trainers match your current filters or ownership status.",
+      });
+    }
+
+    // ==========================================================
+    // 📄 Pagination
+    // ==========================================================
+    const perPage = 15;
+    const totalPages = Math.ceil(rows.length / perPage);
+    let currentPage = 0;
+
+    // ==========================================================
+    // 🧱 Render trainer class list
+    // ==========================================================
+    const renderHome = (page) => {
+      const start = page * perPage;
+      const slice = rows.slice(start, start + perPage);
+      const longestName = Math.max(...slice.map((r) => r.name.length), 12);
+
+      const tableRows = slice
+        .map(
+          (r) =>
+            `${r.name.padEnd(longestName)} | ${r.total
+              .toString()
+              .padStart(2)} | ${r.owned.toString().padStart(2)} | ${r.missing
+              .toString()
+              .padStart(2)} | 🔍`
+        )
+        .join("\n");
+
+      const table = [
+        "```",
+        `| ${"Trainer Class".padEnd(longestName)} | Var | Ow | Ms | 🔍 |`,
+        `| ${"-".repeat(longestName)} | --- | -- | -- | --- |`,
+        tableRows,
+        "```",
+      ].join("\n");
+
+      const embed = new EmbedBuilder()
+        .setTitle(`🎓 ${interaction.user.username}’s Trainer Collection`)
+        .setDescription(
+          [
+            `Owned: ${totalOwned}/${totalAvailable} (${percentOwned}%)`,
+            `Filters: ${rarityFilter.toUpperCase()} | ${ownedFilter.toUpperCase()}`,
+            "",
+            table,
+          ].join("\n")
+        )
+        .setColor(0xf39c12)
+        .setFooter({ text: `Page ${page + 1} of ${totalPages}` })
+        .setTimestamp();
+
       const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId("prev").setLabel("⬅️").setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId("next").setLabel("➡️").setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder()
+          .setCustomId("prev")
+          .setLabel("⬅️ Prev")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(page === 0),
+        new ButtonBuilder()
+          .setCustomId("next")
+          .setLabel("Next ➡️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(page === totalPages - 1),
+        new ButtonBuilder()
+          .setCustomId("refresh")
+          .setLabel("🔄 Refresh")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId("close")
+          .setLabel("❌ Close")
+          .setStyle(ButtonStyle.Danger)
       );
 
-      const reply = await interaction.reply({
-        embeds: [embed],
-        components: [row],
-        flags: 64,
+      // Trainer class buttons
+      const trainerRow = new ActionRowBuilder();
+      slice.forEach((r) => {
+        trainerRow.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`inspect_class_${r.name}`)
+            .setLabel(`🔍 ${r.name}`)
+            .setStyle(ButtonStyle.Primary)
+        );
       });
 
-      const collector = reply.createMessageComponentCollector({ time: 60_000 });
-      collector.on("collect", async i => {
-        if (i.user.id !== interaction.user.id)
-          return i.reply({ content: "Not your menu.", flags: 64 });
-        const max = paginate(owned).length;
-        if (i.customId === "next") page = (page + 1) % max;
-        if (i.customId === "prev") page = (page - 1 + max) % max;
-        await i.update({ embeds: [buildEmbed(owned, page, rarity)], components: [row] });
+      return { embed, row, trainerRow };
+    };
+
+    // ==========================================================
+    // 🧩 Render trainer class variants
+    // ==========================================================
+    const renderClass = (className) => {
+      const variants = trainerSprites.filter((t) => t.name === className);
+      const ownedCount = variants.filter((v) => owned[v.sprite]?.count > 0)
+        .length;
+      const totalCount = variants.length;
+      const percent = ((ownedCount / totalCount) * 100).toFixed(1);
+      const longestVar = Math.max(...variants.map((v) => v.sprite.length), 12);
+
+      const rows = variants
+        .map((v) => {
+          const short = v.sprite.replace(".png", "");
+          const isOwned = owned[v.sprite]?.count > 0;
+          return `${short.padEnd(longestVar)} | ${isOwned ? "✅" : "❌"} | 🔍`;
+        })
+        .join("\n");
+
+      const table = [
+        "```",
+        `| ${"Sprite Variant".padEnd(longestVar)} | Own | 🔍 |`,
+        `| ${"-".repeat(longestVar)} | ---- | --- |`,
+        rows,
+        "```",
+      ].join("\n");
+
+      const embed = new EmbedBuilder()
+        .setTitle(`🎓 ${className} — Trainer Variants`)
+        .setDescription(
+          [
+            `Owned: ${ownedCount}/${totalCount} (${percent}%)`,
+            "",
+            table,
+          ].join("\n")
+        )
+        .setColor(0xf1c40f)
+        .setTimestamp();
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("back_home")
+          .setLabel("🏠 Back to All Trainers")
+          .setStyle(ButtonStyle.Secondary)
+      );
+
+      const variantRow = new ActionRowBuilder();
+      variants.forEach((v) => {
+        variantRow.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`inspect_variant_${v.sprite}`)
+            .setLabel(`🔍 ${v.sprite.replace(".png", "")}`)
+            .setStyle(ButtonStyle.Primary)
+        );
       });
 
-      collector.on("end", async () => {
-        const disabled = row.components.map(b => b.setDisabled(true));
-        await interaction.editReply({
-          embeds: [buildEmbed(owned, page, rarity)],
-          components: [new ActionRowBuilder().addComponents(...disabled)],
-        });
-      });
-    } catch (e) {
-      console.error("❌ Error in /showtrainers:", e);
-      if (!interaction.replied)
-        await interaction.reply({ content: "Error showing trainers.", flags: 64 });
-    }
+      return { embed, row, variantRow };
+    };
+
+    // ==========================================================
+    // 🧩 Render sprite detail
+    // ==========================================================
+    const renderSprite = (spriteFile, className) => {
+      const t = trainerSprites.find((x) => x.sprite === spriteFile);
+      if (!t) return null;
+
+      const isOwned = owned[t.sprite]?.count > 0;
+      const fullURL = `${SPRITE_BASE_URL}${t.sprite}`;
+
+      const embed = new EmbedBuilder()
+        .setTitle(`🎓 ${t.name} — ${t.sprite.replace(".png", "")}`)
+        .setDescription(
+          [
+            `**Rarity:** ${t.rarity?.toUpperCase() || "COMMON"}`,
+            `**Owned:** ${isOwned ? "✅ Yes" : "❌ No"}`,
+          ].join("\n")
+        )
+        .setColor(0xf7b731)
+        .setImage(fullURL)
+        .setTimestamp();
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`back_class_${className}`)
+          .setLabel(`⬅️ Back to ${className}`)
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId("back_home")
+          .setLabel("🏠 Back to All Trainers")
+          .setStyle(ButtonStyle.Secondary)
+      );
+
+      return { embed, row };
+    };
+
+    // ==========================================================
+    // 🖼️ Send initial page
+    // ==========================================================
+    const { embed, row, trainerRow } = renderHome(currentPage);
+    const message = await interaction.editReply({
+      embeds: [embed],
+      components: [row, trainerRow],
+    });
+
+    // ==========================================================
+    // 🎮 Collector
+    // ==========================================================
+    const collector = message.createMessageComponentCollector({
+      time: 60000,
+    });
+
+    collector.on("collect", async (i) => {
+      if (i.user.id !== interaction.user.id)
+        return i.reply({ content: "⚠️ You can’t control this menu.", flags: 64 });
+
+      if (i.customId === "prev" && currentPage > 0) currentPage--;
+      else if (i.customId === "next" && currentPage < totalPages - 1)
+        currentPage++;
+      else if (i.customId === "refresh") currentPage = 0;
+      else if (i.customId === "close") {
+        collector.stop();
+        return i.update({ components: [] });
+      }
+
+      // Level navigation
+      if (i.customId.startsWith("inspect_class_")) {
+        const className = i.customId.replace("inspect_class_", "");
+        const { embed, row, variantRow } = renderClass(className);
+        return i.update({ embeds: [embed], components: [row, variantRow] });
+      }
+
+      if (i.customId.startsWith("inspect_variant_")) {
+        const spriteFile = i.customId.replace("inspect_variant_", "");
+        const variant = trainerSprites.find((x) => x.sprite === spriteFile);
+        const className = variant?.name;
+        const rendered = renderSprite(spriteFile, className);
+        if (!rendered)
+          return i.reply({ content: "❌ Sprite not found.", flags: 64 });
+        return i.update({ embeds: [rendered.embed], components: [rendered.row] });
+      }
+
+      if (i.customId.startsWith("back_class_")) {
+        const className = i.customId.replace("back_class_", "");
+        const { embed, row, variantRow } = renderClass(className);
+        return i.update({ embeds: [embed], components: [row, variantRow] });
+      }
+
+      if (i.customId === "back_home") {
+        const { embed, row, trainerRow } = renderHome(currentPage);
+        return i.update({ embeds: [embed], components: [row, trainerRow] });
+      }
+
+      // Default: refresh top-level pagination
+      const { embed, row, trainerRow } = renderHome(currentPage);
+      await i.update({ embeds: [embed], components: [row, trainerRow] });
+    });
+
+    collector.on("end", async () => {
+      try {
+        await interaction.editReply({ components: [] });
+      } catch {}
+    });
   },
 };

@@ -8,6 +8,7 @@
     "start": "node bot_final.js"
   },
   "dependencies": {
+    "canvas": "^3.2.0",
     "cheerio": "^1.0.0-rc.12",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",

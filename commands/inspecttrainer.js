@@ -1,80 +1,40 @@
-import {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle
-} from 'discord.js';
-import fs from 'fs/promises';
-import { spritePaths, rarityEmojis } from '../spriteconfig.js';
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 
-const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
+const TRAINER_BASE_URL = "https://poke-discord-bot.onrender.com/public/sprites/trainers_2/";
 
 export default {
   data: new SlashCommandBuilder()
-    .setName('inspecttrainer')
-    .setDescription('Inspect a specific Trainer in full size.')
+    .setName("inspecttrainer")
+    .setDescription("Inspect a trainer sprite by filename.")
     .addStringOption(opt =>
-      opt.setName('name').setDescription('Enter the Trainer name').setRequired(true)
+      opt.setName("filename")
+        .setDescription("Trainer filename (e.g., 'lass-gen4.png')")
+        .setRequired(true)
     ),
 
   async execute(interaction, trainerData) {
-    const userId = interaction.user.id;
-    const user = trainerData[userId] || { trainers: {} };
-    const owned = user.trainers || {};
+    await interaction.deferReply({ flags: 64 }); // ✅ Ephemeral
 
-    const input = interaction.options.getString('name').trim().toLowerCase();
+    const user = trainerData[interaction.user.id];
+    const filename = interaction.options.getString("filename", true);
 
-    const match = Object.entries(trainerSprites).find(
-      ([, data]) => data.name.toLowerCase() === input
-    );
+    if (!user?.trainers?.[filename]) {
+      await interaction.editReply(`You don't own **${filename}**.`);
+      return;
+    }
 
-    if (!match)
-      return interaction.reply({
-        content: '❌ Trainer not found.',
-        ephemeral: true
-      });
-
-    const [id, data] = match;
-    const isOwned = !!owned[id];
-    const spriteBase = isOwned
-      ? spritePaths.trainers
-      : spritePaths.trainersGray;
-    const sprite = `${spriteBase}${data.filename}`;
-    const rarity = rarityEmojis[data.rarity.toLowerCase()] || '⚪';
-    const ownedText = isOwned ? '✅ Owned' : '❌ Not Owned';
+    const count = user.trainers[filename];
+    const url = `${TRAINER_BASE_URL}${filename}`;
 
     const embed = new EmbedBuilder()
-      .setColor(0x6c43f3)
-      .setTitle(`${rarity} ${data.name}`)
-      .setDescription(`${ownedText}`)
-      .setImage(sprite)
-      .setFooter({ text: `Rarity: ${data.rarity}` });
+      .setColor(0xff9900)
+      .setTitle(`Trainer: ${filename}`)
+      .setDescription(
+        `Owned ×**${count}**${user.trainer === filename ? " • ✅ Active" : ""}`
+      )
+      .setImage(url)
+      .setFooter({ text: "Use /showtrainers to browse all your sprites." });
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('close_trainer_inspect')
-        .setLabel('❌ Close')
-        .setStyle(ButtonStyle.Danger)
-    );
-
-    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
-
-    const msg = await interaction.fetchReply();
-    const collector = msg.createMessageComponentCollector({ time: 60000 });
-
-    collector.on('collect', async i => {
-      if (i.user.id !== userId)
-        return i.reply({ content: '❌ Not your session.', ephemeral: true });
-
-      if (i.customId === 'close_trainer_inspect') {
-        await i.update({ content: '❌ Closed.', embeds: [], components: [] });
-        collector.stop();
-      }
-    });
-
-    collector.on('end', async () => {
-      try { await msg.edit({ components: [] }); } catch {}
-    });
-  }
+    await interaction.editReply({ embeds: [embed] });
+  },
 };

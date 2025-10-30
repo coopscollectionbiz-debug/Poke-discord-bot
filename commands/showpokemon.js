@@ -6,212 +6,154 @@ import {
   ButtonStyle,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle
-} from 'discord.js';
-import fs from 'fs/promises';
-import { spritePaths, rarityEmojis } from '../spriteconfig.js';
+  TextInputStyle,
+  ComponentType,
+} from "discord.js";
+import pokemonData from "../pokemonData.json" assert { type: "json" };
 
-const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
+// ✅ Feature constants
 const PAGE_SIZE = 12;
+const RARITY_ORDER = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
 
 export default {
   data: new SlashCommandBuilder()
-    .setName('showpokemon')
-    .setDescription('View your Pokémon collection with filters and search.')
+    .setName("showpokemon")
+    .setDescription("Browse your Pokémon collection (with filters).")
     .addStringOption(opt =>
-      opt.setName('type').setDescription('Filter by Pokémon type')
-    )
-    .addStringOption(opt =>
-      opt.setName('rarity')
-        .setDescription('Filter by rarity')
-        .addChoices(
-          { name: 'Common', value: 'common' },
-          { name: 'Uncommon', value: 'uncommon' },
-          { name: 'Rare', value: 'rare' },
-          { name: 'Epic', value: 'epic' },
-          { name: 'Legendary', value: 'legendary' },
-          { name: 'Mythic', value: 'mythic' }
-        )
-    )
-    .addBooleanOption(opt =>
-      opt.setName('shiny').setDescription('Show shiny variants only')
-    )
-    .addStringOption(opt =>
-      opt.setName('ownership')
-        .setDescription('Filter by owned/unowned')
-        .addChoices(
-          { name: 'Owned only', value: 'owned' },
-          { name: 'Unowned only', value: 'unowned' }
-        )
+      opt.setName("search")
+        .setDescription("Search Pokémon by name substring.")
+        .setRequired(false)
     ),
+
   async execute(interaction, trainerData) {
+    await interaction.deferReply({ flags: 64 }); // ✅ Ephemeral response
+
     const userId = interaction.user.id;
-    const user = trainerData[userId] || { pokemon: {} };
-    const owned = user.pokemon || {};
-
-    // Filters
-    const typeFilter = interaction.options.getString('type');
-    const rarityFilter = interaction.options.getString('rarity');
-    const shiny = interaction.options.getBoolean('shiny') || false;
-    const ownershipFilter = interaction.options.getString('ownership');
-
-    let filtered = Object.entries(pokemonData);
-    if (typeFilter) {
-      filtered = filtered.filter(([_, data]) =>
-        data.type.some(t => t.toLowerCase() === typeFilter.toLowerCase())
-      );
-    }
-    if (rarityFilter) {
-      filtered = filtered.filter(([_, data]) =>
-        data.rarity.toLowerCase() === rarityFilter.toLowerCase()
-      );
-    }
-    if (ownershipFilter === 'owned') {
-      filtered = filtered.filter(([id]) => owned[id]);
-    } else if (ownershipFilter === 'unowned') {
-      filtered = filtered.filter(([id]) => !owned[id]);
+    const user = trainerData[userId];
+    if (!user?.pokemon || Object.keys(user.pokemon).length === 0) {
+      await interaction.editReply("You don't own any Pokémon yet!");
+      return;
     }
 
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+    // ---------- Working state ----------
     let page = 0;
-    let highlightId = null;
+    let shinyView = "both"; // ✅ Shiny toggle
+    let sortMode = "name";  // ✅ Sort mode
+    let rarityFilter = "all"; // ✅ Rarity filter
+    let search = (interaction.options.getString("search") || "").trim().toLowerCase();
 
-    const renderPage = async () => {
-      const slice = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-      const embed = new EmbedBuilder()
-        .setColor(0x0099ff)
-        .setTitle(`${interaction.user.username}'s Pokémon Collection`)
-        .setFooter({ text: `Page ${page + 1}/${totalPages}` });
+    // ✅ Helper to build filtered/sorted Pokémon list
+    const getOwnedList = () => {
+      const entries = Object.entries(user.pokemon);
+      let list = entries.map(([id, counts]) => {
+        const mon = pokemonData[id];
+        if (!mon) return null;
+        const total = (counts.normal || 0) + (counts.shiny || 0);
+        return {
+          id: Number(id),
+          name: mon.name,
+          rarity: mon.rarity?.toLowerCase() || "common",
+          counts,
+          total,
+        };
+      }).filter(Boolean);
 
-      let desc = '';
-      slice.forEach(([id, data]) => {
-        const isOwned = !!owned[id];
-        const spriteBase = shiny
-          ? spritePaths.shiny
-          : isOwned
-            ? spritePaths.pokemon
-            : spritePaths.grayscale;
-        const sprite = `${spriteBase}${id}.gif`;
-        const rarity = rarityEmojis[data.rarity.toLowerCase()] || '⚪';
-        const highlight = id === highlightId ? '⭐ ' : '';
-        desc += `${highlight}${rarity} **${data.name}**\n[‎](${sprite})\n\n`;
-      });
+      if (search) list = list.filter(p => p.name.toLowerCase().includes(search));
+      if (rarityFilter !== "all") list = list.filter(p => p.rarity === rarityFilter);
+      if (shinyView === "normal") list = list.filter(p => (p.counts.normal || 0) > 0);
+      if (shinyView === "shiny") list = list.filter(p => (p.counts.shiny || 0) > 0);
 
-      embed.setDescription(desc || 'No Pokémon match your filters.');
+      if (sortMode === "name") list.sort((a, b) => a.name.localeCompare(b.name));
+      else if (sortMode === "count") list.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+      else if (sortMode === "rarity")
+        list.sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity));
 
-      const navRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('prev')
-          .setEmoji('⬅️')
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === 0),
-        new ButtonBuilder()
-          .setCustomId('next')
-          .setEmoji('➡️')
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === totalPages - 1 || totalPages <= 1),
-        new ButtonBuilder()
-          .setCustomId('search')
-          .setLabel('🔍 Search Pokémon')
-          .setStyle(ButtonStyle.Primary)
-      );
-
-      const inspectRows = [];
-      for (const [id, data] of slice) {
-        inspectRows.push(
-          new ButtonBuilder()
-            .setCustomId(`inspect_${id}`)
-            .setLabel(`📖 ${data.name}`)
-            .setStyle(ButtonStyle.Secondary)
-        );
-      }
-      const buttonRows = [];
-      for (let i = 0; i < inspectRows.length; i += 5) {
-        buttonRows.push(new ActionRowBuilder().addComponents(inspectRows.slice(i, i + 5)));
-      }
-
-      await interaction.editReply({
-        embeds: [embed],
-        components: [...buttonRows, navRow],
-      }).catch(async () => {
-        await interaction.reply({
-          embeds: [embed],
-          components: [...buttonRows, navRow],
-          ephemeral: true
-        });
-      });
+      return list;
     };
 
-    await interaction.deferReply({ ephemeral: true });
-    await renderPage();
+    const paginate = (list) => list.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
-    const msg = await interaction.fetchReply();
-    const collector = msg.createMessageComponentCollector({ time: 180_000 });
+    // ✅ Embed builder
+    const buildEmbed = () => {
+      const all = getOwnedList();
+      const shown = paginate(all);
+      const embed = new EmbedBuilder()
+        .setColor(0x00ae86)
+        .setTitle(`${interaction.user.username}'s Pokémon`)
+        .setDescription(
+          `✨ View: **${shinyView}** | 📊 Sort: **${sortMode}** | 💎 Rarity: **${rarityFilter}**\n` +
+          `Results: **${all.length}** • Page ${page + 1}/${Math.max(1, Math.ceil(all.length / PAGE_SIZE))}` +
+          (search ? `\n🔍 Filter: *${search}*` : "")
+        );
 
-    collector.on('collect', async (i) => {
-      if (i.user.id !== userId)
-        return i.reply({ content: '❌ This is not your collection.', ephemeral: true });
-
-      if (i.customId === 'prev' && page > 0) page--;
-      else if (i.customId === 'next' && page < totalPages - 1) page++;
-
-      if (i.customId === 'search') {
-        const modal = new ModalBuilder()
-          .setCustomId('search_modal')
-          .setTitle('Search Pokémon');
-        const searchInput = new TextInputBuilder()
-          .setCustomId('search_name')
-          .setLabel('Enter Pokémon name')
-          .setStyle(TextInputStyle.Short)
-          .setPlaceholder('e.g., Charizard, Eevee, Pikachu')
-          .setRequired(true);
-
-        const modalRow = new ActionRowBuilder().addComponents(searchInput);
-        modal.addComponents(modalRow);
-        await i.showModal(modal);
-
-        try {
-          const submitted = await i.awaitModalSubmit({
-            filter: (m) => m.user.id === userId,
-            time: 30000
+      if (shown.length === 0) {
+        embed.addFields({ name: "No results", value: "Try different filters." });
+      } else {
+        for (const p of shown) {
+          const normal = p.counts.normal ?? 0;
+          const shiny = p.counts.shiny ?? 0;
+          embed.addFields({
+            name: `${p.name} (${p.rarity})`,
+            value: `Normal: **${normal}**${shiny ? ` • Shiny: **${shiny}** ✨` : ""}`,
+            inline: true,
           });
-          const searchName = submitted.fields.getTextInputValue('search_name').trim().toLowerCase();
-
-          // find matching Pokémon (case-insensitive)
-          const match = filtered.find(([_, data]) => data.name.toLowerCase() === searchName);
-          if (match) {
-            const matchIndex = filtered.findIndex(([id]) => id === match[0]);
-            page = Math.floor(matchIndex / PAGE_SIZE);
-            highlightId = match[0];
-            await submitted.reply({ content: `⭐ Found ${match[1].name}!`, ephemeral: true });
-            await renderPage();
-          } else {
-            await submitted.reply({ content: '❌ No Pokémon found by that name.', ephemeral: true });
-          }
-        } catch {
-          await i.followUp({ content: '⏱️ Search timed out.', ephemeral: true });
         }
-        return;
       }
+      return embed;
+    };
 
-      if (i.customId.startsWith('inspect_')) {
-        const pokeId = i.customId.split('_')[1];
-        const data = pokemonData[pokeId];
-        if (!data)
-          return i.reply({ content: 'Pokémon not found.', ephemeral: true });
+    // ✅ Button row (pagination + filters)
+    const buildRow = () =>
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId("prev").setLabel("◀ Prev").setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId("next").setLabel("Next ▶").setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId("toggle_shiny").setLabel(`View: ${shinyView}`).setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId("sort").setLabel(`Sort: ${sortMode}`).setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId("rarity").setLabel(`Rarity: ${rarityFilter}`).setStyle(ButtonStyle.Secondary),
+      );
 
-        return i.reply({
-          content: `📖 Opening Pokédex entry for **${data.name}**... (placeholder)`,
-          ephemeral: true
-        });
+    const render = async () =>
+      await interaction.editReply({ embeds: [buildEmbed()], components: [buildRow()] });
+
+    await render();
+
+    // ✅ Collector logic
+    const msg = await interaction.fetchReply();
+    const collector = msg.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      time: 120000,
+    });
+
+    collector.on("collect", async (i) => {
+      if (i.user.id !== userId)
+        return i.reply({ content: "❌ Not your session.", flags: 64 });
+
+      switch (i.customId) {
+        case "prev": if (page > 0) page--; break;
+        case "next":
+          const max = Math.max(0, Math.ceil(getOwnedList().length / PAGE_SIZE) - 1);
+          if (page < max) page++;
+          break;
+        case "toggle_shiny":
+          shinyView = shinyView === "both" ? "normal" : shinyView === "normal" ? "shiny" : "both";
+          page = 0;
+          break;
+        case "sort":
+          sortMode = sortMode === "name" ? "count" : sortMode === "count" ? "rarity" : "name";
+          page = 0;
+          break;
+        case "rarity":
+          const current = RARITY_ORDER.concat(["all"]);
+          rarityFilter = current[(current.indexOf(rarityFilter) + 1) % current.length];
+          page = 0;
+          break;
       }
-
       await i.deferUpdate();
-      await renderPage();
+      await render();
     });
 
-    collector.on('end', async () => {
-      try { await msg.edit({ components: [] }); } catch {}
+    collector.on("end", async () => {
+      try { await interaction.editReply({ components: [] }); } catch {}
     });
-  }
+  },
 };

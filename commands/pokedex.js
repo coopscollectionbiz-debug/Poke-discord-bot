@@ -68,14 +68,15 @@ export async function execute(interaction) {
   const pokemon = findPokemonByName(query);
 
   if (!pokemon) {
+    // ❌ Keep "not found" messages private to avoid clutter
     return interaction.reply({
       content: `❌ No Pokémon found named **${query}**.`,
       ephemeral: true
     });
   }
 
-  // Defer reply to allow async image loads
-  await interaction.deferReply({ ephemeral: true });
+  // ✅ Public response (not ephemeral)
+  await interaction.deferReply(); // no ephemeral flag
 
   // =============================================
   // Hosted sprite URLs (normal + shiny)
@@ -89,18 +90,18 @@ export async function execute(interaction) {
   // Embed for Pokémon Info
   // =============================================
   const embed = new EmbedBuilder()
-  .setTitle(`${pokemon.name} — #${pokemon.id}`)
-  .setColor(0xffcb05)
-  .setDescription(
-    `🗒️ **Type:** ${pokemon.types
-      .map((id) => typeMap[id] || "Unknown")
-      .join("/")}\n⭐ **Rarity:** ${pokemon.tier || "Unknown"}\n📘 **Description:** ${
-      pokemon.flavor || "No Pokédex entry available."
-    }`
-  )
-  .setThumbnail(normalSprite)
-  .setFooter({ text: "Coop’s Collection Pokédex" })
-  .setTimestamp();
+    .setTitle(`${pokemon.name} — #${pokemon.id}`)
+    .setColor(0xffcb05)
+    .setDescription(
+      `🗒️ **Type:** ${pokemon.types
+        .map((id) => typeMap[id] || "Unknown")
+        .join("/")}\n⭐ **Rarity:** ${pokemon.tier || "Unknown"}\n📘 **Description:** ${
+        pokemon.flavor || "No Pokédex entry available."
+      }`
+    )
+    .setThumbnail(normalSprite)
+    .setFooter({ text: "Coop’s Collection Pokédex" })
+    .setTimestamp();
 
   // =============================================
   // Buttons: toggle shiny, close
@@ -130,11 +131,15 @@ export async function execute(interaction) {
   });
 
   collector.on("collect", async (i) => {
-    if (i.user.id !== interaction.user.id)
-      return i.reply({
-        content: "❌ This Pokédex entry isn’t yours.",
-        ephemeral: true
+    if (i.user.id !== interaction.user.id) {
+      // Instead of ephemeral, show temporary visible message
+      const warn = await i.reply({
+        content: "⏳ Only the original trainer can use these buttons.",
+        fetchReply: true
       });
+      setTimeout(() => i.deleteReply().catch(() => {}), 3000);
+      return;
+    }
 
     switch (i.customId) {
       case "toggle_shiny": {
@@ -156,7 +161,11 @@ export async function execute(interaction) {
       }
 
       default:
-        await i.reply({ content: "Unknown action.", ephemeral: true });
+        await i.reply({
+          content: "Unknown action.",
+          fetchReply: true
+        });
+        setTimeout(() => i.deleteReply().catch(() => {}), 3000);
     }
   });
 

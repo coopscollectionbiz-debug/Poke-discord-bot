@@ -217,12 +217,22 @@ client.on("interactionCreate", async interaction => {
   if (!command) return;
 
   try {
-    await command.execute(interaction, trainerData, () => saveDataToDiscord(trainerData));
-  } catch (err) {
-    console.error("❌ Command error:", err);
-    if (!interaction.replied)
-      await interaction.reply({ content: "❌ There was an error executing that command.", flags: 64 });
+  await command.execute(interaction, trainerData, saveTrainerDataLocal)
+} catch (error) {
+  console.error(`❌ Command error:`, error);
+
+  if (interaction.deferred || interaction.replied) {
+    await interaction.followUp({
+      content: "❌ An unexpected error occurred.",
+      ephemeral: true
+    }).catch(() => {});
+  } else {
+    await interaction.reply({
+      content: "❌ An unexpected error occurred.",
+      ephemeral: true
+    }).catch(() => {});
   }
+}
 });
 
 // ==========================================================

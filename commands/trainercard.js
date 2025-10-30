@@ -6,10 +6,13 @@ import {
   ButtonBuilder,
   ButtonStyle,
 } from 'discord.js';
+import fs from 'fs/promises';
 import { spritePaths } from '../spriteconfig.js';
 import { rollForShiny } from '../helpers/shinyOdds.js';
-import pokemonData from '../pokemonData.json' assert { type: 'json' };
-import trainerSprites from '../trainerSprites.json' assert { type: 'json' };
+
+// Fixed: dynamic JSON loading for Node.js 20+/25+
+const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
+const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
 
 export default {
   data: new SlashCommandBuilder()

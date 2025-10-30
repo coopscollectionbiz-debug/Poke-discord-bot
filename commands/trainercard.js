@@ -10,6 +10,9 @@ import fs from 'fs/promises';
 import { spritePaths } from '../spriteconfig.js';
 import { rollForShiny } from '../helpers/shinyOdds.js';
 
+// Starter Pokémon IDs
+const STARTER_IDS = [1, 4, 7, 152, 155, 158, 252, 255, 258, 387, 390, 393, 495, 498, 501];
+
 // Dynamic JSON loading for Node.js 20+/25+ and Discord.js v14.14.1
 const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
 const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
@@ -35,7 +38,19 @@ export default {
     const cc = user.cc || 0;
     const starter = user.starter || 'Unknown';
     const sprite = user.trainerSprite || 'Unknown';
-    const starterId = pokemonData[starter]?.id || 0;
+
+    // Find starter by name or ID
+    let starterObj = null;
+    for (const id of Object.keys(pokemonData)) {
+      if (
+        pokemonData[id].name === starter ||
+        String(pokemonData[id].id) === String(starter)
+      ) {
+        starterObj = pokemonData[id];
+        break;
+      }
+    }
+    const starterId = starterObj?.id || 0;
     const starterIsShiny = user.pokemon?.[starter]?.shiny;
 
     const starterSprite = starterId
@@ -68,17 +83,13 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
   const user = trainerData[userId] || { tp: 0, cc: 0, pokemon: {}, trainers: {} };
   trainerData[userId] = user;
 
-  // Paginated starter picker
-  // FIX: Use correct filter for Gen 1-5 starters (most Pokémon have no 'generation', so let's fallback to region)
-  const starters = Object.values(pokemonData).filter(
-    p => ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova'].includes(p.region)
-  );
-  const starterNames = Array.from(new Set(starters.map(p => p.name))).sort();
+  // Only show the actual starter Pokémon
+  const starters = STARTER_IDS.map(id => pokemonData[id]).filter(Boolean);
+  const totalPages = 1; // Only 15 starters, fits in one page
   let page = 0;
-  const totalPages = Math.ceil(starterNames.length / PAGE_SIZE);
 
-  // Robust error handling: If no starters, show error and abort
-  if (starterNames.length === 0) {
+  // Error handling: If no starters, show error and abort
+  if (starters.length === 0) {
     await interaction.reply({
       content: '❌ No starter Pokémon found! Please check your pokemonData.json for valid entries.',
       ephemeral: true
@@ -87,34 +98,18 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
   }
 
   async function renderStarterMenu() {
-    const options = starterNames.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(pname => {
-      const p = pokemonData[Object.keys(pokemonData).find(
-        k => pokemonData[k].name === pname
-      )];
-      return {
-        label: p.name,
-        value: p.name,
-        emoji: p.emoji || undefined,
-      };
-    });
+    // Discord select menu only allows emoji, not image, so display sprite in embed thumbnail
+    const options = starters.map(p => ({
+      label: p.name,
+      value: String(p.id), // Use ID for value for ease
+      // No emoji for starters unless you want to add custom emoji logic
+    }));
 
     const starterMenu = new StringSelectMenuBuilder()
       .setCustomId('select_starter')
       .setPlaceholder('Choose your starter Pokémon!')
       .addOptions(options);
 
-    const navRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('prev_starter_page')
-        .setLabel('⬅️ Prev')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(page === 0),
-      new ButtonBuilder()
-        .setCustomId('next_starter_page')
-        .setLabel('Next ➡️')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(page >= totalPages - 1)
-    );
     const cancelRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('cancel_onboard')
@@ -127,9 +122,10 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
         new EmbedBuilder()
           .setColor(0x00ae86)
           .setTitle("🎉 Welcome to Coop’s Collection!")
-          .setDescription(`Page ${page + 1} of ${totalPages}\nChoose your **Starter Pokémon** to begin your journey.`),
+          .setDescription(`Choose your **Starter Pokémon** to begin your journey.`)
+          .setThumbnail(`${spritePaths.pokemon}${starters[0].id}.png`) // Show first starter as preview
       ],
-      components: [new ActionRowBuilder().addComponents(starterMenu), navRow, cancelRow],
+      components: [new ActionRowBuilder().addComponents(starterMenu), cancelRow],
       ephemeral: true,
     });
   }
@@ -140,7 +136,8 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
       new EmbedBuilder()
         .setColor(0x00ae86)
         .setTitle("🎉 Welcome to Coop’s Collection!")
-        .setDescription(`Page ${page + 1} of ${totalPages}\nChoose your **Starter Pokémon** to begin your journey.`),
+        .setDescription(`Choose your **Starter Pokémon** to begin your journey.`)
+        .setThumbnail(`${spritePaths.pokemon}${STARTER_IDS[0]}.png`)
     ],
     components: [],
     ephemeral: true,
@@ -153,17 +150,12 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
   collector.on('collect', async (i) => {
     if (i.user.id !== userId) return i.reply({ content: 'Not your session.', ephemeral: true });
 
-    if (i.customId === 'next_starter_page' && page < totalPages - 1) {
-      page++;
-      await i.deferUpdate();
-      await renderStarterMenu();
-    } else if (i.customId === 'prev_starter_page' && page > 0) {
-      page--;
-      await i.deferUpdate();
-      await renderStarterMenu();
-    } else if (i.customId === 'select_starter') {
+    if (i.customId === 'select_starter') {
       collector.stop();
-      await chooseTrainerSprite(i, trainerData, saveTrainerData, i.values[0]);
+      // Use ID to look up starter
+      const chosenId = parseInt(i.values[0], 10);
+      const chosenStarter = pokemonData[chosenId]?.name || '';
+      await chooseTrainerSprite(i, trainerData, saveTrainerData, chosenStarter);
     } else if (i.customId === 'cancel_onboard') {
       collector.stop();
       await i.update({ content: '❌ Onboarding cancelled.', embeds: [], components: [] });
@@ -177,14 +169,34 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
   });
 }
 
+// Normalize trainer sprite options for dropdown
+function getTrainerSpriteOptions(limit = 10) {
+  const spriteOptions = [];
+  let count = 0;
+  for (const [key, value] of Object.entries(trainerSprites)) {
+    if (Array.isArray(value)) {
+      for (const file of value) {
+        if (typeof file === "string" && count < limit) {
+          spriteOptions.push({ label: key, value: file, emoji: '🧑' });
+          count++;
+        } else if (file.file && !file.disabled && count < limit) {
+          spriteOptions.push({ label: key, value: file.file, emoji: '🧑' });
+          count++;
+        }
+        if (count >= limit) break;
+      }
+    }
+    if (count >= limit) break;
+  }
+  return spriteOptions;
+}
+
 async function chooseTrainerSprite(interaction, trainerData, saveTrainerData, starter) {
   const userId = interaction.user.id;
   const spriteMenu = new StringSelectMenuBuilder()
     .setCustomId('select_trainer_sprite')
     .setPlaceholder('Choose your trainer appearance!')
-    .addOptions(Object.values(trainerSprites).slice(0, 10).map(t =>
-      ({ label: t.name, value: t.filename, emoji: t.emoji || '🧑' })
-    ));
+    .addOptions(getTrainerSpriteOptions(10));
 
   const spriteRow = new ActionRowBuilder().addComponents(spriteMenu);
   const cancelRow = new ActionRowBuilder().addComponents(
@@ -229,7 +241,18 @@ async function confirmSetup(interaction, trainerData, saveTrainerData, starter, 
   const userId = interaction.user.id;
   const user = trainerData[userId] || { tp: 0, cc: 0, pokemon: {}, trainers: {} };
 
-  const starterId = pokemonData[Object.keys(pokemonData).find(k => pokemonData[k].name === starter)]?.id;
+  // Find starter by name or ID
+  let starterObj = null;
+  for (const id of Object.keys(pokemonData)) {
+    if (
+      pokemonData[id].name === starter ||
+      String(pokemonData[id].id) === String(starter)
+    ) {
+      starterObj = pokemonData[id];
+      break;
+    }
+  }
+  const starterId = starterObj?.id;
   const isShiny = rollForShiny(user.tp);
   const starterSprite = starterId ? (isShiny ? `${spritePaths.shiny}${starterId}.gif` : `${spritePaths.pokemon}${starterId}.png`) : null;
   const trainerSprite = `${spritePaths.trainers}${sprite}`;

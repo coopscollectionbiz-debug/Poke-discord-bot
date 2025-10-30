@@ -311,7 +311,8 @@ client.on('messageCreate', async msg => {
   const rankName = getRank(trainerData[msg.author.id].tp);
   const hadRank = member.roles.cache.some(role => role.name === rankName);
   await updateUserRole(member, rankName);
-  if (!hadRank) {
+  // Only send rank up message if new rank is NOT "Novice Trainer"
+  if (!hadRank && rankName !== 'Novice Trainer') {
     msg.channel.send(
       `🎉 Congratulations ${msg.author}! You've reached **${rankName}** rank with ${trainerData[msg.author.id].tp.toLocaleString()} TP!`
     );

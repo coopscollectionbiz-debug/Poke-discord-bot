@@ -14,6 +14,8 @@ import { rollForShiny } from '../helpers/shinyOdds.js';
 const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
 const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
 
+const PAGE_SIZE = 25; // Discord select menu option limit
+
 export default {
   data: new SlashCommandBuilder()
     .setName('trainercard')
@@ -56,6 +58,7 @@ export default {
       .setImage(trainerSprite)
       .setFooter({ text: "Use /showpokemon or /showtrainers to view your collection!" });
 
+    // Discord.js v14: ephemeral is supported but deprecated in v15. Use flags instead if you upgrade.
     return interaction.reply({ embeds: [embed], ephemeral: false });
   },
 };
@@ -65,55 +68,96 @@ async function startOnboardingFlow(interaction, trainerData, saveTrainerData) {
   const user = trainerData[userId] || { tp: 0, cc: 0, pokemon: {}, trainers: {} };
   trainerData[userId] = user;
 
-  // Step 1: Choose Starter Pokémon (Gen 1–5, rarity-weighted)
+  // Paginated starter picker
   const starters = Object.values(pokemonData).filter(p => p.generation <= 5);
-  const weightedStarters = weightedRandomArray(starters, {
-    common: 60, uncommon: 24, rare: 10, epic: 4, legendary: 1.5, mythic: 0.5
-  });
-  const starterOptions = Array.from(new Set(weightedStarters.map(p => p.name))).slice(0, 25).map(pname => {
-    const p = pokemonData[pname];
-    return { label: p.name, value: p.name, emoji: p.emoji || '✨' };
-  });
+  const starterNames = Array.from(new Set(starters.map(p => p.name))).sort();
+  let page = 0;
+  const totalPages = Math.ceil(starterNames.length / PAGE_SIZE);
 
-  const starterMenu = new StringSelectMenuBuilder()
-    .setCustomId('select_starter')
-    .setPlaceholder('Choose your starter Pokémon (Gen 1–5)!')
-    .addOptions(starterOptions);
+  async function renderStarterMenu() {
+    const options = starterNames.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(pname => {
+      const p = pokemonData[pname];
+      return {
+        label: p.name,
+        value: p.name,
+        emoji: p.emoji || undefined,
+      };
+    });
 
-  const starterRow = new ActionRowBuilder().addComponents(starterMenu);
-  const cancelRow = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('cancel_onboard').setLabel('Cancel').setStyle(ButtonStyle.Secondary)
-  );
+    const starterMenu = new StringSelectMenuBuilder()
+      .setCustomId('select_starter')
+      .setPlaceholder('Choose your starter Pokémon (Gen 1–5)!')
+      .addOptions(options);
 
+    const navRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('prev_starter_page')
+        .setLabel('⬅️ Prev')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(page === 0),
+      new ButtonBuilder()
+        .setCustomId('next_starter_page')
+        .setLabel('Next ➡️')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(page === totalPages - 1)
+    );
+    const cancelRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('cancel_onboard')
+        .setLabel('Cancel')
+        .setStyle(ButtonStyle.Secondary)
+    );
+
+    // Discord.js v14: ephemeral is supported, but deprecated in v15.
+    await interaction.editReply({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0x00ae86)
+          .setTitle("🎉 Welcome to Coop’s Collection!")
+          .setDescription(`Page ${page + 1} of ${totalPages}\nChoose your **Starter Pokémon** to begin your journey.`),
+      ],
+      components: [new ActionRowBuilder().addComponents(starterMenu), navRow, cancelRow],
+      ephemeral: true,
+    });
+  }
+
+  // First message
   await interaction.reply({
     embeds: [
       new EmbedBuilder()
         .setColor(0x00ae86)
         .setTitle("🎉 Welcome to Coop’s Collection!")
-        .setDescription("Let's get started!\n\nChoose your **Starter Pokémon** to begin your journey."),
+        .setDescription(`Page ${page + 1} of ${totalPages}\nChoose your **Starter Pokémon** to begin your journey.`),
     ],
-    components: [starterRow, cancelRow],
+    components: [],
     ephemeral: true,
   });
+  await renderStarterMenu();
 
-  const starterCollector = interaction.channel.createMessageComponentCollector({
-    filter: i => i.user.id === userId,
-    time: 300000,
+  const msg = await interaction.fetchReply();
+  const collector = msg.createMessageComponentCollector({ time: 300000 });
+
+  collector.on('collect', async (i) => {
+    if (i.user.id !== userId) return i.reply({ content: 'Not your session.', ephemeral: true });
+
+    if (i.customId === 'next_starter_page' && page < totalPages - 1) {
+      page++;
+      await i.deferUpdate();
+      await renderStarterMenu();
+    } else if (i.customId === 'prev_starter_page' && page > 0) {
+      page--;
+      await i.deferUpdate();
+      await renderStarterMenu();
+    } else if (i.customId === 'select_starter') {
+      collector.stop();
+      await chooseTrainerSprite(i, trainerData, saveTrainerData, i.values[0]);
+    } else if (i.customId === 'cancel_onboard') {
+      collector.stop();
+      await i.update({ content: '❌ Onboarding cancelled.', embeds: [], components: [] });
+    }
   });
 
-  starterCollector.on('collect', async (i) => {
-    if (i.customId === 'cancel_onboard') {
-      starterCollector.stop();
-      return i.update({ content: '❌ Onboarding cancelled.', embeds: [], components: [] });
-    }
-    if (i.customId === 'select_starter') {
-      const starter = i.values[0];
-      starterCollector.stop();
-      await chooseTrainerSprite(i, trainerData, saveTrainerData, starter);
-    }
-  });
-
-  starterCollector.on('end', (collected, reason) => {
+  collector.on('end', (collected, reason) => {
     if (reason === 'time') {
       interaction.editReply({ content: '⏳ Time’s up! Run `/trainercard` again to restart onboarding.', components: [], embeds: [] });
     }
@@ -237,6 +281,7 @@ async function confirmSetup(interaction, trainerData, saveTrainerData, starter, 
   });
 }
 
+// Utility for weighted rarity arrays (used for random picking elsewhere)
 function weightedRandomArray(items, weights) {
   const weighted = [];
   for (const item of items) {

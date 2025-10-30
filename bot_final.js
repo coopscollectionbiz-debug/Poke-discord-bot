@@ -280,7 +280,7 @@ client.on("messageCreate", async msg => {
 // ==========================================================
 let trainerData = {};
 
-client.once("clientReady", async () => {
+  client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
   trainerData = await loadTrainerData();
   await loadCommands();

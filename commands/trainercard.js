@@ -10,7 +10,7 @@ import fs from 'fs/promises';
 import { spritePaths } from '../spriteconfig.js';
 import { rollForShiny } from '../helpers/shinyOdds.js';
 
-// Fixed: dynamic JSON loading for Node.js 20+/25+
+// Dynamic JSON loading for Node.js 20+/25+ and Discord.js v14.14.1
 const pokemonData = JSON.parse(await fs.readFile(new URL('../pokemonData.json', import.meta.url)));
 const trainerSprites = JSON.parse(await fs.readFile(new URL('../trainerSprites.json', import.meta.url)));
 

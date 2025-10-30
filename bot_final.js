@@ -28,7 +28,7 @@ const TRAINERDATA_PATH = "./trainerData.json";   // Local cache location
 const AUTOSAVE_INTERVAL = 1000 * 60 * 30;        // Autosave every 30 minutes
 const PORT = process.env.PORT || 10000;          // Render keep-alive port
 
-// ==========================================================
+
 // 🏅 TP Rank Ladder 
 // ==========================================================
 const RANK_TIERS = [
@@ -298,20 +298,35 @@ let trainerData = {};
 });
 
 // ==========================================================
-// 🌐 Express Keep-Alive (Render requirement)
+// 🌐 Express Keep-Alive + Static File Hosting
 // ==========================================================
-const app = express();
 import { fileURLToPath } from "url";
+import * as fsSync from "fs"; // ✅ Proper synchronous import for existsSync
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Serve static files from the /public directory
-app.use("/public", express.static(path.join(__dirname, "public")));
+// ✅ Create express app
+const app = express();
 
-app.get("/", (_, res) => res.send("Bot is running!"));
+// ✅ Serve static files from /public (Render safe)
+const staticPath = path.join(process.cwd(), "public");
+app.use("/public", express.static(staticPath));
 
-app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
+console.log("📁 Serving static from:", staticPath);
+console.log(
+  "🔍 Test sprite exists:",
+  fsSync.existsSync(path.join(staticPath, "sprites/pokemon/normal/1.gif"))
+);
+
+// ✅ Basic endpoint (Render health check)
+app.get("/", (_, res) => res.send("Bot is running and serving static files!"));
+
+// ✅ Start the Express server
+app.listen(PORT, () => {
+  console.log(`✅ Listening on port ${PORT}`);
+});
+
 
 // ==========================================================
 // 🔐 Login

@@ -177,15 +177,28 @@ client.on("messageCreate", async msg => {
 });
 
 // ==========================================================
-// 🧩 Command Loader and Handler
+// 🧩 Command Loader (Fixed for default exports + Logging)
 // ==========================================================
 async function loadCommands() {
   const commandsPath = path.resolve("./commands");
   const files = (await fs.readdir(commandsPath)).filter(f => f.endsWith(".js"));
 
   for (const file of files) {
-    const command = await import(`./commands/${file}`);
-    client.commands.set(command.data.name, command);
+    try {
+      const imported = await import(`./commands/${file}`);
+      const command = imported.default || imported; // ✅ Support default exports
+
+      console.log("🧩 Checking", file, "->", command?.data?.name || "(missing data)");
+
+      if (!command?.data?.name) {
+        console.warn(`⚠️ Skipping ${file}: missing data.name`);
+        continue;
+      }
+
+      client.commands.set(command.data.name, command);
+    } catch (err) {
+      console.error(`❌ Failed to load ${file}:`, err);
+    }
   }
 
   const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
@@ -195,6 +208,7 @@ async function loadCommands() {
 
   console.log(`✅ Registered ${client.commands.size} slash commands.`);
 }
+
 
 // Handle interactions (slash commands)
 client.on("interactionCreate", async interaction => {

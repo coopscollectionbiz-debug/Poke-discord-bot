@@ -1,6 +1,7 @@
-// ==========================================================
-// pokedex.js — Lookup command: Shows a Pokémon's data, sprite, rarity, and flavor text
-// ==========================================================
+// =============================================
+// /pokedex.js
+// Coop's Collection Discord Bot
+// =============================================
 
 import {
   SlashCommandBuilder,
@@ -8,130 +9,133 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ComponentType
 } from "discord.js";
 import fs from "fs/promises";
 
-// ✅ Safe JSON import (no assert)
+// =============================================
+// Load Pokémon data safely (no assert needed)
+// =============================================
 const pokemonData = JSON.parse(
   await fs.readFile(new URL("../pokemonData.json", import.meta.url))
 );
 
-// ==========================================================
-// 🧩 Command Definition
-// ==========================================================
-export default {
-  data: new SlashCommandBuilder()
-    .setName("pokedex")
-    .setDescription("Look up details about a specific Pokémon.")
-    .addStringOption((option) =>
-      option
-        .setName("name")
-        .setDescription("Enter a Pokémon name or ID to view its Pokédex entry.")
-        .setRequired(true)
-    ),
+// =============================================
+// Helper: find Pokémon by name (case-insensitive)
+// =============================================
+function findPokemonByName(name) {
+  return pokemonData.find(
+    (p) => p.name.toLowerCase() === name.toLowerCase()
+  );
+}
 
-  // ==========================================================
-  // ⚙️ Command Execution
-  // ==========================================================
-  async execute(interaction) {
-    await interaction.deferReply({ flags: 64 });
+// =============================================
+// Slash command definition
+// =============================================
+export const data = new SlashCommandBuilder()
+  .setName("pokedex")
+  .setDescription("View detailed Pokédex information for a Pokémon.")
+  .addStringOption((option) =>
+    option
+      .setName("name")
+      .setDescription("Enter the Pokémon name")
+      .setRequired(true)
+  );
 
-    const input = interaction.options.getString("name").trim().toLowerCase();
+// =============================================
+// Command Execution
+// =============================================
+export async function execute(interaction) {
+  const query = interaction.options.getString("name");
+  const pokemon = findPokemonByName(query);
 
-    // Find the Pokémon
-    const pokemon =
-      pokemonData.find(
-        (p) =>
-          p.name.toLowerCase() === input ||
-          p.id.toString() === input ||
-          (p.aliases && p.aliases.includes(input))
-      ) || null;
-
-    if (!pokemon) {
-      return interaction.editReply({
-        content: `❌ Pokémon **${input}** not found.`,
-      });
-    }
-
-    // ==========================================================
-    // 🖼️ Embed Builder
-    // ==========================================================
-    const normalSprite = pokemon.sprite;
-    const shinySprite = pokemon.shinySprite || null;
-
-    const embed = new EmbedBuilder()
-      .setTitle(`${pokemon.name}  #${pokemon.id}`)
-      .setDescription(
-        [
-          `**Type:** ${pokemon.type || "Unknown"}`,
-          `**Rarity:** ${pokemon.rarity?.toUpperCase() || "COMMON"}`,
-          pokemon.flavorText ? `\n_${pokemon.flavorText}_` : "",
-        ].join("\n")
-      )
-      .setColor(0x3498db)
-      .setImage(normalSprite)
-      .setFooter({
-        text: shinySprite
-          ? "Click 'Show Shiny' to view the shiny version!"
-          : "No shiny variant available.",
-      })
-      .setTimestamp();
-
-    // ==========================================================
-    // ✨ Shiny Toggle Buttons
-    // ==========================================================
-    const row = new ActionRowBuilder();
-
-    if (shinySprite) {
-      row.addComponents(
-        new ButtonBuilder()
-          .setCustomId("show_normal")
-          .setLabel("Normal")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId("show_shiny")
-          .setLabel("Show Shiny ✨")
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId("close_entry")
-          .setLabel("Close")
-          .setStyle(ButtonStyle.Danger)
-      );
-    } else {
-      row.addComponents(
-        new ButtonBuilder()
-          .setCustomId("close_entry")
-          .setLabel("Close")
-          .setStyle(ButtonStyle.Danger)
-      );
-    }
-
-    const message = await interaction.editReply({
-      embeds: [embed],
-      components: shinySprite ? [row] : [],
+  if (!pokemon) {
+    return interaction.reply({
+      content: `❌ No Pokémon found named **${query}**.`,
+      ephemeral: true
     });
+  }
 
-    // ==========================================================
-    // 🎮 Collector for Shiny Toggle
-    // ==========================================================
-    if (!shinySprite) return;
+  // Defer reply to allow async image loads
+  await interaction.deferReply({ ephemeral: true });
 
-    const collector = message.createMessageComponentCollector({ time: 60000 });
+  // =============================================
+  // Embed for Pokémon Info
+  // =============================================
+  const normalSprite = `https://poke-discord-bot.onrender.com/public/sprites/pokemon/${pokemon.id}.gif`;
+  const shinySprite = `https://poke-discord-bot.onrender.com/public/sprites/pokemon/${pokemon.id}_shiny.gif`;
 
-    collector.on("collect", async (i) => {
-      if (i.user.id !== interaction.user.id)
-        return i.reply({ content: "⚠️ This Pokédex entry isn’t yours!", flags: 64 });
+  let showingShiny = false;
 
-      if (i.customId === "show_shiny") {
-        const shinyEmbed = EmbedBuilder.from(embed)
-          .setImage(shinySprite)
-          .setColor(0xffc300)
-          .setFooter({ text: "Shiny variant displayed ✨" });
+  const embed = new EmbedBuilder()
+    .setTitle(`${pokemon.name} — #${pokemon.id}`)
+    .setColor(0xffcb05)
+    .setDescription(
+      `🗒️ **Type:** ${pokemon.type.join(
+        "/"
+      )}\n⭐ **Rarity:** ${pokemon.rarity}\n📘 **Description:** ${
+        pokemon.description || "No Pokédex entry available."
+      }`
+    )
+    .setThumbnail(normalSprite);
 
-        const shinyRow = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("show_normal")
-            .setLabel("Show Normal")
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuild
+  // =============================================
+  // Buttons: toggle shiny, close
+  // =============================================
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("toggle_shiny")
+      .setLabel("Toggle Shiny ✨")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId("close_entry")
+      .setLabel("Close")
+      .setStyle(ButtonStyle.Danger)
+  );
+
+  const message = await interaction.editReply({
+    embeds: [embed],
+    components: [row]
+  });
+
+  // =============================================
+  // Collector for button interactions
+  // =============================================
+  const collector = message.createMessageComponentCollector({
+    componentType: ComponentType.Button,
+    time: 60000
+  });
+
+  collector.on("collect", async (i) => {
+    if (i.user.id !== interaction.user.id)
+      return i.reply({
+        content: "❌ This Pokédex entry isn’t yours.",
+        ephemeral: true
+      });
+
+    switch (i.customId) {
+      case "toggle_shiny": {
+        showingShiny = !showingShiny;
+        embed.setThumbnail(showingShiny ? shinySprite : normalSprite);
+        embed.setColor(showingShiny ? 0xdaa520 : 0xffcb05);
+        await i.update({ embeds: [embed], components: [row] });
+        break;
+      }
+
+      case "close_entry": {
+        collector.stop("closed");
+        await i.update({ content: "Pokédex entry closed.", embeds: [], components: [] });
+        break;
+      }
+
+      default:
+        await i.reply({ content: "Unknown action.", ephemeral: true });
+    }
+  });
+
+  collector.on("end", async (_, reason) => {
+    if (reason !== "closed") {
+      await message.edit({ components: [] }).catch(() => {});
+    }
+  });
+}

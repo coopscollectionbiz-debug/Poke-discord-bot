@@ -336,3 +336,105 @@ export async function execute(interaction, trainerData) {
   // show trainer card
   await showTrainerCard(interaction, user, trainerData);
 }
+
+// ================================
+// BUTTON INTERACTION HANDLER
+// ================================
+export async function handleTrainerCardButtons(interaction, trainerData) {
+  const userId = interaction.user.id;
+  const username = interaction.user.username;
+  const user = trainerData[userId];
+
+  // Defensive guard
+  if (!user) {
+    return interaction.reply({
+      content: "❌ Could not find your trainer data. Try running /trainercard again.",
+      ephemeral: true
+    });
+  }
+
+  switch (interaction.customId) {
+    // 🔄 Refresh the current card
+    case "refresh_card": {
+      const canvas = await renderTrainerCard(user, username);
+      const buffer = await canvas.encode("png");
+      const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
+      const rank = getRank(user.tp);
+      const pokemonOwned = Object.keys(user.ownedPokemon || {}).length;
+      const shinyCount = Object.values(user.ownedPokemon || {}).filter(p => p.shiny).length;
+      const trainerCount = Object.keys(user.trainers || {}).length;
+
+      const embed = new EmbedBuilder()
+        .setTitle(`🧑 ${username}'s Trainer Card`)
+        .setColor(0xffcb05)
+        .setDescription(
+          `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **Coins:** ${user.coins}\n\n📊 **Progress:**\n• Pokémon Owned: ${pokemonOwned}\n• Shiny Pokémon: ${shinyCount} ✨\n• Trainers Recruited: ${trainerCount}`
+        )
+        .setImage("attachment://trainercard.png");
+
+      await interaction.update({
+        embeds: [embed],
+        files: [attachment],
+        components: interaction.message.components
+      });
+      break;
+    }
+
+    // 🌐 Share publicly to the same channel
+    case "share_public": {
+      const canvas = await renderTrainerCard(user, username);
+      const buffer = await canvas.encode("png");
+      const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
+      const rank = getRank(user.tp);
+      const pokemonOwned = Object.keys(user.ownedPokemon || {}).length;
+      const shinyCount = Object.values(user.ownedPokemon || {}).filter(p => p.shiny).length;
+      const trainerCount = Object.keys(user.trainers || {}).length;
+
+      const publicEmbed = new EmbedBuilder()
+        .setTitle(`🌐 ${username}'s Trainer Card`)
+        .setColor(0x00ae86)
+        .setDescription(
+          `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **Coins:** ${user.coins}\n\n📊 **Progress:**\n• Pokémon Owned: ${pokemonOwned}\n• Shiny Pokémon: ${shinyCount} ✨\n• Trainers Recruited: ${trainerCount}`
+        )
+        .setImage("attachment://trainercard.png")
+        .setFooter({ text: "Shared via Coop’s Collection Bot" });
+
+      await interaction.reply({
+        content: "✅ Your Trainer Card has been shared publicly!",
+        ephemeral: true
+      });
+
+      await interaction.channel.send({
+        embeds: [publicEmbed],
+        files: [attachment]
+      });
+      break;
+    }
+
+    // 🧍 Placeholder for changing trainer (implemented separately)
+    case "change_trainer": {
+      return interaction.reply({
+        content: "Feature coming soon: choose from your owned trainer sprites!",
+        ephemeral: true
+      });
+    }
+
+    // 🧬 Placeholder for changing Pokémon (implemented separately)
+    case "change_pokemon": {
+      return interaction.reply({
+        content: "Feature coming soon: choose which Pokémon appear on your card!",
+        ephemeral: true
+      });
+    }
+
+    // ❌ Close ephemeral card
+    case "close_card": {
+      await interaction.message.delete().catch(() => {});
+      break;
+    }
+
+    default:
+      await interaction.reply({ content: "Unknown button action.", ephemeral: true });
+  }
+}
+

@@ -18,6 +18,7 @@ import {
 import { REST, Routes } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
+import { handleTrainerCardButtons } from "./commands/trainercard.js";
 
 // ==========================================================
 // 🌐 Basic Setup
@@ -27,7 +28,7 @@ const AUTOSAVE_INTERVAL = 1000 * 60 * 30;        // Autosave every 30 minutes
 const PORT = process.env.PORT || 10000;          // Render keep-alive port
 
 // ==========================================================
-// 🏅 TP Rank Ladder — your exact structure
+// 🏅 TP Rank Ladder 
 // ==========================================================
 const RANK_TIERS = [
   { tp: 100, roleName: "Novice Trainer" },

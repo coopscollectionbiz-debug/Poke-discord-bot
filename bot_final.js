@@ -2,8 +2,6 @@
 // 🤖 CoopBot Final Build (Render + Full Feature Integration)
 // ==========================================================
 
-process.on('uncaughtException', err => console.error('Uncaught Exception:', err));
-process.on('unhandledRejection', reason => console.error('Unhandled Rejection:', reason));
 
 import fs from 'fs/promises';
 import path from 'path';
@@ -20,6 +18,9 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 dotenv.config();
+
+process.on('uncaughtException', err => console.error('Uncaught Exception:', err));
+process.on('unhandledRejection', reason => console.error('Unhandled Rejection:', reason));
 
 // ==========================================================
 // 🧱 Express Keep-Alive Server (Render requirement)

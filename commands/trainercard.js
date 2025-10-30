@@ -25,7 +25,8 @@ export default {
     .setDescription('View your trainer card or start your journey if new!'),
 
   async execute(interaction, trainerData, saveTrainerData) {
-    const userId = interaction.user.id;
+  await interaction.deferReply({ flags: 64 });    
+  const userId = interaction.user.id;
     const user = trainerData[userId];
 
     // Onboarding flow for new users

@@ -21,3 +21,5 @@ Thumbs.db
 
 # Ignore Render cache
 .cache/
+
+!public/sprites/**

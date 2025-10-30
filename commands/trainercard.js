@@ -67,75 +67,110 @@ function getRank(tp) {
 // CANVAS RENDERER
 // ================================
 async function renderTrainerCard(userData, username) {
-  const canvas = createCanvas(800, 450);
+  const canvas = createCanvas(900, 500);
   const ctx = canvas.getContext("2d");
 
-  // Background
-  ctx.fillStyle = "#f9f9f9";
-  ctx.fillRect(0, 0, 800, 450);
+  // === BACKGROUND ===
+  const gradient = ctx.createLinearGradient(0, 0, 0, 500);
+  gradient.addColorStop(0, "#fafafa");
+  gradient.addColorStop(1, "#e8e8e8");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 900, 500);
 
-  ctx.fillStyle = "#111";
-  ctx.font = "bold 26px Sans";
-  ctx.fillText(`${username}'s Trainer Card`, 40, 40);
+  // Frame + header
+  ctx.fillStyle = "#222";
+  ctx.fillRect(0, 0, 900, 60);
+  ctx.font = "bold 28px Sans";
+  ctx.fillStyle = "#ffcb05";
+  ctx.fillText(`${username}'s Trainer Card`, 30, 40);
 
-  // Trainer sprite
+  // === TRAINER SPRITE ===
+  const trainerX = 60, trainerY = 120;
   if (userData.displayedTrainer) {
     try {
       const trainerURL = `${spritePaths.trainers}${userData.displayedTrainer}`;
       const trainerImg = await loadImage(trainerURL);
-      ctx.drawImage(trainerImg, 50, 100, 200, 250);
+
+      // keep proportions and center
+      const scale = Math.min(200 / trainerImg.width, 250 / trainerImg.height);
+      const w = trainerImg.width * scale;
+      const h = trainerImg.height * scale;
+
+      ctx.drawImage(trainerImg, trainerX + (200 - w) / 2, trainerY, w, h);
     } catch {
-      ctx.fillText("Trainer Missing", 80, 250);
+      ctx.fillStyle = "#888";
+      ctx.fillText("Trainer Missing", trainerX, trainerY + 120);
     }
   } else {
-    ctx.fillText("No Trainer Selected", 70, 250);
+    ctx.fillStyle = "#888";
+    ctx.fillText("No Trainer Selected", trainerX, trainerY + 120);
   }
 
-  // Pokémon grid (3x2)
-  const gridX = 300,
-    gridY = 100,
-    size = 100,
-    gap = 20;
+  // === POKÉMON GRID ===
+  const gridStartX = 330;
+  const gridStartY = 120;
+  const slot = 110;
+  const gap = 15;
+
   const displayed = userData.displayedPokemon?.slice(0, 6) || [];
 
-  for (let i = 0; i < displayed.length; i++) {
-    const id = displayed[i];
+  for (let i = 0; i < 6; i++) {
     const col = i % 3;
     const row = Math.floor(i / 3);
-    const x = gridX + col * (size + gap);
-    const y = gridY + row * (size + gap);
+    const x = gridStartX + col * (slot + gap);
+    const y = gridStartY + row * (slot + gap);
+
+    ctx.strokeStyle = "#ccc";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, slot, slot);
+
+    const id = displayed[i];
+    if (!id) continue;
 
     try {
       const record = userData.pokemon?.[id] || userData.ownedPokemon?.[id];
       const isShiny = record?.shiny > 0;
       const base = isShiny ? spritePaths.shiny : spritePaths.pokemon;
       const img = await loadImage(`${base}${id}.gif`);
-      ctx.drawImage(img, x, y, size, size);
+
+      const scale = Math.min(slot * 0.9 / img.width, slot * 0.9 / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      const offsetX = (slot - w) / 2;
+      const offsetY = (slot - h) / 2;
+
+      ctx.drawImage(img, x + offsetX, y + offsetY, w, h);
     } catch {
-      ctx.strokeStyle = "#aaa";
-      ctx.strokeRect(x, y, size, size);
-      ctx.fillStyle = "#888";
-      ctx.fillText("?", x + 40, y + 60);
+      ctx.fillStyle = "#aaa";
+      ctx.font = "bold 20px Sans";
+      ctx.fillText("?", x + slot / 2 - 6, y + slot / 2 + 8);
     }
   }
 
-  // Stats
+  // === STATS BOX ===
   const rank = getRank(userData.tp);
-  const pokemonOwned = Object.keys(userData.pokemon || userData.ownedPokemon || {}).length;
-  const shinyCount = Object.values(userData.pokemon || userData.ownedPokemon || {}).filter(
-    (p) => p.shiny > 0
-  ).length;
+  const pokemonOwned = Object.keys(userData.pokemon || {}).length;
+  const shinyCount = Object.values(userData.pokemon || {}).filter((p) => p.shiny > 0).length;
   const trainerCount = Object.keys(userData.trainers || {}).length;
 
-  ctx.fillStyle = "#000";
+  const statsX = 60;
+  const statsY = 410;
+
+  ctx.fillStyle = "#333";
+  ctx.font = "bold 20px Sans";
+  ctx.fillText(`Rank: ${rank}`, statsX, statsY);
   ctx.font = "18px Sans";
-  ctx.fillText(`Rank: ${rank}`, 40, 380);
-  ctx.fillText(`TP: ${userData.tp} | CC: ${userData.cc || 0}`, 40, 405);
+  ctx.fillText(`TP: ${userData.tp} | CC: ${userData.cc || 0}`, statsX, statsY + 25);
   ctx.fillText(
     `Pokémon: ${pokemonOwned} | Shiny: ${shinyCount} | Trainers: ${trainerCount}`,
-    40,
-    430
+    statsX,
+    statsY + 50
   );
+
+  // === BORDER ===
+  ctx.strokeStyle = "#333";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(0, 0, 900, 500);
 
   return canvas;
 }
@@ -269,55 +304,123 @@ async function starterSelection(interaction, user, trainerData, saveDataToDiscor
 
 
 async function trainerSelection(interaction, user, trainerData, saveDataToDiscord) {
-  const embed = new EmbedBuilder()
-    .setTitle("🧍 Choose Your Trainer Sprite")
-    .setDescription("Pick your trainer appearance!")
-    .setColor(0x5865f2);
+  const trainers = [
+    {
+      id: "youngster-gen4.png",
+      name: "Youngster 👦",
+      label: "Youngster",
+      description: "A spirited young Pokémon Trainer full of energy.",
+      color: 0x43b581
+    },
+    {
+      id: "lass-gen4.png",
+      name: "Lass 👧",
+      label: "Lass",
+      description: "A cheerful and stylish Trainer who loves cute Pokémon.",
+      color: 0xff70a6
+    }
+  ];
 
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("trainer_youngster")
-      .setLabel("Youngster 👦")
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId("trainer_lass")
-      .setLabel("Lass 👧")
-      .setStyle(ButtonStyle.Primary)
-  );
+  let index = 0;
 
-  await interaction.followUp({ embeds: [embed], components: [row], ephemeral: true });
+  const renderTrainerEmbed = (page) => {
+    const t = trainers[page];
+    return new EmbedBuilder()
+      .setTitle(`🧍 Choose Your Trainer Sprite`)
+      .setDescription(`${t.description}\n\n**Trainer:** ${t.name}`)
+      .setColor(t.color)
+      .setImage(`${spritePaths.trainers}${t.id}`)
+      .setFooter({ text: `Page ${page + 1}/${trainers.length}` });
+  };
+
+  const getButtons = (page) => {
+    const buttons = [];
+
+    // ⬅️ Back button
+    if (page > 0) {
+      buttons.push(
+        new ButtonBuilder()
+          .setCustomId("prev_trainer")
+          .setLabel("⬅️ Back")
+          .setStyle(ButtonStyle.Secondary)
+      );
+    }
+
+    // ➡️ Next button
+    if (page < trainers.length - 1) {
+      buttons.push(
+        new ButtonBuilder()
+          .setCustomId("next_trainer")
+          .setLabel("Next ➡️")
+          .setStyle(ButtonStyle.Secondary)
+      );
+    }
+
+    // ✅ Confirm button
+    buttons.push(
+      new ButtonBuilder()
+        .setCustomId("confirm_trainer")
+        .setLabel(`✅ Confirm ${trainers[page].label}`)
+        .setStyle(ButtonStyle.Success)
+    );
+
+    return new ActionRowBuilder().addComponents(buttons);
+  };
+
+  const embed = renderTrainerEmbed(index);
+  const row = getButtons(index);
+
+  await interaction.followUp({
+    embeds: [embed],
+    components: [row],
+    ephemeral: true
+  });
 
   const collector = interaction.channel.createMessageComponentCollector({
     componentType: ComponentType.Button,
-    time: 30000
+    time: 60000
   });
 
   collector.on("collect", async (i) => {
-    if (!i.customId.startsWith("trainer_")) return;
     if (i.user.id !== interaction.user.id)
-      return i.reply({ content: "Not your onboarding!", ephemeral: true });
+      return i.reply({ content: "This isn’t your selection!", ephemeral: true });
 
-    const choice = i.customId === "trainer_youngster" ? "youngster-gen4.png" : "lass-gen4.png";
-    user.trainers[choice] = true;
-    user.displayedTrainer = choice;
+    switch (i.customId) {
+      case "next_trainer":
+        index = Math.min(index + 1, trainers.length - 1);
+        break;
+      case "prev_trainer":
+        index = Math.max(index - 1, 0);
+        break;
+      case "confirm_trainer": {
+        const choice = trainers[index];
+        user.trainers[choice.id] = true;
+        user.displayedTrainer = choice.id;
+        await saveDataToDiscord(trainerData);
 
-    await saveDataToDiscord(trainerData);
+        await i.update({
+          content: `✅ You chose **${choice.label}** as your Trainer!`,
+          embeds: [],
+          components: []
+        });
 
-    await i.update({
-      content: `✅ You chose ${choice.replace(".png", "")} as your trainer!`,
-      embeds: [],
-      components: []
-    });
+        collector.stop("confirmed");
+        return await showTrainerCard(i, user);
+      }
+    }
 
-    collector.stop();
-    await showTrainerCard(i, user);
+    // Refresh page
+    const newEmbed = renderTrainerEmbed(index);
+    const newRow = getButtons(index);
+    await i.update({ embeds: [newEmbed], components: [newRow] });
   });
 
-  collector.on("end", async () => {
-    await interaction.editReply({ components: [] }).catch(() => {});
+  collector.on("end", async (_, reason) => {
+    if (reason !== "confirmed") {
+      await interaction.editReply({ components: [] }).catch(() => {});
+    }
   });
 }
-
 // ================================
 // MAIN CARD DISPLAY
 // ================================

@@ -1,6 +1,6 @@
 // ==========================================================
-// 🤖 Coop's Collection Discord Bot — Final Version
-// Fully commented, Node 22 ESM-compatible
+// 🤖 Coop's Collection Discord Bot — FINAL VERSION
+// Fully commented, Node 22 compatible, and production ready
 // ==========================================================
 
 import fs from "fs/promises";
@@ -16,25 +16,38 @@ import {
   PermissionsBitField
 } from "discord.js";
 import { REST, Routes } from "discord.js";
-import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
 dotenv.config();
 
 // ==========================================================
-// 🧩 Constants and globals
+// 🌐 Basic Setup
 // ==========================================================
-const TRAINERDATA_PATH = "./trainerData.json";     // local cache
-const AUTOSAVE_INTERVAL = 1000 * 60 * 30;          // 30 min
-const PORT = process.env.PORT || 10000;            // Render keep-alive
-const RANK_ROLES = {
-  0: "Beginner",
-  1000: "Collector",
-  5000: "Elite",
-  10000: "Master",
-  25000: "Legend"
-};
+const TRAINERDATA_PATH = "./trainerData.json";   // Local cache location
+const AUTOSAVE_INTERVAL = 1000 * 60 * 30;        // Autosave every 30 minutes
+const PORT = process.env.PORT || 10000;          // Render keep-alive port
 
-// Discord client setup
+// ==========================================================
+// 🏅 TP Rank Ladder — your exact structure
+// ==========================================================
+const RANK_TIERS = [
+  { tp: 100, roleName: "Novice Trainer" },
+  { tp: 500, roleName: "Junior Trainer" },
+  { tp: 1000, roleName: "Skilled Trainer" },
+  { tp: 2500, roleName: "Experienced Trainer" },
+  { tp: 5000, roleName: "Advanced Trainer" },
+  { tp: 7500, roleName: "Expert Trainer" },
+  { tp: 10000, roleName: "Veteran Trainer" },
+  { tp: 17500, roleName: "Elite Trainer" },
+  { tp: 25000, roleName: "Master Trainer" },
+  { tp: 50000, roleName: "Gym Leader" },
+  { tp: 100000, roleName: "Elite Four Member" },
+  { tp: 175000, roleName: "Champion" },
+  { tp: 250000, roleName: "Legend" }
+];
+
+// ==========================================================
+// ⚙️ Discord Client Setup
+// ==========================================================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -46,10 +59,10 @@ const client = new Client({
 client.commands = new Collection();
 
 // ==========================================================
-// 💾 TRAINER DATA — Load / Save / Backup
+// 💾 Trainer Data Management (load / save / backup)
 // ==========================================================
 
-// Load trainer data from Discord storage channel if available
+// Load trainer data from Discord storage channel and local file
 async function loadTrainerData() {
   const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
   const messages = await storageChannel.messages.fetch({ limit: 10 });
@@ -63,13 +76,12 @@ async function loadTrainerData() {
     console.log(`✅ Found trainerData.json (${Object.keys(loaded).length} users) in storage channel.`);
   }
 
-  // local fallback
   try {
     const local = JSON.parse(await fs.readFile(TRAINERDATA_PATH, "utf8"));
     Object.assign(loaded, local);
   } catch {}
 
-  // normalize schema
+  // Normalize schema for all users
   for (const [id, u] of Object.entries(loaded)) {
     u.tp ??= 0;
     u.cc ??= 0;
@@ -83,12 +95,12 @@ async function loadTrainerData() {
   return loaded;
 }
 
-// Save trainer data locally
+// Save to local file
 async function saveTrainerDataLocal(data) {
   await fs.writeFile(TRAINERDATA_PATH, JSON.stringify(data, null, 2));
 }
 
-// Upload backup to Discord channel
+// Save backup to Discord channel
 async function saveDataToDiscord(data) {
   try {
     const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
@@ -103,59 +115,59 @@ async function saveDataToDiscord(data) {
 }
 
 // ==========================================================
-// 🧮 RANK / TP SYSTEM
+// 🧮 Rank System
 // ==========================================================
 
-// Determine role tier by TP
+// Get the correct role name for a given TP total
 function getRank(tp) {
-  const thresholds = Object.keys(RANK_ROLES).map(Number).sort((a, b) => a - b);
-  let role = RANK_ROLES[0];
-  for (const t of thresholds) if (tp >= t) role = RANK_ROLES[t];
-  return role;
+  let current = null;
+  for (const tier of RANK_TIERS) {
+    if (tp >= tier.tp) current = tier.roleName;
+  }
+  return current;
 }
 
-// Update Discord member role (idempotent)
+// Assign the correct rank to a Discord member (idempotent)
 async function updateUserRole(member, tp) {
-  const newRank = getRank(tp);
-  const role = member.guild.roles.cache.find(r => r.name === newRank);
+  const targetRole = getRank(tp);
+  if (!targetRole) return;
+  const role = member.guild.roles.cache.find(r => r.name === targetRole);
   if (!role) return;
-  if (member.roles.cache.has(role.id)) return; // already correct rank
-  for (const r of Object.values(RANK_ROLES)) {
-    const existing = member.guild.roles.cache.find(x => x.name === r);
-    if (existing && member.roles.cache.has(existing.id)) await member.roles.remove(existing);
+
+  // Skip if user already has this role
+  if (member.roles.cache.has(role.id)) return;
+
+  // Remove old rank roles
+  for (const t of RANK_TIERS) {
+    const oldRole = member.guild.roles.cache.find(r => r.name === t.roleName);
+    if (oldRole && member.roles.cache.has(oldRole.id)) {
+      await member.roles.remove(oldRole).catch(() => {});
+    }
   }
-  await member.roles.add(role);
-  console.log(`🏅 ${member.user.username} promoted to ${newRank}`);
+
+  // Add new rank role
+  await member.roles.add(role).catch(() => {});
+  console.log(`🏅 ${member.user.username} promoted to ${targetRole}`);
 }
 
 // ==========================================================
-// ⚙️ COMMAND LOADER
-// ==========================================================
-async function loadCommands() {
-  const commandsPath = path.resolve("./commands");
-  const files = (await fs.readdir(commandsPath)).filter(f => f.endsWith(".js"));
-  for (const f of files) {
-    const cmd = (await import(`./commands/${f}`)).default;
-    client.commands.set(cmd.data.name, cmd);
-  }
-
-  const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
-  await rest.put(Routes.applicationCommands(client.user.id), {
-    body: client.commands.map(c => c.data.toJSON())
-  });
-  console.log(`✅ Registered ${client.commands.size} slash commands.`);
-}
-
-// ==========================================================
-// 🧠 MESSAGE XP / TP HANDLER
+// 🧠 Message Handler (TP gain)
 // ==========================================================
 client.on("messageCreate", async msg => {
   if (msg.author.bot || !msg.guild) return;
-  const id = msg.author.id;
-  trainerData[id] ??= { tp: 0, cc: 0, pokemon: {}, trainers: {}, trainer: null, displayedPokemon: [] };
-  trainerData[id].tp += 1;
 
-  // Update Discord role tier if needed
+  const id = msg.author.id;
+  trainerData[id] ??= {
+    tp: 0,
+    cc: 0,
+    pokemon: {},
+    trainers: {},
+    trainer: null,
+    displayedPokemon: []
+  };
+
+  trainerData[id].tp += 1; // +1 TP per message
+
   try {
     const member = await msg.guild.members.fetch(id);
     await updateUserRole(member, trainerData[id].tp);
@@ -163,8 +175,26 @@ client.on("messageCreate", async msg => {
 });
 
 // ==========================================================
-// 🎮 SLASH COMMAND HANDLER
+// 🧩 Command Loader and Handler
 // ==========================================================
+async function loadCommands() {
+  const commandsPath = path.resolve("./commands");
+  const files = (await fs.readdir(commandsPath)).filter(f => f.endsWith(".js"));
+
+  for (const file of files) {
+    const command = (await import(`./commands/${file}`)).default;
+    client.commands.set(command.data.name, command);
+  }
+
+  const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
+  await rest.put(Routes.applicationCommands(client.user.id), {
+    body: client.commands.map(c => c.data.toJSON())
+  });
+
+  console.log(`✅ Registered ${client.commands.size} slash commands.`);
+}
+
+// Handle interactions (slash commands)
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
   const command = client.commands.get(interaction.commandName);
@@ -180,7 +210,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 // ==========================================================
-// 🕒 AUTOSAVE AND SHUTDOWN
+// 💾 Autosave + Shutdown Backup
 // ==========================================================
 async function autosave() {
   await saveTrainerDataLocal(trainerData);
@@ -192,7 +222,7 @@ process.on("SIGINT", async () => { console.log("💾 SIGINT → saving..."); awa
 process.on("SIGTERM", async () => { console.log("💾 SIGTERM → saving..."); await autosave(); process.exit(0); });
 
 // ==========================================================
-// 📰 POKÉBEACH UPDATES
+// 📰 PokéBeach News Fetcher
 // ==========================================================
 async function checkPokeBeach() {
   try {
@@ -212,10 +242,10 @@ async function checkPokeBeach() {
     console.error("⚠️ PokéBeach fetch failed:", e.message);
   }
 }
-setInterval(checkPokeBeach, 1000 * 60 * 60 * 6); // every 6 hours
+setInterval(checkPokeBeach, 1000 * 60 * 60 * 6);
 
 // ==========================================================
-// 🔗 AFFILIATE LINK CLEANER
+// 🔗 Affiliate Link Cleaner
 // ==========================================================
 client.on("messageCreate", async msg => {
   if (msg.author.bot) return;
@@ -230,24 +260,25 @@ client.on("messageCreate", async msg => {
 });
 
 // ==========================================================
-// 🚀 BOT STARTUP
+// 🚀 Startup Sequence
 // ==========================================================
 let trainerData = {};
+
 client.once("clientReady", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
   trainerData = await loadTrainerData();
   await loadCommands();
-  checkPokeBeach(); // run immediately
+  checkPokeBeach();
 });
 
 // ==========================================================
-// 🌐 EXPRESS KEEP-ALIVE SERVER (Render requirement)
+// 🌐 Express Keep-Alive (Render requirement)
 // ==========================================================
 const app = express();
 app.get("/", (_, res) => res.send("Bot is running!"));
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
 
 // ==========================================================
-// 🔐 LOGIN
+// 🔐 Login
 // ==========================================================
 client.login(process.env.BOT_TOKEN);

@@ -658,3 +658,5 @@ export async function handleTrainerCardButtons(interaction, trainerData) {
         ephemeral: true
       });
       break;
+  }
+}

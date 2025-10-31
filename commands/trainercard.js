@@ -66,7 +66,7 @@ function getRank(tp) {
 // ================================
 // CANVAS RENDERER
 // ================================
-async function renderTrainerCard(userData, username) {
+async function renderTrainerCard(userData, username, avatarURL) {
   const canvas = createCanvas(900, 500);
   const ctx = canvas.getContext("2d");
 
@@ -77,12 +77,40 @@ async function renderTrainerCard(userData, username) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 900, 500);
 
-  // Frame + header
+  // === HEADER BAR ===
   ctx.fillStyle = "#222";
   ctx.fillRect(0, 0, 900, 60);
   ctx.font = "bold 28px Sans";
   ctx.fillStyle = "#ffcb05";
   ctx.fillText(`${username}'s Trainer Card`, 30, 40);
+
+  // === USER AVATAR (draw AFTER header) ===
+  if (avatarURL) {
+    try {
+      const avatarImg = await loadImage(avatarURL);
+      const size = 64;
+      const x = 900 - size - 30;
+      const y = -13;
+      ctx.lineWidth = 4;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(avatarImg, x, y, size, size);
+      ctx.restore();
+
+      // Outline ring
+      ctx.strokeStyle = "#ffcb05";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(x + size / 2, y + size / 2, size / 2 + 1, 0, Math.PI * 2);
+      ctx.stroke();
+    } catch (err) {
+      console.warn("⚠️ Avatar load failed:", err.message);
+    }
+  }
 
   // === TRAINER SPRITE ===
   const trainerX = 60, trainerY = 120;
@@ -90,12 +118,9 @@ async function renderTrainerCard(userData, username) {
     try {
       const trainerURL = `${spritePaths.trainers}${userData.displayedTrainer}`;
       const trainerImg = await loadImage(trainerURL);
-
-      // keep proportions and center
       const scale = Math.min(200 / trainerImg.width, 250 / trainerImg.height);
       const w = trainerImg.width * scale;
       const h = trainerImg.height * scale;
-
       ctx.drawImage(trainerImg, trainerX + (200 - w) / 2, trainerY, w, h);
     } catch {
       ctx.fillStyle = "#888";
@@ -108,10 +133,9 @@ async function renderTrainerCard(userData, username) {
 
   // === POKÉMON GRID ===
   const gridStartX = 330;
-  const gridStartY = 120;
+  const gridStartY = 140;
   const slot = 110;
   const gap = 15;
-
   const displayed = userData.displayedPokemon?.slice(0, 6) || [];
 
   for (let i = 0; i < 6; i++) {
@@ -119,7 +143,6 @@ async function renderTrainerCard(userData, username) {
     const row = Math.floor(i / 3);
     const x = gridStartX + col * (slot + gap);
     const y = gridStartY + row * (slot + gap);
-
     ctx.strokeStyle = "#ccc";
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, slot, slot);
@@ -138,7 +161,6 @@ async function renderTrainerCard(userData, username) {
       const h = img.height * scale;
       const offsetX = (slot - w) / 2;
       const offsetY = (slot - h) / 2;
-
       ctx.drawImage(img, x + offsetX, y + offsetY, w, h);
     } catch {
       ctx.fillStyle = "#aaa";
@@ -174,7 +196,6 @@ async function renderTrainerCard(userData, username) {
 
   return canvas;
 }
-
 // ================================
 // ONBOARDING HELPERS
 // ================================
@@ -425,8 +446,11 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
 // MAIN CARD DISPLAY
 // ================================
 async function showTrainerCard(interaction, user) {
-  const username = interaction.user.username;
-  const canvas = await renderTrainerCard(user, username);
+  // ✅ Safe user reference
+  const username = interaction?.user?.username || user.name || "Trainer";
+  const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
+const canvas = await renderTrainerCard(user, username, avatarURL);
+
   const buffer = await canvas.encode("png");
   const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
 
@@ -445,21 +469,45 @@ async function showTrainerCard(interaction, user) {
     .setFooter({ text: "Coop’s Collection • /trainercard" });
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId("change_trainer").setLabel("Change Trainer").setEmoji("🧍").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("change_pokemon").setLabel("Change Pokémon").setEmoji("🧬").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("refresh_card").setLabel("Refresh").setEmoji("🔄").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("share_public").setLabel("Share Public").setEmoji("🌐").setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId("close_card").setLabel("Close").setEmoji("❌").setStyle(ButtonStyle.Danger)
+    new ButtonBuilder()
+      .setCustomId("change_trainer")
+      .setLabel("Change Trainer")
+      .setEmoji("🧍")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId("change_pokemon")
+      .setLabel("Change Pokémon")
+      .setEmoji("🧬")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId("refresh_card")
+      .setLabel("Refresh")
+      .setEmoji("🔄")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId("share_public")
+      .setLabel("Share Public")
+      .setEmoji("🌐")
+      .setStyle(ButtonStyle.Success)
   );
 
-  await interaction.followUp({
-    embeds: [embed],
-    files: [attachment],
-    components: [row],
-    ephemeral: true
-  });
+  // ✅ If the previous interaction was ephemeral, reply safely
+  if (interaction.deferred || interaction.replied) {
+    await interaction.followUp({
+      embeds: [embed],
+      files: [attachment],
+      components: [row],
+      ephemeral: true
+    });
+  } else {
+    await interaction.reply({
+      embeds: [embed],
+      files: [attachment],
+      components: [row],
+      ephemeral: true
+    });
+  }
 }
-
 // ================================
 // SLASH COMMAND EXECUTION
 // ================================
@@ -510,63 +558,98 @@ export async function handleTrainerCardButtons(interaction, trainerData) {
 
   switch (interaction.customId) {
     case "refresh_card": {
-      const canvas = await renderTrainerCard(user, username);
-      const buffer = await canvas.encode("png");
-      const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
-      const rank = getRank(user.tp);
+  const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
+  const canvas = await renderTrainerCard(user, username, avatarURL);
+  const buffer = await canvas.encode("png");
+  const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
+  const rank = getRank(user.tp);
 
-      const embed = new EmbedBuilder()
-        .setTitle(`🧑 ${username}'s Trainer Card`)
-        .setColor(0xffcb05)
-        .setDescription(
-          `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}`
-        )
-        .setImage("attachment://trainercard.png");
+  const embed = new EmbedBuilder()
+    .setTitle(`🧑 ${username}'s Trainer Card`)
+    .setColor(0xffcb05)
+    .setDescription(
+      `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}`
+    )
+    .setImage("attachment://trainercard.png");
 
-      return interaction.update({
-        embeds: [embed],
-        files: [attachment],
-        components: interaction.message.components
-      });
-    }
+  return interaction.update({
+    embeds: [embed],
+    files: [attachment],
+    components: interaction.message.components
+  });
+}
+
 
     case "share_public": {
-      const canvas = await renderTrainerCard(user, username);
-      const buffer = await canvas.encode("png");
-      const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
-      const rank = getRank(user.tp);
+  const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
+  const canvas = await renderTrainerCard(user, username, avatarURL);
+  const buffer = await canvas.encode("png");
+  const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
+  const rank = getRank(user.tp);
 
-      const publicEmbed = new EmbedBuilder()
-        .setTitle(`🌐 ${username}'s Trainer Card`)
-        .setColor(0x00ae86)
-        .setDescription(
-          `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}`
-        )
-        .setImage("attachment://trainercard.png")
-        .setFooter({ text: "Shared via Coop’s Collection Bot" });
+  const publicEmbed = new EmbedBuilder()
+    .setTitle(`🌐 ${username}'s Trainer Card`)
+    .setColor(0x00ae86)
+    .setDescription(
+      `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}`
+    )
+    .setImage("attachment://trainercard.png")
+    .setFooter({
+      text: `Shared by ${username} • Coop’s Collection Bot`,
+      iconURL: interaction.user.displayAvatarURL()
+    })
+    .setTimestamp();
 
-      await interaction.reply({ content: "✅ Shared publicly!", ephemeral: true });
-      await interaction.channel.send({ embeds: [publicEmbed], files: [attachment] });
+  if (interaction.deferred || interaction.replied) {
+    await interaction.followUp({
+      content: "✅ Shared publicly!",
+      ephemeral: true
+    });
+  } else {
+    await interaction.reply({
+      content: "✅ Shared publicly!",
+      ephemeral: true
+    });
+  }
+
+  await interaction.channel.send({ embeds: [publicEmbed], files: [attachment] });
+  break;
+}
+
+
+    case "change_trainer": {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({
+          content: "🧍 Feature coming soon: choose from your owned trainer sprites.",
+          ephemeral: true
+        });
+      } else {
+        await interaction.reply({
+          content: "🧍 Feature coming soon: choose from your owned trainer sprites.",
+          ephemeral: true
+        });
+      }
       break;
     }
 
-    case "change_trainer":
-      return interaction.reply({
-        content: "Feature coming soon: choose from your owned trainer sprites.",
-        ephemeral: true
-      });
-
-    case "change_pokemon":
-      return interaction.reply({
-        content: "Feature coming soon: choose which Pokémon appear on your card.",
-        ephemeral: true
-      });
-
-    case "close_card":
-      await interaction.message.delete().catch(() => {});
+    case "change_pokemon": {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({
+          content: "🧬 Feature coming soon: choose which Pokémon appear on your card.",
+          ephemeral: true
+        });
+      } else {
+        await interaction.reply({
+          content: "🧬 Feature coming soon: choose which Pokémon appear on your card.",
+          ephemeral: true
+        });
+      }
       break;
+    }
 
     default:
-      await interaction.reply({ content: "Unknown button action.", ephemeral: true });
-  }
-}
+      await interaction.reply({
+        content: "❌ Unknown button action.",
+        ephemeral: true
+      });
+      break;

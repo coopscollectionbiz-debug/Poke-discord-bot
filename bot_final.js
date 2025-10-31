@@ -64,38 +64,59 @@ client.commands = new Collection();
 // 💾 Trainer Data Management (load / save / backup)
 // ==========================================================
 
-// Load trainer data from Discord storage channel and local file
 async function loadTrainerData() {
-  const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
-  const messages = await storageChannel.messages.fetch({ limit: 10 });
-  const latest = messages.find(m => m.attachments.size > 0 && m.attachments.first().name === "trainerData.json");
+  console.log("📦 Loading trainer data...");
 
   let loaded = {};
-  if (latest) {
-    const url = latest.attachments.first().url;
-    const res = await fetch(url);
-    loaded = await res.json();
-    console.log(`✅ Found trainerData.json (${Object.keys(loaded).length} users) in storage channel.`);
-  }
 
   try {
-    const local = JSON.parse(await fs.readFile(TRAINERDATA_PATH, "utf8"));
-    Object.assign(loaded, local);
-  } catch {}
+    // Attempt to load from Discord storage channel first
+    const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
+    const messages = await storageChannel.messages.fetch({ limit: 10 });
+    const latest = messages.find(
+      (m) => m.attachments.size > 0 && m.attachments.first().name.startsWith("trainerData")
+    );
 
-  // Normalize schema for all users
-  for (const [id, u] of Object.entries(loaded)) {
-    u.tp ??= 0;
-    u.cc ??= 0;
-    u.pokemon ??= {};
-    u.trainers ??= {};
-    u.trainer ??= null;
-    u.displayedPokemon ??= [];
+    if (latest) {
+      const url = latest.attachments.first().url;
+      const res = await fetch(url);
+      const jsonText = await res.text();
+      loaded = JSON.parse(jsonText);
+      console.log(`✅ Found trainerData.json (${Object.keys(loaded).length} users) in storage channel.`);
+    } else {
+      console.warn("⚠️ No trainerData found in storage channel, using local cache if available.");
+    }
+  } catch (err) {
+    console.error("❌ Failed to fetch from Discord storage channel:", err.message);
+  }
+
+  // Try merging any local file data as a backup
+  try {
+    const localRaw = await fs.readFile(TRAINERDATA_PATH, "utf8");
+    const local = JSON.parse(localRaw);
+    Object.assign(loaded, local);
+    console.log(`📂 Merged local trainerData cache (${Object.keys(local).length} users).`);
+  } catch {
+    console.warn("⚠️ No local trainerData.json found or parse error — starting fresh.");
+  }
+
+  // Normalize schema fields for all users
+  for (const [id, user] of Object.entries(loaded)) {
+    user.id ??= id;
+    user.name ??= "Trainer";
+    user.tp ??= 0;
+    user.cc ??= 0;
+    user.rank ??= "Novice Trainer";
+    user.pokemon ??= {};
+    user.trainers ??= {};
+    user.displayedPokemon ??= [];
+    user.displayedTrainer ??= null;
   }
 
   console.log(`✅ Trainer data loaded safely with merged schema (${Object.keys(loaded).length} users).`);
   return loaded;
 }
+
 
 // Save to local file
 async function saveTrainerDataLocal(data) {

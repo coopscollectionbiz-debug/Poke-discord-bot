@@ -273,7 +273,12 @@ async function starterSelection(interaction, user, trainerData, saveDataToDiscor
   // Start with first page (Grass)
   let pageIndex = 0;
   const { embed, components } = buildPage(pageIndex);
+  // Send the starter selection embed safely
+if (interaction.deferred || interaction.replied) {
+  await interaction.followUp({ embeds: [embed], components, ephemeral: true });
+} else {
   await interaction.reply({ embeds: [embed], components, ephemeral: true });
+}
 
   const collector = interaction.channel.createMessageComponentCollector({
     componentType: ComponentType.Button,
@@ -391,11 +396,11 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
   const embed = renderTrainerEmbed(index);
   const row = getButtons(index);
 
-  await interaction.followUp({
-    embeds: [embed],
-    components: [row],
-    ephemeral: true
-  });
+ if (interaction.deferred || interaction.replied) {
+  await interaction.followUp({ embeds: [embed], components: [row], ephemeral: true });
+} else {
+  await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+}
 
   const collector = interaction.channel.createMessageComponentCollector({
     componentType: ComponentType.Button,

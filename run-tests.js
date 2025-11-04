@@ -16,7 +16,9 @@ const tests = [
   'test-schema-migration.js',
   'test-trainer-data-helper.js',
   'test-trainercard-dataloader.js',
-  'test-cleanup-trainer-data.js'
+  'test-cleanup-trainer-data.js',
+  'test-button-handlers.js',
+  'test-deprecated-fields.js'
 ];
 
 let totalPassed = 0;

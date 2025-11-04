@@ -10,7 +10,9 @@
     "test:validation": "node test-schema-validation.js",
     "test:migration": "node test-schema-migration.js",
     "test:helper": "node test-trainer-data-helper.js",
-    "repair": "node repairTrainerData.js"
+    "test:cleanup": "node test-cleanup-trainer-data.js",
+    "repair": "node repairTrainerData.js",
+    "cleanup": "node cleanupTrainerData.js"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.81",

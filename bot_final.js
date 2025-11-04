@@ -20,6 +20,9 @@ import { REST, Routes } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
 import { handleTrainerCardButtons } from "./commands/trainercard.js";
+import { normalizeAllUsers, ensureUserData } from "./utils/trainerDataHelper.js";
+import { retryWithBackoff } from "./utils/errorHandler.js";
+import { getRank, getRankTiers } from "./utils/rankSystem.js";
 
 // ==========================================================
 // 🌐 Basic Setup
@@ -29,23 +32,9 @@ const AUTOSAVE_INTERVAL = 1000 * 60 * 30;        // Autosave every 30 minutes
 const PORT = process.env.PORT || 10000;          // Render keep-alive port
 
 
-// 🏅 TP Rank Ladder 
+// 🏅 TP Rank Ladder (exported from rankSystem for reuse)
 // ==========================================================
-const RANK_TIERS = [
-  { tp: 100, roleName: "Novice Trainer" },
-  { tp: 500, roleName: "Junior Trainer" },
-  { tp: 1000, roleName: "Skilled Trainer" },
-  { tp: 2500, roleName: "Experienced Trainer" },
-  { tp: 5000, roleName: "Advanced Trainer" },
-  { tp: 7500, roleName: "Expert Trainer" },
-  { tp: 10000, roleName: "Veteran Trainer" },
-  { tp: 17500, roleName: "Elite Trainer" },
-  { tp: 25000, roleName: "Master Trainer" },
-  { tp: 50000, roleName: "Gym Leader" },
-  { tp: 100000, roleName: "Elite Four Member" },
-  { tp: 175000, roleName: "Champion" },
-  { tp: 250000, roleName: "Legend" }
-];
+const RANK_TIERS = getRankTiers();
 
 // ==========================================================
 // ⚙️ Discord Client Setup
@@ -67,88 +56,92 @@ client.commands = new Collection();
 async function loadTrainerData() {
   console.log("📦 Loading trainer data...");
 
-  let loaded = {};
+  return await retryWithBackoff(
+    async () => {
+      let loaded = {};
 
-  try {
-    // Attempt to load from Discord storage channel first
-    const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
-    const messages = await storageChannel.messages.fetch({ limit: 10 });
-    const latest = messages.find(
-      (m) => m.attachments.size > 0 && m.attachments.first().name.startsWith("trainerData")
-    );
+      try {
+        // Attempt to load from Discord storage channel first
+        const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
+        const messages = await storageChannel.messages.fetch({ limit: 10 });
+        const latest = messages.find(
+          (m) => m.attachments.size > 0 && m.attachments.first().name.startsWith("trainerData")
+        );
 
-    if (latest) {
-      const url = latest.attachments.first().url;
-      const res = await fetch(url);
-      const jsonText = await res.text();
-      loaded = JSON.parse(jsonText);
-      console.log(`✅ Found trainerData.json (${Object.keys(loaded).length} users) in storage channel.`);
-    } else {
-      console.warn("⚠️ No trainerData found in storage channel, using local cache if available.");
-    }
-  } catch (err) {
-    console.error("❌ Failed to fetch from Discord storage channel:", err.message);
-  }
+        if (latest) {
+          const url = latest.attachments.first().url;
+          const res = await fetch(url);
+          const jsonText = await res.text();
+          loaded = JSON.parse(jsonText);
+          console.log(`✅ Found trainerData.json (${Object.keys(loaded).length} users) in storage channel.`);
+        } else {
+          console.warn("⚠️ No trainerData found in storage channel, using local cache if available.");
+        }
+      } catch (err) {
+        console.error("❌ Failed to fetch from Discord storage channel:", err.message);
+      }
 
-  // Try merging any local file data as a backup
-  try {
-    const localRaw = await fs.readFile(TRAINERDATA_PATH, "utf8");
-    const local = JSON.parse(localRaw);
-    Object.assign(loaded, local);
-    console.log(`📂 Merged local trainerData cache (${Object.keys(local).length} users).`);
-  } catch {
-    console.warn("⚠️ No local trainerData.json found or parse error — starting fresh.");
-  }
+      // Try merging any local file data as a backup
+      try {
+        const localRaw = await fs.readFile(TRAINERDATA_PATH, "utf8");
+        const local = JSON.parse(localRaw);
+        Object.assign(loaded, local);
+        console.log(`📂 Merged local trainerData cache (${Object.keys(local).length} users).`);
+      } catch {
+        console.warn("⚠️ No local trainerData.json found or parse error — starting fresh.");
+      }
 
-  // Normalize schema fields for all users
-  for (const [id, user] of Object.entries(loaded)) {
-    user.id ??= id;
-    user.name ??= "Trainer";
-    user.tp ??= 0;
-    user.cc ??= 0;
-    user.rank ??= "Novice Trainer";
-    user.pokemon ??= {};
-    user.trainers ??= {};
-    user.displayedPokemon ??= [];
-    user.displayedTrainer ??= null;
-  }
+      // Normalize schema fields for all users using helper
+      const normalized = normalizeAllUsers(loaded);
 
-  console.log(`✅ Trainer data loaded safely with merged schema (${Object.keys(loaded).length} users).`);
-  return loaded;
+      console.log(`✅ Trainer data loaded safely with merged schema (${Object.keys(normalized).length} users).`);
+      return normalized;
+    },
+    3,
+    1000,
+    "loadTrainerData"
+  );
 }
 
 
-// Save to local file
+// Save to local file with retry logic
 async function saveTrainerDataLocal(data) {
-  await fs.writeFile(TRAINERDATA_PATH, JSON.stringify(data, null, 2));
+  return await retryWithBackoff(
+    async () => {
+      await fs.writeFile(TRAINERDATA_PATH, JSON.stringify(data, null, 2));
+      console.log("✅ Trainer data saved locally.");
+    },
+    3,
+    500,
+    "saveTrainerDataLocal"
+  );
 }
 
-// Save backup to Discord channel
+// Save backup to Discord channel with retry logic
 async function saveDataToDiscord(data) {
-  try {
-    const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
-    const fileName = `trainerData-${new Date().toISOString().split("T")[0]}.json`;
-    const buffer = Buffer.from(JSON.stringify(data, null, 2));
-    const file = new AttachmentBuilder(buffer, { name: fileName });
-    await storageChannel.send({ content: `📦 Backup ${fileName}`, files: [file] });
-    console.log("✅ Trainer data backed up to Discord.");
-  } catch (err) {
-    console.error("❌ Error saving data to Discord:", err);
-  }
+  return await retryWithBackoff(
+    async () => {
+      const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
+      const fileName = `trainerData-${new Date().toISOString().split("T")[0]}.json`;
+      const buffer = Buffer.from(JSON.stringify(data, null, 2));
+      const file = new AttachmentBuilder(buffer, { name: fileName });
+      await storageChannel.send({ content: `📦 Backup ${fileName}`, files: [file] });
+      console.log("✅ Trainer data backed up to Discord.");
+    },
+    2,
+    2000,
+    "saveDataToDiscord"
+  ).catch((err) => {
+    console.error("❌ Error saving data to Discord after retries:", err);
+  });
 }
 
 // ==========================================================
-// 🧮 Rank System
+// 🧮 Rank System (using centralized helper)
 // ==========================================================
 
-// Get the correct role name for a given TP total
-function getRank(tp) {
-  let current = null;
-  for (const tier of RANK_TIERS) {
-    if (tp >= tier.tp) current = tier.roleName;
-  }
-  return current;
-}
+// Get the correct role name for a given TP total (from rankSystem helper)
+// Already imported at the top
 
 // Assign the correct rank to a Discord member (idempotent)
 async function updateUserRole(member, tp) {
@@ -174,21 +167,16 @@ async function updateUserRole(member, tp) {
 }
 
 // ==========================================================
-// 🧠 Message Handler (TP gain)
+// 🧠 Message Handler (TP gain) - Using helper for user data
 // ==========================================================
 client.on("messageCreate", async msg => {
   if (msg.author.bot || !msg.guild) return;
 
   const id = msg.author.id;
-  trainerData[id] ??= {
-    tp: 0,
-    cc: 0,
-    pokemon: {},
-    trainers: {},
-    trainer: null,
-    displayedPokemon: []
-  };
-
+  
+  // Use helper to ensure user data exists
+  ensureUserData(trainerData, id, msg.author.username);
+  
   trainerData[id].tp += 1; // +1 TP per message
 
   try {

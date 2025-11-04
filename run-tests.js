@@ -14,7 +14,8 @@ const __dirname = dirname(__filename);
 const tests = [
   'test-schema-validation.js',
   'test-schema-migration.js',
-  'test-trainer-data-helper.js'
+  'test-trainer-data-helper.js',
+  'test-trainercard-dataloader.js'
 ];
 
 let totalPassed = 0;

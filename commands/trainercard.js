@@ -175,7 +175,11 @@ const starterIDs = [
 ];
 
 async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
-  const starters = allPokemon.filter((p) => starterIDs.includes(p.id));
+  try {
+    // Dynamically load and initialize the Pokémon dataset
+    const allPokemon = await getAllPokemon();
+
+    const starters = allPokemon.filter((p) => starterIDs.includes(p.id));
 
   // Group starters by primary type
   const grouped = {};
@@ -296,6 +300,13 @@ if (interaction.deferred || interaction.replied) {
       await interaction.editReply({ components: [] });
     } catch {}
   });
+  } catch (error) {
+    console.error("Error loading Pokémon data in starterSelection:", error);
+    return interaction.reply({
+      content: "❌ Failed to load starter Pokémon. Please try again later.",
+      ephemeral: true
+    });
+  }
 }
 
 

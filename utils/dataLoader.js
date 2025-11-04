@@ -19,12 +19,18 @@ export async function loadPokemonData() {
   if (cache.pokemonData) {
     return cache.pokemonData;
   }
-  
-  const data = JSON.parse(
-    await fs.readFile(new URL("../pokemonData.json", import.meta.url))
-  );
-  cache.pokemonData = data;
-  return data;
+
+  try {
+    const data = JSON.parse(
+      await fs.readFile(new URL("../pokemonData.json", import.meta.url))
+    );
+    console.log("Successfully loaded Pokémon data:", Object.keys(data).length, "Pokémon"); // Log the successful load
+    cache.pokemonData = data;
+    return data;
+  } catch (error) {
+    console.error("Error loading Pokémon data:", error); // Log the error
+    throw error; // Re-throw the error for calling functions to handle
+  }
 }
 
 /**

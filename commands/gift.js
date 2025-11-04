@@ -1,22 +1,13 @@
 // ==========================================================
 // gift.js — Gift Coins, Pokémon, or Trainers to another user
-// Coop’s Collection Discord Bot
+// Coop's Collection Discord Bot
 // ==========================================================
 
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
-import fs from "fs/promises";
-
-// ✅ Load live Pokémon + Trainer data safely (Render-safe JSON)
-const pokemonData = JSON.parse(
-  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
-);
-const trainerSprites = JSON.parse(
-  await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
-);
-
-// ✅ NEW — ensure iterable arrays for lookups
-const allPokemon = Object.values(pokemonData);
-const allTrainers = Object.values(trainerSprites);
+import { SlashCommandBuilder } from "discord.js";
+import { ensureUserData } from "../utils/trainerDataHelper.js";
+import { validateAmount, validateUserResources, validateNameQuery } from "../utils/validators.js";
+import { findPokemonByName, getFlattenedTrainers } from "../utils/dataLoader.js";
+import { createSuccessEmbed, createErrorEmbed } from "../utils/embedBuilders.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -68,26 +59,32 @@ export default {
     const itemName = interaction.options.getString("item");
     const amount = interaction.options.getInteger("amount") || 1;
 
+    // Basic validation
     if (!receiver) return interaction.editReply({ content: "❌ Invalid user." });
     if (receiver.id === senderId)
-      return interaction.editReply({ content: "⚠️ You can’t gift yourself." });
+      return interaction.editReply({ content: "⚠️ You can't gift yourself." });
 
-    // Ensure both users exist in trainerData
-    trainerData[senderId] ??= { tp: 0, cc: 0, pokemon: {}, trainers: {}, trainer: null, displayedPokemon: [] };
-    trainerData[receiver.id] ??= { tp: 0, cc: 0, pokemon: {}, trainers: {}, trainer: null, displayedPokemon: [] };
+    // Validate amount for CC/Pokemon
+    if (type !== "trainer") {
+      const amountValidation = validateAmount(amount, 1000000);
+      if (!amountValidation.valid) {
+        return interaction.editReply({ content: `❌ ${amountValidation.error}` });
+      }
+    }
 
-    const sender = trainerData[senderId];
-    const recipient = trainerData[receiver.id];
+    // Ensure both users exist in trainerData using helper
+    const sender = ensureUserData(trainerData, senderId, interaction.user.username);
+    const recipient = ensureUserData(trainerData, receiver.id, receiver.username);
+    
     let description = "";
 
     // ==========================================================
     // 💰 TYPE: COINS (CC)
     // ==========================================================
     if (type === "cc") {
-      if (sender.cc < amount) {
-        return interaction.editReply({
-          content: `❌ You don’t have enough CC to send ${amount.toLocaleString()}.`
-        });
+      const resourceCheck = validateUserResources(sender, "cc", amount);
+      if (!resourceCheck.valid) {
+        return interaction.editReply({ content: `❌ ${resourceCheck.error}` });
       }
 
       sender.cc -= amount;
@@ -105,10 +102,13 @@ export default {
         });
       }
 
-      // ✅ FIXED: use iterable `allPokemon`
-      const targetPokemon = allPokemon.find(
-        p => p.name.toLowerCase() === itemName.toLowerCase()
-      );
+      // Validate and sanitize name
+      const nameValidation = validateNameQuery(itemName);
+      if (!nameValidation.valid) {
+        return interaction.editReply({ content: `❌ ${nameValidation.error}` });
+      }
+
+      const targetPokemon = await findPokemonByName(nameValidation.sanitized);
       if (!targetPokemon) {
         return interaction.editReply({
           content: `⚠️ Pokémon "${itemName}" not found.`
@@ -116,25 +116,29 @@ export default {
       }
 
       const key = targetPokemon.id.toString();
-      const senderCount = sender.pokemon[key] || 0;
+      const senderRecord = sender.pokemon[key];
+      const senderCount = senderRecord ? (senderRecord.normal || 0) + (senderRecord.shiny || 0) : 0;
 
       // Validation: must own more than `amount`
       if (senderCount < amount) {
         return interaction.editReply({
-          content: `❌ You don’t own ${amount}× ${targetPokemon.name}.`
+          content: `❌ You don't own ${amount}× ${targetPokemon.name}.`
         });
       }
 
       // ✅ Prevent gifting if it would reduce count to 0
       if (senderCount - amount === 0) {
         return interaction.editReply({
-          content: `⚠️ You can’t gift your last ${targetPokemon.name}.`
+          content: `⚠️ You can't gift your last ${targetPokemon.name}.`
         });
       }
 
-      // Proceed with transfer
-      sender.pokemon[key] = senderCount - amount;
-      recipient.pokemon[key] = (recipient.pokemon[key] || 0) + amount;
+      // Proceed with transfer (normal variant)
+      if (!sender.pokemon[key]) sender.pokemon[key] = { normal: 0, shiny: 0 };
+      if (!recipient.pokemon[key]) recipient.pokemon[key] = { normal: 0, shiny: 0 };
+      
+      sender.pokemon[key].normal = Math.max(0, (sender.pokemon[key].normal || 0) - amount);
+      recipient.pokemon[key].normal = (recipient.pokemon[key].normal || 0) + amount;
 
       description = `🧬 ${interaction.user.username} sent **${amount}× ${targetPokemon.name}** to ${receiver.username}!`;
     }
@@ -149,10 +153,17 @@ export default {
         });
       }
 
-      // ✅ FIXED: use iterable `allTrainers`
-      const targetTrainer = allTrainers.find(
-        t => t.name.toLowerCase() === itemName.toLowerCase()
+      // Validate and sanitize name
+      const nameValidation = validateNameQuery(itemName);
+      if (!nameValidation.valid) {
+        return interaction.editReply({ content: `❌ ${nameValidation.error}` });
+      }
+
+      const flatTrainers = await getFlattenedTrainers();
+      const targetTrainer = flatTrainers.find(
+        t => t.name.toLowerCase() === nameValidation.sanitized.toLowerCase()
       );
+      
       if (!targetTrainer) {
         return interaction.editReply({
           content: `⚠️ Trainer "${itemName}" not found.`
@@ -162,15 +173,15 @@ export default {
       const spriteKey = targetTrainer.filename;
       if (!sender.trainers[spriteKey]) {
         return interaction.editReply({
-          content: `❌ You don’t own ${targetTrainer.name}.`
+          content: `❌ You don't own ${targetTrainer.name}.`
         });
       }
 
-      // ✅ Prevent gifting if it’s the only one owned
+      // ✅ Prevent gifting if it's the only one owned
       const senderTrainerCount = Object.keys(sender.trainers).length;
       if (senderTrainerCount <= 1) {
         return interaction.editReply({
-          content: `⚠️ You can’t gift your only trainer sprite.`
+          content: `⚠️ You can't gift your only trainer sprite.`
         });
       }
 
@@ -182,14 +193,9 @@ export default {
     }
 
     // ==========================================================
-    // ✅ Confirmation + Save
+    // ✅ Confirmation + Save using embed builder
     // ==========================================================
-    const embed = new EmbedBuilder()
-      .setTitle("🎁 Gift Sent!")
-      .setDescription(description)
-      .setColor(0x57f287)
-      .setTimestamp();
-
+    const embed = createSuccessEmbed("🎁 Gift Sent!", description, { color: 0x57f287 });
     await interaction.editReply({ embeds: [embed] });
 
     try {

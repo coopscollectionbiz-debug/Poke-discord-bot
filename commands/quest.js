@@ -4,19 +4,10 @@
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
-import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js";
-import { rollForShiny } from "../shinyOdds.js"; // ✅ fixed import path
-
-// ==========================================================
-// 📦 Load Pokémon data safely (Render compatible)
-// ==========================================================
-const pokemonData = JSON.parse(
-  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
-);
-
-// ✅ Convert to iterable array
-const allPokemon = Object.values(pokemonData);
+import { rollForShiny } from "../shinyOdds.js";
+import { ensureUserData } from "../utils/trainerDataHelper.js";
+import { getAllPokemon } from "../utils/dataLoader.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -30,15 +21,8 @@ export default {
     await interaction.deferReply({ flags: 64 });
     const id = interaction.user.id;
 
-    // ✅ Ensure user schema exists
-    trainerData[id] ??= {
-      tp: 0,
-      cc: 0,
-      pokemon: {},
-      trainers: {}
-    };
-
-    const user = trainerData[id];
+    // ✅ Ensure user schema exists using helper
+    const user = ensureUserData(trainerData, id, interaction.user.username);
 
     // ✅ 70% Pokémon reward, 30% Trainer reward
     const rewardType = Math.random() < 0.7 ? "pokemon" : "trainer";
@@ -48,6 +32,7 @@ export default {
     // ==========================================================
     if (rewardType === "pokemon") {
       // 🎲 Random Pokémon from Gen 1–5
+      const allPokemon = await getAllPokemon();
       const pool = allPokemon.filter(p => p.generation <= 5);
       const pick = pool[Math.floor(Math.random() * pool.length)];
 

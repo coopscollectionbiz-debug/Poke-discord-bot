@@ -12,21 +12,12 @@ import {
   AttachmentBuilder,
   ComponentType
 } from "discord.js";
-import fs from "fs/promises";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { rollForShiny } from "../shinyOdds.js";
 import { spritePaths } from "../spriteconfig.js";
-
-// ================================
-// SAFE JSON LOADERS
-// ================================
-const pokemonData = JSON.parse(
-  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
-);
-const trainerSprites = JSON.parse(
-  await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
-);
-const allPokemon = Object.values(pokemonData);
+import { loadPokemonData, loadTrainerSprites, getAllPokemon } from "../utils/dataLoader.js";
+import { getRank, getRankTiers } from "../utils/rankSystem.js";
+import { ensureUserData } from "../utils/trainerDataHelper.js";
 
 // ================================
 // TYPE MAP
@@ -39,36 +30,16 @@ const typeMap = {
 };
 
 // ================================
-// RANK TIERS
-// ================================
-const rankTiers = [
-  { tp: 100, roleName: "Novice Trainer" },
-  { tp: 500, roleName: "Junior Trainer" },
-  { tp: 1000, roleName: "Skilled Trainer" },
-  { tp: 2500, roleName: "Experienced Trainer" },
-  { tp: 5000, roleName: "Advanced Trainer" },
-  { tp: 7500, roleName: "Expert Trainer" },
-  { tp: 10000, roleName: "Veteran Trainer" },
-  { tp: 17500, roleName: "Elite Trainer" },
-  { tp: 25000, roleName: "Master Trainer" },
-  { tp: 50000, roleName: "Gym Leader" },
-  { tp: 100000, roleName: "Elite Four Member" },
-  { tp: 175000, roleName: "Champion" },
-  { tp: 250000, roleName: "Legend" }
-];
-
-function getRank(tp) {
-  let rank = "Novice Trainer";
-  for (const tier of rankTiers) if (tp >= tier.tp) rank = tier.roleName;
-  return rank;
-}
-
-// ================================
 // CANVAS RENDERER
 // ================================
 async function renderTrainerCard(userData, username, avatarURL) {
   const canvas = createCanvas(900, 500);
   const ctx = canvas.getContext("2d");
+  
+  // Load data using cached helpers
+  const allPokemon = await getAllPokemon();
+  const pokemonData = await loadPokemonData();
+  const rankTiers = getRankTiers();
 
   // === BACKGROUND ===
   const gradient = ctx.createLinearGradient(0, 0, 0, 500);

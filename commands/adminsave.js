@@ -3,6 +3,7 @@
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { handleCommandError } from "../utils/errorHandler.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -38,10 +39,7 @@ export default {
       await interaction.editReply({ embeds: [embed] });
       console.log(`✅ Admin save executed by ${interaction.user.username}`);
     } catch (err) {
-      console.error("❌ Adminsave failed:", err);
-      await interaction.editReply({
-        content: "❌ An error occurred while saving trainer data. Check logs."
-      });
+      await handleCommandError(err, interaction, "adminsave");
     }
   }
 };

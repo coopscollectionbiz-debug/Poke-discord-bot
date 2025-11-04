@@ -32,10 +32,10 @@ const BACKUP_PATH = path.join(__dirname, `trainerData.backup.${Date.now()}.json`
  */
 async function main() {
   console.log('🔧 TrainerData Repair Script');
-  console.log('=' .repeat(60));
+  console.log('='.repeat(60));
   console.log(`Source: ${TRAINERDATA_PATH}`);
   console.log(`Backup: ${BACKUP_PATH}`);
-  console.log('=' .repeat(60));
+  console.log('='.repeat(60));
 
   let trainerData;
 

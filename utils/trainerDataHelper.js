@@ -214,31 +214,38 @@ export function repairTrainerData(trainerData) {
       stats.issuesFixed.push(`${userId}: ${validation.errors.length} issues fixed`);
     }
 
-    // Additional sanity checks
+    // Additional sanity checks beyond schema validation:
+    // - Ensure pokemon counts are non-negative integers
+    // - Ensure trainer values are boolean or object (not strings/numbers)
+    // - Ensure displayedPokemon is a proper array
+    
+    const userData = repairedData[userId];
     
     // Ensure pokemon counts are non-negative integers
-    if (repairedData[userId].pokemon) {
-      for (const [pokemonId, count] of Object.entries(repairedData[userId].pokemon)) {
+    if (userData.pokemon) {
+      const pokemonCollection = userData.pokemon;
+      for (const [pokemonId, count] of Object.entries(pokemonCollection)) {
         if (!Number.isInteger(count) || count < 0) {
-          repairedData[userId].pokemon[pokemonId] = Math.max(0, parseInt(count) || 0);
+          pokemonCollection[pokemonId] = Math.max(0, parseInt(count) || 0);
           stats.issuesFixed.push(`${userId}: Fixed pokemon ${pokemonId} count`);
         }
       }
     }
 
-    // Ensure trainers are valid
-    if (repairedData[userId].trainers && typeof repairedData[userId].trainers === 'object') {
-      for (const [trainerName, value] of Object.entries(repairedData[userId].trainers)) {
+    // Ensure trainers are valid (boolean or object, not strings/numbers)
+    if (userData.trainers && typeof userData.trainers === 'object') {
+      const trainersCollection = userData.trainers;
+      for (const [trainerName, value] of Object.entries(trainersCollection)) {
         if (typeof value !== 'boolean' && typeof value !== 'object') {
-          repairedData[userId].trainers[trainerName] = Boolean(value);
+          trainersCollection[trainerName] = Boolean(value);
           stats.issuesFixed.push(`${userId}: Fixed trainer ${trainerName} value`);
         }
       }
     }
 
     // Ensure displayedPokemon is a valid array
-    if (!Array.isArray(repairedData[userId].displayedPokemon)) {
-      repairedData[userId].displayedPokemon = [];
+    if (!Array.isArray(userData.displayedPokemon)) {
+      userData.displayedPokemon = [];
       stats.issuesFixed.push(`${userId}: Fixed displayedPokemon array`);
     }
   }

@@ -3,7 +3,44 @@
 // Schema versioning and migration helpers
 // ==========================================================
 
-import { CURRENT_SCHEMA_VERSION, createDefaultUserData } from './schemaValidator.js';
+import { CURRENT_SCHEMA_VERSION, createDefaultUserData, USER_SCHEMA } from './schemaValidator.js';
+
+/**
+ * List of deprecated fields that should be removed during migration
+ * These fields are no longer part of the schema and should not be persisted
+ */
+const DEPRECATED_FIELDS = [
+  'coins',           // Old currency system (replaced by cc)
+  'questProgress',   // Old quest system (removed)
+  'guildId',         // Guild tracking (removed)
+  'lastClaim',       // Old claim system (replaced by lastDaily)
+  'trainer',         // Old trainer field (replaced by displayedTrainer)
+  'ownedPokemon'     // Old pokemon collection (replaced by pokemon)
+];
+
+/**
+ * Remove deprecated fields from user data
+ * @param {object} userData - User data to clean
+ * @param {string} userId - User ID for logging
+ * @returns {object} Cleaned user data
+ */
+function removeDeprecatedFields(userData, userId) {
+  const cleaned = { ...userData };
+  const removedFields = [];
+  
+  for (const field of DEPRECATED_FIELDS) {
+    if (field in cleaned) {
+      delete cleaned[field];
+      removedFields.push(field);
+    }
+  }
+  
+  if (removedFields.length > 0) {
+    console.log(`🧹 Removed deprecated fields from user ${userId}: ${removedFields.join(', ')}`);
+  }
+  
+  return cleaned;
+}
 
 /**
  * Migration functions for each schema version
@@ -14,25 +51,31 @@ const MIGRATIONS = {
   0: (userData, userId) => {
     console.log(`📦 Migrating user ${userId} from v0 to v1`);
     
-    // Ensure all required fields exist with defaults
+    // First, remove deprecated fields
+    const cleaned = removeDeprecatedFields(userData, userId);
+    
+    // Start with default schema
+    const defaults = createDefaultUserData(userId, cleaned.name || 'Trainer');
+    
+    // Overlay existing valid data over defaults, preserving user values
     const migrated = {
-      ...userData,
-      id: userData.id || userId,
-      name: userData.name || 'Trainer',
-      tp: typeof userData.tp === 'number' ? userData.tp : 0,
-      cc: typeof userData.cc === 'number' ? userData.cc : 0,
-      rank: userData.rank || 'Novice Trainer',
-      pokemon: typeof userData.pokemon === 'object' && !Array.isArray(userData.pokemon) 
-        ? userData.pokemon 
-        : {},
-      trainers: typeof userData.trainers === 'object' && !Array.isArray(userData.trainers)
-        ? userData.trainers
-        : {},
-      displayedPokemon: Array.isArray(userData.displayedPokemon)
-        ? userData.displayedPokemon
-        : [],
-      displayedTrainer: userData.displayedTrainer ?? null,
-      lastDaily: typeof userData.lastDaily === 'number' ? userData.lastDaily : 0,
+      ...defaults,
+      id: cleaned.id || userId,
+      name: cleaned.name || defaults.name,
+      tp: typeof cleaned.tp === 'number' ? cleaned.tp : defaults.tp,
+      cc: typeof cleaned.cc === 'number' ? cleaned.cc : defaults.cc,
+      rank: cleaned.rank || defaults.rank,
+      pokemon: typeof cleaned.pokemon === 'object' && !Array.isArray(cleaned.pokemon) 
+        ? cleaned.pokemon 
+        : defaults.pokemon,
+      trainers: typeof cleaned.trainers === 'object' && !Array.isArray(cleaned.trainers)
+        ? cleaned.trainers
+        : defaults.trainers,
+      displayedPokemon: Array.isArray(cleaned.displayedPokemon)
+        ? cleaned.displayedPokemon
+        : defaults.displayedPokemon,
+      displayedTrainer: cleaned.displayedTrainer ?? defaults.displayedTrainer,
+      lastDaily: typeof cleaned.lastDaily === 'number' ? cleaned.lastDaily : defaults.lastDaily,
       schemaVersion: 1
     };
 
@@ -193,4 +236,37 @@ export function logMigrationResults(stats) {
  */
 export function createMigrationBackup(trainerData) {
   return JSON.parse(JSON.stringify(trainerData));
+}
+
+/**
+ * Strip deprecated fields from all users in trainer data
+ * This is used during save operations to ensure deprecated fields don't persist
+ * @param {object} trainerData - Trainer data to clean
+ * @returns {object} Cleaned trainer data
+ */
+export function stripDeprecatedFields(trainerData) {
+  if (typeof trainerData !== 'object' || trainerData === null) {
+    return trainerData;
+  }
+
+  const cleaned = {};
+  // Get valid fields including schemaVersion (which is in USER_SCHEMA)
+  const validFields = [...Object.keys(USER_SCHEMA), 'schemaVersion'];
+  
+  for (const [userId, userData] of Object.entries(trainerData)) {
+    if (typeof userData !== 'object' || userData === null) {
+      cleaned[userId] = userData;
+      continue;
+    }
+
+    // Only keep valid fields
+    cleaned[userId] = {};
+    for (const field of validFields) {
+      if (field in userData) {
+        cleaned[userId][field] = userData[field];
+      }
+    }
+  }
+
+  return cleaned;
 }

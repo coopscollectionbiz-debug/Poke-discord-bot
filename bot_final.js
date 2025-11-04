@@ -243,8 +243,30 @@ async function loadCommands() {
 }
 
 
-// Handle interactions (slash commands)
+// Handle interactions (slash commands and buttons)
 client.on("interactionCreate", async interaction => {
+  // Handle button interactions
+  if (interaction.isButton()) {
+    try {
+      await handleTrainerCardButtons(interaction, trainerData, saveTrainerDataLocal);
+    } catch (error) {
+      console.error(`❌ Button interaction error:`, error);
+      
+      const errorMessage = {
+        content: "❌ An unexpected error occurred.",
+        ephemeral: true
+      };
+      
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp(errorMessage).catch(() => {});
+      } else {
+        await interaction.reply(errorMessage).catch(() => {});
+      }
+    }
+    return;
+  }
+  
+  // Handle slash commands
   if (!interaction.isChatInputCommand()) return;
   const command = client.commands.get(interaction.commandName);
   if (!command) return;

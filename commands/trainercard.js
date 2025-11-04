@@ -536,9 +536,302 @@ export async function execute(interaction, trainerData, saveDataToDiscord) {
 }
 
 // ================================
+// CHANGE TRAINER HANDLER
+// ================================
+async function handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord) {
+  // Get owned trainers
+  const ownedTrainers = Object.keys(user.trainers || {}).filter(t => user.trainers[t]);
+  
+  if (ownedTrainers.length === 0) {
+    return interaction.reply({
+      content: "❌ You don't have any trainers yet! Complete onboarding first with `/trainercard`.",
+      ephemeral: true
+    });
+  }
+
+  // Create pages (5 trainers per page)
+  const trainersPerPage = 5;
+  const pages = [];
+  for (let i = 0; i < ownedTrainers.length; i += trainersPerPage) {
+    pages.push(ownedTrainers.slice(i, i + trainersPerPage));
+  }
+
+  let pageIndex = 0;
+
+  const buildPage = (index) => {
+    const pageTrainers = pages[index];
+    
+    const embed = new EmbedBuilder()
+      .setTitle(`🧍 Select Your Displayed Trainer`)
+      .setDescription(
+        `Choose which trainer appears on your card.\n\n` +
+        `**Your Trainers (${ownedTrainers.length} total):**\n` +
+        pageTrainers.map((t, i) => {
+          const isCurrent = t === user.displayedTrainer;
+          return `${isCurrent ? '✅' : '•'} **${t}**`;
+        }).join('\n')
+      )
+      .setColor(0x3498db)
+      .setFooter({ text: `Page ${index + 1}/${pages.length} • Current: ${user.displayedTrainer || 'None'}` });
+
+    // Trainer selection buttons
+    const trainerButtons = pageTrainers.map(t =>
+      new ButtonBuilder()
+        .setCustomId(`select_trainer_${t}`)
+        .setLabel(t.replace(/\.png$/, '').substring(0, 80))
+        .setStyle(t === user.displayedTrainer ? ButtonStyle.Success : ButtonStyle.Primary)
+    );
+
+    const rows = [new ActionRowBuilder().addComponents(trainerButtons)];
+
+    // Navigation buttons if multiple pages
+    if (pages.length > 1) {
+      const navButtons = [
+        new ButtonBuilder()
+          .setCustomId("trainer_prev_page")
+          .setLabel("⬅️ Previous")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(index === 0),
+        new ButtonBuilder()
+          .setCustomId("trainer_next_page")
+          .setLabel("Next ➡️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(index === pages.length - 1)
+      ];
+      rows.push(new ActionRowBuilder().addComponents(navButtons));
+    }
+
+    return { embed, components: rows };
+  };
+
+  const { embed, components } = buildPage(pageIndex);
+  await interaction.reply({ embeds: [embed], components, ephemeral: true });
+
+  const collector = interaction.channel.createMessageComponentCollector({
+    filter: (i) => i.user.id === interaction.user.id,
+    componentType: ComponentType.Button,
+    time: 60000
+  });
+
+  collector.on("collect", async (i) => {
+    if (i.customId === "trainer_next_page") {
+      pageIndex = Math.min(pageIndex + 1, pages.length - 1);
+      const { embed: newEmbed, components: newRows } = buildPage(pageIndex);
+      await i.update({ embeds: [newEmbed], components: newRows });
+    } else if (i.customId === "trainer_prev_page") {
+      pageIndex = Math.max(pageIndex - 1, 0);
+      const { embed: newEmbed, components: newRows } = buildPage(pageIndex);
+      await i.update({ embeds: [newEmbed], components: newRows });
+    } else if (i.customId.startsWith("select_trainer_")) {
+      const selectedTrainer = i.customId.replace("select_trainer_", "");
+      user.displayedTrainer = selectedTrainer;
+      
+      if (saveDataToDiscord) {
+        await saveDataToDiscord(trainerData);
+      }
+
+      await i.update({
+        content: `✅ Trainer changed to **${selectedTrainer}**! View your updated card with \`/trainercard\`.`,
+        embeds: [],
+        components: []
+      });
+
+      collector.stop();
+    }
+  });
+
+  collector.on("end", async (_, reason) => {
+    if (reason === "time") {
+      try {
+        await interaction.editReply({ 
+          content: "⏱️ Selection timed out. Use `/trainercard` and try again.",
+          components: [] 
+        });
+      } catch (e) {
+        console.error("Failed to edit reply on timeout:", e);
+      }
+    }
+  });
+}
+
+// ================================
+// CHANGE POKEMON HANDLER
+// ================================
+async function handleChangePokemon(interaction, user, trainerData, saveDataToDiscord) {
+  // Get owned Pokemon
+  const ownedPokemon = Object.keys(user.pokemon || {}).filter(id => {
+    const p = user.pokemon[id];
+    return (p?.normal > 0 || p?.shiny > 0) || (typeof p === 'number' && p > 0);
+  });
+
+  if (ownedPokemon.length === 0) {
+    return interaction.reply({
+      content: "❌ You don't have any Pokémon yet! Complete onboarding first with `/trainercard`.",
+      ephemeral: true
+    });
+  }
+
+  const allPokemon = await getAllPokemon();
+  const currentDisplayed = user.displayedPokemon || [];
+
+  // Create pages (12 Pokemon per page for better selection view)
+  const pokemonPerPage = 12;
+  const pages = [];
+  for (let i = 0; i < ownedPokemon.length; i += pokemonPerPage) {
+    pages.push(ownedPokemon.slice(i, i + pokemonPerPage));
+  }
+
+  let pageIndex = 0;
+  let selectedPokemon = [...currentDisplayed].slice(0, 6); // Max 6
+
+  const buildPage = (index) => {
+    const pagePokemon = pages[index];
+    
+    const embed = new EmbedBuilder()
+      .setTitle(`🧬 Select Your Displayed Pokémon`)
+      .setDescription(
+        `Choose up to 6 Pokémon to display on your card.\n\n` +
+        `**Selected (${selectedPokemon.length}/6):** ${selectedPokemon.length > 0 ? selectedPokemon.map(id => {
+          const poke = allPokemon.find(p => p.id == id);
+          return poke?.name || `#${id}`;
+        }).join(', ') : 'None'}\n\n` +
+        `**Your Pokémon (${ownedPokemon.length} total):**\n` +
+        pagePokemon.map(id => {
+          const poke = allPokemon.find(p => p.id == id);
+          const name = poke?.name || `#${id}`;
+          const isSelected = selectedPokemon.includes(id);
+          const record = user.pokemon[id];
+          const isShiny = record?.shiny > 0;
+          return `${isSelected ? '✅' : '•'} **${name}**${isShiny ? ' ✨' : ''}`;
+        }).join('\n')
+      )
+      .setColor(0xe91e63)
+      .setFooter({ text: `Page ${index + 1}/${pages.length}` });
+
+    // Pokemon selection buttons (5 per row max)
+    const pokemonButtons = pagePokemon.map(id => {
+      const poke = allPokemon.find(p => p.id == id);
+      const name = poke?.name || `#${id}`;
+      const isSelected = selectedPokemon.includes(id);
+      
+      return new ButtonBuilder()
+        .setCustomId(`toggle_pokemon_${id}`)
+        .setLabel(name.substring(0, 80))
+        .setStyle(isSelected ? ButtonStyle.Success : ButtonStyle.Primary);
+    });
+
+    const rows = [];
+    for (let i = 0; i < pokemonButtons.length; i += 5) {
+      rows.push(new ActionRowBuilder().addComponents(pokemonButtons.slice(i, i + 5)));
+    }
+
+    // Control buttons
+    const controlButtons = [
+      new ButtonBuilder()
+        .setCustomId("pokemon_clear")
+        .setLabel("Clear All")
+        .setStyle(ButtonStyle.Danger)
+        .setDisabled(selectedPokemon.length === 0),
+      new ButtonBuilder()
+        .setCustomId("pokemon_save")
+        .setLabel("💾 Save Selection")
+        .setStyle(ButtonStyle.Success)
+    ];
+
+    // Navigation buttons if multiple pages
+    if (pages.length > 1) {
+      controlButtons.unshift(
+        new ButtonBuilder()
+          .setCustomId("pokemon_prev_page")
+          .setLabel("⬅️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(index === 0),
+        new ButtonBuilder()
+          .setCustomId("pokemon_next_page")
+          .setLabel("➡️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(index === pages.length - 1)
+      );
+    }
+
+    rows.push(new ActionRowBuilder().addComponents(controlButtons));
+
+    return { embed, components: rows };
+  };
+
+  const { embed, components } = buildPage(pageIndex);
+  await interaction.reply({ embeds: [embed], components, ephemeral: true });
+
+  const collector = interaction.channel.createMessageComponentCollector({
+    filter: (i) => i.user.id === interaction.user.id,
+    componentType: ComponentType.Button,
+    time: 120000 // 2 minutes
+  });
+
+  collector.on("collect", async (i) => {
+    if (i.customId === "pokemon_next_page") {
+      pageIndex = Math.min(pageIndex + 1, pages.length - 1);
+      const { embed: newEmbed, components: newRows } = buildPage(pageIndex);
+      await i.update({ embeds: [newEmbed], components: newRows });
+    } else if (i.customId === "pokemon_prev_page") {
+      pageIndex = Math.max(pageIndex - 1, 0);
+      const { embed: newEmbed, components: newRows } = buildPage(pageIndex);
+      await i.update({ embeds: [newEmbed], components: newRows });
+    } else if (i.customId.startsWith("toggle_pokemon_")) {
+      const pokemonId = i.customId.replace("toggle_pokemon_", "");
+      
+      if (selectedPokemon.includes(pokemonId)) {
+        selectedPokemon = selectedPokemon.filter(id => id !== pokemonId);
+      } else if (selectedPokemon.length < 6) {
+        selectedPokemon.push(pokemonId);
+      } else {
+        return i.followUp({
+          content: "⚠️ You can only display up to 6 Pokémon at once!",
+          ephemeral: true
+        });
+      }
+
+      const { embed: newEmbed, components: newRows } = buildPage(pageIndex);
+      await i.update({ embeds: [newEmbed], components: newRows });
+    } else if (i.customId === "pokemon_clear") {
+      selectedPokemon = [];
+      const { embed: newEmbed, components: newRows } = buildPage(pageIndex);
+      await i.update({ embeds: [newEmbed], components: newRows });
+    } else if (i.customId === "pokemon_save") {
+      user.displayedPokemon = selectedPokemon;
+      
+      if (saveDataToDiscord) {
+        await saveDataToDiscord(trainerData);
+      }
+
+      await i.update({
+        content: `✅ Displayed Pokémon updated! (${selectedPokemon.length} selected) View your updated card with \`/trainercard\`.`,
+        embeds: [],
+        components: []
+      });
+
+      collector.stop();
+    }
+  });
+
+  collector.on("end", async (_, reason) => {
+    if (reason === "time") {
+      try {
+        await interaction.editReply({ 
+          content: "⏱️ Selection timed out. Use `/trainercard` and try again.",
+          components: [] 
+        });
+      } catch (e) {
+        console.error("Failed to edit reply on timeout:", e);
+      }
+    }
+  });
+}
+
+// ================================
 // BUTTON HANDLER
 // ================================
-export async function handleTrainerCardButtons(interaction, trainerData) {
+export async function handleTrainerCardButtons(interaction, trainerData, saveDataToDiscord) {
   const userId = interaction.user.id;
   const username = interaction.user.username;
   const user = trainerData[userId];
@@ -610,35 +903,11 @@ export async function handleTrainerCardButtons(interaction, trainerData) {
 }
 
 
-    case "change_trainer": {
-      if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({
-          content: "🧍 Feature coming soon: choose from your owned trainer sprites.",
-          ephemeral: true
-        });
-      } else {
-        await interaction.reply({
-          content: "🧍 Feature coming soon: choose from your owned trainer sprites.",
-          ephemeral: true
-        });
-      }
-      break;
-    }
+    case "change_trainer":
+      return handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord);
 
-    case "change_pokemon": {
-      if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({
-          content: "🧬 Feature coming soon: choose which Pokémon appear on your card.",
-          ephemeral: true
-        });
-      } else {
-        await interaction.reply({
-          content: "🧬 Feature coming soon: choose which Pokémon appear on your card.",
-          ephemeral: true
-        });
-      }
-      break;
-    }
+    case "change_pokemon":
+      return handleChangePokemon(interaction, user, trainerData, saveDataToDiscord);
 
     default:
       await interaction.reply({

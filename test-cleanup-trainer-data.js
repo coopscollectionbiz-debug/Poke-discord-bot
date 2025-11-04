@@ -13,7 +13,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Valid fields from USER_SCHEMA - dynamically generated to stay in sync
-const VALID_FIELDS = Object.keys(USER_SCHEMA);
+// Include schemaVersion which is handled separately in the validator
+const VALID_FIELDS = [...Object.keys(USER_SCHEMA), 'schemaVersion'];
 
 /**
  * Simulate cleanup logic for testing

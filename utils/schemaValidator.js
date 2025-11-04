@@ -166,6 +166,7 @@ export function createDefaultUserData(userId, username = 'Trainer') {
 
 /**
  * Validate pokemon collection data
+ * Pokemon collection format: { pokemonId: { normal: count, shiny: count } }
  * @param {object} pokemon - Pokemon collection object
  * @param {string} userId - User ID for logging
  * @returns {object} { valid: boolean, errors: array, correctedData: object }
@@ -180,17 +181,46 @@ export function validatePokemonCollection(pokemon, userId = 'unknown') {
   }
 
   // Validate each pokemon entry
-  for (const [pokemonId, count] of Object.entries(pokemon)) {
+  for (const [pokemonId, countOrRecord] of Object.entries(pokemon)) {
     if (typeof pokemonId !== 'string' || pokemonId.trim() === '') {
       errors.push(`Invalid pokemon ID: '${pokemonId}'`);
       continue;
     }
 
-    if (!Number.isInteger(count) || count < 0) {
-      errors.push(`Invalid count for pokemon '${pokemonId}': ${count}`);
-      correctedData[pokemonId] = Math.max(0, parseInt(count) || 0);
+    // Handle both legacy integer format and new { normal, shiny } object format
+    if (typeof countOrRecord === 'object' && countOrRecord !== null && !Array.isArray(countOrRecord)) {
+      // New format: { normal: count, shiny: count }
+      const record = {
+        normal: 0,
+        shiny: 0
+      };
+
+      if ('normal' in countOrRecord) {
+        if (Number.isInteger(countOrRecord.normal) && countOrRecord.normal >= 0) {
+          record.normal = countOrRecord.normal;
+        } else {
+          errors.push(`Invalid normal count for pokemon '${pokemonId}': ${countOrRecord.normal}`);
+          record.normal = Math.max(0, parseInt(countOrRecord.normal) || 0);
+        }
+      }
+
+      if ('shiny' in countOrRecord) {
+        if (Number.isInteger(countOrRecord.shiny) && countOrRecord.shiny >= 0) {
+          record.shiny = countOrRecord.shiny;
+        } else {
+          errors.push(`Invalid shiny count for pokemon '${pokemonId}': ${countOrRecord.shiny}`);
+          record.shiny = Math.max(0, parseInt(countOrRecord.shiny) || 0);
+        }
+      }
+
+      correctedData[pokemonId] = record;
+    } else if (Number.isInteger(countOrRecord) && countOrRecord >= 0) {
+      // Legacy format: simple integer count (convert to new format)
+      correctedData[pokemonId] = { normal: countOrRecord, shiny: 0 };
     } else {
-      correctedData[pokemonId] = count;
+      // Invalid format, create default
+      errors.push(`Invalid count/record for pokemon '${pokemonId}': ${JSON.stringify(countOrRecord)}`);
+      correctedData[pokemonId] = { normal: 0, shiny: 0 };
     }
   }
 

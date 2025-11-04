@@ -143,20 +143,65 @@ async function saveTrainerDataLocal(data) {
 async function saveDataToDiscord(data) {
   return await retryWithBackoff(
     async () => {
+      console.log("💾 Starting Discord backup process...");
+      
+      // Validate STORAGE_CHANNEL_ID
+      if (!process.env.STORAGE_CHANNEL_ID) {
+        throw new Error("STORAGE_CHANNEL_ID environment variable is not set");
+      }
+      console.log(`📍 Using storage channel ID: ${process.env.STORAGE_CHANNEL_ID}`);
+      
       // Sanitize and validate before saving to Discord
+      console.log("🧹 Sanitizing trainer data...");
       const sanitized = sanitizeBeforeSave(data);
+      console.log(`✅ Sanitized data for ${Object.keys(sanitized).length} users`);
+      
+      // Fetch storage channel
+      console.log("📡 Fetching storage channel...");
       const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
+      if (!storageChannel) {
+        throw new Error(`Storage channel ${process.env.STORAGE_CHANNEL_ID} not found`);
+      }
+      console.log(`✅ Storage channel found: ${storageChannel.name || 'unnamed'}`);
+      
+      // Check bot permissions
+      const permissions = storageChannel.permissionsFor(client.user);
+      if (!permissions.has(PermissionsBitField.Flags.SendMessages)) {
+        throw new Error("Bot lacks SendMessages permission in storage channel");
+      }
+      if (!permissions.has(PermissionsBitField.Flags.AttachFiles)) {
+        throw new Error("Bot lacks AttachFiles permission in storage channel");
+      }
+      console.log("✅ Bot has required permissions");
+      
+      // Prepare file
       const fileName = `trainerData-${new Date().toISOString().split("T")[0]}.json`;
       const buffer = Buffer.from(JSON.stringify(sanitized, null, 2));
+      console.log(`📦 Prepared file ${fileName} (${(buffer.length / 1024).toFixed(2)} KB)`);
+      
       const file = new AttachmentBuilder(buffer, { name: fileName });
+      
+      // Send to Discord
+      console.log("📤 Uploading to Discord...");
       await storageChannel.send({ content: `📦 Backup ${fileName}`, files: [file] });
-      console.log("✅ Trainer data backed up to Discord.");
+      console.log("✅ Trainer data backed up to Discord successfully.");
     },
     2,
     2000,
     "saveDataToDiscord"
   ).catch((err) => {
-    console.error("❌ Error saving data to Discord after retries:", err);
+    console.error("❌ Error saving data to Discord after retries:", err.message);
+    
+    // Log specific error codes
+    if (err.code === 50013) {
+      console.error("🚫 Missing Permissions - Bot cannot send messages or attach files to storage channel");
+    } else if (err.code === 10003) {
+      console.error("🚫 Unknown Channel - Storage channel ID is invalid or channel was deleted");
+    } else if (err.code === 50035) {
+      console.error("🚫 Invalid Form Body - File may be too large or malformed");
+    }
+    
+    console.error("Stack trace:", err.stack);
   });
 }
 

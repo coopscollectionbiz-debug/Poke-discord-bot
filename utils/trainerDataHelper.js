@@ -226,13 +226,38 @@ export function repairTrainerData(trainerData) {
     
     const repairedUser = repairedData[userId];
     
-    // Ensure pokemon counts are non-negative integers
+    // Ensure pokemon records have valid format { normal: count, shiny: count }
     if (repairedUser.pokemon) {
       const pokemonCollection = repairedUser.pokemon;
-      for (const [pokemonId, count] of Object.entries(pokemonCollection)) {
-        if (!Number.isInteger(count) || count < 0) {
-          pokemonCollection[pokemonId] = Math.max(0, parseInt(count) || 0);
-          stats.issuesFixed.push(`${userId}: Fixed pokemon ${pokemonId} count`);
+      for (const [pokemonId, countOrRecord] of Object.entries(pokemonCollection)) {
+        // Handle both new and legacy formats
+        if (typeof countOrRecord === 'object' && countOrRecord !== null && !Array.isArray(countOrRecord)) {
+          // New format validation
+          const record = countOrRecord;
+          let fixed = false;
+          
+          if (!Number.isInteger(record.normal) || record.normal < 0) {
+            record.normal = Math.max(0, parseInt(record.normal) || 0);
+            fixed = true;
+          }
+          
+          if (!Number.isInteger(record.shiny) || record.shiny < 0) {
+            record.shiny = Math.max(0, parseInt(record.shiny) || 0);
+            fixed = true;
+          }
+          
+          if (fixed) {
+            stats.issuesFixed.push(`${userId}: Fixed pokemon ${pokemonId} counts`);
+          }
+        } else if (typeof countOrRecord === 'number' && !isNaN(countOrRecord)) {
+          // Legacy format - convert to new format (handles both integers and floats)
+          const normalizedCount = Math.max(0, parseInt(countOrRecord) || 0);
+          pokemonCollection[pokemonId] = { normal: normalizedCount, shiny: 0 };
+          stats.issuesFixed.push(`${userId}: Converted pokemon ${pokemonId} to new format`);
+        } else {
+          // Invalid format
+          pokemonCollection[pokemonId] = { normal: 0, shiny: 0 };
+          stats.issuesFixed.push(`${userId}: Fixed invalid pokemon ${pokemonId} data`);
         }
       }
     }

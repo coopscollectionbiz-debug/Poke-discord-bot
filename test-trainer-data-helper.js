@@ -158,7 +158,8 @@ test('repairTrainerData: repairs malformed data', () => {
   };
   const result = repairTrainerData(trainerData);
   assert.strictEqual(result.repairedData['67890'].tp, 0);
-  assert.strictEqual(result.repairedData['67890'].pokemon.pikachu, 0);
+  // Pokemon should be in new format with normal and shiny
+  assert.deepStrictEqual(result.repairedData['67890'].pokemon.pikachu, { normal: 0, shiny: 0 });
   assert(result.stats.repairedUsers > 0);
 });
 
@@ -177,8 +178,9 @@ test('repairTrainerData: fixes pokemon counts', () => {
   };
   trainerData['12345'].pokemon = { 'pikachu': -10, 'charizard': 3.5 };
   const result = repairTrainerData(trainerData);
-  assert.strictEqual(result.repairedData['12345'].pokemon.pikachu, 0);
-  assert.strictEqual(result.repairedData['12345'].pokemon.charizard, 3);
+  // Pokemon should be in new format with normal and shiny
+  assert.deepStrictEqual(result.repairedData['12345'].pokemon.pikachu, { normal: 0, shiny: 0 });
+  assert.deepStrictEqual(result.repairedData['12345'].pokemon.charizard, { normal: 3, shiny: 0 });
 });
 
 test('repairTrainerData: fixes trainer values', () => {

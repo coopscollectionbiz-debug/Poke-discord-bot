@@ -276,9 +276,15 @@ if (interaction.deferred || interaction.replied) {
     if (i.customId.startsWith("starter_")) {
       const starterId = parseInt(i.customId.split("_")[1]);
       const isShiny = rollForShiny();
+      
+      console.log(`🌱 User ${user.id} selected starter Pokemon ID: ${starterId} (${isShiny ? 'shiny' : 'normal'})`);
 
+      // Assign pokemon to user's collection
       user.pokemon[starterId] = { normal: isShiny ? 0 : 1, shiny: isShiny ? 1 : 0 };
       user.displayedPokemon = [starterId];
+      
+      console.log(`✅ Pokemon assigned - user.pokemon[${starterId}]:`, user.pokemon[starterId]);
+      console.log(`✅ displayedPokemon set:`, user.displayedPokemon);
 
       await i.update({
         content: `✅ You chose **${
@@ -288,7 +294,10 @@ if (interaction.deferred || interaction.replied) {
         components: []
       });
 
+      console.log(`💾 Saving trainer data for user ${user.id} after starter selection...`);
       await saveDataToDiscord(trainerData);
+      console.log(`✅ Trainer data saved successfully`);
+      
       collector.stop();
 
       await trainerSelection(i, user, trainerData, saveDataToDiscord);
@@ -408,9 +417,17 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
         break;
       case "confirm_trainer": {
         const choice = trainers[index];
+        console.log(`🧍 User ${user.id} selected trainer: ${choice.id}`);
+        
         user.trainers[choice.id] = true;
         user.displayedTrainer = choice.id;
+        
+        console.log(`✅ Trainer assigned - user.trainers[${choice.id}]: true`);
+        console.log(`✅ displayedTrainer set: ${user.displayedTrainer}`);
+        console.log(`💾 Saving trainer data for user ${user.id} after trainer selection...`);
+        
         await saveDataToDiscord(trainerData);
+        console.log(`✅ Trainer data saved successfully after trainer selection`);
 
         await i.update({
           content: `✅ You chose **${choice.label}** as your Trainer!`,

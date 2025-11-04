@@ -146,25 +146,40 @@ test('validateUserSchema: negative numbers are corrected', () => {
 // ========== validatePokemonCollection Tests ==========
 console.log('\n📋 validatePokemonCollection Tests:');
 
-test('validatePokemonCollection: valid collection', () => {
-  const pokemon = { 'pikachu': 3, 'charizard': 1 };
+test('validatePokemonCollection: valid new format collection', () => {
+  const pokemon = { 
+    '25': { normal: 3, shiny: 1 }, 
+    '6': { normal: 2, shiny: 0 } 
+  };
   const result = validatePokemonCollection(pokemon, '12345');
   assert.strictEqual(result.valid, true);
   assert.deepStrictEqual(result.correctedData, pokemon);
 });
 
+test('validatePokemonCollection: legacy integer format converted', () => {
+  const pokemon = { '25': 3, '6': 1 };
+  const result = validatePokemonCollection(pokemon, '12345');
+  assert.strictEqual(result.valid, true);
+  assert.deepStrictEqual(result.correctedData, {
+    '25': { normal: 3, shiny: 0 },
+    '6': { normal: 1, shiny: 0 }
+  });
+});
+
 test('validatePokemonCollection: negative counts corrected', () => {
-  const pokemon = { 'pikachu': -5 };
+  const pokemon = { '25': { normal: -5, shiny: 2 } };
   const result = validatePokemonCollection(pokemon, '12345');
   assert.strictEqual(result.valid, false);
-  assert.strictEqual(result.correctedData.pikachu, 0);
+  assert.strictEqual(result.correctedData['25'].normal, 0);
+  assert.strictEqual(result.correctedData['25'].shiny, 2);
 });
 
 test('validatePokemonCollection: non-integer counts corrected', () => {
-  const pokemon = { 'pikachu': 3.5 };
+  const pokemon = { '25': { normal: 3.5, shiny: 1 } };
   const result = validatePokemonCollection(pokemon, '12345');
   assert.strictEqual(result.valid, false);
-  assert.strictEqual(result.correctedData.pikachu, 3);
+  assert.strictEqual(result.correctedData['25'].normal, 3);
+  assert.strictEqual(result.correctedData['25'].shiny, 1);
 });
 
 test('validatePokemonCollection: invalid object returns empty', () => {
@@ -172,6 +187,14 @@ test('validatePokemonCollection: invalid object returns empty', () => {
   assert.strictEqual(result.valid, false);
   assert.deepStrictEqual(result.correctedData, {});
 });
+
+test('validatePokemonCollection: missing normal/shiny defaults to 0', () => {
+  const pokemon = { '25': { normal: 2 } };
+  const result = validatePokemonCollection(pokemon, '12345');
+  assert.strictEqual(result.valid, true);
+  assert.deepStrictEqual(result.correctedData, { '25': { normal: 2, shiny: 0 } });
+});
+
 
 // ========== validateTrainersCollection Tests ==========
 console.log('\n📋 validateTrainersCollection Tests:');

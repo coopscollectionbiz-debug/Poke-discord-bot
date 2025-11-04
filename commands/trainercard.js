@@ -302,10 +302,16 @@ if (interaction.deferred || interaction.replied) {
   });
   } catch (error) {
     console.error("Error loading Pokémon data in starterSelection:", error);
-    return interaction.reply({
+    const errorMessage = {
       content: "❌ Failed to load starter Pokémon. Please try again later.",
       ephemeral: true
-    });
+    };
+    
+    if (interaction.deferred || interaction.replied) {
+      return interaction.followUp(errorMessage);
+    } else {
+      return interaction.reply(errorMessage);
+    }
   }
 }
 

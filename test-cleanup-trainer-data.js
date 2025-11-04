@@ -7,24 +7,13 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { USER_SCHEMA } from './utils/schemaValidator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Valid fields from USER_SCHEMA
-const VALID_FIELDS = [
-  'id',
-  'name',
-  'tp',
-  'cc',
-  'rank',
-  'pokemon',
-  'trainers',
-  'displayedPokemon',
-  'displayedTrainer',
-  'lastDaily',
-  'schemaVersion',
-];
+// Valid fields from USER_SCHEMA - dynamically generated to stay in sync
+const VALID_FIELDS = Object.keys(USER_SCHEMA);
 
 /**
  * Simulate cleanup logic for testing

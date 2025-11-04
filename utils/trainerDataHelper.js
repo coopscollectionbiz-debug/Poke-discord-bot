@@ -219,11 +219,11 @@ export function repairTrainerData(trainerData) {
     // - Ensure trainer values are boolean or object (not strings/numbers)
     // - Ensure displayedPokemon is a proper array
     
-    const userData = repairedData[userId];
+    const repairedUser = repairedData[userId];
     
     // Ensure pokemon counts are non-negative integers
-    if (userData.pokemon) {
-      const pokemonCollection = userData.pokemon;
+    if (repairedUser.pokemon) {
+      const pokemonCollection = repairedUser.pokemon;
       for (const [pokemonId, count] of Object.entries(pokemonCollection)) {
         if (!Number.isInteger(count) || count < 0) {
           pokemonCollection[pokemonId] = Math.max(0, parseInt(count) || 0);
@@ -233,8 +233,8 @@ export function repairTrainerData(trainerData) {
     }
 
     // Ensure trainers are valid (boolean or object, not strings/numbers)
-    if (userData.trainers && typeof userData.trainers === 'object') {
-      const trainersCollection = userData.trainers;
+    if (repairedUser.trainers && typeof repairedUser.trainers === 'object') {
+      const trainersCollection = repairedUser.trainers;
       for (const [trainerName, value] of Object.entries(trainersCollection)) {
         if (typeof value !== 'boolean' && typeof value !== 'object') {
           trainersCollection[trainerName] = Boolean(value);
@@ -244,8 +244,8 @@ export function repairTrainerData(trainerData) {
     }
 
     // Ensure displayedPokemon is a valid array
-    if (!Array.isArray(userData.displayedPokemon)) {
-      userData.displayedPokemon = [];
+    if (!Array.isArray(repairedUser.displayedPokemon)) {
+      repairedUser.displayedPokemon = [];
       stats.issuesFixed.push(`${userId}: Fixed displayedPokemon array`);
     }
   }

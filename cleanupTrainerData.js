@@ -17,8 +17,7 @@ const BACKUP_PATH = path.join(__dirname, `trainerData.backup.${Date.now()}.json`
 
 // Valid fields from USER_SCHEMA in utils/schemaValidator.js
 // Dynamically generated to stay in sync with schema changes
-// Include schemaVersion which is handled separately in the validator
-const VALID_FIELDS = [...Object.keys(USER_SCHEMA), 'schemaVersion'];
+const VALID_FIELDS = Object.keys(USER_SCHEMA);
 
 /**
  * Main cleanup function

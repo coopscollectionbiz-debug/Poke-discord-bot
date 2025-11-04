@@ -91,6 +91,45 @@ node repairTrainerData.js
 7. Saves repaired data
 8. Provides detailed statistics
 
+### 5. Data Cleanup Script (`cleanupTrainerData.js`)
+
+One-time script to remove deprecated fields from trainerData.json.
+
+#### Usage:
+
+```bash
+npm run cleanup
+# or
+node cleanupTrainerData.js
+```
+
+#### What it does:
+
+1. Loads existing trainerData.json
+2. Creates a timestamped backup
+3. Removes deprecated fields not in the current schema:
+   - `lastClaim` (deprecated)
+   - `questProgress` (deprecated)
+   - `coins` (deprecated)
+   - `guildId` (deprecated)
+   - `trainer` (deprecated)
+   - Any other unknown fields
+4. Keeps only valid schema fields:
+   - `id`, `name`, `tp`, `cc`, `rank`
+   - `pokemon`, `trainers`, `displayedPokemon`
+   - `displayedTrainer`, `lastDaily`, `schemaVersion`
+5. Logs all removed fields for review
+6. Saves cleaned data back to trainerData.json
+
+#### When to use:
+
+- After schema changes to remove old fields
+- To reduce file size and improve performance
+- To clean up after deprecated features are removed
+- When warned about unknown fields during validation
+
+**Note**: The cleanup script is destructive. Always review the backup file if you need to restore any data.
+
 ## Integration
 
 ### Bot Initialization
@@ -148,6 +187,7 @@ npm test
 npm run test:validation
 npm run test:migration
 npm run test:helper
+npm run test:cleanup
 ```
 
 ### Test Coverage
@@ -155,8 +195,9 @@ npm run test:helper
 - **test-schema-validation.js**: 26 tests for schema validation
 - **test-schema-migration.js**: 13 tests for schema migration
 - **test-trainer-data-helper.js**: 17 tests for helper functions
+- **test-cleanup-trainer-data.js**: 32 tests for cleanup functionality
 
-Total: **56 tests**
+Total: **88 tests**
 
 ## Error Handling
 

@@ -134,11 +134,11 @@ console.log('\n📋 Basic Cleanup Tests:');
   };
   const result = performCleanup(input);
   
-  assert(!result.cleanedData.user1.hasOwnProperty('lastClaim'), 'lastClaim field removed');
-  assert(!result.cleanedData.user1.hasOwnProperty('questProgress'), 'questProgress field removed');
-  assert(!result.cleanedData.user1.hasOwnProperty('coins'), 'coins field removed');
-  assert(!result.cleanedData.user1.hasOwnProperty('guildId'), 'guildId field removed');
-  assert(!result.cleanedData.user1.hasOwnProperty('trainer'), 'trainer field removed');
+  assert(!('lastClaim' in result.cleanedData.user1), 'lastClaim field removed');
+  assert(!('questProgress' in result.cleanedData.user1), 'questProgress field removed');
+  assert(!('coins' in result.cleanedData.user1), 'coins field removed');
+  assert(!('guildId' in result.cleanedData.user1), 'guildId field removed');
+  assert(!('trainer' in result.cleanedData.user1), 'trainer field removed');
   assert(result.stats.cleanedUsers === 1, 'One user cleaned');
   assert(result.stats.removedFieldsCount === 5, 'Five deprecated fields removed');
 }
@@ -161,8 +161,8 @@ console.log('\n📋 Basic Cleanup Tests:');
   assert(result.cleanedData.user1.name === 'TestUser', 'name field preserved');
   assert(result.cleanedData.user1.tp === 100, 'tp field preserved');
   assert(result.cleanedData.user1.pokemon.pikachu === 1, 'pokemon field preserved');
-  assert(!result.cleanedData.user1.hasOwnProperty('lastClaim'), 'lastClaim removed');
-  assert(!result.cleanedData.user1.hasOwnProperty('coins'), 'coins removed');
+  assert(!('lastClaim' in result.cleanedData.user1), 'lastClaim removed');
+  assert(!('coins' in result.cleanedData.user1), 'coins removed');
 }
 
 // Test 4: Handle multiple users
@@ -192,8 +192,8 @@ console.log('\n📋 Basic Cleanup Tests:');
   assert(result.stats.totalUsers === 3, 'Three users processed');
   assert(result.stats.cleanedUsers === 2, 'Two users had deprecated fields');
   assert(result.stats.removedFieldsCount === 2, 'Two deprecated fields removed total');
-  assert(!result.cleanedData.user1.hasOwnProperty('oldField'), 'user1 oldField removed');
-  assert(!result.cleanedData.user2.hasOwnProperty('anotherOldField'), 'user2 anotherOldField removed');
+  assert(!('oldField' in result.cleanedData.user1), 'user1 oldField removed');
+  assert(!('anotherOldField' in result.cleanedData.user2), 'user2 anotherOldField removed');
   assert(Object.keys(result.cleanedData.user3).length <= VALID_FIELDS.length, 'user3 has only valid fields');
 }
 

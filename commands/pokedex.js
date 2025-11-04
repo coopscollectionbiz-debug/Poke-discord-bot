@@ -11,18 +11,9 @@ import {
   ButtonStyle,
   ComponentType
 } from "discord.js";
-import fs from "fs/promises";
-import { spritePaths } from "../spriteconfig.js"; // ✅ Unified sprite system
-
-// =============================================
-// 📦 Safe JSON Load (Render compatible)
-// =============================================
-const pokemonData = JSON.parse(
-  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
-);
-
-// ✅ Convert to iterable array
-const allPokemon = Object.values(pokemonData);
+import { spritePaths } from "../spriteconfig.js";
+import { findPokemonByName } from "../utils/dataLoader.js";
+import { validateNameQuery } from "../utils/validators.js";
 
 // Convert numeric type IDs into readable names
 const typeMap = {
@@ -31,21 +22,6 @@ const typeMap = {
   11: "Water", 12: "Grass", 13: "Electric", 14: "Psychic",
   15: "Ice", 16: "Dragon", 17: "Dark"
 };
-
-// =============================================
-// Helper: find Pokémon by name or ID (case-insensitive)
-// =============================================
-function findPokemonByName(name) {
-  const input = name.toLowerCase();
-  return (
-    allPokemon.find(
-      (p) =>
-        p.name.toLowerCase() === input ||
-        p.id.toString() === input ||
-        (p.aliases && p.aliases.map((a) => a.toLowerCase()).includes(input))
-    ) || null
-  );
-}
 
 // =============================================
 // Slash command definition
@@ -65,7 +41,18 @@ export const data = new SlashCommandBuilder()
 // =============================================
 export async function execute(interaction) {
   const query = interaction.options.getString("name");
-  const pokemon = findPokemonByName(query);
+  
+  // Validate input
+  const validation = validateNameQuery(query);
+  if (!validation.valid) {
+    return interaction.reply({
+      content: `❌ ${validation.error}`,
+      ephemeral: true
+    });
+  }
+  
+  // Use helper to find Pokemon
+  const pokemon = await findPokemonByName(validation.sanitized);
 
   if (!pokemon) {
     // ❌ Keep "not found" messages private to avoid clutter
@@ -100,7 +87,7 @@ export async function execute(interaction) {
       }`
     )
     .setThumbnail(normalSprite)
-    .setFooter({ text: "Coop’s Collection Pokédex" })
+    .setFooter({ text: "Coop's Collection Pokédex" })
     .setTimestamp();
 
   // =============================================

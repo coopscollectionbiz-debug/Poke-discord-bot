@@ -1,6 +1,6 @@
 // ==========================================================
 // inspecttrainer.js — View another user's Trainer sprite collection
-// Coop’s Collection Discord Bot
+// Coop's Collection Discord Bot
 // ==========================================================
 
 import {
@@ -10,18 +10,9 @@ import {
   ButtonBuilder,
   ButtonStyle,
 } from "discord.js";
-import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js";
-
-// ==========================================================
-// 📦 Safe JSON Load (Render-compatible)
-// ==========================================================
-const trainerSprites = JSON.parse(
-  await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
-);
-
-// ✅ Convert to iterable array
-const allTrainers = Object.values(trainerSprites);
+import { getFlattenedTrainers } from "../utils/dataLoader.js";
+import { createPaginationButtons, calculateTotalPages, getPage } from "../utils/pagination.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -29,7 +20,7 @@ const allTrainers = Object.values(trainerSprites);
 export default {
   data: new SlashCommandBuilder()
     .setName("inspecttrainer")
-    .setDescription("View another user’s Trainer sprite collection.")
+    .setDescription("View another user's Trainer sprite collection.")
     .addUserOption(option =>
       option
         .setName("user")
@@ -64,7 +55,7 @@ export default {
     // Guard: no data
     if (!trainerData[targetUser.id]) {
       return interaction.editReply({
-        content: `❌ ${targetUser.username} doesn’t have a trainer profile yet.`,
+        content: `❌ ${targetUser.username} doesn't have a trainer profile yet.`,
       });
     }
 
@@ -73,15 +64,16 @@ export default {
 
     if (ownedTrainerKeys.length === 0) {
       return interaction.editReply({
-        content: `⚠️ ${targetUser.username} doesn’t own any trainers yet.`,
+        content: `⚠️ ${targetUser.username} doesn't own any trainers yet.`,
       });
     }
 
     // ==========================================================
-    // 🧮 Filter trainers by ownership + rarity
+    // 🧮 Filter trainers by ownership + rarity using helper
     // ==========================================================
+    const allTrainers = await getFlattenedTrainers();
     const filtered = allTrainers.filter(t => {
-      const key = t.filename || t.file; // accommodate both naming conventions
+      const key = t.filename || t.file;
       const owned = ownedTrainerKeys.includes(key);
       const rarityMatch =
         filterRarity === "all" ||
@@ -96,18 +88,17 @@ export default {
     }
 
     // ==========================================================
-    // 📄 Pagination Setup
+    // 📄 Pagination Setup using helper
     // ==========================================================
     const trainersPerPage = 12;
-    const totalPages = Math.ceil(filtered.length / trainersPerPage);
+    const totalPages = calculateTotalPages(filtered, trainersPerPage);
     let currentPage = 0;
 
     const renderPage = page => {
-      const start = page * trainersPerPage;
-      const trainersToShow = filtered.slice(start, start + trainersPerPage);
+      const trainersToShow = getPage(filtered, page, trainersPerPage);
 
       const embed = new EmbedBuilder()
-        .setTitle(`🎓 ${targetUser.username}’s Trainer Collection`)
+        .setTitle(`🎓 ${targetUser.username}'s Trainer Collection`)
         .setDescription(
           filterRarity !== "all"
             ? `Filtering by **${filterRarity.toUpperCase()}** rarity`
@@ -132,18 +123,7 @@ export default {
 
       embed.addFields({ name: "Owned Trainers", value: grid });
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("prev_page")
-          .setLabel("⬅️ Prev")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === 0),
-        new ButtonBuilder()
-          .setCustomId("next_page")
-          .setLabel("Next ➡️")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === totalPages - 1)
-      );
+      const row = createPaginationButtons(page, totalPages, false);
 
       return { embed, row };
     };
@@ -164,7 +144,7 @@ export default {
     collector.on("collect", async i => {
       if (i.user.id !== interaction.user.id) {
         return i.reply({
-          content: "⚠️ You can’t control this menu.",
+          content: "⚠️ You can't control this menu.",
           flags: 64,
         });
       }

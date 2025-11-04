@@ -3,7 +3,44 @@
 // Schema versioning and migration helpers
 // ==========================================================
 
-import { CURRENT_SCHEMA_VERSION, createDefaultUserData } from './schemaValidator.js';
+import { CURRENT_SCHEMA_VERSION, createDefaultUserData, USER_SCHEMA } from './schemaValidator.js';
+
+/**
+ * List of deprecated fields that should be removed during migration
+ * These fields are no longer part of the schema and should not be persisted
+ */
+const DEPRECATED_FIELDS = [
+  'coins',           // Old currency system (replaced by cc)
+  'questProgress',   // Old quest system (removed)
+  'guildId',         // Guild tracking (removed)
+  'lastClaim',       // Old claim system (replaced by lastDaily)
+  'trainer',         // Old trainer field (replaced by displayedTrainer)
+  'ownedPokemon'     // Old pokemon collection (replaced by pokemon)
+];
+
+/**
+ * Remove deprecated fields from user data
+ * @param {object} userData - User data to clean
+ * @param {string} userId - User ID for logging
+ * @returns {object} Cleaned user data
+ */
+function removeDeprecatedFields(userData, userId) {
+  const cleaned = { ...userData };
+  const removedFields = [];
+  
+  for (const field of DEPRECATED_FIELDS) {
+    if (field in cleaned) {
+      delete cleaned[field];
+      removedFields.push(field);
+    }
+  }
+  
+  if (removedFields.length > 0) {
+    console.log(`🧹 Removed deprecated fields from user ${userId}: ${removedFields.join(', ')}`);
+  }
+  
+  return cleaned;
+}
 
 /**
  * Migration functions for each schema version
@@ -14,25 +51,27 @@ const MIGRATIONS = {
   0: (userData, userId) => {
     console.log(`📦 Migrating user ${userId} from v0 to v1`);
     
+    // First, remove deprecated fields
+    const cleaned = removeDeprecatedFields(userData, userId);
+    
     // Ensure all required fields exist with defaults
     const migrated = {
-      ...userData,
-      id: userData.id || userId,
-      name: userData.name || 'Trainer',
-      tp: typeof userData.tp === 'number' ? userData.tp : 0,
-      cc: typeof userData.cc === 'number' ? userData.cc : 0,
-      rank: userData.rank || 'Novice Trainer',
-      pokemon: typeof userData.pokemon === 'object' && !Array.isArray(userData.pokemon) 
-        ? userData.pokemon 
+      id: cleaned.id || userId,
+      name: cleaned.name || 'Trainer',
+      tp: typeof cleaned.tp === 'number' ? cleaned.tp : 0,
+      cc: typeof cleaned.cc === 'number' ? cleaned.cc : 0,
+      rank: cleaned.rank || 'Novice Trainer',
+      pokemon: typeof cleaned.pokemon === 'object' && !Array.isArray(cleaned.pokemon) 
+        ? cleaned.pokemon 
         : {},
-      trainers: typeof userData.trainers === 'object' && !Array.isArray(userData.trainers)
-        ? userData.trainers
+      trainers: typeof cleaned.trainers === 'object' && !Array.isArray(cleaned.trainers)
+        ? cleaned.trainers
         : {},
-      displayedPokemon: Array.isArray(userData.displayedPokemon)
-        ? userData.displayedPokemon
+      displayedPokemon: Array.isArray(cleaned.displayedPokemon)
+        ? cleaned.displayedPokemon
         : [],
-      displayedTrainer: userData.displayedTrainer ?? null,
-      lastDaily: typeof userData.lastDaily === 'number' ? userData.lastDaily : 0,
+      displayedTrainer: cleaned.displayedTrainer ?? null,
+      lastDaily: typeof cleaned.lastDaily === 'number' ? cleaned.lastDaily : 0,
       schemaVersion: 1
     };
 
@@ -193,4 +232,41 @@ export function logMigrationResults(stats) {
  */
 export function createMigrationBackup(trainerData) {
   return JSON.parse(JSON.stringify(trainerData));
+}
+
+/**
+ * Strip deprecated fields from all users in trainer data
+ * This is used during save operations to ensure deprecated fields don't persist
+ * @param {object} trainerData - Trainer data to clean
+ * @returns {object} Cleaned trainer data
+ */
+export function stripDeprecatedFields(trainerData) {
+  if (typeof trainerData !== 'object' || trainerData === null) {
+    return trainerData;
+  }
+
+  const cleaned = {};
+  const validFields = Object.keys(USER_SCHEMA);
+  
+  for (const [userId, userData] of Object.entries(trainerData)) {
+    if (typeof userData !== 'object' || userData === null) {
+      cleaned[userId] = userData;
+      continue;
+    }
+
+    // Only keep valid fields
+    cleaned[userId] = {};
+    for (const field of validFields) {
+      if (field in userData) {
+        cleaned[userId][field] = userData[field];
+      }
+    }
+    
+    // Preserve schemaVersion if present
+    if ('schemaVersion' in userData) {
+      cleaned[userId].schemaVersion = userData.schemaVersion;
+    }
+  }
+
+  return cleaned;
 }

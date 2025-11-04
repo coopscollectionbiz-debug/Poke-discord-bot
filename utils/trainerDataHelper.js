@@ -10,7 +10,7 @@ import {
   createDefaultUserData,
   CURRENT_SCHEMA_VERSION 
 } from './schemaValidator.js';
-import { migrateUserData, getSchemaVersion } from './schemaMigration.js';
+import { migrateUserData, getSchemaVersion, stripDeprecatedFields } from './schemaMigration.js';
 
 /**
  * Initialize or normalize a user's trainer data with default values
@@ -153,7 +153,12 @@ export function normalizeAllUsers(trainerData, options = {}) {
 export function sanitizeBeforeSave(trainerData) {
   console.log('🧹 Sanitizing trainer data before save...');
   
-  const validation = validateTrainerData(trainerData);
+  // First, strip any deprecated fields
+  const stripped = stripDeprecatedFields(trainerData);
+  console.log('✅ Deprecated fields stripped from all users');
+  
+  // Then validate and repair
+  const validation = validateTrainerData(stripped);
   
   if (!validation.valid) {
     console.warn(`⚠️ Found ${validation.errors.length} validation issues during sanitization`);

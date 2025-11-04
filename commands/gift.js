@@ -3,10 +3,11 @@
 // Coop's Collection Discord Bot
 // ==========================================================
 
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { validateAmount, validateUserResources, validateNameQuery } from "../utils/validators.js";
 import { findPokemonByName, getFlattenedTrainers } from "../utils/dataLoader.js";
+import { createSuccessEmbed, createErrorEmbed } from "../utils/embedBuilders.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -192,14 +193,9 @@ export default {
     }
 
     // ==========================================================
-    // ✅ Confirmation + Save
+    // ✅ Confirmation + Save using embed builder
     // ==========================================================
-    const embed = new EmbedBuilder()
-      .setTitle("🎁 Gift Sent!")
-      .setDescription(description)
-      .setColor(0x57f287)
-      .setTimestamp();
-
+    const embed = createSuccessEmbed("🎁 Gift Sent!", description, { color: 0x57f287 });
     await interaction.editReply({ embeds: [embed] });
 
     try {

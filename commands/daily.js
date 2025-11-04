@@ -4,9 +4,7 @@
 // ==========================================================
 import {
   SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  StringSelectMenuBuilder
+  ActionRowBuilder
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
@@ -14,6 +12,12 @@ import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { validateCooldown } from "../utils/validators.js";
 import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
 import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
+import { 
+  createSuccessEmbed, 
+  createPokemonRewardEmbed, 
+  createTrainerRewardEmbed,
+  createChoiceMenu 
+} from "../utils/embedBuilders.js";
 
 // ==========================================================
 // ⚖️ Constants
@@ -51,21 +55,20 @@ export default {
     user.lastDaily = Date.now();
     await saveTrainerData(trainerData);
 
-    // 🎁 Prompt for bonus
-    const menu = new StringSelectMenuBuilder()
-      .setCustomId("daily_type")
-      .setPlaceholder("Choose your bonus!")
-      .addOptions(
+    // 🎁 Prompt for bonus using UI builder
+    const menu = createChoiceMenu(
+      "daily_type",
+      "Choose your bonus!",
+      [
         { label: "Pokémon", value: "pokemon", emoji: "🐾" },
         { label: "Trainer", value: "trainer", emoji: "🎓" }
-      );
+      ]
+    );
 
-    const embed = new EmbedBuilder()
-      .setColor(0x00ae86)
-      .setTitle("🎁 Daily Claimed!")
-      .setDescription(
-        `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**.\nChoose your bonus:`
-      );
+    const embed = createSuccessEmbed(
+      "🎁 Daily Claimed!",
+      `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**.\nChoose your bonus:`
+    );
 
     await interaction.reply({
       embeds: [embed],
@@ -115,22 +118,10 @@ async function giveRandomPokemon(i, user, trainerData, saveTrainerData) {
 
   await saveTrainerData(trainerData);
 
-  await i.update({
-    embeds: [
-      new EmbedBuilder()
-        .setColor(shiny ? 0xffd700 : 0x00ae86)
-        .setTitle("🎁 Pokémon Reward!")
-        .setDescription(
-          shiny
-            ? `✨ You obtained a **Shiny ${pick.name}!**`
-            : `You obtained a **${pick.name}!**`
-        )
-        .setThumbnail(
-          `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pick.id}.gif`
-        )
-    ],
-    components: []
-  });
+  const spriteUrl = `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pick.id}.gif`;
+  const embed = createPokemonRewardEmbed(pick, shiny, spriteUrl);
+
+  await i.update({ embeds: [embed], components: [] });
 }
 
 // ==========================================================
@@ -143,14 +134,8 @@ async function giveRandomTrainer(i, user, trainerData, saveTrainerData) {
 
   await saveTrainerData(trainerData);
 
-  await i.update({
-    embeds: [
-      new EmbedBuilder()
-        .setColor(0x5865f2)
-        .setTitle("🎁 Trainer Reward!")
-        .setDescription(`You unlocked **${pick.name}**!`)
-        .setThumbnail(`${spritePaths.trainers}${pick.filename}`)
-    ],
-    components: []
-  });
+  const spriteUrl = `${spritePaths.trainers}${pick.filename}`;
+  const embed = createTrainerRewardEmbed(pick, spriteUrl);
+
+  await i.update({ embeds: [embed], components: [] });
 }

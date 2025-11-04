@@ -5,7 +5,6 @@
 
 import {
   SlashCommandBuilder,
-  EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -14,6 +13,7 @@ import {
 import { spritePaths } from "../spriteconfig.js";
 import { findPokemonByName } from "../utils/dataLoader.js";
 import { validateNameQuery } from "../utils/validators.js";
+import { createPokedexEmbed } from "../utils/embedBuilders.js";
 
 // Convert numeric type IDs into readable names
 const typeMap = {
@@ -74,21 +74,9 @@ export async function execute(interaction) {
   let showingShiny = false;
 
   // =============================================
-  // Embed for Pokémon Info
+  // Embed for Pokémon Info using builder
   // =============================================
-  const embed = new EmbedBuilder()
-    .setTitle(`${pokemon.name} — #${pokemon.id}`)
-    .setColor(0xffcb05)
-    .setDescription(
-      `🗒️ **Type:** ${pokemon.types
-        .map((id) => typeMap[id] || "Unknown")
-        .join("/")}\n⭐ **Rarity:** ${pokemon.tier || "Unknown"}\n📘 **Description:** ${
-        pokemon.flavor || "No Pokédex entry available."
-      }`
-    )
-    .setThumbnail(normalSprite)
-    .setFooter({ text: "Coop's Collection Pokédex" })
-    .setTimestamp();
+  const embed = createPokedexEmbed(pokemon, normalSprite, typeMap);
 
   // =============================================
   // Buttons: toggle shiny, close

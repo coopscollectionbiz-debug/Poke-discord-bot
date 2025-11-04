@@ -20,9 +20,11 @@ import { REST, Routes } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
 import { handleTrainerCardButtons } from "./commands/trainercard.js";
-import { normalizeAllUsers, ensureUserData } from "./utils/trainerDataHelper.js";
+import { normalizeAllUsers, ensureUserData, sanitizeBeforeSave } from "./utils/trainerDataHelper.js";
 import { retryWithBackoff } from "./utils/errorHandler.js";
 import { getRank, getRankTiers } from "./utils/rankSystem.js";
+import { validateTrainerData, logValidationResults } from "./utils/schemaValidator.js";
+import { migrateTrainerData, checkMigrationNeeded, logMigrationResults } from "./utils/schemaMigration.js";
 
 // ==========================================================
 // 🌐 Basic Setup
@@ -91,10 +93,28 @@ async function loadTrainerData() {
         console.warn("⚠️ No local trainerData.json found or parse error — starting fresh.");
       }
 
-      // Normalize schema fields for all users using helper
-      const normalized = normalizeAllUsers(loaded);
+      // Check if migration is needed
+      const migrationCheck = checkMigrationNeeded(loaded);
+      if (migrationCheck.needed) {
+        console.log(`🔄 Migration needed for ${migrationCheck.stats.needsMigration} users`);
+        const migrationResult = migrateTrainerData(loaded);
+        logMigrationResults(migrationResult.stats);
+        loaded = migrationResult.migratedData;
+      }
 
-      console.log(`✅ Trainer data loaded safely with merged schema (${Object.keys(normalized).length} users).`);
+      // Validate and repair loaded data
+      const validation = validateTrainerData(loaded);
+      logValidationResults(validation, 'load');
+      
+      if (!validation.valid) {
+        console.warn(`⚠️ Loaded data had validation issues, using corrected version`);
+        loaded = validation.correctedData;
+      }
+
+      // Normalize schema fields for all users using helper
+      const normalized = normalizeAllUsers(loaded, { validate: true, migrate: true, repair: true });
+
+      console.log(`✅ Trainer data loaded safely with validated schema (${Object.keys(normalized).length} users).`);
       return normalized;
     },
     3,
@@ -104,11 +124,13 @@ async function loadTrainerData() {
 }
 
 
-// Save to local file with retry logic
+// Save to local file with retry logic and validation
 async function saveTrainerDataLocal(data) {
   return await retryWithBackoff(
     async () => {
-      await fs.writeFile(TRAINERDATA_PATH, JSON.stringify(data, null, 2));
+      // Sanitize and validate before saving
+      const sanitized = sanitizeBeforeSave(data);
+      await fs.writeFile(TRAINERDATA_PATH, JSON.stringify(sanitized, null, 2));
       console.log("✅ Trainer data saved locally.");
     },
     3,
@@ -117,13 +139,15 @@ async function saveTrainerDataLocal(data) {
   );
 }
 
-// Save backup to Discord channel with retry logic
+// Save backup to Discord channel with retry logic and validation
 async function saveDataToDiscord(data) {
   return await retryWithBackoff(
     async () => {
+      // Sanitize and validate before saving to Discord
+      const sanitized = sanitizeBeforeSave(data);
       const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
       const fileName = `trainerData-${new Date().toISOString().split("T")[0]}.json`;
-      const buffer = Buffer.from(JSON.stringify(data, null, 2));
+      const buffer = Buffer.from(JSON.stringify(sanitized, null, 2));
       const file = new AttachmentBuilder(buffer, { name: fileName });
       await storageChannel.send({ content: `📦 Backup ${fileName}`, files: [file] });
       console.log("✅ Trainer data backed up to Discord.");

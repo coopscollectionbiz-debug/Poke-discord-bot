@@ -5,7 +5,12 @@
   "main": "bot_final.js",
   "type": "module",
   "scripts": {
-    "start": "node bot_final.js"
+    "start": "node bot_final.js",
+    "test": "node run-tests.js",
+    "test:validation": "node test-schema-validation.js",
+    "test:migration": "node test-schema-migration.js",
+    "test:helper": "node test-trainer-data-helper.js",
+    "repair": "node repairTrainerData.js"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.81",

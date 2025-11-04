@@ -674,7 +674,7 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
   const allPokemon = await getAllPokemon();
   const currentDisplayed = user.displayedPokemon || [];
 
-  // Create pages (6 Pokemon per page to match card layout)
+  // Create pages (12 Pokemon per page for better selection view)
   const pokemonPerPage = 12;
   const pages = [];
   for (let i = 0; i < ownedPokemon.length; i += pokemonPerPage) {
@@ -785,7 +785,7 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
       } else if (selectedPokemon.length < 6) {
         selectedPokemon.push(pokemonId);
       } else {
-        return i.reply({
+        return i.followUp({
           content: "⚠️ You can only display up to 6 Pokémon at once!",
           ephemeral: true
         });

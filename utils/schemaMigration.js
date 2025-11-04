@@ -54,24 +54,28 @@ const MIGRATIONS = {
     // First, remove deprecated fields
     const cleaned = removeDeprecatedFields(userData, userId);
     
-    // Ensure all required fields exist with defaults
+    // Start with default schema
+    const defaults = createDefaultUserData(userId, cleaned.name || 'Trainer');
+    
+    // Overlay existing valid data over defaults, preserving user values
     const migrated = {
+      ...defaults,
       id: cleaned.id || userId,
-      name: cleaned.name || 'Trainer',
-      tp: typeof cleaned.tp === 'number' ? cleaned.tp : 0,
-      cc: typeof cleaned.cc === 'number' ? cleaned.cc : 0,
-      rank: cleaned.rank || 'Novice Trainer',
+      name: cleaned.name || defaults.name,
+      tp: typeof cleaned.tp === 'number' ? cleaned.tp : defaults.tp,
+      cc: typeof cleaned.cc === 'number' ? cleaned.cc : defaults.cc,
+      rank: cleaned.rank || defaults.rank,
       pokemon: typeof cleaned.pokemon === 'object' && !Array.isArray(cleaned.pokemon) 
         ? cleaned.pokemon 
-        : {},
+        : defaults.pokemon,
       trainers: typeof cleaned.trainers === 'object' && !Array.isArray(cleaned.trainers)
         ? cleaned.trainers
-        : {},
+        : defaults.trainers,
       displayedPokemon: Array.isArray(cleaned.displayedPokemon)
         ? cleaned.displayedPokemon
-        : [],
-      displayedTrainer: cleaned.displayedTrainer ?? null,
-      lastDaily: typeof cleaned.lastDaily === 'number' ? cleaned.lastDaily : 0,
+        : defaults.displayedPokemon,
+      displayedTrainer: cleaned.displayedTrainer ?? defaults.displayedTrainer,
+      lastDaily: typeof cleaned.lastDaily === 'number' ? cleaned.lastDaily : defaults.lastDaily,
       schemaVersion: 1
     };
 
@@ -246,7 +250,8 @@ export function stripDeprecatedFields(trainerData) {
   }
 
   const cleaned = {};
-  const validFields = Object.keys(USER_SCHEMA);
+  // Get valid fields including schemaVersion (which is in USER_SCHEMA)
+  const validFields = [...Object.keys(USER_SCHEMA), 'schemaVersion'];
   
   for (const [userId, userData] of Object.entries(trainerData)) {
     if (typeof userData !== 'object' || userData === null) {
@@ -260,11 +265,6 @@ export function stripDeprecatedFields(trainerData) {
       if (field in userData) {
         cleaned[userId][field] = userData[field];
       }
-    }
-    
-    // Preserve schemaVersion if present
-    if ('schemaVersion' in userData) {
-      cleaned[userId].schemaVersion = userData.schemaVersion;
     }
   }
 

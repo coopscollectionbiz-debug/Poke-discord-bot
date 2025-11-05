@@ -12,6 +12,7 @@
 // ✅ Back/forward navigation
 // ✅ Uses centralized spritePaths.js
 // ✅ Handles nested trainerSprites.json
+// ✅ Refactored with safeReply()
 // ==========================================================
 
 import {
@@ -19,11 +20,12 @@ import {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { createPaginationButtons } from "../utils/pagination.js";
+import { safeReply } from "../utils/safeReply.js";
 
 // ==========================================================
 // 🧩 Command definition
@@ -61,13 +63,14 @@ export default {
   // ⚙️ Execution
   // ==========================================================
   async execute(interaction, trainerData) {
-    await interaction.deferReply({ flags: 64 });
+    await interaction.deferReply({ ephemeral: true });
 
     const userId = interaction.user.id;
     const user = trainerData[userId];
     if (!user) {
-      return interaction.editReply({
-        content: "❌ You don’t have a trainer profile yet. Use `/trainercard` first!"
+      return safeReply(interaction, {
+        content: "❌ You don’t have a trainer profile yet. Use `/trainercard` first!",
+        ephemeral: true,
       });
     }
 
@@ -105,7 +108,7 @@ export default {
           rarity: variants[0].rarity,
           total: totalCount,
           owned: ownedCount,
-          missing: missingCount
+          missing: missingCount,
         };
       })
       .filter(Boolean);
@@ -115,8 +118,9 @@ export default {
     const percentOwned = ((totalOwned / totalAvailable) * 100).toFixed(1);
 
     if (rows.length === 0) {
-      return interaction.editReply({
-        content: "⚠️ No trainers match your current filters or ownership status."
+      return safeReply(interaction, {
+        content: "⚠️ No trainers match your current filters or ownership status.",
+        ephemeral: true,
       });
     }
 
@@ -153,7 +157,7 @@ export default {
             `Trainer Class         | Var | Ow | Ms`,
             "---------------------|-----|----|----",
             tableRows,
-            "```"
+            "```",
           ].join("\n")
         )
         .setColor(0x43b581)
@@ -215,7 +219,7 @@ export default {
             `Sprite Variant             | Owned`,
             "---------------------------|------",
             rows,
-            "```"
+            "```",
           ].join("\n")
         )
         .setColor(0x3498db);
@@ -255,7 +259,7 @@ export default {
         .setDescription(
           [
             `**Rarity:** ${t.rarity?.toUpperCase() || "COMMON"}`,
-            `**Owned:** ${isOwned ? "✅ Yes" : "❌ No"}`
+            `**Owned:** ${isOwned ? "✅ Yes" : "❌ No"}`,
           ].join("\n")
         )
         .setColor(0xf7b731)
@@ -280,33 +284,39 @@ export default {
     // 🖼️ Send initial page
     // ==========================================================
     const { embed, navRow, trainerRow } = renderHome(currentPage);
-    const message = await interaction.editReply({
+    const message = await safeReply(interaction, {
       embeds: [embed],
-      components: [navRow, trainerRow]
+      components: [navRow, trainerRow],
+      ephemeral: true,
     });
 
     // ==========================================================
     // 🎮 Collector
     // ==========================================================
-    const collector = message.createMessageComponentCollector({
-      time: 120000
-    });
+    const collector = message.createMessageComponentCollector({ time: 120000 });
 
     collector.on("collect", async (i) => {
       if (i.user.id !== interaction.user.id)
-        return i.reply({ content: "⚠️ You can’t control this menu.", ephemeral: true });
+        return safeReply(i, {
+          content: "⚠️ You can’t control this menu.",
+          ephemeral: true,
+        });
 
       if (i.customId === "prev" && currentPage > 0) currentPage--;
       else if (i.customId === "next" && currentPage < totalPages - 1) currentPage++;
       else if (i.customId === "close") {
         collector.stop();
-        return i.update({ content: "Trainer list closed.", embeds: [], components: [] });
+        return safeReply(i, {
+          content: "Trainer list closed.",
+          embeds: [],
+          components: [],
+        });
       }
 
       if (i.customId.startsWith("inspect_class_")) {
         const className = i.customId.replace("inspect_class_", "");
         const { embed, backRow, variantRow } = renderClass(className);
-        return i.update({ embeds: [embed], components: [backRow, variantRow] });
+        return safeReply(i, { embeds: [embed], components: [backRow, variantRow] });
       }
 
       if (i.customId.startsWith("inspect_variant_")) {
@@ -315,29 +325,36 @@ export default {
         const className = variant?.name;
         const rendered = renderSprite(spriteFile, className);
         if (!rendered)
-          return i.reply({ content: "❌ Sprite not found.", ephemeral: true });
-        return i.update({ embeds: [rendered.embed], components: [rendered.row] });
+          return safeReply(i, { content: "❌ Sprite not found.", ephemeral: true });
+        return safeReply(i, {
+          embeds: [rendered.embed],
+          components: [rendered.row],
+        });
       }
 
       if (i.customId.startsWith("back_class_")) {
         const className = i.customId.replace("back_class_", "");
         const { embed, backRow, variantRow } = renderClass(className);
-        return i.update({ embeds: [embed], components: [backRow, variantRow] });
+        return safeReply(i, { embeds: [embed], components: [backRow, variantRow] });
       }
 
       if (i.customId === "back_home") {
         const { embed, navRow, trainerRow } = renderHome(currentPage);
-        return i.update({ embeds: [embed], components: [navRow, trainerRow] });
+        return safeReply(i, { embeds: [embed], components: [navRow, trainerRow] });
       }
 
-      const { embed, navRow, trainerRow } = renderHome(currentPage);
-      await i.update({ embeds: [embed], components: [navRow, trainerRow] });
+      const { embed: fallbackEmbed, navRow: fallbackNav, trainerRow: fallbackTrainer } =
+        renderHome(currentPage);
+      await safeReply(i, {
+        embeds: [fallbackEmbed],
+        components: [fallbackNav, fallbackTrainer],
+      });
     });
 
     collector.on("end", async () => {
       try {
-        await interaction.editReply({ components: [] });
+        await safeReply(interaction, { components: [] });
       } catch {}
     });
-  }
+  },
 };

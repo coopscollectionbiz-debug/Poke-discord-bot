@@ -1,5 +1,5 @@
 // ==========================================================
-// inspectpokemon.js — Inspect details about a specific Pokémon
+// inspectpokemon.js (SafeReply Refactor)
 // Coop's Collection Discord Bot
 // ==========================================================
 
@@ -7,6 +7,7 @@ import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { findPokemonByName } from "../utils/dataLoader.js";
 import { validateNameQuery } from "../utils/validators.js";
+import { safeReply } from "../utils/safeReply.js";
 
 // ==========================================================
 // 🧩 Command definition
@@ -15,7 +16,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("inspectpokemon")
     .setDescription("Inspect details about a specific Pokémon by name or ID.")
-    .addStringOption(option =>
+    .addStringOption((option) =>
       option
         .setName("name")
         .setDescription("Pokémon name or Pokédex ID.")
@@ -23,24 +24,26 @@ export default {
     ),
 
   async execute(interaction) {
-    await interaction.deferReply({ flags: 64 });
+    await interaction.deferReply({ ephemeral: true });
 
     const input = interaction.options.getString("name").trim();
 
     // Validate input
     const validation = validateNameQuery(input);
     if (!validation.valid) {
-      return interaction.editReply({
+      return safeReply(interaction, {
         content: `❌ ${validation.error}`,
+        ephemeral: true,
       });
     }
 
-    // Use helper to find Pokemon
+    // Use helper to find Pokémon
     const pokemon = await findPokemonByName(validation.sanitized);
 
     if (!pokemon) {
-      return interaction.editReply({
+      return safeReply(interaction, {
         content: `❌ Pokémon **${input}** not found.`,
+        ephemeral: true,
       });
     }
 
@@ -59,6 +62,6 @@ export default {
       .setFooter({ text: "Pokémon data sourced from Coop's Collection" })
       .setTimestamp();
 
-    await interaction.editReply({ embeds: [embed] });
+    await safeReply(interaction, { embeds: [embed], ephemeral: true });
   },
 };

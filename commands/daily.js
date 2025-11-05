@@ -1,23 +1,21 @@
 // ==========================================================
 // 🕒 /daily — claim daily TP, CC, and one random reward
-// Coop's Collection Discord Bot
+// Coop's Collection Discord Bot (SafeReply Refactor)
 // ==========================================================
-import {
-  SlashCommandBuilder,
-  ActionRowBuilder
-} from "discord.js";
+import { SlashCommandBuilder, ActionRowBuilder } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { validateCooldown } from "../utils/validators.js";
 import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
 import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
-import { 
-  createSuccessEmbed, 
-  createPokemonRewardEmbed, 
+import {
+  createSuccessEmbed,
+  createPokemonRewardEmbed,
   createTrainerRewardEmbed,
-  createChoiceMenu 
+  createChoiceMenu,
 } from "../utils/embedBuilders.js";
+import { safeReply } from "../utils/safeReply.js";
 
 // ==========================================================
 // ⚖️ Constants
@@ -27,7 +25,7 @@ const DAILY_TP_REWARD = 50;
 const DAILY_CC_REWARD = 25;
 
 // ==========================================================
-// 🧩 Command definition
+// 🧩 Command definition (SafeReply Refactor)
 // ==========================================================
 export default {
   data: new SlashCommandBuilder()
@@ -37,15 +35,15 @@ export default {
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
     const id = interaction.user.id;
 
-    // Initialize schema using helper
+    // Initialize schema
     const user = ensureUserData(trainerData, id, interaction.user.username);
 
-    // 🕒 Cooldown check using validator
+    // 🕒 Cooldown check
     const cooldownCheck = validateCooldown(user.lastDaily, DAILY_COOLDOWN_MS);
     if (!cooldownCheck.valid) {
-      return interaction.reply({
+      return safeReply(interaction, {
         content: cooldownCheck.error,
-        ephemeral: true
+        ephemeral: true,
       });
     }
 
@@ -55,34 +53,30 @@ export default {
     user.lastDaily = Date.now();
     await saveTrainerData(trainerData);
 
-    // 🎁 Prompt for bonus using UI builder
-    const menu = createChoiceMenu(
-      "daily_type",
-      "Choose your bonus!",
-      [
-        { label: "Pokémon", value: "pokemon", emoji: "🐾" },
-        { label: "Trainer", value: "trainer", emoji: "🎓" }
-      ]
-    );
+    // 🎁 Prompt for bonus
+    const menu = createChoiceMenu("daily_type", "Choose your bonus!", [
+      { label: "Pokémon", value: "pokemon", emoji: "🐾" },
+      { label: "Trainer", value: "trainer", emoji: "🎓" },
+    ]);
 
     const embed = createSuccessEmbed(
       "🎁 Daily Claimed!",
       `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**.\nChoose your bonus:`
     );
 
-    await interaction.reply({
+    await safeReply(interaction, {
       embeds: [embed],
       components: [new ActionRowBuilder().addComponents(menu)],
-      ephemeral: true
+      ephemeral: true,
     });
 
     // 🎮 Selection handler
     const collector = interaction.channel.createMessageComponentCollector({
-      filter: i => i.user.id === id,
-      time: 120000
+      filter: (i) => i.user.id === id,
+      time: 120000,
     });
 
-    collector.on("collect", async i => {
+    collector.on("collect", async (i) => {
       collector.stop();
       if (i.values[0] === "pokemon") {
         await giveRandomPokemon(i, user, trainerData, saveTrainerData);
@@ -93,22 +87,23 @@ export default {
 
     collector.on("end", async (_, reason) => {
       if (reason === "time") {
-        await interaction.editReply({
+        await safeReply(interaction, {
           content: "⌛ Time's up — try again later!",
           embeds: [],
-          components: []
+          components: [],
+          ephemeral: true,
         }).catch(() => {});
       }
     });
-  }
+  },
 };
 
 // ==========================================================
-// 🐾 Pokémon reward - Refactored to use helpers
+// 🐾 Pokémon reward - SafeReply integrated
 // ==========================================================
 async function giveRandomPokemon(i, user, trainerData, saveTrainerData) {
   const allPokemon = await getAllPokemon();
-  const pool = allPokemon.filter(p => p.generation <= 5);
+  const pool = allPokemon.filter((p) => p.generation <= 5);
   const pick = selectRandomPokemon(pool);
   const shiny = rollForShiny(user.tp);
 
@@ -125,7 +120,7 @@ async function giveRandomPokemon(i, user, trainerData, saveTrainerData) {
 }
 
 // ==========================================================
-// 🎓 Trainer reward - Refactored to use helpers
+// 🎓 Trainer reward - SafeReply integrated
 // ==========================================================
 async function giveRandomTrainer(i, user, trainerData, saveTrainerData) {
   const flatTrainers = await getFlattenedTrainers();

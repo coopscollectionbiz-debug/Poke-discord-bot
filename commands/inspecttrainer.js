@@ -1,5 +1,5 @@
 // ==========================================================
-// inspecttrainer.js — View another user's Trainer sprite collection
+// inspecttrainer.js (SafeReply Refactor)
 // Coop's Collection Discord Bot
 // ==========================================================
 
@@ -12,7 +12,12 @@ import {
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
-import { createPaginationButtons, calculateTotalPages, getPage } from "../utils/pagination.js";
+import {
+  createPaginationButtons,
+  calculateTotalPages,
+  getPage,
+} from "../utils/pagination.js";
+import { safeReply } from "../utils/safeReply.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -21,13 +26,13 @@ export default {
   data: new SlashCommandBuilder()
     .setName("inspecttrainer")
     .setDescription("View another user's Trainer sprite collection.")
-    .addUserOption(option =>
+    .addUserOption((option) =>
       option
         .setName("user")
         .setDescription("The user whose trainers you want to view.")
         .setRequired(true)
     )
-    .addStringOption(option =>
+    .addStringOption((option) =>
       option
         .setName("rarity")
         .setDescription("Filter by trainer rarity.")
@@ -47,15 +52,16 @@ export default {
   // ⚙️ Command Execution
   // ==========================================================
   async execute(interaction, trainerData) {
-    await interaction.deferReply({ flags: 64 });
+    await interaction.deferReply({ ephemeral: true });
 
     const targetUser = interaction.options.getUser("user");
     const filterRarity = interaction.options.getString("rarity") || "all";
 
-    // Guard: no data
+    // Guard: user has no data
     if (!trainerData[targetUser.id]) {
-      return interaction.editReply({
+      return safeReply(interaction, {
         content: `❌ ${targetUser.username} doesn't have a trainer profile yet.`,
+        ephemeral: true,
       });
     }
 
@@ -63,16 +69,17 @@ export default {
     const ownedTrainerKeys = Object.keys(userData.trainers || {});
 
     if (ownedTrainerKeys.length === 0) {
-      return interaction.editReply({
+      return safeReply(interaction, {
         content: `⚠️ ${targetUser.username} doesn't own any trainers yet.`,
+        ephemeral: true,
       });
     }
 
     // ==========================================================
-    // 🧮 Filter trainers by ownership + rarity using helper
+    // 🧮 Filter trainers by ownership + rarity
     // ==========================================================
     const allTrainers = await getFlattenedTrainers();
-    const filtered = allTrainers.filter(t => {
+    const filtered = allTrainers.filter((t) => {
       const key = t.filename || t.file;
       const owned = ownedTrainerKeys.includes(key);
       const rarityMatch =
@@ -82,19 +89,20 @@ export default {
     });
 
     if (filtered.length === 0) {
-      return interaction.editReply({
+      return safeReply(interaction, {
         content: `⚠️ No trainers found matching **${filterRarity}** rarity.`,
+        ephemeral: true,
       });
     }
 
     // ==========================================================
-    // 📄 Pagination Setup using helper
+    // 📄 Pagination Setup
     // ==========================================================
     const trainersPerPage = 12;
     const totalPages = calculateTotalPages(filtered, trainersPerPage);
     let currentPage = 0;
 
-    const renderPage = page => {
+    const renderPage = (page) => {
       const trainersToShow = getPage(filtered, page, trainersPerPage);
 
       const embed = new EmbedBuilder()
@@ -108,9 +116,8 @@ export default {
         .setFooter({ text: `Page ${page + 1} of ${totalPages}` })
         .setTimestamp();
 
-      // Build trainer grid
       const grid = trainersToShow
-        .map(t => {
+        .map((t) => {
           const file = t.filename || t.file;
           const spriteUrl = t.url
             ? t.url
@@ -124,12 +131,11 @@ export default {
       embed.addFields({ name: "Owned Trainers", value: grid });
 
       const row = createPaginationButtons(page, totalPages, false);
-
       return { embed, row };
     };
 
     const { embed, row } = renderPage(currentPage);
-    const message = await interaction.editReply({
+    const message = await safeReply(interaction, {
       embeds: [embed],
       components: [row],
     });
@@ -138,14 +144,14 @@ export default {
     // 🎮 Pagination Collector
     // ==========================================================
     const collector = message.createMessageComponentCollector({
-      time: 60000, // 1 minute timeout
+      time: 60000,
     });
 
-    collector.on("collect", async i => {
+    collector.on("collect", async (i) => {
       if (i.user.id !== interaction.user.id) {
-        return i.reply({
+        return safeReply(i, {
           content: "⚠️ You can't control this menu.",
-          flags: 64,
+          ephemeral: true,
         });
       }
 
@@ -158,7 +164,9 @@ export default {
     });
 
     collector.on("end", async () => {
-      await interaction.editReply({ components: [] });
+      try {
+        await message.edit({ components: [] });
+      } catch {}
     });
   },
 };

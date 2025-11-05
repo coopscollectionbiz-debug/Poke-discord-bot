@@ -8,6 +8,7 @@ import { REST, Routes } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
 import { getRank, getRankTiers } from "./utils/rankSystem.js";
+import { safeReply } from "./utils/safeReply.js";
 
 const TRAINERDATA_PATH = "./trainerData.json";
 const AUTOSAVE_INTERVAL = 1000 * 60 * 3;
@@ -117,6 +118,14 @@ async function loadCommands() {
   }
 }
 
+function debouncedDiscordSave() {
+  if (commandSaveQueue) clearTimeout(commandSaveQueue);
+  commandSaveQueue = setTimeout(async () => {
+    await saveDataToDiscord(trainerData);
+    commandSaveQueue = null;
+  }, 10000);
+}
+
 setInterval(() => saveDataToDiscord(trainerData), AUTOSAVE_INTERVAL);
 process.on("SIGINT", async () => { await saveDataToDiscord(trainerData); process.exit(0); });
 process.on("SIGTERM", async () => { await saveDataToDiscord(trainerData); process.exit(0); });
@@ -181,3 +190,24 @@ function normalizeUserSchema(id, user) {
   user.starterPokemon ??= null;
   return user;
 }
+
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const command = client.commands.get(interaction.commandName);
+  if (!command) {
+    return await safeReply(interaction, { content: "❌ Unknown command.", ephemeral: true });
+  }
+
+  try {
+    await command.execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord);
+    await saveTrainerDataLocal(trainerData);
+    debouncedDiscordSave();
+  } catch (error) {
+    console.error(`❌ ${interaction.commandName}:`, error.message);
+    await safeReply(interaction, {
+      content: `❌ Error while executing \`${interaction.commandName}\`. Please try again.`,
+      ephemeral: true,
+    });
+  }
+});

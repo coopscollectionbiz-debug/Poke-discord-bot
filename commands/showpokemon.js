@@ -1,5 +1,5 @@
 // =============================================
-// /showpokemon.js
+// /showpokemon.js (Refactored with safeReply)
 // Coop's Collection Discord Bot
 // =============================================
 
@@ -14,6 +14,7 @@ import {
 import { spritePaths } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { createPaginationButtons, calculateTotalPages, getPage } from "../utils/pagination.js";
+import { safeReply } from "../utils/safeReply.js";
 
 // =============================================
 // SLASH COMMAND DEFINITION
@@ -60,7 +61,7 @@ export async function execute(interaction, trainerData) {
   const filterShiny = interaction.options.getString("shiny");
 
   if (!user) {
-    return interaction.reply({
+    return safeReply(interaction, {
       content: "❌ You don't have a trainer profile yet. Run /trainercard first.",
       ephemeral: true
     });
@@ -137,9 +138,10 @@ export async function execute(interaction, trainerData) {
   };
 
   const { embed, row, pokedexRow } = renderPage();
-  const msg = await interaction.editReply({
+  const msg = await safeReply(interaction, {
     embeds: [embed],
-    components: [row, pokedexRow]
+    components: [row, pokedexRow],
+    ephemeral: true
   });
 
   // =============================================
@@ -152,24 +154,24 @@ export async function execute(interaction, trainerData) {
 
   collector.on("collect", async (i) => {
     if (i.user.id !== userId)
-      return i.reply({ content: "⚠️ This menu isn't yours.", ephemeral: true });
+      return safeReply(i, { content: "⚠️ This menu isn't yours.", ephemeral: true });
 
     // PAGINATION
     if (i.customId === "next_page") {
       page++;
       const { embed, row, pokedexRow } = renderPage();
-      return i.update({ embeds: [embed], components: [row, pokedexRow] });
+      return safeReply(i, { embeds: [embed], components: [row, pokedexRow] });
     }
     if (i.customId === "prev_page") {
       page--;
       const { embed, row, pokedexRow } = renderPage();
-      return i.update({ embeds: [embed], components: [row, pokedexRow] });
+      return safeReply(i, { embeds: [embed], components: [row, pokedexRow] });
     }
 
     // CLOSE LIST
     if (i.customId === "close") {
       collector.stop("closed");
-      return i.update({
+      return safeReply(i, {
         content: "Pokémon list closed.",
         embeds: [],
         components: []
@@ -182,7 +184,7 @@ export async function execute(interaction, trainerData) {
     if (i.customId.startsWith("inspect_")) {
       const id = parseInt(i.customId.replace("inspect_", ""));
       const p = allPokemon.find((x) => x.id === id);
-      if (!p) return i.reply({ content: "Pokémon not found.", ephemeral: true });
+      if (!p) return safeReply(i, { content: "Pokémon not found.", ephemeral: true });
 
       const normalSprite = `${spritePaths.pokemon}${p.id}.gif`;
       const shinySprite = `${spritePaths.shiny}${p.id}.gif`;
@@ -213,7 +215,7 @@ export async function execute(interaction, trainerData) {
           .setStyle(ButtonStyle.Danger)
       );
 
-      await i.update({ embeds: [entryEmbed], components: [shinyRow] });
+      await safeReply(i, { embeds: [entryEmbed], components: [shinyRow] });
 
       const inner = i.message.createMessageComponentCollector({
         componentType: ComponentType.Button,
@@ -222,19 +224,19 @@ export async function execute(interaction, trainerData) {
 
       inner.on("collect", async (b) => {
         if (b.user.id !== userId)
-          return b.reply({ content: "⚠️ This entry isn't yours.", ephemeral: true });
+          return safeReply(b, { content: "⚠️ This entry isn't yours.", ephemeral: true });
 
         if (b.customId === "toggle_shiny") {
           shinyView = !shinyView;
           entryEmbed.setThumbnail(shinyView ? shinySprite : normalSprite);
           entryEmbed.setColor(shinyView ? 0xdaa520 : 0xffcb05);
-          await b.update({ embeds: [entryEmbed], components: [shinyRow] });
+          return safeReply(b, { embeds: [entryEmbed], components: [shinyRow] });
         }
 
         if (b.customId === "back_to_list") {
           const restored = renderPage();
           inner.stop("back");
-          return b.update({
+          return safeReply(b, {
             embeds: [restored.embed],
             components: [restored.row, restored.pokedexRow]
           });
@@ -242,7 +244,7 @@ export async function execute(interaction, trainerData) {
 
         if (b.customId === "close_entry") {
           inner.stop("closed");
-          return b.update({
+          return safeReply(b, {
             content: "Pokédex entry closed.",
             embeds: [],
             components: []
@@ -252,12 +254,12 @@ export async function execute(interaction, trainerData) {
 
       inner.on("end", async (_, reason) => {
         if (["back", "closed"].includes(reason)) return;
-        await i.message.edit({ components: [] }).catch(() => {});
+        await safeReply(i, { components: [] });
       });
     }
   });
 
   collector.on("end", async (_, reason) => {
-    if (reason !== "closed") await msg.edit({ components: [] }).catch(() => {});
+    if (reason !== "closed") await safeReply(interaction, { components: [] });
   });
 }

@@ -100,33 +100,23 @@ async function loadCommands() {
       console.error(`❌ ${file}:`, err.message);
     }
   }
+
   const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
-  await rest.put(Routes.applicationCommands(client.user.id), { body: client.commands.map(c => c.data.toJSON()) });
-  console.log(`✅ ${client.commands.size} commands`);
-}
 
-function debouncedDiscordSave() {
-  if (commandSaveQueue) clearTimeout(commandSaveQueue);
-  commandSaveQueue = setTimeout(async () => {
-    await saveDataToDiscord(trainerData);
-    commandSaveQueue = null;
-  }, 10000);
-}
+  const commandsJSON = client.commands.map(c => c.data.toJSON());
+  console.log(`📡 Registering ${commandsJSON.length} commands...`);
 
-client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
   try {
-    await command.execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord);
-    await saveTrainerDataLocal(trainerData);
-    debouncedDiscordSave();
-  } catch (error) {
-    console.error(`❌ ${interaction.commandName}:`, error.message);
-    const reply = { content: "❌ Error", ephemeral: true };
-    if (interaction.deferred || interaction.replied) await interaction.followUp(reply).catch(() => {});
-    else await interaction.reply(reply).catch(() => {});
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: commandsJSON }
+    );
+    console.log(`✅ Successfully registered ${commandsJSON.length} commands`);
+  } catch (err) {
+    console.error("❌ Failed to register commands:", err.message);
   }
+}
+
 });
 
 setInterval(() => saveDataToDiscord(trainerData), AUTOSAVE_INTERVAL);

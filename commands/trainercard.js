@@ -155,45 +155,49 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     await safeReply(interaction, { embeds: [embed], components, files, ephemeral: true });
 
     // ── Collector for buttons ─────────────────────────
-const collector = createSafeCollector(
-  interaction,
-  { 
-    filter: i => i.user.id === interaction.user.id,
-    componentType: ComponentType.Button,
-    time: 120000 
-  },
-  "trainercard"
-);
+    const collector = createSafeCollector(
+      interaction,
+      { 
+        filter: i => i.user.id === interaction.user.id,
+        componentType: ComponentType.Button,
+        time: 120000 
+      },
+      "trainercard"
+    );
 
-collector.on("collect", async i => {
-  if (i.user.id !== interaction.user.id)
-    return safeReply(i, { content: "Not your onboarding!", ephemeral: true });
+    collector.on("collect", async i => {
+      if (i.user.id !== interaction.user.id)
+        return safeReply(i, { content: "Not your onboarding!", ephemeral: true });
 
-  if (i.customId === "next_page" || i.customId === "prev_page") {
-    page += i.customId === "next_page" ? 1 : -1;
-    const { embed: e, components: c, files: f } = await buildPage(page);
-    return await safeReply(i, { embeds: [e], components: c, files: f, ephemeral: true });
-  }
+      if (i.customId === "next_page" || i.customId === "prev_page") {
+        page += i.customId === "next_page" ? 1 : -1;
+        const { embed: e, components: c, files: f } = await buildPage(page);
+        return await safeReply(i, { embeds: [e], components: c, files: f, ephemeral: true });
+      }
 
-  if (i.customId.startsWith("starter_")) {
-    const starterId = parseInt(i.customId.split("_")[1]);
-    const isShiny = rollForShiny(user.tp);
-    user.pokemon[starterId] = { normal: isShiny ? 0 : 1, shiny: isShiny ? 1 : 0 };
-    user.displayedPokemon = [starterId];
-    user.starterPokemon = starterId;
-    await safeReply(i, {
-      content: `✅ You chose **${allPokemon.find(p => p.id === starterId).name}**${isShiny ? " ✨" : ""} as your starter!`,
-      ephemeral: true
+      if (i.customId.startsWith("starter_")) {
+        const starterId = parseInt(i.customId.split("_")[1]);
+        const isShiny = rollForShiny(user.tp);
+        user.pokemon[starterId] = { normal: isShiny ? 0 : 1, shiny: isShiny ? 1 : 0 };
+        user.displayedPokemon = [starterId];
+        user.starterPokemon = starterId;
+        await safeReply(i, {
+          content: `✅ You chose **${allPokemon.find(p => p.id === starterId).name}**${isShiny ? " ✨" : ""} as your starter!`,
+          ephemeral: true
+        });
+        await saveDataToDiscord(trainerData);
+        collector.stop();
+        return await trainerSelection(i, user, trainerData, saveDataToDiscord);
+      }
     });
-    await saveDataToDiscord(trainerData);
-    collector.stop();
-    return await trainerSelection(i, user, trainerData, saveDataToDiscord);
-  }
-});
 
-collector.on("end", async () => {
-  try { await safeReply(interaction, { components: [] }); } catch {}
-});
+    collector.on("end", async () => {
+      try { await safeReply(interaction, { components: [] }); } catch {}
+    });
+  } catch (err) {
+    console.error("starterSelection error:", err);
+    await safeReply(interaction, { content: "❌ Failed to load starter selection.", ephemeral: true });
+  }
 }
 
 
@@ -232,7 +236,7 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
 
   const collector = interaction.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
   collector.on("collect", async i => {
-    if (i.user.id !== interaction.user.id) return safeReply(i, { content: "This isn’t your selection!", ephemeral: true });
+    if (i.user.id !== interaction.user.id) return safeReply(i, { content: "This isn't your selection!", ephemeral: true });
 
     switch (i.customId) {
       case "next_trainer": index = Math.min(index + 1, trainers.length - 1); break;
@@ -508,5 +512,3 @@ export async function handleTrainerCardButtons(interaction, trainerData, saveDat
       await safeReply(interaction, { content: "❌ Unknown button action.", ephemeral: true });
   }
 }
-
-

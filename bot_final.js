@@ -176,23 +176,69 @@ setInterval(() => saveDataToDiscord(trainerData), AUTOSAVE_INTERVAL);
 process.on("SIGINT", async () => { await saveDataToDiscord(trainerData); process.exit(0); });
 process.on("SIGTERM", async () => { await saveDataToDiscord(trainerData); process.exit(0); });
 
+
+//Pokebeach scraping for news
 async function checkPokeBeach() {
   try {
     const newsChannel = await client.channels.fetch(process.env.NEWS_CHANNEL_ID);
+    if (!newsChannel) return console.error("❌ NEWS_CHANNEL_ID invalid or not found.");
+
+    // 1️⃣ Fetch PokéBeach homepage
     const res = await fetch("https://www.pokebeach.com/");
     const html = await res.text();
-    const match = html.match(/<a href="(https:\/\/www\.pokebeach\.com\/\d{4}\/[^"]+)"/);
-    if (match) {
-      const url = match[1];
-      const last = await fs.readFile("./lastArticle.txt", "utf8").catch(() => "");
-      if (last !== url) {
-        await newsChannel.send(`📰 ${url}`);
-        await fs.writeFile("./lastArticle.txt", url);
-      }
+
+    // 2️⃣ Extract latest 3 unique article URLs, titles, and thumbnails
+    const regex = /<a href="(https:\/\/www\.pokebeach\.com\/\d{4}\/[^"]+)"[^>]*>([^<]+)<\/a>[\s\S]*?<img[^>]+src="([^"]+)"/g;
+    const found = [];
+    let match;
+    while ((match = regex.exec(html)) !== null) {
+      const [_, url, title, image] = match;
+      if (!found.some(a => a.url === url)) found.push({ url, title: title.trim(), image });
+      if (found.length >= 3) break;
     }
-  } catch {}
+
+    if (found.length === 0) {
+      console.log("⚠️ No PokéBeach links found.");
+      return;
+    }
+
+    // 3️⃣ Get last 3 messages from the Discord news channel
+    const recentMessages = await newsChannel.messages.fetch({ limit: 3 });
+    const recentContent = recentMessages.map((m) => m.content);
+
+    // 4️⃣ Compare and only post new articles
+    for (const article of found.reverse()) { // oldest first
+      const alreadyPosted = recentContent.some((text) => text.includes(article.url));
+      if (alreadyPosted) {
+        console.log(`⏩ Skipping already posted link: ${article.url}`);
+        continue;
+      }
+
+      const last = await fs.readFile("./lastArticle.txt", "utf8").catch(() => "");
+      if (last === article.url) {
+        console.log(`⏩ Same as last recorded link: ${article.url}`);
+        continue;
+      }
+
+      // ✅ Build an embed with title + image
+      const embed = {
+        title: `📰 ${article.title}`,
+        url: article.url,
+        image: { url: article.image },
+        color: 0x0099ff,
+        footer: { text: "PokéBeach.com • Coop's Collection" }
+      };
+
+      await newsChannel.send({ embeds: [embed] });
+      await fs.writeFile("./lastArticle.txt", article.url);
+      console.log(`✅ Posted new PokéBeach article: ${article.title}`);
+    }
+  } catch (err) {
+    console.error("❌ PokéBeach scrape failed:", err.message);
+  }
 }
-setInterval(checkPokeBeach, 1000 * 60 * 60 * 6);
+
+setInterval(checkPokeBeach, 1000 * 60 * 60 * 3); // every 6 hours
 
 client.on("messageCreate", async msg => {
   if (msg.author.bot) return;

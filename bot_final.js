@@ -117,8 +117,6 @@ async function loadCommands() {
   }
 }
 
-});
-
 setInterval(() => saveDataToDiscord(trainerData), AUTOSAVE_INTERVAL);
 process.on("SIGINT", async () => { await saveDataToDiscord(trainerData); process.exit(0); });
 process.on("SIGTERM", async () => { await saveDataToDiscord(trainerData); process.exit(0); });

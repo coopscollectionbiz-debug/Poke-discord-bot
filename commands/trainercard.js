@@ -302,7 +302,7 @@ export async function showTrainerCard(interaction, user) {
       )
       .setImage(`attachment://team.gif`)
       .setThumbnail(trainerPath)
-      .setFooter({ text: "Coop’s Collection • /trainercard" });
+      .setFooter({ text: "Coop's Collection • /trainercard" });
 
     // === 4️⃣ Action Buttons ================================================
     const row = new ActionRowBuilder().addComponents(

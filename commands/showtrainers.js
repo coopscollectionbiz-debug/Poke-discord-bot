@@ -26,6 +26,7 @@ import { spritePaths } from "../spriteconfig.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { createPaginationButtons } from "../utils/pagination.js";
 import { safeReply } from "../utils/safeReply.js";
+import { createSafeCollector } from "../utils/safeCollector.js";
 
 // ==========================================================
 // 🧩 Command definition
@@ -293,7 +294,8 @@ export default {
     // ==========================================================
     // 🎮 Collector
     // ==========================================================
-    const collector = message.createMessageComponentCollector({ time: 120000 });
+    const collector = createSafeCollector(interaction, { time: 120000 }, "showtrainers");
+
 
     collector.on("collect", async (i) => {
       if (i.user.id !== interaction.user.id)

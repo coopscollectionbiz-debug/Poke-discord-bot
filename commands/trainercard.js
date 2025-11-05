@@ -20,6 +20,8 @@ import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { safeReply } from "../utils/safeReply.js";
 import path from "path";
 import { combineGifsHorizontal } from "../utils/gifComposer.js";
+import { createSafeCollector } from "../utils/safeCollector.js";
+
 
 // ===========================================================
 // SLASH COMMAND
@@ -153,9 +155,8 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     await safeReply(interaction, { embeds: [embed], components, files, ephemeral: true });
 
     // ── Collector for buttons ─────────────────────────
-    const collector = interaction.channel.createMessageComponentCollector({
-      componentType: ComponentType.Button,
-      time: 60000
+    const collector = createSafeCollector(interaction, { filter: i => i.user.id === interaction.user.id, time: 120000 }, "trainercard")
+
     });
 
     collector.on("collect", async i => {

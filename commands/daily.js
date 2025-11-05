@@ -16,6 +16,7 @@ import {
   createChoiceMenu,
 } from "../utils/embedBuilders.js";
 import { safeReply } from "../utils/safeReply.js";
+import { createSafeCollector } from "../utils/safeCollector.js";
 
 // ==========================================================
 // ⚖️ Constants
@@ -71,10 +72,14 @@ export default {
     });
 
     // 🎮 Selection handler
-    const collector = interaction.channel.createMessageComponentCollector({
-      filter: (i) => i.user.id === id,
-      time: 120000,
-    });
+    const collector = createSafeCollector(
+  interaction,
+  {
+    filter: i => i.user.id === id,
+    time: 120000 // 2-minute window for claiming
+  },
+  "daily" // This is your restart command name
+);
 
     collector.on("collect", async (i) => {
       collector.stop();

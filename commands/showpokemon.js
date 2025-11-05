@@ -15,6 +15,7 @@ import { spritePaths } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { createPaginationButtons, calculateTotalPages, getPage } from "../utils/pagination.js";
 import { safeReply } from "../utils/safeReply.js";
+import { createSafeCollector } from "../utils/safeCollector.js";
 
 // =============================================
 // SLASH COMMAND DEFINITION
@@ -147,10 +148,11 @@ export async function execute(interaction, trainerData) {
   // =============================================
   // COLLECTOR
   // =============================================
-  const collector = msg.createMessageComponentCollector({
-    componentType: ComponentType.Button,
-    time: 120000
-  });
+  const collector = createSafeCollector(
+  interaction,
+  { componentType: ComponentType.Button, time: 120000 },
+  "showpokemon"
+);
 
   collector.on("collect", async (i) => {
     if (i.user.id !== userId)

@@ -21,35 +21,9 @@ import {
   ButtonBuilder,
   ButtonStyle
 } from "discord.js";
-import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js";
-
-// ==========================================================
-// 🧠 Load trainer sprite dataset safely
-// ==========================================================
-const trainerSprites = JSON.parse(
-  await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
-);
-
-// Flatten nested JSON structure for easy filtering
-function flattenTrainerSprites(json) {
-  const flat = [];
-  for (const [className, entries] of Object.entries(json)) {
-    for (const entry of entries) {
-      if (typeof entry === "string") {
-        flat.push({ name: className, sprite: entry, rarity: "common" });
-      } else if (entry?.file && !entry.disabled) {
-        flat.push({
-          name: className,
-          sprite: entry.file,
-          rarity: entry.rarity || "common"
-        });
-      }
-    }
-  }
-  return flat;
-}
-const flatTrainers = flattenTrainerSprites(trainerSprites);
+import { getFlattenedTrainers } from "../utils/dataLoader.js";
+import { createPaginationButtons } from "../utils/pagination.js";
 
 // ==========================================================
 // 🧩 Command definition
@@ -100,6 +74,9 @@ export default {
     const owned = user.trainers || {};
     const rarityFilter = interaction.options.getString("rarity")?.toLowerCase() || "all";
     const ownedFilter = interaction.options.getString("owned")?.toLowerCase() || "owned";
+
+    // Get flattened trainers using helper
+    const flatTrainers = await getFlattenedTrainers();
 
     // ==========================================================
     // 🧮 Group trainers by class

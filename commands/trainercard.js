@@ -183,19 +183,19 @@ async function renderTrainerCard(userData, username, avatarURL) {
 }
 
 // ===========================================================
-// 🧩 ONBOARDING FLOW — STARTER SELECTION (with colorful canvas)
+// 🌟 STARTER SELECTION — HYBRID (Canvas + Animated GIFs)
 // ===========================================================
 
-// Starter Pokémon IDs (Gen 1–5)
+// Starter Pokémon IDs (Gen 1 – 5)
 const starterIDs = [
-  1, 4, 7,          // Gen 1
-  152, 155, 158,    // Gen 2
-  252, 255, 258,    // Gen 3
-  387, 390, 393,    // Gen 4
-  495, 498, 501     // Gen 5
+  1, 4, 7,
+  152, 155, 158,
+  252, 255, 258,
+  387, 390, 393,
+  495, 498, 501
 ];
 
-// 🖌️ Type color map for themed backgrounds
+// Background gradients per type
 const typeColors = {
   Grass: ["#a8e6cf", "#56ab2f"],
   Fire:  ["#ffb88c", "#de6262"],
@@ -204,64 +204,30 @@ const typeColors = {
   Normal: ["#fdfbfb", "#ebedee"]
 };
 
-// 🖼️ Canvas renderer for type selection pages
-async function renderStarterTypeCanvas(typeName, starters) {
-  const width = 110 * starters.length + 100;
-  const height = 320;
+// Canvas header with gradient + title only
+async function renderStarterTypeCanvas(typeName) {
+  const width = 960;
+  const height = 200;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // Background gradient based on type
-  const [color1, color2] = typeColors[typeName] || typeColors.Normal;
-  const gradient = ctx.createLinearGradient(0, 0, 0, height);
-  gradient.addColorStop(0, color1);
-  gradient.addColorStop(1, color2);
-  ctx.fillStyle = gradient;
+  const [c1, c2] = typeColors[typeName] || typeColors.Normal;
+  const grad = ctx.createLinearGradient(0, 0, 0, height);
+  grad.addColorStop(0, c1);
+  grad.addColorStop(1, c2);
+  ctx.fillStyle = grad;
   ctx.fillRect(0, 0, width, height);
 
-  // Title
-  ctx.font = "bold 36px Sans";
-  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 40px Sans";
+  ctx.fillStyle = "#fff";
   ctx.textAlign = "center";
   ctx.shadowColor = "rgba(0,0,0,0.4)";
-  ctx.shadowBlur = 6;
-  ctx.fillText(`${typeName} Starters`, width / 2, 55);
+  ctx.shadowBlur = 8;
+  ctx.fillText(`${typeName} Starters`, width / 2, 115);
   ctx.shadowBlur = 0;
 
-  // Draw Pokémon row
-  const baseY = 100;
-  const spacing = 180;
-  const startX = width / 2 - (spacing * (starters.length - 1)) / 2;
-
-  for (let i = 0; i < starters.length; i++) {
-    const p = starters[i];
-    const x = startX + i * spacing;
-
-    try {
-      const img = await loadImage(`${spritePaths.pokemon}${p.id}.gif`);
-      const scale = Math.min(96 / img.width, 96 / img.height);
-      const w = img.width * scale;
-      const h = img.height * scale;
-      ctx.drawImage(img, x - w / 2, baseY, w, h);
-
-      // Name under sprite
-      ctx.font = "bold 22px Sans";
-      ctx.fillStyle = "#fff";
-      ctx.textAlign = "center";
-      ctx.strokeStyle = "rgba(0,0,0,0.6)";
-      ctx.lineWidth = 4;
-      ctx.strokeText(p.name, x, baseY + h + 35);
-      ctx.fillText(p.name, x, baseY + h + 35);
-    } catch {
-      ctx.fillStyle = "#000";
-      ctx.textAlign = "center";
-      ctx.fillText("?", x, baseY + 60);
-    }
-  }
-
-  // Frame
   ctx.strokeStyle = "#fff";
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 4;
   ctx.strokeRect(0, 0, width, height);
 
   return canvas;
@@ -271,39 +237,42 @@ async function starterSelection(interaction, user, trainerData, saveDataToDiscor
   try {
     const allPokemon = await getAllPokemon();
     const starters = allPokemon.filter(p => starterIDs.includes(p.id));
-    const grouped = {};
 
+    // Group by primary type (Grass = 12, Fire = 10, Water = 11)
+    const grouped = {};
     for (const p of starters) {
-      const type = p.types?.[0];
-      if (!grouped[type]) grouped[type] = [];
-      grouped[type].push(p);
+      const t = p.types?.[0];
+      if (!grouped[t]) grouped[t] = [];
+      grouped[t].push(p);
     }
 
-    // Sort order: Grass → Fire → Water
-    const typeOrder = [12, 10, 11];
+    const order = [12, 10, 11];
     const sortedTypes = Object.keys(grouped)
       .map(Number)
-      .sort((a, b) => (typeOrder.indexOf(a) + 1 || 99) - (typeOrder.indexOf(b) + 1 || 99));
+      .sort((a, b) => order.indexOf(a) - order.indexOf(b));
 
+    // Build each page (header + animated sprites)
     const buildPage = async index => {
       const typeId = sortedTypes[index];
       const typeName = typeMap[typeId];
-      const typeStarters = grouped[typeId];
+      const list = grouped[typeId];
 
-      // Render themed canvas
-      const canvas = await renderStarterTypeCanvas(typeName, typeStarters);
+      // Header canvas
+      const canvas = await renderStarterTypeCanvas(typeName);
       const buffer = await canvas.encode("png");
-      const attachment = new AttachmentBuilder(buffer, { name: `${typeName.toLowerCase()}_starters.png` });
+      const headerAttachment = new AttachmentBuilder(buffer, { name: `${typeName}.png` });
 
+      // Embed with header
       const embed = new EmbedBuilder()
-        .setTitle(`🌱 Choose Your Starter Pokémon`)
-        .setDescription(`**Type:** ${typeName}\nClick below to select your starter.`)
+        .setTitle(`🌟 Choose Your Starter Pokémon`)
+        .setDescription(`**Type:** ${typeName}\nClick a button below to choose your Pokémon!`)
         .setColor(0x43b581)
-        .setImage(`attachment://${typeName.toLowerCase()}_starters.png`)
+        .setImage(`attachment://${typeName}.png`)
         .setFooter({ text: `Page ${index + 1}/${sortedTypes.length}` });
 
+      // Buttons for each Pokémon
       const row1 = new ActionRowBuilder().addComponents(
-        typeStarters.map(p =>
+        list.map(p =>
           new ButtonBuilder()
             .setCustomId(`starter_${p.id}`)
             .setLabel(p.name)
@@ -311,18 +280,27 @@ async function starterSelection(interaction, user, trainerData, saveDataToDiscor
         )
       );
 
+      // Page navigation
       const row2 = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId("prev_page").setEmoji("⬅️").setStyle(ButtonStyle.Secondary).setDisabled(index === 0),
         new ButtonBuilder().setCustomId("next_page").setEmoji("➡️").setStyle(ButtonStyle.Secondary).setDisabled(index === sortedTypes.length - 1)
       );
 
-      return { embed, components: [row1, row2], files: [attachment] };
+      // Attach animated GIFs separately
+      const gifFiles = list.map(p => ({
+        attachment: `${spritePaths.pokemon}${p.id}.gif`,
+        name: `${p.name}.gif`
+      }));
+
+      return { embed, components: [row1, row2], files: [headerAttachment, ...gifFiles] };
     };
 
+    // ── Display first page ───────────────────────────────────────────────
     let page = 0;
     const { embed, components, files } = await buildPage(page);
     await safeReply(interaction, { embeds: [embed], components, files, ephemeral: true });
 
+    // ── Collector for buttons ────────────────────────────────────────────
     const collector = interaction.channel.createMessageComponentCollector({
       componentType: ComponentType.Button,
       time: 60000
@@ -358,11 +336,12 @@ async function starterSelection(interaction, user, trainerData, saveDataToDiscor
       try { await safeReply(interaction, { components: [] }); } catch {}
     });
 
-  } catch (e) {
-    console.error("starterSelection failed:", e);
+  } catch (err) {
+    console.error("starterSelection failed:", err);
     await safeReply(interaction, { content: "❌ Failed to load starter Pokémon. Try again.", ephemeral: true });
   }
 }
+
 
 // ===========================================================
 // TRAINER SELECTION (refactored with safeReply)

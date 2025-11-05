@@ -11,18 +11,9 @@ import {
   ButtonStyle,
   ComponentType
 } from "discord.js";
-import fs from "fs/promises";
-import { spritePaths } from "../spriteconfig.js"; // ✅ unified sprite configuration
-
-// =============================================
-// SAFE JSON LOADERS
-// =============================================
-const pokemonData = JSON.parse(
-  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
-);
-
-// ✅ Make iterable
-const allPokemon = Object.values(pokemonData);
+import { spritePaths } from "../spriteconfig.js";
+import { getAllPokemon } from "../utils/dataLoader.js";
+import { createPaginationButtons, calculateTotalPages, getPage } from "../utils/pagination.js";
 
 // =============================================
 // SLASH COMMAND DEFINITION
@@ -78,8 +69,9 @@ export async function execute(interaction, trainerData) {
   await interaction.deferReply({ ephemeral: true });
 
   // =============================================
-  // FILTER DATA
+  // FILTER DATA - Using helper for Pokemon data
   // =============================================
+  const allPokemon = await getAllPokemon();
   let filtered = [...allPokemon];
   if (filterRarity)
     filtered = filtered.filter(
@@ -99,14 +91,14 @@ export async function execute(interaction, trainerData) {
   }
 
   // =============================================
-  // PAGINATION SETUP
+  // PAGINATION SETUP - Using helpers
   // =============================================
   const pageSize = 15;
   let page = 0;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const totalPages = calculateTotalPages(filtered, pageSize);
 
   const renderPage = () => {
-    const slice = filtered.slice(page * pageSize, page * pageSize + pageSize);
+    const slice = getPage(filtered, page, pageSize);
     const rows = slice.map((p) => {
       const ownedData = owned[p.id];
       const normalCount = ownedData?.normal || 0;
@@ -129,22 +121,7 @@ export async function execute(interaction, trainerData) {
         text: `Owned: ${ownedCount} • Shiny: ${shinyCount} • Filter: ${filterRarity || "All"}`
       });
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("prev_page")
-        .setEmoji("⬅️")
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(page === 0),
-      new ButtonBuilder()
-        .setCustomId("next_page")
-        .setEmoji("➡️")
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(page + 1 >= totalPages),
-      new ButtonBuilder()
-        .setCustomId("close_list")
-        .setLabel("Close")
-        .setStyle(ButtonStyle.Danger)
-    );
+    const row = createPaginationButtons(page, totalPages, true);
 
     const pokedexRow = new ActionRowBuilder();
     slice.slice(0, 5).forEach((p) => {
@@ -190,7 +167,7 @@ export async function execute(interaction, trainerData) {
     }
 
     // CLOSE LIST
-    if (i.customId === "close_list") {
+    if (i.customId === "close") {
       collector.stop("closed");
       return i.update({
         content: "Pokémon list closed.",

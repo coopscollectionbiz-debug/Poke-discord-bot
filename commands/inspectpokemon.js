@@ -1,21 +1,12 @@
 // ==========================================================
 // inspectpokemon.js — Inspect details about a specific Pokémon
-// Coop’s Collection Discord Bot
+// Coop's Collection Discord Bot
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
-import fs from "fs/promises";
-import { spritePaths } from "../spriteconfig.js"; // ✅ Use hosted URLs
-
-// ==========================================================
-// 📦 Safe JSON load (Render-compatible, no assert { type: "json" })
-// ==========================================================
-const pokemonData = JSON.parse(
-  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
-);
-
-// ✅ Convert object → array for iteration
-const allPokemon = Object.values(pokemonData);
+import { spritePaths } from "../spriteconfig.js";
+import { findPokemonByName } from "../utils/dataLoader.js";
+import { validateNameQuery } from "../utils/validators.js";
 
 // ==========================================================
 // 🧩 Command definition
@@ -34,16 +25,18 @@ export default {
   async execute(interaction) {
     await interaction.deferReply({ flags: 64 });
 
-    const input = interaction.options.getString("name").trim().toLowerCase();
+    const input = interaction.options.getString("name").trim();
 
-    // ✅ Use allPokemon for lookups
-    const pokemon =
-      allPokemon.find(
-        p =>
-          p.name.toLowerCase() === input ||
-          p.id.toString() === input ||
-          (p.aliases && p.aliases.map(a => a.toLowerCase()).includes(input))
-      ) || null;
+    // Validate input
+    const validation = validateNameQuery(input);
+    if (!validation.valid) {
+      return interaction.editReply({
+        content: `❌ ${validation.error}`,
+      });
+    }
+
+    // Use helper to find Pokemon
+    const pokemon = await findPokemonByName(validation.sanitized);
 
     if (!pokemon) {
       return interaction.editReply({

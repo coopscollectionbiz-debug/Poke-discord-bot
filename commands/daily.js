@@ -4,57 +4,24 @@
 // ==========================================================
 import {
   SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  StringSelectMenuBuilder
+  ActionRowBuilder
 } from "discord.js";
-import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
+import { ensureUserData } from "../utils/trainerDataHelper.js";
+import { validateCooldown } from "../utils/validators.js";
+import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
+import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
+import { 
+  createSuccessEmbed, 
+  createPokemonRewardEmbed, 
+  createTrainerRewardEmbed,
+  createChoiceMenu 
+} from "../utils/embedBuilders.js";
 
 // ==========================================================
-// 📦 Load core datasets
+// ⚖️ Constants
 // ==========================================================
-const pokemonData = JSON.parse(
-  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
-);
-const trainerSprites = JSON.parse(
-  await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
-);
-
-// ✅ Iterable Pokémon + flattened trainers
-const allPokemon = Object.values(pokemonData);
-const flatTrainers = Object.entries(trainerSprites).flatMap(([name, variants]) =>
-  variants
-    .filter(v => typeof v === "string" || (v.file && !v.disabled))
-    .map(v => ({
-      name,
-      filename: typeof v === "string" ? v : v.file,
-      rarity: v.rarity || "common"
-    }))
-);
-
-// ==========================================================
-// ⚖️ Weight tables & constants
-// ==========================================================
-const POKEMON_RARITY_WEIGHTS = {
-  common: 60,
-  uncommon: 24,
-  rare: 10,
-  epic: 4,
-  legendary: 1.5,
-  mythic: 0.5
-};
-
-const TRAINER_RARITY_WEIGHTS = {
-  common: 65,
-  uncommon: 22,
-  rare: 8,
-  epic: 3,
-  legendary: 1,
-  mythic: 1
-};
-
 const DAILY_COOLDOWN_MS = 1000 * 60 * 60 * 24;
 const DAILY_TP_REWARD = 50;
 const DAILY_CC_REWARD = 25;
@@ -67,25 +34,17 @@ export default {
     .setName("daily")
     .setDescription("Claim your daily TP, CC, and choose a random reward!"),
 
-  async execute(interaction, trainerData, saveTrainerData) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
     const id = interaction.user.id;
 
-    // Initialize schema
-    trainerData[id] ??= {
-      tp: 0,
-      cc: 0,
-      pokemon: {},
-      trainers: {},
-      lastDaily: 0
-    };
-    const user = trainerData[id];
+    // Initialize schema using helper
+    const user = ensureUserData(trainerData, id, interaction.user.username);
 
-    // 🕒 Cooldown check
-    const now = Date.now();
-    if (now - (user.lastDaily || 0) < DAILY_COOLDOWN_MS) {
-      const next = new Date(user.lastDaily + DAILY_COOLDOWN_MS);
+    // 🕒 Cooldown check using validator
+    const cooldownCheck = validateCooldown(user.lastDaily, DAILY_COOLDOWN_MS);
+    if (!cooldownCheck.valid) {
       return interaction.reply({
-        content: `⏰ You already claimed today’s reward!\nNext reset: **${next.toLocaleString()}**`,
+        content: cooldownCheck.error,
         ephemeral: true
       });
     }
@@ -93,24 +52,23 @@ export default {
     // 💰 Grant TP + CC
     user.tp += DAILY_TP_REWARD;
     user.cc += DAILY_CC_REWARD;
-    user.lastDaily = now;
+    user.lastDaily = Date.now();
     await saveTrainerData(trainerData);
 
-    // 🎁 Prompt for bonus
-    const menu = new StringSelectMenuBuilder()
-      .setCustomId("daily_type")
-      .setPlaceholder("Choose your bonus!")
-      .addOptions(
+    // 🎁 Prompt for bonus using UI builder
+    const menu = createChoiceMenu(
+      "daily_type",
+      "Choose your bonus!",
+      [
         { label: "Pokémon", value: "pokemon", emoji: "🐾" },
         { label: "Trainer", value: "trainer", emoji: "🎓" }
-      );
+      ]
+    );
 
-    const embed = new EmbedBuilder()
-      .setColor(0x00ae86)
-      .setTitle("🎁 Daily Claimed!")
-      .setDescription(
-        `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**.\nChoose your bonus:`
-      );
+    const embed = createSuccessEmbed(
+      "🎁 Daily Claimed!",
+      `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**.\nChoose your bonus:`
+    );
 
     await interaction.reply({
       embeds: [embed],
@@ -136,7 +94,7 @@ export default {
     collector.on("end", async (_, reason) => {
       if (reason === "time") {
         await interaction.editReply({
-          content: "⌛ Time’s up — try again later!",
+          content: "⌛ Time's up — try again later!",
           embeds: [],
           components: []
         }).catch(() => {});
@@ -146,24 +104,12 @@ export default {
 };
 
 // ==========================================================
-// 🎲 Weighted random helper
-// ==========================================================
-function weightedRandomChoice(list, weights) {
-  const bag = [];
-  for (const item of list) {
-    const rarity = item.rarity?.toLowerCase() || "common";
-    const weight = weights[rarity] || 1;
-    for (let n = 0; n < Math.round(weight); n++) bag.push(item);
-  }
-  return bag[Math.floor(Math.random() * bag.length)];
-}
-
-// ==========================================================
-// 🐾 Pokémon reward
+// 🐾 Pokémon reward - Refactored to use helpers
 // ==========================================================
 async function giveRandomPokemon(i, user, trainerData, saveTrainerData) {
+  const allPokemon = await getAllPokemon();
   const pool = allPokemon.filter(p => p.generation <= 5);
-  const pick = weightedRandomChoice(pool, POKEMON_RARITY_WEIGHTS);
+  const pick = selectRandomPokemon(pool);
   const shiny = rollForShiny(user.tp);
 
   const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
@@ -172,41 +118,24 @@ async function giveRandomPokemon(i, user, trainerData, saveTrainerData) {
 
   await saveTrainerData(trainerData);
 
-  await i.update({
-    embeds: [
-      new EmbedBuilder()
-        .setColor(shiny ? 0xffd700 : 0x00ae86)
-        .setTitle("🎁 Pokémon Reward!")
-        .setDescription(
-          shiny
-            ? `✨ You obtained a **Shiny ${pick.name}!**`
-            : `You obtained a **${pick.name}!**`
-        )
-        .setThumbnail(
-          `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pick.id}.gif`
-        )
-    ],
-    components: []
-  });
+  const spriteUrl = `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pick.id}.gif`;
+  const embed = createPokemonRewardEmbed(pick, shiny, spriteUrl);
+
+  await i.update({ embeds: [embed], components: [] });
 }
 
 // ==========================================================
-// 🎓 Trainer reward
+// 🎓 Trainer reward - Refactored to use helpers
 // ==========================================================
 async function giveRandomTrainer(i, user, trainerData, saveTrainerData) {
-  const pick = weightedRandomChoice(flatTrainers, TRAINER_RARITY_WEIGHTS);
+  const flatTrainers = await getFlattenedTrainers();
+  const pick = selectRandomTrainer(flatTrainers);
   user.trainers[pick.filename] = (user.trainers[pick.filename] || 0) + 1;
 
   await saveTrainerData(trainerData);
 
-  await i.update({
-    embeds: [
-      new EmbedBuilder()
-        .setColor(0x5865f2)
-        .setTitle("🎁 Trainer Reward!")
-        .setDescription(`You unlocked **${pick.name}**!`)
-        .setThumbnail(`${spritePaths.trainers}${pick.filename}`)
-    ],
-    components: []
-  });
+  const spriteUrl = `${spritePaths.trainers}${pick.filename}`;
+  const embed = createTrainerRewardEmbed(pick, spriteUrl);
+
+  await i.update({ embeds: [embed], components: [] });
 }

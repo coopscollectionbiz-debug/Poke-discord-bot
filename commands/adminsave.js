@@ -3,6 +3,7 @@
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { handleCommandError } from "../utils/errorHandler.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -16,13 +17,13 @@ export default {
   // ==========================================================
   // ⚙️ Command Execution
   // ==========================================================
-  async execute(interaction, trainerData, saveTrainerData, saveDataToDiscord) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
     await interaction.deferReply({ ephemeral: true });
 
     try {
       // Run both save systems (local + Discord storage channel)
-      if (typeof saveTrainerData === "function") {
-        await saveTrainerData(trainerData);
+      if (typeof saveTrainerDataLocal === "function") {
+        await saveTrainerDataLocal(trainerData);
       }
 
       if (typeof saveDataToDiscord === "function") {
@@ -38,10 +39,7 @@ export default {
       await interaction.editReply({ embeds: [embed] });
       console.log(`✅ Admin save executed by ${interaction.user.username}`);
     } catch (err) {
-      console.error("❌ Adminsave failed:", err);
-      await interaction.editReply({
-        content: "❌ An error occurred while saving trainer data. Check logs."
-      });
+      await handleCommandError(err, interaction, "adminsave");
     }
   }
 };

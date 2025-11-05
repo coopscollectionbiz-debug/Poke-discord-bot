@@ -10,44 +10,11 @@ import {
   ButtonBuilder,
   ButtonStyle
 } from "discord.js";
-import fs from "fs/promises";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
-
-// ==========================================================
-// 📦 Load Pokémon + Trainer data safely
-// ==========================================================
-const pokemonData = JSON.parse(
-  await fs.readFile(new URL("../pokemonData.json", import.meta.url))
-);
-const trainerSprites = JSON.parse(
-  await fs.readFile(new URL("../trainerSprites.json", import.meta.url))
-);
-
-// ✅ Convert datasets to iterable arrays
-const allPokemon = Object.values(pokemonData);
-const allTrainers = Object.values(trainerSprites);
-
-// ==========================================================
-// ⚖️ Rarity Weight Distributions
-// ==========================================================
-const POKEMON_RARITY_WEIGHTS = {
-  common: 60,
-  uncommon: 24,
-  rare: 10,
-  epic: 4,
-  legendary: 1.5,
-  mythic: 0.5
-};
-
-const TRAINER_RARITY_WEIGHTS = {
-  common: 65,
-  uncommon: 22,
-  rare: 8,
-  epic: 3,
-  legendary: 1,
-  mythic: 1
-};
+import { ensureUserData } from "../utils/trainerDataHelper.js";
+import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
+import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -57,13 +24,12 @@ export default {
     .setName("recruit")
     .setDescription("Recruit a Pokémon or Trainer!"),
 
-  async execute(interaction, trainerData, saveTrainerData) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
     await interaction.deferReply({ flags: 64 });
     const id = interaction.user.id;
 
-    // ✅ Initialize user schema if missing
-    trainerData[id] ??= { tp: 0, cc: 0, pokemon: {}, trainers: {} };
-    const user = trainerData[id];
+    // ✅ Initialize user schema if missing using helper
+    const user = ensureUserData(trainerData, id, interaction.user.username);
 
     // ==========================================================
     // 🎮 Recruitment menu UI
@@ -136,24 +102,12 @@ export default {
 };
 
 // ==========================================================
-// 🎲 Weighted random helper
-// ==========================================================
-function weightedRandomChoice(list, weights) {
-  const bag = [];
-  for (const item of list) {
-    const rarity = item.rarity?.toLowerCase() || "common";
-    const weight = weights[rarity] || 1;
-    for (let n = 0; n < Math.round(weight); n++) bag.push(item);
-  }
-  return bag[Math.floor(Math.random() * bag.length)];
-}
-
-// ==========================================================
-// 🐾 Pokémon Recruitment
+// 🐾 Pokémon Recruitment - Refactored to use helpers
 // ==========================================================
 async function recruitPokemon(i, user, trainerData, saveTrainerData) {
+  const allPokemon = await getAllPokemon();
   const pool = allPokemon.filter(p => p.generation <= 5);
-  const pick = weightedRandomChoice(pool, POKEMON_RARITY_WEIGHTS);
+  const pick = selectRandomPokemon(pool);
 
   const shiny = rollForShiny(user.tp);
   const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
@@ -181,10 +135,11 @@ async function recruitPokemon(i, user, trainerData, saveTrainerData) {
 }
 
 // ==========================================================
-// 🎓 Trainer Recruitment
+// 🎓 Trainer Recruitment - Refactored to use helpers
 // ==========================================================
 async function recruitTrainer(i, user, trainerData, saveTrainerData) {
-  const pick = weightedRandomChoice(allTrainers, TRAINER_RARITY_WEIGHTS);
+  const flatTrainers = await getFlattenedTrainers();
+  const pick = selectRandomTrainer(flatTrainers);
   const file = pick.filename || pick.file;
 
   user.trainers[file] = (user.trainers[file] || 0) + 1;

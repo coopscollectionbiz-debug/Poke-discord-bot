@@ -16,7 +16,9 @@ tmp/
 Thumbs.db
 
 # Local training data / backups
+trainerData.json
 trainerData_backup*.json
+trainerData.backup.*.json
 *.zip
 
 # keep sprites folder in deploys

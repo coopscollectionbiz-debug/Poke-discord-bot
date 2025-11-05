@@ -84,7 +84,7 @@ const starterIDs = [
 export async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
   try {
     const allPokemon = await getAllPokemon();
-    const starters = allPokemon.filter(p => starterIDs.includes(p.id));
+    const starters = allPokemon.filter(p => starterIDs.includes(Number(p.id)));
 
     // Group starters by primary type
     const grouped = {};

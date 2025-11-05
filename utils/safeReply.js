@@ -17,7 +17,7 @@
 export async function safeReply(interaction, options = {}, editIfReplied = false) {
   try {
     if (!interaction || typeof interaction !== "object") {
-      console.warn(⚠️ safeReply called without valid interaction.");
+      console.warn("⚠️ safeReply called without valid interaction.");
       return;
     }
 

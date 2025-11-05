@@ -19,6 +19,44 @@ import { getRank, getRankTiers } from "../utils/rankSystem.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
 
 // ================================
+// SLASH COMMAND
+// ================================
+export default {
+  data: new SlashCommandBuilder()
+    .setName("trainercard")
+    .setDescription("View or create your Trainer Card!"),
+
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+    const userId = interaction.user.id;
+    const username = interaction.user.username;
+    let user = trainerData[userId];
+
+    // Create schema if missing
+    if (!user) {
+      user = trainerData[userId] = {
+        id: userId,
+        name: username,
+        cc: 0,
+        tp: 0,
+        rank: "Novice Trainer",
+        trainers: {},
+        pokemon: {},
+        displayedPokemon: [],
+        displayedTrainer: null
+      };
+    }
+
+    // Run onboarding if incomplete
+    if (!user.onboardingComplete) {
+      return starterSelection(interaction, user, trainerData, saveDataToDiscord);
+    }
+
+    // Otherwise, show the card
+    await showTrainerCard(interaction, user);
+  }
+};
+
+// ================================
 // TYPE MAP
 // ================================
 const typeMap = {
@@ -34,35 +72,31 @@ const typeMap = {
 async function renderTrainerCard(userData, username, avatarURL) {
   const canvas = createCanvas(900, 500);
   const ctx = canvas.getContext("2d");
-  
-  // Load data using cached helpers
+
   const allPokemon = await getAllPokemon();
-  const pokemonData = await loadPokemonData();
   const rankTiers = getRankTiers();
 
-  // === BACKGROUND ===
+  // === Background ===
   const gradient = ctx.createLinearGradient(0, 0, 0, 500);
   gradient.addColorStop(0, "#fafafa");
   gradient.addColorStop(1, "#e8e8e8");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 900, 500);
 
-  // === HEADER BAR ===
+  // === Header ===
   ctx.fillStyle = "#222";
   ctx.fillRect(0, 0, 900, 60);
   ctx.font = "bold 28px Sans";
   ctx.fillStyle = "#ffcb05";
   ctx.fillText(`${username}'s Trainer Card`, 30, 40);
 
-  // === USER AVATAR (draw AFTER header) ===
+  // === Avatar ===
   if (avatarURL) {
     try {
       const avatarImg = await loadImage(avatarURL);
       const size = 64;
       const x = 900 - size - 30;
       const y = -13;
-      ctx.lineWidth = 4;
-
       ctx.save();
       ctx.beginPath();
       ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
@@ -70,8 +104,6 @@ async function renderTrainerCard(userData, username, avatarURL) {
       ctx.clip();
       ctx.drawImage(avatarImg, x, y, size, size);
       ctx.restore();
-
-      // Outline ring
       ctx.strokeStyle = "#ffcb05";
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -82,7 +114,7 @@ async function renderTrainerCard(userData, username, avatarURL) {
     }
   }
 
-  // === TRAINER SPRITE ===
+  // === Trainer Sprite ===
   const trainerX = 60, trainerY = 120;
   if (userData.displayedTrainer) {
     try {
@@ -101,7 +133,7 @@ async function renderTrainerCard(userData, username, avatarURL) {
     ctx.fillText("No Trainer Selected", trainerX, trainerY + 120);
   }
 
-  // === POKÉMON GRID ===
+  // === Pokémon Grid ===
   const gridStartX = 330;
   const gridStartY = 140;
   const slot = 110;
@@ -125,7 +157,6 @@ async function renderTrainerCard(userData, username, avatarURL) {
       const isShiny = record?.shiny > 0;
       const base = isShiny ? spritePaths.shiny : spritePaths.pokemon;
       const img = await loadImage(`${base}${id}.gif`);
-
       const scale = Math.min(slot * 0.9 / img.width, slot * 0.9 / img.height);
       const w = img.width * scale;
       const h = img.height * scale;
@@ -139,33 +170,30 @@ async function renderTrainerCard(userData, username, avatarURL) {
     }
   }
 
-  // === STATS BOX ===
+  // === Stats Box ===
   const rank = getRank(userData.tp);
   const pokemonOwned = Object.keys(userData.pokemon || {}).length;
   const shinyCount = Object.values(userData.pokemon || {}).filter((p) => p.shiny > 0).length;
   const trainerCount = Object.keys(userData.trainers || {}).length;
 
-  const statsX = 60;
-  const statsY = 410;
-
   ctx.fillStyle = "#333";
   ctx.font = "bold 20px Sans";
-  ctx.fillText(`Rank: ${rank}`, statsX, statsY);
+  ctx.fillText(`Rank: ${rank}`, 60, 410);
   ctx.font = "18px Sans";
-  ctx.fillText(`TP: ${userData.tp} | CC: ${userData.cc || 0}`, statsX, statsY + 25);
+  ctx.fillText(`TP: ${userData.tp} | CC: ${userData.cc || 0}`, 60, 435);
   ctx.fillText(
     `Pokémon: ${pokemonOwned} | Shiny: ${shinyCount} | Trainers: ${trainerCount}`,
-    statsX,
-    statsY + 50
+    60,
+    460
   );
 
-  // === BORDER ===
   ctx.strokeStyle = "#333";
   ctx.lineWidth = 4;
   ctx.strokeRect(0, 0, 900, 500);
 
   return canvas;
 }
+
 // ================================
 // ONBOARDING HELPERS
 // ================================
@@ -520,39 +548,7 @@ const canvas = await renderTrainerCard(user, username, avatarURL);
     });
   }
 }
-// ================================
-// SLASH COMMAND EXECUTION
-// ================================
-export default {
-  data: new SlashCommandBuilder()
-    .setName("trainercard")
-    .setDescription("View or create your Trainer Card!"),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-    const userId = interaction.user.id;
-    const username = interaction.user.username;
-    let user = trainerData[userId];
-
-    if (!user) {
-      user = trainerData[userId] = {
-        id: userId,
-        name: username,
-        cc: 0,
-        tp: 0,
-        rank: "Novice Trainer",
-        trainers: {},
-        pokemon: {},
-        displayedPokemon: [],
-        displayedTrainer: null,
-      };
-    }
-
-    if (!user.onboardingComplete) {
-      return starterSelection(interaction, user, trainerData, saveDataToDiscord);
-    }
-
-    await showTrainerCard(interaction, user);
-  },
 };
 // ================================
 // CHANGE TRAINER HANDLER

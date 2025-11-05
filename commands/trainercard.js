@@ -549,7 +549,6 @@ const canvas = await renderTrainerCard(user, username, avatarURL);
   }
 }
 
-};
 // ================================
 // CHANGE TRAINER HANDLER
 // ================================

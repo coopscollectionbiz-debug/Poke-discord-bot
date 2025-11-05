@@ -194,6 +194,7 @@ collector.on("collect", async i => {
 collector.on("end", async () => {
   try { await safeReply(interaction, { components: [] }); } catch {}
 });
+}
 
 
 // ===========================================================

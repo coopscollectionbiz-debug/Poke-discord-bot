@@ -18,6 +18,9 @@ import { loadPokemonData, loadTrainerSprites, getAllPokemon } from "../utils/dat
 import { getRank, getRankTiers } from "../utils/rankSystem.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { safeReply } from "../utils/safeReply.js";
+import path from "path";
+import { combineGifsHorizontal } from "../utils/gifComposer.js";
+import { getAllPokemon } from "../utils/dataLoader.js";
 
 // ===========================================================
 // SLASH COMMAND
@@ -65,135 +68,9 @@ const typeMap = {
 };
 
 // ===========================================================
-// CANVAS RENDERER
-// ===========================================================
-async function renderTrainerCard(userData, username, avatarURL) {
-  const canvas = createCanvas(900, 500);
-  const ctx = canvas.getContext("2d");
-
-  const allPokemon = await getAllPokemon();
-  const rankTiers = getRankTiers();
-
-  const gradient = ctx.createLinearGradient(0, 0, 0, 500);
-  gradient.addColorStop(0, "#fafafa");
-  gradient.addColorStop(1, "#e8e8e8");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 900, 500);
-
-  ctx.fillStyle = "#222";
-  ctx.fillRect(0, 0, 900, 60);
-  ctx.font = "bold 28px Sans";
-  ctx.fillStyle = "#ffcb05";
-  ctx.fillText(`${username}'s Trainer Card`, 30, 40);
-
-  if (avatarURL) {
-    try {
-      const avatarImg = await loadImage(avatarURL);
-      const size = 64;
-      const x = 900 - size - 30;
-      const y = -13;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-      ctx.closePath();
-      ctx.clip();
-      ctx.drawImage(avatarImg, x, y, size, size);
-      ctx.restore();
-      ctx.strokeStyle = "#ffcb05";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(x + size / 2, y + size / 2, size / 2 + 1, 0, Math.PI * 2);
-      ctx.stroke();
-    } catch (err) {
-      console.warn("⚠️ Avatar load failed:", err.message);
-    }
-  }
-
-  const trainerX = 60, trainerY = 120;
-  if (userData.displayedTrainer) {
-    try {
-      const trainerURL = `${spritePaths.trainers}${userData.displayedTrainer}`;
-      const trainerImg = await loadImage(trainerURL);
-      const scale = Math.min(200 / trainerImg.width, 250 / trainerImg.height);
-      const w = trainerImg.width * scale;
-      const h = trainerImg.height * scale;
-      ctx.drawImage(trainerImg, trainerX + (200 - w) / 2, trainerY, w, h);
-    } catch {
-      ctx.fillStyle = "#888";
-      ctx.fillText("Trainer Missing", trainerX, trainerY + 120);
-    }
-  } else {
-    ctx.fillStyle = "#888";
-    ctx.fillText("No Trainer Selected", trainerX, trainerY + 120);
-  }
-
-  const gridStartX = 330;
-  const gridStartY = 140;
-  const slot = 110;
-  const gap = 15;
-  const displayed = userData.displayedPokemon?.slice(0, 6) || [];
-
-  for (let i = 0; i < 6; i++) {
-    const col = i % 3;
-    const row = Math.floor(i / 3);
-    const x = gridStartX + col * (slot + gap);
-    const y = gridStartY + row * (slot + gap);
-    ctx.strokeStyle = "#ccc";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, slot, slot);
-
-    const id = displayed[i];
-    if (!id) continue;
-
-    try {
-      const record = userData.pokemon?.[id] || userData.ownedPokemon?.[id];
-      const isShiny = record?.shiny > 0;
-      const base = isShiny ? spritePaths.shiny : spritePaths.pokemon;
-      const img = await loadImage(`${base}${id}.gif`);
-      const scale = Math.min(slot * 0.9 / img.width, slot * 0.9 / img.height);
-      const w = img.width * scale;
-      const h = img.height * scale;
-      const offsetX = (slot - w) / 2;
-      const offsetY = (slot - h) / 2;
-      ctx.drawImage(img, x + offsetX, y + offsetY, w, h);
-    } catch {
-      ctx.fillStyle = "#aaa";
-      ctx.font = "bold 20px Sans";
-      ctx.fillText("?", x + slot / 2 - 6, y + slot / 2 + 8);
-    }
-  }
-
-  const rank = getRank(userData.tp);
-  const pokemonOwned = Object.keys(userData.pokemon || {}).length;
-  const shinyCount = Object.values(userData.pokemon || {}).filter((p) => p.shiny > 0).length;
-  const trainerCount = Object.keys(userData.trainers || {}).length;
-
-  ctx.fillStyle = "#333";
-  ctx.font = "bold 20px Sans";
-  ctx.fillText(`Rank: ${rank}`, 60, 410);
-  ctx.font = "18px Sans";
-  ctx.fillText(`TP: ${userData.tp} | CC: ${userData.cc || 0}`, 60, 435);
-  ctx.fillText(`Pokémon: ${pokemonOwned} | Shiny: ${shinyCount} | Trainers: ${trainerCount}`, 60, 460);
-
-  ctx.strokeStyle = "#333";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(0, 0, 900, 500);
-
-  return canvas;
-}
-
-// ===========================================================
 // 🌿 STARTER SELECTION — Type Sprite Header + Animated GIF Grid
 // ===========================================================
 
-import path from "path";
-import { AttachmentBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from "discord.js";
-import { combineGifsHorizontal } from "../utils/gifComposer.js";
-import { spritePaths } from "../spriteconfig.js";
-import { getAllPokemon } from "../utils/dataLoader.js";
-import { rollForShiny } from "../shinyOdds.js";
-import { safeReply } from "../utils/safeReply.js";
-import { trainerSelection } from "./trainercard.js"; // or adjust import if defined locally
 
 const starterIDs = [
   1, 4, 7,
@@ -202,13 +79,6 @@ const starterIDs = [
   387, 390, 393,
   495, 498, 501
 ];
-
-const typeMap = {
-  1: "Normal", 2: "Fighting", 3: "Flying", 4: "Poison", 5: "Ground",
-  6: "Rock", 7: "Bug", 8: "Ghost", 9: "Steel", 10: "Fire",
-  11: "Water", 12: "Grass", 13: "Electric", 14: "Psychic",
-  15: "Ice", 16: "Dragon", 17: "Dark"
-};
 
 export async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
   try {
@@ -392,12 +262,6 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
 // 🧑 SHOW TRAINER CARD — Animated Layout (Trainer + Pokémon GIFs)
 // ===========================================================
 
-import path from "path";
-import { AttachmentBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
-import { getRank } from "../utils/rankSystem.js";
-import { combineGifsHorizontal } from "../utils/gifComposer.js";
-import { spritePaths } from "../spriteconfig.js";
-import { safeReply } from "../utils/safeReply.js";
 
 export async function showTrainerCard(interaction, user) {
   try {
@@ -625,35 +489,12 @@ export async function handleTrainerCardButtons(interaction, trainerData, saveDat
     return safeReply(interaction, { content: "❌ Could not find your trainer data.", ephemeral: true });
 
   switch (interaction.customId) {
-    case "refresh_card": {
-      const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
-      const canvas = await renderTrainerCard(user, username, avatarURL);
-      const buffer = await canvas.encode("png");
-      const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
-      const embed = new EmbedBuilder()
-        .setTitle(`🧑 ${username}'s Trainer Card`)
-        .setColor(0xffcb05)
-        .setDescription(`🏆 **Rank:** ${getRank(user.tp)}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}`)
-        .setImage("attachment://trainercard.png");
-      return safeReply(interaction, { embeds: [embed], files: [attachment], components: interaction.message.components });
-    }
+    case "refresh_card":
+      return showTrainerCard(interaction, user);
 
-    case "share_public": {
-      const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
-      const canvas = await renderTrainerCard(user, username, avatarURL);
-      const buffer = await canvas.encode("png");
-      const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
-      const publicEmbed = new EmbedBuilder()
-        .setTitle(`🌐 ${username}'s Trainer Card`)
-        .setColor(0x00ae86)
-        .setDescription(`🏆 **Rank:** ${getRank(user.tp)}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}`)
-        .setImage("attachment://trainercard.png")
-        .setFooter({ text: `Shared by ${username}`, iconURL: interaction.user.displayAvatarURL() })
-        .setTimestamp();
+    case "share_public":
       await safeReply(interaction, { content: "✅ Shared publicly!", ephemeral: true });
-      await interaction.channel.send({ embeds: [publicEmbed], files: [attachment] });
-      break;
-    }
+      return showTrainerCard(interaction, user);
 
     case "change_trainer":
       return handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord);

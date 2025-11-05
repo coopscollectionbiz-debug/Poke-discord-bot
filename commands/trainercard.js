@@ -83,6 +83,11 @@ const starterIDs = [
 
 export async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
   try {
+    // ✅ Make sure we reply within 3s
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply({ ephemeral: true });
+    }
+
     const allPokemon = await getAllPokemon();
     const starters = allPokemon.filter(p => starterIDs.includes(Number(p.id)));
 

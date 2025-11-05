@@ -20,7 +20,6 @@ import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { safeReply } from "../utils/safeReply.js";
 import path from "path";
 import { combineGifsHorizontal } from "../utils/gifComposer.js";
-import { getAllPokemon } from "../utils/dataLoader.js";
 
 // ===========================================================
 // SLASH COMMAND

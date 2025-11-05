@@ -1,6 +1,6 @@
 // ==========================================================
 // 🎯 /recruit — manual random Pokémon/trainer recruitment
-// Coop's Collection Discord Bot
+// Coop's Collection Discord Bot (Refactored for safeReply)
 // ==========================================================
 import {
   SlashCommandBuilder,
@@ -15,6 +15,7 @@ import { rollForShiny } from "../shinyOdds.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
 import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
+import { safeReply } from "../utils/safeReply.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -22,21 +23,33 @@ import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRando
 export default {
   data: new SlashCommandBuilder()
     .setName("recruit")
-    .setDescription("Recruit a Pokémon or Trainer!"),
+    .setDescription("Recruit a Pokémon or Trainer! (Costs 100 CC)"),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-    await interaction.deferReply({ flags: 64 });
-    const id = interaction.user.id;
+    await safeReply(interaction, {
+      content: "⏳ Preparing recruitment menu...",
+      ephemeral: true
+    });
 
-    // ✅ Initialize user schema if missing using helper
+    const id = interaction.user.id;
     const user = ensureUserData(trainerData, id, interaction.user.username);
 
     // ==========================================================
-    // 🎮 Recruitment menu UI
+    // 💰 CC Check
+    // ==========================================================
+    if (user.cc < 100) {
+      return safeReply(interaction, {
+        content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
+        ephemeral: true
+      });
+    }
+
+    // ==========================================================
+    // 🎮 Recruitment Menu UI
     // ==========================================================
     const menu = new StringSelectMenuBuilder()
       .setCustomId("recruit_type")
-      .setPlaceholder("Choose what to recruit")
+      .setPlaceholder("Choose what to recruit (100 CC cost)")
       .addOptions(
         { label: "Pokémon", value: "pokemon", emoji: "🐾" },
         { label: "Trainer", value: "trainer", emoji: "🎓" }
@@ -47,34 +60,36 @@ export default {
       .setLabel("Cancel")
       .setStyle(ButtonStyle.Secondary);
 
-    await interaction.editReply({
+    await safeReply(interaction, {
       embeds: [
         new EmbedBuilder()
           .setColor(0x00ae86)
           .setTitle("🎯 Recruitment Time!")
-          .setDescription("Select what type of recruit you want to attempt:")
+          .setDescription(
+            `Each recruitment costs **100 CC**.\n\nSelect what type of recruit you want to attempt:`
+          )
       ],
       components: [
         new ActionRowBuilder().addComponents(menu),
         new ActionRowBuilder().addComponents(cancel)
-      ]
+      ],
+      ephemeral: true
     });
 
     // ==========================================================
     // 🕒 Collector setup
     // ==========================================================
     const collector = interaction.channel.createMessageComponentCollector({
-      filter: i => i.user.id === id,
+      filter: (i) => i.user.id === id,
       time: 120000
     });
 
-    collector.on("collect", async i => {
+    collector.on("collect", async (i) => {
       if (i.customId === "cancel_recruit") {
         collector.stop();
-        return i.update({
+        return safeReply(i, {
           content: "❌ Recruitment cancelled.",
-          embeds: [],
-          components: []
+          ephemeral: true
         });
       }
 
@@ -82,19 +97,27 @@ export default {
         const choice = i.values[0];
         collector.stop();
 
-        if (choice === "pokemon")
-          await recruitPokemon(i, user, trainerData, saveTrainerData);
-        else
-          await recruitTrainer(i, user, trainerData, saveTrainerData);
+        // Check CC again right before the roll
+        if (user.cc < 100) {
+          return safeReply(i, {
+            content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
+            ephemeral: true
+          });
+        }
+
+        if (choice === "pokemon") {
+          await recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord);
+        } else {
+          await recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord);
+        }
       }
     });
 
     collector.on("end", async (_, reason) => {
       if (reason === "time") {
-        await interaction.editReply({
+        await safeReply(interaction, {
           content: "⌛ Recruitment timed out — try again later.",
-          embeds: [],
-          components: []
+          ephemeral: true
         });
       }
     });
@@ -102,11 +125,11 @@ export default {
 };
 
 // ==========================================================
-// 🐾 Pokémon Recruitment - Refactored to use helpers
+// 🐾 Pokémon Recruitment - Refactored to use helpers + safeReply
 // ==========================================================
-async function recruitPokemon(i, user, trainerData, saveTrainerData) {
+async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
   const allPokemon = await getAllPokemon();
-  const pool = allPokemon.filter(p => p.generation <= 5);
+  const pool = allPokemon.filter((p) => p.generation <= 5);
   const pick = selectRandomPokemon(pool);
 
   const shiny = rollForShiny(user.tp);
@@ -114,7 +137,10 @@ async function recruitPokemon(i, user, trainerData, saveTrainerData) {
   shiny ? record.shiny++ : record.normal++;
   user.pokemon[pick.id] = record;
 
-  await saveTrainerData(trainerData);
+  // Deduct 100 CC only after success
+  user.cc = Math.max(0, user.cc - 100);
+  await saveTrainerDataLocal(trainerData);
+  await saveDataToDiscord(trainerData);
 
   const spriteUrl = shiny
     ? `${spritePaths.shiny}${pick.id}.gif`
@@ -129,28 +155,32 @@ async function recruitPokemon(i, user, trainerData, saveTrainerData) {
         : `You recruited a **${pick.name}!**`
     )
     .setThumbnail(spriteUrl)
-    .setFooter({ text: "Keep recruiting to expand your team!" });
+    .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
 
-  await i.update({ embeds: [embed], components: [] });
+  await safeReply(i, { embeds: [embed], ephemeral: true });
 }
 
 // ==========================================================
-// 🎓 Trainer Recruitment - Refactored to use helpers
+// 🎓 Trainer Recruitment - Refactored to use helpers + safeReply
 // ==========================================================
-async function recruitTrainer(i, user, trainerData, saveTrainerData) {
+async function recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
   const flatTrainers = await getFlattenedTrainers();
   const pick = selectRandomTrainer(flatTrainers);
   const file = pick.filename || pick.file;
 
   user.trainers[file] = (user.trainers[file] || 0) + 1;
-  await saveTrainerData(trainerData);
+
+  // Deduct 100 CC only after success
+  user.cc = Math.max(0, user.cc - 100);
+  await saveTrainerDataLocal(trainerData);
+  await saveDataToDiscord(trainerData);
 
   const embed = new EmbedBuilder()
     .setColor(0x5865f2)
     .setTitle("🎓 Trainer Recruited!")
     .setDescription(`You recruited **${pick.name}**!`)
     .setThumbnail(`${spritePaths.trainers}${file}`)
-    .setFooter({ text: "Equip it with /trainercard!" });
+    .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
 
-  await i.update({ embeds: [embed], components: [] });
+  await safeReply(i, { embeds: [embed], ephemeral: true });
 }

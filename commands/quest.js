@@ -1,5 +1,5 @@
 // ==========================================================
-// 🗺️ /quest — complete a quest for a random reward
+// 🗺️ /quest — complete a quest for a random reward (SafeReply + CC reward)
 // Coop's Collection Discord Bot
 // ==========================================================
 
@@ -7,7 +7,8 @@ import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
-import { getAllPokemon } from "../utils/dataLoader.js";
+import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
+import { safeReply } from "../utils/safeReply.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -15,38 +16,41 @@ import { getAllPokemon } from "../utils/dataLoader.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("quest")
-    .setDescription("Complete a quest and receive a Pokémon or trainer reward!"),
+    .setDescription("Complete a quest and receive a random reward! (70% Pokémon, 30% Trainer, +50 CC)"),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-    await interaction.deferReply({ flags: 64 });
-    const id = interaction.user.id;
+    await safeReply(interaction, {
+      content: "🧭 Embarking on a quest... Rewards include Pokémon or Trainers! (70% Pokémon, 30% Trainer)",
+      ephemeral: true
+    });
 
-    // ✅ Ensure user schema exists using helper
+    const id = interaction.user.id;
     const user = ensureUserData(trainerData, id, interaction.user.username);
 
-    // ✅ 70% Pokémon reward, 30% Trainer reward
+    // ==========================================================
+    // 🎲 Reward Type
+    // ==========================================================
     const rewardType = Math.random() < 0.7 ? "pokemon" : "trainer";
 
     // ==========================================================
     // 🐾 Pokémon Reward
     // ==========================================================
     if (rewardType === "pokemon") {
-      // 🎲 Random Pokémon from Gen 1–5
       const allPokemon = await getAllPokemon();
-      const pool = allPokemon.filter(p => p.generation <= 5);
+      const pool = allPokemon.filter((p) => p.generation <= 5);
       const pick = pool[Math.floor(Math.random() * pool.length)];
 
-      // ✨ Shiny roll
       const shiny = rollForShiny(user.tp);
-
-      // ✅ Increment owned count
       const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
       shiny ? record.shiny++ : record.normal++;
       user.pokemon[pick.id] = record;
 
-      await saveTrainerData(trainerData);
+      // 💰 Reward CC
+      user.cc = (user.cc || 0) + 50;
 
-      // ✅ Embed (unified sprite path)
+      await saveTrainerDataLocal(trainerData);
+      await saveDataToDiscord(trainerData);
+
       const spriteUrl = shiny
         ? `${spritePaths.shiny}${pick.id}.gif`
         : `${spritePaths.pokemon}${pick.id}.gif`;
@@ -60,29 +64,33 @@ export default {
             : `You found a **${pick.name}!**`
         )
         .setThumbnail(spriteUrl)
-        .setFooter({ text: "Complete more quests for rarer rewards!" });
+        .setFooter({ text: `+50 CC | Balance: ${user.cc} CC` });
 
-      await interaction.editReply({ embeds: [embed] });
+      await safeReply(interaction, { embeds: [embed], ephemeral: true });
     }
 
     // ==========================================================
     // 🧍 Trainer Reward
     // ==========================================================
     else {
-      const trainerPool = ["youngster-gen4.png", "lass-gen4.png"];
-      const file = trainerPool[Math.floor(Math.random() * trainerPool.length)];
+      const flatTrainers = await getFlattenedTrainers();
+      const pick = flatTrainers[Math.floor(Math.random() * flatTrainers.length)];
+      const file = pick.filename || pick.file || pick.sprite;
 
       user.trainers[file] = (user.trainers[file] || 0) + 1;
-      await saveTrainerData(trainerData);
+      user.cc = (user.cc || 0) + 50;
+
+      await saveTrainerDataLocal(trainerData);
+      await saveDataToDiscord(trainerData);
 
       const embed = new EmbedBuilder()
         .setColor(0x5865f2)
         .setTitle("🏆 Quest Complete!")
-        .setDescription(`You recruited a new trainer: **${file.replace(".png", "")}!**`)
+        .setDescription(`You recruited **${pick.name}**!`)
         .setThumbnail(`${spritePaths.trainers}${file}`)
-        .setFooter({ text: "Equip it anytime with /trainercard!" });
+        .setFooter({ text: `+50 CC | Balance: ${user.cc} CC` });
 
-      await interaction.editReply({ embeds: [embed] });
+      await safeReply(interaction, { embeds: [embed], ephemeral: true });
     }
   }
 };

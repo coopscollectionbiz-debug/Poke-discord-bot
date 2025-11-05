@@ -1,5 +1,5 @@
 // =============================================
-// /pokedex.js
+// /pokedex.js (SafeReply Refactor)
 // Coop's Collection Discord Bot
 // =============================================
 
@@ -14,6 +14,7 @@ import { spritePaths } from "../spriteconfig.js";
 import { findPokemonByName } from "../utils/dataLoader.js";
 import { validateNameQuery } from "../utils/validators.js";
 import { createPokedexEmbed } from "../utils/embedBuilders.js";
+import { safeReply } from "../utils/safeReply.js";
 
 // Convert numeric type IDs into readable names
 const typeMap = {
@@ -41,46 +42,37 @@ export const data = new SlashCommandBuilder()
 // =============================================
 export async function execute(interaction) {
   const query = interaction.options.getString("name");
-  
-  // Validate input
+
+  // ✅ Validate input
   const validation = validateNameQuery(query);
   if (!validation.valid) {
-    return interaction.reply({
+    return safeReply(interaction, {
       content: `❌ ${validation.error}`,
       ephemeral: true
     });
   }
-  
-  // Use helper to find Pokemon
+
+  // ✅ Find Pokémon
   const pokemon = await findPokemonByName(validation.sanitized);
 
   if (!pokemon) {
-    // ❌ Keep "not found" messages private to avoid clutter
-    return interaction.reply({
+    return safeReply(interaction, {
       content: `❌ No Pokémon found named **${query}**.`,
       ephemeral: true
     });
   }
 
-  // ✅ Public response (not ephemeral)
-  await interaction.deferReply(); // no ephemeral flag
+  // ✅ Public reply (not ephemeral)
+  await interaction.deferReply();
 
-  // =============================================
-  // Hosted sprite URLs (normal + shiny)
-  // =============================================
   const normalSprite = `${spritePaths.pokemon}${pokemon.id}.gif`;
   const shinySprite = `${spritePaths.shiny}${pokemon.id}.gif`;
-
   let showingShiny = false;
 
-  // =============================================
-  // Embed for Pokémon Info using builder
-  // =============================================
+  // Create main embed
   const embed = createPokedexEmbed(pokemon, normalSprite, typeMap);
 
-  // =============================================
-  // Buttons: toggle shiny, close
-  // =============================================
+  // Buttons
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("toggle_shiny")
@@ -92,13 +84,13 @@ export async function execute(interaction) {
       .setStyle(ButtonStyle.Danger)
   );
 
-  const message = await interaction.editReply({
+  const message = await safeReply(interaction, {
     embeds: [embed],
     components: [row]
   });
 
   // =============================================
-  // Collector for button interactions
+  // Collector
   // =============================================
   const collector = message.createMessageComponentCollector({
     componentType: ComponentType.Button,
@@ -107,12 +99,13 @@ export async function execute(interaction) {
 
   collector.on("collect", async (i) => {
     if (i.user.id !== interaction.user.id) {
-      // Instead of ephemeral, show temporary visible message
-      const warn = await i.reply({
+      const warn = await safeReply(i, {
         content: "⏳ Only the original trainer can use these buttons.",
-        fetchReply: true
+        ephemeral: true
       });
-      setTimeout(() => i.deleteReply().catch(() => {}), 3000);
+      setTimeout(() => {
+        try { warn.delete().catch(() => {}); } catch {}
+      }, 3000);
       return;
     }
 
@@ -136,17 +129,18 @@ export async function execute(interaction) {
       }
 
       default:
-        await i.reply({
+        await safeReply(i, {
           content: "Unknown action.",
-          fetchReply: true
+          ephemeral: true
         });
-        setTimeout(() => i.deleteReply().catch(() => {}), 3000);
     }
   });
 
   collector.on("end", async (_, reason) => {
     if (reason !== "closed") {
-      await message.edit({ components: [] }).catch(() => {});
+      try {
+        await message.edit({ components: [] });
+      } catch {}
     }
   });
 }

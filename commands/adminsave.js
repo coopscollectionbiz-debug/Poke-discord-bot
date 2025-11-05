@@ -1,9 +1,11 @@
 // ==========================================================
-// /adminsave — Force save trainerData to disk + Discord storage
+// /adminsave — Force save trainerData to disk + Discord storage (SafeReply Refactor)
+// Coop's Collection Discord Bot
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import { handleCommandError } from "../utils/errorHandler.js";
+import { safeReply } from "../utils/safeReply.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -15,10 +17,13 @@ export default {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   // ==========================================================
-  // ⚙️ Command Execution
+  // ⚙️ Command Execution (SafeReply Refactor)
   // ==========================================================
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-    await interaction.deferReply({ ephemeral: true });
+    await safeReply(interaction, {
+      content: "💾 Initiating manual save...",
+      ephemeral: true,
+    });
 
     try {
       // Run both save systems (local + Discord storage channel)
@@ -36,10 +41,16 @@ export default {
         .setColor(0x00ae86)
         .setTimestamp();
 
-      await interaction.editReply({ embeds: [embed] });
+      await safeReply(interaction, { embeds: [embed], ephemeral: true });
+
       console.log(`✅ Admin save executed by ${interaction.user.username}`);
     } catch (err) {
+      console.error("❌ Admin save failed:", err);
       await handleCommandError(err, interaction, "adminsave");
+      await safeReply(interaction, {
+        content: "❌ An error occurred while saving trainer data.",
+        ephemeral: true,
+      });
     }
-  }
+  },
 };

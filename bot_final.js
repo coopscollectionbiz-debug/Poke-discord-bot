@@ -78,29 +78,75 @@ async function updateUserRole(member, tp) {
   await member.roles.add(role).catch(() => {});
 }
 
-client.on("messageCreate", async msg => {
+// ===========================================================
+// 📩 MESSAGE HANDLER — Passive XP/TP system
+// ===========================================================
+
+const MESSAGE_TP_GAIN = 2;            // Base TP gained per message
+const MESSAGE_CC_CHANCE = 0.005;      // % chance to gain CC
+const MESSAGE_COOLDOWN = 10 * 1000;   // Cooldown per user
+
+const userCooldowns = new Map();      // Track per-user message cooldowns
+
+client.on("messageCreate", async (msg) => {
   if (msg.author.bot || !msg.guild) return;
+
   const id = msg.author.id;
-  trainerData[id] = normalizeUserSchema(id, { tp: 0, cc: 0, pokemon: {}, trainers: {} });
+  const now = Date.now();
+
+  // 🔗 Auto-replace or block shortened affiliate links
+  if (/https?:\/\/(amzn\.to|www\.ebay\.com\/itm)/i.test(msg.content)) {
+    await msg.delete().catch(() => {});
+    await msg.channel.send(
+      `🔗 ${msg.content
+        .replace(/amzn\.to/gi, "amazon.com")
+        .replace(/ebay\.com\/itm/gi, "ebay.com/itm")}`
+    );
+    return;
+  }
+
+  // 🕒 TP cooldown
+  const lastMessageTime = userCooldowns.get(id) || 0;
+  if (now - lastMessageTime < MESSAGE_COOLDOWN) return;
+  userCooldowns.set(id, now);
+
+  // 🧩 Ensure user data exists
+  const user = (trainerData[id] = normalizeUserSchema(id, trainerData[id] || {}));
+
+  // 🏆 Grant TP
+  user.tp = (user.tp || 0) + MESSAGE_TP_GAIN;
+
+  // 💰 Random CC reward
+  if (Math.random() < MESSAGE_CC_CHANCE) {
+    user.cc = (user.cc || 0) + 100;
+    console.log(`💰 ${msg.author.username} found 100 Coop Coins!`);
+  }
+
+  // 🎖️ Update rank role
   try {
     const member = await msg.guild.members.fetch(id);
-    await updateUserRole(member, trainerData[id].tp);
-  } catch {}
+    await updateUserRole(member, user.tp);
+  } catch (err) {
+    console.warn(`⚠️ Role update failed for ${msg.author.username}: ${err.message}`);
+  }
+
+  // 💾 Debounced autosave
+  debouncedDiscordSave();
 });
 
 async function loadCommands() {
   const commandsPath = path.resolve("./commands");
   const files = (await fs.readdir(commandsPath)).filter(f => f.endsWith(".js"));
   for (const file of files) {
-    try {
-      const imported = await import(`./commands/${file}`);
-      const command = imported.default || imported;
-      if (!command?.data?.name) continue;
-      client.commands.set(command.data.name, command);
-    } catch (err) {
-      console.error(`❌ ${file}:`, err.message);
-    }
+  try {
+    const imported = await import(`./commands/${file}`);
+    const command = imported.default || imported;
+    if (!command?.data?.name) continue;
+    client.commands.set(command.data.name, command);
+  } catch (err) {
+    console.error(`❌ ${file}:`, err.message);
   }
+}
 
   const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
 

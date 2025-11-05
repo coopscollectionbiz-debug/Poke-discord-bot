@@ -58,10 +58,10 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
     }
 
     // ✅ Run ImageMagick to combine horizontally
-    const quoted = localPaths.map(p => `"${p}"`).join(" ");
-    const cmd = `convert ${quoted} +append -coalesce -resize 128x128 "${outputPath}"`;
-    console.log(`🧩 Combining ${localPaths.length} GIFs → ${outputPath}`);
-    await exec(cmd);
+const quoted = localPaths.map(p => `"${p}"`).join(" ");
+const cmd = `convert ${quoted} -coalesce -resize 128x128 -set delay 5 -loop 0 +append "${outputPath}"`;
+console.log(`🧩 Combining ${localPaths.length} GIFs → ${outputPath}`);
+await exec(cmd);
 
     // ✅ Clean up temporary files (except the final output)
     for (const f of localPaths) {

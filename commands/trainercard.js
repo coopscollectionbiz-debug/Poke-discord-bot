@@ -1,4 +1,3 @@
-export async function execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
 // /trainercard.js
 // Coop's Collection Discord Bot
 // ================================

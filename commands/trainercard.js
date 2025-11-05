@@ -183,10 +183,18 @@ async function renderTrainerCard(userData, username, avatarURL) {
 }
 
 // ===========================================================
-// 🌟 STARTER SELECTION — HYBRID (Canvas + Animated GIFs)
+// 🌿 STARTER SELECTION — Type Sprite Header + Animated GIF Grid
 // ===========================================================
 
-// Starter Pokémon IDs (Gen 1 – 5)
+import path from "path";
+import { AttachmentBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from "discord.js";
+import { combineGifsHorizontal } from "../utils/gifComposer.js";
+import { spritePaths } from "../spriteconfig.js";
+import { getAllPokemon } from "../utils/dataLoader.js";
+import { rollForShiny } from "../shinyOdds.js";
+import { safeReply } from "../utils/safeReply.js";
+import { trainerSelection } from "./trainercard.js"; // or adjust import if defined locally
+
 const starterIDs = [
   1, 4, 7,
   152, 155, 158,
@@ -195,50 +203,19 @@ const starterIDs = [
   495, 498, 501
 ];
 
-// Background gradients per type
-const typeColors = {
-  Grass: ["#a8e6cf", "#56ab2f"],
-  Fire:  ["#ffb88c", "#de6262"],
-  Water: ["#a1c4fd", "#2193b0"],
-  Electric: ["#fff47b", "#f7b733"],
-  Normal: ["#fdfbfb", "#ebedee"]
+const typeMap = {
+  1: "Normal", 2: "Fighting", 3: "Flying", 4: "Poison", 5: "Ground",
+  6: "Rock", 7: "Bug", 8: "Ghost", 9: "Steel", 10: "Fire",
+  11: "Water", 12: "Grass", 13: "Electric", 14: "Psychic",
+  15: "Ice", 16: "Dragon", 17: "Dark"
 };
 
-// Canvas header with gradient + title only
-async function renderStarterTypeCanvas(typeName) {
-  const width = 960;
-  const height = 200;
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d");
-
-  const [c1, c2] = typeColors[typeName] || typeColors.Normal;
-  const grad = ctx.createLinearGradient(0, 0, 0, height);
-  grad.addColorStop(0, c1);
-  grad.addColorStop(1, c2);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, width, height);
-
-  ctx.font = "bold 40px Sans";
-  ctx.fillStyle = "#fff";
-  ctx.textAlign = "center";
-  ctx.shadowColor = "rgba(0,0,0,0.4)";
-  ctx.shadowBlur = 8;
-  ctx.fillText(`${typeName} Starters`, width / 2, 115);
-  ctx.shadowBlur = 0;
-
-  ctx.strokeStyle = "#fff";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(0, 0, width, height);
-
-  return canvas;
-}
-
-async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
+export async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
   try {
     const allPokemon = await getAllPokemon();
     const starters = allPokemon.filter(p => starterIDs.includes(p.id));
 
-    // Group by primary type (Grass = 12, Fire = 10, Water = 11)
+    // Group starters by primary type
     const grouped = {};
     for (const p of starters) {
       const t = p.types?.[0];
@@ -246,31 +223,36 @@ async function starterSelection(interaction, user, trainerData, saveDataToDiscor
       grouped[t].push(p);
     }
 
-    const order = [12, 10, 11];
+    const order = [12, 10, 11]; // Grass, Fire, Water
     const sortedTypes = Object.keys(grouped)
       .map(Number)
       .sort((a, b) => order.indexOf(a) - order.indexOf(b));
 
-    // Build each page (header + animated sprites)
+    // 🧩 Build each page dynamically
     const buildPage = async index => {
       const typeId = sortedTypes[index];
       const typeName = typeMap[typeId];
       const list = grouped[typeId];
 
-      // Header canvas
-      const canvas = await renderStarterTypeCanvas(typeName);
-      const buffer = await canvas.encode("png");
-      const headerAttachment = new AttachmentBuilder(buffer, { name: `${typeName}.png` });
+      // Combine 5 GIFs horizontally
+      const gifPaths = list.map(p => `${spritePaths.pokemon}${p.id}.gif`);
+      const output = path.resolve(`./temp/${typeName}_starters.gif`);
+      await combineGifsHorizontal(gifPaths, output);
+      const combinedGif = new AttachmentBuilder(output, { name: `${typeName}_starters.gif` });
 
-      // Embed with header
+      // Type sprite header (static PNG)
+      const typeSprite = `${spritePaths.types}${typeId}.png`;
+
       const embed = new EmbedBuilder()
         .setTitle(`🌟 Choose Your Starter Pokémon`)
-        .setDescription(`**Type:** ${typeName}\nClick a button below to choose your Pokémon!`)
+        .setDescription(
+          `**Type:** ${typeName}\nClick a button below to choose your Pokémon!`
+        )
+        .setThumbnail(typeSprite) // 🧩 replaces gradient header
         .setColor(0x43b581)
-        .setImage(`attachment://${typeName}.png`)
+        .setImage(`attachment://${typeName}_starters.gif`)
         .setFooter({ text: `Page ${index + 1}/${sortedTypes.length}` });
 
-      // Buttons for each Pokémon
       const row1 = new ActionRowBuilder().addComponents(
         list.map(p =>
           new ButtonBuilder()
@@ -280,27 +262,28 @@ async function starterSelection(interaction, user, trainerData, saveDataToDiscor
         )
       );
 
-      // Page navigation
       const row2 = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId("prev_page").setEmoji("⬅️").setStyle(ButtonStyle.Secondary).setDisabled(index === 0),
-        new ButtonBuilder().setCustomId("next_page").setEmoji("➡️").setStyle(ButtonStyle.Secondary).setDisabled(index === sortedTypes.length - 1)
+        new ButtonBuilder()
+          .setCustomId("prev_page")
+          .setEmoji("⬅️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(index === 0),
+        new ButtonBuilder()
+          .setCustomId("next_page")
+          .setEmoji("➡️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(index === sortedTypes.length - 1)
       );
 
-      // Attach animated GIFs separately
-      const gifFiles = list.map(p => ({
-        attachment: `${spritePaths.pokemon}${p.id}.gif`,
-        name: `${p.name}.gif`
-      }));
-
-      return { embed, components: [row1, row2], files: [headerAttachment, ...gifFiles] };
+      return { embed, components: [row1, row2], files: [combinedGif] };
     };
 
-    // ── Display first page ───────────────────────────────────────────────
+    // ── Show first page ───────────────────────────────
     let page = 0;
     const { embed, components, files } = await buildPage(page);
     await safeReply(interaction, { embeds: [embed], components, files, ephemeral: true });
 
-    // ── Collector for buttons ────────────────────────────────────────────
+    // ── Collector for buttons ─────────────────────────
     const collector = interaction.channel.createMessageComponentCollector({
       componentType: ComponentType.Button,
       time: 60000
@@ -341,7 +324,6 @@ async function starterSelection(interaction, user, trainerData, saveDataToDiscor
     await safeReply(interaction, { content: "❌ Failed to load starter Pokémon. Try again.", ephemeral: true });
   }
 }
-
 
 // ===========================================================
 // TRAINER SELECTION (refactored with safeReply)
@@ -407,37 +389,71 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
 }
 
 // ===========================================================
-// MAIN CARD DISPLAY
+// 🧑 SHOW TRAINER CARD — Animated Layout (Trainer + Pokémon GIFs)
 // ===========================================================
-async function showTrainerCard(interaction, user) {
-  const username = interaction?.user?.username || user.name || "Trainer";
-  const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
-  const canvas = await renderTrainerCard(user, username, avatarURL);
-  const buffer = await canvas.encode("png");
-  const attachment = new AttachmentBuilder(buffer, { name: "trainercard.png" });
 
-  const rank = getRank(user.tp);
-  const pokemonOwned = Object.keys(user.pokemon || {}).length;
-  const shinyCount = Object.values(user.pokemon || {}).filter(p => p.shiny > 0).length;
-  const trainerCount = Object.keys(user.trainers || {}).length;
+import path from "path";
+import { AttachmentBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { getRank } from "../utils/rankSystem.js";
+import { combineGifsHorizontal } from "../utils/gifComposer.js";
+import { spritePaths } from "../spriteconfig.js";
+import { safeReply } from "../utils/safeReply.js";
 
-  const embed = new EmbedBuilder()
-    .setTitle(`🧑 ${username}'s Trainer Card`)
-    .setColor(0xffcb05)
-    .setDescription(
-      `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}\n\n📊 **Progress:**\n• Pokémon Owned: ${pokemonOwned}\n• Shiny Pokémon: ${shinyCount} ✨\n• Trainers Recruited: ${trainerCount}`
-    )
-    .setImage("attachment://trainercard.png")
-    .setFooter({ text: "Coop’s Collection • /trainercard" });
+export async function showTrainerCard(interaction, user) {
+  try {
+    const username = interaction?.user?.username || user.name || "Trainer";
+    const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
 
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId("change_trainer").setLabel("Change Trainer").setEmoji("🧍").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("change_pokemon").setLabel("Change Pokémon").setEmoji("🧬").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("refresh_card").setLabel("Refresh").setEmoji("🔄").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("share_public").setLabel("Share Public").setEmoji("🌐").setStyle(ButtonStyle.Success)
-  );
+    // === 1️⃣ Trainer Sprite =================================================
+    const trainerPath = user.displayedTrainer
+      ? `${spritePaths.trainers}${user.displayedTrainer}`
+      : `${spritePaths.trainers}default.png`;
 
-  await safeReply(interaction, { embeds: [embed], files: [attachment], components: [row], ephemeral: true });
+    // === 2️⃣ Pokémon GIF Strip =============================================
+    const displayed = user.displayedPokemon?.slice(0, 6) || [];
+    const owned = displayed.filter(id => id && user.pokemon[id]);
+    let combinedGifAttachment = null;
+
+    if (owned.length > 0) {
+      const gifPaths = owned.map(id => `${spritePaths.pokemon}${id}.gif`);
+      const output = path.resolve(`./temp/${username}_team.gif`);
+      await combineGifsHorizontal(gifPaths, output);
+      combinedGifAttachment = new AttachmentBuilder(output, { name: "team.gif" });
+    }
+
+    // === 3️⃣ Stats + Embed ==================================================
+    const rank = getRank(user.tp);
+    const pokemonOwned = Object.keys(user.pokemon || {}).length;
+    const shinyCount = Object.values(user.pokemon || {}).filter(p => p.shiny > 0).length;
+    const trainerCount = Object.keys(user.trainers || {}).length;
+
+    const embed = new EmbedBuilder()
+      .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })
+      .setColor(0xffcb05)
+      .setDescription(
+        `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}\n\n` +
+        `📊 **Pokémon Owned:** ${pokemonOwned}\n✨ **Shiny Pokémon:** ${shinyCount}\n🧍 **Trainers:** ${trainerCount}`
+      )
+      .setImage(`attachment://team.gif`)
+      .setThumbnail(trainerPath)
+      .setFooter({ text: "Coop’s Collection • /trainercard" });
+
+    // === 4️⃣ Action Buttons ================================================
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("change_trainer").setLabel("Change Trainer").setEmoji("🧍").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("change_pokemon").setLabel("Change Pokémon").setEmoji("🧬").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("refresh_card").setLabel("Refresh").setEmoji("🔄").setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId("share_public").setLabel("Share Public").setEmoji("🌐").setStyle(ButtonStyle.Success)
+    );
+
+    // === 5️⃣ Reply ==========================================================
+    const files = combinedGifAttachment ? [combinedGifAttachment] : [];
+    await safeReply(interaction, { embeds: [embed], files, components: [row], ephemeral: true });
+
+  } catch (err) {
+    console.error("showTrainerCard error:", err);
+    await safeReply(interaction, { content: "❌ Failed to show Trainer Card.", ephemeral: true });
+  }
 }
 
 // ===========================================================

@@ -523,37 +523,37 @@ const canvas = await renderTrainerCard(user, username, avatarURL);
 // ================================
 // SLASH COMMAND EXECUTION
 // ================================
-export const data = new SlashCommandBuilder()
-  .setName("trainercard")
-  .setDescription("View or create your Trainer Card!");
+export default {
+  data: new SlashCommandBuilder()
+    .setName("trainercard")
+    .setDescription("View or create your Trainer Card!"),
 
-export async function execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-  const userId = interaction.user.id;
-  const username = interaction.user.username;
-  let user = trainerData[userId];
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+    const userId = interaction.user.id;
+    const username = interaction.user.username;
+    let user = trainerData[userId];
 
-  // Schema defaults
-  if (!user) {
-    user = trainerData[userId] = {
-      id: userId,
-      name: username,
-      cc: 0,
-      tp: 0,
-      rank: "Novice Trainer",
-      trainers: {},
-      pokemon: {},
-      displayedPokemon: [],
-      displayedTrainer: null
-    };
-  }
+    if (!user) {
+      user = trainerData[userId] = {
+        id: userId,
+        name: username,
+        cc: 0,
+        tp: 0,
+        rank: "Novice Trainer",
+        trainers: {},
+        pokemon: {},
+        displayedPokemon: [],
+        displayedTrainer: null,
+      };
+    }
 
-  if (!user.onboardingComplete) {
-    return starterSelection(interaction, user, trainerData, saveDataToDiscord);
-  }
+    if (!user.onboardingComplete) {
+      return starterSelection(interaction, user, trainerData, saveDataToDiscord);
+    }
 
-  await showTrainerCard(interaction, user);
-}
-
+    await showTrainerCard(interaction, user);
+  },
+};
 // ================================
 // CHANGE TRAINER HANDLER
 // ================================

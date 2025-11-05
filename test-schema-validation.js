@@ -230,6 +230,20 @@ test('validateDisplayedPokemon: valid string array', () => {
   assert.deepStrictEqual(result.correctedData, displayed);
 });
 
+test('validateDisplayedPokemon: valid number array', () => {
+  const displayed = [1, 25, 6];
+  const result = validateDisplayedPokemon(displayed, '12345');
+  assert.strictEqual(result.valid, true);
+  assert.deepStrictEqual(result.correctedData, displayed);
+});
+
+test('validateDisplayedPokemon: mixed string and number array', () => {
+  const displayed = [1, 'pikachu', 25];
+  const result = validateDisplayedPokemon(displayed, '12345');
+  assert.strictEqual(result.valid, true);
+  assert.deepStrictEqual(result.correctedData, displayed);
+});
+
 test('validateDisplayedPokemon: invalid entries filtered out', () => {
   const displayed = ['pikachu', null, '', 'charizard', undefined];
   const result = validateDisplayedPokemon(displayed, '12345');

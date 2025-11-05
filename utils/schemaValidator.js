@@ -280,10 +280,12 @@ export function validateDisplayedPokemon(displayedPokemon, userId = 'unknown') {
   }
 
   for (const pokemon of displayedPokemon) {
+    // Support string IDs, number IDs, and object structures
     if (typeof pokemon === 'string' && pokemon.trim() !== '') {
       correctedData.push(pokemon);
+    } else if (typeof pokemon === 'number' && !isNaN(pokemon)) {
+      correctedData.push(pokemon);
     } else if (typeof pokemon === 'object' && pokemon !== null) {
-      // Support both string IDs and object structures
       correctedData.push(pokemon);
     } else {
       errors.push(`Invalid pokemon in displayedPokemon: ${JSON.stringify(pokemon)}`);

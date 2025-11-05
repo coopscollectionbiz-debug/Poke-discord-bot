@@ -18,7 +18,8 @@ const tests = [
   'test-trainercard-dataloader.js',
   'test-cleanup-trainer-data.js',
   'test-button-handlers.js',
-  'test-deprecated-fields.js'
+  'test-deprecated-fields.js',
+  'test-onboarding-flow.js'
 ];
 
 let totalPassed = 0;

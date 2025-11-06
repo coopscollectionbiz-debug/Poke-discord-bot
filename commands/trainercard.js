@@ -47,10 +47,18 @@ export default {
       user = validateUserSchema(user, userId, username);
     }
 
+    // ✅ Check onboarding progress
     if (!user.onboardingComplete) {
-      return starterSelection(interaction, user, trainerData, saveDataToDiscord);
+      if (!user.onboardingStage || user.onboardingStage === "starter_selection") {
+        // Show starter selection
+        return starterSelection(interaction, user, trainerData, saveDataToDiscord);
+      } else if (user.onboardingStage === "trainer_selection") {
+        // Show trainer selection
+        return trainerSelection(interaction, user, trainerData, saveDataToDiscord);
+      }
     }
 
+    // ✅ Onboarding complete - show trainer card
     await showTrainerCard(interaction, user);
   }
 };
@@ -206,6 +214,133 @@ async function getPokemonCached() {
 }
 
 // ===========================================================
+// 🌿 TRAINER SELECTION - CAROUSEL
+// ===========================================================
+
+export async function trainerSelection(interaction, user, trainerData, saveDataToDiscord) {
+  try {
+    const allPokemon = await getPokemonCached();
+    
+    // Simple trainer selection - for now just use a few default trainers
+    // In a full implementation, this would load from trainerSprites.json
+    const trainerOptions = [
+      { name: "Trainer 1", key: "trainer1.png", rarity: "common" },
+      { name: "Trainer 2", key: "trainer2.png", rarity: "common" },
+      { name: "Trainer 3", key: "trainer3.png", rarity: "common" }
+    ];
+
+    console.log(`🎪 Trainer selection loaded with ${trainerOptions.length} options`);
+
+    let currentIndex = 0;
+
+    const buildTrainerDisplay = (index) => {
+      const trainer = trainerOptions[index];
+      
+      const embed = new EmbedBuilder()
+        .setTitle(`🧬 Choose Your Trainer`)
+        .setDescription(
+          `**${trainer.name}**\n\n` +
+          `Rarity: ${trainer.rarity}\n\n` +
+          `**Trainer ${index + 1} of ${trainerOptions.length}**`
+        )
+        .setColor(0x5865f2)
+        .setFooter({ text: `Use the arrows to browse trainers` });
+
+      const buttons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("prev_trainer")
+          .setEmoji("⬅️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(index === 0),
+        new ButtonBuilder()
+          .setCustomId("select_trainer")
+          .setLabel(`✅ Choose ${trainer.name}`)
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId("next_trainer")
+          .setEmoji("➡️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(index === trainerOptions.length - 1)
+      );
+
+      return { embed, buttons };
+    };
+
+    const { embed, buttons } = buildTrainerDisplay(currentIndex);
+    const reply = await interaction.editReply({ embeds: [embed], components: [buttons] });
+
+    // Create collector on the message
+    const collector = reply.createMessageComponentCollector({
+      filter: i => i.user.id === interaction.user.id,
+      componentType: ComponentType.Button,
+      time: 120000
+    });
+
+    collector.on("collect", async i => {
+      if (i.customId === "select_trainer") {
+        // ✅ DEFER UPDATE
+        await i.deferUpdate().catch(err => {
+          console.warn("Failed to defer update:", err.message);
+        });
+        
+        // ✅ STOP COLLECTOR
+        collector.stop();
+
+        const selectedTrainer = trainerOptions[currentIndex];
+        user.displayedTrainer = selectedTrainer.key;
+        user.onboardingComplete = true;
+        delete user.onboardingStage;
+
+        // ✅ Save data
+        saveDataToDiscord(trainerData).catch(err => 
+          console.error("Failed to save after trainer selection:", err.message)
+        );
+
+        // ✅ Show trainer card after trainer selection
+        try {
+          await showTrainerCard(interaction, user);
+        } catch (err) {
+          console.error("Failed to show trainer card:", err.message);
+          await interaction.editReply({
+            content: `✅ You chose **${selectedTrainer.name}**! Now viewing your trainer card...`,
+          });
+        }
+
+        return;
+      }
+
+      // For next/prev buttons, defer and update
+      await i.deferUpdate().catch(err => {
+        console.warn("Failed to defer update for navigation:", err.message);
+      });
+      
+      if (i.customId === "next_trainer") {
+        currentIndex = Math.min(currentIndex + 1, trainerOptions.length - 1);
+      } else if (i.customId === "prev_trainer") {
+        currentIndex = Math.max(currentIndex - 1, 0);
+      }
+
+      const { embed: e, buttons: b } = buildTrainerDisplay(currentIndex);
+      await i.editReply({ embeds: [e], components: [b] });
+    });
+
+    // Cleanup when collector ends
+    collector.on("end", async (_, reason) => {
+      if (reason !== "user") {
+        try {
+          await interaction.editReply({ components: [] }).catch(() => {});
+        } catch {}
+      }
+    });
+  } catch (err) {
+    console.error("trainerSelection error:", err);
+    await interaction.editReply({
+      content: "❌ Failed to load trainer selection.",
+    });
+  }
+}
+
+// ===========================================================
 // 🌿 STARTER SELECTION - CAROUSEL WITH ANIMATED GIFS
 // ===========================================================
 
@@ -339,22 +474,23 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
         const selectedPokemon = allStarters[currentIndex];
         user.selectedStarter = selectedPokemon.id;
-        user.onboardingComplete = true;
         user.displayedPokemon = [selectedPokemon.id];
+        user.onboardingStage = "trainer_selection"; // Move to trainer selection
 
-        // ✅ Edit the deferred interaction reply
-        try {
-          await interaction.editReply({
-            content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀\n\nRun \`/pokedex ${selectedPokemon.id}\` to view your starter's Pokédex entry.`,
-          });
-        } catch (err) {
-          console.error("Failed to edit reply:", err.message);
-        }
-
-        // ✅ Save asynchronously AFTER reply
+        // ✅ Save data
         saveDataToDiscord(trainerData).catch(err => 
           console.error("Failed to save after starter selection:", err.message)
         );
+
+        // ✅ Show trainer selection next
+        try {
+          await trainerSelection(interaction, user, trainerData, saveDataToDiscord);
+        } catch (err) {
+          console.error("Failed to show trainer selection:", err.message);
+          await interaction.editReply({
+            content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀`,
+          });
+        }
 
         return;
       }

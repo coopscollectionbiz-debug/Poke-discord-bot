@@ -12,7 +12,6 @@ import {
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
-import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
@@ -34,14 +33,12 @@ export default {
     .setName("recruit")
     .setDescription("Recruit a Pokémon or Trainer! (Costs 100 CC)"),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-    await safeReply(interaction, {
-      content: "⏳ Preparing recruitment menu...",
-      ephemeral: true
-    });
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+    // ✅ Defer reply immediately
+    await interaction.deferReply({ flags: 64 });
 
     const id = interaction.user.id;
-    const user = ensureUserData(trainerData, id, interaction.user.username);
+    const user = await ensureUserInitialized(id, interaction.user.username, trainerData, reloadUserFromDiscord);
 
     // ==========================================================
     // ⏱️ Check cooldown

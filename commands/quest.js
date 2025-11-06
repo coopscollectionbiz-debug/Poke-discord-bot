@@ -6,7 +6,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
-import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { safeReply } from "../utils/safeReply.js";
@@ -27,14 +26,12 @@ export default {
     .setName("quest")
     .setDescription("Complete a quest and receive a random reward! (70% Pokémon, 30% Trainer, +50 CC)"),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-    await safeReply(interaction, {
-      content: "🧭 Embarking on a quest... Rewards include Pokémon or Trainers! (70% Pokémon, 30% Trainer)",
-      ephemeral: true
-    });
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+    // ✅ Defer reply immediately
+    await interaction.deferReply({ flags: 64 });
 
     const id = interaction.user.id;
-    const user = ensureUserData(trainerData, id, interaction.user.username);
+    const user = await ensureUserInitialized(id, interaction.user.username, trainerData, reloadUserFromDiscord);
 
     // ==========================================================
     // ⏱️ Check cooldown

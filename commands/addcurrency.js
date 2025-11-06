@@ -4,7 +4,6 @@
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
-import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { performCurrencyTransaction } from "../utils/saveManager.js";
 
@@ -22,7 +21,7 @@ export default {
     .addIntegerOption(option => option.setName("amount").setDescription("The amount to add.").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
     // ✅ Defer reply immediately
     await interaction.deferReply({ ephemeral: true });
 
@@ -49,7 +48,7 @@ export default {
       });
     }
 
-    const userData = ensureUserData(trainerData, targetUser.id, targetUser.username);
+    const userData = await ensureUserInitialized(targetUser.id, targetUser.username, trainerData, reloadUserFromDiscord);
 
     try {
       // ✅ Use atomic transaction

@@ -28,40 +28,19 @@ export default {
     .setName("trainercard")
     .setDescription("View or create your Trainer Card!"),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
     // ✅ Defer the interaction once at the start
     await interaction.deferReply({ flags: 64 });
 
     const userId = interaction.user.id;
     const username = interaction.user.username;
 
-    // ✅ Reload user from Discord to get latest state (handles race condition)
-    const reloadedUser = await reloadUserFromDiscord(userId);
-    if (reloadedUser) {
-      console.log(`🔄 Using reloaded user data from Discord`);
-      trainerData[userId] = reloadedUser;
-    }
+    console.log(`📋 User lookup for ${username}`);
 
-    let user = trainerData[userId];
+    // ✅ Use shared helper to ensure user is properly initialized
+    const user = await ensureUserInitialized(userId, username, trainerData, reloadUserFromDiscord);
 
-    console.log(`📋 User lookup for ${username}:`, {
-      exists: !!user,
-      onboardingComplete: user?.onboardingComplete,
-      onboardingStage: user?.onboardingStage
-    });
-
-    // ✅ Use unified schema
-    if (!user) {
-      console.log(`🆕 Creating new user`);
-      user = trainerData[userId] = createNewUser(userId, username);
-    } else {
-      console.log(`✏️ Validating existing user schema`);
-      user = validateUserSchema(user, userId, username);
-      // ✅ Ensure the validated user is stored back in trainerData
-      trainerData[userId] = user;
-    }
-
-    console.log(`📋 After schema validation:`, {
+    console.log(`📋 User state:`, {
       onboardingComplete: user.onboardingComplete,
       onboardingStage: user.onboardingStage
     });

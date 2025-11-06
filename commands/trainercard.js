@@ -117,12 +117,14 @@ async function downloadSpritesToTemp(urls, baseName) {
 // 🌿 STARTER SELECTION
 // ===========================================================
 
+// 5 starters for each type (Grass, Fire, Water) - one from each generation
 const starterIDs = [
-  1, 4, 7,
-  152, 155, 158,
-  252, 255, 258,
-  387, 390, 393,
-  495, 498, 501
+  // Grass starters: Bulbasaur, Chikorita, Treecko, Turtwig, Snivy
+  1, 152, 252, 387, 495,
+  // Fire starters: Charmander, Cyndaquil, Torchic, Chimchar, Tepig
+  4, 155, 255, 390, 498,
+  // Water starters: Squirtle, Totodile, Mudkip, Piplup, Oshawott
+  7, 158, 258, 393, 501
 ];
 
 // Cache for Pokemon data to avoid repeated slow loads
@@ -279,7 +281,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     const buildButtons = (list, index, totalPages) => {
       const rows = [];
       
-      // Create button rows - 2 buttons per row to fit more Pokemon
+      // Create all starter buttons
       const buttons = list.map(p =>
         new ButtonBuilder()
           .setCustomId(`starter_${p.id}`)
@@ -287,15 +289,14 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
           .setStyle(ButtonStyle.Primary)
       );
       
-      // Add buttons in pairs (2 per row)
-      for (let i = 0; i < buttons.length; i += 2) {
-        const row = new ActionRowBuilder().addComponents(
-          buttons.slice(i, i + 2)
-        );
-        rows.push(row);
+      // ✅ Put ALL selection buttons on ONE row
+      // Discord limit: max 5 buttons per row
+      if (buttons.length > 0) {
+        const selectionRow = new ActionRowBuilder().addComponents(buttons);
+        rows.push(selectionRow);
       }
 
-      // Add navigation row
+      // Add navigation row separately
       const navRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("prev_page")

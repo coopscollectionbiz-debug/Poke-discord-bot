@@ -12,7 +12,7 @@ import {
   AttachmentBuilder,
   ComponentType
 } from "discord.js";
-import { rollForShiny } from "../shinyOdds.js";
+import { rollForShiny } from "../utils/shinyOdds.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";
@@ -207,11 +207,11 @@ async function getPokemonCached() {
 // ===========================================================
 
 const starterGenerations = [
-  { name: "Kanto", ids: [1, 4, 7, 25, 54] },
-  { name: "Johto", ids: [152, 155, 158, 172, 175] },
-  { name: "Hoenn", ids: [252, 255, 258, 280, 325] },
-  { name: "Sinnoh", ids: [387, 390, 393, 406, 427] },
-  { name: "Unova", ids: [495, 498, 501, 506, 519] }
+  { name: "Kanto", ids: [1, 4, 7] },           // Bulbasaur, Charmander, Squirtle
+  { name: "Johto", ids: [152, 155, 158] },     // Chikorita, Cyndaquil, Totodile
+  { name: "Hoenn", ids: [252, 255, 258] },     // Treecko, Torchic, Mudkip
+  { name: "Sinnoh", ids: [387, 390, 393] },    // Turtwig, Chimchar, Piplup
+  { name: "Unova", ids: [495, 498, 501] }      // Snivy, Tepig, Oshawott
 ];
 
 export async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
@@ -292,12 +292,18 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         .setDescription(
           `**${pokemon.name}** #${pokemon.id}\n\n` +
           `Generation: ${genName}\n` +
-          `Starter ${starterNumInGen} of 5\n\n` +
+          `Starter ${starterNumInGen} of 3\n\n` +
           `**Pokemon ${index + 1} of ${allStarters.length}**`
         )
         .setImage(`${spritePaths.pokemon}${pokemon.id}.gif`)
         .setColor(0x43b581)
         .setFooter({ text: `Use the arrows to browse all starters` });
+
+      // Add type icon as thumbnail (top right)
+      if (pokemon.types?.[0]) {
+        const typeIconUrl = `${spritePaths.types}${pokemon.types[0]}.png`;
+        embed.setThumbnail(typeIconUrl);
+      }
 
       // Navigation buttons
       const buttons = new ActionRowBuilder().addComponents(
@@ -328,7 +334,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
       {
         filter: i => i.user.id === interaction.user.id,
         componentType: ComponentType.Button,
-        time: 120000
+        time: 180000
       },
       "trainercard"
     );
@@ -344,12 +350,16 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         user.onboardingComplete = true;
         user.displayedPokemon = [selectedPokemon.id];
 
-        await saveDataToDiscord(trainerData);
-
+        // ✅ Reply IMMEDIATELY before save operations
         await safeReply(i, {
           content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀`,
           flags: 64
         });
+
+        // ✅ Save asynchronously AFTER reply (don't wait)
+        saveDataToDiscord(trainerData).catch(err => 
+          console.error("Failed to save after starter selection:", err.message)
+        );
 
         return collector.stop();
       }
@@ -585,8 +595,15 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
         selectedPokemon = [];
       } else if (i.customId === "pokemon_save") {
         user.displayedPokemon = selectedPokemon.map(id => Number(id));
-        await saveDataToDiscord(trainerData);
+        
+        // ✅ Reply IMMEDIATELY
         await safeReply(i, { content: "✅ Pokémon updated!", flags: 64 });
+        
+        // ✅ Save asynchronously AFTER reply
+        saveDataToDiscord(trainerData).catch(err => 
+          console.error("Failed to save pokemon selection:", err.message)
+        );
+        
         return collector.stop();
       }
 
@@ -674,8 +691,15 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
       } else if (i.customId.startsWith("select_trainer_")) {
         const selectedTrainer = i.customId.replace("select_trainer_", "");
         user.displayedTrainer = selectedTrainer;
-        await saveDataToDiscord(trainerData);
+        
+        // ✅ Reply IMMEDIATELY
         await safeReply(i, { content: `✅ Trainer changed!`, flags: 64 });
+        
+        // ✅ Save asynchronously AFTER reply
+        saveDataToDiscord(trainerData).catch(err => 
+          console.error("Failed to save trainer selection:", err.message)
+        );
+        
         return collector.stop();
       }
 

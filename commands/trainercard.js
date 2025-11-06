@@ -327,22 +327,21 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     };
 
     const { embed, buttons } = buildCarousel(currentIndex);
-    await interaction.editReply({ embeds: [embed], components: [buttons] });
+    const reply = await interaction.editReply({ embeds: [embed], components: [buttons] });
 
-    const collector = createSafeCollector(
-      interaction,
-      {
-        filter: i => i.user.id === interaction.user.id,
-        componentType: ComponentType.Button,
-        time: 120000
-      },
-      "trainercard"
-    );
+    // Create collector on the message (don't use createSafeCollector here - it tries to reply after interaction expires)
+    const collector = reply.createMessageComponentCollector({
+      filter: i => i.user.id === interaction.user.id,
+      componentType: ComponentType.Button,
+      time: 120000
+    });
 
     collector.on("collect", async i => {
       if (i.customId === "select_starter") {
-        // ✅ DEFER FIRST before any reply
-        await i.deferReply({ flags: 64 });
+        // ✅ DEFER UPDATE (not deferReply - we already deferred the main interaction)
+        await i.deferUpdate().catch(err => {
+          console.warn("Failed to defer update:", err.message);
+        });
         
         // ✅ STOP COLLECTOR
         collector.stop();
@@ -352,11 +351,14 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         user.onboardingComplete = true;
         user.displayedPokemon = [selectedPokemon.id];
 
-        // ✅ Reply AFTER deferring
-        await safeReply(i, {
-          content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀\n\nRun \`/pokedex ${selectedPokemon.id}\` to view your starter's Pokédex entry.`,
-          flags: 64
-        });
+        // ✅ Edit the deferred interaction reply
+        try {
+          await interaction.editReply({
+            content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀\n\nRun \`/pokedex ${selectedPokemon.id}\` to view your starter's Pokédex entry.`,
+          });
+        } catch (err) {
+          console.error("Failed to edit reply:", err.message);
+        }
 
         // ✅ Save asynchronously AFTER reply
         saveDataToDiscord(trainerData).catch(err => 
@@ -367,7 +369,9 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
       }
 
       // For next/prev buttons, defer and update
-      await i.deferUpdate();
+      await i.deferUpdate().catch(err => {
+        console.warn("Failed to defer update for navigation:", err.message);
+      });
       
       if (i.customId === "next_starter") {
         currentIndex = Math.min(currentIndex + 1, allStarters.length - 1);
@@ -377,6 +381,16 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
       const { embed: e, buttons: b } = buildCarousel(currentIndex);
       await i.editReply({ embeds: [e], components: [b] });
+    });
+
+    // Cleanup when collector ends (timeout or manual stop)
+    collector.on("end", async (_, reason) => {
+      // Only clean up if not manually stopped (select_starter)
+      if (reason !== "user") {
+        try {
+          await interaction.editReply({ components: [] }).catch(() => {});
+        } catch {}
+      }
     });
   } catch (err) {
     console.error("starterSelection error:", err);

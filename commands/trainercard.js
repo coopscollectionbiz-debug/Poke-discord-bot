@@ -344,8 +344,8 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         // ✅ DEFER FIRST before any reply
         await i.deferReply({ flags: 64 });
         
-        // ✅ STOP COLLECTOR
-        collector.stop();
+        // ✅ STOP COLLECTOR with "confirmed" reason to prevent false "session expired" message
+        collector.stop("confirmed");
 
         const selectedPokemon = allStarters[currentIndex];
         user.selectedStarter = selectedPokemon.id;
@@ -625,7 +625,8 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
           console.error("Failed to save pokemon selection:", err.message)
         );
         
-        return collector.stop();
+        // Stop with "confirmed" reason to prevent false "session expired" message
+        return collector.stop("confirmed");
       }
 
       const { embed: e, components: c } = buildPage(pageIndex);
@@ -721,7 +722,8 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
           console.error("Failed to save trainer selection:", err.message)
         );
         
-        return collector.stop();
+        // Stop with "confirmed" reason to prevent false "session expired" message
+        return collector.stop("confirmed");
       }
 
       const { embed: e, components: c } = buildPage(pageIndex);

@@ -97,7 +97,8 @@ export default {
     collector.on("collect", async (i) => {
       if (processed) return;
       processed = true;
-      collector.stop();
+      // Stop with "confirmed" reason to prevent false "session expired" message
+      collector.stop("confirmed");
       if (i.values[0] === "pokemon") {
         await giveRandomPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord);
       } else {

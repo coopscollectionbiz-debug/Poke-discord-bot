@@ -118,7 +118,8 @@ export default {
 
       if (i.customId === "recruit_type") {
         const choice = i.values[0];
-        collector.stop();
+        // Stop with "confirmed" reason to prevent false "session expired" message
+        collector.stop("confirmed");
 
         // ✅ Check CC again right before the roll (atomic check)
         if (user.cc < RECRUIT_COST_CC) {

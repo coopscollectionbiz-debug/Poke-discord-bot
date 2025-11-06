@@ -1,6 +1,6 @@
 // ==========================================================
 // 🎯 /recruit – manual random Pokémon/trainer recruitment
-// Coop's Collection Discord Bot (Refactored for safeReply + atomic saves)
+// Coop's Collection Discord Bot (Refactored for safeReply + atomic saves + Pokemon Cache)
 // ==========================================================
 import {
   SlashCommandBuilder,
@@ -13,7 +13,8 @@ import {
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
-import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
+import { getPokemonCached } from "../utils/pokemonCache.js";
+import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
 import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey } from "../utils/trainerFileHandler.js";
@@ -74,7 +75,7 @@ export default {
       .setPlaceholder("Choose what to recruit (100 CC cost)")
       .addOptions(
         { label: "Pokémon", value: "pokemon", emoji: "🐾" },
-        { label: "Trainer", value: "trainer", emoji: "🎓" }
+        { label: "Trainer", value: "trainer", emoji: "🎭" }
       );
 
     const cancel = new ButtonBuilder()
@@ -147,7 +148,7 @@ export default {
 };
 
 // ==========================================================
-// 🐾 Pokémon Recruitment - Atomic save
+// 🐾 Pokémon Recruitment - Atomic save + Pokemon Cache
 // ==========================================================
 async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
   // ✅ Atomic check + deduct
@@ -158,7 +159,7 @@ async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDa
     });
   }
 
-  const allPokemon = await getAllPokemon();
+  const allPokemon = await getPokemonCached();
   const pool = allPokemon.filter((p) => p.generation <= 5);
   const pick = selectRandomPokemon(pool);
 
@@ -204,7 +205,7 @@ async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDa
 }
 
 // ==========================================================
-// 🎓 Trainer Recruitment - Atomic save
+// 🎭 Trainer Recruitment - Atomic save
 // ==========================================================
 async function recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
   // ✅ Atomic check + deduct
@@ -241,7 +242,7 @@ async function recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDa
   // ✅ Only show success after save succeeds
   const embed = new EmbedBuilder()
     .setColor(0x5865f2)
-    .setTitle("🎓 Trainer Recruited!")
+    .setTitle("🎭 Trainer Recruited!")
     .setDescription(`You recruited **${pick.name}**!`)
     .setThumbnail(`${spritePaths.trainers}${file}`)
     .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });

@@ -1,13 +1,14 @@
 // ==========================================================
-// 🕒 /daily — claim daily TP, CC, and one random reward
-// Coop's Collection Discord Bot (SafeReply Refactor)
+// 🕐 /daily – claim daily TP, CC, and one random reward
+// Coop's Collection Discord Bot (SafeReply Refactor + Pokemon Cache)
 // ==========================================================
 import { SlashCommandBuilder, ActionRowBuilder, ComponentType } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { validateCooldown } from "../utils/validators.js";
-import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
+import { getPokemonCached } from "../utils/pokemonCache.js";
+import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
 import {
   createSuccessEmbed,
@@ -27,7 +28,7 @@ const DAILY_TP_REWARD = 50;
 const DAILY_CC_REWARD = 25;
 
 // ==========================================================
-// 🧩 Command definition (SafeReply Refactor)
+// 🧩 Command definition (SafeReply Refactor + Pokemon Cache)
 // ==========================================================
 export default {
   data: new SlashCommandBuilder()
@@ -40,7 +41,7 @@ export default {
     // Initialize schema
     const user = ensureUserData(trainerData, id, interaction.user.username);
 
-    // 🕒 Cooldown check
+    // 🕐 Cooldown check
     const cooldownCheck = validateCooldown(user.lastDaily, DAILY_COOLDOWN_MS);
     if (!cooldownCheck.valid) {
       return safeReply(interaction, {
@@ -67,7 +68,7 @@ export default {
     // 🎁 Prompt for bonus
     const menu = createChoiceMenu("daily_type", "Choose your bonus!", [
       { label: "Pokémon", value: "pokemon", emoji: "🐾" },
-      { label: "Trainer", value: "trainer", emoji: "🎓" },
+      { label: "Trainer", value: "trainer", emoji: "🎭" },
     ]);
 
     const embed = createSuccessEmbed(
@@ -107,7 +108,7 @@ export default {
     collector.on("end", async (_, reason) => {
       if (reason === "time") {
         await safeReply(interaction, {
-          content: "⌛ Time's up — try again later!",
+          content: "❌ Time's up – try again later!",
           embeds: [],
           components: [],
           ephemeral: true,
@@ -118,10 +119,10 @@ export default {
 };
 
 // ==========================================================
-// 🐾 Pokémon reward - SafeReply integrated
+// 🐾 Pokémon reward - SafeReply integrated + Pokemon Cache
 // ==========================================================
 async function giveRandomPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-  const allPokemon = await getAllPokemon();
+  const allPokemon = await getPokemonCached();
   const pool = allPokemon.filter((p) => p.generation <= 5);
   const pick = selectRandomPokemon(pool);
   const shiny = rollForShiny(user.tp || 0);
@@ -147,7 +148,7 @@ async function giveRandomPokemon(i, user, trainerData, saveTrainerDataLocal, sav
 }
 
 // ==========================================================
-// 🎓 Trainer reward - SafeReply integrated
+// 🎭 Trainer reward - SafeReply integrated
 // ==========================================================
 async function giveRandomTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
   const flatTrainers = await getFlattenedTrainers();

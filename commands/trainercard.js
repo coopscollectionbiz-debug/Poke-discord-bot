@@ -20,6 +20,7 @@ import { validateUserSchema, createNewUser } from "../utils/userSchema.js";
 import { safeReply } from "../utils/safeReply.js";
 import path from "path";
 import fs from "fs";
+import fetch from "node-fetch";
 import { combineGifsHorizontal } from "../utils/gifComposer.js";
 import { createSafeCollector } from "../utils/safeCollector.js";
 
@@ -69,6 +70,50 @@ function isUrl(str) {
 }
 
 // ===========================================================
+// UTILITY: Download URL sprites to temp directory
+// ===========================================================
+async function downloadSpriteToTemp(url, filename) {
+  const tempPath = path.resolve(`./temp/${filename}`);
+  
+  // Return if already cached
+  if (fs.existsSync(tempPath)) {
+    console.log(`📦 Using cached sprite: ${filename}`);
+    return tempPath;
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const buffer = await response.buffer();
+    fs.writeFileSync(tempPath, buffer);
+    console.log(`⬇️  Downloaded sprite: ${filename} (${buffer.length} bytes)`);
+    return tempPath;
+  } catch (err) {
+    console.error(`❌ Failed to download sprite: ${err.message}`);
+    throw err;
+  }
+}
+
+// ===========================================================
+// UTILITY: Download multiple URL sprites and return local paths
+// ===========================================================
+async function downloadSpritesToTemp(urls, baseName) {
+  const localPaths = [];
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    const pokemonId = url.split('/').pop().replace('.gif', '');
+    const filename = `${baseName}_${i}_${pokemonId}.gif`;
+    
+    const localPath = await downloadSpriteToTemp(url, filename);
+    localPaths.push(localPath);
+  }
+  return localPaths;
+}
+
+// ===========================================================
 // 🌿 STARTER SELECTION
 // ===========================================================
 
@@ -80,14 +125,35 @@ const starterIDs = [
   495, 498, 501
 ];
 
+// Cache for Pokemon data to avoid repeated slow loads
+let pokemonCache = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+
+async function getPokemonCached() {
+  const now = Date.now();
+  if (pokemonCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    return pokemonCache;
+  }
+  console.log(`📦 Loading Pokemon data (cache miss or expired)`);
+  pokemonCache = await getAllPokemon();
+  cacheTimestamp = now;
+  return pokemonCache;
+}
+
 export async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
+  // ✅ CRITICAL: Defer BEFORE any async work - must happen within 3 seconds
   try {
-    // ✅ Defer reply immediately within 3s
     if (!interaction.deferred && !interaction.replied) {
       await interaction.deferReply({ flags: 64 }); // 64 = MessageFlags.Ephemeral
     }
+  } catch (deferError) {
+    console.error(`❌ Failed to defer interaction:`, deferError.message);
+    return safeReply(interaction, { content: `❌ Error: Interaction expired. Please try again.`, flags: 64 }).catch(() => {});
+  }
 
-    const allPokemon = await getAllPokemon();
+  try {
+    const allPokemon = await getPokemonCached();
     const starters = allPokemon.filter(p => starterIDs.includes(Number(p.id)));
 
     if (!starters || starters.length === 0) {
@@ -131,16 +197,27 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
         // ✅ Build GIF paths - handle both URLs and local paths
         const gifPaths = list.map(p => `${spritePaths.pokemon}${p.id}.gif`);
+        const isUrlPath = isUrl(gifPaths[0]);
+        
         console.log(`📸 Building page for ${typeName} with ${list.length} Pokemon: ${list.map(p => p.name).join(", ")}`);
-        console.log(`🎬 GIF paths: ${gifPaths.join(", ")}`);
+        console.log(`🎬 GIF paths (${isUrlPath ? "URL" : "LOCAL"}): ${gifPaths.join(", ")}`);
 
-        // ✅ Try to combine GIFs, with fallback to first image if URLs
         const output = path.resolve(`./temp/${typeName}_starters.gif`);
         let combinedGif = null;
 
         try {
-          console.log(`⏳ Combining ${gifPaths.length} GIFs into: ${output}`);
-          await combineGifsHorizontal(gifPaths, output);
+          // If URLs, download to temp first
+          let pathsToCompose = gifPaths;
+          if (isUrlPath) {
+            console.log(`⬇️  Downloading ${gifPaths.length} remote sprites to temp...`);
+            pathsToCompose = await downloadSpritesToTemp(gifPaths, typeName);
+            console.log(`✅ All sprites downloaded locally`);
+          }
+
+          // Now compose the GIFs (either local or downloaded)
+          console.log(`⏳ Combining ${pathsToCompose.length} GIFs into: ${output}`);
+          await combineGifsHorizontal(pathsToCompose, output);
+          
           if (fs.existsSync(output)) {
             const stats = fs.statSync(output);
             console.log(`✅ GIF composed successfully (${stats.size} bytes): ${output}`);
@@ -150,7 +227,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
           }
         } catch (gifError) {
           console.warn(`⚠️ GIF composition failed: ${gifError.message}`);
-          console.warn(`⚠️ Falling back to first image URL for ${typeName}`);
+          console.warn(`⚠️ Falling back to first image for ${typeName}`);
           combinedGif = null;
         }
 
@@ -451,16 +528,19 @@ export async function showTrainerCard(interaction, user) {
       try {
         const gifPaths = owned.map(id => `${spritePaths.pokemon}${id}.gif`);
         const output = path.resolve(`./temp/${username}_team.gif`);
+        const isUrlPath = isUrl(gifPaths[0]);
         
-        // Only try GIF composition if paths are local files
-        if (gifPaths.length > 0 && !isUrl(gifPaths[0])) {
-          await combineGifsHorizontal(gifPaths, output);
-          if (fs.existsSync(output)) {
-            combinedGifAttachment = new AttachmentBuilder(output, { name: "team.gif" });
-          }
-        } else if (gifPaths.length > 0 && isUrl(gifPaths[0])) {
-          // If URLs, we'll display the first one in the embed instead
-          console.log("Using remote sprite URLs, skipping local GIF composition");
+        // If URLs, download to temp first
+        let pathsToCompose = gifPaths;
+        if (isUrlPath) {
+          console.log(`⬇️  Downloading ${gifPaths.length} team sprites to temp...`);
+          pathsToCompose = await downloadSpritesToTemp(gifPaths, `${username}_team`);
+        }
+
+        // Compose the GIFs
+        await combineGifsHorizontal(pathsToCompose, output);
+        if (fs.existsSync(output)) {
+          combinedGifAttachment = new AttachmentBuilder(output, { name: "team.gif" });
         }
       } catch (gifErr) {
         console.warn("⚠️ Failed to combine GIFs:", gifErr.message);
@@ -647,7 +727,7 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
       return safeReply(interaction, { content: "❌ You don't have any Pokémon yet!", flags: 64 });
     }
 
-    const allPokemon = await getAllPokemon();
+    const allPokemon = await getPokemonCached();
     const pokemonPerPage = 12;
     const pages = [];
     for (let i = 0; i < ownedPokemon.length; i += pokemonPerPage) {

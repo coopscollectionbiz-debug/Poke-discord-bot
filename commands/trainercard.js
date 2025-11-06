@@ -33,6 +33,9 @@ export default {
     .setDescription("View or create your Trainer Card!"),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+    // ✅ Defer the interaction once at the start
+    await interaction.deferReply({ flags: 64 });
+
     const userId = interaction.user.id;
     const username = interaction.user.username;
     let user = trainerData[userId];
@@ -215,18 +218,6 @@ const starterGenerations = [
 ];
 
 export async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
-  try {
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ flags: 64 });
-    }
-  } catch (deferError) {
-    console.error(`❌ Failed to defer interaction:`, deferError.message);
-    return safeReply(interaction, { 
-      content: `❌ Error: Interaction expired. Please try again.`, 
-      flags: 64 
-    }).catch(() => {});
-  }
-
   try {
     const allPokemon = await getPokemonCached();
     

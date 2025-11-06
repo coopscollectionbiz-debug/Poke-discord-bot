@@ -355,7 +355,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
         // ✅ Reply IMMEDIATELY
         await safeReply(i, {
-          content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀`,
+          content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀\n\nRun \`/pokedex ${selectedPokemon.id}\` to view your starter's Pokédex entry.`,
           flags: 64
         });
 
@@ -363,32 +363,6 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         saveDataToDiscord(trainerData).catch(err => 
           console.error("Failed to save after starter selection:", err.message)
         );
-
-        // ✅ Auto-run pokedex command for the starter
-        try {
-          const { execute: executePokedex } = await import("../commands/pokedex.js");
-          // Create a simulated interaction that matches pokedex command expectations
-          const pokedexInteraction = {
-            user: i.user,
-            channel: i.channel,
-            options: {
-              getString: (name) => name === "name" ? String(selectedPokemon.id) : null
-            },
-            deferred: false,
-            replied: false,
-            deferReply: async () => { pokedexInteraction.deferred = true; },
-            editReply: async (opts) => {
-              try {
-                return await i.channel.send(opts);
-              } catch (err) {
-                console.error("Failed to send pokedex:", err.message);
-              }
-            }
-          };
-          await executePokedex(pokedexInteraction);
-        } catch (err) {
-          console.error("Failed to auto-run pokedex command:", err.message);
-        }
 
         return;
       }

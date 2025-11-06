@@ -308,15 +308,19 @@ client.on("interactionCreate", async (interaction) => {
       if (interaction.customId.startsWith("refresh_card") || 
           interaction.customId.startsWith("share_public") ||
           interaction.customId.startsWith("change_trainer") ||
-          interaction.customId.startsWith("change_pokemon") ||
-          interaction.customId.startsWith("select_starter") ||
-          interaction.customId.startsWith("prev_starter") ||
-          interaction.customId.startsWith("next_starter") ||
-          interaction.customId.startsWith("restart_trainercard")) {
+          interaction.customId.startsWith("change_pokemon")) {
         await handleTrainerCardButtons(interaction, trainerData, saveDataToDiscord);
         await saveTrainerDataLocal(trainerData);
         debouncedDiscordSave();
         return;
+      }
+
+      // Don't route starter carousel buttons - they're handled by the local collector
+      if (interaction.customId.startsWith("select_starter") || 
+          interaction.customId.startsWith("prev_starter") ||
+          interaction.customId.startsWith("next_starter") ||
+          interaction.customId.startsWith("restart_trainercard")) {
+        return; // Silently ignore - handled by collector
       }
 
       console.warn(`⚠️ Unhandled button: ${interaction.customId}`);

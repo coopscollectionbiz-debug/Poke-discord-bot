@@ -1,7 +1,7 @@
 // ==========================================================
 // utils/gifComposer.js
 // Compose multiple animated GIFs into a single horizontal strip
-// Preserves animation timing
+// Preserves animation timing - FIXED VERSION
 // ==========================================================
 
 import { execSync } from "child_process";
@@ -36,21 +36,23 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
     }
 
     // Build ImageMagick command for horizontal composition with animation preservation
-    // Strategy: Use parentheses to process each GIF separately, then composite frames
-    // Key points:
-    // 1. Process each GIF in parentheses with -coalesce to expand all frames
-    // 2. +append combines images horizontally within each frame sequence
-    // 3. -set delay sets frame timing (10 = 100ms per frame)
-    // 4. -loop 0 = infinite loop
-    // 5. -layers Optimize reduces file size
-    
+    // The key insight: we need to +append AFTER coalescing all frames
+    // This ensures each frame of the output is a composite of the corresponding frames
+    // from all input GIFs
     let command = `convert`;
     for (const gifPath of gifPaths) {
-      command += ` \\( "${gifPath}" -coalesce \\)`;
+      command += ` "${gifPath}"`;
     }
-    command += ` -background transparent +append -set delay 10 -loop 0 -layers Optimize "${outputPath}"`;
+    // The magic sequence:
+    // 1. -coalesce: Expand all frames of all GIFs into separate images
+    // 2. +append: Append all images horizontally (frame-by-frame because of coalesce)
+    // 3. -background transparent: Transparent background for empty space
+    // 4. -set delay 10: 10 ticks per frame (100ms)
+    // 5. -loop 0: Infinite loop
+    // 6. -layers Optimize: Optimize animation (reduce file size)
+    command += ` -coalesce -background transparent +append -set delay 10 -loop 0 -layers Optimize "${outputPath}"`;
 
-    console.log(`🧩 [GIFComposer] Command: convert [inputs with -coalesce] +append -set delay 10 -loop 0 -layers Optimize`);
+    console.log(`🧩 [GIFComposer] Executing ImageMagick compose command...`);
 
     // Execute the command
     execSync(command, { 
@@ -70,7 +72,7 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
 
     // Get frame information
     try {
-      const infoCommand = `identify -verbose "${outputPath}" | grep -E "Geometry|Delay|Scene"`;
+      const infoCommand = `identify -verbose "${outputPath}" | grep -E "Geometry|Delay|Scene" | head -20`;
       const info = execSync(infoCommand, { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
       console.log(`ℹ️ GIF Info:\n${info}`);
     } catch {
@@ -85,18 +87,18 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
 }
 
 /**
- * Alternative method using different ImageMagick approach
- * For when the standard approach fails
+ * Alternative method - uses -extent to ensure consistent sizing
+ * For when sprites have different dimensions
  * @param {Array} gifPaths - Array of GIF file paths
  * @param {string} outputPath - Output path
  * @returns {Promise<boolean>}
  */
-export async function combineGifsHorizontalAlt(gifPaths, outputPath) {
+export async function combineGifsHorizontalFixed(gifPaths, outputPath) {
   if (!gifPaths || gifPaths.length === 0) {
     throw new Error("No GIF paths provided");
   }
 
-  console.log(`🧩 [GIFComposer] Using alternative method for ${gifPaths.length} GIFs...`);
+  console.log(`🧩 [GIFComposer] Using fixed-size method for ${gifPaths.length} GIFs...`);
 
   try {
     const outputDir = path.dirname(outputPath);
@@ -104,17 +106,19 @@ export async function combineGifsHorizontalAlt(gifPaths, outputPath) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    // Alternative approach: explicitly handle animation
-    const command = `convert \\
-      -dispose Background \\
-      $(for f in ${gifPaths.map(p => `"${p}"`).join(" ")}; do echo "$f"; done) \\
-      -background transparent \\
-      -gravity Center \\
-      -extent 128x128 \\
-      +append \\
-      -set delay 10 \\
-      -loop 0 \\
-      "${outputPath}"`;
+    // First, get dimensions of first GIF to use as standard
+    const sizeCommand = `identify -format "%w,%h" "${gifPaths[0]}"`;
+    const sizeStr = execSync(sizeCommand, { encoding: "utf-8" }).trim();
+    const [width, height] = sizeStr.split(',').map(Number);
+    
+    console.log(`📐 Standard size from first GIF: ${width}x${height}`);
+
+    // Build command with -extent to normalize sizes
+    let command = `convert`;
+    for (const gifPath of gifPaths) {
+      command += ` "${gifPath}" -coalesce -extent ${width}x${height} -background transparent -gravity Center`;
+    }
+    command += ` -background transparent +append -set delay 10 -loop 0 -layers Optimize "${outputPath}"`;
 
     execSync(command, { 
       stdio: ["pipe", "pipe", "pipe"],
@@ -125,7 +129,48 @@ export async function combineGifsHorizontalAlt(gifPaths, outputPath) {
       throw new Error("Output GIF was not created");
     }
 
-    console.log(`✅ GIF created successfully (alt method)`);
+    console.log(`✅ Fixed-size GIF created successfully`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Fixed-size GIF composition failed: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Alternative method using montage for side-by-side layout
+ * For when standard approach fails
+ * @param {Array} gifPaths - Array of GIF file paths
+ * @param {string} outputPath - Output path
+ * @returns {Promise<boolean>}
+ */
+export async function combineGifsHorizontalAlt(gifPaths, outputPath) {
+  if (!gifPaths || gifPaths.length === 0) {
+    throw new Error("No GIF paths provided");
+  }
+
+  console.log(`🧩 [GIFComposer] Using montage alternative for ${gifPaths.length} GIFs...`);
+
+  try {
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // Use montage with coalesced frames
+    const gifList = gifPaths.map(p => `"${p}"`).join(" ");
+    const command = `convert ${gifList} -coalesce -background transparent -tile ${gifPaths.length}x1 -geometry +0+0 -gravity Center +append -set delay 10 -loop 0 "${outputPath}"`;
+
+    execSync(command, { 
+      stdio: ["pipe", "pipe", "pipe"],
+      shell: "/bin/bash"
+    });
+
+    if (!fs.existsSync(outputPath)) {
+      throw new Error("Output GIF was not created");
+    }
+
+    console.log(`✅ Alternative GIF created successfully`);
     return true;
   } catch (error) {
     console.error(`❌ Alternative GIF composition failed: ${error.message}`);
@@ -153,13 +198,12 @@ export async function combineGifsVertical(gifPaths, outputPath) {
     }
 
     // -append for vertical composition (instead of +append)
-    const command = `convert ${gifPaths.map(p => `"${p}"`).join(" ")} \\
-      -background transparent \\
-      -append \\
-      -set delay 10 \\
-      -loop 0 \\
-      -layers Optimize \\
-      "${outputPath}"`;
+    // Same coalesce strategy as horizontal
+    let command = `convert`;
+    for (const gifPath of gifPaths) {
+      command += ` "${gifPath}"`;
+    }
+    command += ` -coalesce -background transparent -append -set delay 10 -loop 0 -layers Optimize "${outputPath}"`;
 
     execSync(command, { 
       stdio: ["pipe", "pipe", "pipe"],
@@ -188,18 +232,39 @@ export async function getGifInfo(gifPath) {
     const command = `identify -verbose "${gifPath}"`;
     const output = execSync(command, { encoding: "utf-8" });
     
-    const frameMatch = output.match(/Iterations: (\d+)/);
+    // Try multiple patterns for extracting frame count
+    let frames = 1;
+    const iterMatch = output.match(/Iterations: (\d+)/);
+    const sceneMatch = output.match(/Scenes: (\d+)/);
+    if (iterMatch) frames = parseInt(iterMatch[1]);
+    else if (sceneMatch) frames = parseInt(sceneMatch[1]);
+    
     const delayMatch = output.match(/Delay: ([\d.]+)x([\d.]+)/);
     const sizeMatch = output.match(/Geometry: (\d+)x(\d+)/);
     
     return {
-      frames: frameMatch ? parseInt(frameMatch[1]) : 1,
+      frames,
       delay: delayMatch ? parseInt(delayMatch[1]) : 10,
       width: sizeMatch ? parseInt(sizeMatch[1]) : 0,
-      height: sizeMatch ? parseInt(sizeMatch[2]) : 0
+      height: sizeMatch ? parseInt(sizeMatch[2]) : 0,
+      path: gifPath
     };
   } catch (error) {
     console.warn(`⚠️ Could not get GIF info: ${error.message}`);
-    return { frames: 1, delay: 10, width: 0, height: 0 };
+    return { frames: 1, delay: 10, width: 0, height: 0, path: gifPath };
+  }
+}
+
+/**
+ * Debug helper - list all frames in a GIF
+ * @param {string} gifPath - Path to GIF file
+ */
+export async function debugGifFrames(gifPath) {
+  try {
+    const command = `identify "${gifPath}"`;
+    const output = execSync(command, { encoding: "utf-8" });
+    console.log(`🔍 Frames in ${path.basename(gifPath)}:\n${output}`);
+  } catch (error) {
+    console.warn(`⚠️ Could not debug GIF: ${error.message}`);
   }
 }

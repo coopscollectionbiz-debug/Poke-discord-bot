@@ -214,10 +214,18 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
             console.log(`⬇️  Downloading ${gifPaths.length} remote sprites to temp...`);
             pathsToCompose = await downloadSpritesToTemp(gifPaths, typeName);
             console.log(`✅ All sprites downloaded locally`);
+            console.log(`📍 Paths to compose: ${pathsToCompose.join(", ")}`);
+          }
+
+          // Verify all files exist before composing
+          const missingFiles = pathsToCompose.filter(p => !fs.existsSync(p));
+          if (missingFiles.length > 0) {
+            throw new Error(`Missing files: ${missingFiles.join(", ")}`);
           }
 
           // Now compose the GIFs (either local or downloaded)
           console.log(`⏳ Combining ${pathsToCompose.length} GIFs into: ${output}`);
+          console.log(`🎬 GIF paths: ${pathsToCompose.map(p => `"${p}"`).join(" ")}`);
           await combineGifsHorizontal(pathsToCompose, output);
           
           if (fs.existsSync(output)) {
@@ -228,7 +236,8 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
             console.warn(`⚠️ GIF file not created at: ${output}`);
           }
         } catch (gifError) {
-          console.warn(`⚠️ GIF composition failed: ${gifError.message}`);
+          console.error(`❌ GIF composition failed: ${gifError.message}`);
+          console.error(`❌ Stack: ${gifError.stack}`);
           console.warn(`⚠️ Falling back to first image for ${typeName}`);
           combinedGif = null;
         }

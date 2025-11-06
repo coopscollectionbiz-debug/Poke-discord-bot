@@ -1,6 +1,6 @@
-// /trainercard.js (COMPLETE VERSION - URL-AWARE)
-// Coop's Collection Discord Bot — Full Implementation with safeReply()
-// Handles both local files and remote URLs
+// /commands/trainercard.js (COMPLETE VERSION)
+// Coop's Collection Discord Bot — Trainer Card Command
+// Canvas-based display: Trainer Sprite | Lead Pokemon | 5 Pokemon Grid
 // ===========================================================
 
 import {
@@ -12,17 +12,17 @@ import {
   AttachmentBuilder,
   ComponentType
 } from "discord.js";
-import { rollForShiny } from "../shinyOdds.js";
+import { rollForShiny } from "../utils/shinyOdds.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";
 import { validateUserSchema, createNewUser } from "../utils/userSchema.js";
 import { safeReply } from "../utils/safeReply.js";
+import { createSafeCollector } from "../utils/safeCollector.js";
+import { createCanvas, loadImage } from "canvas";
 import path from "path";
 import fs from "fs";
 import fetch from "node-fetch";
-import { combineGifsHorizontal } from "../utils/gifComposer.js";
-import { createSafeCollector } from "../utils/safeCollector.js";
 
 // ===========================================================
 // SLASH COMMAND
@@ -104,7 +104,7 @@ async function downloadSpritesToTemp(urls, baseName) {
   const localPaths = [];
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
-    const pokemonId = url.split('/').pop().replace('.gif', '');
+    const pokemonId = url.split('/').pop().replace('.gif', '').replace('.png', '');
     const filename = `${baseName}_${i}_${pokemonId}.gif`;
     
     const localPath = await downloadSpriteToTemp(url, filename);
@@ -114,20 +114,79 @@ async function downloadSpritesToTemp(urls, baseName) {
 }
 
 // ===========================================================
-// 🌿 STARTER SELECTION
+// UTILITY: Create team grid canvas (Pokemon 2-6)
 // ===========================================================
+async function createTeamGrid(team, spritePaths) {
+  try {
+    const canvas = createCanvas(240, 220);
+    const ctx = canvas.getContext("2d");
 
-// 5 starters for each type (Grass, Fire, Water) - one from each generation
-const starterIDs = [
-  // Grass starters: Bulbasaur, Chikorita, Treecko, Turtwig, Snivy
-  1, 152, 252, 387, 495,
-  // Fire starters: Charmander, Cyndaquil, Torchic, Chimchar, Tepig
-  4, 155, 255, 390, 498,
-  // Water starters: Squirtle, Totodile, Mudkip, Piplup, Oshawott
-  7, 158, 258, 393, 501
-];
+    // Background
+    ctx.fillStyle = "#f0f0f0";
+    ctx.fillRect(0, 0, 240, 220);
+    ctx.strokeStyle = "#ddd";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 0, 240, 220);
 
-// Cache for Pokemon data to avoid repeated slow loads
+    // Grid layout: 2x2 + 1 centered
+    const positions = [
+      { x: 10, y: 10, size: 100 },    // Pokemon 2 (top-left)
+      { x: 130, y: 10, size: 100 },   // Pokemon 3 (top-right)
+      { x: 10, y: 120, size: 100 },   // Pokemon 4 (bottom-left)
+      { x: 130, y: 120, size: 100 },  // Pokemon 5 (bottom-right)
+      { x: 70, y: 110, size: 100 }    // Pokemon 6 (centered bottom)
+    ];
+
+    // Draw each Pokemon
+    for (let i = 0; i < Math.min(team.length, 5); i++) {
+      const pokemon = team[i];
+      if (!pokemon) continue;
+
+      const pos = positions[i];
+
+      try {
+        const imgUrl = `${spritePaths.pokemon}${pokemon.id}.gif`;
+        const img = await loadImage(imgUrl);
+
+        // Draw semi-transparent background
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        ctx.fillRect(pos.x, pos.y, pos.size, pos.size);
+        ctx.strokeStyle = "#ccc";
+        ctx.strokeRect(pos.x, pos.y, pos.size, pos.size);
+
+        // Draw Pokemon sprite centered
+        const spriteSize = 80;
+        const offsetX = (pos.size - spriteSize) / 2;
+        const offsetY = (pos.size - spriteSize) / 2;
+        ctx.drawImage(img, pos.x + offsetX, pos.y + offsetY, spriteSize, spriteSize);
+
+        // Draw Pokemon name
+        ctx.fillStyle = "#333";
+        ctx.font = "bold 10px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(pokemon.name.substring(0, 10), pos.x + pos.size / 2, pos.y + pos.size + 12);
+      } catch (err) {
+        console.warn(`Failed to load image for ${pokemon.name}:`, err.message);
+        // Draw placeholder
+        ctx.fillStyle = "#ccc";
+        ctx.fillRect(pos.x + 30, pos.y + 30, 40, 40);
+        ctx.fillStyle = "#999";
+        ctx.font = "10px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("?", pos.x + pos.size / 2, pos.y + pos.size / 2);
+      }
+    }
+
+    return canvas.toBuffer("image/png");
+  } catch (error) {
+    console.error("Failed to create team grid:", error);
+    throw error;
+  }
+}
+
+// ===========================================================
+// Cache for Pokemon data
+// ===========================================================
 let pokemonCache = null;
 let cacheTimestamp = 0;
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
@@ -143,364 +202,172 @@ async function getPokemonCached() {
   return pokemonCache;
 }
 
+// ===========================================================
+// 🌿 STARTER SELECTION - CAROUSEL WITH ANIMATED GIFS
+// ===========================================================
+
+const starterGenerations = [
+  { name: "Kanto", ids: [1, 4, 7, 25, 54] },
+  { name: "Johto", ids: [152, 155, 158, 172, 175] },
+  { name: "Hoenn", ids: [252, 255, 258, 280, 325] },
+  { name: "Sinnoh", ids: [387, 390, 393, 406, 427] },
+  { name: "Unova", ids: [495, 498, 501, 506, 519] }
+];
+
 export async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
-  // ✅ CRITICAL: Defer BEFORE any async work - must happen within 3 seconds
   try {
     if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ flags: 64 }); // 64 = MessageFlags.Ephemeral
+      await interaction.deferReply({ flags: 64 });
     }
   } catch (deferError) {
     console.error(`❌ Failed to defer interaction:`, deferError.message);
-    return safeReply(interaction, { content: `❌ Error: Interaction expired. Please try again.`, flags: 64 }).catch(() => {});
+    return safeReply(interaction, { 
+      content: `❌ Error: Interaction expired. Please try again.`, 
+      flags: 64 
+    }).catch(() => {});
   }
 
   try {
     const allPokemon = await getPokemonCached();
-    const starters = allPokemon.filter(p => starterIDs.includes(Number(p.id)));
+    
+    // Build all starters in a flat list
+    const allStarters = [];
+    const generationInfo = [];
+    
+    for (const gen of starterGenerations) {
+      const starters = gen.ids
+        .map(id => allPokemon.find(p => p.id === id))
+        .filter(Boolean);
+      
+      if (starters.length > 0) {
+        starters.forEach(starter => {
+          allStarters.push(starter);
+        });
+        generationInfo.push({ name: gen.name, count: starters.length });
+      }
+    }
 
-    if (!starters || starters.length === 0) {
+    if (allStarters.length === 0) {
       throw new Error("No starter pokemon found");
     }
 
-    // Group starters by primary type
-    const grouped = {};
-    for (const p of starters) {
-      const t = p.types?.[0];
-      if (!t) continue;
-      if (!grouped[t]) grouped[t] = [];
-      grouped[t].push(p);
-    }
+    console.log(`🎪 Starter carousel loaded with ${allStarters.length} starters`);
 
-    const order = [12, 10, 11]; // Grass, Fire, Water
-    const sortedTypes = Object.keys(grouped)
-      .map(Number)
-      .sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    let currentIndex = 0;
 
-    if (sortedTypes.length === 0) {
-      throw new Error("No starter types found");
-    }
-
-    // ✅ Ensure temp directory exists
-    const tempDir = path.resolve("./temp");
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-
-    // 🧩 Build each page dynamically
-    const buildPage = async index => {
-      try {
-        const typeId = sortedTypes[index];
-        const typeName = typeMap[typeId];
-        const list = grouped[typeId];
-
-        if (!list || list.length === 0) {
-          throw new Error(`No pokemon for type ${typeId}`);
+    const buildCarousel = (index) => {
+      const pokemon = allStarters[index];
+      const genInfo = generationInfo.find(g => {
+        let genCount = 0;
+        for (const gen of starterGenerations) {
+          if (genCount + gen.ids.length > index) {
+            return true;
+          }
+          genCount += gen.ids.length;
         }
+        return false;
+      });
 
-        // ✅ Build GIF paths - handle both URLs and local paths
-        const gifPaths = list.map(p => `${spritePaths.pokemon}${p.id}.gif`);
-        const isUrlPath = isUrl(gifPaths[0]);
+      // Find which generation this starter belongs to
+      let genName = "Unknown";
+      let genIndex = 0;
+      let starterNumInGen = 0;
+      let count = 0;
+
+      for (let i = 0; i < starterGenerations.length; i++) {
+        const gen = starterGenerations[i];
+        const validCount = gen.ids.filter(id => allPokemon.find(p => p.id === id)).length;
         
-        console.log(`📸 Building page for ${typeName} with ${list.length} Pokemon: ${list.map(p => p.name).join(", ")}`);
-        console.log(`🎬 GIF paths (${isUrlPath ? "URL" : "LOCAL"}): ${gifPaths.join(", ")}`);
-
-        const output = path.resolve(`./temp/${typeName}_starters.gif`);
-        let combinedGif = null;
-
-        try {
-          // If URLs, download to temp first
-          let pathsToCompose = gifPaths;
-          if (isUrlPath) {
-            console.log(`⬇️  Downloading ${gifPaths.length} remote sprites to temp...`);
-            pathsToCompose = await downloadSpritesToTemp(gifPaths, typeName);
-            console.log(`✅ All sprites downloaded locally`);
-            console.log(`📍 Paths to compose: ${pathsToCompose.join(", ")}`);
-          }
-
-          // Verify all files exist before composing
-          const missingFiles = pathsToCompose.filter(p => !fs.existsSync(p));
-          if (missingFiles.length > 0) {
-            throw new Error(`Missing files: ${missingFiles.join(", ")}`);
-          }
-
-          // Now compose the GIFs (either local or downloaded)
-          console.log(`⏳ Combining ${pathsToCompose.length} GIFs into: ${output}`);
-          console.log(`🎬 GIF paths: ${pathsToCompose.map(p => `"${p}"`).join(" ")}`);
-          await combineGifsHorizontal(pathsToCompose, output);
-          
-          if (fs.existsSync(output)) {
-            const stats = fs.statSync(output);
-            console.log(`✅ GIF composed successfully (${stats.size} bytes): ${output}`);
-            combinedGif = new AttachmentBuilder(output, { name: `${typeName}_starters.gif` });
-          } else {
-            console.warn(`⚠️ GIF file not created at: ${output}`);
-          }
-        } catch (gifError) {
-          console.error(`❌ GIF composition failed: ${gifError.message}`);
-          console.error(`❌ Stack: ${gifError.stack}`);
-          console.warn(`⚠️ Falling back to first image for ${typeName}`);
-          combinedGif = null;
+        if (count + validCount > index) {
+          genName = gen.name;
+          genIndex = i;
+          starterNumInGen = index - count + 1;
+          break;
         }
-
-        // Type sprite header (could be URL or local)
-        const typeSprite = `${spritePaths.types}${typeId}.png`;
-
-        const embed = new EmbedBuilder()
-          .setTitle(`🌟 Choose Your Starter Pokémon`)
-          .setDescription(
-            `**Type:** ${typeName}\n\nClick the button for your starter!`
-          )
-          .setThumbnail(typeSprite)
-          .setColor(0x43b581)
-          .setFooter({ text: `Page ${index + 1}/${sortedTypes.length}` });
-
-        // If we have a combined GIF file, use it; otherwise use first pokemon URL
-        if (combinedGif) {
-          embed.setImage(`attachment://${typeName}_starters.gif`);
-        } else if (gifPaths.length > 0 && isUrl(gifPaths[0])) {
-          embed.setImage(gifPaths[0]); // Use URL directly
-        } else if (gifPaths.length > 0) {
-          // Try to load as local file
-          try {
-            const localPath = gifPaths[0].replace(/^\/+/, './');
-            if (fs.existsSync(localPath)) {
-              const attachment = new AttachmentBuilder(localPath, { name: `${typeName}_sprite.gif` });
-              return { 
-                embed: embed.setImage(`attachment://${typeName}_sprite.gif`), 
-                components: buildButtons(list, index, sortedTypes.length),
-                files: [attachment]
-              };
-            }
-          } catch (err) {
-            console.warn(`⚠️ Failed to load local file: ${gifPaths[0]}`);
-          }
-        }
-
-        return { 
-          embed, 
-          components: buildButtons(list, index, sortedTypes.length),
-          files: combinedGif ? [combinedGif] : []
-        };
-      } catch (err) {
-        console.error(`❌ buildPage error:`, err);
-        throw err;
-      }
-    };
-
-    const buildButtons = (list, index, totalPages) => {
-      const rows = [];
-      
-      // Create all starter buttons
-      const buttons = list.map(p =>
-        new ButtonBuilder()
-          .setCustomId(`starter_${p.id}`)
-          .setLabel(p.name.substring(0, 20))
-          .setStyle(ButtonStyle.Primary)
-      );
-      
-      // ✅ Put ALL selection buttons on ONE row
-      // Discord limit: max 5 buttons per row
-      if (buttons.length > 0) {
-        const selectionRow = new ActionRowBuilder().addComponents(buttons);
-        rows.push(selectionRow);
+        count += validCount;
       }
 
-      // Add navigation row separately
-      const navRow = new ActionRowBuilder().addComponents(
+      const embed = new EmbedBuilder()
+        .setTitle(`🌟 Choose Your Starter`)
+        .setDescription(
+          `**${pokemon.name}** #${pokemon.id}\n\n` +
+          `Generation: ${genName}\n` +
+          `Starter ${starterNumInGen} of 5\n\n` +
+          `**Pokemon ${index + 1} of ${allStarters.length}**`
+        )
+        .setImage(`${spritePaths.pokemon}${pokemon.id}.gif`)
+        .setColor(0x43b581)
+        .setFooter({ text: `Use the arrows to browse all starters` });
+
+      // Navigation buttons
+      const buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId("prev_page")
+          .setCustomId("prev_starter")
           .setEmoji("⬅️")
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(index === 0),
         new ButtonBuilder()
-          .setCustomId("next_page")
+          .setCustomId("select_starter")
+          .setLabel(`✅ Choose ${pokemon.name}`)
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId("next_starter")
           .setEmoji("➡️")
           .setStyle(ButtonStyle.Secondary)
-          .setDisabled(index === totalPages - 1)
+          .setDisabled(index === allStarters.length - 1)
       );
-      rows.push(navRow);
 
-      return rows;
+      return { embed, buttons };
     };
 
-    // ── Show first page ───────────────────────────────
-    let page = 0;
-    const { embed, components, files } = await buildPage(page);
-    await interaction.editReply({ embeds: [embed], components, files });
+    const { embed, buttons } = buildCarousel(currentIndex);
+    await interaction.editReply({ embeds: [embed], components: [buttons] });
 
-    // ── Collector for buttons ─────────────────────────
     const collector = createSafeCollector(
       interaction,
-      { 
+      {
         filter: i => i.user.id === interaction.user.id,
         componentType: ComponentType.Button,
-        time: 120000 
+        time: 120000
       },
       "trainercard"
     );
 
     collector.on("collect", async i => {
-      try {
-        if (i.user.id !== interaction.user.id)
-          return safeReply(i, { content: "Not your onboarding!", flags: 64 });
-
-        if (i.customId === "next_page" || i.customId === "prev_page") {
-          page += i.customId === "next_page" ? 1 : -1;
-          const { embed: e, components: c, files: f } = await buildPage(page);
-          await i.deferUpdate();
-          await i.editReply({ embeds: [e], components: c, files: f });
-        } else if (i.customId.startsWith("starter_")) {
-          const pokemonId = Number(i.customId.replace("starter_", ""));
-          const selectedPokemon = allPokemon.find(p => Number(p.id) === pokemonId);
-
-          if (!selectedPokemon) {
-            await i.deferUpdate();
-            return await i.editReply({ content: "❌ Pokémon not found." });
-          }
-
-          user.starterPokemon = pokemonId;
-          user.pokemon = user.pokemon || {};
-          user.pokemon[pokemonId] = user.pokemon[pokemonId] || { normal: 0, shiny: 0 };
-
-          const isShiny = rollForShiny();
-          if (isShiny) {
-            user.pokemon[pokemonId].shiny = (user.pokemon[pokemonId].shiny || 0) + 1;
-          } else {
-            user.pokemon[pokemonId].normal = (user.pokemon[pokemonId].normal || 0) + 1;
-          }
-
-          user.displayedPokemon = [pokemonId];
-          
-          await saveDataToDiscord(trainerData);
-          await i.deferUpdate();
-
-          // ✅ Show trainer selection instead of ending
-          const successEmbed = new EmbedBuilder()
-            .setTitle("🎉 Welcome, Trainer!")
-            .setDescription(`You've chosen **${selectedPokemon.name}**!${isShiny ? " ✨ (Shiny!)" : ""}`)
-            .setColor(0x43b581);
-
-          await i.editReply({ embeds: [successEmbed], components: [] });
-          collector.stop();
-          return await trainerSelection(interaction, user, trainerData, saveDataToDiscord);
-        }
-      } catch (err) {
-        console.error(`❌ starterSelection collector error:`, err);
-        try {
-          await i.deferUpdate().catch(() => {});
-          await i.editReply({ content: "❌ An error occurred.", components: [] }).catch(() => {});
-        } catch {}
-      }
-    });
-
-    collector.on("end", () => {
-      console.log("Starter selection timed out");
-    });
-  } catch (err) {
-    console.error("❌ starterSelection error:", err);
-    await safeReply(interaction, { content: `❌ Error during startup: ${err.message}`, flags: 64 });
-  }
-}
-
-// ===========================================================
-// TRAINER SELECTION (after starter pokemon chosen)
-// ===========================================================
-async function trainerSelection(interaction, user, trainerData, saveDataToDiscord) {
-  try {
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ flags: 64 });
-    }
-
-    const trainers = [
-      { id: "youngster-gen4.png", name: "Youngster", emoji: "👦", color: 0x43b581 },
-      { id: "rival-gen3.png", name: "Rival", emoji: "😤", color: 0xff6b6b },
-      { id: "gym-leader.png", name: "Gym Leader", emoji: "💪", color: 0xffd700 }
-    ];
-
-    let index = 0;
-
-    const renderEmbed = page => {
-      const t = trainers[page];
-      return new EmbedBuilder()
-        .setTitle(`🧍 Choose Your Trainer Sprite`)
-        .setDescription(`Select: ${t.emoji} **${t.name}**`)
-        .setColor(t.color)
-        .setThumbnail(`${spritePaths.trainers}${t.id}`)
-        .setFooter({ text: `${page + 1}/${trainers.length}` });
-    };
-
-    const getButtons = page => {
-      const btns = [];
-      if (page > 0) {
-        btns.push(new ButtonBuilder()
-          .setCustomId("prev_trainer")
-          .setEmoji("⬅️")
-          .setStyle(ButtonStyle.Secondary));
-      }
-      btns.push(new ButtonBuilder()
-        .setCustomId("confirm_trainer")
-        .setLabel(`Select ${trainers[page].name}`)
-        .setEmoji(trainers[page].emoji)
-        .setStyle(ButtonStyle.Success));
-      if (page < trainers.length - 1) {
-        btns.push(new ButtonBuilder()
-          .setCustomId("next_trainer")
-          .setEmoji("➡️")
-          .setStyle(ButtonStyle.Secondary));
-      }
-      return new ActionRowBuilder().addComponents(btns);
-    };
-
-    const embed = renderEmbed(index);
-    const row = getButtons(index);
-    await interaction.editReply({ embeds: [embed], components: [row] });
-
-    const collector = interaction.channel.createMessageComponentCollector({
-      filter: i => i.user.id === interaction.user.id,
-      componentType: ComponentType.Button,
-      time: 60000
-    });
-
-    collector.on("collect", async i => {
-      if (i.user.id !== interaction.user.id) {
-        return safeReply(i, { content: "This isn't your selection!", flags: 64 });
-      }
-
-      if (i.customId === "next_trainer") {
-        index = Math.min(index + 1, trainers.length - 1);
-      } else if (i.customId === "prev_trainer") {
-        index = Math.max(index - 1, 0);
-      } else if (i.customId === "confirm_trainer") {
-        const choice = trainers[index];
-        user.trainers[choice.id] = true;
-        user.displayedTrainer = choice.id;
+      if (i.customId === "next_starter") {
+        currentIndex = Math.min(currentIndex + 1, allStarters.length - 1);
+      } else if (i.customId === "prev_starter") {
+        currentIndex = Math.max(currentIndex - 1, 0);
+      } else if (i.customId === "select_starter") {
+        const selectedPokemon = allStarters[currentIndex];
+        user.selectedStarter = selectedPokemon.id;
         user.onboardingComplete = true;
-        user.onboardingDate = new Date().toISOString();
-        
+        user.displayedPokemon = [selectedPokemon.id];
+
         await saveDataToDiscord(trainerData);
+
         await safeReply(i, {
-          content: `✅ You chose **${choice.name}** ${choice.emoji}!`,
+          content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀`,
           flags: 64
         });
-        collector.stop("confirmed");
-        return await showTrainerCard(i, user);
+
+        return collector.stop();
       }
 
-      const newEmbed = renderEmbed(index);
-      const newRow = getButtons(index);
+      const { embed: e, buttons: b } = buildCarousel(currentIndex);
       await i.deferUpdate();
-      await i.editReply({ embeds: [newEmbed], components: [newRow] });
+      await i.editReply({ embeds: [e], components: [b] });
     });
 
-    collector.on("end", async (_, reason) => {
-      if (reason !== "confirmed") {
-        try { await interaction.editReply({ components: [] }).catch(() => {}); } catch {}
-      }
+    collector.on("end", async () => {
+      try {
+        await interaction.editReply({ components: [] }).catch(() => {});
+      } catch {}
     });
   } catch (err) {
-    console.error("❌ trainerSelection error:", err);
+    console.error("starterSelection error:", err);
     await safeReply(interaction, {
-      content: "❌ Failed to load trainer selection.",
+      content: "❌ Failed to load starter selection.",
       flags: 64
     });
   }
@@ -515,207 +382,91 @@ export async function showTrainerCard(interaction, user) {
       await interaction.deferReply({ flags: 64 });
     }
 
-    const username = interaction?.user?.username || user.name || "Trainer";
-    const avatarURL = interaction.user?.displayAvatarURL({ extension: "png", size: 128 });
+    const allPokemon = await getPokemonCached();
 
-    // ✅ Ensure temp directory exists
-    const tempDir = path.resolve("./temp");
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
+    // Get displayed Pokemon
+    const displayedIds = user.displayedPokemon || [];
+    if (displayedIds.length === 0) {
+      return safeReply(interaction, {
+        content: "❌ No Pokémon selected! Use 🔄 Change Team to select.",
+        flags: 64
+      });
     }
 
-    // === 1️⃣ Trainer Sprite =================================================
-    const trainerPath = user.displayedTrainer
-      ? `${spritePaths.trainers}${user.displayedTrainer}`
-      : `${spritePaths.trainers}default.png`;
+    const displayedPokemon = displayedIds.slice(0, 6)
+      .map(id => allPokemon.find(p => p.id === id))
+      .filter(Boolean);
 
-    // === 2️⃣ Pokémon GIF Strip =============================================
-    const displayed = user.displayedPokemon?.slice(0, 6) || [];
-    const owned = displayed.filter(id => id && user.pokemon[id]);
-    let combinedGifAttachment = null;
-
-    if (owned.length > 0) {
-      try {
-        const gifPaths = owned.map(id => `${spritePaths.pokemon}${id}.gif`);
-        const output = path.resolve(`./temp/${username}_team.gif`);
-        const isUrlPath = isUrl(gifPaths[0]);
-        
-        // If URLs, download to temp first
-        let pathsToCompose = gifPaths;
-        if (isUrlPath) {
-          console.log(`⬇️  Downloading ${gifPaths.length} team sprites to temp...`);
-          pathsToCompose = await downloadSpritesToTemp(gifPaths, `${username}_team`);
-        }
-
-        // Compose the GIFs
-        await combineGifsHorizontal(pathsToCompose, output);
-        if (fs.existsSync(output)) {
-          combinedGifAttachment = new AttachmentBuilder(output, { name: "team.gif" });
-        }
-      } catch (gifErr) {
-        console.warn("⚠️ Failed to combine GIFs:", gifErr.message);
-        // Continue without GIF - will show stats instead
-      }
+    if (displayedPokemon.length === 0) {
+      return safeReply(interaction, {
+        content: "❌ Could not load Pokémon data.",
+        flags: 64
+      });
     }
 
-    // === 3️⃣ Stats + Embed ==================================================
-    const rank = getRank(user.tp || 0);
-    const pokemonOwned = Object.keys(user.pokemon || {}).length;
-    const shinyCount = Object.values(user.pokemon || {}).filter(p => p?.shiny > 0).length;
-    const trainerCount = Object.keys(user.trainers || {}).length;
+    console.log(`🎴 Generating trainer card for ${interaction.user.username}...`);
 
+    // Create team grid canvas (Pokemon 2-6)
+    const teamGridBuffer = await createTeamGrid(displayedPokemon.slice(1), spritePaths);
+    const teamGridAttachment = new AttachmentBuilder(teamGridBuffer, {
+      name: "team-grid.png"
+    });
+
+    // Get trainer sprite if exists
+    let trainerImageUrl = null;
+    if (user.displayedTrainer) {
+      trainerImageUrl = `https://your-domain.com/sprites/trainers/${user.displayedTrainer}`;
+    }
+
+    // Build embed
     const embed = new EmbedBuilder()
-      .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })
-      .setColor(0xffcb05)
+      .setTitle(`🧬 ${interaction.user.username}'s Trainer Card`)
       .setDescription(
-        `🏆 **Rank:** ${rank?.title || "Beginner"}\n` +
-        `⭐ **TP:** ${user.tp || 0}\n` +
-        `💰 **CC:** ${user.cc || 0}\n\n` +
-        `📊 **Pokémon:** ${pokemonOwned}\n` +
-        `✨ **Shiny:** ${shinyCount}\n` +
-        `🧍 **Trainers:** ${trainerCount}`
+        `**Lead Pokémon:** ${displayedPokemon[0].name} #${displayedPokemon[0].id}\n\n` +
+        `**Team:**\n` +
+        displayedPokemon.map((p, i) =>
+          `${i === 0 ? "⭐" : `${i + 1}.`} **${p.name}** (#${p.id})`
+        ).join("\n")
       )
-      .setThumbnail(trainerPath)
-      .setFooter({ text: "Coop's Collection • /trainercard" });
+      .setColor(0x667eea)
+      .setImage("attachment://team-grid.png")
+      .setFooter({ text: `Total: ${displayedPokemon.length} Pokémon` });
 
-    // Only set image if we have a local GIF file
-    if (combinedGifAttachment) {
-      embed.setImage(`attachment://team.gif`);
-    } else if (owned.length > 0) {
-      // Show first pokemon if we have URLs
-      const firstPokemonId = owned[0];
-      const firstPokemonUrl = `${spritePaths.pokemon}${firstPokemonId}.gif`;
-      if (isUrl(firstPokemonUrl)) {
-        embed.setImage(firstPokemonUrl);
-      }
+    if (trainerImageUrl) {
+      embed.setThumbnail(trainerImageUrl);
     }
 
-    // === 4️⃣ Action Buttons ================================================
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("change_trainer")
-        .setLabel("Trainer")
-        .setEmoji("🧍")
-        .setStyle(ButtonStyle.Primary),
+    // Buttons
+    const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("change_pokemon")
-        .setLabel("Pokémon")
-        .setEmoji("🧬")
+        .setLabel("🔄 Change Team")
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
+        .setCustomId("change_trainer")
+        .setLabel("👤 Change Trainer")
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
         .setCustomId("refresh_card")
-        .setLabel("Refresh")
-        .setEmoji("🔄")
+        .setLabel("🔃 Refresh")
         .setStyle(ButtonStyle.Secondary)
     );
 
-    // === 5️⃣ Reply ==========================================================
-    const files = combinedGifAttachment ? [combinedGifAttachment] : [];
-    if (interaction.replied) {
-      await interaction.editReply({ embeds: [embed], files, components: [row] });
-    } else {
-      await interaction.editReply({ embeds: [embed], files, components: [row] });
-    }
+    await safeReply(interaction, {
+      embeds: [embed],
+      files: [teamGridAttachment],
+      components: [buttons],
+      flags: 64
+    });
+
+    console.log(`✅ Trainer card displayed`);
 
   } catch (err) {
     console.error("showTrainerCard error:", err);
-    await safeReply(interaction, { content: "❌ Failed to show Trainer Card.", flags: 64 });
-  }
-}
-
-// ===========================================================
-// CHANGE TRAINER HANDLER
-// ===========================================================
-async function handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord) {
-  try {
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ flags: 64 });
-    }
-
-    const ownedTrainers = Object.keys(user.trainers || {}).filter(t => user.trainers[t]);
-    if (ownedTrainers.length === 0) {
-      return safeReply(interaction, { content: "❌ You don't have any trainers yet!", flags: 64 });
-    }
-
-    const trainersPerPage = 5;
-    const pages = [];
-    for (let i = 0; i < ownedTrainers.length; i += trainersPerPage) {
-      pages.push(ownedTrainers.slice(i, i + trainersPerPage));
-    }
-    let pageIndex = 0;
-
-    const buildPage = index => {
-      const pageTrainers = pages[index];
-      const embed = new EmbedBuilder()
-        .setTitle("🧍 Select Your Displayed Trainer")
-        .setDescription(
-          `${pageTrainers
-            .map(t => `${t === user.displayedTrainer ? "✅" : "•"} **${t}**`)
-            .join("\n")}`
-        )
-        .setColor(0x3498db)
-        .setFooter({ text: `Page ${index + 1}/${pages.length}` });
-
-      const trainerButtons = pageTrainers.map(t =>
-        new ButtonBuilder()
-          .setCustomId(`select_trainer_${t}`)
-          .setLabel(t.replace(/\.png$/, "").substring(0, 80))
-          .setStyle(t === user.displayedTrainer ? ButtonStyle.Success : ButtonStyle.Primary)
-      );
-
-      const rows = [new ActionRowBuilder().addComponents(trainerButtons)];
-      if (pages.length > 1) {
-        rows.push(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId("trainer_prev_page")
-              .setLabel("⬅️")
-              .setStyle(ButtonStyle.Secondary)
-              .setDisabled(index === 0),
-            new ButtonBuilder()
-              .setCustomId("trainer_next_page")
-              .setLabel("➡️")
-              .setStyle(ButtonStyle.Secondary)
-              .setDisabled(index === pages.length - 1)
-          )
-        );
-      }
-      return { embed, components: rows };
-    };
-
-    const { embed, components } = buildPage(pageIndex);
-    await interaction.editReply({ embeds: [embed], components });
-
-    const collector = interaction.channel.createMessageComponentCollector({
-      filter: i => i.user.id === interaction.user.id,
-      componentType: ComponentType.Button,
-      time: 60000
+    await safeReply(interaction, {
+      content: `❌ Failed to load trainer card: ${err.message}`,
+      flags: 64
     });
-
-    collector.on("collect", async i => {
-      if (i.customId === "trainer_next_page") {
-        pageIndex++;
-      } else if (i.customId === "trainer_prev_page") {
-        pageIndex--;
-      } else if (i.customId.startsWith("select_trainer_")) {
-        const selectedTrainer = i.customId.replace("select_trainer_", "");
-        user.displayedTrainer = selectedTrainer;
-        await saveDataToDiscord(trainerData);
-        await safeReply(i, { content: `✅ Trainer changed!`, flags: 64 });
-        return collector.stop();
-      }
-
-      const { embed: e, components: c } = buildPage(pageIndex);
-      await i.deferUpdate();
-      await i.editReply({ embeds: [e], components: c });
-    });
-
-    collector.on("end", async () => {
-      try { await interaction.editReply({ components: [] }).catch(() => {}); } catch {}
-    });
-  } catch (err) {
-    console.error("handleChangeTrainer error:", err);
-    await safeReply(interaction, { content: "❌ Failed to load trainer selection.", flags: 64 });
   }
 }
 
@@ -850,6 +601,95 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
   } catch (err) {
     console.error("handleChangePokemon error:", err);
     await safeReply(interaction, { content: "❌ Failed to load pokemon selection.", flags: 64 });
+  }
+}
+
+// ===========================================================
+// CHANGE TRAINER HANDLER
+// ===========================================================
+async function handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord) {
+  try {
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply({ flags: 64 });
+    }
+
+    // Get available trainer sprites (placeholder - adjust based on your implementation)
+    const trainerSprites = ["trainer1.png", "trainer2.png", "trainer3.png"];
+    
+    let pageIndex = 0;
+    const trainersPerPage = 6;
+    const pages = [];
+    for (let i = 0; i < trainerSprites.length; i += trainersPerPage) {
+      pages.push(trainerSprites.slice(i, i + trainersPerPage));
+    }
+
+    const buildPage = index => {
+      const pageTrainers = pages[index];
+      const embed = new EmbedBuilder()
+        .setTitle("🧬 Select Your Trainer")
+        .setColor(0x3498db)
+        .setFooter({ text: `Page ${index + 1}/${pages.length}` });
+
+      const trainerButtons = pageTrainers.map(t =>
+        new ButtonBuilder()
+          .setCustomId(`select_trainer_${t}`)
+          .setLabel(t.replace(/\.png$/, "").substring(0, 80))
+          .setStyle(t === user.displayedTrainer ? ButtonStyle.Success : ButtonStyle.Primary)
+      );
+
+      const rows = [new ActionRowBuilder().addComponents(trainerButtons)];
+      if (pages.length > 1) {
+        rows.push(
+          new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId("trainer_prev_page")
+              .setLabel("⬅️")
+              .setStyle(ButtonStyle.Secondary)
+              .setDisabled(index === 0),
+            new ButtonBuilder()
+              .setCustomId("trainer_next_page")
+              .setLabel("➡️")
+              .setStyle(ButtonStyle.Secondary)
+              .setDisabled(index === pages.length - 1)
+          )
+        );
+      }
+      return { embed, components: rows };
+    };
+
+    const { embed, components } = buildPage(pageIndex);
+    await interaction.editReply({ embeds: [embed], components });
+
+    const collector = interaction.channel.createMessageComponentCollector({
+      filter: i => i.user.id === interaction.user.id,
+      componentType: ComponentType.Button,
+      time: 60000
+    });
+
+    collector.on("collect", async i => {
+      if (i.customId === "trainer_next_page") {
+        pageIndex++;
+      } else if (i.customId === "trainer_prev_page") {
+        pageIndex--;
+      } else if (i.customId.startsWith("select_trainer_")) {
+        const selectedTrainer = i.customId.replace("select_trainer_", "");
+        user.displayedTrainer = selectedTrainer;
+        await saveDataToDiscord(trainerData);
+        await safeReply(i, { content: `✅ Trainer changed!`, flags: 64 });
+        return collector.stop();
+      }
+
+      const { embed: e, components: c } = buildPage(pageIndex);
+      await i.deferUpdate();
+      await i.editReply({ embeds: [e], components: c });
+    });
+
+    collector.on("end", async () => {
+      try { await interaction.editReply({ components: [] }).catch(() => {}); } catch {}
+    });
+  } catch (err) {
+    console.error("handleChangeTrainer error:", err);
+    await safeReply(interaction, { content: "❌ Failed to load trainer selection.", flags: 64 });
   }
 }
 

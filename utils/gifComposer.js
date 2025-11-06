@@ -11,7 +11,7 @@ import os from "os";
 
 /**
  * Combines multiple animated GIFs horizontally while preserving animation
- * Frame-by-frame approach: works reliably with ImageMagick 6.x
+ * Frame-by-frame approach with proper timing synchronization
  * @param {Array} gifPaths - Array of GIF file paths to combine
  * @param {string} outputPath - Path where combined GIF will be saved
  * @returns {Promise<boolean>} True if successful
@@ -28,7 +28,7 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
     }
   }
 
-  console.log(`🧩 [GIFComposer] Combining ${gifPaths.length} GIFs horizontally (frame-by-frame)...`);
+  console.log(`🧩 [GIFComposer] Combining ${gifPaths.length} GIFs horizontally...`);
 
   // Create temporary working directory
   const workDir = path.resolve(path.dirname(outputPath), `.compose_work_${Date.now()}`);
@@ -47,10 +47,12 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
 
     console.log(`📁 Working directory: ${workDir}`);
 
-    // Step 1: Extract frames from each GIF
+    // Step 1: Extract frames and get metadata from each GIF
     console.log(`📋 Extracting frames from ${gifPaths.length} GIFs...`);
     
     const frameLists = [];
+    const gifMetadata = [];
+    
     for (let i = 0; i < gifPaths.length; i++) {
       const gifPath = gifPaths[i];
       const gifName = `gif_${i}`;
@@ -65,36 +67,47 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
       });
       
       // Get frame files
-      const frameDir = fs.readdirSync(workDir).filter(f => f.startsWith(`${gifName}_`));
+      const frameDir = fs.readdirSync(workDir).filter(f => f.startsWith(`${gifName}_`)).sort();
       console.log(`  ✅ GIF ${i + 1}: Extracted ${frameDir.length} frames`);
       frameLists.push(frameDir.map(f => path.join(workDir, f)));
-    }
-
-    // Step 2: Find max frames and pad shorter GIFs
-    const maxFrames = Math.max(...frameLists.map(f => f.length));
-    console.log(`📊 Max frames: ${maxFrames}`);
-
-    // Pad shorter GIFs by repeating last frame
-    for (let i = 0; i < frameLists.length; i++) {
-      while (frameLists[i].length < maxFrames) {
-        const lastFrame = frameLists[i][frameLists[i].length - 1];
-        const lastIndex = parseInt(lastFrame.match(/_(\d+)\.gif$/)[1]);
-        const newIndex = lastIndex + 1;
-        const newPath = lastFrame.replace(/_\d+\.gif$/, `_${newIndex}.gif`);
-        
-        // Copy last frame to new index
-        fs.copyFileSync(lastFrame, newPath);
-        frameLists[i].push(newPath);
+      
+      // Get GIF info for timing
+      try {
+        const infoCmd = `identify -format "%T " "${gifPath}"`;
+        const delays = execSync(infoCmd, { encoding: "utf-8" }).trim().split(" ").filter(d => d).map(d => parseInt(d) || 10);
+        gifMetadata.push({ frames: frameDir.length, delays });
+        console.log(`     Delays: ${delays.slice(0, 5).join(",")}${delays.length > 5 ? "..." : ""}`);
+      } catch (e) {
+        gifMetadata.push({ frames: frameDir.length, delays: Array(frameDir.length).fill(10) });
       }
     }
 
-    // Step 3: Combine frames horizontally
-    console.log(`🧩 Combining ${maxFrames} frames horizontally...`);
+    // Step 2: Calculate LCM of frame counts for perfect looping
+    const frameCountsLCM = calculateLCM(frameLists.map(f => f.length));
+    console.log(`📊 Frame counts: ${frameLists.map(f => f.length).join(", ")} → LCM: ${frameCountsLCM}`);
+    
+    // Limit to avoid excessive processing (max 100 output frames)
+    const outputFrames = Math.min(frameCountsLCM, 100);
+    console.log(`🎯 Output frames: ${outputFrames}`);
+
+    // Step 3: Expand each GIF to match output frames
+    const expandedFrameLists = frameLists.map((frames, idx) => {
+      const expanded = [];
+      for (let i = 0; i < outputFrames; i++) {
+        // Cycle through frames smoothly
+        const frameIdx = Math.floor((i / outputFrames) * frames.length);
+        expanded.push(frames[frameIdx]);
+      }
+      return expanded;
+    });
+
+    // Step 4: Combine frames horizontally
+    console.log(`🧩 Combining ${outputFrames} frames horizontally...`);
     
     const combinedFrames = [];
-    for (let frameIdx = 0; frameIdx < maxFrames; frameIdx++) {
-      const framesToCombine = frameLists.map(frameList => `"${frameList[frameIdx]}"`).join(" ");
-      const combinedPath = path.join(workDir, `combined_${frameIdx}.gif`);
+    for (let frameIdx = 0; frameIdx < outputFrames; frameIdx++) {
+      const framesToCombine = expandedFrameLists.map(frameList => `"${frameList[frameIdx]}"`).join(" ");
+      const combinedPath = path.join(workDir, `combined_${String(frameIdx).padStart(5, '0')}.gif`);
       
       const combineCmd = `convert ${framesToCombine} -background transparent -gravity Center -extent 96x96 +append "${combinedPath}"`;
       
@@ -106,16 +119,17 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
       
       combinedFrames.push(combinedPath);
       
-      if ((frameIdx + 1) % 10 === 0) {
-        console.log(`  ✅ Combined ${frameIdx + 1}/${maxFrames} frames`);
+      if ((frameIdx + 1) % 20 === 0 || frameIdx === outputFrames - 1) {
+        console.log(`  ✅ Combined ${frameIdx + 1}/${outputFrames} frames`);
       }
     }
 
-    // Step 4: Stitch combined frames into final animated GIF
-    console.log(`🎬 Stitching ${maxFrames} frames into final GIF...`);
+    // Step 5: Stitch combined frames into final animated GIF with uniform delay
+    console.log(`🎬 Stitching ${outputFrames} frames into final GIF...`);
     
     const framePattern = path.join(workDir, "combined_*.gif");
-    const stitchCmd = `convert ${framePattern} -set delay 10 -loop 0 -layers Optimize "${outputPath}"`;
+    // Use consistent 10ms delay (100ms per frame) for smooth animation
+    const stitchCmd = `convert ${framePattern} -delay 10 -loop 0 -layers Optimize "${outputPath}"`;
     
     execSync(stitchCmd, { 
       stdio: ["pipe", "pipe", "pipe"],
@@ -130,7 +144,7 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
 
     const stats = fs.statSync(outputPath);
     const sizeKB = (stats.size / 1024).toFixed(2);
-    console.log(`✅ GIF created successfully: ${sizeKB}KB (${maxFrames} frames)`);
+    console.log(`✅ GIF created successfully: ${sizeKB}KB (${outputFrames} synchronized frames)`);
 
     return true;
   } catch (error) {
@@ -150,6 +164,29 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
       console.warn(`⚠️ Failed to cleanup work directory: ${cleanupError.message}`);
     }
   }
+}
+
+/**
+ * Calculate Greatest Common Divisor
+ * @param {number} a 
+ * @param {number} b 
+ * @returns {number}
+ */
+function gcd(a, b) {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+/**
+ * Calculate Least Common Multiple
+ * @param {number[]} numbers 
+ * @returns {number}
+ */
+function calculateLCM(numbers) {
+  let result = numbers[0];
+  for (let i = 1; i < numbers.length; i++) {
+    result = (result * numbers[i]) / gcd(result, numbers[i]);
+  }
+  return Math.min(result, 100); // Cap at 100 to avoid excessive processing
 }
 
 /**

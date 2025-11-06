@@ -12,7 +12,7 @@ import {
   AttachmentBuilder,
   ComponentType
 } from "discord.js";
-import { rollForShiny } from "../utils/shinyOdds.js";
+import { rollForShiny } from "../shinyOdds.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";
@@ -334,7 +334,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
       {
         filter: i => i.user.id === interaction.user.id,
         componentType: ComponentType.Button,
-        time: 180000
+        time: 120000
       },
       "trainercard"
     );
@@ -388,8 +388,16 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 // ===========================================================
 export async function showTrainerCard(interaction, user) {
   try {
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ flags: 64 });
+    // For button interactions, defer the update instead of a new reply
+    if (interaction.isButton && interaction.isButton()) {
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferUpdate();
+      }
+    } else {
+      // For slash commands or other interactions
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferReply({ flags: 64 });
+      }
     }
 
     const allPokemon = await getPokemonCached();
@@ -462,12 +470,21 @@ export async function showTrainerCard(interaction, user) {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    await safeReply(interaction, {
-      embeds: [embed],
-      files: [teamGridAttachment],
-      components: [buttons],
-      flags: 64
-    });
+    // Use editReply for button interactions, editReply for slash command interactions
+    if (interaction.isButton && interaction.isButton()) {
+      await interaction.editReply({
+        embeds: [embed],
+        files: [teamGridAttachment],
+        components: [buttons]
+      });
+    } else {
+      await safeReply(interaction, {
+        embeds: [embed],
+        files: [teamGridAttachment],
+        components: [buttons],
+        flags: 64
+      });
+    }
 
     console.log(`✅ Trainer card displayed`);
 

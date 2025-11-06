@@ -21,8 +21,11 @@ export async function safeReply(interaction, options = {}, editIfReplied = false
       return;
     }
 
-    // Handle ephemeral consistency
-    if (options.ephemeral === undefined) options.ephemeral = true;
+    // Convert ephemeral to flags if needed
+    if (options.ephemeral !== undefined && !options.flags) {
+      options.flags = options.ephemeral ? 64 : 0;
+      delete options.ephemeral;
+    }
 
     if (interaction.deferred && !interaction.replied) {
       // Deferred, but not yet replied

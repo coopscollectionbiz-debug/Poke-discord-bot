@@ -262,6 +262,8 @@ setInterval(checkPokeBeach, POKEBEACH_CHECK_INTERVAL);
 
 function normalizeUserSchema(id, user) {
   user.id ??= id;
+  user.name ??= "Trainer";
+  user.rank ??= "Novice Trainer";
   user.tp ??= 0;
   user.cc ??= 0;
   user.pokemon ??= {};

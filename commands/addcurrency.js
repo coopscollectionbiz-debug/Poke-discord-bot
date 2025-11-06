@@ -1,10 +1,12 @@
 // ==========================================================
-// /addcurrency — Add TP or CC to a user's account
+// /addcurrency – Add TP or CC to a user's account
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
+import { atomicSave } from "../utils/saveManager.js";
+import { performCurrencyTransaction } from "../utils/saveManager.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -21,6 +23,9 @@ export default {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+    // ✅ Defer reply immediately
+    await interaction.deferReply({ ephemeral: true });
+
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
       return safeReply(interaction, { content: "⛔ You do not have permission to use this command.", ephemeral: true });
     }
@@ -28,15 +33,41 @@ export default {
     const targetUser = interaction.options.getUser("user");
     const type = interaction.options.getString("type");
     const amount = interaction.options.getInteger("amount");
+
+    // ✅ Validate amount
+    if (amount <= 0) {
+      return safeReply(interaction, {
+        content: "❌ Amount must be greater than 0.",
+        ephemeral: true
+      });
+    }
+
+    if (amount > 1000000) {
+      return safeReply(interaction, {
+        content: "❌ Amount exceeds maximum (1,000,000).",
+        ephemeral: true
+      });
+    }
+
     const userData = ensureUserData(trainerData, targetUser.id, targetUser.username);
 
-    if (type === "tp") userData.tp += amount;
-    else if (type === "cc") userData.cc = (userData.cc || 0) + amount;
-    else return safeReply(interaction, { content: "⛔ Invalid currency type. Must be either 'tp' or 'cc'.", ephemeral: true });
+    try {
+      // ✅ Use atomic transaction
+      performCurrencyTransaction(userData, type, amount);
+      
+      // ✅ Use atomic save
+      await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
-    await saveTrainerDataLocal(trainerData);
-    await saveDataToDiscord(trainerData);
-
-    return safeReply(interaction, { content: `✅ Added ${amount} ${type.toUpperCase()} to **${targetUser.username}**.`, ephemeral: true });
+      return safeReply(interaction, {
+        content: `✅ Added ${amount} ${type.toUpperCase()} to **${targetUser.username}**.`,
+        ephemeral: true
+      });
+    } catch (err) {
+      console.error("❌ Add currency error:", err);
+      return safeReply(interaction, {
+        content: `❌ Error: ${err.message}`,
+        ephemeral: true
+      });
+    }
   }
 };

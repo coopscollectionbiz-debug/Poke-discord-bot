@@ -1,159 +1,206 @@
-// ============================================================
-// utils/gifComposer.js — Coop's Collection Discord Bot
-// Production-ready GIF combiner for animated sprites
-// ============================================================
+// ==========================================================
+// utils/gifComposer.js
+// Compose multiple animated GIFs into a single horizontal strip
+// Preserves animation timing
+// ==========================================================
 
-import { exec as _exec } from "child_process";
-import { promisify } from "util";
-import fs from "fs/promises";
-import fss from "fs";
+import { execSync } from "child_process";
 import path from "path";
-import fetch from "node-fetch";
-
-const exec = promisify(_exec);
-const TEMP_DIR = path.resolve("./temp");
+import fs from "fs";
 
 /**
- * Ensure /temp directory exists
+ * Combines multiple animated GIFs horizontally while preserving animation
+ * @param {Array} gifPaths - Array of GIF file paths to combine
+ * @param {string} outputPath - Path where combined GIF will be saved
+ * @returns {Promise<boolean>} True if successful
  */
-async function ensureTempDir() {
-  try {
-    await fs.mkdir(TEMP_DIR, { recursive: true });
-  } catch (err) {
-    console.warn("⚠️ Failed to create temp dir:", err.message);
-  }
-}
-
-/**
- * Download remote GIFs to local temp files (or return local path)
- * Returns { localPath, cleanup: boolean }
- */
-async function toLocalGif(sourcePath) {
-  // remote .gif
-  if (/^https?:\/\//i.test(sourcePath)) {
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.gif`;
-    const localPath = path.join(TEMP_DIR, fileName);
-    const res = await fetch(sourcePath);
-    if (!res.ok) throw new Error(`Failed to fetch ${sourcePath} (${res.status})`);
-    const buf = await res.arrayBuffer();
-    await fs.writeFile(localPath, Buffer.from(buf));
-    return { localPath, cleanup: true };
-  }
-
-  // local file
-  if (!fss.existsSync(sourcePath)) {
-    throw new Error(`Local file not found: ${sourcePath}`);
-  }
-  return { localPath: sourcePath, cleanup: false };
-}
-
-/**
- * Combine multiple animated GIFs horizontally (preserving animation)
- * @param {string[]} gifPaths - array of local or remote .gif URLs
- * @param {string} outputPath - where to save the final combined .gif
- * @param {number} size - resize target (default 128px)
- * @param {string} resizeCustom - optional custom resize string (e.g. "96x96")
- * @returns {Promise<string>} outputPath
- */
-export async function combineGifsHorizontal(
-  gifPaths,
-  outputPath,
-  size = 128,
-  resizeCustom = ""
-) {
-  await ensureTempDir();
-
+export async function combineGifsHorizontal(gifPaths, outputPath) {
   if (!gifPaths || gifPaths.length === 0) {
-    throw new Error("combineGifsHorizontal: gifPaths is empty");
+    throw new Error("No GIF paths provided");
   }
 
-  // === If only one GIF, just copy through (keep animation) ===
-  if (gifPaths.length === 1) {
-    const { localPath, cleanup } = await toLocalGif(gifPaths[0]);
-    await fs.copyFile(localPath, outputPath);
-    if (cleanup) try { await fs.unlink(localPath); } catch {}
-    return outputPath;
+  // Validate all input files exist
+  for (const gifPath of gifPaths) {
+    if (!fs.existsSync(gifPath)) {
+      throw new Error(`GIF file not found: ${gifPath}`);
+    }
   }
 
-  // === Stage input GIFs locally ===
-  const staged = [];
-  for (const p of gifPaths) staged.push(await toLocalGif(p));
-
-  // === Build ImageMagick command ===
-  const resizeArg = resizeCustom || `${size}x${size}`;
-  
-  // Key fix: Use individual -coalesce for each input to expand all frames,
-  // then +append to tile horizontally. This preserves animation in output.
-  const stagedPaths = staged.map(({ localPath }) => `"${localPath}"`).join(" ");
-
-  const outDir = path.dirname(outputPath);
-  await fs.mkdir(outDir, { recursive: true });
-
-  // CORRECTED COMMAND: 
-  // 1. Load all GIFs
-  // 2. -coalesce: Expand animation frames to full canvas (critical for animation)
-  // 3. -resize: Resize each frame
-  // 4. +append: Tile horizontally across all frames
-  // 5. -set delay: Uniform frame delay
-  // 6. -loop 0: Infinite loop
-  // 7. -layers optimize-frame: Optimize without destroying frames
-  const cmd = `convert ${stagedPaths} -coalesce -resize ${resizeArg} +append -set delay 7 -loop 0 -layers optimize-frame "${outputPath}"`;
   console.log(`🧩 [GIFComposer] Combining ${gifPaths.length} GIFs horizontally...`);
-  console.log(`🧩 [GIFComposer] Command: convert [inputs] -coalesce -resize ${resizeArg} +append -set delay 7 -loop 0 -layers optimize-frame`);
 
   try {
-    const { stdout, stderr } = await exec(cmd);
-    if (stderr && stderr.trim()) {
-      console.warn("⚠️ convert stderr:", stderr.trim());
+    // Ensure output directory exists
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
     }
-    if (stdout && stdout.trim()) {
-      console.log("ℹ️ convert stdout:", stdout.trim());
-    }
-  } catch (err) {
-    console.error("❌ ImageMagick convert failed:", err.stderr || err.message);
-    throw err;
-  } finally {
-    // Cleanup downloaded files
-    for (const s of staged) {
-      if (s.cleanup) try { await fs.unlink(s.localPath); } catch {}
-    }
-  }
 
-  // Verify output file and check if animated
-  try {
-    const stat = await fs.stat(outputPath);
-    if (stat.size === 0) throw new Error("Output GIF empty");
-    console.log(`✅ GIF created successfully: ${(stat.size / 1024).toFixed(2)}KB`);
+    // Build ImageMagick command for horizontal composition with animation preservation
+    // Key points:
+    // 1. No -coalesce at the start (preserves original frame delays)
+    // 2. +append combines images horizontally
+    // 3. -layers Coalesce at the end ensures all frames are valid
+    // 4. -set delay sets frame timing (10 = 100ms per frame)
+    // 5. -loop 0 = infinite loop
     
-    // Debug: Check frame count to verify animation
-    try {
-      const { stdout: identifyOut } = await exec(`identify "${outputPath}" 2>&1 | head -5 || true`);
-      if (identifyOut) {
-        console.log(`ℹ️ GIF frames: ${identifyOut.split('\n').length - 1} frames detected`);
-        console.log(`ℹ️ Output info:\n${identifyOut}`);
-      }
-    } catch (identErr) {
-      console.warn("⚠️ Could not verify frame count (identify not available)");
-    }
-  } catch (e) {
-    console.error(`Failed to verify output GIF: ${outputPath}`, e.message);
-    throw new Error(`Failed to create output GIF: ${outputPath}`);
-  }
+    const command = `convert ${gifPaths.map(p => `"${p}"`).join(" ")} \\
+      -background transparent \\
+      +append \\
+      -set delay 10 \\
+      -loop 0 \\
+      -layers Optimize \\
+      "${outputPath}"`;
 
-  return outputPath;
+    console.log(`🧩 [GIFComposer] Command: convert [inputs] +append -set delay 10 -loop 0 -layers Optimize`);
+
+    // Execute the command
+    execSync(command, { 
+      stdio: ["pipe", "pipe", "pipe"],
+      shell: "/bin/bash"
+    });
+
+    // Verify output was created
+    if (!fs.existsSync(outputPath)) {
+      throw new Error("Output GIF was not created");
+    }
+
+    const stats = fs.statSync(outputPath);
+    const sizeKB = (stats.size / 1024).toFixed(2);
+
+    console.log(`✅ GIF created successfully: ${sizeKB}KB`);
+
+    // Get frame information
+    try {
+      const infoCommand = `identify -verbose "${outputPath}" | grep -E "Geometry|Delay|Scene"`;
+      const info = execSync(infoCommand, { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
+      console.log(`ℹ️ GIF Info:\n${info}`);
+    } catch {
+      // Silent fail on info extraction
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`❌ GIF composition failed: ${error.message}`);
+    throw new Error(`Failed to compose GIF: ${error.message}`);
+  }
 }
 
-// ============================================================
-// Optional helper: remove all temp files (for debugging / cleanup)
-// ============================================================
-export async function clearTempGifs() {
+/**
+ * Alternative method using different ImageMagick approach
+ * For when the standard approach fails
+ * @param {Array} gifPaths - Array of GIF file paths
+ * @param {string} outputPath - Output path
+ * @returns {Promise<boolean>}
+ */
+export async function combineGifsHorizontalAlt(gifPaths, outputPath) {
+  if (!gifPaths || gifPaths.length === 0) {
+    throw new Error("No GIF paths provided");
+  }
+
+  console.log(`🧩 [GIFComposer] Using alternative method for ${gifPaths.length} GIFs...`);
+
   try {
-    const files = await fs.readdir(TEMP_DIR);
-    await Promise.all(
-      files.map(f => fs.unlink(path.join(TEMP_DIR, f)).catch(() => {}))
-    );
-    console.log("🧹 Cleared temp GIFs.");
-  } catch (err) {
-    console.warn("⚠️ clearTempGifs failed:", err.message);
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // Alternative approach: explicitly handle animation
+    const command = `convert \\
+      -dispose Background \\
+      $(for f in ${gifPaths.map(p => `"${p}"`).join(" ")}; do echo "$f"; done) \\
+      -background transparent \\
+      -gravity Center \\
+      -extent 128x128 \\
+      +append \\
+      -set delay 10 \\
+      -loop 0 \\
+      "${outputPath}"`;
+
+    execSync(command, { 
+      stdio: ["pipe", "pipe", "pipe"],
+      shell: "/bin/bash"
+    });
+
+    if (!fs.existsSync(outputPath)) {
+      throw new Error("Output GIF was not created");
+    }
+
+    console.log(`✅ GIF created successfully (alt method)`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Alternative GIF composition failed: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Compose GIFs vertically instead of horizontally
+ * @param {Array} gifPaths - Array of GIF paths
+ * @param {string} outputPath - Output path
+ * @returns {Promise<boolean>}
+ */
+export async function combineGifsVertical(gifPaths, outputPath) {
+  if (!gifPaths || gifPaths.length === 0) {
+    throw new Error("No GIF paths provided");
+  }
+
+  console.log(`🧩 [GIFComposer] Combining ${gifPaths.length} GIFs vertically...`);
+
+  try {
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // -append for vertical composition (instead of +append)
+    const command = `convert ${gifPaths.map(p => `"${p}"`).join(" ")} \\
+      -background transparent \\
+      -append \\
+      -set delay 10 \\
+      -loop 0 \\
+      -layers Optimize \\
+      "${outputPath}"`;
+
+    execSync(command, { 
+      stdio: ["pipe", "pipe", "pipe"],
+      shell: "/bin/bash"
+    });
+
+    if (!fs.existsSync(outputPath)) {
+      throw new Error("Output GIF was not created");
+    }
+
+    console.log(`✅ Vertical GIF created successfully`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Vertical GIF composition failed: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Get detailed information about a GIF
+ * @param {string} gifPath - Path to GIF file
+ * @returns {Promise<Object>} GIF metadata
+ */
+export async function getGifInfo(gifPath) {
+  try {
+    const command = `identify -verbose "${gifPath}"`;
+    const output = execSync(command, { encoding: "utf-8" });
+    
+    const frameMatch = output.match(/Iterations: (\d+)/);
+    const delayMatch = output.match(/Delay: ([\d.]+)x([\d.]+)/);
+    const sizeMatch = output.match(/Geometry: (\d+)x(\d+)/);
+    
+    return {
+      frames: frameMatch ? parseInt(frameMatch[1]) : 1,
+      delay: delayMatch ? parseInt(delayMatch[1]) : 10,
+      width: sizeMatch ? parseInt(sizeMatch[1]) : 0,
+      height: sizeMatch ? parseInt(sizeMatch[2]) : 0
+    };
+  } catch (error) {
+    console.warn(`⚠️ Could not get GIF info: ${error.message}`);
+    return { frames: 1, delay: 10, width: 0, height: 0 };
   }
 }

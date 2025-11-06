@@ -2,7 +2,7 @@
 // 🕒 /daily — claim daily TP, CC, and one random reward
 // Coop's Collection Discord Bot (SafeReply Refactor)
 // ==========================================================
-import { SlashCommandBuilder, ActionRowBuilder } from "discord.js";
+import { SlashCommandBuilder, ActionRowBuilder, ComponentType } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
@@ -17,6 +17,7 @@ import {
 } from "../utils/embedBuilders.js";
 import { safeReply } from "../utils/safeReply.js";
 import { createSafeCollector } from "../utils/safeCollector.js";
+import { atomicSave } from "../utils/saveManager.js";
 
 // ==========================================================
 // ⚖️ Constants
@@ -52,7 +53,16 @@ export default {
     user.tp += DAILY_TP_REWARD;
     user.cc += DAILY_CC_REWARD;
     user.lastDaily = Date.now();
-    await saveTrainerData(trainerData);
+    
+    try {
+      await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+    } catch (err) {
+      console.error("❌ Failed to save daily rewards:", err);
+      return safeReply(interaction, {
+        content: "❌ Failed to save rewards. Please try again.",
+        ephemeral: true,
+      });
+    }
 
     // 🎁 Prompt for bonus
     const menu = createChoiceMenu("daily_type", "Choose your bonus!", [
@@ -71,22 +81,26 @@ export default {
       ephemeral: true,
     });
 
-    // 🎮 Selection handler
     const collector = createSafeCollector(
-  interaction,
-  {
-    filter: i => i.user.id === id,
-    time: 120000 // 2-minute window for claiming
-  },
-  "daily" // This is your restart command name
-);
+      interaction,
+      {
+        filter: i => i.user.id === id,
+        componentType: ComponentType.StringSelect,
+        time: 120000
+      },
+      "daily"
+    );
+
+    let processed = false;
 
     collector.on("collect", async (i) => {
+      if (processed) return;
+      processed = true;
       collector.stop();
       if (i.values[0] === "pokemon") {
-        await giveRandomPokemon(i, user, trainerData, saveTrainerData);
+        await giveRandomPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord);
       } else {
-        await giveRandomTrainer(i, user, trainerData, saveTrainerData);
+        await giveRandomTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord);
       }
     });
 
@@ -106,17 +120,25 @@ export default {
 // ==========================================================
 // 🐾 Pokémon reward - SafeReply integrated
 // ==========================================================
-async function giveRandomPokemon(i, user, trainerData, saveTrainerData) {
+async function giveRandomPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
   const allPokemon = await getAllPokemon();
   const pool = allPokemon.filter((p) => p.generation <= 5);
   const pick = selectRandomPokemon(pool);
-  const shiny = rollForShiny(user.tp);
+  const shiny = rollForShiny(user.tp || 0);
 
   const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
   shiny ? record.shiny++ : record.normal++;
   user.pokemon[pick.id] = record;
 
-  await saveTrainerData(trainerData);
+  try {
+    await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+  } catch (err) {
+    console.error("❌ Failed to save pokemon reward:", err);
+    return safeReply(i, {
+      content: "❌ Failed to save reward. Please try again.",
+      ephemeral: true,
+    });
+  }
 
   const spriteUrl = `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pick.id}.gif`;
   const embed = createPokemonRewardEmbed(pick, shiny, spriteUrl);
@@ -127,12 +149,20 @@ async function giveRandomPokemon(i, user, trainerData, saveTrainerData) {
 // ==========================================================
 // 🎓 Trainer reward - SafeReply integrated
 // ==========================================================
-async function giveRandomTrainer(i, user, trainerData, saveTrainerData) {
+async function giveRandomTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
   const flatTrainers = await getFlattenedTrainers();
   const pick = selectRandomTrainer(flatTrainers);
   user.trainers[pick.filename] = (user.trainers[pick.filename] || 0) + 1;
 
-  await saveTrainerData(trainerData);
+  try {
+    await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+  } catch (err) {
+    console.error("❌ Failed to save trainer reward:", err);
+    return safeReply(i, {
+      content: "❌ Failed to save reward. Please try again.",
+      ephemeral: true,
+    });
+  }
 
   const spriteUrl = `${spritePaths.trainers}${pick.filename}`;
   const embed = createTrainerRewardEmbed(pick, spriteUrl);

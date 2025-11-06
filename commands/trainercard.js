@@ -355,7 +355,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
         // ✅ Reply IMMEDIATELY
         await safeReply(i, {
-          content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀\n\nRun \`/pokedex ${selectedPokemon.id}\` to see the full Pokédex entry.`,
+          content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀`,
           flags: 64
         });
 
@@ -363,6 +363,32 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         saveDataToDiscord(trainerData).catch(err => 
           console.error("Failed to save after starter selection:", err.message)
         );
+
+        // ✅ Auto-run pokedex command for the starter
+        try {
+          const { execute: executePokedex } = await import("../commands/pokedex.js");
+          // Create a simulated interaction that matches pokedex command expectations
+          const pokedexInteraction = {
+            user: i.user,
+            channel: i.channel,
+            options: {
+              getString: (name) => name === "name" ? String(selectedPokemon.id) : null
+            },
+            deferred: false,
+            replied: false,
+            deferReply: async () => { pokedexInteraction.deferred = true; },
+            editReply: async (opts) => {
+              try {
+                return await i.channel.send(opts);
+              } catch (err) {
+                console.error("Failed to send pokedex:", err.message);
+              }
+            }
+          };
+          await executePokedex(pokedexInteraction);
+        } catch (err) {
+          console.error("Failed to auto-run pokedex command:", err.message);
+        }
 
         return;
       }
@@ -386,7 +412,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 export async function showTrainerCard(interaction, user) {
   try {
     // For button interactions, defer the update instead of a new reply
-    if (interaction.isButton && interaction.isButton()) {
+    if (interaction.isButton?.()) {
       if (!interaction.deferred && !interaction.replied) {
         await interaction.deferUpdate();
       }
@@ -468,7 +494,7 @@ export async function showTrainerCard(interaction, user) {
     );
 
     // Use editReply for button interactions, editReply for slash command interactions
-    if (interaction.isButton && interaction.isButton()) {
+    if (interaction.isButton?.()) {
       await interaction.editReply({
         embeds: [embed],
         files: [teamGridAttachment],

@@ -234,3 +234,99 @@ With minor concurrency and registration refinements, it can scale safely to thou
 **Prepared by:**  
 *Internal Technical Audit – Coop’s Collection Project, November 2025*
 
+
+---
+
+## 12. Production Hardening: Atomic Saves & Graceful Shutdown
+
+**Added:** November 2025  
+**Scope:** Enhanced persistence layer and runtime lifecycle management
+
+### **12.1 Atomic Filesystem Writes**
+
+The bot now uses atomic write operations to prevent data corruption from partial writes or process crashes during saves.
+
+**Implementation:**
+- `utils/atomicWrite.js` provides `atomicWriteJson(filePath, data)`
+- Write-to-temp-then-rename pattern ensures atomicity
+- In-process locks prevent concurrent writes to the same file
+
+**Benefits:**
+- Prevents corrupted `trainerData.json` from incomplete writes
+- Eliminates risk of data loss during mid-write crashes
+- Ensures consistent state between crashes/restarts
+
+### **12.2 Save Queue & Debouncing**
+
+A centralized save queue serializes and coalesces frequent save operations.
+
+**Implementation:**
+- `utils/saveQueue.js` manages queued saves with 5-second debounce
+- Multiple rapid saves are coalesced into single write operation
+- Queue supports both local (atomic) and Discord saves
+- Handlers registered via `setLocalSaveHandler()` and `setDiscordSaveHandler()`
+
+**Benefits:**
+- Reduces filesystem I/O by coalescing rapid consecutive saves
+- Prevents race conditions from overlapping save operations
+- Maintains save order and consistency
+
+### **12.3 Graceful Shutdown**
+
+The bot now handles `SIGINT` and `SIGTERM` signals gracefully.
+
+**Shutdown Sequence:**
+1. Mark readiness as `false` (stops accepting new commands)
+2. Flush pending saves with 10-second timeout
+3. Perform final Discord backup
+4. Exit cleanly with appropriate status code
+
+**Benefits:**
+- Ensures all pending saves complete before shutdown
+- Prevents data loss during deployments or restarts
+- Provides clean shutdown logging for debugging
+
+### **12.4 Health Endpoint**
+
+A new `/healthz` endpoint reports bot status for orchestration systems.
+
+**Response Format:**
+```json
+{
+  "ready": true,
+  "uptime": 3600
+}
+```
+
+**Use Cases:**
+- Kubernetes/Docker readiness probes
+- Load balancer health checks
+- Monitoring and alerting systems
+
+### **12.5 Migration & Compatibility**
+
+**No Breaking Changes:**
+- Existing `atomicSave()` API unchanged
+- All commands continue to work without modification
+- Save handlers transparently use new queue system
+
+**Testing:**
+- Unit tests in `tests/atomicWrite.test.js` verify atomic write behavior
+- Test runner available via `npm test`
+
+### **12.6 Operational Notes**
+
+**Shutdown Instructions:**
+- Send `SIGTERM` or press `Ctrl+C` (SIGINT)
+- Wait for "✅ Shutdown complete" message
+- Maximum shutdown time: ~15 seconds (includes 10s save flush timeout)
+
+**Limitations:**
+- In-process locks only protect single Node.js process
+- Running multiple bot instances requires external locking (Redis) or database migration
+- Discord save failures are non-fatal (logged as warnings)
+
+**Monitoring:**
+- Check `/healthz` endpoint for readiness status
+- Monitor console logs for save queue messages
+- Watch for "⚠️ Save queue flush timed out" warnings during shutdown

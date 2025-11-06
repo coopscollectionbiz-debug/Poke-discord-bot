@@ -10,6 +10,7 @@ dotenv.config();
 import { getRank, getRankTiers } from "./utils/rankSystem.js";
 import { safeReply } from "./utils/safeReply.js";
 import { handleTrainerCardButtons } from "./commands/trainercard.js";
+import { enqueueSave, shutdownFlush, setLocalSaveHandler, setDiscordSaveHandler } from "./utils/saveQueue.js";
 
 const TRAINERDATA_PATH = "./trainerData.json";
 const AUTOSAVE_INTERVAL = 1000 * 60 * 3; // 3 minutes
@@ -17,6 +18,8 @@ const POKEBEACH_CHECK_INTERVAL = 1000 * 60 * 60 * 6; // 6 hours
 const PORT = process.env.PORT || 10000;
 let discordSaveCount = 0;
 let commandSaveQueue = null;
+let isReady = false;
+const startTime = Date.now();
 
 const RANK_TIERS = getRankTiers();
 
@@ -48,11 +51,13 @@ async function loadTrainerData() {
 }
 
 async function saveTrainerDataLocal(data) {
+  // Use the save queue for atomic writes
   try {
-    await fs.writeFile(TRAINERDATA_PATH, JSON.stringify(data, null, 2));
-    console.log(`💾 Local: ${Object.keys(data).length} users`);
+    await enqueueSave(data);
+    console.log(`💾 Local save queued: ${Object.keys(data).length} users`);
   } catch (err) {
     console.error("❌ Local save failed:", err.message);
+    throw err; // Re-throw so atomicSave can handle it
   }
 }
 
@@ -187,8 +192,40 @@ function debouncedDiscordSave() {
 }
 
 setInterval(() => saveDataToDiscord(trainerData), AUTOSAVE_INTERVAL);
-process.on("SIGINT", async () => { await saveDataToDiscord(trainerData); process.exit(0); });
-process.on("SIGTERM", async () => { await saveDataToDiscord(trainerData); process.exit(0); });
+
+// ===========================================================
+// 🛑 GRACEFUL SHUTDOWN
+// ===========================================================
+
+async function gracefulShutdown(signal) {
+  console.log(`\n🛑 Received ${signal}, starting graceful shutdown...`);
+  
+  // Mark as not ready to stop accepting new commands
+  isReady = false;
+  
+  try {
+    // Flush any pending saves with 10s timeout
+    console.log("💾 Flushing pending saves...");
+    const flushed = await shutdownFlush(10000);
+    
+    if (!flushed) {
+      console.warn("⚠️ Some saves may not have completed");
+    }
+    
+    // Final Discord save
+    console.log("☁️ Final Discord backup...");
+    await saveDataToDiscord(trainerData);
+    
+    console.log("✅ Shutdown complete");
+    process.exit(0);
+  } catch (err) {
+    console.error("❌ Error during shutdown:", err.message);
+    process.exit(1);
+  }
+}
+
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
 // ===========================================================
 // 🏖️ POKEBEACH NEWS SCRAPER
@@ -337,6 +374,12 @@ const app = express();
 const staticPath = path.join(process.cwd(), "public");
 app.use("/public", express.static(staticPath));
 app.get("/", (_, res) => res.send("Bot running"));
+app.get("/healthz", (_, res) => {
+  res.json({
+    ready: isReady,
+    uptime: Math.floor((Date.now() - startTime) / 1000)
+  });
+});
 app.listen(PORT, () => console.log(`✅ Port ${PORT}`));
 
 // ===========================================================
@@ -347,6 +390,9 @@ let trainerData = {};
 
 client.once("ready", async () => {
   console.log(`✅ ${client.user.tag}`);
+  
+  // Register save handlers with the queue
+  setDiscordSaveHandler(saveDataToDiscord);
   
   try {
     trainerData = await loadTrainerData();
@@ -373,6 +419,10 @@ client.once("ready", async () => {
   } catch (err) {
     console.error("❌ Failed initial Discord save:", err.message);
   }
+  
+  // Mark as ready
+  isReady = true;
+  console.log("✅ Bot ready and accepting commands");
 });
 
 client.login(process.env.BOT_TOKEN);

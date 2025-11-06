@@ -131,15 +131,22 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
         // ✅ Build GIF paths - handle both URLs and local paths
         const gifPaths = list.map(p => `${spritePaths.pokemon}${p.id}.gif`);
+        console.log(`📸 Building page for ${typeName} with ${list.length} Pokemon: ${list.map(p => p.name).join(", ")}`);
+        console.log(`🎬 GIF paths: ${gifPaths.join(", ")}`);
 
         // ✅ Try to combine GIFs, with fallback to first image if URLs
         const output = path.resolve(`./temp/${typeName}_starters.gif`);
         let combinedGif = null;
 
         try {
+          console.log(`⏳ Combining ${gifPaths.length} GIFs into: ${output}`);
           await combineGifsHorizontal(gifPaths, output);
           if (fs.existsSync(output)) {
+            const stats = fs.statSync(output);
+            console.log(`✅ GIF composed successfully (${stats.size} bytes): ${output}`);
             combinedGif = new AttachmentBuilder(output, { name: `${typeName}_starters.gif` });
+          } else {
+            console.warn(`⚠️ GIF file not created at: ${output}`);
           }
         } catch (gifError) {
           console.warn(`⚠️ GIF composition failed: ${gifError.message}`);
@@ -193,16 +200,26 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     };
 
     const buildButtons = (list, index, totalPages) => {
-      const row1 = new ActionRowBuilder().addComponents(
-        list.slice(0, 3).map(p =>
-          new ButtonBuilder()
-            .setCustomId(`starter_${p.id}`)
-            .setLabel(p.name)
-            .setStyle(ButtonStyle.Primary)
-        )
+      const rows = [];
+      
+      // Create button rows - 2 buttons per row to fit more Pokemon
+      const buttons = list.map(p =>
+        new ButtonBuilder()
+          .setCustomId(`starter_${p.id}`)
+          .setLabel(p.name.substring(0, 20))
+          .setStyle(ButtonStyle.Primary)
       );
+      
+      // Add buttons in pairs (2 per row)
+      for (let i = 0; i < buttons.length; i += 2) {
+        const row = new ActionRowBuilder().addComponents(
+          buttons.slice(i, i + 2)
+        );
+        rows.push(row);
+      }
 
-      const row2 = new ActionRowBuilder().addComponents(
+      // Add navigation row
+      const navRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("prev_page")
           .setEmoji("⬅️")
@@ -214,8 +231,9 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(index === totalPages - 1)
       );
+      rows.push(navRow);
 
-      return [row1, row2];
+      return rows;
     };
 
     // ── Show first page ───────────────────────────────

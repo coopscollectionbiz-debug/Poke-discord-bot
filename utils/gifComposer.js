@@ -36,22 +36,21 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
     }
 
     // Build ImageMagick command for horizontal composition with animation preservation
+    // Strategy: Use parentheses to process each GIF separately, then composite frames
     // Key points:
-    // 1. No -coalesce at the start (preserves original frame delays)
-    // 2. +append combines images horizontally
-    // 3. -layers Coalesce at the end ensures all frames are valid
-    // 4. -set delay sets frame timing (10 = 100ms per frame)
-    // 5. -loop 0 = infinite loop
+    // 1. Process each GIF in parentheses with -coalesce to expand all frames
+    // 2. +append combines images horizontally within each frame sequence
+    // 3. -set delay sets frame timing (10 = 100ms per frame)
+    // 4. -loop 0 = infinite loop
+    // 5. -layers Optimize reduces file size
     
-    const command = `convert ${gifPaths.map(p => `"${p}"`).join(" ")} \\
-      -background transparent \\
-      +append \\
-      -set delay 10 \\
-      -loop 0 \\
-      -layers Optimize \\
-      "${outputPath}"`;
+    let command = `convert`;
+    for (const gifPath of gifPaths) {
+      command += ` \\( "${gifPath}" -coalesce \\)`;
+    }
+    command += ` -background transparent +append -set delay 10 -loop 0 -layers Optimize "${outputPath}"`;
 
-    console.log(`🧩 [GIFComposer] Command: convert [inputs] +append -set delay 10 -loop 0 -layers Optimize`);
+    console.log(`🧩 [GIFComposer] Command: convert [inputs with -coalesce] +append -set delay 10 -loop 0 -layers Optimize`);
 
     // Execute the command
     execSync(command, { 

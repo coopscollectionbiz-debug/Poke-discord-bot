@@ -35,6 +35,7 @@ export function createNewUser(userId, username) {
     tp: 0,
     rank: "Novice Trainer",
     onboardingComplete: false,
+    onboardingStage: "starter_selection",
     onboardingDate: null,
     starterPokemon: null,
     pokemon: {},
@@ -71,6 +72,7 @@ export function validateUserSchema(user, userId, username) {
 
   // Onboarding fields
   if (validated.onboardingComplete === undefined) validated.onboardingComplete = false;
+  if (validated.onboardingStage === undefined) validated.onboardingStage = "starter_selection";
   if (validated.onboardingDate === undefined) validated.onboardingDate = null;
   if (validated.starterPokemon === undefined) validated.starterPokemon = null;
 

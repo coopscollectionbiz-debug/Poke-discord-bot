@@ -272,6 +272,7 @@ function normalizeUserSchema(id, user) {
   user.displayedTrainer ??= null;
   user.lastDaily ??= 0;
   user.onboardingComplete ??= false;
+  user.onboardingStage ??= "starter_selection";
   user.onboardingDate ??= null;
   user.starterPokemon ??= null;
   return user;

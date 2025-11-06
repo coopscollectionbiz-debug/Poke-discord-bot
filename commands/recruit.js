@@ -109,7 +109,9 @@ export default {
 
     collector.on("collect", async (i) => {
       if (i.customId === "cancel_recruit") {
-        collector.stop();
+        // Stop with "confirmed" reason to prevent duplicate "session expired" message
+        // since we're already sending a "cancelled" message
+        collector.stop("confirmed");
         return safeReply(i, {
           content: "❌ Recruitment cancelled.",
           ephemeral: true

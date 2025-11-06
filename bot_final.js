@@ -262,8 +262,6 @@ setInterval(checkPokeBeach, POKEBEACH_CHECK_INTERVAL);
 
 function normalizeUserSchema(id, user) {
   user.id ??= id;
-  user.name ??= "Trainer";
-  user.rank ??= "Novice Trainer";
   user.tp ??= 0;
   user.cc ??= 0;
   user.pokemon ??= {};
@@ -272,7 +270,6 @@ function normalizeUserSchema(id, user) {
   user.displayedTrainer ??= null;
   user.lastDaily ??= 0;
   user.onboardingComplete ??= false;
-  user.onboardingStage ??= "starter_selection";
   user.onboardingDate ??= null;
   user.starterPokemon ??= null;
   return user;
@@ -316,17 +313,6 @@ client.on("interactionCreate", async (interaction) => {
         await saveTrainerDataLocal(trainerData);
         debouncedDiscordSave();
         return;
-      }
-
-      // Don't route starter/trainer carousel buttons - they're handled by the local collector
-      if (interaction.customId.startsWith("select_starter") || 
-          interaction.customId.startsWith("prev_starter") ||
-          interaction.customId.startsWith("next_starter") ||
-          interaction.customId.startsWith("prev_trainer") ||
-          interaction.customId.startsWith("next_trainer") ||
-          interaction.customId.startsWith("confirm_trainer") ||
-          interaction.customId.startsWith("restart_trainercard")) {
-        return; // Silently ignore - handled by collector
       }
 
       console.warn(`⚠️ Unhandled button: ${interaction.customId}`);

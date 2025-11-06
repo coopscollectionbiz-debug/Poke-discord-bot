@@ -5,7 +5,6 @@
 import { SlashCommandBuilder, ActionRowBuilder, ComponentType } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
-import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { validateCooldown } from "../utils/validators.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
@@ -35,11 +34,14 @@ export default {
     .setName("daily")
     .setDescription("Claim your daily TP, CC, and choose a random reward!"),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+    // ✅ Defer reply immediately
+    await interaction.deferReply({ flags: 64 });
+
     const id = interaction.user.id;
 
     // Initialize schema
-    const user = ensureUserData(trainerData, id, interaction.user.username);
+    const user = await ensureUserInitialized(id, interaction.user.username, trainerData, reloadUserFromDiscord);
 
     // 🕐 Cooldown check
     const cooldownCheck = validateCooldown(user.lastDaily, DAILY_COOLDOWN_MS);

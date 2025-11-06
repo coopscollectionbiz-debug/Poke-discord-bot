@@ -1,10 +1,7 @@
-// ==========================================================
-// /resetuser — Reset onboarding, Pokémon, and trainers for a user (TP preserved)
-// ==========================================================
-
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { createSuccessEmbed } from "../utils/embedBuilders.js";
+import { atomicSave } from "../utils/saveManager.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -13,37 +10,54 @@ export default {
     .addUserOption(option => option.setName("user").setDescription("The user to reset").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+    // ✅ Defer reply immediately
+    await interaction.deferReply({ ephemeral: true });
+
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
       return safeReply(interaction, { content: "⛔ You do not have permission to use this command.", ephemeral: true });
     }
 
     const targetUser = interaction.options.getUser("user");
-    if (!trainerData[targetUser.id]) {
+    
+    // ✅ Use ensureUserInitialized to get latest state
+    const targetData = await ensureUserInitialized(targetUser.id, targetUser.username, trainerData, reloadUserFromDiscord);
+    
+    if (!targetData) {
       return safeReply(interaction, { content: `⛔ ${targetUser.username} does not have a trainer profile.`, ephemeral: true });
     }
 
-    const targetData = trainerData[targetUser.id];
     const preservedTP = targetData.tp ?? 0;
 
+    // ✅ Reset fields
     targetData.onboardingComplete = false;
     targetData.onboardingDate = null;
+    targetData.onboardingStage = "starter_selection";  // Reset to start
+    targetData.selectedStarter = null;
+    targetData.starterPokemon = null;
     targetData.pokemon = {};
     targetData.trainers = {};
     targetData.displayedPokemon = [];
     targetData.displayedTrainer = null;
     targetData.tp = preservedTP;
 
+    // ✅ Update memory
+    trainerData[targetUser.id] = targetData;
+
     try {
-      await saveTrainerDataLocal(trainerData);
-      await saveDataToDiscord(trainerData);
+      // ✅ Use atomic save
+      await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+      
+      return safeReply(interaction, {
+        embeds: [createSuccessEmbed("🔄 User Reset", `Trainer profile for **${targetUser.username}** has been reset.\n\n✅ TP preserved: ${preservedTP}\n✅ Onboarding reset to starter selection`)],
+        ephemeral: true
+      });
     } catch (err) {
       console.error("❌ resetuser save error:", err);
+      return safeReply(interaction, {
+        content: `❌ Failed to reset user: ${err.message}`,
+        ephemeral: true
+      });
     }
-
-    return safeReply(interaction, {
-      embeds: [createSuccessEmbed("🔄 User Reset", `Trainer profile for **${targetUser.username}** has been reset. TP preserved.`)],
-      ephemeral: true
-    });
   }
 };

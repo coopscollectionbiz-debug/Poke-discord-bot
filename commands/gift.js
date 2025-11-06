@@ -4,7 +4,6 @@
 // ==========================================================
 
 import { SlashCommandBuilder } from "discord.js";
-import { ensureUserData } from "../utils/trainerDataHelper.js";
 import {
   validateAmount,
   validateUserResources,
@@ -60,7 +59,7 @@ export default {
   // ==========================================================
   // ⚙️ Command Execution (SafeReply Refactor)
   // ==========================================================
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
     await interaction.deferReply({ ephemeral: true });
 
     const senderId = interaction.user.id;
@@ -90,8 +89,8 @@ export default {
     }
 
     // Ensure both users exist in trainerData
-    const sender = ensureUserData(trainerData, senderId, interaction.user.username);
-    const recipient = ensureUserData(trainerData, receiver.id, receiver.username);
+    const sender = await ensureUserInitialized(senderId, interaction.user.username, trainerData, reloadUserFromDiscord);
+    const recipient = await ensureUserInitialized(receiver.id, receiver.username, trainerData, reloadUserFromDiscord);
 
     let description = "";
 

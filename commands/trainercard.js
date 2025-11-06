@@ -345,7 +345,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
       } else if (i.customId === "prev_starter") {
         currentIndex = Math.max(currentIndex - 1, 0);
       } else if (i.customId === "select_starter") {
-        // ✅ STOP COLLECTOR FIRST (prevents timeout)
+        // ✅ STOP COLLECTOR FIRST (prevents timeout error from "end" event)
         collector.stop();
 
         const selectedPokemon = allStarters[currentIndex];
@@ -353,30 +353,9 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         user.onboardingComplete = true;
         user.displayedPokemon = [selectedPokemon.id];
 
-        // Get pokedex entry
-        const pokedexEntry = selectedPokemon.description || selectedPokemon.flavorText || "A mysterious Pokémon awaits...";
-
-        // ✅ Build embed with pokedex info
-        const starterEmbed = new EmbedBuilder()
-          .setTitle(`✅ ${selectedPokemon.name} Selected!`)
-          .setDescription(
-            `**Your adventure begins!** 🚀\n\n` +
-            `**Pokédex Entry:**\n${pokedexEntry}\n\n` +
-            `**Type:** ${selectedPokemon.types?.map(t => {
-              const typeNames = { 1: "Normal", 2: "Fighting", 3: "Flying", 4: "Poison", 5: "Ground", 
-                6: "Rock", 7: "Bug", 8: "Ghost", 9: "Steel", 10: "Fire", 11: "Water", 12: "Grass", 
-                13: "Electric", 14: "Psychic", 15: "Ice", 16: "Dragon", 17: "Dark" };
-              return typeNames[t] || "Unknown";
-            }).join(", ")}\n` +
-            `**HP:** ${selectedPokemon.hp || "N/A"} | **ATK:** ${selectedPokemon.attack || "N/A"}`
-          )
-          .setImage(`${spritePaths.pokemon}${selectedPokemon.id}.gif`)
-          .setColor(0x43b581)
-          .setFooter({ text: `#${selectedPokemon.id}` });
-
-        // ✅ Reply with embed instead of plain text
+        // ✅ Reply IMMEDIATELY
         await safeReply(i, {
-          embeds: [starterEmbed],
+          content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀\n\nRun \`/pokedex ${selectedPokemon.id}\` to see the full Pokédex entry.`,
           flags: 64
         });
 
@@ -391,12 +370,6 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
       const { embed: e, buttons: b } = buildCarousel(currentIndex);
       await i.deferUpdate();
       await i.editReply({ embeds: [e], components: [b] });
-    });
-
-    collector.on("end", async () => {
-      try {
-        await interaction.editReply({ components: [] }).catch(() => {});
-      } catch {}
     });
   } catch (err) {
     console.error("starterSelection error:", err);
@@ -771,13 +744,13 @@ export async function handleTrainerCardButtons(interaction, trainerData, saveDat
 
   switch (interaction.customId) {
     case "refresh_card":
-      return showTrainerCard(interaction, user);
+      return await showTrainerCard(interaction, user);
 
     case "change_trainer":
-      return handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord);
+      return await handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord);
 
     case "change_pokemon":
-      return handleChangePokemon(interaction, user, trainerData, saveDataToDiscord);
+      return await handleChangePokemon(interaction, user, trainerData, saveDataToDiscord);
 
     default:
       await safeReply(interaction, { content: "❌ Unknown button action.", flags: 64 });

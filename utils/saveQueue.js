@@ -11,29 +11,9 @@ let saveTimer = null;
 let isFlushing = false;
 let isShuttingDown = false;
 
-// Registered save handlers
-let localSaveHandler = null;
-let discordSaveHandler = null;
-
 // Configuration
 const DEBOUNCE_MS = 5000; // 5 seconds debounce by default
 const TRAINERDATA_PATH = "./trainerData.json";
-
-/**
- * Register the local save handler
- * @param {Function} handler - Function(data) that saves locally
- */
-export function setLocalSaveHandler(handler) {
-  localSaveHandler = handler;
-}
-
-/**
- * Register the Discord save handler
- * @param {Function} handler - Function(data) that saves to Discord
- */
-export function setDiscordSaveHandler(handler) {
-  discordSaveHandler = handler;
-}
 
 /**
  * Enqueue a save operation
@@ -87,19 +67,9 @@ async function processSaveQueue() {
     await atomicWriteJson(TRAINERDATA_PATH, data);
     console.log(`💾 Queued save: ${Object.keys(data).length} users`);
 
-    // Call Discord save handler if registered
-    if (discordSaveHandler && typeof discordSaveHandler === "function") {
-      try {
-        await discordSaveHandler(data);
-      } catch (err) {
-        console.warn("⚠️ Discord save failed (non-fatal):", err.message);
-      }
-    }
-
     // Resolve all promises
     batch.forEach(item => item.resolve({ 
       localSuccess: true,
-      discordSuccess: true,
       errors: []
     }));
   } catch (err) {

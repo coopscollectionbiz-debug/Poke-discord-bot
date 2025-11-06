@@ -10,7 +10,7 @@ dotenv.config();
 import { getRank, getRankTiers } from "./utils/rankSystem.js";
 import { safeReply } from "./utils/safeReply.js";
 import { handleTrainerCardButtons } from "./commands/trainercard.js";
-import { enqueueSave, shutdownFlush, setLocalSaveHandler, setDiscordSaveHandler } from "./utils/saveQueue.js";
+import { enqueueSave, shutdownFlush } from "./utils/saveQueue.js";
 
 const TRAINERDATA_PATH = "./trainerData.json";
 const AUTOSAVE_INTERVAL = 1000 * 60 * 3; // 3 minutes
@@ -390,9 +390,6 @@ let trainerData = {};
 
 client.once("ready", async () => {
   console.log(`✅ ${client.user.tag}`);
-  
-  // Register save handlers with the queue
-  setDiscordSaveHandler(saveDataToDiscord);
   
   try {
     trainerData = await loadTrainerData();

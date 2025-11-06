@@ -110,7 +110,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
       const typeName = typeMap[typeId];
       const list = grouped[typeId];
 
-      // Combine 5 GIFs horizontally
+      // Combine GIFs horizontally
       const gifPaths = list.map(p => `${spritePaths.pokemon}${p.id}.gif`);
       const output = path.resolve(`./temp/${typeName}_starters.gif`);
       await combineGifsHorizontal(gifPaths, output);
@@ -124,7 +124,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         .setDescription(
           `**Type:** ${typeName}\nClick a button below to choose your Pokémon!`
         )
-        .setThumbnail(typeSprite) // 🧩 replaces gradient header
+        .setThumbnail(typeSprite)
         .setColor(0x43b581)
         .setImage(`attachment://${typeName}_starters.gif`)
         .setFooter({ text: `Page ${index + 1}/${sortedTypes.length}` });
@@ -177,7 +177,8 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
       if (i.customId === "next_page" || i.customId === "prev_page") {
         page += i.customId === "next_page" ? 1 : -1;
         const { embed: e, components: c, files: f } = await buildPage(page);
-        return await safeReply(i, { embeds: [e], components: c, files: f, ephemeral: true });
+        await i.deferUpdate();
+        return await i.editReply({ embeds: [e], components: c, files: f });
       }
 
       if (i.customId.startsWith("starter_")) {
@@ -239,13 +240,22 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
   const row = getButtons(index);
   await safeReply(interaction, { embeds: [embed], components: [row], ephemeral: true });
 
-  const collector = interaction.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+  const collector = interaction.channel.createMessageComponentCollector({ 
+    filter: i => i.user.id === interaction.user.id,
+    componentType: ComponentType.Button, 
+    time: 60000 
+  });
+
   collector.on("collect", async i => {
     if (i.user.id !== interaction.user.id) return safeReply(i, { content: "This isn't your selection!", ephemeral: true });
 
     switch (i.customId) {
-      case "next_trainer": index = Math.min(index + 1, trainers.length - 1); break;
-      case "prev_trainer": index = Math.max(index - 1, 0); break;
+      case "next_trainer": 
+        index = Math.min(index + 1, trainers.length - 1);
+        break;
+      case "prev_trainer": 
+        index = Math.max(index - 1, 0);
+        break;
       case "confirm_trainer": {
         const choice = trainers[index];
         user.trainers[choice.id] = 1;
@@ -259,13 +269,17 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
       }
     }
 
+    // Update for next/prev navigation
     const newEmbed = renderTrainerEmbed(index);
     const newRow = getButtons(index);
-    await safeReply(i, { embeds: [newEmbed], components: [newRow], ephemeral: true });
+    await i.deferUpdate();
+    await i.editReply({ embeds: [newEmbed], components: [newRow] });
   });
 
   collector.on("end", async (_, reason) => {
-    if (reason !== "confirmed") await safeReply(interaction, { components: [] });
+    if (reason !== "confirmed") {
+      try { await safeReply(interaction, { components: [] }); } catch {}
+    }
   });
 }
 
@@ -290,10 +304,15 @@ export async function showTrainerCard(interaction, user) {
     let combinedGifAttachment = null;
 
     if (owned.length > 0) {
-      const gifPaths = owned.map(id => `${spritePaths.pokemon}${id}.gif`);
-      const output = path.resolve(`./temp/${username}_team.gif`);
-      await combineGifsHorizontal(gifPaths, output);
-      combinedGifAttachment = new AttachmentBuilder(output, { name: "team.gif" });
+      try {
+        const gifPaths = owned.map(id => `${spritePaths.pokemon}${id}.gif`);
+        const output = path.resolve(`./temp/${username}_team.gif`);
+        await combineGifsHorizontal(gifPaths, output);
+        combinedGifAttachment = new AttachmentBuilder(output, { name: "team.gif" });
+      } catch (gifErr) {
+        console.error("Failed to combine GIFs:", gifErr);
+        // Continue without GIF
+      }
     }
 
     // === 3️⃣ Stats + Embed ==================================================
@@ -309,9 +328,13 @@ export async function showTrainerCard(interaction, user) {
         `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}\n\n` +
         `📊 **Pokémon Owned:** ${pokemonOwned}\n✨ **Shiny Pokémon:** ${shinyCount}\n🧍 **Trainers:** ${trainerCount}`
       )
-      .setImage(`attachment://team.gif`)
       .setThumbnail(trainerPath)
       .setFooter({ text: "Coop's Collection • /trainercard" });
+
+    // Only set image if GIF was successfully created
+    if (combinedGifAttachment) {
+      embed.setImage(`attachment://team.gif`);
+    }
 
     // === 4️⃣ Action Buttons ================================================
     const row = new ActionRowBuilder().addComponents(
@@ -386,22 +409,26 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
   });
 
   collector.on("collect", async i => {
-    if (i.customId === "trainer_next_page") pageIndex++;
-    else if (i.customId === "trainer_prev_page") pageIndex--;
-    else if (i.customId.startsWith("select_trainer_")) {
+    if (i.customId === "trainer_next_page") {
+      pageIndex++;
+    } else if (i.customId === "trainer_prev_page") {
+      pageIndex--;
+    } else if (i.customId.startsWith("select_trainer_")) {
       const selectedTrainer = i.customId.replace("select_trainer_", "");
       user.displayedTrainer = selectedTrainer;
       await saveDataToDiscord(trainerData);
       await safeReply(i, { content: `✅ Trainer changed to **${selectedTrainer}**!`, ephemeral: true });
       return collector.stop();
     }
+
     const { embed: e, components: c } = buildPage(pageIndex);
-    await safeReply(i, { embeds: [e], components: c, ephemeral: true });
+    await i.deferUpdate();
+    await i.editReply({ embeds: [e], components: c });
   });
 
-  collector.on("end", async () =>
-    safeReply(interaction, { content: "⏱️ Selection timed out.", ephemeral: true })
-  );
+  collector.on("end", async () => {
+    try { await safeReply(interaction, { content: "⏱️ Selection timed out.", ephemeral: true }); } catch {}
+  });
 }
 
 // ===========================================================
@@ -422,7 +449,7 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
     pages.push(ownedPokemon.slice(i, i + pokemonPerPage));
 
   let pageIndex = 0;
-  let selectedPokemon = [...(user.displayedPokemon || [])].slice(0, 6);
+  let selectedPokemon = [...(user.displayedPokemon || [])].map(id => String(id));
 
   const buildPage = index => {
     const pagePokemon = pages[index];
@@ -430,17 +457,18 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
       .setTitle("🧬 Select Your Displayed Pokémon")
       .setDescription(
         `Choose up to 6 Pokémon.\n\nSelected (${selectedPokemon.length}/6): ${
-          selectedPokemon.map(id => allPokemon.find(p => p.id == id)?.name).join(", ") || "None"
+          selectedPokemon.map(id => allPokemon.find(p => String(p.id) === id)?.name).filter(Boolean).join(", ") || "None"
         }`
       )
       .setColor(0xe91e63)
       .setFooter({ text: `Page ${index + 1}/${pages.length}` });
 
     const buttons = pagePokemon.map(id => {
-      const name = allPokemon.find(p => p.id == id)?.name || `#${id}`;
-      const isSelected = selectedPokemon.includes(id);
+      const idStr = String(id);
+      const name = allPokemon.find(p => String(p.id) === idStr)?.name || `#${id}`;
+      const isSelected = selectedPokemon.includes(idStr);
       return new ButtonBuilder()
-        .setCustomId(`toggle_pokemon_${id}`)
+        .setCustomId(`toggle_pokemon_${idStr}`)
         .setLabel(name.substring(0, 80))
         .setStyle(isSelected ? ButtonStyle.Success : ButtonStyle.Primary);
     });
@@ -448,6 +476,16 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
     const rows = [];
     for (let i = 0; i < buttons.length; i += 5)
       rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
+
+    if (pages.length > 1) {
+      rows.push(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId("pokemon_prev_page").setLabel("⬅️").setStyle(ButtonStyle.Secondary).setDisabled(index === 0),
+          new ButtonBuilder().setCustomId("pokemon_next_page").setLabel("➡️").setStyle(ButtonStyle.Secondary).setDisabled(index === pages.length - 1)
+        )
+      );
+    }
+
     rows.push(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId("pokemon_clear").setLabel("Clear").setStyle(ButtonStyle.Danger),
@@ -467,25 +505,37 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
   });
 
   collector.on("collect", async i => {
-    if (i.customId === "pokemon_next_page") pageIndex++;
-    else if (i.customId === "pokemon_prev_page") pageIndex--;
-    else if (i.customId.startsWith("toggle_pokemon_")) {
-      const id = i.customId.replace("toggle_pokemon_", "");
-      if (selectedPokemon.includes(id)) selectedPokemon = selectedPokemon.filter(p => p !== id);
-      else if (selectedPokemon.length < 6) selectedPokemon.push(id);
-      else return safeReply(i, { content: "⚠️ Max 6 Pokémon.", ephemeral: true });
-    } else if (i.customId === "pokemon_clear") selectedPokemon = [];
-    else if (i.customId === "pokemon_save") {
-      user.displayedPokemon = selectedPokemon;
+    if (i.customId === "pokemon_next_page") {
+      pageIndex++;
+    } else if (i.customId === "pokemon_prev_page") {
+      pageIndex--;
+    } else if (i.customId.startsWith("toggle_pokemon_")) {
+      const idStr = i.customId.replace("toggle_pokemon_", "");
+      if (selectedPokemon.includes(idStr)) {
+        selectedPokemon = selectedPokemon.filter(p => p !== idStr);
+      } else if (selectedPokemon.length < 6) {
+        selectedPokemon.push(idStr);
+      } else {
+        await i.deferUpdate();
+        return await i.editReply({ content: "⚠️ Max 6 Pokémon." });
+      }
+    } else if (i.customId === "pokemon_clear") {
+      selectedPokemon = [];
+    } else if (i.customId === "pokemon_save") {
+      user.displayedPokemon = selectedPokemon.map(id => Number(id));
       await saveDataToDiscord(trainerData);
       await safeReply(i, { content: "✅ Pokémon updated!", ephemeral: true });
       return collector.stop();
     }
+
     const { embed: e, components: c } = buildPage(pageIndex);
-    await safeReply(i, { embeds: [e], components: c, ephemeral: true });
+    await i.deferUpdate();
+    await i.editReply({ embeds: [e], components: c });
   });
 
-  collector.on("end", async () => safeReply(interaction, { content: "⏱️ Selection timed out.", ephemeral: true }));
+  collector.on("end", async () => {
+    try { await safeReply(interaction, { content: "⏱️ Selection timed out.", ephemeral: true }); } catch {}
+  });
 }
 
 // ===========================================================

@@ -1,4 +1,4 @@
-// /commands/trainercard.js (COMPLETE VERSION)
+// /commands/trainercard.js
 // Coop's Collection Discord Bot — Trainer Card Command
 // Canvas-based display: Trainer Sprite | Lead Pokemon | 5 Pokemon Grid
 // ===========================================================
@@ -9,7 +9,6 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ActionRowBuilder,
-  AttachmentBuilder,
   ComponentType
 } from "discord.js";
 import { rollForShiny } from "../shinyOdds.js";
@@ -19,10 +18,7 @@ import { getRank } from "../utils/rankSystem.js";
 import { validateUserSchema, createNewUser } from "../utils/userSchema.js";
 import { safeReply } from "../utils/safeReply.js";
 import { createSafeCollector } from "../utils/safeCollector.js";
-import { createCanvas, loadImage } from "canvas";
-import path from "path";
-import fs from "fs";
-import fetch from "node-fetch";
+
 
 // ===========================================================
 // SLASH COMMAND
@@ -32,33 +28,59 @@ export default {
     .setName("trainercard")
     .setDescription("View or create your Trainer Card!"),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord) {
     // ✅ Defer the interaction once at the start
     await interaction.deferReply({ flags: 64 });
 
     const userId = interaction.user.id;
     const username = interaction.user.username;
+
+    // ✅ Reload user from Discord to get latest state (handles race condition)
+    const reloadedUser = await reloadUserFromDiscord(userId);
+    if (reloadedUser) {
+      console.log(`🔄 Using reloaded user data from Discord`);
+      trainerData[userId] = reloadedUser;
+    }
+
     let user = trainerData[userId];
+
+    console.log(`📋 User lookup for ${username}:`, {
+      exists: !!user,
+      onboardingComplete: user?.onboardingComplete,
+      onboardingStage: user?.onboardingStage
+    });
 
     // ✅ Use unified schema
     if (!user) {
+      console.log(`🆕 Creating new user`);
       user = trainerData[userId] = createNewUser(userId, username);
     } else {
+      console.log(`✏️ Validating existing user schema`);
       user = validateUserSchema(user, userId, username);
+      // ✅ Ensure the validated user is stored back in trainerData
+      trainerData[userId] = user;
     }
+
+    console.log(`📋 After schema validation:`, {
+      onboardingComplete: user.onboardingComplete,
+      onboardingStage: user.onboardingStage
+    });
 
     // ✅ Check onboarding progress
     if (!user.onboardingComplete) {
       if (!user.onboardingStage || user.onboardingStage === "starter_selection") {
         // Show starter selection
+        console.log(`🎪 Showing starter selection`);
         return starterSelection(interaction, user, trainerData, saveDataToDiscord);
       } else if (user.onboardingStage === "trainer_selection") {
         // Show trainer selection
+        console.log(`🧍 Showing trainer selection`);
         return trainerSelection(interaction, user, trainerData, saveDataToDiscord);
       }
     }
 
     // ✅ Onboarding complete - show trainer card
+    console.log(`✅ Onboarding complete - showing trainer card`);
     await showTrainerCard(interaction, user);
   }
 };
@@ -73,277 +95,6 @@ const typeMap = {
   15: "Ice", 16: "Dragon", 17: "Dark"
 };
 
-// ===========================================================
-// UTILITY: Check if path is URL or local file
-// ===========================================================
-function isUrl(str) {
-  return str.startsWith('http://') || str.startsWith('https://');
-}
-
-// ===========================================================
-// UTILITY: Download URL sprites to temp directory
-// ===========================================================
-async function downloadSpriteToTemp(url, filename) {
-  const tempPath = path.resolve(`./temp/${filename}`);
-  
-  // Return if already cached
-  if (fs.existsSync(tempPath)) {
-    console.log(`📦 Using cached sprite: ${filename}`);
-    return tempPath;
-  }
-
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const buffer = await response.buffer();
-    fs.writeFileSync(tempPath, buffer);
-    console.log(`⬇️  Downloaded sprite: ${filename} (${buffer.length} bytes)`);
-    return tempPath;
-  } catch (err) {
-    console.error(`❌ Failed to download sprite: ${err.message}`);
-    throw err;
-  }
-}
-
-// ===========================================================
-// UTILITY: Download multiple URL sprites and return local paths
-// ===========================================================
-async function downloadSpritesToTemp(urls, baseName) {
-  const localPaths = [];
-  for (let i = 0; i < urls.length; i++) {
-    const url = urls[i];
-    const pokemonId = url.split('/').pop().replace('.gif', '').replace('.png', '');
-    const filename = `${baseName}_${i}_${pokemonId}.gif`;
-    
-    const localPath = await downloadSpriteToTemp(url, filename);
-    localPaths.push(localPath);
-  }
-  return localPaths;
-}
-
-// ===========================================================
-// UTILITY: Create team grid canvas (Pokemon 2-6)
-// ===========================================================
-async function createTeamGrid(team, spritePaths) {
-  try {
-    const canvas = createCanvas(240, 220);
-    const ctx = canvas.getContext("2d");
-
-    // Background
-    ctx.fillStyle = "#f0f0f0";
-    ctx.fillRect(0, 0, 240, 220);
-    ctx.strokeStyle = "#ddd";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0, 0, 240, 220);
-
-    // Grid layout: 2x2 + 1 centered
-    const positions = [
-      { x: 10, y: 10, size: 100 },    // Pokemon 2 (top-left)
-      { x: 130, y: 10, size: 100 },   // Pokemon 3 (top-right)
-      { x: 10, y: 120, size: 100 },   // Pokemon 4 (bottom-left)
-      { x: 130, y: 120, size: 100 },  // Pokemon 5 (bottom-right)
-      { x: 70, y: 110, size: 100 }    // Pokemon 6 (centered bottom)
-    ];
-
-    // Draw each Pokemon
-    for (let i = 0; i < Math.min(team.length, 5); i++) {
-      const pokemon = team[i];
-      if (!pokemon) continue;
-
-      const pos = positions[i];
-
-      try {
-        const imgUrl = `${spritePaths.pokemon}${pokemon.id}.gif`;
-        const img = await loadImage(imgUrl);
-
-        // Draw semi-transparent background
-        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-        ctx.fillRect(pos.x, pos.y, pos.size, pos.size);
-        ctx.strokeStyle = "#ccc";
-        ctx.strokeRect(pos.x, pos.y, pos.size, pos.size);
-
-        // Draw Pokemon sprite centered
-        const spriteSize = 80;
-        const offsetX = (pos.size - spriteSize) / 2;
-        const offsetY = (pos.size - spriteSize) / 2;
-        ctx.drawImage(img, pos.x + offsetX, pos.y + offsetY, spriteSize, spriteSize);
-
-        // Draw Pokemon name
-        ctx.fillStyle = "#333";
-        ctx.font = "bold 10px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(pokemon.name.substring(0, 10), pos.x + pos.size / 2, pos.y + pos.size + 12);
-      } catch (err) {
-        console.warn(`Failed to load image for ${pokemon.name}:`, err.message);
-        // Draw placeholder
-        ctx.fillStyle = "#ccc";
-        ctx.fillRect(pos.x + 30, pos.y + 30, 40, 40);
-        ctx.fillStyle = "#999";
-        ctx.font = "10px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("?", pos.x + pos.size / 2, pos.y + pos.size / 2);
-      }
-    }
-
-    return canvas.toBuffer("image/png");
-  } catch (error) {
-    console.error("Failed to create team grid:", error);
-    throw error;
-  }
-}
-
-// ===========================================================
-// Cache for Pokemon data
-// ===========================================================
-let pokemonCache = null;
-let cacheTimestamp = 0;
-const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
-
-async function getPokemonCached() {
-  const now = Date.now();
-  if (pokemonCache && (now - cacheTimestamp) < CACHE_DURATION) {
-    return pokemonCache;
-  }
-  console.log(`📦 Loading Pokemon data (cache miss or expired)`);
-  pokemonCache = await getAllPokemon();
-  cacheTimestamp = now;
-  return pokemonCache;
-}
-
-// ===========================================================
-// 🌿 TRAINER SELECTION - CAROUSEL
-// ===========================================================
-
-export async function trainerSelection(interaction, user, trainerData, saveDataToDiscord) {
-  try {
-    const allPokemon = await getPokemonCached();
-    
-    // Simple trainer selection - for now just use a few default trainers
-    // In a full implementation, this would load from trainerSprites.json
-    const trainerOptions = [
-      { name: "Trainer 1", key: "trainer1.png", rarity: "common" },
-      { name: "Trainer 2", key: "trainer2.png", rarity: "common" },
-      { name: "Trainer 3", key: "trainer3.png", rarity: "common" }
-    ];
-
-    console.log(`🎪 Trainer selection loaded with ${trainerOptions.length} options`);
-
-    let currentIndex = 0;
-
-    const buildTrainerDisplay = (index) => {
-      const trainer = trainerOptions[index];
-      
-      const embed = new EmbedBuilder()
-        .setTitle(`🧬 Choose Your Trainer`)
-        .setDescription(
-          `**${trainer.name}**\n\n` +
-          `Rarity: ${trainer.rarity}\n\n` +
-          `**Trainer ${index + 1} of ${trainerOptions.length}**`
-        )
-        .setColor(0x5865f2)
-        .setFooter({ text: `Use the arrows to browse trainers` });
-
-      const buttons = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("prev_trainer")
-          .setEmoji("⬅️")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(index === 0),
-        new ButtonBuilder()
-          .setCustomId("select_trainer")
-          .setLabel(`✅ Choose ${trainer.name}`)
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId("next_trainer")
-          .setEmoji("➡️")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(index === trainerOptions.length - 1)
-      );
-
-      return { embed, buttons };
-    };
-
-    const { embed, buttons } = buildTrainerDisplay(currentIndex);
-    const reply = await interaction.editReply({ embeds: [embed], components: [buttons] });
-
-    // Create collector on the message
-    const collector = reply.createMessageComponentCollector({
-      filter: i => i.user.id === interaction.user.id,
-      componentType: ComponentType.Button,
-      time: 120000
-    });
-
-    collector.on("collect", async i => {
-      if (i.customId === "select_trainer") {
-        // ✅ DEFER UPDATE
-        await i.deferUpdate().catch(err => {
-          console.warn("Failed to defer update:", err.message);
-        });
-        
-        // ✅ STOP COLLECTOR
-        collector.stop();
-
-        const selectedTrainer = trainerOptions[currentIndex];
-        user.displayedTrainer = selectedTrainer.key;
-        user.onboardingComplete = true;
-        delete user.onboardingStage;
-
-        // ✅ Save data
-        saveDataToDiscord(trainerData).catch(err => 
-          console.error("Failed to save after trainer selection:", err.message)
-        );
-
-        // ✅ Show trainer card after trainer selection
-        try {
-          await showTrainerCard(interaction, user);
-        } catch (err) {
-          console.error("Failed to show trainer card:", err.message);
-          await interaction.editReply({
-            content: `✅ You chose **${selectedTrainer.name}**! Now viewing your trainer card...`,
-          });
-        }
-
-        return;
-      }
-
-      // For next/prev buttons, defer and update
-      await i.deferUpdate().catch(err => {
-        console.warn("Failed to defer update for navigation:", err.message);
-      });
-      
-      if (i.customId === "next_trainer") {
-        currentIndex = Math.min(currentIndex + 1, trainerOptions.length - 1);
-      } else if (i.customId === "prev_trainer") {
-        currentIndex = Math.max(currentIndex - 1, 0);
-      }
-
-      const { embed: e, buttons: b } = buildTrainerDisplay(currentIndex);
-      await i.editReply({ embeds: [e], components: [b] });
-    });
-
-    // Cleanup when collector ends
-    collector.on("end", async (_, reason) => {
-      if (reason !== "user") {
-        try {
-          await interaction.editReply({ components: [] }).catch(() => {});
-        } catch {}
-      }
-    });
-  } catch (err) {
-    console.error("trainerSelection error:", err);
-    await interaction.editReply({
-      content: "❌ Failed to load trainer selection.",
-    });
-  }
-}
-
-// ===========================================================
-// 🌿 STARTER SELECTION - CAROUSEL WITH ANIMATED GIFS
-// ===========================================================
-
 const starterGenerations = [
   { name: "Kanto", ids: [1, 4, 7] },           // Bulbasaur, Charmander, Squirtle
   { name: "Johto", ids: [152, 155, 158] },     // Chikorita, Cyndaquil, Totodile
@@ -352,9 +103,13 @@ const starterGenerations = [
   { name: "Unova", ids: [495, 498, 501] }      // Snivy, Tepig, Oshawott
 ];
 
+// ===========================================================
+// 🌿 STARTER SELECTION - TYPE SPRITE HEADER + ANIMATED GIF GRID
+// ===========================================================
+
 export async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
   try {
-    const allPokemon = await getPokemonCached();
+    const allPokemon = await getAllPokemon();
     
     // Build all starters in a flat list
     const allStarters = [];
@@ -381,22 +136,11 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
     let currentIndex = 0;
 
-    const buildCarousel = (index) => {
+    const buildCarousel = async (index) => {
       const pokemon = allStarters[index];
-      const genInfo = generationInfo.find(g => {
-        let genCount = 0;
-        for (const gen of starterGenerations) {
-          if (genCount + gen.ids.length > index) {
-            return true;
-          }
-          genCount += gen.ids.length;
-        }
-        return false;
-      });
-
+      
       // Find which generation this starter belongs to
       let genName = "Unknown";
-      let genIndex = 0;
       let starterNumInGen = 0;
       let count = 0;
 
@@ -406,7 +150,6 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         
         if (count + validCount > index) {
           genName = gen.name;
-          genIndex = i;
           starterNumInGen = index - count + 1;
           break;
         }
@@ -425,7 +168,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         .setColor(0x43b581)
         .setFooter({ text: `Use the arrows to browse all starters` });
 
-      // Add type icon as thumbnail (top right)
+      // Add type icon as thumbnail
       if (pokemon.types?.[0]) {
         const typeIconUrl = `${spritePaths.types}${pokemon.types[0]}.png`;
         embed.setThumbnail(typeIconUrl);
@@ -452,10 +195,10 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
       return { embed, buttons };
     };
 
-    const { embed, buttons } = buildCarousel(currentIndex);
+    const { embed, buttons } = await buildCarousel(currentIndex);
     const reply = await interaction.editReply({ embeds: [embed], components: [buttons] });
 
-    // Create collector on the message (don't use createSafeCollector here - it tries to reply after interaction expires)
+    // Create collector on the message
     const collector = reply.createMessageComponentCollector({
       filter: i => i.user.id === interaction.user.id,
       componentType: ComponentType.Button,
@@ -464,7 +207,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
     collector.on("collect", async i => {
       if (i.customId === "select_starter") {
-        // ✅ DEFER UPDATE (not deferReply - we already deferred the main interaction)
+        // ✅ DEFER UPDATE
         await i.deferUpdate().catch(err => {
           console.warn("Failed to defer update:", err.message);
         });
@@ -475,12 +218,33 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         const selectedPokemon = allStarters[currentIndex];
         user.selectedStarter = selectedPokemon.id;
         user.displayedPokemon = [selectedPokemon.id];
-        user.onboardingStage = "trainer_selection"; // Move to trainer selection
+        user.onboardingStage = "trainer_selection";
+        
+        // Add to pokemon collection with shiny roll
+        const isShiny = rollForShiny(user.tp);
+        user.pokemon[selectedPokemon.id] = { normal: isShiny ? 0 : 1, shiny: isShiny ? 1 : 0 };
 
-        // ✅ Save data
-        saveDataToDiscord(trainerData).catch(err => 
-          console.error("Failed to save after starter selection:", err.message)
-        );
+        // ✅ Ensure the user object in trainerData is updated
+        trainerData[interaction.user.id] = user;
+
+        console.log(`✅ Starter selected: ${selectedPokemon.name}`);
+        console.log(`👤 Final user state before save:`, {
+          selectedStarter: trainerData[interaction.user.id].selectedStarter,
+          onboardingStage: trainerData[interaction.user.id].onboardingStage,
+          displayedPokemon: trainerData[interaction.user.id].displayedPokemon
+        });
+
+        // ✅ Save data IMMEDIATELY and AWAIT completion
+        try {
+          await saveDataToDiscord(trainerData);
+          console.log(`✅ Starter selection saved`);
+        } catch (err) {
+          console.error("Failed to save after starter selection:", err.message);
+        }
+
+        // ✅ Explicitly update memory copy again after save to prevent stale references
+        trainerData[interaction.user.id] = user;
+        console.log(`🔄 Memory copy updated after save`);
 
         // ✅ Show trainer selection next
         try {
@@ -506,13 +270,12 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         currentIndex = Math.max(currentIndex - 1, 0);
       }
 
-      const { embed: e, buttons: b } = buildCarousel(currentIndex);
+      const { embed: e, buttons: b } = await buildCarousel(currentIndex);
       await i.editReply({ embeds: [e], components: [b] });
     });
 
-    // Cleanup when collector ends (timeout or manual stop)
+    // Cleanup when collector ends
     collector.on("end", async (_, reason) => {
-      // Only clean up if not manually stopped (select_starter)
       if (reason !== "user") {
         try {
           await interaction.editReply({ components: [] }).catch(() => {});
@@ -529,257 +292,198 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 }
 
 // ===========================================================
-// SHOW TRAINER CARD
+// 🧍 TRAINER SELECTION
 // ===========================================================
+
+export async function trainerSelection(interaction, user, trainerData, saveDataToDiscord) {
+  const trainers = [
+    { id: "youngster-gen4.png", name: "Youngster 👦", label: "Youngster", description: "A spirited young Pokémon Trainer full of energy.", color: 0x43b581 },
+    { id: "lass-gen4.png", name: "Lass 👧", label: "Lass", description: "A cheerful and stylish Trainer who loves cute Pokémon.", color: 0xff70a6 }
+  ];
+  
+  let index = 0;
+  
+  const renderTrainerEmbed = page => {
+    const t = trainers[page];
+    const trainerImageUrl = `${spritePaths.trainers}${t.id}`;
+    
+    console.log(`🧍 Rendering trainer ${t.label} - URL: ${trainerImageUrl}`);
+    
+    return new EmbedBuilder()
+      .setTitle("🧍 Choose Your Trainer Sprite")
+      .setDescription(`${t.description}\n\n**Trainer:** ${t.name}`)
+      .setColor(t.color)
+      .setImage(trainerImageUrl)
+      .setFooter({ text: `Page ${page + 1}/${trainers.length}` });
+  };
+  
+  const getButtons = page => {
+    const buttons = [];
+    if (page > 0) {
+      buttons.push(new ButtonBuilder().setCustomId("prev_trainer").setLabel("⬅️ Back").setStyle(ButtonStyle.Secondary));
+    }
+    if (page < trainers.length - 1) {
+      buttons.push(new ButtonBuilder().setCustomId("next_trainer").setLabel("Next ➡️").setStyle(ButtonStyle.Secondary));
+    }
+    buttons.push(
+      new ButtonBuilder()
+        .setCustomId("confirm_trainer")
+        .setLabel(`✅ Confirm ${trainers[page].label}`)
+        .setStyle(ButtonStyle.Success)
+    );
+    return new ActionRowBuilder().addComponents(buttons);
+  };
+  
+  const embed = renderTrainerEmbed(index);
+  const row = getButtons(index);
+  await interaction.editReply({ embeds: [embed], components: [row] });
+  
+  const reply = await interaction.fetchReply();
+  const collector = reply.createMessageComponentCollector({
+    filter: i => i.user.id === interaction.user.id,
+    componentType: ComponentType.Button,
+    time: 120000
+  });
+  
+  collector.on("collect", async i => {
+    if (i.user.id !== interaction.user.id) {
+      return safeReply(i, { content: "This isn't your selection!", flags: 64 });
+    }
+    
+    switch (i.customId) {
+      case "next_trainer":
+        index = Math.min(index + 1, trainers.length - 1);
+        break;
+      case "prev_trainer":
+        index = Math.max(index - 1, 0);
+        break;
+      case "confirm_trainer": {
+        const choice = trainers[index];
+        user.trainers = user.trainers || {};
+        user.trainers[choice.id] = true;
+        user.displayedTrainer = choice.id;
+        user.onboardingComplete = true;
+        user.onboardingDate = Date.now();
+        delete user.onboardingStage;
+
+        // ✅ Ensure the user object in trainerData is updated
+        trainerData[interaction.user.id] = user;
+
+        console.log(`✅ Trainer confirmed: ${choice.label}`);
+        console.log(`👤 Final user state before save:`, {
+          onboardingComplete: trainerData[interaction.user.id].onboardingComplete,
+          onboardingStage: trainerData[interaction.user.id].onboardingStage,
+          displayedTrainer: trainerData[interaction.user.id].displayedTrainer
+        });
+
+        // ✅ Save data IMMEDIATELY and AWAIT completion
+        try {
+          await saveDataToDiscord(trainerData);
+          console.log(`✅ Trainer selection saved - onboarding complete`);
+        } catch (err) {
+          console.error("Failed to save after trainer selection:", err.message);
+        }
+
+        // ✅ Explicitly update memory copy again after save to prevent stale references
+        trainerData[interaction.user.id] = user;
+        console.log(`🔄 Memory copy updated after save`);
+
+        await i.deferUpdate();
+        await safeReply(i, { content: `✅ You chose **${choice.label}** as your Trainer!`, flags: 64 });
+        collector.stop("confirmed");
+        return await showTrainerCard(interaction, user);
+      }
+    }
+    
+    // Update for next/prev navigation
+    const newEmbed = renderTrainerEmbed(index);
+    const newRow = getButtons(index);
+    await i.deferUpdate();
+    await i.editReply({ embeds: [newEmbed], components: [newRow] });
+  });
+  
+  collector.on("end", async (_, reason) => {
+    if (reason !== "confirmed") {
+      try {
+        await interaction.editReply({ components: [] }).catch(() => {});
+      } catch {}
+    }
+  });
+}
+
+// ===========================================================
+// 🧑 SHOW TRAINER CARD
+// ===========================================================
+
 export async function showTrainerCard(interaction, user) {
   try {
-    // For button interactions, defer the update instead of a new reply
-    if (interaction.isButton?.()) {
-      if (!interaction.deferred && !interaction.replied) {
-        await interaction.deferUpdate();
-      }
-    } else {
-      // For slash commands or other interactions
-      if (!interaction.deferred && !interaction.replied) {
-        await interaction.deferReply({ flags: 64 });
-      }
-    }
+    const username = interaction?.user?.username || user.name || "Trainer";
+    const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
 
-    const allPokemon = await getPokemonCached();
+    console.log(`🎴 Showing trainer card for ${username}`);
+    console.log(`👤 User data:`, {
+      displayedTrainer: user.displayedTrainer,
+      displayedPokemon: user.displayedPokemon,
+      onboardingComplete: user.onboardingComplete,
+      onboardingStage: user.onboardingStage
+    });
 
-    // Get displayed Pokemon
-    const displayedIds = user.displayedPokemon || [];
-    if (displayedIds.length === 0) {
-      return safeReply(interaction, {
-        content: "❌ No Pokémon selected! Use 🔄 Change Team to select.",
-        flags: 64
-      });
-    }
+    // === 1️⃣ Trainer Sprite =====================================================
+    const trainerPath = user.displayedTrainer
+      ? `${spritePaths.trainers}${user.displayedTrainer}`
+      : null;
 
-    const displayedPokemon = displayedIds.slice(0, 6)
+    console.log(`🧍 Trainer sprite URL:`, trainerPath);
+
+    // === 2️⃣ Pokémon Info ====================================================
+    const displayed = user.displayedPokemon?.slice(0, 6) || [];
+    const allPokemon = await getAllPokemon();
+    const pokemonInfo = displayed
       .map(id => allPokemon.find(p => p.id === id))
       .filter(Boolean);
 
-    if (displayedPokemon.length === 0) {
-      return safeReply(interaction, {
-        content: "❌ Could not load Pokémon data.",
-        flags: 64
-      });
-    }
+    console.log(`🎮 Pokémon info:`, pokemonInfo.map(p => ({ name: p.name, id: p.id })));
 
-    console.log(`🎴 Generating trainer card for ${interaction.user.username}...`);
+    // === 3️⃣ Stats + Embed ====================================================
+    const rank = getRank(user.tp);
+    const pokemonOwned = Object.keys(user.pokemon || {}).length;
+    const shinyCount = Object.values(user.pokemon || {}).filter(p => p.shiny > 0).length;
+    const trainerCount = Object.keys(user.trainers || {}).length;
 
-    // Create team grid canvas (Pokemon 2-6)
-    const teamGridBuffer = await createTeamGrid(displayedPokemon.slice(1), spritePaths);
-    const teamGridAttachment = new AttachmentBuilder(teamGridBuffer, {
-      name: "team-grid.png"
-    });
+    const teamDisplay = pokemonInfo.length > 0 
+      ? pokemonInfo.map((p, i) => `${i === 0 ? "⭐" : `${i + 1}.`} **${p.name}** (#${p.id})`).join("\n")
+      : "No Pokémon selected";
 
-    // Get trainer sprite if exists
-    let trainerImageUrl = null;
-    if (user.displayedTrainer) {
-      trainerImageUrl = `https://your-domain.com/sprites/trainers/${user.displayedTrainer}`;
-    }
-
-    // Build embed
     const embed = new EmbedBuilder()
-      .setTitle(`🧬 ${interaction.user.username}'s Trainer Card`)
+      .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })
+      .setColor(0xffcb05)
       .setDescription(
-        `**Lead Pokémon:** ${displayedPokemon[0].name} #${displayedPokemon[0].id}\n\n` +
-        `**Team:**\n` +
-        displayedPokemon.map((p, i) =>
-          `${i === 0 ? "⭐" : `${i + 1}.`} **${p.name}** (#${p.id})`
-        ).join("\n")
+        `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}\n\n` +
+        `**Team:**\n${teamDisplay}\n\n` +
+        `📊 **Pokémon Owned:** ${pokemonOwned}\n✨ **Shiny Pokémon:** ${shinyCount}\n🧍 **Trainers:** ${trainerCount}`
       )
-      .setColor(0x667eea)
-      .setImage("attachment://team-grid.png")
-      .setFooter({ text: `Total: ${displayedPokemon.length} Pokémon` });
+      .setFooter({ text: "Coop's Collection • /trainercard" });
 
-    if (trainerImageUrl) {
-      embed.setThumbnail(trainerImageUrl);
+    // Add trainer thumbnail if available
+    if (trainerPath) {
+      embed.setThumbnail(trainerPath);
     }
 
-    // Buttons
-    const buttons = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("change_pokemon")
-        .setLabel("🔄 Change Team")
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId("change_trainer")
-        .setLabel("👤 Change Trainer")
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId("refresh_card")
-        .setLabel("🔃 Refresh")
-        .setStyle(ButtonStyle.Secondary)
+    // === 4️⃣ Action Buttons ===================================================
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("change_trainer").setLabel("Change Trainer").setEmoji("🧍").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("change_pokemon").setLabel("Change Pokémon").setEmoji("🧬").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("refresh_card").setLabel("Refresh").setEmoji("🔄").setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId("share_public").setLabel("Share Public").setEmoji("🌐").setStyle(ButtonStyle.Success)
     );
 
-    // Use editReply for button interactions, editReply for slash command interactions
-    if (interaction.isButton?.()) {
-      await interaction.editReply({
-        embeds: [embed],
-        files: [teamGridAttachment],
-        components: [buttons]
-      });
-    } else {
-      await safeReply(interaction, {
-        embeds: [embed],
-        files: [teamGridAttachment],
-        components: [buttons],
-        flags: 64
-      });
-    }
-
+    // === 5️⃣ Reply ============================================================
+    await safeReply(interaction, { embeds: [embed], components: [row], flags: 64 });
     console.log(`✅ Trainer card displayed`);
 
   } catch (err) {
     console.error("showTrainerCard error:", err);
-    await safeReply(interaction, {
-      content: `❌ Failed to load trainer card: ${err.message}`,
-      flags: 64
-    });
-  }
-}
-
-// ===========================================================
-// CHANGE POKEMON HANDLER
-// ===========================================================
-async function handleChangePokemon(interaction, user, trainerData, saveDataToDiscord) {
-  try {
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ flags: 64 });
-    }
-
-    const ownedPokemon = Object.keys(user.pokemon || {}).filter(id => {
-      const p = user.pokemon[id];
-      return (p?.normal > 0 || p?.shiny > 0) || (typeof p === "number" && p > 0);
-    });
-    
-    if (ownedPokemon.length === 0) {
-      return safeReply(interaction, { content: "❌ You don't have any Pokémon yet!", flags: 64 });
-    }
-
-    const allPokemon = await getPokemonCached();
-    const pokemonPerPage = 12;
-    const pages = [];
-    for (let i = 0; i < ownedPokemon.length; i += pokemonPerPage) {
-      pages.push(ownedPokemon.slice(i, i + pokemonPerPage));
-    }
-
-    let pageIndex = 0;
-    let selectedPokemon = [...(user.displayedPokemon || [])].map(id => String(id));
-
-    const buildPage = index => {
-      const pagePokemon = pages[index];
-      const embed = new EmbedBuilder()
-        .setTitle("🧬 Select Your Displayed Pokémon")
-        .setDescription(
-          `Choose up to 6.\n\nSelected (${selectedPokemon.length}/6): ${
-            selectedPokemon.map(id => allPokemon.find(p => String(p.id) === id)?.name).filter(Boolean).join(", ") || "None"
-          }`
-        )
-        .setColor(0xe91e63)
-        .setFooter({ text: `Page ${index + 1}/${pages.length}` });
-
-      const buttons = pagePokemon.map(id => {
-        const idStr = String(id);
-        const name = allPokemon.find(p => String(p.id) === idStr)?.name || `#${id}`;
-        const isSelected = selectedPokemon.includes(idStr);
-        return new ButtonBuilder()
-          .setCustomId(`toggle_pokemon_${idStr}`)
-          .setLabel(name.substring(0, 80))
-          .setStyle(isSelected ? ButtonStyle.Success : ButtonStyle.Primary);
-      });
-
-      const rows = [];
-      for (let i = 0; i < buttons.length; i += 5) {
-        rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
-      }
-
-      if (pages.length > 1) {
-        rows.push(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId("pokemon_prev_page")
-              .setLabel("⬅️")
-              .setStyle(ButtonStyle.Secondary)
-              .setDisabled(index === 0),
-            new ButtonBuilder()
-              .setCustomId("pokemon_next_page")
-              .setLabel("➡️")
-              .setStyle(ButtonStyle.Secondary)
-              .setDisabled(index === pages.length - 1)
-          )
-        );
-      }
-
-      rows.push(
-        new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("pokemon_clear")
-            .setLabel("Clear")
-            .setStyle(ButtonStyle.Danger),
-          new ButtonBuilder()
-            .setCustomId("pokemon_save")
-            .setLabel("💾 Save")
-            .setStyle(ButtonStyle.Success)
-        )
-      );
-      return { embed, components: rows };
-    };
-
-    const { embed, components } = buildPage(pageIndex);
-    await interaction.editReply({ embeds: [embed], components });
-
-    const collector = interaction.channel.createMessageComponentCollector({
-      filter: i => i.user.id === interaction.user.id,
-      componentType: ComponentType.Button,
-      time: 120000
-    });
-
-    collector.on("collect", async i => {
-      if (i.customId === "pokemon_next_page") {
-        pageIndex++;
-      } else if (i.customId === "pokemon_prev_page") {
-        pageIndex--;
-      } else if (i.customId.startsWith("toggle_pokemon_")) {
-        const idStr = i.customId.replace("toggle_pokemon_", "");
-        if (selectedPokemon.includes(idStr)) {
-          selectedPokemon = selectedPokemon.filter(p => p !== idStr);
-        } else if (selectedPokemon.length < 6) {
-          selectedPokemon.push(idStr);
-        } else {
-          await i.deferUpdate();
-          return await i.editReply({ content: "⚠️ Max 6 Pokémon." });
-        }
-      } else if (i.customId === "pokemon_clear") {
-        selectedPokemon = [];
-      } else if (i.customId === "pokemon_save") {
-        user.displayedPokemon = selectedPokemon.map(id => Number(id));
-        
-        // ✅ Reply IMMEDIATELY
-        await safeReply(i, { content: "✅ Pokémon updated!", flags: 64 });
-        
-        // ✅ Save asynchronously AFTER reply
-        saveDataToDiscord(trainerData).catch(err => 
-          console.error("Failed to save pokemon selection:", err.message)
-        );
-        
-        return collector.stop();
-      }
-
-      const { embed: e, components: c } = buildPage(pageIndex);
-      await i.deferUpdate();
-      await i.editReply({ embeds: [e], components: c });
-    });
-
-    collector.on("end", async () => {
-      try { await interaction.editReply({ components: [] }).catch(() => {}); } catch {}
-    });
-  } catch (err) {
-    console.error("handleChangePokemon error:", err);
-    await safeReply(interaction, { content: "❌ Failed to load pokemon selection.", flags: 64 });
+    await safeReply(interaction, { content: "❌ Failed to show Trainer Card.", flags: 64 });
   }
 }
 
@@ -787,126 +491,227 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
 // CHANGE TRAINER HANDLER
 // ===========================================================
 async function handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord) {
-  try {
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ flags: 64 });
-    }
+  const ownedTrainers = Object.keys(user.trainers || {}).filter(t => user.trainers[t]);
+  if (ownedTrainers.length === 0)
+    return safeReply(interaction, { content: "❌ You don't have any trainers yet!", flags: 64 });
 
-    // Get available trainer sprites (placeholder - adjust based on your implementation)
-    const trainerSprites = ["trainer1.png", "trainer2.png", "trainer3.png"];
-    
-    let pageIndex = 0;
-    const trainersPerPage = 6;
-    const pages = [];
-    for (let i = 0; i < trainerSprites.length; i += trainersPerPage) {
-      pages.push(trainerSprites.slice(i, i + trainersPerPage));
-    }
+  const trainersPerPage = 5;
+  const pages = [];
+  for (let i = 0; i < ownedTrainers.length; i += trainersPerPage)
+    pages.push(ownedTrainers.slice(i, i + trainersPerPage));
+  let pageIndex = 0;
 
-    const buildPage = index => {
-      const pageTrainers = pages[index];
-      const embed = new EmbedBuilder()
-        .setTitle("🧬 Select Your Trainer")
-        .setColor(0x3498db)
-        .setFooter({ text: `Page ${index + 1}/${pages.length}` });
+  const buildPage = index => {
+    const pageTrainers = pages[index];
+    const embed = new EmbedBuilder()
+      .setTitle("🧍 Select Your Displayed Trainer")
+      .setDescription(
+        `Choose which trainer appears on your card.\n\n${pageTrainers
+          .map(t => `${t === user.displayedTrainer ? "✅" : "•"} **${t}**`)
+          .join("\n")}`
+      )
+      .setColor(0x3498db)
+      .setFooter({ text: `Page ${index + 1}/${pages.length}` });
 
-      const trainerButtons = pageTrainers.map(t =>
-        new ButtonBuilder()
-          .setCustomId(`select_trainer_${t}`)
-          .setLabel(t.replace(/\.png$/, "").substring(0, 80))
-          .setStyle(t === user.displayedTrainer ? ButtonStyle.Success : ButtonStyle.Primary)
+    const trainerButtons = pageTrainers.map(t =>
+      new ButtonBuilder()
+        .setCustomId(`select_trainer_${t}`)
+        .setLabel(t.replace(/\.png$/, "").substring(0, 80))
+        .setStyle(t === user.displayedTrainer ? ButtonStyle.Success : ButtonStyle.Primary)
+    );
+
+    const rows = [new ActionRowBuilder().addComponents(trainerButtons)];
+    if (pages.length > 1) {
+      rows.push(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId("trainer_prev_page").setLabel("⬅️").setStyle(ButtonStyle.Secondary).setDisabled(index === 0),
+          new ButtonBuilder().setCustomId("trainer_next_page").setLabel("➡️").setStyle(ButtonStyle.Secondary).setDisabled(index === pages.length - 1)
+        )
       );
+    }
+    return { embed, components: rows };
+  };
 
-      const rows = [new ActionRowBuilder().addComponents(trainerButtons)];
-      if (pages.length > 1) {
-        rows.push(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId("trainer_prev_page")
-              .setLabel("⬅️")
-              .setStyle(ButtonStyle.Secondary)
-              .setDisabled(index === 0),
-            new ButtonBuilder()
-              .setCustomId("trainer_next_page")
-              .setLabel("➡️")
-              .setStyle(ButtonStyle.Secondary)
-              .setDisabled(index === pages.length - 1)
-          )
-        );
+  const { embed, components } = buildPage(pageIndex);
+  const msg = await safeReply(interaction, { embeds: [embed], components, flags: 64 });
+
+  // Fetch the reply to get message object for message-specific collector
+  const message = await interaction.fetchReply().catch(() => msg);
+  
+  const collector = message
+    ? message.createMessageComponentCollector({
+        filter: i => i.user.id === interaction.user.id,
+        componentType: ComponentType.Button,
+        time: 60000
+      })
+    : interaction.channel.createMessageComponentCollector({
+        filter: i => i.user.id === interaction.user.id,
+        componentType: ComponentType.Button,
+        time: 60000
+      });
+
+  collector.on("collect", async i => {
+    if (i.customId === "trainer_next_page") {
+      pageIndex++;
+    } else if (i.customId === "trainer_prev_page") {
+      pageIndex--;
+    } else if (i.customId.startsWith("select_trainer_")) {
+      const selectedTrainer = i.customId.replace("select_trainer_", "");
+      user.displayedTrainer = selectedTrainer;
+      await saveDataToDiscord(trainerData);
+      await safeReply(i, { content: `✅ Trainer changed to **${selectedTrainer}**!`, flags: 64 });
+      return collector.stop();
+    }
+
+    const { embed: e, components: c } = buildPage(pageIndex);
+    await i.deferUpdate();
+    await i.editReply({ embeds: [e], components: c });
+  });
+
+  collector.on("end", async () => {
+    try { await safeReply(interaction, { content: "⏱️ Selection timed out.", flags: 64 }); } catch {}
+  });
+}
+
+// ===========================================================
+// CHANGE POKEMON HANDLER
+// ===========================================================
+async function handleChangePokemon(interaction, user, trainerData, saveDataToDiscord) {
+  const ownedPokemon = Object.keys(user.pokemon || {}).filter(id => {
+    const p = user.pokemon[id];
+    return (p?.normal > 0 || p?.shiny > 0) || (typeof p === "number" && p > 0);
+  });
+  if (ownedPokemon.length === 0)
+    return safeReply(interaction, { content: "❌ You don't have any Pokémon yet!", flags: 64 });
+
+  const allPokemon = await getAllPokemon();
+  const pokemonPerPage = 12;
+  const pages = [];
+  for (let i = 0; i < ownedPokemon.length; i += pokemonPerPage)
+    pages.push(ownedPokemon.slice(i, i + pokemonPerPage));
+
+  let pageIndex = 0;
+  let selectedPokemon = [...(user.displayedPokemon || [])].map(id => String(id));
+
+  const buildPage = index => {
+    const pagePokemon = pages[index];
+    const embed = new EmbedBuilder()
+      .setTitle("🧬 Select Your Displayed Pokémon")
+      .setDescription(
+        `Choose up to 6 Pokémon.\n\nSelected (${selectedPokemon.length}/6): ${
+          selectedPokemon.map(id => allPokemon.find(p => String(p.id) === id)?.name).filter(Boolean).join(", ") || "None"
+        }`
+      )
+      .setColor(0xe91e63)
+      .setFooter({ text: `Page ${index + 1}/${pages.length}` });
+
+    const buttons = pagePokemon.map(id => {
+      const idStr = String(id);
+      const name = allPokemon.find(p => String(p.id) === idStr)?.name || `#${id}`;
+      const isSelected = selectedPokemon.includes(idStr);
+      return new ButtonBuilder()
+        .setCustomId(`toggle_pokemon_${idStr}`)
+        .setLabel(name.substring(0, 80))
+        .setStyle(isSelected ? ButtonStyle.Success : ButtonStyle.Primary);
+    });
+
+    const rows = [];
+    for (let i = 0; i < buttons.length; i += 5)
+      rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
+
+    if (pages.length > 1) {
+      rows.push(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId("pokemon_prev_page").setLabel("⬅️").setStyle(ButtonStyle.Secondary).setDisabled(index === 0),
+          new ButtonBuilder().setCustomId("pokemon_next_page").setLabel("➡️").setStyle(ButtonStyle.Secondary).setDisabled(index === pages.length - 1)
+        )
+      );
+    }
+
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId("pokemon_clear").setLabel("Clear").setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId("pokemon_save").setLabel("💾 Save").setStyle(ButtonStyle.Success)
+      )
+    );
+    return { embed, components: rows };
+  };
+
+  const { embed, components } = buildPage(pageIndex);
+  const msg = await safeReply(interaction, { embeds: [embed], components, flags: 64 });
+
+  // Fetch the reply to get message object for message-specific collector
+  const message = await interaction.fetchReply().catch(() => msg);
+  
+  const collector = message
+    ? message.createMessageComponentCollector({
+        filter: i => i.user.id === interaction.user.id,
+        componentType: ComponentType.Button,
+        time: 120000
+      })
+    : interaction.channel.createMessageComponentCollector({
+        filter: i => i.user.id === interaction.user.id,
+        componentType: ComponentType.Button,
+        time: 120000
+      });
+
+  collector.on("collect", async i => {
+    if (i.customId === "pokemon_next_page") {
+      pageIndex++;
+    } else if (i.customId === "pokemon_prev_page") {
+      pageIndex--;
+    } else if (i.customId.startsWith("toggle_pokemon_")) {
+      const idStr = i.customId.replace("toggle_pokemon_", "");
+      if (selectedPokemon.includes(idStr)) {
+        selectedPokemon = selectedPokemon.filter(p => p !== idStr);
+      } else if (selectedPokemon.length < 6) {
+        selectedPokemon.push(idStr);
+      } else {
+        await i.deferUpdate();
+        return await i.editReply({ content: "⚠️ Max 6 Pokémon." });
       }
-      return { embed, components: rows };
-    };
+    } else if (i.customId === "pokemon_clear") {
+      selectedPokemon = [];
+    } else if (i.customId === "pokemon_save") {
+      user.displayedPokemon = selectedPokemon.map(id => Number(id));
+      await saveDataToDiscord(trainerData);
+      await safeReply(i, { content: "✅ Pokémon updated!", flags: 64 });
+      return collector.stop();
+    }
 
-    const { embed, components } = buildPage(pageIndex);
-    await interaction.editReply({ embeds: [embed], components });
+    const { embed: e, components: c } = buildPage(pageIndex);
+    await i.deferUpdate();
+    await i.editReply({ embeds: [e], components: c });
+  });
 
-    const collector = interaction.channel.createMessageComponentCollector({
-      filter: i => i.user.id === interaction.user.id,
-      componentType: ComponentType.Button,
-      time: 60000
-    });
-
-    collector.on("collect", async i => {
-      if (i.customId === "trainer_next_page") {
-        pageIndex++;
-      } else if (i.customId === "trainer_prev_page") {
-        pageIndex--;
-      } else if (i.customId.startsWith("select_trainer_")) {
-        const selectedTrainer = i.customId.replace("select_trainer_", "");
-        user.displayedTrainer = selectedTrainer;
-        
-        // ✅ Reply IMMEDIATELY
-        await safeReply(i, { content: `✅ Trainer changed!`, flags: 64 });
-        
-        // ✅ Save asynchronously AFTER reply
-        saveDataToDiscord(trainerData).catch(err => 
-          console.error("Failed to save trainer selection:", err.message)
-        );
-        
-        return collector.stop();
-      }
-
-      const { embed: e, components: c } = buildPage(pageIndex);
-      await i.deferUpdate();
-      await i.editReply({ embeds: [e], components: c });
-    });
-
-    collector.on("end", async () => {
-      try { await interaction.editReply({ components: [] }).catch(() => {}); } catch {}
-    });
-  } catch (err) {
-    console.error("handleChangeTrainer error:", err);
-    await safeReply(interaction, { content: "❌ Failed to load trainer selection.", flags: 64 });
-  }
+  collector.on("end", async () => {
+    try { await safeReply(interaction, { content: "⏱️ Selection timed out.", flags: 64 }); } catch {}
+  });
 }
 
 // ===========================================================
 // BUTTON HANDLER
 // ===========================================================
 export async function handleTrainerCardButtons(interaction, trainerData, saveDataToDiscord) {
-  // Silently ignore starter carousel buttons - they're handled by the collector
-  if (interaction.customId === "select_starter" || 
-      interaction.customId === "prev_starter" || 
-      interaction.customId === "next_starter" ||
-      interaction.customId.startsWith("restart_trainercard")) {
-    return;
-  }
-
   const userId = interaction.user.id;
   const user = trainerData[userId];
 
-  if (!user) {
+  if (!user)
     return safeReply(interaction, { content: "❌ Could not find your trainer data.", flags: 64 });
-  }
 
   switch (interaction.customId) {
     case "refresh_card":
-      return await showTrainerCard(interaction, user);
+      return showTrainerCard(interaction, user);
+
+    case "share_public":
+      await safeReply(interaction, { content: "✅ Shared publicly!", flags: 64 });
+      return showTrainerCard(interaction, user);
 
     case "change_trainer":
-      return await handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord);
+      return handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord);
 
     case "change_pokemon":
-      return await handleChangePokemon(interaction, user, trainerData, saveDataToDiscord);
+      return handleChangePokemon(interaction, user, trainerData, saveDataToDiscord);
 
     default:
       await safeReply(interaction, { content: "❌ Unknown button action.", flags: 64 });

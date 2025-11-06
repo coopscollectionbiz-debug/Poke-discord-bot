@@ -742,6 +742,14 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
 // BUTTON HANDLER
 // ===========================================================
 export async function handleTrainerCardButtons(interaction, trainerData, saveDataToDiscord) {
+  // Silently ignore starter carousel buttons - they're handled by the collector
+  if (interaction.customId === "select_starter" || 
+      interaction.customId === "prev_starter" || 
+      interaction.customId === "next_starter" ||
+      interaction.customId.startsWith("restart_trainercard")) {
+    return;
+  }
+
   const userId = interaction.user.id;
   const user = trainerData[userId];
 

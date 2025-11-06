@@ -1,6 +1,6 @@
 // ==========================================================
-// gift.js — Gift Coins, Pokémon, or Trainers to another user
-// Coop's Collection Discord Bot (SafeReply Refactor)
+// gift.js – Gift Coins, Pokémon, or Trainers to another user
+// Coop's Collection Discord Bot (SafeReply Refactor + Trainer Key Standardization)
 // ==========================================================
 
 import { SlashCommandBuilder } from "discord.js";
@@ -16,6 +16,8 @@ import {
   createErrorEmbed,
 } from "../utils/embedBuilders.js";
 import { safeReply } from "../utils/safeReply.js";
+import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
+import { atomicSave } from "../utils/saveManager.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -93,132 +95,158 @@ export default {
 
     let description = "";
 
-    // ==========================================================
-    // 💰 TYPE: COINS (CC)
-    // ==========================================================
-    if (type === "cc") {
-      const resourceCheck = validateUserResources(sender, "cc", amount);
-      if (!resourceCheck.valid)
-        return safeReply(interaction, {
-          content: `❌ ${resourceCheck.error}`,
-          ephemeral: true,
-        });
-
-      sender.cc -= amount;
-      recipient.cc += amount;
-      description = `💰 ${interaction.user.username} sent **${amount.toLocaleString()} CC** to ${receiver.username}!`;
-    }
-
-    // ==========================================================
-    // 🧬 TYPE: POKÉMON
-    // ==========================================================
-    else if (type === "pokemon") {
-      if (!itemName)
-        return safeReply(interaction, {
-          content: "❌ You must specify which Pokémon to gift.",
-          ephemeral: true,
-        });
-
-      const nameValidation = validateNameQuery(itemName);
-      if (!nameValidation.valid)
-        return safeReply(interaction, {
-          content: `❌ ${nameValidation.error}`,
-          ephemeral: true,
-        });
-
-      const targetPokemon = await findPokemonByName(nameValidation.sanitized);
-      if (!targetPokemon)
-        return safeReply(interaction, {
-          content: `⚠️ Pokémon \"${itemName}\" not found.`,
-          ephemeral: true,
-        });
-
-      const key = targetPokemon.id.toString();
-      const senderRecord = sender.pokemon[key];
-      const senderCount = senderRecord ? (senderRecord.normal || 0) + (senderRecord.shiny || 0) : 0;
-
-      if (senderCount < amount)
-        return safeReply(interaction, {
-          content: `❌ You don't own ${amount}× ${targetPokemon.name}.`,
-          ephemeral: true,
-        });
-
-      if (senderCount - amount === 0)
-        return safeReply(interaction, {
-          content: `⚠️ You can't gift your last ${targetPokemon.name}.`,
-          ephemeral: true,
-        });
-
-      if (!sender.pokemon[key]) sender.pokemon[key] = { normal: 0, shiny: 0 };
-      if (!recipient.pokemon[key]) recipient.pokemon[key] = { normal: 0, shiny: 0 };
-
-      sender.pokemon[key].normal = Math.max(0, (sender.pokemon[key].normal || 0) - amount);
-      recipient.pokemon[key].normal = (recipient.pokemon[key].normal || 0) + amount;
-
-      description = `🧬 ${interaction.user.username} sent **${amount}× ${targetPokemon.name}** to ${receiver.username}!`;
-    }
-
-    // ==========================================================
-    // 🧑‍🏫 TYPE: TRAINER
-    // ==========================================================
-    else if (type === "trainer") {
-      if (!itemName)
-        return safeReply(interaction, {
-          content: "❌ You must specify which Trainer to gift.",
-          ephemeral: true,
-        });
-
-      const nameValidation = validateNameQuery(itemName);
-      if (!nameValidation.valid)
-        return safeReply(interaction, {
-          content: `❌ ${nameValidation.error}`,
-          ephemeral: true,
-        });
-
-      const flatTrainers = await getFlattenedTrainers();
-      const targetTrainer = flatTrainers.find(
-        (t) => t.name.toLowerCase() === nameValidation.sanitized.toLowerCase()
-      );
-
-      if (!targetTrainer)
-        return safeReply(interaction, {
-          content: `⚠️ Trainer \"${itemName}\" not found.`,
-          ephemeral: true,
-        });
-
-      const spriteKey = targetTrainer.filename;
-      if (!sender.trainers[spriteKey])
-        return safeReply(interaction, {
-          content: `❌ You don't own ${targetTrainer.name}.`,
-          ephemeral: true,
-        });
-
-      const senderTrainerCount = Object.keys(sender.trainers).length;
-      if (senderTrainerCount <= 1)
-        return safeReply(interaction, {
-          content: `⚠️ You can't gift your only trainer sprite.`,
-          ephemeral: true,
-        });
-
-      delete sender.trainers[spriteKey];
-      recipient.trainers[spriteKey] = true;
-
-      description = `🧑‍🏫 ${interaction.user.username} sent the **${targetTrainer.name}** trainer sprite to ${receiver.username}!`;
-    }
-
-    // ==========================================================
-    // ✅ Confirmation + Save
-    // ==========================================================
-    const embed = createSuccessEmbed("🎁 Gift Sent!", description, { color: 0x57f287 });
-    await safeReply(interaction, { embeds: [embed], ephemeral: true });
-
     try {
-      await saveDataToDiscord(trainerData);
-      console.log(
-        `✅ Gift: ${interaction.user.username} → ${receiver.username} (${type}${itemName ? " - " + itemName : ""})`
-      );
+      // ==========================================================
+      // 💰 TYPE: COINS (CC)
+      // ==========================================================
+      if (type === "cc") {
+        const resourceCheck = validateUserResources(sender, "cc", amount);
+        if (!resourceCheck.valid)
+          return safeReply(interaction, {
+            content: `❌ ${resourceCheck.error}`,
+            ephemeral: true,
+          });
+
+        sender.cc -= amount;
+        recipient.cc += amount;
+        description = `💰 ${interaction.user.username} sent **${amount.toLocaleString()} CC** to ${receiver.username}!`;
+      }
+
+      // ==========================================================
+      // 🧬 TYPE: POKÉMON
+      // ==========================================================
+      else if (type === "pokemon") {
+        if (!itemName)
+          return safeReply(interaction, {
+            content: "❌ You must specify which Pokémon to gift.",
+            ephemeral: true,
+          });
+
+        const nameValidation = validateNameQuery(itemName);
+        if (!nameValidation.valid)
+          return safeReply(interaction, {
+            content: `❌ ${nameValidation.error}`,
+            ephemeral: true,
+          });
+
+        // ✅ Error handling on findPokemonByName
+        let targetPokemon;
+        try {
+          targetPokemon = await findPokemonByName(nameValidation.sanitized);
+        } catch (err) {
+          console.error("❌ Error finding Pokémon:", err);
+          return safeReply(interaction, {
+            content: "❌ Error searching for Pokémon. Please try again.",
+            ephemeral: true,
+          });
+        }
+
+        if (!targetPokemon)
+          return safeReply(interaction, {
+            content: `⚠️ Pokémon \"${itemName}\" not found.`,
+            ephemeral: true,
+          });
+
+        const key = targetPokemon.id.toString();
+        const senderRecord = sender.pokemon[key];
+        const senderCount = senderRecord ? (senderRecord.normal || 0) + (senderRecord.shiny || 0) : 0;
+
+        if (senderCount < amount)
+          return safeReply(interaction, {
+            content: `❌ You don't own ${amount}× ${targetPokemon.name}.`,
+            ephemeral: true,
+          });
+
+        if (senderCount - amount === 0)
+          return safeReply(interaction, {
+            content: `⚠️ You can't gift your last ${targetPokemon.name}.`,
+            ephemeral: true,
+          });
+
+        if (!sender.pokemon[key]) sender.pokemon[key] = { normal: 0, shiny: 0 };
+        if (!recipient.pokemon[key]) recipient.pokemon[key] = { normal: 0, shiny: 0 };
+
+        sender.pokemon[key].normal = Math.max(0, (sender.pokemon[key].normal || 0) - amount);
+        recipient.pokemon[key].normal = (recipient.pokemon[key].normal || 0) + amount;
+
+        description = `🧬 ${interaction.user.username} sent **${amount}× ${targetPokemon.name}** to ${receiver.username}!`;
+      }
+
+      // ==========================================================
+      // 🧑‍🏫 TYPE: TRAINER
+      // ==========================================================
+      else if (type === "trainer") {
+        // ✅ Warn if amount specified for trainer
+        if (amount && amount !== 1) {
+          return safeReply(interaction, {
+            content: "⚠️ Trainer gifts are always 1. Ignore the amount parameter.",
+            ephemeral: true
+          });
+        }
+
+        if (!itemName)
+          return safeReply(interaction, {
+            content: "❌ You must specify which Trainer to gift.",
+            ephemeral: true,
+          });
+
+        const nameValidation = validateNameQuery(itemName);
+        if (!nameValidation.valid)
+          return safeReply(interaction, {
+            content: `❌ ${nameValidation.error}`,
+            ephemeral: true,
+          });
+
+        const flatTrainers = await getFlattenedTrainers();
+        const targetTrainer = findTrainerByQuery(flatTrainers, nameValidation.sanitized);
+
+        if (!targetTrainer)
+          return safeReply(interaction, {
+            content: `⚠️ Trainer \"${itemName}\" not found.`,
+            ephemeral: true,
+          });
+
+        // ✅ Use standardized trainer key handler
+        const spriteKey = getTrainerKey(targetTrainer);
+        if (!sender.trainers[spriteKey])
+          return safeReply(interaction, {
+            content: `❌ You don't own ${targetTrainer.name}.`,
+            ephemeral: true,
+          });
+
+        const senderTrainerCount = Object.keys(sender.trainers).length;
+        if (senderTrainerCount <= 1)
+          return safeReply(interaction, {
+            content: `⚠️ You can't gift your only trainer sprite.`,
+            ephemeral: true,
+          });
+
+        delete sender.trainers[spriteKey];
+        recipient.trainers[spriteKey] = true;
+
+        description = `🧑‍🏫 ${interaction.user.username} sent the **${targetTrainer.name}** trainer sprite to ${receiver.username}!`;
+      }
+
+      // ==========================================================
+      // ✅ Confirmation + Atomic Save
+      // ==========================================================
+      const embed = createSuccessEmbed("🎁 Gift Sent!", description, { color: 0x57f287 });
+      await safeReply(interaction, { embeds: [embed], ephemeral: true });
+
+      try {
+        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+        console.log(
+          `✅ Gift: ${interaction.user.username} → ${receiver.username} (${type}${itemName ? " - " + itemName : ""})`
+        );
+      } catch (err) {
+        console.error("❌ Error saving gift transaction:", err);
+      }
     } catch (err) {
-      console.error("❌ Error saving gift transaction:", err);
+      console.error("❌ Gift command error:", err);
+      return safeReply(interaction, {
+        content: `❌ An error occurred: ${err.message}`,
+        ephemeral: true,
+      });
     }
   },
 };

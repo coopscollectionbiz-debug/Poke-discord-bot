@@ -24,22 +24,25 @@ export async function loadPokemonData() {
     const data = JSON.parse(
       await fs.readFile(new URL("../pokemonData.json", import.meta.url))
     );
-    console.log("Successfully loaded Pokémon data:", Object.keys(data).length, "Pokémon"); // Log the successful load
+    console.log("✅ Successfully loaded Pokémon data:", Object.keys(data).length, "Pokémon");
     cache.pokemonData = data;
     return data;
   } catch (error) {
-    console.error("Error loading Pokémon data:", error); // Log the error
-    throw error; // Re-throw the error for calling functions to handle
+    console.error("❌ Error loading Pokémon data:", error);
+    throw error;
   }
 }
 
 /**
- * Get all Pokemon as an iterable array
- * @returns {Promise<Array>} Array of Pokemon objects
+ * Get all Pokemon as an iterable array with normalized IDs
+ * @returns {Promise<Array>} Array of Pokemon objects with consistent ID types
  */
 export async function getAllPokemon() {
   const data = await loadPokemonData();
-  return Object.values(data);
+  return Object.values(data).map(pokemon => ({
+    ...pokemon,
+    id: Number(pokemon.id) // Ensure ID is always a number
+  }));
 }
 
 /**
@@ -102,17 +105,17 @@ export async function getFlattenedTrainers() {
 
 /**
  * Find Pokemon by name or ID (case-insensitive)
- * @param {string} query - Pokemon name or ID
+ * @param {string|number} query - Pokemon name or ID
  * @returns {Promise<object|null>} Pokemon object or null
  */
 export async function findPokemonByName(query) {
   const allPokemon = await getAllPokemon();
-  const input = query.toLowerCase();
+  const input = String(query).toLowerCase();
   return (
     allPokemon.find(
       (p) =>
         p.name.toLowerCase() === input ||
-        p.id.toString() === input ||
+        String(p.id) === input ||
         (p.aliases && p.aliases.map((a) => a.toLowerCase()).includes(input))
     ) || null
   );

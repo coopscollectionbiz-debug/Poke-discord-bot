@@ -10,19 +10,20 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
  * @param {number} currentPage - Current page index (0-based)
  * @param {number} totalPages - Total number of pages
  * @param {boolean} includeClose - Whether to include a close button
+ * @param {object} options - Additional options (styles, labels)
  * @returns {ActionRowBuilder} Action row with navigation buttons
  */
-export function createPaginationButtons(currentPage, totalPages, includeClose = true) {
+export function createPaginationButtons(currentPage, totalPages, includeClose = true, options = {}) {
   const components = [
     new ButtonBuilder()
       .setCustomId("prev_page")
-      .setLabel("⬅️ Prev")
-      .setStyle(ButtonStyle.Secondary)
+      .setLabel(options.prevLabel || "⬅️ Prev")
+      .setStyle(options.prevStyle || ButtonStyle.Secondary)
       .setDisabled(currentPage === 0),
     new ButtonBuilder()
       .setCustomId("next_page")
-      .setLabel("Next ➡️")
-      .setStyle(ButtonStyle.Secondary)
+      .setLabel(options.nextLabel || "Next ➡️")
+      .setStyle(options.nextStyle || ButtonStyle.Secondary)
       .setDisabled(currentPage >= totalPages - 1)
   ];
   
@@ -30,8 +31,8 @@ export function createPaginationButtons(currentPage, totalPages, includeClose = 
     components.push(
       new ButtonBuilder()
         .setCustomId("close")
-        .setLabel("❌ Close")
-        .setStyle(ButtonStyle.Danger)
+        .setLabel(options.closeLabel || "❌ Close")
+        .setStyle(options.closeStyle || ButtonStyle.Danger)
     );
   }
   
@@ -45,11 +46,15 @@ export function createPaginationButtons(currentPage, totalPages, includeClose = 
  * @returns {Array<Array>} Array of page arrays
  */
 export function paginateArray(items, itemsPerPage = 10) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return [[]];
+  }
+  
   const pages = [];
   for (let i = 0; i < items.length; i += itemsPerPage) {
     pages.push(items.slice(i, i + itemsPerPage));
   }
-  return pages.length > 0 ? pages : [[]];
+  return pages;
 }
 
 /**
@@ -60,8 +65,13 @@ export function paginateArray(items, itemsPerPage = 10) {
  * @returns {Array} Items for the specified page
  */
 export function getPage(items, pageIndex, itemsPerPage = 10) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+  
   const start = pageIndex * itemsPerPage;
-  return items.slice(start, start + itemsPerPage);
+  const end = start + itemsPerPage;
+  return items.slice(start, end);
 }
 
 /**
@@ -71,7 +81,10 @@ export function getPage(items, pageIndex, itemsPerPage = 10) {
  * @returns {number} Total number of pages
  */
 export function calculateTotalPages(items, itemsPerPage = 10) {
-  return Math.max(1, Math.ceil(items.length / itemsPerPage));
+  if (!Array.isArray(items) || items.length === 0) {
+    return 1;
+  }
+  return Math.ceil(items.length / itemsPerPage);
 }
 
 /**
@@ -106,4 +119,68 @@ export function createCollectorConfig(userId, timeoutMs = 120000) {
     filter: (i) => i.user.id === userId,
     time: timeoutMs
   };
+}
+
+/**
+ * Create a Pokemon-specific pagination helper
+ * @param {Array} pokemonList - List of Pokemon to paginate
+ * @param {number} itemsPerPage - Items per page (default 12 for Pokemon)
+ * @returns {object} { pages, totalPages, getPage, handleNavigation }
+ */
+export function createPokemonPaginator(pokemonList, itemsPerPage = 12) {
+  if (!Array.isArray(pokemonList)) {
+    pokemonList = [];
+  }
+
+  const pages = paginateArray(pokemonList, itemsPerPage);
+  const totalPages = pages.length || 1;
+
+  return {
+    pages,
+    totalPages,
+    itemsPerPage,
+    
+    /**
+     * Get items for a specific page
+     * @param {number} pageIndex - Page index
+     * @returns {Array} Items for that page
+     */
+    getPage: (pageIndex) => {
+      if (pageIndex < 0 || pageIndex >= totalPages) {
+        return [];
+      }
+      return pages[pageIndex] || [];
+    },
+
+    /**
+     * Navigate to a new page based on button interaction
+     * @param {string} customId - Button custom ID
+     * @param {number} currentPage - Current page
+     * @returns {number|null} New page index or null if no change
+     */
+    handleNavigation: (customId, currentPage) => {
+      if (customId === "prev_page" && currentPage > 0) {
+        return currentPage - 1;
+      }
+      if (customId === "next_page" && currentPage < totalPages - 1) {
+        return currentPage + 1;
+      }
+      return null;
+    }
+  };
+}
+
+/**
+ * Format page info for embed footer
+ * @param {number} currentPage - Current page (0-based)
+ * @param {number} totalPages - Total pages
+ * @param {number} totalItems - Total items
+ * @returns {string} Formatted page info
+ */
+export function formatPageInfo(currentPage, totalPages, totalItems = null) {
+  let info = `Page ${currentPage + 1}/${totalPages}`;
+  if (totalItems) {
+    info += ` • ${totalItems} total`;
+  }
+  return info;
 }

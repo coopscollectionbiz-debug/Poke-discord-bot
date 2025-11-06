@@ -1,6 +1,6 @@
 // ==========================================================
-// 🎯 /recruit — manual random Pokémon/trainer recruitment
-// Coop's Collection Discord Bot (Refactored for safeReply)
+// 🎯 /recruit – manual random Pokémon/trainer recruitment
+// Coop's Collection Discord Bot (Refactored for safeReply + atomic saves)
 // ==========================================================
 import {
   SlashCommandBuilder,
@@ -16,6 +16,14 @@ import { ensureUserData } from "../utils/trainerDataHelper.js";
 import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
 import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
 import { safeReply } from "../utils/safeReply.js";
+import { getTrainerKey } from "../utils/trainerFileHandler.js";
+import { atomicSave } from "../utils/saveManager.js";
+
+// ==========================================================
+// ⏱️ Constants
+// ==========================================================
+const RECRUIT_COOLDOWN_MS = 1000 * 30;  // 30 second cooldown
+const RECRUIT_COST_CC = 100;
 
 // ==========================================================
 // 🧩 Command Definition
@@ -35,9 +43,23 @@ export default {
     const user = ensureUserData(trainerData, id, interaction.user.username);
 
     // ==========================================================
+    // ⏱️ Check cooldown
+    // ==========================================================
+    const lastRecruit = user.lastRecruit || 0;
+    const timeSinceLastRecruit = Date.now() - lastRecruit;
+    
+    if (timeSinceLastRecruit < RECRUIT_COOLDOWN_MS) {
+      const secondsRemaining = Math.ceil((RECRUIT_COOLDOWN_MS - timeSinceLastRecruit) / 1000);
+      return safeReply(interaction, {
+        content: `⏱️ Wait ${secondsRemaining}s before recruiting again.`,
+        ephemeral: true
+      });
+    }
+
+    // ==========================================================
     // 💰 CC Check
     // ==========================================================
-    if (user.cc < 100) {
+    if (user.cc < RECRUIT_COST_CC) {
       return safeReply(interaction, {
         content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
         ephemeral: true
@@ -77,7 +99,7 @@ export default {
     });
 
     // ==========================================================
-    // 🕒 Collector setup
+    // 🕐 Collector setup
     // ==========================================================
     const collector = interaction.channel.createMessageComponentCollector({
       filter: (i) => i.user.id === id,
@@ -97,8 +119,8 @@ export default {
         const choice = i.values[0];
         collector.stop();
 
-        // Check CC again right before the roll
-        if (user.cc < 100) {
+        // ✅ Check CC again right before the roll (atomic check)
+        if (user.cc < RECRUIT_COST_CC) {
           return safeReply(i, {
             content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
             ephemeral: true
@@ -116,7 +138,7 @@ export default {
     collector.on("end", async (_, reason) => {
       if (reason === "time") {
         await safeReply(interaction, {
-          content: "⌛ Recruitment timed out — try again later.",
+          content: "⏱️ Recruitment timed out – try again later.",
           ephemeral: true
         });
       }
@@ -125,23 +147,44 @@ export default {
 };
 
 // ==========================================================
-// 🐾 Pokémon Recruitment - Refactored to use helpers + safeReply
+// 🐾 Pokémon Recruitment - Atomic save
 // ==========================================================
 async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+  // ✅ Atomic check + deduct
+  if (user.cc < RECRUIT_COST_CC) {
+    return safeReply(i, {
+      content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
+      ephemeral: true
+    });
+  }
+
   const allPokemon = await getAllPokemon();
   const pool = allPokemon.filter((p) => p.generation <= 5);
   const pick = selectRandomPokemon(pool);
 
-  const shiny = rollForShiny(user.tp);
+  const shiny = rollForShiny(user.tp || 0);
   const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
   shiny ? record.shiny++ : record.normal++;
   user.pokemon[pick.id] = record;
 
-  // Deduct 100 CC only after success
-  user.cc = Math.max(0, user.cc - 100);
-  await saveTrainerDataLocal(trainerData);
-  await saveDataToDiscord(trainerData);
+  // ✅ Deduct AFTER successful selection
+  user.cc -= RECRUIT_COST_CC;
+  user.lastRecruit = Date.now();
 
+  // ✅ Atomic save - both must succeed or rollback
+  try {
+    await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+  } catch (err) {
+    // Rollback on failure
+    user.cc += RECRUIT_COST_CC;
+    console.error("❌ Recruitment save failed:", err);
+    return safeReply(i, {
+      content: "❌ Failed to complete recruitment. Please try again.",
+      ephemeral: true
+    });
+  }
+
+  // ✅ Only show success after both saves succeed
   const spriteUrl = shiny
     ? `${spritePaths.shiny}${pick.id}.gif`
     : `${spritePaths.pokemon}${pick.id}.gif`;
@@ -161,20 +204,41 @@ async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDa
 }
 
 // ==========================================================
-// 🎓 Trainer Recruitment - Refactored to use helpers + safeReply
+// 🎓 Trainer Recruitment - Atomic save
 // ==========================================================
 async function recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+  // ✅ Atomic check + deduct
+  if (user.cc < RECRUIT_COST_CC) {
+    return safeReply(i, {
+      content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
+      ephemeral: true
+    });
+  }
+
   const flatTrainers = await getFlattenedTrainers();
   const pick = selectRandomTrainer(flatTrainers);
-  const file = pick.filename || pick.file;
+  const file = getTrainerKey(pick);  // ✅ Use standardized key handler
 
   user.trainers[file] = (user.trainers[file] || 0) + 1;
 
-  // Deduct 100 CC only after success
-  user.cc = Math.max(0, user.cc - 100);
-  await saveTrainerDataLocal(trainerData);
-  await saveDataToDiscord(trainerData);
+  // ✅ Deduct AFTER successful selection
+  user.cc -= RECRUIT_COST_CC;
+  user.lastRecruit = Date.now();
 
+  // ✅ Atomic save
+  try {
+    await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+  } catch (err) {
+    // Rollback on failure
+    user.cc += RECRUIT_COST_CC;
+    console.error("❌ Recruitment save failed:", err);
+    return safeReply(i, {
+      content: "❌ Failed to complete recruitment. Please try again.",
+      ephemeral: true
+    });
+  }
+
+  // ✅ Only show success after save succeeds
   const embed = new EmbedBuilder()
     .setColor(0x5865f2)
     .setTitle("🎓 Trainer Recruited!")

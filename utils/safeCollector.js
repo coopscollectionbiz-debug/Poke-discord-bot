@@ -14,20 +14,26 @@ import { safeReply } from "./safeReply.js";
  *  ✅ Silently ignores "Unknown interaction" errors
  *
  * @param {import("discord.js").Interaction} interaction - The base interaction.
- * @param {Object} [options] - Collector options (e.g. filter, time).
+ * @param {Object} [options] - Collector options (e.g. filter, time, componentType).
  * @param {string} [restartCommand] - Optional command to suggest restarting.
  * @returns {import("discord.js").InteractionCollector}
  */
 export function createSafeCollector(interaction, options = {}, restartCommand = null) {
+  // Determine component type from options or default to Button
+  const componentType = options.componentType || ComponentType.Button;
+
   const collector = interaction.channel.createMessageComponentCollector({
-    componentType: ComponentType.Button,
+    componentType,
     time: options.time ?? 60000, // Default 1 minute
     filter: options.filter ?? (() => true),
     ...options,
   });
 
   collector.on("end", async (_, reason) => {
-    if (reason === "confirmed" || reason === "restarted") return;
+    // Don't send cleanup message if collector ended with confirmed/restarted reason
+    if (reason === "confirmed" || reason === "restarted") {
+      return;
+    }
 
     try {
       // 🧹 Disable buttons and notify user
@@ -41,7 +47,7 @@ export function createSafeCollector(interaction, options = {}, restartCommand = 
         : null;
 
       await safeReply(interaction, {
-        content: `⏳ This session expired. ${
+        content: `⏱️ This session expired. ${
           restartCommand
             ? `Run \`/${restartCommand}\` or press "Restart" below to continue.`
             : "Please rerun the command."
@@ -50,10 +56,32 @@ export function createSafeCollector(interaction, options = {}, restartCommand = 
         ephemeral: true,
       });
     } catch (err) {
-      if (!err.message?.includes("Unknown interaction"))
+      // Silently ignore "Unknown interaction" errors on expiry
+      if (!err.message?.includes("Unknown interaction")) {
         console.error("⚠️ safeCollector end error:", err.message);
+      }
     }
   });
 
   return collector;
+}
+
+/**
+ * Create a specialized button collector for pagination
+ * @param {import("discord.js").Interaction} interaction - The base interaction
+ * @param {string} userId - User ID who can interact
+ * @param {number} timeoutMs - Timeout in milliseconds (default 120000)
+ * @param {string} restartCommand - Command to restart with
+ * @returns {import("discord.js").InteractionCollector}
+ */
+export function createPaginationCollector(interaction, userId, timeoutMs = 120000, restartCommand = null) {
+  return createSafeCollector(
+    interaction,
+    {
+      filter: i => i.user.id === userId,
+      componentType: ComponentType.Button,
+      time: timeoutMs
+    },
+    restartCommand
+  );
 }

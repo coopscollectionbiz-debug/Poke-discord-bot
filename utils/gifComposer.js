@@ -1,16 +1,17 @@
 // ==========================================================
-// utils/gifComposer.js - FINAL WORKING VERSION
+// utils/gifComposer.js - IMAGEMAGICK 6 COMPATIBLE
 // Compose multiple animated GIFs into a single horizontal strip
-// Preserves animation timing - frame by frame
+// Uses frame-by-frame approach for reliable animation preservation
 // ==========================================================
 
 import { execSync } from "child_process";
 import path from "path";
 import fs from "fs";
+import os from "os";
 
 /**
  * Combines multiple animated GIFs horizontally while preserving animation
- * KEY FIX: Load all GIFs, coalesce them together, then +append frame-by-frame
+ * Frame-by-frame approach: works reliably with ImageMagick 6.x
  * @param {Array} gifPaths - Array of GIF file paths to combine
  * @param {string} outputPath - Path where combined GIF will be saved
  * @returns {Promise<boolean>} True if successful
@@ -27,8 +28,11 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
     }
   }
 
-  console.log(`🧩 [GIFComposer] Combining ${gifPaths.length} GIFs horizontally...`);
+  console.log(`🧩 [GIFComposer] Combining ${gifPaths.length} GIFs horizontally (frame-by-frame)...`);
 
+  // Create temporary working directory
+  const workDir = path.resolve(path.dirname(outputPath), `.compose_work_${Date.now()}`);
+  
   try {
     // Ensure output directory exists
     const outputDir = path.dirname(outputPath);
@@ -36,24 +40,87 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    // ✅ THE WORKING APPROACH:
-    // 1. Load ALL GIFs without parentheses (so they're all processed together)
-    // 2. -coalesce: Expand all frames from all GIFs into a sequence
-    // 3. +append: Append horizontally (frame-by-frame because of coalesce)
-    // 4. Set animation parameters
-    
-    const gifArgs = gifPaths.map(p => `"${p}"`).join(" ");
-    
-    const command = `convert ${gifArgs} -coalesce -background transparent +append -set delay 10 -loop 0 -layers Optimize "${outputPath}"`;
+    // Create work directory
+    if (!fs.existsSync(workDir)) {
+      fs.mkdirSync(workDir, { recursive: true });
+    }
 
-    console.log(`🧩 [GIFComposer] Running: convert [${gifPaths.length} GIFs] -coalesce +append ...`);
+    console.log(`📁 Working directory: ${workDir}`);
 
-    // Execute the command
-    const result = execSync(command, { 
-      encoding: "utf-8",
+    // Step 1: Extract frames from each GIF
+    console.log(`📋 Extracting frames from ${gifPaths.length} GIFs...`);
+    
+    const frameLists = [];
+    for (let i = 0; i < gifPaths.length; i++) {
+      const gifPath = gifPaths[i];
+      const gifName = `gif_${i}`;
+      const framePattern = path.join(workDir, `${gifName}_%d.gif`);
+      
+      // Extract all frames
+      const extractCmd = `convert "${gifPath}" "${framePattern}"`;
+      execSync(extractCmd, { 
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: "/bin/bash",
+        maxBuffer: 50 * 1024 * 1024
+      });
+      
+      // Get frame files
+      const frameDir = fs.readdirSync(workDir).filter(f => f.startsWith(`${gifName}_`));
+      console.log(`  ✅ GIF ${i + 1}: Extracted ${frameDir.length} frames`);
+      frameLists.push(frameDir.map(f => path.join(workDir, f)));
+    }
+
+    // Step 2: Find max frames and pad shorter GIFs
+    const maxFrames = Math.max(...frameLists.map(f => f.length));
+    console.log(`📊 Max frames: ${maxFrames}`);
+
+    // Pad shorter GIFs by repeating last frame
+    for (let i = 0; i < frameLists.length; i++) {
+      while (frameLists[i].length < maxFrames) {
+        const lastFrame = frameLists[i][frameLists[i].length - 1];
+        const lastIndex = parseInt(lastFrame.match(/_(\d+)\.gif$/)[1]);
+        const newIndex = lastIndex + 1;
+        const newPath = lastFrame.replace(/_\d+\.gif$/, `_${newIndex}.gif`);
+        
+        // Copy last frame to new index
+        fs.copyFileSync(lastFrame, newPath);
+        frameLists[i].push(newPath);
+      }
+    }
+
+    // Step 3: Combine frames horizontally
+    console.log(`🧩 Combining ${maxFrames} frames horizontally...`);
+    
+    const combinedFrames = [];
+    for (let frameIdx = 0; frameIdx < maxFrames; frameIdx++) {
+      const framesToCombine = frameLists.map(frameList => `"${frameList[frameIdx]}"`).join(" ");
+      const combinedPath = path.join(workDir, `combined_${frameIdx}.gif`);
+      
+      const combineCmd = `convert ${framesToCombine} -background transparent -gravity Center -extent 96x96 +append "${combinedPath}"`;
+      
+      execSync(combineCmd, { 
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: "/bin/bash",
+        maxBuffer: 50 * 1024 * 1024
+      });
+      
+      combinedFrames.push(combinedPath);
+      
+      if ((frameIdx + 1) % 10 === 0) {
+        console.log(`  ✅ Combined ${frameIdx + 1}/${maxFrames} frames`);
+      }
+    }
+
+    // Step 4: Stitch combined frames into final animated GIF
+    console.log(`🎬 Stitching ${maxFrames} frames into final GIF...`);
+    
+    const framePattern = path.join(workDir, "combined_*.gif");
+    const stitchCmd = `convert ${framePattern} -set delay 10 -loop 0 -layers Optimize "${outputPath}"`;
+    
+    execSync(stitchCmd, { 
       stdio: ["pipe", "pipe", "pipe"],
       shell: "/bin/bash",
-      maxBuffer: 10 * 1024 * 1024  // 10MB buffer for large outputs
+      maxBuffer: 50 * 1024 * 1024
     });
 
     // Verify output was created
@@ -63,86 +130,25 @@ export async function combineGifsHorizontal(gifPaths, outputPath) {
 
     const stats = fs.statSync(outputPath);
     const sizeKB = (stats.size / 1024).toFixed(2);
-
-    console.log(`✅ GIF created successfully: ${sizeKB}KB`);
-
-    // Get frame information for verification
-    try {
-      const infoCommand = `identify -format "%T " "${outputPath}" | wc -w`;
-      const frameCountStr = execSync(infoCommand, { encoding: "utf-8" }).trim();
-      const frameCount = parseInt(frameCountStr) || 1;
-      console.log(`📊 Frames in output: ${frameCount}`);
-    } catch (e) {
-      console.log(`📊 Frame count unavailable`);
-    }
+    console.log(`✅ GIF created successfully: ${sizeKB}KB (${maxFrames} frames)`);
 
     return true;
   } catch (error) {
     console.error(`❌ GIF composition failed: ${error.message}`);
     throw new Error(`Failed to compose GIF: ${error.message}`);
-  }
-}
-
-/**
- * Alternative method - uses exact sizes to prevent misalignment
- * Use this if first method produces vertically misaligned output
- * @param {Array} gifPaths - Array of GIF file paths
- * @param {string} outputPath - Output path
- * @returns {Promise<boolean>}
- */
-export async function combineGifsHorizontalFixed(gifPaths, outputPath) {
-  if (!gifPaths || gifPaths.length === 0) {
-    throw new Error("No GIF paths provided");
-  }
-
-  console.log(`🧩 [GIFComposer] Using fixed-extent method for ${gifPaths.length} GIFs...`);
-
-  try {
-    const outputDir = path.dirname(outputPath);
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    // Get dimensions of first GIF to normalize all to same size
-    const sizeCommand = `identify -format "%wx%h" "${gifPaths[0]}"`;
-    let width = 96, height = 96; // Default fallback
-    
+  } finally {
+    // Cleanup work directory
     try {
-      const sizeStr = execSync(sizeCommand, { encoding: "utf-8" }).trim();
-      if (sizeStr.includes('x')) {
-        const parts = sizeStr.split('x');
-        width = parseInt(parts[0]) || 96;
-        height = parseInt(parts[1]) || 96;
+      if (fs.existsSync(workDir)) {
+        execSync(`rm -rf "${workDir}"`, { 
+          stdio: ["pipe", "pipe", "pipe"],
+          shell: "/bin/bash"
+        });
+        console.log(`🧹 Cleaned up work directory`);
       }
-    } catch (e) {
-      console.warn(`⚠️ Could not detect size, using defaults: ${width}x${height}`);
+    } catch (cleanupError) {
+      console.warn(`⚠️ Failed to cleanup work directory: ${cleanupError.message}`);
     }
-    
-    console.log(`📐 Normalizing to: ${width}x${height}`);
-
-    // Build command with normalized sizing
-    let command = `convert`;
-    for (const gifPath of gifPaths) {
-      command += ` "${gifPath}" -coalesce -extent ${width}x${height} -background transparent -gravity Center`;
-    }
-    command += ` -background transparent +append -set delay 10 -loop 0 -layers Optimize "${outputPath}"`;
-
-    execSync(command, { 
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-      shell: "/bin/bash",
-      maxBuffer: 10 * 1024 * 1024
-    });
-
-    if (!fs.existsSync(outputPath)) {
-      throw new Error("Output GIF was not created");
-    }
-
-    console.log(`✅ Fixed-size GIF created successfully`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Fixed-size composition failed: ${error.message}`);
-    throw error;
   }
 }
 
@@ -157,35 +163,89 @@ export async function combineGifsVertical(gifPaths, outputPath) {
     throw new Error("No GIF paths provided");
   }
 
-  console.log(`🧩 [GIFComposer] Combining ${gifPaths.length} GIFs vertically...`);
+  console.log(`🧩 [GIFComposer] Combining ${gifPaths.length} GIFs vertically (frame-by-frame)...`);
 
+  const workDir = path.resolve(path.dirname(outputPath), `.compose_work_${Date.now()}`);
+  
   try {
     const outputDir = path.dirname(outputPath);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    // -append for vertical (instead of +append for horizontal)
-    const gifArgs = gifPaths.map(p => `"${p}"`).join(" ");
-    
-    const command = `convert ${gifArgs} -coalesce -background transparent -append -set delay 10 -loop 0 -layers Optimize "${outputPath}"`;
+    if (!fs.existsSync(workDir)) {
+      fs.mkdirSync(workDir, { recursive: true });
+    }
 
-    execSync(command, { 
-      encoding: "utf-8",
+    // Extract frames
+    const frameLists = [];
+    for (let i = 0; i < gifPaths.length; i++) {
+      const gifPath = gifPaths[i];
+      const framePattern = path.join(workDir, `gif_${i}_%d.gif`);
+      
+      execSync(`convert "${gifPath}" "${framePattern}"`, { 
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: "/bin/bash",
+        maxBuffer: 50 * 1024 * 1024
+      });
+      
+      const frameDir = fs.readdirSync(workDir).filter(f => f.startsWith(`gif_${i}_`));
+      frameLists.push(frameDir.map(f => path.join(workDir, f)));
+    }
+
+    // Pad frames to max length
+    const maxFrames = Math.max(...frameLists.map(f => f.length));
+    for (let i = 0; i < frameLists.length; i++) {
+      while (frameLists[i].length < maxFrames) {
+        const lastFrame = frameLists[i][frameLists[i].length - 1];
+        const lastIndex = parseInt(lastFrame.match(/_(\d+)\.gif$/)[1]);
+        const newIndex = lastIndex + 1;
+        const newPath = lastFrame.replace(/_\d+\.gif$/, `_${newIndex}.gif`);
+        fs.copyFileSync(lastFrame, newPath);
+        frameLists[i].push(newPath);
+      }
+    }
+
+    // Combine frames vertically
+    const combinedFrames = [];
+    for (let frameIdx = 0; frameIdx < maxFrames; frameIdx++) {
+      const framesToCombine = frameLists.map(frameList => `"${frameList[frameIdx]}"`).join(" ");
+      const combinedPath = path.join(workDir, `combined_${frameIdx}.gif`);
+      
+      execSync(`convert ${framesToCombine} -background transparent -gravity Center -extent 96x96 -append "${combinedPath}"`, { 
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: "/bin/bash",
+        maxBuffer: 50 * 1024 * 1024
+      });
+      
+      combinedFrames.push(combinedPath);
+    }
+
+    // Stitch into final GIF
+    execSync(`convert ${path.join(workDir, "combined_*.gif")} -set delay 10 -loop 0 -layers Optimize "${outputPath}"`, { 
       stdio: ["pipe", "pipe", "pipe"],
       shell: "/bin/bash",
-      maxBuffer: 10 * 1024 * 1024
+      maxBuffer: 50 * 1024 * 1024
     });
 
     if (!fs.existsSync(outputPath)) {
       throw new Error("Output GIF was not created");
     }
 
-    console.log(`✅ Vertical GIF created successfully`);
+    const stats = fs.statSync(outputPath);
+    console.log(`✅ Vertical GIF created: ${(stats.size / 1024).toFixed(2)}KB`);
     return true;
   } catch (error) {
     console.error(`❌ Vertical composition failed: ${error.message}`);
     throw error;
+  } finally {
+    try {
+      if (fs.existsSync(workDir)) {
+        execSync(`rm -rf "${workDir}"`, { stdio: ["pipe", "pipe", "pipe"], shell: "/bin/bash" });
+      }
+    } catch (e) {
+      // Silent
+    }
   }
 }
 
@@ -199,7 +259,6 @@ export async function getGifInfo(gifPath) {
     const command = `identify -verbose "${gifPath}"`;
     const output = execSync(command, { encoding: "utf-8" });
     
-    // Try multiple patterns for extracting frame count
     let frames = 1;
     const iterMatch = output.match(/Iterations: (\d+)/);
     const sceneMatch = output.match(/Scenes: (\d+)/);

@@ -340,12 +340,11 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     );
 
     collector.on("collect", async i => {
-      if (i.customId === "next_starter") {
-        currentIndex = Math.min(currentIndex + 1, allStarters.length - 1);
-      } else if (i.customId === "prev_starter") {
-        currentIndex = Math.max(currentIndex - 1, 0);
-      } else if (i.customId === "select_starter") {
-        // ✅ STOP COLLECTOR FIRST (prevents timeout error from "end" event)
+      if (i.customId === "select_starter") {
+        // ✅ DEFER FIRST before any reply
+        await i.deferReply({ flags: 64 });
+        
+        // ✅ STOP COLLECTOR
         collector.stop();
 
         const selectedPokemon = allStarters[currentIndex];
@@ -353,7 +352,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         user.onboardingComplete = true;
         user.displayedPokemon = [selectedPokemon.id];
 
-        // ✅ Reply IMMEDIATELY
+        // ✅ Reply AFTER deferring
         await safeReply(i, {
           content: `✅ You chose **${selectedPokemon.name}**! Your adventure begins! 🚀\n\nRun \`/pokedex ${selectedPokemon.id}\` to view your starter's Pokédex entry.`,
           flags: 64
@@ -367,8 +366,16 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         return;
       }
 
-      const { embed: e, buttons: b } = buildCarousel(currentIndex);
+      // For next/prev buttons, defer and update
       await i.deferUpdate();
+      
+      if (i.customId === "next_starter") {
+        currentIndex = Math.min(currentIndex + 1, allStarters.length - 1);
+      } else if (i.customId === "prev_starter") {
+        currentIndex = Math.max(currentIndex - 1, 0);
+      }
+
+      const { embed: e, buttons: b } = buildCarousel(currentIndex);
       await i.editReply({ embeds: [e], components: [b] });
     });
   } catch (err) {

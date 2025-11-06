@@ -142,6 +142,6 @@ export function getQueueLength() {
  * Check if currently flushing (for testing/monitoring)
  * @returns {boolean} True if flushing
  */
-export function isFlushing() {
+export function isCurrentlyFlushing() {
   return isFlushing;
 }

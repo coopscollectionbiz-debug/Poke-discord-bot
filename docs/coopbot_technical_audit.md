@@ -258,17 +258,17 @@ The bot now uses atomic write operations to prevent data corruption from partial
 
 ### **12.2 Save Queue & Debouncing**
 
-A centralized save queue serializes and coalesces frequent save operations.
+A centralized save queue serializes and coalesces frequent local save operations.
 
 **Implementation:**
 - `utils/saveQueue.js` manages queued saves with 5-second debounce
-- Multiple rapid saves are coalesced into single write operation
-- Queue supports both local (atomic) and Discord saves
-- Handlers registered via `setLocalSaveHandler()` and `setDiscordSaveHandler()`
+- Multiple rapid saves are coalesced into single atomic write operation
+- Uses `atomicWriteJson` for all local filesystem writes
+- Discord saves continue via existing `atomicSave` orchestration
 
 **Benefits:**
 - Reduces filesystem I/O by coalescing rapid consecutive saves
-- Prevents race conditions from overlapping save operations
+- Prevents race conditions from overlapping local save operations
 - Maintains save order and consistency
 
 ### **12.3 Graceful Shutdown**

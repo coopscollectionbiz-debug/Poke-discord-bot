@@ -81,7 +81,7 @@ async function updateUserRole(member, tp) {
 }
 
 // ===========================================================
-// 📩 MESSAGE HANDLER — Passive XP/TP system + Link Replacements
+// 📩 MESSAGE HANDLER – Passive XP/TP system + Link Replacements
 // ===========================================================
 
 const MESSAGE_TP_GAIN = 2;            // Base TP gained per message
@@ -107,7 +107,7 @@ client.on("messageCreate", async (msg) => {
     return;
   }
 
-  // 🕒 TP cooldown
+  // ⏱️ TP cooldown
   const lastMessageTime = userCooldowns.get(id) || 0;
   if (now - lastMessageTime < MESSAGE_COOLDOWN) return;
   userCooldowns.set(id, now);
@@ -191,7 +191,7 @@ process.on("SIGINT", async () => { await saveDataToDiscord(trainerData); process
 process.on("SIGTERM", async () => { await saveDataToDiscord(trainerData); process.exit(0); });
 
 // ===========================================================
-// 📰 POKEBEACH NEWS SCRAPER
+// 🏖️ POKEBEACH NEWS SCRAPER
 // ===========================================================
 
 async function checkPokeBeach() {
@@ -226,13 +226,13 @@ async function checkPokeBeach() {
     for (const article of found.reverse()) { // oldest first
       const alreadyPosted = recentContent.some((text) => text.includes(article.url));
       if (alreadyPosted) {
-        console.log(`⏩ Skipping already posted link: ${article.url}`);
+        console.log(`↩️ Skipping already posted link: ${article.url}`);
         continue;
       }
 
       const last = await fs.readFile("./lastArticle.txt", "utf8").catch(() => "");
       if (last === article.url) {
-        console.log(`⏩ Same as last recorded link: ${article.url}`);
+        console.log(`↩️ Same as last recorded link: ${article.url}`);
         continue;
       }
 
@@ -276,7 +276,7 @@ function normalizeUserSchema(id, user) {
 }
 
 // ===========================================================
-// ⚡ INTERACTION HANDLER — Slash Commands + Buttons
+// ⚡ INTERACTION HANDLER – Slash Commands + Buttons
 // ===========================================================
 
 client.on("interactionCreate", async (interaction) => {
@@ -284,7 +284,7 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
     if (!command) {
-      return await safeReply(interaction, { content: "❌ Unknown command.", ephemeral: true });
+      return await safeReply(interaction, { content: "❌ Unknown command.", flags: 64 });
     }
 
     try {
@@ -295,7 +295,7 @@ client.on("interactionCreate", async (interaction) => {
       console.error(`❌ ${interaction.commandName}:`, error.message);
       await safeReply(interaction, {
         content: `❌ Error while executing \`${interaction.commandName}\`. Please try again.`,
-        ephemeral: true,
+        flags: 64,
       });
     }
     return;
@@ -320,7 +320,7 @@ client.on("interactionCreate", async (interaction) => {
       console.error(`❌ Button interaction error (${interaction.customId}):`, error.message);
       await safeReply(interaction, {
         content: "❌ An error occurred processing your button. Please try again.",
-        ephemeral: true,
+        flags: 64,
       });
     }
   }

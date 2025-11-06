@@ -82,9 +82,9 @@ const starterIDs = [
 
 export async function starterSelection(interaction, user, trainerData, saveDataToDiscord) {
   try {
-    // ✅ Defer reply within 3s
+    // ✅ Defer reply immediately within 3s
     if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 }); // 64 = MessageFlags.Ephemeral
     }
 
     const allPokemon = await getAllPokemon();
@@ -142,9 +142,8 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
             combinedGif = new AttachmentBuilder(output, { name: `${typeName}_starters.gif` });
           }
         } catch (gifError) {
-          console.error(`❌ GIF composition failed: ${gifError.message}`);
+          console.warn(`⚠️ GIF composition failed: ${gifError.message}`);
           console.warn(`⚠️ Falling back to first image URL for ${typeName}`);
-          // If gifPaths are URLs, we'll just use the first one directly in the embed
           combinedGif = null;
         }
 
@@ -165,42 +164,64 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
           embed.setImage(`attachment://${typeName}_starters.gif`);
         } else if (gifPaths.length > 0 && isUrl(gifPaths[0])) {
           embed.setImage(gifPaths[0]); // Use URL directly
+        } else if (gifPaths.length > 0) {
+          // Try to load as local file
+          try {
+            const localPath = gifPaths[0].replace(/^\/+/, './');
+            if (fs.existsSync(localPath)) {
+              const attachment = new AttachmentBuilder(localPath, { name: `${typeName}_sprite.gif` });
+              return { 
+                embed: embed.setImage(`attachment://${typeName}_sprite.gif`), 
+                components: buildButtons(list, index, sortedTypes.length),
+                files: [attachment]
+              };
+            }
+          } catch (err) {
+            console.warn(`⚠️ Failed to load local file: ${gifPaths[0]}`);
+          }
         }
 
-        const row1 = new ActionRowBuilder().addComponents(
-          list.slice(0, 3).map(p =>
-            new ButtonBuilder()
-              .setCustomId(`starter_${p.id}`)
-              .setLabel(p.name)
-              .setStyle(ButtonStyle.Primary)
-          )
-        );
-
-        const row2 = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("prev_page")
-            .setEmoji("⬅️")
-            .setStyle(ButtonStyle.Secondary)
-            .setDisabled(index === 0),
-          new ButtonBuilder()
-            .setCustomId("next_page")
-            .setEmoji("➡️")
-            .setStyle(ButtonStyle.Secondary)
-            .setDisabled(index === sortedTypes.length - 1)
-        );
-
-        const files = combinedGif ? [combinedGif] : [];
-        return { embed, components: [row1, row2], files };
+        return { 
+          embed, 
+          components: buildButtons(list, index, sortedTypes.length),
+          files: combinedGif ? [combinedGif] : []
+        };
       } catch (err) {
         console.error(`❌ buildPage error:`, err);
         throw err;
       }
     };
 
+    const buildButtons = (list, index, totalPages) => {
+      const row1 = new ActionRowBuilder().addComponents(
+        list.slice(0, 3).map(p =>
+          new ButtonBuilder()
+            .setCustomId(`starter_${p.id}`)
+            .setLabel(p.name)
+            .setStyle(ButtonStyle.Primary)
+        )
+      );
+
+      const row2 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("prev_page")
+          .setEmoji("⬅️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(index === 0),
+        new ButtonBuilder()
+          .setCustomId("next_page")
+          .setEmoji("➡️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(index === totalPages - 1)
+      );
+
+      return [row1, row2];
+    };
+
     // ── Show first page ───────────────────────────────
     let page = 0;
     const { embed, components, files } = await buildPage(page);
-    await safeReply(interaction, { embeds: [embed], components, files, ephemeral: true });
+    await interaction.editReply({ embeds: [embed], components, files });
 
     // ── Collector for buttons ─────────────────────────
     const collector = createSafeCollector(
@@ -216,66 +237,75 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     collector.on("collect", async i => {
       try {
         if (i.user.id !== interaction.user.id)
-          return safeReply(i, { content: "Not your onboarding!", ephemeral: true });
+          return safeReply(i, { content: "Not your onboarding!", flags: 64 });
 
         if (i.customId === "next_page" || i.customId === "prev_page") {
           page += i.customId === "next_page" ? 1 : -1;
           const { embed: e, components: c, files: f } = await buildPage(page);
           await i.deferUpdate();
-          return await i.editReply({ embeds: [e], components: c, files: f });
-        }
+          await i.editReply({ embeds: [e], components: c, files: f });
+        } else if (i.customId.startsWith("starter_")) {
+          const pokemonId = Number(i.customId.replace("starter_", ""));
+          const selectedPokemon = allPokemon.find(p => Number(p.id) === pokemonId);
 
-        if (i.customId.startsWith("starter_")) {
-          const starterId = parseInt(i.customId.split("_")[1]);
-          const isShiny = rollForShiny(user.tp || 0);
-          user.pokemon[starterId] = { normal: isShiny ? 0 : 1, shiny: isShiny ? 1 : 0 };
-          user.displayedPokemon = [starterId];
-          user.starterPokemon = starterId;
+          if (!selectedPokemon) {
+            await i.deferUpdate();
+            return await i.editReply({ content: "❌ Pokémon not found." });
+          }
+
+          user.starterPokemon = pokemonId;
+          user.pokemon = user.pokemon || {};
+          user.pokemon[pokemonId] = user.pokemon[pokemonId] || { normal: 0, shiny: 0 };
+
+          const isShiny = rollForShiny();
+          if (isShiny) {
+            user.pokemon[pokemonId].shiny = (user.pokemon[pokemonId].shiny || 0) + 1;
+          } else {
+            user.pokemon[pokemonId].normal = (user.pokemon[pokemonId].normal || 0) + 1;
+          }
+
+          user.displayedPokemon = [pokemonId];
           
-          // ✅ Set onboarding complete
-          user.onboardingComplete = true;
-          user.onboardingDate = new Date().toISOString();
-
-          const allPok = await getAllPokemon();
-          const starterName = allPok.find(p => p.id === starterId)?.name || "Unknown";
-
-          await safeReply(i, {
-            content: `✅ You chose **${starterName}**${isShiny ? " ✨" : ""} as your starter!`,
-            ephemeral: true
-          });
           await saveDataToDiscord(trainerData);
+          await i.deferUpdate();
+
+          // ✅ Show trainer selection instead of ending
+          const successEmbed = new EmbedBuilder()
+            .setTitle("🎉 Welcome, Trainer!")
+            .setDescription(`You've chosen **${selectedPokemon.name}**!${isShiny ? " ✨ (Shiny!)" : ""}`)
+            .setColor(0x43b581);
+
+          await i.editReply({ embeds: [successEmbed], components: [] });
           collector.stop();
-          return await trainerSelection(i, user, trainerData, saveDataToDiscord);
+          return await trainerSelection(interaction, user, trainerData, saveDataToDiscord);
         }
       } catch (err) {
-        console.error(`❌ Collector interaction error:`, err);
-        return safeReply(i, {
-          content: "❌ An error occurred. Please try again.",
-          ephemeral: true
-        });
+        console.error(`❌ starterSelection collector error:`, err);
+        try {
+          await i.deferUpdate().catch(() => {});
+          await i.editReply({ content: "❌ An error occurred.", components: [] }).catch(() => {});
+        } catch {}
       }
     });
 
-    collector.on("end", async () => {
-      try { await safeReply(interaction, { components: [] }); } catch {}
+    collector.on("end", () => {
+      console.log("Starter selection timed out");
     });
   } catch (err) {
     console.error("❌ starterSelection error:", err);
-    console.error("Stack:", err.stack);
-    
-    const errorMsg = err.message || "Unknown error";
-    await safeReply(interaction, {
-      content: `❌ Failed to load starter selection: ${errorMsg}`,
-      ephemeral: true
-    });
+    await safeReply(interaction, { content: `❌ Error during startup: ${err.message}`, flags: 64 });
   }
 }
 
 // ===========================================================
-// TRAINER SELECTION
+// TRAINER SELECTION (after starter pokemon chosen)
 // ===========================================================
 async function trainerSelection(interaction, user, trainerData, saveDataToDiscord) {
   try {
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply({ flags: 64 });
+    }
+
     const trainers = [
       { id: "youngster-gen4.png", name: "Youngster", emoji: "👦", color: 0x43b581 },
       { id: "rival-gen3.png", name: "Rival", emoji: "😤", color: 0xff6b6b },
@@ -318,7 +348,7 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
 
     const embed = renderEmbed(index);
     const row = getButtons(index);
-    await safeReply(interaction, { embeds: [embed], components: [row], ephemeral: true });
+    await interaction.editReply({ embeds: [embed], components: [row] });
 
     const collector = interaction.channel.createMessageComponentCollector({
       filter: i => i.user.id === interaction.user.id,
@@ -328,7 +358,7 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
 
     collector.on("collect", async i => {
       if (i.user.id !== interaction.user.id) {
-        return safeReply(i, { content: "This isn't your selection!", ephemeral: true });
+        return safeReply(i, { content: "This isn't your selection!", flags: 64 });
       }
 
       if (i.customId === "next_trainer") {
@@ -345,7 +375,7 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
         await saveDataToDiscord(trainerData);
         await safeReply(i, {
           content: `✅ You chose **${choice.name}** ${choice.emoji}!`,
-          ephemeral: true
+          flags: 64
         });
         collector.stop("confirmed");
         return await showTrainerCard(i, user);
@@ -359,14 +389,14 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
 
     collector.on("end", async (_, reason) => {
       if (reason !== "confirmed") {
-        try { await safeReply(interaction, { components: [] }); } catch {}
+        try { await interaction.editReply({ components: [] }).catch(() => {}); } catch {}
       }
     });
   } catch (err) {
     console.error("❌ trainerSelection error:", err);
     await safeReply(interaction, {
       content: "❌ Failed to load trainer selection.",
-      ephemeral: true
+      flags: 64
     });
   }
 }
@@ -376,6 +406,10 @@ async function trainerSelection(interaction, user, trainerData, saveDataToDiscor
 // ===========================================================
 export async function showTrainerCard(interaction, user) {
   try {
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply({ flags: 64 });
+    }
+
     const username = interaction?.user?.username || user.name || "Trainer";
     const avatarURL = interaction.user?.displayAvatarURL({ extension: "png", size: 128 });
 
@@ -411,7 +445,7 @@ export async function showTrainerCard(interaction, user) {
           console.log("Using remote sprite URLs, skipping local GIF composition");
         }
       } catch (gifErr) {
-        console.error("Failed to combine GIFs:", gifErr);
+        console.warn("⚠️ Failed to combine GIFs:", gifErr.message);
         // Continue without GIF - will show stats instead
       }
     }
@@ -426,7 +460,7 @@ export async function showTrainerCard(interaction, user) {
       .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })
       .setColor(0xffcb05)
       .setDescription(
-        `🏆 **Rank:** ${rank.title}\n` +
+        `🏆 **Rank:** ${rank?.title || "Beginner"}\n` +
         `⭐ **TP:** ${user.tp || 0}\n` +
         `💰 **CC:** ${user.cc || 0}\n\n` +
         `📊 **Pokémon:** ${pokemonOwned}\n` +
@@ -469,11 +503,15 @@ export async function showTrainerCard(interaction, user) {
 
     // === 5️⃣ Reply ==========================================================
     const files = combinedGifAttachment ? [combinedGifAttachment] : [];
-    await safeReply(interaction, { embeds: [embed], files, components: [row], ephemeral: true });
+    if (interaction.replied) {
+      await interaction.editReply({ embeds: [embed], files, components: [row] });
+    } else {
+      await interaction.editReply({ embeds: [embed], files, components: [row] });
+    }
 
   } catch (err) {
     console.error("showTrainerCard error:", err);
-    await safeReply(interaction, { content: "❌ Failed to show Trainer Card.", ephemeral: true });
+    await safeReply(interaction, { content: "❌ Failed to show Trainer Card.", flags: 64 });
   }
 }
 
@@ -482,9 +520,13 @@ export async function showTrainerCard(interaction, user) {
 // ===========================================================
 async function handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord) {
   try {
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply({ flags: 64 });
+    }
+
     const ownedTrainers = Object.keys(user.trainers || {}).filter(t => user.trainers[t]);
     if (ownedTrainers.length === 0) {
-      return safeReply(interaction, { content: "❌ You don't have any trainers yet!", ephemeral: true });
+      return safeReply(interaction, { content: "❌ You don't have any trainers yet!", flags: 64 });
     }
 
     const trainersPerPage = 5;
@@ -534,7 +576,7 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
     };
 
     const { embed, components } = buildPage(pageIndex);
-    await safeReply(interaction, { embeds: [embed], components, ephemeral: true });
+    await interaction.editReply({ embeds: [embed], components });
 
     const collector = interaction.channel.createMessageComponentCollector({
       filter: i => i.user.id === interaction.user.id,
@@ -551,7 +593,7 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
         const selectedTrainer = i.customId.replace("select_trainer_", "");
         user.displayedTrainer = selectedTrainer;
         await saveDataToDiscord(trainerData);
-        await safeReply(i, { content: `✅ Trainer changed!`, ephemeral: true });
+        await safeReply(i, { content: `✅ Trainer changed!`, flags: 64 });
         return collector.stop();
       }
 
@@ -561,11 +603,11 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
     });
 
     collector.on("end", async () => {
-      try { await safeReply(interaction, { content: "⏱️ Selection timed out.", ephemeral: true }); } catch {}
+      try { await interaction.editReply({ components: [] }).catch(() => {}); } catch {}
     });
   } catch (err) {
     console.error("handleChangeTrainer error:", err);
-    await safeReply(interaction, { content: "❌ Failed to load trainer selection.", ephemeral: true });
+    await safeReply(interaction, { content: "❌ Failed to load trainer selection.", flags: 64 });
   }
 }
 
@@ -574,13 +616,17 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
 // ===========================================================
 async function handleChangePokemon(interaction, user, trainerData, saveDataToDiscord) {
   try {
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply({ flags: 64 });
+    }
+
     const ownedPokemon = Object.keys(user.pokemon || {}).filter(id => {
       const p = user.pokemon[id];
       return (p?.normal > 0 || p?.shiny > 0) || (typeof p === "number" && p > 0);
     });
     
     if (ownedPokemon.length === 0) {
-      return safeReply(interaction, { content: "❌ You don't have any Pokémon yet!", ephemeral: true });
+      return safeReply(interaction, { content: "❌ You don't have any Pokémon yet!", flags: 64 });
     }
 
     const allPokemon = await getAllPokemon();
@@ -653,7 +699,7 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
     };
 
     const { embed, components } = buildPage(pageIndex);
-    await safeReply(interaction, { embeds: [embed], components, ephemeral: true });
+    await interaction.editReply({ embeds: [embed], components });
 
     const collector = interaction.channel.createMessageComponentCollector({
       filter: i => i.user.id === interaction.user.id,
@@ -681,7 +727,7 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
       } else if (i.customId === "pokemon_save") {
         user.displayedPokemon = selectedPokemon.map(id => Number(id));
         await saveDataToDiscord(trainerData);
-        await safeReply(i, { content: "✅ Pokémon updated!", ephemeral: true });
+        await safeReply(i, { content: "✅ Pokémon updated!", flags: 64 });
         return collector.stop();
       }
 
@@ -691,11 +737,11 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
     });
 
     collector.on("end", async () => {
-      try { await safeReply(interaction, { content: "⏱️ Selection timed out.", ephemeral: true }); } catch {}
+      try { await interaction.editReply({ components: [] }).catch(() => {}); } catch {}
     });
   } catch (err) {
     console.error("handleChangePokemon error:", err);
-    await safeReply(interaction, { content: "❌ Failed to load pokemon selection.", ephemeral: true });
+    await safeReply(interaction, { content: "❌ Failed to load pokemon selection.", flags: 64 });
   }
 }
 
@@ -707,7 +753,7 @@ export async function handleTrainerCardButtons(interaction, trainerData, saveDat
   const user = trainerData[userId];
 
   if (!user) {
-    return safeReply(interaction, { content: "❌ Could not find your trainer data.", ephemeral: true });
+    return safeReply(interaction, { content: "❌ Could not find your trainer data.", flags: 64 });
   }
 
   switch (interaction.customId) {
@@ -721,6 +767,6 @@ export async function handleTrainerCardButtons(interaction, trainerData, saveDat
       return handleChangePokemon(interaction, user, trainerData, saveDataToDiscord);
 
     default:
-      await safeReply(interaction, { content: "❌ Unknown button action.", ephemeral: true });
+      await safeReply(interaction, { content: "❌ Unknown button action.", flags: 64 });
   }
 }

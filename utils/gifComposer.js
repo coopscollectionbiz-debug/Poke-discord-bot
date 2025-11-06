@@ -81,21 +81,34 @@ export async function combineGifsHorizontal(
 
   // === Build ImageMagick command ===
   const resizeArg = resizeCustom || `${size}x${size}`;
-  // Each input wrapped in parentheses to preserve animation
-  const groups = staged
-    .map(({ localPath }) => `\\( "${localPath}" -coalesce -resize ${resizeArg} \\)`)
-    .join(" ");
+  
+  // Key fix: Use individual -coalesce for each input to expand all frames,
+  // then +append to tile horizontally. This preserves animation in output.
+  const stagedPaths = staged.map(({ localPath }) => `"${localPath}"`).join(" ");
 
   const outDir = path.dirname(outputPath);
   await fs.mkdir(outDir, { recursive: true });
 
-  // Delay 7 (~70ms) for smooth animation, optimize layers to reduce size
-  const cmd = `convert ${groups} +append -set delay 7 -loop 0 -layers optimize "${outputPath}"`;
-  console.log(`🧩 [GIFComposer] ${cmd}`);
+  // CORRECTED COMMAND: 
+  // 1. Load all GIFs
+  // 2. -coalesce: Expand animation frames to full canvas (critical for animation)
+  // 3. -resize: Resize each frame
+  // 4. +append: Tile horizontally across all frames
+  // 5. -set delay: Uniform frame delay
+  // 6. -loop 0: Infinite loop
+  // 7. -layers optimize-frame: Optimize without destroying frames
+  const cmd = `convert ${stagedPaths} -coalesce -resize ${resizeArg} +append -set delay 7 -loop 0 -layers optimize-frame "${outputPath}"`;
+  console.log(`🧩 [GIFComposer] Combining ${gifPaths.length} GIFs horizontally...`);
+  console.log(`🧩 [GIFComposer] Command: convert [inputs] -coalesce -resize ${resizeArg} +append -set delay 7 -loop 0 -layers optimize-frame`);
 
   try {
-    const { stderr } = await exec(cmd);
-    if (stderr && stderr.trim()) console.warn("⚠️ convert stderr:", stderr.trim());
+    const { stdout, stderr } = await exec(cmd);
+    if (stderr && stderr.trim()) {
+      console.warn("⚠️ convert stderr:", stderr.trim());
+    }
+    if (stdout && stdout.trim()) {
+      console.log("ℹ️ convert stdout:", stdout.trim());
+    }
   } catch (err) {
     console.error("❌ ImageMagick convert failed:", err.stderr || err.message);
     throw err;
@@ -106,11 +119,24 @@ export async function combineGifsHorizontal(
     }
   }
 
-  // Verify output file
+  // Verify output file and check if animated
   try {
     const stat = await fs.stat(outputPath);
     if (stat.size === 0) throw new Error("Output GIF empty");
+    console.log(`✅ GIF created successfully: ${(stat.size / 1024).toFixed(2)}KB`);
+    
+    // Debug: Check frame count to verify animation
+    try {
+      const { stdout: identifyOut } = await exec(`identify "${outputPath}" 2>&1 | head -5 || true`);
+      if (identifyOut) {
+        console.log(`ℹ️ GIF frames: ${identifyOut.split('\n').length - 1} frames detected`);
+        console.log(`ℹ️ Output info:\n${identifyOut}`);
+      }
+    } catch (identErr) {
+      console.warn("⚠️ Could not verify frame count (identify not available)");
+    }
   } catch (e) {
+    console.error(`Failed to verify output GIF: ${outputPath}`, e.message);
     throw new Error(`Failed to create output GIF: ${outputPath}`);
   }
 

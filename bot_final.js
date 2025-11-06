@@ -9,9 +9,11 @@ import dotenv from "dotenv";
 dotenv.config();
 import { getRank, getRankTiers } from "./utils/rankSystem.js";
 import { safeReply } from "./utils/safeReply.js";
+import { handleTrainerCardButtons } from "./commands/trainercard.js";
 
 const TRAINERDATA_PATH = "./trainerData.json";
-const AUTOSAVE_INTERVAL = 1000 * 60 * 3;
+const AUTOSAVE_INTERVAL = 1000 * 60 * 3; // 3 minutes
+const POKEBEACH_CHECK_INTERVAL = 1000 * 60 * 60 * 6; // 6 hours
 const PORT = process.env.PORT || 10000;
 let discordSaveCount = 0;
 let commandSaveQueue = null;
@@ -79,7 +81,7 @@ async function updateUserRole(member, tp) {
 }
 
 // ===========================================================
-// 📩 MESSAGE HANDLER — Passive XP/TP system
+// 📩 MESSAGE HANDLER — Passive XP/TP system + Link Replacements
 // ===========================================================
 
 const MESSAGE_TP_GAIN = 2;            // Base TP gained per message
@@ -134,22 +136,30 @@ client.on("messageCreate", async (msg) => {
   debouncedDiscordSave();
 });
 
+// ===========================================================
+// 📂 COMMAND LOADER
+// ===========================================================
+
 async function loadCommands() {
   const commandsPath = path.resolve("./commands");
   const files = (await fs.readdir(commandsPath)).filter(f => f.endsWith(".js"));
+  
   for (const file of files) {
-  try {
-    const imported = await import(`./commands/${file}`);
-    const command = imported.default || imported;
-    if (!command?.data?.name) continue;
-    client.commands.set(command.data.name, command);
-  } catch (err) {
-    console.error(`❌ ${file}:`, err.message);
+    try {
+      const imported = await import(`./commands/${file}`);
+      const command = imported.default || imported;
+      if (!command?.data?.name) {
+        console.warn(`⚠️ ${file}: No valid command data found`);
+        continue;
+      }
+      client.commands.set(command.data.name, command);
+      console.log(`✅ Loaded: ${command.data.name}`);
+    } catch (err) {
+      console.error(`❌ ${file}:`, err.message);
+    }
   }
-}
 
   const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
-
   const commandsJSON = client.commands.map(c => c.data.toJSON());
   console.log(`📡 Registering ${commandsJSON.length} commands...`);
 
@@ -164,6 +174,10 @@ async function loadCommands() {
   }
 }
 
+// ===========================================================
+// 💾 SAVE DEBOUNCING
+// ===========================================================
+
 function debouncedDiscordSave() {
   if (commandSaveQueue) clearTimeout(commandSaveQueue);
   commandSaveQueue = setTimeout(async () => {
@@ -176,8 +190,10 @@ setInterval(() => saveDataToDiscord(trainerData), AUTOSAVE_INTERVAL);
 process.on("SIGINT", async () => { await saveDataToDiscord(trainerData); process.exit(0); });
 process.on("SIGTERM", async () => { await saveDataToDiscord(trainerData); process.exit(0); });
 
+// ===========================================================
+// 📰 POKEBEACH NEWS SCRAPER
+// ===========================================================
 
-//Pokebeach scraping for news
 async function checkPokeBeach() {
   try {
     const newsChannel = await client.channels.fetch(process.env.NEWS_CHANNEL_ID);
@@ -238,35 +254,11 @@ async function checkPokeBeach() {
   }
 }
 
-setInterval(checkPokeBeach, 1000 * 60 * 60 * 3); // every 6 hours
+setInterval(checkPokeBeach, POKEBEACH_CHECK_INTERVAL);
 
-client.on("messageCreate", async msg => {
-  if (msg.author.bot) return;
-  if (/https?:\/\/(amzn\.to|www\.ebay\.com\/itm)/i.test(msg.content)) {
-    await msg.delete().catch(() => {});
-    await msg.channel.send(`🔗 ${msg.content.replace(/amzn\.to/gi, "amazon.com").replace(/ebay\.com\/itm/gi, "ebay.com/itm")}`);
-  }
-});
-
-let trainerData = {};
-client.once("ready", async () => {
-  console.log(`✅ ${client.user.tag}`);
-  trainerData = await loadTrainerData();
-  await loadCommands();
-  checkPokeBeach();
-  await saveDataToDiscord(trainerData);
-});
-
-import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const app = express();
-const staticPath = path.join(process.cwd(), "public");
-app.use("/public", express.static(staticPath));
-app.get("/", (_, res) => res.send("Bot running"));
-app.listen(PORT, () => console.log(`✅ Port ${PORT}`));
-client.login(process.env.BOT_TOKEN);
-// Enhanced schema normalization with onboarding tracking
+// ===========================================================
+// 🔧 SCHEMA NORMALIZATION
+// ===========================================================
 
 function normalizeUserSchema(id, user) {
   user.id ??= id;
@@ -283,23 +275,104 @@ function normalizeUserSchema(id, user) {
   return user;
 }
 
-client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+// ===========================================================
+// ⚡ INTERACTION HANDLER — Slash Commands + Buttons
+// ===========================================================
 
-  const command = client.commands.get(interaction.commandName);
-  if (!command) {
-    return await safeReply(interaction, { content: "❌ Unknown command.", ephemeral: true });
+client.on("interactionCreate", async (interaction) => {
+  // Handle Slash Commands
+  if (interaction.isChatInputCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command) {
+      return await safeReply(interaction, { content: "❌ Unknown command.", ephemeral: true });
+    }
+
+    try {
+      await command.execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord);
+      await saveTrainerDataLocal(trainerData);
+      debouncedDiscordSave();
+    } catch (error) {
+      console.error(`❌ ${interaction.commandName}:`, error.message);
+      await safeReply(interaction, {
+        content: `❌ Error while executing \`${interaction.commandName}\`. Please try again.`,
+        ephemeral: true,
+      });
+    }
+    return;
   }
 
-  try {
-    await command.execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord);
-    await saveTrainerDataLocal(trainerData);
-    debouncedDiscordSave();
-  } catch (error) {
-    console.error(`❌ ${interaction.commandName}:`, error.message);
-    await safeReply(interaction, {
-      content: `❌ Error while executing \`${interaction.commandName}\`. Please try again.`,
-      ephemeral: true,
-    });
+  // Handle Button Interactions
+  if (interaction.isButton()) {
+    try {
+      // Route trainercard buttons to the handler
+      if (interaction.customId.startsWith("refresh_card") || 
+          interaction.customId.startsWith("share_public") ||
+          interaction.customId.startsWith("change_trainer") ||
+          interaction.customId.startsWith("change_pokemon")) {
+        await handleTrainerCardButtons(interaction, trainerData, saveDataToDiscord);
+        await saveTrainerDataLocal(trainerData);
+        debouncedDiscordSave();
+        return;
+      }
+
+      console.warn(`⚠️ Unhandled button: ${interaction.customId}`);
+    } catch (error) {
+      console.error(`❌ Button interaction error (${interaction.customId}):`, error.message);
+      await safeReply(interaction, {
+        content: "❌ An error occurred processing your button. Please try again.",
+        ephemeral: true,
+      });
+    }
   }
 });
+
+// ===========================================================
+// 🌐 EXPRESS SERVER
+// ===========================================================
+
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const app = express();
+const staticPath = path.join(process.cwd(), "public");
+app.use("/public", express.static(staticPath));
+app.get("/", (_, res) => res.send("Bot running"));
+app.listen(PORT, () => console.log(`✅ Port ${PORT}`));
+
+// ===========================================================
+// 🤖 BOT READY
+// ===========================================================
+
+let trainerData = {};
+
+client.once("ready", async () => {
+  console.log(`✅ ${client.user.tag}`);
+  
+  try {
+    trainerData = await loadTrainerData();
+  } catch (err) {
+    console.error("❌ Failed to load trainer data:", err.message);
+    trainerData = {};
+  }
+  
+  try {
+    await loadCommands();
+  } catch (err) {
+    console.error("❌ Failed to load commands:", err.message);
+  }
+  
+  // Initial PokéBeach check
+  try {
+    checkPokeBeach();
+  } catch (err) {
+    console.error("❌ Failed initial PokéBeach check:", err.message);
+  }
+  
+  try {
+    await saveDataToDiscord(trainerData);
+  } catch (err) {
+    console.error("❌ Failed initial Discord save:", err.message);
+  }
+});
+
+client.login(process.env.BOT_TOKEN);

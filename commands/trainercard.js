@@ -1,5 +1,6 @@
-// /trainercard.js (COMPLETE VERSION)
+// /trainercard.js (COMPLETE VERSION - URL-AWARE)
 // Coop's Collection Discord Bot — Full Implementation with safeReply()
+// Handles both local files and remote URLs
 // ===========================================================
 
 import {
@@ -59,6 +60,13 @@ const typeMap = {
   11: "Water", 12: "Grass", 13: "Electric", 14: "Psychic",
   15: "Ice", 16: "Dragon", 17: "Dark"
 };
+
+// ===========================================================
+// UTILITY: Check if path is URL or local file
+// ===========================================================
+function isUrl(str) {
+  return str.startsWith('http://') || str.startsWith('https://');
+}
 
 // ===========================================================
 // 🌿 STARTER SELECTION
@@ -121,38 +129,26 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
           throw new Error(`No pokemon for type ${typeId}`);
         }
 
-        // ✅ Build GIF paths with error checking
-        const gifPaths = list.map(p => {
-          const gifPath = `${spritePaths.pokemon}${p.id}.gif`;
-          if (!fs.existsSync(gifPath)) {
-            console.warn(`⚠️ GIF not found: ${gifPath}`);
-          }
-          return gifPath;
-        });
+        // ✅ Build GIF paths - handle both URLs and local paths
+        const gifPaths = list.map(p => `${spritePaths.pokemon}${p.id}.gif`);
 
-        // ✅ Combine GIFs with error handling
+        // ✅ Try to combine GIFs, with fallback to first image if URLs
         const output = path.resolve(`./temp/${typeName}_starters.gif`);
+        let combinedGif = null;
+
         try {
           await combineGifsHorizontal(gifPaths, output);
+          if (fs.existsSync(output)) {
+            combinedGif = new AttachmentBuilder(output, { name: `${typeName}_starters.gif` });
+          }
         } catch (gifError) {
           console.error(`❌ GIF composition failed: ${gifError.message}`);
-          console.warn(`⚠️ Falling back to static image for ${typeName}`);
-          const fallbackPath = gifPaths[0];
-          if (fs.existsSync(fallbackPath)) {
-            fs.copyFileSync(fallbackPath, output);
-          } else {
-            throw new Error(`No fallback image found: ${fallbackPath}`);
-          }
+          console.warn(`⚠️ Falling back to first image URL for ${typeName}`);
+          // If gifPaths are URLs, we'll just use the first one directly in the embed
+          combinedGif = null;
         }
 
-        // ✅ Verify output file exists
-        if (!fs.existsSync(output)) {
-          throw new Error(`GIF output not created: ${output}`);
-        }
-
-        const combinedGif = new AttachmentBuilder(output, { name: `${typeName}_starters.gif` });
-
-        // Type sprite header (static PNG)
+        // Type sprite header (could be URL or local)
         const typeSprite = `${spritePaths.types}${typeId}.png`;
 
         const embed = new EmbedBuilder()
@@ -162,8 +158,14 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
           )
           .setThumbnail(typeSprite)
           .setColor(0x43b581)
-          .setImage(`attachment://${typeName}_starters.gif`)
           .setFooter({ text: `Page ${index + 1}/${sortedTypes.length}` });
+
+        // If we have a combined GIF file, use it; otherwise use first pokemon URL
+        if (combinedGif) {
+          embed.setImage(`attachment://${typeName}_starters.gif`);
+        } else if (gifPaths.length > 0 && isUrl(gifPaths[0])) {
+          embed.setImage(gifPaths[0]); // Use URL directly
+        }
 
         const row1 = new ActionRowBuilder().addComponents(
           list.slice(0, 3).map(p =>
@@ -187,7 +189,8 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
             .setDisabled(index === sortedTypes.length - 1)
         );
 
-        return { embed, components: [row1, row2], files: [combinedGif] };
+        const files = combinedGif ? [combinedGif] : [];
+        return { embed, components: [row1, row2], files };
       } catch (err) {
         console.error(`❌ buildPage error:`, err);
         throw err;
@@ -396,11 +399,20 @@ export async function showTrainerCard(interaction, user) {
       try {
         const gifPaths = owned.map(id => `${spritePaths.pokemon}${id}.gif`);
         const output = path.resolve(`./temp/${username}_team.gif`);
-        await combineGifsHorizontal(gifPaths, output);
-        combinedGifAttachment = new AttachmentBuilder(output, { name: "team.gif" });
+        
+        // Only try GIF composition if paths are local files
+        if (gifPaths.length > 0 && !isUrl(gifPaths[0])) {
+          await combineGifsHorizontal(gifPaths, output);
+          if (fs.existsSync(output)) {
+            combinedGifAttachment = new AttachmentBuilder(output, { name: "team.gif" });
+          }
+        } else if (gifPaths.length > 0 && isUrl(gifPaths[0])) {
+          // If URLs, we'll display the first one in the embed instead
+          console.log("Using remote sprite URLs, skipping local GIF composition");
+        }
       } catch (gifErr) {
         console.error("Failed to combine GIFs:", gifErr);
-        // Continue without GIF
+        // Continue without GIF - will show stats instead
       }
     }
 
@@ -424,9 +436,16 @@ export async function showTrainerCard(interaction, user) {
       .setThumbnail(trainerPath)
       .setFooter({ text: "Coop's Collection • /trainercard" });
 
-    // Only set image if GIF was successfully created
+    // Only set image if we have a local GIF file
     if (combinedGifAttachment) {
       embed.setImage(`attachment://team.gif`);
+    } else if (owned.length > 0) {
+      // Show first pokemon if we have URLs
+      const firstPokemonId = owned[0];
+      const firstPokemonUrl = `${spritePaths.pokemon}${firstPokemonId}.gif`;
+      if (isUrl(firstPokemonUrl)) {
+        embed.setImage(firstPokemonUrl);
+      }
     }
 
     // === 4️⃣ Action Buttons ================================================

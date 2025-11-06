@@ -1,5 +1,5 @@
 // =============================================
-// /showpokemon.js (Refactored with safeReply)
+// /showpokemon.js (Refactored with safeReply + Pokemon Cache)
 // Coop's Collection Discord Bot
 // =============================================
 
@@ -12,7 +12,7 @@ import {
   ComponentType
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
-import { getAllPokemon } from "../utils/dataLoader.js";
+import { getPokemonCached } from "../utils/pokemonCache.js";
 import { createPaginationButtons, calculateTotalPages, getPage } from "../utils/pagination.js";
 import { safeReply } from "../utils/safeReply.js";
 import { createSafeCollector } from "../utils/safeCollector.js";
@@ -68,12 +68,12 @@ export async function execute(interaction, trainerData) {
     });
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: 64 });
 
   // =============================================
-  // FILTER DATA - Using helper for Pokemon data
+  // FILTER DATA - Using helper for Pokemon data + cache
   // =============================================
-  const allPokemon = await getAllPokemon();
+  const allPokemon = await getPokemonCached();
   let filtered = [...allPokemon];
   if (filterRarity)
     filtered = filtered.filter(
@@ -116,7 +116,7 @@ export async function execute(interaction, trainerData) {
     const shinyCount = Object.values(owned).filter((p) => p.shiny > 0).length;
 
     const embed = new EmbedBuilder()
-      .setTitle(`📜 Pokémon Collection — Page ${page + 1}/${totalPages}`)
+      .setTitle(`📜 Pokémon Collection – Page ${page + 1}/${totalPages}`)
       .setColor(0x43b581)
       .setDescription(rows.join("\n") || "No Pokémon match this filter.")
       .setFooter({
@@ -130,7 +130,7 @@ export async function execute(interaction, trainerData) {
       pokedexRow.addComponents(
         new ButtonBuilder()
           .setCustomId(`inspect_${p.id}`)
-          .setLabel(`🔍 ${p.name}`)
+          .setLabel(`📖 ${p.name}`)
           .setStyle(ButtonStyle.Primary)
       );
     });
@@ -181,7 +181,7 @@ export async function execute(interaction, trainerData) {
     }
 
     // =============================================
-    // 🔍 INSPECT ENTRY
+    // 📖 INSPECT ENTRY
     // =============================================
     if (i.customId.startsWith("inspect_")) {
       const id = parseInt(i.customId.replace("inspect_", ""));
@@ -193,7 +193,7 @@ export async function execute(interaction, trainerData) {
 
       let shinyView = false;
       const entryEmbed = new EmbedBuilder()
-        .setTitle(`${p.name} — #${p.id}`)
+        .setTitle(`${p.name} – #${p.id}`)
         .setColor(0xffcb05)
         .setDescription(
           `**Rarity:** ${p.rarity?.toUpperCase() || "Unknown"}\n**Type:** ${

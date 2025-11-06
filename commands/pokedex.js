@@ -1,5 +1,5 @@
 // =============================================
-// /pokedex.js (SafeReply Refactor)
+// /pokedex.js (SafeReply Refactor + Pokemon Cache)
 // Coop's Collection Discord Bot
 // =============================================
 
@@ -52,7 +52,7 @@ export async function execute(interaction) {
     });
   }
 
-  // ✅ Find Pokémon
+  // ✅ Find Pokémon (uses cache internally if dataLoader is updated)
   const pokemon = await findPokemonByName(validation.sanitized);
 
   if (!pokemon) {
@@ -63,7 +63,7 @@ export async function execute(interaction) {
   }
 
   // ✅ Public reply (not ephemeral)
-  await interaction.deferReply();
+  await interaction.deferReply({ flags: 0 });
 
   const normalSprite = `${spritePaths.pokemon}${pokemon.id}.gif`;
   const shinySprite = `${spritePaths.shiny}${pokemon.id}.gif`;

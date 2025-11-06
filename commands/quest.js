@@ -1,5 +1,5 @@
 // ==========================================================
-// 🗺️ /quest – complete a quest for a random reward (SafeReply + CC reward + atomic save)
+// 🗺️ /quest – complete a quest for a random reward (SafeReply + CC reward + atomic save + Pokemon Cache)
 // Coop's Collection Discord Bot
 // ==========================================================
 
@@ -7,7 +7,8 @@ import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { ensureUserData } from "../utils/trainerDataHelper.js";
-import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
+import { getPokemonCached } from "../utils/pokemonCache.js";
+import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
@@ -61,7 +62,7 @@ export default {
     // 🐾 Pokémon Reward
     // ==========================================================
     if (rewardType === "pokemon") {
-      const allPokemon = await getAllPokemon();
+      const allPokemon = await getPokemonCached();
       const pool = allPokemon.filter((p) => p.generation <= 5);
       const pick = pool[Math.floor(Math.random() * pool.length)];
 

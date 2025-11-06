@@ -12,7 +12,7 @@ import {
   AttachmentBuilder,
   ComponentType
 } from "discord.js";
-import { rollForShiny } from "../utils/shinyOdds.js";
+import { rollForShiny } from "../shinyOdds.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";

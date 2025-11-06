@@ -69,6 +69,9 @@ export function validateUserSchema(user, userId, username) {
   if (validated.cc === undefined) validated.cc = 0;
   if (validated.tp === undefined) validated.tp = 0;
   if (validated.rank === undefined) validated.rank = "Novice Trainer";
+if (validated.name === undefined || validated.name === "Trainer") {
+  validated.name = username || "Unknown";
+}
 
   // Onboarding fields
   if (validated.onboardingComplete === undefined) validated.onboardingComplete = false;

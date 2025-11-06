@@ -318,10 +318,13 @@ client.on("interactionCreate", async (interaction) => {
         return;
       }
 
-      // Don't route starter carousel buttons - they're handled by the local collector
+      // Don't route starter/trainer carousel buttons - they're handled by the local collector
       if (interaction.customId.startsWith("select_starter") || 
           interaction.customId.startsWith("prev_starter") ||
           interaction.customId.startsWith("next_starter") ||
+          interaction.customId.startsWith("prev_trainer") ||
+          interaction.customId.startsWith("next_trainer") ||
+          interaction.customId.startsWith("confirm_trainer") ||
           interaction.customId.startsWith("restart_trainercard")) {
         return; // Silently ignore - handled by collector
       }

@@ -1,4 +1,8 @@
-// utils/gifComposer.js
+// ============================================================
+// utils/gifComposer.js — Coop's Collection Discord Bot
+// Production-ready GIF combiner for animated sprites
+// ============================================================
+
 import { exec as _exec } from "child_process";
 import { promisify } from "util";
 import fs from "fs/promises";
@@ -7,23 +11,25 @@ import path from "path";
 import fetch from "node-fetch";
 
 const exec = promisify(_exec);
-
 const TEMP_DIR = path.resolve("./temp");
 
 /**
- * Ensure temp directory exists.
+ * Ensure /temp directory exists
  */
 async function ensureTempDir() {
   try {
     await fs.mkdir(TEMP_DIR, { recursive: true });
-  } catch {}
+  } catch (err) {
+    console.warn("⚠️ Failed to create temp dir:", err.message);
+  }
 }
 
 /**
- * Download a remote file (http/https) to a local temp path.
- * If path is already local, returns it unchanged.
+ * Download remote GIFs to local temp files (or return local path)
+ * Returns { localPath, cleanup: boolean }
  */
 async function toLocalGif(sourcePath) {
+  // remote .gif
   if (/^https?:\/\//i.test(sourcePath)) {
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.gif`;
     const localPath = path.join(TEMP_DIR, fileName);
@@ -32,52 +38,50 @@ async function toLocalGif(sourcePath) {
     const buf = await res.arrayBuffer();
     await fs.writeFile(localPath, Buffer.from(buf));
     return { localPath, cleanup: true };
-  } else {
-    // If file doesn't exist locally, still throw for clarity
-    if (!fss.existsSync(sourcePath)) {
-      throw new Error(`Local file not found: ${sourcePath}`);
-    }
-    return { localPath: sourcePath, cleanup: false };
   }
+
+  // local file
+  if (!fss.existsSync(sourcePath)) {
+    throw new Error(`Local file not found: ${sourcePath}`);
+  }
+  return { localPath: sourcePath, cleanup: false };
 }
 
 /**
- * Combine multiple animated GIFs horizontally into a single animated GIF.
- * - Coalesces EACH input GIF in its own parentheses group (critical!)
- * - Resizes frames
- * - Appends horizontally (+append)
- * - Optimizes layers and sets delay/loop
- *
- * @param {string[]} gifPaths - absolute or remote URLs
- * @param {string} outputPath - desired output .gif path (will be created/overwritten)
- * @param {number} size - target height in px (width scales); if you want a fixed box, pass width x height via resizeCustom
- * @param {string} resizeCustom - optional ImageMagick resize string (e.g. "128x128")
+ * Combine multiple animated GIFs horizontally (preserving animation)
+ * @param {string[]} gifPaths - array of local or remote .gif URLs
+ * @param {string} outputPath - where to save the final combined .gif
+ * @param {number} size - resize target (default 128px)
+ * @param {string} resizeCustom - optional custom resize string (e.g. "96x96")
+ * @returns {Promise<string>} outputPath
  */
-export async function combineGifsHorizontal(gifPaths, outputPath, size = 128, resizeCustom = "") {
+export async function combineGifsHorizontal(
+  gifPaths,
+  outputPath,
+  size = 128,
+  resizeCustom = ""
+) {
   await ensureTempDir();
 
   if (!gifPaths || gifPaths.length === 0) {
     throw new Error("combineGifsHorizontal: gifPaths is empty");
   }
 
-  // If only one GIF, just copy it through (keeps animation)
+  // === If only one GIF, just copy through (keep animation) ===
   if (gifPaths.length === 1) {
     const { localPath, cleanup } = await toLocalGif(gifPaths[0]);
     await fs.copyFile(localPath, outputPath);
-    if (cleanup) { try { await fs.unlink(localPath); } catch {} }
+    if (cleanup) try { await fs.unlink(localPath); } catch {}
     return outputPath;
   }
 
-  // Cache inputs locally
+  // === Stage input GIFs locally ===
   const staged = [];
-  for (const p of gifPaths) {
-    const item = await toLocalGif(p);
-    staged.push(item);
-  }
+  for (const p of gifPaths) staged.push(await toLocalGif(p));
 
-  // Build the ImageMagick command using parentheses per input
-  // so that -coalesce applies to each sequence independently.
-  const resizeArg = resizeCustom ? resizeCustom : `${size}x${size}`;
+  // === Build ImageMagick command ===
+  const resizeArg = resizeCustom || `${size}x${size}`;
+  // Each input wrapped in parentheses to preserve animation
   const groups = staged
     .map(({ localPath }) => `\\( "${localPath}" -coalesce -resize ${resizeArg} \\)`)
     .join(" ");
@@ -85,31 +89,45 @@ export async function combineGifsHorizontal(gifPaths, outputPath, size = 128, re
   const outDir = path.dirname(outputPath);
   await fs.mkdir(outDir, { recursive: true });
 
-  // Delay ~7 (≈70ms) looks smooth; adjust to taste.
+  // Delay 7 (~70ms) for smooth animation, optimize layers to reduce size
   const cmd = `convert ${groups} +append -set delay 7 -loop 0 -layers optimize "${outputPath}"`;
+  console.log(`🧩 [GIFComposer] ${cmd}`);
 
-  console.log(`🧩 ImageMagick: ${cmd}`);
   try {
-    await exec(cmd);
+    const { stderr } = await exec(cmd);
+    if (stderr && stderr.trim()) console.warn("⚠️ convert stderr:", stderr.trim());
   } catch (err) {
-    // Surface stderr for easier debugging
-    throw new Error(`ImageMagick convert failed: ${err.stderr || err.message}`);
+    console.error("❌ ImageMagick convert failed:", err.stderr || err.message);
+    throw err;
   } finally {
-    // Clean temp files
+    // Cleanup downloaded files
     for (const s of staged) {
-      if (s.cleanup) {
-        try { await fs.unlink(s.localPath); } catch {}
-      }
+      if (s.cleanup) try { await fs.unlink(s.localPath); } catch {}
     }
   }
 
-  // Sanity check: output exists and is non-empty
+  // Verify output file
   try {
     const stat = await fs.stat(outputPath);
-    if (!stat.size) throw new Error("Output GIF is empty");
+    if (stat.size === 0) throw new Error("Output GIF empty");
   } catch (e) {
     throw new Error(`Failed to create output GIF: ${outputPath}`);
   }
 
   return outputPath;
+}
+
+// ============================================================
+// Optional helper: remove all temp files (for debugging / cleanup)
+// ============================================================
+export async function clearTempGifs() {
+  try {
+    const files = await fs.readdir(TEMP_DIR);
+    await Promise.all(
+      files.map(f => fs.unlink(path.join(TEMP_DIR, f)).catch(() => {}))
+    );
+    console.log("🧹 Cleared temp GIFs.");
+  } catch (err) {
+    console.warn("⚠️ clearTempGifs failed:", err.message);
+  }
 }

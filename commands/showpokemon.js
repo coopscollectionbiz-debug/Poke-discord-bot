@@ -23,6 +23,7 @@ import { createSafeCollector } from "../utils/safeCollector.js";
 export const data = new SlashCommandBuilder()
   .setName("showpokemon")
   .setDescription("View your Pokémon collection with filters.")
+.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .addStringOption((opt) =>
     opt
       .setName("filter")

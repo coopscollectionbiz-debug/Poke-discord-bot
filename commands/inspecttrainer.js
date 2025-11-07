@@ -26,6 +26,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("inspecttrainer")
     .setDescription("View another user's Trainer sprite collection.")
+.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addUserOption((option) =>
       option
         .setName("user")

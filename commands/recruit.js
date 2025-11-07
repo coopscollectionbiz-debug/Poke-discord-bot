@@ -32,6 +32,7 @@ const RECRUIT_COST_CC = 100;
 export default {
   data: new SlashCommandBuilder()
     .setName("recruit")
+.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDescription("Recruit a Pokémon or Trainer! (Costs 100 CC)"),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {

@@ -3,6 +3,8 @@ import * as fsSync from "fs";
 import path from "path";
 import express from "express";
 import fetch from "node-fetch";
+import cheerio from "cheerio";
+import { decode } from "html-entities";
 import { Client, GatewayIntentBits, Collection, AttachmentBuilder, PermissionsBitField } from "discord.js";
 import { REST, Routes } from "discord.js";
 import dotenv from "dotenv";
@@ -11,6 +13,7 @@ import { getRank, getRankTiers } from "./utils/rankSystem.js";
 import { safeReply } from "./utils/safeReply.js";
 import { handleTrainerCardButtons } from "./commands/trainercard.js";
 import { enqueueSave, shutdownFlush } from "./utils/saveQueue.js";
+import { reloadUserFromDiscord, ensureUserInitialized } from "./utils/userInitializer.js";
 
 const TRAINERDATA_PATH = "./trainerData.json";
 const AUTOSAVE_INTERVAL = 1000 * 60 * 3; // 3 minutes
@@ -240,15 +243,46 @@ async function checkPokeBeach() {
     const res = await fetch("https://www.pokebeach.com/");
     const html = await res.text();
 
-    // 2️⃣ Extract latest 3 unique article URLs, titles, and thumbnails
-    const regex = /<a href="(https:\/\/www\.pokebeach\.com\/\d{4}\/[^"]+)"[^>]*>([^<]+)<\/a>[\s\S]*?<img[^>]+src="([^"]+)"/g;
+    // 2️⃣ Extract latest 3 unique article URLs, titles, and thumbnails using cheerio
+    const $ = cheerio.load(html);
     const found = [];
-    let match;
-    while ((match = regex.exec(html)) !== null) {
-      const [_, url, title, image] = match;
-      if (!found.some(a => a.url === url)) found.push({ url, title: title.trim(), image });
-      if (found.length >= 3) break;
-    }
+    const urlRegex = /https:\/\/www\.pokebeach\.com\/\d{4}\//;
+    const defaultPlaceholder = "https://www.pokebeach.com/wp-content/themes/pokebeach/images/logo.png";
+    
+    $("a[href*='www.pokebeach.com/2']").each((i, elem) => {
+      const url = $(elem).attr("href");
+      const title = $(elem).text().trim();
+      
+      // Find associated image (look for img within the same article container)
+      const $parent = $(elem).closest("article, .post, .entry, div");
+      let image = $parent.find("img").first().attr("src");
+      
+      // If no image in parent, try finding img near the link
+      if (!image) {
+        image = $(elem).find("img").first().attr("src") || 
+                $(elem).next("img").attr("src") || 
+                $(elem).parent().find("img").first().attr("src");
+      }
+      
+      // Use placeholder if no image found
+      if (!image) {
+        image = defaultPlaceholder;
+      }
+      
+      // Only add if we have a valid URL, title, and it's not a duplicate
+      if (url && title && urlRegex.test(url)) {
+        if (!found.some(a => a.url === url)) {
+          found.push({ 
+            url, 
+            title: decode(title), // Decode HTML entities in title
+            image 
+          });
+        }
+      }
+      
+      // Stop after finding 3 unique articles
+      return found.length < 3;
+    });
 
     if (found.length === 0) {
       console.log("⚠️ No PokéBeach links found.");
@@ -325,7 +359,14 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     try {
-      await command.execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord);
+      await command.execute(
+        interaction,
+        trainerData,
+        saveTrainerDataLocal,
+        saveDataToDiscord,
+        reloadUserFromDiscord,
+        ensureUserInitialized
+      );
       await saveTrainerDataLocal(trainerData);
       debouncedDiscordSave();
     } catch (error) {

@@ -3,7 +3,7 @@ import * as fsSync from "fs";
 import path from "path";
 import express from "express";
 import fetch from "node-fetch";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio"
 import { decode } from "html-entities";
 import { Client, GatewayIntentBits, Collection, AttachmentBuilder, PermissionsBitField } from "discord.js";
 import { REST, Routes } from "discord.js";

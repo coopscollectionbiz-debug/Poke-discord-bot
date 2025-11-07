@@ -18,6 +18,7 @@ import {
 import { safeReply } from "../utils/safeReply.js";
 import { createSafeCollector } from "../utils/safeCollector.js";
 import { atomicSave } from "../utils/saveManager.js";
+import { ensureUserInitialized } from "../utils/userInitializer.js";
 
 // ==========================================================
 // ⚖️ Constants
@@ -34,14 +35,14 @@ export default {
     .setName("daily")
     .setDescription("Claim your daily TP, CC, and choose a random reward!"),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     // ✅ Defer reply immediately
-    await interaction.deferReply({ flags: 64 });
+    await interaction.deferReply({ ephemeral: true });
 
     const id = interaction.user.id;
 
     // Initialize schema
-    const user = await ensureUserInitialized(id, interaction.user.username, trainerData, reloadUserFromDiscord);
+    const user = await ensureUserInitialized(id, interaction.user.username, trainerData, client);
 
     // 🕐 Cooldown check
     const cooldownCheck = validateCooldown(user.lastDaily, DAILY_COOLDOWN_MS);

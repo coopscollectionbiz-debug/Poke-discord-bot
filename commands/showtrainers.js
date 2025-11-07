@@ -63,7 +63,7 @@ export default {
   // ==========================================================
   // ⚙️ Execution
   // ==========================================================
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     await interaction.deferReply({ ephemeral: true });
 
     const userId = interaction.user.id;

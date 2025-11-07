@@ -17,6 +17,7 @@ import {
 import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
+import { ensureUserInitialized } from "../utils/userInitializer.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -59,7 +60,7 @@ export default {
   // ==========================================================
   // ⚙️ Command Execution (SafeReply Refactor)
   // ==========================================================
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     await interaction.deferReply({ ephemeral: true });
 
     const senderId = interaction.user.id;
@@ -89,8 +90,8 @@ export default {
     }
 
     // Ensure both users exist in trainerData
-    const sender = await ensureUserInitialized(senderId, interaction.user.username, trainerData, reloadUserFromDiscord);
-    const recipient = await ensureUserInitialized(receiver.id, receiver.username, trainerData, reloadUserFromDiscord);
+    const sender = await ensureUserInitialized(senderId, interaction.user.username, trainerData, client);
+    const recipient = await ensureUserInitialized(receiver.id, receiver.username, trainerData, client);
 
     let description = "";
 

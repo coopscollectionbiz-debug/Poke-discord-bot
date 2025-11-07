@@ -18,6 +18,7 @@ import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRando
 import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
+import { ensureUserInitialized } from "../utils/userInitializer.js";
 
 // ==========================================================
 // ⏱️ Constants
@@ -33,12 +34,12 @@ export default {
     .setName("recruit")
     .setDescription("Recruit a Pokémon or Trainer! (Costs 100 CC)"),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     // ✅ Defer reply immediately
-    await interaction.deferReply({ flags: 64 });
+    await interaction.deferReply({ ephemeral: true });
 
     const id = interaction.user.id;
-    const user = await ensureUserInitialized(id, interaction.user.username, trainerData, reloadUserFromDiscord);
+    const user = await ensureUserInitialized(id, interaction.user.username, trainerData, client);
 
     // ==========================================================
     // ⏱️ Check cooldown

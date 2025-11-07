@@ -457,13 +457,16 @@ async function renderFullTeamCanvas(user) {
   ctx.fillStyle = "#1e1e2f";
   ctx.fillRect(0, 0, width, height);
 
-  // LEFT SIDE: Trainer sprite (centered vertically)
+  // LEFT SIDE: Trainer sprite (larger, centered vertically)
   if (trainerPath) {
     try {
       const trainerImg = await loadImage(trainerPath);
-      const trainerX = 50;
-      const trainerY = height / 2 - trainerImg.height / 2;
-      ctx.drawImage(trainerImg, trainerX, trainerY);
+      const trainerScale = 2.5; // Increase trainer size
+      const scaledWidth = trainerImg.width * trainerScale;
+      const scaledHeight = trainerImg.height * trainerScale;
+      const trainerX = 80 - scaledWidth / 2;
+      const trainerY = height / 2 - scaledHeight / 2;
+      ctx.drawImage(trainerImg, trainerX, trainerY, scaledWidth, scaledHeight);
     } catch (err) {
       console.warn("Trainer image load failed:", err.message);
     }
@@ -480,10 +483,11 @@ async function renderFullTeamCanvas(user) {
   ctx.fillText(`TP: ${user.tp}`, 150, 450);
 
   // RIGHT SIDE: Pokémon grid (2 rows × 3 cols)
-  const gridStartX = 350;
-  const gridStartY = 50;
-  const colSpacing = 150;
-  const rowSpacing = 180;
+  const gridStartX = 360;
+  const gridStartY = 80;
+  const colSpacing = 170;
+  const rowSpacing = 200;
+  const spriteSize = 70; // Smaller pokemon sprites
 
   for (let i = 0; i < pokemonInfo.length && i < 6; i++) {
     const p = pokemonInfo[i];
@@ -501,28 +505,30 @@ async function renderFullTeamCanvas(user) {
 
     try {
       const sprite = await loadImage(spriteURL);
-      ctx.drawImage(sprite, x - 48, y, 96, 96);
+      // Draw sprite centered, with transparent background handling
+      ctx.drawImage(sprite, x - spriteSize / 2, y - 10, spriteSize, spriteSize);
     } catch (err) {
       console.warn(`Sprite failed for ${p?.name} (${p?.id}): ${err?.message}`);
       // Draw placeholder card instead of failing
       ctx.fillStyle = "#444444";
-      ctx.fillRect(x - 48, y, 96, 96);
+      ctx.fillRect(x - spriteSize / 2, y - 10, spriteSize, spriteSize);
       ctx.fillStyle = "#ffffff";
       ctx.font = "12px Arial";
       ctx.textAlign = "center";
-      ctx.fillText("?", x, y + 48);
+      ctx.fillText("?", x, y + 20);
     }
 
     // Pokémon name with ✨ if shiny
-    ctx.font = "bold 18px Arial";
+    ctx.font = "bold 16px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = hasShiny ? "#ffcb05" : "#ffffff";
-    ctx.fillText(`${hasShiny ? "✨ " : ""}${p.name}`, x, y + 115);
+    ctx.fillText(`${hasShiny ? "✨ " : ""}${p.name}`, x, y + 75);
 
-    // Rarity
-    ctx.font = "14px Arial";
-    ctx.fillStyle = "#aaaaaa";
-    ctx.fillText(`${p.rarity || "?"}`, x, y + 135);
+    // Tier (using the tier field from pokemon data)
+    ctx.font = "13px Arial";
+    ctx.fillStyle = "#bdbdbd";
+    const tierDisplay = p.tier ? p.tier.charAt(0).toUpperCase() + p.tier.slice(1) : "Unknown";
+    ctx.fillText(tierDisplay, x, y + 92);
   }
 
   return new AttachmentBuilder(canvas.toBuffer("image/png"), { name: "team_card.png" });

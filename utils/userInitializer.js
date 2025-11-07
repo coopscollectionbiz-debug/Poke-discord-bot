@@ -41,18 +41,10 @@ export async function reloadUserFromDiscord(client, userId) {
  * @returns {Promise<Object>} Initialized user object
  */
 export async function ensureUserInitialized(userId, username, trainerData, client) {
-  // 1️⃣ Try to reload from Discord to get latest state
-  const reloadedUser = await reloadUserFromDiscord(client, userId);
-  if (reloadedUser) {
-    console.log(`🔄 Using reloaded user data from Discord`);
-    trainerData[userId] = reloadedUser;
-    return trainerData[userId];
-  }
-
-  // 2️⃣ If not in Discord, check if in memory
+  // Check if in memory
   let user = trainerData[userId];
 
-  // 3️⃣ If neither, create new user
+  // If not in memory, create new user
   if (!user) {
     console.log(`🆕 Creating new user ${userId}`);
     user = createNewUser(userId, username);
@@ -60,8 +52,8 @@ export async function ensureUserInitialized(userId, username, trainerData, clien
     return user;
   }
 
-  // 4️⃣ If in memory, validate schema
-  console.log(`✏️ Validating user schema for ${userId}`);
+  // If in memory, validate schema
+  console.log(`✅ User ${userId} loaded from memory`);
   user = validateUserSchema(user, userId, username);
   trainerData[userId] = user;
   return user;

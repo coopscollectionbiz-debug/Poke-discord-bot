@@ -540,8 +540,10 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   ctx.fillStyle = "#ffcb05";
   ctx.fillText(`TP: ${user.tp}`, 100, 460);
 
-  // RIGHT SIDE: Pokémon grid (2 rows × 3 cols)
-  const gridStartX = 360;
+  // RIGHT SIDE: Pokémon grid (2 rows × 3 cols) - CENTERED
+  const gridWidth = 3 * 170 - 170; // Total width of 3 columns (340px)
+  const availableWidth = 600; // Width from x=300 to x=900
+  const gridStartX = 300 + (availableWidth - gridWidth) / 2; // Center horizontally
   const gridStartY = 80;
   const colSpacing = 170;
   const rowSpacing = 200;
@@ -562,9 +564,10 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
 
     try {
       const sprite = await loadImage(spriteURL);
+      const spriteScale = 1.5; // Scale sprites up by 50%
       
-      // Draw sprite at native size, centered with transparency
-      ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2, sprite.width, sprite.height);
+      // Draw sprite at scaled size, centered with transparency
+      ctx.drawImage(sprite, x - (sprite.width * spriteScale) / 2, y - (sprite.height * spriteScale) / 2, sprite.width * spriteScale, sprite.height * spriteScale);
     } catch (err) {
       console.warn(`Sprite failed for ${p?.name} (${p?.id}): ${err?.message}`);
       // Draw placeholder card instead of failing

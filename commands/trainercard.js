@@ -364,8 +364,32 @@ export async function showTrainerCard(interaction, user) {
       ? `${spritePaths.trainers}${user.displayedTrainer}`
       : null;
 
-    const displayed = user.displayedPokemon?.slice(0, 6) || [];
+    let displayed = user.displayedPokemon?.slice(0, 6) || [];
     const allPokemon = await getAllPokemon();
+    
+    // 🆕 AUTO-FILL TEAM FIRST: If less than 6, add owned pokemon to empty slots
+    if (displayed.length < 6) {
+      const ownedPokemonIds = Object.keys(user.pokemon || {}).filter(id => {
+        const p = user.pokemon[id];
+        return (p?.normal > 0 || p?.shiny > 0) || (typeof p === "number" && p > 0);
+      }).map(id => Number(id));
+
+      // Add owned pokemon to fill empty slots
+      for (const pokemonId of ownedPokemonIds) {
+        if (displayed.length >= 6) break;
+        if (!displayed.includes(pokemonId)) {
+          displayed.push(pokemonId);
+        }
+      }
+
+      // Save the auto-filled team
+      if (displayed.length > (user.displayedPokemon?.length || 0)) {
+        user.displayedPokemon = displayed;
+        console.log(`➕ Auto-filled team: ${displayed.length}/6 pokemon`);
+      }
+    }
+
+    // NOW calculate pokemonInfo from the auto-filled team
     const pokemonInfo = displayed
       .map(id => allPokemon.find(p => p.id === id))
       .filter(Boolean);

@@ -287,12 +287,11 @@ async function checkPokeBeach() {
       const title = titleHTML.replace(/<[^>]*>/g, '').trim();
 
       // Filter out non-articles
-      if (link && title && 
-          link.includes('/20') && // Must have a year (2024, 2025, etc)
-          title.length > 10 && // Reasonable title length
-          !link.includes('#') && // Not an anchor/comment link
-          !link.includes('comment') && // Extra safety: exclude comment URLs
-          !articles.some(a => a.link === link)) { // Not a duplicate
+     if (link && title && 
+          link.includes('/20') &&
+          title.length > 10 &&
+          !link.includes('#') &&
+          !link.includes('comment')) { // ← KEEP ONLY THESE
 
         // Decode HTML entities in title
         const decodedTitle = decode(title);

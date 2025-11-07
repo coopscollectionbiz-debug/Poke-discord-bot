@@ -393,17 +393,7 @@ async function checkPokeBeach() {
     console.log(`   📢 Posting ${articlesToPsot.length} article(s)`);
 
     for (const article of articlesToPsot) {
-      const imageUrl = article.image || "https://www.pokebeach.com/wp-content/themes/pokebeach/images/logo.png";
-
-      const embed = {
-        title: `📰 ${article.title}`,
-        url: article.link,
-        image: { url: imageUrl },
-        color: 0x0099ff,
-        footer: { text: "PokéBeach.com • Coop's Collection" }
-      };
-
-      await newsChannel.send({ embeds: [embed] });
+      await newsChannel.send(article.link);
       
       console.log(`   ✅ Posted: ${article.title.substring(0, 60)}...`);
       

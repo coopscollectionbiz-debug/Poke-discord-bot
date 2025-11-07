@@ -471,7 +471,7 @@ export async function showTrainerCard(interaction, user) {
 // CHANGE TRAINER HANDLER
 // ===========================================================
 async function handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord) {
-  const ownedTrainers = Object.keys(user.trainers || {}).filter(t => user.trainers[t]);
+  const ownedTrainers = Object.keys(user.trainers || {}).filter(t => (user.trainers[t] || 0) > 0);
   if (ownedTrainers.length === 0)
     return safeReply(interaction, { content: "❌ You don't have any trainers yet!", ephemeral: true });
 

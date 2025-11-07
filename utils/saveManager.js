@@ -158,8 +158,9 @@ export function performItemTransaction(sender, recipient, itemType, itemKey, amo
       success: true,
       type: "trainer",
       itemKey,
-      senderRemaining: Object.keys(sender.trainers).length,
-      recipientTotal: Object.keys(recipient.trainers).length
+      amount,
+      senderRemaining: sender.trainers[itemKey] || 0,
+      recipientTotal: recipient.trainers[itemKey]
     };
   }
 }

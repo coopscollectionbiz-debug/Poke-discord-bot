@@ -1,11 +1,14 @@
 // ==========================================================
-// 🕐 /daily – claim daily TP, CC, and one random reward
-// Coop's Collection Discord Bot (SafeReply Refactor + Pokemon Cache)
+// 🕐 /daily – Global Reset (Midnight UTC) + Dual Reward (Pokémon + Trainer)
+// + Epic+ Broadcast via utils/rareSightings.js
 // ==========================================================
-import { SlashCommandBuilder, ActionRowBuilder, ComponentType } from "discord.js";
-import { spritePaths } from "../spriteconfig.js";
+
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+} from "discord.js";
+import { spritePaths, rarityEmojis } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
-import { validateCooldown } from "../utils/validators.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
@@ -13,52 +16,77 @@ import {
   createSuccessEmbed,
   createPokemonRewardEmbed,
   createTrainerRewardEmbed,
-  createChoiceMenu,
 } from "../utils/embedBuilders.js";
 import { safeReply } from "../utils/safeReply.js";
-import { createSafeCollector } from "../utils/safeCollector.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { postRareSightings } from "../utils/rareSightings.js";
 
 // ==========================================================
 // ⚖️ Constants
 // ==========================================================
-const DAILY_COOLDOWN_MS = 1000 * 60 * 60 * 24;
 const DAILY_TP_REWARD = 50;
 const DAILY_CC_REWARD = 25;
 
 // ==========================================================
-// 🧩 Command definition (SafeReply Refactor + Pokemon Cache)
+// 🌍 Global Reset Helper (Midnight UTC)
+// ==========================================================
+function hasClaimedToday(user) {
+  if (!user.lastDaily) return false;
+  const last = new Date(user.lastDaily);
+  const now = new Date();
+  return (
+    last.getUTCFullYear() === now.getUTCFullYear() &&
+    last.getUTCMonth() === now.getUTCMonth() &&
+    last.getUTCDate() === now.getUTCDate()
+  );
+}
+
+// ==========================================================
+// 🧩 Command Definition
 // ==========================================================
 export default {
   data: new SlashCommandBuilder()
     .setName("daily")
-    .setDescription("Claim your daily TP, CC, and choose a random reward!"),
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    .setDescription("Claim your daily TP, CC, and receive both a Pokémon and Trainer!")
+    .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    // ✅ Defer reply immediately
     await interaction.deferReply({ ephemeral: true });
 
     const id = interaction.user.id;
-
-    // Initialize schema
     const user = await ensureUserInitialized(id, interaction.user.username, trainerData, client);
 
-    // 🕐 Cooldown check
-    const cooldownCheck = validateCooldown(user.lastDaily, DAILY_COOLDOWN_MS);
-    if (!cooldownCheck.valid) {
+    // 🕐 Global Reset Check
+    if (hasClaimedToday(user)) {
       return safeReply(interaction, {
-        content: cooldownCheck.error,
+        content: "❌ You’ve already claimed your daily reward today! Try again after **midnight UTC**.",
         ephemeral: true,
       });
     }
 
-    // 💰 Grant TP + CC
+    // 💰 Base Rewards
     user.tp += DAILY_TP_REWARD;
     user.cc += DAILY_CC_REWARD;
     user.lastDaily = Date.now();
-    
+
+    // 🎁 Generate Dual Rewards
+    const allPokemon = await getPokemonCached();
+    const flatTrainers = await getFlattenedTrainers();
+
+    const pokemonPick = selectRandomPokemon(allPokemon.filter(p => p.generation <= 5));
+    const trainerPick = selectRandomTrainer(flatTrainers);
+    const shiny = rollForShiny(user.tp || 0);
+
+    // Update user data
+    user.pokemon ??= {};
+    user.pokemon[pokemonPick.id] ??= { normal: 0, shiny: 0 };
+    shiny ? user.pokemon[pokemonPick.id].shiny++ : user.pokemon[pokemonPick.id].normal++;
+
+    user.trainers ??= {};
+    user.trainers[trainerPick.filename] = (user.trainers[trainerPick.filename] || 0) + 1;
+
+    // 💾 Save
     try {
       await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
     } catch (err) {
@@ -69,108 +97,30 @@ export default {
       });
     }
 
-    // 🎁 Prompt for bonus
-    const menu = createChoiceMenu("daily_type", "Choose your bonus!", [
-      { label: "Pokémon", value: "pokemon", emoji: "🐾" },
-      { label: "Trainer", value: "trainer", emoji: "🎭" },
-    ]);
+    // 🖼️ Sprites
+    const pokemonSprite = `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pokemonPick.id}.gif`;
+    const trainerSprite = `${spritePaths.trainers}${trainerPick.filename}.png`;
 
-    const embed = createSuccessEmbed(
+    // 🧱 Embeds
+    const successEmbed = createSuccessEmbed(
       "🎁 Daily Claimed!",
-      `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**.\nChoose your bonus:`
+      `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**!\n` +
+      `You also received both a Pokémon and a Trainer reward!`
     );
 
-   await interaction.editReply({
-  embeds: [embed],
-  components: [new ActionRowBuilder().addComponents(menu)],
-});
+    const pokemonEmbed = createPokemonRewardEmbed(pokemonPick, shiny, pokemonSprite);
+    const trainerEmbed = createTrainerRewardEmbed(trainerPick, trainerSprite);
 
-
-    const collector = createSafeCollector(
-      interaction,
-      {
-        filter: i => i.user.id === id,
-        componentType: ComponentType.StringSelect,
-        time: 120000
-      },
-      "daily"
-    );
-
-    let processed = false;
-
-    collector.on("collect", async (i) => {
-      if (processed) return;
-      processed = true;
-      collector.stop();
-      if (i.values[0] === "pokemon") {
-        await giveRandomPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord);
-      } else {
-        await giveRandomTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord);
-      }
+    // 🪩 Send ephemeral result to user
+    await interaction.editReply({
+      embeds: [successEmbed, pokemonEmbed, trainerEmbed],
+      components: [],
     });
 
-    collector.on("end", async (_, reason) => {
-      if (reason === "time") {
-        await safeReply(interaction, {
-          content: "❌ Time's up – try again later!",
-          embeds: [],
-          components: [],
-          ephemeral: true,
-        }).catch(() => {});
-      }
-    });
+    // ======================================================
+    // 🌟 Rare Sightings Broadcast (Epic+)
+    // ======================================================
+    await postRareSightings(client, pokemonPick, interaction.user, true, shiny);
+    await postRareSightings(client, trainerPick, interaction.user, false, false);
   },
 };
-
-// ==========================================================
-// 🐾 Pokémon reward - SafeReply integrated + Pokemon Cache
-// ==========================================================
-async function giveRandomPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-  const allPokemon = await getPokemonCached();
-  const pool = allPokemon.filter((p) => p.generation <= 5);
-  const pick = selectRandomPokemon(pool);
-  const shiny = rollForShiny(user.tp || 0);
-
-  const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
-  shiny ? record.shiny++ : record.normal++;
-  user.pokemon[pick.id] = record;
-
-  try {
-    await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-  } catch (err) {
-    console.error("❌ Failed to save pokemon reward:", err);
-    return safeReply(i, {
-      content: "❌ Failed to save reward. Please try again.",
-      ephemeral: true,
-    });
-  }
-
-  const spriteUrl = `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pick.id}.gif`;
-  const embed = createPokemonRewardEmbed(pick, shiny, spriteUrl);
-
-  await i.update({ embeds: [embed], components: [] });
-}
-
-// ==========================================================
-// 🎭 Trainer reward - SafeReply integrated
-// ==========================================================
-async function giveRandomTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-  const flatTrainers = await getFlattenedTrainers();
-  const pick = selectRandomTrainer(flatTrainers);
-  user.trainers[pick.filename] = (user.trainers[pick.filename] || 0) + 1;
-
-  try {
-    await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-  } catch (err) {
-    console.error("❌ Failed to save trainer reward:", err);
-    return safeReply(i, {
-      content: "❌ Failed to save reward. Please try again.",
-      ephemeral: true,
-    });
-  }
-
-  const spriteUrl = `${spritePaths.trainers}${pick.filename}`;
-  const embed = createTrainerRewardEmbed(pick, spriteUrl);
-
-  await i.update({ embeds: [embed], components: [] });
-}

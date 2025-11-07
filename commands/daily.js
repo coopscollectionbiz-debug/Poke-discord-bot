@@ -79,11 +79,11 @@ export default {
       `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**.\nChoose your bonus:`
     );
 
-    await safeReply(interaction, {
-      embeds: [embed],
-      components: [new ActionRowBuilder().addComponents(menu)],
-      ephemeral: true,
-    });
+   await interaction.editReply({
+  embeds: [embed],
+  components: [new ActionRowBuilder().addComponents(menu)],
+});
+
 
     const collector = createSafeCollector(
       interaction,

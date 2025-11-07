@@ -68,7 +68,7 @@ export async function execute(interaction, trainerData) {
     });
   }
 
-  await interaction.deferReply({ flags: 64 });
+  await interaction.deferReply({ ephemeral: true });
 
   // =============================================
   // FILTER DATA - Using helper for Pokemon data + cache

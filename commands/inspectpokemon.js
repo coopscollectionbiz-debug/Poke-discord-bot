@@ -23,7 +23,7 @@ export default {
         .setRequired(true)
     ),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     await interaction.deferReply({ ephemeral: true });
 
     const input = interaction.options.getString("name").trim();

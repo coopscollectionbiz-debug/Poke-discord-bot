@@ -7,6 +7,7 @@ import { safeReply } from "../utils/safeReply.js";
 import { findPokemonByName, getFlattenedTrainers } from "../utils/dataLoader.js";
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
+import { ensureUserInitialized } from "../utils/userInitializer.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -23,7 +24,7 @@ export default {
     .addBooleanOption(option => option.setName("shiny").setDescription("Add as shiny (for Pokémon only).").setRequired(false))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     // ✅ Defer reply immediately
     await interaction.deferReply({ ephemeral: true });
 
@@ -35,7 +36,7 @@ export default {
     const type = interaction.options.getString("type");
     const name = interaction.options.getString("name");
     const shiny = interaction.options.getBoolean("shiny") || false;
-    const userData = await ensureUserInitialized(targetUser.id, targetUser.username, trainerData, reloadUserFromDiscord);
+    const userData = await ensureUserInitialized(targetUser.id, targetUser.username, trainerData, client);
 
     try {
       if (type === "pokemon") {

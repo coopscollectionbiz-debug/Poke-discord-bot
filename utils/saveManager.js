@@ -129,7 +129,8 @@ export function performItemTransaction(sender, recipient, itemType, itemKey, amo
     };
   } else {
     // Trainer transaction
-    if (!sender.trainers[itemKey]) {
+    const senderCount = sender.trainers[itemKey] || 0;
+    if (senderCount < 1) {
       throw new Error(`Sender doesn't own trainer ${itemKey}`);
     }
 
@@ -138,19 +139,28 @@ export function performItemTransaction(sender, recipient, itemType, itemKey, amo
       throw new Error("Cannot transfer your only trainer sprite");
     }
 
-    // Perform transfer
-    delete sender.trainers[itemKey];
+    // Perform transfer (use numeric counts)
+    sender.trainers[itemKey] = senderCount - amount;
+    
+    // Remove if count reaches 0
+    if (sender.trainers[itemKey] <= 0) {
+      delete sender.trainers[itemKey];
+    }
+    
     if (!recipient.trainers) {
       recipient.trainers = {};
     }
-    recipient.trainers[itemKey] = true;
+    
+    const recipientCount = recipient.trainers[itemKey] || 0;
+    recipient.trainers[itemKey] = recipientCount + amount;
 
     return {
       success: true,
       type: "trainer",
       itemKey,
-      senderRemaining: Object.keys(sender.trainers).length,
-      recipientTotal: Object.keys(recipient.trainers).length
+      amount,
+      senderRemaining: sender.trainers[itemKey] || 0,
+      recipientTotal: recipient.trainers[itemKey]
     };
   }
 }

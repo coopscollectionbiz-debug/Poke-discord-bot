@@ -35,15 +35,26 @@ export default {
     const userId = interaction.user.id;
     const username = interaction.user.username;
 
+    console.log(`📋 User lookup for ${username}`);
+
     const user = await ensureUserInitialized(userId, username, trainerData, client);
 
+    console.log(`📋 User state:`, {
+      onboardingComplete: user.onboardingComplete,
+      onboardingStage: user.onboardingStage
+    });
+
     if (!user.onboardingComplete) {
-      if (!user.onboardingStage || user.onboardingStage === "starter_selection")
+      if (!user.onboardingStage || user.onboardingStage === "starter_selection") {
+        console.log(`🎪 Showing starter selection`);
         return starterSelection(interaction, user, trainerData, saveDataToDiscord);
-      else if (user.onboardingStage === "trainer_selection")
+      } else if (user.onboardingStage === "trainer_selection") {
+        console.log(`🧍 Showing trainer selection`);
         return trainerSelection(interaction, user, trainerData, saveDataToDiscord);
+      }
     }
 
+    console.log(`✅ Onboarding complete - showing trainer card`);
     await showTrainerCard(interaction, user);
   }
 };
@@ -343,7 +354,7 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
 }
 
 // ===========================================================
-// 🧑 SHOW TRAINER CARD
+// 🧑 SHOW TRAINER CARD (EMBED + LEAD POKEMON SPRITE)
 // ===========================================================
 export async function showTrainerCard(interaction, user) {
   try {
@@ -360,12 +371,21 @@ export async function showTrainerCard(interaction, user) {
       .map(id => allPokemon.find(p => p.id === id))
       .filter(Boolean);
 
+    // NEW: Display first pokemon sprite on the embed
+    let leadPokemonImage = null;
+    if (pokemonInfo.length > 0) {
+      const leadPokemon = pokemonInfo[0];
+      const hasShiny = user.pokemon[leadPokemon.id]?.shiny > 0;
+      leadPokemonImage = hasShiny
+        ? `${spritePaths.shiny}${leadPokemon.id}.gif`
+        : `${spritePaths.pokemon}${leadPokemon.id}.gif`;
+    }
+
     const rank = getRank(user.tp);
     const pokemonOwned = Object.keys(user.pokemon || {}).length;
     const shinyCount = Object.values(user.pokemon || {}).filter(p => p.shiny > 0).length;
     const trainerCount = Object.keys(user.trainers || {}).length;
 
-    // Team list with ✨ indicator for shiny
     const teamDisplay = pokemonInfo.length > 0
       ? pokemonInfo.map((p, i) => {
           const shinyOwned = user.pokemon[p.id]?.shiny > 0;
@@ -374,7 +394,6 @@ export async function showTrainerCard(interaction, user) {
         }).join("\n")
       : "No Pokémon selected";
 
-    // === Trainer Card Embed ===
     const embed = new EmbedBuilder()
       .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })
       .setColor(0xffcb05)
@@ -387,7 +406,11 @@ export async function showTrainerCard(interaction, user) {
 
     if (trainerPath) embed.setThumbnail(trainerPath);
 
-    // === Buttons - ONLY "Show Full Team" ===
+    // NEW: Add lead pokemon image
+    if (leadPokemonImage) {
+      embed.setImage(leadPokemonImage);
+    }
+
     const showTeamRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("show_full_team")
@@ -474,11 +497,20 @@ async function renderFullTeamCanvas(user) {
       ? `${spritePaths.shiny}${p.id}.gif`
       : `${spritePaths.pokemon}${p.id}.gif`;
 
+    console.log(`Loading sprite for ${p.name} (ID: ${p.id}): ${spriteURL}`);
+
     try {
       const sprite = await loadImage(spriteURL);
       ctx.drawImage(sprite, x - 48, y, 96, 96);
     } catch (err) {
-      console.warn(`Sprite failed: ${p.name}`, err.message);
+      console.warn(`Sprite failed for ${p?.name} (${p?.id}): ${err?.message}`);
+      // Draw placeholder card instead of failing
+      ctx.fillStyle = "#444444";
+      ctx.fillRect(x - 48, y, 96, 96);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "12px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("?", x, y + 48);
     }
 
     // Pokémon name with ✨ if shiny
@@ -493,7 +525,7 @@ async function renderFullTeamCanvas(user) {
     ctx.fillText(`${p.rarity || "?"}`, x, y + 135);
   }
 
-  return new AttachmentBuilder(await canvas.encode("png"), { name: "team_card.png" });
+  return new AttachmentBuilder(canvas.toBuffer("image/png"), { name: "team_card.png" });
 }
 
 // ===========================================================
@@ -503,23 +535,22 @@ export async function handleTrainerCardButtons(interaction, trainerData, saveDat
   const userId = interaction.user.id;
   const user = trainerData[userId];
 
-  if (!user)
-    return safeReply(interaction, { content: "❌ Could not find your trainer data.", ephemeral: true });
+  if (!user) {
+    await interaction.reply({ content: "❌ Could not find your trainer data.", ephemeral: true });
+    return;
+  }
 
-  switch (interaction.customId) {
-    case "show_full_team": {
-      await interaction.deferReply({ ephemeral: true });
-      try {
-        const image = await renderFullTeamCanvas(user);
-        await interaction.editReply({ content: "🖼️ **Full Team View**", files: [image] });
-      } catch (err) {
-        console.error("renderFullTeamCanvas error:", err);
-        await interaction.editReply({ content: "❌ Failed to render team canvas.", ephemeral: true });
-      }
-      break;
+  if (interaction.customId === "show_full_team") {
+    await interaction.deferReply({ ephemeral: true });
+    
+    try {
+      const image = await renderFullTeamCanvas(user);
+      await interaction.editReply({ content: "🖼️ **Full Team View**", files: [image] });
+    } catch (err) {
+      console.error("❌ renderFullTeamCanvas error:", err.message);
+      await interaction.editReply({ content: `❌ Failed to render: ${err.message}` });
     }
-
-    default:
-      await safeReply(interaction, { content: "❌ Unknown button action.", ephemeral: true });
+  } else {
+    await interaction.reply({ content: "❌ Unknown button action.", ephemeral: true });
   }
 }

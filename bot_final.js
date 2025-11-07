@@ -21,6 +21,7 @@ const PORT = process.env.PORT || 10000;
 let discordSaveCount = 0;
 let commandSaveQueue = null;
 let isReady = false;
+let isSaving = false; // 🛡️ Global save lock to prevent race conditions
 const startTime = Date.now();
 
 const RANK_TIERS = getRankTiers();
@@ -64,6 +65,20 @@ async function saveTrainerDataLocal(data) {
 }
 
 async function saveDataToDiscord(data) {
+  // 🛡️ Prevent concurrent saves - use global lock
+  if (isSaving) {
+    console.log("⏳ Save already in progress, queuing...");
+    return new Promise(resolve => {
+      const checkInterval = setInterval(() => {
+        if (!isSaving) {
+          clearInterval(checkInterval);
+          resolve(saveDataToDiscord(data));
+        }
+      }, 100);
+    });
+  }
+
+  isSaving = true;
   try {
     const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
     const buffer = Buffer.from(JSON.stringify(data, null, 2));
@@ -72,6 +87,8 @@ async function saveDataToDiscord(data) {
     console.log(`✅ Discord #${discordSaveCount}`);
   } catch (err) {
     console.error("❌ Discord save failed:", err.message);
+  } finally {
+    isSaving = false;
   }
 }
 
@@ -232,7 +249,6 @@ process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 // ===========================================================
 // 🏖️ IMPROVED POKEBEACH NEWS SCRAPER (v2)
 // Checks Discord message history to prevent duplicates on restart
-// Replace the current checkPokeBeach() function with this
 // ===========================================================
 
 async function checkPokeBeach() {
@@ -372,27 +388,29 @@ async function checkPokeBeach() {
 
     console.log(`   📢 Found ${newArticles.length} new article(s)!`);
 
-    // 6️⃣ Only post the NEWEST article (first one in the newArticles array)
-    const articleToPost = newArticles[0];
+    // 6️⃣ Post the 3 most recent articles
+    const articlesToPsot = newArticles.slice(0, 3);
     
-    if (newArticles.length > 1) {
-      console.log(`   ℹ️ Posting only the newest (${newArticles.length - 1} older articles skipped)`);
+    console.log(`   📢 Posting ${articlesToPsot.length} article(s)`);
+
+    for (const article of articlesToPsot) {
+      const imageUrl = article.image || "https://www.pokebeach.com/wp-content/themes/pokebeach/images/logo.png";
+
+      const embed = {
+        title: `📰 ${article.title}`,
+        url: article.link,
+        image: { url: imageUrl },
+        color: 0x0099ff,
+        footer: { text: "PokéBeach.com • Coop's Collection" }
+      };
+
+      await newsChannel.send({ embeds: [embed] });
+      
+      console.log(`   ✅ Posted: ${article.title.substring(0, 60)}...`);
+      
+      // Small delay between posts
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-
-    // Use placeholder if no image found
-    const imageUrl = articleToPost.image || "https://www.pokebeach.com/wp-content/themes/pokebeach/images/logo.png";
-
-    const embed = {
-      title: `📰 ${articleToPost.title}`,
-      url: articleToPost.link,
-      image: { url: imageUrl },
-      color: 0x0099ff,
-      footer: { text: "PokéBeach.com • Coop's Collection" }
-    };
-
-    await newsChannel.send({ embeds: [embed] });
-    
-    console.log(`   ✅ Posted: ${articleToPost.title.substring(0, 60)}...`);
 
   } catch (err) {
     console.error("❌ PokéBeach scrape failed:", err.message);
@@ -457,10 +475,10 @@ client.on("interactionCreate", async (interaction) => {
     try {
       // Route trainercard buttons to the handler
       if (interaction.customId.startsWith("show_full_team") ||
-    interaction.customId.startsWith("refresh_card") || 
-    interaction.customId.startsWith("share_public") ||
-    interaction.customId.startsWith("change_trainer") ||
-    interaction.customId.startsWith("change_pokemon")) {
+          interaction.customId.startsWith("refresh_card") || 
+          interaction.customId.startsWith("share_public") ||
+          interaction.customId.startsWith("change_trainer") ||
+          interaction.customId.startsWith("change_pokemon")) {
         await handleTrainerCardButtons(interaction, trainerData, saveDataToDiscord);
         await saveTrainerDataLocal(trainerData);
         debouncedDiscordSave();

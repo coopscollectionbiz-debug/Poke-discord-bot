@@ -9,11 +9,16 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ComponentType
+  ComponentType,
+  PermissionFlagsBits // ✅ Added import
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
-import { createPaginationButtons, calculateTotalPages, getPage } from "../utils/pagination.js";
+import {
+  createPaginationButtons,
+  calculateTotalPages,
+  getPage
+} from "../utils/pagination.js";
 import { safeReply } from "../utils/safeReply.js";
 import { createSafeCollector } from "../utils/safeCollector.js";
 
@@ -23,7 +28,7 @@ import { createSafeCollector } from "../utils/safeCollector.js";
 export const data = new SlashCommandBuilder()
   .setName("showpokemon")
   .setDescription("View your Pokémon collection with filters.")
-.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator) // ✅ Admin-only for testing
   .addStringOption((opt) =>
     opt
       .setName("filter")
@@ -150,10 +155,10 @@ export async function execute(interaction, trainerData) {
   // COLLECTOR
   // =============================================
   const collector = createSafeCollector(
-  interaction,
-  { componentType: ComponentType.Button, time: 120000 },
-  "showpokemon"
-);
+    interaction,
+    { componentType: ComponentType.Button, time: 120000 },
+    "showpokemon"
+  );
 
   collector.on("collect", async (i) => {
     if (i.user.id !== userId)

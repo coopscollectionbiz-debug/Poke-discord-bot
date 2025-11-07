@@ -3,7 +3,7 @@
 // Coop's Collection Discord Bot
 // ==========================================================
 
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
@@ -25,11 +25,10 @@ const QUEST_CC_REWARD = 50;
 export default {
   data: new SlashCommandBuilder()
     .setName("quest")
-.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDescription("Complete a quest and receive a random reward! (70% Pokémon, 30% Trainer, +50 CC)"),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    // ✅ Defer reply immediately
     await interaction.deferReply({ ephemeral: true });
 
     const id = interaction.user.id;
@@ -70,10 +69,8 @@ export default {
       shiny ? record.shiny++ : record.normal++;
       user.pokemon[pick.id] = record;
 
-      // 💰 Reward CC
       user.cc = (user.cc || 0) + QUEST_CC_REWARD;
 
-      // ✅ Atomic save
       try {
         await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
       } catch (err) {
@@ -108,12 +105,11 @@ export default {
     else {
       const flatTrainers = await getFlattenedTrainers();
       const pick = flatTrainers[Math.floor(Math.random() * flatTrainers.length)];
-      const file = getTrainerKey(pick);  // ✅ Use standardized key handler
+      const file = getTrainerKey(pick);
 
       user.trainers[file] = (user.trainers[file] || 0) + 1;
       user.cc = (user.cc || 0) + QUEST_CC_REWARD;
 
-      // ✅ Atomic save
       try {
         await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
       } catch (err) {

@@ -3,7 +3,7 @@
 // Coop's Collection Discord Bot
 // ==========================================================
 
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { findPokemonByName } from "../utils/dataLoader.js";
 import { validateNameQuery } from "../utils/validators.js";
@@ -16,7 +16,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("inspectpokemon")
     .setDescription("Inspect details about a specific Pokémon by name or ID.")
-.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addStringOption((option) =>
       option
         .setName("name")

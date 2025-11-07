@@ -522,9 +522,9 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // Background - only for left side (trainer, avatar, rank, TP area)
-  ctx.fillStyle = "#1e1e2f";
-  ctx.fillRect(0, 0, 300, height); // Only fill left 300px
+  // Background - Discord embed color for entire canvas
+  ctx.fillStyle = "#2F3136";
+  ctx.fillRect(0, 0, width, height);
 
   // LEFT SIDE: Trainer sprite (larger, centered horizontally and vertically in left 300px)
   if (trainerPath) {
@@ -534,7 +534,7 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
       const scaledWidth = trainerImg.width * trainerScale;
       const scaledHeight = trainerImg.height * trainerScale;
       const trainerX = 150 - scaledWidth / 2; // Center horizontally in 300px space
-      const trainerY = 80 - scaledHeight / 2; // Position in upper area
+      const trainerY = 120 - scaledHeight / 2; // Moved closer to avatar
       ctx.drawImage(trainerImg, trainerX, trainerY, scaledWidth, scaledHeight);
     } catch (err) {
       console.warn("Trainer image load failed:", err.message);
@@ -545,17 +545,16 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   ctx.font = "bold 14px Arial";
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.fillText(trainerInfo.name, 150, 170);
+  ctx.fillText(trainerInfo.name, 150, 200);
 
   ctx.font = "12px Arial";
   ctx.fillStyle = "#bdbdbd";
-  ctx.fillText(trainerInfo.rarity, 150, 185);
+  ctx.fillText(trainerInfo.rarity, 150, 215);
 
   // CENTER-LEFT SIDE: Discord Avatar + Username (centered between trainer text and rank)
-  // Trainer text ends at ~185, Rank starts at 430, so center = (185 + 430) / 2 = 307.5
   const avatarX = 150; // Center of 300px left space
-  const avatarY = 285; // Centered vertically between trainer and rank
-  const avatarSize = 60;
+  const avatarY = 325; // Moved down closer to rank
+  const avatarSize = 70; // Increased from 60
 
   if (avatarURL) {
     try {
@@ -581,10 +580,10 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   }
 
   // Draw username below avatar
-  ctx.font = "bold 14px Arial";
+  ctx.font = "bold 15px Arial";
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.fillText(username, avatarX, avatarY + 45);
+  ctx.fillText(username, avatarX, avatarY + 50);
 
   // Draw rank + TP below username (centered in left 300px space)
   ctx.font = "bold 24px Arial";
@@ -600,7 +599,7 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   const gridWidth = 3 * 170 - 170; // Total width of 3 columns (340px)
   const availableWidth = 600; // Width from x=300 to x=900
   const gridStartX = 300 + (availableWidth - gridWidth) / 2; // Center horizontally
-  const gridStartY = 80;
+  const gridStartY = 125; // Moved down closer to bottom
   const colSpacing = 170;
   const rowSpacing = 200;
 
@@ -640,13 +639,13 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
     ctx.textAlign = "center";
     ctx.fillStyle = hasShiny ? "#ffcb05" : "#ffffff";
     const shinyLabel = hasShiny ? "Shiny " : "";
-    ctx.fillText(`${shinyLabel}${p.name}`, x, y + 115); // Increased from y + 70
+    ctx.fillText(`${shinyLabel}${p.name}`, x, y + 60); // Moved closer to sprite
 
     // Tier (using the tier field from pokemon data)
     ctx.font = "13px Arial";
     ctx.fillStyle = "#bdbdbd";
     const tierDisplay = p.tier ? p.tier.charAt(0).toUpperCase() + p.tier.slice(1) : "Unknown";
-    ctx.fillText(tierDisplay, x, y + 135); // Increased from y + 87
+    ctx.fillText(tierDisplay, x, y + 80); // Moved closer to sprite
   }
 
   return new AttachmentBuilder(canvas.toBuffer("image/png"), { name: "team_card.png" });

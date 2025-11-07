@@ -418,9 +418,14 @@ export async function showTrainerCard(interaction, user) {
     const trainerCount = Object.keys(user.trainers || {}).length;
 
     const leadPokemon = pokemonInfo[0];
-    const teamDisplay = pokemonInfo.length > 0 
-      ? pokemonInfo.map((p, i) => `${i === 0 ? "⭐" : `${i + 1}.`} **${p.name}** (#${p.id})`).join("\n")
-      : "No Pokémon selected";
+    const teamDisplay = pokemonInfo.length > 0
+  ? pokemonInfo
+      .map((p, i) => {
+        const prefix = i === 0 ? "⭐ **Lead:**" : `${i + 1}.`;
+        return `${prefix} **${p.name}** 🔍 (#${p.id})`;
+      })
+      .join("\n")
+  : "No Pokémon selected";
 
     // === Embed with animated lead Pokémon ===
     const embed = new EmbedBuilder()
@@ -449,23 +454,24 @@ export async function showTrainerCard(interaction, user) {
       new ButtonBuilder().setCustomId("share_public").setLabel("Share Public").setEmoji("🌐").setStyle(ButtonStyle.Success)
     );
 
-    // 🔍 Pokédex buttons for other team Pokémon
-    const pokedexButtons = pokemonInfo.slice(1).map(p =>
-      new ButtonBuilder()
-        .setCustomId(`pokedex_${p.name.toLowerCase()}`)
-        .setLabel(`🔍 ${p.name}`)
-        .setStyle(ButtonStyle.Secondary)
-    );
+    // 🔍 Inline Pokédex buttons (for all team Pokémon)
+const pokedexButtons = pokemonInfo.map(p =>
+  new ButtonBuilder()
+    .setCustomId(`pokedex_${p.name.toLowerCase()}`)
+    .setEmoji("🔍")
+    .setLabel(p.name)
+    .setStyle(p === pokemonInfo[0] ? ButtonStyle.Success : ButtonStyle.Secondary)
+);
 
-    const pokedexRows = [];
-    for (let i = 0; i < pokedexButtons.length; i += 5)
-      pokedexRows.push(new ActionRowBuilder().addComponents(pokedexButtons.slice(i, i + 5)));
+const pokedexRows = [];
+for (let i = 0; i < pokedexButtons.length; i += 3)
+  pokedexRows.push(new ActionRowBuilder().addComponents(pokedexButtons.slice(i, i + 3)));
 
-    await safeReply(interaction, {
-      embeds: [embed],
-      components: [...pokedexRows, controlRow],
-      ephemeral: true
-    });
+await safeReply(interaction, {
+  embeds: [embed],
+  components: [...pokedexRows, controlRow],
+  ephemeral: true
+});
 
     console.log(`✅ Trainer card displayed`);
 
@@ -489,11 +495,14 @@ export async function showTrainerCard(interaction, user) {
           return;
         }
         try {
-          await pokedexCmd.execute(i, trainerData);
-        } catch (err) {
-          console.error("❌ Pokédex command error:", err);
-          await safeReply(i, { content: "⚠️ Failed to open Pokédex entry.", ephemeral: true });
-        }
+  if (!i.options) i.options = {};
+  i.options.getString = () => pokemonName; // Mock interaction input
+  await pokedexCmd.execute(i); // Match real /pokedex signature
+} catch (err) {
+  console.error("❌ Pokédex command error:", err);
+  await safeReply(i, { content: "⚠️ Failed to open Pokédex entry.", ephemeral: true });
+}
+
       }
     });
 

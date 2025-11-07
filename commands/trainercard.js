@@ -464,8 +464,8 @@ export async function showTrainerCard(interaction, user) {
       .setColor(0xffcb05)
       .setDescription(
         `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}\n\n` +
-        `**Team:**\n${teamDisplay}\n\n` +
-        `📊 **Pokémon Owned:** ${pokemonOwned}\n✨ **Shiny Pokémon:** ${shinyCount}\n🧍 **Trainers:** ${trainerCount}`
+        `📊 **Pokémon Owned:** ${pokemonOwned}\n✨ **Shiny Pokémon:** ${shinyCount}\n🧍 **Trainers:** ${trainerCount}\n\n` +
+        `**Team:**\n${teamDisplay}`
       )
       .setFooter({ text: "Coop's Collection • /trainercard" });
 

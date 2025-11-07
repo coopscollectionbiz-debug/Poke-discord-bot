@@ -58,7 +58,10 @@ async function processSaveQueue() {
   const batch = saveQueue.slice();
   saveQueue = [];
 
-  // Use the latest data (all saves have the same data reference typically)
+  // Use the latest data from the batch
+  // Note: In this bot, all commands share the same trainerData reference,
+  // so all queued saves contain the same object with the latest state.
+  // If different data objects are enqueued, only the last one is persisted.
   const latestItem = batch[batch.length - 1];
   const { data } = latestItem;
 
@@ -110,11 +113,21 @@ export async function shutdownFlush(timeoutMs = 10000) {
 
   // Create flush promise
   const flushPromise = (async () => {
-    while (saveQueue.length > 0 || isFlushing) {
+    let attempts = 0;
+    const maxAttempts = 5;
+    
+    while ((saveQueue.length > 0 || isFlushing) && attempts < maxAttempts) {
       await processSaveQueue();
       // Small delay to ensure flush completes
       await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
     }
+    
+    if (attempts >= maxAttempts && saveQueue.length > 0) {
+      console.warn(`⚠️ Max flush attempts (${maxAttempts}) reached with ${saveQueue.length} saves remaining`);
+      return false;
+    }
+    
     return true;
   })();
 

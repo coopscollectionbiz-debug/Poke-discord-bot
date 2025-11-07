@@ -45,8 +45,9 @@ export async function atomicWrite(filePath, content) {
       // Clean up temp file on failure
       try {
         await fs.unlink(tmpPath);
-      } catch {
-        // Ignore cleanup errors
+      } catch (cleanupErr) {
+        // Log cleanup failures for debugging
+        console.debug(`⚠️ Failed to cleanup temp file ${tmpPath}:`, cleanupErr.message);
       }
       throw err;
     }

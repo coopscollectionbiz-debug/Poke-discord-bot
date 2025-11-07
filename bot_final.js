@@ -246,6 +246,8 @@ async function checkPokeBeach() {
     // 2️⃣ Extract latest 3 unique article URLs, titles, and thumbnails using cheerio
     const $ = cheerio.load(html);
     const found = [];
+    const urlRegex = /https:\/\/www\.pokebeach\.com\/\d{4}\//;
+    const defaultPlaceholder = "https://www.pokebeach.com/wp-content/themes/pokebeach/images/logo.png";
     
     $("a[href*='www.pokebeach.com/2']").each((i, elem) => {
       const url = $(elem).attr("href");
@@ -262,8 +264,13 @@ async function checkPokeBeach() {
                 $(elem).parent().find("img").first().attr("src");
       }
       
-      // Only add if we have a valid URL, title, and image, and it's not a duplicate
-      if (url && title && image && url.match(/https:\/\/www\.pokebeach\.com\/\d{4}\//)) {
+      // Use placeholder if no image found
+      if (!image) {
+        image = defaultPlaceholder;
+      }
+      
+      // Only add if we have a valid URL, title, and it's not a duplicate
+      if (url && title && urlRegex.test(url)) {
         if (!found.some(a => a.url === url)) {
           found.push({ 
             url, 

@@ -477,11 +477,11 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // Background
+  // Background - only for left side (trainer, avatar, rank, TP area)
   ctx.fillStyle = "#1e1e2f";
-  ctx.fillRect(0, 0, width, height);
+  ctx.fillRect(0, 0, 300, height); // Only fill left 300px
 
-  // LEFT SIDE: Trainer sprite (larger, centered vertically)
+  // LEFT SIDE: Trainer sprite (larger, positioned higher)
   if (trainerPath) {
     try {
       const trainerImg = await loadImage(trainerPath);
@@ -489,7 +489,7 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
       const scaledWidth = trainerImg.width * trainerScale;
       const scaledHeight = trainerImg.height * trainerScale;
       const trainerX = 80 - scaledWidth / 2;
-      const trainerY = height / 2 - scaledHeight / 2;
+      const trainerY = 80; // Position at top instead of center
       ctx.drawImage(trainerImg, trainerX, trainerY, scaledWidth, scaledHeight);
     } catch (err) {
       console.warn("Trainer image load failed:", err.message);
@@ -498,7 +498,7 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
 
   // CENTER-LEFT SIDE: Discord Avatar + Username
   const avatarX = 80;
-  const avatarY = 300;
+  const avatarY = 360; // Moved down to avoid trainer sprite
   const avatarSize = 60;
 
   if (avatarURL) {
@@ -534,11 +534,11 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   ctx.font = "bold 24px Arial";
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.fillText(`Rank: ${rank}`, 80, 420);
+  ctx.fillText(`Rank: ${rank}`, 100, 430);
 
   ctx.font = "bold 24px Arial";
   ctx.fillStyle = "#ffcb05";
-  ctx.fillText(`TP: ${user.tp}`, 80, 450);
+  ctx.fillText(`TP: ${user.tp}`, 100, 460);
 
   // RIGHT SIDE: Pokémon grid (2 rows × 3 cols)
   const gridStartX = 360;

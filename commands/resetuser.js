@@ -2,6 +2,7 @@ import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { createSuccessEmbed } from "../utils/embedBuilders.js";
 import { atomicSave } from "../utils/saveManager.js";
+import { ensureUserInitialized } from "../utils/userInitializer.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -10,7 +11,7 @@ export default {
     .addUserOption(option => option.setName("user").setDescription("The user to reset").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     // ✅ Defer reply immediately
     await interaction.deferReply({ ephemeral: true });
 
@@ -21,7 +22,7 @@ export default {
     const targetUser = interaction.options.getUser("user");
     
     // ✅ Use ensureUserInitialized to get latest state
-    const targetData = await ensureUserInitialized(targetUser.id, targetUser.username, trainerData, reloadUserFromDiscord);
+    const targetData = await ensureUserInitialized(targetUser.id, targetUser.username, trainerData, client);
     
     if (!targetData) {
       return safeReply(interaction, { content: `⛔ ${targetUser.username} does not have a trainer profile.`, ephemeral: true });

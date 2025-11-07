@@ -20,7 +20,7 @@ export default {
   // ==========================================================
   // ⚙️ Command Execution (SafeReply Refactor)
   // ==========================================================
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     // ✅ Defer reply immediately to prevent timeout
     await interaction.deferReply({ ephemeral: true });
 

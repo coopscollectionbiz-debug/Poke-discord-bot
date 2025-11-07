@@ -40,7 +40,7 @@ import {
   selectRandomPokemonForUser,
   selectRandomTrainerForUser,
 } from "./utils/weightedRandom.js";
-import { rollForShiny } from "./utils/shinyOdds.js";
+import { rollForShiny } from "./shinyOdds.js";
 import { rarityEmojis, spritePaths } from "./spriteconfig.js";
 import { postRareSightings } from "./utils/rareSightings.js";
 

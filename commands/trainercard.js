@@ -17,7 +17,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { rollForShiny } from "../shinyOdds.js";
-import { spritePaths } from "../spriteconfig.js";
+import { spritePaths, rarityEmojis } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";
 import { validateUserSchema, createNewUser } from "../utils/userSchema.js";
@@ -540,7 +540,7 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   }
 
   // Trainer name and rarity below sprite
-  ctx.font = "bold 14px Arial";
+  ctx.font = "bold 16px Arial";
   ctx.fillStyle = "#ffffff";
   ctx.strokeStyle = "#1a1a1a";
   ctx.lineWidth = 2;
@@ -548,12 +548,14 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   ctx.strokeText(trainerInfo.name, 150, 215);
   ctx.fillText(trainerInfo.name, 150, 215);
 
-  ctx.font = "12px Arial";
+  ctx.font = "13px Arial";
   ctx.fillStyle = "#bdbdbd";
   ctx.strokeStyle = "#1a1a1a";
   ctx.lineWidth = 2;
-  ctx.strokeText(trainerInfo.rarity, 150, 230);
-  ctx.fillText(trainerInfo.rarity, 150, 230);
+  const trainerRarityEmoji = rarityEmojis[trainerInfo.rarity?.toLowerCase()] || '';
+  const trainerRarityText = trainerRarityEmoji ? `${trainerInfo.rarity} ${trainerRarityEmoji}` : trainerInfo.rarity;
+  ctx.strokeText(trainerRarityText, 150, 230);
+  ctx.fillText(trainerRarityText, 150, 230);
 
   // CENTER-LEFT SIDE: Discord Avatar + Username (centered between trainer text and rank)
   const avatarX = 150; // Center of 300px left space
@@ -655,8 +657,8 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
     ctx.lineWidth = 2;
     const shinyLabel = hasShiny ? "Shiny " : "";
     const pokemonNameText = `${shinyLabel}${p.name}`;
-    ctx.strokeText(pokemonNameText, x, y + 75); // Moved down
-    ctx.fillText(pokemonNameText, x, y + 75);
+    ctx.strokeText(pokemonNameText, x, y + 90); // Moved down
+    ctx.fillText(pokemonNameText, x, y + 90);
 
     // Tier (using the tier field from pokemon data)
     ctx.font = "13px Arial";
@@ -664,8 +666,10 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
     ctx.strokeStyle = "#1a1a1a";
     ctx.lineWidth = 2;
     const tierDisplay = p.tier ? p.tier.charAt(0).toUpperCase() + p.tier.slice(1) : "Unknown";
-    ctx.strokeText(tierDisplay, x, y + 95); // Moved down
-    ctx.fillText(tierDisplay, x, y + 95);
+    const tierEmoji = rarityEmojis[p.tier?.toLowerCase()] || '';
+    const tierText = tierEmoji ? `${tierDisplay} ${tierEmoji}` : tierDisplay;
+    ctx.strokeText(tierText, x, y + 110); // Moved down
+    ctx.fillText(tierText, x, y + 110);
   }
 
   // Draw border around entire canvas

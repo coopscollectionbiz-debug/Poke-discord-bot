@@ -3,7 +3,6 @@ import * as fsSync from "fs";
 import path from "path";
 import express from "express";
 import fetch from "node-fetch";
-import * as cheerio from "cheerio"
 import { decode } from "html-entities";
 import { Client, GatewayIntentBits, Collection, AttachmentBuilder, PermissionsBitField } from "discord.js";
 import { REST, Routes } from "discord.js";
@@ -231,7 +230,9 @@ process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
 // ===========================================================
-// 🏖️ POKEBEACH NEWS SCRAPER
+// 🏖️ IMPROVED POKEBEACH NEWS SCRAPER (v2)
+// Checks Discord message history to prevent duplicates on restart
+// Replace the current checkPokeBeach() function with this
 // ===========================================================
 
 async function checkPokeBeach() {
@@ -239,87 +240,160 @@ async function checkPokeBeach() {
     const newsChannel = await client.channels.fetch(process.env.NEWS_CHANNEL_ID);
     if (!newsChannel) return console.error("❌ NEWS_CHANNEL_ID invalid or not found.");
 
-    // 1️⃣ Fetch PokéBeach homepage
-    const res = await fetch("https://www.pokebeach.com/");
-    const html = await res.text();
+    console.log("📰 Checking PokéBeach for new articles...");
 
-    // 2️⃣ Extract latest 3 unique article URLs, titles, and thumbnails using cheerio
-    const $ = cheerio.load(html);
-    const found = [];
-    const urlRegex = /https:\/\/www\.pokebeach\.com\/\d{4}\//;
-    const defaultPlaceholder = "https://www.pokebeach.com/wp-content/themes/pokebeach/images/logo.png";
-    
-    $("a[href*='www.pokebeach.com/2']").each((i, elem) => {
-      const url = $(elem).attr("href");
-      const title = $(elem).text().trim();
-      
-      // Find associated image (look for img within the same article container)
-      const $parent = $(elem).closest("article, .post, .entry, div");
-      let image = $parent.find("img").first().attr("src");
-      
-      // If no image in parent, try finding img near the link
-      if (!image) {
-        image = $(elem).find("img").first().attr("src") || 
-                $(elem).next("img").attr("src") || 
-                $(elem).parent().find("img").first().attr("src");
+    // 1️⃣ Fetch PokéBeach homepage
+    const res = await fetch("https://www.pokebeach.com/", {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
-      
-      // Use placeholder if no image found
-      if (!image) {
-        image = defaultPlaceholder;
-      }
-      
-      // Only add if we have a valid URL, title, and it's not a duplicate
-      if (url && title && urlRegex.test(url)) {
-        if (!found.some(a => a.url === url)) {
-          found.push({ 
-            url, 
-            title: decode(title), // Decode HTML entities in title
-            image 
-          });
-        }
-      }
-      
-      // Stop after finding 3 unique articles
-      return found.length < 3;
     });
 
-    if (found.length === 0) {
-      console.log("⚠️ No PokéBeach links found.");
+    if (!res.ok) {
+      console.error(`❌ Failed to fetch PokéBeach: HTTP ${res.status}`);
       return;
     }
 
-    // 3️⃣ Get last 3 messages from the Discord news channel
-    const recentMessages = await newsChannel.messages.fetch({ limit: 3 });
-    const recentContent = recentMessages.map((m) => m.content);
+    const html = await res.text();
+    console.log(`   📊 Fetched ${html.length} characters`);
 
-    // 4️⃣ Compare and only post new articles
-    for (const article of found.reverse()) { // oldest first
-      const alreadyPosted = recentContent.some((text) => text.includes(article.url));
-      if (alreadyPosted) {
-        console.log(`↩️ Skipping already posted link: ${article.url}`);
-        continue;
+    // 2️⃣ Extract article URLs + titles using REGEX (targets H2/H3 headlines, not comments)
+    const articles = [];
+    
+    // THIS REGEX IS KEY: Only matches links inside H2/H3 tags (where article titles are)
+    // Comment links won't match because they're not in H2/H3 tags
+    const pattern = /<h[23][^>]*>[\s\S]*?<a[^>]+href=["']([^"']+)["'][^>]*>(.*?)<\/a>[\s\S]*?<\/h[23]>/gi;
+    const matches = html.matchAll(pattern);
+
+    for (const match of matches) {
+      const link = match[1];
+      const titleHTML = match[2] || link.split('/').pop();
+      const title = titleHTML.replace(/<[^>]*>/g, '').trim();
+
+      // Filter out non-articles
+      if (link && title && 
+          link.includes('/20') && // Must have a year (2024, 2025, etc)
+          title.length > 10 && // Reasonable title length
+          !link.includes('#') && // Not an anchor/comment link
+          !link.includes('comment') && // Extra safety: exclude comment URLs
+          !articles.some(a => a.link === link)) { // Not a duplicate
+
+        // Decode HTML entities in title
+        const decodedTitle = decode(title);
+
+        articles.push({
+          link: link.startsWith('http') ? link : `https://www.pokebeach.com${link}`,
+          title: decodedTitle,
+          image: null // Will be populated next
+        });
       }
-
-      const last = await fs.readFile("./lastArticle.txt", "utf8").catch(() => "");
-      if (last === article.url) {
-        console.log(`↩️ Same as last recorded link: ${article.url}`);
-        continue;
-      }
-
-      // ✅ Build an embed with title + image
-      const embed = {
-        title: `📰 ${article.title}`,
-        url: article.url,
-        image: { url: article.image },
-        color: 0x0099ff,
-        footer: { text: "PokéBeach.com • Coop's Collection" }
-      };
-
-      await newsChannel.send({ embeds: [embed] });
-      await fs.writeFile("./lastArticle.txt", article.url);
-      console.log(`✅ Posted new PokéBeach article: ${article.title}`);
     }
+
+    console.log(`   ✅ Found ${articles.length} articles`);
+
+    if (articles.length === 0) {
+      console.log("   ⚠️ No articles extracted");
+      return;
+    }
+
+    // 3️⃣ Extract images for articles (with better filtering)
+    console.log("   🖼️ Extracting article images...");
+    
+    for (const article of articles.slice(0, 10)) {
+      // Find the article link in HTML and get surrounding context
+      const linkIndex = html.indexOf(article.link);
+      if (linkIndex === -1) continue;
+
+      // Get 3000 chars around the article link
+      const contextBefore = html.substring(Math.max(0, linkIndex - 1500), linkIndex);
+      const contextAfter = html.substring(linkIndex, Math.min(html.length, linkIndex + 1500));
+      const articleContext = contextBefore + contextAfter;
+
+      // Look for images in the article context
+      const imgPattern = /<img[^>]+src=["']([^"']+)["'][^>]*/gi;
+      const imgMatches = [...articleContext.matchAll(imgPattern)];
+
+      if (imgMatches.length > 0) {
+        // Find the best image (first one that's not a logo/icon)
+        for (const imgMatch of imgMatches) {
+          const imgUrl = imgMatch[1];
+
+          // Filter out: icons, logos, avatars, sprites, emojis, small images
+          if (imgUrl && 
+              !imgUrl.includes('icon') && 
+              !imgUrl.includes('logo') &&
+              !imgUrl.includes('avatar') &&
+              !imgUrl.includes('sprite') &&
+              !imgUrl.includes('emoji') &&
+              !imgUrl.includes('smilie') &&
+              !imgUrl.includes('favicon') &&
+              (imgUrl.includes('.jpg') || imgUrl.includes('.png') || 
+               imgUrl.includes('.webp') || imgUrl.includes('.jpeg'))) {
+            
+            article.image = imgUrl.startsWith('http') ? imgUrl : `https://www.pokebeach.com${imgUrl}`;
+            break;
+          }
+        }
+      }
+    }
+
+    const articlesWithImages = articles.filter(a => a.image).length;
+    console.log(`   🖼️ Found images for ${articlesWithImages}/${articles.length} articles`);
+
+    // 4️⃣ CHECK DISCORD MESSAGE HISTORY - This survives bot restarts!
+    console.log("   📜 Checking Discord history for already-posted articles...");
+    
+    const recentMessages = await newsChannel.messages.fetch({ limit: 50 });
+    const postedLinks = new Set();
+    
+    for (const msg of recentMessages.values()) {
+      // Extract URLs from embed URLs
+      if (msg.embeds.length > 0) {
+        for (const embed of msg.embeds) {
+          if (embed.url) {
+            postedLinks.add(embed.url);
+          }
+        }
+      }
+      // Also check message content for PokeBeach links
+      const linkMatches = msg.content.match(/https:\/\/www\.pokebeach\.com\/\d{4}\/[^\s]+/g) || [];
+      linkMatches.forEach(link => postedLinks.add(link));
+    }
+
+    console.log(`   📋 Found ${postedLinks.size} already-posted links in Discord`);
+
+    // 5️⃣ Filter out already-posted articles
+    const newArticles = articles.filter(article => !postedLinks.has(article.link));
+
+    if (newArticles.length === 0) {
+      console.log("   ✅ No new articles (all already posted)");
+      return;
+    }
+
+    console.log(`   📢 Found ${newArticles.length} new article(s)!`);
+
+    // 6️⃣ Only post the NEWEST article (first one in the newArticles array)
+    const articleToPost = newArticles[0];
+    
+    if (newArticles.length > 1) {
+      console.log(`   ℹ️ Posting only the newest (${newArticles.length - 1} older articles skipped)`);
+    }
+
+    // Use placeholder if no image found
+    const imageUrl = articleToPost.image || "https://www.pokebeach.com/wp-content/themes/pokebeach/images/logo.png";
+
+    const embed = {
+      title: `📰 ${articleToPost.title}`,
+      url: articleToPost.link,
+      image: { url: imageUrl },
+      color: 0x0099ff,
+      footer: { text: "PokéBeach.com • Coop's Collection" }
+    };
+
+    await newsChannel.send({ embeds: [embed] });
+    
+    console.log(`   ✅ Posted: ${articleToPost.title.substring(0, 60)}...`);
+
   } catch (err) {
     console.error("❌ PokéBeach scrape failed:", err.message);
   }
@@ -382,10 +456,11 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isButton()) {
     try {
       // Route trainercard buttons to the handler
-      if (interaction.customId.startsWith("refresh_card") || 
-          interaction.customId.startsWith("share_public") ||
-          interaction.customId.startsWith("change_trainer") ||
-          interaction.customId.startsWith("change_pokemon")) {
+      if (interaction.customId.startsWith("show_full_team") ||
+    interaction.customId.startsWith("refresh_card") || 
+    interaction.customId.startsWith("share_public") ||
+    interaction.customId.startsWith("change_trainer") ||
+    interaction.customId.startsWith("change_pokemon")) {
         await handleTrainerCardButtons(interaction, trainerData, saveDataToDiscord);
         await saveTrainerDataLocal(trainerData);
         debouncedDiscordSave();

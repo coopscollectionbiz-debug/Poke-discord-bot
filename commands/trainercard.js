@@ -471,8 +471,8 @@ async function renderFullTeamCanvas(user) {
 
     const hasShiny = user.pokemon[p.id]?.shiny > 0;
     const spriteURL = hasShiny
-      ? `${spritePaths.shiny}${p.id}.png`
-      : `${spritePaths.pokemon}${p.id}.png`;
+      ? `${spritePaths.shiny}${p.id}.gif`
+      : `${spritePaths.pokemon}${p.id}.gif`;
 
     try {
       const sprite = await loadImage(spriteURL);

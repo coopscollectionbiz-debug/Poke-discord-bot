@@ -5,12 +5,12 @@
  */
 
 export const rarityEmojis = {
-  common: '✰',
-  uncommon: '✰✰',
-  rare: '⭐',
-  epic: '⭐⭐',
-  legendary: '🌟',
-  mythic: '🌟🌟'
+  common: '⏺',
+  uncommon: '✦︎',
+  rare: '☆',
+  epic: '✮✮',
+  legendary: '˙⋆✮⋆',
+  mythic: '⋆𖤐⋆'
 };
 
 export const spritePaths = {

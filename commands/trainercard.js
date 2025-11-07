@@ -552,10 +552,16 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   ctx.fillStyle = "#bdbdbd";
   ctx.strokeStyle = "#1a1a1a";
   ctx.lineWidth = 2;
+  ctx.strokeText(trainerInfo.rarity, 150, 230);
+  ctx.fillText(trainerInfo.rarity, 150, 230);
+  
+  // Emoji below rarity
   const trainerRarityEmoji = rarityEmojis[trainerInfo.rarity?.toLowerCase()] || '';
-  const trainerRarityText = trainerRarityEmoji ? `${trainerInfo.rarity} ${trainerRarityEmoji}` : trainerInfo.rarity;
-  ctx.strokeText(trainerRarityText, 150, 230);
-  ctx.fillText(trainerRarityText, 150, 230);
+  if (trainerRarityEmoji) {
+    ctx.font = "16px Arial";
+    ctx.strokeText(trainerRarityEmoji, 150, 248);
+    ctx.fillText(trainerRarityEmoji, 150, 248);
+  }
 
   // CENTER-LEFT SIDE: Discord Avatar + Username (centered between trainer text and rank)
   const avatarX = 150; // Center of 300px left space
@@ -666,10 +672,16 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
     ctx.strokeStyle = "#1a1a1a";
     ctx.lineWidth = 2;
     const tierDisplay = p.tier ? p.tier.charAt(0).toUpperCase() + p.tier.slice(1) : "Unknown";
+    ctx.strokeText(tierDisplay, x, y + 110); // Moved down
+    ctx.fillText(tierDisplay, x, y + 110);
+    
+    // Emoji below tier
     const tierEmoji = rarityEmojis[p.tier?.toLowerCase()] || '';
-    const tierText = tierEmoji ? `${tierDisplay} ${tierEmoji}` : tierDisplay;
-    ctx.strokeText(tierText, x, y + 110); // Moved down
-    ctx.fillText(tierText, x, y + 110);
+    if (tierEmoji) {
+      ctx.font = "16px Arial";
+      ctx.strokeText(tierEmoji, x, y + 128);
+      ctx.fillText(tierEmoji, x, y + 128);
+    }
   }
 
   // Draw border around entire canvas

@@ -21,6 +21,7 @@ import { validateUserSchema, createNewUser } from "../utils/userSchema.js";
 import { safeReply } from "../utils/safeReply.js";
 import { createSafeCollector } from "../utils/safeCollector.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+import trainerSprites from "../trainerSprites.json" assert { type: "json" };
 
 // ===========================================================
 // SLASH COMMAND
@@ -76,6 +77,39 @@ const starterGenerations = [
   { name: "Sinnoh", ids: [387, 390, 393] },
   { name: "Unova", ids: [495, 498, 501] }
 ];
+
+// ===========================================================
+// 🧍 TRAINER INFO HELPER
+// ===========================================================
+function getTrainerInfo(trainerFilename) {
+  if (!trainerFilename) return { name: "Unknown Trainer", rarity: "Unknown" };
+  
+  // Extract trainer type from filename (e.g., "youngster-gen4.png" -> "youngster")
+  const trainerType = trainerFilename.split("-")[0].replace(".png", "");
+  
+  // Lookup in trainerSprites JSON
+  const trainerExists = Object.keys(trainerSprites).find(key => key === trainerType);
+  
+  if (!trainerExists) return { name: "Unknown Trainer", rarity: "Unknown" };
+  
+  // Capitalize trainer name (e.g., "youngster" -> "Youngster")
+  const capitalizedName = trainerType.charAt(0).toUpperCase() + trainerType.slice(1);
+  
+  // Determine rarity based on trainer type (can be customized)
+  const rarityMap = {
+    youngster: "Common",
+    lass: "Common",
+    acetrainer: "Uncommon",
+    channeler: "Uncommon",
+    champion: "Legendary",
+    elite: "Epic",
+    gym: "Epic"
+  };
+  
+  const rarity = rarityMap[trainerType] || "Common";
+  
+  return { name: capitalizedName, rarity };
+}
 
 // ===========================================================
 // 🌿 STARTER SELECTION
@@ -471,6 +505,9 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
 
   const rank = getRank(user.tp);
 
+  // Get trainer info from JSON
+  const trainerInfo = getTrainerInfo(user.displayedTrainer);
+
   // Canvas layout: 900×500 (trainer area ~300px left, grid ~600px right)
   const width = 900;
   const height = 500;
@@ -481,24 +518,35 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   ctx.fillStyle = "#1e1e2f";
   ctx.fillRect(0, 0, 300, height); // Only fill left 300px
 
-  // LEFT SIDE: Trainer sprite (larger, positioned higher)
+  // LEFT SIDE: Trainer sprite (larger, centered horizontally and vertically in left 300px)
   if (trainerPath) {
     try {
       const trainerImg = await loadImage(trainerPath);
       const trainerScale = 2.5; // Increase trainer size
       const scaledWidth = trainerImg.width * trainerScale;
       const scaledHeight = trainerImg.height * trainerScale;
-      const trainerX = 80 - scaledWidth / 2;
-      const trainerY = 80; // Position at top instead of center
+      const trainerX = 150 - scaledWidth / 2; // Center horizontally in 300px space
+      const trainerY = 80 - scaledHeight / 2; // Position in upper area
       ctx.drawImage(trainerImg, trainerX, trainerY, scaledWidth, scaledHeight);
     } catch (err) {
       console.warn("Trainer image load failed:", err.message);
     }
   }
 
-  // CENTER-LEFT SIDE: Discord Avatar + Username
-  const avatarX = 80;
-  const avatarY = 360; // Moved down to avoid trainer sprite
+  // Trainer name and rarity below sprite
+  ctx.font = "bold 14px Arial";
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+  ctx.fillText(trainerInfo.name, 150, 170);
+
+  ctx.font = "12px Arial";
+  ctx.fillStyle = "#bdbdbd";
+  ctx.fillText(trainerInfo.rarity, 150, 185);
+
+  // CENTER-LEFT SIDE: Discord Avatar + Username (centered between trainer text and rank)
+  // Trainer text ends at ~185, Rank starts at 430, so center = (185 + 430) / 2 = 307.5
+  const avatarX = 150; // Center of 300px left space
+  const avatarY = 285; // Centered vertically between trainer and rank
   const avatarSize = 60;
 
   if (avatarURL) {
@@ -528,17 +576,17 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
   ctx.font = "bold 14px Arial";
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.fillText(username, avatarX, avatarY + 50);
+  ctx.fillText(username, avatarX, avatarY + 45);
 
-  // Draw rank + TP below username
+  // Draw rank + TP below username (centered in left 300px space)
   ctx.font = "bold 24px Arial";
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.fillText(`Rank: ${rank}`, 100, 430);
+  ctx.fillText(`Rank: ${rank}`, 150, 430);
 
   ctx.font = "bold 24px Arial";
   ctx.fillStyle = "#ffcb05";
-  ctx.fillText(`TP: ${user.tp}`, 100, 460);
+  ctx.fillText(`TP: ${user.tp}`, 150, 460);
 
   // RIGHT SIDE: Pokémon grid (2 rows × 3 cols) - CENTERED
   const gridWidth = 3 * 170 - 170; // Total width of 3 columns (340px)
@@ -584,13 +632,13 @@ async function renderFullTeamCanvas(user, avatarURL, username) {
     ctx.textAlign = "center";
     ctx.fillStyle = hasShiny ? "#ffcb05" : "#ffffff";
     const shinyLabel = hasShiny ? "Shiny " : "";
-    ctx.fillText(`${shinyLabel}${p.name}`, x, y + 70);
+    ctx.fillText(`${shinyLabel}${p.name}`, x, y + 115); // Increased from y + 70
 
     // Tier (using the tier field from pokemon data)
     ctx.font = "13px Arial";
     ctx.fillStyle = "#bdbdbd";
     const tierDisplay = p.tier ? p.tier.charAt(0).toUpperCase() + p.tier.slice(1) : "Unknown";
-    ctx.fillText(tierDisplay, x, y + 87);
+    ctx.fillText(tierDisplay, x, y + 135); // Increased from y + 87
   }
 
   return new AttachmentBuilder(canvas.toBuffer("image/png"), { name: "team_card.png" });

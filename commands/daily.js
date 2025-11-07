@@ -34,6 +34,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("daily")
     .setDescription("Claim your daily TP, CC, and choose a random reward!"),
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     // ✅ Defer reply immediately

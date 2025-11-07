@@ -16,6 +16,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("inspectpokemon")
     .setDescription("Inspect details about a specific Pokémon by name or ID.")
+.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addStringOption((option) =>
       option
         .setName("name")

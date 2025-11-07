@@ -35,6 +35,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("showtrainers")
     .setDescription("View and inspect your trainer collection.")
+.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addStringOption((option) =>
       option
         .setName("rarity")

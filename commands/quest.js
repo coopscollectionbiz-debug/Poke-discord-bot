@@ -25,6 +25,7 @@ const QUEST_CC_REWARD = 50;
 export default {
   data: new SlashCommandBuilder()
     .setName("quest")
+.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDescription("Complete a quest and receive a random reward! (70% Pokémon, 30% Trainer, +50 CC)"),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {

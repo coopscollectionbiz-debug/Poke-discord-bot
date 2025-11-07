@@ -26,6 +26,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("gift")
     .setDescription("Gift CC, Pokémon, or Trainer to another player.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addUserOption((option) =>
       option
         .setName("target")

@@ -9,6 +9,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  PermissionFlagsBits
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
@@ -26,7 +27,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("inspecttrainer")
     .setDescription("View another user's Trainer sprite collection.")
-.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addUserOption((option) =>
       option
         .setName("user")
@@ -58,7 +59,6 @@ export default {
     const targetUser = interaction.options.getUser("user");
     const filterRarity = interaction.options.getString("rarity") || "all";
 
-    // Guard: user has no data
     if (!trainerData[targetUser.id]) {
       return safeReply(interaction, {
         content: `❌ ${targetUser.username} doesn't have a trainer profile yet.`,

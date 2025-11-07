@@ -3,7 +3,7 @@
 // Coop's Collection Discord Bot (SafeReply Refactor + Trainer Key Standardization)
 // ==========================================================
 
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import {
   validateAmount,
   validateUserResources,
@@ -181,7 +181,7 @@ export default {
         if (amount && amount !== 1) {
           return safeReply(interaction, {
             content: "⚠️ Trainer gifts are always 1. Ignore the amount parameter.",
-            ephemeral: true
+            ephemeral: true,
           });
         }
 
@@ -236,9 +236,7 @@ export default {
 
       try {
         await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-        console.log(
-          `✅ Gift: ${interaction.user.username} → ${receiver.username} (${type}${itemName ? " - " + itemName : ""})`
-        );
+        console.log(`✅ Gift: ${interaction.user.username} → ${receiver.username} (${type}${itemName ? " - " + itemName : ""})`);
       } catch (err) {
         console.error("❌ Error saving gift transaction:", err);
       }

@@ -7,11 +7,14 @@ import {
   SlashCommandBuilder,
   PermissionFlagsBits,
 } from "discord.js";
-import { spritePaths, rarityEmojis } from "../spriteconfig.js";
+import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
-import { selectRandomPokemon, selectRandomTrainer } from "../utils/weightedRandom.js";
+import {
+  selectRandomPokemonForUser,
+  selectRandomTrainerForUser,
+} from "../utils/weightedRandom.js";
 import {
   createSuccessEmbed,
   createPokemonRewardEmbed,
@@ -49,7 +52,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("daily")
     .setDescription("Claim your daily TP, CC, and receive both a Pokémon and Trainer!")
-    .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages),
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     await interaction.deferReply({ ephemeral: true });
@@ -74,8 +77,8 @@ export default {
     const allPokemon = await getPokemonCached();
     const flatTrainers = await getFlattenedTrainers();
 
-    const pokemonPick = selectRandomPokemon(allPokemon.filter(p => p.generation <= 5));
-    const trainerPick = selectRandomTrainer(flatTrainers);
+    const pokemonPick = selectRandomPokemonForUser(allPokemon, user);
+    const trainerPick = selectRandomTrainerForUser(flatTrainers, user);
     const shiny = rollForShiny(user.tp || 0);
 
     // Update user data
@@ -105,7 +108,7 @@ export default {
     const successEmbed = createSuccessEmbed(
       "🎁 Daily Claimed!",
       `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**!\n` +
-      `You also received both a Pokémon and a Trainer reward!`
+        `You also received both a Pokémon and a Trainer reward!`
     );
 
     const pokemonEmbed = createPokemonRewardEmbed(pokemonPick, shiny, pokemonSprite);
@@ -118,7 +121,7 @@ export default {
     });
 
     // ======================================================
-    // 🌟 Rare Sightings Broadcast (Epic+)
+    // 🌟 Rare Sightings Broadcast (Epic+ and all Shinies)
     // ======================================================
     await postRareSightings(client, pokemonPick, interaction.user, true, shiny);
     await postRareSightings(client, trainerPick, interaction.user, false, false);

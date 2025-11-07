@@ -21,6 +21,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  PermissionFlagsBits, // ✅ Added import
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
@@ -35,7 +36,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("showtrainers")
     .setDescription("View and inspect your trainer collection.")
-.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator) // ✅ Admin-only for testing
     .addStringOption((option) =>
       option
         .setName("rarity")
@@ -80,7 +81,6 @@ export default {
     const rarityFilter = interaction.options.getString("rarity")?.toLowerCase() || "all";
     const ownedFilter = interaction.options.getString("owned")?.toLowerCase() || "owned";
 
-    // Get flattened trainers using helper
     const flatTrainers = await getFlattenedTrainers();
 
     // ==========================================================
@@ -296,7 +296,6 @@ export default {
     // 🎮 Collector
     // ==========================================================
     const collector = createSafeCollector(interaction, { time: 120000 }, "showtrainers");
-
 
     collector.on("collect", async (i) => {
       if (i.user.id !== interaction.user.id)

@@ -186,7 +186,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         user.displayedPokemon = [selectedPokemon.id];
         user.onboardingStage = "trainer_selection";
         
-        const isShiny = rollForShiny(user.tp);
+        const isShiny = rollForShiny(user.tp || 0);
         user.pokemon[selectedPokemon.id] = { normal: isShiny ? 0 : 1, shiny: isShiny ? 1 : 0 };
 
         trainerData[interaction.user.id] = user;
@@ -237,9 +237,8 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     });
   } catch (err) {
     console.error("starterSelection error:", err);
-    await safeReply(interaction, {
-      content: "❌ Failed to load starter selection.",
-      ephemeral: true
+    await interaction.editReply({
+      content: "❌ Failed to load starter selection."
     });
   }
 }
@@ -299,7 +298,7 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
   
   collector.on("collect", async i => {
     if (i.user.id !== interaction.user.id) {
-      return safeReply(i, { content: "This isn't your selection!", ephemeral: true });
+      return await i.reply({ content: "This isn't your selection!", ephemeral: true });
     }
     
     switch (i.customId) {
@@ -332,7 +331,7 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
         trainerData[interaction.user.id] = user;
 
         await i.deferUpdate();
-        await safeReply(i, { content: `✅ You chose **${choice.label}** as your Trainer!`, ephemeral: true });
+        await i.editReply({ content: `✅ You chose **${choice.label}** as your Trainer!` });
         collector.stop("confirmed");
         return await showTrainerCard(interaction, user);
       }
@@ -371,7 +370,7 @@ export async function showTrainerCard(interaction, user) {
       .map(id => allPokemon.find(p => p.id === id))
       .filter(Boolean);
 
-    // NEW: Display first pokemon sprite on the embed
+    // Display first pokemon sprite on the embed
     let leadPokemonImage = null;
     if (pokemonInfo.length > 0) {
       const leadPokemon = pokemonInfo[0];
@@ -406,7 +405,7 @@ export async function showTrainerCard(interaction, user) {
 
     if (trainerPath) embed.setThumbnail(trainerPath);
 
-    // NEW: Add lead pokemon image
+    // Add lead pokemon image
     if (leadPokemonImage) {
       embed.setImage(leadPokemonImage);
     }
@@ -419,15 +418,16 @@ export async function showTrainerCard(interaction, user) {
         .setStyle(ButtonStyle.Primary)
     );
 
-    await safeReply(interaction, {
+    await interaction.editReply({
       embeds: [embed],
-      components: [showTeamRow],
-      ephemeral: true
+      components: [showTeamRow]
     });
 
   } catch (err) {
     console.error("showTrainerCard error:", err);
-    await safeReply(interaction, { content: "❌ Failed to show Trainer Card.", ephemeral: true });
+    await interaction.editReply({
+      content: "❌ Failed to show Trainer Card."
+    });
   }
 }
 

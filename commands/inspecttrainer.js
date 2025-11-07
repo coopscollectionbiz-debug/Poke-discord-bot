@@ -51,7 +51,7 @@ export default {
   // ==========================================================
   // ⚙️ Command Execution
   // ==========================================================
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     await interaction.deferReply({ ephemeral: true });
 
     const targetUser = interaction.options.getUser("user");

@@ -355,7 +355,7 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
     if (!command) {
-      return await safeReply(interaction, { content: "❌ Unknown command.", flags: 64 });
+      return await safeReply(interaction, { content: "❌ Unknown command.", ephemeral: true });
     }
 
     try {
@@ -364,8 +364,7 @@ client.on("interactionCreate", async (interaction) => {
         trainerData,
         saveTrainerDataLocal,
         saveDataToDiscord,
-        reloadUserFromDiscord,
-        ensureUserInitialized
+        client
       );
       await saveTrainerDataLocal(trainerData);
       debouncedDiscordSave();
@@ -373,7 +372,7 @@ client.on("interactionCreate", async (interaction) => {
       console.error(`❌ ${interaction.commandName}:`, error.message);
       await safeReply(interaction, {
         content: `❌ Error while executing \`${interaction.commandName}\`. Please try again.`,
-        flags: 64,
+        ephemeral: true,
       });
     }
     return;
@@ -398,7 +397,7 @@ client.on("interactionCreate", async (interaction) => {
       console.error(`❌ Button interaction error (${interaction.customId}):`, error.message);
       await safeReply(interaction, {
         content: "❌ An error occurred processing your button. Please try again.",
-        flags: 64,
+        ephemeral: true,
       });
     }
   }

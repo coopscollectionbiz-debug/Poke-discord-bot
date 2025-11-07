@@ -18,6 +18,7 @@ import { getRank } from "../utils/rankSystem.js";
 import { validateUserSchema, createNewUser } from "../utils/userSchema.js";
 import { safeReply } from "../utils/safeReply.js";
 import { createSafeCollector } from "../utils/safeCollector.js";
+import { ensureUserInitialized } from "../utils/userInitializer.js";
 
 
 // ===========================================================
@@ -28,9 +29,9 @@ export default {
     .setName("trainercard")
     .setDescription("View or create your Trainer Card!"),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, reloadUserFromDiscord, ensureUserInitialized) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     // ✅ Defer the interaction once at the start
-    await interaction.deferReply({ flags: 64 });
+    await interaction.deferReply({ ephemeral: true });
 
     const userId = interaction.user.id;
     const username = interaction.user.username;
@@ -38,7 +39,7 @@ export default {
     console.log(`📋 User lookup for ${username}`);
 
     // ✅ Use shared helper to ensure user is properly initialized
-    const user = await ensureUserInitialized(userId, username, trainerData, reloadUserFromDiscord);
+    const user = await ensureUserInitialized(userId, username, trainerData, client);
 
     console.log(`📋 User state:`, {
       onboardingComplete: user.onboardingComplete,
@@ -265,7 +266,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     console.error("starterSelection error:", err);
     await safeReply(interaction, {
       content: "❌ Failed to load starter selection.",
-      flags: 64
+      ephemeral: true
     });
   }
 }
@@ -326,7 +327,7 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
   
   collector.on("collect", async i => {
     if (i.user.id !== interaction.user.id) {
-      return safeReply(i, { content: "This isn't your selection!", flags: 64 });
+      return safeReply(i, { content: "This isn't your selection!", ephemeral: true });
     }
     
     switch (i.customId) {
@@ -368,7 +369,7 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
         console.log(`🔄 Memory copy updated after save`);
 
         await i.deferUpdate();
-        await safeReply(i, { content: `✅ You chose **${choice.label}** as your Trainer!`, flags: 64 });
+        await safeReply(i, { content: `✅ You chose **${choice.label}** as your Trainer!`, ephemeral: true });
         collector.stop("confirmed");
         return await showTrainerCard(interaction, user);
       }
@@ -457,12 +458,12 @@ export async function showTrainerCard(interaction, user) {
     );
 
     // === 5️⃣ Reply ============================================================
-    await safeReply(interaction, { embeds: [embed], components: [row], flags: 64 });
+    await safeReply(interaction, { embeds: [embed], components: [row], ephemeral: true });
     console.log(`✅ Trainer card displayed`);
 
   } catch (err) {
     console.error("showTrainerCard error:", err);
-    await safeReply(interaction, { content: "❌ Failed to show Trainer Card.", flags: 64 });
+    await safeReply(interaction, { content: "❌ Failed to show Trainer Card.", ephemeral: true });
   }
 }
 
@@ -472,7 +473,7 @@ export async function showTrainerCard(interaction, user) {
 async function handleChangeTrainer(interaction, user, trainerData, saveDataToDiscord) {
   const ownedTrainers = Object.keys(user.trainers || {}).filter(t => user.trainers[t]);
   if (ownedTrainers.length === 0)
-    return safeReply(interaction, { content: "❌ You don't have any trainers yet!", flags: 64 });
+    return safeReply(interaction, { content: "❌ You don't have any trainers yet!", ephemeral: true });
 
   const trainersPerPage = 5;
   const pages = [];
@@ -512,7 +513,7 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
   };
 
   const { embed, components } = buildPage(pageIndex);
-  const msg = await safeReply(interaction, { embeds: [embed], components, flags: 64 });
+  const msg = await safeReply(interaction, { embeds: [embed], components, ephemeral: true });
 
   // Fetch the reply to get message object for message-specific collector
   const message = await interaction.fetchReply().catch(() => msg);
@@ -538,7 +539,7 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
       const selectedTrainer = i.customId.replace("select_trainer_", "");
       user.displayedTrainer = selectedTrainer;
       await saveDataToDiscord(trainerData);
-      await safeReply(i, { content: `✅ Trainer changed to **${selectedTrainer}**!`, flags: 64 });
+      await safeReply(i, { content: `✅ Trainer changed to **${selectedTrainer}**!`, ephemeral: true });
       return collector.stop();
     }
 
@@ -548,7 +549,7 @@ async function handleChangeTrainer(interaction, user, trainerData, saveDataToDis
   });
 
   collector.on("end", async () => {
-    try { await safeReply(interaction, { content: "⏱️ Selection timed out.", flags: 64 }); } catch {}
+    try { await safeReply(interaction, { content: "⏱️ Selection timed out.", ephemeral: true }); } catch {}
   });
 }
 
@@ -561,7 +562,7 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
     return (p?.normal > 0 || p?.shiny > 0) || (typeof p === "number" && p > 0);
   });
   if (ownedPokemon.length === 0)
-    return safeReply(interaction, { content: "❌ You don't have any Pokémon yet!", flags: 64 });
+    return safeReply(interaction, { content: "❌ You don't have any Pokémon yet!", ephemeral: true });
 
   const allPokemon = await getAllPokemon();
   const pokemonPerPage = 12;
@@ -617,7 +618,7 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
   };
 
   const { embed, components } = buildPage(pageIndex);
-  const msg = await safeReply(interaction, { embeds: [embed], components, flags: 64 });
+  const msg = await safeReply(interaction, { embeds: [embed], components, ephemeral: true });
 
   // Fetch the reply to get message object for message-specific collector
   const message = await interaction.fetchReply().catch(() => msg);
@@ -654,7 +655,7 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
     } else if (i.customId === "pokemon_save") {
       user.displayedPokemon = selectedPokemon.map(id => Number(id));
       await saveDataToDiscord(trainerData);
-      await safeReply(i, { content: "✅ Pokémon updated!", flags: 64 });
+      await safeReply(i, { content: "✅ Pokémon updated!", ephemeral: true });
       return collector.stop();
     }
 
@@ -664,7 +665,7 @@ async function handleChangePokemon(interaction, user, trainerData, saveDataToDis
   });
 
   collector.on("end", async () => {
-    try { await safeReply(interaction, { content: "⏱️ Selection timed out.", flags: 64 }); } catch {}
+    try { await safeReply(interaction, { content: "⏱️ Selection timed out.", ephemeral: true }); } catch {}
   });
 }
 
@@ -676,14 +677,14 @@ export async function handleTrainerCardButtons(interaction, trainerData, saveDat
   const user = trainerData[userId];
 
   if (!user)
-    return safeReply(interaction, { content: "❌ Could not find your trainer data.", flags: 64 });
+    return safeReply(interaction, { content: "❌ Could not find your trainer data.", ephemeral: true });
 
   switch (interaction.customId) {
     case "refresh_card":
       return showTrainerCard(interaction, user);
 
     case "share_public":
-      await safeReply(interaction, { content: "✅ Shared publicly!", flags: 64 });
+      await safeReply(interaction, { content: "✅ Shared publicly!", ephemeral: true });
       return showTrainerCard(interaction, user);
 
     case "change_trainer":
@@ -693,6 +694,6 @@ export async function handleTrainerCardButtons(interaction, trainerData, saveDat
       return handleChangePokemon(interaction, user, trainerData, saveDataToDiscord);
 
     default:
-      await safeReply(interaction, { content: "❌ Unknown button action.", flags: 64 });
+      await safeReply(interaction, { content: "❌ Unknown button action.", ephemeral: true });
   }
 }

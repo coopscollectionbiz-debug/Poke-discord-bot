@@ -401,114 +401,65 @@ export async function showTrainerCard(interaction, user) {
     const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
 
     console.log(`🎴 Showing trainer card for ${username}`);
+    console.log(`👤 User data:`, {
+      displayedTrainer: user.displayedTrainer,
+      displayedPokemon: user.displayedPokemon,
+      onboardingComplete: user.onboardingComplete,
+      onboardingStage: user.onboardingStage
+    });
 
+    // === 1️⃣ Trainer Sprite =====================================================
     const trainerPath = user.displayedTrainer
       ? `${spritePaths.trainers}${user.displayedTrainer}`
       : null;
 
+    console.log(`🧍 Trainer sprite URL:`, trainerPath);
+
+    // === 2️⃣ Pokémon Info ====================================================
     const displayed = user.displayedPokemon?.slice(0, 6) || [];
     const allPokemon = await getAllPokemon();
     const pokemonInfo = displayed
       .map(id => allPokemon.find(p => p.id === id))
       .filter(Boolean);
 
+    console.log(`🎮 Pokémon info:`, pokemonInfo.map(p => ({ name: p.name, id: p.id })));
+
+    // === 3️⃣ Stats + Embed ====================================================
     const rank = getRank(user.tp);
     const pokemonOwned = Object.keys(user.pokemon || {}).length;
     const shinyCount = Object.values(user.pokemon || {}).filter(p => p.shiny > 0).length;
     const trainerCount = Object.keys(user.trainers || {}).length;
 
-    const leadPokemon = pokemonInfo[0];
-    const teamDisplay = pokemonInfo.length > 0
-  ? pokemonInfo
-      .map((p, i) => {
-        const prefix = i === 0 ? "⭐ **Lead:**" : `${i + 1}.`;
-        return `${prefix} **${p.name}** 🔍 (#${p.id})`;
-      })
-      .join("\n")
-  : "No Pokémon selected";
+    const teamDisplay = pokemonInfo.length > 0 
+      ? pokemonInfo.map((p, i) => `${i === 0 ? "⭐" : `${i + 1}.`} **${p.name}** (#${p.id})`).join("\n")
+      : "No Pokémon selected";
 
-    // === Embed with animated lead Pokémon ===
     const embed = new EmbedBuilder()
       .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })
       .setColor(0xffcb05)
       .setDescription(
-        `⭐ **Lead:** ${leadPokemon ? leadPokemon.name : "None"}\n` +
         `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}\n\n` +
         `**Team:**\n${teamDisplay}\n\n` +
         `📊 **Pokémon Owned:** ${pokemonOwned}\n✨ **Shiny Pokémon:** ${shinyCount}\n🧍 **Trainers:** ${trainerCount}`
       )
       .setFooter({ text: "Coop's Collection • /trainercard" });
 
-    // Trainer sprite in top-right corner
-    if (trainerPath) embed.setThumbnail(trainerPath);
+    // Add trainer thumbnail if available
+    if (trainerPath) {
+      embed.setThumbnail(trainerPath);
+    }
 
-    // Animated lead Pokémon GIF
-    if (leadPokemon)
-      embed.setImage(`${spritePaths.pokemon}${leadPokemon.id}.gif`);
-
-    // === Buttons ===
-    const controlRow = new ActionRowBuilder().addComponents(
+    // === 4️⃣ Action Buttons ===================================================
+    const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("change_trainer").setLabel("Change Trainer").setEmoji("🧍").setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId("change_pokemon").setLabel("Change Pokémon").setEmoji("🧬").setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId("refresh_card").setLabel("Refresh").setEmoji("🔄").setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId("share_public").setLabel("Share Public").setEmoji("🌐").setStyle(ButtonStyle.Success)
     );
 
-    // 🔍 Inline Pokédex buttons (for all team Pokémon)
-const pokedexButtons = pokemonInfo.map(p =>
-  new ButtonBuilder()
-    .setCustomId(`pokedex_${p.name.toLowerCase()}`)
-    .setEmoji("🔍")
-    .setLabel(p.name)
-    .setStyle(p === pokemonInfo[0] ? ButtonStyle.Success : ButtonStyle.Secondary)
-);
-
-const pokedexRows = [];
-for (let i = 0; i < pokedexButtons.length; i += 3)
-  pokedexRows.push(new ActionRowBuilder().addComponents(pokedexButtons.slice(i, i + 3)));
-
-await safeReply(interaction, {
-  embeds: [embed],
-  components: [...pokedexRows, controlRow],
-  ephemeral: true
-});
-
+    // === 5️⃣ Reply ============================================================
+    await safeReply(interaction, { embeds: [embed], components: [row], ephemeral: true });
     console.log(`✅ Trainer card displayed`);
-
-    // === Collector for Pokédex Buttons ===
-    const message = await interaction.fetchReply().catch(() => null);
-    if (!message) return;
-
-    const collector = message.createMessageComponentCollector({
-      componentType: ComponentType.Button,
-      time: 60000,
-      filter: i => i.user.id === interaction.user.id,
-    });
-
-    collector.on("collect", async (i) => {
-      const id = i.customId;
-      if (id.startsWith("pokedex_")) {
-        const pokemonName = id.replace("pokedex_", "");
-        const pokedexCmd = i.client.commands.get("pokedex");
-        if (!pokedexCmd) {
-          await safeReply(i, { content: "❌ Pokédex command not found.", ephemeral: true });
-          return;
-        }
-        try {
-  if (!i.options) i.options = {};
-  i.options.getString = () => pokemonName; // Mock interaction input
-  await pokedexCmd.execute(i); // Match real /pokedex signature
-} catch (err) {
-  console.error("❌ Pokédex command error:", err);
-  await safeReply(i, { content: "⚠️ Failed to open Pokédex entry.", ephemeral: true });
-}
-
-      }
-    });
-
-    collector.on("end", async () => {
-      try { await interaction.editReply({ components: [] }); } catch {}
-    });
 
   } catch (err) {
     console.error("showTrainerCard error:", err);

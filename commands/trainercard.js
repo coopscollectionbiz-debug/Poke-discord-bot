@@ -458,7 +458,7 @@ export async function showTrainerCard(interaction, user) {
 // ===========================================================
 // 🖼️ CANVAS RENDER FUNCTION (Show Full Team)
 // ===========================================================
-async function renderFullTeamCanvas(user) {
+async function renderFullTeamCanvas(user, avatarURL, username) {
   const allPokemon = await getAllPokemon();
   const displayed = user.displayedPokemon?.slice(0, 6) || [];
   const pokemonInfo = displayed
@@ -496,22 +496,55 @@ async function renderFullTeamCanvas(user) {
     }
   }
 
-  // Draw rank + TP below trainer sprite
+  // CENTER-LEFT SIDE: Discord Avatar + Username
+  const avatarX = 80;
+  const avatarY = 300;
+  const avatarSize = 60;
+
+  if (avatarURL) {
+    try {
+      const avatarImg = await loadImage(avatarURL);
+      
+      // Draw circular avatar using clip path
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(avatarImg, avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize);
+      ctx.restore();
+      
+      // Draw circle border around avatar
+      ctx.strokeStyle = "#ffcb05";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
+      ctx.stroke();
+    } catch (err) {
+      console.warn("Avatar image load failed:", err.message);
+    }
+  }
+
+  // Draw username below avatar
+  ctx.font = "bold 14px Arial";
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+  ctx.fillText(username, avatarX, avatarY + 50);
+
+  // Draw rank + TP below username
   ctx.font = "bold 24px Arial";
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.fillText(`Rank: ${rank}`, 150, 420);
+  ctx.fillText(`Rank: ${rank}`, 80, 420);
 
   ctx.font = "bold 24px Arial";
   ctx.fillStyle = "#ffcb05";
-  ctx.fillText(`TP: ${user.tp}`, 150, 450);
+  ctx.fillText(`TP: ${user.tp}`, 80, 450);
 
   // RIGHT SIDE: Pokémon grid (2 rows × 3 cols)
   const gridStartX = 360;
   const gridStartY = 80;
   const colSpacing = 170;
   const rowSpacing = 200;
-  const spriteSize = 70; // Smaller pokemon sprites
 
   for (let i = 0; i < pokemonInfo.length && i < 6; i++) {
     const p = pokemonInfo[i];
@@ -529,30 +562,32 @@ async function renderFullTeamCanvas(user) {
 
     try {
       const sprite = await loadImage(spriteURL);
-      // Draw sprite centered, with transparent background handling
-      ctx.drawImage(sprite, x - spriteSize / 2, y - 10, spriteSize, spriteSize);
+      
+      // Draw sprite at native size, centered with transparency
+      ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2, sprite.width, sprite.height);
     } catch (err) {
       console.warn(`Sprite failed for ${p?.name} (${p?.id}): ${err?.message}`);
       // Draw placeholder card instead of failing
       ctx.fillStyle = "#444444";
-      ctx.fillRect(x - spriteSize / 2, y - 10, spriteSize, spriteSize);
+      ctx.fillRect(x - 35, y - 35, 70, 70);
       ctx.fillStyle = "#ffffff";
       ctx.font = "12px Arial";
       ctx.textAlign = "center";
-      ctx.fillText("?", x, y + 20);
+      ctx.fillText("?", x, y + 2);
     }
 
-    // Pokémon name with ✨ if shiny
+    // Pokémon name with "Shiny" text label
     ctx.font = "bold 16px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = hasShiny ? "#ffcb05" : "#ffffff";
-    ctx.fillText(`${hasShiny ? "✨ " : ""}${p.name}`, x, y + 75);
+    const shinyLabel = hasShiny ? "Shiny " : "";
+    ctx.fillText(`${shinyLabel}${p.name}`, x, y + 70);
 
     // Tier (using the tier field from pokemon data)
     ctx.font = "13px Arial";
     ctx.fillStyle = "#bdbdbd";
     const tierDisplay = p.tier ? p.tier.charAt(0).toUpperCase() + p.tier.slice(1) : "Unknown";
-    ctx.fillText(tierDisplay, x, y + 92);
+    ctx.fillText(tierDisplay, x, y + 87);
   }
 
   return new AttachmentBuilder(canvas.toBuffer("image/png"), { name: "team_card.png" });
@@ -574,7 +609,9 @@ export async function handleTrainerCardButtons(interaction, trainerData, saveDat
     await interaction.deferReply({ ephemeral: true });
     
     try {
-      const image = await renderFullTeamCanvas(user);
+      const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
+      const username = interaction.user.username;
+      const image = await renderFullTeamCanvas(user, avatarURL, username);
       await interaction.editReply({ content: "🖼️ **Full Team View**", files: [image] });
     } catch (err) {
       console.error("❌ renderFullTeamCanvas error:", err.message);

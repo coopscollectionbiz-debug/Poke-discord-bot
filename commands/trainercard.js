@@ -13,6 +13,9 @@ import {
   ComponentType
 } from "discord.js";
 import { createCanvas, loadImage } from "canvas";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { rollForShiny } from "../shinyOdds.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
@@ -21,7 +24,12 @@ import { validateUserSchema, createNewUser } from "../utils/userSchema.js";
 import { safeReply } from "../utils/safeReply.js";
 import { createSafeCollector } from "../utils/safeCollector.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
-import trainerSprites from "../trainerSprites.json" assert { type: "json" };
+
+// Load trainer sprites JSON
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const trainerSpritesPath = path.join(__dirname, "../trainerSprites.json");
+const trainerSprites = JSON.parse(fs.readFileSync(trainerSpritesPath, "utf-8"));
 
 // ===========================================================
 // SLASH COMMAND

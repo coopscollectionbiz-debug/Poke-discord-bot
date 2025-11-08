@@ -7,12 +7,16 @@ import { ensureUserInitialized } from "../utils/userInitializer.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("resetuser")
-    .setDescription("Reset onboarding, Pokémon, and trainers for a user (TP preserved).")
-    .addUserOption(option => option.setName("user").setDescription("The user to reset").setRequired(true))
+    .setDescription("Reset onboarding, Pokémon, trainers, and /daily timer for a user (TP + CC preserved).")
+    .addUserOption(option => 
+      option
+        .setName("user")
+        .setDescription("The user to reset")
+        .setRequired(true)
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    // ✅ Defer reply immediately
     await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
@@ -20,37 +24,51 @@ export default {
     }
 
     const targetUser = interaction.options.getUser("user");
-    
-    // ✅ Use ensureUserInitialized to get latest state
     const targetData = await ensureUserInitialized(targetUser.id, targetUser.username, trainerData, client);
-    
+
     if (!targetData) {
       return safeReply(interaction, { content: `⛔ ${targetUser.username} does not have a trainer profile.`, ephemeral: true });
     }
 
+    // ✅ Preserve key currencies
     const preservedTP = targetData.tp ?? 0;
+    const preservedCC = targetData.cc ?? 0;
 
     // ✅ Reset fields
     targetData.onboardingComplete = false;
     targetData.onboardingDate = null;
-    targetData.onboardingStage = "starter_selection";  // Reset to start
+    targetData.onboardingStage = "starter_selection";
     targetData.selectedStarter = null;
     targetData.starterPokemon = null;
     targetData.pokemon = {};
     targetData.trainers = {};
     targetData.displayedPokemon = [];
     targetData.displayedTrainer = null;
+
+    // ✅ Reset daily timer
+    targetData.dailyLastUsed = null;
+    targetData.dailyCooldown = null;
+
+    // ✅ Reassign preserved values
     targetData.tp = preservedTP;
+    targetData.cc = preservedCC;
 
     // ✅ Update memory
     trainerData[targetUser.id] = targetData;
 
     try {
-      // ✅ Use atomic save
       await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-      
+
       return safeReply(interaction, {
-        embeds: [createSuccessEmbed("🔄 User Reset", `Trainer profile for **${targetUser.username}** has been reset.\n\n✅ TP preserved: ${preservedTP}\n✅ Onboarding reset to starter selection`)],
+        embeds: [
+          createSuccessEmbed(
+            "🔄 User Reset",
+            `Trainer profile for **${targetUser.username}** has been reset.\n\n` +
+            `✅ TP preserved: ${preservedTP}\n` +
+            `✅ CC preserved: ${preservedCC}\n` +
+            `✅ /daily timer reset`
+          )
+        ],
         ephemeral: true
       });
     } catch (err) {

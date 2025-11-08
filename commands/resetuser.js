@@ -21,7 +21,6 @@ export default {
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
     try {
-      // ✅ Always defer first to prevent 'Unknown interaction'
       await interaction.deferReply({ ephemeral: true });
 
       const target = interaction.options.getUser("user");
@@ -40,18 +39,24 @@ export default {
       const tp = targetData.tp ?? 0;
       const cc = targetData.cc ?? 0;
 
-      // ✅ Reset daily timer (matches /daily.js logic)
+      // ✅ Reset daily timer
       targetData.lastDaily = 0;
       targetData.daily = { lastUsed: null, streak: 0, rewards: [] };
 
-      // ✅ Guarantee Pokémon & Trainer structures exist
-      targetData.pokemon = targetData.pokemon || {};
-      targetData.trainers = targetData.trainers || {};
-      targetData.displayedPokemon = targetData.displayedPokemon || [];
-      targetData.displayedTrainer = targetData.displayedTrainer || null;
+      // ✅ Full wipe of Pokémon & Trainer data
+      targetData.pokemon = {};
+      targetData.trainers = {};
+      targetData.displayedPokemon = [];
+      targetData.displayedTrainer = null;
 
-      // ✅ Clear onboarding or session-related flags if used
-      delete targetData.onboardingStep;
+      // ✅ Full onboarding reset
+      targetData.onboardingComplete = false;
+      targetData.onboardingStep = 0;
+      targetData.starterSelected = null;
+      targetData.starterConfirmed = false;
+      targetData.introComplete = false;
+
+      // ✅ Clear transient session data
       delete targetData.sessionActive;
       delete targetData.sessionStart;
       delete targetData.currentReward;
@@ -63,11 +68,12 @@ export default {
       // 💾 Save updated user data
       await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
-      // ✅ Confirmation (edit deferred message)
+      // ✅ Confirmation
       await interaction.editReply(
         `✅ Successfully reset **${target.username}**!\n` +
           `- Daily timer cleared\n` +
-          `- Pokémon/Trainer structures ensured\n` +
+          `- Pokémon & Trainer data wiped\n` +
+          `- Onboarding fully reset\n` +
           `- TP: ${tp}\n` +
           `- CC: ${cc}`
       );

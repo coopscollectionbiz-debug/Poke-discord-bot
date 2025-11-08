@@ -28,6 +28,7 @@ import { safeReply } from "../utils/safeReply.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { postRareSightings } from "../utils/rareSightings.js";
+import { updateUserRole } from "../utils/updateUserRole.js";
 
 // ==========================================================
 // ⚖️ Constants
@@ -86,6 +87,9 @@ export default {
       user.tp += DAILY_TP_REWARD;
       user.cc += DAILY_CC_REWARD;
       user.lastDaily = Date.now();
+
+const member = await interaction.guild.members.fetch(interaction.user.id);
+await updateUserRole(member, user.tp, interaction.channel);
 
       // 🎁 Generate Dual Rewards
       const allPokemon = await getPokemonCached();
@@ -154,6 +158,32 @@ export default {
         embeds: [successEmbed, pokemonEmbed, trainerEmbed],
         components: []
       });
+
+// ======================================================
+// 🌐 Global Reward Announcements (Daily Rewards)
+// ======================================================
+import { broadcastReward } from "../utils/broadcastReward.js"; // ensure it's imported at top
+
+try {
+  // Post both Pokémon and Trainer rewards to the global channel
+  await broadcastReward(client, {
+    user: interaction.user,
+    type: "pokemon",
+    item: pokemonPick,
+    shiny,
+    source: "daily"
+  });
+
+  await broadcastReward(client, {
+    user: interaction.user,
+    type: "trainer",
+    item: trainerPick,
+    shiny: false,
+    source: "daily"
+  });
+} catch (err) {
+  console.error("❌ broadcastReward failed (daily):", err.message);
+}
 
       // ======================================================
       // 🌟 Rare Sightings Broadcast (Epic+ and all Shinies)

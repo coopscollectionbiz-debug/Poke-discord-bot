@@ -724,7 +724,7 @@
   "49": {
     "id": 49,
     "name": "Venomoth",
-    "tier": "common",
+    "tier": "Uncommon",
     "region": "Kanto",
     "types": [
       7,
@@ -1060,7 +1060,7 @@
   "72": {
     "id": 72,
     "name": "Tentacool",
-    "tier": "rare",
+    "tier": "common",
     "region": "Kanto",
     "types": [
       11,
@@ -1075,7 +1075,7 @@
   "73": {
     "id": 73,
     "name": "Tentacruel",
-    "tier": "common",
+    "tier": "Uncommon",
     "region": "Kanto",
     "types": [
       11,
@@ -1196,7 +1196,7 @@
   "81": {
     "id": 81,
     "name": "Magnemite",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Kanto",
     "types": [
       13,
@@ -1211,7 +1211,7 @@
   "82": {
     "id": 82,
     "name": "Magneton",
-    "tier": "common",
+    "tier": "rare",
     "region": "Kanto",
     "types": [
       13,
@@ -1241,7 +1241,7 @@
   "84": {
     "id": 84,
     "name": "Doduo",
-    "tier": "rare",
+    "tier": "common",
     "region": "Kanto",
     "types": [
       1,
@@ -1419,7 +1419,7 @@
   "96": {
     "id": 96,
     "name": "Drowzee",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Kanto",
     "types": [
       14
@@ -1433,7 +1433,7 @@
   "97": {
     "id": 97,
     "name": "Hypno",
-    "tier": "common",
+    "tier": "rare",
     "region": "Kanto",
     "types": [
       14
@@ -1631,7 +1631,7 @@
   "111": {
     "id": 111,
     "name": "Rhyhorn",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Kanto",
     "types": [
       5,
@@ -1646,7 +1646,7 @@
   "112": {
     "id": 112,
     "name": "Rhydon",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Kanto",
     "types": [
       5,
@@ -2392,7 +2392,7 @@
   "164": {
     "id": 164,
     "name": "Noctowl",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       1,
@@ -2407,7 +2407,7 @@
   "165": {
     "id": 165,
     "name": "Ledyba",
-    "tier": "rare",
+    "tier": "common",
     "region": "Johto",
     "types": [
       7,
@@ -2422,7 +2422,7 @@
   "166": {
     "id": 166,
     "name": "Ledian",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       7,
@@ -2586,7 +2586,7 @@
   "177": {
     "id": 177,
     "name": "Natu",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       14,
@@ -2601,7 +2601,7 @@
   "178": {
     "id": 178,
     "name": "Xatu",
-    "tier": "common",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       14,
@@ -2616,7 +2616,7 @@
   "179": {
     "id": 179,
     "name": "Mareep",
-    "tier": "uncommon",
+    "tier": "common",
     "region": "Johto",
     "types": [
       13
@@ -2630,7 +2630,7 @@
   "180": {
     "id": 180,
     "name": "Flaaffy",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       13
@@ -2646,7 +2646,7 @@
   "181": {
     "id": 181,
     "name": "Ampharos",
-    "tier": "common",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       13
@@ -2674,7 +2674,7 @@
   "183": {
     "id": 183,
     "name": "Marill",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       11
@@ -2690,7 +2690,7 @@
   "184": {
     "id": 184,
     "name": "Azumarill",
-    "tier": "common",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       11
@@ -2704,7 +2704,7 @@
   "185": {
     "id": 185,
     "name": "Sudowoodo",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       6
@@ -2938,7 +2938,7 @@
   "201": {
     "id": 201,
     "name": "Unown",
-    "tier": "rare",
+    "tier": "common",
     "region": "Johto",
     "types": [
       14
@@ -2950,7 +2950,7 @@
   "202": {
     "id": 202,
     "name": "Wobbuffet",
-    "tier": "common",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       14
@@ -2964,7 +2964,7 @@
   "203": {
     "id": 203,
     "name": "Girafarig",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       1,
@@ -2977,7 +2977,7 @@
   "204": {
     "id": 204,
     "name": "Pineco",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       7
@@ -3006,7 +3006,7 @@
   "206": {
     "id": 206,
     "name": "Dunsparce",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       1
@@ -3033,7 +3033,7 @@
   "208": {
     "id": 208,
     "name": "Steelix",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       9,
@@ -3113,7 +3113,7 @@
   "214": {
     "id": 214,
     "name": "Heracross",
-    "tier": "common",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       7,
@@ -3126,7 +3126,7 @@
   "215": {
     "id": 215,
     "name": "Sneasel",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       17,
@@ -3141,7 +3141,7 @@
   "216": {
     "id": 216,
     "name": "Teddiursa",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       1
@@ -3230,7 +3230,7 @@
   "222": {
     "id": 222,
     "name": "Corsola",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       11,
@@ -3782,7 +3782,7 @@
   "261": {
     "id": 261,
     "name": "Poochyena",
-    "tier": "rare",
+    "tier": "common",
     "region": "Hoenn",
     "types": [
       17
@@ -3796,7 +3796,7 @@
   "262": {
     "id": 262,
     "name": "Mightyena",
-    "tier": "common",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       17
@@ -3824,7 +3824,7 @@
   "264": {
     "id": 264,
     "name": "Linoone",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       1
@@ -4232,7 +4232,7 @@
   "291": {
     "id": 291,
     "name": "Ninjask",
-    "tier": "rare",
+    "tier": "common",
     "region": "Hoenn",
     "types": [
       7,
@@ -4247,7 +4247,7 @@
   "292": {
     "id": 292,
     "name": "Shedinja",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       7,
@@ -4262,7 +4262,7 @@
   "293": {
     "id": 293,
     "name": "Whismur",
-    "tier": "uncommon",
+    "tier": "common",
     "region": "Hoenn",
     "types": [
       1
@@ -4276,7 +4276,7 @@
   "294": {
     "id": 294,
     "name": "Loudred",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       1
@@ -4306,7 +4306,7 @@
   "296": {
     "id": 296,
     "name": "Makuhita",
-    "tier": "rare",
+    "tier": "common",
     "region": "Hoenn",
     "types": [
       2
@@ -4362,7 +4362,7 @@
   "300": {
     "id": 300,
     "name": "Skitty",
-    "tier": "uncommon",
+    "tier": "common",
     "region": "Hoenn",
     "types": [
       1
@@ -4415,7 +4415,7 @@
   "304": {
     "id": 304,
     "name": "Aron",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       9,
@@ -4430,7 +4430,7 @@
   "305": {
     "id": 305,
     "name": "Lairon",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       9,
@@ -4447,7 +4447,7 @@
   "306": {
     "id": 306,
     "name": "Aggron",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       9,
@@ -4462,7 +4462,7 @@
   "307": {
     "id": 307,
     "name": "Meditite",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       2,
@@ -4492,7 +4492,7 @@
   "309": {
     "id": 309,
     "name": "Electrike",
-    "tier": "rare",
+    "tier": "common",
     "region": "Hoenn",
     "types": [
       13
@@ -4544,7 +4544,7 @@
   "313": {
     "id": 313,
     "name": "Volbeat",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       7
@@ -4556,7 +4556,7 @@
   "314": {
     "id": 314,
     "name": "Illumise",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       7
@@ -4613,7 +4613,7 @@
   "318": {
     "id": 318,
     "name": "Carvanha",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       11,
@@ -4657,7 +4657,7 @@
   "321": {
     "id": 321,
     "name": "Wailord",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       11
@@ -4686,7 +4686,7 @@
   "323": {
     "id": 323,
     "name": "Camerupt",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       10,
@@ -4727,7 +4727,7 @@
   "326": {
     "id": 326,
     "name": "Grumpig",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       14
@@ -4741,7 +4741,7 @@
   "327": {
     "id": 327,
     "name": "Spinda",
-    "tier": "rare",
+    "tier": "common",
     "region": "Hoenn",
     "types": [
       1
@@ -4784,7 +4784,7 @@
   "330": {
     "id": 330,
     "name": "Flygon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       5,
@@ -4813,7 +4813,7 @@
   "332": {
     "id": 332,
     "name": "Cacturne",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       12,
@@ -4828,7 +4828,7 @@
   "333": {
     "id": 333,
     "name": "Swablu",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       1,
@@ -5249,7 +5249,7 @@
   "363": {
     "id": 363,
     "name": "Spheal",
-    "tier": "rare",
+    "tier": "common",
     "region": "Hoenn",
     "types": [
       15,
@@ -5264,7 +5264,7 @@
   "364": {
     "id": 364,
     "name": "Sealeo",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       15,
@@ -5296,7 +5296,7 @@
   "366": {
     "id": 366,
     "name": "Clamperl",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       11
@@ -5879,7 +5879,7 @@
   "407": {
     "id": 407,
     "name": "Roserade",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Sinnoh",
     "types": [
       12,
@@ -6540,7 +6540,7 @@
   "453": {
     "id": 453,
     "name": "Croagunk",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Sinnoh",
     "types": [
       4,
@@ -6555,7 +6555,7 @@
   "454": {
     "id": 454,
     "name": "Toxicroak",
-    "tier": "common",
+    "tier": "rare",
     "region": "Sinnoh",
     "types": [
       4,
@@ -6570,7 +6570,7 @@
   "455": {
     "id": 455,
     "name": "Carnivine",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Sinnoh",
     "types": [
       12
@@ -6625,7 +6625,7 @@
   "459": {
     "id": 459,
     "name": "Snover",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Sinnoh",
     "types": [
       12,
@@ -6640,7 +6640,7 @@
   "460": {
     "id": 460,
     "name": "Abomasnow",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Sinnoh",
     "types": [
       12,
@@ -6655,7 +6655,7 @@
   "461": {
     "id": 461,
     "name": "Weavile",
-    "tier": "uncommon",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       17,
@@ -6670,7 +6670,7 @@
   "462": {
     "id": 462,
     "name": "Magnezone",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       13,
@@ -6685,7 +6685,7 @@
   "463": {
     "id": 463,
     "name": "Lickilicky",
-    "tier": "common",
+    "tier": "rare",
     "region": "Sinnoh",
     "types": [
       1
@@ -6699,7 +6699,7 @@
   "464": {
     "id": 464,
     "name": "Rhyperior",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       5,
@@ -6728,7 +6728,7 @@
   "466": {
     "id": 466,
     "name": "Electivire",
-    "tier": "common",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       13
@@ -6742,7 +6742,7 @@
   "467": {
     "id": 467,
     "name": "Magmortar",
-    "tier": "uncommon",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       10
@@ -6770,7 +6770,7 @@
   "469": {
     "id": 469,
     "name": "Yanmega",
-    "tier": "common",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       7,
@@ -6813,7 +6813,7 @@
   "472": {
     "id": 472,
     "name": "Gliscor",
-    "tier": "common",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       5,
@@ -6828,7 +6828,7 @@
   "473": {
     "id": 473,
     "name": "Mamoswine",
-    "tier": "uncommon",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       15,
@@ -6857,7 +6857,7 @@
   "475": {
     "id": 475,
     "name": "Gallade",
-    "tier": "uncommon",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       14,
@@ -6901,7 +6901,7 @@
   "478": {
     "id": 478,
     "name": "Froslass",
-    "tier": "common",
+    "tier": "rare",
     "region": "Sinnoh",
     "types": [
       15,
@@ -6916,7 +6916,7 @@
   "479": {
     "id": 479,
     "name": "Rotom",
-    "tier": "epic",
+    "tier": "rare",
     "region": "Sinnoh",
     "types": [
       13,
@@ -7148,7 +7148,7 @@
   "497": {
     "id": 497,
     "name": "Serperior",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Unova",
     "types": [
       12
@@ -7176,7 +7176,7 @@
   "499": {
     "id": 499,
     "name": "Pignite",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       10,
@@ -7193,7 +7193,7 @@
   "500": {
     "id": 500,
     "name": "Emboar",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Unova",
     "types": [
       10,
@@ -7222,7 +7222,7 @@
   "502": {
     "id": 502,
     "name": "Dewott",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       11
@@ -7238,7 +7238,7 @@
   "503": {
     "id": 503,
     "name": "Samurott",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Unova",
     "types": [
       11
@@ -7380,7 +7380,7 @@
   "513": {
     "id": 513,
     "name": "Pansear",
-    "tier": "rare",
+    "tier": "common",
     "region": "Unova",
     "types": [
       10
@@ -7394,7 +7394,7 @@
   "514": {
     "id": 514,
     "name": "Simisear",
-    "tier": "common",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       10
@@ -7408,7 +7408,7 @@
   "515": {
     "id": 515,
     "name": "Panpour",
-    "tier": "uncommon",
+    "tier": "common",
     "region": "Unova",
     "types": [
       11
@@ -8216,7 +8216,7 @@
   "571": {
     "id": 571,
     "name": "Zoroark",
-    "tier": "common",
+    "tier": "epic",
     "region": "Unova",
     "types": [
       17
@@ -8230,7 +8230,7 @@
   "572": {
     "id": 572,
     "name": "Minccino",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       1
@@ -8406,7 +8406,7 @@
   "584": {
     "id": 584,
     "name": "Vanilluxe",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       15
@@ -8420,7 +8420,7 @@
   "585": {
     "id": 585,
     "name": "Deerling",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       1,
@@ -8435,7 +8435,7 @@
   "586": {
     "id": 586,
     "name": "Sawsbuck",
-    "tier": "common",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       1,
@@ -8463,7 +8463,7 @@
   "588": {
     "id": 588,
     "name": "Karrablast",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       7
@@ -8477,7 +8477,7 @@
   "589": {
     "id": 589,
     "name": "Escavalier",
-    "tier": "common",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       7,
@@ -8492,7 +8492,7 @@
   "590": {
     "id": 590,
     "name": "Foongus",
-    "tier": "uncommon",
+    "tier": "common",
     "region": "Unova",
     "types": [
       12,
@@ -8507,7 +8507,7 @@
   "591": {
     "id": 591,
     "name": "Amoonguss",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       12,
@@ -8552,7 +8552,7 @@
   "594": {
     "id": 594,
     "name": "Alomomola",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       11
@@ -8624,7 +8624,7 @@
   "599": {
     "id": 599,
     "name": "Klink",
-    "tier": "uncommon",
+    "tier": "common",
     "region": "Unova",
     "types": [
       9
@@ -8638,7 +8638,7 @@
   "600": {
     "id": 600,
     "name": "Klang",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       9
@@ -8654,7 +8654,7 @@
   "601": {
     "id": 601,
     "name": "Klinklang",
-    "tier": "common",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       9
@@ -8698,7 +8698,7 @@
   "604": {
     "id": 604,
     "name": "Eelektross",
-    "tier": "common",
+    "tier": "epic",
     "region": "Unova",
     "types": [
       13
@@ -8772,7 +8772,7 @@
   "609": {
     "id": 609,
     "name": "Chandelure",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Unova",
     "types": [
       8,
@@ -8801,7 +8801,7 @@
   "611": {
     "id": 611,
     "name": "Fraxure",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       16
@@ -8817,7 +8817,7 @@
   "612": {
     "id": 612,
     "name": "Haxorus",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Unova",
     "types": [
       16
@@ -8859,7 +8859,7 @@
   "615": {
     "id": 615,
     "name": "Cryogonal",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       15
@@ -8871,7 +8871,7 @@
   "616": {
     "id": 616,
     "name": "Shelmet",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       7
@@ -8885,7 +8885,7 @@
   "617": {
     "id": 617,
     "name": "Accelgor",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       7
@@ -8899,7 +8899,7 @@
   "618": {
     "id": 618,
     "name": "Stunfisk",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       5,
@@ -8952,7 +8952,7 @@
   "622": {
     "id": 622,
     "name": "Golett",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       5,
@@ -8967,7 +8967,7 @@
   "623": {
     "id": 623,
     "name": "Golurk",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       5,
@@ -8982,7 +8982,7 @@
   "624": {
     "id": 624,
     "name": "Pawniard",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       17,
@@ -8997,7 +8997,7 @@
   "625": {
     "id": 625,
     "name": "Bisharp",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       17,
@@ -9012,7 +9012,7 @@
   "626": {
     "id": 626,
     "name": "Bouffalant",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       1
@@ -9024,7 +9024,7 @@
   "627": {
     "id": 627,
     "name": "Rufflet",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       1,
@@ -9039,7 +9039,7 @@
   "628": {
     "id": 628,
     "name": "Braviary",
-    "tier": "common",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       1,
@@ -9171,7 +9171,7 @@
   "637": {
     "id": 637,
     "name": "Volcarona",
-    "tier": "common",
+    "tier": "epic",
     "region": "Unova",
     "types": [
       7,

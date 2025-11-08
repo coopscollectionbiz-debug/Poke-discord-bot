@@ -560,7 +560,9 @@ client.on("interactionCreate", async (interaction) => {
         const tier = foundTier.toLowerCase();
         const emoji = rarityEmojis[tier] || "⚬";
         const tierName = foundTier.charAt(0).toUpperCase() + foundTier.slice(1);
-        const spriteUrl = `${spritePaths.trainers}${trainerId}`;
+        let cleanTrainerId = trainerId.replace(/^trainers?_2\//, "").replace(/\.png$/i, "");
+const spriteUrl = `${spritePaths.trainers}${cleanTrainerId}.png`;
+
 
         try {
           await saveTrainerDataLocal(trainerData);

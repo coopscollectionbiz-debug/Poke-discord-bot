@@ -129,7 +129,9 @@ export default {
 
       // 🖼️ Sprites
       const pokemonSprite = `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pokemonPick.id}.gif`;
-      const trainerSprite = `${spritePaths.trainers}${trainerPick.filename}.png`;
+      let cleanTrainerFile = trainerPick.filename.replace(/^trainers?_2\//, "").replace(/\.png$/i, "");
+const trainerSprite = `${spritePaths.trainers}${cleanTrainerFile}.png`;
+
 
       // 🧱 Embeds
       const successEmbed = createSuccessEmbed(

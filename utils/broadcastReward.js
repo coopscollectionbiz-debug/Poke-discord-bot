@@ -33,7 +33,7 @@ export async function broadcastReward(
     if (!channel) return;
 
     // 🧩 Pull rarity + emoji
-    const rarity = item.rarity?.toLowerCase() || "common";
+    const rarity = (item.rarity || item.tier || "common").toLowerCase();
     const emoji = rarityEmojis?.[rarity] || "⚪";
     const rarityLabel = `${emoji} ${rarity.toUpperCase()}`;
 

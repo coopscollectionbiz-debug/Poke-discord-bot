@@ -7,7 +7,7 @@ import { EmbedBuilder } from "discord.js";
 import { rarityEmojis, spritePaths } from "../spriteconfig.js";
 
 // Broadcast tiers (Epic+ always public)
-const RARE_TIERS = ["epic", "legendary", "mythic"];
+const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
 
 /**
  * Post an Epic+ Pokémon or Trainer — or any Shiny Pokémon — to the #rare-sightings channel

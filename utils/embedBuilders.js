@@ -10,14 +10,14 @@ import {
   ButtonStyle,
   StringSelectMenuBuilder,
 } from "discord.js";
-import { rarityEmojis } from "../spriteconfig.js"; // 👈 Make sure this exports your emoji mapping
+import { rarityEmojis } from "../spriteconfig.js"; // ✅ standardized import
 
 // ==========================================================
 // 🧩 Helper: format tier text + emoji
 // ==========================================================
 function getTierDisplay(tier) {
   const t = String(tier || "Common").toLowerCase();
-  const emoji = tierEmojis?.[t] || "❔";
+  const emoji = rarityEmojis?.[t] || "❔";
   const formatted = t.charAt(0).toUpperCase() + t.slice(1);
   return `${emoji} ${formatted}`;
 }
@@ -41,27 +41,21 @@ export function createSuccessEmbed(title, description, options = {}) {
 }
 
 export function createErrorEmbed(message, options = {}) {
-  const embed = new EmbedBuilder()
+  return new EmbedBuilder()
     .setTitle(options.title || "❌ Error")
     .setDescription(message)
     .setColor(options.color || 0xff0000)
-    .setTimestamp();
-
-  if (options.footer) embed.setFooter(options.footer);
-
-  return embed;
+    .setTimestamp()
+    .setFooter(options.footer || null);
 }
 
 export function createWarningEmbed(message, options = {}) {
-  const embed = new EmbedBuilder()
+  return new EmbedBuilder()
     .setTitle(options.title || "⚠️ Warning")
     .setDescription(message)
     .setColor(options.color || 0xffa500)
-    .setTimestamp();
-
-  if (options.footer) embed.setFooter(options.footer);
-
-  return embed;
+    .setTimestamp()
+    .setFooter(options.footer || null);
 }
 
 export function createInfoEmbed(title, description, options = {}) {
@@ -155,17 +149,12 @@ export function createCollectionStatsEmbed(username, stats, options = {}) {
     { name: "Trainers", value: `${stats.totalTrainers || 0}`, inline: true },
   ];
 
-  if (stats.tp !== undefined) {
+  if (stats.tp !== undefined)
     fields.push({ name: "TP (Trainer Points)", value: `${stats.tp.toLocaleString()}`, inline: true });
-  }
-
-  if (stats.cc !== undefined) {
+  if (stats.cc !== undefined)
     fields.push({ name: "CC (Collection Coins)", value: `${stats.cc.toLocaleString()}`, inline: true });
-  }
-
-  if (stats.rank) {
+  if (stats.rank)
     fields.push({ name: "Rank", value: stats.rank, inline: true });
-  }
 
   return new EmbedBuilder()
     .setTitle(`${username}'s Collection`)

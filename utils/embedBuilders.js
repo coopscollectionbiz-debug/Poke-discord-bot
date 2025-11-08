@@ -111,7 +111,7 @@ export function createTrainerRewardEmbed(trainer, spriteUrl, options = {}) {
     .setTitle(options.title || "🎓 Trainer Reward!")
     .setDescription(
       options.description ||
-        `You unlocked **${trainer.name || trainer.filename}!**\n${tierDisplay} Tier\nEquip it with \`/trainercard\`!`
+        `You unlocked **${trainer.name || trainer.filename}!**\n${tierDisplay} Tier`
     )
     .setColor(options.color || 0x5865f2)
     .setThumbnail(spriteUrl)

@@ -43,6 +43,7 @@ import {
 import { rollForShiny } from "./shinyOdds.js";
 import { rarityEmojis, spritePaths } from "./spriteconfig.js";
 import { postRareSightings } from "./utils/rareSightings.js";
+import { loadTrainerSprites } from "./utils/dataLoader.js";
 
 // ==========================================================
 // ⚙️ Global Constants
@@ -477,7 +478,6 @@ function normalizeUserSchema(id, user) {
 // ==========================================================
 // ⚡ INTERACTION HANDLER (Slash Commands + Buttons)
 // ==========================================================
-import { spritePaths, rarityEmojis } from "./spriteconfig.js"; // ensure both imported at top
 
 client.on("interactionCreate", async (interaction) => {
   // 🧭 Slash Command Handling
@@ -537,15 +537,24 @@ client.on("interactionCreate", async (interaction) => {
           return;
         }
 
-        // ✅ Assign the trainer
+        // ✅ Set displayed trainer
         user.displayedTrainer = trainerId;
 
-        // ✅ Get sprite + tier data
-        const spriteUrl = `${spritePaths.trainers}${trainerId}`;
-        const trainerKey = trainerId.replace(".png", "");
-        const tier = (trainerData?.tiers?.[trainerKey]?.tier || "common").toLowerCase();
+        // ✅ Get trainer tier from trainerSprites.json
+        const allTrainers = await loadTrainerSprites();
+        let foundTier = "common";
+
+        for (const [key, entry] of Object.entries(allTrainers)) {
+          if (entry.sprites?.includes(trainerId)) {
+            foundTier = entry.tier || "Common";
+            break;
+          }
+        }
+
+        const tier = foundTier.toLowerCase();
         const emoji = rarityEmojis[tier] || "⚬";
-        const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
+        const tierName = foundTier.charAt(0).toUpperCase() + foundTier.slice(1);
+        const spriteUrl = `${spritePaths.trainers}${trainerId}`;
 
         try {
           await saveTrainerDataLocal(trainerData);
@@ -553,7 +562,7 @@ client.on("interactionCreate", async (interaction) => {
 
           const embed = new EmbedBuilder()
             .setTitle(`${emoji} ${tierName} Trainer Equipped!`)
-            .setDescription(`✅ **${trainerKey}** is now your displayed Trainer!`)
+            .setDescription(`✅ **${trainerId.replace(".png", "")}** is now your displayed Trainer!`)
             .setThumbnail(spriteUrl)
             .setColor(0x5865f2)
             .setFooter({ text: "You can view it anytime with /trainercard" })
@@ -586,7 +595,7 @@ client.on("interactionCreate", async (interaction) => {
         return;
       }
 
-      // 🪶 Fallback for anything unhandled
+      // 🪶 Unhandled fallback
       console.warn(`⚠️ Unhandled button: ${interaction.customId}`);
     } catch (err) {
       console.error(`❌ Button error (${interaction.customId}):`, err.message);
@@ -597,7 +606,6 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 });
-
 
 // ==========================================================
 // 🌐 EXPRESS SERVER

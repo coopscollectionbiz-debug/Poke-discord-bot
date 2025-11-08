@@ -172,6 +172,8 @@ async function updateUserRole(member, tp) {
 // ==========================================================
 // 🎁 Random Reward System (Message / Reaction / Daily Shared)
 // ==========================================================
+import { broadcastReward } from "./utils/broadcastReward.js"; // ✅ Add at top of file if missing
+
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   const now = Date.now();
   const last = rewardCooldowns.get(interactionUser.id) || 0;
@@ -203,7 +205,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
   await saveDataToDiscord(trainerData);
 
-  // 🎨 Embed
+  // 🎨 Embed for ephemeral/self-view
   const tier = (reward.tier || reward.rarity || "common").toLowerCase();
   const emoji = rarityEmojis[tier] || "⚬";
   const title = isPokemon
@@ -227,7 +229,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
   const isRare = RARE_TIERS.includes(tier) || isShiny;
 
-  // 🪩 Send Result
+  // 🪩 Send Ephemeral Result to Player
   try {
     if (msgOrInteraction?.reply) {
       await msgOrInteraction.reply({
@@ -253,58 +255,26 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     console.warn("⚠️ Reward embed failed:", err.message);
   }
 
-  // 🌟 Rare Sightings Broadcast
+  // 🌟 Public Broadcast (Random Encounters Only)
+  try {
+    await broadcastReward(client, {
+      user: interactionUser,
+      type: isPokemon ? "pokemon" : "trainer",
+      item: reward,
+      shiny: isShiny,
+      source: "random encounter", // marks it as random to skip /daily & /quest
+    });
+  } catch (err) {
+    console.error("❌ broadcastReward failed:", err.message);
+  }
+
+  // 🌟 Rare Sightings Broadcast (still separate system)
   try {
     await postRareSightings(client, reward, interactionUser, isPokemon, isShiny);
   } catch (err) {
     console.error("❌ Rare Sightings broadcast failed:", err.message);
   }
 }
-
-
-// ==========================================================
-// 💬 MESSAGE + REACTION EVENT LISTENERS
-// ==========================================================
-client.on("messageCreate", async (msg) => {
-  if (msg.author.bot || !msg.guild) return;
-
-  const id = msg.author.id;
-  const now = Date.now();
-
-  // Initialize user
-  const user = trainerData[id] || normalizeUserSchema(id, {});
-
-  // 🧩 TP Gain
-  const last = userCooldowns.get(id) || 0;
-  if (now - last >= MESSAGE_COOLDOWN) {
-    user.tp += MESSAGE_TP_GAIN;
-    userCooldowns.set(id, now);
-  }
-
-  // 💰 CC Chance
-  if (Math.random() < MESSAGE_CC_CHANCE) user.cc++;
-
-  // 🎁 Try reward
-  try {
-    await tryGiveRandomReward(user, msg.author, msg);
-  } catch (err) {
-    console.error("❌ Reward grant failed:", err.message);
-  }
-
-  debouncedDiscordSave();
-});
-
-client.on("messageReactionAdd", async (reaction, user) => {
-  if (user.bot) return;
-  const u = trainerData[user.id] || normalizeUserSchema(user.id, {});
-  if (Math.random() < REACTION_REWARD_CHANCE) {
-    try {
-      await tryGiveRandomReward(u, user, reaction.message);
-    } catch (err) {
-      console.error("❌ Reaction reward failed:", err.message);
-    }
-  }
-});
 
 // ==========================================================
 // 📂 COMMAND LOADER

@@ -1,3306 +1,5352 @@
 {
-  "aaron": [
-    "aaron.png"
-  ],
-  "aarune": [
-    "aarune.png"
-  ],
-  "acerola": [
-    "acerola-masters.png",
-    "acerola-masters2.png",
-    "acerola-masters3.png",
-    "acerola.png"
-  ],
-  "acetrainer": [
-    {
-      "file": "acetrainer-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "acetrainer-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "acetrainer-gen2.png",
-      "disabled": true
-    },
-    "acetrainer-gen3.png",
-    "acetrainer-gen3jp.png",
-    "acetrainer-gen3rs.png",
-    "acetrainer-gen4.png",
-    "acetrainer-gen4dp.png",
-    "acetrainer-gen6.png",
-    "acetrainer-gen6xy.png",
-    "acetrainer-gen7.png",
-    "acetrainer.png",
-    "acetrainerf.png"
-  ],
-  "acetrainercouple": [
-    "acetrainercouple-gen3.png",
-    "acetrainercouple.png"
-  ],
-  "acetrainerf": [
-    {
-      "file": "acetrainerf-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "acetrainerf-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "acetrainerf-gen2.png",
-      "disabled": true
-    },
-    "acetrainerf-gen3.png",
-    "acetrainerf-gen3rs.png",
-    "acetrainerf-gen4.png",
-    "acetrainerf-gen4dp.png",
-    "acetrainerf-gen6.png",
-    "acetrainerf-gen6xy.png",
-    "acetrainerf-gen7.png"
-  ],
-  "acetrainersnow": [
-    "acetrainersnow.png",
-    "acetrainersnowf.png"
-  ],
-  "adaman": [
-    "adaman-masters.png",
-    "adaman.png"
-  ],
-  "aetheremployee": [
-    "aetheremployee.png",
-    "aetheremployeef.png"
-  ],
-  "aetherfoundation": [
-    "aetherfoundation.png",
-    "aetherfoundation2.png",
-    "aetherfoundationf.png"
-  ],
-  "agatha": [
-    {
-      "file": "agatha-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "agatha-gen1rb.png",
-      "disabled": true
-    },
-    "agatha-gen3.png",
-    "agatha-lgpe.png"
-  ],
-  "akari": [
-    "akari-isekai.png",
-    "akari.png"
-  ],
-  "alain": [
-    "alain.png"
-  ],
-  "alder": [
-    "alder.png"
-  ],
-  "alec": [
-    "alec-anime.png"
-  ],
-  "allister": [
-    "allister-masters.png",
-    "allister-unmasked.png",
-    "allister.png"
-  ],
-  "amarys": [
-    "amarys.png"
-  ],
-  "amelia-shuffle": [
-    "amelia-shuffle.png"
-  ],
-  "anabel": [
-    "anabel-gen3.png",
-    "anabel-gen7.png",
-    "anabel.png"
-  ],
-  "anthe": [
-    "anthe.png"
-  ],
-  "anthea": [
-    "anthea.png"
-  ],
-  "anvin": [
-    "anvin.png"
-  ],
-  "aquagrunt": [
-    "aquagrunt.png",
-    "aquagruntf.png"
-  ],
-  "aquagrunt-rse": [
-    "aquagrunt-rse.png"
-  ],
-  "aquagruntf-rse": [
-    "aquagruntf-rse.png"
-  ],
-  "aquasuit": [
-    "aquasuit.png"
-  ],
-  "archer": [
-    "archer.png"
-  ],
-  "archie": [
-    "archie-gen3.png",
-    "archie-gen6.png",
-    "archie-usum.png"
-  ],
-  "arezu": [
-    "arezu.png"
-  ],
-  "argenta": [
-    "argenta.png"
-  ],
-  "ariana": [
-    "ariana.png"
-  ],
-  "arlo": [
-    "arlo.png"
-  ],
-  "aromalady": [
-    "aromalady-gen3.png",
-    "aromalady-gen3rs.png",
-    "aromalady-gen6.png",
-    "aromalady.png"
-  ],
-  "artist": [
-    "artist-gen4.png",
-    "artist-gen6.png",
-    "artist-gen8.png",
-    "artist-gen9.png",
-    "artist.png"
-  ],
-  "artistf": [
-    "artistf-gen6.png"
-  ],
-  "arven": [
-    "arven-s.png",
-    "arven-v.png"
-  ],
-  "ash": [
-    "ash.png"
-  ],
-  "ash-alola": [
-    "ash-alola.png"
-  ],
-  "ash-capbackward": [
-    "ash-capbackward.png"
-  ],
-  "ash-hoenn": [
-    "ash-hoenn.png"
-  ],
-  "ash-johto": [
-    "ash-johto.png"
-  ],
-  "ash-kalos": [
-    "ash-kalos.png"
-  ],
-  "ash-sinnoh": [
-    "ash-sinnoh.png"
-  ],
-  "ash-unova": [
-    "ash-unova.png"
-  ],
-  "atticus": [
-    "atticus.png"
-  ],
-  "avery": [
-    "avery.png"
-  ],
-  "az": [
-    "az.png"
-  ],
-  "az-lza": [
-    "az-lza.png"
-  ],
-  "backers": [
-    "backers.png",
-    "backersf.png"
-  ],
-  "backpacker": [
-    "backpacker-gen6.png",
-    "backpacker-gen8.png",
-    "backpacker-gen9.png",
-    "backpacker.png",
-    "backpackerf.png"
-  ],
-  "baker": [
-    "baker.png"
-  ],
-  "ballguy": [
-    "ballguy.png"
-  ],
-  "baoba": [
-    "baoba.png"
-  ],
-  "barry": [
-    "barry-masters.png",
-    "barry.png"
-  ],
-  "battlegirl": [
-    "battlegirl-gen3.png",
-    "battlegirl-gen4.png",
-    "battlegirl-gen6.png",
-    "battlegirl-gen6xy.png",
-    "battlegirl.png"
-  ],
-  "bea": [
-    "bea-masters.png",
-    "bea.png"
-  ],
-  "beauty": [
-    {
-      "file": "beauty-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "beauty-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "beauty-gen2.png",
-      "disabled": true
-    },
-    {
-      "file": "beauty-gen2jp.png",
-      "disabled": true
-    },
-    "beauty-gen3.png",
-    "beauty-gen3rs.png",
-    "beauty-gen4dp.png",
-    "beauty-gen5bw2.png",
-    "beauty-gen6.png",
-    "beauty-gen6xy.png",
-    "beauty-gen7.png",
-    "beauty-gen8.png",
-    "beauty-gen9.png",
-    "beauty-masters.png",
-    "beauty.png"
-  ],
-  "bede": [
-    "bede-masters.png",
-    "bede.png"
-  ],
-  "bede-leader": [
-    "bede-leader.png"
-  ],
-  "bellelba": [
-    "bellelba.png"
-  ],
-  "bellepa": [
-    "bellepa.png"
-  ],
-  "bellhop": [
-    "bellhop.png"
-  ],
-  "bellis": [
-    "bellis.png"
-  ],
-  "benga": [
-    "benga.png"
-  ],
-  "beni": [
-    "beni-ninja.png",
-    "beni.png"
-  ],
-  "bertha": [
-    "bertha.png"
-  ],
-  "bianca": [
-    "bianca-masters.png",
-    "bianca-pwt.png",
-    "bianca.png"
-  ],
-  "biker": [
-    {
-      "file": "biker-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "biker-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "biker-gen2.png",
-      "disabled": true
-    },
-    "biker-gen3.png",
-    "biker-gen4.png",
-    "biker.png"
-  ],
-  "bill": [
-    "bill-gen3.png",
-    "bill.png"
-  ],
-  "birch": [
-    "birch-gen3.png",
-    "birch.png"
-  ],
-  "birdkeeper": [
-    {
-      "file": "birdkeeper-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "birdkeeper-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "birdkeeper-gen2.png",
-      "disabled": true
-    },
-    "birdkeeper-gen3.png",
-    "birdkeeper-gen3rs.png",
-    "birdkeeper-gen4dp.png",
-    "birdkeeper-gen6.png",
-    "birdkeeper.png"
-  ],
-  "blackbelt": [
-    {
-      "file": "blackbelt-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "blackbelt-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "blackbelt-gen2.png",
-      "disabled": true
-    },
-    "blackbelt-gen3.png",
-    "blackbelt-gen3rs.png",
-    "blackbelt-gen4.png",
-    "blackbelt-gen4dp.png",
-    "blackbelt-gen6.png",
-    "blackbelt-gen7.png",
-    "blackbelt-gen8.png",
-    "blackbelt-gen9.png",
-    "blackbelt.png"
-  ],
-  "blaine": [
-    {
-      "file": "blaine-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "blaine-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "blaine-gen2.png",
-      "disabled": true
-    },
-    "blaine-gen3.png",
-    "blaine-lgpe.png",
-    "blaine.png"
-  ],
-  "blanche": [
-    "blanche-casual.png",
-    "blanche.png"
-  ],
-  "blue": [
-    {
-      "file": "blue-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "blue-gen1champion.png",
-      "disabled": true
-    },
-    {
-      "file": "blue-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "blue-gen1rbchampion.png",
-      "disabled": true
-    },
-    {
-      "file": "blue-gen1rbtwo.png",
-      "disabled": true
-    },
-    {
-      "file": "blue-gen1two.png",
-      "disabled": true
-    },
-    {
-      "file": "blue-gen2.png",
-      "disabled": true
-    },
-    "blue-gen3.png",
-    "blue-gen3champion.png",
-    "blue-gen3two.png",
-    "blue-gen7.png",
-    "blue-lgpe.png",
-    "blue-masters.png",
-    "blue-masters2.png",
-    "blue.png"
-  ],
-  "boarder": [
-    {
-      "file": "boarder-gen2.png",
-      "disabled": true
-    },
-    "boarder.png"
-  ],
-  "bodybuilder": [
-    "bodybuilder-gen9.png"
-  ],
-  "bodybuilderf": [
-    "bodybuilderf-gen9.png"
-  ],
-  "brandon": [
-    "brandon-gen3.png",
-    "brandon.png"
-  ],
-  "brassius": [
-    "brassius.png"
-  ],
-  "brawly": [
-    "brawly-gen3.png",
-    "brawly-gen6.png",
-    "brawly.png"
-  ],
-  "brendan": [
-    "brendan-gen3.png",
-    "brendan-gen3rs.png",
-    "brendan-masters.png",
-    "brendan-masters2.png",
-    "brendan.png"
-  ],
-  "brendan-contest": [
-    "brendan-contest.png"
-  ],
-  "brendan-e": [
-    "brendan-e.png"
-  ],
-  "brendan-rs": [
-    "brendan-rs.png"
-  ],
-  "briar": [
-    "briar.png"
-  ],
-  "brigette": [
-    "brigette.png"
-  ],
-  "brock": [
-    {
-      "file": "brock-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "brock-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "brock-gen2.png",
-      "disabled": true
-    },
-    "brock-gen3.png",
-    "brock-lgpe.png",
-    "brock-masters.png",
-    "brock.png"
-  ],
-  "bruno": [
-    {
-      "file": "bruno-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "bruno-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "bruno-gen2.png",
-      "disabled": true
-    },
-    "bruno-gen3.png",
-    "bruno.png"
-  ],
-  "brycen": [
-    "brycen.png"
-  ],
-  "brycenman": [
-    "brycenman.png"
-  ],
-  "bryony": [
-    "bryony.png"
-  ],
-  "buck": [
-    "buck.png"
-  ],
-  "bugcatcher": [
-    {
-      "file": "bugcatcher-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "bugcatcher-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "bugcatcher-gen2.png",
-      "disabled": true
-    },
-    "bugcatcher-gen3.png",
-    "bugcatcher-gen3rs.png",
-    "bugcatcher-gen4dp.png",
-    "bugcatcher-gen6.png",
-    "bugcatcher.png"
-  ],
-  "bugmaniac": [
-    "bugmaniac-gen3.png",
-    "bugmaniac-gen6.png"
-  ],
-  "bugsy": [
-    {
-      "file": "bugsy-gen2.png",
-      "disabled": true
-    },
-    "bugsy-masters.png",
-    "bugsy.png"
-  ],
-  "burgh": [
-    "burgh-masters.png",
-    "burgh.png"
-  ],
-  "burglar": [
-    {
-      "file": "burglar-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "burglar-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "burglar-gen2.png",
-      "disabled": true
-    },
-    "burglar-gen3.png",
-    "burglar-lgpe.png",
-    "burglar.png"
-  ],
-  "burnet": [
-    "burnet-radar.png",
-    "burnet.png"
-  ],
-  "butler": [
-    "butler.png"
-  ],
-  "byron": [
-    "byron.png"
-  ],
-  "cabbie": [
-    "cabbie-gen9.png",
-    "cabbie.png"
-  ],
-  "cafemaster": [
-    "cafemaster.png"
-  ],
-  "caitlin": [
-    "caitlin-gen4.png",
-    "caitlin-masters.png",
-    "caitlin.png"
-  ],
-  "calaba": [
-    "calaba.png"
-  ],
-  "calem": [
-    "calem-masters.png",
-    "calem.png"
-  ],
-  "cameraman": [
-    "cameraman-gen6.png",
-    "cameraman-gen8.png",
-    "cameraman.png"
-  ],
-  "camper": [
-    {
-      "file": "camper-gen2.png",
-      "disabled": true
-    },
-    "camper-gen3.png",
-    "camper-gen3rs.png",
-    "camper-gen6.png",
-    "camper.png"
-  ],
-  "candela": [
-    "candela-casual.png",
-    "candela.png"
-  ],
-  "candice": [
-    "candice-masters.png",
-    "candice.png"
-  ],
-  "caraliss": [
-    "caraliss.png"
-  ],
-  "caretaker": [
-    "caretaker.png"
-  ],
-  "carmine": [
-    "carmine-festival.png",
-    "carmine.png"
-  ],
-  "cedricjuniper": [
-    "cedricjuniper.png"
-  ],
-  "celio": [
-    "celio.png"
-  ],
-  "channeler": [
-    {
-      "file": "channeler-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "channeler-gen1rb.png",
-      "disabled": true
-    },
-    "channeler-gen3.png",
-    "channeler-lgpe.png"
-  ],
-  "charm": [
-    "charm.png"
-  ],
-  "charon": [
-    "charon.png"
-  ],
-  "chase": [
-    "chase.png"
-  ],
-  "che": [
-    "chef.png"
-  ],
-  "cheren": [
-    "cheren-gen5bw2.png",
-    "cheren-masters.png",
-    "cheren.png"
-  ],
-  "cheryl": [
-    "cheryl.png"
-  ],
-  "chili": [
-    "chili.png"
-  ],
-  "choy": [
-    "choy.png"
-  ],
-  "christoph": [
-    "christoph.png"
-  ],
-  "chuck": [
-    {
-      "file": "chuck-gen2.png",
-      "disabled": true
-    },
-    "chuck.png"
-  ],
-  "cilan": [
-    "cilan.png"
-  ],
-  "clair": [
-    {
-      "file": "clair-gen2.png",
-      "disabled": true
-    },
-    "clair-masters.png",
-    "clair.png"
-  ],
-  "clavell": [
-    "clavell-s.png"
-  ],
-  "clay": [
-    "clay.png"
-  ],
-  "clemont": [
-    "clemont.png"
-  ],
-  "clerk": [
-    "clerk-gen8.png",
-    "clerk.png",
-    "clerkf.png"
-  ],
-  "clerk-boss": [
-    "clerk-boss.png"
-  ],
-  "clerk-unite": [
-    "clerk-unite.png"
-  ],
-  "clerkf": [
-    "clerkf-gen8.png"
-  ],
-  "clif": [
-    "cliff.png"
-  ],
-  "clive": [
-    "clive-v.png"
-  ],
-  "clover": [
-    "clover.png"
-  ],
-  "clown": [
-    "clown.png"
-  ],
-  "cogita": [
-    "cogita.png"
-  ],
-  "coin": [
-    "coin.png"
-  ],
-  "collector": [
-    "collector-gen3.png",
-    "collector-gen6.png",
-    "collector-gen7.png",
-    "collector-masters.png",
-    "collector.png"
-  ],
-  "colress": [
-    "colress-gen7.png",
-    "colress.png"
-  ],
-  "colza": [
-    "colza.png"
-  ],
-  "concordia": [
-    "concordia.png"
-  ],
-  "cook": [
-    "cook-gen7.png",
-    "cook-gen9.png",
-    "cook.png"
-  ],
-  "courier": [
-    "courier.png"
-  ],
-  "courtney": [
-    "courtney-gen3.png",
-    "courtney.png"
-  ],
-  "cowgirl": [
-    "cowgirl.png"
-  ],
-  "crasherwake": [
-    "crasherwake.png"
-  ],
-  "cress": [
-    "cress.png"
-  ],
-  "crispin": [
-    "crispin.png"
-  ],
-  "crushgirl": [
-    "crushgirl-gen3.png"
-  ],
-  "crushkin": [
-    "crushkin-gen3.png"
-  ],
-  "cueball": [
-    {
-      "file": "cueball-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "cueball-gen1rb.png",
-      "disabled": true
-    },
-    "cueball-gen3.png"
-  ],
-  "curtis": [
-    "curtis.png"
-  ],
-  "cyclist": [
-    "cyclist-gen4.png",
-    "cyclist.png",
-    "cyclistf.png"
-  ],
-  "cyclistf": [
-    "cyclistf-gen4.png"
-  ],
-  "cyllene": [
-    "cyllene.png"
-  ],
-  "cynthia": [
-    "cynthia-anime.png",
-    "cynthia-anime2.png",
-    "cynthia-gen4.png",
-    "cynthia-gen7.png",
-    "cynthia-masters.png",
-    "cynthia-masters2.png",
-    "cynthia-masters3.png",
-    "cynthia-masters4.png",
-    "cynthia.png"
-  ],
-  "cyrano": [
-    "cyrano.png"
-  ],
-  "cyrus": [
-    "cyrus-masters.png",
-    "cyrus.png"
-  ],
-  "dagero": [
-    "dagero.png"
-  ],
-  "dahlia": [
-    "dahlia.png"
-  ],
-  "daisy": [
-    "daisy-gen3.png",
-    "daisy.png"
-  ],
-  "dana": [
-    "dana.png"
-  ],
-  "dancer": [
-    "dancer-gen7.png",
-    "dancer-gen8.png",
-    "dancer.png"
-  ],
-  "darach": [
-    "darach.png"
-  ],
-  "darach-caitlin": [
-    "darach-caitlin.png"
-  ],
-  "dawn": [
-    "dawn-gen4pt.png",
-    "dawn-masters.png",
-    "dawn-masters2.png",
-    "dawn-masters3.png",
-    "dawn.png"
-  ],
-  "dawn-contest": [
-    "dawn-contest.png"
-  ],
-  "delinquent": [
-    "delinquent-gen9.png",
-    "delinquent.png"
-  ],
-  "delinquentf": [
-    "delinquentf-gen9.png"
-  ],
-  "delinquentf2": [
-    "delinquentf2-gen9.png"
-  ],
-  "dendra": [
-    "dendra.png"
-  ],
-  "depotagent": [
-    "depotagent.png"
-  ],
-  "dexio": [
-    "dexio-gen6.png",
-    "dexio.png"
-  ],
-  "diamondclanmember": [
-    "diamondclanmember.png"
-  ],
-  "diantha": [
-    "diantha-masters.png",
-    "diantha-masters2.png",
-    "diantha.png"
-  ],
-  "doctor": [
-    "doctor-gen8.png",
-    "doctor.png"
-  ],
-  "doctorf": [
-    "doctorf-gen8.png"
-  ],
-  "doubleteam": [
-    "doubleteam.png"
-  ],
-  "dragontamer": [
-    "dragontamer-gen3.png",
-    "dragontamer-gen6.png",
-    "dragontamer-gen9.png",
-    "dragontamer.png"
-  ],
-  "drake": [
-    "drake-gen3.png"
-  ],
-  "drasna": [
-    "drasna.png"
-  ],
-  "drayden": [
-    "drayden.png"
-  ],
-  "drayton": [
-    "drayton.png"
-  ],
-  "dulse": [
-    "dulse.png"
-  ],
-  "elaine": [
-    "elaine.png"
-  ],
-  "elesa": [
-    "elesa-gen5bw2.png",
-    "elesa-masters.png",
-    "elesa-masters2.png",
-    "elesa-masters3.png",
-    "elesa.png"
-  ],
-  "elio": [
-    "elio-masters.png",
-    "elio-usum.png",
-    "elio.png"
-  ],
-  "elm": [
-    "elm.png"
-  ],
-  "emma": [
-    "emma.png"
-  ],
-  "emma-lza": [
-    "emma-lza.png"
-  ],
-  "emmet": [
-    "emmet-masters.png",
-    "emmet.png"
-  ],
-  "engineer": [
-    {
-      "file": "engineer-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "engineer-gen1rb.png",
-      "disabled": true
-    },
-    "engineer-gen3.png"
-  ],
-  "erbie-unite": [
-    "erbie-unite.png"
-  ],
-  "eri": [
-    "eri.png"
-  ],
-  "erika": [
-    {
-      "file": "erika-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "erika-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "erika-gen2.png",
-      "disabled": true
-    },
-    "erika-gen3.png",
-    "erika-lgpe.png",
-    "erika-masters.png",
-    "erika-masters2.png",
-    "erika-masters3.png",
-    "erika.png"
-  ],
-  "essentia": [
-    "essentia.png"
-  ],
-  "ethan": [
-    {
-      "file": "ethan-gen2.png",
-      "disabled": true
-    },
-    {
-      "file": "ethan-gen2c.png",
-      "disabled": true
-    },
-    "ethan-masters.png",
-    "ethan.png"
-  ],
-  "ethan-pokeathlon": [
-    "ethan-pokeathlon.png"
-  ],
-  "eusine": [
-    {
-      "file": "eusine-gen2.png",
-      "disabled": true
-    },
-    "eusine.png"
-  ],
-  "evelyn": [
-    "evelyn.png"
-  ],
-  "expert": [
-    "expert-gen3.png",
-    "expert-gen6.png"
-  ],
-  "expertf": [
-    "expertf-gen3.png",
-    "expertf-gen6.png"
-  ],
-  "faba": [
-    "faba.png"
-  ],
-  "fairytalegirl": [
-    "fairytalegirl.png"
-  ],
-  "falkner": [
-    {
-      "file": "falkner-gen2.png",
-      "disabled": true
-    },
-    "falkner.png"
-  ],
-  "fantina": [
-    "fantina.png"
-  ],
-  "fennel": [
-    "fennel.png"
-  ],
-  "firebreather": [
-    {
-      "file": "firebreather-gen2.png",
-      "disabled": true
-    },
-    "firebreather.png"
-  ],
-  "firefighter": [
-    "firefighter.png"
-  ],
-  "fisher": [
-    "fisher-gen8.png"
-  ],
-  "fisherman": [
-    {
-      "file": "fisherman-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "fisherman-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "fisherman-gen2jp.png",
-      "disabled": true
-    },
-    "fisherman-gen3.png",
-    "fisherman-gen3rs.png",
-    "fisherman-gen4.png",
-    "fisherman-gen6.png",
-    "fisherman-gen6xy.png",
-    "fisherman-gen7.png",
-    "fisherman.png"
-  ],
-  "flannery": [
-    "flannery-gen3.png",
-    "flannery-gen6.png",
-    "flannery.png"
-  ],
-  "flaregrunt": [
-    "flaregrunt.png",
-    "flaregruntf.png"
-  ],
-  "flint": [
-    "flint.png"
-  ],
-  "florian": [
-    "florian-festival.png",
-    "florian-s.png"
-  ],
-  "florian-bb": [
-    "florian-bb.png"
-  ],
-  "freediver": [
-    "freediver.png"
-  ],
-  "furisodegirl-black": [
-    "furisodegirl-black.png"
-  ],
-  "furisodegirl-blue": [
-    "furisodegirl-blue.png"
-  ],
-  "furisodegirl-pink": [
-    "furisodegirl-pink.png"
-  ],
-  "furisodegirl-white": [
-    "furisodegirl-white.png"
-  ],
-  "gaeric": [
-    "gaeric.png"
-  ],
-  "galacticgrunt": [
-    "galacticgrunt.png",
-    "galacticgruntf.png"
-  ],
-  "gambler": [
-    {
-      "file": "gambler-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "gambler-gen1rb.png",
-      "disabled": true
-    },
-    "gambler.png"
-  ],
-  "gamer": [
-    "gamer-gen3.png"
-  ],
-  "garcon": [
-    "garcon.png"
-  ],
-  "gardener": [
-    "gardener.png"
-  ],
-  "gardenia": [
-    "gardenia-masters.png",
-    "gardenia.png"
-  ],
-  "geeta": [
-    "geeta.png"
-  ],
-  "gentleman": [
-    {
-      "file": "gentleman-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "gentleman-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "gentleman-gen2.png",
-      "disabled": true
-    },
-    "gentleman-gen3.png",
-    "gentleman-gen3rs.png",
-    "gentleman-gen4.png",
-    "gentleman-gen4dp.png",
-    "gentleman-gen6.png",
-    "gentleman-gen6xy.png",
-    "gentleman-gen7.png",
-    "gentleman-gen8.png",
-    "gentleman-lgpe.png",
-    "gentleman.png"
-  ],
-  "ghetsis": [
-    "ghetsis-gen5bw.png",
-    "ghetsis.png"
-  ],
-  "giacomo": [
-    "giacomo.png"
-  ],
-  "ginchiyo": [
-    "ginchiyo-conquest.png"
-  ],
-  "ginter": [
-    "ginter.png"
-  ],
-  "giovanni": [
-    {
-      "file": "giovanni-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "giovanni-gen1rb.png",
-      "disabled": true
-    },
-    "giovanni-gen3.png",
-    "giovanni-lgpe.png",
-    "giovanni-masters.png",
-    "giovanni.png"
-  ],
-  "glacia": [
-    "glacia-gen3.png",
-    "glacia.png"
-  ],
-  "gladion": [
-    "gladion-masters.png",
-    "gladion.png"
-  ],
-  "gladion-stance": [
-    "gladion-stance.png"
-  ],
-  "gloria": [
-    "gloria-dojo.png",
-    "gloria-league.png",
-    "gloria-masters.png",
-    "gloria-tundra.png",
-    "gloria.png"
-  ],
-  "golfer": [
-    "golfer.png"
-  ],
-  "gordie": [
-    "gordie.png"
-  ],
-  "grace": [
-    "grace.png"
-  ],
-  "grant": [
-    "grant.png"
-  ],
-  "green": [
-    "green.png"
-  ],
-  "greta": [
-    "greta-gen3.png",
-    "greta.png"
-  ],
-  "grimsley": [
-    "grimsley-gen7.png",
-    "grimsley-masters.png",
-    "grimsley.png"
-  ],
-  "grusha": [
-    "grusha.png"
-  ],
-  "guitarist": [
-    {
-      "file": "guitarist-gen2.png",
-      "disabled": true
-    },
-    "guitarist-gen3.png",
-    "guitarist-gen4.png",
-    "guitarist-gen6.png",
-    "guitarist.png"
-  ],
-  "gurkinn": [
-    "gurkinn.png"
-  ],
-  "guzma": [
-    "guzma-masters.png",
-    "guzma.png"
-  ],
-  "hala": [
-    "hala.png"
-  ],
-  "hanbei": [
-    "hanbei-conquest.png"
-  ],
-  "hapu": [
-    "hapu.png"
-  ],
-  "harlequin": [
-    "harlequin.png"
-  ],
-  "harmony": [
-    "harmony.png"
-  ],
-  "hassel": [
-    "hassel.png"
-  ],
-  "hau": [
-    "hau-masters.png",
-    "hau.png"
-  ],
-  "hau-stance": [
-    "hau-stance.png"
-  ],
-  "hayley": [
-    "hayley.png"
-  ],
-  "heath": [
-    "heath.png"
-  ],
-  "hero": [
-    "hero-conquest.png"
-  ],
-  "hero2": [
-    "hero2-conquest.png"
-  ],
-  "heroine": [
-    "heroine-conquest.png"
-  ],
-  "heroine2": [
-    "heroine2-conquest.png"
-  ],
-  "hexmaniac": [
-    "hexmaniac-gen3.png",
-    "hexmaniac-gen3jp.png",
-    "hexmaniac-gen6.png"
-  ],
-  "hiker": [
-    {
-      "file": "hiker-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "hiker-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "hiker-gen2.png",
-      "disabled": true
-    },
-    "hiker-gen3.png",
-    "hiker-gen3rs.png",
-    "hiker-gen4.png",
-    "hiker-gen6.png",
-    "hiker-gen7.png",
-    "hiker-gen8.png",
-    "hiker-gen9.png",
-    "hiker.png"
-  ],
-  "hilbert": [
-    "hilbert-masters.png",
-    "hilbert-masters2.png",
-    "hilbert-wonderlauncher.png",
-    "hilbert.png"
-  ],
-  "hilda": [
-    "hilda-masters.png",
-    "hilda-masters2.png",
-    "hilda-masters3.png",
-    "hilda-wonderlauncher.png",
-    "hilda.png"
-  ],
-  "hooligans": [
-    "hooligans.png"
-  ],
-  "hoopster": [
-    "hoopster.png"
-  ],
-  "hop": [
-    "hop-masters.png",
-    "hop.png"
-  ],
-  "hugh": [
-    "hugh.png"
-  ],
-  "hyde": [
-    "hyde.png"
-  ],
-  "idol": [
-    "idol.png"
-  ],
-  "ilima": [
-    "ilima.png"
-  ],
-  "infielder": [
-    "infielder.png"
-  ],
-  "ingo": [
-    "ingo-masters.png",
-    "ingo.png"
-  ],
-  "ingo-hisui": [
-    "ingo-hisui.png"
-  ],
-  "interviewers": [
-    "interviewers-gen3.png",
-    "interviewers-gen6.png",
-    "interviewers.png"
-  ],
-  "iono": [
-    "iono-masters.png",
-    "iono-masters2.png",
-    "iono.png"
-  ],
-  "irida": [
-    "irida-masters.png",
-    "irida.png"
-  ],
-  "iris": [
-    "iris-gen5bw2.png",
-    "iris-masters.png",
-    "iris.png"
-  ],
-  "iscan": [
-    "iscan.png"
-  ],
-  "jacq": [
-    "jacq.png"
-  ],
-  "jamie": [
-    "jamie.png"
-  ],
-  "janine": [
-    {
-      "file": "janine-gen2.png",
-      "disabled": true
-    },
-    "janine.png"
-  ],
-  "janitor": [
-    "janitor-gen7.png",
-    "janitor-gen9.png",
-    "janitor.png"
-  ],
-  "jasmine": [
-    {
-      "file": "jasmine-gen2.png",
-      "disabled": true
-    },
-    "jasmine-masters.png",
-    "jasmine-masters2.png",
-    "jasmine.png"
-  ],
-  "jasmine-contest": [
-    "jasmine-contest.png"
-  ],
-  "jessiejames": [
-    {
-      "file": "jessiejames-gen1.png",
-      "disabled": true
-    }
-  ],
-  "jogger": [
-    "jogger.png"
-  ],
-  "johanna": [
-    "johanna.png"
-  ],
-  "johanna-contest": [
-    "johanna-contest.png"
-  ],
-  "jrtrainer": [
-    {
-      "file": "jrtrainer-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "jrtrainer-gen1rb.png",
-      "disabled": true
-    }
-  ],
-  "jrtrainerf": [
-    {
-      "file": "jrtrainerf-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "jrtrainerf-gen1rb.png",
-      "disabled": true
-    }
-  ],
-  "juan": [
-    "juan-gen3.png",
-    "juan.png"
-  ],
-  "juggler": [
-    {
-      "file": "juggler-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "juggler-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "juggler-gen2.png",
-      "disabled": true
-    },
-    "juggler-gen3.png",
-    "juggler.png"
-  ],
-  "juliana": [
-    "juliana-festival.png",
-    "juliana-s.png"
-  ],
-  "juliana-bb": [
-    "juliana-bb.png"
-  ],
-  "juniper": [
-    "juniper.png"
-  ],
-  "jupiter": [
-    "jupiter.png"
-  ],
-  "kabu": [
-    "kabu.png"
-  ],
-  "kahili": [
-    "kahili.png"
-  ],
-  "kamado": [
-    "kamado.png"
-  ],
-  "kamado-armor": [
-    "kamado-armor.png"
-  ],
-  "karen": [
-    {
-      "file": "karen-gen2.png",
-      "disabled": true
-    },
-    "karen.png"
-  ],
-  "katy": [
-    "katy.png"
-  ],
-  "kiawe": [
-    "kiawe.png"
-  ],
-  "kieran": [
-    "kieran-festival.png",
-    "kieran.png"
-  ],
-  "kieran-champion": [
-    "kieran-champion.png"
-  ],
-  "kimonogirl": [
-    {
-      "file": "kimonogirl-gen2.png",
-      "disabled": true
-    },
-    "kimonogirl.png"
-  ],
-  "kindler": [
-    "kindler-gen3.png",
-    "kindler-gen6.png"
-  ],
-  "klara": [
-    "klara.png"
-  ],
-  "kofu": [
-    "kofu.png"
-  ],
-  "koga": [
-    {
-      "file": "koga-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "koga-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "koga-gen2.png",
-      "disabled": true
-    },
-    "koga-gen3.png",
-    "koga-lgpe.png",
-    "koga.png"
-  ],
-  "korrina": [
-    "korrina-masters.png",
-    "korrina.png"
-  ],
-  "kris": [
-    {
-      "file": "kris-gen2.png",
-      "disabled": true
-    },
-    "kris-masters.png",
-    "kris.png"
-  ],
-  "kukui": [
-    "kukui.png"
-  ],
-  "kukui-stand": [
-    "kukui-stand.png"
-  ],
-  "kunoichi": [
-    "kunoichi-conquest.png"
-  ],
-  "kunoichi2": [
-    "kunoichi2-conquest.png"
-  ],
-  "kurt": [
-    "kurt.png"
-  ],
-  "lacey": [
-    "lacey.png"
-  ],
-  "lady": [
-    "lady-gen3.png",
-    "lady-gen3rs.png",
-    "lady-gen4.png",
-    "lady-gen6.png",
-    "lady-gen6oras.png",
-    "lady.png"
-  ],
-  "lana": [
-    "lana-masters.png",
-    "lana.png"
-  ],
-  "lance": [
-    {
-      "file": "lance-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "lance-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "lance-gen2.png",
-      "disabled": true
-    },
-    "lance-gen3.png",
-    "lance-lgpe.png",
-    "lance-masters.png",
-    "lance-masters2.png",
-    "lance.png"
-  ],
-  "lanette": [
-    "lanette.png"
-  ],
-  "larry": [
-    "larry.png"
-  ],
-  "lass": [
-    {
-      "file": "lass-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "lass-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "lass-gen2.png",
-      "disabled": true
-    },
-    "lass-gen3.png",
-    "lass-gen3rs.png",
-    "lass-gen4.png",
-    "lass-gen4dp.png",
-    "lass-gen6.png",
-    "lass-gen6oras.png",
-    "lass-gen7.png",
-    "lass-gen8.png",
-    "lass.png"
-  ],
-  "laventon": [
-    "laventon.png",
-    "laventon2.png"
-  ],
-  "leaf": [
-    "leaf-gen3.png",
-    "leaf-masters.png",
-    "leaf-masters2.png"
-  ],
-  "leaguestaf": [
-    "leaguestaff.png"
-  ],
-  "leaguestaff": [
-    "leaguestafff.png"
-  ],
-  "lenora": [
-    "lenora.png"
-  ],
-  "leon": [
-    "leon-masters.png",
-    "leon-masters2.png",
-    "leon.png"
-  ],
-  "leon-tower": [
-    "leon-tower.png"
-  ],
-  "li": [
-    "li.png"
-  ],
-  "lian": [
-    "lian.png"
-  ],
-  "lida": [
-    "lida.png"
-  ],
-  "liko": [
-    "liko.png"
-  ],
-  "lillie": [
-    "lillie-masters.png",
-    "lillie-masters2.png",
-    "lillie-masters3.png",
-    "lillie.png"
-  ],
-  "lillie-z": [
-    "lillie-z.png"
-  ],
-  "linebacker": [
-    "linebacker.png"
-  ],
-  "lisia": [
-    "lisia-masters.png",
-    "lisia.png"
-  ],
-  "liza": [
-    "liza-gen6.png",
-    "liza-masters.png",
-    "liza.png"
-  ],
-  "lorelei": [
-    {
-      "file": "lorelei-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "lorelei-gen1rb.png",
-      "disabled": true
-    },
-    "lorelei-gen3.png",
-    "lorelei-lgpe.png"
-  ],
-  "ltsurge": [
-    {
-      "file": "ltsurge-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "ltsurge-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "ltsurge-gen2.png",
-      "disabled": true
-    },
-    "ltsurge-gen3.png",
-    "ltsurge.png"
-  ],
-  "lucas": [
-    "lucas-gen4pt.png",
-    "lucas.png"
-  ],
-  "lucas-contest": [
-    "lucas-contest.png"
-  ],
-  "lucian": [
-    "lucian.png"
-  ],
-  "lucy": [
-    "lucy-gen3.png",
-    "lucy.png"
-  ],
-  "lusamine": [
-    "lusamine-masters.png",
-    "lusamine.png"
-  ],
-  "lusamine-nihilego": [
-    "lusamine-nihilego.png"
-  ],
-  "lyra": [
-    "lyra-masters.png",
-    "lyra-masters2.png",
-    "lyra.png"
-  ],
-  "lyra-pokeathlon": [
-    "lyra-pokeathlon.png"
-  ],
-  "lysandre": [
-    "lysandre-masters.png",
-    "lysandre.png"
-  ],
-  "mable": [
-    "mable.png"
-  ],
-  "madame": [
-    "madame-gen4.png",
-    "madame-gen4dp.png",
-    "madame-gen6.png",
-    "madame-gen7.png",
-    "madame-gen8.png",
-    "madame.png"
-  ],
-  "magmagrunt": [
-    "magmagrunt.png",
-    "magmagruntf.png"
-  ],
-  "magmagrunt-rse": [
-    "magmagrunt-rse.png"
-  ],
-  "magmagruntf-rse": [
-    "magmagruntf-rse.png"
-  ],
-  "magmasuit": [
-    "magmasuit.png"
-  ],
-  "magnolia": [
-    "magnolia.png"
-  ],
-  "magnus": [
-    "magnus.png"
-  ],
-  "mai": [
-    "mai.png"
-  ],
-  "maid": [
-    "maid-gen4.png",
-    "maid-gen6.png",
-    "maid.png"
-  ],
-  "mallow": [
-    "mallow-masters.png",
-    "mallow.png"
-  ],
-  "malva": [
-    "malva.png"
-  ],
-  "marley": [
-    "marley-masters.png",
-    "marley.png"
-  ],
-  "marlon": [
-    "marlon.png"
-  ],
-  "marnie": [
-    "marnie-league.png",
-    "marnie-masters.png",
-    "marnie-masters2.png",
-    "marnie-masters3.png",
-    "marnie.png"
-  ],
-  "mars": [
-    "mars.png"
-  ],
-  "marshal": [
-    "marshal.png"
-  ],
-  "masamune": [
-    "masamune-conquest.png"
-  ],
-  "mateo": [
-    "mateo.png"
-  ],
-  "matt": [
-    "matt-gen3.png",
-    "matt.png"
-  ],
-  "maxie": [
-    "maxie-gen3.png",
-    "maxie-gen6.png"
-  ],
-  "may": [
-    "may-gen3.png",
-    "may-gen3rs.png",
-    "may-masters.png",
-    "may-masters2.png",
-    "may-masters3.png",
-    "may-masters4.png",
-    "may.png"
-  ],
-  "may-contest": [
-    "may-contest.png"
-  ],
-  "may-e": [
-    "may-e.png"
-  ],
-  "may-rs": [
-    "may-rs.png"
-  ],
-  "maylene": [
-    "maylene.png"
-  ],
-  "medium": [
-    {
-      "file": "medium-gen2jp.png",
-      "disabled": true
-    },
-    "medium.png"
-  ],
-  "mela": [
-    "mela.png"
-  ],
-  "melli": [
-    "melli.png"
-  ],
-  "melony": [
-    "melony.png"
-  ],
-  "miku-fairy": [
-    "miku-fairy.png"
-  ],
-  "miku-fire": [
-    "miku-fire.png"
-  ],
-  "miku-flying": [
-    "miku-flying.png"
-  ],
-  "miku-ghost": [
-    "miku-ghost.png"
-  ],
-  "miku-grass": [
-    "miku-grass.png"
-  ],
-  "miku-ground": [
-    "miku-ground.png"
-  ],
-  "miku-ice": [
-    "miku-ice.png"
-  ],
-  "miku-psychic": [
-    "miku-psychic.png"
-  ],
-  "miku-water": [
-    "miku-water.png"
-  ],
-  "milo": [
-    "milo.png"
-  ],
-  "mina": [
-    "mina-lgpe.png",
-    "mina-masters.png",
-    "mina.png"
-  ],
-  "mira": [
-    "mira.png"
-  ],
-  "miriam": [
-    "miriam.png"
-  ],
-  "mirror": [
-    "mirror.png"
-  ],
-  "misty": [
-    {
-      "file": "misty-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "misty-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "misty-gen2.png",
-      "disabled": true
-    },
-    "misty-gen3.png",
-    "misty-lgpe.png",
-    "misty-masters.png",
-    "misty.png"
-  ],
-  "model": [
-    "model-gen8.png"
-  ],
-  "mohn": [
-    "mohn-anime.png",
-    "mohn.png"
-  ],
-  "molayne": [
-    "molayne.png"
-  ],
-  "mom-alola": [
-    "mom-alola.png"
-  ],
-  "mom-hoenn": [
-    "mom-hoenn.png"
-  ],
-  "mom-johto": [
-    "mom-johto.png"
-  ],
-  "mom-paldea": [
-    "mom-paldea.png"
-  ],
-  "mom-unova": [
-    "mom-unova.png",
-    "mom-unova2.png"
-  ],
-  "morgan": [
-    "morgan.png"
-  ],
-  "morty": [
-    {
-      "file": "morty-gen2.png",
-      "disabled": true
-    },
-    "morty-masters.png",
-    "morty-masters2.png",
-    "morty-masters3.png",
-    "morty.png"
-  ],
-  "mrbriney": [
-    "mrbriney.png"
-  ],
-  "mrfuji": [
-    "mrfuji-gen3.png"
-  ],
-  "mrstone": [
-    "mrstone.png"
-  ],
-  "musician": [
-    "musician-gen8.png",
-    "musician-gen9.png",
-    "musician.png"
-  ],
-  "mustard": [
-    "mustard.png"
-  ],
-  "mustard-champion": [
-    "mustard-champion.png"
-  ],
-  "mustard-master": [
-    "mustard-master.png"
-  ],
-  "n": [
-    "n-masters.png",
-    "n-masters2.png",
-    "n-masters3.png",
-    "n.png"
-  ],
-  "nancy": [
-    "nancy.png"
-  ],
-  "nanu": [
-    "nanu.png"
-  ],
-  "nate": [
-    "nate-masters.png",
-    "nate-pokestar.png",
-    "nate-pokestar3.png",
-    "nate-wonderlauncher.png",
-    "nate.png"
-  ],
-  "naveen": [
-    "naveen.png"
-  ],
-  "nemona": [
-    "nemona-masters.png",
-    "nemona-s.png",
-    "nemona-v.png"
-  ],
-  "neroli": [
-    "neroli.png"
-  ],
-  "nessa": [
-    "nessa-masters.png",
-    "nessa.png"
-  ],
-  "ninjaboy": [
-    "ninjaboy-gen3.png",
-    "ninjaboy-gen6.png",
-    "ninjaboy.png"
-  ],
-  "nita": [
-    "nita.png"
-  ],
-  "nobunaga": [
-    "nobunaga-conquest.png"
-  ],
-  "noland": [
-    "noland-gen3.png",
-    "noland.png"
-  ],
-  "norman": [
-    "norman-gen3.png",
-    "norman-gen6.png",
-    "norman.png"
-  ],
-  "nurse": [
-    "nurse.png"
-  ],
-  "nurseryaide": [
-    "nurseryaide.png"
-  ],
-  "oak": [
-    {
-      "file": "oak-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "oak-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "oak-gen2.png",
-      "disabled": true
-    },
-    "oak-gen3.png",
-    "oak.png"
-  ],
-  "officer": [
-    {
-      "file": "officer-gen2.png",
-      "disabled": true
-    }
-  ],
-  "officeworker": [
-    "officeworker-gen9.png",
-    "officeworker.png",
-    "officeworkerf.png"
-  ],
-  "officeworkerf": [
-    "officeworkerf-gen9.png"
-  ],
-  "ogreclan": [
-    "ogreclan.png"
-  ],
-  "oichi": [
-    "oichi-conquest.png"
-  ],
-  "oldcouple": [
-    "oldcouple-gen3.png"
-  ],
-  "oleana": [
-    "oleana.png"
-  ],
-  "olivia": [
-    "olivia.png"
-  ],
-  "olympia": [
-    "olympia.png"
-  ],
-  "opal": [
-    "opal.png"
-  ],
-  "ortega": [
-    "ortega.png"
-  ],
-  "owner": [
-    "owner.png"
-  ],
-  "painter": [
-    "painter-gen3.png"
-  ],
-  "palina": [
-    "palina.png"
-  ],
-  "palmer": [
-    "palmer.png"
-  ],
-  "parasollady": [
-    "parasollady-gen3.png",
-    "parasollady-gen4.png",
-    "parasollady-gen6.png",
-    "parasollady.png"
-  ],
-  "paulo": [
-    "paulo-masters.png"
-  ],
-  "paxton": [
-    "paxton.png"
-  ],
-  "pearlclanmember": [
-    "pearlclanmember.png"
-  ],
-  "penny": [
-    "penny.png"
-  ],
-  "peonia": [
-    "peonia.png"
-  ],
-  "peony": [
-    "peony-league.png",
-    "peony.png"
-  ],
-  "perrin": [
-    "perrin.png"
-  ],
-  "pesselle": [
-    "pesselle.png"
-  ],
-  "petrel": [
-    "petrel.png"
-  ],
-  "phil": [
-    "phil.png"
-  ],
-  "phoebe": [
-    "phoebe-gen3.png",
-    "phoebe-gen6.png",
-    "phoebe-masters.png"
-  ],
-  "phorus-unite": [
-    "phorus-unite.png"
-  ],
-  "phyco": [
-    "phyco.png"
-  ],
-  "picnicker": [
-    {
-      "file": "picnicker-gen2.png",
-      "disabled": true
-    },
-    "picnicker-gen3.png",
-    "picnicker-gen3rs.png",
-    "picnicker-gen6.png",
-    "picnicker.png"
-  ],
-  "piers": [
-    "piers-league.png",
-    "piers-masters.png",
-    "piers.png"
-  ],
-  "pilot": [
-    "pilot.png"
-  ],
-  "plasmagrunt": [
-    "plasmagrunt-gen5bw.png",
-    "plasmagrunt.png",
-    "plasmagruntf.png"
-  ],
-  "plasmagruntf": [
-    "plasmagruntf-gen5bw.png"
-  ],
-  "player-go": [
-    "player-go.png"
-  ],
-  "playerf-go": [
-    "playerf-go.png"
-  ],
-  "plumeria": [
-    "plumeria-league.png",
-    "plumeria.png"
-  ],
-  "pokefan": [
-    {
-      "file": "pokefan-gen2.png",
-      "disabled": true
-    },
-    "pokefan-gen3.png",
-    "pokefan-gen4.png",
-    "pokefan-gen6.png",
-    "pokefan-gen6xy.png",
-    "pokefan.png",
-    "pokefanf.png"
-  ],
-  "pokefanf": [
-    {
-      "file": "pokefanf-gen2.png",
-      "disabled": true
-    },
-    "pokefanf-gen3.png",
-    "pokefanf-gen4.png",
-    "pokefanf-gen6.png",
-    "pokefanf-gen6xy.png"
-  ],
-  "pokekid": [
-    "pokekid-gen8.png",
-    "pokekid.png"
-  ],
-  "pokekidf": [
-    "pokekidf-gen8.png"
-  ],
-  "pokemaniac": [
-    {
-      "file": "pokemaniac-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "pokemaniac-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "pokemaniac-gen2.png",
-      "disabled": true
-    },
-    "pokemaniac-gen3.png",
-    "pokemaniac-gen3rs.png",
-    "pokemaniac-gen6.png",
-    "pokemaniac-gen9.png",
-    "pokemaniac.png"
-  ],
-  "pokemonbreeder": [
-    "pokemonbreeder-gen3.png",
-    "pokemonbreeder-gen4.png",
-    "pokemonbreeder-gen6.png",
-    "pokemonbreeder-gen6xy.png",
-    "pokemonbreeder-gen7.png",
-    "pokemonbreeder-gen8.png",
-    "pokemonbreeder.png",
-    "pokemonbreederf.png"
-  ],
-  "pokemonbreederf": [
-    "pokemonbreederf-gen3.png",
-    "pokemonbreederf-gen3frlg.png",
-    "pokemonbreederf-gen4.png",
-    "pokemonbreederf-gen6.png",
-    "pokemonbreederf-gen6xy.png",
-    "pokemonbreederf-gen7.png",
-    "pokemonbreederf-gen8.png"
-  ],
-  "pokemoncenterlady": [
-    "pokemoncenterlady.png"
-  ],
-  "pokemonranger": [
-    "pokemonranger-gen3.png",
-    "pokemonranger-gen3rs.png",
-    "pokemonranger-gen4.png",
-    "pokemonranger-gen6.png",
-    "pokemonranger-gen6xy.png",
-    "pokemonranger.png",
-    "pokemonrangerf.png"
-  ],
-  "pokemonrangerf": [
-    "pokemonrangerf-gen3.png",
-    "pokemonrangerf-gen3rs.png",
-    "pokemonrangerf-gen4.png",
-    "pokemonrangerf-gen6.png",
-    "pokemonrangerf-gen6xy.png"
-  ],
-  "policeman": [
-    "policeman-gen4.png",
-    "policeman-gen7.png",
-    "policeman-gen8.png",
-    "policeman.png"
-  ],
-  "poppy": [
-    "poppy.png"
-  ],
-  "postman": [
-    "postman.png"
-  ],
-  "preschooler": [
-    "preschooler-gen6.png",
-    "preschooler-gen7.png",
-    "preschooler.png",
-    "preschoolerf.png"
-  ],
-  "preschoolerf": [
-    "preschoolerf-gen6.png",
-    "preschoolerf-gen7.png"
-  ],
-  "preschoolers": [
-    "preschoolers.png"
-  ],
-  "proton": [
-    "proton.png"
-  ],
-  "pryce": [
-    {
-      "file": "pryce-gen2.png",
-      "disabled": true
-    },
-    "pryce.png"
-  ],
-  "psychic": [
-    {
-      "file": "psychic-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "psychic-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "psychic-gen2.png",
-      "disabled": true
-    },
-    "psychic-gen3.png",
-    "psychic-gen3rs.png",
-    "psychic-gen4.png",
-    "psychic-gen6.png",
-    "psychic-lgpe.png",
-    "psychic.png",
-    "psychicf.png"
-  ],
-  "psychicf": [
-    "psychicf-gen3.png",
-    "psychicf-gen3rs.png",
-    "psychicf-gen4.png"
-  ],
-  "psychicfjp": [
-    "psychicfjp-gen3.png"
-  ],
-  "punkgirl": [
-    "punkgirl-gen7.png",
-    "punkgirl-masters.png",
-    "punkgirl.png"
-  ],
-  "punkguy": [
-    "punkguy-gen7.png",
-    "punkguy.png"
-  ],
-  "raifort": [
-    "raifort.png"
-  ],
-  "raihan": [
-    "raihan-masters.png",
-    "raihan.png"
-  ],
-  "railstaf": [
-    "railstaff.png"
-  ],
-  "ramos": [
-    "ramos.png"
-  ],
-  "rancher": [
-    "rancher.png"
-  ],
-  "ranmaru": [
-    "ranmaru-conquest.png"
-  ],
-  "red": [
-    {
-      "file": "red-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "red-gen1main.png",
-      "disabled": true
-    },
-    {
-      "file": "red-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "red-gen1title.png",
-      "disabled": true
-    },
-    {
-      "file": "red-gen2.png",
-      "disabled": true
-    },
-    "red-gen3.png",
-    "red-gen7.png",
-    "red-lgpe.png",
-    "red-masters.png",
-    "red-masters2.png",
-    "red-masters3.png",
-    "red.png"
-  ],
-  "rei": [
-    "rei-isekai.png",
-    "rei.png"
-  ],
-  "reporter": [
-    "reporter-gen6.png",
-    "reporter-gen8.png",
-    "reporter.png"
-  ],
-  "rhi": [
-    "rhi.png"
-  ],
-  "richboy": [
-    "richboy-gen3.png",
-    "richboy-gen4.png",
-    "richboy-gen6.png",
-    "richboy-gen6xy.png",
-    "richboy.png"
-  ],
-  "rika": [
-    "rika.png"
-  ],
-  "riley": [
-    "riley.png"
-  ],
-  "risingstar": [
-    "risingstar-gen6.png",
-    "risingstar.png",
-    "risingstarf.png"
-  ],
-  "risingstarf": [
-    "risingstarf-gen6.png"
-  ],
-  "rita": [
-    "rita.png"
-  ],
-  "river": [
-    "river.png"
-  ],
-  "roark": [
-    "roark.png"
-  ],
-  "rocker": [
-    {
-      "file": "rocker-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "rocker-gen1rb.png",
-      "disabled": true
-    },
-    "rocker-gen3.png"
-  ],
-  "rocket": [
-    {
-      "file": "rocket-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "rocket-gen1rb.png",
-      "disabled": true
-    }
-  ],
-  "rocketexecutive": [
-    {
-      "file": "rocketexecutive-gen2.png",
-      "disabled": true
-    }
-  ],
-  "rocketexecutivef": [
-    {
-      "file": "rocketexecutivef-gen2.png",
-      "disabled": true
-    }
-  ],
-  "rocketgrunt": [
-    {
-      "file": "rocketgrunt-gen2.png",
-      "disabled": true
-    },
-    "rocketgrunt.png",
-    "rocketgruntf.png"
-  ],
-  "rocketgruntf": [
-    {
-      "file": "rocketgruntf-gen2.png",
-      "disabled": true
-    }
-  ],
-  "rollerskater": [
-    "rollerskater.png",
-    "rollerskaterf.png"
-  ],
-  "rood": [
-    "rood.png"
-  ],
-  "rosa": [
-    "rosa-masters.png",
-    "rosa-masters2.png",
-    "rosa-masters3.png",
-    "rosa-pokestar.png",
-    "rosa-pokestar2.png",
-    "rosa-pokestar3.png",
-    "rosa-wonderlauncher.png",
-    "rosa.png"
-  ],
-  "rose": [
-    "rose-zerosuit.png",
-    "rose.png"
-  ],
-  "roughneck": [
-    "roughneck-gen4.png",
-    "roughneck.png"
-  ],
-  "rowan": [
-    "rowan.png"
-  ],
-  "roxanne": [
-    "roxanne-gen3.png",
-    "roxanne-gen6.png",
-    "roxanne-masters.png",
-    "roxanne.png"
-  ],
-  "roxie": [
-    "roxie-masters.png",
-    "roxie.png"
-  ],
-  "roy": [
-    "roy.png"
-  ],
-  "ruffian": [
-    "ruffian.png"
-  ],
-  "ruinmaniac": [
-    "ruinmaniac-gen3.png",
-    "ruinmaniac-gen3rs.png",
-    "ruinmaniac-gen6.png",
-    "ruinmaniac.png"
-  ],
-  "rye": [
-    "rye.png"
-  ],
-  "ryme": [
-    "ryme.png"
-  ],
-  "ryuki": [
-    "ryuki.png"
-  ],
-  "sabi": [
-    "sabi.png"
-  ],
-  "sabrina": [
-    "sabrina-frlg.png",
-    {
-      "file": "sabrina-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "sabrina-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "sabrina-gen2.png",
-      "disabled": true
-    },
-    "sabrina-gen3.png",
-    "sabrina-lgpe.png",
-    "sabrina-masters.png",
-    "sabrina.png"
-  ],
-  "sada": [
-    "sada-ai.png",
-    "sada.png"
-  ],
-  "sage": [
-    {
-      "file": "sage-gen2.png",
-      "disabled": true
-    },
-    {
-      "file": "sage-gen2jp.png",
-      "disabled": true
-    },
-    "sage.png"
-  ],
-  "saguaro": [
-    "saguaro.png"
-  ],
-  "sailor": [
-    {
-      "file": "sailor-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "sailor-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "sailor-gen2.png",
-      "disabled": true
-    },
-    "sailor-gen3.png",
-    "sailor-gen3jp.png",
-    "sailor-gen3rs.png",
-    "sailor-gen6.png",
-    "sailor.png"
-  ],
-  "salvatore": [
-    "salvatore.png"
-  ],
-  "samsonoak": [
-    "samsonoak.png"
-  ],
-  "sanqua": [
-    "sanqua.png"
-  ],
-  "saturn": [
-    "saturn.png"
-  ],
-  "schoolboy": [
-    {
-      "file": "schoolboy-gen2.png",
-      "disabled": true
-    },
-    "schoolboy.png"
-  ],
-  "schoolgirl": [
-    "schoolgirl.png"
-  ],
-  "schoolkid": [
-    "schoolkid-gen3.png",
-    "schoolkid-gen4.png",
-    "schoolkid-gen4dp.png",
-    "schoolkid-gen6.png",
-    "schoolkid-gen8.png",
-    "schoolkid.png",
-    "schoolkidf.png"
-  ],
-  "schoolkidf": [
-    "schoolkidf-gen3.png",
-    "schoolkidf-gen4.png",
-    "schoolkidf-gen6.png",
-    "schoolkidf-gen8.png"
-  ],
-  "scientist": [
-    {
-      "file": "scientist-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "scientist-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "scientist-gen2.png",
-      "disabled": true
-    },
-    "scientist-gen3.png",
-    "scientist-gen4.png",
-    "scientist-gen4dp.png",
-    "scientist-gen6.png",
-    "scientist-gen7.png",
-    "scientist-gen9.png",
-    "scientist.png",
-    "scientistf.png"
-  ],
-  "scientistf": [
-    "scientistf-gen6.png"
-  ],
-  "scott": [
-    "scott.png"
-  ],
-  "scottie": [
-    "scottie-masters.png"
-  ],
-  "scubadiver": [
-    "scubadiver.png"
-  ],
-  "securitycorps": [
-    "securitycorps.png",
-    "securitycorpsf.png"
-  ],
-  "selene": [
-    "selene-masters.png",
-    "selene-masters2.png",
-    "selene-usum.png",
-    "selene.png"
-  ],
-  "serena": [
-    "serena-anime.png",
-    "serena-masters.png",
-    "serena-masters2.png",
-    "serena-masters3.png",
-    "serena.png"
-  ],
-  "shadowtriad": [
-    "shadowtriad.png"
-  ],
-  "shauna": [
-    "shauna-masters.png",
-    "shauna.png"
-  ],
-  "shauntal": [
-    "shauntal-masters.png",
-    "shauntal.png"
-  ],
-  "shelly": [
-    "shelly-gen3.png",
-    "shelly.png"
-  ],
-  "shielbert": [
-    "shielbert.png"
-  ],
-  "sidney": [
-    "sidney-gen3.png",
-    "sidney.png"
-  ],
-  "siebold": [
-    "siebold-masters.png",
-    "siebold.png"
-  ],
-  "sierra": [
-    "sierra.png"
-  ],
-  "sightseer": [
-    "sightseer.png",
-    "sightseerf.png"
-  ],
-  "silver": [
-    {
-      "file": "silver-gen2.png",
-      "disabled": true
-    },
-    {
-      "file": "silver-gen2kanto.png",
-      "disabled": true
-    },
-    "silver-masters.png",
-    "silver.png"
-  ],
-  "sina": [
-    "sina-gen6.png",
-    "sina.png"
-  ],
-  "sisandbro": [
-    "sisandbro-gen3.png",
-    "sisandbro-gen3rs.png",
-    "sisandbro.png"
-  ],
-  "skier": [
-    {
-      "file": "skier-gen2.png",
-      "disabled": true
-    },
-    "skier.png",
-    "skierf.png"
-  ],
-  "skierf": [
-    "skierf-gen4dp.png"
-  ],
-  "skullgrunt": [
-    "skullgrunt.png",
-    "skullgruntf.png"
-  ],
-  "skyla": [
-    "skyla-masters.png",
-    "skyla-masters2.png",
-    "skyla.png"
-  ],
-  "skytrainer": [
-    "skytrainer.png",
-    "skytrainerf.png"
-  ],
-  "smasher": [
-    "smasher.png"
-  ],
-  "soliera": [
-    "soliera.png"
-  ],
-  "sonia": [
-    "sonia-masters.png",
-    "sonia.png"
-  ],
-  "sonia-professor": [
-    "sonia-professor.png"
-  ],
-  "sophocles": [
-    "sophocles.png"
-  ],
-  "sordward": [
-    "sordward.png"
-  ],
-  "sordward-shielbert": [
-    "sordward-shielbert.png"
-  ],
-  "spark": [
-    "spark-casual.png",
-    "spark.png"
-  ],
-  "spenser": [
-    "spenser-gen3.png",
-    "spenser.png"
-  ],
-  "srandjr": [
-    "srandjr-gen3.png"
-  ],
-  "stargrunt": [
-    "stargrunt-s.png",
-    "stargrunt-v.png"
-  ],
-  "stargruntf": [
-    "stargruntf-s.png",
-    "stargruntf-v.png"
-  ],
-  "steven": [
-    "steven-gen3.png",
-    "steven-gen6.png",
-    "steven-masters.png",
-    "steven-masters2.png",
-    "steven-masters3.png",
-    "steven-masters4.png",
-    "steven.png"
-  ],
-  "streetthug": [
-    "streetthug-masters.png",
-    "streetthug.png"
-  ],
-  "striker": [
-    "striker.png"
-  ],
-  "supernerd": [
-    {
-      "file": "supernerd-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "supernerd-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "supernerd-gen2.png",
-      "disabled": true
-    },
-    "supernerd-gen3.png",
-    "supernerd.png"
-  ],
-  "surfer": [
-    "surfer.png"
-  ],
-  "swimmer": [
-    {
-      "file": "swimmer-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "swimmer-gen1rb.png",
-      "disabled": true
-    },
-    "swimmer-gen4.png",
-    "swimmer-gen4dp.png",
-    "swimmer-gen4jp.png",
-    "swimmer-gen6.png",
-    "swimmer-gen7.png",
-    "swimmer-gen8.png",
-    "swimmer-masters.png",
-    "swimmer.png",
-    "swimmerf.png"
-  ],
-  "swimmerf": [
-    {
-      "file": "swimmerf-gen2.png",
-      "disabled": true
-    },
-    "swimmerf-gen3.png",
-    "swimmerf-gen3rs.png",
-    "swimmerf-gen4.png",
-    "swimmerf-gen4dp.png",
-    "swimmerf-gen6.png",
-    "swimmerf-gen7.png",
-    "swimmerf-gen8.png"
-  ],
-  "swimmerf2": [
-    "swimmerf2-gen6.png",
-    "swimmerf2-gen7.png"
-  ],
-  "swimmerfjp": [
-    {
-      "file": "swimmerfjp-gen2.png",
-      "disabled": true
-    }
-  ],
-  "swimmerm": [
-    {
-      "file": "swimmerm-gen2.png",
-      "disabled": true
-    },
-    "swimmerm-gen3.png",
-    "swimmerm-gen3rs.png"
-  ],
-  "sycamore": [
-    "sycamore-masters.png",
-    "sycamore.png"
-  ],
-  "tabitha": [
-    "tabitha-gen3.png",
-    "tabitha.png"
-  ],
-  "tamer": [
-    {
-      "file": "tamer-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "tamer-gen1rb.png",
-      "disabled": true
-    },
-    "tamer-gen3.png"
-  ],
-  "taohua": [
-    "taohua.png"
-  ],
-  "tate": [
-    "tate-gen6.png",
-    "tate-masters.png",
-    "tate.png"
-  ],
-  "tateandliza": [
-    "tateandliza-gen3.png",
-    "tateandliza-gen6.png"
-  ],
-  "teacher": [
-    {
-      "file": "teacher-gen2.png",
-      "disabled": true
-    },
-    "teacher-gen7.png",
-    "teacher.png"
-  ],
-  "teamaquabeta": [
-    "teamaquabeta-gen3.png"
-  ],
-  "teamaquagruntf": [
-    "teamaquagruntf-gen3.png"
-  ],
-  "teamaquagruntm": [
-    "teamaquagruntm-gen3.png"
-  ],
-  "teammagmagruntf": [
-    "teammagmagruntf-gen3.png"
-  ],
-  "teammagmagruntm": [
-    "teammagmagruntm-gen3.png"
-  ],
-  "teammates": [
-    "teammates.png"
-  ],
-  "teamrocket": [
-    "teamrocket.png"
-  ],
-  "teamrocketgruntf": [
-    "teamrocketgruntf-gen3.png"
-  ],
-  "teamrocketgruntm": [
-    "teamrocketgruntm-gen3.png"
-  ],
-  "theroyal": [
-    "theroyal.png"
-  ],
-  "thorton": [
-    "thorton.png"
-  ],
-  "tierno": [
-    "tierno.png"
-  ],
-  "tina": [
-    "tina-masters.png"
-  ],
-  "toddsnap": [
-    "toddsnap.png",
-    "toddsnap2.png"
-  ],
-  "tourist": [
-    "tourist.png",
-    "touristf.png"
-  ],
-  "touristf": [
-    "touristf2.png"
-  ],
-  "trace": [
-    "trace.png"
-  ],
-  "trevor": [
-    "trevor.png"
-  ],
-  "trialguide": [
-    "trialguide.png",
-    "trialguidef.png"
-  ],
-  "triathletebiker": [
-    "triathletebiker-gen6.png"
-  ],
-  "triathletebikerf": [
-    "triathletebikerf-gen3.png"
-  ],
-  "triathletebikerm": [
-    "triathletebikerm-gen3.png"
-  ],
-  "triathleterunner": [
-    "triathleterunner-gen6.png"
-  ],
-  "triathleterunnerf": [
-    "triathleterunnerf-gen3.png"
-  ],
-  "triathleterunnerm": [
-    "triathleterunnerm-gen3.png"
-  ],
-  "triathleteswimmer": [
-    "triathleteswimmer-gen6.png"
-  ],
-  "triathleteswimmerf": [
-    "triathleteswimmerf-gen3.png"
-  ],
-  "triathleteswimmerm": [
-    "triathleteswimmerm-gen3.png"
-  ],
-  "tuber": [
-    "tuber-gen3.png",
-    "tuber-gen6.png",
-    "tuber.png",
-    "tuberf.png"
-  ],
-  "tuberf": [
-    "tuberf-gen3.png",
-    "tuberf-gen3rs.png",
-    "tuberf-gen6.png"
-  ],
-  "tucker": [
-    "tucker-gen3.png",
-    "tucker.png"
-  ],
-  "tuli": [
-    "tuli.png"
-  ],
-  "tulip": [
-    "tulip.png"
-  ],
-  "turo": [
-    "turo-ai.png",
-    "turo.png"
-  ],
-  "twins": [
-    {
-      "file": "twins-gen2.png",
-      "disabled": true
-    },
-    "twins-gen3.png",
-    "twins-gen3rs.png",
-    "twins-gen4.png",
-    "twins-gen4dp.png",
-    "twins-gen6.png",
-    "twins.png"
-  ],
-  "tyme": [
-    "tyme.png"
-  ],
-  "ultraforestkartenvoy": [
-    "ultraforestkartenvoy.png"
-  ],
-  "unknown": [
-    "unknown.png",
-    "unknownf.png"
-  ],
-  "valerie": [
-    "valerie.png"
-  ],
-  "vessa": [
-    "vessa.png"
-  ],
-  "veteran": [
-    "veteran-gen4.png",
-    "veteran-gen6.png",
-    "veteran-gen7.png",
-    "veteran.png",
-    "veteranf.png"
-  ],
-  "veteranf": [
-    "veteranf-gen6.png",
-    "veteranf-gen7.png"
-  ],
-  "victor": [
-    "victor-dojo.png",
-    "victor-league.png",
-    "victor-masters.png",
-    "victor-tundra.png",
-    "victor.png"
-  ],
-  "vince": [
-    "vince.png"
-  ],
-  "viola": [
-    "viola-masters.png",
-    "viola.png"
-  ],
-  "volkner": [
-    "volkner-masters.png",
-    "volkner.png"
-  ],
-  "volo": [
-    "volo-ginkgo.png",
-    "volo.png"
-  ],
-  "waiter": [
-    "waiter-gen4.png",
-    "waiter-gen4dp.png",
-    "waiter-gen9.png",
-    "waiter.png"
-  ],
-  "waitress": [
-    "waitress-gen4.png",
-    "waitress-gen6.png",
-    "waitress-gen9.png",
-    "waitress.png"
-  ],
-  "wallace": [
-    "wallace-gen3.png",
-    "wallace-gen3rs.png",
-    "wallace-gen6.png",
-    "wallace-masters.png",
-    "wallace.png"
-  ],
-  "wally": [
-    "wally-gen3.png",
-    "wally-masters.png",
-    "wally.png"
-  ],
-  "wally-rse": [
-    "wally-rse.png"
-  ],
-  "wattson": [
-    "wattson-gen3.png",
-    "wattson.png"
-  ],
-  "whitney": [
-    {
-      "file": "whitney-gen2.png",
-      "disabled": true
-    },
-    "whitney-masters.png",
-    "whitney.png"
-  ],
-  "wicke": [
-    "wicke.png"
-  ],
-  "wikstrom": [
-    "wikstrom.png"
-  ],
-  "will": [
-    {
-      "file": "will-gen2.png",
-      "disabled": true
-    },
-    "will.png"
-  ],
-  "willow": [
-    "willow-casual.png",
-    "willow.png"
-  ],
-  "winona": [
-    "winona-gen3.png",
-    "winona-gen6.png",
-    "winona.png"
-  ],
-  "worker": [
-    "worker-gen4.png",
-    "worker-gen6.png",
-    "worker-gen7.png",
-    "worker-gen8.png",
-    "worker-gen9.png",
-    "worker-lgpe.png",
-    "worker.png"
-  ],
-  "worker2": [
-    "worker2-gen6.png"
-  ],
-  "workerf": [
-    "workerf-gen8.png"
-  ],
-  "workerice": [
-    "workerice.png"
-  ],
-  "wulfric": [
-    "wulfric.png"
-  ],
-  "xerosic": [
-    "xerosic.png"
-  ],
-  "yancy": [
-    "yancy.png"
-  ],
-  "yellgrunt": [
-    "yellgrunt.png",
-    "yellgruntf.png"
-  ],
-  "yellow": [
-    "yellow.png"
-  ],
-  "youngathlete": [
-    "youngathlete.png",
-    "youngathletef.png"
-  ],
-  "youngcouple": [
-    "youngcouple-gen3.png",
-    "youngcouple-gen3rs.png",
-    "youngcouple-gen4dp.png",
-    "youngcouple-gen6.png",
-    "youngcouple.png"
-  ],
-  "youngn": [
-    "youngn.png"
-  ],
-  "youngster": [
-    {
-      "file": "youngster-gen1.png",
-      "disabled": true
-    },
-    {
-      "file": "youngster-gen1rb.png",
-      "disabled": true
-    },
-    {
-      "file": "youngster-gen2.png",
-      "disabled": true
-    },
-    "youngster-gen3.png",
-    "youngster-gen3rs.png",
-    "youngster-gen4.png",
-    "youngster-gen4dp.png",
-    "youngster-gen6.png",
-    "youngster-gen6xy.png",
-    "youngster-gen7.png",
-    "youngster-gen8.png",
-    "youngster-gen9.png",
-    "youngster-masters.png",
-    "youngster.png"
-  ],
-  "yukito-hideko": [
-    "yukito-hideko.png"
-  ],
-  "zinnia": [
-    "zinnia-masters.png",
-    "zinnia.png"
-  ],
-  "zinzolin": [
-    "zinzolin.png"
-  ],
-  "zirco-unite": [
-    "zirco-unite.png"
-  ],
-  "zisu": [
-    "zisu.png"
-  ],
-  "zossie": [
-    "zossie.png"
-  ]
+  "aaron": {
+    "sprites": [
+      "aaron.png"
+    ],
+    "tier": "Epic"
+  },
+  "aarune": {
+    "sprites": [
+      "aarune.png"
+    ],
+    "tier": "Common"
+  },
+  "acerola": {
+    "sprites": [
+      "acerola-masters.png",
+      "acerola-masters2.png",
+      "acerola-masters3.png",
+      "acerola.png"
+    ],
+    "tier": "Rare"
+  },
+  "acetrainer": {
+    "sprites": [
+      {
+        "file": "acetrainer-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "acetrainer-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "acetrainer-gen2.png",
+        "disabled": true
+      },
+      "acetrainer-gen3.png",
+      "acetrainer-gen3jp.png",
+      "acetrainer-gen3rs.png",
+      "acetrainer-gen4.png",
+      "acetrainer-gen4dp.png",
+      "acetrainer-gen6.png",
+      "acetrainer-gen6xy.png",
+      "acetrainer-gen7.png",
+      "acetrainer.png",
+      "acetrainerf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "acetrainercouple": {
+    "sprites": [
+      "acetrainercouple-gen3.png",
+      "acetrainercouple.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "acetrainerf": {
+    "sprites": [
+      {
+        "file": "acetrainerf-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "acetrainerf-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "acetrainerf-gen2.png",
+        "disabled": true
+      },
+      "acetrainerf-gen3.png",
+      "acetrainerf-gen3rs.png",
+      "acetrainerf-gen4.png",
+      "acetrainerf-gen4dp.png",
+      "acetrainerf-gen6.png",
+      "acetrainerf-gen6xy.png",
+      "acetrainerf-gen7.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "acetrainersnow": {
+    "sprites": [
+      "acetrainersnow.png",
+      "acetrainersnowf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "adaman": {
+    "sprites": [
+      "adaman-masters.png",
+      "adaman.png"
+    ],
+    "tier": "Rare"
+  },
+  "aetheremployee": {
+    "sprites": [
+      "aetheremployee.png",
+      "aetheremployeef.png"
+    ],
+    "tier": "Common"
+  },
+  "aetherfoundation": {
+    "sprites": [
+      "aetherfoundation.png",
+      "aetherfoundation2.png",
+      "aetherfoundationf.png"
+    ],
+    "tier": "Common"
+  },
+  "agatha": {
+    "sprites": [
+      {
+        "file": "agatha-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "agatha-gen1rb.png",
+        "disabled": true
+      },
+      "agatha-gen3.png",
+      "agatha-lgpe.png"
+    ],
+    "tier": "Epic"
+  },
+  "akari": {
+    "sprites": [
+      "akari-isekai.png",
+      "akari.png"
+    ],
+    "tier": "Common"
+  },
+  "alain": {
+    "sprites": [
+      "alain.png"
+    ],
+    "tier": "Common"
+  },
+  "alder": {
+    "sprites": [
+      "alder.png"
+    ],
+    "tier": "Legendary"
+  },
+  "alec": {
+    "sprites": [
+      "alec-anime.png"
+    ],
+    "tier": "Common"
+  },
+  "allister": {
+    "sprites": [
+      "allister-masters.png",
+      "allister-unmasked.png",
+      "allister.png"
+    ],
+    "tier": "Rare"
+  },
+  "amarys": {
+    "sprites": [
+      "amarys.png"
+    ],
+    "tier": "Epic"
+  },
+  "amelia-shuffle": {
+    "sprites": [
+      "amelia-shuffle.png"
+    ],
+    "tier": "Common"
+  },
+  "anabel": {
+    "sprites": [
+      "anabel-gen3.png",
+      "anabel-gen7.png",
+      "anabel.png"
+    ],
+    "tier": "Epic"
+  },
+  "anthe": {
+    "sprites": [
+      "anthe.png"
+    ],
+    "tier": "Common"
+  },
+  "anthea": {
+    "sprites": [
+      "anthea.png"
+    ],
+    "tier": "Common"
+  },
+  "anvin": {
+    "sprites": [
+      "anvin.png"
+    ],
+    "tier": "Common"
+  },
+  "aquagrunt": {
+    "sprites": [
+      "aquagrunt.png",
+      "aquagruntf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "aquagrunt-rse": {
+    "sprites": [
+      "aquagrunt-rse.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "aquagruntf-rse": {
+    "sprites": [
+      "aquagruntf-rse.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "aquasuit": {
+    "sprites": [
+      "aquasuit.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "archer": {
+    "sprites": [
+      "archer.png"
+    ],
+    "tier": "Rare"
+  },
+  "archie": {
+    "sprites": [
+      "archie-gen3.png",
+      "archie-gen6.png",
+      "archie-usum.png"
+    ],
+    "tier": "Epic"
+  },
+  "arezu": {
+    "sprites": [
+      "arezu.png"
+    ],
+    "tier": "Common"
+  },
+  "argenta": {
+    "sprites": [
+      "argenta.png"
+    ],
+    "tier": "Epic"
+  },
+  "ariana": {
+    "sprites": [
+      "ariana.png"
+    ],
+    "tier": "Rare"
+  },
+  "arlo": {
+    "sprites": [
+      "arlo.png"
+    ],
+    "tier": "Common"
+  },
+  "aromalady": {
+    "sprites": [
+      "aromalady-gen3.png",
+      "aromalady-gen3rs.png",
+      "aromalady-gen6.png",
+      "aromalady.png"
+    ],
+    "tier": "Common"
+  },
+  "artist": {
+    "sprites": [
+      "artist-gen4.png",
+      "artist-gen6.png",
+      "artist-gen8.png",
+      "artist-gen9.png",
+      "artist.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "artistf": {
+    "sprites": [
+      "artistf-gen6.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "arven": {
+    "sprites": [
+      "arven-s.png",
+      "arven-v.png"
+    ],
+    "tier": "Epic"
+  },
+  "ash": {
+    "sprites": [
+      "ash.png"
+    ],
+    "tier": "Legendary"
+  },
+  "ash-alola": {
+    "sprites": [
+      "ash-alola.png"
+    ],
+    "tier": "Common"
+  },
+  "ash-capbackward": {
+    "sprites": [
+      "ash-capbackward.png"
+    ],
+    "tier": "Common"
+  },
+  "ash-hoenn": {
+    "sprites": [
+      "ash-hoenn.png"
+    ],
+    "tier": "Common"
+  },
+  "ash-johto": {
+    "sprites": [
+      "ash-johto.png"
+    ],
+    "tier": "Common"
+  },
+  "ash-kalos": {
+    "sprites": [
+      "ash-kalos.png"
+    ],
+    "tier": "Common"
+  },
+  "ash-sinnoh": {
+    "sprites": [
+      "ash-sinnoh.png"
+    ],
+    "tier": "Common"
+  },
+  "ash-unova": {
+    "sprites": [
+      "ash-unova.png"
+    ],
+    "tier": "Common"
+  },
+  "atticus": {
+    "sprites": [
+      "atticus.png"
+    ],
+    "tier": "Rare"
+  },
+  "avery": {
+    "sprites": [
+      "avery.png"
+    ],
+    "tier": "Rare"
+  },
+  "az": {
+    "sprites": [
+      "az.png"
+    ],
+    "tier": "Epic"
+  },
+  "az-lza": {
+    "sprites": [
+      "az-lza.png"
+    ],
+    "tier": "Epic"
+  },
+  "backers": {
+    "sprites": [
+      "backers.png",
+      "backersf.png"
+    ],
+    "tier": "Common"
+  },
+  "backpacker": {
+    "sprites": [
+      "backpacker-gen6.png",
+      "backpacker-gen8.png",
+      "backpacker-gen9.png",
+      "backpacker.png",
+      "backpackerf.png"
+    ],
+    "tier": "Common"
+  },
+  "baker": {
+    "sprites": [
+      "baker.png"
+    ],
+    "tier": "Common"
+  },
+  "ballguy": {
+    "sprites": [
+      "ballguy.png"
+    ],
+    "tier": "Common"
+  },
+  "baoba": {
+    "sprites": [
+      "baoba.png"
+    ],
+    "tier": "Common"
+  },
+  "barry": {
+    "sprites": [
+      "barry-masters.png",
+      "barry.png"
+    ],
+    "tier": "Rare"
+  },
+  "battlegirl": {
+    "sprites": [
+      "battlegirl-gen3.png",
+      "battlegirl-gen4.png",
+      "battlegirl-gen6.png",
+      "battlegirl-gen6xy.png",
+      "battlegirl.png"
+    ],
+    "tier": "Common"
+  },
+  "bea": {
+    "sprites": [
+      "bea-masters.png",
+      "bea.png"
+    ],
+    "tier": "Rare"
+  },
+  "beauty": {
+    "sprites": [
+      {
+        "file": "beauty-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "beauty-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "beauty-gen2.png",
+        "disabled": true
+      },
+      {
+        "file": "beauty-gen2jp.png",
+        "disabled": true
+      },
+      "beauty-gen3.png",
+      "beauty-gen3rs.png",
+      "beauty-gen4dp.png",
+      "beauty-gen5bw2.png",
+      "beauty-gen6.png",
+      "beauty-gen6xy.png",
+      "beauty-gen7.png",
+      "beauty-gen8.png",
+      "beauty-gen9.png",
+      "beauty-masters.png",
+      "beauty.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "bede": {
+    "sprites": [
+      "bede-masters.png",
+      "bede.png"
+    ],
+    "tier": "Rare"
+  },
+  "bede-leader": {
+    "sprites": [
+      "bede-leader.png"
+    ],
+    "tier": "Rare"
+  },
+  "bellelba": {
+    "sprites": [
+      "bellelba.png"
+    ],
+    "tier": "Common"
+  },
+  "bellepa": {
+    "sprites": [
+      "bellepa.png"
+    ],
+    "tier": "Common"
+  },
+  "bellhop": {
+    "sprites": [
+      "bellhop.png"
+    ],
+    "tier": "Common"
+  },
+  "bellis": {
+    "sprites": [
+      "bellis.png"
+    ],
+    "tier": "Common"
+  },
+  "benga": {
+    "sprites": [
+      "benga.png"
+    ],
+    "tier": "Common"
+  },
+  "beni": {
+    "sprites": [
+      "beni-ninja.png",
+      "beni.png"
+    ],
+    "tier": "Common"
+  },
+  "bertha": {
+    "sprites": [
+      "bertha.png"
+    ],
+    "tier": "Epic"
+  },
+  "bianca": {
+    "sprites": [
+      "bianca-masters.png",
+      "bianca-pwt.png",
+      "bianca.png"
+    ],
+    "tier": "Common"
+  },
+  "biker": {
+    "sprites": [
+      {
+        "file": "biker-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "biker-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "biker-gen2.png",
+        "disabled": true
+      },
+      "biker-gen3.png",
+      "biker-gen4.png",
+      "biker.png"
+    ],
+    "tier": "Common"
+  },
+  "bill": {
+    "sprites": [
+      "bill-gen3.png",
+      "bill.png"
+    ],
+    "tier": "Common"
+  },
+  "birch": {
+    "sprites": [
+      "birch-gen3.png",
+      "birch.png"
+    ],
+    "tier": "Rare"
+  },
+  "birdkeeper": {
+    "sprites": [
+      {
+        "file": "birdkeeper-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "birdkeeper-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "birdkeeper-gen2.png",
+        "disabled": true
+      },
+      "birdkeeper-gen3.png",
+      "birdkeeper-gen3rs.png",
+      "birdkeeper-gen4dp.png",
+      "birdkeeper-gen6.png",
+      "birdkeeper.png"
+    ],
+    "tier": "Common"
+  },
+  "blackbelt": {
+    "sprites": [
+      {
+        "file": "blackbelt-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "blackbelt-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "blackbelt-gen2.png",
+        "disabled": true
+      },
+      "blackbelt-gen3.png",
+      "blackbelt-gen3rs.png",
+      "blackbelt-gen4.png",
+      "blackbelt-gen4dp.png",
+      "blackbelt-gen6.png",
+      "blackbelt-gen7.png",
+      "blackbelt-gen8.png",
+      "blackbelt-gen9.png",
+      "blackbelt.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "blaine": {
+    "sprites": [
+      {
+        "file": "blaine-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "blaine-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "blaine-gen2.png",
+        "disabled": true
+      },
+      "blaine-gen3.png",
+      "blaine-lgpe.png",
+      "blaine.png"
+    ],
+    "tier": "Rare"
+  },
+  "blanche": {
+    "sprites": [
+      "blanche-casual.png",
+      "blanche.png"
+    ],
+    "tier": "Common"
+  },
+  "blue": {
+    "sprites": [
+      {
+        "file": "blue-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "blue-gen1champion.png",
+        "disabled": true
+      },
+      {
+        "file": "blue-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "blue-gen1rbchampion.png",
+        "disabled": true
+      },
+      {
+        "file": "blue-gen1rbtwo.png",
+        "disabled": true
+      },
+      {
+        "file": "blue-gen1two.png",
+        "disabled": true
+      },
+      {
+        "file": "blue-gen2.png",
+        "disabled": true
+      },
+      "blue-gen3.png",
+      "blue-gen3champion.png",
+      "blue-gen3two.png",
+      "blue-gen7.png",
+      "blue-lgpe.png",
+      "blue-masters.png",
+      "blue-masters2.png",
+      "blue.png"
+    ],
+    "tier": "Legendary"
+  },
+  "boarder": {
+    "sprites": [
+      {
+        "file": "boarder-gen2.png",
+        "disabled": true
+      },
+      "boarder.png"
+    ],
+    "tier": "Common"
+  },
+  "bodybuilder": {
+    "sprites": [
+      "bodybuilder-gen9.png"
+    ],
+    "tier": "Common"
+  },
+  "bodybuilderf": {
+    "sprites": [
+      "bodybuilderf-gen9.png"
+    ],
+    "tier": "Common"
+  },
+  "brandon": {
+    "sprites": [
+      "brandon-gen3.png",
+      "brandon.png"
+    ],
+    "tier": "Epic"
+  },
+  "brassius": {
+    "sprites": [
+      "brassius.png"
+    ],
+    "tier": "Rare"
+  },
+  "brawly": {
+    "sprites": [
+      "brawly-gen3.png",
+      "brawly-gen6.png",
+      "brawly.png"
+    ],
+    "tier": "Rare"
+  },
+  "brendan": {
+    "sprites": [
+      "brendan-gen3.png",
+      "brendan-gen3rs.png",
+      "brendan-masters.png",
+      "brendan-masters2.png",
+      "brendan.png"
+    ],
+    "tier": "Rare"
+  },
+  "brendan-contest": {
+    "sprites": [
+      "brendan-contest.png"
+    ],
+    "tier": "Rare"
+  },
+  "brendan-e": {
+    "sprites": [
+      "brendan-e.png"
+    ],
+    "tier": "Rare"
+  },
+  "brendan-rs": {
+    "sprites": [
+      "brendan-rs.png"
+    ],
+    "tier": "Rare"
+  },
+  "briar": {
+    "sprites": [
+      "briar.png"
+    ],
+    "tier": "Common"
+  },
+  "brigette": {
+    "sprites": [
+      "brigette.png"
+    ],
+    "tier": "Common"
+  },
+  "brock": {
+    "sprites": [
+      {
+        "file": "brock-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "brock-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "brock-gen2.png",
+        "disabled": true
+      },
+      "brock-gen3.png",
+      "brock-lgpe.png",
+      "brock-masters.png",
+      "brock.png"
+    ],
+    "tier": "Rare"
+  },
+  "bruno": {
+    "sprites": [
+      {
+        "file": "bruno-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "bruno-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "bruno-gen2.png",
+        "disabled": true
+      },
+      "bruno-gen3.png",
+      "bruno.png"
+    ],
+    "tier": "Epic"
+  },
+  "brycen": {
+    "sprites": [
+      "brycen.png"
+    ],
+    "tier": "Rare"
+  },
+  "brycenman": {
+    "sprites": [
+      "brycenman.png"
+    ],
+    "tier": "Common"
+  },
+  "bryony": {
+    "sprites": [
+      "bryony.png"
+    ],
+    "tier": "Common"
+  },
+  "buck": {
+    "sprites": [
+      "buck.png"
+    ],
+    "tier": "Common"
+  },
+  "bugcatcher": {
+    "sprites": [
+      {
+        "file": "bugcatcher-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "bugcatcher-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "bugcatcher-gen2.png",
+        "disabled": true
+      },
+      "bugcatcher-gen3.png",
+      "bugcatcher-gen3rs.png",
+      "bugcatcher-gen4dp.png",
+      "bugcatcher-gen6.png",
+      "bugcatcher.png"
+    ],
+    "tier": "Common"
+  },
+  "bugmaniac": {
+    "sprites": [
+      "bugmaniac-gen3.png",
+      "bugmaniac-gen6.png"
+    ],
+    "tier": "Common"
+  },
+  "bugsy": {
+    "sprites": [
+      {
+        "file": "bugsy-gen2.png",
+        "disabled": true
+      },
+      "bugsy-masters.png",
+      "bugsy.png"
+    ],
+    "tier": "Rare"
+  },
+  "burgh": {
+    "sprites": [
+      "burgh-masters.png",
+      "burgh.png"
+    ],
+    "tier": "Rare"
+  },
+  "burglar": {
+    "sprites": [
+      {
+        "file": "burglar-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "burglar-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "burglar-gen2.png",
+        "disabled": true
+      },
+      "burglar-gen3.png",
+      "burglar-lgpe.png",
+      "burglar.png"
+    ],
+    "tier": "Common"
+  },
+  "burnet": {
+    "sprites": [
+      "burnet-radar.png",
+      "burnet.png"
+    ],
+    "tier": "Common"
+  },
+  "butler": {
+    "sprites": [
+      "butler.png"
+    ],
+    "tier": "Common"
+  },
+  "byron": {
+    "sprites": [
+      "byron.png"
+    ],
+    "tier": "Rare"
+  },
+  "cabbie": {
+    "sprites": [
+      "cabbie-gen9.png",
+      "cabbie.png"
+    ],
+    "tier": "Common"
+  },
+  "cafemaster": {
+    "sprites": [
+      "cafemaster.png"
+    ],
+    "tier": "Common"
+  },
+  "caitlin": {
+    "sprites": [
+      "caitlin-gen4.png",
+      "caitlin-masters.png",
+      "caitlin.png"
+    ],
+    "tier": "Epic"
+  },
+  "calaba": {
+    "sprites": [
+      "calaba.png"
+    ],
+    "tier": "Common"
+  },
+  "calem": {
+    "sprites": [
+      "calem-masters.png",
+      "calem.png"
+    ],
+    "tier": "Rare"
+  },
+  "cameraman": {
+    "sprites": [
+      "cameraman-gen6.png",
+      "cameraman-gen8.png",
+      "cameraman.png"
+    ],
+    "tier": "Common"
+  },
+  "camper": {
+    "sprites": [
+      {
+        "file": "camper-gen2.png",
+        "disabled": true
+      },
+      "camper-gen3.png",
+      "camper-gen3rs.png",
+      "camper-gen6.png",
+      "camper.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "candela": {
+    "sprites": [
+      "candela-casual.png",
+      "candela.png"
+    ],
+    "tier": "Common"
+  },
+  "candice": {
+    "sprites": [
+      "candice-masters.png",
+      "candice.png"
+    ],
+    "tier": "Rare"
+  },
+  "caraliss": {
+    "sprites": [
+      "caraliss.png"
+    ],
+    "tier": "Common"
+  },
+  "caretaker": {
+    "sprites": [
+      "caretaker.png"
+    ],
+    "tier": "Common"
+  },
+  "carmine": {
+    "sprites": [
+      "carmine-festival.png",
+      "carmine.png"
+    ],
+    "tier": "Common"
+  },
+  "cedricjuniper": {
+    "sprites": [
+      "cedricjuniper.png"
+    ],
+    "tier": "Common"
+  },
+  "celio": {
+    "sprites": [
+      "celio.png"
+    ],
+    "tier": "Common"
+  },
+  "channeler": {
+    "sprites": [
+      {
+        "file": "channeler-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "channeler-gen1rb.png",
+        "disabled": true
+      },
+      "channeler-gen3.png",
+      "channeler-lgpe.png"
+    ],
+    "tier": "Common"
+  },
+  "charm": {
+    "sprites": [
+      "charm.png"
+    ],
+    "tier": "Common"
+  },
+  "charon": {
+    "sprites": [
+      "charon.png"
+    ],
+    "tier": "Common"
+  },
+  "chase": {
+    "sprites": [
+      "chase.png"
+    ],
+    "tier": "Common"
+  },
+  "che": {
+    "sprites": [
+      "chef.png"
+    ],
+    "tier": "Common"
+  },
+  "cheren": {
+    "sprites": [
+      "cheren-gen5bw2.png",
+      "cheren-masters.png",
+      "cheren.png"
+    ],
+    "tier": "Common"
+  },
+  "cheryl": {
+    "sprites": [
+      "cheryl.png"
+    ],
+    "tier": "Common"
+  },
+  "chili": {
+    "sprites": [
+      "chili.png"
+    ],
+    "tier": "Rare"
+  },
+  "choy": {
+    "sprites": [
+      "choy.png"
+    ],
+    "tier": "Common"
+  },
+  "christoph": {
+    "sprites": [
+      "christoph.png"
+    ],
+    "tier": "Common"
+  },
+  "chuck": {
+    "sprites": [
+      {
+        "file": "chuck-gen2.png",
+        "disabled": true
+      },
+      "chuck.png"
+    ],
+    "tier": "Rare"
+  },
+  "cilan": {
+    "sprites": [
+      "cilan.png"
+    ],
+    "tier": "Rare"
+  },
+  "clair": {
+    "sprites": [
+      {
+        "file": "clair-gen2.png",
+        "disabled": true
+      },
+      "clair-masters.png",
+      "clair.png"
+    ],
+    "tier": "Rare"
+  },
+  "clavell": {
+    "sprites": [
+      "clavell-s.png"
+    ],
+    "tier": "Common"
+  },
+  "clay": {
+    "sprites": [
+      "clay.png"
+    ],
+    "tier": "Rare"
+  },
+  "clemont": {
+    "sprites": [
+      "clemont.png"
+    ],
+    "tier": "Rare"
+  },
+  "clerk": {
+    "sprites": [
+      "clerk-gen8.png",
+      "clerk.png",
+      "clerkf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "clerk-boss": {
+    "sprites": [
+      "clerk-boss.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "clerk-unite": {
+    "sprites": [
+      "clerk-unite.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "clerkf": {
+    "sprites": [
+      "clerkf-gen8.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "clif": {
+    "sprites": [
+      "cliff.png"
+    ],
+    "tier": "Common"
+  },
+  "clive": {
+    "sprites": [
+      "clive-v.png"
+    ],
+    "tier": "Common"
+  },
+  "clover": {
+    "sprites": [
+      "clover.png"
+    ],
+    "tier": "Common"
+  },
+  "clown": {
+    "sprites": [
+      "clown.png"
+    ],
+    "tier": "Common"
+  },
+  "cogita": {
+    "sprites": [
+      "cogita.png"
+    ],
+    "tier": "Common"
+  },
+  "coin": {
+    "sprites": [
+      "coin.png"
+    ],
+    "tier": "Common"
+  },
+  "collector": {
+    "sprites": [
+      "collector-gen3.png",
+      "collector-gen6.png",
+      "collector-gen7.png",
+      "collector-masters.png",
+      "collector.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "colress": {
+    "sprites": [
+      "colress-gen7.png",
+      "colress.png"
+    ],
+    "tier": "Rare"
+  },
+  "colza": {
+    "sprites": [
+      "colza.png"
+    ],
+    "tier": "Common"
+  },
+  "concordia": {
+    "sprites": [
+      "concordia.png"
+    ],
+    "tier": "Common"
+  },
+  "cook": {
+    "sprites": [
+      "cook-gen7.png",
+      "cook-gen9.png",
+      "cook.png"
+    ],
+    "tier": "Common"
+  },
+  "courier": {
+    "sprites": [
+      "courier.png"
+    ],
+    "tier": "Common"
+  },
+  "courtney": {
+    "sprites": [
+      "courtney-gen3.png",
+      "courtney.png"
+    ],
+    "tier": "Common"
+  },
+  "cowgirl": {
+    "sprites": [
+      "cowgirl.png"
+    ],
+    "tier": "Common"
+  },
+  "crasherwake": {
+    "sprites": [
+      "crasherwake.png"
+    ],
+    "tier": "Common"
+  },
+  "cress": {
+    "sprites": [
+      "cress.png"
+    ],
+    "tier": "Rare"
+  },
+  "crispin": {
+    "sprites": [
+      "crispin.png"
+    ],
+    "tier": "Common"
+  },
+  "crushgirl": {
+    "sprites": [
+      "crushgirl-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "crushkin": {
+    "sprites": [
+      "crushkin-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "cueball": {
+    "sprites": [
+      {
+        "file": "cueball-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "cueball-gen1rb.png",
+        "disabled": true
+      },
+      "cueball-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "curtis": {
+    "sprites": [
+      "curtis.png"
+    ],
+    "tier": "Common"
+  },
+  "cyclist": {
+    "sprites": [
+      "cyclist-gen4.png",
+      "cyclist.png",
+      "cyclistf.png"
+    ],
+    "tier": "Common"
+  },
+  "cyclistf": {
+    "sprites": [
+      "cyclistf-gen4.png"
+    ],
+    "tier": "Common"
+  },
+  "cyllene": {
+    "sprites": [
+      "cyllene.png"
+    ],
+    "tier": "Common"
+  },
+  "cynthia": {
+    "sprites": [
+      "cynthia-anime.png",
+      "cynthia-anime2.png",
+      "cynthia-gen4.png",
+      "cynthia-gen7.png",
+      "cynthia-masters.png",
+      "cynthia-masters2.png",
+      "cynthia-masters3.png",
+      "cynthia-masters4.png",
+      "cynthia.png"
+    ],
+    "tier": "Legendary"
+  },
+  "cyrano": {
+    "sprites": [
+      "cyrano.png"
+    ],
+    "tier": "Common"
+  },
+  "cyrus": {
+    "sprites": [
+      "cyrus-masters.png",
+      "cyrus.png"
+    ],
+    "tier": "Epic"
+  },
+  "dagero": {
+    "sprites": [
+      "dagero.png"
+    ],
+    "tier": "Common"
+  },
+  "dahlia": {
+    "sprites": [
+      "dahlia.png"
+    ],
+    "tier": "Epic"
+  },
+  "daisy": {
+    "sprites": [
+      "daisy-gen3.png",
+      "daisy.png"
+    ],
+    "tier": "Common"
+  },
+  "dana": {
+    "sprites": [
+      "dana.png"
+    ],
+    "tier": "Common"
+  },
+  "dancer": {
+    "sprites": [
+      "dancer-gen7.png",
+      "dancer-gen8.png",
+      "dancer.png"
+    ],
+    "tier": "Common"
+  },
+  "darach": {
+    "sprites": [
+      "darach.png"
+    ],
+    "tier": "Epic"
+  },
+  "darach-caitlin": {
+    "sprites": [
+      "darach-caitlin.png"
+    ],
+    "tier": "Common"
+  },
+  "dawn": {
+    "sprites": [
+      "dawn-gen4pt.png",
+      "dawn-masters.png",
+      "dawn-masters2.png",
+      "dawn-masters3.png",
+      "dawn.png"
+    ],
+    "tier": "Common"
+  },
+  "dawn-contest": {
+    "sprites": [
+      "dawn-contest.png"
+    ],
+    "tier": "Common"
+  },
+  "delinquent": {
+    "sprites": [
+      "delinquent-gen9.png",
+      "delinquent.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "delinquentf": {
+    "sprites": [
+      "delinquentf-gen9.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "delinquentf2": {
+    "sprites": [
+      "delinquentf2-gen9.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "dendra": {
+    "sprites": [
+      "dendra.png"
+    ],
+    "tier": "Common"
+  },
+  "depotagent": {
+    "sprites": [
+      "depotagent.png"
+    ],
+    "tier": "Common"
+  },
+  "dexio": {
+    "sprites": [
+      "dexio-gen6.png",
+      "dexio.png"
+    ],
+    "tier": "Common"
+  },
+  "diamondclanmember": {
+    "sprites": [
+      "diamondclanmember.png"
+    ],
+    "tier": "Common"
+  },
+  "diantha": {
+    "sprites": [
+      "diantha-masters.png",
+      "diantha-masters2.png",
+      "diantha.png"
+    ],
+    "tier": "Legendary"
+  },
+  "doctor": {
+    "sprites": [
+      "doctor-gen8.png",
+      "doctor.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "doctorf": {
+    "sprites": [
+      "doctorf-gen8.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "doubleteam": {
+    "sprites": [
+      "doubleteam.png"
+    ],
+    "tier": "Common"
+  },
+  "dragontamer": {
+    "sprites": [
+      "dragontamer-gen3.png",
+      "dragontamer-gen6.png",
+      "dragontamer-gen9.png",
+      "dragontamer.png"
+    ],
+    "tier": "Common"
+  },
+  "drake": {
+    "sprites": [
+      "drake-gen3.png"
+    ],
+    "tier": "Epic"
+  },
+  "drasna": {
+    "sprites": [
+      "drasna.png"
+    ],
+    "tier": "Epic"
+  },
+  "drayden": {
+    "sprites": [
+      "drayden.png"
+    ],
+    "tier": "Rare"
+  },
+  "drayton": {
+    "sprites": [
+      "drayton.png"
+    ],
+    "tier": "Common"
+  },
+  "dulse": {
+    "sprites": [
+      "dulse.png"
+    ],
+    "tier": "Common"
+  },
+  "elaine": {
+    "sprites": [
+      "elaine.png"
+    ],
+    "tier": "Common"
+  },
+  "elesa": {
+    "sprites": [
+      "elesa-gen5bw2.png",
+      "elesa-masters.png",
+      "elesa-masters2.png",
+      "elesa-masters3.png",
+      "elesa.png"
+    ],
+    "tier": "Rare"
+  },
+  "elio": {
+    "sprites": [
+      "elio-masters.png",
+      "elio-usum.png",
+      "elio.png"
+    ],
+    "tier": "Common"
+  },
+  "elm": {
+    "sprites": [
+      "elm.png"
+    ],
+    "tier": "Rare"
+  },
+  "emma": {
+    "sprites": [
+      "emma.png"
+    ],
+    "tier": "Common"
+  },
+  "emma-lza": {
+    "sprites": [
+      "emma-lza.png"
+    ],
+    "tier": "Common"
+  },
+  "emmet": {
+    "sprites": [
+      "emmet-masters.png",
+      "emmet.png"
+    ],
+    "tier": "Common"
+  },
+  "engineer": {
+    "sprites": [
+      {
+        "file": "engineer-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "engineer-gen1rb.png",
+        "disabled": true
+      },
+      "engineer-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "erbie-unite": {
+    "sprites": [
+      "erbie-unite.png"
+    ],
+    "tier": "Common"
+  },
+  "eri": {
+    "sprites": [
+      "eri.png"
+    ],
+    "tier": "Common"
+  },
+  "erika": {
+    "sprites": [
+      {
+        "file": "erika-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "erika-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "erika-gen2.png",
+        "disabled": true
+      },
+      "erika-gen3.png",
+      "erika-lgpe.png",
+      "erika-masters.png",
+      "erika-masters2.png",
+      "erika-masters3.png",
+      "erika.png"
+    ],
+    "tier": "Rare"
+  },
+  "essentia": {
+    "sprites": [
+      "essentia.png"
+    ],
+    "tier": "Common"
+  },
+  "ethan": {
+    "sprites": [
+      {
+        "file": "ethan-gen2.png",
+        "disabled": true
+      },
+      {
+        "file": "ethan-gen2c.png",
+        "disabled": true
+      },
+      "ethan-masters.png",
+      "ethan.png"
+    ],
+    "tier": "Common"
+  },
+  "ethan-pokeathlon": {
+    "sprites": [
+      "ethan-pokeathlon.png"
+    ],
+    "tier": "Common"
+  },
+  "eusine": {
+    "sprites": [
+      {
+        "file": "eusine-gen2.png",
+        "disabled": true
+      },
+      "eusine.png"
+    ],
+    "tier": "Common"
+  },
+  "evelyn": {
+    "sprites": [
+      "evelyn.png"
+    ],
+    "tier": "Common"
+  },
+  "expert": {
+    "sprites": [
+      "expert-gen3.png",
+      "expert-gen6.png"
+    ],
+    "tier": "Common"
+  },
+  "expertf": {
+    "sprites": [
+      "expertf-gen3.png",
+      "expertf-gen6.png"
+    ],
+    "tier": "Common"
+  },
+  "faba": {
+    "sprites": [
+      "faba.png"
+    ],
+    "tier": "Common"
+  },
+  "fairytalegirl": {
+    "sprites": [
+      "fairytalegirl.png"
+    ],
+    "tier": "Common"
+  },
+  "falkner": {
+    "sprites": [
+      {
+        "file": "falkner-gen2.png",
+        "disabled": true
+      },
+      "falkner.png"
+    ],
+    "tier": "Rare"
+  },
+  "fantina": {
+    "sprites": [
+      "fantina.png"
+    ],
+    "tier": "Rare"
+  },
+  "fennel": {
+    "sprites": [
+      "fennel.png"
+    ],
+    "tier": "Common"
+  },
+  "firebreather": {
+    "sprites": [
+      {
+        "file": "firebreather-gen2.png",
+        "disabled": true
+      },
+      "firebreather.png"
+    ],
+    "tier": "Common"
+  },
+  "firefighter": {
+    "sprites": [
+      "firefighter.png"
+    ],
+    "tier": "Common"
+  },
+  "fisher": {
+    "sprites": [
+      "fisher-gen8.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "fisherman": {
+    "sprites": [
+      {
+        "file": "fisherman-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "fisherman-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "fisherman-gen2jp.png",
+        "disabled": true
+      },
+      "fisherman-gen3.png",
+      "fisherman-gen3rs.png",
+      "fisherman-gen4.png",
+      "fisherman-gen6.png",
+      "fisherman-gen6xy.png",
+      "fisherman-gen7.png",
+      "fisherman.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "flannery": {
+    "sprites": [
+      "flannery-gen3.png",
+      "flannery-gen6.png",
+      "flannery.png"
+    ],
+    "tier": "Rare"
+  },
+  "flaregrunt": {
+    "sprites": [
+      "flaregrunt.png",
+      "flaregruntf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "flint": {
+    "sprites": [
+      "flint.png"
+    ],
+    "tier": "Epic"
+  },
+  "florian": {
+    "sprites": [
+      "florian-festival.png",
+      "florian-s.png"
+    ],
+    "tier": "Common"
+  },
+  "florian-bb": {
+    "sprites": [
+      "florian-bb.png"
+    ],
+    "tier": "Common"
+  },
+  "freediver": {
+    "sprites": [
+      "freediver.png"
+    ],
+    "tier": "Common"
+  },
+  "furisodegirl-black": {
+    "sprites": [
+      "furisodegirl-black.png"
+    ],
+    "tier": "Common"
+  },
+  "furisodegirl-blue": {
+    "sprites": [
+      "furisodegirl-blue.png"
+    ],
+    "tier": "Common"
+  },
+  "furisodegirl-pink": {
+    "sprites": [
+      "furisodegirl-pink.png"
+    ],
+    "tier": "Common"
+  },
+  "furisodegirl-white": {
+    "sprites": [
+      "furisodegirl-white.png"
+    ],
+    "tier": "Common"
+  },
+  "gaeric": {
+    "sprites": [
+      "gaeric.png"
+    ],
+    "tier": "Common"
+  },
+  "galacticgrunt": {
+    "sprites": [
+      "galacticgrunt.png",
+      "galacticgruntf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "gambler": {
+    "sprites": [
+      {
+        "file": "gambler-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "gambler-gen1rb.png",
+        "disabled": true
+      },
+      "gambler.png"
+    ],
+    "tier": "Common"
+  },
+  "gamer": {
+    "sprites": [
+      "gamer-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "garcon": {
+    "sprites": [
+      "garcon.png"
+    ],
+    "tier": "Common"
+  },
+  "gardener": {
+    "sprites": [
+      "gardener.png"
+    ],
+    "tier": "Common"
+  },
+  "gardenia": {
+    "sprites": [
+      "gardenia-masters.png",
+      "gardenia.png"
+    ],
+    "tier": "Rare"
+  },
+  "geeta": {
+    "sprites": [
+      "geeta.png"
+    ],
+    "tier": "Legendary"
+  },
+  "gentleman": {
+    "sprites": [
+      {
+        "file": "gentleman-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "gentleman-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "gentleman-gen2.png",
+        "disabled": true
+      },
+      "gentleman-gen3.png",
+      "gentleman-gen3rs.png",
+      "gentleman-gen4.png",
+      "gentleman-gen4dp.png",
+      "gentleman-gen6.png",
+      "gentleman-gen6xy.png",
+      "gentleman-gen7.png",
+      "gentleman-gen8.png",
+      "gentleman-lgpe.png",
+      "gentleman.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "ghetsis": {
+    "sprites": [
+      "ghetsis-gen5bw.png",
+      "ghetsis.png"
+    ],
+    "tier": "Epic"
+  },
+  "giacomo": {
+    "sprites": [
+      "giacomo.png"
+    ],
+    "tier": "Rare"
+  },
+  "ginchiyo": {
+    "sprites": [
+      "ginchiyo-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "ginter": {
+    "sprites": [
+      "ginter.png"
+    ],
+    "tier": "Common"
+  },
+  "giovanni": {
+    "sprites": [
+      {
+        "file": "giovanni-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "giovanni-gen1rb.png",
+        "disabled": true
+      },
+      "giovanni-gen3.png",
+      "giovanni-lgpe.png",
+      "giovanni-masters.png",
+      "giovanni.png"
+    ],
+    "tier": "Epic"
+  },
+  "glacia": {
+    "sprites": [
+      "glacia-gen3.png",
+      "glacia.png"
+    ],
+    "tier": "Epic"
+  },
+  "gladion": {
+    "sprites": [
+      "gladion-masters.png",
+      "gladion.png"
+    ],
+    "tier": "Epic"
+  },
+  "gladion-stance": {
+    "sprites": [
+      "gladion-stance.png"
+    ],
+    "tier": "Common"
+  },
+  "gloria": {
+    "sprites": [
+      "gloria-dojo.png",
+      "gloria-league.png",
+      "gloria-masters.png",
+      "gloria-tundra.png",
+      "gloria.png"
+    ],
+    "tier": "Rare"
+  },
+  "golfer": {
+    "sprites": [
+      "golfer.png"
+    ],
+    "tier": "Common"
+  },
+  "gordie": {
+    "sprites": [
+      "gordie.png"
+    ],
+    "tier": "Common"
+  },
+  "grace": {
+    "sprites": [
+      "grace.png"
+    ],
+    "tier": "Common"
+  },
+  "grant": {
+    "sprites": [
+      "grant.png"
+    ],
+    "tier": "Rare"
+  },
+  "green": {
+    "sprites": [
+      "green.png"
+    ],
+    "tier": "Legendary"
+  },
+  "greta": {
+    "sprites": [
+      "greta-gen3.png",
+      "greta.png"
+    ],
+    "tier": "Epic"
+  },
+  "grimsley": {
+    "sprites": [
+      "grimsley-gen7.png",
+      "grimsley-masters.png",
+      "grimsley.png"
+    ],
+    "tier": "Epic"
+  },
+  "grusha": {
+    "sprites": [
+      "grusha.png"
+    ],
+    "tier": "Epic"
+  },
+  "guitarist": {
+    "sprites": [
+      {
+        "file": "guitarist-gen2.png",
+        "disabled": true
+      },
+      "guitarist-gen3.png",
+      "guitarist-gen4.png",
+      "guitarist-gen6.png",
+      "guitarist.png"
+    ],
+    "tier": "Common"
+  },
+  "gurkinn": {
+    "sprites": [
+      "gurkinn.png"
+    ],
+    "tier": "Common"
+  },
+  "guzma": {
+    "sprites": [
+      "guzma-masters.png",
+      "guzma.png"
+    ],
+    "tier": "Epic"
+  },
+  "hala": {
+    "sprites": [
+      "hala.png"
+    ],
+    "tier": "Rare"
+  },
+  "hanbei": {
+    "sprites": [
+      "hanbei-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "hapu": {
+    "sprites": [
+      "hapu.png"
+    ],
+    "tier": "Rare"
+  },
+  "harlequin": {
+    "sprites": [
+      "harlequin.png"
+    ],
+    "tier": "Common"
+  },
+  "harmony": {
+    "sprites": [
+      "harmony.png"
+    ],
+    "tier": "Common"
+  },
+  "hassel": {
+    "sprites": [
+      "hassel.png"
+    ],
+    "tier": "Epic"
+  },
+  "hau": {
+    "sprites": [
+      "hau-masters.png",
+      "hau.png"
+    ],
+    "tier": "Epic"
+  },
+  "hau-stance": {
+    "sprites": [
+      "hau-stance.png"
+    ],
+    "tier": "Common"
+  },
+  "hayley": {
+    "sprites": [
+      "hayley.png"
+    ],
+    "tier": "Common"
+  },
+  "heath": {
+    "sprites": [
+      "heath.png"
+    ],
+    "tier": "Common"
+  },
+  "hero": {
+    "sprites": [
+      "hero-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "hero2": {
+    "sprites": [
+      "hero2-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "heroine": {
+    "sprites": [
+      "heroine-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "heroine2": {
+    "sprites": [
+      "heroine2-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "hexmaniac": {
+    "sprites": [
+      "hexmaniac-gen3.png",
+      "hexmaniac-gen3jp.png",
+      "hexmaniac-gen6.png"
+    ],
+    "tier": "Common"
+  },
+  "hiker": {
+    "sprites": [
+      {
+        "file": "hiker-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "hiker-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "hiker-gen2.png",
+        "disabled": true
+      },
+      "hiker-gen3.png",
+      "hiker-gen3rs.png",
+      "hiker-gen4.png",
+      "hiker-gen6.png",
+      "hiker-gen7.png",
+      "hiker-gen8.png",
+      "hiker-gen9.png",
+      "hiker.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "hilbert": {
+    "sprites": [
+      "hilbert-masters.png",
+      "hilbert-masters2.png",
+      "hilbert-wonderlauncher.png",
+      "hilbert.png"
+    ],
+    "tier": "Common"
+  },
+  "hilda": {
+    "sprites": [
+      "hilda-masters.png",
+      "hilda-masters2.png",
+      "hilda-masters3.png",
+      "hilda-wonderlauncher.png",
+      "hilda.png"
+    ],
+    "tier": "Common"
+  },
+  "hooligans": {
+    "sprites": [
+      "hooligans.png"
+    ],
+    "tier": "Common"
+  },
+  "hoopster": {
+    "sprites": [
+      "hoopster.png"
+    ],
+    "tier": "Common"
+  },
+  "hop": {
+    "sprites": [
+      "hop-masters.png",
+      "hop.png"
+    ],
+    "tier": "Epic"
+  },
+  "hugh": {
+    "sprites": [
+      "hugh.png"
+    ],
+    "tier": "Common"
+  },
+  "hyde": {
+    "sprites": [
+      "hyde.png"
+    ],
+    "tier": "Common"
+  },
+  "idol": {
+    "sprites": [
+      "idol.png"
+    ],
+    "tier": "Common"
+  },
+  "ilima": {
+    "sprites": [
+      "ilima.png"
+    ],
+    "tier": "Common"
+  },
+  "infielder": {
+    "sprites": [
+      "infielder.png"
+    ],
+    "tier": "Common"
+  },
+  "ingo": {
+    "sprites": [
+      "ingo-masters.png",
+      "ingo.png"
+    ],
+    "tier": "Common"
+  },
+  "ingo-hisui": {
+    "sprites": [
+      "ingo-hisui.png"
+    ],
+    "tier": "Common"
+  },
+  "interviewers": {
+    "sprites": [
+      "interviewers-gen3.png",
+      "interviewers-gen6.png",
+      "interviewers.png"
+    ],
+    "tier": "Common"
+  },
+  "iono": {
+    "sprites": [
+      "iono-masters.png",
+      "iono-masters2.png",
+      "iono.png"
+    ],
+    "tier": "Rare"
+  },
+  "irida": {
+    "sprites": [
+      "irida-masters.png",
+      "irida.png"
+    ],
+    "tier": "Epic"
+  },
+  "iris": {
+    "sprites": [
+      "iris-gen5bw2.png",
+      "iris-masters.png",
+      "iris.png"
+    ],
+    "tier": "Legendary"
+  },
+  "iscan": {
+    "sprites": [
+      "iscan.png"
+    ],
+    "tier": "Common"
+  },
+  "jacq": {
+    "sprites": [
+      "jacq.png"
+    ],
+    "tier": "Common"
+  },
+  "jamie": {
+    "sprites": [
+      "jamie.png"
+    ],
+    "tier": "Common"
+  },
+  "janine": {
+    "sprites": [
+      {
+        "file": "janine-gen2.png",
+        "disabled": true
+      },
+      "janine.png"
+    ],
+    "tier": "Common"
+  },
+  "janitor": {
+    "sprites": [
+      "janitor-gen7.png",
+      "janitor-gen9.png",
+      "janitor.png"
+    ],
+    "tier": "Common"
+  },
+  "jasmine": {
+    "sprites": [
+      {
+        "file": "jasmine-gen2.png",
+        "disabled": true
+      },
+      "jasmine-masters.png",
+      "jasmine-masters2.png",
+      "jasmine.png"
+    ],
+    "tier": "Rare"
+  },
+  "jasmine-contest": {
+    "sprites": [
+      "jasmine-contest.png"
+    ],
+    "tier": "Common"
+  },
+  "jessiejames": {
+    "sprites": [
+      {
+        "file": "jessiejames-gen1.png",
+        "disabled": true
+      }
+    ],
+    "tier": "Common"
+  },
+  "jogger": {
+    "sprites": [
+      "jogger.png"
+    ],
+    "tier": "Common"
+  },
+  "johanna": {
+    "sprites": [
+      "johanna.png"
+    ],
+    "tier": "Common"
+  },
+  "johanna-contest": {
+    "sprites": [
+      "johanna-contest.png"
+    ],
+    "tier": "Common"
+  },
+  "jrtrainer": {
+    "sprites": [
+      {
+        "file": "jrtrainer-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "jrtrainer-gen1rb.png",
+        "disabled": true
+      }
+    ],
+    "tier": "Common"
+  },
+  "jrtrainerf": {
+    "sprites": [
+      {
+        "file": "jrtrainerf-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "jrtrainerf-gen1rb.png",
+        "disabled": true
+      }
+    ],
+    "tier": "Common"
+  },
+  "juan": {
+    "sprites": [
+      "juan-gen3.png",
+      "juan.png"
+    ],
+    "tier": "Rare"
+  },
+  "juggler": {
+    "sprites": [
+      {
+        "file": "juggler-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "juggler-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "juggler-gen2.png",
+        "disabled": true
+      },
+      "juggler-gen3.png",
+      "juggler.png"
+    ],
+    "tier": "Common"
+  },
+  "juliana": {
+    "sprites": [
+      "juliana-festival.png",
+      "juliana-s.png"
+    ],
+    "tier": "Common"
+  },
+  "juliana-bb": {
+    "sprites": [
+      "juliana-bb.png"
+    ],
+    "tier": "Common"
+  },
+  "juniper": {
+    "sprites": [
+      "juniper.png"
+    ],
+    "tier": "Rare"
+  },
+  "jupiter": {
+    "sprites": [
+      "jupiter.png"
+    ],
+    "tier": "Common"
+  },
+  "kabu": {
+    "sprites": [
+      "kabu.png"
+    ],
+    "tier": "Rare"
+  },
+  "kahili": {
+    "sprites": [
+      "kahili.png"
+    ],
+    "tier": "Epic"
+  },
+  "kamado": {
+    "sprites": [
+      "kamado.png"
+    ],
+    "tier": "Common"
+  },
+  "kamado-armor": {
+    "sprites": [
+      "kamado-armor.png"
+    ],
+    "tier": "Common"
+  },
+  "karen": {
+    "sprites": [
+      {
+        "file": "karen-gen2.png",
+        "disabled": true
+      },
+      "karen.png"
+    ],
+    "tier": "Epic"
+  },
+  "katy": {
+    "sprites": [
+      "katy.png"
+    ],
+    "tier": "Rare"
+  },
+  "kiawe": {
+    "sprites": [
+      "kiawe.png"
+    ],
+    "tier": "Common"
+  },
+  "kieran": {
+    "sprites": [
+      "kieran-festival.png",
+      "kieran.png"
+    ],
+    "tier": "Legendary"
+  },
+  "kieran-champion": {
+    "sprites": [
+      "kieran-champion.png"
+    ],
+    "tier": "Legendary"
+  },
+  "kimonogirl": {
+    "sprites": [
+      {
+        "file": "kimonogirl-gen2.png",
+        "disabled": true
+      },
+      "kimonogirl.png"
+    ],
+    "tier": "Common"
+  },
+  "kindler": {
+    "sprites": [
+      "kindler-gen3.png",
+      "kindler-gen6.png"
+    ],
+    "tier": "Common"
+  },
+  "klara": {
+    "sprites": [
+      "klara.png"
+    ],
+    "tier": "Common"
+  },
+  "kofu": {
+    "sprites": [
+      "kofu.png"
+    ],
+    "tier": "Rare"
+  },
+  "koga": {
+    "sprites": [
+      {
+        "file": "koga-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "koga-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "koga-gen2.png",
+        "disabled": true
+      },
+      "koga-gen3.png",
+      "koga-lgpe.png",
+      "koga.png"
+    ],
+    "tier": "Epic"
+  },
+  "korrina": {
+    "sprites": [
+      "korrina-masters.png",
+      "korrina.png"
+    ],
+    "tier": "Rare"
+  },
+  "kris": {
+    "sprites": [
+      {
+        "file": "kris-gen2.png",
+        "disabled": true
+      },
+      "kris-masters.png",
+      "kris.png"
+    ],
+    "tier": "Common"
+  },
+  "kukui": {
+    "sprites": [
+      "kukui.png"
+    ],
+    "tier": "Legendary"
+  },
+  "kukui-stand": {
+    "sprites": [
+      "kukui-stand.png"
+    ],
+    "tier": "Common"
+  },
+  "kunoichi": {
+    "sprites": [
+      "kunoichi-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "kunoichi2": {
+    "sprites": [
+      "kunoichi2-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "kurt": {
+    "sprites": [
+      "kurt.png"
+    ],
+    "tier": "Common"
+  },
+  "lacey": {
+    "sprites": [
+      "lacey.png"
+    ],
+    "tier": "Common"
+  },
+  "lady": {
+    "sprites": [
+      "lady-gen3.png",
+      "lady-gen3rs.png",
+      "lady-gen4.png",
+      "lady-gen6.png",
+      "lady-gen6oras.png",
+      "lady.png"
+    ],
+    "tier": "Common"
+  },
+  "lana": {
+    "sprites": [
+      "lana-masters.png",
+      "lana.png"
+    ],
+    "tier": "Common"
+  },
+  "lance": {
+    "sprites": [
+      {
+        "file": "lance-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "lance-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "lance-gen2.png",
+        "disabled": true
+      },
+      "lance-gen3.png",
+      "lance-lgpe.png",
+      "lance-masters.png",
+      "lance-masters2.png",
+      "lance.png"
+    ],
+    "tier": "Legendary"
+  },
+  "lanette": {
+    "sprites": [
+      "lanette.png"
+    ],
+    "tier": "Common"
+  },
+  "larry": {
+    "sprites": [
+      "larry.png"
+    ],
+    "tier": "Epic"
+  },
+  "lass": {
+    "sprites": [
+      {
+        "file": "lass-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "lass-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "lass-gen2.png",
+        "disabled": true
+      },
+      "lass-gen3.png",
+      "lass-gen3rs.png",
+      "lass-gen4.png",
+      "lass-gen4dp.png",
+      "lass-gen6.png",
+      "lass-gen6oras.png",
+      "lass-gen7.png",
+      "lass-gen8.png",
+      "lass.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "laventon": {
+    "sprites": [
+      "laventon.png",
+      "laventon2.png"
+    ],
+    "tier": "Common"
+  },
+  "leaf": {
+    "sprites": [
+      "leaf-gen3.png",
+      "leaf-masters.png",
+      "leaf-masters2.png"
+    ],
+    "tier": "Common"
+  },
+  "leaguestaf": {
+    "sprites": [
+      "leaguestaff.png"
+    ],
+    "tier": "Common"
+  },
+  "leaguestaff": {
+    "sprites": [
+      "leaguestafff.png"
+    ],
+    "tier": "Common"
+  },
+  "lenora": {
+    "sprites": [
+      "lenora.png"
+    ],
+    "tier": "Rare"
+  },
+  "leon": {
+    "sprites": [
+      "leon-masters.png",
+      "leon-masters2.png",
+      "leon.png"
+    ],
+    "tier": "Legendary"
+  },
+  "leon-tower": {
+    "sprites": [
+      "leon-tower.png"
+    ],
+    "tier": "Common"
+  },
+  "li": {
+    "sprites": [
+      "li.png"
+    ],
+    "tier": "Common"
+  },
+  "lian": {
+    "sprites": [
+      "lian.png"
+    ],
+    "tier": "Common"
+  },
+  "lida": {
+    "sprites": [
+      "lida.png"
+    ],
+    "tier": "Common"
+  },
+  "liko": {
+    "sprites": [
+      "liko.png"
+    ],
+    "tier": "Common"
+  },
+  "lillie": {
+    "sprites": [
+      "lillie-masters.png",
+      "lillie-masters2.png",
+      "lillie-masters3.png",
+      "lillie.png"
+    ],
+    "tier": "Common"
+  },
+  "lillie-z": {
+    "sprites": [
+      "lillie-z.png"
+    ],
+    "tier": "Common"
+  },
+  "linebacker": {
+    "sprites": [
+      "linebacker.png"
+    ],
+    "tier": "Common"
+  },
+  "lisia": {
+    "sprites": [
+      "lisia-masters.png",
+      "lisia.png"
+    ],
+    "tier": "Common"
+  },
+  "liza": {
+    "sprites": [
+      "liza-gen6.png",
+      "liza-masters.png",
+      "liza.png"
+    ],
+    "tier": "Rare"
+  },
+  "lorelei": {
+    "sprites": [
+      {
+        "file": "lorelei-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "lorelei-gen1rb.png",
+        "disabled": true
+      },
+      "lorelei-gen3.png",
+      "lorelei-lgpe.png"
+    ],
+    "tier": "Epic"
+  },
+  "ltsurge": {
+    "sprites": [
+      {
+        "file": "ltsurge-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "ltsurge-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "ltsurge-gen2.png",
+        "disabled": true
+      },
+      "ltsurge-gen3.png",
+      "ltsurge.png"
+    ],
+    "tier": "Rare"
+  },
+  "lucas": {
+    "sprites": [
+      "lucas-gen4pt.png",
+      "lucas.png"
+    ],
+    "tier": "Common"
+  },
+  "lucas-contest": {
+    "sprites": [
+      "lucas-contest.png"
+    ],
+    "tier": "Common"
+  },
+  "lucian": {
+    "sprites": [
+      "lucian.png"
+    ],
+    "tier": "Epic"
+  },
+  "lucy": {
+    "sprites": [
+      "lucy-gen3.png",
+      "lucy.png"
+    ],
+    "tier": "Epic"
+  },
+  "lusamine": {
+    "sprites": [
+      "lusamine-masters.png",
+      "lusamine.png"
+    ],
+    "tier": "Epic"
+  },
+  "lusamine-nihilego": {
+    "sprites": [
+      "lusamine-nihilego.png"
+    ],
+    "tier": "Common"
+  },
+  "lyra": {
+    "sprites": [
+      "lyra-masters.png",
+      "lyra-masters2.png",
+      "lyra.png"
+    ],
+    "tier": "Common"
+  },
+  "lyra-pokeathlon": {
+    "sprites": [
+      "lyra-pokeathlon.png"
+    ],
+    "tier": "Common"
+  },
+  "lysandre": {
+    "sprites": [
+      "lysandre-masters.png",
+      "lysandre.png"
+    ],
+    "tier": "Epic"
+  },
+  "mable": {
+    "sprites": [
+      "mable.png"
+    ],
+    "tier": "Common"
+  },
+  "madame": {
+    "sprites": [
+      "madame-gen4.png",
+      "madame-gen4dp.png",
+      "madame-gen6.png",
+      "madame-gen7.png",
+      "madame-gen8.png",
+      "madame.png"
+    ],
+    "tier": "Common"
+  },
+  "magmagrunt": {
+    "sprites": [
+      "magmagrunt.png",
+      "magmagruntf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "magmagrunt-rse": {
+    "sprites": [
+      "magmagrunt-rse.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "magmagruntf-rse": {
+    "sprites": [
+      "magmagruntf-rse.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "magmasuit": {
+    "sprites": [
+      "magmasuit.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "magnolia": {
+    "sprites": [
+      "magnolia.png"
+    ],
+    "tier": "Rare"
+  },
+  "magnus": {
+    "sprites": [
+      "magnus.png"
+    ],
+    "tier": "Common"
+  },
+  "mai": {
+    "sprites": [
+      "mai.png"
+    ],
+    "tier": "Common"
+  },
+  "maid": {
+    "sprites": [
+      "maid-gen4.png",
+      "maid-gen6.png",
+      "maid.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "mallow": {
+    "sprites": [
+      "mallow-masters.png",
+      "mallow.png"
+    ],
+    "tier": "Common"
+  },
+  "malva": {
+    "sprites": [
+      "malva.png"
+    ],
+    "tier": "Epic"
+  },
+  "marley": {
+    "sprites": [
+      "marley-masters.png",
+      "marley.png"
+    ],
+    "tier": "Common"
+  },
+  "marlon": {
+    "sprites": [
+      "marlon.png"
+    ],
+    "tier": "Common"
+  },
+  "marnie": {
+    "sprites": [
+      "marnie-league.png",
+      "marnie-masters.png",
+      "marnie-masters2.png",
+      "marnie-masters3.png",
+      "marnie.png"
+    ],
+    "tier": "Epic"
+  },
+  "mars": {
+    "sprites": [
+      "mars.png"
+    ],
+    "tier": "Rare"
+  },
+  "marshal": {
+    "sprites": [
+      "marshal.png"
+    ],
+    "tier": "Epic"
+  },
+  "masamune": {
+    "sprites": [
+      "masamune-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "mateo": {
+    "sprites": [
+      "mateo.png"
+    ],
+    "tier": "Common"
+  },
+  "matt": {
+    "sprites": [
+      "matt-gen3.png",
+      "matt.png"
+    ],
+    "tier": "Common"
+  },
+  "maxie": {
+    "sprites": [
+      "maxie-gen3.png",
+      "maxie-gen6.png"
+    ],
+    "tier": "Epic"
+  },
+  "may": {
+    "sprites": [
+      "may-gen3.png",
+      "may-gen3rs.png",
+      "may-masters.png",
+      "may-masters2.png",
+      "may-masters3.png",
+      "may-masters4.png",
+      "may.png"
+    ],
+    "tier": "Epic"
+  },
+  "may-contest": {
+    "sprites": [
+      "may-contest.png"
+    ],
+    "tier": "Epic"
+  },
+  "may-e": {
+    "sprites": [
+      "may-e.png"
+    ],
+    "tier": "Epic"
+  },
+  "may-rs": {
+    "sprites": [
+      "may-rs.png"
+    ],
+    "tier": "Epic"
+  },
+  "maylene": {
+    "sprites": [
+      "maylene.png"
+    ],
+    "tier": "Rare"
+  },
+  "medium": {
+    "sprites": [
+      {
+        "file": "medium-gen2jp.png",
+        "disabled": true
+      },
+      "medium.png"
+    ],
+    "tier": "Common"
+  },
+  "mela": {
+    "sprites": [
+      "mela.png"
+    ],
+    "tier": "Rare"
+  },
+  "melli": {
+    "sprites": [
+      "melli.png"
+    ],
+    "tier": "Common"
+  },
+  "melony": {
+    "sprites": [
+      "melony.png"
+    ],
+    "tier": "Common"
+  },
+  "miku-fairy": {
+    "sprites": [
+      "miku-fairy.png"
+    ],
+    "tier": "Common"
+  },
+  "miku-fire": {
+    "sprites": [
+      "miku-fire.png"
+    ],
+    "tier": "Common"
+  },
+  "miku-flying": {
+    "sprites": [
+      "miku-flying.png"
+    ],
+    "tier": "Common"
+  },
+  "miku-ghost": {
+    "sprites": [
+      "miku-ghost.png"
+    ],
+    "tier": "Common"
+  },
+  "miku-grass": {
+    "sprites": [
+      "miku-grass.png"
+    ],
+    "tier": "Common"
+  },
+  "miku-ground": {
+    "sprites": [
+      "miku-ground.png"
+    ],
+    "tier": "Common"
+  },
+  "miku-ice": {
+    "sprites": [
+      "miku-ice.png"
+    ],
+    "tier": "Common"
+  },
+  "miku-psychic": {
+    "sprites": [
+      "miku-psychic.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "miku-water": {
+    "sprites": [
+      "miku-water.png"
+    ],
+    "tier": "Common"
+  },
+  "milo": {
+    "sprites": [
+      "milo.png"
+    ],
+    "tier": "Rare"
+  },
+  "mina": {
+    "sprites": [
+      "mina-lgpe.png",
+      "mina-masters.png",
+      "mina.png"
+    ],
+    "tier": "Common"
+  },
+  "mira": {
+    "sprites": [
+      "mira.png"
+    ],
+    "tier": "Common"
+  },
+  "miriam": {
+    "sprites": [
+      "miriam.png"
+    ],
+    "tier": "Common"
+  },
+  "mirror": {
+    "sprites": [
+      "mirror.png"
+    ],
+    "tier": "Common"
+  },
+  "misty": {
+    "sprites": [
+      {
+        "file": "misty-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "misty-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "misty-gen2.png",
+        "disabled": true
+      },
+      "misty-gen3.png",
+      "misty-lgpe.png",
+      "misty-masters.png",
+      "misty.png"
+    ],
+    "tier": "Rare"
+  },
+  "model": {
+    "sprites": [
+      "model-gen8.png"
+    ],
+    "tier": "Common"
+  },
+  "mohn": {
+    "sprites": [
+      "mohn-anime.png",
+      "mohn.png"
+    ],
+    "tier": "Common"
+  },
+  "molayne": {
+    "sprites": [
+      "molayne.png"
+    ],
+    "tier": "Common"
+  },
+  "mom-alola": {
+    "sprites": [
+      "mom-alola.png"
+    ],
+    "tier": "Common"
+  },
+  "mom-hoenn": {
+    "sprites": [
+      "mom-hoenn.png"
+    ],
+    "tier": "Common"
+  },
+  "mom-johto": {
+    "sprites": [
+      "mom-johto.png"
+    ],
+    "tier": "Common"
+  },
+  "mom-paldea": {
+    "sprites": [
+      "mom-paldea.png"
+    ],
+    "tier": "Common"
+  },
+  "mom-unova": {
+    "sprites": [
+      "mom-unova.png",
+      "mom-unova2.png"
+    ],
+    "tier": "Common"
+  },
+  "morgan": {
+    "sprites": [
+      "morgan.png"
+    ],
+    "tier": "Common"
+  },
+  "morty": {
+    "sprites": [
+      {
+        "file": "morty-gen2.png",
+        "disabled": true
+      },
+      "morty-masters.png",
+      "morty-masters2.png",
+      "morty-masters3.png",
+      "morty.png"
+    ],
+    "tier": "Rare"
+  },
+  "mrbriney": {
+    "sprites": [
+      "mrbriney.png"
+    ],
+    "tier": "Common"
+  },
+  "mrfuji": {
+    "sprites": [
+      "mrfuji-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "mrstone": {
+    "sprites": [
+      "mrstone.png"
+    ],
+    "tier": "Common"
+  },
+  "musician": {
+    "sprites": [
+      "musician-gen8.png",
+      "musician-gen9.png",
+      "musician.png"
+    ],
+    "tier": "Common"
+  },
+  "mustard": {
+    "sprites": [
+      "mustard.png"
+    ],
+    "tier": "Common"
+  },
+  "mustard-champion": {
+    "sprites": [
+      "mustard-champion.png"
+    ],
+    "tier": "Common"
+  },
+  "mustard-master": {
+    "sprites": [
+      "mustard-master.png"
+    ],
+    "tier": "Common"
+  },
+  "n": {
+    "sprites": [
+      "n-masters.png",
+      "n-masters2.png",
+      "n-masters3.png",
+      "n.png"
+    ],
+    "tier": "Legendary"
+  },
+  "nancy": {
+    "sprites": [
+      "nancy.png"
+    ],
+    "tier": "Common"
+  },
+  "nanu": {
+    "sprites": [
+      "nanu.png"
+    ],
+    "tier": "Common"
+  },
+  "nate": {
+    "sprites": [
+      "nate-masters.png",
+      "nate-pokestar.png",
+      "nate-pokestar3.png",
+      "nate-wonderlauncher.png",
+      "nate.png"
+    ],
+    "tier": "Common"
+  },
+  "naveen": {
+    "sprites": [
+      "naveen.png"
+    ],
+    "tier": "Common"
+  },
+  "nemona": {
+    "sprites": [
+      "nemona-masters.png",
+      "nemona-s.png",
+      "nemona-v.png"
+    ],
+    "tier": "Epic"
+  },
+  "neroli": {
+    "sprites": [
+      "neroli.png"
+    ],
+    "tier": "Common"
+  },
+  "nessa": {
+    "sprites": [
+      "nessa-masters.png",
+      "nessa.png"
+    ],
+    "tier": "Rare"
+  },
+  "ninjaboy": {
+    "sprites": [
+      "ninjaboy-gen3.png",
+      "ninjaboy-gen6.png",
+      "ninjaboy.png"
+    ],
+    "tier": "Common"
+  },
+  "nita": {
+    "sprites": [
+      "nita.png"
+    ],
+    "tier": "Common"
+  },
+  "nobunaga": {
+    "sprites": [
+      "nobunaga-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "noland": {
+    "sprites": [
+      "noland-gen3.png",
+      "noland.png"
+    ],
+    "tier": "Epic"
+  },
+  "norman": {
+    "sprites": [
+      "norman-gen3.png",
+      "norman-gen6.png",
+      "norman.png"
+    ],
+    "tier": "Rare"
+  },
+  "nurse": {
+    "sprites": [
+      "nurse.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "nurseryaide": {
+    "sprites": [
+      "nurseryaide.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "oak": {
+    "sprites": [
+      {
+        "file": "oak-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "oak-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "oak-gen2.png",
+        "disabled": true
+      },
+      "oak-gen3.png",
+      "oak.png"
+    ],
+    "tier": "Rare"
+  },
+  "officer": {
+    "sprites": [
+      {
+        "file": "officer-gen2.png",
+        "disabled": true
+      }
+    ],
+    "tier": "Uncommon"
+  },
+  "officeworker": {
+    "sprites": [
+      "officeworker-gen9.png",
+      "officeworker.png",
+      "officeworkerf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "officeworkerf": {
+    "sprites": [
+      "officeworkerf-gen9.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "ogreclan": {
+    "sprites": [
+      "ogreclan.png"
+    ],
+    "tier": "Common"
+  },
+  "oichi": {
+    "sprites": [
+      "oichi-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "oldcouple": {
+    "sprites": [
+      "oldcouple-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "oleana": {
+    "sprites": [
+      "oleana.png"
+    ],
+    "tier": "Common"
+  },
+  "olivia": {
+    "sprites": [
+      "olivia.png"
+    ],
+    "tier": "Common"
+  },
+  "olympia": {
+    "sprites": [
+      "olympia.png"
+    ],
+    "tier": "Rare"
+  },
+  "opal": {
+    "sprites": [
+      "opal.png"
+    ],
+    "tier": "Common"
+  },
+  "ortega": {
+    "sprites": [
+      "ortega.png"
+    ],
+    "tier": "Rare"
+  },
+  "owner": {
+    "sprites": [
+      "owner.png"
+    ],
+    "tier": "Common"
+  },
+  "painter": {
+    "sprites": [
+      "painter-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "palina": {
+    "sprites": [
+      "palina.png"
+    ],
+    "tier": "Common"
+  },
+  "palmer": {
+    "sprites": [
+      "palmer.png"
+    ],
+    "tier": "Epic"
+  },
+  "parasollady": {
+    "sprites": [
+      "parasollady-gen3.png",
+      "parasollady-gen4.png",
+      "parasollady-gen6.png",
+      "parasollady.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "paulo": {
+    "sprites": [
+      "paulo-masters.png"
+    ],
+    "tier": "Common"
+  },
+  "paxton": {
+    "sprites": [
+      "paxton.png"
+    ],
+    "tier": "Common"
+  },
+  "pearlclanmember": {
+    "sprites": [
+      "pearlclanmember.png"
+    ],
+    "tier": "Common"
+  },
+  "penny": {
+    "sprites": [
+      "penny.png"
+    ],
+    "tier": "Rare"
+  },
+  "peonia": {
+    "sprites": [
+      "peonia.png"
+    ],
+    "tier": "Common"
+  },
+  "peony": {
+    "sprites": [
+      "peony-league.png",
+      "peony.png"
+    ],
+    "tier": "Common"
+  },
+  "perrin": {
+    "sprites": [
+      "perrin.png"
+    ],
+    "tier": "Common"
+  },
+  "pesselle": {
+    "sprites": [
+      "pesselle.png"
+    ],
+    "tier": "Common"
+  },
+  "petrel": {
+    "sprites": [
+      "petrel.png"
+    ],
+    "tier": "Common"
+  },
+  "phil": {
+    "sprites": [
+      "phil.png"
+    ],
+    "tier": "Common"
+  },
+  "phoebe": {
+    "sprites": [
+      "phoebe-gen3.png",
+      "phoebe-gen6.png",
+      "phoebe-masters.png"
+    ],
+    "tier": "Epic"
+  },
+  "phorus-unite": {
+    "sprites": [
+      "phorus-unite.png"
+    ],
+    "tier": "Common"
+  },
+  "phyco": {
+    "sprites": [
+      "phyco.png"
+    ],
+    "tier": "Common"
+  },
+  "picnicker": {
+    "sprites": [
+      {
+        "file": "picnicker-gen2.png",
+        "disabled": true
+      },
+      "picnicker-gen3.png",
+      "picnicker-gen3rs.png",
+      "picnicker-gen6.png",
+      "picnicker.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "piers": {
+    "sprites": [
+      "piers-league.png",
+      "piers-masters.png",
+      "piers.png"
+    ],
+    "tier": "Rare"
+  },
+  "pilot": {
+    "sprites": [
+      "pilot.png"
+    ],
+    "tier": "Common"
+  },
+  "plasmagrunt": {
+    "sprites": [
+      "plasmagrunt-gen5bw.png",
+      "plasmagrunt.png",
+      "plasmagruntf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "plasmagruntf": {
+    "sprites": [
+      "plasmagruntf-gen5bw.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "player-go": {
+    "sprites": [
+      "player-go.png"
+    ],
+    "tier": "Common"
+  },
+  "playerf-go": {
+    "sprites": [
+      "playerf-go.png"
+    ],
+    "tier": "Common"
+  },
+  "plumeria": {
+    "sprites": [
+      "plumeria-league.png",
+      "plumeria.png"
+    ],
+    "tier": "Common"
+  },
+  "pokefan": {
+    "sprites": [
+      {
+        "file": "pokefan-gen2.png",
+        "disabled": true
+      },
+      "pokefan-gen3.png",
+      "pokefan-gen4.png",
+      "pokefan-gen6.png",
+      "pokefan-gen6xy.png",
+      "pokefan.png",
+      "pokefanf.png"
+    ],
+    "tier": "Common"
+  },
+  "pokefanf": {
+    "sprites": [
+      {
+        "file": "pokefanf-gen2.png",
+        "disabled": true
+      },
+      "pokefanf-gen3.png",
+      "pokefanf-gen4.png",
+      "pokefanf-gen6.png",
+      "pokefanf-gen6xy.png"
+    ],
+    "tier": "Common"
+  },
+  "pokekid": {
+    "sprites": [
+      "pokekid-gen8.png",
+      "pokekid.png"
+    ],
+    "tier": "Common"
+  },
+  "pokekidf": {
+    "sprites": [
+      "pokekidf-gen8.png"
+    ],
+    "tier": "Common"
+  },
+  "pokemaniac": {
+    "sprites": [
+      {
+        "file": "pokemaniac-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "pokemaniac-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "pokemaniac-gen2.png",
+        "disabled": true
+      },
+      "pokemaniac-gen3.png",
+      "pokemaniac-gen3rs.png",
+      "pokemaniac-gen6.png",
+      "pokemaniac-gen9.png",
+      "pokemaniac.png"
+    ],
+    "tier": "Common"
+  },
+  "pokemonbreeder": {
+    "sprites": [
+      "pokemonbreeder-gen3.png",
+      "pokemonbreeder-gen4.png",
+      "pokemonbreeder-gen6.png",
+      "pokemonbreeder-gen6xy.png",
+      "pokemonbreeder-gen7.png",
+      "pokemonbreeder-gen8.png",
+      "pokemonbreeder.png",
+      "pokemonbreederf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "pokemonbreederf": {
+    "sprites": [
+      "pokemonbreederf-gen3.png",
+      "pokemonbreederf-gen3frlg.png",
+      "pokemonbreederf-gen4.png",
+      "pokemonbreederf-gen6.png",
+      "pokemonbreederf-gen6xy.png",
+      "pokemonbreederf-gen7.png",
+      "pokemonbreederf-gen8.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "pokemoncenterlady": {
+    "sprites": [
+      "pokemoncenterlady.png"
+    ],
+    "tier": "Common"
+  },
+  "pokemonranger": {
+    "sprites": [
+      "pokemonranger-gen3.png",
+      "pokemonranger-gen3rs.png",
+      "pokemonranger-gen4.png",
+      "pokemonranger-gen6.png",
+      "pokemonranger-gen6xy.png",
+      "pokemonranger.png",
+      "pokemonrangerf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "pokemonrangerf": {
+    "sprites": [
+      "pokemonrangerf-gen3.png",
+      "pokemonrangerf-gen3rs.png",
+      "pokemonrangerf-gen4.png",
+      "pokemonrangerf-gen6.png",
+      "pokemonrangerf-gen6xy.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "policeman": {
+    "sprites": [
+      "policeman-gen4.png",
+      "policeman-gen7.png",
+      "policeman-gen8.png",
+      "policeman.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "poppy": {
+    "sprites": [
+      "poppy.png"
+    ],
+    "tier": "Common"
+  },
+  "postman": {
+    "sprites": [
+      "postman.png"
+    ],
+    "tier": "Common"
+  },
+  "preschooler": {
+    "sprites": [
+      "preschooler-gen6.png",
+      "preschooler-gen7.png",
+      "preschooler.png",
+      "preschoolerf.png"
+    ],
+    "tier": "Common"
+  },
+  "preschoolerf": {
+    "sprites": [
+      "preschoolerf-gen6.png",
+      "preschoolerf-gen7.png"
+    ],
+    "tier": "Common"
+  },
+  "preschoolers": {
+    "sprites": [
+      "preschoolers.png"
+    ],
+    "tier": "Common"
+  },
+  "proton": {
+    "sprites": [
+      "proton.png"
+    ],
+    "tier": "Common"
+  },
+  "pryce": {
+    "sprites": [
+      {
+        "file": "pryce-gen2.png",
+        "disabled": true
+      },
+      "pryce.png"
+    ],
+    "tier": "Rare"
+  },
+  "psychic": {
+    "sprites": [
+      {
+        "file": "psychic-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "psychic-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "psychic-gen2.png",
+        "disabled": true
+      },
+      "psychic-gen3.png",
+      "psychic-gen3rs.png",
+      "psychic-gen4.png",
+      "psychic-gen6.png",
+      "psychic-lgpe.png",
+      "psychic.png",
+      "psychicf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "psychicf": {
+    "sprites": [
+      "psychicf-gen3.png",
+      "psychicf-gen3rs.png",
+      "psychicf-gen4.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "psychicfjp": {
+    "sprites": [
+      "psychicfjp-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "punkgirl": {
+    "sprites": [
+      "punkgirl-gen7.png",
+      "punkgirl-masters.png",
+      "punkgirl.png"
+    ],
+    "tier": "Common"
+  },
+  "punkguy": {
+    "sprites": [
+      "punkguy-gen7.png",
+      "punkguy.png"
+    ],
+    "tier": "Common"
+  },
+  "raifort": {
+    "sprites": [
+      "raifort.png"
+    ],
+    "tier": "Common"
+  },
+  "raihan": {
+    "sprites": [
+      "raihan-masters.png",
+      "raihan.png"
+    ],
+    "tier": "Rare"
+  },
+  "railstaf": {
+    "sprites": [
+      "railstaff.png"
+    ],
+    "tier": "Common"
+  },
+  "ramos": {
+    "sprites": [
+      "ramos.png"
+    ],
+    "tier": "Rare"
+  },
+  "rancher": {
+    "sprites": [
+      "rancher.png"
+    ],
+    "tier": "Common"
+  },
+  "ranmaru": {
+    "sprites": [
+      "ranmaru-conquest.png"
+    ],
+    "tier": "Common"
+  },
+  "red": {
+    "sprites": [
+      {
+        "file": "red-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "red-gen1main.png",
+        "disabled": true
+      },
+      {
+        "file": "red-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "red-gen1title.png",
+        "disabled": true
+      },
+      {
+        "file": "red-gen2.png",
+        "disabled": true
+      },
+      "red-gen3.png",
+      "red-gen7.png",
+      "red-lgpe.png",
+      "red-masters.png",
+      "red-masters2.png",
+      "red-masters3.png",
+      "red.png"
+    ],
+    "tier": "Legendary"
+  },
+  "rei": {
+    "sprites": [
+      "rei-isekai.png",
+      "rei.png"
+    ],
+    "tier": "Common"
+  },
+  "reporter": {
+    "sprites": [
+      "reporter-gen6.png",
+      "reporter-gen8.png",
+      "reporter.png"
+    ],
+    "tier": "Common"
+  },
+  "rhi": {
+    "sprites": [
+      "rhi.png"
+    ],
+    "tier": "Common"
+  },
+  "richboy": {
+    "sprites": [
+      "richboy-gen3.png",
+      "richboy-gen4.png",
+      "richboy-gen6.png",
+      "richboy-gen6xy.png",
+      "richboy.png"
+    ],
+    "tier": "Common"
+  },
+  "rika": {
+    "sprites": [
+      "rika.png"
+    ],
+    "tier": "Epic"
+  },
+  "riley": {
+    "sprites": [
+      "riley.png"
+    ],
+    "tier": "Common"
+  },
+  "risingstar": {
+    "sprites": [
+      "risingstar-gen6.png",
+      "risingstar.png",
+      "risingstarf.png"
+    ],
+    "tier": "Common"
+  },
+  "risingstarf": {
+    "sprites": [
+      "risingstarf-gen6.png"
+    ],
+    "tier": "Common"
+  },
+  "rita": {
+    "sprites": [
+      "rita.png"
+    ],
+    "tier": "Common"
+  },
+  "river": {
+    "sprites": [
+      "river.png"
+    ],
+    "tier": "Common"
+  },
+  "roark": {
+    "sprites": [
+      "roark.png"
+    ],
+    "tier": "Rare"
+  },
+  "rocker": {
+    "sprites": [
+      {
+        "file": "rocker-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "rocker-gen1rb.png",
+        "disabled": true
+      },
+      "rocker-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "rocket": {
+    "sprites": [
+      {
+        "file": "rocket-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "rocket-gen1rb.png",
+        "disabled": true
+      }
+    ],
+    "tier": "Common"
+  },
+  "rocketexecutive": {
+    "sprites": [
+      {
+        "file": "rocketexecutive-gen2.png",
+        "disabled": true
+      }
+    ],
+    "tier": "Rare"
+  },
+  "rocketexecutivef": {
+    "sprites": [
+      {
+        "file": "rocketexecutivef-gen2.png",
+        "disabled": true
+      }
+    ],
+    "tier": "Rare"
+  },
+  "rocketgrunt": {
+    "sprites": [
+      {
+        "file": "rocketgrunt-gen2.png",
+        "disabled": true
+      },
+      "rocketgrunt.png",
+      "rocketgruntf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "rocketgruntf": {
+    "sprites": [
+      {
+        "file": "rocketgruntf-gen2.png",
+        "disabled": true
+      }
+    ],
+    "tier": "Uncommon"
+  },
+  "rollerskater": {
+    "sprites": [
+      "rollerskater.png",
+      "rollerskaterf.png"
+    ],
+    "tier": "Common"
+  },
+  "rood": {
+    "sprites": [
+      "rood.png"
+    ],
+    "tier": "Common"
+  },
+  "rosa": {
+    "sprites": [
+      "rosa-masters.png",
+      "rosa-masters2.png",
+      "rosa-masters3.png",
+      "rosa-pokestar.png",
+      "rosa-pokestar2.png",
+      "rosa-pokestar3.png",
+      "rosa-wonderlauncher.png",
+      "rosa.png"
+    ],
+    "tier": "Common"
+  },
+  "rose": {
+    "sprites": [
+      "rose-zerosuit.png",
+      "rose.png"
+    ],
+    "tier": "Epic"
+  },
+  "roughneck": {
+    "sprites": [
+      "roughneck-gen4.png",
+      "roughneck.png"
+    ],
+    "tier": "Common"
+  },
+  "rowan": {
+    "sprites": [
+      "rowan.png"
+    ],
+    "tier": "Rare"
+  },
+  "roxanne": {
+    "sprites": [
+      "roxanne-gen3.png",
+      "roxanne-gen6.png",
+      "roxanne-masters.png",
+      "roxanne.png"
+    ],
+    "tier": "Rare"
+  },
+  "roxie": {
+    "sprites": [
+      "roxie-masters.png",
+      "roxie.png"
+    ],
+    "tier": "Common"
+  },
+  "roy": {
+    "sprites": [
+      "roy.png"
+    ],
+    "tier": "Common"
+  },
+  "ruffian": {
+    "sprites": [
+      "ruffian.png"
+    ],
+    "tier": "Common"
+  },
+  "ruinmaniac": {
+    "sprites": [
+      "ruinmaniac-gen3.png",
+      "ruinmaniac-gen3rs.png",
+      "ruinmaniac-gen6.png",
+      "ruinmaniac.png"
+    ],
+    "tier": "Common"
+  },
+  "rye": {
+    "sprites": [
+      "rye.png"
+    ],
+    "tier": "Common"
+  },
+  "ryme": {
+    "sprites": [
+      "ryme.png"
+    ],
+    "tier": "Rare"
+  },
+  "ryuki": {
+    "sprites": [
+      "ryuki.png"
+    ],
+    "tier": "Common"
+  },
+  "sabi": {
+    "sprites": [
+      "sabi.png"
+    ],
+    "tier": "Common"
+  },
+  "sabrina": {
+    "sprites": [
+      "sabrina-frlg.png",
+      {
+        "file": "sabrina-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "sabrina-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "sabrina-gen2.png",
+        "disabled": true
+      },
+      "sabrina-gen3.png",
+      "sabrina-lgpe.png",
+      "sabrina-masters.png",
+      "sabrina.png"
+    ],
+    "tier": "Rare"
+  },
+  "sada": {
+    "sprites": [
+      "sada-ai.png",
+      "sada.png"
+    ],
+    "tier": "Epic"
+  },
+  "sage": {
+    "sprites": [
+      {
+        "file": "sage-gen2.png",
+        "disabled": true
+      },
+      {
+        "file": "sage-gen2jp.png",
+        "disabled": true
+      },
+      "sage.png"
+    ],
+    "tier": "Common"
+  },
+  "saguaro": {
+    "sprites": [
+      "saguaro.png"
+    ],
+    "tier": "Common"
+  },
+  "sailor": {
+    "sprites": [
+      {
+        "file": "sailor-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "sailor-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "sailor-gen2.png",
+        "disabled": true
+      },
+      "sailor-gen3.png",
+      "sailor-gen3jp.png",
+      "sailor-gen3rs.png",
+      "sailor-gen6.png",
+      "sailor.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "salvatore": {
+    "sprites": [
+      "salvatore.png"
+    ],
+    "tier": "Common"
+  },
+  "samsonoak": {
+    "sprites": [
+      "samsonoak.png"
+    ],
+    "tier": "Common"
+  },
+  "sanqua": {
+    "sprites": [
+      "sanqua.png"
+    ],
+    "tier": "Common"
+  },
+  "saturn": {
+    "sprites": [
+      "saturn.png"
+    ],
+    "tier": "Common"
+  },
+  "schoolboy": {
+    "sprites": [
+      {
+        "file": "schoolboy-gen2.png",
+        "disabled": true
+      },
+      "schoolboy.png"
+    ],
+    "tier": "Common"
+  },
+  "schoolgirl": {
+    "sprites": [
+      "schoolgirl.png"
+    ],
+    "tier": "Common"
+  },
+  "schoolkid": {
+    "sprites": [
+      "schoolkid-gen3.png",
+      "schoolkid-gen4.png",
+      "schoolkid-gen4dp.png",
+      "schoolkid-gen6.png",
+      "schoolkid-gen8.png",
+      "schoolkid.png",
+      "schoolkidf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "schoolkidf": {
+    "sprites": [
+      "schoolkidf-gen3.png",
+      "schoolkidf-gen4.png",
+      "schoolkidf-gen6.png",
+      "schoolkidf-gen8.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "scientist": {
+    "sprites": [
+      {
+        "file": "scientist-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "scientist-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "scientist-gen2.png",
+        "disabled": true
+      },
+      "scientist-gen3.png",
+      "scientist-gen4.png",
+      "scientist-gen4dp.png",
+      "scientist-gen6.png",
+      "scientist-gen7.png",
+      "scientist-gen9.png",
+      "scientist.png",
+      "scientistf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "scientistf": {
+    "sprites": [
+      "scientistf-gen6.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "scott": {
+    "sprites": [
+      "scott.png"
+    ],
+    "tier": "Common"
+  },
+  "scottie": {
+    "sprites": [
+      "scottie-masters.png"
+    ],
+    "tier": "Common"
+  },
+  "scubadiver": {
+    "sprites": [
+      "scubadiver.png"
+    ],
+    "tier": "Common"
+  },
+  "securitycorps": {
+    "sprites": [
+      "securitycorps.png",
+      "securitycorpsf.png"
+    ],
+    "tier": "Common"
+  },
+  "selene": {
+    "sprites": [
+      "selene-masters.png",
+      "selene-masters2.png",
+      "selene-usum.png",
+      "selene.png"
+    ],
+    "tier": "Common"
+  },
+  "serena": {
+    "sprites": [
+      "serena-anime.png",
+      "serena-masters.png",
+      "serena-masters2.png",
+      "serena-masters3.png",
+      "serena.png"
+    ],
+    "tier": "Epic"
+  },
+  "shadowtriad": {
+    "sprites": [
+      "shadowtriad.png"
+    ],
+    "tier": "Common"
+  },
+  "shauna": {
+    "sprites": [
+      "shauna-masters.png",
+      "shauna.png"
+    ],
+    "tier": "Common"
+  },
+  "shauntal": {
+    "sprites": [
+      "shauntal-masters.png",
+      "shauntal.png"
+    ],
+    "tier": "Epic"
+  },
+  "shelly": {
+    "sprites": [
+      "shelly-gen3.png",
+      "shelly.png"
+    ],
+    "tier": "Common"
+  },
+  "shielbert": {
+    "sprites": [
+      "shielbert.png"
+    ],
+    "tier": "Common"
+  },
+  "sidney": {
+    "sprites": [
+      "sidney-gen3.png",
+      "sidney.png"
+    ],
+    "tier": "Common"
+  },
+  "siebold": {
+    "sprites": [
+      "siebold-masters.png",
+      "siebold.png"
+    ],
+    "tier": "Epic"
+  },
+  "sierra": {
+    "sprites": [
+      "sierra.png"
+    ],
+    "tier": "Rare"
+  },
+  "sightseer": {
+    "sprites": [
+      "sightseer.png",
+      "sightseerf.png"
+    ],
+    "tier": "Common"
+  },
+  "silver": {
+    "sprites": [
+      {
+        "file": "silver-gen2.png",
+        "disabled": true
+      },
+      {
+        "file": "silver-gen2kanto.png",
+        "disabled": true
+      },
+      "silver-masters.png",
+      "silver.png"
+    ],
+    "tier": "Epic"
+  },
+  "sina": {
+    "sprites": [
+      "sina-gen6.png",
+      "sina.png"
+    ],
+    "tier": "Common"
+  },
+  "sisandbro": {
+    "sprites": [
+      "sisandbro-gen3.png",
+      "sisandbro-gen3rs.png",
+      "sisandbro.png"
+    ],
+    "tier": "Common"
+  },
+  "skier": {
+    "sprites": [
+      {
+        "file": "skier-gen2.png",
+        "disabled": true
+      },
+      "skier.png",
+      "skierf.png"
+    ],
+    "tier": "Common"
+  },
+  "skierf": {
+    "sprites": [
+      "skierf-gen4dp.png"
+    ],
+    "tier": "Common"
+  },
+  "skullgrunt": {
+    "sprites": [
+      "skullgrunt.png",
+      "skullgruntf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "skyla": {
+    "sprites": [
+      "skyla-masters.png",
+      "skyla-masters2.png",
+      "skyla.png"
+    ],
+    "tier": "Rare"
+  },
+  "skytrainer": {
+    "sprites": [
+      "skytrainer.png",
+      "skytrainerf.png"
+    ],
+    "tier": "Common"
+  },
+  "smasher": {
+    "sprites": [
+      "smasher.png"
+    ],
+    "tier": "Common"
+  },
+  "soliera": {
+    "sprites": [
+      "soliera.png"
+    ],
+    "tier": "Common"
+  },
+  "sonia": {
+    "sprites": [
+      "sonia-masters.png",
+      "sonia.png"
+    ],
+    "tier": "Common"
+  },
+  "sonia-professor": {
+    "sprites": [
+      "sonia-professor.png"
+    ],
+    "tier": "Common"
+  },
+  "sophocles": {
+    "sprites": [
+      "sophocles.png"
+    ],
+    "tier": "Common"
+  },
+  "sordward": {
+    "sprites": [
+      "sordward.png"
+    ],
+    "tier": "Common"
+  },
+  "sordward-shielbert": {
+    "sprites": [
+      "sordward-shielbert.png"
+    ],
+    "tier": "Common"
+  },
+  "spark": {
+    "sprites": [
+      "spark-casual.png",
+      "spark.png"
+    ],
+    "tier": "Common"
+  },
+  "spenser": {
+    "sprites": [
+      "spenser-gen3.png",
+      "spenser.png"
+    ],
+    "tier": "Epic"
+  },
+  "srandjr": {
+    "sprites": [
+      "srandjr-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "stargrunt": {
+    "sprites": [
+      "stargrunt-s.png",
+      "stargrunt-v.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "stargruntf": {
+    "sprites": [
+      "stargruntf-s.png",
+      "stargruntf-v.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "steven": {
+    "sprites": [
+      "steven-gen3.png",
+      "steven-gen6.png",
+      "steven-masters.png",
+      "steven-masters2.png",
+      "steven-masters3.png",
+      "steven-masters4.png",
+      "steven.png"
+    ],
+    "tier": "Legendary"
+  },
+  "streetthug": {
+    "sprites": [
+      "streetthug-masters.png",
+      "streetthug.png"
+    ],
+    "tier": "Common"
+  },
+  "striker": {
+    "sprites": [
+      "striker.png"
+    ],
+    "tier": "Common"
+  },
+  "supernerd": {
+    "sprites": [
+      {
+        "file": "supernerd-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "supernerd-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "supernerd-gen2.png",
+        "disabled": true
+      },
+      "supernerd-gen3.png",
+      "supernerd.png"
+    ],
+    "tier": "Common"
+  },
+  "surfer": {
+    "sprites": [
+      "surfer.png"
+    ],
+    "tier": "Common"
+  },
+  "swimmer": {
+    "sprites": [
+      {
+        "file": "swimmer-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "swimmer-gen1rb.png",
+        "disabled": true
+      },
+      "swimmer-gen4.png",
+      "swimmer-gen4dp.png",
+      "swimmer-gen4jp.png",
+      "swimmer-gen6.png",
+      "swimmer-gen7.png",
+      "swimmer-gen8.png",
+      "swimmer-masters.png",
+      "swimmer.png",
+      "swimmerf.png"
+    ],
+    "tier": "Common"
+  },
+  "swimmerf": {
+    "sprites": [
+      {
+        "file": "swimmerf-gen2.png",
+        "disabled": true
+      },
+      "swimmerf-gen3.png",
+      "swimmerf-gen3rs.png",
+      "swimmerf-gen4.png",
+      "swimmerf-gen4dp.png",
+      "swimmerf-gen6.png",
+      "swimmerf-gen7.png",
+      "swimmerf-gen8.png"
+    ],
+    "tier": "Common"
+  },
+  "swimmerf2": {
+    "sprites": [
+      "swimmerf2-gen6.png",
+      "swimmerf2-gen7.png"
+    ],
+    "tier": "Common"
+  },
+  "swimmerfjp": {
+    "sprites": [
+      {
+        "file": "swimmerfjp-gen2.png",
+        "disabled": true
+      }
+    ],
+    "tier": "Common"
+  },
+  "swimmerm": {
+    "sprites": [
+      {
+        "file": "swimmerm-gen2.png",
+        "disabled": true
+      },
+      "swimmerm-gen3.png",
+      "swimmerm-gen3rs.png"
+    ],
+    "tier": "Common"
+  },
+  "sycamore": {
+    "sprites": [
+      "sycamore-masters.png",
+      "sycamore.png"
+    ],
+    "tier": "Rare"
+  },
+  "tabitha": {
+    "sprites": [
+      "tabitha-gen3.png",
+      "tabitha.png"
+    ],
+    "tier": "Common"
+  },
+  "tamer": {
+    "sprites": [
+      {
+        "file": "tamer-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "tamer-gen1rb.png",
+        "disabled": true
+      },
+      "tamer-gen3.png"
+    ],
+    "tier": "Common"
+  },
+  "taohua": {
+    "sprites": [
+      "taohua.png"
+    ],
+    "tier": "Common"
+  },
+  "tate": {
+    "sprites": [
+      "tate-gen6.png",
+      "tate-masters.png",
+      "tate.png"
+    ],
+    "tier": "Rare"
+  },
+  "tateandliza": {
+    "sprites": [
+      "tateandliza-gen3.png",
+      "tateandliza-gen6.png"
+    ],
+    "tier": "Common"
+  },
+  "teacher": {
+    "sprites": [
+      {
+        "file": "teacher-gen2.png",
+        "disabled": true
+      },
+      "teacher-gen7.png",
+      "teacher.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "teamaquabeta": {
+    "sprites": [
+      "teamaquabeta-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "teamaquagruntf": {
+    "sprites": [
+      "teamaquagruntf-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "teamaquagruntm": {
+    "sprites": [
+      "teamaquagruntm-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "teammagmagruntf": {
+    "sprites": [
+      "teammagmagruntf-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "teammagmagruntm": {
+    "sprites": [
+      "teammagmagruntm-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "teammates": {
+    "sprites": [
+      "teammates.png"
+    ],
+    "tier": "Common"
+  },
+  "teamrocket": {
+    "sprites": [
+      "teamrocket.png"
+    ],
+    "tier": "Common"
+  },
+  "teamrocketgruntf": {
+    "sprites": [
+      "teamrocketgruntf-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "teamrocketgruntm": {
+    "sprites": [
+      "teamrocketgruntm-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "theroyal": {
+    "sprites": [
+      "theroyal.png"
+    ],
+    "tier": "Common"
+  },
+  "thorton": {
+    "sprites": [
+      "thorton.png"
+    ],
+    "tier": "Epic"
+  },
+  "tierno": {
+    "sprites": [
+      "tierno.png"
+    ],
+    "tier": "Common"
+  },
+  "tina": {
+    "sprites": [
+      "tina-masters.png"
+    ],
+    "tier": "Common"
+  },
+  "toddsnap": {
+    "sprites": [
+      "toddsnap.png",
+      "toddsnap2.png"
+    ],
+    "tier": "Common"
+  },
+  "tourist": {
+    "sprites": [
+      "tourist.png",
+      "touristf.png"
+    ],
+    "tier": "Common"
+  },
+  "touristf": {
+    "sprites": [
+      "touristf2.png"
+    ],
+    "tier": "Common"
+  },
+  "trace": {
+    "sprites": [
+      "trace.png"
+    ],
+    "tier": "Rare"
+  },
+  "trevor": {
+    "sprites": [
+      "trevor.png"
+    ],
+    "tier": "Common"
+  },
+  "trialguide": {
+    "sprites": [
+      "trialguide.png",
+      "trialguidef.png"
+    ],
+    "tier": "Common"
+  },
+  "triathletebiker": {
+    "sprites": [
+      "triathletebiker-gen6.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "triathletebikerf": {
+    "sprites": [
+      "triathletebikerf-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "triathletebikerm": {
+    "sprites": [
+      "triathletebikerm-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "triathleterunner": {
+    "sprites": [
+      "triathleterunner-gen6.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "triathleterunnerf": {
+    "sprites": [
+      "triathleterunnerf-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "triathleterunnerm": {
+    "sprites": [
+      "triathleterunnerm-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "triathleteswimmer": {
+    "sprites": [
+      "triathleteswimmer-gen6.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "triathleteswimmerf": {
+    "sprites": [
+      "triathleteswimmerf-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "triathleteswimmerm": {
+    "sprites": [
+      "triathleteswimmerm-gen3.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "tuber": {
+    "sprites": [
+      "tuber-gen3.png",
+      "tuber-gen6.png",
+      "tuber.png",
+      "tuberf.png"
+    ],
+    "tier": "Common"
+  },
+  "tuberf": {
+    "sprites": [
+      "tuberf-gen3.png",
+      "tuberf-gen3rs.png",
+      "tuberf-gen6.png"
+    ],
+    "tier": "Common"
+  },
+  "tucker": {
+    "sprites": [
+      "tucker-gen3.png",
+      "tucker.png"
+    ],
+    "tier": "Epic"
+  },
+  "tuli": {
+    "sprites": [
+      "tuli.png"
+    ],
+    "tier": "Common"
+  },
+  "tulip": {
+    "sprites": [
+      "tulip.png"
+    ],
+    "tier": "Epic"
+  },
+  "turo": {
+    "sprites": [
+      "turo-ai.png",
+      "turo.png"
+    ],
+    "tier": "Epic"
+  },
+  "twins": {
+    "sprites": [
+      {
+        "file": "twins-gen2.png",
+        "disabled": true
+      },
+      "twins-gen3.png",
+      "twins-gen3rs.png",
+      "twins-gen4.png",
+      "twins-gen4dp.png",
+      "twins-gen6.png",
+      "twins.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "tyme": {
+    "sprites": [
+      "tyme.png"
+    ],
+    "tier": "Common"
+  },
+  "ultraforestkartenvoy": {
+    "sprites": [
+      "ultraforestkartenvoy.png"
+    ],
+    "tier": "Common"
+  },
+  "unknown": {
+    "sprites": [
+      "unknown.png",
+      "unknownf.png"
+    ],
+    "tier": "Common"
+  },
+  "valerie": {
+    "sprites": [
+      "valerie.png"
+    ],
+    "tier": "Rare"
+  },
+  "vessa": {
+    "sprites": [
+      "vessa.png"
+    ],
+    "tier": "Common"
+  },
+  "veteran": {
+    "sprites": [
+      "veteran-gen4.png",
+      "veteran-gen6.png",
+      "veteran-gen7.png",
+      "veteran.png",
+      "veteranf.png"
+    ],
+    "tier": "Common"
+  },
+  "veteranf": {
+    "sprites": [
+      "veteranf-gen6.png",
+      "veteranf-gen7.png"
+    ],
+    "tier": "Common"
+  },
+  "victor": {
+    "sprites": [
+      "victor-dojo.png",
+      "victor-league.png",
+      "victor-masters.png",
+      "victor-tundra.png",
+      "victor.png"
+    ],
+    "tier": "Rare"
+  },
+  "vince": {
+    "sprites": [
+      "vince.png"
+    ],
+    "tier": "Common"
+  },
+  "viola": {
+    "sprites": [
+      "viola-masters.png",
+      "viola.png"
+    ],
+    "tier": "Rare"
+  },
+  "volkner": {
+    "sprites": [
+      "volkner-masters.png",
+      "volkner.png"
+    ],
+    "tier": "Rare"
+  },
+  "volo": {
+    "sprites": [
+      "volo-ginkgo.png",
+      "volo.png"
+    ],
+    "tier": "Legendary"
+  },
+  "waiter": {
+    "sprites": [
+      "waiter-gen4.png",
+      "waiter-gen4dp.png",
+      "waiter-gen9.png",
+      "waiter.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "waitress": {
+    "sprites": [
+      "waitress-gen4.png",
+      "waitress-gen6.png",
+      "waitress-gen9.png",
+      "waitress.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "wallace": {
+    "sprites": [
+      "wallace-gen3.png",
+      "wallace-gen3rs.png",
+      "wallace-gen6.png",
+      "wallace-masters.png",
+      "wallace.png"
+    ],
+    "tier": "Legendary"
+  },
+  "wally": {
+    "sprites": [
+      "wally-gen3.png",
+      "wally-masters.png",
+      "wally.png"
+    ],
+    "tier": "Epic"
+  },
+  "wally-rse": {
+    "sprites": [
+      "wally-rse.png"
+    ],
+    "tier": "Common"
+  },
+  "wattson": {
+    "sprites": [
+      "wattson-gen3.png",
+      "wattson.png"
+    ],
+    "tier": "Rare"
+  },
+  "whitney": {
+    "sprites": [
+      {
+        "file": "whitney-gen2.png",
+        "disabled": true
+      },
+      "whitney-masters.png",
+      "whitney.png"
+    ],
+    "tier": "Rare"
+  },
+  "wicke": {
+    "sprites": [
+      "wicke.png"
+    ],
+    "tier": "Common"
+  },
+  "wikstrom": {
+    "sprites": [
+      "wikstrom.png"
+    ],
+    "tier": "Epic"
+  },
+  "will": {
+    "sprites": [
+      {
+        "file": "will-gen2.png",
+        "disabled": true
+      },
+      "will.png"
+    ],
+    "tier": "Epic"
+  },
+  "willow": {
+    "sprites": [
+      "willow-casual.png",
+      "willow.png"
+    ],
+    "tier": "Common"
+  },
+  "winona": {
+    "sprites": [
+      "winona-gen3.png",
+      "winona-gen6.png",
+      "winona.png"
+    ],
+    "tier": "Rare"
+  },
+  "worker": {
+    "sprites": [
+      "worker-gen4.png",
+      "worker-gen6.png",
+      "worker-gen7.png",
+      "worker-gen8.png",
+      "worker-gen9.png",
+      "worker-lgpe.png",
+      "worker.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "worker2": {
+    "sprites": [
+      "worker2-gen6.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "workerf": {
+    "sprites": [
+      "workerf-gen8.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "workerice": {
+    "sprites": [
+      "workerice.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "wulfric": {
+    "sprites": [
+      "wulfric.png"
+    ],
+    "tier": "Rare"
+  },
+  "xerosic": {
+    "sprites": [
+      "xerosic.png"
+    ],
+    "tier": "Common"
+  },
+  "yancy": {
+    "sprites": [
+      "yancy.png"
+    ],
+    "tier": "Common"
+  },
+  "yellgrunt": {
+    "sprites": [
+      "yellgrunt.png",
+      "yellgruntf.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "yellow": {
+    "sprites": [
+      "yellow.png"
+    ],
+    "tier": "Uncommon"
+  },
+  "youngathlete": {
+    "sprites": [
+      "youngathlete.png",
+      "youngathletef.png"
+    ],
+    "tier": "Common"
+  },
+  "youngcouple": {
+    "sprites": [
+      "youngcouple-gen3.png",
+      "youngcouple-gen3rs.png",
+      "youngcouple-gen4dp.png",
+      "youngcouple-gen6.png",
+      "youngcouple.png"
+    ],
+    "tier": "Common"
+  },
+  "youngn": {
+    "sprites": [
+      "youngn.png"
+    ],
+    "tier": "Common"
+  },
+  "youngster": {
+    "sprites": [
+      {
+        "file": "youngster-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "youngster-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "youngster-gen2.png",
+        "disabled": true
+      },
+      "youngster-gen3.png",
+      "youngster-gen3rs.png",
+      "youngster-gen4.png",
+      "youngster-gen4dp.png",
+      "youngster-gen6.png",
+      "youngster-gen6xy.png",
+      "youngster-gen7.png",
+      "youngster-gen8.png",
+      "youngster-gen9.png",
+      "youngster-masters.png",
+      "youngster.png"
+    ],
+    "tier": "Common"
+  },
+  "yukito-hideko": {
+    "sprites": [
+      "yukito-hideko.png"
+    ],
+    "tier": "Common"
+  },
+  "zinnia": {
+    "sprites": [
+      "zinnia-masters.png",
+      "zinnia.png"
+    ],
+    "tier": "Epic"
+  },
+  "zinzolin": {
+    "sprites": [
+      "zinzolin.png"
+    ],
+    "tier": "Common"
+  },
+  "zirco-unite": {
+    "sprites": [
+      "zirco-unite.png"
+    ],
+    "tier": "Common"
+  },
+  "zisu": {
+    "sprites": [
+      "zisu.png"
+    ],
+    "tier": "Common"
+  },
+  "zossie": {
+    "sprites": [
+      "zossie.png"
+    ],
+    "tier": "Common"
+  }
 }

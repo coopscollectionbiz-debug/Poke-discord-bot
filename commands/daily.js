@@ -56,7 +56,6 @@ export default {
   data: new SlashCommandBuilder()
     .setName("daily")
     .setDescription("Claim your daily TP, CC, and receive both a Pokémon and Trainer!")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {

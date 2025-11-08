@@ -52,11 +52,11 @@ const AUTOSAVE_INTERVAL = 1000 * 60 * 3;      // 3 minutes
 const POKEBEACH_CHECK_INTERVAL = 1000 * 60 * 120; // 2 hours
 const PORT = process.env.PORT || 10000;
 const MESSAGE_TP_GAIN = 2;
-const MESSAGE_CC_CHANCE = 0.01;
-const MESSAGE_COOLDOWN = 10_000;
-const MESSAGE_REWARD_CHANCE = 0.02;
-const REACTION_REWARD_CHANCE = 0.02;
-const REWARD_COOLDOWN = 10_000;
+const MESSAGE_CC_CHANCE = 0.03;
+const MESSAGE_COOLDOWN = 5000;
+const MESSAGE_REWARD_CHANCE = 0.03;
+const REACTION_REWARD_CHANCE = 0.03;
+const REWARD_COOLDOWN = 5000;
 const RARE_TIERS = ["epic", "legendary", "mythic"];
 
 let trainerData = {};

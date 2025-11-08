@@ -155,51 +155,56 @@ const trainerSprite = `${spritePaths.trainers}${cleanTrainerFile}.png`;
       await postRareSightings(client, pokemonPick, interaction.user, true, shiny);
       await postRareSightings(client, trainerPick, interaction.user, false, false);
 
-      // ======================================================
-      // 🧍 Equip Prompt for New Trainer
-      // ======================================================
-      try {
-        await interaction.followUp({
-          content: `🎉 You obtained **${trainerPick.name || trainerPick.filename}!**\nWould you like to equip them as your displayed Trainer?`,
-          components: [
-            new ActionRowBuilder().addComponents(
-              new ButtonBuilder()
-                .setCustomId(`equip_${trainerPick.filename}`)
-                .setLabel("Equip Trainer")
-                .setStyle(ButtonStyle.Success),
-              new ButtonBuilder()
-                .setCustomId("skip_equip")
-                .setLabel("Skip")
-                .setStyle(ButtonStyle.Secondary)
-            ),
-          ],
-          ephemeral: true,
-        });
+    // ======================================================
+// 🧍 Equip Prompt for New Trainer (Fixed collector + defer)
+// ======================================================
+try {
+  const promptMessage = await interaction.followUp({
+    content: `🎉 You obtained **${trainerPick.name || trainerPick.filename}!**\nWould you like to equip them as your displayed Trainer?`,
+    components: [
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`equip_${trainerPick.filename}`)
+          .setLabel("Equip Trainer")
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId("skip_equip")
+          .setLabel("Skip")
+          .setStyle(ButtonStyle.Secondary)
+      ),
+    ],
+    ephemeral: true,
+  });
 
-        const collector = interaction.channel?.createMessageComponentCollector({
-          componentType: ComponentType.Button,
-          time: 15000,
-          filter: i => i.user.id === interaction.user.id,
-        });
+  const collector = promptMessage.createMessageComponentCollector({
+    componentType: ComponentType.Button,
+    time: 15000,
+    filter: i => i.user.id === interaction.user.id,
+  });
 
-        collector?.on("collect", async i => {
-          if (i.customId === `equip_${trainerPick.filename}`) {
-            user.displayedTrainer = trainerPick.filename;
-            await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-            await i.update({
-              content: `✅ **${trainerPick.name || trainerPick.filename}** equipped as your displayed Trainer!`,
-              components: [],
-            });
-          } else if (i.customId === "skip_equip") {
-            await i.update({
-              content: `⏭️ Trainer kept in your collection.`,
-              components: [],
-            });
-          }
+  collector.on("collect", async i => {
+    try {
+      await i.deferUpdate();
+      if (i.customId === `equip_${trainerPick.filename}`) {
+        user.displayedTrainer = trainerPick.filename;
+        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+        await interaction.editReply({
+          content: `✅ **${trainerPick.name || trainerPick.filename}** equipped as your displayed Trainer!`,
+          components: [],
         });
-      } catch (err) {
-        console.warn("⚠️ Equip prompt failed:", err.message);
+      } else {
+        await interaction.editReply({
+          content: "⏭️ Trainer kept in your collection.",
+          components: [],
+        });
       }
+    } catch (err) {
+      console.warn("⚠️ Equip prompt error:", err.message);
+    }
+  });
+} catch (err) {
+  console.warn("⚠️ Equip prompt failed:", err.message);
+}
 
     } catch (err) {
       console.error("❌ /daily error stack:", err);

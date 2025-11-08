@@ -61,7 +61,7 @@ const MESSAGE_COOLDOWN = 5000;
 const MESSAGE_REWARD_CHANCE = 0.03;
 const REACTION_REWARD_CHANCE = 0.03;
 const REWARD_COOLDOWN = 5000;
-const RARE_TIERS = ["epic", "legendary", "mythic"];
+const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
 
 let trainerData = {};
 let discordSaveCount = 0;
@@ -308,7 +308,7 @@ try {
 try {
   const isTrainer = !isPokemon;
   const shinyTag = isShiny ? "✨ Shiny " : "";
-  const emoji = rarityEmojis[(reward.rarity || "common").toLowerCase()] || "⚪";
+  const emoji = rarityEmojis[(reward.tier || reward.rarity || "common").toLowerCase()] || "⚪";
 
   let messageText;
   if (isPokemon) {

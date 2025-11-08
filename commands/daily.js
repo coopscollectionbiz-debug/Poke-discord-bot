@@ -54,8 +54,10 @@ function hasClaimedToday(user) {
 // ==========================================================
 export default {
   data: new SlashCommandBuilder()
-    .setName("daily")
-    .setDescription("Claim your daily TP, CC, and receive both a Pokémon and Trainer!")
+  .setName("daily")
+  .setDescription("Claim your daily TP, CC, and receive both a Pokémon and Trainer!")
+  .setDefaultMemberPermissions(null), // ✅ explicitly null (not removed)
+
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {

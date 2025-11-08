@@ -45,6 +45,7 @@ import { rarityEmojis, spritePaths } from "./spriteconfig.js";
 import { postRareSightings } from "./utils/rareSightings.js";
 import { loadTrainerSprites } from "./utils/dataLoader.js";
 import { updateUserRole } from "./utils/updateUserRole.js";
+import { broadcastReward } from "./utils/broadcastReward.js"; // ✅ Add at top of file if missing
 
 // ==========================================================
 // ⚙️ Global Constants
@@ -159,9 +160,8 @@ async function saveDataToDiscord(data) {
 // ==========================================================
 // 🎁 Random Reward System (Message / Reaction / Daily Shared)
 // ==========================================================
-import { broadcastReward } from "./utils/broadcastReward.js"; // ✅ Add at top of file if missing
-
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
+console.log("⚙️ tryGiveRandomReward called for", interactionUser.username);
   const now = Date.now();
   const last = rewardCooldowns.get(interactionUser.id) || 0;
   if (now - last < REWARD_COOLDOWN) return;
@@ -291,6 +291,7 @@ try {
 
 
 // 🌟 Global broadcast to reward channel
+console.log("📡 Broadcasting reward for", reward?.name);
 try {
   await broadcastReward(client, {
     user: interactionUser,

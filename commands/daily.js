@@ -6,6 +6,10 @@
 import {
   SlashCommandBuilder,
   PermissionFlagsBits,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ComponentType
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
@@ -60,6 +64,13 @@ export default {
     const id = interaction.user.id;
     const user = await ensureUserInitialized(id, interaction.user.username, trainerData, client);
 
+    // ✅ Ensure essential fields exist to prevent "entries is not iterable"
+    user.tp ??= 0;
+    user.cc ??= 0;
+    user.pokemon ??= {};
+    user.trainers ??= {};
+    user.displayedTrainer ??= null;
+
     // 🕐 Global Reset Check
     if (hasClaimedToday(user)) {
       return safeReply(interaction, {
@@ -82,14 +93,12 @@ export default {
     const shiny = rollForShiny(user.tp || 0);
 
     // Update user data
-    user.pokemon ??= {};
     user.pokemon[pokemonPick.id] ??= { normal: 0, shiny: 0 };
     shiny ? user.pokemon[pokemonPick.id].shiny++ : user.pokemon[pokemonPick.id].normal++;
 
-    user.trainers ??= {};
     user.trainers[trainerPick.filename] = (user.trainers[trainerPick.filename] || 0) + 1;
 
-    // 💾 Save
+    // 💾 Save before prompt so rewards persist even if user doesn't interact
     try {
       await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
     } catch (err) {
@@ -125,5 +134,51 @@ export default {
     // ======================================================
     await postRareSightings(client, pokemonPick, interaction.user, true, shiny);
     await postRareSightings(client, trainerPick, interaction.user, false, false);
+
+    // ======================================================
+    // 🧍 Equip Prompt for New Trainer
+    // ======================================================
+    try {
+      await interaction.followUp({
+        content: `🎉 You obtained **${trainerPick.name || trainerPick.filename}!**\nWould you like to equip them as your displayed Trainer?`,
+        components: [
+          new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId(`equip_${trainerPick.filename}`)
+              .setLabel("Equip Trainer")
+              .setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+              .setCustomId("skip_equip")
+              .setLabel("Skip")
+              .setStyle(ButtonStyle.Secondary)
+          ),
+        ],
+        ephemeral: true,
+      });
+
+      const collector = interaction.channel.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 15000,
+        filter: i => i.user.id === interaction.user.id,
+      });
+
+      collector.on("collect", async i => {
+        if (i.customId === `equip_${trainerPick.filename}`) {
+          user.displayedTrainer = trainerPick.filename;
+          await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+          await i.update({
+            content: `✅ **${trainerPick.name || trainerPick.filename}** equipped as your displayed Trainer!`,
+            components: [],
+          });
+        } else if (i.customId === "skip_equip") {
+          await i.update({
+            content: `⏭️ Trainer kept in your collection.`,
+            components: [],
+          });
+        }
+      });
+    } catch (err) {
+      console.warn("⚠️ Equip prompt failed:", err.message);
+    }
   },
 };

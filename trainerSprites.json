@@ -958,7 +958,7 @@
       "candela-casual.png",
       "candela.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "candice": {
     "sprites": [
@@ -984,7 +984,7 @@
       "carmine-festival.png",
       "carmine.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "cedricjuniper": {
     "sprites": [
@@ -1023,13 +1023,13 @@
     "sprites": [
       "charon.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "chase": {
     "sprites": [
       "chase.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "che": {
     "sprites": [
@@ -1043,13 +1043,13 @@
       "cheren-masters.png",
       "cheren.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "cheryl": {
     "sprites": [
       "cheryl.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "chili": {
     "sprites": [
@@ -1061,13 +1061,13 @@
     "sprites": [
       "choy.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "christoph": {
     "sprites": [
       "christoph.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "chuck": {
     "sprites": [
@@ -1094,13 +1094,13 @@
       "clair-masters.png",
       "clair.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "clavell": {
     "sprites": [
       "clavell-s.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "clay": {
     "sprites": [
@@ -1144,19 +1144,19 @@
     "sprites": [
       "cliff.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "clive": {
     "sprites": [
       "clive-v.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "clover": {
     "sprites": [
       "clover.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "clown": {
     "sprites": [
@@ -1168,13 +1168,13 @@
     "sprites": [
       "cogita.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "coin": {
     "sprites": [
       "coin.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "collector": {
     "sprites": [
@@ -1203,7 +1203,7 @@
     "sprites": [
       "concordia.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "cook": {
     "sprites": [
@@ -1224,7 +1224,7 @@
       "courtney-gen3.png",
       "courtney.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "cowgirl": {
     "sprites": [
@@ -1236,7 +1236,7 @@
     "sprites": [
       "crasherwake.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "cress": {
     "sprites": [
@@ -1248,7 +1248,7 @@
     "sprites": [
       "crispin.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "crushgirl": {
     "sprites": [
@@ -1280,7 +1280,7 @@
     "sprites": [
       "curtis.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "cyclist": {
     "sprites": [
@@ -1300,7 +1300,7 @@
     "sprites": [
       "cyllene.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "cynthia": {
     "sprites": [
@@ -1320,7 +1320,7 @@
     "sprites": [
       "cyrano.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "cyrus": {
     "sprites": [
@@ -1346,13 +1346,13 @@
       "daisy-gen3.png",
       "daisy.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "dana": {
     "sprites": [
       "dana.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "dancer": {
     "sprites": [
@@ -1372,7 +1372,7 @@
     "sprites": [
       "darach-caitlin.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "dawn": {
     "sprites": [
@@ -1382,13 +1382,13 @@
       "dawn-masters3.png",
       "dawn.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "dawn-contest": {
     "sprites": [
       "dawn-contest.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "delinquent": {
     "sprites": [
@@ -1413,7 +1413,7 @@
     "sprites": [
       "dendra.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "depotagent": {
     "sprites": [
@@ -1459,7 +1459,7 @@
     "sprites": [
       "doubleteam.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "dragontamer": {
     "sprites": [
@@ -1468,7 +1468,7 @@
       "dragontamer-gen9.png",
       "dragontamer.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "drake": {
     "sprites": [
@@ -1480,7 +1480,7 @@
     "sprites": [
       "drasna.png"
     ],
-    "tier": "Epic"
+    "tier": "Rare"
   },
   "drayden": {
     "sprites": [
@@ -1492,7 +1492,7 @@
     "sprites": [
       "drayton.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "dulse": {
     "sprites": [
@@ -1504,7 +1504,7 @@
     "sprites": [
       "elaine.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "elesa": {
     "sprites": [
@@ -1522,7 +1522,7 @@
       "elio-usum.png",
       "elio.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "elm": {
     "sprites": [
@@ -1573,7 +1573,7 @@
     "sprites": [
       "eri.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "erika": {
     "sprites": [
@@ -1617,13 +1617,13 @@
       "ethan-masters.png",
       "ethan.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "ethan-pokeathlon": {
     "sprites": [
       "ethan-pokeathlon.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "eusine": {
     "sprites": [
@@ -1639,7 +1639,7 @@
     "sprites": [
       "evelyn.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "expert": {
     "sprites": [
@@ -1659,7 +1659,7 @@
     "sprites": [
       "faba.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "fairytalegirl": {
     "sprites": [
@@ -1687,7 +1687,7 @@
     "sprites": [
       "fennel.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "firebreather": {
     "sprites": [
@@ -1709,7 +1709,7 @@
     "sprites": [
       "fisher-gen8.png"
     ],
-    "tier": "Uncommon"
+    "tier": "Common"
   },
   "fisherman": {
     "sprites": [
@@ -1733,7 +1733,7 @@
       "fisherman-gen7.png",
       "fisherman.png"
     ],
-    "tier": "Uncommon"
+    "tier": "Common"
   },
   "flannery": {
     "sprites": [
@@ -1761,13 +1761,13 @@
       "florian-festival.png",
       "florian-s.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "florian-bb": {
     "sprites": [
       "florian-bb.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "freediver": {
     "sprites": [
@@ -1803,7 +1803,7 @@
     "sprites": [
       "gaeric.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "galacticgrunt": {
     "sprites": [
@@ -1966,7 +1966,7 @@
     "sprites": [
       "gordie.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "grace": {
     "sprites": [
@@ -2067,20 +2067,20 @@
     "sprites": [
       "hassel.png"
     ],
-    "tier": "Epic"
+    "tier": "Rare"
   },
   "hau": {
     "sprites": [
       "hau-masters.png",
       "hau.png"
     ],
-    "tier": "Epic"
+    "tier": "Rare"
   },
   "hau-stance": {
     "sprites": [
       "hau-stance.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "hayley": {
     "sprites": [
@@ -2158,7 +2158,7 @@
       "hilbert-wonderlauncher.png",
       "hilbert.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "hilda": {
     "sprites": [
@@ -2168,7 +2168,7 @@
       "hilda-wonderlauncher.png",
       "hilda.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "hooligans": {
     "sprites": [
@@ -2187,13 +2187,13 @@
       "hop-masters.png",
       "hop.png"
     ],
-    "tier": "Epic"
+    "tier": "Rare"
   },
   "hugh": {
     "sprites": [
       "hugh.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "hyde": {
     "sprites": [
@@ -2224,13 +2224,13 @@
       "ingo-masters.png",
       "ingo.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "ingo-hisui": {
     "sprites": [
       "ingo-hisui.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "interviewers": {
     "sprites": [
@@ -2246,7 +2246,7 @@
       "iono-masters2.png",
       "iono.png"
     ],
-    "tier": "Rare"
+    "tier": "Legendary"
   },
   "irida": {
     "sprites": [
@@ -2261,7 +2261,7 @@
       "iris-masters.png",
       "iris.png"
     ],
-    "tier": "Legendary"
+    "tier": "Epic"
   },
   "iscan": {
     "sprites": [
@@ -2289,7 +2289,7 @@
       },
       "janine.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "janitor": {
     "sprites": [
@@ -2315,7 +2315,7 @@
     "sprites": [
       "jasmine-contest.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "jessiejames": {
     "sprites": [
@@ -2324,7 +2324,7 @@
         "disabled": true
       }
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "jogger": {
     "sprites": [
@@ -2336,13 +2336,13 @@
     "sprites": [
       "johanna.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "johanna-contest": {
     "sprites": [
       "johanna-contest.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "jrtrainer": {
     "sprites": [
@@ -2401,13 +2401,13 @@
       "juliana-festival.png",
       "juliana-s.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "juliana-bb": {
     "sprites": [
       "juliana-bb.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "juniper": {
     "sprites": [
@@ -2419,7 +2419,7 @@
     "sprites": [
       "jupiter.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "kabu": {
     "sprites": [
@@ -2437,13 +2437,13 @@
     "sprites": [
       "kamado.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "kamado-armor": {
     "sprites": [
       "kamado-armor.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "karen": {
     "sprites": [
@@ -2465,7 +2465,7 @@
     "sprites": [
       "kiawe.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "kieran": {
     "sprites": [
@@ -2488,7 +2488,7 @@
       },
       "kimonogirl.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "kindler": {
     "sprites": [
@@ -2501,13 +2501,13 @@
     "sprites": [
       "klara.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "kofu": {
     "sprites": [
       "kofu.png"
     ],
-    "tier": "Rare"
+    "tier": "Uncommon"
   },
   "koga": {
     "sprites": [
@@ -2545,7 +2545,7 @@
       "kris-masters.png",
       "kris.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "kukui": {
     "sprites": [
@@ -2581,7 +2581,7 @@
     "sprites": [
       "lacey.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "lady": {
     "sprites": [
@@ -2592,14 +2592,14 @@
       "lady-gen6oras.png",
       "lady.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "lana": {
     "sprites": [
       "lana-masters.png",
       "lana.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "lance": {
     "sprites": [
@@ -2659,7 +2659,7 @@
       "lass-gen8.png",
       "lass.png"
     ],
-    "tier": "Uncommon"
+    "tier": "Common"
   },
   "laventon": {
     "sprites": [
@@ -2674,13 +2674,13 @@
       "leaf-masters.png",
       "leaf-masters2.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "leaguestaf": {
     "sprites": [
       "leaguestaff.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "leaguestaff": {
     "sprites": [
@@ -2706,7 +2706,7 @@
     "sprites": [
       "leon-tower.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "li": {
     "sprites": [
@@ -2739,13 +2739,13 @@
       "lillie-masters3.png",
       "lillie.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "lillie-z": {
     "sprites": [
       "lillie-z.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "linebacker": {
     "sprites": [
@@ -2758,7 +2758,7 @@
       "lisia-masters.png",
       "lisia.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "liza": {
     "sprites": [

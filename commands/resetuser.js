@@ -6,7 +6,6 @@
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { atomicSave } from "../utils/saveManager.js";
-import { safeReply } from "../utils/safeReply.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -22,14 +21,15 @@ export default {
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
     try {
+      // ✅ Always defer first to prevent 'Unknown interaction'
+      await interaction.deferReply({ ephemeral: true });
+
       const target = interaction.options.getUser("user");
       const id = target.id;
 
       if (!trainerData[id]) {
-        return safeReply(interaction, {
-          content: `❌ No data found for ${target.username}.`,
-          ephemeral: true,
-        });
+        await interaction.editReply(`❌ No data found for **${target.username}**.`);
+        return;
       }
 
       const targetData = trainerData[id];
@@ -63,20 +63,24 @@ export default {
       // 💾 Save updated user data
       await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
-      // ✅ Confirmation
-      await safeReply(interaction, {
-        content: `✅ Successfully reset **${target.username}**!\n- Daily timer cleared\n- Pokémon/Trainer structures ensured\n- TP: ${tp}\n- CC: ${cc}`,
-        ephemeral: true,
-      });
+      // ✅ Confirmation (edit deferred message)
+      await interaction.editReply(
+        `✅ Successfully reset **${target.username}**!\n` +
+          `- Daily timer cleared\n` +
+          `- Pokémon/Trainer structures ensured\n` +
+          `- TP: ${tp}\n` +
+          `- CC: ${cc}`
+      );
 
       console.log(`✅ /resetuser: ${target.username} reset successfully.`);
 
     } catch (err) {
       console.error("❌ /resetuser error:", err);
-      await safeReply(interaction, {
-        content: `❌ Error resetting user: ${err.message}`,
-        ephemeral: true,
-      });
+      try {
+        await interaction.editReply(`❌ Error resetting user: ${err.message}`);
+      } catch {
+        console.error("❌ Failed to send error reply:", err.message);
+      }
     }
   },
 };

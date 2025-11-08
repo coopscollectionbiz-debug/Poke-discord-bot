@@ -1,14 +1,18 @@
+// ==========================================================
+// 🔄 /resetuser – Admin Command
+// Resets a user's daily timer, onboarding state, and data safely
+// while keeping TP and CC intact.
+// ==========================================================
+
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
-import { safeReply } from "../utils/safeReply.js";
-import { createSuccessEmbed } from "../utils/embedBuilders.js";
 import { atomicSave } from "../utils/saveManager.js";
-import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { safeReply } from "../utils/safeReply.js";
 
 export default {
   data: new SlashCommandBuilder()
     .setName("resetuser")
-    .setDescription("Reset onboarding, Pokémon, trainers, and /daily timer for a user (TP + CC preserved).")
-    .addUserOption(option => 
+    .setDescription("Admin: Reset a user’s daily timer, onboarding, and data safely.")
+    .addUserOption(option =>
       option
         .setName("user")
         .setDescription("The user to reset")
@@ -16,68 +20,63 @@ export default {
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    await interaction.deferReply({ ephemeral: true });
-
-    if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
-      return safeReply(interaction, { content: "⛔ You do not have permission to use this command.", ephemeral: true });
-    }
-
-    const targetUser = interaction.options.getUser("user");
-    const targetData = await ensureUserInitialized(targetUser.id, targetUser.username, trainerData, client);
-
-    if (!targetData) {
-      return safeReply(interaction, { content: `⛔ ${targetUser.username} does not have a trainer profile.`, ephemeral: true });
-    }
-
-    // ✅ Preserve key currencies
-    const preservedTP = targetData.tp ?? 0;
-    const preservedCC = targetData.cc ?? 0;
-
-    // ✅ Reset fields
-    targetData.onboardingComplete = false;
-    targetData.onboardingDate = null;
-    targetData.onboardingStage = "starter_selection";
-    targetData.selectedStarter = null;
-    targetData.starterPokemon = null;
-    targetData.pokemon = {};
-    targetData.trainers = {};
-    targetData.displayedPokemon = [];
-    targetData.displayedTrainer = null;
-
-    // ✅ Reset daily timer (to match /daily.js)
-targetData.lastDaily = 0; // Clear timestamp used for UTC check
-targetData.daily = { lastUsed: null, streak: 0, rewards: [] }; // Optional: keep structure future-proof
-
-
-    // ✅ Reassign preserved values
-    targetData.tp = preservedTP;
-    targetData.cc = preservedCC;
-
-    // ✅ Update memory
-    trainerData[targetUser.id] = targetData;
-
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
     try {
+      const target = interaction.options.getUser("user");
+      const id = target.id;
+
+      if (!trainerData[id]) {
+        return safeReply(interaction, {
+          content: `❌ No data found for ${target.username}.`,
+          ephemeral: true,
+        });
+      }
+
+      const targetData = trainerData[id];
+
+      // ======================================================
+      // 🧭 Preserve Currency, Reset Everything Else
+      // ======================================================
+      const tp = targetData.tp ?? 0;
+      const cc = targetData.cc ?? 0;
+
+      // ✅ Reset daily timer (matches /daily.js logic)
+      targetData.lastDaily = 0;
+      targetData.daily = { lastUsed: null, streak: 0, rewards: [] };
+
+      // ✅ Guarantee Pokémon & Trainer structures exist
+      targetData.pokemon = targetData.pokemon || {};
+      targetData.trainers = targetData.trainers || {};
+      targetData.displayedPokemon = targetData.displayedPokemon || [];
+      targetData.displayedTrainer = targetData.displayedTrainer || null;
+
+      // ✅ Clear onboarding or session-related flags if used
+      delete targetData.onboardingStep;
+      delete targetData.sessionActive;
+      delete targetData.sessionStart;
+      delete targetData.currentReward;
+
+      // ✅ Reapply preserved currencies
+      targetData.tp = tp;
+      targetData.cc = cc;
+
+      // 💾 Save updated user data
       await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
-      return safeReply(interaction, {
-        embeds: [
-          createSuccessEmbed(
-            "🔄 User Reset",
-            `Trainer profile for **${targetUser.username}** has been reset.\n\n` +
-            `✅ TP preserved: ${preservedTP}\n` +
-            `✅ CC preserved: ${preservedCC}\n` +
-            `✅ /daily timer reset`
-          )
-        ],
-        ephemeral: true
+      // ✅ Confirmation
+      await safeReply(interaction, {
+        content: `✅ Successfully reset **${target.username}**!\n- Daily timer cleared\n- Pokémon/Trainer structures ensured\n- TP: ${tp}\n- CC: ${cc}`,
+        ephemeral: true,
       });
+
+      console.log(`✅ /resetuser: ${target.username} reset successfully.`);
+
     } catch (err) {
-      console.error("❌ resetuser save error:", err);
-      return safeReply(interaction, {
-        content: `❌ Failed to reset user: ${err.message}`,
-        ephemeral: true
+      console.error("❌ /resetuser error:", err);
+      await safeReply(interaction, {
+        content: `❌ Error resetting user: ${err.message}`,
+        ephemeral: true,
       });
     }
-  }
+  },
 };

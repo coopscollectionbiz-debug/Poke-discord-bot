@@ -452,12 +452,15 @@ export async function showTrainerCard(interaction, user) {
     const trainerCount = Object.keys(user.trainers || {}).length;
 
     const teamDisplay = pokemonInfo.length > 0
-      ? pokemonInfo.map((p, i) => {
-          const shinyOwned = user.pokemon[p.id]?.shiny > 0;
-          const shinyMark = shinyOwned ? "✨ " : "";
-          return `${i + 1}. ${shinyMark}**${p.name}** (#${p.id})`;
-        }).join("\n")
-      : "No Pokémon selected";
+  ? pokemonInfo.map((p, i) => {
+      const shinyOwned = user.pokemon[p.id]?.shiny > 0;
+      const shinyMark = shinyOwned ? "✨ " : "";
+      const tier = (p.tier || p.rarity || "common").toLowerCase();
+      const emoji = rarityEmojis[tier] || "⚬";
+      const tierDisplay = emoji; // or `${emoji} ${tier.charAt(0).toUpperCase() + tier.slice(1)}`
+      return `${i + 1}. ${shinyMark}**${p.name}** ${tierDisplay}`;
+    }).join("\n")
+  : "No Pokémon selected";
 
     const embed = new EmbedBuilder()
       .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })

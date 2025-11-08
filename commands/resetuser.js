@@ -45,9 +45,10 @@ export default {
     targetData.displayedPokemon = [];
     targetData.displayedTrainer = null;
 
-    // ✅ Reset daily timer
-    targetData.dailyLastUsed = null;
-    targetData.dailyCooldown = null;
+    // ✅ Reset daily timer (to match /daily.js)
+targetData.lastDaily = 0; // Clear timestamp used for UTC check
+targetData.daily = { lastUsed: null, streak: 0, rewards: [] }; // Optional: keep structure future-proof
+
 
     // ✅ Reassign preserved values
     targetData.tp = preservedTP;

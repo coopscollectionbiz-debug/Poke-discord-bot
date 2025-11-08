@@ -5,7 +5,7 @@
 //  • Rank Buffs & Weighted Acquisition
 //  • Shiny Pokémon Logic (applies to all acquisitions)
 //  • Epic+ & Shiny Broadcast via utils/rareSightings.js
-//  • Passive Message / Reaction Rewards
+//  • Passive Message / Reaction Rewards (deterministic reward architecture)
 //  • PokéBeach News (every 2 hours, link-only posting)
 //  • Autosave / Graceful Shutdown / Express Health Endpoint
 // ==========================================================
@@ -45,14 +45,18 @@ import { rarityEmojis, spritePaths } from "./spriteconfig.js";
 import { postRareSightings } from "./utils/rareSightings.js";
 import { loadTrainerSprites } from "./utils/dataLoader.js";
 import { updateUserRole } from "./utils/updateUserRole.js";
-import { broadcastReward } from "./utils/broadcastReward.js"; // ✅ Add at top of file if missing
+import { broadcastReward } from "./utils/broadcastReward.js";
+import {
+  createPokemonRewardEmbed,
+  createTrainerRewardEmbed,
+} from "./utils/embedBuilders.js";
 
 // ==========================================================
 // ⚙️ Global Constants
 // ==========================================================
 const TRAINERDATA_PATH = "./trainerData.json";
-const AUTOSAVE_INTERVAL = 1000 * 60 * 3;      // 3 minutes
-const POKEBEACH_CHECK_INTERVAL = 1000 * 60 * 120; // 2 hours
+const AUTOSAVE_INTERVAL = 1000 * 60 * 3;
+const POKEBEACH_CHECK_INTERVAL = 1000 * 60 * 120;
 const PORT = process.env.PORT || 10000;
 const MESSAGE_TP_GAIN = 2;
 const MESSAGE_CC_CHANCE = 0.03;
@@ -97,9 +101,7 @@ async function loadTrainerData() {
     const messages = await storageChannel.messages.fetch({ limit: 50 });
     const backups = messages
       .filter(
-        (m) =>
-          m.attachments.size > 0 &&
-          m.attachments.first().name.startsWith("trainerData")
+        (m) => m.attachments.size > 0 && m.attachments.first().name.startsWith("trainerData")
       )
       .sort((a, b) => b.createdTimestamp - a.createdTimestamp);
     if (backups.size > 0) {
@@ -158,34 +160,31 @@ async function saveDataToDiscord(data) {
 }
 
 // ==========================================================
-// 🎁 Random Reward System (Message / Reaction / Daily Shared)
+// 🎁 DETERMINISTIC RANDOM REWARD SYSTEM
 // ==========================================================
-import {
-  createPokemonRewardEmbed,
-  createTrainerRewardEmbed,
-} from "./utils/embedBuilders.js";
 
+/**
+ * Executes a random reward for a user.
+ * NOTE: This function is now *deterministic* — it does NOT contain RNG gating.
+ * All probability checks (3% chance, etc.) happen in the event layer (message/reaction/daily).
+ */
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
-  console.log("⚙️ tryGiveRandomReward called for", interactionUser.username);
+  console.log("⚙️ tryGiveRandomReward executed for", interactionUser.username);
 
-  // Enforce cooldown only
+  // Cooldown only (no RNG here)
   const now = Date.now();
   const last = rewardCooldowns.get(interactionUser.id) || 0;
-  if (now - last < REWARD_COOLDOWN) return; // 5s cooldown
+  if (now - last < REWARD_COOLDOWN) return;
   rewardCooldowns.set(interactionUser.id, now);
-
-  // 🧩 NOTE: Removed second random() check
-  // The 3% RNG should ONLY happen once in messageCreate / reactionAdd
-
 
   // Load data pools
   const allPokemon = await getAllPokemon();
   const allTrainers = await getAllTrainers();
 
+  // Roll Pokémon or Trainer (50/50)
   let reward, isShiny = false, isPokemon = false;
   try {
     if (Math.random() < 0.5) {
-      // Pokémon reward
       isPokemon = true;
       reward = selectRandomPokemonForUser(allPokemon, userObj);
       isShiny = rollForShiny(userObj.tp || 0);
@@ -195,7 +194,6 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
         ? userObj.pokemon[reward.id].shiny++
         : userObj.pokemon[reward.id].normal++;
     } else {
-      // Trainer reward
       isPokemon = false;
       reward = selectRandomTrainerForUser(allTrainers, userObj);
       userObj.trainers ??= {};
@@ -206,11 +204,9 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     return;
   }
 
-  // Save user data (queued)
   await saveDataToDiscord(trainerData);
 
-  // Build the embed
-  const tier = (reward.tier || reward.rarity || "common").toLowerCase();
+  // Build embed
   const spriteUrl = isPokemon
     ? isShiny
       ? `${spritePaths.shiny}${reward.id}.gif`
@@ -221,28 +217,20 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     ? createPokemonRewardEmbed(reward, isShiny, spriteUrl)
     : createTrainerRewardEmbed(reward, spriteUrl);
 
-  // 🧍 Trainer equip prompt (only if it's a trainer and context supports interaction)
+  // Trainer equip prompt (only for trainers)
   if (!isPokemon) {
     try {
       const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = await import("discord.js");
-
       const payload = {
         content: `🎉 You obtained **${reward.name}!**\nWould you like to equip them as your displayed Trainer?`,
         components: [
           new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`equip_${reward.id}`)
-              .setLabel("Equip Trainer")
-              .setStyle(ButtonStyle.Success),
-            new ButtonBuilder()
-              .setCustomId("skip_equip")
-              .setLabel("Skip")
-              .setStyle(ButtonStyle.Secondary)
+            new ButtonBuilder().setCustomId(`equip_${reward.id}`).setLabel("Equip Trainer").setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId("skip_equip").setLabel("Skip").setStyle(ButtonStyle.Secondary)
           ),
         ],
       };
 
-      // Message or interaction detection
       if (msgOrInteraction?.isRepliable?.()) {
         await msgOrInteraction.followUp({ ...payload, ephemeral: true });
       } else if (msgOrInteraction?.channel) {
@@ -258,26 +246,18 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       collector.on("collect", async (i) => {
         if (i.customId === `equip_${reward.id}`) {
           userObj.displayedTrainer = reward.id;
-          await saveDataToDiscord(trainerData);
           userObj.tp ??= 0;
           userObj.tp += MESSAGE_TP_GAIN;
-
+          await saveDataToDiscord(trainerData);
           try {
             const member = await msgOrInteraction.guild.members.fetch(interactionUser.id);
             await updateUserRole(member, userObj.tp, msgOrInteraction.channel);
           } catch (err) {
             console.warn("⚠️ Rank update failed:", err.message);
           }
-
-          await i.update({
-            content: `✅ **${reward.name}** equipped as your displayed Trainer!`,
-            components: [],
-          });
+          await i.update({ content: `✅ **${reward.name}** equipped as your displayed Trainer!`, components: [] });
         } else if (i.customId === "skip_equip") {
-          await i.update({
-            content: `⏭️ Trainer kept in your collection.`,
-            components: [],
-          });
+          await i.update({ content: `⏭️ Trainer kept in your collection.`, components: [] });
         }
       });
     } catch (err) {
@@ -285,7 +265,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     }
   }
 
-  // 🎨 Public announcement
+  // Announce in channel
   try {
     const announcement = isPokemon
       ? `🎉 <@${interactionUser.id}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`
@@ -295,9 +275,8 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     console.warn("⚠️ Public reward announcement failed:", err.message);
   }
 
-  // 🌟 Broadcast reward globally
+  // Global broadcasts
   try {
-    console.log("📡 Broadcasting reward for", reward?.name);
     await broadcastReward(client, {
       user: interactionUser,
       type: isPokemon ? "pokemon" : "trainer",
@@ -309,15 +288,102 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     console.error("❌ broadcastReward failed:", err.message);
   }
 
-  // 🌟 Rare Sightings broadcast (separate system)
   try {
     await postRareSightings(client, reward, interactionUser, isPokemon, isShiny);
   } catch (err) {
     console.error("❌ Rare Sightings broadcast failed:", err.message);
   }
 
-  console.log(`✅ tryGiveRandomReward completed for ${interactionUser.username}`);
+  console.log(`✅ Reward granted to ${interactionUser.username}`);
 }
+
+// ==========================================================
+// 💬 Passive TP Gain from Messages (RNG Entry Point)
+// ==========================================================
+client.on("messageCreate", async (message) => {
+  if (message.author.bot || !message.guild) return;
+
+  const userId = message.author.id;
+  const now = Date.now();
+  if (userCooldowns.has(userId) && now - userCooldowns.get(userId) < MESSAGE_COOLDOWN) return;
+  userCooldowns.set(userId, now);
+
+  trainerData[userId] ??= {
+    id: userId,
+    tp: 0,
+    cc: 0,
+    pokemon: {},
+    trainers: {},
+    displayedTrainer: null,
+    onboardingComplete: false,
+  };
+  const userObj = trainerData[userId];
+
+  userObj.tp += MESSAGE_TP_GAIN;
+  if (Math.random() < MESSAGE_CC_CHANCE) {
+    userObj.cc += MESSAGE_CC_GAIN;
+    await message.react("💰").catch(() => {});
+  }
+
+  try {
+    const member = await message.guild.members.fetch(userId);
+    await updateUserRole(member, userObj.tp, message.channel);
+  } catch (err) {
+    console.warn("⚠️ Rank update failed:", err.message);
+  }
+
+  // ✅ Single RNG gate (true 3% chance overall)
+  if (Math.random() < MESSAGE_REWARD_CHANCE) {
+    console.log(`🎲 RNG PASSED for ${message.author.username}`);
+    await tryGiveRandomReward(userObj, message.author, message);
+  }
+
+  if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
+});
+
+// ==========================================================
+// 💖 TP Gain from Reactions (RNG Entry Point)
+// ==========================================================
+client.on("messageReactionAdd", async (reaction, user) => {
+  if (user.bot || !reaction.message.guild) return;
+
+  const userId = user.id;
+  const now = Date.now();
+  if (rewardCooldowns.has(userId) && now - rewardCooldowns.get(userId) < REWARD_COOLDOWN) return;
+  rewardCooldowns.set(userId, now);
+
+  trainerData[userId] ??= {
+    id: userId,
+    tp: 0,
+    cc: 0,
+    pokemon: {},
+    trainers: {},
+    displayedTrainer: null,
+    onboardingComplete: false,
+  };
+  const userObj = trainerData[userId];
+
+  userObj.tp += MESSAGE_TP_GAIN;
+  if (Math.random() < MESSAGE_CC_CHANCE) {
+    userObj.cc += MESSAGE_CC_GAIN;
+    await reaction.message.react("💰").catch(() => {});
+  }
+
+  try {
+    const member = await reaction.message.guild.members.fetch(userId);
+    await updateUserRole(member, userObj.tp, reaction.message.channel);
+  } catch (err) {
+    console.warn("⚠️ Rank update failed:", err.message);
+  }
+
+  // ✅ Single RNG gate (3% total)
+  if (Math.random() < REACTION_REWARD_CHANCE) {
+    console.log(`🎲 RNG PASSED (reaction) for ${user.username}`);
+    await tryGiveRandomReward(userObj, user, reaction.message);
+  }
+
+  if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
+});
 
 // ==========================================================
 // 📂 COMMAND LOADER

@@ -29,6 +29,7 @@ import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { postRareSightings } from "../utils/rareSightings.js";
 import { updateUserRole } from "../utils/updateUserRole.js";
+import { broadcastReward } from "../utils/broadcastReward.js"; // ensure it's imported at top
 
 // ==========================================================
 // ⚖️ Constants
@@ -162,7 +163,6 @@ await updateUserRole(member, user.tp, interaction.channel);
 // ======================================================
 // 🌐 Global Reward Announcements (Daily Rewards)
 // ======================================================
-import { broadcastReward } from "../utils/broadcastReward.js"; // ensure it's imported at top
 
 try {
   // Post both Pokémon and Trainer rewards to the global channel

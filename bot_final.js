@@ -167,11 +167,16 @@ import {
 
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   console.log("⚙️ tryGiveRandomReward called for", interactionUser.username);
+
+  // Enforce cooldown only
   const now = Date.now();
   const last = rewardCooldowns.get(interactionUser.id) || 0;
-  if (now - last < REWARD_COOLDOWN) return;
-  if (Math.random() > MESSAGE_REWARD_CHANCE) return;
+  if (now - last < REWARD_COOLDOWN) return; // 5s cooldown
   rewardCooldowns.set(interactionUser.id, now);
+
+  // 🧩 NOTE: Removed second random() check
+  // The 3% RNG should ONLY happen once in messageCreate / reactionAdd
+
 
   // Load data pools
   const allPokemon = await getAllPokemon();

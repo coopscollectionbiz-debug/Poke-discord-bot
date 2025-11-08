@@ -44,6 +44,7 @@ import { rollForShiny } from "./shinyOdds.js";
 import { rarityEmojis, spritePaths } from "./spriteconfig.js";
 import { postRareSightings } from "./utils/rareSightings.js";
 import { loadTrainerSprites } from "./utils/dataLoader.js";
+import { updateUserRole } from "./utils/updateUserRole.js";
 
 // ==========================================================
 // ⚙️ Global Constants
@@ -54,6 +55,7 @@ const POKEBEACH_CHECK_INTERVAL = 1000 * 60 * 120; // 2 hours
 const PORT = process.env.PORT || 10000;
 const MESSAGE_TP_GAIN = 2;
 const MESSAGE_CC_CHANCE = 0.03;
+const MESSAGE_CC_GAIN = 50;
 const MESSAGE_COOLDOWN = 5000;
 const MESSAGE_REWARD_CHANCE = 0.03;
 const REACTION_REWARD_CHANCE = 0.03;
@@ -155,22 +157,6 @@ async function saveDataToDiscord(data) {
 }
 
 // ==========================================================
-// 🧱 Rank Role Updater
-// ==========================================================
-async function updateUserRole(member, tp) {
-  const targetRole = getRank(tp);
-  if (!targetRole) return;
-  const role = member.guild.roles.cache.find((r) => r.name === targetRole);
-  if (!role || member.roles.cache.has(role.id)) return;
-
-  for (const t of RANK_TIERS) {
-    const old = member.guild.roles.cache.find((r) => r.name === t.roleName);
-    if (old && member.roles.cache.has(old.id)) await member.roles.remove(old).catch(() => {});
-  }
-  await member.roles.add(role).catch(() => {});
-}
-
-// ==========================================================
 // 🎁 Random Reward System (Message / Reaction / Daily Shared)
 // ==========================================================
 import { broadcastReward } from "./utils/broadcastReward.js"; // ✅ Add at top of file if missing
@@ -234,6 +220,18 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       if (i.customId === `equip_${reward.id}`) {
         userObj.displayedTrainer = reward.id;
         await saveDataToDiscord(trainerData);
+
+// 🪙 Award TP for participation and update rank
+userObj.tp ??= 0;
+userObj.tp += MESSAGE_TP_GAIN;
+
+try {
+  const member = await msgOrInteraction.guild.members.fetch(interactionUser.id);
+  await updateUserRole(member, userObj.tp, msgOrInteraction.channel);
+} catch (err) {
+  console.warn("⚠️ Rank update failed (message):", err.message);
+}
+
         await i.update({
           content: `✅ **${reward.name}** equipped as your displayed Trainer!`,
           components: [],
@@ -474,6 +472,114 @@ function normalizeUserSchema(id, user) {
   user.starterPokemon ??= null;
   return user;
 }
+
+// ==========================================================
+// 💬 Passive TP Gain from Messages
+// ==========================================================
+client.on("messageCreate", async (message) => {
+  if (message.author.bot || !message.guild) return;
+
+  const userId = message.author.id;
+  const username = message.author.username;
+
+  // Prevent spam with cooldown
+  const now = Date.now();
+  if (userCooldowns.has(userId) && now - userCooldowns.get(userId) < MESSAGE_COOLDOWN) return;
+  userCooldowns.set(userId, now);
+
+  // Ensure user data exists
+  trainerData[userId] ??= {
+    id: userId,
+    tp: 0,
+    cc: 0,
+    pokemon: {},
+    trainers: {},
+    displayedTrainer: null,
+    onboardingComplete: false,
+  };
+  const userObj = trainerData[userId];
+
+// 🪙 Give base TP for chatting
+userObj.tp += MESSAGE_TP_GAIN;
+
+// 💰 Chance to earn CC
+if (Math.random() < MESSAGE_CC_CHANCE) {
+  userObj.cc ??= 0;
+  userObj.cc += MESSAGE_CC_GAIN;
+
+  try {
+    await message.react("💰").catch(() => {}); // optional fun emoji indicator
+  } catch {}
+}
+
+try {
+  const member = await message.guild.members.fetch(userId);
+  await updateUserRole(member, userObj.tp, message.channel);
+} catch (err) {
+  console.warn("⚠️ Rank update failed (messageCreate):", err.message);
+}
+
+  // 🎲 3% chance for bonus Pokémon or Trainer
+  if (Math.random() < MESSAGE_REWARD_CHANCE) {
+    await tryGiveRandomReward(userObj, message.author, message);
+  }
+
+  // Periodic autosave
+  if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
+});
+
+// ==========================================================
+// 💖 TP Gain from Reactions
+// ==========================================================
+client.on("messageReactionAdd", async (reaction, user) => {
+  if (user.bot || !reaction.message.guild) return;
+
+  const userId = user.id;
+
+  // Prevent spam with cooldown
+  const now = Date.now();
+  if (rewardCooldowns.has(userId) && now - rewardCooldowns.get(userId) < REWARD_COOLDOWN) return;
+  rewardCooldowns.set(userId, now);
+
+  trainerData[userId] ??= {
+    id: userId,
+    tp: 0,
+    cc: 0,
+    pokemon: {},
+    trainers: {},
+    displayedTrainer: null,
+    onboardingComplete: false,
+  };
+  const userObj = trainerData[userId];
+
+  // 🪙 Gain TP for reaction
+userObj.tp += MESSAGE_TP_GAIN;
+
+// 💰 Chance to earn CC
+if (Math.random() < MESSAGE_CC_CHANCE) {
+  userObj.cc ??= 0;
+  userObj.cc += MESSAGE_CC_GAIN;
+
+  try {
+    await reaction.message.react("💰").catch(() => {});
+  } catch {}
+}
+
+  try {
+    const member = await reaction.message.guild.members.fetch(userId);
+    await updateUserRole(member, userObj.tp, reaction.message.channel);
+  } catch (err) {
+    console.warn("⚠️ Rank update failed (reaction):", err.message);
+  }
+
+  // 3% chance for random reward
+  if (Math.random() < REACTION_REWARD_CHANCE) {
+    await tryGiveRandomReward(userObj, user, reaction.message);
+  }
+
+  if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
+});
+
 
 // ==========================================================
 // ⚡ INTERACTION HANDLER (Slash Commands + Buttons)

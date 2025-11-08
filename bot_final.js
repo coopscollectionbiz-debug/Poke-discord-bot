@@ -477,11 +477,15 @@ function normalizeUserSchema(id, user) {
 // ==========================================================
 // ⚡ INTERACTION HANDLER (Slash Commands + Buttons)
 // ==========================================================
+import { spritePaths, rarityEmojis } from "./spriteconfig.js"; // ensure both imported at top
+
 client.on("interactionCreate", async (interaction) => {
+  // 🧭 Slash Command Handling
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
-    if (!command)
+    if (!command) {
       return safeReply(interaction, { content: "❌ Unknown command.", ephemeral: true });
+    }
 
     try {
       await command.execute(
@@ -506,6 +510,7 @@ client.on("interactionCreate", async (interaction) => {
   // 🧩 Button Interactions
   if (interaction.isButton()) {
     try {
+      // 🎴 Trainer Card Buttons
       if (
         interaction.customId.startsWith("show_full_team") ||
         interaction.customId.startsWith("refresh_card") ||
@@ -518,6 +523,70 @@ client.on("interactionCreate", async (interaction) => {
         debouncedDiscordSave();
         return;
       }
+
+      // 🧍 Equip Trainer Buttons (Global)
+      if (interaction.customId.startsWith("equip_")) {
+        const trainerId = interaction.customId.replace("equip_", "");
+        const user = trainerData[interaction.user.id];
+
+        if (!user) {
+          await safeReply(interaction, {
+            content: "⚠️ Could not find your trainer data.",
+            ephemeral: true,
+          });
+          return;
+        }
+
+        // ✅ Assign the trainer
+        user.displayedTrainer = trainerId;
+
+        // ✅ Get sprite + tier data
+        const spriteUrl = `${spritePaths.trainers}${trainerId}`;
+        const trainerKey = trainerId.replace(".png", "");
+        const tier = (trainerData?.tiers?.[trainerKey]?.tier || "common").toLowerCase();
+        const emoji = rarityEmojis[tier] || "⚬";
+        const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
+
+        try {
+          await saveTrainerDataLocal(trainerData);
+          await saveDataToDiscord(trainerData);
+
+          const embed = new EmbedBuilder()
+            .setTitle(`${emoji} ${tierName} Trainer Equipped!`)
+            .setDescription(`✅ **${trainerKey}** is now your displayed Trainer!`)
+            .setThumbnail(spriteUrl)
+            .setColor(0x5865f2)
+            .setFooter({ text: "You can view it anytime with /trainercard" })
+            .setTimestamp();
+
+          await interaction.update({
+            content: "",
+            embeds: [embed],
+            components: [],
+          });
+
+          console.log(`🎓 ${interaction.user.username} equipped ${trainerId} (${tierName})`);
+        } catch (err) {
+          console.error("❌ Equip trainer failed:", err.message);
+          await safeReply(interaction, {
+            content: "❌ Failed to equip trainer. Please try again.",
+            ephemeral: true,
+          });
+        }
+        return;
+      }
+
+      // ⏭️ Skip equip button
+      if (interaction.customId === "skip_equip") {
+        await interaction.update({
+          content: "⏭️ Trainer kept in your collection.",
+          components: [],
+          embeds: [],
+        });
+        return;
+      }
+
+      // 🪶 Fallback for anything unhandled
       console.warn(`⚠️ Unhandled button: ${interaction.customId}`);
     } catch (err) {
       console.error(`❌ Button error (${interaction.customId}):`, err.message);
@@ -528,6 +597,7 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 });
+
 
 // ==========================================================
 // 🌐 EXPRESS SERVER

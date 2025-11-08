@@ -55,9 +55,8 @@ function hasClaimedToday(user) {
 export default {
   data: new SlashCommandBuilder()
     .setName("daily")
-    .setDescription("Claim your daily TP, CC, and receive both a Pokémon and Trainer!")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-
+    .setDescription("Claim your daily TP, CC, and receive both a Pokémon and Trainer!"),
+    
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {
       await interaction.deferReply({ ephemeral: true });
@@ -155,8 +154,8 @@ const trainerSprite = `${spritePaths.trainers}${cleanTrainerFile}.png`;
       await postRareSightings(client, pokemonPick, interaction.user, true, shiny);
       await postRareSightings(client, trainerPick, interaction.user, false, false);
 
-    // ======================================================
-// 🧍 Equip Prompt for New Trainer (Fixed collector + defer)
+  // ======================================================
+// 🧍 Equip Prompt for New Trainer (Final Stable Fix)
 // ======================================================
 try {
   const promptMessage = await interaction.followUp({
@@ -185,21 +184,45 @@ try {
   collector.on("collect", async i => {
     try {
       await i.deferUpdate();
+
       if (i.customId === `equip_${trainerPick.filename}`) {
         user.displayedTrainer = trainerPick.filename;
-        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-        await interaction.editReply({
+
+        // use direct saves (safer than atomicSave here)
+        await saveTrainerDataLocal(trainerData);
+        await saveDataToDiscord(trainerData);
+
+        await i.followUp({
           content: `✅ **${trainerPick.name || trainerPick.filename}** equipped as your displayed Trainer!`,
-          components: [],
+          ephemeral: true,
         });
-      } else {
-        await interaction.editReply({
+      } else if (i.customId === "skip_equip") {
+        await i.followUp({
           content: "⏭️ Trainer kept in your collection.",
-          components: [],
+          ephemeral: true,
         });
       }
+
+      // stop collector so buttons disable
+      collector.stop("responded");
     } catch (err) {
-      console.warn("⚠️ Equip prompt error:", err.message);
+      console.error("❌ Equip trainer failed:", err.message);
+      try {
+        await i.followUp({
+          content: "❌ Failed to equip trainer. Please try again.",
+          ephemeral: true,
+        });
+      } catch (e) {
+        console.warn("⚠️ Could not send failure message:", e.message);
+      }
+    }
+  });
+
+  collector.on("end", async (_, reason) => {
+    if (reason !== "responded") {
+      try {
+        await promptMessage.edit({ components: [] });
+      } catch {}
     }
   });
 } catch (err) {

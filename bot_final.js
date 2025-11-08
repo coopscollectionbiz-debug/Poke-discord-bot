@@ -301,18 +301,39 @@ try {
     console.warn("⚠️ Reward embed failed:", err.message);
   }
 
-  // 🌟 Public Broadcast (Random Encounters Only)
-  try {
-    await broadcastReward(client, {
-      user: interactionUser,
-      type: isPokemon ? "pokemon" : "trainer",
-      item: reward,
-      shiny: isShiny,
-      source: "random encounter", // marks it as random to skip /daily & /quest
-    });
-  } catch (err) {
-    console.error("❌ broadcastReward failed:", err.message);
+// 🌟 Global broadcast to reward channel
+try {
+  await broadcastReward(client, {
+    user: interactionUser,
+    type: isPokemon ? "pokemon" : "trainer",
+    item: reward,
+    shiny: isShiny,
+    source: "random encounter",
+  });
+} catch (err) {
+  console.error("❌ broadcastReward failed:", err.message);
+}
+
+  /// 🗣️ Public announcement for all random message rewards (Pokémon + Trainer)
+try {
+  const isTrainer = !isPokemon;
+  const shinyTag = isShiny ? "✨ Shiny " : "";
+  const emoji = rarityEmojis[(reward.rarity || "common").toLowerCase()] || "⚪";
+
+  let messageText;
+  if (isPokemon) {
+    messageText = `🎉 <@${interactionUser.id}> found a ${shinyTag}**${reward.name}**! ${emoji}`;
+  } else {
+    messageText = `👥 <@${interactionUser.id}> recruited **${reward.name}** to their team! ${emoji}`;
   }
+
+  await msgOrInteraction.channel.send({
+    content: messageText,
+    embeds: [embed],
+  });
+} catch (err) {
+  console.warn("⚠️ Local reward announcement failed:", err.message);
+}
 
   // 🌟 Rare Sightings Broadcast (still separate system)
   try {

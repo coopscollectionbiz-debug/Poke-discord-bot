@@ -275,31 +275,20 @@ try {
 
   const isRare = RARE_TIERS.includes(tier) || isShiny;
 
-  // 🪩 Send Ephemeral Result to Player
-  try {
-    if (msgOrInteraction?.reply) {
-      await msgOrInteraction.reply({
-        content: isRare
-          ? `🎉 <@${interactionUser.id}> found a **${isShiny ? "✨ shiny " : ""}${reward.name}**!`
-          : null,
-        embeds: [embed],
-        ephemeral: !isRare,
-      });
-    } else if (msgOrInteraction?.channel) {
-      if (isRare) {
-        await msgOrInteraction.channel.send({
-          content: `🎉 <@${interactionUser.id}> found a **${isShiny ? "✨ shiny " : ""}${reward.name}**!`,
-          embeds: [embed],
-        });
-      } else {
-        await msgOrInteraction.reply?.({ embeds: [embed], ephemeral: true }).catch(() =>
-          msgOrInteraction.channel.send({ embeds: [embed], ephemeral: true })
-        );
-      }
-    }
-  } catch (err) {
-    console.warn("⚠️ Reward embed failed:", err.message);
-  }
+// 🪩 Always send public result to the channel
+try {
+  const announcement = isPokemon
+    ? `🎉 <@${interactionUser.id}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`
+    : `👥 <@${interactionUser.id}> recruited **${reward.name}** to their team!`;
+
+  await msgOrInteraction.channel.send({
+    content: announcement,
+    embeds: [embed],
+  });
+} catch (err) {
+  console.warn("⚠️ Public reward announcement failed:", err.message);
+}
+
 
 // 🌟 Global broadcast to reward channel
 try {

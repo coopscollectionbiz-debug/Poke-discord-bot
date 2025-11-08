@@ -160,8 +160,13 @@ async function saveDataToDiscord(data) {
 // ==========================================================
 // 🎁 Random Reward System (Message / Reaction / Daily Shared)
 // ==========================================================
+import {
+  createPokemonRewardEmbed,
+  createTrainerRewardEmbed,
+} from "./utils/embedBuilders.js";
+
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
-console.log("⚙️ tryGiveRandomReward called for", interactionUser.username);
+  console.log("⚙️ tryGiveRandomReward called for", interactionUser.username);
   const now = Date.now();
   const last = rewardCooldowns.get(interactionUser.id) || 0;
   if (now - last < REWARD_COOLDOWN) return;
@@ -172,165 +177,141 @@ console.log("⚙️ tryGiveRandomReward called for", interactionUser.username);
   const allPokemon = await getAllPokemon();
   const allTrainers = await getAllTrainers();
 
-  // Roll Pokémon or Trainer
   let reward, isShiny = false, isPokemon = false;
-  if (Math.random() < 0.5) {
-    isPokemon = true;
-    reward = selectRandomPokemonForUser(allPokemon, userObj);
-    isShiny = rollForShiny(userObj.tp || 0);
-    userObj.pokemon ??= {};
-    userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-    isShiny
-      ? userObj.pokemon[reward.id].shiny++
-      : userObj.pokemon[reward.id].normal++;
-  } else {
-  isPokemon = false;
-  reward = selectRandomTrainerForUser(allTrainers, userObj);
-  userObj.trainers ??= {};
-  userObj.trainers[reward.id] = (userObj.trainers[reward.id] || 0) + 1;
-
-  // 🧍 Equip Trainer Prompt (Global Integration)
   try {
-    const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = await import("discord.js");
-
-    await msgOrInteraction.followUp({
-      content: `🎉 You obtained **${reward.name}!**\nWould you like to equip them as your displayed Trainer?`,
-      components: [
-        new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`equip_${reward.id}`)
-            .setLabel("Equip Trainer")
-            .setStyle(ButtonStyle.Success),
-          new ButtonBuilder()
-            .setCustomId("skip_equip")
-            .setLabel("Skip")
-            .setStyle(ButtonStyle.Secondary)
-        ),
-      ],
-      ephemeral: true,
-    });
-
-    const collector = msgOrInteraction.channel.createMessageComponentCollector({
-      componentType: ComponentType.Button,
-      time: 15000,
-      filter: (i) => i.user.id === interactionUser.id,
-    });
-
-    collector.on("collect", async (i) => {
-      if (i.customId === `equip_${reward.id}`) {
-        userObj.displayedTrainer = reward.id;
-        await saveDataToDiscord(trainerData);
-
-// 🪙 Award TP for participation and update rank
-userObj.tp ??= 0;
-userObj.tp += MESSAGE_TP_GAIN;
-
-try {
-  const member = await msgOrInteraction.guild.members.fetch(interactionUser.id);
-  await updateUserRole(member, userObj.tp, msgOrInteraction.channel);
-} catch (err) {
-  console.warn("⚠️ Rank update failed (message):", err.message);
-}
-
-        await i.update({
-          content: `✅ **${reward.name}** equipped as your displayed Trainer!`,
-          components: [],
-        });
-      } else if (i.customId === "skip_equip") {
-        await i.update({
-          content: `⏭️ Trainer kept in your collection.`,
-          components: [],
-        });
-      }
-    });
+    if (Math.random() < 0.5) {
+      // Pokémon reward
+      isPokemon = true;
+      reward = selectRandomPokemonForUser(allPokemon, userObj);
+      isShiny = rollForShiny(userObj.tp || 0);
+      userObj.pokemon ??= {};
+      userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
+      isShiny
+        ? userObj.pokemon[reward.id].shiny++
+        : userObj.pokemon[reward.id].normal++;
+    } else {
+      // Trainer reward
+      isPokemon = false;
+      reward = selectRandomTrainerForUser(allTrainers, userObj);
+      userObj.trainers ??= {};
+      userObj.trainers[reward.id] = (userObj.trainers[reward.id] || 0) + 1;
+    }
   } catch (err) {
-    console.warn("⚠️ Equip prompt failed:", err.message);
+    console.error("❌ Reward selection failed:", err);
+    return;
   }
-}
 
-
+  // Save user data (queued)
   await saveDataToDiscord(trainerData);
 
-  // 🎨 Embed for ephemeral/self-view
+  // Build the embed
   const tier = (reward.tier || reward.rarity || "common").toLowerCase();
-  const emoji = rarityEmojis[tier] || "⚬";
-  const title = isPokemon
-    ? `${emoji} ${isShiny ? "✨ " : ""}${reward.name}`
-    : `${emoji} ${reward.name}`;
-  const desc = isPokemon
-    ? `You caught a ${isShiny ? "**shiny** " : ""}**${reward.name}** (${emoji} ${reward.tier || reward.rarity})!`
-    : `You encountered **${reward.name}** (${emoji} ${reward.tier || reward.rarity})!`;
-
   const spriteUrl = isPokemon
     ? isShiny
       ? `${spritePaths.shiny}${reward.id}.gif`
       : `${spritePaths.pokemon}${reward.id}.gif`
     : `${spritePaths.trainers}${reward.id}.png`;
 
-  const embed = new EmbedBuilder()
-    .setTitle(title)
-    .setDescription(desc)
-    .setThumbnail(spriteUrl)
-    .setFooter({ text: `Tier: ${emoji} ${reward.tier || reward.rarity}` });
+  const embed = isPokemon
+    ? createPokemonRewardEmbed(reward, isShiny, spriteUrl)
+    : createTrainerRewardEmbed(reward, spriteUrl);
 
-  const isRare = RARE_TIERS.includes(tier) || isShiny;
+  // 🧍 Trainer equip prompt (only if it's a trainer and context supports interaction)
+  if (!isPokemon) {
+    try {
+      const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = await import("discord.js");
 
-// 🪩 Always send public result to the channel
-try {
-  const announcement = isPokemon
-    ? `🎉 <@${interactionUser.id}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`
-    : `👥 <@${interactionUser.id}> recruited **${reward.name}** to their team!`;
+      const payload = {
+        content: `🎉 You obtained **${reward.name}!**\nWould you like to equip them as your displayed Trainer?`,
+        components: [
+          new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId(`equip_${reward.id}`)
+              .setLabel("Equip Trainer")
+              .setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+              .setCustomId("skip_equip")
+              .setLabel("Skip")
+              .setStyle(ButtonStyle.Secondary)
+          ),
+        ],
+      };
 
-  await msgOrInteraction.channel.send({
-    content: announcement,
-    embeds: [embed],
-  });
-} catch (err) {
-  console.warn("⚠️ Public reward announcement failed:", err.message);
-}
+      // Message or interaction detection
+      if (msgOrInteraction?.isRepliable?.()) {
+        await msgOrInteraction.followUp({ ...payload, ephemeral: true });
+      } else if (msgOrInteraction?.channel) {
+        await msgOrInteraction.channel.send(payload);
+      }
 
+      const collector = msgOrInteraction.channel.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 15000,
+        filter: (i) => i.user.id === interactionUser.id,
+      });
 
-// 🌟 Global broadcast to reward channel
-console.log("📡 Broadcasting reward for", reward?.name);
-try {
-  await broadcastReward(client, {
-    user: interactionUser,
-    type: isPokemon ? "pokemon" : "trainer",
-    item: reward,
-    shiny: isShiny,
-    source: "random encounter",
-  });
-} catch (err) {
-  console.error("❌ broadcastReward failed:", err.message);
-}
+      collector.on("collect", async (i) => {
+        if (i.customId === `equip_${reward.id}`) {
+          userObj.displayedTrainer = reward.id;
+          await saveDataToDiscord(trainerData);
+          userObj.tp ??= 0;
+          userObj.tp += MESSAGE_TP_GAIN;
 
-  /// 🗣️ Public announcement for all random message rewards (Pokémon + Trainer)
-try {
-  const isTrainer = !isPokemon;
-  const shinyTag = isShiny ? "✨ Shiny " : "";
-  const emoji = rarityEmojis[(reward.tier || reward.rarity || "common").toLowerCase()] || "⚪";
+          try {
+            const member = await msgOrInteraction.guild.members.fetch(interactionUser.id);
+            await updateUserRole(member, userObj.tp, msgOrInteraction.channel);
+          } catch (err) {
+            console.warn("⚠️ Rank update failed:", err.message);
+          }
 
-  let messageText;
-  if (isPokemon) {
-    messageText = `🎉 <@${interactionUser.id}> found a ${shinyTag}**${reward.name}**! ${emoji}`;
-  } else {
-    messageText = `👥 <@${interactionUser.id}> recruited **${reward.name}** to their team! ${emoji}`;
+          await i.update({
+            content: `✅ **${reward.name}** equipped as your displayed Trainer!`,
+            components: [],
+          });
+        } else if (i.customId === "skip_equip") {
+          await i.update({
+            content: `⏭️ Trainer kept in your collection.`,
+            components: [],
+          });
+        }
+      });
+    } catch (err) {
+      console.warn("⚠️ Equip prompt failed:", err.message);
+    }
   }
 
-  await msgOrInteraction.channel.send({
-    content: messageText,
-    embeds: [embed],
-  });
-} catch (err) {
-  console.warn("⚠️ Local reward announcement failed:", err.message);
-}
+  // 🎨 Public announcement
+  try {
+    const announcement = isPokemon
+      ? `🎉 <@${interactionUser.id}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`
+      : `👥 <@${interactionUser.id}> recruited **${reward.name}** to their team!`;
+    await msgOrInteraction.channel.send({ content: announcement, embeds: [embed] });
+  } catch (err) {
+    console.warn("⚠️ Public reward announcement failed:", err.message);
+  }
 
-  // 🌟 Rare Sightings Broadcast (still separate system)
+  // 🌟 Broadcast reward globally
+  try {
+    console.log("📡 Broadcasting reward for", reward?.name);
+    await broadcastReward(client, {
+      user: interactionUser,
+      type: isPokemon ? "pokemon" : "trainer",
+      item: reward,
+      shiny: isShiny,
+      source: "random encounter",
+    });
+  } catch (err) {
+    console.error("❌ broadcastReward failed:", err.message);
+  }
+
+  // 🌟 Rare Sightings broadcast (separate system)
   try {
     await postRareSightings(client, reward, interactionUser, isPokemon, isShiny);
   } catch (err) {
     console.error("❌ Rare Sightings broadcast failed:", err.message);
   }
+
+  console.log(`✅ tryGiveRandomReward completed for ${interactionUser.username}`);
 }
 
 // ==========================================================

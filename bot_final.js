@@ -197,11 +197,58 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       ? userObj.pokemon[reward.id].shiny++
       : userObj.pokemon[reward.id].normal++;
   } else {
-    isPokemon = false;
-    reward = selectRandomTrainerForUser(allTrainers, userObj);
-    userObj.trainers ??= {};
-    userObj.trainers[reward.id] = (userObj.trainers[reward.id] || 0) + 1;
+  isPokemon = false;
+  reward = selectRandomTrainerForUser(allTrainers, userObj);
+  userObj.trainers ??= {};
+  userObj.trainers[reward.id] = (userObj.trainers[reward.id] || 0) + 1;
+
+  // 🧍 Equip Trainer Prompt (Global Integration)
+  try {
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = await import("discord.js");
+
+    await msgOrInteraction.followUp({
+      content: `🎉 You obtained **${reward.name}!**\nWould you like to equip them as your displayed Trainer?`,
+      components: [
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`equip_${reward.id}`)
+            .setLabel("Equip Trainer")
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId("skip_equip")
+            .setLabel("Skip")
+            .setStyle(ButtonStyle.Secondary)
+        ),
+      ],
+      ephemeral: true,
+    });
+
+    const collector = msgOrInteraction.channel.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      time: 15000,
+      filter: (i) => i.user.id === interactionUser.id,
+    });
+
+    collector.on("collect", async (i) => {
+      if (i.customId === `equip_${reward.id}`) {
+        userObj.displayedTrainer = reward.id;
+        await saveDataToDiscord(trainerData);
+        await i.update({
+          content: `✅ **${reward.name}** equipped as your displayed Trainer!`,
+          components: [],
+        });
+      } else if (i.customId === "skip_equip") {
+        await i.update({
+          content: `⏭️ Trainer kept in your collection.`,
+          components: [],
+        });
+      }
+    });
+  } catch (err) {
+    console.warn("⚠️ Equip prompt failed:", err.message);
   }
+}
+
 
   await saveDataToDiscord(trainerData);
 

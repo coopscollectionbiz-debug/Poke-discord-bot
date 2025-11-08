@@ -18,7 +18,7 @@
       "acerola-masters3.png",
       "acerola.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "acetrainer": {
     "sprites": [
@@ -127,7 +127,7 @@
       "akari-isekai.png",
       "akari.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "alain": {
     "sprites": [
@@ -145,7 +145,7 @@
     "sprites": [
       "alec-anime.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "allister": {
     "sprites": [
@@ -185,7 +185,7 @@
     "sprites": [
       "anthea.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "anvin": {
     "sprites": [
@@ -236,7 +236,7 @@
     "sprites": [
       "arezu.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "argenta": {
     "sprites": [
@@ -254,7 +254,7 @@
     "sprites": [
       "arlo.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "aromalady": {
     "sprites": [
@@ -298,43 +298,43 @@
     "sprites": [
       "ash-alola.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "ash-capbackward": {
     "sprites": [
       "ash-capbackward.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "ash-hoenn": {
     "sprites": [
       "ash-hoenn.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "ash-johto": {
     "sprites": [
       "ash-johto.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "ash-kalos": {
     "sprites": [
       "ash-kalos.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "ash-sinnoh": {
     "sprites": [
       "ash-sinnoh.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "ash-unova": {
     "sprites": [
       "ash-unova.png"
     ],
-    "tier": "Common"
+    "tier": "Legendary"
   },
   "atticus": {
     "sprites": [
@@ -387,7 +387,7 @@
     "sprites": [
       "ballguy.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "baoba": {
     "sprites": [
@@ -468,7 +468,7 @@
     "sprites": [
       "bellelba.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "bellepa": {
     "sprites": [
@@ -505,7 +505,7 @@
     "sprites": [
       "bertha.png"
     ],
-    "tier": "Epic"
+    "tier": "Uncommon"
   },
   "bianca": {
     "sprites": [
@@ -513,7 +513,7 @@
       "bianca-pwt.png",
       "bianca.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "biker": {
     "sprites": [
@@ -540,7 +540,7 @@
       "bill-gen3.png",
       "bill.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "birch": {
     "sprites": [
@@ -622,7 +622,7 @@
       "blanche-casual.png",
       "blanche.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "blue": {
     "sprites": [
@@ -716,37 +716,37 @@
       "brendan-masters2.png",
       "brendan.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "brendan-contest": {
     "sprites": [
       "brendan-contest.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "brendan-e": {
     "sprites": [
       "brendan-e.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "brendan-rs": {
     "sprites": [
       "brendan-rs.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "briar": {
     "sprites": [
       "briar.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "brigette": {
     "sprites": [
       "brigette.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "brock": {
     "sprites": [
@@ -798,13 +798,13 @@
     "sprites": [
       "brycenman.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "bryony": {
     "sprites": [
       "bryony.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "buck": {
     "sprites": [
@@ -877,14 +877,14 @@
       "burglar-lgpe.png",
       "burglar.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "burnet": {
     "sprites": [
       "burnet-radar.png",
       "burnet.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "butler": {
     "sprites": [
@@ -951,7 +951,7 @@
       "camper-gen6.png",
       "camper.png"
     ],
-    "tier": "Uncommon"
+    "tier": "Common"
   },
   "candela": {
     "sprites": [
@@ -3066,61 +3066,61 @@
     "sprites": [
       "melony.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "miku-fairy": {
     "sprites": [
       "miku-fairy.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "miku-fire": {
     "sprites": [
       "miku-fire.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "miku-flying": {
     "sprites": [
       "miku-flying.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "miku-ghost": {
     "sprites": [
       "miku-ghost.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "miku-grass": {
     "sprites": [
       "miku-grass.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "miku-ground": {
     "sprites": [
       "miku-ground.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "miku-ice": {
     "sprites": [
       "miku-ice.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "miku-psychic": {
     "sprites": [
       "miku-psychic.png"
     ],
-    "tier": "Uncommon"
+    "tier": "Epic"
   },
   "miku-water": {
     "sprites": [
       "miku-water.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "milo": {
     "sprites": [

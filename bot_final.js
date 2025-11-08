@@ -478,7 +478,6 @@ function normalizeUserSchema(id, user) {
 // ==========================================================
 // ⚡ INTERACTION HANDLER (Slash Commands + Buttons)
 // ==========================================================
-
 client.on("interactionCreate", async (interaction) => {
   // 🧭 Slash Command Handling
   if (interaction.isChatInputCommand()) {
@@ -509,6 +508,13 @@ client.on("interactionCreate", async (interaction) => {
 
   // 🧩 Button Interactions
   if (interaction.isButton()) {
+    // 🧱 Ignore onboarding button IDs handled inside trainercard.js
+    const internalButtons = [
+      "prev_starter", "next_starter", "select_starter",
+      "prev_trainer", "next_trainer", "confirm_trainer"
+    ];
+    if (internalButtons.includes(interaction.customId)) return;
+
     try {
       // 🎴 Trainer Card Buttons
       if (
@@ -606,6 +612,7 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 });
+
 
 // ==========================================================
 // 🌐 EXPRESS SERVER

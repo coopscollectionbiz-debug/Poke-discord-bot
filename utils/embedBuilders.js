@@ -10,7 +10,7 @@ import {
   ButtonStyle,
   StringSelectMenuBuilder,
 } from "discord.js";
-import { tierEmojis } from "../spriteconfig.js"; // 👈 Make sure this exports your emoji mapping
+import { rarityEmojis } from "../spriteconfig.js"; // 👈 Make sure this exports your emoji mapping
 
 // ==========================================================
 // 🧩 Helper: format tier text + emoji

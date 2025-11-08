@@ -1,12 +1,13 @@
 // ==========================================================
 // weightedRandom.js
-// Shared weighted random selection logic (Rank-Aware Version)
+// Shared weighted random selection logic (Tier- and Rank-Aware)
 // ==========================================================
 
 import { getRank } from "./rankSystem.js";
 
 // ==========================================================
-// ⚖️ Rarity weight distributions
+// ⚖️ Base rarity/tier weights
+// Higher = more common
 // ==========================================================
 export const POKEMON_RARITY_WEIGHTS = {
   common: 60,
@@ -14,7 +15,7 @@ export const POKEMON_RARITY_WEIGHTS = {
   rare: 10,
   epic: 4,
   legendary: 1.5,
-  mythic: 0.5
+  mythic: 0.5,
 };
 
 export const TRAINER_RARITY_WEIGHTS = {
@@ -23,8 +24,24 @@ export const TRAINER_RARITY_WEIGHTS = {
   rare: 10,
   epic: 4,
   legendary: 1.5,
-  mythic: 0.5
+  mythic: 0.5,
 };
+
+// ==========================================================
+// 🧩 Normalize tier/rarity label
+// ==========================================================
+function normalizeTier(value) {
+  const t = String(value || "common").toLowerCase();
+  const map = {
+    common: "common",
+    uncommon: "uncommon",
+    rare: "rare",
+    epic: "epic",
+    legendary: "legendary",
+    mythic: "mythic",
+  };
+  return map[t] || "common";
+}
 
 // ==========================================================
 // 💪 Rank-based Weight Multipliers
@@ -43,47 +60,47 @@ export const RANK_WEIGHT_MULTIPLIERS = {
   "Gym Leader":           { rare: 1.9,  epic: 2.0,  legendary: 1.45, mythic: 1.35 },
   "Elite Four Member":    { rare: 2.0,  epic: 2.2,  legendary: 1.5,  mythic: 1.4 },
   "Champion":             { rare: 2.2,  epic: 2.4,  legendary: 1.6,  mythic: 1.5 },
-  "Legend":               { rare: 2.4,  epic: 2.6,  legendary: 1.75, mythic: 1.6 }
+  "Legend":               { rare: 2.4,  epic: 2.6,  legendary: 1.75, mythic: 1.6 },
 };
 
 // ==========================================================
-// 🎲 Base Weighted Random Choice
+// 🎲 Weighted Random Choice Helper
 // ==========================================================
 export function weightedRandomChoice(list, weights) {
+  if (!Array.isArray(list) || !list.length) return null;
   const bag = [];
+
   for (const item of list) {
-    const rarity = item.rarity?.toLowerCase() || "common";
+    const rarity = normalizeTier(item.tier || item.rarity);
     const weight = weights[rarity] || 1;
-    for (let n = 0; n < Math.round(weight); n++) {
-      bag.push(item);
-    }
+    for (let i = 0; i < Math.round(weight); i++) bag.push(item);
   }
+
   return bag[Math.floor(Math.random() * bag.length)];
 }
 
 // ==========================================================
 // 🧮 Rank-Aware Weighted Random Choice
-// Applies multipliers based on user rank
+// Applies multipliers based on user rank and rarity/tier
 // ==========================================================
 export function weightedRandomChoiceWithRank(list, weights, user) {
+  if (!Array.isArray(list) || !list.length) return null;
+
   const rank = getRank(user.tp || 0);
   const buffs = RANK_WEIGHT_MULTIPLIERS[rank] || {};
   const bag = [];
 
   for (const item of list) {
-    const rarity = item.rarity?.toLowerCase() || "common";
+    const rarity = normalizeTier(item.tier || item.rarity);
     let weight = weights[rarity] || 1;
 
-    // Apply rank buff multiplier if available
+    // Apply rank multiplier if available
     if (buffs[rarity]) weight *= buffs[rarity];
 
-    for (let n = 0; n < Math.round(weight); n++) {
-      bag.push(item);
-    }
+    for (let i = 0; i < Math.round(weight); i++) bag.push(item);
   }
 
   if (!bag.length) return list[Math.floor(Math.random() * list.length)];
-
   return bag[Math.floor(Math.random() * bag.length)];
 }
 
@@ -92,20 +109,29 @@ export function weightedRandomChoiceWithRank(list, weights, user) {
 // ==========================================================
 /**
  * Select a random Pokémon based on rarity + rank buffs
- * @param {Array} pokemonPool - Array of Pokémon objects
- * @param {Object} user - TrainerData user (includes TP)
- * @returns {Object} Selected Pokémon
  */
 export function selectRandomPokemonForUser(pokemonPool, user) {
   return weightedRandomChoiceWithRank(pokemonPool, POKEMON_RARITY_WEIGHTS, user);
 }
 
 /**
- * Select a random Trainer based on rarity + rank buffs
- * @param {Array} trainerPool - Array of Trainer objects
- * @param {Object} user - TrainerData user (includes TP)
- * @returns {Object} Selected Trainer
+ * Select a random Trainer based on tier/rarity + rank buffs
  */
 export function selectRandomTrainerForUser(trainerPool, user) {
   return weightedRandomChoiceWithRank(trainerPool, TRAINER_RARITY_WEIGHTS, user);
+}
+
+// ==========================================================
+// 🧪 Optional: Simulate distribution (for tuning odds)
+// ==========================================================
+export function simulateDrops(pool, iterations = 10000) {
+  const counts = { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 0, mythic: 0 };
+
+  for (let i = 0; i < iterations; i++) {
+    const pick = weightedRandomChoice(pool, TRAINER_RARITY_WEIGHTS);
+    if (pick) counts[normalizeTier(pick.tier || pick.rarity)]++;
+  }
+
+  console.log("🎲 Simulated drop distribution:", counts);
+  return counts;
 }

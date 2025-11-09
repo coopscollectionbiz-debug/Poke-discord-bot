@@ -818,10 +818,8 @@ app.get("/healthz", (_, res) =>
 );
 
 // ===========================================================
-// 🧩 TRAINER PICKER API ENDPOINTS
+// 🧩 TRAINER PICKER API ENDPOINT — FIXED (returns exact sprite filenames)
 // ===========================================================
-
-// Return owned trainers for a given user (used by picker)
 app.get("/api/user-trainers", (req, res) => {
   const { id, token } = req.query;
   if (!validateToken(id, token)) {
@@ -833,9 +831,14 @@ app.get("/api/user-trainers", (req, res) => {
     const user = data[id];
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const owned = Array.isArray(user.trainers)
-      ? user.trainers
-      : Object.keys(user.trainers || {});
+    // ✅ Trainers is stored as object { "sprite.png": count }
+    const owned =
+      typeof user.trainers === "object"
+        ? Object.keys(user.trainers)
+        : Array.isArray(user.trainers)
+        ? user.trainers
+        : [];
+
     res.json({ owned });
   } catch (err) {
     console.error("❌ /api/user-trainers failed:", err);

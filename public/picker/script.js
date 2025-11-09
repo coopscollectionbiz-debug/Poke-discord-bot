@@ -81,19 +81,10 @@ function render(filter = "") {
     if (selectedRarity !== "all" && rarity !== selectedRarity) return;
     if (filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
 
-    const owned = ownedTrainers.includes(name);
-    if (showOwnedOnly && !owned) return;
-    if (showUnownedOnly && owned) return;
-
-    // ✅ Accept both "files" and "sprites"
-    const spriteFiles = info.files || info.sprites || [];
-
-    if (!Array.isArray(spriteFiles) || spriteFiles.length === 0) {
-      console.warn(`⚠️ Trainer "${name}" missing sprite list`);
-      return;
-    }
-
+    const spriteFiles = info.sprites || info.files || [];
     spriteFiles.forEach((file) => {
+      const owned = ownedTrainers.includes(file);
+
       const imgPath = owned
         ? `${TRAINER_SPRITE_PATH}${file}`
         : `${GRAY_PATH}${file}`;
@@ -106,6 +97,7 @@ function render(filter = "") {
         <span class="rarity ${rarity}">${rarity}</span>
       `;
 
+      // Only clickable if the user owns that exact sprite
       if (owned) {
         card.onclick = () => selectTrainer(name, file);
       }

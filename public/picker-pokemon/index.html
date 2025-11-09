@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coop's Collection — Choose Your Pokémon</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header>
-    <h1>Choose Your Pokémon</h1>
-    <p>Select a Pokémon to display on your Trainer Card.</p>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pokémon Team Picker | Coop’s Collection</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-  <section id="filters">
-    <input type="text" id="search" placeholder="Search Pokémon..." />
-    <div class="filter-buttons">
-      <button id="ownedToggle">Show Owned Only</button>
-      <button id="unownedToggle">Show Unowned Only</button>
-      <button id="shinyToggle">Show Shiny Only ✨</button>
+  <body>
+    <header>
+      <h1>🐾 Choose Your Pokémon Team</h1>
+      <p class="subtitle">
+        Select up to 6 Pokémon for your team. The first one becomes your lead Pokémon.
+      </p>
+    </header>
+
+    <section class="controls" id="controls">
+      <input type="text" id="search" placeholder="🔍 Search Pokémon..." autocomplete="off" />
+
       <select id="rarityFilter">
         <option value="all">All Rarities</option>
         <option value="common">Common</option>
@@ -27,17 +27,29 @@
         <option value="legendary">Legendary</option>
         <option value="mythic">Mythic</option>
       </select>
-    </div>
-  </section>
 
-  <main id="pokemonGrid" class="grid">
-    <p class="loading">Loading Pokémon data...</p>
-  </main>
+      <div class="toggle-group">
+        <button id="ownedToggle" class="toggle-btn">Show Owned Only</button>
+        <button id="unownedToggle" class="toggle-btn">Show Unowned Only</button>
+        <button id="shinyToggle" class="toggle-btn">Shiny Mode</button>
+      </div>
+    </section>
 
-  <footer>
-    <p>🌟 Coop's Collection — Pokémon Picker</p>
-  </footer>
+    <main>
+      <div id="pokemonGrid" class="grid">
+        <p class="notice">Loading Pokémon data...</p>
+      </div>
+    </main>
 
-  <script type="module" src="script.js"></script>
-</body>
+    <footer>
+      <p>
+        🌟 Opened via <strong>/changepokemon</strong> •
+        <span>Secure session expires after 10 minutes</span>
+      </p>
+      <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
+      <p id="teamStatus" class="status-msg"></p>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+  </body>
 </html>

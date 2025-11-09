@@ -938,7 +938,7 @@ app.post("/api/set-trainer", express.json(), async (req, res) => {
 });
 
 // ===========================================================
-// 🧩 POKÉMON PICKER API ENDPOINTS
+// 🧩 POKÉMON PICKER API ENDPOINTS (Supports 6-Pokémon Teams)
 // ===========================================================
 
 // ✅ GET owned Pokémon
@@ -949,11 +949,9 @@ app.get("/api/user-pokemon", (req, res) => {
   }
 
   const user = trainerData[id];
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
-  }
+  if (!user) return res.status(404).json({ error: "User not found" });
 
-  // owned = Pokémon with at least one copy (normal or shiny)
+  // Owned Pokémon = any ID with normal or shiny copies
   const owned =
     typeof user.pokemon === "object"
       ? Object.keys(user.pokemon)
@@ -961,16 +959,23 @@ app.get("/api/user-pokemon", (req, res) => {
       ? user.pokemon
       : [];
 
-  res.json({ owned });
+  // Previously displayed team (6 max)
+  const currentTeam = Array.isArray(user.displayedPokemon)
+    ? user.displayedPokemon
+    : user.displayedPokemon
+    ? [user.displayedPokemon]
+    : [];
+
+  res.json({ owned, currentTeam });
 });
 
-// ✅ POST — set displayed Pokémon
-app.post("/api/set-pokemon", express.json(), async (req, res) => {
+// ✅ POST — set full Pokémon team (up to 6)
+app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   try {
-    const { id, token, name, file } = req.body;
-    if (!id || !token || !file) {
-      console.warn("⚠️ Missing fields in /api/set-pokemon", req.body);
-      return res.status(400).json({ success: false, error: "Missing id, token, or file" });
+    const { id, token, team } = req.body;
+    if (!id || !token || !Array.isArray(team)) {
+      console.warn("⚠️ Missing or invalid fields in /api/set-pokemon-team", req.body);
+      return res.status(400).json({ success: false, error: "Missing id, token, or team array" });
     }
 
     // ✅ Validate token
@@ -986,26 +991,34 @@ app.post("/api/set-pokemon", express.json(), async (req, res) => {
       return res.status(404).json({ success: false, error: "User not found" });
     }
 
-    // ✅ Equip Pokémon (displayed)
-    user.displayedPokemon = file; // single slot for now
+    // ✅ Cap team length at 6
+    if (team.length === 0 || team.length > 6) {
+      return res.status(400).json({ success: false, error: "Team must be 1–6 Pokémon" });
+    }
+
+    // ✅ Overwrite displayed team (array)
+    user.displayedPokemon = team.map(String);
     await saveTrainerDataLocal(trainerData);
     await saveDataToDiscord(trainerData);
 
-    console.log(`✅ ${id} equipped Pokémon ${file}`);
+    console.log(`✅ ${id} saved team [${team.join(", ")}]`);
 
     // =======================================================
-    // 🧾 Send confirmation message in the invoking channel
+    // 🧾 Send confirmation message to invoking Discord channel
     // =======================================================
     try {
       const channelId = getChannelIdForToken(token);
       if (channelId) {
         const channel = await client.channels.fetch(channelId).catch(() => null);
         if (channel) {
+          const leadName = team[0];
           const embed = new EmbedBuilder()
-            .setTitle("🐾 Pokémon Equipped!")
-            .setDescription(`✅ You equipped **${name}** as your displayed Pokémon!\nUse **/trainercard** to view your updated card.`)
+            .setTitle("🐾 Pokémon Team Updated!")
+            .setDescription(
+              `✅ You set your Pokémon team!\n**${leadName}** is now your lead Pokémon.\nUse **/trainercard** to view your updated card.`
+            )
             .setColor(0xffcb05)
-            .setThumbnail(`${spritePaths.pokemon}${file}.gif`)
+            .setThumbnail(`${spritePaths.pokemon}${leadName}.gif`)
             .setFooter({ text: "🌟 Coop’s Collection Update" })
             .setTimestamp();
 
@@ -1016,12 +1029,12 @@ app.post("/api/set-pokemon", express.json(), async (req, res) => {
         }
       }
     } catch (notifyErr) {
-      console.warn("⚠️ Failed to send equip confirmation:", notifyErr.message);
+      console.warn("⚠️ Failed to send team confirmation:", notifyErr.message);
     }
 
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ /api/set-pokemon failed:", err.message);
+    console.error("❌ /api/set-pokemon-team failed:", err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });

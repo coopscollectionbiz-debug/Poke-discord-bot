@@ -15,11 +15,6 @@ const TRAINER_SPRITE_PATH = "../sprites/trainers_2/";
 const GRAY_PATH            = "../sprites/trainers_2/grayscale/";
 const TRAINER_DATA_FILE = "../trainerSprites.json";
 
-// API endpoints stay same-origin
-const API_USER = "/api/user-trainers";
-const API_SET  = "/api/set-trainer";
-
-
 // API stays same-origin
 const API_USER = "/api/user-trainers";
 const API_SET  = "/api/set-trainer";

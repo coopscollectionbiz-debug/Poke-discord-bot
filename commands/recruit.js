@@ -23,7 +23,7 @@ import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
-import { postRareSightings } from "../utils/rareSightings.js";
+
 
 // ==========================================================
 // ⏱️ Constants

@@ -187,12 +187,6 @@ try {
 }
 
       // ======================================================
-      // 🌟 Rare Sightings Broadcast (Epic+ and all Shinies)
-      // ======================================================
-      await postRareSightings(client, pokemonPick, interaction.user, true, shiny);
-      await postRareSightings(client, trainerPick, interaction.user, false, false);
-
-      // ======================================================
       // 🧍 Equip Prompt for New Trainer (clean + safe)
       // ======================================================
       const promptMessage = await interaction.followUp({

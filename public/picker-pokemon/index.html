@@ -15,8 +15,16 @@
       </p>
     </header>
 
+    <!-- ===================================================== -->
+    <!-- FILTERS & TOGGLES -->
+    <!-- ===================================================== -->
     <section class="controls" id="controls">
-      <input type="text" id="search" placeholder="🔍 Search Pokémon..." autocomplete="off" />
+      <input
+        type="text"
+        id="search"
+        placeholder="🔍 Search Pokémon..."
+        autocomplete="off"
+      />
 
       <select id="rarityFilter">
         <option value="all">All Rarities</option>
@@ -31,23 +39,35 @@
       <div class="toggle-group">
         <button id="ownedToggle" class="toggle-btn">Show Owned Only</button>
         <button id="unownedToggle" class="toggle-btn">Show Unowned Only</button>
-        <button id="shinyToggle" class="toggle-btn">Shiny Mode</button>
+        <button id="shinyToggle" class="toggle-btn">✨ Shiny Mode</button>
       </div>
     </section>
 
+    <!-- ===================================================== -->
+    <!-- TEAM STATUS + SAVE BUTTON -->
+    <!-- ===================================================== -->
+    <section id="teamControls" class="team-controls">
+      <p id="teamCounter">0/6 selected</p>
+      <button id="saveTeam" class="save-btn">💾 Save Team</button>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- MAIN GRID -->
+    <!-- ===================================================== -->
     <main>
       <div id="pokemonGrid" class="grid">
         <p class="notice">Loading Pokémon data...</p>
       </div>
     </main>
 
+    <!-- ===================================================== -->
+    <!-- FOOTER -->
+    <!-- ===================================================== -->
     <footer>
       <p>
         🌟 Opened via <strong>/changepokemon</strong> •
         <span>Secure session expires after 10 minutes</span>
       </p>
-      <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
-      <p id="teamStatus" class="status-msg"></p>
     </footer>
 
     <script type="module" src="script.js"></script>

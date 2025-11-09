@@ -36,13 +36,17 @@ export async function broadcastReward(
     const globalChannel = await safeFetchChannel(client, GLOBAL_CHANNEL_ID);
     const rareChannel   = await safeFetchChannel(client, RARE_CHANNEL_ID);
 
-    // ======================================================
-    // 🧩 Rarity classification
-    // ======================================================
-    const rarity = (item.rarity || item.tier || "common").toLowerCase();
-    const emoji  = rarityEmojis?.[rarity] || "⚬";
-    const rarityDisplay = `${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`;
-    const isRareTier = ["rare", "epic", "legendary", "mythic"].includes(rarity);
+    // 🧩 Rarity classification (normalize both .tier and .rarity)
+let rawTier = item.tier || item.rarity || "common";
+if (typeof rawTier !== "string") rawTier = String(rawTier);
+const rarity = rawTier.trim().toLowerCase();
+
+const emoji  = rarityEmojis?.[rarity] || "⚬";
+const rarityDisplay = `${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`;
+
+// ✅ Treat Epic+ and Rare as special broadcast tiers
+const isRareTier = ["rare", "epic", "legendary", "mythic"].includes(rarity);
+
 
     // ======================================================
     // 🖼️ Sprite resolution

@@ -105,61 +105,7 @@ export async function getAllTrainers() {
   return Object.values(data);
 }
 
-// ==========================================================
-// 🔄 Flatten Trainer Structure
-// ==========================================================
-export function flattenTrainerSprites(trainerSprites) {
-  const flat = [];
 
-  if (!trainerSprites || typeof trainerSprites !== "object" || Array.isArray(trainerSprites)) {
-    console.warn("⚠️ flattenTrainerSprites: invalid input. Returning empty array.");
-    return flat;
-  }
-
-  for (const [key, node] of Object.entries(trainerSprites)) {
-    // Supports both legacy and new schema:
-    // A) { "key": [ {file:"..."}, "sprite.png" ] }
-    // B) { "key": { sprites:[...], tier:"Epic" } }
-
-    const sprites = Array.isArray(node)
-      ? node
-      : Array.isArray(node?.sprites)
-      ? node.sprites
-      : [];
-    const baseTier = normalizeTier(node?.tier);
-
-    for (const entry of sprites) {
-      // Simple string entry → "sprite.png"
-      if (typeof entry === "string") {
-        const tier = baseTier || "common";
-        flat.push({
-          id: key,
-          name: key,
-          filename: entry,
-          sprite: entry,
-          tier,
-          rarity: tier, // keep for compatibility
-        });
-        continue;
-      }
-
-      // Object entry → { file, tier?, rarity?, disabled? }
-      if (entry && !entry.disabled) {
-        const tier = normalizeTier(entry.tier || entry.rarity || baseTier || "common");
-        flat.push({
-          id: key,
-          name: key,
-          filename: entry.file,
-          sprite: entry.file,
-          tier,
-          rarity: tier,
-        });
-      }
-    }
-  }
-
-  return flat;
-}
 
 // ==========================================================
 // 📜 Get Flattened Trainers with Normalization & Caching

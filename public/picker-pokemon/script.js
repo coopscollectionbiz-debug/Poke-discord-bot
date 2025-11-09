@@ -1,34 +1,26 @@
 // ===========================================================
-// Coop's Collection — Pokémon Picker (Token-Secured Version)
-// ===========================================================
-// Features:
-// • Reads id + token from URL (?id=...&token=...)
-// • Owned Pokémon shown in color, unowned in grayscale
-// • Shiny toggle + rarity filters
-// • Allows selecting up to 6 Pokémon (team setup)
-// • First selected = lead Pokémon on trainer card
+// Coop's Collection — Pokémon Team Picker (Token-Secured)
 // ===========================================================
 
 import { rarityEmojis } from "/public/spriteconfig.js";
 
-const POKEMON_SPRITE_PATH = "/public/sprites/pokemon/normal/";
-const SHINY_PATH          = "/public/sprites/pokemon/shiny/";
-const GRAY_PATH           = "/public/sprites/pokemon/gray/";
-const POKEMON_DATA_FILE   = "/public/pokemonData.json";
+const POKEMON_SPRITE_PATH = "/public/sprites/pokemon/";
+const SHINY_PATH = "/public/sprites/pokemon-shiny/";
+const GRAY_PATH = "/public/sprites/pokemon/grayscale/";
+const POKEMON_DATA_FILE = "/public/pokemonData.json";
 
 const API_USER = "/api/user-pokemon";
-const API_SET  = "/api/set-pokemon-team";
+const API_SET = "/api/set-pokemon-team";
 
 let allPokemon = {};
 let ownedPokemon = [];
+let selectedTeam = [];
 let userId = null;
 let token = null;
-
 let showOwnedOnly = false;
 let showUnownedOnly = false;
 let showShinyOnly = false;
 let selectedRarity = "all";
-let selectedTeam = [];
 
 // ===========================================================
 // 🧭 Initialization
@@ -39,7 +31,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===========================================================
-// 📦 Load Pokémon + Ownership
+// 📦 Data Load
 // ===========================================================
 async function loadData() {
   try {
@@ -53,20 +45,23 @@ async function loadData() {
       return;
     }
 
-    const dataRes = await fetch(POKEMON_DATA_FILE);
-    allPokemon = await dataRes.json();
+    const res = await fetch(POKEMON_DATA_FILE);
+    allPokemon = await res.json();
 
-    const res = await fetch(`${API_USER}?id=${userId}&token=${token}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    const ownedRes = await fetch(`${API_USER}?id=${userId}&token=${token}`);
+    if (!ownedRes.ok) throw new Error(`HTTP ${ownedRes.status}`);
+    const data = await ownedRes.json();
 
+    // ✅ Normalize owned Pokémon
     if (data.owned) {
       if (Array.isArray(data.owned)) {
-        ownedPokemon = data.owned;
+        ownedPokemon = data.owned.map(String);
       } else if (typeof data.owned === "object") {
         ownedPokemon = Object.keys(data.owned);
       }
     }
+    if (Array.isArray(data.currentTeam))
+      selectedTeam = data.currentTeam.map(String);
 
     render();
   } catch (err) {
@@ -77,34 +72,28 @@ async function loadData() {
 }
 
 // ===========================================================
-// 🎨 Render Pokémon Grid
+// 🎨 Render Grid
 // ===========================================================
 function render(filter = "") {
   const grid = document.getElementById("pokemonGrid");
   grid.innerHTML = "";
 
   const entries = Object.entries(allPokemon);
-
-  entries.forEach(([name, info]) => {
-    const rarity = (info.rarity || "common").toLowerCase();
+  entries.forEach(([id, info]) => {
+    const name = info.name || `#${id}`;
+    const rarity = (info.tier || "common").toLowerCase();
     const tierDisplay = rarity.charAt(0).toUpperCase() + rarity.slice(1);
     const emoji = rarityEmojis?.[rarity] || "⚬";
+    const owned = ownedPokemon.includes(String(info.id));
 
     if (selectedRarity !== "all" && rarity !== selectedRarity) return;
     if (filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
-
-    const owned = ownedPokemon.includes(name);
     if (showOwnedOnly && !owned) return;
     if (showUnownedOnly && owned) return;
 
     const spriteFile = `${info.id}.gif`;
-    const basePath = showShinyOnly
-      ? SHINY_PATH
-      : POKEMON_SPRITE_PATH;
-
-    const imgPath = owned
-      ? `${basePath}${spriteFile}`
-      : `${GRAY_PATH}${spriteFile}`;
+    const basePath = showShinyOnly ? SHINY_PATH : POKEMON_SPRITE_PATH;
+    const imgPath = owned ? `${basePath}${spriteFile}` : `${GRAY_PATH}${spriteFile}`;
 
     const card = document.createElement("div");
     card.className = `pokemon-card ${owned ? "owned" : "unowned"}`;
@@ -117,11 +106,12 @@ function render(filter = "") {
     img.alt = name;
     img.loading = "lazy";
     img.onerror = () => {
-      console.warn(`⚠️ Missing sprite: ${spriteFile}`);
+      console.warn(`⚠️ Missing sprite for ${name} (${spriteFile})`);
       card.remove();
     };
     spriteWrapper.appendChild(img);
 
+    // 🔒 Lock overlay for unowned
     if (!owned) {
       const lock = document.createElement("div");
       lock.className = "lock-overlay";
@@ -129,12 +119,13 @@ function render(filter = "") {
       spriteWrapper.appendChild(lock);
     }
 
-    // ✅ Selection highlight
-    if (selectedTeam.includes(name)) {
-      const sel = document.createElement("div");
-      sel.className = "selected-overlay";
-      sel.innerHTML = `<span>${selectedTeam.indexOf(name) + 1}</span>`;
-      spriteWrapper.appendChild(sel);
+    // 🔢 Team order badge if selected
+    const indexInTeam = selectedTeam.indexOf(String(info.id));
+    if (indexInTeam !== -1) {
+      const badge = document.createElement("div");
+      badge.className = "team-badge";
+      badge.textContent = indexInTeam + 1;
+      spriteWrapper.appendChild(badge);
       card.classList.add("selected");
     }
 
@@ -147,40 +138,41 @@ function render(filter = "") {
       </div>
     `;
 
-    if (owned) card.onclick = () => toggleSelect(name);
+    if (owned) card.onclick = () => toggleSelect(info);
     grid.appendChild(card);
   });
 
-  if (grid.children.length === 0) {
+  if (grid.children.length === 0)
     grid.innerHTML = "<p class='notice'>No Pokémon match your filters.</p>";
-  }
-
-  updateTeamUI();
 }
 
 // ===========================================================
-// 🧩 Toggle Pokémon Selection
+// 🖱️ Team Selection Logic
 // ===========================================================
-function toggleSelect(name) {
-  const idx = selectedTeam.indexOf(name);
-  if (idx !== -1) {
-    selectedTeam.splice(idx, 1);
+function toggleSelect(info) {
+  const idStr = String(info.id);
+  const alreadySelected = selectedTeam.includes(idStr);
+
+  if (alreadySelected) {
+    selectedTeam = selectedTeam.filter((p) => p !== idStr);
   } else {
     if (selectedTeam.length >= 6) {
-      alert("You can only select 6 Pokémon!");
+      alert("⚠️ You can only select up to 6 Pokémon!");
       return;
     }
-    selectedTeam.push(name);
+    selectedTeam.push(idStr);
   }
+
   render(document.getElementById("search").value);
+  updateTeamStatus();
 }
 
 // ===========================================================
-// 💾 Save Team Button
+// 💾 Save Team
 // ===========================================================
-async function saveTeam() {
+document.getElementById("saveTeamBtn").addEventListener("click", async () => {
   if (selectedTeam.length === 0) {
-    alert("Please select at least one Pokémon to save your team!");
+    alert("❌ You must select at least one Pokémon.");
     return;
   }
 
@@ -195,21 +187,32 @@ async function saveTeam() {
     const data = await res.json();
 
     if (data.success) {
-      alert(`✅ Team saved successfully! Your lead Pokémon is ${selectedTeam[0]}.`);
+      const msg = document.getElementById("teamStatus");
+      msg.textContent = "✅ Team saved successfully!";
+      msg.className = "status-msg success";
     } else {
-      throw new Error("Response not successful");
+      throw new Error("Save failed");
     }
   } catch (err) {
     console.error("❌ saveTeam failed:", err);
-    alert("❌ Failed to save team. Please reopen via /changepokemon.");
+    const msg = document.getElementById("teamStatus");
+    msg.textContent = "❌ Failed to save team.";
+    msg.className = "status-msg error";
   }
-}
+});
 
 // ===========================================================
-// 🧰 Filter & Toggle Controls
+// 🧰 Filter Controls
 // ===========================================================
 function setupControls() {
-  document.getElementById("search").addEventListener("input", (e) => render(e.target.value));
+  document.getElementById("search").addEventListener("input", (e) => {
+    render(e.target.value);
+  });
+
+  document.getElementById("rarityFilter").addEventListener("change", (e) => {
+    selectedRarity = e.target.value;
+    render(document.getElementById("search").value);
+  });
 
   document.getElementById("ownedToggle").addEventListener("click", (e) => {
     showOwnedOnly = !showOwnedOnly;
@@ -232,23 +235,19 @@ function setupControls() {
     e.target.classList.toggle("active", showShinyOnly);
     render(document.getElementById("search").value);
   });
-
-  document.getElementById("rarityFilter").addEventListener("change", (e) => {
-    selectedRarity = e.target.value;
-    render(document.getElementById("search").value);
-  });
-
-  document.getElementById("saveTeam").addEventListener("click", saveTeam);
 }
 
 // ===========================================================
-// 🧱 Update Team Preview / Save Button
+// 🧾 Status Display
 // ===========================================================
-function updateTeamUI() {
-  const teamCount = selectedTeam.length;
-  const saveBtn = document.getElementById("saveTeam");
-  const counter = document.getElementById("teamCounter");
-
-  if (counter) counter.textContent = `${teamCount}/6 selected`;
-  if (saveBtn) saveBtn.disabled = teamCount === 0;
+function updateTeamStatus() {
+  const status = document.getElementById("teamStatus");
+  if (selectedTeam.length === 0) {
+    status.textContent = "No Pokémon selected.";
+    status.className = "status-msg";
+  } else {
+    const lead = allPokemon[selectedTeam[0]]?.name || "Unknown";
+    status.textContent = `🧢 ${selectedTeam.length}/6 selected — Lead: ${lead}`;
+    status.className = "status-msg active";
+  }
 }

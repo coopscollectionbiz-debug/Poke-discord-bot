@@ -1,7 +1,6 @@
 /* ===========================================================
-   Coop's Collection — Pokémon Team Picker Styles
+   Coop's Collection — Pokémon Picker Styles (with Team Badges)
    =========================================================== */
-
 body {
   font-family: "Inter", Arial, sans-serif;
   background-color: #0d1117;
@@ -69,46 +68,6 @@ p {
 }
 
 /* -----------------------------------------------------------
-   Team Controls (counter + save)
------------------------------------------------------------ */
-.team-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin: 1rem 0 0.5rem;
-}
-
-#teamCounter {
-  color: #00ff9d;
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.save-btn {
-  background: #00ff9d;
-  color: #0d1117;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.save-btn:hover:not(:disabled) {
-  background: #00e68a;
-  transform: scale(1.05);
-}
-
-.save-btn:disabled {
-  background: #30363d;
-  color: #777;
-  cursor: not-allowed;
-}
-
-/* -----------------------------------------------------------
    Pokémon Grid
 ----------------------------------------------------------- */
 #pokemonGrid {
@@ -118,6 +77,7 @@ p {
   padding: 1rem;
   max-width: 1100px;
   margin: 0 auto 2rem;
+  text-align: center;
 }
 
 /* -----------------------------------------------------------
@@ -132,23 +92,36 @@ p {
   transition: all 0.15s ease;
   position: relative;
   overflow: hidden;
+  text-align: center;
 }
 
 .pokemon-card img {
-  width: 100px;
+  width: 96px;
   height: auto;
-  transition: opacity 0.25s ease;
+  display: block;
+  margin: 0 auto;
 }
 
 .pokemon-card p.pokemon-name {
   margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
   font-size: 0.9rem;
   color: #eee;
   font-weight: 600;
+  line-height: 1.2;
+}
+
+.pokemon-tier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.85em;
+  margin-top: 2px;
 }
 
 /* -----------------------------------------------------------
-   Owned & Unowned States
+   Hover & Owned States
 ----------------------------------------------------------- */
 .pokemon-card.owned:hover {
   transform: scale(1.05);
@@ -161,46 +134,13 @@ p {
   opacity: 0.8;
 }
 
-.pokemon-card.unowned:hover {
-  transform: none;
-  border-color: #30363d;
-  box-shadow: none;
-}
-
 .pokemon-card.unowned img {
   filter: grayscale(1);
   opacity: 0.9;
 }
 
 /* -----------------------------------------------------------
-   Selection Overlay (for 1–6 slots)
------------------------------------------------------------ */
-.selected-overlay {
-  position: absolute;
-  bottom: 6px;
-  right: 6px;
-  width: 26px;
-  height: 26px;
-  background: #00ff9d;
-  color: #0d1117;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-  pointer-events: none;
-  box-shadow: 0 0 6px #00ff9d90;
-}
-
-.pokemon-card.selected {
-  border-color: #00ff9d;
-  box-shadow: 0 0 12px #00ff9d70;
-  transform: scale(1.05);
-}
-
-/* -----------------------------------------------------------
-   Lock Overlay for Unowned
+   Lock & Badge Overlays
 ----------------------------------------------------------- */
 .sprite-wrapper {
   position: relative;
@@ -227,29 +167,35 @@ p {
   user-select: none;
 }
 
-/* -----------------------------------------------------------
-   Tier + Emoji Display
------------------------------------------------------------ */
-.pokemon-tier {
+/* 🔢 Team Order Badge */
+.team-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: #00ff9d;
+  color: #0d1117;
+  font-weight: 700;
+  font-size: 0.8rem;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-top: 3px;
-  font-weight: 600;
-  font-size: 0.85em;
-}
-
-.pokemon-tier .tier-text {
-  text-transform: capitalize;
-}
-
-.pokemon-tier .tier-emoji {
-  font-size: 1.1em;
-  margin-top: 1px;
+  justify-content: center;
+  box-shadow: 0 0 6px #00ff9d80;
 }
 
 /* -----------------------------------------------------------
-   Tier Color Coding
+   Selected Cards
+----------------------------------------------------------- */
+.pokemon-card.selected {
+  border-color: #00ff9d;
+  box-shadow: 0 0 10px #00ff9d70;
+  transform: scale(1.04);
+}
+
+/* -----------------------------------------------------------
+   Rarity Colors
 ----------------------------------------------------------- */
 .tier-text.common { color: #9ca3af; }
 .tier-text.uncommon { color: #10b981; }
@@ -259,20 +205,37 @@ p {
 .tier-text.mythic { color: #ef4444; }
 
 /* -----------------------------------------------------------
-   Notice Text
------------------------------------------------------------ */
-.notice {
-  grid-column: 1 / -1;
-  text-align: center;
-  color: #999;
-  font-style: italic;
-}
-
-/* -----------------------------------------------------------
-   Footer
+   Footer & Save Button
 ----------------------------------------------------------- */
 footer {
-  padding-bottom: 1rem;
+  padding-bottom: 1.5rem;
   font-size: 0.85rem;
   color: #777;
 }
+
+.save-btn {
+  background: #00ff9d;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  color: #0d1117;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.save-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px #00ff9d60;
+}
+
+.status-msg {
+  margin-top: 0.5rem;
+  color: #ccc;
+  font-weight: 500;
+}
+
+.status-msg.success { color: #00ff9d; }
+.status-msg.error { color: #ef4444; }
+.status-msg.active { color: #facc15; }

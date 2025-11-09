@@ -16,7 +16,7 @@ import { rarityEmojis } from "../spriteconfig.js"; // ✅ standardized import
 // 🧩 Helper: format tier text + emoji
 // ==========================================================
 function getTierDisplay(tier) {
-  const t = String(tier || "Common").toLowerCase();
+  const t = String(tier || "common").toLowerCase();
   const emoji = rarityEmojis?.[t] || "❔";
   const formatted = t.charAt(0).toUpperCase() + t.slice(1);
   return `${emoji} ${formatted}`;
@@ -81,7 +81,7 @@ export function createInfoEmbed(title, description, options = {}) {
  * Pokémon Reward Embed
  */
 export function createPokemonRewardEmbed(pokemon, isShiny, spriteUrl, options = {}) {
-  const tier = pokemon.tier || pokemon.rarity || "Common";
+  const tier = pokemon.tier || pokemon.rarity || "common";
   const tierDisplay = getTierDisplay(tier);
 
   const title = options.title || (isShiny ? "✨ Shiny Pokémon!" : "🎁 Pokémon Reward!");
@@ -104,14 +104,21 @@ export function createPokemonRewardEmbed(pokemon, isShiny, spriteUrl, options = 
  * Trainer Reward Embed
  */
 export function createTrainerRewardEmbed(trainer, spriteUrl, options = {}) {
-  const tier = trainer.tier || trainer.rarity || "Common";
+  const tier = trainer.tier || trainer.rarity || "common";
   const tierDisplay = getTierDisplay(tier);
+
+  // ✅ Normalize name (clean .png and folder paths)
+  const trainerName =
+    trainer.name ||
+    trainer.filename?.replace(/^trainers?_2\//, "").replace(/\.png$/i, "") ||
+    trainer.spriteFile?.replace(/^trainers?_2\//, "").replace(/\.png$/i, "") ||
+    "Unknown Trainer";
 
   return new EmbedBuilder()
     .setTitle(options.title || "🎓 Trainer Reward!")
     .setDescription(
       options.description ||
-        `You unlocked **${trainer.name || trainer.filename}!**\n${tierDisplay} Tier`
+        `You unlocked **${trainerName}!**\n${tierDisplay} Tier`
     )
     .setColor(options.color || 0x5865f2)
     .setThumbnail(spriteUrl)
@@ -126,7 +133,7 @@ export function createPokedexEmbed(pokemon, spriteUrl, typeMap, options = {}) {
   const types = pokemon.types
     ? pokemon.types.map((id) => typeMap[id] || "Unknown").join("/")
     : "Unknown";
-  const tier = pokemon.tier || pokemon.rarity || "Unknown";
+  const tier = pokemon.tier || pokemon.rarity || "unknown";
   const tierDisplay = getTierDisplay(tier);
 
   return new EmbedBuilder()

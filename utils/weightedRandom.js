@@ -126,22 +126,35 @@ export function selectRandomTrainerForUser(trainerPool, user) {
 
     const tier = normalizeTier(data?.tier || data?.rarity || "common");
     const sprites = Array.isArray(data?.sprites)
-  ? data.sprites
-      .filter((s) => typeof s === "string" && s.trim().length)
-      .map((s) => s.toLowerCase())
-  : [typeof data?.spriteFile === "string"
-      ? data.spriteFile.toLowerCase()
-      : `${id}.png`];
+      ? data.sprites
+          .filter((s) => typeof s === "string" && s.trim().length)
+          .map((s) => s.toLowerCase())
+      : [typeof data?.spriteFile === "string"
+          ? data.spriteFile.toLowerCase()
+          : `${id}.png`];
 
-    // ✅ Smarter naming fallback
-    const cleanName = data?.name && !data.name.toLowerCase().startsWith("trainer ")
-      ? data.name
-      : id
-          .replace(/[-_]/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase())
-          .trim();
+    // 🧠 Smart display name generator (prettifies filenames)
+    let displayName = data?.name?.trim();
+    if (!displayName || /^trainer\s*\d+/i.test(displayName)) {
+      displayName = id
+        .replace(/[-_]/g, " ")                  // dashes/underscores → space
+        .replace(/([a-z])([A-Z])/g, "$1 $2")    // camelCase → spaced
+        .replace(/(\d+)/g, " $1")               // digits → spaced
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim();
 
-    return { id, name: cleanName, tier, sprites };
+      // optional cleanups for known groups
+      displayName = displayName
+        .replace(/\bAce Trainer Snow F\b/i, "Ace Trainer (Snow F)")
+        .replace(/\bAce Trainer Snow M\b/i, "Ace Trainer (Snow M)")
+        .replace(/\bAce Trainer Sand F\b/i, "Ace Trainer (Sand F)")
+        .replace(/\bAce Trainer Sand M\b/i, "Ace Trainer (Sand M)")
+        .replace(/\bGrunt F\b/i, "Rocket Grunt (F)")
+        .replace(/\bGrunt M\b/i, "Rocket Grunt (M)")
+        .replace(/\s{2,}/g, " ");
+    }
+
+    return { id, name: displayName, tier, sprites };
   });
 
   const chosen = weightedRandomChoiceWithRank(
@@ -156,7 +169,7 @@ export function selectRandomTrainerForUser(trainerPool, user) {
 
   return {
     id: chosen.id,
-    name: chosen.name,
+    name: chosen.name, // always clean human-readable
     rarity: chosen.tier,
     spriteFile: spriteFile.toLowerCase(),
     filename: spriteFile.toLowerCase(),

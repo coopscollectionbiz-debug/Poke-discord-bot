@@ -36,13 +36,13 @@ export async function broadcastReward(
     const globalChannel = await safeFetchChannel(client, GLOBAL_CHANNEL_ID);
     const rareChannel   = await safeFetchChannel(client, RARE_CHANNEL_ID);
 
-// ======================================================
-// 🧩 Rarity classification (Fixed)
-// ======================================================
-const rarity = (item.rarity || item.tier || "common").toString().toLowerCase();
-const emoji  = rarityEmojis?.[rarity] || "⚬";
-const rarityDisplay = `${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`;
-const isRareTier = ["rare", "epic", "legendary", "mythic"].includes(rarity);
+    // ======================================================
+    // 🧩 Rarity classification (Fixed)
+    // ======================================================
+    const rarity = (item.rarity || item.tier || "common").toString().toLowerCase();
+    const emoji  = rarityEmojis?.[rarity] || "⚬";
+    const rarityDisplay = `${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`;
+    const isRareTier = ["rare", "epic", "legendary", "mythic"].includes(rarity);
 
     // ======================================================
     // 🖼️ Sprite resolution
@@ -56,12 +56,25 @@ const isRareTier = ["rare", "epic", "legendary", "mythic"].includes(rarity);
         ? `${spritePaths.shiny}${item.id}.gif`
         : `${spritePaths.pokemon}${item.id}.gif`;
     } else {
-      const file = item.spriteFile || item.filename || `${item.id}.png`;
+      // ✅ Normalize trainer filename and display name
+      const baseId = String(item.id || "")
+        .replace(/^trainers?_2\//, "")
+        .replace(/\.png$/i, "")
+        .trim()
+        .toLowerCase();
+
+      const cleanFile = (item.spriteFile || item.filename || `${baseId}.png`)
+        .replace(/^trainers?_2\//, "")
+        .replace(/\s+/g, "")
+        .replace(/\.png\.png$/i, ".png") // double extension safety
+        .toLowerCase();
+
       displayName =
-        item.name ||
-        file.replace(/^trainers?_2\//, "").replace(/\.png$/i, "") ||
-        "Unknown Trainer";
-      spriteUrl = `${spritePaths.trainers}${file}`;
+        item.name && !item.name.toLowerCase().startsWith("trainer ")
+          ? item.name
+          : baseId.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+      spriteUrl = `${spritePaths.trainers}${cleanFile}`;
     }
 
     // ======================================================
@@ -90,24 +103,15 @@ const isRareTier = ["rare", "epic", "legendary", "mythic"].includes(rarity);
     // ======================================================
     // 📡 Broadcast routing
     // ======================================================
-    // 1️⃣ Global — always
-    if (globalChannel) {
-      await globalChannel.send({ embeds: [embed] }).catch(() => {});
-    }
-
-    // 2️⃣ Rare Sightings — rare+ or shiny Pokémon
-    if (rareChannel && (isRareTier || shiny)) {
+    if (globalChannel) await globalChannel.send({ embeds: [embed] }).catch(() => {});
+    if (rareChannel && (isRareTier || shiny))
       await rareChannel.send({ embeds: [embed] }).catch(() => {});
-    }
-
-    // 3️⃣ Local — always, but avoid duplicate channel posts
     if (
       localChannel &&
       localChannel.id !== globalChannel?.id &&
       localChannel.id !== rareChannel?.id
-    ) {
+    )
       await localChannel.send({ embeds: [embed] }).catch(() => {});
-    }
 
     console.log(
       `📢 Broadcasted ${type} (${displayName}) [${rarity}${shiny ? "✨" : ""}] for ${user.username}`

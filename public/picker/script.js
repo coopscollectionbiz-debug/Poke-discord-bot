@@ -71,7 +71,7 @@ async function loadData() {
 }
 
 // ===========================================================
-// 🎨 RENDER GRID (updated for "sprites" support)
+// 🎨 RENDER GRID (updated for "sprites" support + missing sprite fix)
 // ===========================================================
 
 function render(filter = "") {
@@ -96,7 +96,10 @@ function render(filter = "") {
 
     spriteFiles.forEach((fileName) => {
       if (typeof fileName !== "string") return;
-      const owned = ownedTrainers.includes(fileName);
+
+      const owned = ownedTrainers.some(
+        (t) => t.toLowerCase() === fileName.toLowerCase()
+      );
 
       const imgPath = owned
         ? `${TRAINER_SPRITE_PATH}${fileName}`
@@ -104,11 +107,32 @@ function render(filter = "") {
 
       const card = document.createElement("div");
       card.className = `trainer-card ${owned ? "owned" : "unowned"}`;
-      card.innerHTML = `
-        <div class="sprite-wrapper">
-          <img src="${imgPath}" alt="${name}" loading="lazy"/>
-          ${!owned ? '<div class="lock-overlay"><span>🔒</span></div>' : ""}
-        </div>
+
+      // ✅ Build sprite wrapper
+      const spriteWrapper = document.createElement("div");
+      spriteWrapper.className = "sprite-wrapper";
+
+      const img = document.createElement("img");
+      img.src = imgPath;
+      img.alt = name;
+      img.loading = "lazy";
+
+      // ✅ Hide cards with missing sprite files (prevents blank boxes)
+      img.onerror = () => {
+        console.warn(`⚠️ Missing sprite file: ${fileName}`);
+        card.remove();
+      };
+
+      spriteWrapper.appendChild(img);
+      if (!owned) {
+        const lock = document.createElement("div");
+        lock.className = "lock-overlay";
+        lock.innerHTML = "<span>🔒</span>";
+        spriteWrapper.appendChild(lock);
+      }
+
+      card.appendChild(spriteWrapper);
+      card.innerHTML += `
         <p class="trainer-name">${name}</p>
         <div class="trainer-tier">
           <span class="tier-text ${rarity}">${tierDisplay}</span>

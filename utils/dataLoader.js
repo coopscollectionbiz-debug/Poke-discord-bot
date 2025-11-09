@@ -130,7 +130,7 @@ export async function getFlattenedTrainers() {
 }
 
 // ==========================================================
-// 🔧 Flatten and Normalize Trainer Sprites
+// 🔧 Flatten and Normalize Trainer Sprites (safe version)
 // ==========================================================
 function flattenTrainerSprites(spritesObj) {
   const flat = [];
@@ -138,9 +138,11 @@ function flattenTrainerSprites(spritesObj) {
   for (const [key, info] of Object.entries(spritesObj)) {
     const lowerKey = key.toLowerCase();
 
-    // Normalize sprite array
+    // ✅ Safely normalize sprite array — filter only valid strings
     const spriteArray = Array.isArray(info.sprites)
-      ? info.sprites.map((s) => s.toLowerCase())
+      ? info.sprites
+          .filter((s) => typeof s === "string" && s.trim().length > 0)
+          .map((s) => s.toLowerCase())
       : [`${lowerKey}.png`];
 
     flat.push({

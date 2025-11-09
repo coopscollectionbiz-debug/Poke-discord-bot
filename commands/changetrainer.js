@@ -7,7 +7,7 @@
 // ===========================================================
 
 import { SlashCommandBuilder } from "discord.js";
-import { generateUserToken } from "../bot_final.js"; // adjust path if needed
+import { generateToken as generateUserToken } from "../bot_final.js";
 
 export default {
   data: new SlashCommandBuilder()

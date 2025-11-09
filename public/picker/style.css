@@ -26,6 +26,9 @@ p {
   color: #ccc;
 }
 
+/* -----------------------------------------------------------
+   Controls
+----------------------------------------------------------- */
 #controls {
   display: flex;
   justify-content: center;
@@ -65,6 +68,9 @@ p {
   font-weight: 600;
 }
 
+/* -----------------------------------------------------------
+   Trainer Grid
+----------------------------------------------------------- */
 #trainerGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -74,6 +80,9 @@ p {
   margin: 0 auto 2rem;
 }
 
+/* -----------------------------------------------------------
+   Trainer Cards
+----------------------------------------------------------- */
 .trainer-card {
   background: #161b22;
   border: 2px solid #30363d;
@@ -82,6 +91,7 @@ p {
   cursor: pointer;
   transition: all 0.15s ease;
   position: relative;
+  overflow: hidden;
 }
 
 .trainer-card img {
@@ -90,12 +100,16 @@ p {
   transition: opacity 0.25s ease;
 }
 
-.trainer-card p {
+.trainer-card p.trainer-name {
   margin-top: 0.5rem;
   font-size: 0.9rem;
   color: #eee;
+  font-weight: 600;
 }
 
+/* -----------------------------------------------------------
+   Owned & Unowned States
+----------------------------------------------------------- */
 .trainer-card.owned:hover {
   transform: scale(1.05);
   border-color: #00ff9d;
@@ -104,7 +118,7 @@ p {
 
 .trainer-card.unowned {
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .trainer-card.unowned:hover {
@@ -113,6 +127,73 @@ p {
   box-shadow: none;
 }
 
+/* -----------------------------------------------------------
+   Lock Overlay for Unowned
+----------------------------------------------------------- */
+.sprite-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.lock-overlay {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.lock-overlay span {
+  color: #fff;
+  font-size: 13px;
+  user-select: none;
+}
+
+.trainer-card.unowned img {
+  filter: grayscale(1);
+  opacity: 0.9;
+}
+
+/* -----------------------------------------------------------
+   Tier + Emoji Display
+----------------------------------------------------------- */
+.trainer-tier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 3px;
+  font-weight: 600;
+  font-size: 0.85em;
+}
+
+.trainer-tier .tier-text {
+  text-transform: capitalize;
+}
+
+.trainer-tier .tier-emoji {
+  font-size: 1.1em;
+  margin-top: 1px;
+}
+
+/* -----------------------------------------------------------
+   Tier Color Coding
+----------------------------------------------------------- */
+.tier-text.common { color: #9ca3af; }
+.tier-text.uncommon { color: #10b981; }
+.tier-text.rare { color: #3b82f6; }
+.tier-text.epic { color: #a855f7; }
+.tier-text.legendary { color: #facc15; }
+.tier-text.mythic { color: #ef4444; }
+
+/* -----------------------------------------------------------
+   Old rarity tag (if reused)
+----------------------------------------------------------- */
 .rarity-tag {
   position: absolute;
   top: 6px;
@@ -155,6 +236,9 @@ p {
   color: #fff;
 }
 
+/* -----------------------------------------------------------
+   Footer
+----------------------------------------------------------- */
 footer {
   padding-bottom: 1rem;
   font-size: 0.85rem;

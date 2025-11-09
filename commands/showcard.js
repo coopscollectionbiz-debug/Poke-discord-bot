@@ -8,7 +8,12 @@
 // - Supports self or another user
 // ==========================================================
 
-import { SlashCommandBuilder } from "discord.js";
+import {
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { showTrainerCard } from "./trainercard.js";
@@ -17,7 +22,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("showcard")
     .setDescription("Publicly display your Trainer Card or view another user's.")
-    .addUserOption(option =>
+    .addUserOption((option) =>
       option
         .setName("user")
         .setDescription("The user whose Trainer Card you want to view")
@@ -47,16 +52,31 @@ export default {
       // Ensure user data is valid
       const ensured = await ensureUserInitialized(targetId, targetUser.username, trainerData, client);
 
-      // Temporarily override interaction.user to render the correct username/avatar
-      const fakeInteraction = {
-        ...interaction,
-        user: targetUser,
-        editReply: (data) => interaction.editReply(data),
-      };
+      // ✅ Reuse the same embed display
+      const message = await showTrainerCard(interaction, ensured, targetUser);
 
-      // ✅ Reuse the exact embed display
-      await showTrainerCard(fakeInteraction, ensured);
+      // 🧩 If showTrainerCard returns a message with buttons,
+      // rewrite the Show Full Team button to include the targetId
+      if (message?.components?.length) {
+        const updatedComponents = message.components.map((row) => {
+          if (!row?.components) return row;
+          const newRow = ActionRowBuilder.from(row);
+          newRow.components = row.components.map((btn) => {
+            if (btn.customId === "show_full_team") {
+              return new ButtonBuilder()
+                .setCustomId(`show_full_team_${targetId}`)
+                .setLabel(btn.label || "Show Full Team")
+                .setStyle(btn.style || ButtonStyle.Primary);
+            }
+            return btn;
+          });
+          return newRow;
+        });
 
+        await interaction.editReply({
+          components: updatedComponents,
+        });
+      }
     } catch (err) {
       console.error("❌ /showcard error:", err);
       await safeReply(interaction, {

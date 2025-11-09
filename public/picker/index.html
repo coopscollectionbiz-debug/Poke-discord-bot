@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trainer Picker | Coop’s Collection</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <header>
+      <h1>🎨 Choose Your Trainer</h1>
+      <p class="subtitle">
+        Select a Trainer to display on your profile. Only owned Trainers can be equipped.
+      </p>
+    </header>
+
+    <!-- FILTER + CONTROL BAR -->
+    <section class="controls">
+      <input
+        type="text"
+        id="search"
+        placeholder="🔍 Search Trainer..."
+        autocomplete="off"
+      />
+
+      <select id="rarityFilter">
+        <option value="all">All Rarities</option>
+        <option value="common">Common</option>
+        <option value="uncommon">Uncommon</option>
+        <option value="rare">Rare</option>
+        <option value="epic">Epic</option>
+        <option value="legendary">Legendary</option>
+        <option value="mythic">Mythic</option>
+      </select>
+
+      <div class="toggle-group">
+        <button id="ownedToggle" class="toggle-btn">Show Owned Only</button>
+        <button id="unownedToggle" class="toggle-btn">Show Unowned Only</button>
+      </div>
+    </section>
+
+    <!-- TRAINER GRID -->
+    <main>
+      <div id="trainerGrid" class="grid">
+        <p class="notice">Loading trainer data...</p>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+      <p>
+        🧑‍🏫 Opened via <strong>/changetrainer</strong> •
+        <span>Secure session expires after 10 minutes</span>
+      </p>
+    </footer>
+
+    <!-- SCRIPT -->
+    <script src="script.js"></script>
+  </body>
+</html>

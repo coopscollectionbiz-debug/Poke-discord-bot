@@ -1,0 +1,162 @@
+/* ===========================================================
+   Coop's Collection — Trainer Picker Styles
+   =========================================================== */
+
+body {
+  font-family: "Inter", Arial, sans-serif;
+  background-color: #0d1117;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+header {
+  padding: 2rem 1rem 1rem;
+}
+
+h1 {
+  margin-bottom: 0.25rem;
+  color: #00ff9d;
+  font-size: 2rem;
+}
+
+p {
+  margin: 0.5rem 0;
+  color: #ccc;
+}
+
+#controls {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 1rem auto 1.5rem;
+  max-width: 800px;
+}
+
+#controls input,
+#controls select,
+#controls button {
+  background: #161b22;
+  color: white;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+#controls input {
+  width: 200px;
+}
+
+#controls button:hover,
+#controls select:hover,
+#controls input:focus {
+  border-color: #00ff9d;
+  outline: none;
+}
+
+#controls button.active {
+  background: #00ff9d;
+  color: #0d1117;
+  font-weight: 600;
+}
+
+#trainerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 1.2rem;
+  padding: 1rem;
+  max-width: 1100px;
+  margin: 0 auto 2rem;
+}
+
+.trainer-card {
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 12px;
+  padding: 10px 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.trainer-card img {
+  width: 100px;
+  height: auto;
+  transition: opacity 0.25s ease;
+}
+
+.trainer-card p {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #eee;
+}
+
+.trainer-card.owned:hover {
+  transform: scale(1.05);
+  border-color: #00ff9d;
+  box-shadow: 0 0 8px #00ff9d60;
+}
+
+.trainer-card.unowned {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.trainer-card.unowned:hover {
+  transform: none;
+  border-color: #30363d;
+  box-shadow: none;
+}
+
+.rarity-tag {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* 🌈 Rarity color codes */
+.rarity-tag.common {
+  background: #80808040;
+  color: #aaa;
+}
+
+.rarity-tag.uncommon {
+  background: #2b9348;
+  color: #b7f3cb;
+}
+
+.rarity-tag.rare {
+  background: #1d4ed8;
+  color: #d2e3ff;
+}
+
+.rarity-tag.epic {
+  background: #7c3aed;
+  color: #e0d0ff;
+}
+
+.rarity-tag.legendary {
+  background: linear-gradient(45deg, #facc15, #f97316);
+  color: #111;
+}
+
+.rarity-tag.mythic {
+  background: linear-gradient(45deg, #ef4444, #ec4899);
+  color: #fff;
+}
+
+footer {
+  padding-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #777;
+}

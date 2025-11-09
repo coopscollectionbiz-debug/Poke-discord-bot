@@ -94,9 +94,7 @@ export function weightedRandomChoiceWithRank(list, weights, user) {
     const rarity = normalizeTier(item.tier || item.rarity);
     let weight = weights[rarity] || 1;
 
-    // Apply rank multiplier if available
     if (buffs[rarity]) weight *= buffs[rarity];
-
     for (let i = 0; i < Math.round(weight); i++) bag.push(item);
   }
 
@@ -107,48 +105,67 @@ export function weightedRandomChoiceWithRank(list, weights, user) {
 // ==========================================================
 // 🧩 Convenience Wrappers
 // ==========================================================
-/**
- * Select a random Pokémon based on rarity + rank buffs
- */
 export function selectRandomPokemonForUser(pokemonPool, user) {
   return weightedRandomChoiceWithRank(pokemonPool, POKEMON_RARITY_WEIGHTS, user);
 }
 
-/**
- * Select a random Trainer based on tier/rarity + rank buffs
- * Returns full object with exact unlocked sprite variant.
- */
+// ==========================================================
+// 🧩 Fixed Trainer Selector (prevents numeric IDs)
+// ==========================================================
 export function selectRandomTrainerForUser(trainerPool, user) {
-  const trainerKeys = Object.keys(trainerPool);
-  const allTrainers = trainerKeys.map(key => ({
-    id: key,
-    name: key.charAt(0).toUpperCase() + key.slice(1),
-    tier: trainerPool[key].tier || "common",
-    sprites: trainerPool[key].sprites || [`${key}.png`],
-  }));
+  // Handle both array and object trainer pools safely
+  const entries = Array.isArray(trainerPool)
+    ? trainerPool.map((t, i) => [t.id || t.name || `trainer-${i}`, t])
+    : Object.entries(trainerPool);
 
-  const chosen = weightedRandomChoiceWithRank(allTrainers, TRAINER_RARITY_WEIGHTS, user);
+  const allTrainers = entries.map(([key, data]) => {
+    const id = String(key)
+      .replace(/^trainers?_2\//, "")
+      .replace(/\.png$/i, "")
+      .trim();
+
+    const tier = normalizeTier(data?.tier || data?.rarity || "common");
+    const sprites =
+      data?.sprites || data?.files || [data?.spriteFile || `${id}.png`];
+    const name =
+      data?.name ||
+      id.charAt(0).toUpperCase() + id.slice(1).replace(/[-_]/g, " ");
+
+    return { id, name, tier, sprites };
+  });
+
+  const chosen = weightedRandomChoiceWithRank(
+    allTrainers,
+    TRAINER_RARITY_WEIGHTS,
+    user
+  );
   if (!chosen) return null;
 
-  // Pick specific sprite variant
   const spriteFile =
     chosen.sprites[Math.floor(Math.random() * chosen.sprites.length)];
 
   return {
-    id: chosen.id,
+    id: chosen.id,               // ✅ clean string (e.g. "acerola")
     name: chosen.name,
-    rarity: chosen.tier,
-    spriteFile,             // ✅ exact sprite variant (e.g., "brock-gen3.png")
-    filename: spriteFile,   // ✅ added for compatibility with /daily.js & embeds
-    tier: chosen.tier       // ✅ keep consistent naming with other systems
+    rarity: chosen.tier,         // ✅ normalized rarity
+    spriteFile,                  // ✅ exact variant (e.g. "acerola.png")
+    filename: spriteFile,
+    tier: chosen.tier
   };
 }
 
 // ==========================================================
-// 🧪 Optional: Simulate distribution (for tuning odds)
+// 🧪 Simulation Helper
 // ==========================================================
 export function simulateDrops(pool, iterations = 10000) {
-  const counts = { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 0, mythic: 0 };
+  const counts = {
+    common: 0,
+    uncommon: 0,
+    rare: 0,
+    epic: 0,
+    legendary: 0,
+    mythic: 0,
+  };
 
   for (let i = 0; i < iterations; i++) {
     const pick = weightedRandomChoice(pool, TRAINER_RARITY_WEIGHTS);

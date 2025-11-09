@@ -199,23 +199,33 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   const allPokemon = await getAllPokemon();
   const allTrainers = await getAllTrainers();
 
-  // Roll Pokémon or Trainer (50/50)
   let reward, isShiny = false, isPokemon = false;
   try {
     if (Math.random() < 0.5) {
+      // 🟢 Pokémon reward
       isPokemon = true;
       reward = selectRandomPokemonForUser(allPokemon, userObj);
       isShiny = rollForShiny(userObj.tp || 0);
+
       userObj.pokemon ??= {};
       userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-      isShiny
-        ? userObj.pokemon[reward.id].shiny++
-        : userObj.pokemon[reward.id].normal++;
+      if (isShiny) userObj.pokemon[reward.id].shiny++;
+      else userObj.pokemon[reward.id].normal++;
     } else {
+      // 🔵 Trainer reward
       isPokemon = false;
       reward = selectRandomTrainerForUser(allTrainers, userObj);
       userObj.trainers ??= {};
-      userObj.trainers[reward.id] = (userObj.trainers[reward.id] || 0) + 1;
+
+      // ✅ Use filename / spriteFile / name instead of numeric ID
+      const trainerKey =
+        reward.filename || reward.spriteFile || reward.id || reward.name;
+
+      if (trainerKey) {
+        userObj.trainers[trainerKey] = (userObj.trainers[trainerKey] || 0) + 1;
+      } else {
+        console.warn("⚠️ Trainer reward missing identifier:", reward);
+      }
     }
   } catch (err) {
     console.error("❌ Reward selection failed:", err);
@@ -224,18 +234,18 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
   await saveDataToDiscord(trainerData);
 
-  // Build embed
+  // 🖼️ Sprite URL
   const spriteUrl = isPokemon
     ? isShiny
       ? `${spritePaths.shiny}${reward.id}.gif`
       : `${spritePaths.pokemon}${reward.id}.gif`
-    : `${spritePaths.trainers}${reward.id}.png`;
+    : `${spritePaths.trainers}${reward.filename || reward.spriteFile || reward.id}.png`;
 
   const embed = isPokemon
     ? createPokemonRewardEmbed(reward, isShiny, spriteUrl)
     : createTrainerRewardEmbed(reward, spriteUrl);
 
-  // Trainer equip prompt (only for trainers)
+  // Equip prompt for trainers
   if (!isPokemon) {
     try {
       const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = await import("discord.js");
@@ -243,7 +253,10 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
         content: `🎉 You obtained **${reward.name}!**\nWould you like to equip them as your displayed Trainer?`,
         components: [
           new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId(`equip_${reward.id}`).setLabel("Equip Trainer").setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+              .setCustomId(`equip_${reward.filename || reward.spriteFile || reward.id}`)
+              .setLabel("Equip Trainer")
+              .setStyle(ButtonStyle.Success),
             new ButtonBuilder().setCustomId("skip_equip").setLabel("Skip").setStyle(ButtonStyle.Secondary)
           ),
         ],
@@ -262,8 +275,9 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       });
 
       collector.on("collect", async (i) => {
-        if (i.customId === `equip_${reward.id}`) {
-          userObj.displayedTrainer = reward.id;
+        if (i.customId.startsWith("equip_")) {
+          const selectedKey = i.customId.replace("equip_", "");
+          userObj.displayedTrainer = selectedKey;
           userObj.tp ??= 0;
           userObj.tp += MESSAGE_TP_GAIN;
           await saveDataToDiscord(trainerData);
@@ -274,7 +288,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
             console.warn("⚠️ Rank update failed:", err.message);
           }
           await i.update({ content: `✅ **${reward.name}** equipped as your displayed Trainer!`, components: [] });
-        } else if (i.customId === "skip_equip") {
+        } else {
           await i.update({ content: `⏭️ Trainer kept in your collection.`, components: [] });
         }
       });
@@ -293,21 +307,20 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     console.warn("⚠️ Public reward announcement failed:", err.message);
   }
 
-  // Global broadcasts
+  // Global broadcast
   try {
- await broadcastReward(client, {
-  user: interactionUser,
-  type: isPokemon ? "pokemon" : "trainer",
-  item: {
-    id: reward.id,
-    name: reward.name,
-    rarity: reward.rarity || reward.tier || "common",
-    spriteFile: !isPokemon ? reward.spriteFile : null, // ✅ include exact file if Trainer
-  },
-  shiny: isShiny,
-  source: "random encounter",
-});
-
+    await broadcastReward(client, {
+      user: interactionUser,
+      type: isPokemon ? "pokemon" : "trainer",
+      item: {
+        id: reward.id,
+        name: reward.name,
+        rarity: reward.rarity || reward.tier || "common",
+        spriteFile: !isPokemon ? (reward.filename || reward.spriteFile) : null,
+      },
+      shiny: isShiny,
+      source: "random encounter",
+    });
   } catch (err) {
     console.error("❌ broadcastReward failed:", err.message);
   }
@@ -818,7 +831,7 @@ app.get("/healthz", (_, res) =>
 );
 
 // ===========================================================
-// 🧩 TRAINER PICKER API ENDPOINT — FIXED (returns exact sprite filenames)
+// 🧩 TRAINER PICKER API ENDPOINT (Memory-based)
 // ===========================================================
 app.get("/api/user-trainers", (req, res) => {
   const { id, token } = req.query;
@@ -826,44 +839,19 @@ app.get("/api/user-trainers", (req, res) => {
     return res.status(403).json({ error: "Invalid or expired token" });
   }
 
-  try {
-    const data = JSON.parse(fsSync.readFileSync(TRAINERDATA_PATH, "utf8"));
-    const user = data[id];
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    // ✅ Trainers is stored as object { "sprite.png": count }
-    const owned =
-      typeof user.trainers === "object"
-        ? Object.keys(user.trainers)
-        : Array.isArray(user.trainers)
-        ? user.trainers
-        : [];
-
-    res.json({ owned });
-  } catch (err) {
-    console.error("❌ /api/user-trainers failed:", err);
-    res.status(500).json({ error: "Server error reading trainer data" });
-  }
-});
-
-app.post("/api/set-trainer", express.json(), (req, res) => {
-  const { id, name, token } = req.body;
-  if (!validateToken(id, token)) {
-    return res.status(403).json({ error: "Invalid or expired token" });
+  const user = trainerData[id];
+  if (!user) {
+    return res.status(404).json({ error: "User not found in memory" });
   }
 
-  try {
-    const data = JSON.parse(fsSync.readFileSync(TRAINERDATA_PATH, "utf8"));
-    if (!data[id]) return res.status(404).json({ error: "User not found" });
+  const owned =
+    typeof user.trainers === "object"
+      ? Object.keys(user.trainers)
+      : Array.isArray(user.trainers)
+      ? user.trainers
+      : [];
 
-    data[id].displayedTrainer = name.replace(/\.png$/i, "");
-    fsSync.writeFileSync(TRAINERDATA_PATH, JSON.stringify(data, null, 2));
-    console.log(`🎨 ${id} equipped trainer ${name}`);
-    res.json({ success: true, selectedTrainer: name });
-  } catch (err) {
-    console.error("❌ /api/set-trainer failed:", err);
-    res.status(500).json({ error: "Failed to update trainer" });
-  }
+  res.json({ owned });
 });
 
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));

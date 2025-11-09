@@ -68,7 +68,7 @@ async function loadData() {
 }
 
 // ===========================================================
-// 🎨 RENDER GRID
+// 🎨 RENDER GRID (updated for "sprites" support)
 // ===========================================================
 function render(filter = "") {
   const grid = document.getElementById("trainerGrid");
@@ -85,7 +85,15 @@ function render(filter = "") {
     if (showOwnedOnly && !owned) return;
     if (showUnownedOnly && owned) return;
 
-    info.files.forEach((file) => {
+    // ✅ Accept both "files" and "sprites"
+    const spriteFiles = info.files || info.sprites || [];
+
+    if (!Array.isArray(spriteFiles) || spriteFiles.length === 0) {
+      console.warn(`⚠️ Trainer "${name}" missing sprite list`);
+      return;
+    }
+
+    spriteFiles.forEach((file) => {
       const imgPath = owned
         ? `${TRAINER_SPRITE_PATH}${file}`
         : `${GRAY_PATH}${file}`;

@@ -296,13 +296,19 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
   // Global broadcasts
   try {
-    await broadcastReward(client, {
-      user: interactionUser,
-      type: isPokemon ? "pokemon" : "trainer",
-      item: reward,
-      shiny: isShiny,
-      source: "random encounter",
-    });
+ await broadcastReward(client, {
+  user: interactionUser,
+  type: isPokemon ? "pokemon" : "trainer",
+  item: {
+    id: reward.id,
+    name: reward.name,
+    rarity: reward.rarity || reward.tier || "common",
+    spriteFile: !isPokemon ? reward.spriteFile : null, // ✅ include exact file if Trainer
+  },
+  shiny: isShiny,
+  source: "random encounter",
+});
+
   } catch (err) {
     console.error("❌ broadcastReward failed:", err.message);
   }

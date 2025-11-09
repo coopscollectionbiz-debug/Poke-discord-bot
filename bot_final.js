@@ -240,21 +240,22 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
       if (isShiny) userObj.pokemon[reward.id].shiny++;
       else userObj.pokemon[reward.id].normal++;
-    } else {
+        } else {
       // 🔵 Trainer reward
       isPokemon = false;
       reward = selectRandomTrainerForUser(allTrainers, userObj);
       userObj.trainers ??= {};
 
       // ✅ Use filename / spriteFile / name instead of numeric ID
-      userObj.trainers ??= {};
-const trainerKey = reward.spriteFile || reward.filename || `${reward.id}.png`;
-userObj.trainers[trainerKey] = (userObj.trainers[trainerKey] || 0) + 1;
- console.log(`🎁 Trainer reward → ${reward.name} (${reward.tier}) key=${trainerKey}`);
+      const trainerKey = reward.spriteFile || reward.filename || `${reward.id}.png`;
+      if (trainerKey) {
+        userObj.trainers[trainerKey] = (userObj.trainers[trainerKey] || 0) + 1;
+        console.log(`🎁 Trainer reward → ${reward.name} (${reward.tier}) key=${trainerKey}`);
       } else {
         console.warn("⚠️ Trainer reward missing identifier:", reward);
       }
     }
+
   } catch (err) {
     console.error("❌ Reward selection failed:", err);
     return;

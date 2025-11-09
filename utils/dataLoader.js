@@ -130,7 +130,7 @@ export async function getFlattenedTrainers() {
 }
 
 // ==========================================================
-// 🔧 Flatten and Normalize Trainer Sprites (safe version)
+// 🔧 Flatten and Normalize Trainer Sprites (Respects "disabled" flag)
 // ==========================================================
 function flattenTrainerSprites(spritesObj) {
   const flat = [];
@@ -138,11 +138,22 @@ function flattenTrainerSprites(spritesObj) {
   for (const [key, info] of Object.entries(spritesObj)) {
     const lowerKey = key.toLowerCase();
 
-    // ✅ Safely normalize sprite array — filter only valid strings
     const spriteArray = Array.isArray(info.sprites)
       ? info.sprites
-          .filter((s) => typeof s === "string" && s.trim().length > 0)
-          .map((s) => s.toLowerCase())
+          .map((s) => {
+            // ✅ String entries
+            if (typeof s === "string") return s.toLowerCase();
+
+            // ✅ Object entries (support { file, disabled })
+            if (s && typeof s === "object" && typeof s.file === "string") {
+              if (s.disabled) return null; // skip disabled sprites
+              return s.file.toLowerCase();
+            }
+
+            // ❌ Unknown or invalid entry
+            return null;
+          })
+          .filter(Boolean) // remove nulls
       : [`${lowerKey}.png`];
 
     flat.push({
@@ -157,6 +168,7 @@ function flattenTrainerSprites(spritesObj) {
 
   return flat;
 }
+
 
 // ==========================================================
 // 🔍 Find Pokémon by name or ID

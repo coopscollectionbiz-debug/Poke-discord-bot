@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coop's Collection — Choose Your Pokémon</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Choose Your Pokémon</h1>
+    <p>Select a Pokémon to display on your Trainer Card.</p>
+  </header>
+
+  <section id="filters">
+    <input type="text" id="search" placeholder="Search Pokémon..." />
+    <div class="filter-buttons">
+      <button id="ownedToggle">Show Owned Only</button>
+      <button id="unownedToggle">Show Unowned Only</button>
+      <button id="shinyToggle">Show Shiny Only ✨</button>
+      <select id="rarityFilter">
+        <option value="all">All Rarities</option>
+        <option value="common">Common</option>
+        <option value="uncommon">Uncommon</option>
+        <option value="rare">Rare</option>
+        <option value="epic">Epic</option>
+        <option value="legendary">Legendary</option>
+        <option value="mythic">Mythic</option>
+      </select>
+    </div>
+  </section>
+
+  <main id="pokemonGrid" class="grid">
+    <p class="loading">Loading Pokémon data...</p>
+  </main>
+
+  <footer>
+    <p>🌟 Coop's Collection — Pokémon Picker</p>
+  </footer>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

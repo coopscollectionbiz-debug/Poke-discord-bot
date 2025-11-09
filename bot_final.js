@@ -937,6 +937,95 @@ app.post("/api/set-trainer", express.json(), async (req, res) => {
   }
 });
 
+// ===========================================================
+// 🧩 POKÉMON PICKER API ENDPOINTS
+// ===========================================================
+
+// ✅ GET owned Pokémon
+app.get("/api/user-pokemon", (req, res) => {
+  const { id, token } = req.query;
+  if (!validateToken(id, token)) {
+    return res.status(403).json({ error: "Invalid or expired token" });
+  }
+
+  const user = trainerData[id];
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  // owned = Pokémon with at least one copy (normal or shiny)
+  const owned =
+    typeof user.pokemon === "object"
+      ? Object.keys(user.pokemon)
+      : Array.isArray(user.pokemon)
+      ? user.pokemon
+      : [];
+
+  res.json({ owned });
+});
+
+// ✅ POST — set displayed Pokémon
+app.post("/api/set-pokemon", express.json(), async (req, res) => {
+  try {
+    const { id, token, name, file } = req.body;
+    if (!id || !token || !file) {
+      console.warn("⚠️ Missing fields in /api/set-pokemon", req.body);
+      return res.status(400).json({ success: false, error: "Missing id, token, or file" });
+    }
+
+    // ✅ Validate token
+    if (!validateToken(id, token)) {
+      console.warn("⚠️ Invalid or expired token for", id);
+      return res.status(403).json({ success: false, error: "Invalid or expired token" });
+    }
+
+    // ✅ Ensure user exists
+    const user = trainerData[id];
+    if (!user) {
+      console.warn("⚠️ User not found:", id);
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    // ✅ Equip Pokémon (displayed)
+    user.displayedPokemon = file; // single slot for now
+    await saveTrainerDataLocal(trainerData);
+    await saveDataToDiscord(trainerData);
+
+    console.log(`✅ ${id} equipped Pokémon ${file}`);
+
+    // =======================================================
+    // 🧾 Send confirmation message in the invoking channel
+    // =======================================================
+    try {
+      const channelId = getChannelIdForToken(token);
+      if (channelId) {
+        const channel = await client.channels.fetch(channelId).catch(() => null);
+        if (channel) {
+          const embed = new EmbedBuilder()
+            .setTitle("🐾 Pokémon Equipped!")
+            .setDescription(`✅ You equipped **${name}** as your displayed Pokémon!\nUse **/trainercard** to view your updated card.`)
+            .setColor(0xffcb05)
+            .setThumbnail(`${spritePaths.pokemon}${file}.gif`)
+            .setFooter({ text: "🌟 Coop’s Collection Update" })
+            .setTimestamp();
+
+          await channel.send({
+            content: `<@${id}>`,
+            embeds: [embed],
+          });
+        }
+      }
+    } catch (notifyErr) {
+      console.warn("⚠️ Failed to send equip confirmation:", notifyErr.message);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ /api/set-pokemon failed:", err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
 
 // ==========================================================

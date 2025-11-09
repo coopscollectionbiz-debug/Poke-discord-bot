@@ -126,8 +126,12 @@ export function selectRandomTrainerForUser(trainerPool, user) {
 
     const tier = normalizeTier(data?.tier || data?.rarity || "common");
     const sprites = Array.isArray(data?.sprites)
-      ? data.sprites.map((s) => s.toLowerCase())
-      : [data?.spriteFile?.toLowerCase?.() || `${id}.png`];
+  ? data.sprites
+      .filter((s) => typeof s === "string" && s.trim().length)
+      .map((s) => s.toLowerCase())
+  : [typeof data?.spriteFile === "string"
+      ? data.spriteFile.toLowerCase()
+      : `${id}.png`];
 
     // ✅ Smarter naming fallback
     const cleanName = data?.name && !data.name.toLowerCase().startsWith("trainer ")

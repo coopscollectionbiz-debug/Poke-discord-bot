@@ -119,7 +119,6 @@ export function selectRandomPokemonForUser(pokemonPool, user) {
  * Returns full object with exact unlocked sprite variant.
  */
 export function selectRandomTrainerForUser(trainerPool, user) {
-  // Perform weighted random based on rarity
   const trainerKeys = Object.keys(trainerPool);
   const allTrainers = trainerKeys.map(key => ({
     id: key,
@@ -139,7 +138,9 @@ export function selectRandomTrainerForUser(trainerPool, user) {
     id: chosen.id,
     name: chosen.name,
     rarity: chosen.tier,
-    spriteFile, // ✅ Exact file unlocked
+    spriteFile,             // ✅ exact sprite variant (e.g., "brock-gen3.png")
+    filename: spriteFile,   // ✅ added for compatibility with /daily.js & embeds
+    tier: chosen.tier       // ✅ keep consistent naming with other systems
   };
 }
 

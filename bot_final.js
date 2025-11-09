@@ -1,5 +1,5 @@
 // ==========================================================
-// 🤖 Coop’s Collection Discord Bot — FULL VERSION (Part 1 / 2)
+// 🤖 Coop’s Collection Discord Bot
 // ==========================================================
 // Includes:
 //  • Rank Buffs & Weighted Acquisition
@@ -66,6 +66,25 @@ const MESSAGE_REWARD_CHANCE = 0.03;
 const REACTION_REWARD_CHANCE = 0.03;
 const REWARD_COOLDOWN = 5000;
 const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
+
+
+// ===========================================================
+// 🛡️ TOKEN MANAGEMENT (10-min access tokens for picker)
+// ===========================================================
+const activeTokens = new Map(); // { userId: { token, expires } }
+
+export function generateUserToken(userId) {
+  const token = Math.random().toString(36).slice(2);
+  activeTokens.set(userId, { token, expires: Date.now() + 10 * 60_000 }); // valid 10 minutes
+  return token;
+}
+
+function validateToken(userId, token) {
+  const entry = activeTokens.get(userId);
+  return entry && entry.token === token && entry.expires > Date.now();
+}
+
+
 
 let trainerData = {};
 let discordSaveCount = 0;
@@ -798,6 +817,53 @@ app.get("/", (_, res) => res.send("Bot running"));
 app.get("/healthz", (_, res) =>
   res.json({ ready: isReady, uptime: Math.floor((Date.now() - startTime) / 1000) })
 );
+
+// ===========================================================
+// 🧩 TRAINER PICKER API ENDPOINTS
+// ===========================================================
+
+// Return owned trainers for a given user (used by picker)
+app.get("/api/user-trainers", (req, res) => {
+  const { id, token } = req.query;
+  if (!validateToken(id, token)) {
+    return res.status(403).json({ error: "Invalid or expired token" });
+  }
+
+  try {
+    const data = JSON.parse(fsSync.readFileSync(TRAINERDATA_PATH, "utf8"));
+    const user = data[id];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const owned = Array.isArray(user.trainers)
+      ? user.trainers
+      : Object.keys(user.trainers || {});
+    res.json({ owned });
+  } catch (err) {
+    console.error("❌ /api/user-trainers failed:", err);
+    res.status(500).json({ error: "Server error reading trainer data" });
+  }
+});
+
+app.post("/api/set-trainer", express.json(), (req, res) => {
+  const { id, name, token } = req.body;
+  if (!validateToken(id, token)) {
+    return res.status(403).json({ error: "Invalid or expired token" });
+  }
+
+  try {
+    const data = JSON.parse(fsSync.readFileSync(TRAINERDATA_PATH, "utf8"));
+    if (!data[id]) return res.status(404).json({ error: "User not found" });
+
+    data[id].displayedTrainer = name.replace(/\.png$/i, "");
+    fsSync.writeFileSync(TRAINERDATA_PATH, JSON.stringify(data, null, 2));
+    console.log(`🎨 ${id} equipped trainer ${name}`);
+    res.json({ success: true, selectedTrainer: name });
+  } catch (err) {
+    console.error("❌ /api/set-trainer failed:", err);
+    res.status(500).json({ error: "Failed to update trainer" });
+  }
+});
+
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
 
 // ==========================================================

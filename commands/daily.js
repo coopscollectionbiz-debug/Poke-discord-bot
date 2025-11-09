@@ -5,11 +5,7 @@
 
 import {
   SlashCommandBuilder,
-  PermissionFlagsBits,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ComponentType
+  PermissionFlagsBits
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
@@ -28,7 +24,7 @@ import { safeReply } from "../utils/safeReply.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { updateUserRole } from "../utils/updateUserRole.js";
-import { broadcastReward } from "../utils/broadcastReward.js"; // ensure it's imported at top
+import { broadcastReward } from "../utils/broadcastReward.js";
 
 // ==========================================================
 // ⚖️ Constants
@@ -55,10 +51,9 @@ function hasClaimedToday(user) {
 // ==========================================================
 export default {
   data: new SlashCommandBuilder()
-  .setName("daily")
-  .setDescription("Claim your daily TP, CC, and receive both a Pokémon and Trainer!")
-  .setDefaultMemberPermissions(null), // ✅ explicitly null (not removed)
-
+    .setName("daily")
+    .setDescription("Claim your daily TP, CC, and receive both a Pokémon and Trainer!")
+    .setDefaultMemberPermissions(null),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {
@@ -88,8 +83,8 @@ export default {
       user.cc += DAILY_CC_REWARD;
       user.lastDaily = Date.now();
 
-const member = await interaction.guild.members.fetch(interaction.user.id);
-await updateUserRole(member, user.tp, interaction.channel);
+      const member = await interaction.guild.members.fetch(interaction.user.id);
+      await updateUserRole(member, user.tp, interaction.channel);
 
       // 🎁 Generate Dual Rewards
       const allPokemon = await getPokemonCached();
@@ -139,20 +134,22 @@ await updateUserRole(member, user.tp, interaction.channel);
       }
 
       // 🖼️ Sprites
-const trainerFile =
-  (trainerPick.sprites && trainerPick.sprites[0]) ||
-  trainerPick.spriteFile ||
-  trainerPick.filename ||
-  `${trainerPick.id}.png`;
+      const pokemonSprite = shiny
+        ? `${spritePaths.shiny}${pokemonPick.id}.gif`
+        : `${spritePaths.pokemon}${pokemonPick.id}.gif`;
 
-const trainerFileFinal = trainerFile.toLowerCase();
-const trainerSprite = `${spritePaths.trainers}${trainerFileFinal}`;
+      const trainerFile =
+        (trainerPick.sprites && trainerPick.sprites[0]) ||
+        trainerPick.spriteFile ||
+        trainerPick.filename ||
+        `${trainerPick.id}.png`;
+
+      const trainerSprite = `${spritePaths.trainers}${trainerFile.toLowerCase()}`;
 
       // 🧱 Embeds
       const successEmbed = createSuccessEmbed(
         "🎁 Daily Claimed!",
-        `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**!\n` +
-          `You also received both a Pokémon and a Trainer reward!`
+        `You earned **${DAILY_TP_REWARD} TP** and **${DAILY_CC_REWARD} CC**!\nYou also received both a Pokémon and a Trainer reward!`
       );
 
       const pokemonEmbed = createPokemonRewardEmbed(pokemonPick, shiny, pokemonSprite);
@@ -164,87 +161,32 @@ const trainerSprite = `${spritePaths.trainers}${trainerFileFinal}`;
         components: []
       });
 
-// ======================================================
-// 🌐 Global Reward Announcements (Daily Rewards)
-// ======================================================
-
-try {
-  // Post both Pokémon and Trainer rewards to the global channel
-  await broadcastReward(client, {
-    user: interaction.user,
-    type: "pokemon",
-    item: pokemonPick,
-    shiny,
-    source: "daily"
-  });
-
-  await broadcastReward(client, {
-    user: interaction.user,
-    type: "trainer",
-    item: trainerPick,
-    shiny: false,
-    source: "daily"
-  });
-} catch (err) {
-  console.error("❌ broadcastReward failed (daily):", err.message);
-}
-
-      // ======================================================
-      // 🧍 Equip Prompt for New Trainer (clean + safe)
-      // ======================================================
-      const promptMessage = await interaction.followUp({
-        content: `🎉 You obtained **${trainerPick.name || trainerPick.filename}!**\nWould you like to equip them as your displayed Trainer?`,
-        components: [
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`equip_${trainerPick.filename}`)
-              .setLabel("Equip Trainer")
-              .setStyle(ButtonStyle.Success),
-            new ButtonBuilder()
-              .setCustomId("skip_equip")
-              .setLabel("Skip")
-              .setStyle(ButtonStyle.Secondary)
-          )
-        ],
+      // 🗣️ Add trainer message after embed
+      await interaction.followUp({
+        content: `👥 You recruited **${trainerPick.name || trainerPick.filename}** to your team!\n💡 Use **/changetrainer** to equip a different trainer.`,
         ephemeral: true
       });
 
-      const collector = promptMessage.createMessageComponentCollector({
-        componentType: ComponentType.Button,
-        time: 20000,
-        filter: i => i.user.id === interaction.user.id
-      });
+      // 🌐 Global broadcasts
+      try {
+        await broadcastReward(client, {
+          user: interaction.user,
+          type: "pokemon",
+          item: pokemonPick,
+          shiny,
+          source: "daily"
+        });
 
-      collector.on("collect", async i => {
-        try {
-          await i.deferUpdate();
-          if (i.customId === `equip_${trainerPick.filename}`) {
-            user.displayedTrainer = trainerPick.filename;
-            await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-            await i.editReply({
-              content: `✅ **${trainerPick.name || trainerPick.filename}** equipped as your displayed Trainer!`,
-              components: []
-            });
-          } else {
-            await i.editReply({
-              content: "⏭️ Trainer kept in your collection.",
-              components: []
-            });
-          }
-        } catch (err) {
-          console.warn("⚠️ Equip prompt error:", err.message);
-        }
-      });
-
-      collector.on("end", async collected => {
-        if (collected.size === 0) {
-          await promptMessage.edit({
-            content: "⌛ Equip prompt timed out.",
-            components: []
-          }).catch(() => {});
-        }
-      });
-
+        await broadcastReward(client, {
+          user: interaction.user,
+          type: "trainer",
+          item: trainerPick,
+          shiny: false,
+          source: "daily"
+        });
+      } catch (err) {
+        console.error("❌ broadcastReward failed (daily):", err.message);
+      }
     } catch (err) {
       console.error("❌ /daily error stack:", err);
       return safeReply(interaction, {

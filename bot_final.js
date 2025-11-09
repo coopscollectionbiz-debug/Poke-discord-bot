@@ -267,84 +267,37 @@ reward = selectRandomTrainerForUser(allTrainers, userObj);
 
   await saveDataToDiscord(trainerData);
 
-  // 🖼️ Sprite URL (trainer-safe)
-let spriteUrl;
-if (isPokemon) {
-  spriteUrl = isShiny
-    ? `${spritePaths.shiny}${reward.id}.gif`
-    : `${spritePaths.pokemon}${reward.id}.gif`;
-} else {
-  // Use the same sanitization logic as broadcastReward
-  const baseId = String(reward.id || "")
-    .replace(/^trainers?_2\//, "")
-    .replace(/\.png$/i, "")
-    .trim()
-    .toLowerCase();
+    // 🖼️ Sprite URL (trainer-safe)
+  let spriteUrl;
+  if (isPokemon) {
+    spriteUrl = isShiny
+      ? `${spritePaths.shiny}${reward.id}.gif`
+      : `${spritePaths.pokemon}${reward.id}.gif`;
+  } else {
+    const baseId = String(reward.id || "")
+      .replace(/^trainers?_2\//, "")
+      .replace(/\.png$/i, "")
+      .trim()
+      .toLowerCase();
 
-  const cleanFile = (reward.spriteFile || reward.filename || `${baseId}.png`)
-    .replace(/^trainers?_2\//, "")
-    .replace(/\s+/g, "")
-    .replace(/\.png\.png$/i, ".png")
-    .toLowerCase();
+    const cleanFile = (reward.spriteFile || reward.filename || `${baseId}.png`)
+      .replace(/^trainers?_2\//, "")
+      .replace(/\s+/g, "")
+      .replace(/\.png\.png$/i, ".png")
+      .toLowerCase();
 
-  spriteUrl = `${spritePaths.trainers}${cleanFile}`;
-}
-
+    spriteUrl = `${spritePaths.trainers}${cleanFile}`;
+  }
 
   const embed = isPokemon
     ? createPokemonRewardEmbed(reward, isShiny, spriteUrl)
     : createTrainerRewardEmbed(reward, spriteUrl);
 
-  // Equip prompt for trainers
+  // ✅ Simplified trainer handling — no buttons
   if (!isPokemon) {
-    try {
-      const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = await import("discord.js");
-      const payload = {
-        content: `🎉 You obtained **${reward.name}!**\nWould you like to equip them as your displayed Trainer?`,
-        components: [
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`equip_${reward.filename || reward.spriteFile || reward.id}`)
-              .setLabel("Equip Trainer")
-              .setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId("skip_equip").setLabel("Skip").setStyle(ButtonStyle.Secondary)
-          ),
-        ],
-      };
-
-      if (msgOrInteraction?.isRepliable?.()) {
-        await msgOrInteraction.followUp({ ...payload, ephemeral: true });
-      } else if (msgOrInteraction?.channel) {
-        await msgOrInteraction.channel.send(payload);
-      }
-
-      const collector = msgOrInteraction.channel.createMessageComponentCollector({
-        componentType: ComponentType.Button,
-        time: 15000,
-        filter: (i) => i.user.id === interactionUser.id,
-      });
-
-      collector.on("collect", async (i) => {
-        if (i.customId.startsWith("equip_")) {
-          const selectedKey = i.customId.replace("equip_", "");
-          userObj.displayedTrainer = selectedKey;
-          userObj.tp ??= 0;
-          userObj.tp += MESSAGE_TP_GAIN;
-          await saveDataToDiscord(trainerData);
-          try {
-            const member = await msgOrInteraction.guild.members.fetch(interactionUser.id);
-            await updateUserRole(member, userObj.tp, msgOrInteraction.channel);
-          } catch (err) {
-            console.warn("⚠️ Rank update failed:", err.message);
-          }
-          await i.update({ content: `✅ **${reward.name}** equipped as your displayed Trainer!`, components: [] });
-        } else {
-          await i.update({ content: `⏭️ Trainer kept in your collection.`, components: [] });
-        }
-      });
-    } catch (err) {
-      console.warn("⚠️ Equip prompt failed:", err.message);
-    }
+    console.log(
+      `🧢 Trainer acquired: ${reward.name} (${reward.tier || "common"}) — use /changetrainer to equip a different trainer.`
+    );
   }
 
   // Announce in channel
@@ -780,78 +733,17 @@ client.on("interactionCreate", async (interaction) => {
         return;
       }
 
-      // 🧍 Equip Trainer Buttons (Global)
-      if (interaction.customId.startsWith("equip_")) {
-        const trainerId = interaction.customId.replace("equip_", "");
-        const user = trainerData[interaction.user.id];
-
-        if (!user) {
-          await safeReply(interaction, {
-            content: "⚠️ Could not find your trainer data.",
-            ephemeral: true,
-          });
-          return;
-        }
-
-        // ✅ Set displayed trainer
-        user.displayedTrainer = trainerId;
-
-        // ✅ Get trainer tier from trainerSprites.json
-        const allTrainers = await loadTrainerSprites();
-        let foundTier = "common";
-
-        for (const [key, entry] of Object.entries(allTrainers)) {
-          if (entry.sprites?.includes(trainerId)) {
-            foundTier = entry.tier || "Common";
-            break;
-          }
-        }
-
-        const tier = foundTier.toLowerCase();
-        const emoji = rarityEmojis[tier] || "⚬";
-        const tierName = foundTier.charAt(0).toUpperCase() + foundTier.slice(1);
-        let cleanTrainerId = trainerId.replace(/^trainers?_2\//, "").replace(/\.png$/i, "");
-const spriteUrl = `${spritePaths.trainers}${cleanTrainerId}.png`;
-
-
-        try {
-          await saveTrainerDataLocal(trainerData);
-          await saveDataToDiscord(trainerData);
-
-          const embed = new EmbedBuilder()
-            .setTitle(`${emoji} ${tierName} Trainer Equipped!`)
-            .setDescription(`✅ **${trainerId.replace(".png", "")}** is now your displayed Trainer!`)
-            .setThumbnail(spriteUrl)
-            .setColor(0x5865f2)
-            .setFooter({ text: "You can view it anytime with /trainercard" })
-            .setTimestamp();
-
-          await interaction.update({
-            content: "",
-            embeds: [embed],
-            components: [],
-          });
-
-          console.log(`🎓 ${interaction.user.username} equipped ${trainerId} (${tierName})`);
-        } catch (err) {
-          console.error("❌ Equip trainer failed:", err.message);
-          await safeReply(interaction, {
-            content: "❌ Failed to equip trainer. Please try again.",
-            ephemeral: true,
-          });
-        }
-        return;
-      }
-
-      // ⏭️ Skip equip button
-      if (interaction.customId === "skip_equip") {
-        await interaction.update({
-          content: "⏭️ Trainer kept in your collection.",
-          components: [],
-          embeds: [],
-        });
-        return;
-      }
+     // 🪶 Fallback for any obsolete equip buttons (now disabled)
+if (
+  interaction.customId.startsWith("equip_") ||
+  interaction.customId === "skip_equip"
+) {
+  await safeReply(interaction, {
+    content: "⚙️ Trainer equipping is now handled through `/changetrainer`.",
+    ephemeral: true,
+  });
+  return;
+}
 
       // 🪶 Unhandled fallback
       console.warn(`⚠️ Unhandled button: ${interaction.customId}`);

@@ -110,21 +110,24 @@ export function selectRandomPokemonForUser(pokemonPool, user) {
 }
 
 // ==========================================================
-// 🧩 Fixed Trainer Selector (prevents numeric IDs + ensures readable names)
+// 🧩 Fixed Trainer Selector (uses group key for readable names)
 // ==========================================================
 export function selectRandomTrainerForUser(trainerPool, user) {
+  // Normalize trainerPool entries into [groupName, data]
   const entries = Array.isArray(trainerPool)
     ? trainerPool.map((t, i) => [t.id || t.name || `trainer-${i}`, t])
     : Object.entries(trainerPool);
 
-  const allTrainers = entries.map(([key, data]) => {
-    const id = String(key)
+  const allTrainers = entries.map(([groupKey, data]) => {
+    const id = String(groupKey)
       .replace(/^trainers?_2\//, "")
       .replace(/\.png$/i, "")
       .trim()
       .toLowerCase();
 
     const tier = normalizeTier(data?.tier || data?.rarity || "common");
+
+    // 🧩 Collect sprite filenames
     const sprites = Array.isArray(data?.sprites)
       ? data.sprites
           .filter((s) => typeof s === "string" && s.trim().length)
@@ -133,30 +136,22 @@ export function selectRandomTrainerForUser(trainerPool, user) {
           ? data.spriteFile.toLowerCase()
           : `${id}.png`];
 
-    // 🧠 Smart display name generator (prettifies filenames)
-    let displayName = data?.name?.trim();
-    if (!displayName || /^trainer\s*\d+/i.test(displayName)) {
-      displayName = id
-        .replace(/[-_]/g, " ")                  // dashes/underscores → space
-        .replace(/([a-z])([A-Z])/g, "$1 $2")    // camelCase → spaced
-        .replace(/(\d+)/g, " $1")               // digits → spaced
-        .replace(/\b\w/g, (c) => c.toUpperCase())
-        .trim();
+    // 🧠 Smart name: prefer the group key (Ace Trainer, Grunt, etc.)
+    let displayName = groupKey
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim();
 
-      // optional cleanups for known groups
-      displayName = displayName
-        .replace(/\bAce Trainer Snow F\b/i, "Ace Trainer (Snow F)")
-        .replace(/\bAce Trainer Snow M\b/i, "Ace Trainer (Snow M)")
-        .replace(/\bAce Trainer Sand F\b/i, "Ace Trainer (Sand F)")
-        .replace(/\bAce Trainer Sand M\b/i, "Ace Trainer (Sand M)")
-        .replace(/\bGrunt F\b/i, "Rocket Grunt (F)")
-        .replace(/\bGrunt M\b/i, "Rocket Grunt (M)")
-        .replace(/\s{2,}/g, " ");
-    }
+    // Clean common suffixes
+    displayName = displayName
+      .replace(/\bTrainer\b/i, "Trainer")
+      .replace(/\bGrunt\b/i, "Rocket Grunt")
+      .replace(/\s{2,}/g, " ");
 
-    return { id, name: displayName, tier, sprites };
+    return { id, name: displayName, tier, sprites, groupName: groupKey };
   });
 
+  // Weighted random pick based on rarity + user rank
   const chosen = weightedRandomChoiceWithRank(
     allTrainers,
     TRAINER_RARITY_WEIGHTS,
@@ -164,16 +159,19 @@ export function selectRandomTrainerForUser(trainerPool, user) {
   );
   if (!chosen) return null;
 
+  // Pick a random sprite file within the chosen group
   const spriteFile =
     chosen.sprites[Math.floor(Math.random() * chosen.sprites.length)];
 
+  // 🧩 Final normalized trainer object
   return {
     id: chosen.id,
-    name: chosen.name, // always clean human-readable
+    name: chosen.name,               // ✅ Always readable ("Ace Trainer")
     rarity: chosen.tier,
     spriteFile: spriteFile.toLowerCase(),
     filename: spriteFile.toLowerCase(),
     tier: chosen.tier,
+    groupName: chosen.groupName,
   };
 }
 

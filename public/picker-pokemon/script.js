@@ -1,21 +1,23 @@
 // ===========================================================
-// Coop's Collection — Pokémon Picker (Token-Secured Version)
+// Coop's Collection — Pokémon Team Picker
 // ===========================================================
-// Reads id + token from URL (?id=...&token=...)
-// Displays owned/unowned Pokémon with filters and rarity tags
+// Select up to 6 Pokémon (1st = lead) → saved to /trainercard
 // ===========================================================
 
 import { rarityEmojis } from "/public/spriteconfig.js";
 
-const POKEMON_SPRITE_PATH = "/public/sprites/pokemon/";
-const SHINY_PATH = "/public/sprites/shiny/";
+const NORMAL_PATH = "/public/sprites/pokemon/normal/";
+const SHINY_PATH  = "/public/sprites/pokemon/shiny/";
+const GRAY_PATH   = "/public/sprites/pokemon/grayscale/";
+const GRAY_SHINY  = "/public/sprites/pokemon/grayscale/";
 const POKEMON_DATA_FILE = "/public/pokemonData.json";
 
 const API_USER = "/api/user-pokemon";
-const API_SET  = "/api/set-pokemon";
+const API_SAVE = "/api/set-pokemon-team";
 
 let allPokemon = {};
 let ownedPokemon = [];
+let selectedTeam = [];
 let userId = null;
 let token = null;
 let showOwnedOnly = false;
@@ -49,7 +51,11 @@ async function loadData() {
     const res = await fetch(`${API_USER}?id=${userId}&token=${token}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    ownedPokemon = data.owned || [];
+    ownedPokemon = Array.isArray(data.owned)
+      ? data.owned
+      : typeof data.owned === "object"
+      ? Object.keys(data.owned)
+      : [];
 
     render();
   } catch (err) {
@@ -67,32 +73,48 @@ function render(filter = "") {
   grid.innerHTML = "";
 
   const entries = Object.entries(allPokemon);
-
   entries.forEach(([name, info]) => {
     const rarity = (info.rarity || "common").toLowerCase();
-    const emoji = rarityEmojis?.[rarity] || "⚬";
-    const tierDisplay = rarity.charAt(0).toUpperCase() + rarity.slice(1);
-
     if (selectedRarity !== "all" && rarity !== selectedRarity) return;
     if (filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
 
+    const emoji = rarityEmojis?.[rarity] || "⚬";
+    const tierDisplay = rarity.charAt(0).toUpperCase() + rarity.slice(1);
     const owned = ownedPokemon.includes(name);
+
     if (showOwnedOnly && !owned) return;
     if (showUnownedOnly && owned) return;
 
-    const spriteFile = showShinyOnly
-      ? `${SHINY_PATH}${info.id}.gif`
-      : `${POKEMON_SPRITE_PATH}${info.id}.gif`;
-
-    const imgPath = owned ? spriteFile : `${POKEMON_SPRITE_PATH}${info.id}.gif`;
+    const spritePath = showShinyOnly
+      ? owned
+        ? `${SHINY_PATH}${info.id}.gif`
+        : `${GRAY_SHINY}${info.id}.gif`
+      : owned
+        ? `${NORMAL_PATH}${info.id}.gif`
+        : `${GRAY_PATH}${info.id}.gif`;
 
     const card = document.createElement("div");
-    card.className = `pokemon-card ${owned ? "owned" : "unowned"}`;
-    card.innerHTML = `
-      <div class="sprite-wrapper">
-        <img src="${imgPath}" alt="${name}" loading="lazy" />
-        ${!owned ? '<div class="lock-overlay"><span>🔒</span></div>' : ""}
-      </div>
+    const isSelected = selectedTeam.includes(name);
+    card.className = `pokemon-card ${owned ? "owned" : "unowned"} ${isSelected ? "selected" : ""}`;
+
+    const spriteWrapper = document.createElement("div");
+    spriteWrapper.className = "sprite-wrapper";
+
+    const img = document.createElement("img");
+    img.src = spritePath;
+    img.alt = name;
+    img.loading = "lazy";
+
+    spriteWrapper.appendChild(img);
+    if (!owned) {
+      const lock = document.createElement("div");
+      lock.className = "lock-overlay";
+      lock.innerHTML = "<span>🔒</span>";
+      spriteWrapper.appendChild(lock);
+    }
+
+    card.appendChild(spriteWrapper);
+    card.innerHTML += `
       <p class="pokemon-name">${name}</p>
       <div class="pokemon-tier">
         <span class="tier-text ${rarity}">${tierDisplay}</span>
@@ -100,7 +122,10 @@ function render(filter = "") {
       </div>
     `;
 
-    if (owned) card.onclick = () => selectPokemon(name, info.id);
+    if (owned) {
+      card.onclick = () => togglePokemon(name, info.id);
+    }
+
     grid.appendChild(card);
   });
 
@@ -108,6 +133,59 @@ function render(filter = "") {
     grid.innerHTML = "<p class='notice'>No Pokémon match your filters.</p>";
   }
 }
+
+// ===========================================================
+// 🧩 Team Selection Logic
+// ===========================================================
+function togglePokemon(name, id) {
+  const idx = selectedTeam.indexOf(name);
+  if (idx >= 0) {
+    selectedTeam.splice(idx, 1); // deselect
+  } else {
+    if (selectedTeam.length >= 6) {
+      alert("⚠️ You can only select up to 6 Pokémon.");
+      return;
+    }
+    selectedTeam.push(name);
+  }
+  render(document.getElementById("search").value);
+}
+
+// ===========================================================
+// 💾 Save Team
+// ===========================================================
+document.getElementById("saveTeamBtn").addEventListener("click", async () => {
+  if (selectedTeam.length === 0) {
+    alert("❌ You must select at least one Pokémon.");
+    return;
+  }
+
+  const payload = {
+    id: userId,
+    token,
+    team: selectedTeam,
+  };
+
+  try {
+    const res = await fetch(API_SAVE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById("teamStatus").textContent =
+        `✅ Team saved! ${selectedTeam[0]} is your lead Pokémon.`;
+    } else {
+      throw new Error("Failed to save");
+    }
+  } catch (err) {
+    console.error("❌ saveTeam failed:", err);
+    document.getElementById("teamStatus").textContent =
+      "❌ Failed to save team. Please try again.";
+  }
+});
 
 // ===========================================================
 // 🧰 Filter & Toggle Controls
@@ -125,47 +203,4 @@ function setupControls() {
 
   document.getElementById("unownedToggle").addEventListener("click", (e) => {
     showUnownedOnly = !showUnownedOnly;
-    showOwnedOnly = false;
-    e.target.classList.toggle("active", showUnownedOnly);
-    document.getElementById("ownedToggle").classList.remove("active");
-    render(document.getElementById("search").value);
-  });
-
-  document.getElementById("shinyToggle").addEventListener("click", (e) => {
-    showShinyOnly = !showShinyOnly;
-    e.target.classList.toggle("active", showShinyOnly);
-    render(document.getElementById("search").value);
-  });
-
-  document.getElementById("rarityFilter").addEventListener("change", (e) => {
-    selectedRarity = e.target.value;
-    render(document.getElementById("search").value);
-  });
-}
-
-// ===========================================================
-// 🖱️ Select Pokémon
-// ===========================================================
-async function selectPokemon(name, id) {
-  if (!confirm(`Select ${name}?`)) return;
-
-  try {
-    const res = await fetch(API_SET, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: userId, token, name, file: id }),
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    if (data.success) {
-      alert(`✅ ${name} equipped as your displayed Pokémon!`);
-    } else {
-      throw new Error("Response not successful");
-    }
-  } catch (err) {
-    console.error("❌ selectPokemon failed:", err);
-    alert("❌ Failed to update Pokémon. Please reopen the picker via /changepokemon.");
-  }
-}
+    showOwnedOnly =

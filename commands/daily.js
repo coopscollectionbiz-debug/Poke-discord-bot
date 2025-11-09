@@ -140,9 +140,11 @@ await updateUserRole(member, user.tp, interaction.channel);
       }
 
       // 🖼️ Sprites
-      const pokemonSprite = `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pokemonPick.id}.gif`;
-      const cleanTrainerFile = trainerPick.filename.replace(/^trainers?_2\//, "").replace(/\.png$/i, "");
-      const trainerSprite = `${spritePaths.trainers}${cleanTrainerFile}.png`;
+const trainerFile = trainerPick.spriteFile || trainerPick.filename || `${trainerPick.id}.png`;
+const trainerSprite = `${spritePaths.trainers}${trainerFile}`;
+const pokemonSprite = `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pokemonPick.id}.gif`;
+
+
 
       // 🧱 Embeds
       const successEmbed = createSuccessEmbed(

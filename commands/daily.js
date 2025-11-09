@@ -27,7 +27,6 @@ import {
 import { safeReply } from "../utils/safeReply.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
-import { postRareSightings } from "../utils/rareSightings.js";
 import { updateUserRole } from "../utils/updateUserRole.js";
 import { broadcastReward } from "../utils/broadcastReward.js"; // ensure it's imported at top
 

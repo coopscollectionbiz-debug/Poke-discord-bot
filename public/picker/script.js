@@ -12,7 +12,7 @@
 // ✅ Correct public paths
 // ===========================================================
 
-import { rarityEmojis } from "/public/spriteconfig.js";
+import { rarityEmojis } from "../spriteconfig.js";
 
 const TRAINER_SPRITE_PATH = "/public/sprites/trainers_2/";
 const GRAY_PATH            = "/public/sprites/trainers_2/grayscale/";

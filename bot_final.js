@@ -70,19 +70,48 @@ const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
 // ===========================================================
 // 🛡️ TOKEN MANAGEMENT (10-min access tokens for picker)
 // ===========================================================
-const activeTokens = new Map(); // { userId: { token, expires } }
+// We'll keep all active tokens in memory for 10 minutes
+const activeTokens = new Map();
 
-export function generateUserToken(userId) {
-  const token = Math.random().toString(36).slice(2);
-  activeTokens.set(userId, { token, expires: Date.now() + 10 * 60_000 }); // valid 10 minutes
+/**
+ * Generate a secure token linked to both the user and the channel
+ * @param {string} userId - The Discord user ID
+ * @param {string} channelId - The Discord channel ID where /changetrainer was used
+ */
+function generateToken(userId, channelId) {
+  const token = Math.random().toString(36).substring(2, 12);
+  activeTokens.set(token, {
+    id: userId,
+    channelId,
+    expires: Date.now() + 10 * 60 * 1000 // 10 min expiration
+  });
   return token;
 }
 
+/**
+ * Validate that a token belongs to a specific user and isn't expired
+ */
 function validateToken(userId, token) {
-  const entry = activeTokens.get(userId);
-  return entry && entry.token === token && entry.expires > Date.now();
+  const entry = activeTokens.get(token);
+  if (!entry) return false;
+  if (entry.id !== userId) return false;
+  if (Date.now() > entry.expires) {
+    activeTokens.delete(token);
+    return false;
+  }
+  return true;
 }
 
+/**
+ * Retrieve the channel ID stored with a token
+ */
+function getChannelIdForToken(token) {
+  const entry = activeTokens.get(token);
+  return entry ? entry.channelId : null;
+}
+
+// Export if using ES modules
+export { generateToken, validateToken, getChannelIdForToken };
 
 
 let trainerData = {};
@@ -851,6 +880,60 @@ app.get("/api/user-trainers", (req, res) => {
       : [];
 
   res.json({ owned });
+});
+
+// ===========================================================
+// 🧩 SET TRAINER API ENDPOINT (Post confirmation in local channel)
+// ===========================================================
+app.post("/api/set-trainer", express.json(), async (req, res) => {
+  try {
+    const { id, token, name, file } = req.body;
+    if (!id || !token || !file) {
+      console.warn("⚠️ Missing fields in /api/set-trainer", req.body);
+      return res.status(400).json({ success: false, error: "Missing id, token, or file" });
+    }
+
+    // ✅ Validate token
+    if (!validateToken(id, token)) {
+      console.warn("⚠️ Invalid or expired token for", id);
+      return res.status(403).json({ success: false, error: "Invalid or expired token" });
+    }
+
+    // ✅ Ensure user exists
+    const user = trainerData[id];
+    if (!user) {
+      console.warn("⚠️ User not found:", id);
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    // ✅ Equip trainer
+    user.displayedTrainer = file;
+    await saveTrainerDataLocal(trainerData);
+    await saveDataToDiscord(trainerData);
+    console.log(`✅ ${id} equipped trainer ${file}`);
+
+    // ✅ Get the channel associated with the token
+    const channelId = getChannelIdForToken(token);
+    if (channelId) {
+      const channel = await client.channels.fetch(channelId).catch(() => null);
+      if (channel) {
+        const embed = new EmbedBuilder()
+          .setTitle("🎨 Trainer Equipped!")
+          .setDescription(`✅ You equipped **${name || file.replace(".png", "")}** as your displayed Trainer!\nUse **/trainercard** to view your new look.`)
+          .setColor(0x00ff9d)
+          .setThumbnail(`${spritePaths.trainers}${file}`)
+          .setTimestamp();
+        await channel.send({ content: `<@${id}>`, embeds: [embed] });
+      }
+    } else {
+      console.warn(`⚠️ No channel found for token: ${token}`);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ /api/set-trainer failed:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));

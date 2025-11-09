@@ -139,11 +139,14 @@ await updateUserRole(member, user.tp, interaction.channel);
       }
 
       // 🖼️ Sprites
-const trainerFile = trainerPick.spriteFile || trainerPick.filename || `${trainerPick.id}.png`;
-const trainerSprite = `${spritePaths.trainers}${trainerFile}`;
-const pokemonSprite = `${shiny ? spritePaths.shiny : spritePaths.pokemon}${pokemonPick.id}.gif`;
+const trainerFile =
+  (trainerPick.sprites && trainerPick.sprites[0]) ||
+  trainerPick.spriteFile ||
+  trainerPick.filename ||
+  `${trainerPick.id}.png`;
 
-
+const trainerFileFinal = trainerFile.toLowerCase();
+const trainerSprite = `${spritePaths.trainers}${trainerFileFinal}`;
 
       // 🧱 Embeds
       const successEmbed = createSuccessEmbed(

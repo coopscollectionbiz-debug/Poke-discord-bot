@@ -110,10 +110,9 @@ export function selectRandomPokemonForUser(pokemonPool, user) {
 }
 
 // ==========================================================
-// 🧩 Fixed Trainer Selector (prevents numeric IDs)
+// 🧩 Fixed Trainer Selector (prevents numeric IDs + ensures readable names)
 // ==========================================================
 export function selectRandomTrainerForUser(trainerPool, user) {
-  // Handle both array and object trainer pools safely
   const entries = Array.isArray(trainerPool)
     ? trainerPool.map((t, i) => [t.id || t.name || `trainer-${i}`, t])
     : Object.entries(trainerPool);
@@ -122,16 +121,23 @@ export function selectRandomTrainerForUser(trainerPool, user) {
     const id = String(key)
       .replace(/^trainers?_2\//, "")
       .replace(/\.png$/i, "")
-      .trim();
+      .trim()
+      .toLowerCase();
 
     const tier = normalizeTier(data?.tier || data?.rarity || "common");
-    const sprites =
-      data?.sprites || data?.files || [data?.spriteFile || `${id}.png`];
-    const name =
-      data?.name ||
-      id.charAt(0).toUpperCase() + id.slice(1).replace(/[-_]/g, " ");
+    const sprites = Array.isArray(data?.sprites)
+      ? data.sprites.map((s) => s.toLowerCase())
+      : [data?.spriteFile?.toLowerCase?.() || `${id}.png`];
 
-    return { id, name, tier, sprites };
+    // ✅ Smarter naming fallback
+    const cleanName = data?.name && !data.name.toLowerCase().startsWith("trainer ")
+      ? data.name
+      : id
+          .replace(/[-_]/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase())
+          .trim();
+
+    return { id, name: cleanName, tier, sprites };
   });
 
   const chosen = weightedRandomChoiceWithRank(
@@ -145,12 +151,12 @@ export function selectRandomTrainerForUser(trainerPool, user) {
     chosen.sprites[Math.floor(Math.random() * chosen.sprites.length)];
 
   return {
-    id: chosen.id,               // ✅ clean string (e.g. "acerola")
+    id: chosen.id,
     name: chosen.name,
-    rarity: chosen.tier,         // ✅ normalized rarity
-    spriteFile,                  // ✅ exact variant (e.g. "acerola.png")
-    filename: spriteFile,
-    tier: chosen.tier
+    rarity: chosen.tier,
+    spriteFile: spriteFile.toLowerCase(),
+    filename: spriteFile.toLowerCase(),
+    tier: chosen.tier,
   };
 }
 

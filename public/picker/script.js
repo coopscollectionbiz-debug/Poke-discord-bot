@@ -8,11 +8,22 @@
 // • Securely communicates with /api endpoints
 // ===========================================================
 
+// ===========================================================
+// ✅ Correct relative paths (picker is inside /public/picker)
+// ===========================================================
 const TRAINER_SPRITE_PATH = "../sprites/trainers_2/";
-const GRAY_PATH = "../sprites/trainers_2/grayscale/";
-const TRAINER_DATA_FILE = `${TRAINER_SPRITE_PATH}trainerSprites.json`;
+const GRAY_PATH            = "../sprites/trainers_2/grayscale/";
+const TRAINER_DATA_FILE    = "../sprites/trainers_2/trainerSprites.json";
+
+// API endpoints stay same-origin
 const API_USER = "/api/user-trainers";
-const API_SET = "/api/set-trainer";
+const API_SET  = "/api/set-trainer";
+
+
+// API stays same-origin
+const API_USER = "/api/user-trainers";
+const API_SET  = "/api/set-trainer";
+
 
 let allTrainers = {};
 let ownedTrainers = [];

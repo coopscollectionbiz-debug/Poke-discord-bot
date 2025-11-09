@@ -9,11 +9,11 @@
 // ===========================================================
 
 // ===========================================================
-// ✅ Correct relative paths (picker is inside /public/picker)
+// ✅ Correct public paths
 // ===========================================================
-const TRAINER_SPRITE_PATH = "../sprites/trainers_2/";
-const GRAY_PATH            = "../sprites/trainers_2/grayscale/";
-const TRAINER_DATA_FILE = "../trainerSprites.json";
+const TRAINER_SPRITE_PATH = "/public/sprites/trainers_2/";
+const GRAY_PATH            = "/public/sprites/trainers_2/grayscale/";
+const TRAINER_DATA_FILE    = "/public/trainerSprites.json";
 
 // API stays same-origin
 const API_USER = "/api/user-trainers";

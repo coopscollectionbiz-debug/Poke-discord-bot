@@ -4,7 +4,7 @@
 // Includes:
 //  • Rank Buffs & Weighted Acquisition
 //  • Shiny Pokémon Logic (applies to all acquisitions)
-//  • Epic+ & Shiny Broadcast via utils/rareSightings.js
+//  • Epic+ & Shiny Broadcast via broadcastReward
 //  • Passive Message / Reaction Rewards (deterministic reward architecture)
 //  • PokéBeach News (every 2 hours, link-only posting)
 //  • Autosave / Graceful Shutdown / Express Health Endpoint
@@ -310,12 +310,6 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
   } catch (err) {
     console.error("❌ broadcastReward failed:", err.message);
-  }
-
-  try {
-    await postRareSightings(client, reward, interactionUser, isPokemon, isShiny);
-  } catch (err) {
-    console.error("❌ Rare Sightings broadcast failed:", err.message);
   }
 
   console.log(`✅ Reward granted to ${interactionUser.username}`);

@@ -11,6 +11,9 @@
 // ===========================================================
 // ✅ Correct public paths
 // ===========================================================
+
+import { rarityEmojis } from "/public/spriteconfig.js";
+
 const TRAINER_SPRITE_PATH = "/public/sprites/trainers_2/";
 const GRAY_PATH            = "/public/sprites/trainers_2/grayscale/";
 const TRAINER_DATA_FILE    = "/public/trainerSprites.json";
@@ -70,6 +73,7 @@ async function loadData() {
 // ===========================================================
 // 🎨 RENDER GRID (updated for "sprites" support)
 // ===========================================================
+
 function render(filter = "") {
   const grid = document.getElementById("trainerGrid");
   grid.innerHTML = "";
@@ -78,30 +82,41 @@ function render(filter = "") {
 
   entries.forEach(([name, info]) => {
     const rarity = (info.tier || "common").toLowerCase();
+    const tierDisplay = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+    const emoji = rarityEmojis?.[rarity] || "⚬";
+
     if (selectedRarity !== "all" && rarity !== selectedRarity) return;
     if (filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
 
-    const spriteFiles = info.sprites || info.files || [];
-    spriteFiles.forEach((file) => {
-      const owned = ownedTrainers.includes(file);
+    const spriteFiles = Array.isArray(info.sprites)
+      ? info.sprites
+      : Array.isArray(info.files)
+      ? info.files
+      : [];
+
+    spriteFiles.forEach((fileName) => {
+      if (typeof fileName !== "string") return;
+      const owned = ownedTrainers.includes(fileName);
 
       const imgPath = owned
-        ? `${TRAINER_SPRITE_PATH}${file}`
-        : `${GRAY_PATH}${file}`;
+        ? `${TRAINER_SPRITE_PATH}${fileName}`
+        : `${GRAY_PATH}${fileName}`;
 
       const card = document.createElement("div");
       card.className = `trainer-card ${owned ? "owned" : "unowned"}`;
       card.innerHTML = `
-        <img src="${imgPath}" alt="${name}" loading="lazy"/>
-        <p>${name}</p>
-        <span class="rarity ${rarity}">${rarity}</span>
+        <div class="sprite-wrapper">
+          <img src="${imgPath}" alt="${name}" loading="lazy"/>
+          ${!owned ? '<div class="lock-overlay"><span>🔒</span></div>' : ""}
+        </div>
+        <p class="trainer-name">${name}</p>
+        <div class="trainer-tier">
+          <span class="tier-text ${rarity}">${tierDisplay}</span>
+          <span class="tier-emoji">${emoji}</span>
+        </div>
       `;
 
-      // Only clickable if the user owns that exact sprite
-      if (owned) {
-        card.onclick = () => selectTrainer(name, file);
-      }
-
+      if (owned) card.onclick = () => selectTrainer(name, fileName);
       grid.appendChild(card);
     });
   });

@@ -116,9 +116,31 @@ export function selectRandomPokemonForUser(pokemonPool, user) {
 
 /**
  * Select a random Trainer based on tier/rarity + rank buffs
+ * Returns full object with exact unlocked sprite variant.
  */
 export function selectRandomTrainerForUser(trainerPool, user) {
-  return weightedRandomChoiceWithRank(trainerPool, TRAINER_RARITY_WEIGHTS, user);
+  // Perform weighted random based on rarity
+  const trainerKeys = Object.keys(trainerPool);
+  const allTrainers = trainerKeys.map(key => ({
+    id: key,
+    name: key.charAt(0).toUpperCase() + key.slice(1),
+    tier: trainerPool[key].tier || "common",
+    sprites: trainerPool[key].sprites || [`${key}.png`],
+  }));
+
+  const chosen = weightedRandomChoiceWithRank(allTrainers, TRAINER_RARITY_WEIGHTS, user);
+  if (!chosen) return null;
+
+  // Pick specific sprite variant
+  const spriteFile =
+    chosen.sprites[Math.floor(Math.random() * chosen.sprites.length)];
+
+  return {
+    id: chosen.id,
+    name: chosen.name,
+    rarity: chosen.tier,
+    spriteFile, // ✅ Exact file unlocked
+  };
 }
 
 // ==========================================================

@@ -797,8 +797,10 @@ app.get("/api/user-trainers", (req, res) => {
 });
 
 // ===========================================================
-// 🧩 SET TRAINER API ENDPOINT (Post confirmation in local channel)
+// ✅ POST — Equip Trainer (Debounced Discord Save)
 // ===========================================================
+let lastTrainerSave = 0; // global throttle timestamp
+
 app.post("/api/set-trainer", express.json(), async (req, res) => {
   try {
     const { id, token, name, file } = req.body;
@@ -820,32 +822,57 @@ app.post("/api/set-trainer", express.json(), async (req, res) => {
       return res.status(404).json({ success: false, error: "User not found" });
     }
 
-    // ✅ Equip trainer
+    // ✅ Equip trainer locally
     user.displayedTrainer = file;
+    trainerData[id] = user;
     await saveTrainerDataLocal(trainerData);
-    await saveDataToDiscord(trainerData);
+
+    // 🧠 Smart Discord backup throttle (1× per minute max)
+    const now = Date.now();
+    if (now - lastTrainerSave > 60_000) {
+      lastTrainerSave = now;
+      await saveDataToDiscord(trainerData).catch(err =>
+        console.warn("⚠️ Debounced Discord save failed:", err.message)
+      );
+    } else {
+      console.log("💾 Skipped Discord backup (debounced save)");
+    }
+
     console.log(`✅ ${id} equipped trainer ${file}`);
 
-    // ✅ Get the channel associated with the token
-    const channelId = getChannelIdForToken(token);
-    if (channelId) {
-      const channel = await client.channels.fetch(channelId).catch(() => null);
-      if (channel) {
-        const embed = new EmbedBuilder()
-          .setTitle("🎨 Trainer Equipped!")
-          .setDescription(`✅ You equipped **${name || file.replace(".png", "")}** as your displayed Trainer!\nUse **/trainercard** to view your new look.`)
-          .setColor(0x00ff9d)
-          .setThumbnail(`${spritePaths.trainers}${file}`)
-          .setTimestamp();
-        await channel.send({ content: `<@${id}>`, embeds: [embed] });
+    // =======================================================
+    // 🧾 Send confirmation message to invoking Discord channel
+    // =======================================================
+    try {
+      const channelId = getChannelIdForToken(token);
+      if (channelId) {
+        const channel = await client.channels.fetch(channelId).catch(() => null);
+        if (channel) {
+          const embed = new EmbedBuilder()
+            .setTitle("🎨 Trainer Equipped!")
+            .setDescription(
+              `✅ You equipped **${name || file.replace(".png", "")}** as your displayed Trainer!\nUse **/trainercard** to view your new look.`
+            )
+            .setColor(0x00ff9d)
+            .setThumbnail(`${spritePaths.trainers}${file}`)
+            .setFooter({ text: "🌟 Coop’s Collection Update" })
+            .setTimestamp();
+
+          await channel.send({
+            content: `<@${id}>`,
+            embeds: [embed],
+          });
+        }
+      } else {
+        console.warn(`⚠️ No channel found for token: ${token}`);
       }
-    } else {
-      console.warn(`⚠️ No channel found for token: ${token}`);
+    } catch (notifyErr) {
+      console.warn("⚠️ Failed to send trainer confirmation:", notifyErr.message);
     }
 
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ /api/set-trainer failed:", err);
+    console.error("❌ /api/set-trainer failed:", err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -882,7 +909,11 @@ app.get("/api/user-pokemon", (req, res) => {
   res.json({ owned, currentTeam });
 });
 
-// ✅ POST — set full Pokémon team (up to 6)
+// ===========================================================
+// ✅ POST — set full Pokémon team (up to 6) — Debounced Discord Save
+// ===========================================================
+let lastTeamSave = 0; // global throttle timestamp
+
 app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   try {
     const { id, token, team } = req.body;
@@ -909,10 +940,21 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       return res.status(400).json({ success: false, error: "Team must be 1–6 Pokémon" });
     }
 
-    // ✅ Overwrite displayed team (array)
+    // ✅ Update in-memory + local save
     user.displayedPokemon = team.map(String);
+    trainerData[id] = user;
     await saveTrainerDataLocal(trainerData);
-    await saveDataToDiscord(trainerData);
+
+    // 🧠 Smart Discord backup throttle (1× per minute max)
+    const now = Date.now();
+    if (now - lastTeamSave > 60_000) {
+      lastTeamSave = now;
+      await saveDataToDiscord(trainerData).catch(err =>
+        console.warn("⚠️ Debounced Discord save failed:", err.message)
+      );
+    } else {
+      console.log("💾 Skipped Discord backup (debounced save)");
+    }
 
     console.log(`✅ ${id} saved team [${team.join(", ")}]`);
 
@@ -951,6 +993,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
 

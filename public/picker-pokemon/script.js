@@ -4,8 +4,8 @@
 
 import { rarityEmojis } from "/public/spriteconfig.js";
 
-const POKEMON_SPRITE_PATH = "/public/sprites/pokemon/";
-const SHINY_PATH = "/public/sprites/pokemon-shiny/";
+const POKEMON_SPRITE_PATH = "/public/sprites/pokemon/normal/";
+const SHINY_PATH = "/public/sprites/pokemon/shiny/";
 const GRAY_PATH = "/public/sprites/pokemon/grayscale/";
 const POKEMON_DATA_FILE = "/public/pokemonData.json";
 
@@ -52,16 +52,25 @@ async function loadData() {
     if (!ownedRes.ok) throw new Error(`HTTP ${ownedRes.status}`);
     const data = await ownedRes.json();
 
-    // ✅ Normalize owned Pokémon
+    // ✅ Normalize owned Pokémon (support object or array)
     if (data.owned) {
       if (Array.isArray(data.owned)) {
-        ownedPokemon = data.owned.map(String);
+        ownedPokemon = data.owned.map((x) => String(x).toLowerCase());
       } else if (typeof data.owned === "object") {
-        ownedPokemon = Object.keys(data.owned);
+        ownedPokemon = Object.keys(data.owned).map((x) => String(x).toLowerCase());
       }
     }
+
+    // ✅ Store full object for shiny tracking
+    if (typeof data.owned === "object") {
+      window.userOwnedData = {};
+      for (const [key, value] of Object.entries(data.owned)) {
+        window.userOwnedData[String(key).toLowerCase()] = value;
+      }
+    }
+
     if (Array.isArray(data.currentTeam))
-      selectedTeam = data.currentTeam.map(String);
+      selectedTeam = data.currentTeam.map((x) => String(x).toLowerCase());
 
     render();
   } catch (err) {
@@ -80,24 +89,47 @@ function render(filter = "") {
 
   const entries = Object.entries(allPokemon);
   entries.forEach(([id, info]) => {
+    const normalizedId = String(info.id || id).toLowerCase();
     const name = info.name || `#${id}`;
     const rarity = (info.tier || "common").toLowerCase();
     const tierDisplay = rarity.charAt(0).toUpperCase() + rarity.slice(1);
     const emoji = rarityEmojis?.[rarity] || "⚬";
-    const owned = ownedPokemon.includes(String(info.id));
 
+    // ===========================================================
+    // 🧩 Ownership & Shiny Filter Logic
+    // ===========================================================
+    const ownedEntry = ownedPokemon.includes(normalizedId);
+    let owned = ownedEntry;
+    let shinyOwned = false;
+
+    if (typeof window.userOwnedData === "object") {
+      const ownedData = window.userOwnedData[normalizedId];
+      shinyOwned = ownedData?.shiny > 0;
+    }
+
+    // When shiny mode is active AND owned filter is on → only show shiny owned Pokémon
+    if (showShinyOnly && showOwnedOnly && !shinyOwned) return;
+
+    // Filters
     if (selectedRarity !== "all" && rarity !== selectedRarity) return;
     if (filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
     if (showOwnedOnly && !owned) return;
     if (showUnownedOnly && owned) return;
 
+    // ===========================================================
+    // 🖼️ Sprite Path Setup
+    // ===========================================================
     const spriteFile = `${info.id}.gif`;
     const basePath = showShinyOnly ? SHINY_PATH : POKEMON_SPRITE_PATH;
     const imgPath = owned ? `${basePath}${spriteFile}` : `${GRAY_PATH}${spriteFile}`;
 
+    // ===========================================================
+    // 📦 Card Structure
+    // ===========================================================
     const card = document.createElement("div");
     card.className = `pokemon-card ${owned ? "owned" : "unowned"}`;
 
+    // Sprite wrapper
     const spriteWrapper = document.createElement("div");
     spriteWrapper.className = "sprite-wrapper";
 
@@ -120,7 +152,7 @@ function render(filter = "") {
     }
 
     // 🔢 Team order badge if selected
-    const indexInTeam = selectedTeam.indexOf(String(info.id));
+    const indexInTeam = selectedTeam.indexOf(normalizedId);
     if (indexInTeam !== -1) {
       const badge = document.createElement("div");
       badge.className = "team-badge";
@@ -129,14 +161,20 @@ function render(filter = "") {
       card.classList.add("selected");
     }
 
-    card.appendChild(spriteWrapper);
-    card.innerHTML += `
+    // ===========================================================
+    // 🧱 Card Text (Aligned)
+    // ===========================================================
+    const infoBlock = document.createElement("div");
+    infoBlock.innerHTML = `
       <p class="pokemon-name">${name}</p>
       <div class="pokemon-tier">
         <span class="tier-text ${rarity}">${tierDisplay}</span>
         <span class="tier-emoji">${emoji}</span>
       </div>
     `;
+
+    card.appendChild(spriteWrapper);
+    card.appendChild(infoBlock);
 
     if (owned) card.onclick = () => toggleSelect(info);
     grid.appendChild(card);
@@ -150,7 +188,7 @@ function render(filter = "") {
 // 🖱️ Team Selection Logic
 // ===========================================================
 function toggleSelect(info) {
-  const idStr = String(info.id);
+  const idStr = String(info.id).toLowerCase();
   const alreadySelected = selectedTeam.includes(idStr);
 
   if (alreadySelected) {
@@ -186,8 +224,8 @@ document.getElementById("saveTeamBtn").addEventListener("click", async () => {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
+    const msg = document.getElementById("teamStatus");
     if (data.success) {
-      const msg = document.getElementById("teamStatus");
       msg.textContent = "✅ Team saved successfully!";
       msg.className = "status-msg success";
     } else {

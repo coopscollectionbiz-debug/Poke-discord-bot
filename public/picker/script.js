@@ -13,7 +13,7 @@
 // ===========================================================
 const TRAINER_SPRITE_PATH = "../sprites/trainers_2/";
 const GRAY_PATH            = "../sprites/trainers_2/grayscale/";
-const TRAINER_DATA_FILE    = "../sprites/trainers_2/trainerSprites.json";
+const TRAINER_DATA_FILE = "../trainerSprites.json";
 
 // API endpoints stay same-origin
 const API_USER = "/api/user-trainers";

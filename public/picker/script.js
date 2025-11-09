@@ -57,10 +57,22 @@ async function loadData() {
     allTrainers = await spriteRes.json();
 
     // Fetch user-owned trainers
-    const res = await fetch(`${API_USER}?id=${userId}&token=${token}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    ownedTrainers = data.owned || [];
+const res = await fetch(`${API_USER}?id=${userId}&token=${token}`);
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
+const data = await res.json();
+
+// 🔧 Normalize trainer data
+if (data.owned) {
+  if (Array.isArray(data.owned)) {
+    ownedTrainers = data.owned;
+  } else if (typeof data.owned === "object") {
+    ownedTrainers = Object.keys(data.owned); // convert { "lyra.png": 1, "buck.png": 1 } → ["lyra.png", "buck.png"]
+  } else {
+    ownedTrainers = [];
+  }
+} else {
+  ownedTrainers = [];
+}
 
     render();
   } catch (err) {
@@ -97,9 +109,15 @@ function render(filter = "") {
     spriteFiles.forEach((fileName) => {
       if (typeof fileName !== "string") return;
 
-      const owned = ownedTrainers.some(
-        (t) => t.toLowerCase() === fileName.toLowerCase()
-      );
+      const owned = ownedTrainers.some((t) => {
+  const baseT = t.split("/").pop().toLowerCase();
+  return baseT === fileName.toLowerCase();
+});
+
+
+      // ✅ Ownership filtering
+      if (showOwnedOnly && !owned) return;
+      if (showUnownedOnly && owned) return;
 
       const imgPath = owned
         ? `${TRAINER_SPRITE_PATH}${fileName}`
@@ -108,7 +126,6 @@ function render(filter = "") {
       const card = document.createElement("div");
       card.className = `trainer-card ${owned ? "owned" : "unowned"}`;
 
-      // ✅ Build sprite wrapper
       const spriteWrapper = document.createElement("div");
       spriteWrapper.className = "sprite-wrapper";
 
@@ -116,8 +133,6 @@ function render(filter = "") {
       img.src = imgPath;
       img.alt = name;
       img.loading = "lazy";
-
-      // ✅ Hide cards with missing sprite files (prevents blank boxes)
       img.onerror = () => {
         console.warn(`⚠️ Missing sprite file: ${fileName}`);
         card.remove();
@@ -150,30 +165,35 @@ function render(filter = "") {
   }
 }
 
+
 // ===========================================================
 // 🧰 FILTER & TOGGLE CONTROLS
 // ===========================================================
 function setupControls() {
+  // 🔍 Search bar
   document
     .getElementById("search")
     .addEventListener("input", (e) => render(e.target.value));
 
-  document
-    .getElementById("ownedToggle")
-    .addEventListener("click", () => {
-      showOwnedOnly = !showOwnedOnly;
-      showUnownedOnly = false;
-      render(document.getElementById("search").value);
-    });
+  // ✅ "Show Owned Only" button
+  document.getElementById("ownedToggle").addEventListener("click", (e) => {
+    showOwnedOnly = !showOwnedOnly;
+    showUnownedOnly = false;
+    e.target.classList.toggle("active", showOwnedOnly);
+    document.getElementById("unownedToggle").classList.remove("active");
+    render(document.getElementById("search").value);
+  });
 
-  document
-    .getElementById("unownedToggle")
-    .addEventListener("click", () => {
-      showUnownedOnly = !showUnownedOnly;
-      showOwnedOnly = false;
-      render(document.getElementById("search").value);
-    });
+  // 🚫 "Show Unowned Only" button
+  document.getElementById("unownedToggle").addEventListener("click", (e) => {
+    showUnownedOnly = !showUnownedOnly;
+    showOwnedOnly = false;
+    e.target.classList.toggle("active", showUnownedOnly);
+    document.getElementById("ownedToggle").classList.remove("active");
+    render(document.getElementById("search").value);
+  });
 
+  // 🌟 Rarity dropdown
   document
     .getElementById("rarityFilter")
     .addEventListener("change", (e) => {

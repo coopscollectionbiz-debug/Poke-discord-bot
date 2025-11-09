@@ -218,11 +218,10 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       userObj.trainers ??= {};
 
       // ✅ Use filename / spriteFile / name instead of numeric ID
-      const trainerKey =
-        reward.filename || reward.spriteFile || reward.id || reward.name;
-
-      if (trainerKey) {
-        userObj.trainers[trainerKey] = (userObj.trainers[trainerKey] || 0) + 1;
+      userObj.trainers ??= {};
+const trainerKey = reward.spriteFile || reward.filename || `${reward.id}.png`;
+userObj.trainers[trainerKey] = (userObj.trainers[trainerKey] || 0) + 1;
+ console.log(`🎁 Trainer reward → ${reward.name} (${reward.tier}) key=${trainerKey}`);
       } else {
         console.warn("⚠️ Trainer reward missing identifier:", reward);
       }

@@ -243,7 +243,11 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
         } else {
       // 🔵 Trainer reward
       isPokemon = false;
-      reward = selectRandomTrainerForUser(allTrainers, userObj);
+     
+// Dynamically re-import the newest weightedRandom on each call
+const { selectRandomTrainerForUser } = await import("./utils/weightedRandom.js");
+reward = selectRandomTrainerForUser(allTrainers, userObj);
+
       userObj.trainers ??= {};
 
       // ✅ Use filename / spriteFile / name instead of numeric ID
@@ -263,12 +267,29 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
   await saveDataToDiscord(trainerData);
 
-  // 🖼️ Sprite URL
-  const spriteUrl = isPokemon
-    ? isShiny
-      ? `${spritePaths.shiny}${reward.id}.gif`
-      : `${spritePaths.pokemon}${reward.id}.gif`
-    : `${spritePaths.trainers}${reward.filename || reward.spriteFile || reward.id}.png`;
+  // 🖼️ Sprite URL (trainer-safe)
+let spriteUrl;
+if (isPokemon) {
+  spriteUrl = isShiny
+    ? `${spritePaths.shiny}${reward.id}.gif`
+    : `${spritePaths.pokemon}${reward.id}.gif`;
+} else {
+  // Use the same sanitization logic as broadcastReward
+  const baseId = String(reward.id || "")
+    .replace(/^trainers?_2\//, "")
+    .replace(/\.png$/i, "")
+    .trim()
+    .toLowerCase();
+
+  const cleanFile = (reward.spriteFile || reward.filename || `${baseId}.png`)
+    .replace(/^trainers?_2\//, "")
+    .replace(/\s+/g, "")
+    .replace(/\.png\.png$/i, ".png")
+    .toLowerCase();
+
+  spriteUrl = `${spritePaths.trainers}${cleanFile}`;
+}
+
 
   const embed = isPokemon
     ? createPokemonRewardEmbed(reward, isShiny, spriteUrl)

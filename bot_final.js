@@ -42,7 +42,6 @@ import {
 } from "./utils/weightedRandom.js";
 import { rollForShiny } from "./shinyOdds.js";
 import { rarityEmojis, spritePaths } from "./spriteconfig.js";
-import { postRareSightings } from "./utils/rareSightings.js";
 import { loadTrainerSprites } from "./utils/dataLoader.js";
 import { updateUserRole } from "./utils/updateUserRole.js";
 import { broadcastReward } from "./utils/broadcastReward.js";

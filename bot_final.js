@@ -49,7 +49,7 @@ import {
   createPokemonRewardEmbed,
   createTrainerRewardEmbed,
 } from "./utils/embedBuilders.js";
-
+import { sanitizeTrainerData } from "./utils/sanitizeTrainerData.js";
 // ==========================================================
 // ⚙️ Global Constants
 // ==========================================================
@@ -879,6 +879,7 @@ client.once("ready", async () => {
 
   try {
     trainerData = await loadTrainerData();
+    trainerData = sanitizeTrainerData(trainerData); // 🧼 Clean it immediately
   } catch (err) {
     console.error("❌ Trainer data load failed:", err.message);
     trainerData = {};
@@ -890,13 +891,13 @@ client.once("ready", async () => {
     console.error("❌ Command registration failed:", err.message);
   }
 
-  // Initial PokéBeach check
   try {
     await checkPokeBeach();
   } catch (err) {
     console.error("❌ PokéBeach initial check failed:", err.message);
   }
 
+  // 🪣 Save immediately after cleaning
   try {
     await saveDataToDiscord(trainerData);
   } catch (err) {

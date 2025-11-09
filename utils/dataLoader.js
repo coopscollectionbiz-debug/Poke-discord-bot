@@ -162,7 +162,7 @@ export function flattenTrainerSprites(trainerSprites) {
 }
 
 // ==========================================================
-// 📜 Get Flattened Trainers with Caching
+// 📜 Get Flattened Trainers with Normalization & Caching
 // ==========================================================
 export async function getFlattenedTrainers() {
   let sprites;
@@ -180,6 +180,33 @@ export async function getFlattenedTrainers() {
 
   const flat = flattenTrainerSprites(sprites);
   console.log("🧩 Flattened trainers count:", flat.length);
+  return flat;
+}
+
+// ==========================================================
+// 🔧 Flatten and Normalize Trainer Sprites
+// ==========================================================
+function flattenTrainerSprites(spritesObj) {
+  const flat = [];
+
+  for (const [key, info] of Object.entries(spritesObj)) {
+    const lowerKey = key.toLowerCase();
+
+    // Normalize sprite array
+    const spriteArray = Array.isArray(info.sprites)
+      ? info.sprites.map((s) => s.toLowerCase())
+      : [`${lowerKey}.png`];
+
+    flat.push({
+      id: lowerKey,
+      name: lowerKey.charAt(0).toUpperCase() + lowerKey.slice(1),
+      tier: info.tier || "Common",
+      sprites: spriteArray,
+      filename: spriteArray[0],
+      spriteFile: spriteArray[0],
+    });
+  }
+
   return flat;
 }
 

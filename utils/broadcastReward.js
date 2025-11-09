@@ -69,10 +69,22 @@ export async function broadcastReward(
         .replace(/\.png\.png$/i, ".png") // double extension safety
         .toLowerCase();
 
-      displayName =
-        item.name && !item.name.toLowerCase().startsWith("trainer ")
-          ? item.name
-          : baseId.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+     // 🧼 Clean up any generic or numeric trainer names
+if (
+  item.name &&
+  !/^trainer\s*\d+/i.test(item.name) &&
+  !item.name.toLowerCase().startsWith("trainer ")
+) {
+  displayName = item.name;
+} else {
+  displayName = baseId
+    .replace(/^trainers?_2\//, "")
+    .replace(/\.png$/i, "")
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+}
+
 
       spriteUrl = `${spritePaths.trainers}${cleanFile}`;
     }

@@ -223,12 +223,6 @@ async function saveDataToDiscord(data) {
 // ==========================================================
 // 🎁 DETERMINISTIC RANDOM REWARD SYSTEM
 // ==========================================================
-
-/**
- * Executes a random reward for a user.
- * NOTE: This function is now *deterministic* — it does NOT contain RNG gating.
- * All probability checks (3% chance, etc.) happen in the event layer (message/reaction/daily).
- */
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   console.log("⚙️ tryGiveRandomReward executed for", interactionUser.username);
 
@@ -243,6 +237,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   const allTrainers = await getAllTrainers();
 
   let reward, isShiny = false, isPokemon = false;
+
   try {
     if (Math.random() < 0.5) {
       // 🟢 Pokémon reward
@@ -254,34 +249,37 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
       if (isShiny) userObj.pokemon[reward.id].shiny++;
       else userObj.pokemon[reward.id].normal++;
-        } else {
+    } else {
       // 🔵 Trainer reward
       isPokemon = false;
-     
-// Dynamically re-import the newest weightedRandom on each call
-const { selectRandomTrainerForUser } = await import("./utils/weightedRandom.js");
-reward = selectRandomTrainerForUser(allTrainers, userObj);
 
-// 🧠 Normalize reward fields
-if (!reward.name) {
-  // Try to resolve a readable name from weightedRandom or filename
-  reward.name =
-    reward.displayName ||
-    reward.trainerName ||
-    (reward.filename ? path.basename(reward.filename, ".png") : null) ||
-    (reward.id ? `Trainer #${reward.id}` : "Unknown Trainer");
-}
+      // Dynamically import latest trainer selector
+      const { selectRandomTrainerForUser } = await import("./utils/weightedRandom.js");
+      reward = selectRandomTrainerForUser(allTrainers, userObj);
 
-// Clean up display formatting
-reward.name = reward.name
-  .replace(/_/g, " ")
-  .replace(/\b\w/g, c => c.toUpperCase()); // capitalize words
+      // 🧠 Normalize reward fields
+      if (!reward.name) {
+        reward.name =
+          reward.key ||                                     // e.g., "acerola"
+          reward.trainerName ||
+          reward.id ||
+          (reward.filename ? path.basename(reward.filename, ".png") : null) ||
+          "Unknown Trainer";
+      }
 
-userObj.trainers ??= {};
+      // Clean up and capitalize
+      reward.name = String(reward.name)
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim();
 
+      // Fallback tier/rarity
+      reward.tier = reward.tier || reward.rarity || "common";
 
-      // ✅ Use filename / spriteFile / name instead of numeric ID
+      // ✅ Record trainer ownership
+      userObj.trainers ??= {};
       const trainerKey = reward.spriteFile || reward.filename || `${reward.id}.png`;
+
       if (trainerKey) {
         userObj.trainers[trainerKey] = (userObj.trainers[trainerKey] || 0) + 1;
         console.log(`🎁 Trainer reward → ${reward.name} (${reward.tier}) key=${trainerKey}`);
@@ -289,7 +287,6 @@ userObj.trainers ??= {};
         console.warn("⚠️ Trainer reward missing identifier:", reward);
       }
     }
-
   } catch (err) {
     console.error("❌ Reward selection failed:", err);
     return;
@@ -297,25 +294,19 @@ userObj.trainers ??= {};
 
   await saveDataToDiscord(trainerData);
 
-    // 🖼️ Sprite URL (trainer-safe)
+  // 🖼️ Sprite URL (trainer-safe)
   let spriteUrl;
   if (isPokemon) {
     spriteUrl = isShiny
       ? `${spritePaths.shiny}${reward.id}.gif`
       : `${spritePaths.pokemon}${reward.id}.gif`;
   } else {
-    const baseId = String(reward.id || "")
-      .replace(/^trainers?_2\//, "")
-      .replace(/\.png$/i, "")
-      .trim()
-      .toLowerCase();
-
-    const cleanFile = (reward.spriteFile || reward.filename || `${baseId}.png`)
+    const trainerKey = reward.spriteFile || reward.filename || `${reward.id}.png`;
+    const cleanFile = trainerKey
       .replace(/^trainers?_2\//, "")
       .replace(/\s+/g, "")
       .replace(/\.png\.png$/i, ".png")
       .toLowerCase();
-
     spriteUrl = `${spritePaths.trainers}${cleanFile}`;
   }
 
@@ -323,14 +314,13 @@ userObj.trainers ??= {};
     ? createPokemonRewardEmbed(reward, isShiny, spriteUrl)
     : createTrainerRewardEmbed(reward, spriteUrl);
 
-  // ✅ Simplified trainer handling — no buttons
   if (!isPokemon) {
     console.log(
       `🧢 Trainer acquired: ${reward.name} (${reward.tier || "common"}) — use /changetrainer to equip a different trainer.`
     );
   }
 
-  // Announce in channel
+  // 🗣️ Public announcement
   try {
     const announcement = isPokemon
       ? `🎉 <@${interactionUser.id}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`
@@ -340,7 +330,7 @@ userObj.trainers ??= {};
     console.warn("⚠️ Public reward announcement failed:", err.message);
   }
 
-  // Global broadcast
+  // 🌍 Global broadcast (server-wide announcement)
   try {
     await broadcastReward(client, {
       user: interactionUser,
@@ -349,7 +339,7 @@ userObj.trainers ??= {};
         id: reward.id,
         name: reward.name,
         rarity: reward.rarity || reward.tier || "common",
-        spriteFile: !isPokemon ? (reward.filename || reward.spriteFile) : null,
+        spriteFile: !isPokemon ? reward.filename || reward.spriteFile : null,
       },
       shiny: isShiny,
       source: "random encounter",

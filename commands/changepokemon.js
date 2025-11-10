@@ -1,8 +1,7 @@
 // ===========================================================
-// 🐾 /changepokemon
+// 🎨 /changetrainer
 // ===========================================================
-// Opens secure web-based Pokémon Picker.
-// Now handles ephemeral confirmation directly in Discord.
+// Opens secure web-based Trainer Picker (shared /public/picker).
 // ===========================================================
 
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
@@ -10,8 +9,8 @@ import { generateToken } from "../bot_final.js";
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("changepokemon")
-    .setDescription("Open the Pokémon Picker to change your displayed Pokémon."),
+    .setName("changetrainer")
+    .setDescription("Open the Trainer Picker to change your displayed Trainer."),
 
   async execute(interaction) {
     try {
@@ -23,27 +22,25 @@ export default {
         process.env.RENDER_EXTERNAL_URL ||
         "https://coopscollection-bot.onrender.com";
 
-      const pickerUrl = `${baseUrl}/public/picker-pokemon/?id=${userId}&token=${token}`;
+      // 🔗 Use shared /picker folder instead of /picker-trainer
+      const pickerUrl = `${baseUrl}/public/picker/?id=${userId}&token=${token}`;
 
       const embed = new EmbedBuilder()
-        .setTitle("🐾 Pokémon Picker Opened!")
+        .setTitle("🎨 Trainer Picker Opened!")
         .setDescription(
-          `Click the link below to choose your displayed Pokémon team.\n\n🔗 [Open Pokémon Picker](${pickerUrl})\n\nYour link expires in **10 minutes**.`
+          `Click the link below to select your new Trainer.\n\n🔗 [Open Trainer Picker](${pickerUrl})\n\nYour link expires in **10 minutes**.`
         )
-        .setColor(0xffcb05)
+        .setColor(0x00ff9d)
         .setFooter({ text: "🌟 Coop’s Collection Update" })
         .setTimestamp();
 
-      await interaction.reply({
-        embeds: [embed],
-        ephemeral: true,
-      });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
 
-      console.log(`🎟️ Pokémon token generated for ${interaction.user.username}`);
+      console.log(`🎟️ Trainer token generated for ${interaction.user.username}`);
     } catch (err) {
-      console.error("❌ /changepokemon failed:", err);
+      console.error("❌ /changetrainer failed:", err);
       await interaction.reply({
-        content: "❌ Something went wrong generating your Pokémon Picker link.",
+        content: "❌ Something went wrong generating your Trainer Picker link.",
         ephemeral: true,
       });
     }

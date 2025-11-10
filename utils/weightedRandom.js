@@ -164,15 +164,17 @@ export function selectRandomTrainerForUser(trainerPool, user) {
     chosen.sprites[Math.floor(Math.random() * chosen.sprites.length)];
 
   // 🧩 Final normalized trainer object
-  return {
-    id: chosen.id,
-    name: chosen.name,               // ✅ Always readable ("Ace Trainer")
-    rarity: chosen.tier,
-    spriteFile: spriteFile.toLowerCase(),
-    filename: spriteFile.toLowerCase(),
-    tier: chosen.tier,
-    groupName: chosen.groupName,
-  };
+return {
+  id: chosen.id,
+  key: chosen.groupName,           // ✅ NEW: preserve the original JSON key (e.g. "acerola")
+  name: chosen.name,               // Readable name ("Acerola", "Rocket Grunt", etc.)
+  rarity: chosen.tier,
+  tier: chosen.tier,
+  spriteFile: spriteFile.toLowerCase(),
+  filename: spriteFile.toLowerCase(),
+  groupName: chosen.groupName,
+};
+
 }
 
 // ==========================================================

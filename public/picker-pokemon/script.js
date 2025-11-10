@@ -206,37 +206,47 @@ function toggleSelect(info) {
 }
 
 // ===========================================================
-// 💾 Save Team
+// 💾 Save Team — safely binds after DOM is ready
 // ===========================================================
-document.getElementById("saveTeamBtn").addEventListener("click", async () => {
-  if (selectedTeam.length === 0) {
-    alert("❌ You must select at least one Pokémon.");
+window.addEventListener("DOMContentLoaded", () => {
+  const saveBtn = document.getElementById("saveTeamBtn");
+  if (!saveBtn) {
+    console.warn("⚠️ saveTeamBtn not found in DOM.");
     return;
   }
 
-  try {
-    const res = await fetch(API_SET, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: userId, token, team: selectedTeam }),
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    const msg = document.getElementById("teamStatus");
-    if (data.success) {
-      msg.textContent = "✅ Team saved successfully!";
-      msg.className = "status-msg success";
-    } else {
-      throw new Error("Save failed");
+  saveBtn.addEventListener("click", async () => {
+    if (selectedTeam.length === 0) {
+      alert("❌ You must select at least one Pokémon.");
+      return;
     }
-  } catch (err) {
-    console.error("❌ saveTeam failed:", err);
-    const msg = document.getElementById("teamStatus");
-    msg.textContent = "❌ Failed to save team.";
-    msg.className = "status-msg error";
-  }
+
+    try {
+      const res = await fetch(API_SET, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: userId, token, team: selectedTeam }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const msg = document.getElementById("teamStatus");
+      if (!msg) return;
+      if (data.success) {
+        msg.textContent = "✅ Team saved successfully!";
+        msg.className = "status-msg success";
+      } else {
+        throw new Error("Save failed");
+      }
+    } catch (err) {
+      console.error("❌ saveTeam failed:", err);
+      const msg = document.getElementById("teamStatus");
+      if (!msg) return;
+      msg.textContent = "❌ Failed to save team.";
+      msg.className = "status-msg error";
+    }
+  });
 });
 
 // ===========================================================
@@ -280,6 +290,8 @@ function setupControls() {
 // ===========================================================
 function updateTeamStatus() {
   const status = document.getElementById("teamStatus");
+  if (!status) return;
+
   if (selectedTeam.length === 0) {
     status.textContent = "No Pokémon selected.";
     status.className = "status-msg";

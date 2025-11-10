@@ -3,41 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pokémon Team Picker | Coop’s Collection</title>
-
-    <!-- ===================================================== -->
-    <!-- 🧩 Styles -->
-    <!-- ===================================================== -->
-    <link rel="stylesheet" href="style.css" />
-
-    <!-- Defer ensures DOM is loaded before script executes -->
-    <script type="module" src="script.js" defer></script>
+    <title>Coop’s Collection — Pokémon Management</title>
+    <link rel="stylesheet" href="/public/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
 
   <body>
-    <!-- ===================================================== -->
-    <!-- HEADER -->
-    <!-- ===================================================== -->
     <header>
-      <h1>🐾 Choose Your Pokémon Team</h1>
-      <p class="subtitle">
-        Select up to 6 Pokémon for your team. The first one becomes your lead Pokémon.
-      </p>
+      <h1>Pokémon Management Portal</h1>
+      <p>⭐ Build your team · 🧬 Evolve with stones · 💝 Donate for CC</p>
     </header>
 
-    <!-- ===================================================== -->
-    <!-- FILTERS & TOGGLES -->
-    <!-- ===================================================== -->
-    <section class="controls" id="controls">
+    <!-- ===========================================================
+         Mode Toggles
+    =========================================================== -->
+    <div id="modeToggle">
+      <button class="mode-btn active" data-mode="change">⭐ Change Team</button>
+      <button class="mode-btn" data-mode="evolve">🧬 Evolve</button>
+      <button class="mode-btn" data-mode="donate">💝 Donate</button>
+    </div>
+
+    <div style="margin-top: 10px;">
+      <button id="shinyToggle" class="mode-btn">Shiny Mode OFF</button>
+    </div>
+
+    <!-- ===========================================================
+         Controls (Filters & Search)
+    =========================================================== -->
+    <div id="controls">
       <input
         type="text"
-        id="search"
-        placeholder="🔍 Search Pokémon..."
-        autocomplete="off"
+        id="searchInput"
+        placeholder="Search Pokémon..."
+        oninput="filterPokemon()"
       />
 
-      <select id="rarityFilter">
-        <option value="all">All Rarities</option>
+      <select id="rarityFilter" onchange="filterPokemon()">
+        <option value="">All Rarities</option>
         <option value="common">Common</option>
         <option value="uncommon">Uncommon</option>
         <option value="rare">Rare</option>
@@ -46,39 +51,74 @@
         <option value="mythic">Mythic</option>
       </select>
 
-      <div class="toggle-group">
-        <button id="ownedToggle" class="toggle-btn">Show Owned Only</button>
-        <button id="unownedToggle" class="toggle-btn">Show Unowned Only</button>
-        <button id="shinyToggle" class="toggle-btn">✨ Shiny Mode</button>
-      </div>
-    </section>
+      <select id="typeFilter" onchange="filterPokemon()">
+        <option value="">All Types</option>
+        <option value="fire">Fire</option>
+        <option value="water">Water</option>
+        <option value="grass">Grass</option>
+        <option value="electric">Electric</option>
+        <option value="psychic">Psychic</option>
+        <option value="fighting">Fighting</option>
+        <option value="dark">Dark</option>
+        <option value="fairy">Fairy</option>
+        <option value="steel">Steel</option>
+        <option value="ghost">Ghost</option>
+        <option value="rock">Rock</option>
+        <option value="ground">Ground</option>
+        <option value="poison">Poison</option>
+        <option value="ice">Ice</option>
+        <option value="dragon">Dragon</option>
+        <option value="bug">Bug</option>
+        <option value="flying">Flying</option>
+        <option value="normal">Normal</option>
+      </select>
+    </div>
 
-    <!-- ===================================================== -->
-    <!-- TEAM STATUS + SAVE BUTTON -->
-    <!-- ===================================================== -->
-    <section id="teamControls" class="team-controls">
-      <p id="teamCounter">0/6 selected</p>
-      <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
-      <p id="teamStatus" class="status-msg"></p>
-    </section>
+    <!-- ===========================================================
+         Pokémon Grid
+    =========================================================== -->
+    <div id="pokemonGrid"></div>
 
-    <!-- ===================================================== -->
-    <!-- MAIN GRID -->
-    <!-- ===================================================== -->
-    <main>
-      <div id="pokemonGrid" class="grid">
-        <p class="notice">Loading Pokémon data...</p>
-      </div>
-    </main>
-
-    <!-- ===================================================== -->
-    <!-- FOOTER -->
-    <!-- ===================================================== -->
+    <!-- ===========================================================
+         Save Button + Status
+    =========================================================== -->
     <footer>
-      <p>
-        🌟 Opened via <strong>/changepokemon</strong> •
-        <span>Secure session expires after 10 minutes</span>
+      <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
+      <div id="statusMsg" class="status-msg"></div>
+      <p style="margin-top: 1rem; color: #777;">
+        Opened via <code>/pokemon</code> · Session valid for 10 minutes
       </p>
     </footer>
+
+    <!-- ===========================================================
+         Scripts
+    =========================================================== -->
+    <script src="/public/script.js"></script>
+
+    <script>
+      // Optional client-side filter logic for search/type/rarity
+      function filterPokemon() {
+        const search = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const rarity = document.getElementById("rarityFilter").value;
+        const type = document.getElementById("typeFilter").value;
+        const cards = document.querySelectorAll(".pokemon-card");
+
+        cards.forEach((card) => {
+          const name = card
+            .querySelector(".pokemon-name")
+            ?.textContent.toLowerCase();
+          const tier = card
+            .querySelector(".tier-text")
+            ?.textContent.toLowerCase();
+          const matchesSearch = !search || name.includes(search);
+          const matchesRarity = !rarity || tier.includes(rarity);
+          const matchesType = !type || card.dataset.type === type;
+          card.style.display =
+            matchesSearch && matchesRarity && matchesType ? "flex" : "none";
+        });
+      }
+    </script>
   </body>
 </html>

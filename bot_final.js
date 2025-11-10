@@ -909,92 +909,84 @@ app.get("/api/user-pokemon", (req, res) => {
   res.json({ owned, currentTeam });
 });
 
-// ===========================================================
 // ✅ POST — set full Pokémon team (up to 6) — Debounced Discord Save
-// ===========================================================
 let lastTeamSave = 0; // global throttle timestamp
 
 app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   try {
     const { id, token, team } = req.body;
+
+    // Basic validation
     if (!id || !token || !Array.isArray(team)) {
-      console.warn("⚠️ Missing or invalid fields in /api/set-pokemon-team", req.body);
       return res.status(400).json({ success: false, error: "Missing id, token, or team array" });
     }
-
-    // ✅ Validate token
     if (!validateToken(id, token)) {
-      console.warn("⚠️ Invalid or expired token for", id);
       return res.status(403).json({ success: false, error: "Invalid or expired token" });
     }
-
-    // ✅ Ensure user exists
     const user = trainerData[id];
     if (!user) {
-      console.warn("⚠️ User not found:", id);
       return res.status(404).json({ success: false, error: "User not found" });
     }
 
-    // ✅ Cap team length at 6
-    if (team.length === 0 || team.length > 6) {
-      return res.status(400).json({ success: false, error: "Team must be 1–6 Pokémon" });
+    // Normalize & validate team list (1–6 unique ints)
+    const normalized = [...new Set(team.map(n => Number(n)).filter(n => Number.isInteger(n)))];
+    if (normalized.length === 0 || normalized.length > 6) {
+      return res.status(400).json({ success: false, error: "Team must contain 1–6 valid Pokémon IDs" });
     }
 
-    // ===========================================================
-    // 🧠 Schema Update — maintain both team + lead
-    // ===========================================================
-    user.team = team.map(String);
-    user.displayedPokemon = team[0]; // first Pokémon is lead
-    trainerData[id] = user;
+    // (Optional) ensure each chosen ID is actually owned
+    const owns = (pid) => {
+      const p = user.pokemon?.[pid];
+      return !!p && ((typeof p === "number" && p > 0) || p.normal > 0 || p.shiny > 0);
+    };
+    const unowned = normalized.filter(pid => !owns(pid));
+    if (unowned.length) {
+      return res.status(400).json({ success: false, error: `You don't own: ${unowned.join(", ")}` });
+    }
 
+    // ✅ Schema-compliant write
+    delete user.team; // no team field in schema
+    user.displayedPokemon = normalized;                // <-- array of up to 6
+    // lead is the first element; no separate field needed
+
+    trainerData[id] = user;
     await saveTrainerDataLocal(trainerData);
 
-    // 🧠 Smart Discord backup throttle (1× per minute max)
+    // Debounced Discord backup
     const now = Date.now();
     if (now - lastTeamSave > 60_000) {
       lastTeamSave = now;
       await saveDataToDiscord(trainerData).catch(err =>
         console.warn("⚠️ Debounced Discord save failed:", err.message)
       );
-    } else {
-      console.log("💾 Skipped Discord backup (debounced save)");
     }
 
-    console.log(`✅ ${id} saved team [${team.join(", ")}]`);
-
-    // ===========================================================
-    // 🧩 Readable embed (use Pokémon names from pokemonData.json)
-    // ===========================================================
+    // Optional: Post channel confirmation only if enabled
     try {
-      const allPokemon = JSON.parse(
-        fsSync.readFileSync("./public/pokemonData.json", "utf8")
-      );
-      const leadId = team[0];
-      const leadInfo = allPokemon[leadId];
-      const leadName = leadInfo?.name || `#${leadId}`;
-
-      const channelId = getChannelIdForToken(token);
-      if (channelId) {
-        const channel = await client.channels.fetch(channelId).catch(() => null);
-        if (channel) {
-          const embed = new EmbedBuilder()
-            .setTitle("🐾 Pokémon Team Updated!")
-            .setDescription(
-              `✅ You set your Pokémon team!\n**${leadName}** is now your lead Pokémon.\nUse **/trainercard** to view your updated card.`
-            )
-            .setColor(0xffcb05)
-            .setThumbnail(`${spritePaths.pokemon}${leadId}.gif`)
-            .setFooter({ text: "🌟 Coop’s Collection Update" })
-            .setTimestamp();
-
-          await channel.send({
-            content: `<@${id}>`,
-            embeds: [embed],
-          });
+      if (process.env.BROADCAST_PICKER_UPDATES === "true") {
+        const channelId = getChannelIdForToken(token);
+        if (channelId) {
+          const channel = await client.channels.fetch(channelId).catch(() => null);
+          if (channel) {
+            // Load names for nicer message (best-effort)
+            let leadName = `#${normalized[0]}`;
+            try {
+              const allPokemon = JSON.parse(fsSync.readFileSync("./public/pokemonData.json", "utf8"));
+              leadName = allPokemon?.[normalized[0]]?.name || leadName;
+            } catch {}
+            const embed = new EmbedBuilder()
+              .setTitle("🐾 Pokémon Team Updated!")
+              .setDescription(`✅ Team saved. **${leadName}** is now your lead.\nUse **/trainercard** to view your updated card.`)
+              .setColor(0xffcb05)
+              .setThumbnail(`${spritePaths.pokemon}${normalized[0]}.gif`)
+              .setFooter({ text: "🌟 Coop’s Collection Update" })
+              .setTimestamp();
+            await channel.send({ content: `<@${id}>`, embeds: [embed] });
+          }
         }
       }
     } catch (notifyErr) {
-      console.warn("⚠️ Failed to send team confirmation:", notifyErr.message);
+      console.warn("⚠️ Team confirmation send failed:", notifyErr.message);
     }
 
     res.json({ success: true });
@@ -1020,6 +1012,108 @@ client.once("ready", async () => {
     trainerData = {};
   }
 
+ // ==========================================================
+// 🤖 BOT READY EVENT
+// ==========================================================
+client.once("ready", async () => {
+  console.log(`✅ Logged in as ${client.user.tag}`);
+
+  try {
+    trainerData = await loadTrainerData();
+    trainerData = sanitizeTrainerData(trainerData); // 🧼 Clean it immediately
+  } catch (err) {
+    console.error("❌ Trainer data load failed:", err.message);
+    trainerData = {};
+  }
+
+ // ==========================================================
+// 🤖 BOT READY EVENT
+// ==========================================================
+client.once("ready", async () => {
+  console.log(`✅ Logged in as ${client.user.tag}`);
+
+  try {
+    trainerData = await loadTrainerData();
+    trainerData = sanitizeTrainerData(trainerData); // 🧼 Clean it immediately
+  } catch (err) {
+    console.error("❌ Trainer data load failed:", err.message);
+    trainerData = {};
+  }
+
+  // ==========================================================
+  // 🧹 AUTO-CLEAN: Remove invalid or unowned displayedTrainer & displayedPokemon
+  // ==========================================================
+  try {
+    // ---------- TRAINER CLEANUP ----------
+    const trainerSpriteDir = path.join(process.cwd(), "public/sprites/trainers_2");
+    const validTrainerFiles = new Set(
+      fsSync
+        .readdirSync(trainerSpriteDir)
+        .filter(f => f.toLowerCase().endsWith(".png"))
+        .map(f => f.toLowerCase())
+    );
+
+    let cleanedTrainers = 0;
+    for (const [id, user] of Object.entries(trainerData)) {
+      if (!user.displayedTrainer) continue;
+      const normalized = user.displayedTrainer.toLowerCase().trim();
+      const ownsTrainer =
+        user.trainers &&
+        Object.keys(user.trainers).some(t => t.toLowerCase().trim() === normalized);
+
+      if (!validTrainerFiles.has(normalized) || !ownsTrainer) {
+        console.warn(
+          `⚠️ Removed invalid or unowned trainer for ${id}: ${user.displayedTrainer}`
+        );
+        delete user.displayedTrainer;
+        cleanedTrainers++;
+      }
+    }
+
+    // ---------- POKÉMON CLEANUP ----------
+    const pokemonPath = path.join(process.cwd(), "public/pokemonData.json");
+    let validPokemonIDs = new Set();
+    try {
+      const pokemonData = JSON.parse(fsSync.readFileSync(pokemonPath, "utf8"));
+      validPokemonIDs = new Set(Object.keys(pokemonData).map(k => Number(k)));
+    } catch (err) {
+      console.warn("⚠️ Could not read pokemonData.json — skipping displayedPokemon validation.");
+    }
+
+    let cleanedPokemon = 0;
+    for (const [id, user] of Object.entries(trainerData)) {
+      if (!Array.isArray(user.displayedPokemon)) continue;
+      const before = user.displayedPokemon.length;
+      user.displayedPokemon = user.displayedPokemon.filter(pid => {
+        const owned =
+          user.pokemon?.[pid] &&
+          ((typeof user.pokemon[pid] === "number" && user.pokemon[pid] > 0) ||
+            user.pokemon[pid].normal > 0 ||
+            user.pokemon[pid].shiny > 0);
+        return validPokemonIDs.has(Number(pid)) && owned;
+      });
+      if (user.displayedPokemon.length < before) {
+        cleanedPokemon++;
+        console.warn(`⚠️ Removed invalid or unowned Pokémon for ${id}`);
+      }
+    }
+
+    // ---------- SUMMARY ----------
+    if (cleanedTrainers > 0 || cleanedPokemon > 0) {
+      console.log(
+        `🧹 Cleaned ${cleanedTrainers} invalid/unowned trainer(s) and ${cleanedPokemon} invalid/unowned Pokémon team(s)`
+      );
+      await saveDataToDiscord(trainerData);
+    } else {
+      console.log("✅ No invalid or unowned displayedTrainer/displayedPokemon entries found");
+    }
+  } catch (err) {
+    console.error("❌ Auto-clean failed:", err.message);
+  }
+
+  // ==========================================================
+  // 🧩 LOAD COMMANDS & INITIAL NEWS CHECK
+  // ==========================================================
   try {
     await loadCommands();
   } catch (err) {
@@ -1042,6 +1136,7 @@ client.once("ready", async () => {
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });
+
 
 // ==========================================================
 // 🚀 LAUNCH

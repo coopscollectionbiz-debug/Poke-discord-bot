@@ -11,7 +11,7 @@ import {
   StringSelectMenuBuilder,
 } from "discord.js";
 import { rarityEmojis } from "../spriteconfig.js";
-import { rarityColors } from "../bot_final.js"; // 🎨 unified color palette
+import { rarityColors } from "../utils/colors.js";
 
 // ==========================================================
 // 🧩 Helper: format tier text + emoji

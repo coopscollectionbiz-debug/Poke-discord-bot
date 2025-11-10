@@ -1,7 +1,8 @@
 // ===========================================================
-// 🎨 /changetrainer
+// 🐾 /changepokemon
 // ===========================================================
-// Opens secure web-based Trainer Picker (shared /public/picker).
+// Opens secure web-based Pokémon Picker.
+// Sends ephemeral confirmation in Discord.
 // ===========================================================
 
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
@@ -9,38 +10,44 @@ import { generateToken } from "../bot_final.js";
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("changetrainer")
-    .setDescription("Open the Trainer Picker to change your displayed Trainer."),
+    .setName("changepokemon")
+    .setDescription("Open the Pokémon Picker to change your displayed Pokémon."),
 
   async execute(interaction) {
     try {
       const userId = interaction.user.id;
       const channelId = interaction.channelId;
+
+      // 🔐 Generate a 10-minute access token
       const token = generateToken(userId, channelId);
 
+      // Base URL (supports Render auto-URL or fallback)
       const baseUrl =
         process.env.RENDER_EXTERNAL_URL ||
         "https://coopscollection-bot.onrender.com";
 
-      // 🔗 Use shared /picker folder instead of /picker-trainer
-      const pickerUrl = `${baseUrl}/public/picker/?id=${userId}&token=${token}`;
+      const pickerUrl = `${baseUrl}/public/picker-pokemon/?id=${userId}&token=${token}`;
 
+      // 🟡 Ephemeral confirmation embed
       const embed = new EmbedBuilder()
-        .setTitle("🎨 Trainer Picker Opened!")
+        .setTitle("🐾 Pokémon Picker Opened!")
         .setDescription(
-          `Click the link below to select your new Trainer.\n\n🔗 [Open Trainer Picker](${pickerUrl})\n\nYour link expires in **10 minutes**.`
+          `Click below to choose your displayed Pokémon team:\n\n🔗 [Open Pokémon Picker](${pickerUrl})\n\nYour link expires in **10 minutes**.`
         )
-        .setColor(0x00ff9d)
+        .setColor(0xffcb05)
         .setFooter({ text: "🌟 Coop’s Collection Update" })
         .setTimestamp();
 
-      await interaction.reply({ embeds: [embed], ephemeral: true });
-
-      console.log(`🎟️ Trainer token generated for ${interaction.user.username}`);
-    } catch (err) {
-      console.error("❌ /changetrainer failed:", err);
       await interaction.reply({
-        content: "❌ Something went wrong generating your Trainer Picker link.",
+        embeds: [embed],
+        ephemeral: true,
+      });
+
+      console.log(`🎟️ Pokémon token generated for ${interaction.user.username}`);
+    } catch (err) {
+      console.error("❌ /changepokemon failed:", err);
+      await interaction.reply({
+        content: "❌ Something went wrong generating your Pokémon Picker link.",
         ephemeral: true,
       });
     }

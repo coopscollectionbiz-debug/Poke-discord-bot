@@ -830,36 +830,6 @@ app.post("/api/set-trainer", express.json(), async (req, res) => {
 
     console.log(`✅ ${id} equipped trainer ${file}`);
 
-    // =======================================================
-    // 🧾 Send confirmation message to invoking Discord channel
-    // =======================================================
-    try {
-      const channelId = getChannelIdForToken(token);
-      if (channelId) {
-        const channel = await client.channels.fetch(channelId).catch(() => null);
-        if (channel) {
-          const embed = new EmbedBuilder()
-            .setTitle("🎨 Trainer Equipped!")
-            .setDescription(
-              `✅ You equipped **${name || file.replace(".png", "")}** as your displayed Trainer!\nUse **/trainercard** to view your new look.`
-            )
-            .setColor(0x00ff9d)
-            .setThumbnail(`${spritePaths.trainers}${file}`)
-            .setFooter({ text: "🌟 Coop’s Collection Update" })
-            .setTimestamp();
-
-          await channel.send({
-            content: `<@${id}>`,
-            embeds: [embed],
-          });
-        }
-      } else {
-        console.warn(`⚠️ No channel found for token: ${token}`);
-      }
-    } catch (notifyErr) {
-      console.warn("⚠️ Failed to send trainer confirmation:", notifyErr.message);
-    }
-
     res.json({ success: true });
   } catch (err) {
     console.error("❌ /api/set-trainer failed:", err.message);

@@ -747,12 +747,37 @@ client.on("interactionCreate", async (interaction) => {
 // ==========================================================
 // 🌐 EXPRESS SERVER
 // ==========================================================
+import express from "express";
+import path from "path";
 import { fileURLToPath } from "url";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const app = express();
-const staticPath = path.join(process.cwd(), "public");
-app.use("/public", express.static(staticPath));
+const staticPath = path.join(__dirname, "public");
+
+
+// ===========================================================
+// 🧩 STATIC FILES — Serve Picker + Assets
+// ===========================================================
+// ✅ Serve all /public assets with correct MIME headers
+app.use(
+  "/public",
+  express.static(staticPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".js")) res.type("application/javascript");
+      if (filePath.endsWith(".css")) res.type("text/css");
+      if (filePath.endsWith(".json")) res.type("application/json");
+    },
+  })
+);
+
+// Optional convenience route to serve the Pokémon Picker directly
+app.get("/public/picker-pokemon", (_, res) => {
+  res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"));
+});
+
 app.get("/", (_, res) => res.send("Bot running"));
 app.get("/healthz", (_, res) =>
   res.json({ ready: isReady, uptime: Math.floor((Date.now() - startTime) / 1000) })
@@ -922,6 +947,128 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
     console.error("❌ /api/set-pokemon-team failed:", err.message);
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// ===========================================================
+// ===========================================================
+// 🧬 EVOLVE & DONATE ENDPOINTS (Shiny-Aware Versions)
+// ===========================================================
+
+// 🔹 Evolve Pokémon (normal + shiny supported)
+app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
+  const { id, token, baseId, targetId, shiny } = req.body;
+  if (!validateToken(id, token))
+    return res.status(403).json({ error: "Invalid or expired token" });
+
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  const pokemonData = JSON.parse(fsSync.readFileSync("public/pokemonData.json", "utf8"));
+  const base = pokemonData[baseId];
+  const target = pokemonData[targetId];
+  if (!base || !target) return res.status(400).json({ error: "Invalid Pokémon IDs" });
+
+  // Evolution cost mapping
+  const costMap = {
+    "common-uncommon": 1,
+    "common-rare": 3,
+    "uncommon-rare": 2,
+    "rare-epic": 3,
+    "uncommon-epic": 4,
+  };
+  const currentTier = base.tier;
+  const nextTier = target.tier;
+  const key = `${currentTier}-${nextTier}`;
+  const cost = costMap[key] ?? 0;
+
+  if (cost <= 0)
+    return res.status(400).json({ error: "This evolution path is not supported." });
+
+  if (!user.items || user.items.evolution_stone < cost)
+    return res.status(400).json({ error: "Not enough Evolution Stones." });
+
+  // Check ownership of correct variant
+  const variant = shiny ? "shiny" : "normal";
+  const owned = user.pokemon?.[baseId]?.[variant] || 0;
+  if (owned <= 0)
+    return res.status(400).json({
+      error: `You don’t own a ${shiny ? "shiny " : ""}${base.name} to evolve.`,
+    });
+
+  // Deduct stones
+  user.items.evolution_stone -= cost;
+
+  // Deduct base variant
+  user.pokemon[baseId][variant] -= 1;
+  if (user.pokemon[baseId].normal <= 0 && user.pokemon[baseId].shiny <= 0)
+    delete user.pokemon[baseId];
+
+  // Add evolved Pokémon, preserving variant
+  user.pokemon[targetId] ??= { normal: 0, shiny: 0 };
+  user.pokemon[targetId][variant] += 1;
+
+  await saveTrainerDataLocal(trainerData);
+  await saveDataToDiscord(trainerData);
+
+  res.json({
+    success: true,
+    evolved: { from: base.name, to: target.name, shiny },
+    stones: user.items.evolution_stone,
+  });
+});
+
+// 💝 Donate Pokémon (normal + shiny supported, 5× CC for shiny)
+app.post("/api/pokemon/donate", express.json(), async (req, res) => {
+  const { id, token, pokeId, shiny } = req.body;
+  if (!validateToken(id, token))
+    return res.status(403).json({ error: "Invalid or expired token" });
+
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  const pokemonData = JSON.parse(fsSync.readFileSync("public/pokemonData.json", "utf8"));
+  const p = pokemonData[pokeId];
+  if (!p) return res.status(400).json({ error: "Invalid Pokémon ID" });
+
+  // 💰 Base CC rewards by rarity
+  const ccMap = {
+    common: 250,
+    uncommon: 500,
+    rare: 1000,
+    epic: 2500,
+    legendary: 5000,
+    mythic: 10000,
+  };
+
+  const baseValue = ccMap[p.tier] ?? 0;
+  const variant = shiny ? "shiny" : "normal";
+  const owned = user.pokemon?.[pokeId]?.[variant] || 0;
+
+  if (owned <= 0)
+    return res.status(400).json({
+      error: `You don’t own a ${shiny ? "shiny " : ""}${p.name} to donate.`,
+    });
+
+  // 🧮 Reward 5× CC if shiny
+  const finalValue = shiny ? baseValue * 5 : baseValue;
+
+  // 🧹 Remove one copy of the correct variant
+  user.pokemon[pokeId][variant] -= 1;
+  if (user.pokemon[pokeId].normal <= 0 && user.pokemon[pokeId].shiny <= 0)
+    delete user.pokemon[pokeId];
+
+  // 💰 Add coins
+  user.cc = (user.cc ?? 0) + finalValue;
+
+  await saveTrainerDataLocal(trainerData);
+  await saveDataToDiscord(trainerData);
+
+  res.json({
+    success: true,
+    donated: { name: p.name, shiny },
+    gainedCC: finalValue,
+    totalCC: user.cc,
+  });
 });
 
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));

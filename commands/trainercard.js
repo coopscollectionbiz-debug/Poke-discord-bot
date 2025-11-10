@@ -348,64 +348,31 @@ export async function showTrainerCard(interaction, user) {
         }).join("\n")
       : "No Pokémon selected.";
 
+    // 👇 Add helpful command reminders at the bottom
+    const commandHelp =
+      "\n\n> 🪶 **Commands:**\n" +
+      "> `/changetrainer` – Update trainer sprite\n" +
+      "> `/changepokemon` – Update team";
+
     const embed = new EmbedBuilder()
       .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })
       .setColor(0x5865f2)
       .setDescription(
         `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}\n\n` +
         `📊 **Pokémon Owned:** ${pokemonOwned}\n✨ **Shiny Pokémon:** ${shinyCount}\n🧍 **Trainers:** ${trainerCount}\n\n` +
-        `**Team:**\n${teamDisplay}`
+        `**Team:**\n${teamDisplay}${commandHelp}`
       )
       .setFooter({ text: "Coop's Collection • /trainercard" });
 
     if (trainerPath) embed.setThumbnail(trainerPath);
 
-    // Buttons: Change Trainer / Change Pokémon
-    const changeRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setLabel("Change Trainer")
-        .setEmoji("🧢")
-        .setStyle(ButtonStyle.Primary)
-        .setURL("https://coopscollection.com/changetrainer"), // direct link to picker
-      new ButtonBuilder()
-        .setLabel("Change Pokémon")
-        .setEmoji("🐾")
-        .setStyle(ButtonStyle.Primary)
-        .setURL("https://coopscollection.com/changepokemon")
-    );
+    await interaction.editReply({
+      embeds: [embed],
+      components: [], // ✅ no buttons
+    });
 
-    await interaction.editReply({ embeds: [embed], components: [changeRow] });
   } catch (err) {
     console.error("showTrainerCard error:", err);
     await interaction.editReply({ content: "❌ Failed to show Trainer Card." });
   }
 }
-
-// ===========================================================
-// 🔘 BUTTON HANDLER (ephemeral only)
-// ===========================================================
-export async function handleTrainerCardButtons(interaction, trainerData, saveDataToDiscord) {
-  const userId = interaction.user.id;
-  const user = trainerData[userId];
-
-  if (!user) {
-    await interaction.reply({ content: "❌ Could not find your trainer data.", ephemeral: true });
-    return;
-  }
-
-  const id = interaction.customId;
-  console.log(`🔘 handleTrainerCardButtons: ${id}`);
-
-  // These buttons now handled as external URLs (no internal actions)
-  if (id === "show_full_team") {
-    await interaction.reply({
-      content: "🖼️ Full team view is now deprecated — use **/changepokemon** to edit your lineup.",
-      ephemeral: true
-    });
-    return;
-  }
-
-  await interaction.reply({ content: "❌ Unknown or deprecated button action.", ephemeral: true });
-}
-
-

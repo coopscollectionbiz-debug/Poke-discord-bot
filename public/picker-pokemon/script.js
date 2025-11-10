@@ -107,10 +107,7 @@ function render(filter = "") {
       shinyOwned = ownedData?.shiny > 0;
     }
 
-    // When shiny mode is active AND owned filter is on → only show shiny owned Pokémon
     if (showShinyOnly && showOwnedOnly && !shinyOwned) return;
-
-    // Filters
     if (selectedRarity !== "all" && rarity !== selectedRarity) return;
     if (filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
     if (showOwnedOnly && !owned) return;
@@ -129,7 +126,6 @@ function render(filter = "") {
     const card = document.createElement("div");
     card.className = `pokemon-card ${owned ? "owned" : "unowned"}`;
 
-    // Sprite wrapper
     const spriteWrapper = document.createElement("div");
     spriteWrapper.className = "sprite-wrapper";
 
@@ -143,7 +139,6 @@ function render(filter = "") {
     };
     spriteWrapper.appendChild(img);
 
-    // 🔒 Lock overlay for unowned
     if (!owned) {
       const lock = document.createElement("div");
       lock.className = "lock-overlay";
@@ -151,7 +146,6 @@ function render(filter = "") {
       spriteWrapper.appendChild(lock);
     }
 
-    // 🔢 Team order badge if selected
     const indexInTeam = selectedTeam.indexOf(normalizedId);
     if (indexInTeam !== -1) {
       const badge = document.createElement("div");
@@ -161,9 +155,6 @@ function render(filter = "") {
       card.classList.add("selected");
     }
 
-    // ===========================================================
-    // 🧱 Card Text (Aligned)
-    // ===========================================================
     const infoBlock = document.createElement("div");
     infoBlock.innerHTML = `
       <p class="pokemon-name">${name}</p>
@@ -195,7 +186,7 @@ function toggleSelect(info) {
     selectedTeam = selectedTeam.filter((p) => p !== idStr);
   } else {
     if (selectedTeam.length >= 6) {
-      alert("⚠️ You can only select up to 6 Pokémon!");
+      showPopup("⚠️ Team Full", "You can only select up to 6 Pokémon.", "#facc15");
       return;
     }
     selectedTeam.push(idStr);
@@ -217,7 +208,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   saveBtn.addEventListener("click", async () => {
     if (selectedTeam.length === 0) {
-      alert("❌ You must select at least one Pokémon.");
+      showPopup("❌ No Pokémon Selected", "You must select at least one Pokémon.", "#ef4444");
       return;
     }
 
@@ -231,20 +222,19 @@ window.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
-      const msg = document.getElementById("teamStatus");
-      if (!msg) return;
       if (data.success) {
-        msg.textContent = "✅ Team saved successfully!";
-        msg.className = "status-msg success";
+        showPopup("✅ Team Saved!", "Your Pokémon team was updated successfully.");
+        const msg = document.getElementById("teamStatus");
+        if (msg) {
+          msg.textContent = "✅ Team saved successfully!";
+          msg.className = "status-msg success";
+        }
       } else {
-        throw new Error("Save failed");
+        showPopup("❌ Error", "Failed to save your team. Please try again.", "#ef4444");
       }
     } catch (err) {
       console.error("❌ saveTeam failed:", err);
-      const msg = document.getElementById("teamStatus");
-      if (!msg) return;
-      msg.textContent = "❌ Failed to save team.";
-      msg.className = "status-msg error";
+      showPopup("❌ Save Failed", "Could not connect to the server.", "#ef4444");
     }
   });
 });
@@ -300,4 +290,40 @@ function updateTeamStatus() {
     status.textContent = `🧢 ${selectedTeam.length}/6 selected — Lead: ${lead}`;
     status.className = "status-msg active";
   }
+}
+
+// ===========================================================
+// ✨ Popup Confirmation Utility
+// ===========================================================
+function showPopup(title, message, color = "#00ff9d") {
+  const popup = document.createElement("div");
+  popup.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1b1b2f;
+      color: white;
+      border: 2px solid ${color};
+      border-radius: 16px;
+      padding: 20px 30px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+      font-family: 'Poppins', sans-serif;
+      z-index: 9999;
+      max-width: 320px;
+      animation: fadeIn 0.3s ease;
+    ">
+      <h2 style="margin: 0 0 8px; font-size: 1.2em;">${title}</h2>
+      <p style="margin: 0; font-size: 0.95em;">${message}</p>
+    </div>
+  `;
+  document.body.appendChild(popup);
+
+  setTimeout(() => {
+    popup.firstChild.style.transition = "opacity 0.4s ease";
+    popup.firstChild.style.opacity = "0";
+    setTimeout(() => popup.remove(), 400);
+  }, 2500);
 }

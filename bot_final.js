@@ -951,34 +951,6 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       );
     }
 
-    // Optional: Post channel confirmation only if enabled
-    try {
-      if (process.env.BROADCAST_PICKER_UPDATES === "true") {
-        const channelId = getChannelIdForToken(token);
-        if (channelId) {
-          const channel = await client.channels.fetch(channelId).catch(() => null);
-          if (channel) {
-            // Load names for nicer message (best-effort)
-            let leadName = `#${normalized[0]}`;
-            try {
-              const allPokemon = JSON.parse(fsSync.readFileSync("./public/pokemonData.json", "utf8"));
-              leadName = allPokemon?.[normalized[0]]?.name || leadName;
-            } catch {}
-            const embed = new EmbedBuilder()
-              .setTitle("🐾 Pokémon Team Updated!")
-              .setDescription(`✅ Team saved. **${leadName}** is now your lead.\nUse **/trainercard** to view your updated card.`)
-              .setColor(0xffcb05)
-              .setThumbnail(`${spritePaths.pokemon}${normalized[0]}.gif`)
-              .setFooter({ text: "🌟 Coop’s Collection Update" })
-              .setTimestamp();
-            await channel.send({ content: `<@${id}>`, embeds: [embed] });
-          }
-        }
-      }
-    } catch (notifyErr) {
-      console.warn("⚠️ Team confirmation send failed:", notifyErr.message);
-    }
-
     res.json({ success: true });
   } catch (err) {
     console.error("❌ /api/set-pokemon-team failed:", err.message);

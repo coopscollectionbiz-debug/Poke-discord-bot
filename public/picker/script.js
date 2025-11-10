@@ -8,20 +8,14 @@
 // • Securely communicates with /api endpoints
 // ===========================================================
 
-// ===========================================================
-// ✅ Correct public paths
-// ===========================================================
-
 import { rarityEmojis } from "/public/spriteconfig.js";
 
 const TRAINER_SPRITE_PATH = "/public/sprites/trainers_2/";
-const GRAY_PATH            = "/public/sprites/trainers_2/grayscale/";
-const TRAINER_DATA_FILE    = "/public/trainerSprites.json";
+const GRAY_PATH = "/public/sprites/trainers_2/grayscale/";
+const TRAINER_DATA_FILE = "/public/trainerSprites.json";
 
-// API stays same-origin
 const API_USER = "/api/user-trainers";
-const API_SET  = "/api/set-trainer";
-
+const API_SET = "/api/set-trainer";
 
 let allTrainers = {};
 let ownedTrainers = [];
@@ -39,9 +33,11 @@ window.addEventListener("DOMContentLoaded", () => {
   loadData();
 });
 
+// ===========================================================
+// 📦 LOAD DATA
+// ===========================================================
 async function loadData() {
   try {
-    // Parse URL params
     const urlParams = new URLSearchParams(window.location.search);
     userId = urlParams.get("id");
     token = urlParams.get("token");
@@ -52,27 +48,25 @@ async function loadData() {
       return;
     }
 
-    // Load all trainers
     const spriteRes = await fetch(TRAINER_DATA_FILE);
     allTrainers = await spriteRes.json();
 
-    // Fetch user-owned trainers
-const res = await fetch(`${API_USER}?id=${userId}&token=${token}`);
-if (!res.ok) throw new Error(`HTTP ${res.status}`);
-const data = await res.json();
+    const res = await fetch(`${API_USER}?id=${userId}&token=${token}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
 
-// 🔧 Normalize trainer data
-if (data.owned) {
-  if (Array.isArray(data.owned)) {
-    ownedTrainers = data.owned;
-  } else if (typeof data.owned === "object") {
-    ownedTrainers = Object.keys(data.owned); // convert { "lyra.png": 1, "buck.png": 1 } → ["lyra.png", "buck.png"]
-  } else {
-    ownedTrainers = [];
-  }
-} else {
-  ownedTrainers = [];
-}
+    // 🔧 Normalize trainer data
+    if (data.owned) {
+      if (Array.isArray(data.owned)) {
+        ownedTrainers = data.owned;
+      } else if (typeof data.owned === "object") {
+        ownedTrainers = Object.keys(data.owned);
+      } else {
+        ownedTrainers = [];
+      }
+    } else {
+      ownedTrainers = [];
+    }
 
     render();
   } catch (err) {
@@ -83,9 +77,8 @@ if (data.owned) {
 }
 
 // ===========================================================
-// 🎨 RENDER GRID (updated for "sprites" support + missing sprite fix)
+// 🎨 RENDER GRID
 // ===========================================================
-
 function render(filter = "") {
   const grid = document.getElementById("trainerGrid");
   grid.innerHTML = "";
@@ -110,12 +103,10 @@ function render(filter = "") {
       if (typeof fileName !== "string") return;
 
       const owned = ownedTrainers.some((t) => {
-  const baseT = t.split("/").pop().toLowerCase();
-  return baseT === fileName.toLowerCase();
-});
+        const baseT = t.split("/").pop().toLowerCase();
+        return baseT === fileName.toLowerCase();
+      });
 
-
-      // ✅ Ownership filtering
       if (showOwnedOnly && !owned) return;
       if (showUnownedOnly && owned) return;
 
@@ -139,6 +130,7 @@ function render(filter = "") {
       };
 
       spriteWrapper.appendChild(img);
+
       if (!owned) {
         const lock = document.createElement("div");
         lock.className = "lock-overlay";
@@ -165,17 +157,14 @@ function render(filter = "") {
   }
 }
 
-
 // ===========================================================
 // 🧰 FILTER & TOGGLE CONTROLS
 // ===========================================================
 function setupControls() {
-  // 🔍 Search bar
   document
     .getElementById("search")
     .addEventListener("input", (e) => render(e.target.value));
 
-  // ✅ "Show Owned Only" button
   document.getElementById("ownedToggle").addEventListener("click", (e) => {
     showOwnedOnly = !showOwnedOnly;
     showUnownedOnly = false;
@@ -184,7 +173,6 @@ function setupControls() {
     render(document.getElementById("search").value);
   });
 
-  // 🚫 "Show Unowned Only" button
   document.getElementById("unownedToggle").addEventListener("click", (e) => {
     showUnownedOnly = !showUnownedOnly;
     showOwnedOnly = false;
@@ -193,7 +181,6 @@ function setupControls() {
     render(document.getElementById("search").value);
   });
 
-  // 🌟 Rarity dropdown
   document
     .getElementById("rarityFilter")
     .addEventListener("change", (e) => {
@@ -206,8 +193,6 @@ function setupControls() {
 // 🖱️ SELECT TRAINER
 // ===========================================================
 async function selectTrainer(name, file) {
-  if (!confirm(`Select ${name}?`)) return;
-
   try {
     const res = await fetch(API_SET, {
       method: "POST",
@@ -219,12 +204,48 @@ async function selectTrainer(name, file) {
     const data = await res.json();
 
     if (data.success) {
-      alert(`✅ ${name} equipped as your displayed Trainer!`);
+      showPopup("✅ Trainer Equipped!", `${name} is now your displayed Trainer!`);
     } else {
-      throw new Error("Response not successful");
+      showPopup("❌ Error", "Failed to equip trainer. Please try again.", "#ef4444");
     }
   } catch (err) {
     console.error("❌ selectTrainer failed:", err);
-    alert("❌ Failed to update trainer. Please reopen the picker via /changetrainer.");
+    showPopup("❌ Error", "Could not connect to the server.", "#ef4444");
   }
+}
+
+// ===========================================================
+// ✨ POPUP CONFIRMATION UTILITY
+// ===========================================================
+function showPopup(title, message, color = "#00ff9d") {
+  const popup = document.createElement("div");
+  popup.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1b1b2f;
+      color: white;
+      border: 2px solid ${color};
+      border-radius: 16px;
+      padding: 20px 30px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+      font-family: 'Poppins', sans-serif;
+      z-index: 9999;
+      max-width: 320px;
+      animation: fadeIn 0.3s ease;
+    ">
+      <h2 style="margin: 0 0 8px; font-size: 1.2em;">${title}</h2>
+      <p style="margin: 0; font-size: 0.95em;">${message}</p>
+    </div>
+  `;
+  document.body.appendChild(popup);
+
+  setTimeout(() => {
+    popup.firstChild.style.transition = "opacity 0.4s ease";
+    popup.firstChild.style.opacity = "0";
+    setTimeout(() => popup.remove(), 400);
+  }, 2500);
 }

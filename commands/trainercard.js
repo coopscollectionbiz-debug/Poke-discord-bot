@@ -312,40 +312,55 @@ export async function showTrainerCard(interaction, user) {
   try {
     const username = interaction?.user?.username || user.name || "Trainer";
     const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
-    const trainerPath = user.displayedTrainer ? `${spritePaths.trainers}${user.displayedTrainer}` : null;
-    let displayed = user.displayedPokemon?.slice(0, 6) || [];
+    const trainerPath = user.displayedTrainer
+      ? `${spritePaths.trainers}${user.displayedTrainer}`
+      : null;
+
     const allPokemon = await getAllPokemon();
 
-    // Auto-fill team with owned Pokémon if fewer than 6
-    if (displayed.length < 6) {
-      const ownedIds = Object.keys(user.pokemon || {}).filter(id => {
-        const p = user.pokemon[id];
-        return (p?.normal > 0 || p?.shiny > 0) || (typeof p === "number" && p > 0);
-      }).map(id => Number(id));
-      for (const pid of ownedIds) {
-        if (displayed.length >= 6) break;
-        if (!displayed.includes(pid)) displayed.push(pid);
-      }
-      if (displayed.length > (user.displayedPokemon?.length || 0)) {
-        user.displayedPokemon = displayed;
-        console.log(`➕ Auto-filled team: ${displayed.length}/6 Pokémon`);
-      }
+    // ✅ Always ensure lead is first in displayed list
+    let displayed = Array.isArray(user.displayedPokemon)
+      ? [...user.displayedPokemon]
+      : [];
+    if (displayed.length > 6) displayed = displayed.slice(0, 6);
+
+    // Auto-fill team if empty
+    if (displayed.length === 0 && user.pokemon) {
+      const ownedIds = Object.keys(user.pokemon)
+        .filter(id => {
+          const p = user.pokemon[id];
+          return (p?.normal > 0 || p?.shiny > 0) || (typeof p === "number" && p > 0);
+        })
+        .map(id => Number(id));
+      displayed = ownedIds.slice(0, 6);
+      user.displayedPokemon = displayed;
     }
 
-    const pokemonInfo = displayed.map(id => allPokemon.find(p => p.id === id)).filter(Boolean);
+    const leadId = displayed[0];
+    const leadPokemon = allPokemon.find(p => p.id === leadId);
+    const leadSprite = leadPokemon
+      ? `${spritePaths.pokemon}${leadId}.gif`
+      : null;
+
+    const pokemonInfo = displayed
+      .map(id => allPokemon.find(p => p.id === id))
+      .filter(Boolean);
+
     const rank = getRank(user.tp);
     const pokemonOwned = Object.keys(user.pokemon || {}).length;
     const shinyCount = Object.values(user.pokemon || {}).filter(p => p.shiny > 0).length;
     const trainerCount = Object.keys(user.trainers || {}).length;
 
     const teamDisplay = pokemonInfo.length
-      ? pokemonInfo.map((p, i) => {
-          const shinyOwned = user.pokemon[p.id]?.shiny > 0;
-          const shinyMark = shinyOwned ? "✨ " : "";
-          const tier = (p.tier || p.rarity || "common").toLowerCase();
-          const emoji = rarityEmojis[tier] || "⚬";
-          return `${i + 1}. ${shinyMark}**${p.name}** ${emoji}`;
-        }).join("\n")
+      ? pokemonInfo
+          .map((p, i) => {
+            const shinyOwned = user.pokemon[p.id]?.shiny > 0;
+            const shinyMark = shinyOwned ? "✨ " : "";
+            const tier = (p.tier || p.rarity || "common").toLowerCase();
+            const emoji = rarityEmojis[tier] || "⚬";
+            return `${i + 1}. ${shinyMark}**${p.name}** ${emoji}`;
+          })
+          .join("\n")
       : "No Pokémon selected.";
 
     // 👇 Add helpful command reminders at the bottom
@@ -359,18 +374,21 @@ export async function showTrainerCard(interaction, user) {
       .setColor(0x5865f2)
       .setDescription(
         `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}\n\n` +
-        `📊 **Pokémon Owned:** ${pokemonOwned}\n✨ **Shiny Pokémon:** ${shinyCount}\n🧍 **Trainers:** ${trainerCount}\n\n` +
-        `**Team:**\n${teamDisplay}${commandHelp}`
+          `📊 **Pokémon Owned:** ${pokemonOwned}\n✨ **Shiny Pokémon:** ${shinyCount}\n🧍 **Trainers:** ${trainerCount}\n\n` +
+          `**Team:**\n${teamDisplay}${commandHelp}`
       )
       .setFooter({ text: "Coop's Collection • /trainercard" });
 
+    // 🧍 Trainer thumbnail
     if (trainerPath) embed.setThumbnail(trainerPath);
+
+    // 🐾 Lead Pokémon image (big sprite at top)
+    if (leadSprite) embed.setImage(leadSprite);
 
     await interaction.editReply({
       embeds: [embed],
       components: [], // ✅ no buttons
     });
-
   } catch (err) {
     console.error("showTrainerCard error:", err);
     await interaction.editReply({ content: "❌ Failed to show Trainer Card." });

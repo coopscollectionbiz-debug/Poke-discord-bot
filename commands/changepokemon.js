@@ -1,14 +1,12 @@
 // ===========================================================
 // 🐾 /changepokemon
 // ===========================================================
-// Opens the secure web-based Pokémon Picker for users to
-// change their displayed Pokémon.
-// Uses 10-minute access tokens to prevent ID spoofing.
-// Matches /changetrainer structure exactly.
+// Opens secure web-based Pokémon Picker.
+// Now handles ephemeral confirmation directly in Discord.
 // ===========================================================
 
-import { SlashCommandBuilder } from "discord.js";
-import { generateToken as generateUserToken } from "../bot_final.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { generateToken } from "../bot_final.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -19,20 +17,25 @@ export default {
     try {
       const userId = interaction.user.id;
       const channelId = interaction.channelId;
+      const token = generateToken(userId, channelId);
 
-      // 🔐 Generate secure user token (same as /changetrainer)
-      const token = generateUserToken(userId, channelId);
-
-      // 🌐 Use the same base URL resolution as /changetrainer
       const baseUrl =
         process.env.RENDER_EXTERNAL_URL ||
         "https://coopscollection-bot.onrender.com";
 
-      // 🧭 Pokémon picker path
       const pickerUrl = `${baseUrl}/public/picker-pokemon/?id=${userId}&token=${token}`;
 
+      const embed = new EmbedBuilder()
+        .setTitle("🐾 Pokémon Picker Opened!")
+        .setDescription(
+          `Click the link below to choose your displayed Pokémon team.\n\n🔗 [Open Pokémon Picker](${pickerUrl})\n\nYour link expires in **10 minutes**.`
+        )
+        .setColor(0xffcb05)
+        .setFooter({ text: "🌟 Coop’s Collection Update" })
+        .setTimestamp();
+
       await interaction.reply({
-        content: `🐾 **Pokémon Picker**\nClick below to choose which Pokémon appears on your Trainer Card!\n\n🔗 ${pickerUrl}\n\nYour link expires in **10 minutes** for security.`,
+        embeds: [embed],
         ephemeral: true,
       });
 

@@ -1,13 +1,12 @@
 // ===========================================================
 // 🎨 /changetrainer
 // ===========================================================
-// Opens the secure web-based Trainer Picker for users to
-// change their displayed Trainer.
-// Uses 10-minute access tokens to prevent ID spoofing.
+// Opens secure web-based Trainer Picker.
+// Now handles ephemeral confirmation directly in Discord.
 // ===========================================================
 
-import { SlashCommandBuilder } from "discord.js";
-import { generateToken as generateUserToken } from "../bot_final.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { generateToken } from "../bot_final.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -17,21 +16,33 @@ export default {
   async execute(interaction) {
     try {
       const userId = interaction.user.id;
-      const token = generateUserToken(userId);
+      const channelId = interaction.channelId;
 
-      // Base URL for your hosted bot/picker
+      // 🔐 Generate secure 10-minute token
+      const token = generateToken(userId, channelId);
+
       const baseUrl =
         process.env.RENDER_EXTERNAL_URL ||
         "https://coopscollection-bot.onrender.com";
 
-      const pickerUrl = `${baseUrl}/public/picker/?id=${userId}&token=${token}`;
+      const pickerUrl = `${baseUrl}/public/picker-trainer/?id=${userId}&token=${token}`;
+
+      // 🎨 Ephemeral confirmation message
+      const embed = new EmbedBuilder()
+        .setTitle("🎨 Trainer Picker Opened!")
+        .setDescription(
+          `Click the link below to select your new Trainer.\n\n🔗 [Open Trainer Picker](${pickerUrl})\n\nYour link expires in **10 minutes**.`
+        )
+        .setColor(0x00ff9d)
+        .setFooter({ text: "🌟 Coop’s Collection Update" })
+        .setTimestamp();
 
       await interaction.reply({
-        content: `🎨 **Trainer Picker**\nClick below to choose your displayed Trainer!\n\n🔗 ${pickerUrl}\n\nYour link expires in **10 minutes** for security.`,
+        embeds: [embed],
         ephemeral: true,
       });
 
-      console.log(`🎟️ Token generated for ${interaction.user.username}`);
+      console.log(`🎟️ Trainer token generated for ${interaction.user.username}`);
     } catch (err) {
       console.error("❌ /changetrainer failed:", err);
       await interaction.reply({

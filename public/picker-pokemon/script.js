@@ -1,12 +1,12 @@
 /* ===========================================================
-   Coop's Collection — Pokémon Management Script (FINAL)
+   Coop's Collection — Pokémon Management Script (FINAL FIXED)
+   Schema-aligned with trainerData.json
    Modes: Change Team / Evolve / Donate
    =========================================================== */
 
 let allPokemonData = {};
 let userPokemon = {};
 let userItems = { evolution_stone: 0 };
-let userOwnedIds = [];
 let currentTeam = [];
 let userId, token;
 let mode = "change";
@@ -101,24 +101,19 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      // ✅ Align with real trainerData schema
       allPokemonData = allData;
-      userOwnedIds = pokeData.owned || [];
-      currentTeam = pokeData.currentTeam || [];
       userPokemon = pokeData.pokemon || {};
+      currentTeam = pokeData.currentTeam || [];
       userItems = pokeData.items || { evolution_stone: 0 };
 
-      // 🪙 Populate top stats bar
-      const stoneCountEl = document.getElementById("stoneCount");
-      if (stoneCountEl) stoneCountEl.textContent = userItems.evolution_stone ?? 0;
-      
-      const ccCountEl = document.getElementById("ccCount");
-      if (ccCountEl) ccCountEl.textContent = pokeData.cc ?? 0;
-      
-      const tpCountEl = document.getElementById("tpCount");
-      if (tpCountEl) tpCountEl.textContent = pokeData.tp ?? 0;
-      
-      const rankLabelEl = document.getElementById("rankLabel");
-      if (rankLabelEl) rankLabelEl.textContent = pokeData.rank ?? "Novice Trainer";
+      // 🪙 Populate stats bar
+      document.getElementById("stoneCount")?.textContent =
+        userItems.evolution_stone ?? 0;
+      document.getElementById("ccCount")?.textContent = pokeData.cc ?? 0;
+      document.getElementById("tpCount")?.textContent = pokeData.tp ?? 0;
+      document.getElementById("rankLabel")?.textContent =
+        pokeData.rank ?? "Novice Trainer";
 
       renderPokemonGrid();
     } catch (err) {
@@ -134,27 +129,39 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!pokemonGrid) return;
     pokemonGrid.innerHTML = "";
 
-    const showAll = mode === "change";
     const isEvolve = mode === "evolve";
     const isDonate = mode === "donate";
 
     for (const [id, poke] of Object.entries(allPokemonData)) {
       const ownedData = userPokemon[id];
-      const isOwned =
-        ownedData && ((ownedData.normal ?? 0) > 0 || (ownedData.shiny ?? 0) > 0);
+      const isOwned = !!(ownedData && (ownedData.normal > 0 || ownedData.shiny > 0));
+      const isShinyOwned = !!(ownedData && ownedData.shiny > 0);
 
-      if (!showAll && !isOwned) continue;
+      // show only owned for evolve / donate
+      if ((isEvolve || isDonate) && !isOwned) continue;
 
       const card = document.createElement("div");
       card.className = "pokemon-card";
       card.dataset.type = poke.type?.toLowerCase() || "";
-      if (isOwned) card.classList.add("owned");
-      else card.classList.add("unowned");
+      card.classList.add(isOwned ? "owned" : "unowned");
 
+      // 🖼 Sprite
+      const spriteWrapper = document.createElement("div");
+      spriteWrapper.className = "sprite-wrapper";
       const sprite = document.createElement("img");
-      sprite.src = `/public/sprites/pokemon/${id}.gif`;
+
+      const basePath = shinyMode
+        ? isShinyOwned
+          ? "/public/sprites/pokemon/shiny"
+          : "/public/sprites/pokemon/grayscale"
+        : isOwned
+          ? "/public/sprites/pokemon/normal"
+          : "/public/sprites/pokemon/grayscale";
+
+      sprite.src = `${basePath}/${id}.gif`;
       sprite.alt = poke.name;
-      card.appendChild(sprite);
+      spriteWrapper.appendChild(sprite);
+      card.appendChild(spriteWrapper);
 
       const name = document.createElement("div");
       name.className = "pokemon-name";
@@ -166,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tier.textContent = poke.tier.toUpperCase();
       card.appendChild(tier);
 
-      // ⭐ Team Marker
+      // ⭐ Team marker
       if (mode === "change" && currentTeam.includes(Number(id))) {
         const badge = document.createElement("div");
         badge.className = "team-badge";
@@ -184,28 +191,19 @@ document.addEventListener("DOMContentLoaded", () => {
           addLock(card);
         } else {
           const cost = evolutionCost(poke.tier, next.tier);
-          const hasEnoughStones = userItems.evolution_stone >= cost;
-          const ownedNormal = userPokemon[id]?.normal ?? 0;
-          const ownedShiny = userPokemon[id]?.shiny ?? 0;
+          const hasEnough = userItems.evolution_stone >= cost;
+          const normal = userPokemon[id]?.normal ?? 0;
+          const shiny = userPokemon[id]?.shiny ?? 0;
 
-          let canEvolve = false;
-          if (shinyMode) {
-            canEvolve = ownedShiny > 0 && cost > 0 && hasEnoughStones;
-          } else {
-            canEvolve = ownedNormal > 0 && cost > 0 && hasEnoughStones;
-          }
+          let canEvolve = shinyMode ? shiny > 0 && hasEnough : normal > 0 && hasEnough;
 
+          addBadge(card, `🪨 ${cost}`, "evolve-cost");
           if (canEvolve) {
-            addBadge(card, `🪨 ${cost}`, "evolve-cost");
             card.classList.add("eligible");
             card.addEventListener("click", () =>
               confirmEvolution(id, evolvesTo, shinyMode)
             );
-          } else {
-            addBadge(card, `🪨 ${cost}`, "evolve-cost");
-            card.classList.add("unowned");
-            addLock(card);
-          }
+          } else addLock(card);
         }
       }
 
@@ -244,13 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("/api/pokemon/evolve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: userId,
-          token,
-          baseId,
-          targetId,
-          shiny: shinyMode,
-        }),
+        body: JSON.stringify({ id: userId, token, baseId, targetId, shiny: shinyMode }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -343,6 +335,7 @@ document.addEventListener("DOMContentLoaded", () => {
       shinyMode = !shinyMode;
       shinyToggle.classList.toggle("active");
       shinyToggle.textContent = shinyMode ? "✨ Shiny Mode ON" : "Shiny Mode OFF";
+      renderPokemonGrid();
     });
   }
 
@@ -354,79 +347,58 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch(`/api/user-pokemon?id=${userId}&token=${token}`);
       const data = await res.json();
       if (data.error) return;
-      
-      const stoneCountEl = document.getElementById("stoneCount");
-      if (stoneCountEl) stoneCountEl.textContent = data.items?.evolution_stone ?? 0;
-      
-      const ccCountEl = document.getElementById("ccCount");
-      if (ccCountEl) ccCountEl.textContent = data.cc ?? 0;
-      
-      const tpCountEl = document.getElementById("tpCount");
-      if (tpCountEl) tpCountEl.textContent = data.tp ?? 0;
-      
-      const rankLabelEl = document.getElementById("rankLabel");
-      if (rankLabelEl) rankLabelEl.textContent = data.rank ?? "Novice Trainer";
+      document.getElementById("stoneCount").textContent =
+        data.items?.evolution_stone ?? 0;
+      document.getElementById("ccCount").textContent = data.cc ?? 0;
+      document.getElementById("tpCount").textContent = data.tp ?? 0;
+      document.getElementById("rankLabel").textContent =
+        data.rank ?? "Novice Trainer";
     } catch (err) {
       console.error("Failed to refresh stats:", err);
     }
   }
 
   // ===========================================================
-  // 🎉 Evolution Popup
+  // 🎉 Popups
   // ===========================================================
   function showEvolutionPopup(fromName, toName, toId, shiny = false) {
     const overlay = document.createElement("div");
     overlay.id = "evoPopupOverlay";
-
     const popup = document.createElement("div");
     popup.id = "evoPopup";
     if (shiny) popup.classList.add("shiny");
-
     const spritePath = shiny
       ? `/public/sprites/pokemon/shiny/${toId}.gif`
       : `/public/sprites/pokemon/normal/${toId}.gif`;
-
     popup.innerHTML = `
       <h2>${shiny ? "✨ " : ""}${fromName} evolved into ${toName}!</h2>
       <img src="${spritePath}" alt="${toName}" />
-      <button id="closeEvoPopup">Continue</button>
-    `;
-
+      <button id="closeEvoPopup">Continue</button>`;
     overlay.appendChild(popup);
     document.body.appendChild(overlay);
-
     document.getElementById("closeEvoPopup").addEventListener("click", () => {
       overlay.classList.add("fadeOut");
       setTimeout(() => overlay.remove(), 300);
     });
   }
 
-  // ===========================================================
-  // 💝 Donation Popup
-  // ===========================================================
   function showDonationPopup(pokeName, tier, value, pokeId, shiny) {
     const overlay = document.createElement("div");
     overlay.id = "donationPopupOverlay";
-
     const popup = document.createElement("div");
     popup.id = "donationPopup";
     if (shiny) popup.classList.add("shiny");
-
     const spritePath = shiny
       ? `/public/sprites/pokemon/shiny/${pokeId}.gif`
       : `/public/sprites/pokemon/normal/${pokeId}.gif`;
-
     popup.innerHTML = `
       <h2>${shiny ? "✨ " : ""}You donated ${pokeName}!</h2>
       <img src="${spritePath}" alt="${pokeName}" />
       <p class="donate-msg">Professor Coop thanks you!</p>
       <p class="cc-earned">+${value.toLocaleString()} CC earned 💰</p>
-      <button id="closeDonationPopup">Continue</button>
-    `;
-
+      <button id="closeDonationPopup">Continue</button>`;
     overlay.appendChild(popup);
     document.body.appendChild(overlay);
-
     document.getElementById("closeDonationPopup").addEventListener("click", () => {
       overlay.classList.add("fadeOut");
       setTimeout(() => overlay.remove(), 300);
@@ -434,28 +406,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===========================================================
-  // 🚀 Init
+  // 🔍 Filtering
   // ===========================================================
+  window.filterPokemon = function () {
+    const search = document.getElementById("searchInput")?.value.toLowerCase() || "";
+    const rarity = document.getElementById("rarityFilter")?.value || "";
+    const type = document.getElementById("typeFilter")?.value || "";
+    const cards = document.querySelectorAll(".pokemon-card");
+    cards.forEach((card) => {
+      const name = card.querySelector(".pokemon-name")?.textContent.toLowerCase() || "";
+      const tier = card.querySelector(".tier-text")?.textContent.toLowerCase() || "";
+      const matchesSearch = !search || name.includes(search);
+      const matchesRarity = !rarity || tier.includes(rarity);
+      const matchesType = !type || card.dataset.type === type;
+      card.style.display =
+        matchesSearch && matchesRarity && matchesType ? "flex" : "none";
+    });
+  };
+
+  // 🚀 Initialize
   init();
-
-// ===========================================================
-// 🔍 Filter Pokémon (Search / Rarity / Type)
-// ===========================================================
-window.filterPokemon = function () {
-  const search = document.getElementById("searchInput")?.value.toLowerCase() || "";
-  const rarity = document.getElementById("rarityFilter")?.value || "";
-  const type = document.getElementById("typeFilter")?.value || "";
-  const cards = document.querySelectorAll(".pokemon-card");
-
-  cards.forEach((card) => {
-    const name = card.querySelector(".pokemon-name")?.textContent.toLowerCase() || "";
-    const tier = card.querySelector(".tier-text")?.textContent.toLowerCase() || "";
-    const matchesSearch = !search || name.includes(search);
-    const matchesRarity = !rarity || tier.includes(rarity);
-    const matchesType = !type || card.dataset.type === type;
-    card.style.display =
-      matchesSearch && matchesRarity && matchesType ? "flex" : "none";
-  });
-};
-
 });

@@ -12,8 +12,6 @@
 
 import fs from "fs/promises";
 import * as fsSync from "fs";
-import path from "path";
-import express from "express";
 import fetch from "node-fetch";
 import { decode } from "html-entities";
 import {
@@ -26,6 +24,49 @@ import {
 import { REST, Routes } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
+
+// 🌐 EXPRESS — single, canonical setup
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const staticPath = path.join(__dirname, "public");
+
+// Serve all /public assets with correct MIME (prevents nosniff)
+app.use(
+  "/public",
+  express.static(staticPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".js"))   res.type("application/javascript");
+      if (filePath.endsWith(".css"))  res.type("text/css");
+      if (filePath.endsWith(".json")) res.type("application/json");
+      if (filePath.endsWith(".svg"))  res.type("image/svg+xml");
+      if (filePath.endsWith(".png"))  res.type("image/png");
+      if (filePath.endsWith(".gif"))  res.type("image/gif");
+    },
+  })
+);
+
+// Trainer picker HTML
+app.get("/public/picker", (_, res) => {
+  res.sendFile(path.join(staticPath, "picker", "index.html"));
+});
+
+// Pokémon picker HTML
+app.get("/public/picker-pokemon", (_, res) => {
+  res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"));
+});
+
+// Health + root
+app.get("/", (_, res) => res.send("Bot running"));
+app.get("/healthz", (_, res) =>
+  res.json({ ready: isReady, uptime: Math.floor((Date.now() - startTime) / 1000) })
+);
+
 
 // ==========================================================
 // 🎨 Color Palette (Matches CSS theme)
@@ -742,18 +783,6 @@ client.on("interactionCreate", async (interaction) => {
     });
   }
 });
-
-
-// ==========================================================
-// 🌐 EXPRESS SERVER
-// ==========================================================
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const app = express();
-const staticPath = path.join(__dirname, "public");
 
 
 // ===========================================================

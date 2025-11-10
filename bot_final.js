@@ -248,7 +248,23 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 const { selectRandomTrainerForUser } = await import("./utils/weightedRandom.js");
 reward = selectRandomTrainerForUser(allTrainers, userObj);
 
-      userObj.trainers ??= {};
+// 🧠 Normalize reward fields
+if (!reward.name) {
+  // Try to resolve a readable name from weightedRandom or filename
+  reward.name =
+    reward.displayName ||
+    reward.trainerName ||
+    (reward.filename ? path.basename(reward.filename, ".png") : null) ||
+    (reward.id ? `Trainer #${reward.id}` : "Unknown Trainer");
+}
+
+// Clean up display formatting
+reward.name = reward.name
+  .replace(/_/g, " ")
+  .replace(/\b\w/g, c => c.toUpperCase()); // capitalize words
+
+userObj.trainers ??= {};
+
 
       // ✅ Use filename / spriteFile / name instead of numeric ID
       const trainerKey = reward.spriteFile || reward.filename || `${reward.id}.png`;

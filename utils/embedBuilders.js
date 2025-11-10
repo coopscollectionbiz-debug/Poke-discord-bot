@@ -10,7 +10,8 @@ import {
   ButtonStyle,
   StringSelectMenuBuilder,
 } from "discord.js";
-import { rarityEmojis } from "../spriteconfig.js"; // ✅ standardized import
+import { rarityEmojis } from "../spriteconfig.js";
+import { rarityColors } from "../bot_final.js"; // 🎨 unified color palette
 
 // ==========================================================
 // 🧩 Helper: format tier text + emoji
@@ -26,25 +27,22 @@ function getTierDisplay(tier) {
 // 🟢 Standard Embeds
 // ==========================================================
 export function createSuccessEmbed(title, description, options = {}) {
-  const embed = new EmbedBuilder()
+  return new EmbedBuilder()
     .setTitle(title)
     .setDescription(description)
-    .setColor(options.color || 0x00ae86)
-    .setTimestamp();
-
-  if (options.thumbnail) embed.setThumbnail(options.thumbnail);
-  if (options.image) embed.setImage(options.image);
-  if (options.footer) embed.setFooter(options.footer);
-  if (options.fields) embed.addFields(options.fields);
-
-  return embed;
+    .setColor(options.color || rarityColors.success)
+    .setTimestamp()
+    .setThumbnail(options.thumbnail || null)
+    .setImage(options.image || null)
+    .setFooter(options.footer || null)
+    .addFields(options.fields || []);
 }
 
 export function createErrorEmbed(message, options = {}) {
   return new EmbedBuilder()
     .setTitle(options.title || "❌ Error")
     .setDescription(message)
-    .setColor(options.color || 0xff0000)
+    .setColor(options.color || rarityColors.mythic) // red
     .setTimestamp()
     .setFooter(options.footer || null);
 }
@@ -53,33 +51,26 @@ export function createWarningEmbed(message, options = {}) {
   return new EmbedBuilder()
     .setTitle(options.title || "⚠️ Warning")
     .setDescription(message)
-    .setColor(options.color || 0xffa500)
+    .setColor(options.color || rarityColors.warning) // yellow
     .setTimestamp()
     .setFooter(options.footer || null);
 }
 
 export function createInfoEmbed(title, description, options = {}) {
-  const embed = new EmbedBuilder()
+  return new EmbedBuilder()
     .setTitle(title)
     .setDescription(description)
-    .setColor(options.color || 0x3498db)
-    .setTimestamp();
-
-  if (options.thumbnail) embed.setThumbnail(options.thumbnail);
-  if (options.image) embed.setImage(options.image);
-  if (options.footer) embed.setFooter(options.footer);
-  if (options.fields) embed.addFields(options.fields);
-
-  return embed;
+    .setColor(options.color || rarityColors.rare) // blue
+    .setTimestamp()
+    .setThumbnail(options.thumbnail || null)
+    .setImage(options.image || null)
+    .setFooter(options.footer || null)
+    .addFields(options.fields || []);
 }
 
 // ==========================================================
 // 🎁 Reward Embeds
 // ==========================================================
-
-/**
- * Pokémon Reward Embed
- */
 export function createPokemonRewardEmbed(pokemon, isShiny, spriteUrl, options = {}) {
   const tier = pokemon.tier || pokemon.rarity || "common";
   const tierDisplay = getTierDisplay(tier);
@@ -94,20 +85,20 @@ export function createPokemonRewardEmbed(pokemon, isShiny, spriteUrl, options = 
   return new EmbedBuilder()
     .setTitle(title)
     .setDescription(description)
-    .setColor(isShiny ? 0xffd700 : 0x00ae86)
+    .setColor(
+      isShiny
+        ? rarityColors.shiny
+        : rarityColors[tier] || rarityColors.success
+    )
     .setThumbnail(spriteUrl)
     .setFooter(options.footer || { text: "Keep collecting to complete your Pokédex!" })
     .setTimestamp();
 }
 
-/**
- * Trainer Reward Embed
- */
 export function createTrainerRewardEmbed(trainer, spriteUrl, options = {}) {
   const tier = trainer.tier || trainer.rarity || "common";
   const tierDisplay = getTierDisplay(tier);
 
-  // ✅ Normalize name (clean .png and folder paths)
   const trainerName =
     trainer.name ||
     trainer.filename?.replace(/^trainers?_2\//, "").replace(/\.png$/i, "") ||
@@ -120,7 +111,7 @@ export function createTrainerRewardEmbed(trainer, spriteUrl, options = {}) {
       options.description ||
         `You unlocked **${trainerName}!**\n${tierDisplay} Tier`
     )
-    .setColor(options.color || 0x5865f2)
+    .setColor(rarityColors[tier] || rarityColors.rare)
     .setThumbnail(spriteUrl)
     .setFooter(options.footer || { text: "Keep training to collect them all!" })
     .setTimestamp();
@@ -143,7 +134,7 @@ export function createPokedexEmbed(pokemon, spriteUrl, typeMap, options = {}) {
         pokemon.flavor || pokemon.description || "No Pokédex entry available."
       }`
     )
-    .setColor(options.color || 0xffcb05)
+    .setColor(options.color || rarityColors.warning) // gold yellow
     .setThumbnail(spriteUrl)
     .setFooter(options.footer || { text: "Coop's Collection Pokédex" })
     .setTimestamp();
@@ -165,7 +156,7 @@ export function createCollectionStatsEmbed(username, stats, options = {}) {
 
   return new EmbedBuilder()
     .setTitle(`${username}'s Collection`)
-    .setColor(options.color || 0x43b581)
+    .setColor(options.color || rarityColors.uncommon) // green success
     .addFields(fields)
     .setFooter(options.footer || { text: "Keep collecting to level up!" })
     .setTimestamp();
@@ -179,14 +170,15 @@ export function createChoiceMenu(customId, placeholder, options) {
     .setCustomId(customId)
     .setPlaceholder(placeholder);
 
-  const menuOptions = options.map((opt) => {
-    const option = { label: opt.label, value: opt.value };
-    if (opt.emoji) option.emoji = opt.emoji;
-    if (opt.description) option.description = opt.description;
-    return option;
-  });
+  menu.addOptions(
+    options.map((opt) => ({
+      label: opt.label,
+      value: opt.value,
+      emoji: opt.emoji,
+      description: opt.description,
+    }))
+  );
 
-  menu.addOptions(menuOptions);
   return menu;
 }
 

@@ -619,6 +619,7 @@ function normalizeUserSchema(id, user) {
   user.onboardingComplete ??= false;
   user.onboardingDate ??= null;
   user.starterPokemon ??= null;
+  user.items ??= { evolution_stone: 0 };
   return user;
 }
 
@@ -858,34 +859,35 @@ app.post("/api/set-trainer", express.json(), async (req, res) => {
 // 🧩 POKÉMON PICKER API ENDPOINTS (Supports 6-Pokémon Teams)
 // ===========================================================
 
-// ✅ GET owned Pokémon
+// ✅ GET full user Pokémon data (for web picker)
 app.get("/api/user-pokemon", (req, res) => {
   const { id, token } = req.query;
-  if (!validateToken(id, token)) {
+  if (!validateToken(id, token))
     return res.status(403).json({ error: "Invalid or expired token" });
-  }
 
   const user = trainerData[id];
-  if (!user) return res.status(404).json({ error: "User not found" });
+  if (!user)
+    return res.status(404).json({ error: "User not found" });
 
-  // Owned Pokémon = any ID with normal or shiny copies
-  const owned =
-    typeof user.pokemon === "object"
-      ? Object.keys(user.pokemon)
-      : Array.isArray(user.pokemon)
-      ? user.pokemon
-      : [];
+  // --- ensure schema consistency ---
+  user.items ??= { evolution_stone: 0 };
+  user.cc ??= 0;
+  user.tp ??= 0;
+  user.rank ??= getRank(user.tp);       // derive rank label from TP if missing
+  user.pokemon ??= {};
+  user.displayedPokemon ??= [];
 
-  // Previously displayed team (6 max)
-  const currentTeam = Array.isArray(user.displayedPokemon)
-    ? user.displayedPokemon
-    : user.displayedPokemon
-    ? [user.displayedPokemon]
-    : [];
-
-  res.json({ owned, currentTeam });
+  // flatten response for front-end
+  res.json({
+    id: user.id,
+    cc: user.cc,
+    tp: user.tp,
+    rank: user.rank,
+    items: user.items,
+    pokemon: user.pokemon,
+    currentTeam: user.displayedPokemon,
+  });
 });
-
 // ✅ POST — set full Pokémon team (up to 6) — Debounced Discord Save
 let lastTeamSave = 0; // global throttle timestamp
 

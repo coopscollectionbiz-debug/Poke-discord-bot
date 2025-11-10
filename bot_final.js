@@ -28,11 +28,25 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // ==========================================================
+// 🎨 Color Palette (Matches CSS theme)
+// ==========================================================
+export const rarityColors = {
+  common: 0x9ca3af,     // gray
+  uncommon: 0x10b981,   // green
+  rare: 0x3b82f6,       // blue
+  epic: 0xa855f7,       // purple
+  legendary: 0xfacc15,  // gold
+  mythic: 0xef4444,     // red
+  shiny: 0xffd700,      // shiny gold highlight
+  success: 0x00ff9d,    // used for confirmations
+};
+
+
+// ==========================================================
 // 📦 Internal Utilities
 // ==========================================================
 import { getRank, getRankTiers } from "./utils/rankSystem.js";
 import { safeReply } from "./utils/safeReply.js";
-import { handleTrainerCardButtons } from "./commands/trainercard.js";
 import { enqueueSave, shutdownFlush } from "./utils/saveQueue.js";
 import { reloadUserFromDiscord, ensureUserInitialized } from "./utils/userInitializer.js";
 import { getAllPokemon, getAllTrainers } from "./utils/dataLoader.js";
@@ -734,42 +748,12 @@ client.on("interactionCreate", async (interaction) => {
     ];
     if (internalButtons.includes(interaction.customId)) return;
 
-    try {
-      // 🎴 Trainer Card Buttons
-      if (
-        interaction.customId.startsWith("show_full_team") ||
-        interaction.customId.startsWith("refresh_card") ||
-        interaction.customId.startsWith("share_public") ||
-        interaction.customId.startsWith("change_trainer") ||
-        interaction.customId.startsWith("change_pokemon")
-      ) {
-        await handleTrainerCardButtons(interaction, trainerData, saveDataToDiscord);
-        await saveTrainerDataLocal(trainerData);
-        debouncedDiscordSave();
-        return;
-      }
-
-     // 🪶 Fallback for any obsolete equip buttons (now disabled)
-if (
-  interaction.customId.startsWith("equip_") ||
-  interaction.customId === "skip_equip"
-) {
-  await safeReply(interaction, {
-    content: "⚙️ Trainer equipping is now handled through `/changetrainer`.",
-    ephemeral: true,
-  });
-  return;
-}
-
-      // 🪶 Unhandled fallback
-      console.warn(`⚠️ Unhandled button: ${interaction.customId}`);
-    } catch (err) {
-      console.error(`❌ Button error (${interaction.customId}):`, err.message);
-      await safeReply(interaction, {
-        content: "❌ Error processing your button.",
-        ephemeral: true,
-      });
-    }
+    // ⚙️ Trainer Card buttons are now deprecated — respond helpfully
+    await safeReply(interaction, {
+      content:
+        "⚙️ Trainer Card no longer uses buttons.\nUse `/changetrainer` to update your trainer or `/changepokemon` to update your team.",
+      ephemeral: true,
+    });
   }
 });
 

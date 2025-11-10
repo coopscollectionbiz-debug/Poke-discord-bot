@@ -69,51 +69,59 @@ export function createInfoEmbed(title, description, options = {}) {
 }
 
 // ==========================================================
-// 🎁 Reward Embeds
+// 🎁 Pokémon Reward Embed (Unified Style)
 // ==========================================================
 export function createPokemonRewardEmbed(pokemon, isShiny, spriteUrl, options = {}) {
   const tier = pokemon.tier || pokemon.rarity || "common";
   const tierDisplay = getTierDisplay(tier);
+  const color = isShiny
+    ? rarityColors.shiny
+    : rarityColors[tier.toLowerCase()] || rarityColors.common;
 
-  const title = options.title || (isShiny ? "✨ Shiny Pokémon!" : "🎁 Pokémon Reward!");
-  const description =
-    options.description ||
-    (isShiny
-      ? `✨ You obtained a **Shiny ${pokemon.name}!**\n${tierDisplay} Tier`
-      : `You obtained a **${pokemon.name}!**\n${tierDisplay} Tier`);
+  const displayName = String(pokemon.name || `#${pokemon.id}`)
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+
+  const title = isShiny ? "✨ Shiny Pokémon!" : "🎁 Pokémon Reward!";
+  const desc = isShiny
+    ? `✨ You caught a **Shiny ${displayName}!**\n${tierDisplay} Tier`
+    : `You caught **${displayName}!**\n${tierDisplay} Tier`;
 
   return new EmbedBuilder()
     .setTitle(title)
-    .setDescription(description)
-    .setColor(
-      isShiny
-        ? rarityColors.shiny
-        : rarityColors[tier] || rarityColors.success
-    )
+    .setDescription(desc)
+    .setColor(color)
     .setThumbnail(spriteUrl)
-    .setFooter(options.footer || { text: "Keep collecting to complete your Pokédex!" })
+    .setFooter({ text: "🌟 Coop’s Collection Reward" })
     .setTimestamp();
 }
 
+// ==========================================================
+// 👥 Trainer Reward Embed (Unified Style)
+// ==========================================================
 export function createTrainerRewardEmbed(trainer, spriteUrl, options = {}) {
   const tier = trainer.tier || trainer.rarity || "common";
   const tierDisplay = getTierDisplay(tier);
+  const color = rarityColors[tier.toLowerCase()] || rarityColors.common;
 
-  const trainerName =
-    trainer.name ||
-    trainer.filename?.replace(/^trainers?_2\//, "").replace(/\.png$/i, "") ||
-    trainer.spriteFile?.replace(/^trainers?_2\//, "").replace(/\.png$/i, "") ||
-    "Unknown Trainer";
+  const displayName = String(trainer.name || trainer.key || "Unknown Trainer")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+
+  const typeLabel = trainer.key
+    ? trainer.key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "Trainer";
 
   return new EmbedBuilder()
-    .setTitle(options.title || "🎓 Trainer Reward!")
+    .setTitle(`👥 ${displayName}`)
     .setDescription(
-      options.description ||
-        `You unlocked **${trainerName}!**\n${tierDisplay} Tier`
+      `🎖️ **Rarity:** ${tierDisplay}\n🧢 **Trainer Type:** ${typeLabel}`
     )
-    .setColor(rarityColors[tier] || rarityColors.rare)
+    .setColor(color)
     .setThumbnail(spriteUrl)
-    .setFooter(options.footer || { text: "Keep training to collect them all!" })
+    .setFooter({ text: "🌟 Coop’s Collection Reward" })
     .setTimestamp();
 }
 

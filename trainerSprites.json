@@ -663,7 +663,7 @@
       "blue-masters2.png",
       "blue.png"
     ],
-    "tier": "Legendary"
+    "tier": "Mythic"
   },
   "boarder": {
     "sprites": [
@@ -1944,7 +1944,7 @@
     "sprites": [
       "gladion-stance.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "gloria": {
     "sprites": [
@@ -1984,7 +1984,7 @@
     "sprites": [
       "green.png"
     ],
-    "tier": "Legendary"
+    "tier": "Mythic"
   },
   "greta": {
     "sprites": [

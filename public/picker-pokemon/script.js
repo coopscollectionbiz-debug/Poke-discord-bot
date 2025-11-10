@@ -1,5 +1,5 @@
 /* ===========================================================
-   Coop's Collection — Pokémon Management Script (FINAL FIXED)
+   Coop's Collection — Pokémon Management Script (FINAL v2)
    Schema-aligned with trainerData.json
    Modes: Change Team / Evolve / Donate
    =========================================================== */
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // ✅ Align with real trainerData schema
+      // ✅ Align with trainerData schema
       allPokemonData = allData;
       userPokemon = pokeData.pokemon || {};
       currentTeam = pokeData.currentTeam || [];
@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const isOwned = !!(ownedData && (ownedData.normal > 0 || ownedData.shiny > 0));
       const isShinyOwned = !!(ownedData && ownedData.shiny > 0);
 
-      // show only owned for evolve / donate
+      // Show only owned Pokémon in evolve/donate modes
       if ((isEvolve || isDonate) && !isOwned) continue;
 
       const card = document.createElement("div");
@@ -163,6 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
       spriteWrapper.appendChild(sprite);
       card.appendChild(spriteWrapper);
 
+      // 🏷 Name + Tier
       const name = document.createElement("div");
       name.className = "pokemon-name";
       name.textContent = poke.name;
@@ -173,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tier.textContent = poke.tier.toUpperCase();
       card.appendChild(tier);
 
-      // ⭐ Team marker
+      // ⭐ Team Marker
       if (mode === "change" && currentTeam.includes(Number(id))) {
         const badge = document.createElement("div");
         badge.className = "team-badge";
@@ -195,7 +196,9 @@ document.addEventListener("DOMContentLoaded", () => {
           const normal = userPokemon[id]?.normal ?? 0;
           const shiny = userPokemon[id]?.shiny ?? 0;
 
-          let canEvolve = shinyMode ? shiny > 0 && hasEnough : normal > 0 && hasEnough;
+          const canEvolve = shinyMode
+            ? shiny > 0 && hasEnough
+            : normal > 0 && hasEnough;
 
           addBadge(card, `🪨 ${cost}`, "evolve-cost");
           if (canEvolve) {
@@ -203,7 +206,9 @@ document.addEventListener("DOMContentLoaded", () => {
             card.addEventListener("click", () =>
               confirmEvolution(id, evolvesTo, shinyMode)
             );
-          } else addLock(card);
+          } else {
+            addLock(card);
+          }
         }
       }
 
@@ -220,6 +225,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       pokemonGrid.appendChild(card);
     }
+
+    // 🧭 Empty state message for evolve/donate
+    if ((isEvolve || isDonate) && !pokemonGrid.querySelector(".pokemon-card")) {
+      setStatus("No eligible Pokémon for this mode.", "error");
+    }
+
+    // 🔍 Re-apply active filters
+    window.filterPokemon?.();
   }
 
   // ===========================================================
@@ -406,21 +419,32 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===========================================================
-  // 🔍 Filtering
+  // 🔍 Filtering (Search / Rarity / Type / Owned)
   // ===========================================================
   window.filterPokemon = function () {
     const search = document.getElementById("searchInput")?.value.toLowerCase() || "";
     const rarity = document.getElementById("rarityFilter")?.value || "";
-    const type = document.getElementById("typeFilter")?.value || "";
-    const cards = document.querySelectorAll(".pokemon-card");
+    const type   = document.getElementById("typeFilter")?.value || "";
+    const ownedF = document.getElementById("ownedFilter")?.value || "";
+    const cards  = document.querySelectorAll(".pokemon-card");
+
     cards.forEach((card) => {
       const name = card.querySelector(".pokemon-name")?.textContent.toLowerCase() || "";
       const tier = card.querySelector(".tier-text")?.textContent.toLowerCase() || "";
+      const isOwned = card.classList.contains("owned");
+
       const matchesSearch = !search || name.includes(search);
       const matchesRarity = !rarity || tier.includes(rarity);
-      const matchesType = !type || card.dataset.type === type;
+      const matchesType   = !type || card.dataset.type === type;
+      const matchesOwned  =
+        !ownedF ||
+        (ownedF === "owned" && isOwned) ||
+        (ownedF === "unowned" && !isOwned);
+
       card.style.display =
-        matchesSearch && matchesRarity && matchesType ? "flex" : "none";
+        matchesSearch && matchesRarity && matchesType && matchesOwned
+          ? "flex"
+          : "none";
     });
   };
 

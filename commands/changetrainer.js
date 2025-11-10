@@ -25,7 +25,7 @@ export default {
         process.env.RENDER_EXTERNAL_URL ||
         "https://coopscollection-bot.onrender.com";
 
-      const pickerUrl = `${baseUrl}/public/picker-trainer/?id=${userId}&token=${token}`;
+      const pickerUrl = `${baseUrl}/public/picker/?id=${userId}&token=${token}`;
 
       // 🎨 Ephemeral confirmation message
       const embed = new EmbedBuilder()

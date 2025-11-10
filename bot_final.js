@@ -988,34 +988,6 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
 
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
 
-// ==========================================================
-// 🤖 BOT READY EVENT
-// ==========================================================
-client.once("ready", async () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-
-  try {
-    trainerData = await loadTrainerData();
-    trainerData = sanitizeTrainerData(trainerData); // 🧼 Clean it immediately
-  } catch (err) {
-    console.error("❌ Trainer data load failed:", err.message);
-    trainerData = {};
-  }
-
- // ==========================================================
-// 🤖 BOT READY EVENT
-// ==========================================================
-client.once("ready", async () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-
-  try {
-    trainerData = await loadTrainerData();
-    trainerData = sanitizeTrainerData(trainerData); // 🧼 Clean it immediately
-  } catch (err) {
-    console.error("❌ Trainer data load failed:", err.message);
-    trainerData = {};
-  }
-
  // ==========================================================
 // 🤖 BOT READY EVENT
 // ==========================================================

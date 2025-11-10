@@ -108,12 +108,17 @@ document.addEventListener("DOMContentLoaded", () => {
       userItems = pokeData.items || { evolution_stone: 0 };
 
       // 🪙 Populate top stats bar
-      document.getElementById("stoneCount")?.textContent =
-        userItems.evolution_stone ?? 0;
-      document.getElementById("ccCount")?.textContent = pokeData.cc ?? 0;
-      document.getElementById("tpCount")?.textContent = pokeData.tp ?? 0;
-      document.getElementById("rankLabel")?.textContent =
-        pokeData.rank ?? "Novice Trainer";
+      const stoneCountEl = document.getElementById("stoneCount");
+      if (stoneCountEl) stoneCountEl.textContent = userItems.evolution_stone ?? 0;
+      
+      const ccCountEl = document.getElementById("ccCount");
+      if (ccCountEl) ccCountEl.textContent = pokeData.cc ?? 0;
+      
+      const tpCountEl = document.getElementById("tpCount");
+      if (tpCountEl) tpCountEl.textContent = pokeData.tp ?? 0;
+      
+      const rankLabelEl = document.getElementById("rankLabel");
+      if (rankLabelEl) rankLabelEl.textContent = pokeData.rank ?? "Novice Trainer";
 
       renderPokemonGrid();
     } catch (err) {
@@ -349,12 +354,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch(`/api/user-pokemon?id=${userId}&token=${token}`);
       const data = await res.json();
       if (data.error) return;
-      document.getElementById("stoneCount").textContent =
-        data.items?.evolution_stone ?? 0;
-      document.getElementById("ccCount").textContent = data.cc ?? 0;
-      document.getElementById("tpCount").textContent = data.tp ?? 0;
-      document.getElementById("rankLabel").textContent =
-        data.rank ?? "Novice Trainer";
+      
+      const stoneCountEl = document.getElementById("stoneCount");
+      if (stoneCountEl) stoneCountEl.textContent = data.items?.evolution_stone ?? 0;
+      
+      const ccCountEl = document.getElementById("ccCount");
+      if (ccCountEl) ccCountEl.textContent = data.cc ?? 0;
+      
+      const tpCountEl = document.getElementById("tpCount");
+      if (tpCountEl) tpCountEl.textContent = data.tp ?? 0;
+      
+      const rankLabelEl = document.getElementById("rankLabel");
+      if (rankLabelEl) rankLabelEl.textContent = data.rank ?? "Novice Trainer";
     } catch (err) {
       console.error("Failed to refresh stats:", err);
     }

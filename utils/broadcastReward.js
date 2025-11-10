@@ -82,19 +82,26 @@ export async function broadcastReward(
         .replace(/\.png\.png$/i, ".png")
         .toLowerCase();
 
-      // 🧠 Normalize readable trainer name
-      let nameSource = item.name || baseId;
-      nameSource = nameSource
-        .replace(/\.png$/i, "")
-        .replace(/[-_]/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase())
-        .replace(/\bTrainer\s*\d+\b/i, "")
-        .trim();
+      // 🧠 Normalize readable trainer name (keep "Trainer 77" and Dexio-style names)
+let nameSource =
+  item.name ||
+  item.displayName ||
+  item.groupName ||
+  (item.spriteFile || item.filename || baseId || "")
+    .replace(/^trainers?_2\//i, "")
+    .replace(/\.png$/i, "")
+    .trim();
 
-      if (!nameSource || /^\d+$/.test(nameSource)) nameSource = "Unknown Trainer";
+nameSource = nameSource
+  .replace(/[_\-]+/g, " ")
+  .replace(/\s{2,}/g, " ")
+  .replace(/\b\w/g, c => c.toUpperCase())
+  .trim();
 
-      displayName = nameSource;
-      spriteUrl = `${spritePaths.trainers}${cleanFile}`;
+if (!nameSource) nameSource = "Trainer";
+displayName = nameSource;
+spriteUrl = `${spritePaths.trainers}${cleanFile}`;
+
     }
 
     // ======================================================

@@ -221,20 +221,21 @@ async function saveDataToDiscord(data) {
 }
 
 // ==========================================================
-// 🎁 DETERMINISTIC RANDOM REWARD SYSTEM
+// 🎁 DETERMINISTIC RANDOM REWARD SYSTEM (Fixed Trainer Names)
 // ==========================================================
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   console.log("⚙️ tryGiveRandomReward executed for", interactionUser.username);
 
-  // Cooldown only (no RNG here)
+  // ⏳ Cooldown (no RNG gating)
   const now = Date.now();
   const last = rewardCooldowns.get(interactionUser.id) || 0;
   if (now - last < REWARD_COOLDOWN) return;
   rewardCooldowns.set(interactionUser.id, now);
 
-  // Load data pools
+  // Load Pokémon + flattened trainer pool for correct names
   const allPokemon = await getAllPokemon();
-  const allTrainers = await getAllTrainers();
+  const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
+  const flatTrainers = await getFlattenedTrainers();
 
   let reward, isShiny = false, isPokemon = false;
 
@@ -253,33 +254,27 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       // 🔵 Trainer reward
       isPokemon = false;
 
-      // Dynamically import latest trainer selector
+      // Dynamic import for latest selector
       const { selectRandomTrainerForUser } = await import("./utils/weightedRandom.js");
-      reward = selectRandomTrainerForUser(allTrainers, userObj);
+      reward = selectRandomTrainerForUser(flatTrainers, userObj);
 
-      // 🧠 Normalize reward fields
-      if (!reward.name) {
-        reward.name =
-          reward.key ||                                     // e.g., "acerola"
-          reward.trainerName ||
-          reward.id ||
-          (reward.filename ? path.basename(reward.filename, ".png") : null) ||
-          "Unknown Trainer";
-      }
+      // ✅ Normalize and trust flattened data
+      reward.name =
+        reward.name ||
+        reward.displayName ||
+        reward.groupName ||
+        (reward.filename ? reward.filename.replace(".png", "") : "Trainer");
 
-      // Clean up and capitalize
-      reward.name = String(reward.name)
+      reward.name = reward.name
         .replace(/_/g, " ")
         .replace(/\b\w/g, (c) => c.toUpperCase())
         .trim();
 
-      // Fallback tier/rarity
       reward.tier = reward.tier || reward.rarity || "common";
 
-      // ✅ Record trainer ownership
+      // Record trainer ownership
       userObj.trainers ??= {};
       const trainerKey = reward.spriteFile || reward.filename || `${reward.id}.png`;
-
       if (trainerKey) {
         userObj.trainers[trainerKey] = (userObj.trainers[trainerKey] || 0) + 1;
         console.log(`🎁 Trainer reward → ${reward.name} (${reward.tier}) key=${trainerKey}`);
@@ -292,17 +287,17 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     return;
   }
 
+  // 💾 Save to Discord backup
   await saveDataToDiscord(trainerData);
 
-  // 🖼️ Sprite URL (trainer-safe)
+  // 🖼️ Sprite URL
   let spriteUrl;
   if (isPokemon) {
     spriteUrl = isShiny
       ? `${spritePaths.shiny}${reward.id}.gif`
       : `${spritePaths.pokemon}${reward.id}.gif`;
   } else {
-    const trainerKey = reward.spriteFile || reward.filename || `${reward.id}.png`;
-    const cleanFile = trainerKey
+    const cleanFile = (reward.filename || reward.spriteFile || `${reward.id}.png`)
       .replace(/^trainers?_2\//, "")
       .replace(/\s+/g, "")
       .replace(/\.png\.png$/i, ".png")
@@ -310,6 +305,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     spriteUrl = `${spritePaths.trainers}${cleanFile}`;
   }
 
+  // 🎨 Embed
   const embed = isPokemon
     ? createPokemonRewardEmbed(reward, isShiny, spriteUrl)
     : createTrainerRewardEmbed(reward, spriteUrl);
@@ -320,7 +316,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     );
   }
 
-  // 🗣️ Public announcement
+  // 🗣️ Local announcement
   try {
     const announcement = isPokemon
       ? `🎉 <@${interactionUser.id}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`
@@ -330,7 +326,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     console.warn("⚠️ Public reward announcement failed:", err.message);
   }
 
-  // 🌍 Global broadcast (server-wide announcement)
+  // 🌍 Global broadcast
   try {
     await broadcastReward(client, {
       user: interactionUser,

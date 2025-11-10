@@ -4,10 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pokémon Team Picker | Coop’s Collection</title>
+
+    <!-- ===================================================== -->
+    <!-- 🧩 Styles -->
+    <!-- ===================================================== -->
     <link rel="stylesheet" href="style.css" />
+
+    <!-- Defer ensures DOM is loaded before script executes -->
+    <script type="module" src="script.js" defer></script>
   </head>
 
   <body>
+    <!-- ===================================================== -->
+    <!-- HEADER -->
+    <!-- ===================================================== -->
     <header>
       <h1>🐾 Choose Your Pokémon Team</h1>
       <p class="subtitle">
@@ -48,7 +58,8 @@
     <!-- ===================================================== -->
     <section id="teamControls" class="team-controls">
       <p id="teamCounter">0/6 selected</p>
-      <button id="saveTeam" class="save-btn">💾 Save Team</button>
+      <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
+      <p id="teamStatus" class="status-msg"></p>
     </section>
 
     <!-- ===================================================== -->
@@ -69,7 +80,5 @@
         <span>Secure session expires after 10 minutes</span>
       </p>
     </footer>
-
-    <script type="module" src="script.js"></script>
   </body>
 </html>

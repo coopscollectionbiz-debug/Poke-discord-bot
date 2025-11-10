@@ -940,9 +940,13 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       return res.status(400).json({ success: false, error: "Team must be 1–6 Pokémon" });
     }
 
-    // ✅ Update in-memory + local save
-    user.displayedPokemon = team.map(String);
+    // ===========================================================
+    // 🧠 Schema Update — maintain both team + lead
+    // ===========================================================
+    user.team = team.map(String);
+    user.displayedPokemon = team[0]; // first Pokémon is lead
     trainerData[id] = user;
+
     await saveTrainerDataLocal(trainerData);
 
     // 🧠 Smart Discord backup throttle (1× per minute max)
@@ -958,22 +962,28 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
 
     console.log(`✅ ${id} saved team [${team.join(", ")}]`);
 
-    // =======================================================
-    // 🧾 Send confirmation message to invoking Discord channel
-    // =======================================================
+    // ===========================================================
+    // 🧩 Readable embed (use Pokémon names from pokemonData.json)
+    // ===========================================================
     try {
+      const allPokemon = JSON.parse(
+        fsSync.readFileSync("./public/pokemonData.json", "utf8")
+      );
+      const leadId = team[0];
+      const leadInfo = allPokemon[leadId];
+      const leadName = leadInfo?.name || `#${leadId}`;
+
       const channelId = getChannelIdForToken(token);
       if (channelId) {
         const channel = await client.channels.fetch(channelId).catch(() => null);
         if (channel) {
-          const leadName = team[0];
           const embed = new EmbedBuilder()
             .setTitle("🐾 Pokémon Team Updated!")
             .setDescription(
               `✅ You set your Pokémon team!\n**${leadName}** is now your lead Pokémon.\nUse **/trainercard** to view your updated card.`
             )
             .setColor(0xffcb05)
-            .setThumbnail(`${spritePaths.pokemon}${leadName}.gif`)
+            .setThumbnail(`${spritePaths.pokemon}${leadId}.gif`)
             .setFooter({ text: "🌟 Coop’s Collection Update" })
             .setTimestamp();
 
@@ -993,7 +1003,6 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-
 
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
 

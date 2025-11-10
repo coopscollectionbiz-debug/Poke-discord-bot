@@ -14,14 +14,14 @@ export async function broadcastReward(
   {
     user,
     type,              // "pokemon" or "trainer"
-    item,              // object with { id, name, rarity/tier, spriteFile/filename }
+    item,              // { id, name, rarity/tier, spriteFile/filename }
     shiny = false,
     source = "random",
-    originChannel = null, // message.channel or interaction.channel
+    originChannel = null,
   }
 ) {
   try {
-    // 🧭 Anti-spam (5 s per user)
+    // 🧭 Anti-spam (5s per user)
     const last = lastBroadcast.get(user.id);
     if (last && Date.now() - last < 5000) return;
     lastBroadcast.set(user.id, Date.now());
@@ -37,7 +37,7 @@ export async function broadcastReward(
     const rareChannel   = await safeFetchChannel(client, RARE_CHANNEL_ID);
 
     // ======================================================
-    // 🧩 Rarity classification (Fixed)
+    // 🧩 Rarity classification
     // ======================================================
     const rarity = (item.rarity || item.tier || "common").toString().toLowerCase();
     const emoji  = rarityEmojis?.[rarity] || "⚬";
@@ -45,18 +45,31 @@ export async function broadcastReward(
     const isRareTier = ["rare", "epic", "legendary", "mythic"].includes(rarity);
 
     // ======================================================
-    // 🖼️ Sprite resolution
+    // 🎨 Color map — matched to CSS theme
+    // ======================================================
+    const rarityColors = {
+      common: 0x9ca3af,     // gray
+      uncommon: 0x10b981,   // green
+      rare: 0x3b82f6,       // blue
+      epic: 0xa855f7,       // purple
+      legendary: 0xfacc15,  // gold
+      mythic: 0xef4444,     // red
+    };
+
+    // ======================================================
+    // 🖼️ Sprite resolution + readable name
     // ======================================================
     let spriteUrl = "";
     let displayName = "";
 
     if (type === "pokemon") {
+      // 🟢 Pokémon handling
       displayName = shiny ? `✨ Shiny ${item.name}` : item.name;
       spriteUrl = shiny
         ? `${spritePaths.shiny}${item.id}.gif`
         : `${spritePaths.pokemon}${item.id}.gif`;
     } else {
-      // ✅ Normalize trainer filename and display name
+      // 🔵 Trainer handling
       const baseId = String(item.id || "")
         .replace(/^trainers?_2\//, "")
         .replace(/\.png$/i, "")
@@ -66,26 +79,21 @@ export async function broadcastReward(
       const cleanFile = (item.spriteFile || item.filename || `${baseId}.png`)
         .replace(/^trainers?_2\//, "")
         .replace(/\s+/g, "")
-        .replace(/\.png\.png$/i, ".png") // double extension safety
+        .replace(/\.png\.png$/i, ".png")
         .toLowerCase();
 
-     // 🧼 Clean up any generic or numeric trainer names
-if (
-  item.name &&
-  !/^trainer\s*\d+/i.test(item.name) &&
-  !item.name.toLowerCase().startsWith("trainer ")
-) {
-  displayName = item.name;
-} else {
-  displayName = baseId
-    .replace(/^trainers?_2\//, "")
-    .replace(/\.png$/i, "")
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-}
+      // 🧠 Normalize readable trainer name
+      let nameSource = item.name || baseId;
+      nameSource = nameSource
+        .replace(/\.png$/i, "")
+        .replace(/[-_]/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .replace(/\bTrainer\s*\d+\b/i, "")
+        .trim();
 
+      if (!nameSource || /^\d+$/.test(nameSource)) nameSource = "Unknown Trainer";
 
+      displayName = nameSource;
       spriteUrl = `${spritePaths.trainers}${cleanFile}`;
     }
 
@@ -107,7 +115,9 @@ if (
     const embed = new EmbedBuilder()
       .setTitle(title)
       .setDescription(description)
-      .setColor(shiny ? 0xffd700 : type === "trainer" ? 0x5865f2 : 0x43b581)
+      .setColor(
+        shiny ? 0xffd700 : rarityColors[rarity] || (type === "trainer" ? 0x5865f2 : 0x43b581)
+      )
       .setThumbnail(spriteUrl)
       .setFooter({ text: "🌟 Coop’s Collection Broadcast" })
       .setTimestamp();

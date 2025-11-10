@@ -6,6 +6,8 @@
 // - Reuses showTrainerCard() from trainercard.js
 // - No onboarding logic
 // - Supports self or another user
+// - Public when showing your own card, ephemeral when viewing another user's
+// - Adds "(Private View)" footer indicator for ephemeral views
 // ==========================================================
 
 import {
@@ -21,7 +23,7 @@ import { showTrainerCard } from "./trainercard.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("showcard")
-    .setDescription("Publicly display your Trainer Card or view another user's.")
+    .setDescription("Display your Trainer Card publicly, or view another user's card privately.")
     .addUserOption((option) =>
       option
         .setName("user")
@@ -31,32 +33,45 @@ export default {
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {
-      // Public message
-      await interaction.deferReply({ ephemeral: false });
-
       // Determine target (self or mentioned)
       const targetUser = interaction.options.getUser("user") || interaction.user;
       const targetId = targetUser.id;
+      const isSelf = targetId === interaction.user.id;
+
+      // If viewing your own card → public
+      // If viewing someone else's card → ephemeral (private)
+      await interaction.deferReply({ ephemeral: !isSelf });
 
       const user = trainerData[targetId];
       if (!user) {
         return safeReply(interaction, {
           content:
-            targetId === interaction.user.id
+            isSelf
               ? "⚠️ You don’t have a Trainer Card yet! Use `/trainercard` to create one."
               : `⚠️ ${targetUser.username} doesn’t have a Trainer Card yet.`,
           ephemeral: true,
         });
       }
 
-      // Ensure user data is valid
+      // Ensure data is valid
       const ensured = await ensureUserInitialized(targetId, targetUser.username, trainerData, client);
 
-      // ✅ Reuse the same embed display
+      // ✅ Reuse the same embed display (pass targetUser so the correct name/avatar show)
       const message = await showTrainerCard(interaction, ensured, targetUser);
 
-      // 🧩 If showTrainerCard returns a message with buttons,
-      // rewrite the Show Full Team button to include the targetId
+      // 🧩 If ephemeral, append “(Private View)” footer text
+      if (!isSelf && message?.embeds?.length > 0) {
+        const updatedEmbed = message.embeds[0];
+        const existingFooter = updatedEmbed.footer?.text || "Coop's Collection";
+        updatedEmbed.setFooter({ text: `${existingFooter} • (Private View)` });
+
+        await interaction.editReply({
+          embeds: [updatedEmbed],
+          components: message.components || [],
+        });
+      }
+
+      // 🧩 Optional legacy support for Show Full Team (safe rewrite)
       if (message?.components?.length) {
         const updatedComponents = message.components.map((row) => {
           if (!row?.components) return row;

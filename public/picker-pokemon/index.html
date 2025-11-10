@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coop’s Collection — Pokémon Management</title>
+
+    <!-- ===========================================================
+         Styles
+    =========================================================== -->
     <link rel="stylesheet" href="/public/picker-pokemon/style.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
@@ -12,6 +16,9 @@
   </head>
 
   <body>
+    <!-- ===========================================================
+         Header
+    =========================================================== -->
     <header>
       <h1>Pokémon Management Portal</h1>
       <p>⭐ Build your team · 🧬 Evolve with stones · 💝 Donate for CC</p>
@@ -31,7 +38,7 @@
     </div>
 
     <!-- ===========================================================
-         Controls (Filters & Search)
+         Filters and Search
     =========================================================== -->
     <div id="controls">
       <input
@@ -80,7 +87,7 @@
     <div id="pokemonGrid"></div>
 
     <!-- ===========================================================
-         Save Button + Status
+         Footer (Save + Status)
     =========================================================== -->
     <footer>
       <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
@@ -91,34 +98,8 @@
     </footer>
 
     <!-- ===========================================================
-         Scripts
+         Script (deferred)
     =========================================================== -->
-    <script src="/public/picker-pokemon/script.js"></script>
-
-    <script>
-      // Optional client-side filter logic for search/type/rarity
-      function filterPokemon() {
-        const search = document
-          .getElementById("searchInput")
-          .value.toLowerCase();
-        const rarity = document.getElementById("rarityFilter").value;
-        const type = document.getElementById("typeFilter").value;
-        const cards = document.querySelectorAll(".pokemon-card");
-
-        cards.forEach((card) => {
-          const name = card
-            .querySelector(".pokemon-name")
-            ?.textContent.toLowerCase();
-          const tier = card
-            .querySelector(".tier-text")
-            ?.textContent.toLowerCase();
-          const matchesSearch = !search || name.includes(search);
-          const matchesRarity = !rarity || tier.includes(rarity);
-          const matchesType = !type || card.dataset.type === type;
-          card.style.display =
-            matchesSearch && matchesRarity && matchesType ? "flex" : "none";
-        });
-      }
-    </script>
+    <script src="/public/picker-pokemon/script.js" defer></script>
   </body>
 </html>

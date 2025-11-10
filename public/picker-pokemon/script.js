@@ -426,4 +426,25 @@ document.addEventListener("DOMContentLoaded", () => {
   // 🚀 Init
   // ===========================================================
   init();
+
+// ===========================================================
+// 🔍 Filter Pokémon (Search / Rarity / Type)
+// ===========================================================
+window.filterPokemon = function () {
+  const search = document.getElementById("searchInput")?.value.toLowerCase() || "";
+  const rarity = document.getElementById("rarityFilter")?.value || "";
+  const type = document.getElementById("typeFilter")?.value || "";
+  const cards = document.querySelectorAll(".pokemon-card");
+
+  cards.forEach((card) => {
+    const name = card.querySelector(".pokemon-name")?.textContent.toLowerCase() || "";
+    const tier = card.querySelector(".tier-text")?.textContent.toLowerCase() || "";
+    const matchesSearch = !search || name.includes(search);
+    const matchesRarity = !rarity || tier.includes(rarity);
+    const matchesType = !type || card.dataset.type === type;
+    card.style.display =
+      matchesSearch && matchesRarity && matchesType ? "flex" : "none";
+  });
+};
+
 });

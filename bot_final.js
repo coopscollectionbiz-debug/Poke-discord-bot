@@ -620,6 +620,7 @@ function normalizeUserSchema(id, user) {
   user.onboardingDate ??= null;
   user.starterPokemon ??= null;
   user.items ??= { evolution_stone: 0 };
+  user.purchases ??= []; // for one-time shop items like starter_pack
   return user;
 }
 
@@ -873,7 +874,7 @@ app.get("/api/user-pokemon", (req, res) => {
   user.items ??= { evolution_stone: 0 };
   user.cc ??= 0;
   user.tp ??= 0;
-  user.rank ??= getRank(user.tp);       // derive rank label from TP if missing
+  user.rank = getRank(user.tp);   // always derive from TP
   user.pokemon ??= {};
   user.displayedPokemon ??= [];
 

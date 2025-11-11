@@ -389,14 +389,14 @@ if (currentMode === "donate") {
 }
 
 if (currentMode === "evolve") {
-  // Always show stone cost if this Pokémon has an evolution
+  // Always show stone cost if this Pokémon has any evolution, even if locked
   const evos = getEvoList(p);
   if (evos.length) {
     const target = pokemonData[evos[0]];
     if (target) {
       const cost = getEvolutionCost(p, target);
       badgeHTML = `
-        <div class="evolve-cost" style="bottom:6px; right:6px; opacity:${locked ? 0.6 : 1};">
+        <div class="evolve-cost" style="bottom:6px; right:6px; opacity:${locked ? 0.5 : 1};">
           <img src="/public/sprites/items/evolution_stone.png"
                style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
           ${cost}

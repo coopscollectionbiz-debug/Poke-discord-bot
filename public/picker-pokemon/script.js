@@ -376,41 +376,42 @@ if (currentMode === "team") {
       `<img src="/public/sprites/types/${typeId}.png" alt="${TYPE_MAP[typeId]}" style="width: 32px; height: 32px; image-rendering: pixelated;">`
     ).join('');
 
-    // =======================================================
-// 💰 / 🧬 Mode-specific badges (bottom-right corner)
-// =======================================================
+  // 💰 / 🧬 Mode-specific badges (bottom-right corner)
 let badgeHTML = "";
-if (!locked) {
-  if (currentMode === "donate") {
-    const ccValue = getDonationValue(p.tier, shinyMode);
-    badgeHTML = `
-      <div class="donate-value" style="bottom:6px; right:6px;">
-        💰 ${ccValue}
-      </div>`;
-  } else if (currentMode === "evolve") {
-    const evos = getEvoList(p);
-    if (evos.length) {
-      const target = pokemonData[evos[0]];
-      if (target) {
-        const cost = getEvolutionCost(p, target);
-        badgeHTML = `
-          <div class="evolve-cost" style="bottom:6px; right:6px;">
-            <img src="/public/sprites/items/evolution_stone.png"
-                 style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
-            ${cost}
-          </div>`;
-      }
+
+if (currentMode === "donate") {
+  // Always show CC reward for donate mode (owned-only mode anyway)
+  const ccValue = getDonationValue(p.tier, shinyMode);
+  badgeHTML = `
+    <div class="donate-value" style="bottom:6px; right:6px;">
+      💰 ${ccValue}
+    </div>`;
+}
+
+if (currentMode === "evolve") {
+  // Always show stone cost if this Pokémon has an evolution
+  const evos = getEvoList(p);
+  if (evos.length) {
+    const target = pokemonData[evos[0]];
+    if (target) {
+      const cost = getEvolutionCost(p, target);
+      badgeHTML = `
+        <div class="evolve-cost" style="bottom:6px; right:6px; opacity:${locked ? 0.6 : 1};">
+          <img src="/public/sprites/items/evolution_stone.png"
+               style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
+          ${cost}
+        </div>`;
     }
   }
 }
-
     card.innerHTML = `
       <div class="sprite-wrapper">
         <img src="${spritePath}" class="poke-sprite" alt="${name}">
         ${teamIndex >= 0 ? `<div class="team-badge">${teamIndex + 1}</div>` : ""}
-        ${locked && currentMode === "team" ? `<div class="lock-overlay"><span>🔒</span></div>` : ""}
+        ${locked ? `<div class="lock-overlay"><span>🔒</span></div>` : ""}
         ${displayCount > 0 ? `<div class="count-label bottom-left">x${displayCount}</div>` : ""}
         ${badgeHTML}
+
       </div>
       <div class="pokemon-name">${name}</div>
       <div class="type-icons" style="display: flex; gap: 4px; justify-content: center; margin: 4px 0;">

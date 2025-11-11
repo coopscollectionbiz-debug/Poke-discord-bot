@@ -1,5 +1,5 @@
 // ==========================================================
-// 🏪 Coop's Collection Discord Bot — /shop (Final Production Build v3)
+// 🏪 Coop's Collection Discord Bot — /shop (Final Production Build v4)
 // ==========================================================
 // Features:
 //  • Local logic only (no API requests)
@@ -98,7 +98,7 @@ export default {
       )
         .setThumbnail(POKEMART_IMG)
         .setFooter({
-          text: `Your current balance: ${user.cc.toLocaleString()} CC`,
+          text: `Your current balance: ${user.cc.toLocaleString()} ${COOPCOIN}`,
           iconURL: COOPCOIN_IMG,
         });
 
@@ -167,15 +167,28 @@ export default {
 
         confirmCollector.on("collect", async (i) => {
           const choice = i.values[0];
+          const itemId = i.customId.replace("confirm_", "");
+          const confirmedItem = SHOP_ITEMS.find((x) => x.id === itemId);
+
+          if (!confirmedItem)
+            return i.update({
+              content: "❌ Invalid item reference. Please reopen the shop and try again.",
+              components: [],
+              embeds: [],
+            });
+
           if (choice === "cancel") {
-            await i.update({ content: "❌ Purchase cancelled.", embeds: [], components: [] });
+            await i.update({
+              embeds: [createSuccessEmbed("❌ Purchase Cancelled", "No changes were made.")],
+              components: [],
+            });
             return;
           }
 
           // ====================================================
           // 🎁 Starter Pack (Safe Commit)
           // ====================================================
-          if (item.id === "starter_pack") {
+          if (confirmedItem.id === "starter_pack") {
             user.purchases ??= [];
             if (user.purchases.includes("starter_pack"))
               return i.reply({ content: "⚠️ You’ve already claimed your Starter Pack!", ephemeral: true });
@@ -261,10 +274,10 @@ export default {
           // ====================================================
           // 🪨 Evolution Stone Purchase (Safe Error Handling)
           // ====================================================
-          if (item.id === "evolution_stone") {
-            if (user.cc < item.cost) {
+          if (confirmedItem.id === "evolution_stone") {
+            if (user.cc < confirmedItem.cost) {
               await i.reply({
-                content: `❌ You don’t have enough Coop Coins! You need **${item.cost} CC**, but only have **${user.cc} CC**.`,
+                content: `❌ You don’t have enough Coop Coins! You need **${confirmedItem.cost} CC**, but only have **${user.cc} CC**.`,
                 ephemeral: true,
               });
 
@@ -275,7 +288,7 @@ export default {
               return;
             }
 
-            user.cc -= item.cost;
+            user.cc -= confirmedItem.cost;
             user.items ??= { evolution_stone: 0 };
             user.items.evolution_stone++;
             await saveTrainerDataLocal(trainerData);
@@ -283,7 +296,7 @@ export default {
 
             const successEmbed = createSuccessEmbed(
               `${EVO_STONE} Evolution Stone Purchased!`,
-              `You spent **${item.cost} CC** and received **1 ${item.name}**.\n\nYou now have **${user.items.evolution_stone}** Evolution Stones.`
+              `You spent **${confirmedItem.cost} CC** and received **1 ${confirmedItem.name}**.\n\nYou now have **${user.items.evolution_stone}** Evolution Stones.`
             ).setFooter({
               text: `Remaining balance: ${user.cc.toLocaleString()} CC`,
               iconURL: COOPCOIN_IMG,
@@ -292,6 +305,15 @@ export default {
             await i.update({ embeds: [successEmbed], components: [] });
           }
         });
+
+        // Auto-clean confirm menu on timeout
+        confirmCollector.on("end", async () => {
+          await reply.edit({ components: [] }).catch(() => {});
+        });
+      });
+
+      collector.on("end", async () => {
+        await reply.edit({ components: [] }).catch(() => {});
       });
     } catch (err) {
       console.error("❌ /shop failed:", err);

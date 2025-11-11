@@ -1,13 +1,10 @@
 // ==========================================================
-// 🏪 Coop's Collection Discord Bot — /shop (Admin Command)
+// 🏪 Coop's Collection Discord Bot — /shop (Admin Command v6.2)
 // ==========================================================
-// Features:
 //  • Requires Administrator permission
-//  • Grants Starter Pack (1 Common, 1 Uncommon, 1 Rare Pokémon + 1 Rare Trainer)
-//  • Grants purchasable Evolution Stones
-//  • Safe interaction handling (no Unknown/AlreadyReplied)
-//  • Uses embedBuilders.js (same as /daily)
-//  • Shiny Pokémon broadcast via broadcastReward()
+//  • Fully deferred (no "Unknown interaction")
+//  • Standardized admin access (PermissionFlagsBits.Administrator)
+//  • Safe interaction fallback handling
 // ==========================================================
 
 import {
@@ -34,7 +31,21 @@ import {
 } from "../utils/embedBuilders.js";
 
 // ==========================================================
-// 🪙 Emojis & Assets
+// 🧩 Utility
+// ==========================================================
+async function safeInteractionReply(i, payload) {
+  try {
+    if (!i.deferred && !i.replied) await i.reply(payload);
+    else await i.followUp(payload);
+  } catch {
+    try {
+      await i.followUp(payload);
+    } catch {}
+  }
+}
+
+// ==========================================================
+// 🪙 Assets
 // ==========================================================
 const COOPCOIN = "<:coopcoin:1437892112959148093>";
 const COOPCOIN_IMG = "https://cdn.discordapp.com/emojis/1437892112959148093.webp?size=96";
@@ -43,7 +54,7 @@ const STARTER_PACK = "<:starter_pack:1437896364087443479>";
 const POKEMART_IMG = "https://poke-discord-bot.onrender.com/public/sprites/items/Pokemart.png";
 
 // ==========================================================
-// 🧩 Shop Items
+// 🛍️ Items
 // ==========================================================
 const SHOP_ITEMS = [
   {
@@ -72,12 +83,11 @@ const SHOP_ITEMS = [
 export default {
   data: new SlashCommandBuilder()
     .setName("shop")
-    .setDescription("Admin: access the PokéMart to grant items or rewards.")
+    .setDescription("Admin: grant or test item rewards via the PokéMart.")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {
-      // ✅ Prevent Discord timeout
       await interaction.deferReply({ ephemeral: true });
 
       const userId = interaction.user.id;
@@ -91,12 +101,9 @@ export default {
         purchases: [],
       });
 
-      // ======================================================
-      // 🏪 Initial Embed
-      // ======================================================
       const embed = createSuccessEmbed(
         "🏪 Coop’s Collection PokéMart (Admin)",
-        "Select an item to view details or confirm a grant."
+        "Select an item to grant or test."
       )
         .setThumbnail(POKEMART_IMG)
         .setFooter({
@@ -124,7 +131,7 @@ export default {
       const reply = await interaction.fetchReply();
 
       // ======================================================
-      // 🎯 Main Menu Collector
+      // 🎯 Main Collector
       // ======================================================
       const collector = reply.createMessageComponentCollector({
         componentType: ComponentType.StringSelect,
@@ -133,15 +140,15 @@ export default {
 
       collector.on("collect", async (i) => {
         if (i.user.id !== userId)
-          return i.reply({ content: "❌ This shop isn’t yours.", ephemeral: true });
+          return safeInteractionReply(i, { content: "❌ This shop isn’t yours.", ephemeral: true });
 
         const item = SHOP_ITEMS.find((x) => x.id === i.values[0]);
         if (!item)
-          return i.reply({ content: "❌ Invalid item.", ephemeral: true });
+          return safeInteractionReply(i, { content: "❌ Invalid item.", ephemeral: true });
 
         const confirmEmbed = createSuccessEmbed(
           `${item.emoji} ${item.name}`,
-          `**Cost:** ${item.cost === 0 ? "🆓 FREE" : `${item.cost} CC`}\n\n${item.description}\n\nConfirm your purchase below.`
+          `**Cost:** ${item.cost === 0 ? "🆓 FREE" : `${item.cost} CC`}\n\n${item.description}\n\nConfirm below.`
         ).setThumbnail(item.sprite);
 
         const confirmRow = new ActionRowBuilder().addComponents(
@@ -154,11 +161,12 @@ export default {
             ])
         );
 
-        await i.update({ embeds: [confirmEmbed], components: [confirmRow] });
+        try {
+          await i.update({ embeds: [confirmEmbed], components: [confirmRow] });
+        } catch {
+          return; // interaction expired — ignore
+        }
 
-        // ======================================================
-        // Scoped Confirm Collector (per-user)
-        // ======================================================
         const confirmCollector = reply.createMessageComponentCollector({
           componentType: ComponentType.StringSelect,
           filter: (x) => x.user.id === userId && x.customId.startsWith("confirm_"),
@@ -172,7 +180,7 @@ export default {
           const confirmedItem = SHOP_ITEMS.find((x) => x.id === itemId);
 
           if (!confirmedItem)
-            return i2.reply({ content: "❌ Invalid item reference.", ephemeral: true });
+            return safeInteractionReply(i2, { content: "❌ Invalid item reference.", ephemeral: true });
 
           if (choice === "cancel") {
             await i2.update({
@@ -184,13 +192,11 @@ export default {
 
           await i2.deferUpdate();
 
-          // ====================================================
-          // 🎁 Starter Pack Logic
-          // ====================================================
+          // 🎁 Starter Pack
           if (confirmedItem.id === "starter_pack") {
             user.purchases ??= [];
             if (user.purchases.includes("starter_pack"))
-              return i2.followUp({ content: "⚠️ Already claimed.", ephemeral: true });
+              return safeInteractionReply(i2, { content: "⚠️ Already claimed.", ephemeral: true });
 
             const allPokemon = await getAllPokemon();
             const allTrainers = await getAllTrainers();
@@ -209,10 +215,8 @@ export default {
             for (const reward of rewards) {
               const shiny = rollForShiny(user.tp || 0);
               user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-              if (shiny) {
-                user.pokemon[reward.id].shiny++;
-                shinyPulled.push(reward);
-              } else user.pokemon[reward.id].normal++;
+              if (shiny) user.pokemon[reward.id].shiny++;
+              else user.pokemon[reward.id].normal++;
 
               const spriteURL = shiny
                 ? `${spritePaths.shiny}${reward.id}.gif`
@@ -224,12 +228,12 @@ export default {
                 item: { id: reward.id, name: reward.name, rarity: reward.tier },
                 shiny,
               });
+              if (shiny) shinyPulled.push(reward);
             }
 
             user.trainers[rareTrainer.id] = true;
             const trainerSprite = `${spritePaths.trainers}${rareTrainer.filename || rareTrainer.id}.png`;
             rewardEmbeds.push(createTrainerRewardEmbed(rareTrainer, trainerSprite));
-
             broadcastQueue.push({
               type: "trainer",
               item: { id: rareTrainer.id, name: rareTrainer.name, rarity: rareTrainer.tier || "rare" },
@@ -251,7 +255,9 @@ export default {
                 }).catch(() => {});
 
               const summary = `You received 3 Pokémon and 1 Rare Trainer!\n${
-                shinyPulled.length ? `✨ ${shinyPulled.length} shiny Pokémon pulled!` : "No shinies this time!"
+                shinyPulled.length
+                  ? `✨ ${shinyPulled.length} shiny Pokémon pulled!`
+                  : "No shinies this time!"
               }`;
 
               const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summary);
@@ -267,12 +273,10 @@ export default {
             return;
           }
 
-          // ====================================================
-          // 🪨 Evolution Stone Logic
-          // ====================================================
+          // 🪨 Evolution Stone
           if (confirmedItem.id === "evolution_stone") {
             if (user.cc < confirmedItem.cost) {
-              await i2.followUp({
+              await safeInteractionReply(i2, {
                 content: `❌ Not enough CC. Need **${confirmedItem.cost}**, have **${user.cc}**.`,
                 ephemeral: true,
               });

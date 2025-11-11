@@ -573,17 +573,27 @@ document.querySelectorAll("#modeToggle .mode-btn").forEach(btn => {
 
   confirmBox.innerHTML = `
     <h2 style="color: var(--brand);">✅ Team Saved!</h2>
-    <p style="margin:0.5rem 0 1rem;color:#ccc;">Your new team has been successfully updated.</p>
+    <p style="margin:0.5rem 0 1rem;color:#ccc;">
+      Your new team has been successfully updated.
+    </p>
     <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;">
       ${teamPreview}
     </div>
-    <button style="background: var(--brand); color: var(--bg); border:none
+    <button style="
+      background: var(--brand);
+      color: var(--bg);
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+    ">OK</button>
+  `;
 
-          confirmBox.querySelector("button").addEventListener("click", () => closeOverlay(modal2));
-          modal2.appendChild(confirmBox);
-        } else {
-          alert("❌ Failed to save team.");
-        }
+  confirmBox.querySelector("button").addEventListener("click", () => closeOverlay(modal2));
+  modal2.appendChild(confirmBox);
+}
+
       } catch (err) {
         alert("❌ " + err.message);
       } finally {

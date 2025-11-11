@@ -25,6 +25,8 @@ let activePokemon = null;
 let showOwned = true;
 let showUnowned = true;
 
+import { rarityEmojis, rarityColors } from "/public/spriteconfig.js";
+
 // ===========================================================
 // 🧠 Utility Constants
 // ===========================================================

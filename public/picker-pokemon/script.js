@@ -1,16 +1,10 @@
 /* ===========================================================
-   Coop’s Collection — Pokémon Picker
+   Coop's Collection — Pokémon Picker (HYBRID FIXED VERSION)
    ===========================================================
-   Modes: 
-     🟢 Change Team
-     🧬 Evolve
-     💝 Donate
-   Includes:
-     • Sticky + compact HUD
-     • Pulse animations for stat changes
-     • Shiny-aware rendering
-     • Tier + cost display on evolutions
-     • Owned/Unowned toggles for Team mode
+   Combines:
+   - Three-mode system (Team, Evolve, Donate)
+   - Proven team selection from working version
+   - Better debugging and error handling
 =========================================================== */
 
 let userId, userToken;
@@ -145,6 +139,7 @@ function refreshStats(newData, prevData) {
 // 🧩 Mode Switching
 // ===========================================================
 function setMode(mode) {
+  console.log(`🔄 Switching to ${mode} mode`);
   currentMode = mode;
   document.querySelectorAll(".mode-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.mode === mode);
@@ -169,6 +164,7 @@ function initShinyToggle() {
       shinyMode = !shinyMode;
       shinyBtn.classList.toggle("active", shinyMode);
       shinyBtn.textContent = shinyMode ? "🌟 Shiny Mode ON" : "✨ Shiny Mode OFF";
+      console.log(`✨ Shiny mode: ${shinyMode}`);
       renderPokemonGrid();
     });
   }
@@ -182,6 +178,7 @@ function initShinyToggle() {
       showUnowned = false; // mutually exclusive
       e.target.classList.toggle("active", showOwned);
       if (unownedBtn) unownedBtn.classList.remove("active");
+      console.log(`👀 Show owned: ${showOwned}, Show unowned: ${showUnowned}`);
       renderPokemonGrid();
     });
   }
@@ -192,6 +189,7 @@ function initShinyToggle() {
       showOwned = false; // mutually exclusive
       e.target.classList.toggle("active", showUnowned);
       if (ownedBtn) ownedBtn.classList.remove("active");
+      console.log(`👀 Show owned: ${showOwned}, Show unowned: ${showUnowned}`);
       renderPokemonGrid();
     });
   }
@@ -225,11 +223,15 @@ function ownedCountForVariant(id) {
 }
 
 // ===========================================================
-// 🎴 Pokémon Grid Renderer (Trainer-style behavior)
+// 🎴 Pokémon Grid Renderer (FIXED VERSION)
 // ===========================================================
 function renderPokemonGrid() {
+  console.log(`🎨 Rendering grid in ${currentMode} mode, shiny: ${shinyMode}`);
   const container = document.getElementById("pokemonGrid");
-  if (!container) return;
+  if (!container) {
+    console.error("❌ pokemonGrid element not found!");
+    return;
+  }
   container.innerHTML = "";
 
   const searchEl = document.getElementById("searchInput");
@@ -321,7 +323,10 @@ function renderPokemonGrid() {
     // 🚫 Click only if NOT locked
     // =======================================================
     if (!locked) {
-      card.addEventListener("click", () => onPokemonClick(id));
+      card.addEventListener("click", () => {
+        console.log(`🖱️ Clicked Pokemon #${id} (${name}) in ${currentMode} mode`);
+        onPokemonClick(id);
+      });
     }
 
     container.appendChild(card);
@@ -332,12 +337,16 @@ function renderPokemonGrid() {
   if (shown === 0) {
     container.innerHTML = `<p class="empty-msg">No Pokémon match your filters.</p>`;
   }
+  
+  console.log(`✅ Rendered ${shown} Pokemon cards`);
 }
 
 // ===========================================================
-// 🖱️ Pokémon Click Handler
+// 🖱️ Pokémon Click Handler (FIXED - HYBRID VERSION)
 // ===========================================================
 function onPokemonClick(id) {
+  console.log(`🎯 onPokemonClick called with id: ${id}, mode: ${currentMode}`);
+  
   if (currentMode === "team") {
     toggleTeamSelection(id);
   } else if (currentMode === "evolve") {
@@ -348,15 +357,21 @@ function onPokemonClick(id) {
 }
 
 function toggleTeamSelection(id) {
+  // Convert to number for consistency
   const numId = Number(id);
+  console.log(`🔄 toggleTeamSelection called with id: ${numId}`);
+  console.log(`📋 Current team:`, selectedTeam);
+  
   const index = selectedTeam.indexOf(numId);
   
   if (index >= 0) {
     // Remove from team
     selectedTeam.splice(index, 1);
+    console.log(`➖ Removed Pokemon #${numId} from team`);
   } else {
     // Add to team (max 6)
     if (selectedTeam.length >= 6) {
+      console.warn(`⚠️ Team is full! Cannot add Pokemon #${numId}`);
       const status = document.getElementById("statusMsg");
       if (status) {
         status.textContent = "❌ Team is full! (Max 6 Pokémon)";
@@ -367,8 +382,10 @@ function toggleTeamSelection(id) {
       return;
     }
     selectedTeam.push(numId);
+    console.log(`➕ Added Pokemon #${numId} to team`);
   }
   
+  console.log(`📋 New team:`, selectedTeam);
   renderPokemonGrid();
 }
 
@@ -376,16 +393,22 @@ function toggleTeamSelection(id) {
 // 🚀 Initialization
 // ===========================================================
 async function init() {
+  console.log("🚀 Initializing Pokemon Portal...");
+  
   // Pull query params
   const url = new URL(window.location.href);
   userId = url.searchParams.get("id");
   userToken = url.searchParams.get("token");
+  
+  console.log(`🔐 User ID: ${userId}, Token: ${userToken ? "present" : "missing"}`);
+  
   if (!userId || !userToken) {
     document.body.innerHTML = "<p>Missing credentials.</p>";
     return;
   }
 
   try {
+    console.log("📦 Loading data...");
     const [pokeRes, userRes] = await Promise.all([
       fetch("/public/pokemonData.json").then(r => r.json()),
       fetchUserData(),
@@ -393,8 +416,19 @@ async function init() {
     pokemonData = pokeRes;
     userData = userRes;
 
+    console.log(`✅ Loaded ${Object.keys(pokemonData).length} Pokemon`);
+    console.log(`👤 User data:`, {
+      id: userData.id,
+      pokemonCount: Object.keys(userData.pokemon || {}).length,
+      currentTeam: userData.currentTeam,
+      stones: userData.items?.evolution_stone,
+      cc: userData.cc,
+      tp: userData.tp
+    });
+
     // Initialize selected team
     selectedTeam = Array.isArray(userData.currentTeam) ? [...userData.currentTeam] : [];
+    console.log(`📋 Initial team:`, selectedTeam);
 
     updateHUD();
     initStickyHUD();
@@ -406,26 +440,42 @@ async function init() {
     // ===========================================================
 
     // Re-render grid when filters change
-    document.getElementById("searchInput")?.addEventListener("input", renderPokemonGrid);
-    document.getElementById("rarityFilter")?.addEventListener("change", renderPokemonGrid);
-    document.getElementById("typeFilter")?.addEventListener("change", renderPokemonGrid);
+    document.getElementById("searchInput")?.addEventListener("input", () => {
+      console.log("🔍 Search input changed");
+      renderPokemonGrid();
+    });
+    document.getElementById("rarityFilter")?.addEventListener("change", () => {
+      console.log("⭐ Rarity filter changed");
+      renderPokemonGrid();
+    });
+    document.getElementById("typeFilter")?.addEventListener("change", () => {
+      console.log("🏷️ Type filter changed");
+      renderPokemonGrid();
+    });
 
     // Debug coverage
     const ids = Object.keys(pokemonData).map(Number).sort((a, b) => a - b);
     console.log("Pokémon loaded:", ids.length, "min:", ids[0], "max:", ids[ids.length - 1]);
-    console.log("First 20 IDs:", ids.slice(0, 20));
 
     // Hook mode buttons
-    document.querySelectorAll(".mode-btn").forEach(btn =>
-      btn.addEventListener("click", () => setMode(btn.dataset.mode))
-    );
+    document.querySelectorAll(".mode-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        console.log(`🔘 Mode button clicked: ${btn.dataset.mode}`);
+        setMode(btn.dataset.mode);
+      });
+    });
 
     // Hook save button (support either id)
     const saveBtn = document.getElementById("saveTeamBtn") || document.getElementById("saveTeam");
-    if (saveBtn) saveBtn.addEventListener("click", async () => {
-      const res = await saveTeam();
+    if (saveBtn) {
+      console.log("✅ Save button found, attaching handler");
+      saveBtn.addEventListener("click", async () => {
+        console.log("💾 Save button clicked");
+        console.log("📋 Saving team:", selectedTeam);
+        const res = await saveTeam();
       const status = document.getElementById("statusMsg");
       if (res.success) {
+        console.log("✅ Team saved successfully!");
         if (status) {
           status.textContent = "✅ Team saved!";
           status.classList.remove("error");
@@ -435,6 +485,7 @@ async function init() {
           alert("✅ Team saved!");
         }
       } else {
+        console.error("❌ Failed to save team:", res.error);
         if (status) {
           status.textContent = "❌ Failed to save team";
           status.classList.remove("success");
@@ -444,10 +495,15 @@ async function init() {
         }
       }
     });
+    } else {
+      console.warn("⚠️ Save button not found!");
+    }
   } catch (err) {
-    console.error(err);
+    console.error("❌ Initialization failed:", err);
     document.body.innerHTML = `<p>Error loading data: ${err.message}</p>`;
   }
+  
+  console.log("🎉 Initialization complete!");
 }
 
 window.addEventListener("DOMContentLoaded", init);
@@ -472,9 +528,13 @@ function closeOverlay(overlay) {
 // 🧬 EVOLUTION MODAL
 // ===========================================================
 function openEvolutionModal(baseId) {
+  console.log(`🧬 Opening evolution modal for Pokemon #${baseId}`);
   const base = pokemonData[baseId];
   const evoList = getEvoList(base);
-  if (!evoList.length) return;
+  if (!evoList.length) {
+    console.warn(`⚠️ Pokemon #${baseId} has no evolutions`);
+    return;
+  }
 
   const overlay = createOverlay();
   const modal = document.createElement("div");
@@ -541,16 +601,20 @@ function openEvolutionModal(baseId) {
 }
 
 async function handleEvolutionConfirm(baseId, targetId, overlay) {
+  console.log(`✨ Evolving Pokemon #${baseId} → #${targetId}`);
   const base = pokemonData[baseId];
   const target = pokemonData[targetId];
   const res = await evolvePokemon(baseId, targetId);
 
   if (!res.success) {
+    console.error("❌ Evolution failed:", res.error);
     alert("❌ " + (res.error || "Evolution failed."));
     closeOverlay(overlay);
     return;
   }
 
+  console.log("✅ Evolution successful!");
+  
   // Pre-confirmation was the selection modal; now show success
   const newOverlay = createOverlay();
   const modal = document.createElement("div");
@@ -578,6 +642,7 @@ async function handleEvolutionConfirm(baseId, targetId, overlay) {
 // 💝 DONATION MODAL
 // ===========================================================
 function openDonationModal(pokeId) {
+  console.log(`💝 Opening donation modal for Pokemon #${pokeId}`);
   const p = pokemonData[pokeId];
   if (!p) return;
   const overlay = createOverlay();
@@ -603,7 +668,7 @@ function openDonationModal(pokeId) {
   modal.innerHTML = `
     <h2>💝 Donate ${shinyMode ? "✨ shiny " : ""}${p.name}?</h2>
     <img src="${sprite}" class="poke-sprite large" alt="${p.name}">
-    <p>You’ll receive <b>${finalValue} CC</b> for donating this Pokémon.</p>
+    <p>You'll receive <b>${finalValue} CC</b> for donating this Pokémon.</p>
     <div class="modal-actions">
       <button class="cancel-btn">Cancel</button>
       <button class="confirm-btn">Confirm Donation</button>
@@ -620,13 +685,17 @@ function openDonationModal(pokeId) {
 }
 
 async function handleDonationConfirm(pokeId, overlay) {
+  console.log(`💰 Donating Pokemon #${pokeId}`);
   const p = pokemonData[pokeId];
   const res = await donatePokemon(pokeId);
   if (!res.success) {
+    console.error("❌ Donation failed:", res.error);
     alert("❌ " + (res.error || "Donation failed."));
     closeOverlay(overlay);
     return;
   }
+
+  console.log(`✅ Donation successful! Gained ${res.gainedCC} CC`);
 
   // Success popup
   const overlay2 = createOverlay();

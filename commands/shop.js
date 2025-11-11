@@ -41,7 +41,7 @@ const COOPCOIN = "<:coopcoin:1437892112959148093>";
 const COOPCOIN_IMG = "https://cdn.discordapp.com/emojis/1437892112959148093.webp?size=96";
 const EVO_STONE = "<:evolution_stone:1437892171381473551>";
 const STARTER_PACK = "<:starter_pack:1437896364087443479>";
-const POKEMART_IMG = "https://cdn.discordapp.com/attachments/xxxxx/Pokemart.png"; // replace with your CDN link
+const POKEMART_IMG = "https://poke-discord-bot.onrender.com/public/sprites/items/Pokemart.png";
 
 // ==========================================================
 // 🧩 Shop Items

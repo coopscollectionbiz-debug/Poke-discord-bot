@@ -91,6 +91,16 @@ p {
   font-size: 1rem;
   color: var(--text);
 }
+
+#statsBar .stat-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--brand);
+  font-size: 0.95rem;
+}
+
 #statsBar.compact {
   padding: 0.4rem 0.75rem;
   font-size: 0.85rem;
@@ -614,3 +624,30 @@ footer a:hover {
 .sprite-wrapper img.poke-sprite {
   z-index: 1;
 }
+
+.stat-icon {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+/* ===========================================================
+   Stat Icon Consistency (HUD + Compact)
+=========================================================== */
+#statsBar .stat-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--brand);
+  font-size: 0.95rem;
+}
+
+#statsBar.compact .stat-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 3px;
+}
+

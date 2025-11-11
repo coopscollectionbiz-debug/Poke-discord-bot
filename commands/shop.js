@@ -230,49 +230,63 @@ export default {
           const shinyPulled = [];
           const rewardEmbeds = [];
 
-          // 🧬 Pokémon rewards
-          for (const reward of rewards) {
-            const shiny = rollForShiny(user.tp || 0);
-            user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
+         // 🧬 Pokémon rewards
+for (const reward of rewards) {
+  const shiny = rollForShiny(user.tp || 0);
+  user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
 
-            if (shiny) {
-              user.pokemon[reward.id].shiny++;
-              shinyPulled.push(reward);
+  if (shiny) {
+    user.pokemon[reward.id].shiny++;
+    shinyPulled.push(reward);
+  } else {
+    user.pokemon[reward.id].normal++;
+  }
 
-              // 🌟 Broadcast shiny Pokémon
-              await broadcastReward(client, {
-                user: i.user,
-                type: "pokemon",
-                item: {
-                  id: reward.id,
-                  name: reward.name,
-                  rarity: reward.tier,
-                },
-                shiny: true,
-                source: "Starter Pack",
-              }).catch(() => {});
-            } else {
-              user.pokemon[reward.id].normal++;
-            }
+  // 🧭 Broadcast all Pokémon to global; broadcastReward routes rare+/shiny to rare-sightings automatically
+  await broadcastReward(client, {
+    user: i.user,
+    type: "pokemon",
+    item: {
+      id: reward.id,
+      name: reward.name,
+      rarity: reward.tier,
+    },
+    shiny,
+    source: "Starter Pack",
+  }).catch(() => {});
 
-            const spriteURL = shiny
-              ? `${spritePaths.shiny}${reward.id}.gif`
-              : `${spritePaths.pokemon}${reward.id}.gif`;
+  const spriteURL = shiny
+    ? `${spritePaths.shiny}${reward.id}.gif`
+    : `${spritePaths.pokemon}${reward.id}.gif`;
 
-            rewardEmbeds.push(createPokemonRewardEmbed(reward, shiny, spriteURL));
-          }
+  rewardEmbeds.push(createPokemonRewardEmbed(reward, shiny, spriteURL));
+}
 
-          // 🎓 Trainer embed
-          const cleanTrainerFile = (
-            rareTrainer.filename ||
-            rareTrainer.spriteFile ||
-            `${rareTrainer.id}.png`
-          )
-            .replace(/^trainers?_2\//, "")
-            .replace(/\.png\.png$/i, ".png")
-            .toLowerCase();
-          const trainerSprite = `${spritePaths.trainers}${cleanTrainerFile}`;
-          rewardEmbeds.push(createTrainerRewardEmbed(rareTrainer, trainerSprite));
+// 🎓 Trainer embed + broadcast (once only)
+const cleanTrainerFile = (
+  rareTrainer.filename ||
+  rareTrainer.spriteFile ||
+  `${rareTrainer.id}.png`
+)
+  .replace(/^trainers?_2\//, "")
+  .replace(/\.png\.png$/i, ".png")
+  .toLowerCase();
+const trainerSprite = `${spritePaths.trainers}${cleanTrainerFile}`;
+rewardEmbeds.push(createTrainerRewardEmbed(rareTrainer, trainerSprite));
+
+// Broadcast trainer globally only
+await broadcastReward(client, {
+  user: i.user,
+  type: "trainer",
+  item: {
+    id: rareTrainer.id,
+    name: rareTrainer.name,
+    rarity: rareTrainer.tier || "rare",
+  },
+  shiny: false,
+  source: "Starter Pack",
+}).catch(() => {});
+
 
           // ✅ Save purchase + data
           user.purchases.push("starter_pack");

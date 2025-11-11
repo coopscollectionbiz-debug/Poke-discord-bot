@@ -1,14 +1,13 @@
 // ==========================================================
-// 🏪 Coop's Collection Discord Bot — /shop (Final Production Build v5.2)
+// 🏪 Coop's Collection Discord Bot — /shop (Admin Command)
 // ==========================================================
 // Features:
-//  • Local logic only (no API requests)
-//  • Starter Pack grants 1 Common, 1 Uncommon, 1 Rare Pokémon + 1 Rare Trainer
+//  • Requires Administrator permission
+//  • Grants Starter Pack (1 Common, 1 Uncommon, 1 Rare Pokémon + 1 Rare Trainer)
+//  • Grants purchasable Evolution Stones
+//  • Safe interaction handling (no Unknown/AlreadyReplied)
 //  • Uses embedBuilders.js (same as /daily)
 //  • Shiny Pokémon broadcast via broadcastReward()
-//  • Scoped collectors (no global listeners)
-//  • Safe “commit-on-success” purchase handling
-//  • Defers reply safely to prevent interaction expiry
 // ==========================================================
 
 import {
@@ -17,9 +16,9 @@ import {
   StringSelectMenuOptionBuilder,
   ActionRowBuilder,
   ComponentType,
+  PermissionFlagsBits,
 } from "discord.js";
 
-import { safeReply } from "../utils/safeReply.js";
 import { getAllPokemon, getAllTrainers } from "../utils/dataLoader.js";
 import {
   selectRandomPokemonForUser,
@@ -73,10 +72,14 @@ const SHOP_ITEMS = [
 export default {
   data: new SlashCommandBuilder()
     .setName("shop")
-    .setDescription("Browse the PokéMart and purchase items!"),
+    .setDescription("Admin: access the PokéMart to grant items or rewards.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {
+      // ✅ Prevent Discord timeout
+      await interaction.deferReply({ ephemeral: true });
+
       const userId = interaction.user.id;
       const user = (trainerData[userId] ??= {
         id: userId,
@@ -91,15 +94,13 @@ export default {
       // ======================================================
       // 🏪 Initial Embed
       // ======================================================
-      await interaction.deferReply(); // keeps token alive
-
       const embed = createSuccessEmbed(
-        "🏪 Coop’s Collection PokéMart",
-        "Welcome to the PokéMart!\nSelect an item below to view details or confirm your purchase."
+        "🏪 Coop’s Collection PokéMart (Admin)",
+        "Select an item to view details or confirm a grant."
       )
         .setThumbnail(POKEMART_IMG)
         .setFooter({
-          text: `Your current balance: ${user.cc.toLocaleString()} ${COOPCOIN}`,
+          text: `Balance: ${user.cc.toLocaleString()} ${COOPCOIN}`,
           iconURL: COOPCOIN_IMG,
         });
 
@@ -119,9 +120,8 @@ export default {
         .addOptions(options);
 
       const row = new ActionRowBuilder().addComponents(menu);
-
       await interaction.editReply({ embeds: [embed], components: [row] });
-      const reply = await interaction.fetchReply(); // guarantee valid message
+      const reply = await interaction.fetchReply();
 
       // ======================================================
       // 🎯 Main Menu Collector
@@ -139,9 +139,6 @@ export default {
         if (!item)
           return i.reply({ content: "❌ Invalid item.", ephemeral: true });
 
-        if (item.onceOnly && user.purchases?.includes(item.id))
-          return i.reply({ content: "⚠️ You’ve already claimed this item!", ephemeral: true });
-
         const confirmEmbed = createSuccessEmbed(
           `${item.emoji} ${item.name}`,
           `**Cost:** ${item.cost === 0 ? "🆓 FREE" : `${item.cost} CC`}\n\n${item.description}\n\nConfirm your purchase below.`
@@ -152,7 +149,7 @@ export default {
             .setCustomId(`confirm_${item.id}_${userId}`)
             .setPlaceholder("✅ Confirm or ❌ Cancel")
             .addOptions([
-              new StringSelectMenuOptionBuilder().setLabel("Confirm Purchase").setValue("confirm").setEmoji("✅"),
+              new StringSelectMenuOptionBuilder().setLabel("Confirm").setValue("confirm").setEmoji("✅"),
               new StringSelectMenuOptionBuilder().setLabel("Cancel").setValue("cancel").setEmoji("❌"),
             ])
         );
@@ -164,32 +161,36 @@ export default {
         // ======================================================
         const confirmCollector = reply.createMessageComponentCollector({
           componentType: ComponentType.StringSelect,
-          filter: (x) =>
-            x.user.id === userId && x.customId.startsWith(`confirm_${item.id}_${userId}`),
+          filter: (x) => x.user.id === userId && x.customId.startsWith("confirm_"),
           time: 30000,
           max: 1,
         });
 
         confirmCollector.on("collect", async (i2) => {
           const choice = i2.values[0];
+          const [, itemId] = i2.customId.split("_").slice(0, 2);
+          const confirmedItem = SHOP_ITEMS.find((x) => x.id === itemId);
+
+          if (!confirmedItem)
+            return i2.reply({ content: "❌ Invalid item reference.", ephemeral: true });
+
           if (choice === "cancel") {
             await i2.update({
-              embeds: [createSuccessEmbed("❌ Purchase Cancelled", "No changes were made.")],
+              embeds: [createSuccessEmbed("❌ Cancelled", "No changes made.")],
               components: [],
             });
             return;
           }
 
-          // ⏳ Defer immediately to prevent timeout during async operations
           await i2.deferUpdate();
 
           // ====================================================
           // 🎁 Starter Pack Logic
           // ====================================================
-          if (item.id === "starter_pack") {
+          if (confirmedItem.id === "starter_pack") {
             user.purchases ??= [];
             if (user.purchases.includes("starter_pack"))
-              return i2.reply({ content: "⚠️ You’ve already claimed your Starter Pack!", ephemeral: true });
+              return i2.followUp({ content: "⚠️ Already claimed.", ephemeral: true });
 
             const allPokemon = await getAllPokemon();
             const allTrainers = await getAllTrainers();
@@ -205,7 +206,6 @@ export default {
             const rewardEmbeds = [];
             const broadcastQueue = [];
 
-            // Pokémon rewards
             for (const reward of rewards) {
               const shiny = rollForShiny(user.tp || 0);
               user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
@@ -217,7 +217,6 @@ export default {
               const spriteURL = shiny
                 ? `${spritePaths.shiny}${reward.id}.gif`
                 : `${spritePaths.pokemon}${reward.id}.gif`;
-
               rewardEmbeds.push(createPokemonRewardEmbed(reward, shiny, spriteURL));
 
               broadcastQueue.push({
@@ -227,24 +226,22 @@ export default {
               });
             }
 
-            // Trainer reward
             user.trainers[rareTrainer.id] = true;
             const trainerSprite = `${spritePaths.trainers}${rareTrainer.filename || rareTrainer.id}.png`;
             rewardEmbeds.push(createTrainerRewardEmbed(rareTrainer, trainerSprite));
+
             broadcastQueue.push({
               type: "trainer",
               item: { id: rareTrainer.id, name: rareTrainer.name, rarity: rareTrainer.tier || "rare" },
               shiny: false,
             });
 
-            // ✅ Save before broadcast
             try {
               user.purchases.push("starter_pack");
               await saveTrainerDataLocal(trainerData);
               await saveDataToDiscord(trainerData);
 
-              // Now broadcast publicly
-              for (const b of broadcastQueue) {
+              for (const b of broadcastQueue)
                 await broadcastReward(client, {
                   user: i2.user,
                   type: b.type,
@@ -252,20 +249,17 @@ export default {
                   shiny: b.shiny,
                   source: "Starter Pack",
                 }).catch(() => {});
-              }
 
-              const summaryText = `You received 3 Pokémon and 1 Rare Trainer!\n${
-                shinyPulled.length > 0
-                  ? `✨ You pulled ${shinyPulled.length} shiny Pokémon!`
-                  : "No shinies this time... maybe next pack!"
+              const summary = `You received 3 Pokémon and 1 Rare Trainer!\n${
+                shinyPulled.length ? `✨ ${shinyPulled.length} shiny Pokémon pulled!` : "No shinies this time!"
               }`;
 
-              const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summaryText);
+              const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summary);
               await i2.editReply({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
             } catch (err) {
-              console.error("❌ Failed to finalize Starter Pack:", err);
-              return i2.editReply({
-                content: "⚠️ Something went wrong granting your Starter Pack. Please try again later — your pack has not been consumed.",
+              console.error("❌ Starter Pack Error:", err);
+              await i2.editReply({
+                content: "⚠️ Error granting Starter Pack.",
                 components: [],
                 embeds: [],
               });
@@ -274,21 +268,18 @@ export default {
           }
 
           // ====================================================
-          // 🪨 Evolution Stone Purchase
+          // 🪨 Evolution Stone Logic
           // ====================================================
-          if (item.id === "evolution_stone") {
-            if (user.cc < item.cost) {
-              await i2.reply({
-                content: `❌ You don’t have enough Coop Coins! You need **${item.cost} CC**, but only have **${user.cc} CC**.`,
+          if (confirmedItem.id === "evolution_stone") {
+            if (user.cc < confirmedItem.cost) {
+              await i2.followUp({
+                content: `❌ Not enough CC. Need **${confirmedItem.cost}**, have **${user.cc}**.`,
                 ephemeral: true,
               });
-              setTimeout(async () => {
-                await i2.message.edit({ components: [] }).catch(() => {});
-              }, 3000);
               return;
             }
 
-            user.cc -= item.cost;
+            user.cc -= confirmedItem.cost;
             user.items ??= { evolution_stone: 0 };
             user.items.evolution_stone++;
             await saveTrainerDataLocal(trainerData);
@@ -296,7 +287,7 @@ export default {
 
             const successEmbed = createSuccessEmbed(
               `${EVO_STONE} Evolution Stone Purchased!`,
-              `You spent **${item.cost} CC** and received **1 ${item.name}**.\n\nYou now have **${user.items.evolution_stone}** Evolution Stones.`
+              `Spent **${confirmedItem.cost} CC**.\nNow have **${user.items.evolution_stone}** total.`
             ).setFooter({
               text: `Remaining balance: ${user.cc.toLocaleString()} CC`,
               iconURL: COOPCOIN_IMG,
@@ -305,10 +296,6 @@ export default {
             await i2.editReply({ embeds: [successEmbed], components: [] });
           }
         });
-
-        confirmCollector.on("end", async () => {
-          await reply.edit({ components: [] }).catch(() => {});
-        });
       });
 
       collector.on("end", async () => {
@@ -316,7 +303,14 @@ export default {
       });
     } catch (err) {
       console.error("❌ /shop failed:", err);
-      await safeReply(interaction, { content: `❌ Error: ${err.message}`, ephemeral: true });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: `❌ Error: ${err.message}`,
+          ephemeral: true,
+        });
+      } else {
+        await interaction.editReply(`❌ Error: ${err.message}`);
+      }
     }
   },
 };

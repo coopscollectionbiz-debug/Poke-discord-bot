@@ -15,8 +15,8 @@ let selectedTeam = [];
 let activePokemon = null;
 
 // Owned/Unowned view flags (Team mode UI)
-let showOwned = true;
-let showUnowned = true;
+let showOwnedOnly = false;
+let showUnownedOnly = false;
 
 import { rarityEmojis, rarityColors } from "/public/spriteconfig.js";
 
@@ -173,22 +173,22 @@ function initShinyToggle() {
 
   if (ownedBtn) {
     ownedBtn.addEventListener("click", (e) => {
-      showOwned = !showOwned;
-      showUnowned = false; // mutually exclusive
-      e.target.classList.toggle("active", showOwned);
+      showOwnedOnly = !showOwnedOnly;
+      showUnownedOnly = false; // mutually exclusive
+      e.target.classList.toggle("active", showOwnedOnly);
       if (unownedBtn) unownedBtn.classList.remove("active");
-      console.log(`👀 Show owned: ${showOwned}, Show unowned: ${showUnowned}`);
+      console.log(`👀 Show owned only: ${showOwnedOnly}, Show unowned only: ${showUnownedOnly}`);
       renderPokemonGrid();
     });
   }
 
   if (unownedBtn) {
     unownedBtn.addEventListener("click", (e) => {
-      showUnowned = !showUnowned;
-      showOwned = false; // mutually exclusive
-      e.target.classList.toggle("active", showUnowned);
+      showUnownedOnly = !showUnownedOnly;
+      showOwnedOnly = false; // mutually exclusive
+      e.target.classList.toggle("active", showUnownedOnly);
       if (ownedBtn) ownedBtn.classList.remove("active");
-      console.log(`👀 Show owned: ${showOwned}, Show unowned: ${showUnowned}`);
+      console.log(`👀 Show owned only: ${showOwnedOnly}, Show unowned only: ${showUnownedOnly}`);
       renderPokemonGrid();
     });
   }
@@ -268,45 +268,60 @@ function renderPokemonGrid() {
       // Only show Pokémon you actually own (variant-aware)
       if (!isOwnedVariant) continue;
     } else {
-      // Trainer-style toggle behavior
-      if (showOwned && !showUnowned && !isOwnedAny) continue;   // hide unowned if owned-only active
-      if (showUnowned && !showOwned && isOwnedAny) continue; // hide owned if unowned-only active
-      // If both are true or both false → show all
+      // Team mode: filter by owned/unowned toggles
+      if (showOwnedOnly && !isOwnedAny) continue;   // hide unowned if owned-only active
+      if (showUnownedOnly && isOwnedAny) continue;  // hide owned if unowned-only active
     }
 
     // =======================================================
     // 🔒 Lock & sprite logic
     // =======================================================
     let locked = false;
-    if (currentMode === "evolve" && (!isOwnedVariant || !isEvolutionEligible(id))) locked = true;
-    if (currentMode === "team" && !isOwnedAny) locked = true;
+    
+    // In team mode, unowned Pokémon are always locked
+    if (currentMode === "team" && !isOwnedAny) {
+      locked = true;
+    }
+    
+    // In evolve mode, lock if not owned OR not eligible to evolve
+    if (currentMode === "evolve") {
+      if (!isOwnedVariant || !isEvolutionEligible(id)) {
+        locked = true;
+      }
+    }
+    
+    // In donate mode, lock if not owned
+    if (currentMode === "donate" && !isOwnedVariant) {
+      locked = true;
+    }
 
     let spritePath;
-    if (shinyMode) {
-      spritePath = locked
-        ? `/public/sprites/pokemon/grayscale/${id}.gif`
-        : `/public/sprites/pokemon/shiny/${id}.gif`;
+    if (locked) {
+      // Always use grayscale for locked Pokémon
+      spritePath = `/public/sprites/pokemon/grayscale/${id}.gif`;
+    } else if (shinyMode) {
+      spritePath = `/public/sprites/pokemon/shiny/${id}.gif`;
     } else {
-      spritePath = locked
-        ? `/public/sprites/pokemon/grayscale/${id}.gif`
-        : `/public/sprites/pokemon/normal/${id}.gif`;
+      spritePath = `/public/sprites/pokemon/normal/${id}.gif`;
     }
 
     // =======================================================
     // 🧱 Card Construction
     // =======================================================
     const card = document.createElement("div");
-    card.className = `pokemon-card${locked ? " locked" : ""}`;
+    card.className = `pokemon-card ${isOwnedAny ? "owned" : "unowned"}`;
+    if (locked) card.classList.add("locked");
     card.dataset.id = id;
 
     const teamIndex = selectedTeam.indexOf(Number(id));
+    if (teamIndex >= 0) card.classList.add("selected");
     const displayCount = shinyMode ? ownedCounts.shiny : ownedCounts.normal;
 
     card.innerHTML = `
       <div class="sprite-wrapper">
         <img src="${spritePath}" class="poke-sprite ${locked ? "locked" : ""}" alt="${name}">
         ${teamIndex >= 0 ? `<div class="team-badge">${teamIndex + 1}</div>` : ""}
-        ${locked ? `<div class="lock-overlay"><span>🔒</span></div>` : ""}
+        ${!isOwnedAny && currentMode === "team" ? `<div class="lock-overlay"><span>🔒</span></div>` : ""}
         ${displayCount > 0 ? `<div class="count-label bottom-left">x${displayCount}</div>` : ""}
       </div>
       <div class="pokemon-name">${name}</div>

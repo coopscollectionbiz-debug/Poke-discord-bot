@@ -136,6 +136,11 @@ export function selectRandomTrainerForUser(trainerPool, user) {
           ? data.spriteFile.toLowerCase()
           : `${id}.png`];
 
+    // ✅ FIX: Ensure sprites array is never empty
+    if (sprites.length === 0) {
+      sprites.push(`${id}.png`);
+    }
+
     // 🧠 Smart name: prefer the group key (Ace Trainer, Grunt, etc.)
     let displayName = groupKey
       .replace(/[-_]/g, " ")
@@ -160,8 +165,14 @@ export function selectRandomTrainerForUser(trainerPool, user) {
   if (!chosen) return null;
 
   // Pick a random sprite file within the chosen group
-  const spriteFile =
-    chosen.sprites[Math.floor(Math.random() * chosen.sprites.length)];
+  // ✅ FIX: Ensure we always have a valid sprite file
+  const spriteFile = 
+    chosen.sprites && chosen.sprites.length > 0
+      ? chosen.sprites[Math.floor(Math.random() * chosen.sprites.length)]
+      : `${chosen.id}.png`;  // Fallback to ID-based filename
+
+  // ✅ FIX: Ensure spriteFile is never undefined
+  const finalSpriteFile = spriteFile || `${chosen.id}.png`;
 
   // 🧩 Final normalized trainer object
 return {
@@ -170,8 +181,8 @@ return {
   name: chosen.name,               // Readable name ("Acerola", "Rocket Grunt", etc.)
   rarity: chosen.tier,
   tier: chosen.tier,
-  spriteFile: spriteFile.toLowerCase(),
-  filename: spriteFile.toLowerCase(),
+  spriteFile: finalSpriteFile.toLowerCase(),
+  filename: finalSpriteFile.toLowerCase(),
   groupName: chosen.groupName,
 };
 

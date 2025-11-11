@@ -152,6 +152,13 @@ function setMode(mode) {
   renderPokemonGrid();
 }
 
+function refreshModeButtons() {
+  document.querySelectorAll(".mode-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mode === currentMode);
+  });
+}
+
+
 // ===========================================================
 // 🌟 Shiny Toggle + Owned/Unowned Toggles
 // ===========================================================
@@ -219,11 +226,16 @@ function ownedCountForVariant(id) {
 }
 
 // ===========================================================
-// 🎴 Pokémon Grid Renderer
+// ===========================================================
+// 🎴 Pokémon Grid Renderer (FINAL CLEAN VERSION)
 // ===========================================================
 function renderPokemonGrid() {
   const container = document.getElementById("pokemonGrid");
   if (!container) return;
+
+  // Preserve current mode when toggling shiny
+  const mode = currentMode;
+
   container.innerHTML = "";
 
   const searchEl = document.getElementById("searchInput");
@@ -234,18 +246,8 @@ function renderPokemonGrid() {
   const rarityFilter = rarityEl?.value || "";
   const typeFilter = typeEl?.value || "";
 
-  // Build list depending on mode:
-  // • team: all Pokémon (apply owned/unowned toggles)
-  // • evolve/donate: ONLY owned (variant-aware)
-  let ids = Object.keys(pokemonData).map(Number);
-
-  // sort by rarity then id
-  ids.sort((a, b) => {
-    const ra = RARITY_ORDER.indexOf(pokemonData[a]?.tier || "common");
-    const rb = RARITY_ORDER.indexOf(pokemonData[b]?.tier || "common");
-    if (ra !== rb) return ra - rb;
-    return a - b;
-  });
+  // Sort Pokémon numerically (Pokédex order)
+  const ids = Object.keys(pokemonData).map(Number).sort((a, b) => a - b);
 
   let shown = 0;
 
@@ -256,6 +258,7 @@ function renderPokemonGrid() {
     const types = p.types || [];
     const name = p.name || `#${id}`;
 
+    // Apply filters
     if (search && !name.toLowerCase().includes(search)) continue;
     if (rarityFilter && p.tier !== rarityFilter) continue;
     if (typeFilter && !types.includes(typeFilter)) continue;
@@ -264,43 +267,42 @@ function renderPokemonGrid() {
     const isOwnedVariant = shinyMode ? ownedCounts.shiny > 0 : ownedCounts.normal > 0;
     const isOwnedAny = ownedCounts.any > 0;
 
-    // Mode-specific visibility
-    if (currentMode === "evolve" || currentMode === "donate") {
-      // Only show OWNED of the selected variant
+    // 🧩 Enforce ownership visibility
+    if (shinyMode && ownedCounts.shiny === 0) continue;
+    if (!shinyMode && ownedCounts.normal === 0 && mode !== "evolve" && mode !== "donate") continue;
+
+    // 🧩 Mode visibility
+    if (mode === "evolve" || mode === "donate") {
       if (!isOwnedVariant) continue;
     } else {
-      // Team mode — obey toggles (default both true = show all)
       if (isOwnedAny && !showOwned) continue;
       if (!isOwnedAny && !showUnowned) continue;
     }
 
-    // Sprite path logic
+    // Determine sprite path
     let spritePath;
     if (shinyMode) {
-      spritePath = `/public/sprites/pokemon/shiny/${id}.gif`;
-    } else if (currentMode === "team" && !isOwnedAny) {
-      spritePath = `/public/sprites/pokemon/grayscale/${id}.gif`;
+      spritePath = isOwnedVariant
+        ? `/public/sprites/pokemon/shiny/${id}.gif`
+        : `/public/sprites/pokemon/grayscale/${id}.gif`;
     } else {
-      spritePath = `/public/sprites/pokemon/normal/${id}.gif`;
+      spritePath = isOwnedAny
+        ? `/public/sprites/pokemon/normal/${id}.gif`
+        : `/public/sprites/pokemon/grayscale/${id}.gif`;
     }
 
-    // Card
+    // Card setup
     const card = document.createElement("div");
     card.className = "pokemon-card";
     card.dataset.id = id;
 
-    // Locked overlay for evolve if not eligible (still hidden by owned-only above)
+    // Determine locked status
     let locked = false;
-    if (currentMode === "evolve" && !isEvolutionEligible(id)) locked = true;
+    if (mode === "evolve" && !isEvolutionEligible(id)) locked = true;
+    if (mode === "team" && !isOwnedAny) locked = true; // lock unowned in team mode
 
-    // Owned count badge (show any total in Team, variant count in Evolve/Donate)
-    const displayCount =
-      currentMode === "team"
-        ? ownedCounts.any
-        : shinyMode
-        ? ownedCounts.shiny
-        : ownedCounts.normal;
-
+    // Variant-specific count
+    const displayCount = shinyMode ? ownedCounts.shiny : ownedCounts.normal;
     const teamIndex = selectedTeam.indexOf(Number(id));
 
     card.innerHTML = `
@@ -312,12 +314,11 @@ function renderPokemonGrid() {
       </div>
       <div class="pokemon-name">${name}</div>
       <div class="pokemon-tier">
-  <div class="tier-emoji">${rarityEmojis[p.tier] || ""}</div>
-  <div class="tier-text" style="color:${rarityColors[p.tier] || "#ccc"};">
-    ${p.tier}
-  </div>
-</div>
-
+        <div class="tier-emoji">${rarityEmojis[p.tier] || ""}</div>
+        <div class="tier-text" style="color:${rarityColors[p.tier] || "#ccc"};">
+          ${p.tier}
+        </div>
+      </div>
     `;
 
     if (!locked) {

@@ -25,17 +25,32 @@
     </header>
 
     <!-- ===========================================================
-         Sticky HUD (Stats Bar)
+         Player Stats Bar (Sticky + Compact)
     =========================================================== -->
-    <div id="statsBar">
-      <div>💎 Stones: <span id="stoneCount">0</span></div>
-      <div>💰 CC: <span id="ccCount">0</span></div>
-      <div>✨ TP: <span id="tpCount">0</span></div>
-      <div>🏅 Rank: <span id="rankName">Novice</span></div>
+    <div id="playerStats">
+      <div class="stat-item">
+        <span>🪨</span>
+        <span id="stoneCount">0</span>
+        <span>Stones</span>
+      </div>
+      <div class="stat-item">
+        <span>💰</span>
+        <span id="ccCount">0</span>
+        <span>CC</span>
+      </div>
+      <div class="stat-item">
+        <span>⚡</span>
+        <span id="tpCount">0</span>
+        <span>TP</span>
+      </div>
+      <div class="stat-item">
+        <span>🏆</span>
+        <span id="rankLabel">Novice Trainer</span>
+      </div>
     </div>
 
     <!-- ===========================================================
-         Mode Toggles
+         Mode Buttons
     =========================================================== -->
     <div id="modeToggle">
       <button class="mode-btn active" data-mode="team">⭐ Change Team</button>
@@ -44,24 +59,25 @@
     </div>
 
     <!-- ===========================================================
-         Shiny Mode Toggle
+         Toggles (Shiny + Owned/Unowned)
     =========================================================== -->
-    <div style="margin-top: 10px;">
-      <button id="toggleShiny" class="mode-btn">✨ Shiny Mode: OFF</button>
+    <div id="displayToggles">
+      <button id="toggleShiny" class="mode-btn">🌟 Shiny Mode OFF</button>
+      <button id="toggleOwned" class="mode-btn active">✅ Show Owned</button>
+      <button id="toggleUnowned" class="mode-btn">❌ Show Unowned</button>
     </div>
 
     <!-- ===========================================================
-         Filters / Search Bar
+         Search + Filters
     =========================================================== -->
     <div id="controls">
       <input
         type="text"
         id="searchInput"
         placeholder="Search Pokémon..."
-        oninput="filterPokemon()"
       />
 
-      <select id="rarityFilter" onchange="filterPokemon()">
+      <select id="rarityFilter">
         <option value="">All Rarities</option>
         <option value="common">Common</option>
         <option value="uncommon">Uncommon</option>
@@ -71,7 +87,7 @@
         <option value="mythic">Mythic</option>
       </select>
 
-      <select id="typeFilter" onchange="filterPokemon()">
+      <select id="typeFilter">
         <option value="">All Types</option>
         <option value="fire">Fire</option>
         <option value="water">Water</option>
@@ -100,12 +116,12 @@
     <div id="pokemonGrid"></div>
 
     <!-- ===========================================================
-         Footer (Save Button + Status)
+         Footer (Save + Status)
     =========================================================== -->
     <footer>
-      <button id="saveTeam" class="save-btn">💾 Save Team</button>
+      <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
       <div id="statusMsg" class="status-msg"></div>
-      <p style="margin-top: 1rem; color: #777;">
+      <p style="margin-top:1rem;color:#777;">
         Opened via <code>/pokemon</code> · Session valid for 10 minutes
       </p>
     </footer>
@@ -113,6 +129,7 @@
     <!-- ===========================================================
          Script (Deferred)
     =========================================================== -->
-    <script src="/public/picker-pokemon/script.js" defer></script>
+<script src="/public/spriteconfig.js"></script>
+<script src="/public/picker-pokemon/script.js" defer></script>
   </body>
 </html>

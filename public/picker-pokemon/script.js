@@ -382,6 +382,20 @@ async function init() {
     initShinyToggle();
     renderPokemonGrid();
 
+    // ===========================================================
+    // 🧭 Hook filters + log dataset coverage
+    // ===========================================================
+
+    // Re-render grid when filters change
+    document.getElementById("searchInput")?.addEventListener("input", renderPokemonGrid);
+    document.getElementById("rarityFilter")?.addEventListener("change", renderPokemonGrid);
+    document.getElementById("typeFilter")?.addEventListener("change", renderPokemonGrid);
+
+    // Debug coverage
+    const ids = Object.keys(pokemonData).map(Number).sort((a, b) => a - b);
+    console.log("Pokémon loaded:", ids.length, "min:", ids[0], "max:", ids[ids.length - 1]);
+    console.log("First 20 IDs:", ids.slice(0, 20));
+
     // Hook mode buttons
     document.querySelectorAll(".mode-btn").forEach(btn =>
       btn.addEventListener("click", () => setMode(btn.dataset.mode))

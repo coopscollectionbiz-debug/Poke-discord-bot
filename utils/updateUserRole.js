@@ -1,6 +1,7 @@
 // ==========================================================
 // /utils/updateUserRole.js
 // Handles automatic rank promotions + announcements
+// FIXED: Assigns all ranks properly AND announces Novice (requires 100 TP)
 // ==========================================================
 
 import { EmbedBuilder } from "discord.js";
@@ -19,9 +20,6 @@ export async function updateUserRole(member, tp, contextChannel = null) {
     // Determine rank from TP
     const targetRoleName = getRank(tp);
     if (!targetRoleName) return;
-
-    // 🛑 Skip "Novice Trainer" announcements — base rank
-    if (targetRoleName.toLowerCase().includes("novice")) return;
 
     const guild = member.guild;
 
@@ -54,6 +52,7 @@ export async function updateUserRole(member, tp, contextChannel = null) {
 
     // ✅ Assign the new rank
     await member.roles.add(newRole).catch(() => {});
+    console.log(`🏅 ${member.user.username} assigned role: ${finalRoleName} (${tp} TP)`);
 
     // Find next rank info
     const currentIdx = RANK_TIERS.findIndex((r) => r.roleName === targetRoleName);
@@ -61,15 +60,15 @@ export async function updateUserRole(member, tp, contextChannel = null) {
 
     const nextRankInfo = next && typeof next.tp === "number"
       ? `➡️ **Next Rank:** ${next.roleName} (${next.tp.toLocaleString()} TP)`
-      : "🏁 You’ve reached the **highest rank!**";
+      : "🏆 You've reached the **highest rank!**";
 
-    // 🎨 Promotion embed
+    // 🎨 Promotion embed (NOW INCLUDES NOVICE TRAINER!)
     const embed = new EmbedBuilder()
       .setTitle("🏆 Rank Up!")
       .setDescription(
         [
           `🎉 <@${member.user.id}> has advanced to **${finalRoleName}**!`,
-          `They’ve proven their skill through dedication and hard work.`,
+          `They've proven their skill through dedication and hard work.`,
           "",
           nextRankInfo,
           "",
@@ -78,7 +77,7 @@ export async function updateUserRole(member, tp, contextChannel = null) {
       )
       .setColor(0xffcb05)
       .setThumbnail(member.user.displayAvatarURL({ size: 128 }))
-      .setFooter({ text: "Coop’s Collection — Trainer Progression" })
+      .setFooter({ text: "Coop's Collection – Trainer Progression" })
       .setTimestamp();
 
     // 🗣️ Announce in the context channel if available
@@ -86,7 +85,7 @@ export async function updateUserRole(member, tp, contextChannel = null) {
       await contextChannel.send({ embeds: [embed] }).catch(() => {});
     }
 
-    console.log(`🏅 ${member.user.username} promoted to ${finalRoleName}`);
+    console.log(`🎉 ${member.user.username} promoted to ${finalRoleName} - announcement sent`);
   } catch (err) {
     console.error("❌ updateUserRole failed:", err.message);
   }

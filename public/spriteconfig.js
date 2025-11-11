@@ -13,6 +13,15 @@ export const rarityEmojis = {
   mythic: '✮✮✮✮'
 };
 
+export const rarityColors = {
+  common: "#9ca3af",     // gray
+  uncommon: "#10b981",   // green
+  rare: "#3b82f6",       // blue
+  epic: "#a855f7",       // purple
+  legendary: "#facc15",  // gold
+  mythic: "#ef4444",     // red
+};
+
 export const spritePaths = {
   // Pokémon sprites (Gen 1–5)
   pokemon: 'https://poke-discord-bot.onrender.com/public/sprites/pokemon/normal/',

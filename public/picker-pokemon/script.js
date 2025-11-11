@@ -335,6 +335,44 @@ function renderPokemonGrid() {
 }
 
 // ===========================================================
+// 🖱️ Pokémon Click Handler
+// ===========================================================
+function onPokemonClick(id) {
+  if (currentMode === "team") {
+    toggleTeamSelection(id);
+  } else if (currentMode === "evolve") {
+    openEvolutionModal(id);
+  } else if (currentMode === "donate") {
+    openDonationModal(id);
+  }
+}
+
+function toggleTeamSelection(id) {
+  const numId = Number(id);
+  const index = selectedTeam.indexOf(numId);
+  
+  if (index >= 0) {
+    // Remove from team
+    selectedTeam.splice(index, 1);
+  } else {
+    // Add to team (max 6)
+    if (selectedTeam.length >= 6) {
+      const status = document.getElementById("statusMsg");
+      if (status) {
+        status.textContent = "❌ Team is full! (Max 6 Pokémon)";
+        status.classList.remove("success");
+        status.classList.add("error");
+        setTimeout(() => status.textContent = "", 2000);
+      }
+      return;
+    }
+    selectedTeam.push(numId);
+  }
+  
+  renderPokemonGrid();
+}
+
+// ===========================================================
 // 🚀 Initialization
 // ===========================================================
 async function init() {

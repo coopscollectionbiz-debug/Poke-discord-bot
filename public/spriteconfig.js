@@ -9,7 +9,7 @@ export const rarityEmojis = {
   uncommon: '✦︎',
   rare: '☆',
   epic: '✮✮',
-  legendary: '˙✮✮✮',
+  legendary: '✮✮✮',
   mythic: '✮✮✮✮'
 };
 

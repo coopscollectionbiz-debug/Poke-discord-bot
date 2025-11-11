@@ -534,8 +534,8 @@ document.querySelectorAll("#modeToggle .mode-btn").forEach(btn => {
   // Build preview HTML for selected Pokémon
   const previewHTML = selectedTeam.map(id => {
     const sprite = shinyMode
-      ? `/sprites/pokemon/shiny/${id}.gif`
-      : `/sprites/pokemon/normal/${id}.gif`;
+      ? `/public/sprites/pokemon/shiny/${id}.gif`
+      : `/public/sprites/pokemon/normal/${id}.gif`;
     return `<img src="${sprite}" style="width:64px;height:64px;image-rendering:pixelated;">`;
   }).join("");
 
@@ -566,8 +566,8 @@ document.querySelectorAll("#modeToggle .mode-btn").forEach(btn => {
   // 🧩 Build a row of the new team’s sprites
   const teamPreview = selectedTeam.map(id => {
     const sprite = shinyMode
-      ? `/sprites/pokemon/shiny/${id}.gif`
-      : `/sprites/pokemon/normal/${id}.gif`;
+      ? `/public/sprites/pokemon/shiny/${id}.gif`
+      : `/public/sprites/pokemon/normal/${id}.gif`;
     return `<img src="${sprite}" style="width:64px;height:64px;image-rendering:pixelated;">`;
   }).join("");
 

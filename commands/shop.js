@@ -1,14 +1,10 @@
 // ==========================================================
-// 🏪 Coop's Collection Discord Bot — /shop (Final Production Build v4)
+// 🏪 Coop's Collection Discord Bot — /shop (Final Production Build v5)
 // ==========================================================
-// Features:
-//  • Local logic only (no API requests)
-//  • Starter Pack grants 1 Common, 1 Uncommon, 1 Rare Pokémon + 1 Rare Trainer
-//  • Uses embedBuilders.js (same as /daily)
-//  • Shiny Pokémon broadcast via broadcastReward()
-//  • Scoped collectors (no global listeners)
-//  • Safe “commit-on-success” purchase handling
-//  • Graceful handling for insufficient CC with auto-reset
+// Fixes:
+//  • Prevents double i.update() on Starter Pack grant
+//  • Moves commit-before-save logic
+//  • Keeps all broadcast + embedBuilders integrations
 // ==========================================================
 
 import {
@@ -53,7 +49,7 @@ const SHOP_ITEMS = [
     cost: 3500,
     emoji: EVO_STONE,
     sprite: "https://cdn.discordapp.com/emojis/1437892171381473551.webp?size=128",
-    description: "Used to evolve certain Pokémon into stronger forms.",
+    description: "Used to evolve Pokémon. Multiple needed for rarer evolutions.",
     onceOnly: false,
   },
   {
@@ -63,7 +59,7 @@ const SHOP_ITEMS = [
     emoji: STARTER_PACK,
     sprite: "https://cdn.discordapp.com/emojis/1437896364087443479.webp?size=128",
     description:
-      "Receive 1 Common, 1 Uncommon, 1 Rare Pokémon, and 1 Rare Trainer (with shiny odds). Claimable only once per account!",
+      "1 Common, 1 Uncommon, 1 Rare Pokémon & Trainer (1/account)",
     onceOnly: true,
   },
 ];
@@ -186,7 +182,7 @@ export default {
           }
 
           // ====================================================
-          // 🎁 Starter Pack (Safe Commit)
+          // 🎁 Starter Pack (Fixed: Commit Before Update)
           // ====================================================
           if (confirmedItem.id === "starter_pack") {
             user.purchases ??= [];
@@ -248,31 +244,27 @@ export default {
                 ? `✨ You pulled ${shinyPulled.length} shiny Pokémon!`
                 : "No shinies this time... maybe next pack!"
             }`;
-            const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summaryText);
+
+            // ✅ commit purchase before saving or updating
+            user.purchases.push("starter_pack");
 
             try {
               await saveTrainerDataLocal(trainerData);
               await saveDataToDiscord(trainerData);
-
-              await i.update({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
-
-              user.purchases.push("starter_pack");
-              await saveTrainerDataLocal(trainerData);
-              await saveDataToDiscord(trainerData);
             } catch (err) {
-              console.error("❌ Failed to finalize Starter Pack:", err);
-              return i.update({
-                content:
-                  "⚠️ Something went wrong granting your Starter Pack. Please try again later — your pack has not been consumed.",
-                components: [],
-                embeds: [],
-              });
+              console.error("⚠️ Failed to save Starter Pack data:", err);
             }
+
+            await i.update({
+              embeds: [createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summaryText), ...rewardEmbeds],
+              components: [],
+            });
+
             return;
           }
 
           // ====================================================
-          // 🪨 Evolution Stone Purchase (Safe Error Handling)
+          // 🪨 Evolution Stone Purchase
           // ====================================================
           if (confirmedItem.id === "evolution_stone") {
             if (user.cc < confirmedItem.cost) {
@@ -281,7 +273,6 @@ export default {
                 ephemeral: true,
               });
 
-              // Auto-reset confirm selector after 3 seconds
               setTimeout(async () => {
                 await i.message.edit({ components: [] }).catch(() => {});
               }, 3000);
@@ -291,8 +282,13 @@ export default {
             user.cc -= confirmedItem.cost;
             user.items ??= { evolution_stone: 0 };
             user.items.evolution_stone++;
-            await saveTrainerDataLocal(trainerData);
-            await saveDataToDiscord(trainerData);
+
+            try {
+              await saveTrainerDataLocal(trainerData);
+              await saveDataToDiscord(trainerData);
+            } catch (err) {
+              console.error("⚠️ Failed to save Evolution Stone purchase:", err);
+            }
 
             const successEmbed = createSuccessEmbed(
               `${EVO_STONE} Evolution Stone Purchased!`,
@@ -306,7 +302,6 @@ export default {
           }
         });
 
-        // Auto-clean confirm menu on timeout
         confirmCollector.on("end", async () => {
           await reply.edit({ components: [] }).catch(() => {});
         });

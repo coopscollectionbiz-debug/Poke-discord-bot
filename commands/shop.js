@@ -180,6 +180,9 @@ export default {
             return;
           }
 
+          // ⏳ Defer immediately to prevent timeout during async operations
+          await i2.deferUpdate();
+
           // ====================================================
           // 🎁 Starter Pack Logic
           // ====================================================
@@ -258,10 +261,10 @@ export default {
               }`;
 
               const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summaryText);
-              await i2.update({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
+              await i2.editReply({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
             } catch (err) {
               console.error("❌ Failed to finalize Starter Pack:", err);
-              return i2.update({
+              return i2.editReply({
                 content: "⚠️ Something went wrong granting your Starter Pack. Please try again later — your pack has not been consumed.",
                 components: [],
                 embeds: [],
@@ -299,7 +302,7 @@ export default {
               iconURL: COOPCOIN_IMG,
             });
 
-            await i2.update({ embeds: [successEmbed], components: [] });
+            await i2.editReply({ embeds: [successEmbed], components: [] });
           }
         });
 

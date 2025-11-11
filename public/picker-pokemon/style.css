@@ -274,12 +274,21 @@ p {
   letter-spacing: 0.1px;
 }
 
+/* ===========================================================
+   Tier Display (Emoji + Text)
+=========================================================== */
+
 .pokemon-tier {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  font-size: 0.8rem;
-  margin-top: 2px;
+  justify-content: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 0.85em;
+}
+
+.pokemon-tier .tier-emoji {
+  font-size: 1em;
 }
 
 .tier-text.common    { color: #9ca3af; }
@@ -288,6 +297,10 @@ p {
 .tier-text.epic      { color: #a855f7; }
 .tier-text.legendary { color: #facc15; }
 .tier-text.mythic    { color: #ef4444; }
+
+.pokemon-tier .tier-text {
+  text-transform: capitalize;
+}
 
 /* -----------------------------------------------------------
    States

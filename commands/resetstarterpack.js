@@ -1,18 +1,14 @@
 // ==========================================================
-// 🛠️ Coop's Collection Discord Bot — /resetstarterpack (Admin Role)
+// 🛠️ Coop's Collection Discord Bot — /resetstarterpack (Improved Admin Role Check)
 // ==========================================================
-// Purpose:
-//  • Removes "starter_pack" from a user's purchases list
-//  • Allows re-claiming the Starter Pack for testing
-//  • Role-gated (requires a role named "Admin" or matching ADMIN_ROLE_NAME)
+// Allows admins (via role name OR Discord "Administrator" permission) 
+// to reset a user's Starter Pack so it can be claimed again.
 // ==========================================================
 
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 
-// 🔒 Role name or ID for admin access
-const ADMIN_ROLE_NAME = "Admin"; // or replace with your actual role name
-// const ADMIN_ROLE_ID = "123456789012345678"; // alternative if you prefer by ID
+const ADMIN_ROLE_KEYWORDS = ["admin", "moderator", "staff"]; // flexible name check
 
 export default {
   data: new SlashCommandBuilder()
@@ -29,22 +25,23 @@ export default {
     try {
       const member = await interaction.guild.members.fetch(interaction.user.id);
 
-      // 🧩 Permission check (by role)
-      const hasAdminRole =
-        member.roles.cache.some((r) => r.name === ADMIN_ROLE_NAME);
-        // or by ID: member.roles.cache.has(ADMIN_ROLE_ID);
+      // 🧩 Permission Check (any of these pass = admin)
+      const hasAdminPermission = member.permissions.has(PermissionFlagsBits.Administrator);
+      const hasAdminRole = member.roles.cache.some((r) =>
+        ADMIN_ROLE_KEYWORDS.some((keyword) => r.name.toLowerCase().includes(keyword))
+      );
 
-      if (!hasAdminRole) {
+      if (!hasAdminPermission && !hasAdminRole) {
         return safeReply(interaction, {
-          content: "❌ You do not have permission to use this command. Admin role required.",
+          content: "❌ You do not have permission to use this command. Admin role or Administrator permission required.",
           ephemeral: true,
         });
       }
 
       const target = interaction.options.getUser("user");
       const userId = target.id;
-
       const user = trainerData[userId];
+
       if (!user) {
         return safeReply(interaction, {
           content: `⚠️ No trainer data found for <@${userId}>.`,

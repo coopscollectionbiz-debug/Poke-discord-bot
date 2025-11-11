@@ -69,39 +69,62 @@ export async function broadcastReward(
         ? `${spritePaths.shiny}${item.id}.gif`
         : `${spritePaths.pokemon}${item.id}.gif`;
     } else {
-      // 🔵 Trainer handling
-      const baseId = String(item.id || "")
-        .replace(/^trainers?_2\//, "")
-        .replace(/\.png$/i, "")
+      // 🔵 Trainer handling - IMPROVED VERSION
+      
+      // Step 1: Get sprite filename from any available field
+      let spriteFile = 
+        item.spriteFile ||      // Primary field
+        item.filename ||        // Secondary field  
+        item.sprites?.[0] ||    // Array format (from dataLoader)
+        item.id ||              // Fallback to ID
+        "trainer.png";          // Ultimate fallback
+      
+      // Step 2: Convert to string and clean up
+      spriteFile = String(spriteFile)
+        .replace(/^trainers?_2\//i, "")  // Remove trainers_2/ prefix
+        .replace(/^trainers?\//i, "")    // Remove trainers/ prefix
+        .replace(/\s+/g, "")             // Remove spaces
         .trim()
         .toLowerCase();
-
-      const cleanFile = (item.spriteFile || item.filename || `${baseId}.png`)
-        .replace(/^trainers?_2\//, "")
-        .replace(/\s+/g, "")
-        .replace(/\.png\.png$/i, ".png")
-        .toLowerCase();
-
-      // 🧠 Normalize readable trainer name (keep "Trainer 77" and Dexio-style names)
-let nameSource =
-  item.name ||
-  item.displayName ||
-  item.groupName ||
-  (item.spriteFile || item.filename || baseId || "")
-    .replace(/^trainers?_2\//i, "")
-    .replace(/\.png$/i, "")
-    .trim();
-
-nameSource = nameSource
-  .replace(/[_\-]+/g, " ")
-  .replace(/\s{2,}/g, " ")
-  .replace(/\b\w/g, c => c.toUpperCase())
-  .trim();
-
-if (!nameSource) nameSource = "Trainer";
-displayName = nameSource;
-spriteUrl = `${spritePaths.trainers}${cleanFile}`;
-
+      
+      // Step 3: Ensure .png extension
+      if (!spriteFile.endsWith('.png')) {
+        spriteFile += '.png';
+      }
+      
+      // Step 4: Remove any double extensions
+      spriteFile = spriteFile.replace(/\.png\.png$/i, '.png');
+      
+      // Step 5: Construct final URL
+      spriteUrl = `${spritePaths.trainers}${spriteFile}`;
+      
+      // Step 6: Build display name from item.name or derive from filename
+      let nameSource = item.name || 
+                       item.displayName || 
+                       item.groupName || 
+                       spriteFile.replace('.png', '');
+      
+      // Step 7: Format display name (capitalize, clean up)
+      displayName = nameSource
+        .replace(/[_-]/g, ' ')           // Replace underscores/hyphens with spaces
+        .replace(/\b\w/g, c => c.toUpperCase())  // Capitalize each word
+        .trim();
+      
+      // Step 8: Fallback if name is empty
+      if (!displayName || displayName === '') {
+        displayName = 'Trainer';
+      }
+      
+      // 🐛 DEBUG LOGGING - Remove after fixing
+      console.log(`🖼️ Trainer Sprite Construction:`, {
+        inputId: item.id,
+        inputSpriteFile: item.spriteFile,
+        inputFilename: item.filename,
+        inputSprites: item.sprites,
+        cleanedFile: spriteFile,
+        finalUrl: spriteUrl,
+        displayName: displayName
+      });
     }
 
     // ======================================================

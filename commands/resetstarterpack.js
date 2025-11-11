@@ -5,11 +5,10 @@
 //  • Requires Administrator permission
 //  • Resets Starter Pack claim for a specific user OR all users
 //  • Uses atomicSave() pattern for consistent persistence
-//  • Mirrors structure of /resetdaily.js for consistency
+//  • Fully deferred (no "application did not respond")
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
-import { safeReply } from "../utils/safeReply.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -25,6 +24,9 @@ export default {
 
   async execute(interaction, trainerData, atomicSave) {
     try {
+      // ✅ Prevents Discord from timing out
+      await interaction.deferReply({ ephemeral: true });
+
       const targetUser = interaction.options.getUser("user");
 
       if (targetUser) {
@@ -32,10 +34,8 @@ export default {
         const userId = targetUser.id;
         const user = trainerData[userId];
         if (!user) {
-          return safeReply(interaction, {
-            content: `⚠️ No trainer data found for <@${userId}>.`,
-            ephemeral: true,
-          });
+          await interaction.editReply(`⚠️ No trainer data found for <@${userId}>.`);
+          return;
         }
 
         user.purchases = Array.isArray(user.purchases)
@@ -44,10 +44,9 @@ export default {
 
         await atomicSave(trainerData);
 
-        await safeReply(interaction, {
-          content: `✅ Starter Pack reset for <@${userId}>.\nThey can now claim it again via \`/shop\`.`,
-          ephemeral: false,
-        });
+        await interaction.editReply(
+          `✅ Starter Pack reset for <@${userId}>.\nThey can now claim it again via \`/shop\`.`
+        );
 
         console.log(`🔁 Starter Pack reset for ${targetUser.username} (${userId}) by ${interaction.user.username}.`);
       } else {
@@ -63,19 +62,22 @@ export default {
 
         await atomicSave(trainerData);
 
-        await safeReply(interaction, {
-          content: `✅ Starter Pack reset for **${count}** users.\nAll affected users can now claim it again via \`/shop\`.`,
-          ephemeral: false,
-        });
+        await interaction.editReply(
+          `✅ Starter Pack reset for **${count}** users.\nAll affected users can now claim it again via \`/shop\`.`
+        );
 
         console.log(`🔁 Global Starter Pack reset completed by ${interaction.user.username}. (${count} users)`);
       }
     } catch (err) {
       console.error("❌ /resetstarterpack failed:", err);
-      await safeReply(interaction, {
-        content: `❌ Error resetting Starter Pack: ${err.message}`,
-        ephemeral: true,
-      });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: `❌ Error resetting Starter Pack: ${err.message}`,
+          ephemeral: true,
+        });
+      } else {
+        await interaction.editReply(`❌ Error resetting Starter Pack: ${err.message}`);
+      }
     }
   },
 };

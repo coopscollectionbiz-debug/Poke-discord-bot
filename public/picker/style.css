@@ -244,3 +244,159 @@ footer {
   font-size: 0.85rem;
   color: #777;
 }
+
+/* ===========================================================
+   Coop's Collection — Pokémon Picker Visual Consistency
+   =========================================================== */
+
+/* 🎴 Card Grid */
+#pokemonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 1.2rem;
+  padding: 1rem;
+  max-width: 1100px;
+  margin: 0 auto 2rem;
+}
+
+/* 🧱 Card Base */
+.pokemon-card {
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 12px;
+  padding: 10px 6px 12px;
+  position: relative;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  min-height: 180px; /* ensures equal vertical space across all sprites */
+}
+
+.pokemon-card:hover:not(.locked) {
+  transform: scale(1.05);
+  border-color: #00ff9d;
+  box-shadow: 0 0 8px #00ff9d60;
+}
+
+/* 🖼️ Sprite Wrapper */
+.sprite-wrapper {
+  position: relative;
+  width: 100%;
+  height: 110px; /* fixed uniform sprite area */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.poke-sprite {
+  max-width: 90px;
+  max-height: 90px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  transition: opacity 0.25s ease;
+}
+
+/* 🔒 Lock Overlay */
+.lock-overlay {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.lock-overlay span {
+  color: #fff;
+  font-size: 13px;
+  user-select: none;
+}
+
+/* 🩶 Locked (grayscale) */
+.pokemon-card.locked img,
+.poke-sprite.locked {
+  filter: grayscale(1);
+  opacity: 0.9;
+}
+.pokemon-card.locked {
+  cursor: not-allowed;
+  transform: none !important;
+  border-color: #30363d !important;
+  box-shadow: none !important;
+}
+
+/* 🔢 Team Number (Centered) */
+.team-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -48%);
+  background: rgba(0, 0, 0, 0.65);
+  color: #00ff9d;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 50%;
+  padding: 6px 10px;
+  border: 2px solid #00ff9d80;
+  pointer-events: none;
+  box-shadow: 0 0 6px rgba(0, 255, 157, 0.5);
+}
+
+/* 🔢 Count (Bottom Left, Fixed) */
+.count-label.bottom-left {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  pointer-events: none;
+}
+
+/* 🏷️ Name + Tier Alignment */
+.pokemon-name {
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #eee;
+  text-align: center;
+  min-height: 1.2em; /* keeps name line height consistent */
+}
+
+.pokemon-tier {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 0.85em;
+  margin-top: 2px;
+  text-align: center;
+}
+.pokemon-tier .tier-emoji {
+  font-size: 1em;
+}
+.pokemon-tier .tier-text {
+  text-transform: capitalize;
+}
+
+/* 🧩 Empty Message */
+.empty-msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #999;
+  font-size: 1rem;
+  margin-top: 1rem;
+}

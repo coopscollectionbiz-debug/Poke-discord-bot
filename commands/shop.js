@@ -1,6 +1,13 @@
-// ===========================================================
-// 🛒 /shop — Coop’s Collection Store (Sprite-Based Items)
-// ===========================================================
+// ==========================================================
+// 🏪 Coop's Collection Discord Bot — /shop (Final with Starter Pack Emoji + Shiny Logic)
+// ==========================================================
+// Features:
+//  • Local logic only (no API requests)
+//  • Starter Pack grants 1 Common, 1 Uncommon, 1 Rare Pokémon (with shiny odds)
+//  • Evolution Stone costs Coop Coins
+//  • Shiny Pokémon broadcast via broadcastReward()
+// ==========================================================
+
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -9,158 +16,296 @@ import {
   ActionRowBuilder,
   ComponentType,
 } from "discord.js";
-import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { safeReply } from "../utils/safeReply.js";
+import { getAllPokemon } from "../utils/dataLoader.js";
+import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
+import { rollForShiny } from "../shinyOdds.js";
+import { broadcastReward } from "../utils/broadcastReward.js";
+import { rarityEmojis } from "../spriteconfig.js";
 
-// ===========================================================
-// 🧾 Catalog — uses sprite instead of emoji
-// ===========================================================
+// ==========================================================
+// 🪙 Emoji IDs
+// ==========================================================
+const COOPCOIN = "<:coopcoin:1437892112959148093>";
+const EVO_STONE = "<:evolution_stone:1437892171381473551>";
+const STARTER_PACK = "<:starter_pack:1437896364087443479>";
+
+// ==========================================================
+// 🧩 Shop Items
+// ==========================================================
 const SHOP_ITEMS = [
   {
     id: "evolution_stone",
     name: "Evolution Stone",
-    cost: 500,
-    desc: "Used to evolve certain Pokémon into stronger forms.",
-    sprite: "/public/sprites/items/evolution_stone.png",
-    key: "evolution_stone",
+    cost: 3500,
+    emoji: EVO_STONE,
+    sprite: "https://cdn.discordapp.com/emojis/1437892171381473551.webp?size=128",
+    description: "Used to evolve certain Pokémon into stronger forms.",
+    onceOnly: false,
+  },
+  {
+    id: "starter_pack",
+    name: "Starter Pack",
+    cost: 0,
+    emoji: STARTER_PACK,
+    sprite: "https://cdn.discordapp.com/emojis/1437896364087443479.webp?size=128",
+    description:
+      "Receive 1 Common, 1 Uncommon, and 1 Rare Pokémon (with shiny odds). Claimable only once per account!",
+    onceOnly: true,
   },
 ];
 
-// ===========================================================
-// 🏪 Command
-// ===========================================================
+// ==========================================================
+// 🎯 Slash Command
+// ==========================================================
 export default {
   data: new SlashCommandBuilder()
     .setName("shop")
-    .setDescription("View the Coop’s Collection Shop"),
+    .setDescription("Browse the PokéMart and purchase items!"),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal) {
-    await interaction.deferReply();
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
+    try {
+      const userId = interaction.user.id;
+      const user = trainerData[userId] ??= {
+        id: userId,
+        tp: 0,
+        cc: 0,
+        pokemon: {},
+        trainers: {},
+        items: { evolution_stone: 0 },
+        purchases: [],
+      };
 
-    const userId = interaction.user.id;
-    const user = await ensureUserInitialized(trainerData, userId);
-    const userCC = user.cc ?? 0;
-
-    // Base URL for sprites (adjust for local vs Render)
-    const baseUrl = process.env.RENDER_EXTERNAL_URL || "https://yourapp.onrender.com";
-
-    // =======================================================
-    // 🏷️ Shop Overview
-    // =======================================================
-    const shopEmbed = new EmbedBuilder()
-      .setTitle("🛒 Coop’s Collection Shop")
-      .setColor(0x00ff9d)
-      .setDescription(
-        SHOP_ITEMS.map(
-          (item) =>
-            `**[${item.name}](${baseUrl}${item.sprite})** — ${item.cost.toLocaleString()} CC\n*${item.desc}*`
-        ).join("\n\n")
-      )
-      .setFooter({ text: `Your balance: ${userCC.toLocaleString()} CC` });
-
-    const menu = new StringSelectMenuBuilder()
-      .setCustomId("shop-select")
-      .setPlaceholder("Select an item to buy")
-      .addOptions(
-        SHOP_ITEMS.map((item) =>
-          new StringSelectMenuOptionBuilder()
-            .setLabel(`${item.name}`)
-            .setDescription(`${item.cost.toLocaleString()} CC — ${item.desc}`)
-            .setValue(item.id)
-        )
-      );
-
-    const row = new ActionRowBuilder().addComponents(menu);
-    await interaction.editReply({ embeds: [shopEmbed], components: [row] });
-
-    // =======================================================
-    // 🧩 Item Selection Collector
-    // =======================================================
-    const collector = interaction.channel.createMessageComponentCollector({
-      componentType: ComponentType.StringSelect,
-      time: 60000,
-      filter: (i) => i.user.id === userId,
-    });
-
-    collector.on("collect", async (i) => {
-      if (i.customId !== "shop-select") return;
-
-      const selected = SHOP_ITEMS.find((x) => x.id === i.values[0]);
-      if (!selected) return;
-
-      // Confirmation Embed
-      const confirmEmbed = new EmbedBuilder()
-        .setTitle("🛍️ Confirm Purchase")
-        .setColor(0xffcc00)
+      // ======================================================
+      // 🏪 Initial Embed
+      // ======================================================
+      const embed = new EmbedBuilder()
+        .setColor("#00ff9d")
+        .setTitle("🏪 Coop’s Collection PokéMart")
         .setDescription(
-          `Buy **1 ${selected.name}** for **${selected.cost.toLocaleString()} CC**?\n\n` +
-          `You currently have **${userCC.toLocaleString()} CC.**`
+          "Welcome to the PokéMart!\nSelect an item below to view details or confirm your purchase."
         )
-        .setThumbnail(`${baseUrl}${selected.sprite}`);
+        .setThumbnail("/public/sprites/items/Pokemart.png")
+        .setFooter({
+  text: `Your current balance: ${user.cc.toLocaleString()} ${COOPCOIN}`,
+});
 
-      const confirmMenu = new StringSelectMenuBuilder()
-        .setCustomId("shop-confirm")
-        .setPlaceholder("Confirm or cancel your purchase")
-        .addOptions(
-          new StringSelectMenuOptionBuilder()
-            .setLabel("✅ Confirm Purchase")
-            .setDescription(`Spend ${selected.cost} CC`)
-            .setValue(`confirm:${selected.id}`),
-          new StringSelectMenuOptionBuilder()
-            .setLabel("❌ Cancel")
-            .setDescription("Cancel this purchase")
-            .setValue("cancel")
+
+      // NEW:
+const options = SHOP_ITEMS
+  .filter(item => !(item.onceOnly && user.purchases?.includes(item.id))) // ⬅ hide claimed one-time items
+  .map((item) => {
+    const label = `${item.name} — ${
+      item.cost === 0 ? "FREE" : `${item.cost} ${COOPCOIN}`
+    }`;
+    return new StringSelectMenuOptionBuilder()
+      .setLabel(label)
+      .setValue(item.id)
+      .setDescription(item.description.slice(0, 80))
+      .setEmoji(item.emoji);
+  });
+
+
+      const menu = new StringSelectMenuBuilder()
+        .setCustomId("shop_select")
+        .setPlaceholder("🛍️ Select an item")
+        .addOptions(options);
+
+      const row = new ActionRowBuilder().addComponents(menu);
+      const reply = await safeReply(interaction, { embeds: [embed], components: [row] });
+
+      // ======================================================
+      // 🎯 Selection Collector
+      // ======================================================
+      const collector = reply.createMessageComponentCollector({
+        componentType: ComponentType.StringSelect,
+        time: 60000,
+      });
+
+      collector.on("collect", async (i) => {
+        if (i.user.id !== userId)
+          return i.reply({ content: "❌ This shop isn’t yours.", ephemeral: true });
+
+        const item = SHOP_ITEMS.find((x) => x.id === i.values[0]);
+        if (!item) return i.reply({ content: "❌ Invalid item.", ephemeral: true });
+
+        if (item.onceOnly && user.purchases?.includes(item.id)) {
+          return i.reply({
+            content: "⚠️ You’ve already claimed this item!",
+            ephemeral: true,
+          });
+        }
+
+        const confirmEmbed = new EmbedBuilder()
+          .setColor("#00ff9d")
+          .setTitle(`${item.emoji} ${item.name}`)
+          .setThumbnail(item.sprite)
+          .setDescription(
+            `**Cost:** ${
+              item.cost === 0 ? "🆓 FREE" : `${item.cost} ${COOPCOIN}`
+            }\n\n${item.description}\n\nConfirm your purchase below.`
+          );
+
+        const confirmRow = new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`confirm_${item.id}`)
+            .setPlaceholder("✅ Confirm or ❌ Cancel")
+            .addOptions([
+              new StringSelectMenuOptionBuilder()
+                .setLabel("Confirm Purchase")
+                .setValue("confirm")
+                .setEmoji("✅"),
+              new StringSelectMenuOptionBuilder()
+                .setLabel("Cancel")
+                .setValue("cancel")
+                .setEmoji("❌"),
+            ])
         );
 
-      const confirmRow = new ActionRowBuilder().addComponents(confirmMenu);
-      await i.update({ embeds: [confirmEmbed], components: [confirmRow] });
-    });
+        await i.update({ embeds: [confirmEmbed], components: [confirmRow] });
+      });
 
-    // =======================================================
-    // 💰 Confirmation Collector
-    // =======================================================
-    collector.on("collect", async (i) => {
-      if (i.customId !== "shop-confirm") return;
-
-      const [action, id] = i.values[0].split(":");
-      if (action === "cancel") {
-        await i.update({
-          content: "❌ Purchase cancelled.",
-          embeds: [],
+      collector.on("end", async () => {
+        await interaction.editReply({
           components: [],
+          content: "🕒 Shop session expired. Use `/shop` again to reopen.",
         });
-        return;
-      }
+      });
 
-      const selected = SHOP_ITEMS.find((x) => x.id === id);
-      if (!selected) return;
+      // ======================================================
+      // 💾 Confirm Collector (local logic)
+      // ======================================================
+      client.on("interactionCreate", async (i) => {
+        if (!i.isStringSelectMenu()) return;
+        if (!i.customId.startsWith("confirm_")) return;
+        if (i.user.id !== userId) return;
 
-      const cost = selected.cost;
-      if (user.cc < cost) {
-        await i.reply({ content: "❌ You don't have enough CC!", ephemeral: true });
-        return;
-      }
+        const itemId = i.customId.replace("confirm_", "");
+        const item = SHOP_ITEMS.find((x) => x.id === itemId);
+        const choice = i.values[0];
+        if (!item) return;
 
-      // Transaction
-      user.cc -= cost;
-      user.items[selected.key] = (user.items[selected.key] ?? 0) + 1;
-      await saveTrainerDataLocal(trainerData);
+        if (choice === "cancel") {
+          return i.update({ content: "❌ Purchase cancelled.", components: [], embeds: [] });
+        }
 
-      // Success Embed
-      const successEmbed = new EmbedBuilder()
-        .setTitle("✅ Purchase Complete")
-        .setColor(0x55ff55)
-        .setDescription(
-          `You bought **1 ${selected.name}** for **${cost.toLocaleString()} CC.**\n\n` +
-          `💰 Remaining balance: **${user.cc.toLocaleString()} CC**\n` +
-          `🎒 Inventory: **${user.items[selected.key]} Evolution Stone(s)**`
-        )
-        .setThumbnail(`${baseUrl}${selected.sprite}`);
+        // ======================================================
+        // 🎁 Starter Pack (with shiny logic)
+        // ======================================================
+        if (item.id === "starter_pack") {
+          user.purchases ??= [];
+          if (user.purchases.includes("starter_pack")) {
+            return i.update({
+              content: "⚠️ You’ve already claimed your Starter Pack!",
+              components: [],
+            });
+          }
 
-      await i.update({ embeds: [successEmbed], components: [] });
-    });
+          const allPokemon = await getAllPokemon();
+          const rewards = [
+            selectRandomPokemonForUser(allPokemon, user, "common"),
+            selectRandomPokemonForUser(allPokemon, user, "uncommon"),
+            selectRandomPokemonForUser(allPokemon, user, "rare"),
+          ];
 
-    collector.on("end", async () => {
-      await interaction.editReply({ components: [] }).catch(() => {});
-    });
+          let shinyPulled = [];
+          let lines = [];
+          let spritesHTML = [];
+
+          for (const reward of rewards) {
+            const shiny = rollForShiny(user.tp || 0);
+            user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
+
+            const spriteURL = shiny
+              ? `/public/sprites/pokemon/shiny/${reward.id}.gif`
+              : `/public/sprites/pokemon/normal/${reward.id}.gif`;
+            spritesHTML.push(
+              `[${shiny ? "✨" : ""}${reward.name}](${spriteURL})`
+            );
+
+            if (shiny) {
+              user.pokemon[reward.id].shiny++;
+              shinyPulled.push(reward);
+              lines.push(`✨ **${reward.name}** (${reward.tier})`);
+            } else {
+              user.pokemon[reward.id].normal++;
+              lines.push(`${rarityEmojis[reward.tier]} **${reward.name}**`);
+            }
+
+            // Broadcast shiny immediately
+            if (shiny) {
+              await broadcastReward(client, {
+                user: i.user,
+                type: "pokemon",
+                item: {
+                  id: reward.id,
+                  name: reward.name,
+                  rarity: reward.tier,
+                },
+                shiny: true,
+                source: "Starter Pack",
+              }).catch(() => {});
+            }
+          }
+
+          user.purchases.push("starter_pack");
+          await saveTrainerDataLocal(trainerData);
+          await saveDataToDiscord(trainerData);
+
+          const successEmbed = new EmbedBuilder()
+            .setColor("#00ff9d")
+            .setTitle(`${STARTER_PACK} Starter Pack Claimed!`)
+            .setDescription(
+              `You received:\n${lines.join("\n")}\n\nEnjoy your adventure!`
+            )
+            .setThumbnail(item.sprite)
+            .setFooter({
+              text:
+                shinyPulled.length > 0
+                  ? `✨ You pulled ${shinyPulled.length} shiny Pokémon!`
+                  : "No shinies this time... maybe next pack!",
+            });
+
+          await i.update({ embeds: [successEmbed], components: [] });
+          return;
+        }
+
+        // ======================================================
+        // 🪨 Evolution Stone Purchase
+        // ======================================================
+        if (item.id === "evolution_stone") {
+          if (user.cc < item.cost) {
+            return i.update({
+              content: `❌ Not enough Coop Coins! You need ${item.cost} ${COOPCOIN}.`,
+              components: [],
+            });
+          }
+
+          user.cc -= item.cost;
+          user.items ??= { evolution_stone: 0 };
+          user.items.evolution_stone++;
+          await saveTrainerDataLocal(trainerData);
+          await saveDataToDiscord(trainerData);
+
+          const successEmbed = new EmbedBuilder()
+            .setColor("#00ff9d")
+            .setTitle(`${EVO_STONE} Evolution Stone Purchased!`)
+            .setDescription(
+              `You spent **${item.cost} ${COOPCOIN}** and received **1 ${item.name}**.\n\nYou now have **${user.items.evolution_stone}** ${EVO_STONE}.`
+            )
+            .setThumbnail(item.sprite)
+            .setFooter({ text: `Remaining balance: ${user.cc} ${COOPCOIN}` });
+
+          await i.update({ embeds: [successEmbed], components: [] });
+          return;
+        }
+      });
+    } catch (err) {
+      console.error("❌ /shop failed:", err);
+      await safeReply(interaction, {
+        content: `❌ Error: ${err.message}`,
+        ephemeral: true,
+      });
+    }
   },
 };

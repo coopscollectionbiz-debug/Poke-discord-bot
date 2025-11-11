@@ -18,7 +18,9 @@ export const USER_SCHEMA_TEMPLATE = {
   displayedTrainer: "string or null (trainer key)",
   lastDaily: "number (timestamp, default 0)",
   lastRecruit: "number (timestamp, default 0)",
-  lastQuest: "number (timestamp, default 0)"
+  lastQuest: "number (timestamp, default 0)",
+  items: "object { [itemId: string]: number } (inventory; e.g. evolution_stone)",
+  purchases: "array of strings (one-time shop purchases like 'starter_pack')"
 };
 
 /**
@@ -44,7 +46,11 @@ export function createNewUser(userId, username) {
     displayedTrainer: null,
     lastDaily: 0,
     lastRecruit: 0,
-    lastQuest: 0
+    lastQuest: 0,
+
+    // 🛒 Added fields
+    items: { evolution_stone: 0 },
+    purchases: []
   };
 }
 
@@ -69,9 +75,9 @@ export function validateUserSchema(user, userId, username) {
   if (validated.cc === undefined) validated.cc = 0;
   if (validated.tp === undefined) validated.tp = 0;
   if (validated.rank === undefined) validated.rank = "Novice Trainer";
-if (validated.name === undefined || validated.name === "Trainer") {
-  validated.name = username || "Unknown";
-}
+  if (validated.name === undefined || validated.name === "Trainer") {
+    validated.name = username || "Unknown";
+  }
 
   // Onboarding fields
   if (validated.onboardingComplete === undefined) validated.onboardingComplete = false;
@@ -92,10 +98,19 @@ if (validated.name === undefined || validated.name === "Trainer") {
   if (validated.lastRecruit === undefined) validated.lastRecruit = 0;
   if (validated.lastQuest === undefined) validated.lastQuest = 0;
 
+  // 🧾 Inventory + Purchases
+  if (!validated.items || typeof validated.items !== "object")
+    validated.items = { evolution_stone: 0 };
+
+  if (!Array.isArray(validated.purchases))
+    validated.purchases = [];
+
   // Remove deprecated ownedPokemon if it exists
   if (validated.ownedPokemon !== undefined) {
-    // Migrate data if needed
-    if (Object.keys(validated.ownedPokemon).length > 0 && Object.keys(validated.pokemon).length === 0) {
+    if (
+      Object.keys(validated.ownedPokemon).length > 0 &&
+      Object.keys(validated.pokemon).length === 0
+    ) {
       validated.pokemon = validated.ownedPokemon;
     }
     delete validated.ownedPokemon;

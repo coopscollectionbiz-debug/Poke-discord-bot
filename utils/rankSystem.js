@@ -35,7 +35,8 @@ const ROLE_NAME_MAP = new Map(
  * @returns {string} Rank name
  */
 export function getRank(tp) {
-  let current = "Novice Trainer";
+if (tp < 100) return null;
+  let current = "";
   for (const tier of RANK_TIERS) {
     if (tp >= tier.tp) {
       current = tier.roleName;

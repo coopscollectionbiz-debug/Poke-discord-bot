@@ -570,3 +570,24 @@ footer a:hover {
   from { opacity: 1; }
   to   { opacity: 0; }
 }
+
+/* ===========================================================
+   Additional Styles for Toggle Buttons & Type Icons
+=========================================================== */
+.mode-btn:hover:not(.active) {
+  border-color: var(--brand);
+  opacity: 0.85;
+}
+
+.type-icons {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin: 4px 0;
+}
+
+.type-icons img {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}

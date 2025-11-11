@@ -160,39 +160,38 @@ function refreshModeButtons() {
 
 
 // ===========================================================
-// 🌟 Shiny Toggle + Owned/Unowned Toggles
+// 🌟 Shiny Toggle + Owned/Unowned Toggles (Trainer-style logic)
 // ===========================================================
 function initShinyToggle() {
-  const toggle = document.getElementById("toggleShiny");
-  if (toggle) {
-    toggle.addEventListener("click", () => {
+  const shinyBtn = document.getElementById("toggleShiny");
+  if (shinyBtn) {
+    shinyBtn.addEventListener("click", () => {
       shinyMode = !shinyMode;
-      toggle.classList.toggle("active", shinyMode);
-      toggle.textContent = shinyMode ? "🌟 Shiny Mode: ON" : "✨ Shiny Mode: OFF";
+      shinyBtn.classList.toggle("active", shinyMode);
+      shinyBtn.textContent = shinyMode ? "🌟 Shiny Mode ON" : "✨ Shiny Mode OFF";
       renderPokemonGrid();
     });
   }
 
   const ownedBtn = document.getElementById("toggleOwned");
+  const unownedBtn = document.getElementById("toggleUnowned");
+
   if (ownedBtn) {
-    ownedBtn.classList.toggle("active", showOwned);
-    ownedBtn.textContent = showOwned ? "✅ Show Owned" : "🚫 Hide Owned";
-    ownedBtn.addEventListener("click", () => {
+    ownedBtn.addEventListener("click", (e) => {
       showOwned = !showOwned;
-      ownedBtn.classList.toggle("active", showOwned);
-      ownedBtn.textContent = showOwned ? "✅ Show Owned" : "🚫 Hide Owned";
+      showUnowned = false; // mutually exclusive
+      e.target.classList.toggle("active", showOwned);
+      if (unownedBtn) unownedBtn.classList.remove("active");
       renderPokemonGrid();
     });
   }
 
-  const unownedBtn = document.getElementById("toggleUnowned");
   if (unownedBtn) {
-    unownedBtn.classList.toggle("active", showUnowned);
-    unownedBtn.textContent = showUnowned ? "✅ Show Unowned" : "❌ Hide Unowned";
-    unownedBtn.addEventListener("click", () => {
+    unownedBtn.addEventListener("click", (e) => {
       showUnowned = !showUnowned;
-      unownedBtn.classList.toggle("active", showUnowned);
-      unownedBtn.textContent = showUnowned ? "✅ Show Unowned" : "❌ Hide Unowned";
+      showOwned = false; // mutually exclusive
+      e.target.classList.toggle("active", showUnowned);
+      if (ownedBtn) ownedBtn.classList.remove("active");
       renderPokemonGrid();
     });
   }
@@ -226,16 +225,11 @@ function ownedCountForVariant(id) {
 }
 
 // ===========================================================
-// ===========================================================
-// 🎴 Pokémon Grid Renderer (FINAL CLEAN VERSION)
+// 🎴 Pokémon Grid Renderer (Trainer-style behavior)
 // ===========================================================
 function renderPokemonGrid() {
   const container = document.getElementById("pokemonGrid");
   if (!container) return;
-
-  // Preserve current mode when toggling shiny
-  const mode = currentMode;
-
   container.innerHTML = "";
 
   const searchEl = document.getElementById("searchInput");
@@ -246,9 +240,8 @@ function renderPokemonGrid() {
   const rarityFilter = rarityEl?.value || "";
   const typeFilter = typeEl?.value || "";
 
-  // Sort Pokémon numerically (Pokédex order)
-  const ids = Object.keys(pokemonData).map(Number).sort((a, b) => a - b);
-
+  // Build and sort list
+  let ids = Object.keys(pokemonData).map(Number).sort((a, b) => a - b);
   let shown = 0;
 
   for (const id of ids) {
@@ -258,7 +251,7 @@ function renderPokemonGrid() {
     const types = p.types || [];
     const name = p.name || `#${id}`;
 
-    // Apply filters
+    // Basic filters
     if (search && !name.toLowerCase().includes(search)) continue;
     if (rarityFilter && p.tier !== rarityFilter) continue;
     if (typeFilter && !types.includes(typeFilter)) continue;
@@ -267,91 +260,78 @@ function renderPokemonGrid() {
     const isOwnedVariant = shinyMode ? ownedCounts.shiny > 0 : ownedCounts.normal > 0;
     const isOwnedAny = ownedCounts.any > 0;
 
-    // 🧩 Enforce ownership visibility
-    if (shinyMode && ownedCounts.shiny === 0) continue;
-    if (!shinyMode && ownedCounts.normal === 0 && mode !== "evolve" && mode !== "donate") continue;
-
-    // 🧩 Mode visibility
-    if (mode === "evolve" || mode === "donate") {
+    // =======================================================
+    // 🧩 Mode-specific visibility
+    // =======================================================
+    if (currentMode === "evolve" || currentMode === "donate") {
+      // Only show Pokémon you actually own (variant-aware)
       if (!isOwnedVariant) continue;
     } else {
-      if (isOwnedAny && !showOwned) continue;
-      if (!isOwnedAny && !showUnowned) continue;
+      // Trainer-style toggle behavior
+      if (showOwned && !isOwnedAny) continue;   // hide unowned if owned-only active
+      if (showUnowned && isOwnedAny) continue; // hide owned if unowned-only active
+      // If both are false → show all
     }
 
-    // Determine sprite path
+    // =======================================================
+    // 🔒 Lock & sprite logic
+    // =======================================================
+    let locked = false;
+    if (currentMode === "evolve" && (!isOwnedVariant || !isEvolutionEligible(id))) locked = true;
+    if (currentMode === "team" && !isOwnedAny) locked = true;
+
     let spritePath;
     if (shinyMode) {
-      spritePath = isOwnedVariant
-        ? `/public/sprites/pokemon/shiny/${id}.gif`
-        : `/public/sprites/pokemon/grayscale/${id}.gif`;
+      spritePath = locked
+        ? `/public/sprites/pokemon/grayscale/${id}.gif`
+        : `/public/sprites/pokemon/shiny/${id}.gif`;
     } else {
-      spritePath = isOwnedAny
-        ? `/public/sprites/pokemon/normal/${id}.gif`
-        : `/public/sprites/pokemon/grayscale/${id}.gif`;
+      spritePath = locked
+        ? `/public/sprites/pokemon/grayscale/${id}.gif`
+        : `/public/sprites/pokemon/normal/${id}.gif`;
     }
 
-    // Card setup
+    // =======================================================
+    // 🧱 Card Construction
+    // =======================================================
     const card = document.createElement("div");
-    card.className = "pokemon-card";
+    card.className = `pokemon-card${locked ? " locked" : ""}`;
     card.dataset.id = id;
 
-    // Determine locked status
-    let locked = false;
-    if (mode === "evolve" && !isEvolutionEligible(id)) locked = true;
-    if (mode === "team" && !isOwnedAny) locked = true; // lock unowned in team mode
-
-    // Variant-specific count
-    const displayCount = shinyMode ? ownedCounts.shiny : ownedCounts.normal;
     const teamIndex = selectedTeam.indexOf(Number(id));
+    const displayCount = shinyMode ? ownedCounts.shiny : ownedCounts.normal;
 
     card.innerHTML = `
       <div class="sprite-wrapper">
         <img src="${spritePath}" class="poke-sprite ${locked ? "locked" : ""}" alt="${name}">
         ${teamIndex >= 0 ? `<div class="team-badge">${teamIndex + 1}</div>` : ""}
         ${locked ? `<div class="lock-overlay"><span>🔒</span></div>` : ""}
-        ${displayCount > 0 ? `<div class="count-label">x${displayCount}</div>` : ""}
+        ${displayCount > 0 ? `<div class="count-label bottom-left">x${displayCount}</div>` : ""}
       </div>
       <div class="pokemon-name">${name}</div>
       <div class="pokemon-tier">
         <div class="tier-emoji">${rarityEmojis[p.tier] || ""}</div>
         <div class="tier-text" style="color:${rarityColors[p.tier] || "#ccc"};">
-          ${p.tier}
+          ${p.tier.charAt(0).toUpperCase() + p.tier.slice(1)}
         </div>
       </div>
     `;
 
+    // =======================================================
+    // 🚫 Click only if NOT locked
+    // =======================================================
     if (!locked) {
       card.addEventListener("click", () => onPokemonClick(id));
-    } else {
-      card.classList.add("ineligible");
     }
 
     container.appendChild(card);
     shown++;
   }
 
+  // Fallback message
   if (shown === 0) {
-    container.innerHTML = `<p class="empty-msg">No Pokémon found for this mode.</p>`;
+    container.innerHTML = `<p class="empty-msg">No Pokémon match your filters.</p>`;
   }
-}
-
-// ===========================================================
-// 🧭 Mode Click Logic
-// ===========================================================
-function onPokemonClick(pokeId) {
-  if (currentMode === "team") handleTeamSelection(pokeId);
-  else if (currentMode === "evolve") openEvolutionModal(pokeId);
-  else if (currentMode === "donate") openDonationModal(pokeId);
-}
-
-function handleTeamSelection(pokeId) {
-  const idx = selectedTeam.indexOf(Number(pokeId));
-  if (idx > -1) selectedTeam.splice(idx, 1);
-  else if (selectedTeam.length < 6) selectedTeam.push(Number(pokeId));
-
-  // Re-render to refresh slot numbers and selection
-  renderPokemonGrid();
 }
 
 // ===========================================================

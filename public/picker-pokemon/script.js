@@ -332,21 +332,19 @@ function renderPokemonGrid() {
       if (showUnownedOnly && isOwnedAny) continue;
     }
 
-    // =======================================================
-    // 🔒 LOCK STATE
-    // =======================================================
-    let locked = false;
-    if (currentMode === "team" && !isOwnedAny) {
-      locked = true;
-    }
-    if (currentMode === "evolve") {
-      const hasVariant = shinyMode ? isOwnedShiny : isOwnedNormal;
-      if (!hasVariant || !isEvolutionEligible(id)) locked = true;
-    }
-    if (currentMode === "donate") {
-      const hasVariant = shinyMode ? isOwnedShiny : isOwnedNormal;
-      if (!hasVariant) locked = true;
-    }
+    // 🔒 LOCK STATE — always enforce lock correctly across modes
+let locked = false;
+
+if (currentMode === "team") {
+  // Always lock unowned in team mode
+  locked = !isOwnedAny;
+} else if (currentMode === "evolve") {
+  const hasVariant = shinyMode ? isOwnedShiny : isOwnedNormal;
+  locked = !hasVariant || !isEvolutionEligible(id);
+} else if (currentMode === "donate") {
+  const hasVariant = shinyMode ? isOwnedShiny : isOwnedNormal;
+  locked = !hasVariant;
+}
 
     // =======================================================
     // 🖼️ SPRITE PATH
@@ -378,28 +376,40 @@ function renderPokemonGrid() {
       `<img src="/public/sprites/types/${typeId}.png" alt="${TYPE_MAP[typeId]}" style="width: 32px; height: 32px; image-rendering: pixelated;">`
     ).join('');
 
-    // Mode-specific badges
-    let badgeHTML = '';
-    if (currentMode === "donate" && !locked) {
-      const ccValue = getDonationValue(p.tier, shinyMode);
-      badgeHTML = `<div class="donate-value">💰 ${ccValue}</div>`;
-    } else if (currentMode === "evolve" && !locked) {
-      const evos = getEvoList(p);
-      if (evos.length) {
-        const target = pokemonData[evos[0]];
-        if (target) {
-          const cost = getEvolutionCost(p, target);
-          badgeHTML = `<div class="evolve-cost"><img src="/public/sprites/items/evolution_stone.png" style="width: 16px; height: 16px; vertical-align: middle; image-rendering: pixelated;"> ${cost}</div>`;
-        }
+    // =======================================================
+// 💰 / 🧬 Mode-specific badges (bottom-right corner)
+// =======================================================
+let badgeHTML = "";
+if (!locked) {
+  if (currentMode === "donate") {
+    const ccValue = getDonationValue(p.tier, shinyMode);
+    badgeHTML = `
+      <div class="donate-value" style="bottom:6px; right:6px;">
+        💰 ${ccValue}
+      </div>`;
+  } else if (currentMode === "evolve") {
+    const evos = getEvoList(p);
+    if (evos.length) {
+      const target = pokemonData[evos[0]];
+      if (target) {
+        const cost = getEvolutionCost(p, target);
+        badgeHTML = `
+          <div class="evolve-cost" style="bottom:6px; right:6px;">
+            <img src="/public/sprites/items/evolution_stone.png"
+                 style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
+            ${cost}
+          </div>`;
       }
     }
+  }
+}
 
     card.innerHTML = `
       <div class="sprite-wrapper">
         <img src="${spritePath}" class="poke-sprite" alt="${name}">
         ${teamIndex >= 0 ? `<div class="team-badge">${teamIndex + 1}</div>` : ""}
         ${locked && currentMode === "team" ? `<div class="lock-overlay"><span>🔒</span></div>` : ""}
-        ${displayCount > 0 && currentMode === "team" ? `<div class="count-label bottom-left">x${displayCount}</div>` : ""}
+        ${displayCount > 0 ? `<div class="count-label bottom-left">x${displayCount}</div>` : ""}
         ${badgeHTML}
       </div>
       <div class="pokemon-name">${name}</div>
@@ -508,10 +518,10 @@ async function init() {
     document.getElementById("rarityFilter")?.addEventListener("change", () => renderPokemonGrid());
     document.getElementById("typeFilter")?.addEventListener("change", () => renderPokemonGrid());
 
-    // Hook mode buttons
-    document.querySelectorAll(".mode-btn").forEach(btn => {
-      btn.addEventListener("click", () => setMode(btn.dataset.mode));
-    });
+    // ✅ Hook main mode buttons only (ignore filters)
+document.querySelectorAll("#modeToggle .mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => setMode(btn.dataset.mode));
+});
 
     // Hook save button
     const saveBtn = document.getElementById("saveTeamBtn");

@@ -525,31 +525,74 @@ document.querySelectorAll("#modeToggle .mode-btn").forEach(btn => {
 
     // Hook save button
     const saveBtn = document.getElementById("saveTeamBtn");
-    if (saveBtn) {
-      saveBtn.addEventListener("click", async () => {
-        if (selectedTeam.length === 0) {
-          alert("⚠️ Select at least one Pokémon!");
-          return;
+    saveBtn.addEventListener("click", () => {
+  if (selectedTeam.length === 0) {
+    alert("⚠️ Select at least one Pokémon!");
+    return;
+  }
+
+  // Build preview HTML for selected Pokémon
+  const previewHTML = selectedTeam.map(id => {
+    const sprite = shinyMode
+      ? `/sprites/pokemon/shiny/${id}.gif`
+      : `/sprites/pokemon/normal/${id}.gif`;
+    return `<img src="${sprite}" style="width:64px;height:64px;image-rendering:pixelated;">`;
+  }).join("");
+
+  createConfirmModal({
+    title: "💾 Save New Team?",
+    message: `
+      <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;">
+        ${previewHTML}
+      </div>
+      Are you sure you want to save this new team?
+    `,
+    onConfirm: async (overlay) => {
+      try {
+        const res = await saveTeam();
+       if (res.success) {
+  const modal2 = createOverlay();
+  const confirmBox = document.createElement("div");
+  confirmBox.style.cssText = `
+    background: var(--card);
+    border: 2px solid var(--brand);
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 480px;
+    width: 92%;
+  `;
+
+  // 🧩 Build a row of the new team’s sprites
+  const teamPreview = selectedTeam.map(id => {
+    const sprite = shinyMode
+      ? `/sprites/pokemon/shiny/${id}.gif`
+      : `/sprites/pokemon/normal/${id}.gif`;
+    return `<img src="${sprite}" style="width:64px;height:64px;image-rendering:pixelated;">`;
+  }).join("");
+
+  confirmBox.innerHTML = `
+    <h2 style="color: var(--brand);">✅ Team Saved!</h2>
+    <p style="margin:0.5rem 0 1rem;color:#ccc;">Your new team has been successfully updated.</p>
+    <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;">
+      ${teamPreview}
+    </div>
+    <button style="background: var(--brand); color: var(--bg); border:none
+
+          confirmBox.querySelector("button").addEventListener("click", () => closeOverlay(modal2));
+          modal2.appendChild(confirmBox);
+        } else {
+          alert("❌ Failed to save team.");
         }
-        
-        try {
-          const res = await saveTeam();
-          const status = document.getElementById("teamStatus");
-          if (res.success) {
-            if (status) {
-              status.textContent = "✅ Team saved!";
-              status.className = "status-msg success";
-              setTimeout(() => status.textContent = "", 3000);
-            } else {
-              alert("✅ Team saved!");
-            }
-          }
-        } catch (err) {
-          console.error("Save failed:", err);
-          alert("❌ " + err.message);
-        }
-      });
+      } catch (err) {
+        alert("❌ " + err.message);
+      } finally {
+        closeOverlay(overlay);
+      }
     }
+  });
+});
+
   } catch (err) {
     console.error("Init failed:", err);
     document.body.innerHTML = `<p class='error'>❌ ${err.message}</p>`;
@@ -574,6 +617,51 @@ function createOverlay() {
 
 function closeOverlay(overlay) {
   if (overlay) overlay.remove();
+}
+
+// ===========================================================
+// 💾 Confirmation Modal (used for Save Team)
+// ===========================================================
+function createConfirmModal({ title, message, onConfirm, onCancel }) {
+  const overlay = createOverlay();
+  const modal = document.createElement("div");
+  modal.style.cssText = `
+    background: var(--card);
+    border: 2px solid var(--brand);
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 500px;
+    width: 92%;
+  `;
+
+  modal.innerHTML = `
+    <h2 style="color: var(--brand); margin-bottom: 0.5rem;">${title}</h2>
+    <p style="margin-bottom: 1rem; color: #ccc;">${message}</p>
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+      <button class="cancel-btn"
+        style="background: var(--border); color: white; border: none;
+               padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+        Cancel
+      </button>
+      <button class="confirm-btn"
+        style="background: var(--brand); color: var(--bg); border: none;
+               padding: 10px 20px; border-radius: 8px; cursor: pointer;
+               font-weight: 700;">
+        Confirm Save
+      </button>
+    </div>
+  `;
+
+  modal.querySelector(".cancel-btn").addEventListener("click", () => {
+    closeOverlay(overlay);
+    if (onCancel) onCancel();
+  });
+  modal.querySelector(".confirm-btn").addEventListener("click", () => {
+    if (onConfirm) onConfirm(overlay);
+  });
+
+  overlay.appendChild(modal);
 }
 
 // ===========================================================

@@ -248,21 +248,27 @@ p {
 .sprite-wrapper {
   position: relative;
   width: 100%;
+  height: 120px; /* 👈 fixed sprite area for consistent badge placement */
   display: flex;
   justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
 /* 🖼️ Sprite */
 .pokemon-card img {
   image-rendering: pixelated;
-  width: auto;
-  height: auto;
   max-width: 96px;
   max-height: 96px;
+  width: auto;
+  height: auto;
   margin: 0 auto;
   display: block;
   object-fit: contain;
+  position: relative;
+  top: 0;
 }
+
 
 /* Text */
 .pokemon-name {
@@ -373,6 +379,11 @@ p {
   font-weight: 700;
   color: var(--brand);
   text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+line-height: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+
 }
 
 .count-label.bottom-left {
@@ -410,12 +421,16 @@ p {
   background: var(--bg);
   border: 1px solid var(--brand);
   border-radius: 8px;
-  padding: 3px 6px;
+  padding: 2px 6px;
   font-size: 0.75rem;
   color: var(--brand);
   font-weight: 700;
   box-shadow: 0 0 4px #00ff9d60;
   letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
 }
 
 .donate-value {
@@ -590,4 +605,12 @@ footer a:hover {
   width: 32px;
   height: 32px;
   image-rendering: pixelated;
+}
+
+/* Ensure overlays and badges always render above sprites */
+.sprite-wrapper > * {
+  z-index: 2;
+}
+.sprite-wrapper img.poke-sprite {
+  z-index: 1;
 }

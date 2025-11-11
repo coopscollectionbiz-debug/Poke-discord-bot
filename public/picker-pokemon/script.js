@@ -1,10 +1,9 @@
 /* ===========================================================
-   Coop's Collection — Pokémon Picker (HYBRID FIXED VERSION)
+   Coop's Collection — Pokémon Picker (FIXED VERSION)
    ===========================================================
-   Combines:
+   - Fixed all element ID mismatches
    - Three-mode system (Team, Evolve, Donate)
-   - Proven team selection from working version
-   - Better debugging and error handling
+   - Team selection functionality restored
 =========================================================== */
 
 let userId, userToken;
@@ -15,7 +14,7 @@ let shinyMode = false;
 let selectedTeam = [];
 let activePokemon = null;
 
-// NEW: Owned/Unowned view flags (Team mode UI)
+// Owned/Unowned view flags (Team mode UI)
 let showOwned = true;
 let showUnowned = true;
 
@@ -145,6 +144,7 @@ function setMode(mode) {
     btn.classList.toggle("active", btn.dataset.mode === mode);
   });
   renderPokemonGrid();
+  updateTeamCounter();
 }
 
 function refreshModeButtons() {
@@ -153,24 +153,23 @@ function refreshModeButtons() {
   });
 }
 
-
 // ===========================================================
-// 🌟 Shiny Toggle + Owned/Unowned Toggles (Trainer-style logic)
+// 🌟 Shiny Toggle + Owned/Unowned Toggles (FIXED IDs)
 // ===========================================================
 function initShinyToggle() {
-  const shinyBtn = document.getElementById("toggleShiny");
+  const shinyBtn = document.getElementById("shinyToggle"); // FIXED: was "toggleShiny"
   if (shinyBtn) {
     shinyBtn.addEventListener("click", () => {
       shinyMode = !shinyMode;
       shinyBtn.classList.toggle("active", shinyMode);
-      shinyBtn.textContent = shinyMode ? "🌟 Shiny Mode ON" : "✨ Shiny Mode OFF";
+      shinyBtn.textContent = shinyMode ? "🌟 Shiny Mode ON" : "🌟 Shiny Mode OFF";
       console.log(`✨ Shiny mode: ${shinyMode}`);
       renderPokemonGrid();
     });
   }
 
-  const ownedBtn = document.getElementById("toggleOwned");
-  const unownedBtn = document.getElementById("toggleUnowned");
+  const ownedBtn = document.getElementById("ownedToggle"); // FIXED: was "toggleOwned"
+  const unownedBtn = document.getElementById("unownedToggle"); // FIXED: was "toggleUnowned"
 
   if (ownedBtn) {
     ownedBtn.addEventListener("click", (e) => {
@@ -223,7 +222,7 @@ function ownedCountForVariant(id) {
 }
 
 // ===========================================================
-// 🎴 Pokémon Grid Renderer (FIXED VERSION)
+// 🎴 Pokémon Grid Renderer
 // ===========================================================
 function renderPokemonGrid() {
   console.log(`🎨 Rendering grid in ${currentMode} mode, shiny: ${shinyMode}`);
@@ -234,7 +233,7 @@ function renderPokemonGrid() {
   }
   container.innerHTML = "";
 
-  const searchEl = document.getElementById("searchInput");
+  const searchEl = document.getElementById("search"); // FIXED: was "searchInput"
   const rarityEl = document.getElementById("rarityFilter");
   const typeEl = document.getElementById("typeFilter");
 
@@ -270,9 +269,9 @@ function renderPokemonGrid() {
       if (!isOwnedVariant) continue;
     } else {
       // Trainer-style toggle behavior
-      if (showOwned && !isOwnedAny) continue;   // hide unowned if owned-only active
-      if (showUnowned && isOwnedAny) continue; // hide owned if unowned-only active
-      // If both are false → show all
+      if (showOwned && !showUnowned && !isOwnedAny) continue;   // hide unowned if owned-only active
+      if (showUnowned && !showOwned && isOwnedAny) continue; // hide owned if unowned-only active
+      // If both are true or both false → show all
     }
 
     // =======================================================
@@ -312,10 +311,8 @@ function renderPokemonGrid() {
       </div>
       <div class="pokemon-name">${name}</div>
       <div class="pokemon-tier">
-        <div class="tier-emoji">${rarityEmojis[p.tier] || ""}</div>
-        <div class="tier-text" style="color:${rarityColors[p.tier] || "#ccc"};">
-          ${p.tier.charAt(0).toUpperCase() + p.tier.slice(1)}
-        </div>
+        <span class="tier-emoji">${rarityEmojis[p.tier] || ""}</span>
+        <span class="tier-text ${p.tier}">${p.tier.charAt(0).toUpperCase() + p.tier.slice(1)}</span>
       </div>
     `;
 
@@ -342,7 +339,7 @@ function renderPokemonGrid() {
 }
 
 // ===========================================================
-// 🖱️ Pokémon Click Handler (FIXED - HYBRID VERSION)
+// 🖱️ Pokémon Click Handler
 // ===========================================================
 function onPokemonClick(id) {
   console.log(`🎯 onPokemonClick called with id: ${id}, mode: ${currentMode}`);
@@ -356,67 +353,70 @@ function onPokemonClick(id) {
   }
 }
 
+// ===========================================================
+// ⭐ Team Selection Logic (from working version)
+// ===========================================================
 function toggleTeamSelection(id) {
-  // Convert to number for consistency
   const numId = Number(id);
-  console.log(`🔄 toggleTeamSelection called with id: ${numId}`);
-  console.log(`📋 Current team:`, selectedTeam);
-  
   const index = selectedTeam.indexOf(numId);
   
   if (index >= 0) {
-    // Remove from team
+    // Already in team - remove
     selectedTeam.splice(index, 1);
-    console.log(`➖ Removed Pokemon #${numId} from team`);
+    console.log(`➖ Removed Pokemon #${id} from team`);
   } else {
-    // Add to team (max 6)
+    // Not in team - try to add
     if (selectedTeam.length >= 6) {
-      console.warn(`⚠️ Team is full! Cannot add Pokemon #${numId}`);
-      const status = document.getElementById("statusMsg");
-      if (status) {
-        status.textContent = "❌ Team is full! (Max 6 Pokémon)";
-        status.classList.remove("success");
-        status.classList.add("error");
-        setTimeout(() => status.textContent = "", 2000);
-      }
+      alert("⚠️ Team is full! You can only have 6 Pokémon.");
       return;
     }
     selectedTeam.push(numId);
-    console.log(`➕ Added Pokemon #${numId} to team`);
+    console.log(`➕ Added Pokemon #${id} to team`);
   }
   
-  console.log(`📋 New team:`, selectedTeam);
+  console.log(`📋 Current team:`, selectedTeam);
   renderPokemonGrid();
+  updateTeamCounter();
+}
+
+// ===========================================================
+// 📊 Update Team Counter
+// ===========================================================
+function updateTeamCounter() {
+  const counter = document.getElementById("teamCounter");
+  if (counter) {
+    counter.textContent = `${selectedTeam.length}/6 selected`;
+  }
 }
 
 // ===========================================================
 // 🚀 Initialization
 // ===========================================================
 async function init() {
-  console.log("🚀 Initializing Pokemon Portal...");
+  console.log("🚀 Initializing Pokémon picker...");
   
-  // Pull query params
-  const url = new URL(window.location.href);
-  userId = url.searchParams.get("id");
-  userToken = url.searchParams.get("token");
-  
-  console.log(`🔐 User ID: ${userId}, Token: ${userToken ? "present" : "missing"}`);
-  
-  if (!userId || !userToken) {
-    document.body.innerHTML = "<p>Missing credentials.</p>";
-    return;
-  }
-
   try {
-    console.log("📦 Loading data...");
-    const [pokeRes, userRes] = await Promise.all([
-      fetch("/public/pokemonData.json").then(r => r.json()),
-      fetchUserData(),
-    ]);
-    pokemonData = pokeRes;
-    userData = userRes;
+    // Extract URL params
+    const params = new URLSearchParams(window.location.search);
+    userId = params.get("id");
+    userToken = params.get("token");
+    
+    if (!userId || !userToken) {
+      document.body.innerHTML = "<p class='error'>❌ Missing credentials. Please use /changepokemon from Discord.</p>";
+      return;
+    }
+    
+    console.log(`👤 User ID: ${userId}`);
 
-    console.log(`✅ Loaded ${Object.keys(pokemonData).length} Pokemon`);
+    // Load Pokémon data
+    console.log("📦 Loading Pokémon data...");
+    const pokeRes = await fetch("/public/pokemonData.json");
+    pokemonData = await pokeRes.json();
+    console.log(`✅ Loaded ${Object.keys(pokemonData).length} Pokémon`);
+
+    // Load user data
+    console.log("👤 Loading user data...");
+    await fetchUserData();
     console.log(`👤 User data:`, {
       id: userData.id,
       pokemonCount: Object.keys(userData.pokemon || {}).length,
@@ -431,16 +431,15 @@ async function init() {
     console.log(`📋 Initial team:`, selectedTeam);
 
     updateHUD();
+    updateTeamCounter();
     initStickyHUD();
     initShinyToggle();
     renderPokemonGrid();
 
     // ===========================================================
-    // 🧭 Hook filters + log dataset coverage
+    // 🧭 Hook filters (FIXED IDs)
     // ===========================================================
-
-    // Re-render grid when filters change
-    document.getElementById("searchInput")?.addEventListener("input", () => {
+    document.getElementById("search")?.addEventListener("input", () => {
       console.log("🔍 Search input changed");
       renderPokemonGrid();
     });
@@ -453,10 +452,6 @@ async function init() {
       renderPokemonGrid();
     });
 
-    // Debug coverage
-    const ids = Object.keys(pokemonData).map(Number).sort((a, b) => a - b);
-    console.log("Pokémon loaded:", ids.length, "min:", ids[0], "max:", ids[ids.length - 1]);
-
     // Hook mode buttons
     document.querySelectorAll(".mode-btn").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -465,42 +460,50 @@ async function init() {
       });
     });
 
-    // Hook save button (support either id)
-    const saveBtn = document.getElementById("saveTeamBtn") || document.getElementById("saveTeam");
+    // Hook save button (FIXED ID)
+    const saveBtn = document.getElementById("saveTeamBtn");
     if (saveBtn) {
       console.log("✅ Save button found, attaching handler");
       saveBtn.addEventListener("click", async () => {
         console.log("💾 Save button clicked");
         console.log("📋 Saving team:", selectedTeam);
+        
+        if (selectedTeam.length === 0) {
+          alert("⚠️ Please select at least one Pokémon for your team!");
+          return;
+        }
+        
         const res = await saveTeam();
-      const status = document.getElementById("statusMsg");
-      if (res.success) {
-        console.log("✅ Team saved successfully!");
-        if (status) {
-          status.textContent = "✅ Team saved!";
-          status.classList.remove("error");
-          status.classList.add("success");
-          setTimeout(() => (status.textContent = ""), 2500);
+        const status = document.getElementById("teamStatus"); // FIXED: was "statusMsg"
+        
+        if (res.success) {
+          console.log("✅ Team saved successfully!");
+          if (status) {
+            status.textContent = "✅ Team saved successfully!";
+            status.className = "status-msg success";
+            setTimeout(() => {
+              status.textContent = "";
+              status.className = "status-msg";
+            }, 3000);
+          } else {
+            alert("✅ Team saved!");
+          }
         } else {
-          alert("✅ Team saved!");
+          console.error("❌ Failed to save team:", res.error);
+          if (status) {
+            status.textContent = "❌ Failed to save team";
+            status.className = "status-msg error";
+          } else {
+            alert("❌ Failed to save team");
+          }
         }
-      } else {
-        console.error("❌ Failed to save team:", res.error);
-        if (status) {
-          status.textContent = "❌ Failed to save team";
-          status.classList.remove("success");
-          status.classList.add("error");
-        } else {
-          alert("❌ Failed to save team");
-        }
-      }
-    });
+      });
     } else {
       console.warn("⚠️ Save button not found!");
     }
   } catch (err) {
     console.error("❌ Initialization failed:", err);
-    document.body.innerHTML = `<p>Error loading data: ${err.message}</p>`;
+    document.body.innerHTML = `<p class='error'>Error loading data: ${err.message}</p>`;
   }
   
   console.log("🎉 Initialization complete!");
@@ -514,14 +517,24 @@ window.addEventListener("DOMContentLoaded", init);
 function createOverlay() {
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay visible";
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+  `;
   document.body.appendChild(overlay);
   return overlay;
 }
 
 function closeOverlay(overlay) {
   if (!overlay) return;
-  overlay.classList.remove("visible");
-  setTimeout(() => overlay.remove(), 200);
+  overlay.style.animation = "fadeOut 0.3s ease";
+  setTimeout(() => overlay.remove(), 300);
 }
 
 // ===========================================================
@@ -538,22 +551,31 @@ function openEvolutionModal(baseId) {
 
   const overlay = createOverlay();
   const modal = document.createElement("div");
-  modal.className = "modal evo-modal fade-in";
+  modal.style.cssText = `
+    background: var(--card);
+    border: 2px solid var(--brand);
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 0 20px #00ff9d70;
+    max-width: 500px;
+    width: 92%;
+  `;
 
   const baseSprite = shinyMode
     ? `/public/sprites/pokemon/shiny/${baseId}.gif`
     : `/public/sprites/pokemon/normal/${baseId}.gif`;
 
   modal.innerHTML = `
-    <h2>🧬 Choose Evolution</h2>
-    <div class="evo-current">
-      <img src="${baseSprite}" class="poke-sprite large" alt="${base.name}">
-      <span class="arrow">➡️</span>
+    <h2 style="color: var(--brand); margin-bottom: 1.5rem;">🧬 Choose Evolution</h2>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1.5rem;">
+      <img src="${baseSprite}" style="width: 96px; height: 96px; image-rendering: pixelated;" alt="${base.name}">
+      <span style="font-size: 2rem;">➡️</span>
     </div>
-    <div class="evo-grid"></div>
-    <div class="modal-actions">
-      <button class="cancel-btn">Cancel</button>
-      <button class="confirm-btn" disabled>Confirm Evolution</button>
+    <div class="evo-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;"></div>
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+      <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
+      <button class="confirm-btn" disabled style="background: var(--brand); color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm Evolution</button>
     </div>
   `;
 
@@ -571,20 +593,36 @@ function openEvolutionModal(baseId) {
     const enough = stones >= cost;
 
     const card = document.createElement("div");
-    card.className = `evo-option ${enough ? "" : "locked"}`;
+    card.style.cssText = `
+      background: var(--card);
+      border: 2px solid ${enough ? "var(--border)" : "#555"};
+      border-radius: 10px;
+      padding: 10px;
+      cursor: ${enough ? "pointer" : "not-allowed"};
+      opacity: ${enough ? "1" : "0.5"};
+      transition: all 0.2s ease;
+      position: relative;
+    `;
     card.innerHTML = `
-      <img src="${sprite}" class="poke-sprite small ${enough ? "" : "locked"}" alt="${target.name}">
-      <div class="poke-name">${target.name}</div>
-      <div class="poke-tier ${target.tier}">${target.tier}</div>
-      <div class="cost">🪨 ${cost}</div>
-      ${!enough ? `<div class="lock-icon">🔒</div>` : ""}
+      <img src="${sprite}" style="width: 80px; height: 80px; image-rendering: pixelated; margin-bottom: 0.5rem;" alt="${target.name}">
+      <div style="font-weight: 600; margin-bottom: 0.25rem;">${target.name}</div>
+      <div style="font-size: 0.85rem; color: #aaa; text-transform: capitalize;">${target.tier}</div>
+      <div style="margin-top: 0.5rem; color: var(--brand); font-weight: 700;">🪨 ${cost}</div>
+      ${!enough ? `<div style="position: absolute; top: 5px; right: 5px; font-size: 1.2rem;">🔒</div>` : ""}
     `;
     if (enough) {
       card.addEventListener("click", () => {
-        grid.querySelectorAll(".evo-option").forEach(c => c.classList.remove("selected"));
-        card.classList.add("selected");
+        grid.querySelectorAll("div").forEach(c => c.style.borderColor = "var(--border)");
+        card.style.borderColor = "var(--brand)";
+        card.style.boxShadow = "0 0 10px #00ff9d60";
         selectedTarget = targetId;
         modal.querySelector(".confirm-btn").disabled = false;
+      });
+      card.addEventListener("mouseenter", () => {
+        if (selectedTarget !== targetId) card.style.borderColor = "var(--brand)";
+      });
+      card.addEventListener("mouseleave", () => {
+        if (selectedTarget !== targetId) card.style.borderColor = "var(--border)";
       });
     }
     grid.appendChild(card);
@@ -615,17 +653,27 @@ async function handleEvolutionConfirm(baseId, targetId, overlay) {
 
   console.log("✅ Evolution successful!");
   
-  // Pre-confirmation was the selection modal; now show success
+  // Show success modal
   const newOverlay = createOverlay();
   const modal = document.createElement("div");
-  modal.className = "modal success-modal fade-in";
+  modal.style.cssText = `
+    background: var(--card);
+    border: 2px solid var(--brand);
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 0 20px #00ff9d70;
+    max-width: 400px;
+    width: 92%;
+  `;
   const targetSprite = shinyMode
     ? `/public/sprites/pokemon/shiny/${targetId}.gif`
     : `/public/sprites/pokemon/normal/${targetId}.gif`;
   modal.innerHTML = `
-    <h2>✨ ${base.name} evolved into ${target.name}!</h2>
-    <img src="${targetSprite}" class="poke-sprite large" alt="${target.name}">
-    <button class="ok-btn">OK</button>
+    <h2 style="color: var(--brand); margin-bottom: 1rem;">✨ Evolution Complete!</h2>
+    <p style="margin-bottom: 1rem;">${base.name} evolved into ${target.name}!</p>
+    <img src="${targetSprite}" style="width: 120px; height: 120px; image-rendering: pixelated; margin-bottom: 1rem;" alt="${target.name}">
+    <button class="ok-btn" style="background: var(--brand); color: var(--bg); border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">OK</button>
   `;
   modal.querySelector(".ok-btn").addEventListener("click", () => closeOverlay(newOverlay));
   newOverlay.appendChild(modal);
@@ -647,7 +695,16 @@ function openDonationModal(pokeId) {
   if (!p) return;
   const overlay = createOverlay();
   const modal = document.createElement("div");
-  modal.className = "modal donate-modal fade-in";
+  modal.style.cssText = `
+    background: var(--card);
+    border: 2px solid #facc15;
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+    max-width: 400px;
+    width: 92%;
+  `;
 
   const sprite = shinyMode
     ? `/public/sprites/pokemon/shiny/${pokeId}.gif`
@@ -666,12 +723,12 @@ function openDonationModal(pokeId) {
   const finalValue = shinyMode ? baseValue * 5 : baseValue;
 
   modal.innerHTML = `
-    <h2>💝 Donate ${shinyMode ? "✨ shiny " : ""}${p.name}?</h2>
-    <img src="${sprite}" class="poke-sprite large" alt="${p.name}">
-    <p>You'll receive <b>${finalValue} CC</b> for donating this Pokémon.</p>
-    <div class="modal-actions">
-      <button class="cancel-btn">Cancel</button>
-      <button class="confirm-btn">Confirm Donation</button>
+    <h2 style="color: #facc15; margin-bottom: 1rem;">💝 Donate ${shinyMode ? "✨ shiny " : ""}${p.name}?</h2>
+    <img src="${sprite}" style="width: 96px; height: 96px; image-rendering: pixelated; margin-bottom: 1rem;" alt="${p.name}">
+    <p style="margin-bottom: 1.5rem;">You'll receive <b style="color: #facc15;">${finalValue} CC</b> for donating this Pokémon.</p>
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+      <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
+      <button class="confirm-btn" style="background: #facc15; color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm Donation</button>
     </div>
   `;
 
@@ -700,15 +757,25 @@ async function handleDonationConfirm(pokeId, overlay) {
   // Success popup
   const overlay2 = createOverlay();
   const modal = document.createElement("div");
-  modal.className = "modal success-modal fade-in";
+  modal.style.cssText = `
+    background: var(--card);
+    border: 2px solid #facc15;
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+    max-width: 400px;
+    width: 92%;
+  `;
   const sprite = shinyMode
     ? `/public/sprites/pokemon/shiny/${pokeId}.gif`
     : `/public/sprites/pokemon/normal/${pokeId}.gif`;
   modal.innerHTML = `
-    <h2>💰 You donated ${shinyMode ? "✨ shiny " : ""}${p.name}!</h2>
-    <img src="${sprite}" class="poke-sprite large" alt="${p.name}">
-    <p>Received <b>${res.gainedCC}</b> CC!</p>
-    <button class="ok-btn">OK</button>
+    <h2 style="color: #facc15; margin-bottom: 1rem;">💰 Donation Complete!</h2>
+    <p style="margin-bottom: 1rem;">You donated ${shinyMode ? "✨ shiny " : ""}${p.name}!</p>
+    <img src="${sprite}" style="width: 96px; height: 96px; image-rendering: pixelated; margin-bottom: 1rem;" alt="${p.name}">
+    <p style="margin-bottom: 1.5rem;">Received <b style="color: #facc15;">${res.gainedCC} CC</b>!</p>
+    <button class="ok-btn" style="background: #facc15; color: var(--bg); border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">OK</button>
   `;
   modal.querySelector(".ok-btn").addEventListener("click", () => closeOverlay(overlay2));
   overlay2.appendChild(modal);
@@ -720,11 +787,3 @@ async function handleDonationConfirm(pokeId, overlay) {
   renderPokemonGrid();
   closeOverlay(overlay);
 }
-
-// ===========================================================
-// ✨ Re-render Hooks
-// ===========================================================
-window.addEventListener("resize", () => {
-  const container = document.getElementById("pokemonGrid");
-  if (container) container.style.gridTemplateColumns = "";
-});

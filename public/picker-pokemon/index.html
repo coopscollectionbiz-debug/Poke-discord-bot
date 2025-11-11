@@ -25,28 +25,13 @@
     </header>
 
     <!-- ===========================================================
-         Player Stats Bar (Sticky + Compact)
+         Player Stats Bar
     =========================================================== -->
     <div id="statsBar">
-      <div class="stat-item">
-        <span>🪨</span>
-        <span id="stoneCount">0</span>
-        <span>Stones</span>
-      </div>
-      <div class="stat-item">
-        <span>💰</span>
-        <span id="ccCount">0</span>
-        <span>CC</span>
-      </div>
-      <div class="stat-item">
-        <span>⚡</span>
-        <span id="tpCount">0</span>
-        <span>TP</span>
-      </div>
-      <div class="stat-item">
-        <span>🏆</span>
-        <span id="rankLabel">Novice Trainer</span>
-      </div>
+      <div class="stat-item">🪨 <span id="stoneCount">0</span> Stones</div>
+      <div class="stat-item">💰 <span id="ccCount">0</span> CC</div>
+      <div class="stat-item">⚡ <span id="tpCount">0</span> TP</div>
+      <div class="stat-item">🏆 <span id="rankLabel">Novice Trainer</span></div>
     </div>
 
     <!-- ===========================================================
@@ -59,22 +44,14 @@
     </div>
 
     <!-- ===========================================================
-         Toggles (Shiny + Owned/Unowned)
-    =========================================================== -->
-    <div id="displayToggles">
-      <button id="toggleShiny" class="mode-btn">🌟 Shiny Mode OFF</button>
-      <button id="toggleOwned" class="mode-btn active">✅ Show Owned</button>
-      <button id="toggleUnowned" class="mode-btn">❌ Show Unowned</button>
-    </div>
-
-    <!-- ===========================================================
-         Search + Filters
+         Toggles + Search (Restored IDs)
     =========================================================== -->
     <div id="controls">
       <input
         type="text"
-        id="searchInput"
-        placeholder="Search Pokémon..."
+        id="search"
+        placeholder="🔍 Search Pokémon..."
+        autocomplete="off"
       />
 
       <select id="rarityFilter">
@@ -108,6 +85,12 @@
         <option value="flying">Flying</option>
         <option value="normal">Normal</option>
       </select>
+
+      <div class="toggle-group">
+        <button id="ownedToggle" class="mode-btn">✅ Show Owned</button>
+        <button id="unownedToggle" class="mode-btn">❌ Show Unowned</button>
+        <button id="shinyToggle" class="mode-btn">🌟 Shiny Mode OFF</button>
+      </div>
     </div>
 
     <!-- ===========================================================
@@ -116,18 +99,20 @@
     <div id="pokemonGrid"></div>
 
     <!-- ===========================================================
-         Footer (Save + Status)
+         Footer / Team Info (Restored IDs)
     =========================================================== -->
     <footer>
+      <p id="teamCounter">0/6 selected</p>
       <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
-      <div id="statusMsg" class="status-msg"></div>
+      <p id="teamStatus" class="status-msg"></p>
       <p style="margin-top:1rem;color:#777;">
-        Opened via <code>/pokemon</code> · Session valid for 10 minutes
+        Opened via <code>/changepokemon</code> · Session valid for 10 minutes
       </p>
     </footer>
 
     <!-- ===========================================================
-         Script (Deferred)
+         Script
     =========================================================== -->
-<script type="module" src="/public/picker-pokemon/script.js"></script>
+    <script type="module" src="/public/picker-pokemon/script.js"></script>
+  </body>
 </html>

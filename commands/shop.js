@@ -1,12 +1,14 @@
 // ==========================================================
-// 🏪 Coop's Collection Discord Bot — /shop (Final Production Build)
+// 🏪 Coop's Collection Discord Bot — /shop (Final Production Build v3)
 // ==========================================================
 // Features:
 //  • Local logic only (no API requests)
 //  • Starter Pack grants 1 Common, 1 Uncommon, 1 Rare Pokémon + 1 Rare Trainer
 //  • Uses embedBuilders.js (same as /daily)
 //  • Shiny Pokémon broadcast via broadcastReward()
-//  • Scoped collectors (no global client listener)
+//  • Scoped collectors (no global listeners)
+//  • Safe “commit-on-success” purchase handling
+//  • Graceful handling for insufficient CC with auto-reset
 // ==========================================================
 
 import {
@@ -25,7 +27,7 @@ import {
 } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
-import { rarityEmojis, spritePaths } from "../spriteconfig.js";
+import { spritePaths } from "../spriteconfig.js";
 import {
   createSuccessEmbed,
   createPokemonRewardEmbed,
@@ -165,16 +167,18 @@ export default {
 
         confirmCollector.on("collect", async (i) => {
           const choice = i.values[0];
-          if (choice === "cancel")
-            return i.update({ content: "❌ Purchase cancelled.", embeds: [], components: [] });
+          if (choice === "cancel") {
+            await i.update({ content: "❌ Purchase cancelled.", embeds: [], components: [] });
+            return;
+          }
 
           // ====================================================
-          // 🎁 Starter Pack
+          // 🎁 Starter Pack (Safe Commit)
           // ====================================================
           if (item.id === "starter_pack") {
             user.purchases ??= [];
             if (user.purchases.includes("starter_pack"))
-              return i.update({ content: "⚠️ You’ve already claimed your Starter Pack!", components: [] });
+              return i.reply({ content: "⚠️ You’ve already claimed your Starter Pack!", ephemeral: true });
 
             const allPokemon = await getAllPokemon();
             const allTrainers = await getAllTrainers();
@@ -184,6 +188,7 @@ export default {
               selectRandomPokemonForUser(allPokemon, user, "uncommon"),
               selectRandomPokemonForUser(allPokemon, user, "rare"),
             ];
+
             const rareTrainer = selectRandomTrainerForUser(allTrainers, user, "rare");
             user.trainers[rareTrainer.id] = true;
 
@@ -225,28 +230,50 @@ export default {
               source: "Starter Pack",
             }).catch(() => {});
 
-            user.purchases.push("starter_pack");
-            await saveTrainerDataLocal(trainerData);
-            await saveDataToDiscord(trainerData);
-
             const summaryText = `You received 3 Pokémon and 1 Rare Trainer!\n${
               shinyPulled.length > 0
                 ? `✨ You pulled ${shinyPulled.length} shiny Pokémon!`
                 : "No shinies this time... maybe next pack!"
             }`;
-
             const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summaryText);
 
-            await i.update({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
+            try {
+              await saveTrainerDataLocal(trainerData);
+              await saveDataToDiscord(trainerData);
+
+              await i.update({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
+
+              user.purchases.push("starter_pack");
+              await saveTrainerDataLocal(trainerData);
+              await saveDataToDiscord(trainerData);
+            } catch (err) {
+              console.error("❌ Failed to finalize Starter Pack:", err);
+              return i.update({
+                content:
+                  "⚠️ Something went wrong granting your Starter Pack. Please try again later — your pack has not been consumed.",
+                components: [],
+                embeds: [],
+              });
+            }
             return;
           }
 
           // ====================================================
-          // 🪨 Evolution Stone Purchase
+          // 🪨 Evolution Stone Purchase (Safe Error Handling)
           // ====================================================
           if (item.id === "evolution_stone") {
-            if (user.cc < item.cost)
-              return i.update({ content: `❌ Not enough Coop Coins! You need ${item.cost} CC.`, components: [] });
+            if (user.cc < item.cost) {
+              await i.reply({
+                content: `❌ You don’t have enough Coop Coins! You need **${item.cost} CC**, but only have **${user.cc} CC**.`,
+                ephemeral: true,
+              });
+
+              // Auto-reset confirm selector after 3 seconds
+              setTimeout(async () => {
+                await i.message.edit({ components: [] }).catch(() => {});
+              }, 3000);
+              return;
+            }
 
             user.cc -= item.cost;
             user.items ??= { evolution_stone: 0 };

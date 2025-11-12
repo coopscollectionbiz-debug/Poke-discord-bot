@@ -763,23 +763,39 @@ client.on("interactionCreate", async (interaction) => {
     return;
   }
 
-  // 🧩 Button Interactions
-  if (interaction.isButton()) {
-    // 🧱 Ignore onboarding button IDs handled inside trainercard.js
-    const internalButtons = [
-      "prev_starter", "next_starter", "select_starter",
-      "prev_trainer", "next_trainer", "confirm_trainer"
-    ];
-    if (internalButtons.includes(interaction.customId)) return;
+  // ==========================================================
+// 🧩 Button Interactions (v7.1)
+// ==========================================================
+if (interaction.isButton()) {
+  const id = interaction.customId;
 
-    // ⚙️ Trainer Card buttons are now deprecated — respond helpfully
+  // ✅ Allow Shop buttons (confirm/cancel/disabled)
+  const allowedPrefixes = ["confirm_", "cancel_", "disabled_"];
+  if (allowedPrefixes.some(prefix => id.startsWith(prefix))) {
+    // Shop handles its own interactions
+    return;
+  }
+
+  // 🧱 Legacy trainer/starter buttons
+  const legacyIDs = [
+    "prev_starter", "next_starter", "select_starter",
+    "prev_trainer", "next_trainer", "confirm_trainer"
+  ];
+  if (legacyIDs.includes(id)) {
     await safeReply(interaction, {
       content:
         "⚙️ Trainer Card no longer uses buttons.\nUse `/changetrainer` to update your trainer or `/changepokemon` to update your team.",
       ephemeral: true,
     });
+    return;
   }
-});
+
+  // ❓ Unknown button fallback
+  await safeReply(interaction, {
+    content: "❓ Unknown button interaction.",
+    ephemeral: true,
+  });
+}
 
 // ===========================================================
 // 🧩 TRAINER PICKER API ENDPOINT (Memory-based)

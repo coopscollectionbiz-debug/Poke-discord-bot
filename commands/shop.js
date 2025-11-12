@@ -1,11 +1,11 @@
 // ==========================================================
-// 🏪 Coop's Collection Discord Bot — /shop (Admin Command v6.4)
+// 🏪 Coop's Collection Discord Bot — /shop (Admin Command v6.7)
 // ==========================================================
 //  • Requires Administrator permission
 //  • Fully deferred (no "Unknown interaction")
-//  • Safe interaction fallback handling
-//  • Universal purchase + closure handling
-//  • Auto-closes shop after success, cancel, or failure
+//  • Button-based confirmation (no nested dropdowns)
+//  • Safe broadcast handling + closure after any outcome
+//  • Starter Pack broadcasts bypass cooldown
 // ==========================================================
 
 import {
@@ -13,6 +13,8 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   ComponentType,
   PermissionFlagsBits,
 } from "discord.js";
@@ -47,13 +49,10 @@ async function safeInteractionReply(i, payload) {
 
 async function closeShopMessage(i) {
   try {
-    await i.message.edit({ components: [] }).catch(() => {});
+    if (i?.message) await i.message.edit({ components: [] }).catch(() => {});
   } catch {}
 }
 
-// ==========================================================
-// 🧰 Unified Shop Closure Helper
-// ==========================================================
 async function terminateShop(i, collector) {
   try {
     if (collector && !collector.ended) collector.stop("closed");
@@ -61,7 +60,7 @@ async function terminateShop(i, collector) {
   } catch {}
 }
 
-// Handles cost deduction and insufficient funds for any item
+// Handles cost deduction and insufficient funds
 async function handlePurchaseCost(i, user, item, saveLocal, saveDiscord, collector) {
   if (item.cost > 0 && user.cc < item.cost) {
     await safeInteractionReply(i, {
@@ -182,48 +181,53 @@ export default {
         if (!item)
           return safeInteractionReply(i, { content: "❌ Invalid item.", ephemeral: true });
 
+        // Build confirmation embed
         const confirmEmbed = createSuccessEmbed(
           `${item.emoji} ${item.name}`,
           `**Cost:** ${item.cost === 0 ? "🆓 FREE" : `${item.cost} CC`}\n\n${item.description}\n\nConfirm below.`
         ).setThumbnail(item.sprite);
 
+        // ✅ Confirmation Buttons
         const confirmRow = new ActionRowBuilder().addComponents(
-          new StringSelectMenuBuilder()
+          new ButtonBuilder()
             .setCustomId(`confirm_${item.id}_${userId}`)
-            .setPlaceholder("✅ Confirm or ❌ Cancel")
-            .addOptions([
-              new StringSelectMenuOptionBuilder().setLabel("Confirm").setValue("confirm").setEmoji("✅"),
-              new StringSelectMenuOptionBuilder().setLabel("Cancel").setValue("cancel").setEmoji("❌"),
-            ])
+            .setLabel("Confirm")
+            .setStyle(ButtonStyle.Success)
+            .setEmoji("✅"),
+          new ButtonBuilder()
+            .setCustomId(`cancel_${item.id}_${userId}`)
+            .setLabel("Cancel")
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji("❌")
         );
 
         await i.update({ embeds: [confirmEmbed], components: [confirmRow] });
 
-        const confirmCollector = reply.createMessageComponentCollector({
-          componentType: ComponentType.StringSelect,
-          filter: (x) => x.user.id === userId && x.customId.startsWith("confirm_"),
+        // ======================================================
+        // 🎯 Button Collector
+        // ======================================================
+        const buttonCollector = reply.createMessageComponentCollector({
+          componentType: ComponentType.Button,
+          filter: (btn) => btn.user.id === userId && btn.customId.endsWith(userId),
           time: 30000,
           max: 1,
         });
 
-        confirmCollector.on("collect", async (i2) => {
-          const choice = i2.values[0];
-          const customId = i2.customId;
-          const itemId = customId.substring(8, customId.lastIndexOf("_"));
+        buttonCollector.on("collect", async (btn) => {
+          const [action, itemId] = btn.customId.split("_");
           const confirmedItem = SHOP_ITEMS.find((x) => x.id === itemId);
-          if (!confirmedItem)
-            return safeInteractionReply(i2, { content: "❌ Invalid item reference.", ephemeral: true });
 
-          if (choice === "cancel") {
-            await i2.update({
+          if (!confirmedItem)
+            return safeInteractionReply(btn, { content: "❌ Invalid item reference.", ephemeral: true });
+
+          if (action === "cancel") {
+            await safeInteractionReply(btn, {
               embeds: [createSuccessEmbed("❌ Cancelled", "No changes made.")],
-              components: [],
+              ephemeral: true,
             });
-            await terminateShop(i2, confirmCollector);
+            await terminateShop(btn, buttonCollector);
             return;
           }
-
-          await i2.deferUpdate();
 
           // ====================================================
           // 🎁 Starter Pack
@@ -231,8 +235,8 @@ export default {
           if (confirmedItem.id === "starter_pack") {
             user.purchases ??= [];
             if (user.purchases.includes("starter_pack")) {
-              await safeInteractionReply(i2, { content: "⚠️ Already claimed.", ephemeral: true });
-              await terminateShop(i2, confirmCollector);
+              await safeInteractionReply(btn, { content: "⚠️ Already claimed.", ephemeral: true });
+              await terminateShop(btn, buttonCollector);
               return;
             }
 
@@ -283,14 +287,15 @@ export default {
               await saveTrainerDataLocal(trainerData);
               await saveDataToDiscord(trainerData);
 
-              for (const b of broadcastQueue)
+              for (const b of broadcastQueue) {
                 await broadcastReward(client, {
-                  user: i2.user,
+                  user: btn.user,
                   type: b.type,
                   item: b.item,
                   shiny: b.shiny,
-                  source: "Starter Pack",
+                  source: "Starter Pack", // bypass throttle
                 }).catch(() => {});
+              }
 
               const summary = `You received 3 Pokémon and 1 Rare Trainer!\n${
                 shinyPulled.length
@@ -299,16 +304,17 @@ export default {
               }`;
 
               const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summary);
-              await i2.editReply({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
-              await terminateShop(i2, confirmCollector);
+              await btn.message.edit({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
+              await terminateShop(btn, buttonCollector);
+              return;
             } catch (err) {
               console.error("❌ Starter Pack Error:", err);
-              await i2.editReply({
+              await btn.message.edit({
                 content: "⚠️ Error granting Starter Pack.",
                 components: [],
                 embeds: [],
               });
-              await terminateShop(i2, confirmCollector);
+              await terminateShop(btn, buttonCollector);
             }
             return;
           }
@@ -318,12 +324,12 @@ export default {
           // ====================================================
           if (confirmedItem.id === "evolution_stone") {
             const ok = await handlePurchaseCost(
-              i2,
+              btn,
               user,
               confirmedItem,
               () => saveTrainerDataLocal(trainerData),
               () => saveDataToDiscord(trainerData),
-              confirmCollector
+              buttonCollector
             );
             if (!ok) return;
 
@@ -340,12 +346,12 @@ export default {
               iconURL: COOPCOIN_IMG,
             });
 
-            await i2.editReply({ embeds: [successEmbed], components: [] });
-            await terminateShop(i2, confirmCollector);
+            await btn.message.edit({ embeds: [successEmbed], components: [] });
+            await terminateShop(btn, buttonCollector);
           }
         });
 
-        confirmCollector.on("end", async () => {
+        buttonCollector.on("end", async () => {
           await closeShopMessage(i).catch(() => {});
         });
       });
@@ -356,10 +362,7 @@ export default {
     } catch (err) {
       console.error("❌ /shop failed:", err);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          content: `❌ Error: ${err.message}`,
-          ephemeral: true,
-        });
+        await interaction.reply({ content: `❌ Error: ${err.message}`, ephemeral: true });
       } else {
         await interaction.editReply(`❌ Error: ${err.message}`);
       }

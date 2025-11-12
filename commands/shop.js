@@ -176,9 +176,20 @@ export default {
 
         confirmCollector.on("collect", async (i2) => {
           const choice = i2.values[0];
-          const [, itemId] = i2.customId.split("_").slice(0, 2);
+          // Extract itemId properly (handles underscores in item IDs)
+          // customId format: "confirm_ITEMID_USERID"
+          const customId = i2.customId;
+          const itemId = customId.substring(8, customId.lastIndexOf("_")); // 8 = "confirm_".length
           const confirmedItem = SHOP_ITEMS.find((x) => x.id === itemId);
 
+          
+          // 🐛 Debug logging
+          console.log("🔍 Confirm collector triggered:", {
+            customId: i2.customId,
+            extractedItemId: itemId,
+            choice: choice,
+            foundItem: confirmedItem ? confirmedItem.name : "NOT FOUND"
+          });
           if (!confirmedItem)
             return safeInteractionReply(i2, { content: "❌ Invalid item reference.", ephemeral: true });
 

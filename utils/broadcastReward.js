@@ -1,8 +1,9 @@
 // ==========================================================
-// broadcastReward.js — Multi-Tier Broadcast System
+// broadcastReward.js — Multi-Tier Broadcast System (v6.5)
 // ==========================================================
 import { EmbedBuilder } from "discord.js";
 import { spritePaths, rarityEmojis } from "../spriteconfig.js";
+import trainerSprites from "../trainerSprites.json" assert { type: "json" };
 
 const lastBroadcast = new Map();
 
@@ -48,12 +49,12 @@ export async function broadcastReward(
     // 🎨 Color map — matched to CSS theme
     // ======================================================
     const rarityColors = {
-      common: 0x9ca3af,     // gray
-      uncommon: 0x10b981,   // green
-      rare: 0x3b82f6,       // blue
-      epic: 0xa855f7,       // purple
-      legendary: 0xfacc15,  // gold
-      mythic: 0xef4444,     // red
+      common: 0x9ca3af,
+      uncommon: 0x10b981,
+      rare: 0x3b82f6,
+      epic: 0xa855f7,
+      legendary: 0xfacc15,
+      mythic: 0xef4444,
     };
 
     // ======================================================
@@ -69,61 +70,61 @@ export async function broadcastReward(
         ? `${spritePaths.shiny}${item.id}.gif`
         : `${spritePaths.pokemon}${item.id}.gif`;
     } else {
-      // 🔵 Trainer handling - IMPROVED VERSION
-      
-      // Step 1: Get sprite filename from any available field
-      let spriteFile = 
-        item.spriteFile ||      // Primary field
-        item.filename ||        // Secondary field  
-        item.sprites?.[0] ||    // Array format (from dataLoader)
-        item.id ||              // Fallback to ID
-        "trainer.png";          // Ultimate fallback
-      
-      // Step 2: Convert to string and clean up
+      // 🔵 Trainer handling — robust URL normalization
+
+      // Step 1: Ensure base path ends with '/'
+      const base = spritePaths.trainers.endsWith("/")
+        ? spritePaths.trainers
+        : spritePaths.trainers + "/";
+
+      // Step 2: Pick filename
+      let spriteFile =
+        item.spriteFile ||
+        item.filename ||
+        item.sprites?.[0] ||
+        (trainerSprites[item.id]?.sprites?.[0]) ||
+        `${item.id}.png`;
+
+      // Step 3: Cleanup filename
       spriteFile = String(spriteFile)
-        .replace(/^trainers?_2\//i, "")  // Remove trainers_2/ prefix
-        .replace(/^trainers?\//i, "")    // Remove trainers/ prefix
-        .replace(/\s+/g, "")             // Remove spaces
+        .replace(/^trainers?_2\//i, "")
+        .replace(/^trainers?\//i, "")
+        .replace(/^\//, "")
+        .replace(/\s+/g, "")
         .trim()
         .toLowerCase();
-      
-      // Step 3: Ensure .png extension
-      if (!spriteFile.endsWith('.png')) {
-        spriteFile += '.png';
+
+      // Step 4: Enforce correct extension
+      if (!spriteFile.match(/\.(png|jpg|jpeg|gif)$/i)) {
+        spriteFile += ".png";
       }
-      
-      // Step 4: Remove any double extensions
-      spriteFile = spriteFile.replace(/\.png\.png$/i, '.png');
-      
+      spriteFile = spriteFile.replace(/\.png\.png$/i, ".png");
+
       // Step 5: Construct final URL
-      spriteUrl = `${spritePaths.trainers}${spriteFile}`;
-      
-      // Step 6: Build display name from item.name or derive from filename
-      let nameSource = item.name || 
-                       item.displayName || 
-                       item.groupName || 
-                       spriteFile.replace('.png', '');
-      
-      // Step 7: Format display name (capitalize, clean up)
+      spriteUrl = `${base}${spriteFile}`;
+
+      // Step 6: Build display name
+      let nameSource =
+        item.name ||
+        item.displayName ||
+        item.groupName ||
+        item.id ||
+        spriteFile.replace(".png", "");
+
       displayName = nameSource
-        .replace(/[_-]/g, ' ')           // Replace underscores/hyphens with spaces
-        .replace(/\b\w/g, c => c.toUpperCase())  // Capitalize each word
-        .trim();
-      
-      // Step 8: Fallback if name is empty
-      if (!displayName || displayName === '') {
-        displayName = 'Trainer';
-      }
-      
-      // 🐛 DEBUG LOGGING - Remove after fixing
-      console.log(`🖼️ Trainer Sprite Construction:`, {
+        .replace(/[_-]/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim() || "Trainer";
+
+      // 🪶 Debug log
+      console.log("🖼️ Trainer Sprite Construction:", {
         inputId: item.id,
         inputSpriteFile: item.spriteFile,
         inputFilename: item.filename,
         inputSprites: item.sprites,
         cleanedFile: spriteFile,
         finalUrl: spriteUrl,
-        displayName: displayName
+        displayName: displayName,
       });
     }
 
@@ -139,7 +140,7 @@ export async function broadcastReward(
 
     const description =
       type === "pokemon"
-        ? `**${user.username}** caught **${displayName}**!\n${rarityDisplay}\n🌿 *A wild Pokémon appeared in the tall grass!*`
+        ? `**${user.username}** caught **${displayName}**!\n${rarityDisplay}\n🌿 *A wild Pokémon appeared!*`
         : `**${user.username}** recruited **${displayName}**!\n${rarityDisplay}\n🏫 *A new ally joins the adventure!*`;
 
     const embed = new EmbedBuilder()

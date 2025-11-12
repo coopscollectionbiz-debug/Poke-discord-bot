@@ -2162,7 +2162,7 @@
     "sprites": [
       "hayley.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "heath": {
     "sprites": [
@@ -2349,13 +2349,13 @@
     "sprites": [
       "jacq.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "jamie": {
     "sprites": [
       "jamie.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "janine": {
     "sprites": [
@@ -2385,7 +2385,7 @@
       "jasmine-masters2.png",
       "jasmine.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "jasmine-contest": {
     "sprites": [
@@ -2513,13 +2513,13 @@
     "sprites": [
       "kamado.png"
     ],
-    "tier": "Uncommon"
+    "tier": "Rare"
   },
   "kamado-armor": {
     "sprites": [
       "kamado-armor.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "karen": {
     "sprites": [
@@ -2618,10 +2618,18 @@
         "file": "kris-gen2.png",
         "disabled": true
       },
-      "kris-masters.png",
+      
       "kris.png"
     ],
-    "tier": "Epic"
+    "tier": "Legendary"
+
+"kris-masters": {
+    "sprites": [
+      "kris-masters.png"
+    ],
+    "tier": "Mythic"
+  },
+
   },
   "kukui": {
     "sprites": [
@@ -2639,13 +2647,13 @@
     "sprites": [
       "kunoichi-conquest.png"
     ],
-    "tier": "Common"
+    "tier": "Rare"
   },
   "kunoichi2": {
     "sprites": [
       "kunoichi2-conquest.png"
     ],
-    "tier": "Common"
+    "tier": "Epic"
   },
   "kurt": {
     "sprites": [

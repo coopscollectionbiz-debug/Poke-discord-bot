@@ -5206,7 +5206,7 @@
   "360": {
     "id": 360,
     "name": "Wynaut",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       14
@@ -6453,7 +6453,7 @@
   "447": {
     "id": 447,
     "name": "Riolu",
-    "tier": "uncommon",
+    "tier": "Rare",
     "region": "Sinnoh",
     "types": [
       2

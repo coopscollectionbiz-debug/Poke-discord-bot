@@ -1,9 +1,9 @@
 // ==========================================================
-// 🏪 Coop's Collection Discord Bot — /shop (Admin Command v6.7)
+// 🏪 Coop's Collection Discord Bot — /shop (Admin Command v6.9)
 // ==========================================================
 //  • Requires Administrator permission
-//  • Fully deferred (no "Unknown interaction")
 //  • Button-based confirmation (no nested dropdowns)
+//  • Full collector lifecycle management (no ghost clicks)
 //  • Safe broadcast handling + closure after any outcome
 //  • Starter Pack broadcasts bypass cooldown
 // ==========================================================
@@ -47,27 +47,29 @@ async function safeInteractionReply(i, payload) {
   }
 }
 
-async function closeShopMessage(i) {
+// ✅ Enhanced: closes message + stops all collectors
+async function closeShopMessage(i, confirmCollector = null, mainCollector = null) {
   try {
+    if (confirmCollector && !confirmCollector.ended) confirmCollector.stop("closed");
+    if (mainCollector && !mainCollector.ended) mainCollector.stop("closed");
     if (i?.message) await i.message.edit({ components: [] }).catch(() => {});
-  } catch {}
+  } catch (err) {
+    console.log("⚠️ Failed to close shop:", err.message);
+  }
 }
 
-async function terminateShop(i, collector) {
-  try {
-    if (collector && !collector.ended) collector.stop("closed");
-    await closeShopMessage(i);
-  } catch {}
+async function terminateShop(i, confirmCollector, mainCollector) {
+  await closeShopMessage(i, confirmCollector, mainCollector);
 }
 
 // Handles cost deduction and insufficient funds
-async function handlePurchaseCost(i, user, item, saveLocal, saveDiscord, collector) {
+async function handlePurchaseCost(i, user, item, saveLocal, saveDiscord, confirmCollector, mainCollector) {
   if (item.cost > 0 && user.cc < item.cost) {
     await safeInteractionReply(i, {
       content: `❌ Not enough CC. Need **${item.cost}**, have **${user.cc}**.`,
       ephemeral: true,
     });
-    await terminateShop(i, collector);
+    await closeShopMessage(i, confirmCollector, mainCollector);
     return false;
   }
 
@@ -206,26 +208,31 @@ export default {
         // ======================================================
         // 🎯 Button Collector
         // ======================================================
-        const buttonCollector = reply.createMessageComponentCollector({
+        const confirmCollector = reply.createMessageComponentCollector({
           componentType: ComponentType.Button,
           filter: (btn) => btn.user.id === userId && btn.customId.endsWith(userId),
           time: 30000,
           max: 1,
         });
 
-        buttonCollector.on("collect", async (btn) => {
-          const [action, itemId] = btn.customId.split("_");
-          const confirmedItem = SHOP_ITEMS.find((x) => x.id === itemId);
+        confirmCollector.on("collect", async (btn) => {
+          // robust parsing
+          const withoutUser = btn.customId.replace(/_\d+$/, "");
+          const firstUnderscore = withoutUser.indexOf("_");
+          const action = withoutUser.slice(0, firstUnderscore);
+          const itemId = withoutUser.slice(firstUnderscore + 1);
 
+          const confirmedItem = SHOP_ITEMS.find((x) => x.id === itemId);
           if (!confirmedItem)
             return safeInteractionReply(btn, { content: "❌ Invalid item reference.", ephemeral: true });
 
+          // ❌ Cancel pressed
           if (action === "cancel") {
-            await safeInteractionReply(btn, {
+            await btn.update({
               embeds: [createSuccessEmbed("❌ Cancelled", "No changes made.")],
-              ephemeral: true,
+              components: [],
             });
-            await terminateShop(btn, buttonCollector);
+            await closeShopMessage(btn, confirmCollector, collector);
             return;
           }
 
@@ -236,7 +243,7 @@ export default {
             user.purchases ??= [];
             if (user.purchases.includes("starter_pack")) {
               await safeInteractionReply(btn, { content: "⚠️ Already claimed.", ephemeral: true });
-              await terminateShop(btn, buttonCollector);
+              await closeShopMessage(btn, confirmCollector, collector);
               return;
             }
 
@@ -293,7 +300,7 @@ export default {
                   type: b.type,
                   item: b.item,
                   shiny: b.shiny,
-                  source: "Starter Pack", // bypass throttle
+                  source: "Starter Pack",
                 }).catch(() => {});
               }
 
@@ -305,7 +312,7 @@ export default {
 
               const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summary);
               await btn.message.edit({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
-              await terminateShop(btn, buttonCollector);
+              await closeShopMessage(btn, confirmCollector, collector);
               return;
             } catch (err) {
               console.error("❌ Starter Pack Error:", err);
@@ -314,7 +321,7 @@ export default {
                 components: [],
                 embeds: [],
               });
-              await terminateShop(btn, buttonCollector);
+              await closeShopMessage(btn, confirmCollector, collector);
             }
             return;
           }
@@ -329,7 +336,8 @@ export default {
               confirmedItem,
               () => saveTrainerDataLocal(trainerData),
               () => saveDataToDiscord(trainerData),
-              buttonCollector
+              confirmCollector,
+              collector
             );
             if (!ok) return;
 
@@ -347,12 +355,12 @@ export default {
             });
 
             await btn.message.edit({ embeds: [successEmbed], components: [] });
-            await terminateShop(btn, buttonCollector);
+            await closeShopMessage(btn, confirmCollector, collector);
           }
         });
 
-        buttonCollector.on("end", async () => {
-          await closeShopMessage(i).catch(() => {});
+        confirmCollector.on("end", async () => {
+          await closeShopMessage(i, confirmCollector, collector);
         });
       });
 

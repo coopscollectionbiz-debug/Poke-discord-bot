@@ -1,10 +1,11 @@
 // ==========================================================
-// 🏪 Coop's Collection Discord Bot — /shop (Admin Command v6.2)
+// 🏪 Coop's Collection Discord Bot — /shop (Admin Command v6.3)
 // ==========================================================
 //  • Requires Administrator permission
 //  • Fully deferred (no "Unknown interaction")
-//  • Standardized admin access (PermissionFlagsBits.Administrator)
 //  • Safe interaction fallback handling
+//  • Universal purchase + closure handling
+//  • Auto-closes shop after success, cancel, or failure
 // ==========================================================
 
 import {
@@ -42,6 +43,31 @@ async function safeInteractionReply(i, payload) {
       await i.followUp(payload);
     } catch {}
   }
+}
+
+async function closeShopMessage(i) {
+  try {
+    await i.message.edit({ components: [] }).catch(() => {});
+  } catch {}
+}
+
+// Handles cost deduction and insufficient funds for any item
+async function handlePurchaseCost(i, user, item, saveLocal, saveDiscord) {
+  if (item.cost > 0 && user.cc < item.cost) {
+    await safeInteractionReply(i, {
+      content: `❌ Not enough CC. Need **${item.cost}**, have **${user.cc}**.`,
+      ephemeral: true,
+    });
+    await closeShopMessage(i);
+    return false;
+  }
+
+  if (item.cost > 0) {
+    user.cc -= item.cost;
+    await saveLocal();
+    await saveDiscord();
+  }
+  return true;
 }
 
 // ==========================================================
@@ -107,7 +133,7 @@ export default {
       )
         .setThumbnail(POKEMART_IMG)
         .setFooter({
-          text: `Balance: ${user.cc.toLocaleString()} ${COOPCOIN}`,
+          text: `Balance: ${user.cc.toLocaleString()} CC`,
           iconURL: COOPCOIN_IMG,
         });
 
@@ -161,11 +187,7 @@ export default {
             ])
         );
 
-        try {
-          await i.update({ embeds: [confirmEmbed], components: [confirmRow] });
-        } catch {
-          return; // interaction expired — ignore
-        }
+        await i.update({ embeds: [confirmEmbed], components: [confirmRow] });
 
         const confirmCollector = reply.createMessageComponentCollector({
           componentType: ComponentType.StringSelect,
@@ -176,20 +198,9 @@ export default {
 
         confirmCollector.on("collect", async (i2) => {
           const choice = i2.values[0];
-          // Extract itemId properly (handles underscores in item IDs)
-          // customId format: "confirm_ITEMID_USERID"
           const customId = i2.customId;
-          const itemId = customId.substring(8, customId.lastIndexOf("_")); // 8 = "confirm_".length
+          const itemId = customId.substring(8, customId.lastIndexOf("_"));
           const confirmedItem = SHOP_ITEMS.find((x) => x.id === itemId);
-
-          
-          // 🐛 Debug logging
-          console.log("🔍 Confirm collector triggered:", {
-            customId: i2.customId,
-            extractedItemId: itemId,
-            choice: choice,
-            foundItem: confirmedItem ? confirmedItem.name : "NOT FOUND"
-          });
           if (!confirmedItem)
             return safeInteractionReply(i2, { content: "❌ Invalid item reference.", ephemeral: true });
 
@@ -203,11 +214,16 @@ export default {
 
           await i2.deferUpdate();
 
+          // ====================================================
           // 🎁 Starter Pack
+          // ====================================================
           if (confirmedItem.id === "starter_pack") {
             user.purchases ??= [];
-            if (user.purchases.includes("starter_pack"))
-              return safeInteractionReply(i2, { content: "⚠️ Already claimed.", ephemeral: true });
+            if (user.purchases.includes("starter_pack")) {
+              await safeInteractionReply(i2, { content: "⚠️ Already claimed.", ephemeral: true });
+              await closeShopMessage(i2);
+              return;
+            }
 
             const allPokemon = await getAllPokemon();
             const allTrainers = await getAllTrainers();
@@ -273,6 +289,7 @@ export default {
 
               const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summary);
               await i2.editReply({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
+              await closeShopMessage(i2);
             } catch (err) {
               console.error("❌ Starter Pack Error:", err);
               await i2.editReply({
@@ -280,21 +297,24 @@ export default {
                 components: [],
                 embeds: [],
               });
+              await closeShopMessage(i2);
             }
             return;
           }
 
+          // ====================================================
           // 🪨 Evolution Stone
+          // ====================================================
           if (confirmedItem.id === "evolution_stone") {
-            if (user.cc < confirmedItem.cost) {
-              await safeInteractionReply(i2, {
-                content: `❌ Not enough CC. Need **${confirmedItem.cost}**, have **${user.cc}**.`,
-                ephemeral: true,
-              });
-              return;
-            }
+            const ok = await handlePurchaseCost(
+              i2,
+              user,
+              confirmedItem,
+              () => saveTrainerDataLocal(trainerData),
+              () => saveDataToDiscord(trainerData)
+            );
+            if (!ok) return;
 
-            user.cc -= confirmedItem.cost;
             user.items ??= { evolution_stone: 0 };
             user.items.evolution_stone++;
             await saveTrainerDataLocal(trainerData);
@@ -309,6 +329,7 @@ export default {
             });
 
             await i2.editReply({ embeds: [successEmbed], components: [] });
+            await closeShopMessage(i2);
           }
         });
       });

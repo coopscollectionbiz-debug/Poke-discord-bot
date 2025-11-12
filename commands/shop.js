@@ -1,5 +1,5 @@
 // ==========================================================
-// 🏪 Coop's Collection Discord Bot — /shop (Admin Command v6.3)
+// 🏪 Coop's Collection Discord Bot — /shop (Admin Command v6.4)
 // ==========================================================
 //  • Requires Administrator permission
 //  • Fully deferred (no "Unknown interaction")
@@ -51,14 +51,24 @@ async function closeShopMessage(i) {
   } catch {}
 }
 
+// ==========================================================
+// 🧰 Unified Shop Closure Helper
+// ==========================================================
+async function terminateShop(i, collector) {
+  try {
+    if (collector && !collector.ended) collector.stop("closed");
+    await closeShopMessage(i);
+  } catch {}
+}
+
 // Handles cost deduction and insufficient funds for any item
-async function handlePurchaseCost(i, user, item, saveLocal, saveDiscord) {
+async function handlePurchaseCost(i, user, item, saveLocal, saveDiscord, collector) {
   if (item.cost > 0 && user.cc < item.cost) {
     await safeInteractionReply(i, {
       content: `❌ Not enough CC. Need **${item.cost}**, have **${user.cc}**.`,
       ephemeral: true,
     });
-    await closeShopMessage(i);
+    await terminateShop(i, collector);
     return false;
   }
 
@@ -209,6 +219,7 @@ export default {
               embeds: [createSuccessEmbed("❌ Cancelled", "No changes made.")],
               components: [],
             });
+            await terminateShop(i2, confirmCollector);
             return;
           }
 
@@ -221,7 +232,7 @@ export default {
             user.purchases ??= [];
             if (user.purchases.includes("starter_pack")) {
               await safeInteractionReply(i2, { content: "⚠️ Already claimed.", ephemeral: true });
-              await closeShopMessage(i2);
+              await terminateShop(i2, confirmCollector);
               return;
             }
 
@@ -289,7 +300,7 @@ export default {
 
               const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summary);
               await i2.editReply({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
-              await closeShopMessage(i2);
+              await terminateShop(i2, confirmCollector);
             } catch (err) {
               console.error("❌ Starter Pack Error:", err);
               await i2.editReply({
@@ -297,7 +308,7 @@ export default {
                 components: [],
                 embeds: [],
               });
-              await closeShopMessage(i2);
+              await terminateShop(i2, confirmCollector);
             }
             return;
           }
@@ -311,7 +322,8 @@ export default {
               user,
               confirmedItem,
               () => saveTrainerDataLocal(trainerData),
-              () => saveDataToDiscord(trainerData)
+              () => saveDataToDiscord(trainerData),
+              confirmCollector
             );
             if (!ok) return;
 
@@ -329,13 +341,17 @@ export default {
             });
 
             await i2.editReply({ embeds: [successEmbed], components: [] });
-            await closeShopMessage(i2);
+            await terminateShop(i2, confirmCollector);
           }
+        });
+
+        confirmCollector.on("end", async () => {
+          await closeShopMessage(i).catch(() => {});
         });
       });
 
-      collector.on("end", async () => {
-        await reply.edit({ components: [] }).catch(() => {});
+      collector.on("end", async (_, reason) => {
+        if (reason !== "closed") await reply.edit({ components: [] }).catch(() => {});
       });
     } catch (err) {
       console.error("❌ /shop failed:", err);

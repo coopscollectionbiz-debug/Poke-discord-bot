@@ -796,6 +796,7 @@ if (interaction.isButton()) {
     ephemeral: true,
   });
 }
+});
 
 // ===========================================================
 // 🧩 TRAINER PICKER API ENDPOINT (Memory-based)

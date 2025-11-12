@@ -763,7 +763,7 @@ client.on("interactionCreate", async (interaction) => {
     return;
   }
 
-  // ==========================================================
+// ==========================================================
 // 🧩 Button Interactions (v7.1)
 // ==========================================================
 if (interaction.isButton()) {
@@ -776,25 +776,8 @@ if (interaction.isButton()) {
     return;
   }
 
-  // 🧱 Legacy trainer/starter buttons
-  const legacyIDs = [
-    "prev_starter", "next_starter", "select_starter",
-    "prev_trainer", "next_trainer", "confirm_trainer"
-  ];
-  if (legacyIDs.includes(id)) {
-    await safeReply(interaction, {
-      content:
-        "⚙️ Trainer Card no longer uses buttons.\nUse `/changetrainer` to update your trainer or `/changepokemon` to update your team.",
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // ❓ Unknown button fallback
-  await safeReply(interaction, {
-    content: "❓ Unknown button interaction.",
-    ephemeral: true,
-  });
+  // ✅ Let all other buttons (like trainercard carousels) fall through
+  return; // avoids “Unknown button interaction.”
 }
 });
 

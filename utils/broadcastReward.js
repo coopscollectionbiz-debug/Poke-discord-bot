@@ -3,7 +3,15 @@
 // ==========================================================
 import { EmbedBuilder } from "discord.js";
 import { spritePaths, rarityEmojis } from "../spriteconfig.js";
-import trainerSprites from "../trainerSprites.json" assert { type: "json" };
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const trainerSprites = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "../trainerSprites.json"), "utf8")
+);
+
 
 const lastBroadcast = new Map();
 

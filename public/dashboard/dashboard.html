@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coop's Collection Dashboard</title>
+    <link rel="stylesheet" href="dashboard-style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- ===========================================================
+         Header
+    =========================================================== -->
+    <header>
+      <h1>🎮 Coop's Collection Dashboard</h1>
+      <p class="subtitle">Manage your Pokémon, Trainers, and Shop all in one place</p>
+    </header>
+
+    <!-- ===========================================================
+         Player Stats Bar (Sticky)
+    =========================================================== -->
+    <div id="statsBar">
+      <div class="stat-item">
+        <img src="/public/sprites/items/evolution_stone.png" alt="Evolution Stone" class="stat-icon">
+        <span id="stoneCount">0</span> Stones
+      </div>
+
+      <div class="stat-item">
+        <img src="/public/sprites/items/cc_coin.png" alt="Collector Coin" class="stat-icon">
+        <span id="ccCount">0</span> CC
+      </div>
+
+      <div class="stat-item">
+        <img src="/public/sprites/items/tp_icon.png" alt="Trainer Points" class="stat-icon">
+        <span id="tpCount">0</span> TP
+      </div>
+
+      <div class="stat-item">
+        <img src="/public/sprites/items/rank_badge.png" alt="Rank Badge" class="stat-icon">
+        <span id="rankLabel">Novice Trainer</span>
+      </div>
+    </div>
+
+    <!-- ===========================================================
+         Tab Navigation
+    =========================================================== -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="pokemon">🎾 Pokémon</button>
+      <button class="tab-btn" data-tab="trainers">👤 Trainers</button>
+      <button class="tab-btn" data-tab="shop">🛒 Shop</button>
+    </nav>
+
+    <!-- ===========================================================
+         TAB 1: POKÉMON MANAGEMENT
+    =========================================================== -->
+    <div id="pokemon-tab" class="tab-content active">
+      <!-- Mode Buttons -->
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="team">⭐ Change Team</button>
+        <button class="mode-btn" data-mode="evolve">🧬 Evolve</button>
+        <button class="mode-btn" data-mode="donate">💎 Donate</button>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <input
+          type="text"
+          id="pokemonSearch"
+          placeholder="🔍 Search Pokémon..."
+          autocomplete="off"
+        />
+
+        <select id="pokemonRarityFilter">
+          <option value="">All Rarities</option>
+          <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
+          <option value="rare">Rare</option>
+          <option value="epic">Epic</option>
+          <option value="legendary">Legendary</option>
+          <option value="mythic">Mythic</option>
+        </select>
+
+        <select id="pokemonTypeFilter">
+          <option value="">All Types</option>
+          <option value="fire">Fire</option>
+          <option value="water">Water</option>
+          <option value="grass">Grass</option>
+          <option value="electric">Electric</option>
+          <option value="psychic">Psychic</option>
+          <option value="fighting">Fighting</option>
+          <option value="dark">Dark</option>
+          <option value="fairy">Fairy</option>
+          <option value="steel">Steel</option>
+          <option value="ghost">Ghost</option>
+          <option value="rock">Rock</option>
+          <option value="ground">Ground</option>
+          <option value="poison">Poison</option>
+          <option value="ice">Ice</option>
+          <option value="dragon">Dragon</option>
+          <option value="bug">Bug</option>
+          <option value="flying">Flying</option>
+          <option value="normal">Normal</option>
+        </select>
+
+        <div class="toggle-group">
+          <button id="pokemonOwnedToggle" class="toggle-btn">✅ Show Owned</button>
+          <button id="pokemonUnownedToggle" class="toggle-btn">❌ Show Unowned</button>
+          <button id="pokemonShinyToggle" class="toggle-btn">🌟 Shiny Mode OFF</button>
+        </div>
+      </div>
+
+      <!-- Pokémon Grid -->
+      <div id="pokemonGrid" class="grid">
+        <p class="notice">Loading Pokémon data...</p>
+      </div>
+
+      <!-- Save Team Button -->
+      <footer class="section-footer">
+        <p id="teamCounter">0/6 selected</p>
+        <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
+        <p id="teamStatus" class="status-msg"></p>
+      </footer>
+    </div>
+
+    <!-- ===========================================================
+         TAB 2: TRAINER MANAGEMENT
+    =========================================================== -->
+    <div id="trainers-tab" class="tab-content">
+      <!-- Controls -->
+      <div class="controls">
+        <input
+          type="text"
+          id="trainerSearch"
+          placeholder="🔍 Search Trainer..."
+          autocomplete="off"
+        />
+
+        <select id="trainerRarityFilter">
+          <option value="all">All Rarities</option>
+          <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
+          <option value="rare">Rare</option>
+          <option value="epic">Epic</option>
+          <option value="legendary">Legendary</option>
+          <option value="mythic">Mythic</option>
+        </select>
+
+        <div class="toggle-group">
+          <button id="trainerOwnedToggle" class="toggle-btn">Show Owned Only</button>
+          <button id="trainerUnownedToggle" class="toggle-btn">Show Unowned Only</button>
+        </div>
+      </div>
+
+      <!-- Trainer Grid -->
+      <div id="trainerGrid" class="grid">
+        <p class="notice">Loading trainer data...</p>
+      </div>
+    </div>
+
+    <!-- ===========================================================
+         TAB 3: SHOP
+    =========================================================== -->
+    <div id="shop-tab" class="tab-content">
+      <div class="shop-header">
+        <h2>🛒 Shop</h2>
+        <p class="shop-subtitle">Purchase items using your CC (Collector Coins)</p>
+      </div>
+
+      <!-- Shop Grid -->
+      <div id="shopGrid" class="shop-grid">
+        <!-- Items will be dynamically loaded here -->
+      </div>
+    </div>
+
+    <!-- ===========================================================
+         Footer
+    =========================================================== -->
+    <footer class="main-footer">
+      <p>
+        🎮 Opened via <strong>/dashboard</strong> •
+        <span>Secure session expires after 10 minutes</span>
+      </p>
+    </footer>
+
+    <!-- ===========================================================
+         Popups & Overlays
+    =========================================================== -->
+    
+    <!-- Evolution Popup -->
+    <div id="evoPopupOverlay" style="display: none;">
+      <div id="evoPopup">
+        <h2>🧬 Evolution Complete!</h2>
+        <img id="evoSprite" src="" alt="Evolved Pokémon">
+        <p id="evoMessage"></p>
+        <button id="closeEvoPopup">Close</button>
+      </div>
+    </div>
+
+    <!-- Donation Popup -->
+    <div id="donationPopupOverlay" style="display: none;">
+      <div id="donationPopup">
+        <h2>💎 Pokémon Donated!</h2>
+        <img id="donationSprite" src="" alt="Donated Pokémon">
+        <p class="donate-msg" id="donationMessage"></p>
+        <p class="cc-earned" id="donationCC"></p>
+        <button id="closeDonationPopup">Close</button>
+      </div>
+    </div>
+
+    <!-- Shop Purchase Confirmation Popup -->
+    <div id="shopPopupOverlay" style="display: none;">
+      <div id="shopPopup">
+        <h2 id="shopPopupTitle">Confirm Purchase</h2>
+        <img id="shopPopupImage" src="" alt="Item">
+        <p id="shopPopupMessage"></p>
+        <div class="shop-popup-buttons">
+          <button id="confirmPurchaseBtn" class="confirm-btn">Confirm</button>
+          <button id="cancelPurchaseBtn" class="cancel-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="dashboard-script.js"></script>
+  </body>
+</html>

@@ -711,42 +711,41 @@
   "brendan": {
     "sprites": [
       "brendan-gen3.png",
-      "brendan-gen3rs.png",
       "brendan-masters.png",
       "brendan-masters2.png",
       "brendan.png"
     ],
-    "tier": "Epic"
+    "tier": "Legendary"
   },
   "brendan-contest": {
     "sprites": [
       "brendan-contest.png"
     ],
-    "tier": "Epic"
+    "tier": "Legendary"
   },
   "brendan-e": {
     "sprites": [
       "brendan-e.png"
     ],
-    "tier": "Epic"
+    "tier": "Legendary"
   },
   "brendan-rs": {
     "sprites": [
       "brendan-rs.png"
     ],
-    "tier": "Epic"
+    "tier": "Legendary"
   },
   "briar": {
     "sprites": [
       "briar.png"
     ],
-    "tier": "Uncommon"
+    "tier": "Rare"
   },
   "brigette": {
     "sprites": [
       "brigette.png"
     ],
-    "tier": "Uncommon"
+    "tier": "Rare"
   },
   "brock": {
     "sprites": [
@@ -764,10 +763,16 @@
       },
       "brock-gen3.png",
       "brock-lgpe.png",
-      "brock-masters.png",
+      
       "brock.png"
     ],
     "tier": "Rare"
+},
+  "brock-masters": {
+    "sprites": [
+      "brock-masters.png"
+    ],
+    "tier": "Epic"
   },
   "bruno": {
     "sprites": [
@@ -914,11 +919,18 @@
   "caitlin": {
     "sprites": [
       "caitlin-gen4.png",
-      "caitlin-masters.png",
       "caitlin.png"
     ],
     "tier": "Epic"
   },
+
+  "caitlin-masters": {
+    "sprites": [
+     "caitlin-masters.png"
+    ],
+    "tier": "Legendary"
+  },
+
   "calaba": {
     "sprites": [
       "calaba.png"
@@ -962,11 +974,18 @@
   },
   "candice": {
     "sprites": [
-      "candice-masters.png",
       "candice.png"
     ],
     "tier": "Rare"
   },
+
+"candice-masters": {
+    "sprites": [
+      "candice-masters.png"
+    ],
+    "tier": "Epic"
+  },
+
   "caraliss": {
     "sprites": [
       "caraliss.png"
@@ -981,11 +1000,18 @@
   },
   "carmine": {
     "sprites": [
-      "carmine-festival.png",
       "carmine.png"
     ],
     "tier": "Rare"
   },
+
+ "carmine-festival": {
+    "sprites": [
+      "carmine-festival.png"
+    ],
+    "tier": "Epic"
+  },
+
   "cedricjuniper": {
     "sprites": [
       "cedricjuniper.png"
@@ -1040,10 +1066,16 @@
   "cheren": {
     "sprites": [
       "cheren-gen5bw2.png",
-      "cheren-masters.png",
       "cheren.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
+  },
+
+ "cheren-masters": {
+    "sprites": [
+      "cheren-masters.png"
+    ],
+    "tier": "Legendary"
   },
   "cheryl": {
     "sprites": [
@@ -1091,11 +1123,18 @@
         "file": "clair-gen2.png",
         "disabled": true
       },
-      "clair-masters.png",
       "clair.png"
     ],
     "tier": "Epic"
   },
+
+"clair-masters": {
+    "sprites": [
+      "clair-masters.png"
+    ],
+    "tier": "Legendary"
+  },
+
   "clavell": {
     "sprites": [
       "clavell-s.png"
@@ -1168,7 +1207,7 @@
     "sprites": [
       "cogita.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "coin": {
     "sprites": [
@@ -1197,13 +1236,13 @@
     "sprites": [
       "colza.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "concordia": {
     "sprites": [
       "concordia.png"
     ],
-    "tier": "Uncommon"
+    "tier": "Rare"
   },
   "cook": {
     "sprites": [
@@ -1219,13 +1258,20 @@
     ],
     "tier": "Common"
   },
-  "courtney": {
+  "courtney-gen3": {
     "sprites": [
-      "courtney-gen3.png",
-      "courtney.png"
+      "courtney-gen3.png"
     ],
     "tier": "Rare"
   },
+
+"courtney": {
+    "sprites": [
+      "courtney.png"
+    ],
+    "tier": "Epic"
+  },
+
   "cowgirl": {
     "sprites": [
       "cowgirl.png"
@@ -1260,7 +1306,7 @@
     "sprites": [
       "crushkin-gen3.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "cueball": {
     "sprites": [
@@ -1304,18 +1350,25 @@
   },
   "cynthia": {
     "sprites": [
-      "cynthia-anime.png",
-      "cynthia-anime2.png",
       "cynthia-gen4.png",
       "cynthia-gen7.png",
-      "cynthia-masters.png",
-      "cynthia-masters2.png",
-      "cynthia-masters3.png",
-      "cynthia-masters4.png",
       "cynthia.png"
     ],
     "tier": "Legendary"
   },
+
+"cynthia-alt": {
+    "sprites": [
+      "cynthia-anime.png",
+      "cynthia-anime2.png",
+      "cynthia-masters.png",
+      "cynthia-masters2.png",
+      "cynthia-masters3.png",
+      "cynthia-masters4.png"
+    ],
+    "tier": "Mythic"
+  },
+
   "cyrano": {
     "sprites": [
       "cyrano.png"
@@ -1324,11 +1377,18 @@
   },
   "cyrus": {
     "sprites": [
-      "cyrus-masters.png",
       "cyrus.png"
     ],
     "tier": "Epic"
   },
+
+"cyrus-masters": {
+    "sprites": [
+      "cyrus-masters.png"
+    ],
+    "tier": "Legendary"
+  },
+
   "dagero": {
     "sprites": [
       "dagero.png"
@@ -1366,29 +1426,36 @@
     "sprites": [
       "darach.png"
     ],
-    "tier": "Epic"
+    "tier": "Rare"
   },
   "darach-caitlin": {
     "sprites": [
       "darach-caitlin.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "dawn": {
     "sprites": [
       "dawn-gen4pt.png",
-      "dawn-masters.png",
-      "dawn-masters2.png",
-      "dawn-masters3.png",
       "dawn.png"
     ],
-    "tier": "Epic"
+    "tier": "Legendary"
   },
+
+  "dawn-masters": {
+    "sprites": [
+      "dawn-masters.png",
+      "dawn-masters2.png",
+      "dawn-masters3.png"
+    ],
+    "tier": "Mythic"
+  },
+
   "dawn-contest": {
     "sprites": [
       "dawn-contest.png"
     ],
-    "tier": "Epic"
+    "tier": "Mythic"
   },
   "delinquent": {
     "sprites": [
@@ -1436,12 +1503,19 @@
   },
   "diantha": {
     "sprites": [
-      "diantha-masters.png",
-      "diantha-masters2.png",
       "diantha.png"
     ],
     "tier": "Legendary"
   },
+
+"diantha-masters": {
+    "sprites": [
+      "diantha-masters.png",
+      "diantha-masters2.png"
+    ],
+    "tier": "Mythic"
+  },
+
   "doctor": {
     "sprites": [
       "doctor-gen8.png",
@@ -1486,7 +1560,7 @@
     "sprites": [
       "drayden.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "drayton": {
     "sprites": [
@@ -1504,25 +1578,32 @@
     "sprites": [
       "elaine.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "elesa": {
     "sprites": [
       "elesa-gen5bw2.png",
-      "elesa-masters.png",
-      "elesa-masters2.png",
-      "elesa-masters3.png",
       "elesa.png"
     ],
     "tier": "Rare"
   },
+
+"elesa-masters": {
+    "sprites": [
+      "elesa-masters.png",
+      "elesa-masters2.png",
+      "elesa-masters3.png"
+    ],
+    "tier": "Epic"
+  },
+
   "elio": {
     "sprites": [
       "elio-masters.png",
       "elio-usum.png",
       "elio.png"
     ],
-    "tier": "Rare"
+    "tier": "Epic"
   },
   "elm": {
     "sprites": [
@@ -1577,27 +1658,22 @@
   },
   "erika": {
     "sprites": [
-      {
-        "file": "erika-gen1.png",
-        "disabled": true
-      },
-      {
-        "file": "erika-gen1rb.png",
-        "disabled": true
-      },
-      {
-        "file": "erika-gen2.png",
-        "disabled": true
-      },
       "erika-gen3.png",
       "erika-lgpe.png",
-      "erika-masters.png",
-      "erika-masters2.png",
-      "erika-masters3.png",
       "erika.png"
     ],
     "tier": "Rare"
   },
+
+  "erika-masters": {
+    "sprites": [
+      "erika-masters.png",
+      "erika-masters2.png",
+      "erika-masters3.png"
+    ],
+    "tier": "Epic"
+  },
+
   "essentia": {
     "sprites": [
       "essentia.png"
@@ -1633,7 +1709,7 @@
       },
       "eusine.png"
     ],
-    "tier": "Common"
+    "tier": "Uncommon"
   },
   "evelyn": {
     "sprites": [

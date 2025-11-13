@@ -303,40 +303,62 @@ export async function showTrainerCard(interaction, user) {
       "\n\n> 🪶 **Commands:**\n" +
       "> `/dashboard` – Manage Pokémon & Trainers\n";
 
-    // ==========================================================
-    // 📘 Build Trainer Card Embed
-    // ==========================================================
-    const embed = new EmbedBuilder()
-      .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })
-      .setColor(0x5865f2)
-      .setDescription(
-        `🏆 **Rank:** ${rank}\n⭐ **TP:** ${user.tp}\n💰 **CC:** ${user.cc || 0}\n\n` +
-        `📊 **Pokémon Owned:** ${pokemonOwned}\n✨ **Shiny Pokémon:** ${shinyCount}\n🧍 **Trainers:** ${trainerCount}\n\n` +
-        `**Team:**`
-      )
-      .setFooter({ text: "Coop's Collection • /trainercard" });
+ // ==========================================================
+// 🎨 Trainer rarity → dashboard color mapping
+// ==========================================================
+const rarityColors = {
+  common:    0x9ca3af,
+  uncommon:  0x10b981,
+  rare:      0x3b82f6,
+  epic:      0xa855f7,
+  legendary: 0xfacc15,
+  mythic:    0xef4444
+};
 
-    teamFields.forEach(f => embed.addFields(f));
+// Custom currency emojis
+const TP_EMOJI = "<:tp_icon:1437892250922123364>";
+const CC_EMOJI = "<:coopcoin:1437892112959148093>";
 
-    embed.addFields({
-      name: " ",
-      value: commandHelp,
-      inline: false
-    });
+// ==========================================================
+// 📘 Build Trainer Card Embed
+// ==========================================================
+const embed = new EmbedBuilder()
+  .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })
+  .setColor(rarityColors[trainerInfo.rarity.toLowerCase()] || 0x5865f2)
+  .setDescription(
+    `🏆 **Rank:** ${rank}\n` +
+    `${TP_EMOJI} **${user.tp}** | ${CC_EMOJI} **${user.cc || 0}**\n\n` +
 
-    const trainerPath = user.displayedTrainer
-      ? `${spritePaths.trainers}${user.displayedTrainer}`
-      : null;
+    `🧍 **Trainer:** ${trainerInfo.name} — ${trainerInfo.rarity} ${trainerInfo.emoji}\n\n` +
 
-    if (trainerPath) embed.setThumbnail(trainerPath);
-    if (leadSprite) embed.setImage(leadSprite);
+    `📊 **Pokémon Owned:** ${pokemonOwned}\n` +
+    `✨ **Shiny Pokémon:** ${shinyCount}\n` +
+    `🧍 **Trainers:** ${trainerCount}\n\n` +
 
-    await interaction.editReply({
-      embeds: [embed],
-      components: []
-    });
-  } catch (err) {
-    console.error("trainerCard error:", err);
-    return interaction.editReply({ content: "❌ Failed to show Trainer Card." });
-  }
-}
+    `🌀 **Team:**`
+  )
+  .setFooter({ text: "Coop's Collection • /trainercard" });
+
+// ➤ Add 2×3 Pokémon Team Grid
+teamFields.forEach(f => embed.addFields(f));
+
+// ➤ Add /dashboard Command
+embed.addFields({
+  name: " ",
+  value: "🪶 **Commands:**\n`/dashboard`",
+  inline: false
+});
+
+// ➤ Trainer sprite + lead Pokémon image
+const trainerPath = user.displayedTrainer
+  ? `${spritePaths.trainers}${user.displayedTrainer}`
+  : null;
+
+if (trainerPath) embed.setThumbnail(trainerPath);
+if (leadSprite) embed.setImage(leadSprite);
+
+await interaction.editReply({
+  embeds: [embed],
+  components: []
+});
+

@@ -951,23 +951,6 @@ app.post("/api/set-pokemon-team", async (req, res) => {
   }
 });
 
-app.get("/public/picker-pokemon", (_, res) =>
-  res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
-);
-
-// ===========================================================
-// 🎮 Dashboard Route
-// ===========================================================
-app.use(
-  "/public/dashboard",
-  express.static(path.join(staticPath, "dashboard"))
-);
-
-app.get("/public/dashboard/", (_, res) => {
-  res.sendFile(path.join(staticPath, "dashboard", "dashboard.html"));
-});
-
-
 // ===========================================================
 // ===========================================================
 // 🧬 EVOLVE & DONATE ENDPOINTS (Shiny-Aware Versions)
@@ -987,6 +970,13 @@ app.post("/api/pokemon/evolve", async (req, res) => {
   const target = pokemonData[targetId];
   if (!base || !target) return res.status(400).json({ error: "Invalid Pokémon IDs" });
 
+  // Validate evolution chain
+  if (base.evolution && base.evolution !== parseInt(targetId)) {
+    return res.status(400).json({ 
+      error: `${base.name} doesn't evolve into ${target.name}!` 
+    });
+  }
+
   // Evolution cost mapping
   const costMap = {
     "common-uncommon": 1,
@@ -994,6 +984,9 @@ app.post("/api/pokemon/evolve", async (req, res) => {
     "uncommon-rare": 2,
     "rare-epic": 3,
     "uncommon-epic": 4,
+    "epic-legendary": 5,
+    "legendary-mythic": 7,
+    "rare-legendary": 6,
   };
   const currentTier = base.tier;
   const nextTier = target.tier;
@@ -1031,7 +1024,12 @@ app.post("/api/pokemon/evolve", async (req, res) => {
 
   res.json({
     success: true,
-    evolved: { from: base.name, to: target.name, shiny },
+    evolved: { 
+      id: targetId,
+      from: base.name, 
+      to: target.name, 
+      shiny 
+    },
     stones: user.items.evolution_stone,
   });
 });

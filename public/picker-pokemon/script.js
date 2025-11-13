@@ -893,3 +893,28 @@ async function handleDonationConfirm(pokeId, overlay) {
     closeOverlay(overlay);
   }
 }
+
+// ===========================================================
+// 🔄 Navigation Tabs — Preserve ID & Token Across Pickers
+// ===========================================================
+(function initNavTabs() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  const token = params.get("token");
+  if (!id || !token) return;
+
+  const goPokemon = document.getElementById("goPokemon");
+  const goTrainers = document.getElementById("goTrainers");
+
+  if (goPokemon) {
+    goPokemon.addEventListener("click", () => {
+      // Already here — do nothing
+    });
+  }
+
+  if (goTrainers) {
+    goTrainers.addEventListener("click", () => {
+      window.location.href = `/public/picker-trainer/index.html?id=${id}&token=${token}`;
+    });
+  }
+})();

@@ -255,3 +255,28 @@ function showPopup(title, message, color = "#00ff9d") {
     setTimeout(() => popup.remove(), 400);
   }, 2500);
 }
+
+// ===========================================================
+// 🔄 Navigation Tabs — Preserve ID & Token Across Pickers
+// ===========================================================
+(function initNavTabs() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  const token = params.get("token");
+  if (!id || !token) return;
+
+  const goPokemon = document.getElementById("goPokemon");
+  const goTrainers = document.getElementById("goTrainers");
+
+  if (goPokemon) {
+    goPokemon.addEventListener("click", () => {
+      window.location.href = `/public/picker-pokemon/index.html?id=${id}&token=${token}`;
+    });
+  }
+
+  if (goTrainers) {
+    goTrainers.addEventListener("click", () => {
+      // Already here — do nothing
+    });
+  }
+})();

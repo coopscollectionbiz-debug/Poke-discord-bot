@@ -121,8 +121,10 @@ function setupTabs() {
 async function loadAllData() {
   try {
     // Load Pokémon data
-    const pokemonRes = await fetch("/public/pokemonData.json");
-    allPokemon = await pokemonRes.json();
+const pokemonRes = await fetch("/public/pokemonData.json");
+const rawPokemon = await pokemonRes.json();
+allPokemon = Object.entries(rawPokemon).map(([id, info]) => ({ id, ...info }));
+
 
     // Load Trainer data
     const trainerRes = await fetch("/public/trainerSprites.json");

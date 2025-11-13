@@ -6,7 +6,8 @@
 import { getRank } from "./rankSystem.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { getAllPokemon, getAllTrainers } from "./dataLoader.js";
-import { loadUser, saveUser } from "./userSchema.js";
+import { addPokemonToUser, addTrainerToUser } from "./userData.js";
+
 
 // ==========================================================
 // User Modification Helpers (Replacing userData.js)

@@ -119,47 +119,25 @@ function setupTabs() {
 // 📦 DATA LOADING
 // ===========================================================
 async function loadAllData() {
-  const baseURL = window.location.origin;
-
   try {
-    // =======================================================
-    // 🧩 Load Pokémon + Trainer Data (Safe for Render + Local)
-    // =======================================================
-    // 🐉 Pokémon Data
-    const pokemonRes = await fetch(`${baseURL}/public/pokemonData.json`);
-    if (!pokemonRes.ok) throw new Error(`Failed to load pokemonData.json (${pokemonRes.status})`);
-    const rawPokemon = await pokemonRes.json();
+    // Load Pokémon data
+    const pokemonRes = await fetch("/public/pokemonData.json");
+    allPokemon = await pokemonRes.json();
 
-    // Handle both array and object formats safely
-    allPokemon = Array.isArray(rawPokemon)
-      ? rawPokemon
-      : Object.entries(rawPokemon).map(([id, info]) => ({ id, ...info }));
-
-    if (!Array.isArray(allPokemon)) {
-      console.warn("⚠️ pokemonData.json did not load as expected, forcing empty array fallback");
-      allPokemon = [];
-    }
-
-    // 👥 Trainer Data
-    const trainerRes = await fetch(`${baseURL}/public/trainerSprites.json`);
-    if (!trainerRes.ok) throw new Error(`Failed to load trainerSprites.json (${trainerRes.status})`);
+    // Load Trainer data
+    const trainerRes = await fetch("/public/trainerSprites.json");
     allTrainers = await trainerRes.json();
 
-    if (!allTrainers || typeof allTrainers !== "object") {
-      console.warn("⚠️ trainerSprites.json invalid or empty, applying empty fallback");
-      allTrainers = {};
-    }
-
-    console.log(`✅ Loaded ${allPokemon.length} Pokémon and ${Object.keys(allTrainers).length} trainers`);
-
-    // =======================================================
-    // 👤 Load User Pokémon Data
-    // =======================================================
-    const userRes = await fetch(`${API_ENDPOINTS.userPokemon}?id=${userId}&token=${token}`);
+    // Load user data
+    const userRes = await fetch(
+      `${API_ENDPOINTS.userPokemon}?id=${userId}&token=${token}`
+    );
+    
     if (userRes.status === 403) {
       showError("⏰ Session expired. Please reopen /dashboard from Discord.");
       return;
     }
+    
     if (!userRes.ok) throw new Error(`HTTP ${userRes.status}`);
     userData = await userRes.json();
 
@@ -170,25 +148,23 @@ async function loadAllData() {
     selectedTeam = userData.currentTeam || [];
     renderPokemon();
 
-    // =======================================================
-    // 🎴 Load Trainer Ownership
-    // =======================================================
-    const trainerUserRes = await fetch(`${API_ENDPOINTS.userTrainers}?id=${userId}&token=${token}`);
+    // Load trainers for trainer tab
+    const trainerUserRes = await fetch(
+      `${API_ENDPOINTS.userTrainers}?id=${userId}&token=${token}`
+    );
+    
     if (trainerUserRes.status === 403) {
       showError("⏰ Session expired. Please reopen /dashboard from Discord.");
       return;
     }
+    
     if (trainerUserRes.ok) {
       const trainerUserData = await trainerUserRes.json();
-      userData.ownedTrainers = Array.isArray(trainerUserData.owned)
-        ? trainerUserData.owned
-        : Object.keys(trainerUserData.owned || {});
+      userData.ownedTrainers = trainerUserData.owned || [];
       renderTrainers();
     }
 
-    // =======================================================
-    // 🛒 Load Shop Items
-    // =======================================================
+    // Load shop items
     await loadShopItems();
 
     console.log("✅ All data loaded successfully");
@@ -197,6 +173,22 @@ async function loadAllData() {
     showError("❌ Failed to load data. Please re-open the link.");
   }
 }
+
+// Helper function to refresh user data after actions like evolution/donation
+async function loadUserData() {
+  try {
+    const userRes = await fetch(
+      `${API_ENDPOINTS.userPokemon}?id=${userId}&token=${token}`
+    );
+    
+    if (userRes.status === 403) {
+      showPopup("⏰ Session Expired", "Your session has expired. Please reopen /dashboard from Discord.", "#ef4444");
+      return;
+    }
+    
+    if (!userRes.ok) throw new Error(`HTTP ${userRes.status}`);
+    const freshData = await userRes.json();
+    
     // Update userData with fresh values
     userData.pokemon = freshData.pokemon;
     userData.items = freshData.items;
@@ -472,7 +464,7 @@ function createPokemonCard(pkmn, spritePath, owned, count) {
   if (currentMode === "donate" && owned && count > 0) {
     const donateVal = document.createElement("div");
     donateVal.className = "donate-value";
-    const ccValue = calculateDonationValue(rarity, shinyMode);
+    const ccValue = calculateDonationValue(rarity);
     donateVal.textContent = `💰 ${ccValue}`;
     spriteWrapper.appendChild(donateVal);
   }
@@ -573,17 +565,13 @@ async function saveTeam() {
   }
 }
 
-// ===========================================================
-// 🔁 UPDATED: evolvePokemon()
-// ===========================================================
 async function evolvePokemon(pkmn) {
   if (!pkmn.evolution) {
     showPopup("❌ Cannot Evolve", "This Pokémon has no evolution!", "#ef4444");
     return;
   }
 
-  const hasStone =
-    (userData.items?.evolution_stone ?? userData.items?.evolutionStone ?? 0) > 0;
+  const hasStone = (userData.items?.evolution_stone || 0) > 0;
   if (!hasStone) {
     showPopup("❌ No Evolution Stones", "You need an Evolution Stone to evolve Pokémon!", "#ef4444");
     return;
@@ -593,12 +581,12 @@ async function evolvePokemon(pkmn) {
     const res = await fetch(API_ENDPOINTS.evolvePokemon, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: userId,
-        token,
-        baseId: pkmn.id,
-        targetId: pkmn.evolution,
-        shiny: shinyMode,
+      body: JSON.stringify({ 
+        id: userId, 
+        token, 
+        baseId: pkmn.id, 
+        targetId: pkmn.evolution, 
+        shiny: shinyMode 
       }),
     });
 
@@ -611,25 +599,19 @@ async function evolvePokemon(pkmn) {
     const data = await res.json();
 
     if (data.success) {
-      // Update local stones safely
-      const stones =
-        data.stones ??
-        userData.items?.evolution_stone ??
-        userData.items?.evolutionStone ??
-        0;
-      userData.items.evolution_stone = stones;
-
-      // Refresh user Pokémon data before re-rendering
+      // Update local data
+      userData.items.evolution_stone = data.stones;
+      
+      // Refresh user data to get updated Pokémon
       await loadUserData();
-
-      // Animate stats
-      animateStat("stoneCount", stones);
-
-      // Show evolution popup (safe reset)
+      
+      animateStat("stoneCount", userData.items.evolution_stone);
+      
+      // Show evolution popup
       showEvolutionPopup(data.evolved, shinyMode);
-
-      // Refresh Pokémon grid AFTER data is reloaded
-      await renderPokemon(document.getElementById("pokemonSearch").value);
+      
+      // Re-render
+      renderPokemon(document.getElementById("pokemonSearch").value);
     } else {
       throw new Error(data.error || "Evolution failed");
     }
@@ -639,12 +621,9 @@ async function evolvePokemon(pkmn) {
   }
 }
 
-// ===========================================================
-// 🔁 UPDATED: donatePokemon()
-// ===========================================================
 async function donatePokemon(pkmn) {
   const userPokemon = userData.pokemon[pkmn.id];
-  const count = shinyMode ? userPokemon?.shiny || 0 : userPokemon?.normal || 0;
+  const count = shinyMode ? (userPokemon?.shiny || 0) : (userPokemon?.normal || 0);
 
   if (count <= 0) {
     showPopup("❌ Cannot Donate", "You don't have this Pokémon!", "#ef4444");
@@ -667,20 +646,19 @@ async function donatePokemon(pkmn) {
     const data = await res.json();
 
     if (data.success) {
-      // Update local CC
-      userData.cc = data.totalCC ?? userData.cc ?? 0;
-
-      // Refresh Pokémon data before re-rendering
+      // Update local data
+      userData.cc = data.totalCC;
+      
+      // Refresh user data to get updated Pokémon
       await loadUserData();
-
-      // Animate CC stat
+      
       animateStat("ccCount", userData.cc, "--gold");
-
-      // Show donation popup (safe reset)
+      
+      // Show donation popup
       showDonationPopup(pkmn, data.gainedCC, shinyMode);
-
-      // Refresh grid AFTER data reload
-      await renderPokemon(document.getElementById("pokemonSearch").value);
+      
+      // Re-render
+      renderPokemon(document.getElementById("pokemonSearch").value);
     } else {
       throw new Error(data.error || "Donation failed");
     }
@@ -690,50 +668,16 @@ async function donatePokemon(pkmn) {
   }
 }
 
-// ===========================================================
-// 🔁 UPDATED: loadUserData()
-// ===========================================================
-async function loadUserData() {
-  try {
-    const userRes = await fetch(`${API_ENDPOINTS.userPokemon}?id=${userId}&token=${token}`);
-
-    if (userRes.status === 403) {
-      showPopup("⏰ Session Expired", "Your session has expired. Please reopen /dashboard from Discord.", "#ef4444");
-      return;
-    }
-
-    if (!userRes.ok) throw new Error(`HTTP ${userRes.status}`);
-    const freshData = await userRes.json();
-
-    // Safely merge into userData
-    userData.pokemon = freshData.pokemon || {};
-    userData.items = freshData.items || {};
-    userData.cc = freshData.cc ?? userData.cc ?? 0;
-    userData.tp = freshData.tp ?? userData.tp ?? 0;
-    userData.rank = freshData.rank || userData.rank || "Novice Trainer";
-
-    updateStatsBar();
-  } catch (err) {
-    console.error("❌ loadUserData failed:", err);
-  }
-}
-
-function calculateDonationValue(rarity, isShiny = false) {
+function calculateDonationValue(rarity) {
   const values = {
-    common: 100,
-    uncommon: 350,
-    rare: 1000,
-    epic: 3000,
-    legendary: 5000,
-    mythic: 7000,
+    common: 10,
+    uncommon: 25,
+    rare: 50,
+    epic: 100,
+    legendary: 200,
+    mythic: 500,
   };
-
-  let value = values[rarity] || 10;
-
-  // 🟡 Give 5x bonus for shiny Pokémon
-  if (isShiny) value *= 5;
-
-  return value;
+  return values[rarity] || 10;
 }
 
 // ===========================================================
@@ -779,43 +723,33 @@ function renderTrainers(searchFilter = "") {
 
   Object.entries(allTrainers).forEach(([name, info]) => {
     const rarity = (info.tier || "common").toLowerCase();
-
-    // 🔍 Apply filters
+    
+    // Apply filters
     if (trainerRarityFilter !== "all" && rarity !== trainerRarityFilter) return;
     if (searchFilter && !name.toLowerCase().includes(searchFilter.toLowerCase())) return;
 
-    // 🧩 Normalize sprite entries (handles both strings + objects)
     const spriteFiles = Array.isArray(info.sprites)
       ? info.sprites
       : Array.isArray(info.files)
       ? info.files
       : [];
 
-    spriteFiles.forEach((entry) => {
-      // Entry may be string or object
-      const fileName = typeof entry === "string" ? entry : entry.file;
-      const disabled = typeof entry === "object" && entry.disabled;
+    spriteFiles.forEach((fileName) => {
+      if (typeof fileName !== "string") return;
 
-      // Skip invalid or disabled sprites
-      if (!fileName || disabled) return;
-
-      // ✅ Check ownership
       const owned = ownedTrainers.some((t) => {
         const baseT = t.split("/").pop().toLowerCase();
         return baseT === fileName.toLowerCase();
       });
 
-      // 🧭 Apply view filters
       if (trainerShowOwnedOnly && !owned) return;
       if (trainerShowUnownedOnly && owned) return;
 
-      // 🎴 Create and append trainer card
       const card = createTrainerCard(name, fileName, rarity, owned);
       grid.appendChild(card);
     });
   });
 
-  // 🪶 Handle empty grid
   if (grid.children.length === 0) {
     grid.innerHTML = "<p class='notice'>No trainers match your filters.</p>";
   }
@@ -999,7 +933,7 @@ async function purchaseItem(item) {
 }
 
 // ===========================================================
-// ✨ POPUP UTILITIES — Evolution • Donation • Shop
+// ✨ POPUP UTILITIES
 // ===========================================================
 
 function showPopup(title, message, color = "#00ff9d") {
@@ -1035,64 +969,27 @@ function showPopup(title, message, color = "#00ff9d") {
   }, 2500);
 }
 
-// ===========================================================
-// 🧬 Evolution Popup
-// ===========================================================
 function showEvolutionPopup(evolved, isShiny) {
   const overlay = document.getElementById("evoPopupOverlay");
   const popup = document.getElementById("evoPopup");
-
-  if (isShiny) popup.classList.add("shiny");
-  else popup.classList.remove("shiny");
-
-  const spritePath = isShiny
+  
+  if (isShiny) {
+    popup.classList.add("shiny");
+  } else {
+    popup.classList.remove("shiny");
+  }
+  
+  const spritePath = isShiny 
     ? `${SPRITE_PATHS.shiny}${evolved.id}.gif`
     : `${SPRITE_PATHS.pokemon}${evolved.id}.gif`;
-
+  
   document.getElementById("evoSprite").src = spritePath;
-  document.getElementById("evoMessage").textContent =
+  document.getElementById("evoMessage").textContent = 
     `Your Pokémon evolved into ${evolved.name}!`;
-
+  
   overlay.style.display = "flex";
-}
-
-// ===========================================================
-// 💎 Donation Popup
-// ===========================================================
-function showDonationPopup(pkmn, ccGained, isShiny) {
-  const overlay = document.getElementById("donationPopupOverlay");
-  const popup = document.getElementById("donationPopup");
-
-  if (isShiny) popup.classList.add("shiny");
-  else popup.classList.remove("shiny");
-
-  const spritePath = isShiny
-    ? `${SPRITE_PATHS.shiny}${pkmn.id}.gif`
-    : `${SPRITE_PATHS.pokemon}${pkmn.id}.gif`;
-
-  document.getElementById("donationSprite").src = spritePath;
-  document.getElementById("donationMessage").textContent =
-    `You donated ${pkmn.name} to the collection!`;
-  document.getElementById("donationCC").textContent = `+${ccGained} CC earned!`;
-
-  overlay.style.display = "flex";
-}
-
-// ===========================================================
-// 🛒 Shop Purchase Confirmation Popup
-// ===========================================================
-function showPurchaseConfirmation(item) {
-  const overlay = document.getElementById("shopPopupOverlay");
-  document.getElementById("shopPopupTitle").textContent = "Confirm Purchase";
-  document.getElementById("shopPopupImage").src = item.image;
-  document.getElementById("shopPopupMessage").textContent =
-    `Purchase ${item.name} for ${item.price} CC?`;
-
-  overlay.style.display = "flex";
-
-  const confirmBtn = document.getElementById("confirmPurchaseBtn");
-  confirmBtn.onclick = async () => {
-    await purchaseItem(item);
+  
+  document.getElementById("closeEvoPopup").onclick = () => {
     overlay.classList.add("fadeOut");
     setTimeout(() => {
       overlay.style.display = "none";
@@ -1101,50 +998,37 @@ function showPurchaseConfirmation(item) {
   };
 }
 
-// ===========================================================
-// 🧩 Global Popup Close Bindings (applies to all overlays)
-// ===========================================================
-function bindGlobalPopups() {
-  const popups = [
-    { overlay: "evoPopupOverlay", button: "closeEvoPopup" },
-    { overlay: "donationPopupOverlay", button: "closeDonationPopup" },
-    { overlay: "shopPopupOverlay", button: "cancelPurchaseBtn" },
-  ];
-
-  popups.forEach(({ overlay, button }) => {
-    const overlayEl = document.getElementById(overlay);
-    const buttonEl = document.getElementById(button);
-    if (!overlayEl || !buttonEl) return;
-
-    // ✅ Button closes overlay
-    buttonEl.addEventListener("click", () => {
-      overlayEl.classList.add("fadeOut");
-      setTimeout(() => {
-        overlayEl.style.display = "none";
-        overlayEl.classList.remove("fadeOut");
-      }, 300);
-    });
-
-    // ✅ Clicking outside popup closes overlay
-    overlayEl.addEventListener("click", (e) => {
-      if (e.target === overlayEl) {
-        overlayEl.classList.add("fadeOut");
-        setTimeout(() => {
-          overlayEl.style.display = "none";
-          overlayEl.classList.remove("fadeOut");
-        }, 300);
-      }
-    });
-  });
+function showDonationPopup(pkmn, ccGained, isShiny) {
+  const overlay = document.getElementById("donationPopupOverlay");
+  const popup = document.getElementById("donationPopup");
+  
+  if (isShiny) {
+    popup.classList.add("shiny");
+  } else {
+    popup.classList.remove("shiny");
+  }
+  
+  const spritePath = isShiny
+    ? `${SPRITE_PATHS.shiny}${pkmn.id}.gif`
+    : `${SPRITE_PATHS.pokemon}${pkmn.id}.gif`;
+  
+  document.getElementById("donationSprite").src = spritePath;
+  document.getElementById("donationMessage").textContent = 
+    `You donated ${pkmn.name} to the collection!`;
+  document.getElementById("donationCC").textContent = `+${ccGained} CC earned!`;
+  
+  overlay.style.display = "flex";
+  
+  document.getElementById("closeDonationPopup").onclick = () => {
+    overlay.classList.add("fadeOut");
+    setTimeout(() => {
+      overlay.style.display = "none";
+      overlay.classList.remove("fadeOut");
+    }, 300);
+  };
 }
 
-// Run global binding after DOM loads
-window.addEventListener("DOMContentLoaded", bindGlobalPopups);
-
-// ===========================================================
-// ❌ Error Display Helper
-// ===========================================================
 function showError(message) {
-  document.getElementById("pokemonGrid").innerHTML =
+  document.getElementById("pokemonGrid").innerHTML = 
     `<p class='error'>${message}</p>`;
 }

@@ -1,38 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coop’s Collection — Unified Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <!-- Lead Pokémon Header -->
-  <div id="leadPokemonHeader">
-    <img id="leadPokemonSprite" class="lead-pokemon" />
-    <h2>Manage Pokémon</h2>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coop’s Collection — Pokémon Management</title>
+
+    <!-- ===========================================================
+         Styles
+    =========================================================== -->
+    <link rel="stylesheet" href="/public/picker-pokemon/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- ===========================================================
+         Header
+    =========================================================== -->
+    <header>
+      <h1>Pokémon Management Portal</h1>
+      <p>⭐ Build your team · 🧬 Evolve with stones · 💝 Donate for CC</p>
+    </header>
+
+    <!-- ===========================================================
+         Player Stats Bar
+    =========================================================== -->
+    <div id="statsBar">
+  <div class="stat-item">
+    <img src="/public/sprites/items/evolution_stone.png"
+         alt="Evolution Stone"
+         class="stat-icon">
+    <span id="stoneCount">0</span> Stones
   </div>
 
-  <!-- Pokémon Controls & Grid -->
-  <section id="pokemonManager">
-    <div id="hud"></div>
+  <div class="stat-item">
+    <img src="/public/sprites/items/cc_coin.png"
+         alt="Collector Coin"
+         class="stat-icon">
+    <span id="ccCount">0</span> CC
+  </div>
 
-    <div id="filters">
-      <input type="text" id="searchInput" placeholder="Search Pokémon..." />
-      <select id="rarityFilter"></select>
-      <select id="typeFilter"></select>
-      <label><input type="checkbox" id="showShinyOnly" /> Shiny Only</label>
+  <div class="stat-item">
+    <img src="/public/sprites/items/tp_icon.png"
+         alt="Trainer Points"
+         class="stat-icon">
+    <span id="tpCount">0</span> TP
+  </div>
+
+  <div class="stat-item">
+    <img src="/public/sprites/items/rank_badge.png"
+         alt="Rank Badge"
+         class="stat-icon">
+    <span id="rankLabel">Novice Trainer</span>
+  </div>
+</div>
+
+    <!-- ===========================================================
+         Mode Buttons
+    =========================================================== -->
+    <div id="modeToggle">
+      <button class="mode-btn active" data-mode="team">⭐ Change Team</button>
+      <button class="mode-btn" data-mode="evolve">🧬 Evolve</button>
+      <button class="mode-btn" data-mode="donate">💝 Donate</button>
     </div>
 
+    <!-- ===========================================================
+         Toggles + Search (Restored IDs)
+    =========================================================== -->
+    <div id="controls">
+      <input
+        type="text"
+        id="search"
+        placeholder="🔍 Search Pokémon..."
+        autocomplete="off"
+      />
+
+      <select id="rarityFilter">
+        <option value="">All Rarities</option>
+        <option value="common">Common</option>
+        <option value="uncommon">Uncommon</option>
+        <option value="rare">Rare</option>
+        <option value="epic">Epic</option>
+        <option value="legendary">Legendary</option>
+        <option value="mythic">Mythic</option>
+      </select>
+
+      <select id="typeFilter">
+        <option value="">All Types</option>
+        <option value="fire">Fire</option>
+        <option value="water">Water</option>
+        <option value="grass">Grass</option>
+        <option value="electric">Electric</option>
+        <option value="psychic">Psychic</option>
+        <option value="fighting">Fighting</option>
+        <option value="dark">Dark</option>
+        <option value="fairy">Fairy</option>
+        <option value="steel">Steel</option>
+        <option value="ghost">Ghost</option>
+        <option value="rock">Rock</option>
+        <option value="ground">Ground</option>
+        <option value="poison">Poison</option>
+        <option value="ice">Ice</option>
+        <option value="dragon">Dragon</option>
+        <option value="bug">Bug</option>
+        <option value="flying">Flying</option>
+        <option value="normal">Normal</option>
+      </select>
+
+      <div class="toggle-group">
+        <button id="ownedToggle" class="mode-btn">✅ Show Owned</button>
+        <button id="unownedToggle" class="mode-btn">❌ Show Unowned</button>
+        <button id="shinyToggle" class="mode-btn">🌟 Shiny Mode OFF</button>
+      </div>
+    </div>
+
+    <!-- ===========================================================
+         Pokémon Grid
+    =========================================================== -->
     <div id="pokemonGrid"></div>
-  </section>
 
-  <!-- Trainer Section -->
-  <section id="trainerManager">
-    <h2>Manage Trainers</h2>
-    <button id="changeTrainerBtn">Change Trainer</button>
-  </section>
+    <!-- ===========================================================
+         Footer / Team Info (Restored IDs)
+    =========================================================== -->
+    <footer>
+      <p id="teamCounter">0/6 selected</p>
+      <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
+      <p id="teamStatus" class="status-msg"></p>
+      <p style="margin-top:1rem;color:#777;">
+        Opened via <code>/changepokemon</code> · Session valid for 10 minutes
+      </p>
+    </footer>
 
-  <script src="script.js"></script>
-</body>
+    <!-- ===========================================================
+         Script
+    =========================================================== -->
+    <script type="module" src="/public/picker-pokemon/script.js"></script>
+  </body>
 </html>

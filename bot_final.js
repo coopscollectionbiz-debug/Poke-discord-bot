@@ -1089,122 +1089,191 @@ app.post("/api/pokemon/donate", async (req, res) => {
 });
 
 // ===========================================================
-// 🛒 SHOP ENDPOINTS
+// 🛒 SHOP ENDPOINTS (FINAL CLEAN VERSION)
 // ===========================================================
 
-// 📦 Get shop items
-app.get("/api/shop-items", (req, res) => {
-  const { id, token } = req.query;
-  if (!validateToken(id, token)) {
-    return res.status(403).json({ error: "Invalid or expired token" });
-  }
-
-  // Default shop items
-  const shopItems = [
+// 📦 Define shop items once (extendable)
+function getShopItems() {
+  return [
     {
       id: "evolution_stone",
       name: "Evolution Stone",
       description: "Evolve any Pokémon that has an evolution available",
       price: 150,
       image: "/public/sprites/items/evolution_stone.png",
-      quantity: "unlimited",
+      oneTime: false,
     },
     {
-      id: "shiny_charm",
-      name: "Shiny Charm",
-      description: "Permanently increase shiny odds by 0.5%",
+      id: "starter_pack",
+      name: "Starter Pack",
+      description: "1 Common, 1 Uncommon, 1 Rare Pokémon + 1 Rare Trainer (one time only)",
       price: 500,
-      image: "/public/sprites/items/shiny_charm.png",
-      quantity: "limited",
+      image: "/public/sprites/items/starter_pack.png",
+      oneTime: true,
     },
     {
-      id: "lucky_egg",
-      name: "Lucky Egg",
-      description: "Double TP gain for 24 hours",
+      id: "pokeball",
+      name: "Poké Ball",
+      description: "Catch a random Pokémon (normal odds)",
+      price: 75,
+      image: "/public/sprites/items/pokeball.png",
+      oneTime: false,
+    },
+    {
+      id: "greatball",
+      name: "Great Ball",
+      description: "Catch a Pokémon with increased odds for Uncommon+",
+      price: 150,
+      image: "/public/sprites/items/greatball.png",
+      oneTime: false,
+    },
+    {
+      id: "ultraball",
+      name: "Ultra Ball",
+      description: "Catch a Pokémon with increased odds for Rare+",
       price: 300,
-      image: "/public/sprites/items/lucky_egg.png",
-      quantity: "unlimited",
-    },
-    {
-      id: "rare_candy",
-      name: "Rare Candy",
-      description: "Get 5 random Pokémon instantly",
-      price: 250,
-      image: "/public/sprites/items/rare_candy.png",
-      quantity: "unlimited",
+      image: "/public/sprites/items/ultraball.png",
+      oneTime: false,
     },
   ];
+}
 
-  res.json({ items: shopItems });
+// ===========================================================
+// 📦 GET shop items (Dashboard)
+// ===========================================================
+app.get("/api/shop-items", (req, res) => {
+  const { id, token } = req.query;
+
+  if (!validateToken(id, token)) {
+    return res.status(403).json({ error: "Invalid or expired token" });
+  }
+
+  res.json({ items: getShopItems() });
 });
 
-// 💰 Purchase item
+// ===========================================================
+// 💰 PURCHASE ITEM
+// ===========================================================
 app.post("/api/purchase-item", async (req, res) => {
-  const { id, token, itemId } = req.body;
-  
-  if (!id || !token || !itemId) {
-    return res.status(400).json({ success: false, error: "Missing id, token, or itemId" });
+  try {
+    const { id, token, itemId } = req.body;
+
+    // 🔐 Validate session
+    if (!validateToken(id, token)) {
+      return res.status(403).json({ success: false, error: "Invalid or expired token" });
+    }
+
+    const user = trainerData[id];
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    user.items ??= { evolution_stone: 0 };
+    user.purchases ??= [];
+
+    // Pull item definition
+    const shopItems = getShopItems();
+    const item = shopItems.find((i) => i.id === itemId);
+
+    if (!item) {
+      return res.status(400).json({ success: false, error: "Invalid item" });
+    }
+
+    // Not enough CC
+    if (user.cc < item.price) {
+      return res.status(400).json({ success: false, error: "Not enough CC" });
+    }
+
+    // One-time purchase rule
+    if (item.oneTime && user.purchases.includes(itemId)) {
+      return res.status(400).json({
+        success: false,
+        error: `${item.name} has already been purchased`,
+      });
+    }
+
+    // Deduct CC
+    user.cc -= item.price;
+
+    let rewards = [];
+
+    // =======================================================
+    // 🟩 STARTER PACK — 1 Common, 1 Uncommon, 1 Rare Pokémon + 1 Rare Trainer
+    // =======================================================
+    if (itemId === "starter_pack") {
+      user.purchases.push("starter_pack");
+
+      const { giveRandomPokemonOfRarity } = await import("./utils/weightedRandom.js");
+      const { giveRandomTrainerOfRarity } = await import("./utils/giveRandomTrainerOfRarity.js");
+
+      const r1 = await giveRandomPokemonOfRarity(user, "common");
+      const r2 = await giveRandomPokemonOfRarity(user, "uncommon");
+      const r3 = await giveRandomPokemonOfRarity(user, "rare");
+      const r4 = await giveRandomTrainerOfRarity(user, "rare");
+
+      rewards.push(r1, r2, r3, r4);
+
+      await broadcastReward(client, { user, type: "pokemon", item: r1 });
+      await broadcastReward(client, { user, type: "pokemon", item: r2 });
+      await broadcastReward(client, { user, type: "pokemon", item: r3 });
+      await broadcastReward(client, { user, type: "trainer", item: r4 });
+    }
+
+    // =======================================================
+    // ⚪ Poké Ball — normal weighted RNG
+    // =======================================================
+    if (itemId === "pokeball") {
+      const { giveWeightedRandomPokemon } = await import("./utils/weightedRandom.js");
+      const mon = await giveWeightedRandomPokemon(user, { boost: "none" });
+      rewards.push(mon);
+      await broadcastReward(client, { user, type: "pokemon", item: mon, source: "Poké Ball" });
+    }
+
+    // =======================================================
+    // 🔵 Great Ball — uncommon+ weighted boost
+    // =======================================================
+    if (itemId === "greatball") {
+      const { giveWeightedRandomPokemon } = await import("./utils/weightedRandom.js");
+      const mon = await giveWeightedRandomPokemon(user, { boost: "uncommonPlus" });
+      rewards.push(mon);
+      await broadcastReward(client, { user, type: "pokemon", item: mon, source: "Great Ball" });
+    }
+
+    // =======================================================
+    // 🟧 Ultra Ball — rare+ weighted boost
+    // =======================================================
+    if (itemId === "ultraball") {
+      const { giveWeightedRandomPokemon } = await import("./utils/weightedRandom.js");
+      const mon = await giveWeightedRandomPokemon(user, { boost: "rarePlus" });
+      rewards.push(mon);
+      await broadcastReward(client, { user, type: "pokemon", item: mon, source: "Ultra Ball" });
+    }
+
+    // =======================================================
+    // 🔶 Evolution Stone (just increments inventory)
+    // =======================================================
+    if (itemId === "evolution_stone") {
+      user.items.evolution_stone += 1;
+    }
+
+    // =======================================================
+    // 💾 SAVE
+    // =======================================================
+    await saveTrainerDataLocal(trainerData);
+    await saveDataToDiscord(trainerData);
+
+    return res.json({
+      success: true,
+      newCC: user.cc,
+      items: user.items,
+      purchases: user.purchases,
+      rewards,
+    });
+
+  } catch (err) {
+    console.error("❌ Purchase failed:", err);
+    return res.status(500).json({ success: false, error: "Server error" });
   }
-  
-  if (!validateToken(id, token)) {
-    return res.status(403).json({ success: false, error: "Invalid or expired token" });
-  }
-
-  const user = trainerData[id];
-  if (!user) {
-    return res.status(404).json({ success: false, error: "User not found" });
-  }
-
-  // Item price mapping
-  const prices = {
-    evolution_stone: 150,
-    shiny_charm: 500,
-    lucky_egg: 300,
-    rare_candy: 250,
-  };
-
-  const price = prices[itemId];
-  if (!price) {
-    return res.status(400).json({ success: false, error: "Invalid item ID" });
-  }
-
-  // Check if user can afford it
-  if ((user.cc || 0) < price) {
-    return res.status(400).json({ success: false, error: "Not enough CC" });
-  }
-
-  // Process purchase
-  user.cc -= price;
-  user.items ??= { evolution_stone: 0 };
-
-  // Apply item effect
-  switch (itemId) {
-    case "evolution_stone":
-      user.items.evolution_stone = (user.items.evolution_stone || 0) + 1;
-      break;
-    case "shiny_charm":
-      // Track shiny charm purchases (you can implement shiny boost logic)
-      user.shinyCharms = (user.shinyCharms || 0) + 1;
-      break;
-    case "lucky_egg":
-      // Set lucky egg expiration (24 hours from now)
-      user.luckyEggExpires = Date.now() + 24 * 60 * 60 * 1000;
-      break;
-    case "rare_candy":
-      // Award 5 random Pokémon (implement this logic as needed)
-      // For now, just track that they purchased it
-      user.rareCandyPurchases = (user.rareCandyPurchases || 0) + 1;
-      break;
-  }
-
-  await saveTrainerDataLocal(trainerData);
-  await saveDataToDiscord(trainerData);
-
-  res.json({
-    success: true,
-    newCC: user.cc,
-    items: user.items,
-  });
 });
 
 // ===========================================================

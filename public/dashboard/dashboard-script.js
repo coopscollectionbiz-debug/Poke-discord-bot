@@ -589,13 +589,17 @@ async function saveTeam() {
   }
 }
 
+// ===========================================================
+// 🔁 UPDATED: evolvePokemon()
+// ===========================================================
 async function evolvePokemon(pkmn) {
   if (!pkmn.evolution) {
     showPopup("❌ Cannot Evolve", "This Pokémon has no evolution!", "#ef4444");
     return;
   }
 
-  const hasStone = (userData.items?.evolution_stone || 0) > 0;
+  const hasStone =
+    (userData.items?.evolution_stone ?? userData.items?.evolutionStone ?? 0) > 0;
   if (!hasStone) {
     showPopup("❌ No Evolution Stones", "You need an Evolution Stone to evolve Pokémon!", "#ef4444");
     return;
@@ -605,12 +609,12 @@ async function evolvePokemon(pkmn) {
     const res = await fetch(API_ENDPOINTS.evolvePokemon, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        id: userId, 
-        token, 
-        baseId: pkmn.id, 
-        targetId: pkmn.evolution, 
-        shiny: shinyMode 
+      body: JSON.stringify({
+        id: userId,
+        token,
+        baseId: pkmn.id,
+        targetId: pkmn.evolution,
+        shiny: shinyMode,
       }),
     });
 
@@ -623,19 +627,25 @@ async function evolvePokemon(pkmn) {
     const data = await res.json();
 
     if (data.success) {
-      // Update local data
-      userData.items.evolution_stone = data.stones;
-      
-      // Refresh user data to get updated Pokémon
+      // Update local stones safely
+      const stones =
+        data.stones ??
+        userData.items?.evolution_stone ??
+        userData.items?.evolutionStone ??
+        0;
+      userData.items.evolution_stone = stones;
+
+      // Refresh user Pokémon data before re-rendering
       await loadUserData();
-      
-      animateStat("stoneCount", userData.items.evolution_stone);
-      
-      // Show evolution popup
+
+      // Animate stats
+      animateStat("stoneCount", stones);
+
+      // Show evolution popup (safe reset)
       showEvolutionPopup(data.evolved, shinyMode);
-      
-      // Re-render
-      renderPokemon(document.getElementById("pokemonSearch").value);
+
+      // Refresh Pokémon grid AFTER data is reloaded
+      await renderPokemon(document.getElementById("pokemonSearch").value);
     } else {
       throw new Error(data.error || "Evolution failed");
     }
@@ -645,9 +655,12 @@ async function evolvePokemon(pkmn) {
   }
 }
 
+// ===========================================================
+// 🔁 UPDATED: donatePokemon()
+// ===========================================================
 async function donatePokemon(pkmn) {
   const userPokemon = userData.pokemon[pkmn.id];
-  const count = shinyMode ? (userPokemon?.shiny || 0) : (userPokemon?.normal || 0);
+  const count = shinyMode ? userPokemon?.shiny || 0 : userPokemon?.normal || 0;
 
   if (count <= 0) {
     showPopup("❌ Cannot Donate", "You don't have this Pokémon!", "#ef4444");
@@ -670,19 +683,20 @@ async function donatePokemon(pkmn) {
     const data = await res.json();
 
     if (data.success) {
-      // Update local data
-      userData.cc = data.totalCC;
-      
-      // Refresh user data to get updated Pokémon
+      // Update local CC
+      userData.cc = data.totalCC ?? userData.cc ?? 0;
+
+      // Refresh Pokémon data before re-rendering
       await loadUserData();
-      
+
+      // Animate CC stat
       animateStat("ccCount", userData.cc, "--gold");
-      
-      // Show donation popup
+
+      // Show donation popup (safe reset)
       showDonationPopup(pkmn, data.gainedCC, shinyMode);
-      
-      // Re-render
-      renderPokemon(document.getElementById("pokemonSearch").value);
+
+      // Refresh grid AFTER data reload
+      await renderPokemon(document.getElementById("pokemonSearch").value);
     } else {
       throw new Error(data.error || "Donation failed");
     }
@@ -692,16 +706,50 @@ async function donatePokemon(pkmn) {
   }
 }
 
-function calculateDonationValue(rarity) {
+// ===========================================================
+// 🔁 UPDATED: loadUserData()
+// ===========================================================
+async function loadUserData() {
+  try {
+    const userRes = await fetch(`${API_ENDPOINTS.userPokemon}?id=${userId}&token=${token}`);
+
+    if (userRes.status === 403) {
+      showPopup("⏰ Session Expired", "Your session has expired. Please reopen /dashboard from Discord.", "#ef4444");
+      return;
+    }
+
+    if (!userRes.ok) throw new Error(`HTTP ${userRes.status}`);
+    const freshData = await userRes.json();
+
+    // Safely merge into userData
+    userData.pokemon = freshData.pokemon || {};
+    userData.items = freshData.items || {};
+    userData.cc = freshData.cc ?? userData.cc ?? 0;
+    userData.tp = freshData.tp ?? userData.tp ?? 0;
+    userData.rank = freshData.rank || userData.rank || "Novice Trainer";
+
+    updateStatsBar();
+  } catch (err) {
+    console.error("❌ loadUserData failed:", err);
+  }
+}
+
+function calculateDonationValue(rarity, isShiny = false) {
   const values = {
-    common: 10,
-    uncommon: 25,
-    rare: 50,
-    epic: 100,
-    legendary: 200,
-    mythic: 500,
+    common: 100,
+    uncommon: 350,
+    rare: 1000,
+    epic: 3000,
+    legendary: 5000,
+    mythic: 7000,
   };
-  return values[rarity] || 10;
+
+  let value = values[rarity] || 10;
+
+  // 🟡 Give 5x bonus for shiny Pokémon
+  if (isShiny) value *= 5;
+
+  return value;
 }
 
 // ===========================================================

@@ -120,51 +120,79 @@ function setupTabs() {
 // ===========================================================
 async function loadAllData() {
   try {
-    // Load Pokémon data
+    // ===========================================================
+    // 🧩 Load Pokémon
+    // ===========================================================
     const pokemonRes = await fetch("/public/pokemonData.json");
-    allPokemon = await pokemonRes.json();
+    const rawPokemon = await pokemonRes.json();
+    allPokemon = Object.entries(rawPokemon).map(([id, info]) => ({
+      id,
+      ...info,
+    }));
 
-    // Load Trainer data
+    // ===========================================================
+    // 🧩 Load Trainers
+    // ===========================================================
     const trainerRes = await fetch("/public/trainerSprites.json");
-    allTrainers = await trainerRes.json();
+    const rawTrainers = await trainerRes.json();
 
-    // Load user data
+    // ✅ Flatten grouped trainer data into usable entries
+    allTrainers = Object.entries(rawTrainers).flatMap(([name, files]) =>
+      files.map(file => ({
+        name,
+        file,
+        displayName: name.charAt(0).toUpperCase() + name.slice(1),
+        spritePath: `/public/sprites/trainers_2/${file}`,
+      }))
+    );
+
+    // ===========================================================
+    // 👤 Load User Data
+    // ===========================================================
     const userRes = await fetch(
       `${API_ENDPOINTS.userPokemon}?id=${userId}&token=${token}`
     );
-    
+
     if (userRes.status === 403) {
       showError("⏰ Session expired. Please reopen /dashboard from Discord.");
       return;
     }
-    
+
     if (!userRes.ok) throw new Error(`HTTP ${userRes.status}`);
     userData = await userRes.json();
 
-    // Update stats bar
+    // ===========================================================
+    // 📊 Update Stats Bar
+    // ===========================================================
     updateStatsBar();
 
-    // Initialize Pokémon view
+    // ===========================================================
+    // 🧬 Initialize Pokémon View
+    // ===========================================================
     selectedTeam = userData.currentTeam || [];
     renderPokemon();
 
-    // Load trainers for trainer tab
+    // ===========================================================
+    // 🎒 Load User’s Owned Trainers
+    // ===========================================================
     const trainerUserRes = await fetch(
       `${API_ENDPOINTS.userTrainers}?id=${userId}&token=${token}`
     );
-    
+
     if (trainerUserRes.status === 403) {
       showError("⏰ Session expired. Please reopen /dashboard from Discord.");
       return;
     }
-    
+
     if (trainerUserRes.ok) {
       const trainerUserData = await trainerUserRes.json();
       userData.ownedTrainers = trainerUserData.owned || [];
       renderTrainers();
     }
 
-    // Load shop items
+    // ===========================================================
+    // 🏪 Load Shop Items
+    // ===========================================================
     await loadShopItems();
 
     console.log("✅ All data loaded successfully");

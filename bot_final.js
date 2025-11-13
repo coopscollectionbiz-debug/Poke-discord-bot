@@ -276,8 +276,11 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   let reward, isShiny = false, isPokemon = false;
 
   try {
+    // ======================================================
+    // 🎲 50/50 Pokémon vs Trainer (passive rewards only)
+    // ======================================================
     if (Math.random() < 0.5) {
-      // 🟢 Pokémon reward
+      // 🟢 Pokémon reward (uses Pokémon weights)
       isPokemon = true;
       reward = selectRandomPokemonForUser(allPokemon, userObj);
       isShiny = rollForShiny(userObj.tp || 0);
@@ -286,15 +289,15 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
       if (isShiny) userObj.pokemon[reward.id].shiny++;
       else userObj.pokemon[reward.id].normal++;
-    } else {
-      // 🔵 Trainer reward
-      isPokemon = false;
 
-      // Dynamic import for latest selector
-      const { selectRandomTrainerForUser } = await import("./utils/weightedRandom.js");
+    } else {
+      // 🔵 Trainer reward (uses Trainer weights)
+      isPokemon = false;
       reward = selectRandomTrainerForUser(flatTrainers, userObj);
 
-      // ✅ Normalize and trust flattened data
+      // ------------------------------
+      // 🎨 Normalize Trainer Naming
+      // ------------------------------
       reward.name =
         reward.name ||
         reward.displayName ||
@@ -308,16 +311,23 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
       reward.tier = reward.tier || reward.rarity || "common";
 
-      // Record trainer ownership
+      // ------------------------------
+      // 📦 Record trainer ownership
+      // ------------------------------
       userObj.trainers ??= {};
-      const trainerKey = reward.spriteFile || reward.filename || `${reward.id}.png`;
-      if (trainerKey) {
-        userObj.trainers[trainerKey] = (userObj.trainers[trainerKey] || 0) + 1;
-        console.log(`🎁 Trainer reward → ${reward.name} (${reward.tier}) key=${trainerKey}`);
-      } else {
-        console.warn("⚠️ Trainer reward missing identifier:", reward);
-      }
+      const trainerKey =
+        reward.spriteFile ||
+        reward.filename ||
+        `${reward.id}.png`;
+
+      userObj.trainers[trainerKey] =
+        (userObj.trainers[trainerKey] || 0) + 1;
+
+      console.log(
+        `🎁 Trainer reward → ${reward.name} (${reward.tier}) key=${trainerKey}`
+      );
     }
+
   } catch (err) {
     console.error("❌ Reward selection failed:", err);
     return;

@@ -1,5 +1,5 @@
 /* ===========================================================
-   Coop's Collection — Trainer Picker Styles (FULL RESTORE)
+   Coop's Collection — Trainer Picker Styles
    =========================================================== */
 
 body {
@@ -13,7 +13,30 @@ body {
 
 header {
   padding: 2rem 1rem 1rem;
+  position: relative;
 }
+
+/* 🔙 Return Button */
+.return-btn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: #161b22;
+  border: 2px solid #30363d;
+  color: #00ff9d;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.return-btn:hover {
+  border-color: #00ff9d;
+  background: #00ff9d22;
+}
+
+/* (The rest of your stylesheet remains unchanged) */
 
 h1 {
   margin-bottom: 0.25rem;

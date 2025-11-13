@@ -1,12 +1,6 @@
 // ===========================================================
 // Coop's Collection — Trainer Picker (Token-Secured Version)
 // ===========================================================
-// Features:
-// • Reads id + token from URL (?id=...&token=...)
-// • Owned trainers shown in color, unowned in grayscale
-// • Filters: search, rarity, owned/unowned toggles
-// • Securely communicates with /api endpoints
-// ===========================================================
 
 import { rarityEmojis } from "/public/spriteconfig.js";
 
@@ -29,9 +23,21 @@ let selectedRarity = "all";
 // 🧭 INITIALIZATION
 // ===========================================================
 window.addEventListener("DOMContentLoaded", () => {
+  setupReturnButton();
   setupControls();
   loadData();
 });
+
+// ===========================================================
+// 🔙 RETURN BUTTON
+// ===========================================================
+function setupReturnButton() {
+  const btn = document.getElementById("returnBtn");
+  btn.addEventListener("click", () => {
+    // Redirect back to unified dashboard
+    window.location.href = "/public/picker-pokemon/index.html";
+  });
+}
 
 // ===========================================================
 // 📦 LOAD DATA

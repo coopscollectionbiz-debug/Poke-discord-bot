@@ -1561,7 +1561,7 @@
   "106": {
     "id": 106,
     "name": "Hitmonlee",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       2
@@ -1575,7 +1575,7 @@
   "107": {
     "id": 107,
     "name": "Hitmonchan",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "types": [
       2
@@ -2392,7 +2392,7 @@
   "164": {
     "id": 164,
     "name": "Noctowl",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       1,
@@ -2467,7 +2467,7 @@
   "169": {
     "id": 169,
     "name": "Crobat",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       4,
@@ -2821,7 +2821,7 @@
   "193": {
     "id": 193,
     "name": "Yanma",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       7,
@@ -2909,7 +2909,7 @@
   "199": {
     "id": 199,
     "name": "Slowking",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       11,
@@ -3213,7 +3213,7 @@
   "221": {
     "id": 221,
     "name": "Piloswine",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Johto",
     "types": [
       15,
@@ -3441,7 +3441,7 @@
   "237": {
     "id": 237,
     "name": "Hitmontop",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Johto",
     "types": [
       2
@@ -3560,7 +3560,7 @@
   "246": {
     "id": 246,
     "name": "Larvitar",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Johto",
     "types": [
       6,
@@ -3853,7 +3853,7 @@
   "266": {
     "id": 266,
     "name": "Silcoon",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       7
@@ -3869,7 +3869,7 @@
   "267": {
     "id": 267,
     "name": "Beautifly",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       7,
@@ -3884,7 +3884,7 @@
   "268": {
     "id": 268,
     "name": "Cascoon",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       7
@@ -3900,7 +3900,7 @@
   "269": {
     "id": 269,
     "name": "Dustox",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       7,
@@ -3976,7 +3976,7 @@
   "274": {
     "id": 274,
     "name": "Nuzleaf",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       12,
@@ -4232,7 +4232,7 @@
   "291": {
     "id": 291,
     "name": "Ninjask",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       7,
@@ -4247,7 +4247,7 @@
   "292": {
     "id": 292,
     "name": "Shedinja",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Hoenn",
     "types": [
       7,
@@ -4334,7 +4334,7 @@
   "298": {
     "id": 298,
     "name": "Azurill",
-    "tier": "rare",
+    "tier": "common",
     "region": "Hoenn",
     "types": [
       1
@@ -4520,7 +4520,7 @@
   "311": {
     "id": 311,
     "name": "Plusle",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       13
@@ -4532,7 +4532,7 @@
   "312": {
     "id": 312,
     "name": "Minun",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       13
@@ -4923,7 +4923,7 @@
   "340": {
     "id": 340,
     "name": "Whiscash",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Hoenn",
     "types": [
       11,
@@ -5167,7 +5167,7 @@
   "357": {
     "id": 357,
     "name": "Tropius",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       12,
@@ -5206,7 +5206,7 @@
   "360": {
     "id": 360,
     "name": "Wynaut",
-    "tier": "uncommon",
+    "tier": "common",
     "region": "Hoenn",
     "types": [
       14
@@ -5220,7 +5220,7 @@
   "361": {
     "id": 361,
     "name": "Snorunt",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       15
@@ -5311,7 +5311,7 @@
   "367": {
     "id": 367,
     "name": "Huntail",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       11
@@ -5325,7 +5325,7 @@
   "368": {
     "id": 368,
     "name": "Gorebyss",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Hoenn",
     "types": [
       11
@@ -6024,7 +6024,7 @@
   "417": {
     "id": 417,
     "name": "Pachirisu",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Sinnoh",
     "types": [
       13
@@ -6193,7 +6193,7 @@
   "429": {
     "id": 429,
     "name": "Mismagius",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       8
@@ -6207,7 +6207,7 @@
   "430": {
     "id": 430,
     "name": "Honchkrow",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       17,
@@ -6453,7 +6453,7 @@
   "447": {
     "id": 447,
     "name": "Riolu",
-    "tier": "uncommon",
+    "tier": "Rare",
     "region": "Sinnoh",
     "types": [
       2
@@ -6685,7 +6685,7 @@
   "463": {
     "id": 463,
     "name": "Lickilicky",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       1
@@ -6714,7 +6714,7 @@
   "465": {
     "id": 465,
     "name": "Tangrowth",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       12
@@ -6872,7 +6872,7 @@
   "476": {
     "id": 476,
     "name": "Probopass",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       6,
@@ -6901,7 +6901,7 @@
   "478": {
     "id": 478,
     "name": "Froslass",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Sinnoh",
     "types": [
       15,
@@ -7783,7 +7783,7 @@
   "541": {
     "id": 541,
     "name": "Swadloon",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       7,
@@ -7800,7 +7800,7 @@
   "542": {
     "id": 542,
     "name": "Leavanny",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       7,
@@ -7962,7 +7962,7 @@
   "553": {
     "id": 553,
     "name": "Krookodile",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Unova",
     "types": [
       5,
@@ -8302,7 +8302,7 @@
   "577": {
     "id": 577,
     "name": "Solosis",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       14
@@ -8316,7 +8316,7 @@
   "578": {
     "id": 578,
     "name": "Duosion",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Unova",
     "types": [
       14
@@ -8463,7 +8463,7 @@
   "588": {
     "id": 588,
     "name": "Karrablast",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       7
@@ -8668,7 +8668,7 @@
   "602": {
     "id": 602,
     "name": "Tynamo",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       13
@@ -9109,7 +9109,7 @@
   "633": {
     "id": 633,
     "name": "Deino",
-    "tier": "rare",
+    "tier": "uncommon",
     "region": "Unova",
     "types": [
       17,

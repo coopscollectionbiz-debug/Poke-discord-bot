@@ -1,17 +1,16 @@
 // ==========================================================
-// weightedRandom.js
-// Shared weighted random selection logic (Tier- and Rank-Aware)
+// weightedRandom.js (Fractional RNG Version)
+// Coop’s Collection — Tier-First, Rank-Aware, Fractional Weights
 // ==========================================================
 
 import { getRank } from "./rankSystem.js";
 
 // ==========================================================
-// ⚖️ Base rarity/tier weights
-// Higher = more common
+// ⚖️ Base rarity/tier weights (fractional allowed!)
 // ==========================================================
 export const POKEMON_RARITY_WEIGHTS = {
-  common: 60,
-  uncommon: 24,
+  common: 50,
+  uncommon: 34,
   rare: 10,
   epic: 4,
   legendary: 1.5,
@@ -19,8 +18,8 @@ export const POKEMON_RARITY_WEIGHTS = {
 };
 
 export const TRAINER_RARITY_WEIGHTS = {
-  common: 60,
-  uncommon: 24,
+  common: 50,
+  uncommon: 34,
   rare: 10,
   epic: 4,
   legendary: 1.5,
@@ -28,24 +27,24 @@ export const TRAINER_RARITY_WEIGHTS = {
 };
 
 // ==========================================================
-// 🧩 Normalize tier/rarity label
+// Normalize label
 // ==========================================================
 function normalizeTier(value) {
   const t = String(value || "common").toLowerCase();
-  const map = {
-    common: "common",
-    uncommon: "uncommon",
-    rare: "rare",
-    epic: "epic",
-    legendary: "legendary",
-    mythic: "mythic",
-  };
-  return map[t] || "common";
+  return (
+    {
+      common: "common",
+      uncommon: "uncommon",
+      rare: "rare",
+      epic: "epic",
+      legendary: "legendary",
+      mythic: "mythic",
+    }[t] || "common"
+  );
 }
 
 // ==========================================================
-// 💪 Rank-based Weight Multipliers
-// Matches rank names from rankSystem.js
+// 💪 Rank multipliers (fractional safe!)
 // ==========================================================
 export const RANK_WEIGHT_MULTIPLIERS = {
   "Novice Trainer":       { rare: 1.0,  epic: 1.0,  legendary: 1.0,  mythic: 1.0 },
@@ -64,132 +63,114 @@ export const RANK_WEIGHT_MULTIPLIERS = {
 };
 
 // ==========================================================
-// 🎲 Weighted Random Choice Helper
+// 🎲 FRACTIONAL weighted random choice
+// Pure probability roll, no rounding, no bags
 // ==========================================================
-export function weightedRandomChoice(list, weights) {
-  if (!Array.isArray(list) || !list.length) return null;
-  const bag = [];
+function fractionalRandomChoice(list, weights) {
+  if (!Array.isArray(list) || list.length === 0) return null;
 
-  for (const item of list) {
-    const rarity = normalizeTier(item.tier || item.rarity);
-    const weight = weights[rarity] || 1;
-    for (let i = 0; i < Math.round(weight); i++) bag.push(item);
+  let total = 0;
+  const tiers = list.map((item) => {
+    const tier = normalizeTier(item.tier || item.rarity);
+    const w = weights[tier] ?? 0;
+    total += w;
+    return { item, weight: w };
+  });
+
+  if (total <= 0) return list[Math.floor(Math.random() * list.length)];
+
+  let roll = Math.random() * total;
+
+  for (const { item, weight } of tiers) {
+    roll -= weight;
+    if (roll <= 0) return item;
   }
 
-  return bag[Math.floor(Math.random() * bag.length)];
+  return tiers[tiers.length - 1].item;
 }
 
 // ==========================================================
-// 🧮 Rank-Aware Weighted Random Choice
-// Applies multipliers based on user rank and rarity/tier
+// 🎲 FRACTIONAL weighted random with rank multipliers
 // ==========================================================
-export function weightedRandomChoiceWithRank(list, weights, user) {
-  if (!Array.isArray(list) || !list.length) return null;
+function fractionalRandomChoiceWithRank(list, weights, user) {
+  if (!Array.isArray(list) || list.length === 0) return null;
 
   const rank = getRank(user.tp || 0);
   const buffs = RANK_WEIGHT_MULTIPLIERS[rank] || {};
-  const bag = [];
 
-  for (const item of list) {
-    const rarity = normalizeTier(item.tier || item.rarity);
-    let weight = weights[rarity] || 1;
+  let total = 0;
+  const weightedList = list.map((item) => {
+    const tier = normalizeTier(item.tier || item.rarity);
+    let w = weights[tier] ?? 0;
 
-    if (buffs[rarity]) weight *= buffs[rarity];
-    for (let i = 0; i < Math.round(weight); i++) bag.push(item);
-  }
+    if (buffs[tier]) w *= buffs[tier];
 
-  if (!bag.length) return list[Math.floor(Math.random() * list.length)];
-  return bag[Math.floor(Math.random() * bag.length)];
-}
-
-// ==========================================================
-// 🧩 Convenience Wrappers
-// ==========================================================
-export function selectRandomPokemonForUser(pokemonPool, user) {
-  return weightedRandomChoiceWithRank(pokemonPool, POKEMON_RARITY_WEIGHTS, user);
-}
-
-// ==========================================================
-// 🧩 Fixed Trainer Selector (uses group key for readable names)
-// ==========================================================
-export function selectRandomTrainerForUser(trainerPool, user) {
-  // Normalize trainerPool entries into [groupName, data]
-  const entries = Array.isArray(trainerPool)
-    ? trainerPool.map((t, i) => [t.id || t.name || `trainer-${i}`, t])
-    : Object.entries(trainerPool);
-
-  const allTrainers = entries.map(([groupKey, data]) => {
-    const id = String(groupKey)
-      .replace(/^trainers?_2\//, "")
-      .replace(/\.png$/i, "")
-      .trim()
-      .toLowerCase();
-
-    const tier = normalizeTier(data?.tier || data?.rarity || "common");
-
-    // 🧩 Collect sprite filenames
-    const sprites = Array.isArray(data?.sprites)
-      ? data.sprites
-          .filter((s) => typeof s === "string" && s.trim().length)
-          .map((s) => s.toLowerCase())
-      : [typeof data?.spriteFile === "string"
-          ? data.spriteFile.toLowerCase()
-          : `${id}.png`];
-
-    // ✅ FIX: Ensure sprites array is never empty
-    if (sprites.length === 0) {
-      sprites.push(`${id}.png`);
-    }
-
-    // 🧠 Smart name: prefer the group key (Ace Trainer, Grunt, etc.)
-    let displayName = groupKey
-      .replace(/[-_]/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase())
-      .trim();
-
-    // Clean common suffixes
-    displayName = displayName
-      .replace(/\bTrainer\b/i, "Trainer")
-      .replace(/\bGrunt\b/i, "Rocket Grunt")
-      .replace(/\s{2,}/g, " ");
-
-    return { id, name: displayName, tier, sprites, groupName: groupKey };
+    total += w;
+    return { item, weight: w };
   });
 
-  // Weighted random pick based on rarity + user rank
-  const chosen = weightedRandomChoiceWithRank(
-    allTrainers,
+  if (total <= 0)
+    return list[Math.floor(Math.random() * list.length)];
+
+  let roll = Math.random() * total;
+
+  for (const { item, weight } of weightedList) {
+    roll -= weight;
+    if (roll <= 0) return item;
+  }
+
+  return weightedList[weightedList.length - 1].item;
+}
+
+// ==========================================================
+// 🧩 Convenience wrapper: Pokémon
+// ==========================================================
+export function selectRandomPokemonForUser(pokemonPool, user) {
+  return fractionalRandomChoiceWithRank(
+    pokemonPool,
+    POKEMON_RARITY_WEIGHTS,
+    user
+  );
+}
+
+// ==========================================================
+// 🧩 Convenience wrapper: Trainer
+// ==========================================================
+export function selectRandomTrainerForUser(trainerPool, user) {
+  // Flatten trainerPool objects into usable trainer entries
+  const entries = Array.isArray(trainerPool)
+    ? trainerPool
+    : Object.entries(trainerPool).map(([k, v]) => ({ key: k, ...v }));
+
+  const normalized = entries.map((trainer, i) => ({
+    id: trainer.id || trainer.key || `trainer-${i}`,
+    name: trainer.name || trainer.key,
+    tier: normalizeTier(trainer.tier || trainer.rarity || "common"),
+    sprites: trainer.sprites || [trainer.spriteFile || `${trainer.id}.png`],
+    spriteFile: trainer.spriteFile || (trainer.sprites?.[0] ?? `${trainer.id}.png`),
+    raw: trainer,
+  }));
+
+  const chosen = fractionalRandomChoiceWithRank(
+    normalized,
     TRAINER_RARITY_WEIGHTS,
     user
   );
-  if (!chosen) return null;
 
-  // Pick a random sprite file within the chosen group
-  // ✅ FIX: Ensure we always have a valid sprite file
-  const spriteFile = 
-    chosen.sprites && chosen.sprites.length > 0
-      ? chosen.sprites[Math.floor(Math.random() * chosen.sprites.length)]
-      : `${chosen.id}.png`;  // Fallback to ID-based filename
-
-  // ✅ FIX: Ensure spriteFile is never undefined
-  const finalSpriteFile = spriteFile || `${chosen.id}.png`;
-
-  // 🧩 Final normalized trainer object
-return {
-  id: chosen.id,
-  key: chosen.groupName,           // ✅ NEW: preserve the original JSON key (e.g. "acerola")
-  name: chosen.name,               // Readable name ("Acerola", "Rocket Grunt", etc.)
-  rarity: chosen.tier,
-  tier: chosen.tier,
-  spriteFile: finalSpriteFile.toLowerCase(),
-  filename: finalSpriteFile.toLowerCase(),
-  groupName: chosen.groupName,
-};
-
+  return {
+    id: chosen.id,
+    name: chosen.name,
+    tier: chosen.tier,
+    rarity: chosen.tier,
+    sprites: chosen.sprites,
+    spriteFile: chosen.spriteFile,
+    filename: chosen.spriteFile,
+    groupName: chosen.raw.key || chosen.id,
+  };
 }
 
 // ==========================================================
-// 🧪 Simulation Helper
+// 🧪 Simulation helper (fractional safe)
 // ==========================================================
 export function simulateDrops(pool, iterations = 10000) {
   const counts = {
@@ -202,10 +183,11 @@ export function simulateDrops(pool, iterations = 10000) {
   };
 
   for (let i = 0; i < iterations; i++) {
-    const pick = weightedRandomChoice(pool, TRAINER_RARITY_WEIGHTS);
-    if (pick) counts[normalizeTier(pick.tier || pick.rarity)]++;
+    const pick = fractionalRandomChoice(pool, TRAINER_RARITY_WEIGHTS);
+    if (pick)
+      counts[normalizeTier(pick.tier || pick.rarity)]++;
   }
 
-  console.log("🎲 Simulated drop distribution:", counts);
+  console.log("🎲 Simulated distribution:", counts);
   return counts;
 }

@@ -23,21 +23,9 @@ let selectedRarity = "all";
 // 🧭 INITIALIZATION
 // ===========================================================
 window.addEventListener("DOMContentLoaded", () => {
-  setupReturnButton();
   setupControls();
   loadData();
 });
-
-// ===========================================================
-// 🔙 RETURN BUTTON
-// ===========================================================
-function setupReturnButton() {
-  const btn = document.getElementById("returnBtn");
-  btn.addEventListener("click", () => {
-    // Redirect back to unified dashboard
-    window.location.href = "/public/picker-pokemon/index.html";
-  });
-}
 
 // ===========================================================
 // 📦 LOAD DATA
@@ -153,7 +141,7 @@ function render(filter = "") {
         </div>
       `;
 
-      if (owned) card.onclick = () => selectTrainer(name, fileName);
+      if (owned) card.onclick = () => askToEquipTrainer(name, fileName);
       grid.appendChild(card);
     });
   });
@@ -196,6 +184,62 @@ function setupControls() {
 }
 
 // ===========================================================
+// 🪄 Modal Creator
+// ===========================================================
+function createTrainerModal({ title, message, sprite, onConfirm }) {
+  const overlay = document.createElement("div");
+  overlay.id = "trainerModalOverlay";
+
+  const modal = document.createElement("div");
+  modal.id = "trainerModal";
+
+  modal.innerHTML = `
+    <h2 style="color:#00ff9d; margin-top:0;">${title}</h2>
+    <img src="${sprite}" alt="trainer" />
+    <p style="margin:1rem 0; color:#ccc;">${message}</p>
+
+    <div class="modal-buttons">
+      <button class="modal-btn cancel">Cancel</button>
+      <button class="modal-btn confirm">Confirm</button>
+    </div>
+  `;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Close on Cancel
+  modal.querySelector(".cancel").onclick = () => overlay.remove();
+
+  // Confirm callback
+  modal.querySelector(".confirm").onclick = async () => {
+    await onConfirm();
+    overlay.remove();
+  };
+
+  // Optional: clicking outside modal closes it
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
+// ===========================================================
+// 🔄 Ask Before Equipping Trainer
+// ===========================================================
+function askToEquipTrainer(name, file) {
+  const sprite = `${TRAINER_SPRITE_PATH}${file}`;
+
+  createTrainerModal({
+    title: "Equip This Trainer?",
+    message: `Would you like to equip **${name}** as your displayed Trainer?`,
+    sprite,
+    onConfirm: async () => {
+      await selectTrainer(name, file);
+    }
+  });
+}
+
+
+// ===========================================================
 // 🖱️ SELECT TRAINER
 // ===========================================================
 async function selectTrainer(name, file) {
@@ -210,13 +254,32 @@ async function selectTrainer(name, file) {
     const data = await res.json();
 
     if (data.success) {
-      showPopup("✅ Trainer Equipped!", `${name} is now your displayed Trainer!`);
-    } else {
-      showPopup("❌ Error", "Failed to equip trainer. Please try again.", "#ef4444");
-    }
+      createTrainerModal({
+        title: "Trainer Equipped!",
+        message: `${name} is now your displayed Trainer.`,
+        sprite: `${TRAINER_SPRITE_PATH}${file}`,
+        onConfirm: () => {} // only OK button
+      });
+      return;
+    } 
+
+    // ❌ If server responds but success = false
+    createTrainerModal({
+      title: "Error",
+      message: "Failed to equip trainer. Please try again.",
+      sprite: `${TRAINER_SPRITE_PATH}${file}`,
+      onConfirm: () => {}
+    });
+
   } catch (err) {
     console.error("❌ selectTrainer failed:", err);
-    showPopup("❌ Error", "Could not connect to the server.", "#ef4444");
+
+    createTrainerModal({
+      title: "Connection Error",
+      message: "Could not connect to the server.",
+      sprite: `${TRAINER_SPRITE_PATH}${file}`,
+      onConfirm: () => {}
+    });
   }
 }
 

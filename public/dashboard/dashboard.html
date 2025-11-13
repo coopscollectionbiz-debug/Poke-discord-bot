@@ -67,12 +67,7 @@
 
       <!-- Controls -->
       <div class="controls">
-        <input
-          type="text"
-          id="pokemonSearch"
-          placeholder="🔍 Search Pokémon..."
-          autocomplete="off"
-        />
+        <input type="text" id="pokemonSearch" placeholder="🔍 Search Pokémon..." autocomplete="off" />
 
         <select id="pokemonRarityFilter">
           <option value="">All Rarities</option>
@@ -118,7 +113,6 @@
         <p class="notice">Loading Pokémon data...</p>
       </div>
 
-      <!-- Save Team Button -->
       <footer class="section-footer">
         <p id="teamCounter">0/6 selected</p>
         <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
@@ -130,14 +124,8 @@
          TAB 2: TRAINER MANAGEMENT
     =========================================================== -->
     <div id="trainers-tab" class="tab-content">
-      <!-- Controls -->
       <div class="controls">
-        <input
-          type="text"
-          id="trainerSearch"
-          placeholder="🔍 Search Trainer..."
-          autocomplete="off"
-        />
+        <input type="text" id="trainerSearch" placeholder="🔍 Search Trainer..." autocomplete="off" />
 
         <select id="trainerRarityFilter">
           <option value="all">All Rarities</option>
@@ -155,7 +143,6 @@
         </div>
       </div>
 
-      <!-- Trainer Grid -->
       <div id="trainerGrid" class="grid">
         <p class="notice">Loading trainer data...</p>
       </div>
@@ -170,30 +157,25 @@
         <p class="shop-subtitle">Purchase items using your CC (Collector Coins)</p>
       </div>
 
-      <!-- Shop Grid -->
-      <div id="shopGrid" class="shop-grid">
-        <!-- Items will be dynamically loaded here -->
-      </div>
+      <div id="shopGrid" class="shop-grid"></div>
     </div>
 
     <!-- ===========================================================
          Footer
     =========================================================== -->
     <footer class="main-footer">
-      <p>
-        🎮 Opened via <strong>/dashboard</strong> •
-        <span>Secure session expires after 10 minutes</span>
-      </p>
+      <p>🎮 Opened via <strong>/dashboard</strong> • <span>Secure session expires after 10 minutes</span></p>
     </footer>
 
     <!-- ===========================================================
-         Popups & Overlays
+         POPUPS — SINGLE CLEAN COPY
     =========================================================== -->
+
     <!-- Evolution Popup -->
     <div id="evoPopupOverlay" class="popup-overlay" style="display:none;">
       <div id="evoPopup" class="popup">
         <h2>🧬 Evolution Complete!</h2>
-        <img id="evoSprite" src="" alt="Evolved Pokémon">
+        <img id="evoSprite" src="">
         <p id="evoMessage"></p>
         <button id="closeEvoPopup">Close</button>
       </div>
@@ -203,9 +185,9 @@
     <div id="donationPopupOverlay" class="popup-overlay" style="display:none;">
       <div id="donationPopup" class="popup">
         <h2>💎 Pokémon Donated!</h2>
-        <img id="donationSprite" src="" alt="Donated Pokémon">
-        <p class="donate-msg" id="donationMessage"></p>
-        <p class="cc-earned" id="donationCC"></p>
+        <img id="donationSprite" src="">
+        <p id="donationMessage"></p>
+        <p id="donationCC"></p>
         <button id="closeDonationPopup">Close</button>
       </div>
     </div>
@@ -214,7 +196,7 @@
     <div id="shopPopupOverlay" class="popup-overlay" style="display:none;">
       <div id="shopPopup" class="popup">
         <h2 id="shopPopupTitle">Confirm Purchase</h2>
-        <img id="shopPopupImage" src="" alt="Item">
+        <img id="shopPopupImage" src="">
         <p id="shopPopupMessage"></p>
         <div class="shop-popup-buttons">
           <button id="confirmPurchaseBtn" class="confirm-btn">Confirm</button>
@@ -223,7 +205,6 @@
       </div>
     </div>
 
-    <!-- Scripts -->
     <script type="module" src="dashboard-script.js"></script>
   </body>
 </html>

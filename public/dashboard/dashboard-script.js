@@ -24,6 +24,18 @@ const SPRITE_PATHS = {
   types: "/public/sprites/types/",
 };
 
+const EVO_COSTS = {
+"common-common": 1,  
+"common-uncommon": 1,
+"uncommon-uncommon": 2,
+  "common-rare": 3,
+  "uncommon-rare": 2,
+  "rare-epic": 3,
+  "epic-legendary": 5,
+  "legendary-mythic": 7,
+};
+
+
 const API_ENDPOINTS = {
   userPokemon: "/api/user-pokemon",
   setTeam: "/api/set-pokemon-team",
@@ -44,6 +56,9 @@ let userData = null;
 let allPokemon = [];
 let allTrainers = {};
 let shopItems = [];
+
+// Flattened trainer list (needed for cross-tab features)
+let allTrainerEntries = [];
 
 // Pokémon state
 let selectedTeam = [];
@@ -131,20 +146,25 @@ async function loadAllData() {
     }));
 
     // ===========================================================
-    // 🧩 Load Trainers
-    // ===========================================================
-    const trainerRes = await fetch("/public/trainerSprites.json");
-    const rawTrainers = await trainerRes.json();
+// 🧩 Load Trainers (correct structure for trainerSprites.json)
+// ===========================================================
+const trainerRes = await fetch("/public/trainerSprites.json");
+const rawTrainers = await trainerRes.json();
 
-    // ✅ Flatten grouped trainer data into usable entries
-    allTrainers = Object.entries(rawTrainers).flatMap(([name, files]) =>
-      files.map(file => ({
-        name,
-        file,
-        displayName: name.charAt(0).toUpperCase() + name.slice(1),
-        spritePath: `/public/sprites/trainers_2/${file}`,
-      }))
-    );
+// Preserve full structured trainer map for renderTrainers()
+allTrainers = rawTrainers;
+
+// Flatten for optional future uses
+allTrainerEntries = Object.entries(rawTrainers).flatMap(([name, info]) => {
+  const files = Array.isArray(info.sprites) ? info.sprites : [];
+
+  return files.map(fileName => ({
+    name,
+    file: fileName,
+    tier: info.tier?.toLowerCase() || "common",
+    spritePath: `/public/sprites/trainers_2/${fileName}`,
+  }));
+});
 
     // ===========================================================
     // 👤 Load User Data
@@ -250,37 +270,37 @@ async function loadShopItems() {
 function getDefaultShopItems() {
   return [
     {
-      id: "evolution_stone",
-      name: "Evolution Stone",
-      description: "Evolve any Pokémon that has an evolution available",
-      price: 150,
-      image: `${SPRITE_PATHS.items}evolution_stone.png`,
+      id: "starter_pack",
+      name: "Starter Pack",
+      description: "1 Common Pokémon • 1 Uncommon • 1 Rare • 1 Rare Trainer (Guaranteed)",
+      price: 350,
+      image: `${SPRITE_PATHS.items}starter_pack.png`,
+      quantity: "one-time",
+    },
+    {
+      id: "pokeball",
+      name: "Poké Ball",
+      description: "Get 1 random Pokémon (normal odds).",
+      price: 50,
+      image: `${SPRITE_PATHS.items}pokeball.png`,
       quantity: "unlimited",
     },
     {
-      id: "shiny_charm",
-      name: "Shiny Charm",
-      description: "Permanently increase shiny odds by 0.5%",
-      price: 500,
-      image: `${SPRITE_PATHS.items}shiny_charm.png`,
-      quantity: "limited",
-    },
-    {
-      id: "lucky_egg",
-      name: "Lucky Egg",
-      description: "Double TP gain for 24 hours",
-      price: 300,
-      image: `${SPRITE_PATHS.items}lucky_egg.png`,
+      id: "greatball",
+      name: "Great Ball",
+      description: "Get 1 random Pokémon with boosted odds for Uncommon+.",
+      price: 100,
+      image: `${SPRITE_PATHS.items}greatball.png`,
       quantity: "unlimited",
     },
     {
-      id: "rare_candy",
-      name: "Rare Candy",
-      description: "Get 5 random Pokémon instantly",
-      price: 250,
-      image: `${SPRITE_PATHS.items}rare_candy.png`,
+      id: "ultraball",
+      name: "Ultra Ball",
+      description: "Get 1 random Pokémon with boosted odds for Rare+.",
+      price: 180,
+      image: `${SPRITE_PATHS.items}ultraball.png`,
       quantity: "unlimited",
-    },
+    }
   ];
 }
 
@@ -473,11 +493,37 @@ function createPokemonCard(pkmn, spritePath, owned, count) {
     spriteWrapper.appendChild(countLabel);
   }
 
-  // Evolution cost badge (evolve mode)
-  if (currentMode === "evolve" && owned && pkmn.evolution) {
-    const evoCost = document.createElement("div");
-    evoCost.className = "evolve-cost";
-    evoCost.textContent = "🪨 1";
+ // Evolution cost badge (evolve mode)
+if (currentMode === "evolve" && owned && pkmn.evolution) {
+  const evoCost = document.createElement("div");
+  evoCost.className = "evolve-cost";
+
+  // Determine actual evolution cost from tier map
+  const target = allPokemon.find(p => p.id === pkmn.evolution);
+  const evoKey = `${(pkmn.tier || "common").toLowerCase()}-${(target?.tier || "uncommon").toLowerCase()}`;
+  const evoPrice = EVO_COSTS[evoKey] || 1;
+
+  // Evolution stone sprite (16px icon)
+  const stoneIcon = document.createElement("img");
+  stoneIcon.src = `${SPRITE_PATHS.items}evolution_stone.png`;
+  stoneIcon.className = "stone-icon";
+  stoneIcon.alt = "Evolution Stone";
+  stoneIcon.draggable = false;
+
+  evoCost.appendChild(stoneIcon);
+  evoCost.appendChild(document.createTextNode(` ${evoPrice}`));
+
+  spriteWrapper.appendChild(evoCost);
+
+  // Styling eligibility
+  const hasStone = (userData.items?.evolution_stone || 0) >= evoPrice;
+  if (hasStone) {
+    card.classList.add("eligible");
+  } else {
+    card.classList.add("ineligible");
+  }
+}
+
     spriteWrapper.appendChild(evoCost);
     
     const hasStone = (userData.items?.evolution_stone || 0) > 0;
@@ -492,7 +538,7 @@ function createPokemonCard(pkmn, spritePath, owned, count) {
   if (currentMode === "donate" && owned && count > 0) {
     const donateVal = document.createElement("div");
     donateVal.className = "donate-value";
-    const ccValue = calculateDonationValue(rarity);
+    const ccValue = calculateDonationValue(rarity, shinyMode);
     donateVal.textContent = `💰 ${ccValue}`;
     spriteWrapper.appendChild(donateVal);
   }
@@ -696,7 +742,7 @@ async function donatePokemon(pkmn) {
   }
 }
 
-function calculateDonationValue(rarity) {
+function calculateDonationValue(rarity, isShiny = false) {
   const values = {
     common: 10,
     uncommon: 25,
@@ -705,7 +751,9 @@ function calculateDonationValue(rarity) {
     legendary: 200,
     mythic: 500,
   };
-  return values[rarity] || 10;
+
+  const base = values[rarity] || 10;
+  return isShiny ? base * 5 : base;
 }
 
 // ===========================================================
@@ -743,6 +791,18 @@ function setupTrainerControls() {
   });
 }
 
+function normalizeTrainerSprites(info) {
+  if (!info || !Array.isArray(info.sprites)) return [];
+
+  return info.sprites
+    .map(entry => {
+      if (typeof entry === "string") return entry;
+      if (entry && typeof entry === "object" && !entry.disabled) return entry.file;
+      return null;
+    })
+    .filter(Boolean);
+}
+
 function renderTrainers(searchFilter = "") {
   const grid = document.getElementById("trainerGrid");
   grid.innerHTML = "";
@@ -751,24 +811,16 @@ function renderTrainers(searchFilter = "") {
 
   Object.entries(allTrainers).forEach(([name, info]) => {
     const rarity = (info.tier || "common").toLowerCase();
-    
-    // Apply filters
+
     if (trainerRarityFilter !== "all" && rarity !== trainerRarityFilter) return;
     if (searchFilter && !name.toLowerCase().includes(searchFilter.toLowerCase())) return;
 
-    const spriteFiles = Array.isArray(info.sprites)
-      ? info.sprites
-      : Array.isArray(info.files)
-      ? info.files
-      : [];
+    const spriteFiles = normalizeTrainerSprites(info);
 
-    spriteFiles.forEach((fileName) => {
-      if (typeof fileName !== "string") return;
-
-      const owned = ownedTrainers.some((t) => {
-        const baseT = t.split("/").pop().toLowerCase();
-        return baseT === fileName.toLowerCase();
-      });
+    spriteFiles.forEach(fileName => {
+      const owned = ownedTrainers.some(t =>
+        t.split("/").pop().toLowerCase() === fileName.toLowerCase()
+      );
 
       if (trainerShowOwnedOnly && !owned) return;
       if (trainerShowUnownedOnly && owned) return;
@@ -794,6 +846,9 @@ function createTrainerCard(name, fileName, rarity, owned) {
     ? `${SPRITE_PATHS.trainers}${fileName}`
     : `${SPRITE_PATHS.trainersGray}${fileName}`;
 
+  // -----------------------------
+  // Sprite wrapper + image
+  // -----------------------------
   const spriteWrapper = document.createElement("div");
   spriteWrapper.className = "sprite-wrapper";
 
@@ -816,16 +871,39 @@ function createTrainerCard(name, fileName, rarity, owned) {
   }
 
   card.appendChild(spriteWrapper);
-  card.innerHTML += `
-    <p class="trainer-name">${name}</p>
-    <div class="trainer-tier">
-      <span class="tier-emoji">${emoji}</span>
-      <span class="tier-text ${rarity}">${tierDisplay}</span>
-    </div>
-  `;
 
+  // -----------------------------
+  // Name
+  // -----------------------------
+  const nameEl = document.createElement("p");
+  nameEl.className = "trainer-name";
+  nameEl.textContent = name;
+  card.appendChild(nameEl);
+
+  // -----------------------------
+  // Tier row
+  // -----------------------------
+  const tierRow = document.createElement("div");
+  tierRow.className = "trainer-tier";
+
+  const emojiSpan = document.createElement("span");
+  emojiSpan.className = "tier-emoji";
+  emojiSpan.textContent = emoji;
+
+  const tierTextSpan = document.createElement("span");
+  tierTextSpan.className = `tier-text ${rarity}`;
+  tierTextSpan.textContent = tierDisplay;
+
+  tierRow.appendChild(emojiSpan);
+  tierRow.appendChild(tierTextSpan);
+
+  card.appendChild(tierRow);
+
+  // -----------------------------
+  // Click handler
+  // -----------------------------
   if (owned) {
-    card.onclick = () => selectTrainer(name, fileName);
+    card.addEventListener("click", () => selectTrainer(name, fileName));
   }
 
   return card;
@@ -854,111 +932,164 @@ async function selectTrainer(name, fileName) {
 }
 
 // ===========================================================
-// 🛒 SHOP TAB
+// 🛒 SHOP TAB — FINAL VERSION (Starter Pack + Balls + Stones)
 // ===========================================================
+
+async function loadShopItems() {
+  try {
+    const res = await fetch(
+      `${API_ENDPOINTS.shopItems}?id=${userId}&token=${token}`
+    );
+
+    if (!res.ok) throw new Error(`Shop load failed: HTTP ${res.status}`);
+
+    const data = await res.json();
+    shopItems = data.items || [];
+    renderShop();
+  } catch (err) {
+    console.error("❌ loadShopItems failed:", err);
+    document.getElementById("shopGrid").innerHTML =
+      "<p class='error'>Failed to load shop items.</p>";
+  }
+}
 
 function renderShop() {
   const grid = document.getElementById("shopGrid");
   grid.innerHTML = "";
 
   shopItems.forEach((item) => {
-    const card = createShopCard(item);
+    const card = document.createElement("div");
+    card.className = "shop-item";
+
+    const img = document.createElement("img");
+    img.src = item.image;
+    img.className = "shop-item-image";
+
+    const name = document.createElement("div");
+    name.className = "shop-item-name";
+    name.textContent = item.name;
+
+    const desc = document.createElement("div");
+    desc.className = "shop-item-description";
+    desc.textContent = item.description;
+
+    const price = document.createElement("div");
+    price.className = "shop-item-price";
+    price.textContent = `${item.price} CC`;
+
+    const btn = document.createElement("button");
+    btn.className = "shop-buy-btn";
+    btn.textContent = "Buy";
+
+    // Starter Pack one-time rule
+    const alreadyBought =
+      item.id === "starter_pack" && userData.items?.starter_pack >= 1;
+
+    if (alreadyBought) {
+      btn.disabled = true;
+      btn.textContent = "Purchased";
+    }
+
+    btn.onclick = () => confirmBuyItem(item);
+
+    card.appendChild(img);
+    card.appendChild(name);
+    card.appendChild(desc);
+    card.appendChild(price);
+    card.appendChild(btn);
+
     grid.appendChild(card);
   });
-
-  if (grid.children.length === 0) {
-    grid.innerHTML = "<p class='notice'>Shop items are loading...</p>";
-  }
 }
 
-function createShopCard(item) {
-  const card = document.createElement("div");
-  card.className = "shop-item";
+// ===========================================================
+// 🟢 CONFIRM PURCHASE POPUP
+// ===========================================================
+function confirmBuyItem(item) {
+  if (isBuying) return;
 
-  const canAfford = (userData.cc || 0) >= item.price;
-
-  card.innerHTML = `
-    <img src="${item.image}" alt="${item.name}" class="shop-item-image">
-    <h3 class="shop-item-name">${item.name}</h3>
-    <p class="shop-item-description">${item.description}</p>
-    <p class="shop-item-price">💰 ${item.price} CC</p>
-    <button class="shop-buy-btn" ${!canAfford ? "disabled" : ""}>
-      ${canAfford ? "Purchase" : "Not Enough CC"}
-    </button>
-  `;
-
-  const btn = card.querySelector(".shop-buy-btn");
-  if (canAfford) {
-    btn.onclick = () => showPurchaseConfirmation(item);
-  }
-
-  return card;
-}
-
-function showPurchaseConfirmation(item) {
   const overlay = document.getElementById("shopPopupOverlay");
   const popup = document.getElementById("shopPopup");
-  
-  document.getElementById("shopPopupTitle").textContent = "Confirm Purchase";
-  document.getElementById("shopPopupImage").src = item.image;
-  document.getElementById("shopPopupMessage").textContent = 
-    `Purchase ${item.name} for ${item.price} CC?`;
-  
+
+  popup.innerHTML = `
+    <h2>Purchase ${item.name}?</h2>
+    <img src="${item.image}">
+    <p>${item.description}</p>
+    <p class="shop-price">Cost: ${item.price} CC</p>
+
+    <div class="shop-popup-buttons">
+      <button id="shopConfirm" class="confirm-btn">Confirm</button>
+      <button id="shopCancel" class="cancel-btn">Cancel</button>
+    </div>
+  `;
+
   overlay.style.display = "flex";
 
-  // Confirm button
-  const confirmBtn = document.getElementById("confirmPurchaseBtn");
-  confirmBtn.onclick = async () => {
-    await purchaseItem(item);
-    overlay.style.display = "none";
-  };
+  document.getElementById("shopCancel").onclick = () => closeShopPopup();
 
-  // Cancel button
-  const cancelBtn = document.getElementById("cancelPurchaseBtn");
-  cancelBtn.onclick = () => {
-    overlay.style.display = "none";
+  document.getElementById("shopConfirm").onclick = async () => {
+    await buyItem(item);
+    closeShopPopup();
   };
 }
 
-async function purchaseItem(item) {
+function closeShopPopup() {
+  const overlay = document.getElementById("shopPopupOverlay");
+  overlay.classList.add("fadeOut");
+  setTimeout(() => {
+    overlay.style.display = "none";
+    overlay.classList.remove("fadeOut");
+  }, 260);
+}
+
+// ===========================================================
+// 🟣 PURCHASE ITEM
+// ===========================================================
+async function buyItem(item) {
+  if (isBuying) return;
+  isBuying = true;
+
   try {
-    const res = await fetch(API_ENDPOINTS.purchaseItem, {
+    const res = await fetch("/api/purchase-item", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: userId, token, itemId: item.id }),
+      body: JSON.stringify({
+        id: userId,
+        token,
+        itemId: item.id,
+      }),
     });
 
-    if (res.status === 403) {
-      showPopup("⏰ Session Expired", "Your session has expired. Please reopen /dashboard from Discord.", "#ef4444");
+    const data = await res.json();
+    if (!data.success) {
+      showPopup("❌ Purchase Failed", data.error || "Unknown error", "#ef4444");
+      isBuying = false;
       return;
     }
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    // Update user CC + items
+    userData.cc = data.newCC;
+    userData.items = data.items;
+    userData.purchases = data.purchases;
 
-    if (data.success) {
-      // Update local data
-      userData.cc = data.newCC;
-      if (data.items) {
-        userData.items = data.items;
+    animateStat("ccCount", userData.cc, "--brand");
+
+    // Show rewards
+    if (Array.isArray(data.rewards)) {
+      for (const reward of data.rewards) {
+        showShopRewardPopup(reward);
       }
-      
-      // Update UI
-      animateStat("ccCount", userData.cc, "--gold");
-      if (item.id === "evolution_stone") {
-        animateStat("stoneCount", userData.items.evolution_stone);
-      }
-      
-      renderShop();
-      showPopup("✅ Purchase Complete!", `You bought ${item.name}!`);
-    } else {
-      throw new Error(data.error || "Purchase failed");
     }
+
+    renderShop();
   } catch (err) {
-    console.error("❌ purchaseItem failed:", err);
-    showPopup("❌ Purchase Failed", err.message, "#ef4444");
+    console.error("❌ buyItem failed:", err);
+    showPopup("❌ Error", "Could not complete purchase.", "#ef4444");
   }
+
+  isBuying = false;
 }
+
 
 // ===========================================================
 // ✨ POPUP UTILITIES
@@ -1060,3 +1191,36 @@ function showError(message) {
   document.getElementById("pokemonGrid").innerHTML = 
     `<p class='error'>${message}</p>`;
 }
+
+// ===========================================================
+// 🎁 SHOW REWARD POPUP (Pokémon / Trainer)
+// ===========================================================
+function showShopRewardPopup(reward) {
+  const overlay = document.getElementById("shopPopupOverlay");
+  const popup = document.getElementById("shopPopup");
+
+  const isPokemon = reward.type === "pokemon";
+
+  let sprite;
+  if (isPokemon) {
+    sprite = reward.shiny
+      ? `${SPRITE_PATHS.shiny}${reward.id}.gif`
+      : `${SPRITE_PATHS.pokemon}${reward.id}.gif`;
+  } else {
+    sprite = `${SPRITE_PATHS.trainers}${reward.spriteFile || reward.filename}`;
+  }
+
+  popup.innerHTML = `
+    <h2>${isPokemon ? "New Pokémon!" : "New Trainer!"}</h2>
+    <img src="${sprite}">
+    <p>${reward.shiny ? "✨ Shiny " : ""}${reward.name}</p>
+    <button class="confirm-btn" id="closeRewardPopup">Close</button>
+  `;
+
+  overlay.style.display = "flex";
+
+  document.getElementById("closeRewardPopup").onclick = () => {
+    closeShopPopup();
+  };
+}
+

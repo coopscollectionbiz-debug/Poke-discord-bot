@@ -1207,6 +1207,19 @@ app.post("/api/purchase-item", async (req, res) => {
   });
 });
 
+// ===========================================================
+// 🎮 DASHBOARD ROUTE
+// ===========================================================
+app.use(
+  "/public/dashboard",
+  express.static(path.join(staticPath, "dashboard"))
+);
+
+app.get("/public/dashboard/", (_, res) => {
+  res.sendFile(path.join(staticPath, "dashboard", "dashboard.html"));
+});
+
+
 app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
 
  // ==========================================================

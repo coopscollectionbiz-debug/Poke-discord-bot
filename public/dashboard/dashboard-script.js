@@ -119,27 +119,47 @@ function setupTabs() {
 // 📦 DATA LOADING
 // ===========================================================
 async function loadAllData() {
+  const baseURL = window.location.origin;
+
   try {
-    // Load Pokémon data
-const pokemonRes = await fetch("/public/pokemonData.json");
-const rawPokemon = await pokemonRes.json();
-allPokemon = Object.entries(rawPokemon).map(([id, info]) => ({ id, ...info }));
+    // =======================================================
+    // 🧩 Load Pokémon + Trainer Data (Safe for Render + Local)
+    // =======================================================
+    // 🐉 Pokémon Data
+    const pokemonRes = await fetch(`${baseURL}/public/pokemonData.json`);
+    if (!pokemonRes.ok) throw new Error(`Failed to load pokemonData.json (${pokemonRes.status})`);
+    const rawPokemon = await pokemonRes.json();
 
+    // Handle both array and object formats safely
+    allPokemon = Array.isArray(rawPokemon)
+      ? rawPokemon
+      : Object.entries(rawPokemon).map(([id, info]) => ({ id, ...info }));
 
-    // Load Trainer data
-    const trainerRes = await fetch("/public/trainerSprites.json");
+    if (!Array.isArray(allPokemon)) {
+      console.warn("⚠️ pokemonData.json did not load as expected, forcing empty array fallback");
+      allPokemon = [];
+    }
+
+    // 👥 Trainer Data
+    const trainerRes = await fetch(`${baseURL}/public/trainerSprites.json`);
+    if (!trainerRes.ok) throw new Error(`Failed to load trainerSprites.json (${trainerRes.status})`);
     allTrainers = await trainerRes.json();
 
-    // Load user data
-    const userRes = await fetch(
-      `${API_ENDPOINTS.userPokemon}?id=${userId}&token=${token}`
-    );
-    
+    if (!allTrainers || typeof allTrainers !== "object") {
+      console.warn("⚠️ trainerSprites.json invalid or empty, applying empty fallback");
+      allTrainers = {};
+    }
+
+    console.log(`✅ Loaded ${allPokemon.length} Pokémon and ${Object.keys(allTrainers).length} trainers`);
+
+    // =======================================================
+    // 👤 Load User Pokémon Data
+    // =======================================================
+    const userRes = await fetch(`${API_ENDPOINTS.userPokemon}?id=${userId}&token=${token}`);
     if (userRes.status === 403) {
       showError("⏰ Session expired. Please reopen /dashboard from Discord.");
       return;
     }
-    
     if (!userRes.ok) throw new Error(`HTTP ${userRes.status}`);
     userData = await userRes.json();
 
@@ -150,23 +170,25 @@ allPokemon = Object.entries(rawPokemon).map(([id, info]) => ({ id, ...info }));
     selectedTeam = userData.currentTeam || [];
     renderPokemon();
 
-    // Load trainers for trainer tab
-    const trainerUserRes = await fetch(
-      `${API_ENDPOINTS.userTrainers}?id=${userId}&token=${token}`
-    );
-    
+    // =======================================================
+    // 🎴 Load Trainer Ownership
+    // =======================================================
+    const trainerUserRes = await fetch(`${API_ENDPOINTS.userTrainers}?id=${userId}&token=${token}`);
     if (trainerUserRes.status === 403) {
       showError("⏰ Session expired. Please reopen /dashboard from Discord.");
       return;
     }
-    
     if (trainerUserRes.ok) {
       const trainerUserData = await trainerUserRes.json();
-      userData.ownedTrainers = trainerUserData.owned || [];
+      userData.ownedTrainers = Array.isArray(trainerUserData.owned)
+        ? trainerUserData.owned
+        : Object.keys(trainerUserData.owned || {});
       renderTrainers();
     }
 
-    // Load shop items
+    // =======================================================
+    // 🛒 Load Shop Items
+    // =======================================================
     await loadShopItems();
 
     console.log("✅ All data loaded successfully");
@@ -725,33 +747,43 @@ function renderTrainers(searchFilter = "") {
 
   Object.entries(allTrainers).forEach(([name, info]) => {
     const rarity = (info.tier || "common").toLowerCase();
-    
-    // Apply filters
+
+    // 🔍 Apply filters
     if (trainerRarityFilter !== "all" && rarity !== trainerRarityFilter) return;
     if (searchFilter && !name.toLowerCase().includes(searchFilter.toLowerCase())) return;
 
+    // 🧩 Normalize sprite entries (handles both strings + objects)
     const spriteFiles = Array.isArray(info.sprites)
       ? info.sprites
       : Array.isArray(info.files)
       ? info.files
       : [];
 
-    spriteFiles.forEach((fileName) => {
-      if (typeof fileName !== "string") return;
+    spriteFiles.forEach((entry) => {
+      // Entry may be string or object
+      const fileName = typeof entry === "string" ? entry : entry.file;
+      const disabled = typeof entry === "object" && entry.disabled;
 
+      // Skip invalid or disabled sprites
+      if (!fileName || disabled) return;
+
+      // ✅ Check ownership
       const owned = ownedTrainers.some((t) => {
         const baseT = t.split("/").pop().toLowerCase();
         return baseT === fileName.toLowerCase();
       });
 
+      // 🧭 Apply view filters
       if (trainerShowOwnedOnly && !owned) return;
       if (trainerShowUnownedOnly && owned) return;
 
+      // 🎴 Create and append trainer card
       const card = createTrainerCard(name, fileName, rarity, owned);
       grid.appendChild(card);
     });
   });
 
+  // 🪶 Handle empty grid
   if (grid.children.length === 0) {
     grid.innerHTML = "<p class='notice'>No trainers match your filters.</p>";
   }

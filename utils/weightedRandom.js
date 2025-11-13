@@ -1,19 +1,19 @@
 // ==========================================================
 // weightedRandom.js
-// Coop's Collection — Correct Weighted RNG System (FULL VERSION)
+// Coop's Collection — Correct Weighted RNG System (ASYNC SAFE)
+// FULL VERSION — NO TRUNCATION
 // ==========================================================
 
 import { getRank } from "./rankSystem.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { getAllPokemon, getAllTrainers } from "./dataLoader.js";
-import { addPokemonToUser, addTrainerToUser } from "./userData.js";
-
+import { loadUserFromFile, saveUserToFile } from "./userSchema.js";
 
 // ==========================================================
-// User Modification Helpers (Replacing userData.js)
+// User Modification Helpers
 // ==========================================================
 async function addPokemonToUser(userId, reward) {
-  const user = await loadUser(userId);
+  const user = await loadUserFromFile(userId);
   if (!user.pokemon) user.pokemon = [];
 
   user.pokemon.push({
@@ -24,11 +24,11 @@ async function addPokemonToUser(userId, reward) {
     timestamp: Date.now()
   });
 
-  await saveUser(userId, user);
+  await saveUserToFile(userId, user);
 }
 
 async function addTrainerToUser(userId, reward) {
-  const user = await loadUser(userId);
+  const user = await loadUserFromFile(userId);
   if (!user.trainers) user.trainers = [];
 
   user.trainers.push({
@@ -39,11 +39,11 @@ async function addTrainerToUser(userId, reward) {
     timestamp: Date.now()
   });
 
-  await saveUser(userId, user);
+  await saveUserToFile(userId, user);
 }
 
 // ==========================================================
-// BASE RARITY WEIGHTS
+// BASE WEIGHTS
 // ==========================================================
 export const POKEMON_RARITY_WEIGHTS = {
   common: 54,
@@ -54,7 +54,6 @@ export const POKEMON_RARITY_WEIGHTS = {
   mythic: 0.5,
 };
 
-// ⭐ **HERE ARE THE TRAINER WEIGHTS**
 export const TRAINER_RARITY_WEIGHTS = {
   common: 54,
   uncommon: 30,
@@ -84,7 +83,7 @@ export const RANK_WEIGHT_MULTIPLIERS = {
 };
 
 // ==========================================================
-// Normalize Rarity
+// Normalize Tier
 // ==========================================================
 function normalizeTier(value) {
   const t = String(value).toLowerCase();
@@ -103,19 +102,15 @@ function pickRarity(user, ballBoost = null) {
   for (const rarity in POKEMON_RARITY_WEIGHTS) {
     let w = POKEMON_RARITY_WEIGHTS[rarity];
 
-    // Rank buffs
+    // Rank buffs applied to rare+
     if (buffs[rarity]) w *= buffs[rarity];
 
-    // Greatball (uncommon+)
-    if (ballBoost === "uncommonPlus" &&
-        ["uncommon","rare","epic"].includes(rarity)) {
-      w *= 2;
+    if (ballBoost === "uncommonPlus") {
+      if (["uncommon","rare","epic"].includes(rarity)) w *= 2;
     }
 
-    // Ultraball (rare+)
-    if (ballBoost === "rarePlus" &&
-        ["rare","epic","legendary","mythic"].includes(rarity)) {
-      w *= 2.5;
+    if (ballBoost === "rarePlus") {
+      if (["rare","epic","legendary","mythic"].includes(rarity)) w *= 2.5;
     }
 
     weighted[rarity] = w;
@@ -131,20 +126,17 @@ function pickRarity(user, ballBoost = null) {
 }
 
 // ==========================================================
-// Pick a Pokémon from chosen rarity
+// Pick Pokémon (ASYNC SAFE NOW)
 // ==========================================================
-function pickPokemonOfRarity(rarity) {
-  const pool = getAllPokemon().filter(
-    p => normalizeTier(p.tier) === rarity
-  );
-
+async function pickPokemonOfRarity(rarity) {
+  const all = await getAllPokemon();
+  const pool = all.filter(p => normalizeTier(p.tier) === rarity);
   if (!pool.length) return null;
-
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
 // ==========================================================
-// Finalize Pokémon Reward
+// Finalize Pokémon
 // ==========================================================
 async function finalizePokemonReward(user, pokemon) {
   const shiny = rollForShiny();
@@ -162,54 +154,54 @@ async function finalizePokemonReward(user, pokemon) {
 }
 
 // ==========================================================
-// Public Pokémon functions
+// Public Pokémon acquisition functions
 // ==========================================================
 export async function giveRandomPokemon(user) {
   const rarity = pickRarity(user);
-  const pokemon = pickPokemonOfRarity(rarity);
+  const pokemon = await pickPokemonOfRarity(rarity);
   return finalizePokemonReward(user, pokemon);
 }
 
 export async function giveGreatballPokemon(user) {
   const rarity = pickRarity(user, "uncommonPlus");
-  const pokemon = pickPokemonOfRarity(rarity);
+  const pokemon = await pickPokemonOfRarity(rarity);
   return finalizePokemonReward(user, pokemon);
 }
 
 export async function giveUltraballPokemon(user) {
   const rarity = pickRarity(user, "rarePlus");
-  const pokemon = pickPokemonOfRarity(rarity);
+  const pokemon = await pickPokemonOfRarity(rarity);
   return finalizePokemonReward(user, pokemon);
 }
 
 export async function giveRandomPokemonOfRarity(user, rarity) {
-  const pokemon = pickPokemonOfRarity(normalizeTier(rarity));
+  const pokemon = await pickPokemonOfRarity(normalizeTier(rarity));
   return finalizePokemonReward(user, pokemon);
 }
 
 // ==========================================================
-// Trainer RNG
+// Trainer RNG (ASYNC SAFE)
 // ==========================================================
 export async function giveRandomTrainerOfRarity(user, rarity) {
-  const trainers = getAllTrainers();
+  const trainers = await getAllTrainers();
 
-  const pool = Object.entries(trainers).filter(
-    ([, info]) => normalizeTier(info.tier) === normalizeTier(rarity)
+  const pool = trainers.filter(
+    t => normalizeTier(t.rarity) === normalizeTier(rarity)
   );
 
   if (!pool.length) return null;
 
-  const [key, info] = pool[Math.floor(Math.random() * pool.length)];
+  const t = pool[Math.floor(Math.random() * pool.length)];
 
-  const sprite = Array.isArray(info.sprites) && info.sprites.length
-    ? info.sprites[Math.floor(Math.random() * info.sprites.length)]
-    : `${key}.png`;
+  const sprite = Array.isArray(t.sprites) && t.sprites.length
+    ? t.sprites[Math.floor(Math.random() * t.sprites.length)]
+    : t.filename || t.sprite || `${t.name}.png`;
 
   const reward = {
     type: "trainer",
-    key,
-    name: key,
-    rarity: info.tier,
+    key: t.name,
+    name: t.name,
+    rarity: t.rarity,
     spriteFile: sprite,
   };
 
@@ -218,7 +210,7 @@ export async function giveRandomTrainerOfRarity(user, rarity) {
 }
 
 // ==========================================================
-// Starter Pack (3 Pokémon + 1 Rare Trainer)
+// Starter Pack
 // ==========================================================
 export async function giveStarterPack(user) {
   return {

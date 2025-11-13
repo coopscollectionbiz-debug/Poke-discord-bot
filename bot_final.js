@@ -49,6 +49,9 @@ app.use(
   })
 );
 
+// ✅ Parse JSON request bodies
+app.use(express.json());
+
 // ✅ Explicit index routes
 app.get("/public/picker", (_, res) =>
   res.sendFile(path.join(staticPath, "picker", "index.html"))
@@ -810,7 +813,7 @@ app.get("/api/user-trainers", (req, res) => {
 // ===========================================================
 let lastTrainerSave = 0; // global throttle timestamp
 
-app.post("/api/set-trainer", express.json(), async (req, res) => {
+app.post("/api/set-trainer", async (req, res) => {
   try {
     const { id, token, name, file } = req.body;
     if (!id || !token || !file) {
@@ -892,7 +895,7 @@ app.get("/api/user-pokemon", (req, res) => {
 // ✅ POST — set full Pokémon team (up to 6) — Debounced Discord Save
 let lastTeamSave = 0; // global throttle timestamp
 
-app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
+app.post("/api/set-pokemon-team", async (req, res) => {
   try {
     const { id, token, team } = req.body;
 
@@ -948,13 +951,30 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   }
 });
 
+app.get("/public/picker-pokemon", (_, res) =>
+  res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
+);
+
+// ===========================================================
+// 🎮 Dashboard Route
+// ===========================================================
+app.use(
+  "/public/dashboard",
+  express.static(path.join(staticPath, "dashboard"))
+);
+
+app.get("/public/dashboard/", (_, res) => {
+  res.sendFile(path.join(staticPath, "dashboard", "dashboard.html"));
+});
+
+
 // ===========================================================
 // ===========================================================
 // 🧬 EVOLVE & DONATE ENDPOINTS (Shiny-Aware Versions)
 // ===========================================================
 
 // 🔹 Evolve Pokémon (normal + shiny supported)
-app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
+app.post("/api/pokemon/evolve", async (req, res) => {
   const { id, token, baseId, targetId, shiny } = req.body;
   if (!validateToken(id, token))
     return res.status(403).json({ error: "Invalid or expired token" });
@@ -1017,7 +1037,7 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
 });
 
 // 💝 Donate Pokémon (normal + shiny supported, 5× CC for shiny)
-app.post("/api/pokemon/donate", express.json(), async (req, res) => {
+app.post("/api/pokemon/donate", async (req, res) => {
   const { id, token, pokeId, shiny } = req.body;
   if (!validateToken(id, token))
     return res.status(403).json({ error: "Invalid or expired token" });
@@ -1067,6 +1087,125 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
     donated: { name: p.name, shiny },
     gainedCC: finalValue,
     totalCC: user.cc,
+  });
+});
+
+// ===========================================================
+// 🛒 SHOP ENDPOINTS
+// ===========================================================
+
+// 📦 Get shop items
+app.get("/api/shop-items", (req, res) => {
+  const { id, token } = req.query;
+  if (!validateToken(id, token)) {
+    return res.status(403).json({ error: "Invalid or expired token" });
+  }
+
+  // Default shop items
+  const shopItems = [
+    {
+      id: "evolution_stone",
+      name: "Evolution Stone",
+      description: "Evolve any Pokémon that has an evolution available",
+      price: 150,
+      image: "/public/sprites/items/evolution_stone.png",
+      quantity: "unlimited",
+    },
+    {
+      id: "shiny_charm",
+      name: "Shiny Charm",
+      description: "Permanently increase shiny odds by 0.5%",
+      price: 500,
+      image: "/public/sprites/items/shiny_charm.png",
+      quantity: "limited",
+    },
+    {
+      id: "lucky_egg",
+      name: "Lucky Egg",
+      description: "Double TP gain for 24 hours",
+      price: 300,
+      image: "/public/sprites/items/lucky_egg.png",
+      quantity: "unlimited",
+    },
+    {
+      id: "rare_candy",
+      name: "Rare Candy",
+      description: "Get 5 random Pokémon instantly",
+      price: 250,
+      image: "/public/sprites/items/rare_candy.png",
+      quantity: "unlimited",
+    },
+  ];
+
+  res.json({ items: shopItems });
+});
+
+// 💰 Purchase item
+app.post("/api/purchase-item", async (req, res) => {
+  const { id, token, itemId } = req.body;
+  
+  if (!id || !token || !itemId) {
+    return res.status(400).json({ success: false, error: "Missing id, token, or itemId" });
+  }
+  
+  if (!validateToken(id, token)) {
+    return res.status(403).json({ success: false, error: "Invalid or expired token" });
+  }
+
+  const user = trainerData[id];
+  if (!user) {
+    return res.status(404).json({ success: false, error: "User not found" });
+  }
+
+  // Item price mapping
+  const prices = {
+    evolution_stone: 150,
+    shiny_charm: 500,
+    lucky_egg: 300,
+    rare_candy: 250,
+  };
+
+  const price = prices[itemId];
+  if (!price) {
+    return res.status(400).json({ success: false, error: "Invalid item ID" });
+  }
+
+  // Check if user can afford it
+  if ((user.cc || 0) < price) {
+    return res.status(400).json({ success: false, error: "Not enough CC" });
+  }
+
+  // Process purchase
+  user.cc -= price;
+  user.items ??= { evolution_stone: 0 };
+
+  // Apply item effect
+  switch (itemId) {
+    case "evolution_stone":
+      user.items.evolution_stone = (user.items.evolution_stone || 0) + 1;
+      break;
+    case "shiny_charm":
+      // Track shiny charm purchases (you can implement shiny boost logic)
+      user.shinyCharms = (user.shinyCharms || 0) + 1;
+      break;
+    case "lucky_egg":
+      // Set lucky egg expiration (24 hours from now)
+      user.luckyEggExpires = Date.now() + 24 * 60 * 60 * 1000;
+      break;
+    case "rare_candy":
+      // Award 5 random Pokémon (implement this logic as needed)
+      // For now, just track that they purchased it
+      user.rareCandyPurchases = (user.rareCandyPurchases || 0) + 1;
+      break;
+  }
+
+  await saveTrainerDataLocal(trainerData);
+  await saveDataToDiscord(trainerData);
+
+  res.json({
+    success: true,
+    newCC: user.cc,
+    items: user.items,
   });
 });
 

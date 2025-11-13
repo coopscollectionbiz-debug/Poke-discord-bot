@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coop’s Collection — Unified Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Lead Pokémon Header -->
+  <div id="leadPokemonHeader">
+    <img id="leadPokemonSprite" class="lead-pokemon" />
+    <h2>Manage Pokémon</h2>
+  </div>
+
+  <!-- Pokémon Controls & Grid -->
+  <section id="pokemonManager">
+    <div id="hud"></div>
+
+    <div id="filters">
+      <input type="text" id="searchInput" placeholder="Search Pokémon..." />
+      <select id="rarityFilter"></select>
+      <select id="typeFilter"></select>
+      <label><input type="checkbox" id="showShinyOnly" /> Shiny Only</label>
+    </div>
+
+    <div id="pokemonGrid"></div>
+  </section>
+
+  <!-- Trainer Section -->
+  <section id="trainerManager">
+    <h2>Manage Trainers</h2>
+    <button id="changeTrainerBtn">Change Trainer</button>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>

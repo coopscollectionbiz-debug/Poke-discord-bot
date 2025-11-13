@@ -197,22 +197,6 @@ async function loadAllData() {
     showError("❌ Failed to load data. Please re-open the link.");
   }
 }
-
-// Helper function to refresh user data after actions like evolution/donation
-async function loadUserData() {
-  try {
-    const userRes = await fetch(
-      `${API_ENDPOINTS.userPokemon}?id=${userId}&token=${token}`
-    );
-    
-    if (userRes.status === 403) {
-      showPopup("⏰ Session Expired", "Your session has expired. Please reopen /dashboard from Discord.", "#ef4444");
-      return;
-    }
-    
-    if (!userRes.ok) throw new Error(`HTTP ${userRes.status}`);
-    const freshData = await userRes.json();
-    
     // Update userData with fresh values
     userData.pokemon = freshData.pokemon;
     userData.items = freshData.items;
@@ -488,7 +472,7 @@ function createPokemonCard(pkmn, spritePath, owned, count) {
   if (currentMode === "donate" && owned && count > 0) {
     const donateVal = document.createElement("div");
     donateVal.className = "donate-value";
-    const ccValue = calculateDonationValue(rarity);
+    const ccValue = calculateDonationValue(rarity, shinyMode);
     donateVal.textContent = `💰 ${ccValue}`;
     spriteWrapper.appendChild(donateVal);
   }
@@ -1015,7 +999,7 @@ async function purchaseItem(item) {
 }
 
 // ===========================================================
-// ✨ POPUP UTILITIES
+// ✨ POPUP UTILITIES — Evolution • Donation • Shop
 // ===========================================================
 
 function showPopup(title, message, color = "#00ff9d") {
@@ -1051,57 +1035,64 @@ function showPopup(title, message, color = "#00ff9d") {
   }, 2500);
 }
 
+// ===========================================================
+// 🧬 Evolution Popup
+// ===========================================================
 function showEvolutionPopup(evolved, isShiny) {
   const overlay = document.getElementById("evoPopupOverlay");
   const popup = document.getElementById("evoPopup");
-  
-  if (isShiny) {
-    popup.classList.add("shiny");
-  } else {
-    popup.classList.remove("shiny");
-  }
-  
-  const spritePath = isShiny 
+
+  if (isShiny) popup.classList.add("shiny");
+  else popup.classList.remove("shiny");
+
+  const spritePath = isShiny
     ? `${SPRITE_PATHS.shiny}${evolved.id}.gif`
     : `${SPRITE_PATHS.pokemon}${evolved.id}.gif`;
-  
+
   document.getElementById("evoSprite").src = spritePath;
-  document.getElementById("evoMessage").textContent = 
+  document.getElementById("evoMessage").textContent =
     `Your Pokémon evolved into ${evolved.name}!`;
-  
+
   overlay.style.display = "flex";
-  
-  document.getElementById("closeEvoPopup").onclick = () => {
-    overlay.classList.add("fadeOut");
-    setTimeout(() => {
-      overlay.style.display = "none";
-      overlay.classList.remove("fadeOut");
-    }, 300);
-  };
 }
 
+// ===========================================================
+// 💎 Donation Popup
+// ===========================================================
 function showDonationPopup(pkmn, ccGained, isShiny) {
   const overlay = document.getElementById("donationPopupOverlay");
   const popup = document.getElementById("donationPopup");
-  
-  if (isShiny) {
-    popup.classList.add("shiny");
-  } else {
-    popup.classList.remove("shiny");
-  }
-  
+
+  if (isShiny) popup.classList.add("shiny");
+  else popup.classList.remove("shiny");
+
   const spritePath = isShiny
     ? `${SPRITE_PATHS.shiny}${pkmn.id}.gif`
     : `${SPRITE_PATHS.pokemon}${pkmn.id}.gif`;
-  
+
   document.getElementById("donationSprite").src = spritePath;
-  document.getElementById("donationMessage").textContent = 
+  document.getElementById("donationMessage").textContent =
     `You donated ${pkmn.name} to the collection!`;
   document.getElementById("donationCC").textContent = `+${ccGained} CC earned!`;
-  
+
   overlay.style.display = "flex";
-  
-  document.getElementById("closeDonationPopup").onclick = () => {
+}
+
+// ===========================================================
+// 🛒 Shop Purchase Confirmation Popup
+// ===========================================================
+function showPurchaseConfirmation(item) {
+  const overlay = document.getElementById("shopPopupOverlay");
+  document.getElementById("shopPopupTitle").textContent = "Confirm Purchase";
+  document.getElementById("shopPopupImage").src = item.image;
+  document.getElementById("shopPopupMessage").textContent =
+    `Purchase ${item.name} for ${item.price} CC?`;
+
+  overlay.style.display = "flex";
+
+  const confirmBtn = document.getElementById("confirmPurchaseBtn");
+  confirmBtn.onclick = async () => {
+    await purchaseItem(item);
     overlay.classList.add("fadeOut");
     setTimeout(() => {
       overlay.style.display = "none";
@@ -1110,7 +1101,50 @@ function showDonationPopup(pkmn, ccGained, isShiny) {
   };
 }
 
+// ===========================================================
+// 🧩 Global Popup Close Bindings (applies to all overlays)
+// ===========================================================
+function bindGlobalPopups() {
+  const popups = [
+    { overlay: "evoPopupOverlay", button: "closeEvoPopup" },
+    { overlay: "donationPopupOverlay", button: "closeDonationPopup" },
+    { overlay: "shopPopupOverlay", button: "cancelPurchaseBtn" },
+  ];
+
+  popups.forEach(({ overlay, button }) => {
+    const overlayEl = document.getElementById(overlay);
+    const buttonEl = document.getElementById(button);
+    if (!overlayEl || !buttonEl) return;
+
+    // ✅ Button closes overlay
+    buttonEl.addEventListener("click", () => {
+      overlayEl.classList.add("fadeOut");
+      setTimeout(() => {
+        overlayEl.style.display = "none";
+        overlayEl.classList.remove("fadeOut");
+      }, 300);
+    });
+
+    // ✅ Clicking outside popup closes overlay
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target === overlayEl) {
+        overlayEl.classList.add("fadeOut");
+        setTimeout(() => {
+          overlayEl.style.display = "none";
+          overlayEl.classList.remove("fadeOut");
+        }, 300);
+      }
+    });
+  });
+}
+
+// Run global binding after DOM loads
+window.addEventListener("DOMContentLoaded", bindGlobalPopups);
+
+// ===========================================================
+// ❌ Error Display Helper
+// ===========================================================
 function showError(message) {
-  document.getElementById("pokemonGrid").innerHTML = 
+  document.getElementById("pokemonGrid").innerHTML =
     `<p class='error'>${message}</p>`;
 }

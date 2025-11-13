@@ -908,13 +908,13 @@ async function handleDonationConfirm(pokeId, overlay) {
 
   if (goPokemon) {
     goPokemon.addEventListener("click", () => {
-      // Already here — do nothing
+      // Already here
     });
   }
 
   if (goTrainers) {
     goTrainers.addEventListener("click", () => {
-      window.location.href = `/public/picker-trainer/index.html?id=${id}&token=${token}`;
+      window.location.href = `/public/picker/index.html?id=${id}&token=${token}`;
     });
   }
 })();

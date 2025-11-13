@@ -276,7 +276,7 @@ function showPopup(title, message, color = "#00ff9d") {
 
   if (goTrainers) {
     goTrainers.addEventListener("click", () => {
-      // Already here — do nothing
+      // Already here
     });
   }
 })();

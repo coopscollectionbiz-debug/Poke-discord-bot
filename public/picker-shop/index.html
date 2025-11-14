@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coop’s Collection — Shop</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/public/picker-shop/style.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+</head>
+
+<body>
+  <!-- ===========================================================
+       HEADER
+  =========================================================== -->
+  <header>
+    <h1>🛒 Shop</h1>
+    <p>Get Poké Balls • Evolution Items • Bundles</p>
+  </header>
+
+  <!-- ===========================================================
+       NAVIGATION TABS (MATCHES OTHER PICKERS)
+  =========================================================== -->
+  <nav class="top-nav">
+    <a href="/public/picker-pokemon/index.html?id={{id}}&token={{token}}" class="nav-btn">
+      Manage Pokémon
+    </a>
+
+    <a href="/public/picker/index.html?id={{id}}&token={{token}}" class="nav-btn">
+      Manage Trainers
+    </a>
+
+    <a href="/public/picker-shop/index.html?id={{id}}&token={{token}}" class="nav-btn active">
+      Shop
+    </a>
+  </nav>
+
+  <!-- ===========================================================
+       SHOP GRID
+  =========================================================== -->
+  <section id="shopGrid" class="shop-grid"></section>
+
+  <!-- ===========================================================
+       POPUP (CONFIRMATION / REWARDS)
+  =========================================================== -->
+  <div id="shopPopupOverlay" class="popup-overlay">
+    <div id="shopPopup" class="popup-card"></div>
+  </div>
+
+  <!-- ===========================================================
+       SCRIPTS
+  =========================================================== -->
+  <script src="/public/picker-shop/script.js"></script>
+</body>
+</html>

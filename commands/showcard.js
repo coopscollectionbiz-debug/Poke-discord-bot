@@ -1,14 +1,13 @@
 // ==========================================================
 // 🪪 /showcard — Public version of /trainercard
 // ==========================================================
-// Now fully synced with the updated trainer card display.
+// Now simplified: always shows YOUR card publicly.
+// No viewing other users, no ephemeral mode.
+// Fully compatible with updated showTrainerCard().
 // ==========================================================
 
 import {
-  SlashCommandBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
+  SlashCommandBuilder
 } from "discord.js";
 
 import { safeReply } from "../utils/safeReply.js";
@@ -18,85 +17,38 @@ import { showTrainerCard } from "./trainercard.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("showcard")
-    .setDescription("Display your Trainer Card publicly, or view another user's card privately.")
-    .addUserOption((option) =>
-      option
-        .setName("user")
-        .setDescription("The user whose Trainer Card you want to view")
-        .setRequired(false)
-    ),
+    .setDescription("Display your Trainer Card publicly."),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {
+      // Show publicly → ephemeral: false
+      await interaction.deferReply({ ephemeral: false });
 
-      // Determine whose card we're showing
-      const targetUser = interaction.options.getUser("user") || interaction.user;
+      const targetUser = interaction.user;
       const targetId = targetUser.id;
-      const isSelf = targetId === interaction.user.id;
 
-      // Ephemeral only for viewing someone else
-      await interaction.deferReply({ ephemeral: !isSelf });
-
-      // Ensure the user exists in trainerData
-      const user = trainerData[targetId];
+      // Ensure user exists
+      let user = trainerData[targetId];
       if (!user) {
         return safeReply(interaction, {
-          content:
-            isSelf
-              ? "⚠️ You don’t have a Trainer Card yet! Use `/trainercard` to create one."
-              : `⚠️ ${targetUser.username} doesn’t have a Trainer Card yet.`,
+          content: "⚠️ You don’t have a Trainer Card yet! Use `/trainercard` to create one.",
           ephemeral: true,
         });
       }
 
-      // Validate + load full user entry
-      const ensured = await ensureUserInitialized(
+      // Load full user record
+      user = await ensureUserInitialized(
         targetId,
         targetUser.username,
         trainerData,
         client
       );
 
-      // ======================================================
-      // 🖼 Render card using the NEW trainer card builder
-      // ======================================================
-      // NEW: pass targetUser so avatar/name work correctly
-      const message = await showTrainerCard(interaction, ensured, targetUser);
+      // Render card (this edits the reply internally)
+      await showTrainerCard(interaction, user);
 
-      // ======================================================
-      // 🏷 Add "(Private View)" to footer if needed
-      // ======================================================
-      if (!isSelf && message?.embeds?.length > 0) {
-        const embed = message.embeds[0];
-        const footerText = (embed.footer?.text || "Coop's Collection") + " • (Private View)";
-        embed.setFooter({ text: footerText });
-
-        await interaction.editReply({
-          embeds: [embed],
-          components: message.components || [],
-        });
-      }
-
-      // ======================================================
-      // 🧩 Patch "Show Full Team" buttons (legacy support)
-      // ======================================================
-      if (message?.components?.length) {
-        const updated = message.components.map((row) => {
-          const actionRow = ActionRowBuilder.from(row);
-          actionRow.components = row.components.map((c) => {
-            if (c.customId === "show_full_team") {
-              return new ButtonBuilder()
-                .setCustomId(`show_full_team_${targetId}`)
-                .setLabel(c.label || "Show Full Team")
-                .setStyle(ButtonStyle.Primary);
-            }
-            return c;
-          });
-          return actionRow;
-        });
-
-        await interaction.editReply({ components: updated });
-      }
+      // Done — no need to manipulate embeds further
+      return;
 
     } catch (err) {
       console.error("❌ /showcard error:", err);

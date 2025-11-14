@@ -300,10 +300,14 @@ export async function showTrainerCard(interaction, user) {
     }
 
     const commandHelp =
-      "\n\n> 🪶 **Commands:**\n" +
-      "> `/dashboard` – Manage Pokémon & Trainers\n";
+  "\n\n> 🪶 **Commands:**\n" +
+  "> `/dashboard` – Manage Pokémon & Trainers\n";
 
- // ==========================================================
+// Custom currency emojis
+const TP_EMOJI = "<:tp_icon:1437892250922123364>";
+const CC_EMOJI = "<:coopcoin:1437892112959148093>";
+
+// ==========================================================
 // 🎨 Trainer rarity → dashboard color mapping
 // ==========================================================
 const rarityColors = {
@@ -315,9 +319,33 @@ const rarityColors = {
   mythic:    0xef4444
 };
 
-// Custom currency emojis
-const TP_EMOJI = "<:tp_icon:1437892250922123364>";
-const CC_EMOJI = "<:coopcoin:1437892112959148093>";
+// ➤ Trainer sprite + lead Pokémon image
+const trainerPath = user.displayedTrainer
+  ? `${spritePaths.trainers}${user.displayedTrainer}`
+  : null;
+
+// Trainer info (name, rarity, emoji)
+const trainerInfo = (() => {
+  if (!user.displayedTrainer) {
+    return { name: "Unknown", rarity: "Common", emoji: rarityEmojis.common };
+  }
+
+  // filename -> key lookup
+  const file = user.displayedTrainer.toLowerCase();
+  const base = file.split("-")[0].replace(".png", "");
+
+  const entry = trainerSprites[base];
+  if (!entry) {
+    return { name: base.charAt(0).toUpperCase() + base.slice(1), rarity: "Common", emoji: rarityEmojis.common };
+  }
+
+  const rarity = (entry.tier || "common").toLowerCase();
+  return {
+    name: base.charAt(0).toUpperCase() + base.slice(1),
+    rarity,
+    emoji: rarityEmojis[rarity] || "⚬"
+  };
+})();
 
 // ==========================================================
 // 📘 Build Trainer Card Embed
@@ -349,11 +377,6 @@ embed.addFields({
   inline: false
 });
 
-// ➤ Trainer sprite + lead Pokémon image
-const trainerPath = user.displayedTrainer
-  ? `${spritePaths.trainers}${user.displayedTrainer}`
-  : null;
-
 if (trainerPath) embed.setThumbnail(trainerPath);
 if (leadSprite) embed.setImage(leadSprite);
 
@@ -362,3 +385,8 @@ await interaction.editReply({
   components: []
 });
 
+} catch (err) {
+  console.error("trainerCard error:", err);
+  return interaction.editReply({ content: "❌ Failed to show Trainer Card." });
+}
+}

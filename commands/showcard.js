@@ -1,14 +1,11 @@
 // ==========================================================
 // 🪪 /showcard — Public version of /trainercard
 // ==========================================================
-// Now simplified: always shows YOUR card publicly.
-// No viewing other users, no ephemeral mode.
+// Simplified: Always shows YOUR card, publicly.
 // Fully compatible with updated showTrainerCard().
 // ==========================================================
 
-import {
-  SlashCommandBuilder
-} from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 
 import { safeReply } from "../utils/safeReply.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
@@ -21,41 +18,38 @@ export default {
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {
-      // Show publicly → ephemeral: false
+      // Always public
       await interaction.deferReply({ ephemeral: false });
 
-      const targetUser = interaction.user;
-      const targetId = targetUser.id;
+      const userId = interaction.user.id;
+      const username = interaction.user.username;
 
-      // Ensure user exists
-      let user = trainerData[targetId];
+      // Check if user exists
+      let user = trainerData[userId];
       if (!user) {
         return safeReply(interaction, {
           content: "⚠️ You don’t have a Trainer Card yet! Use `/trainercard` to create one.",
-          ephemeral: true,
+          ephemeral: true
         });
       }
 
-      // Load full user record
+      // Ensure fully loaded user entry
       user = await ensureUserInitialized(
-        targetId,
-        targetUser.username,
+        userId,
+        username,
         trainerData,
         client
       );
 
-      // Render card (this edits the reply internally)
+      // Render card
       await showTrainerCard(interaction, user);
-
-      // Done — no need to manipulate embeds further
-      return;
 
     } catch (err) {
       console.error("❌ /showcard error:", err);
       await safeReply(interaction, {
         content: "❌ Failed to show Trainer Card. Please try again later.",
-        ephemeral: true,
+        ephemeral: true
       });
     }
-  },
+  }
 };

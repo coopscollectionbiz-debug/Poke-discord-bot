@@ -262,8 +262,9 @@ export async function showTrainerCard(interaction, user) {
     if (leadPokemon) {
       const shiny = user.pokemon?.[leadId]?.shiny > 0;
       leadSprite = shiny
-        ? `${spritePaths.pokemon}shiny/${leadId}.gif`
-        : `${spritePaths.pokemon}normal/${leadId}.gif`;
+  ? `${spritePaths.shiny}${leadId}.gif`
+  : `${spritePaths.pokemon}${leadId}.gif`;
+
     }
 
     const pokemonInfo = displayed

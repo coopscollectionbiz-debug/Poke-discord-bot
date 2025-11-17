@@ -164,7 +164,8 @@ export function selectRandomTrainerForUser(trainerPool, user) {
     rarity: chosen.tier,
     spriteFile: chosen.spriteFile,
     filename: chosen.spriteFile,
-    groupName: chosen.raw.key || chosen.id
+    groupName: chosen.raw.groupName || chosen.name || chosen.id
+
   };
 }
 

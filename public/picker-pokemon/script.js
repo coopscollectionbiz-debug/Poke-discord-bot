@@ -63,12 +63,41 @@ function getRankFromTP(tp) {
 // 🧬 Evolution Costs
 // ===========================================================
 const COST_MAP = {
+  // ================================
+  // Same-tier evolutions
+  // ================================
+  "common-common": 1,
+  "uncommon-uncommon": 2,
+  "rare-rare": 3,
+  "epic-epic": 4,
+  "legendary-legendary": 6,
+  "mythic-mythic": 8,
+
+  // ================================
+  // Tier-up evolutions (1-step)
+  // ================================
   "common-uncommon": 1,
-  "common-rare": 3,
   "uncommon-rare": 2,
-  "rare-epic": 3,
-  "uncommon-epic": 4,
+  "rare-epic": 5,      // revised recommended balance
+  "epic-legendary": 8,
+  "legendary-mythic": 12,
+
+  // ================================
+  // Multi-step jumps (rare but possible)
+  // ================================
+  "common-rare": 4,
+  "common-epic": 8,
+  "common-legendary": 12,
+
+  "uncommon-epic": 8,
+  "uncommon-legendary": 12,
+
+  "rare-legendary": 8,
+  "rare-mythic": 14,
+
+  "epic-mythic": 12,
 };
+
 
 function getEvoList(p) {
   return p?.evolvesTo || p?.evolves_to || [];
@@ -83,12 +112,23 @@ function isEvolutionEligible(pokeId) {
   const p = pokemonData[pokeId];
   const evos = getEvoList(p);
   if (!evos.length) return false;
-  const target = pokemonData[evos[0]];
-  if (!target) return false;
-  const cost = getEvolutionCost(p, target);
+
   const stones = userData.items?.evolution_stone ?? 0;
-  return stones >= cost;
+
+  // Check ALL valid evolutions, not just the first one
+  for (const targetId of evos) {
+    const target = pokemonData[targetId];
+    if (!target) continue;
+
+    const cost = getEvolutionCost(p, target);
+    if (cost > 0 && stones >= cost) {
+      return true; // at least *one* valid evolution exists
+    }
+  }
+
+  return false; // none were affordable or valid
 }
+
 
 // ===========================================================
 // 💰 Donation Values

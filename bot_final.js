@@ -1036,71 +1036,117 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   }
 });
 
-// ===========================================================
-// ===========================================================
-// 🧬 EVOLVE & DONATE ENDPOINTS (Shiny-Aware Versions)
-// ===========================================================
-
-// 🔹 Evolve Pokémon (normal + shiny supported)
+// ==========================================================
+// 🧬 EVOLVE (Supports Same-Tier + Multi-Step Evolutions)
+// ==========================================================
 app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
   const { id, token, baseId, targetId, shiny } = req.body;
+
   if (!validateToken(id, token))
     return res.status(403).json({ error: "Invalid or expired token" });
 
   const user = trainerData[id];
   if (!user) return res.status(404).json({ error: "User not found" });
 
-  const pokemonData = JSON.parse(fsSync.readFileSync("public/pokemonData.json", "utf8"));
+  const pokemonData = JSON.parse(
+    fsSync.readFileSync("public/pokemonData.json", "utf8")
+  );
+
   const base = pokemonData[baseId];
   const target = pokemonData[targetId];
-  if (!base || !target) return res.status(400).json({ error: "Invalid Pokémon IDs" });
 
-  // Evolution cost mapping
-  const costMap = {
+  if (!base || !target)
+    return res.status(400).json({ error: "Invalid Pokémon IDs" });
+
+  // ======================================================
+  // 🧮 FULL EVOLUTION COST MAP (Same-tier + Tier-up + Multi-step)
+  // ======================================================
+  const COST_MAP = {
+    // Same-tier evolutions
+    "common-common": 1,
+    "uncommon-uncommon": 2,
+    "rare-rare": 3,
+    "epic-epic": 4,
+    "legendary-legendary": 6,
+    "mythic-mythic": 8,
+
+    // One-step tier ups
     "common-uncommon": 1,
-    "common-rare": 3,
     "uncommon-rare": 2,
-    "rare-epic": 3,
-    "uncommon-epic": 4,
+    "rare-epic": 5,
+    "epic-legendary": 8,
+    "legendary-mythic": 12,
+
+    // Multi-step tier jumps
+    "common-rare": 4,
+    "common-epic": 8,
+    "common-legendary": 12,
+
+    "uncommon-epic": 8,
+    "uncommon-legendary": 12,
+    "uncommon-mythic": 14,
+
+    "rare-legendary": 8,
+    "rare-mythic": 14,
+
+    "epic-mythic": 12,
   };
+
   const currentTier = base.tier;
   const nextTier = target.tier;
   const key = `${currentTier}-${nextTier}`;
-  const cost = costMap[key] ?? 0;
+
+  // FIXED bug — must use COST_MAP not costMap
+  const cost = COST_MAP[key] ?? 0;
 
   if (cost <= 0)
-    return res.status(400).json({ error: "This evolution path is not supported." });
+    return res.status(400).json({
+      error: `Evolution path ${currentTier} → ${nextTier} is not supported.`,
+    });
 
+  // ======================================================
+  // 🪨 Verify stones exist
+  // ======================================================
   if (!user.items || user.items.evolution_stone < cost)
     return res.status(400).json({ error: "Not enough Evolution Stones." });
 
-  // Check ownership of correct variant
+  // ======================================================
+  // 🐾 Verify ownership of correct shiny/normal variant
+  // ======================================================
   const variant = shiny ? "shiny" : "normal";
   const owned = user.pokemon?.[baseId]?.[variant] || 0;
+
   if (owned <= 0)
     return res.status(400).json({
-      error: `You don’t own a ${shiny ? "shiny " : ""}${base.name} to evolve.`,
+      error: `You do not own a ${shiny ? "shiny " : ""}${base.name}.`,
     });
 
-  // Deduct stones
+  // ======================================================
+  // 🔄 Apply Evolution
+  // ======================================================
   user.items.evolution_stone -= cost;
 
-  // Deduct base variant
+  // Remove base form
   user.pokemon[baseId][variant] -= 1;
   if (user.pokemon[baseId].normal <= 0 && user.pokemon[baseId].shiny <= 0)
     delete user.pokemon[baseId];
 
-  // Add evolved Pokémon, preserving variant
+  // Add evolved form
   user.pokemon[targetId] ??= { normal: 0, shiny: 0 };
   user.pokemon[targetId][variant] += 1;
 
   await saveTrainerDataLocal(trainerData);
   await saveDataToDiscord(trainerData);
 
-  res.json({
+  return res.json({
     success: true,
-    evolved: { from: base.name, to: target.name, shiny },
-    stones: user.items.evolution_stone,
+    evolved: {
+      from: base.name,
+      to: target.name,
+      shiny,
+      cost,
+    },
+    stonesRemaining: user.items.evolution_stone,
   });
 });
 

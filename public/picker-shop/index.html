@@ -39,33 +39,6 @@
     <div class="stat-item">💎 Stones: <span id="stoneCount">0</span></div>
   </div>
 
-  <!-- ===========================================================
-       Loading Modal (for all purchases)
-  ============================================================ -->
-  <div id="loadingOverlay" style="
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.6);
-    backdrop-filter:blur(4px);
-    z-index:99999;
-    align-items:center;
-    justify-content:center;
-  ">
-    <div style="
-      background:#161b22;
-      padding:22px 32px;
-      border-radius:12px;
-      border:2px solid #00ff9d;
-      color:white;
-      font-size:1.2rem;
-      font-weight:700;
-      box-shadow:0 0 14px #00ff9d60;
-    ">
-      Processing...
-    </div>
-  </div>
-
   <main>
 
     <!-- ===========================================================
@@ -73,7 +46,7 @@
     ============================================================ -->
     <section class="shop-section">
       <h2>Poké Balls</h2>
-      <p class="subtitle">Gives 1 random Pokémon. Higher chance of better rarity with stronger balls.</p>
+      <p class="subtitle">Gives 1 random Pokémon. Better balls increase rarity odds.</p>
 
       <div class="shop-grid">
 
@@ -92,7 +65,7 @@
         <div class="shop-item">
           <img src="/public/sprites/items/greatball.png" class="item-icon" />
           <h3>Great Ball</h3>
-          <p class="desc">Improved catch rate. Better Rare chances.</p>
+          <p class="desc">Improved rarity odds.</p>
           <p class="price">
             <span class="price-value" data-price="greatball">–</span> CC
           </p>
@@ -103,7 +76,7 @@
         <div class="shop-item">
           <img src="/public/sprites/items/ultraball.png" class="item-icon" />
           <h3>Ultra Ball</h3>
-          <p class="desc">Best overall rates. Strong Rare+ boosts.</p>
+          <p class="desc">Best Rare+ chance.</p>
           <p class="price">
             <span class="price-value" data-price="ultraball">–</span> CC
           </p>
@@ -114,23 +87,21 @@
     </section>
 
     <!-- ===========================================================
-         Evolution Stone
+         Evolution Stones
     ============================================================ -->
     <section class="shop-section">
       <h2>Evolution</h2>
 
       <div class="shop-grid">
-
         <div class="shop-item">
           <img src="/public/sprites/items/evolution_stone.png" class="item-icon" />
           <h3>Evolution Stone</h3>
-          <p class="desc">Evolves eligible Pokémon in your team.</p>
+          <p class="desc">Evolves eligible Pokémon.</p>
           <p class="price">
             <span class="price-value" data-price="evo_stone">–</span> CC
           </p>
           <button class="buy-btn" data-item="evo_stone">Buy</button>
         </div>
-
       </div>
     </section>
 
@@ -151,7 +122,6 @@
           <p id="weeklyStatus"></p>
         </div>
       </div>
-
     </section>
 
   </main>
@@ -172,9 +142,9 @@
       };
 
       for (const key in mapping) {
-        const span = document.querySelector(`[data-price="${key}"]`);
-        if (span && window.ITEM_COSTS && window.ITEM_COSTS[key]) {
-          span.textContent = window.ITEM_COSTS[key];
+        const el = document.querySelector(`[data-price="${key}"]`);
+        if (el && window.ITEM_COSTS && window.ITEM_COSTS[key]) {
+          el.textContent = window.ITEM_COSTS[key];
         }
       }
     });

@@ -278,8 +278,8 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 userObj.luck ??= 0;
 
 const BASE_CHANCE = MESSAGE_REWARD_CHANCE;  // 0.02 (2%)
-const MAX_CHANCE = 0.12;                    // 12% hard cap (tweakable)
-const PITY_INCREMENT = 0.01;                // +1% per failed attempt
+const MAX_CHANCE = 0.10;                    // 10% hard cap (tweakable)
+const PITY_INCREMENT = 0.005;                // +0.5% per failed attempt
 
 // Increase pity every time tryGiveRandomReward runs
 userObj.luck = Math.min(MAX_CHANCE, userObj.luck + PITY_INCREMENT);

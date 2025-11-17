@@ -110,12 +110,34 @@ function showShopModal({ title, message, sprites = [], onConfirm }) {
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
 
+  // CANCEL closes immediately
   modal.querySelector(".cancel").onclick = () => overlay.remove();
+
+  // CONFIRM — correctly patched
   modal.querySelector(".confirm").onclick = async () => {
-    await onConfirm();
-    overlay.remove();
+
+    const confirmBtn = modal.querySelector(".confirm");
+    const cancelBtn  = modal.querySelector(".cancel");
+
+    // 🛑 Disable
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+
+    confirmBtn.textContent = "Processing...";
+    confirmBtn.style.opacity = "0.6";
+
+    // ⚡ Instant loading modal in front
+    const closeLoading = showLoadingModal();
+
+    try {
+      await onConfirm();  // purchase handler
+    } finally {
+      closeLoading();     // remove loading
+      overlay.remove();   // THEN close main modal
+    }
   };
 
+  // Close if clicking outside
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) overlay.remove();
   });

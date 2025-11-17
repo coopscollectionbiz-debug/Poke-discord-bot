@@ -314,6 +314,11 @@ async function claimWeeklyPack() {
     rewards.push(result.trainer);
   }
 
+// mark weekly pack claimed **immediately**
+user.lastWeeklyPack = new Date().toISOString();
+await saveUser();
+updateUI();
+
   // Pokémon
   await pushPokemon("common");
   await pushPokemon("common");
@@ -339,15 +344,23 @@ async function claimWeeklyPack() {
 
   closeLoading(); // 🔄 CLOSE LOADING
 
-  showShopModal({
-    title: "Weekly Pack Rewards!",
-    message: rewards.map(r => `${r.rarity} ${r.name}`).join("<br>"),
-    sprites: [
-      "/public/sprites/items/starter_pack.png",
-      ...rewards.map(r => r.sprite)
-    ],
-    onConfirm: () => {}
-  });
+// Normalize weekly reward labels
+const rewardLines = rewards.map(r => {
+  const name = r?.name ?? "Unknown";
+  const rarity = r?.rarity ?? "common";
+  return `${rarity} — ${name}`;
+});
+
+showShopModal({
+  title: "Weekly Pack Rewards!",
+  message: rewardLines.join("<br>"),
+  sprites: [
+    "/public/sprites/items/starter_pack.png",
+    ...rewards.map(r => r?.sprite ?? "/public/sprites/items/unknown.png")
+  ],
+  onConfirm: () => {}
+});
+
 }
 
 // ======================================================

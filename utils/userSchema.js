@@ -79,7 +79,7 @@ export function createNewUser(userId, username) {
     lastDaily: 0,
     lastRecruit: 0,
     lastQuest: 0,
-    lastWeeklyPack: 0,
+    lastWeeklyPack: null,
 
     // Inventory
     items: {
@@ -134,7 +134,10 @@ export function validateUserSchema(user, userId, username) {
   if (out.lastDaily == null) out.lastDaily = 0;
   if (out.lastRecruit == null) out.lastRecruit = 0;
   if (out.lastQuest == null) out.lastQuest = 0;
-  if (out.lastWeeklyPack == null) out.lastWeeklyPack = 0;
+  if (out.lastWeeklyPack == null || out.lastWeeklyPack === "0" || isNaN(new Date(out.lastWeeklyPack))) {
+  out.lastWeeklyPack = null;
+}
+
 
   // Inventory
   if (!out.items || typeof out.items !== "object") {

@@ -574,7 +574,7 @@ function normalizeUserSchema(id, user) {
   user.lastDaily ??= 0;
   user.lastRecruit ??= 0;
   user.lastQuest ??= 0;
-  user.lastWeeklyPack ??= 0;
+  user.lastWeeklyPack ??= null;
 
   user.onboardingComplete ??= false;
   user.onboardingDate ??= null;

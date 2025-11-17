@@ -943,6 +943,184 @@ if (interaction.isButton()) {
 }
 });
 
+app.post("/api/claim-weekly", express.json(), async (req, res) => {
+  const { id, token } = req.body;
+
+  if (!validateToken(id, token))
+    return res.status(403).json({ error: "Invalid or expired token" });
+
+  const user = trainerData[id];
+  if (!user)
+    return res.status(404).json({ error: "User not found" });
+
+  // 🔥 HARD COOL DOWN CHECK
+  const last = user.lastWeeklyPack ? new Date(user.lastWeeklyPack).getTime() : 0;
+  const now = Date.now();
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+  if (now - last < sevenDays) {
+    return res.status(400).json({ error: "Weekly pack already claimed." });
+  }
+
+  // Set cooldown FIRST (prevents spam + refresh exploits)
+  user.lastWeeklyPack = new Date().toISOString();
+
+  await saveTrainerDataLocal(trainerData);
+  debouncedDiscordSave();
+
+  res.json({ success: true });
+});
+
+// ==========================================================
+// 🧰 WEEKLY PACK — Single Atomic Backend Generator (v2, Optimized)
+// ==========================================================
+app.post("/api/weekly-pack", express.json(), async (req, res) => {
+  const { id, token } = req.body;
+
+  // Validate token/user
+  if (!validateToken(id, token))
+    return res.status(403).json({ error: "Invalid or expired token" });
+
+  const user = trainerData[id];
+  if (!user)
+    return res.status(404).json({ error: "User not found" });
+
+  // ======================================================
+  // ⏳ Cooldown Check (7 days)
+  // ======================================================
+  const last = user.lastWeeklyPack ? new Date(user.lastWeeklyPack).getTime() : 0;
+  const now = Date.now();
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+  if (now - last < sevenDays) {
+    return res.status(400).json({ error: "Weekly pack already claimed." });
+  }
+
+  // ======================================================
+  // 🔥 Set cooldown FIRST (prevents refresh exploits)
+  // ======================================================
+  user.lastWeeklyPack = new Date().toISOString();
+
+  // ======================================================
+  // ⚡ PRELOAD POKÉMON + TRAINERS ONCE (major speedup)
+  // ======================================================
+  const allPokemon = await getAllPokemon();
+
+  const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
+  const flat = await getFlattenedTrainers();
+
+  const results = [];
+
+  // ======================================================
+  // Helper: Award Pokémon (fast, no extra loads)
+  // ======================================================
+  function givePokemon(tier) {
+    const reward = selectRandomPokemonForUser(allPokemon, user, tier);
+    const shiny = rollForShiny(user.tp || 0);
+
+    user.pokemon ??= {};
+    user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
+
+    if (shiny) user.pokemon[reward.id].shiny++;
+    else user.pokemon[reward.id].normal++;
+
+    results.push({
+      type: "pokemon",
+      id: reward.id,
+      name: reward.name,
+      rarity: reward.rarity || reward.tier,
+      shiny,
+      sprite: shiny
+        ? `/public/sprites/pokemon/shiny/${reward.id}.gif`
+        : `/public/sprites/pokemon/normal/${reward.id}.gif`
+    });
+  }
+
+  // ======================================================
+  // Helper: Award Trainer (fast, no extra loads)
+  // ======================================================
+  function giveTrainer(tier) {
+    const pool = flat.filter(t => (t.tier || t.rarity) === tier);
+    if (!pool.length) return;
+
+    const reward = pool[Math.floor(Math.random() * pool.length)];
+
+    let name =
+      reward.name ||
+      reward.displayName ||
+      reward.groupName ||
+      (reward.filename ? reward.filename.replace(".png", "") : "Trainer");
+
+    name = name
+      .replace(/_/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, c => c.toUpperCase());
+
+    let file =
+      reward.spriteFile ||
+      reward.filename ||
+      reward.file ||
+      "";
+
+    file = file
+      .trim()
+      .toLowerCase()
+      .replace(/^trainers?_2\//, "")
+      .replace(/\.png\.png$/, ".png")
+      .replace(/\s+/g, "");
+
+    const sprite = `${spritePaths.trainers}${file}`;
+
+    user.trainers ??= {};
+    user.trainers[file] = (user.trainers[file] || 0) + 1;
+
+    results.push({
+      type: "trainer",
+      name,
+      rarity: reward.tier || reward.rarity || "common",
+      sprite,
+      file
+    });
+  }
+
+  // ======================================================
+  // 🎁 Weekly Pack Structure (6 Pokémon + 6 Trainers)
+  // ======================================================
+
+  // Pokémon (3 common, 2 uncommon, 1 rare)
+  givePokemon("common");
+  givePokemon("common");
+  givePokemon("common");
+  givePokemon("uncommon");
+  givePokemon("uncommon");
+  givePokemon("rare");
+
+  // Trainers (3 common, 2 uncommon, 1 rare)
+  giveTrainer("common");
+  giveTrainer("common");
+  giveTrainer("common");
+  giveTrainer("uncommon");
+  giveTrainer("uncommon");
+  giveTrainer("rare");
+
+  // ======================================================
+  // 💾 Save ONCE (massive performance gain)
+  // ======================================================
+  await saveTrainerDataLocal(trainerData);
+  debouncedDiscordSave();
+
+  console.log(`🎁 Weekly pack generated for ${id}`);
+
+  // ======================================================
+  // 📦 Return clean reward list
+  // ======================================================
+  return res.json({
+    success: true,
+    rewards: results
+  });
+});
+
 // ===========================================================
 // 🧩 TRAINER PICKER API ENDPOINT (Memory-based)
 // ===========================================================

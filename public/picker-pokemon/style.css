@@ -683,4 +683,82 @@ footer a:hover {
   box-shadow: 0 0 8px #00ff9d60;
 }
 
+/* ===========================================================
+   SHOP TAB
+=========================================================== */
+#shopTab {
+  padding: 20px;
+}
+
+#shopStats {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  margin-bottom: 20px;
+  background: #1a1b1f;
+  padding: 12px 0;
+  border: 1px solid #222;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.shop-item {
+  background: #1a1b1f;
+  padding: 18px;
+  border-radius: 14px;
+  text-align: center;
+  border: 1px solid #222;
+}
+
+.shop-item.special {
+  background: #2a2235;
+  border-color: #7c3aed;
+}
+
+.item-icon {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 10px;
+}
+
+.shop-item h3 {
+  margin: 8px 0 6px;
+  font-size: 18px;
+}
+
+.price {
+  font-size: 15px;
+  color: #facc15;
+  margin-bottom: 12px;
+}
+
+.buy-btn {
+  width: 100%;
+  padding: 10px 0;
+  background: #3b82f6;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.buy-btn:hover {
+  background: #2563eb;
+}
+
+.hidden {
+  display: none;
+}
+
+
 

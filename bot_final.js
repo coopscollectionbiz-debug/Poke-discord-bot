@@ -772,8 +772,9 @@ app.post("/api/updateUser", express.json(), async (req, res) => {
 // ==========================================================
 // 🛍️ SHOP API — POKÉMON REWARD (Ball-Aware Version)
 // ==========================================================
+
 app.post("/api/rewardPokemon", express.json(), async (req, res) => {
-  const { id, token, source } = req.body;  // source = pokeball, greatball, ultraball
+  const { id, token, source } = req.body;
 
   if (!validateToken(id, token))
     return res.status(403).json({ error: "Invalid token" });
@@ -784,13 +785,20 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
 
   const allPokemon = await getAllPokemon();
 
-  // 🎯 Tier-first + Rank-aware + Ball-aware weighted selection
+  // 🎯 Correct call (ball-aware)
   const reward = selectRandomPokemonForUser(allPokemon, user, source);
+
+  if (!reward) {
+    return res.json({
+      success: false,
+      error: "No Pokémon could be selected."
+    });
+  }
 
   // ✨ Shiny roll
   const shiny = rollForShiny(user.tp || 0);
 
-  // 🗃️ Record ownership
+  // 🗃️ Save ownership
   user.pokemon ??= {};
   user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
   if (shiny) user.pokemon[reward.id].shiny++;
@@ -799,13 +807,12 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
   await saveTrainerDataLocal(trainerData);
   debouncedDiscordSave();
 
-  // 🎁 Frontend expects full details
   res.json({
     success: true,
     pokemon: {
       id: reward.id,
       name: reward.name,
-      rarity: reward.rarity || reward.tier,
+      rarity: reward.tier,
       shiny,
       sprite: shiny
         ? `/public/sprites/pokemon/shiny/${reward.id}.gif`
@@ -972,14 +979,13 @@ app.post("/api/claim-weekly", express.json(), async (req, res) => {
 });
 
 // ==========================================================
-// 🧰 WEEKLY PACK — Single Atomic Backend Generator (CACHED)
+// 🧰 WEEKLY PACK — Forced Rarity Version (Correct Behavior)
 // ==========================================================
 import { getPokemonCached } from "./utils/pokemonCache.js";
 
 app.post("/api/weekly-pack", express.json(), async (req, res) => {
   const { id, token } = req.body;
 
-  // Validate token/user
   if (!validateToken(id, token))
     return res.status(403).json({ error: "Invalid or expired token" });
 
@@ -987,36 +993,49 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
   if (!user)
     return res.status(404).json({ error: "User not found" });
 
-  // Cooldown
+  // Cooldown check
   const last = user.lastWeeklyPack ? new Date(user.lastWeeklyPack).getTime() : 0;
   const now = Date.now();
   const sevenDays = 7 * 24 * 60 * 60 * 1000;
 
-  if (now - last < sevenDays) {
+  if (now - last < sevenDays)
     return res.status(400).json({ error: "Weekly pack already claimed." });
-  }
 
-  // 🔥 Set cooldown FIRST (blocks refresh spam)
+  // Lock cooldown immediately
   user.lastWeeklyPack = new Date().toISOString();
 
   const results = [];
 
-  // ======================================================
-  // Cached Pokémon data (1 load, reused for all 6 pulls)
-  // ======================================================
-  const cachedPokemon = await getPokemonCached();   // ❗ NEW
-  // (cachedTrainer already loaded via flattened trainer call)
+  // Cached Pokémon
+  const allPokemon = await getPokemonCached();
 
-  // ------------------------------------------------------
-  // Pokémon Pull Helper
-  // ------------------------------------------------------
+  // ------------------------------
+  // Filter Pokémon by *true tier*
+  // ------------------------------
+  function poolFor(tier) {
+    return allPokemon.filter(p => p.tier === tier);
+  }
+
+  // ------------------------------
+  // Forced-tier Pokémon picker
+  // ------------------------------
+  function pickFromPool(tier) {
+    const pool = poolFor(tier);
+    if (!pool.length) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // ------------------------------
+  // Pokémon Reward Helper
+  // ------------------------------
   async function givePokemon(tier) {
-    const reward = selectRandomPokemonForUser(cachedPokemon, user, tier);
+    const reward = pickFromPool(tier);
+    if (!reward) return;
+
     const shiny = rollForShiny(user.tp || 0);
 
     user.pokemon ??= {};
     user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-
     if (shiny) user.pokemon[reward.id].shiny++;
     else user.pokemon[reward.id].normal++;
 
@@ -1024,7 +1043,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
       type: "pokemon",
       id: reward.id,
       name: reward.name,
-      rarity: reward.rarity || reward.tier,
+      rarity: reward.tier,
       shiny,
       sprite: shiny
         ? `/public/sprites/pokemon/shiny/${reward.id}.gif`
@@ -1032,9 +1051,9 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
     });
   }
 
-  // ------------------------------------------------------
-  // Trainer Pull Helper (already optimized)
-  // ------------------------------------------------------
+  // ------------------------------
+  // Trainer forced-tier picker
+  // ------------------------------
   async function giveTrainer(tier) {
     const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
     const flat = await getFlattenedTrainers();
@@ -1044,25 +1063,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
 
     const reward = pool[Math.floor(Math.random() * pool.length)];
 
-    let name =
-      reward.name ||
-      reward.displayName ||
-      reward.groupName ||
-      (reward.filename ? reward.filename.replace(".png", "") : "Trainer");
-
-    name = name
-      .replace(/_/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-
-    let file =
-      reward.spriteFile ||
-      reward.filename ||
-      reward.file ||
-      "";
-
-    file = file
+    let file = (reward.spriteFile || reward.filename || reward.file || "")
       .trim()
       .toLowerCase()
       .replace(/^trainers?_2\//, "")
@@ -1071,21 +1072,35 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
 
     const sprite = `${spritePaths.trainers}${file}`;
 
+    let name =
+      reward.name ||
+      reward.displayName ||
+      reward.groupName ||
+      file.replace(".png", "");
+
+    name = name
+      .replace(/_/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, c => c.toUpperCase());
+
     user.trainers ??= {};
     user.trainers[file] = (user.trainers[file] || 0) + 1;
 
     results.push({
       type: "trainer",
       name,
-      rarity: reward.tier || reward.rarity || "common",
+      rarity: tier,
       sprite,
       file
     });
   }
 
   // ======================================================
-  // 🎁 Weekly Pack Structure (6 + 6)
+  // 🎁 WEEKLY PACK STRUCTURE (FORCED RARITIES)
   // ======================================================
+
+  // Pokémon
   await givePokemon("common");
   await givePokemon("common");
   await givePokemon("common");
@@ -1093,6 +1108,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
   await givePokemon("uncommon");
   await givePokemon("rare");
 
+  // Trainers
   await giveTrainer("common");
   await giveTrainer("common");
   await giveTrainer("common");
@@ -1100,13 +1116,9 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
   await giveTrainer("uncommon");
   await giveTrainer("rare");
 
-  // ======================================================
-  // Save ONCE
-  // ======================================================
+  // Save once
   await saveTrainerDataLocal(trainerData);
   debouncedDiscordSave();
-
-  console.log(`🎁 Weekly pack generated for ${id}`);
 
   return res.json({
     success: true,

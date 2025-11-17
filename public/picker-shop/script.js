@@ -334,17 +334,18 @@ async function claimWeeklyPack() {
 window.addEventListener("DOMContentLoaded", () => {
   loadUser();
 
-  document.querySelector("[data-item='pokeball']").onclick =
-    () => buyPokeball("pokeball", ITEM_COSTS.pokeball);
+ document.querySelector("[data-item='pokeball']").onclick =
+  () => buyPokeball("pokeball", window.ITEM_COSTS.pokeball);
 
-  document.querySelector("[data-item='greatball']").onclick =
-    () => buyPokeball("greatball", ITEM_COSTS.greatball);
+document.querySelector("[data-item='greatball']").onclick =
+  () => buyPokeball("greatball", window.ITEM_COSTS.greatball);
 
-  document.querySelector("[data-item='ultraball']").onclick =
-    () => buyPokeball("ultraball", ITEM_COSTS.ultraball);
+document.querySelector("[data-item='ultraball']").onclick =
+  () => buyPokeball("ultraball", window.ITEM_COSTS.ultraball);
 
-  document.querySelector("[data-item='evo_stone']").onclick =
-    () => buyStone(ITEM_COSTS.evo_stone);
+document.querySelector("[data-item='evo_stone']").onclick =
+  () => buyStone(window.ITEM_COSTS.evo_stone);
+
 
   document.querySelector("[data-item='weekly']").onclick =
     claimWeeklyPack;

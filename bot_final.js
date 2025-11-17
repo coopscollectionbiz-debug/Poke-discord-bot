@@ -574,7 +574,9 @@ function normalizeUserSchema(id, user) {
   user.lastDaily ??= 0;
   user.lastRecruit ??= 0;
   user.lastQuest ??= 0;
-  user.lastWeeklyPack ??= null;
+  if (!user.lastWeeklyPack || user.lastWeeklyPack === "0" || isNaN(new Date(user.lastWeeklyPack))) {
+    user.lastWeeklyPack = null;
+}
 
   user.onboardingComplete ??= false;
   user.onboardingDate ??= null;
@@ -619,7 +621,7 @@ client.on("messageCreate", async (message) => {
   lastDaily: 0,
   lastRecruit: 0,
   lastQuest: 0,
-  lastWeeklyPack: 0,       // ✅ REQUIRED
+  lastWeeklyPack: null,       // ✅ REQUIRED
   items: { evolution_stone: 0 },
   purchases: [],
   luck: 0,
@@ -683,7 +685,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
   lastDaily: 0,
   lastRecruit: 0,
   lastQuest: 0,
-  lastWeeklyPack: 0,       // ✅ REQUIRED
+  lastWeeklyPack: null,       // ✅ REQUIRED
   items: { evolution_stone: 0 },
   purchases: [],
   luck: 0,

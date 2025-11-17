@@ -253,7 +253,7 @@ async function buyPokeball(type, cost) {
 }
 
 // ======================================================
-// WEEKLY PACK — FINAL FIXED VERSION
+// WEEKLY PACK — FINAL, CLEAN, CORRECT, SERVER-SAFE VERSION
 // ======================================================
 async function claimWeeklyPack() {
   if (!canClaimWeeklyPack()) return;
@@ -261,50 +261,55 @@ async function claimWeeklyPack() {
   const weeklyBtn = document.querySelector("[data-item='weekly']");
   if (weeklyBtn) weeklyBtn.disabled = true;
 
-  // Show loading overlay
   const closeLoading = showLoadingModal();
   const rewards = [];
 
-  // Pokémon reward helper
+  // ======================================================
+  // 🔒 NEW: SERVER FIRST — attempt to lock weekly claim
+  // ======================================================
+  const lock = await fetch("/api/claim-weekly", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: userId, token })
+  }).then(r => r.json());
+
+  if (!lock.success) {
+    closeLoading();
+    alert("You've already claimed your weekly pack.");
+    updateUI();
+    return;
+  }
+
+  // ======================================================
+  // Reward Helpers
+  // ======================================================
   async function pushPokemon(tier) {
-    const result = await fetch("/api/rewardPokemon", {
+    const res = await fetch("/api/rewardPokemon", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: userId, token, source: tier }),
-    }).then((r) => r.json());
+      body: JSON.stringify({ id: userId, token, source: tier })
+    }).then(r => r.json());
 
-    if (result?.success && result?.pokemon) {
-      rewards.push({
-        type: "pokemon",
-        name: result.pokemon.name,
-        rarity: result.pokemon.rarity,
-        sprite: result.pokemon.sprite
-      });
-    }
+    if (res?.pokemon)
+      rewards.push({ ...res.pokemon, type: "pokemon" });
   }
 
-  // Trainer reward helper (with safety normalization)
   async function pushTrainer(tier) {
-    const result = await fetch("/api/rewardTrainer", {
+    const res = await fetch("/api/rewardTrainer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: userId, token, tier }),
-    }).then((r) => r.json());
+      body: JSON.stringify({ id: userId, token, tier })
+    }).then(r => r.json());
 
-    if (result?.success && result?.trainer) {
-      const t = result.trainer;
-      rewards.push({
-        type: "trainer",
-        name: t.name || "Unknown Trainer",
-        rarity: t.rarity || "common",
-        sprite: t.sprite || "/public/sprites/items/unknown.png"
-      });
-    }
+    if (res?.trainer)
+      rewards.push({ ...res.trainer, type: "trainer" });
   }
 
   // ======================================================
-  // ⭐ Generate ALL rewards BEFORE setting cooldown
+  // 🎁 Generate rewards
   // ======================================================
+
+  // Pokémon: 3 common, 2 uncommon, 1 rare
   await pushPokemon("common");
   await pushPokemon("common");
   await pushPokemon("common");
@@ -312,6 +317,7 @@ async function claimWeeklyPack() {
   await pushPokemon("uncommon");
   await pushPokemon("rare");
 
+  // Trainers: 3 common, 2 uncommon, 1 rare
   await pushTrainer("common");
   await pushTrainer("common");
   await pushTrainer("common");
@@ -320,36 +326,37 @@ async function claimWeeklyPack() {
   await pushTrainer("rare");
 
   // ======================================================
-  // ⭐ Apply cooldown AFTER rewards are safely rolled
+  // Update UI — cooldown is ALREADY set server-side
   // ======================================================
-  user.lastWeeklyPack = new Date().toISOString();
-  await saveUser();
+  await loadUser();  // reload user from API so UI shows cooldown
   updateUI();
 
   closeLoading();
 
   // ======================================================
-  // Render rewards cleanly
+  // Build summary lines
   // ======================================================
-  const rewardLines = rewards.map((r) => {
-    const rare = r.rarity || "common";
-    const name = r.name || "Unknown";
-    return `${rare} — ${name}`;
+  const rewardLines = rewards.map(r => {
+    const emoji = window.rarityEmojis?.[r.rarity] ?? "";
+    const color = window.rarityColors?.[r.rarity] ?? "#fff";
+    return `
+      <span style="color:${color}; font-weight:700;">
+        ${emoji} ${r.rarity}
+      </span> — ${r.name}
+    `;
   });
 
-  const spriteList = [
-    "/public/sprites/items/starter_pack.png",
-    ...rewards.map((r) => r.sprite)
-  ];
-
   // ======================================================
-  // 🎁 Show final modal
+  // Show rewards modal
   // ======================================================
   showShopModal({
     title: "Weekly Pack Rewards!",
     message: rewardLines.join("<br>"),
-    sprites: spriteList,
-    onConfirm: () => {},
+    sprites: [
+      "/public/sprites/items/starter_pack.png",
+      ...rewards.map(r => r.sprite)
+    ],
+    onConfirm: () => {}
   });
 }
 

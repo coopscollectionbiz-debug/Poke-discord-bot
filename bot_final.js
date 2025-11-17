@@ -834,23 +834,37 @@ app.post("/api/rewardTrainer", express.json(), async (req, res) => {
 
   const reward = filtered[Math.floor(Math.random() * filtered.length)];
 
-  user.trainers ??= {};
-  const key =
-  (reward.spriteFile || reward.filename || reward.file || "")
+  // Normalize names
+  const trainerName =
+    reward.name ||
+    reward.displayName ||
+    reward.groupName ||
+    (reward.filename ? reward.filename.replace(".png", "") : "Trainer");
+
+  const cleanedFile = (reward.spriteFile || reward.filename || reward.file)
     .trim()
     .toLowerCase();
 
-user.trainers[key] = (user.trainers[key] || 0) + 1;
-
+  // Save trainer to user inventory
+  user.trainers ??= {};
+  user.trainers[cleanedFile] = (user.trainers[cleanedFile] || 0) + 1;
 
   await saveTrainerDataLocal(trainerData);
   debouncedDiscordSave();
 
+  // FIXED: Send full trainer object matching frontend expectation
   res.json({
     success: true,
-    reward: reward.spriteFile,
+    trainer: {
+      name: trainerName,
+      rarity: reward.tier ?? reward.rarity ?? "common",
+      sprite: `${spritePaths.trainers}${cleanedFile}`,
+      file: cleanedFile,
+    }
   });
 });
+
+
 
 
 // ==========================================================

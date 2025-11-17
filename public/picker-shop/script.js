@@ -374,14 +374,29 @@ document.querySelector("[data-item='evo_stone']").onclick =
 });
 
 // ======================================================
-// 🔄 NAVIGATION TABS — TOKEN SAFE
+// 🔄 NAVIGATION TABS — ALWAYS USE CURRENT TOKEN
 // ======================================================
 (function initNavTabs() {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
-  const urlToken = params.get("token");
+  function getSafeParams() {
+    // Prefer in-memory values
+    if (userId && token) {
+      return { id: userId, token };
+    }
 
-  if (!id || !urlToken) return;
+    // Fall back to URL if memory is empty
+    const params = new URLSearchParams(window.location.search);
+    return {
+      id: params.get("id"),
+      token: params.get("token"),
+    };
+  }
+
+  const { id, token: urlToken } = getSafeParams();
+
+  if (!id || !urlToken) {
+    console.warn("❌ Missing id/token — navigation disabled");
+    return;
+  }
 
   const goPokemon  = document.getElementById("goPokemon");
   const goTrainers = document.getElementById("goTrainers");

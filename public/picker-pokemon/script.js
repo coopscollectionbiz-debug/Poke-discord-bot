@@ -959,16 +959,28 @@ async function handleDonationConfirm(pokeId, overlay) {
   }
 }
 
-//------------------------------------------------------------
-// 🔄 Navigation Tabs — Unified Token-Safe Routing
-//------------------------------------------------------------
+// ======================================================
+// 🔄 NAVIGATION TABS — ALWAYS USE CURRENT TOKEN
+// ======================================================
 (function initNavTabs() {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
-  const token = params.get("token");
+  function getSafeParams() {
+    // Prefer in-memory values
+    if (userId && token) {
+      return { id: userId, token };
+    }
 
-  if (!id || !token) {
-    console.warn("❌ Missing ID or token in URL — tabs disabled.");
+    // Fall back to URL if memory is empty
+    const params = new URLSearchParams(window.location.search);
+    return {
+      id: params.get("id"),
+      token: params.get("token"),
+    };
+  }
+
+  const { id, token: urlToken } = getSafeParams();
+
+  if (!id || !urlToken) {
+    console.warn("❌ Missing id/token — navigation disabled");
     return;
   }
 
@@ -976,24 +988,15 @@ async function handleDonationConfirm(pokeId, overlay) {
   const goTrainers = document.getElementById("goTrainers");
   const goShop     = document.getElementById("goShop");
 
-  // ⭐ Pokémon Tab
-  if (goPokemon) {
-    goPokemon.onclick = () => {
-      window.location.href = `/public/picker-pokemon/?id=${id}&token=${token}`;
-    };
-  }
+  if (goPokemon)
+    goPokemon.onclick = () =>
+      window.location.href = `/public/picker-pokemon/?id=${id}&token=${urlToken}`;
 
-  // 🧑 Trainers Tab
-  if (goTrainers) {
-    goTrainers.onclick = () => {
-      window.location.href = `/public/picker/?id=${id}&token=${token}`;
-    };
-  }
+  if (goTrainers)
+    goTrainers.onclick = () =>
+      window.location.href = `/public/picker/?id=${id}&token=${urlToken}`;
 
-  // 🛒 Shop Tab
-  if (goShop) {
-    goShop.onclick = () => {
-      window.location.href = `/public/picker-shop/?id=${id}&token=${token}`;
-    };
-  }
+  if (goShop)
+    goShop.onclick = () =>
+      window.location.href = `/public/picker-shop/?id=${id}&token=${urlToken}`;
 })();

@@ -201,3 +201,24 @@ document.querySelector("[data-item='evo_stone']").onclick = () =>
 
   document.querySelector("[data-item='weekly']").onclick = claimWeeklyPack;
 });
+
+//------------------------------------------------------------
+// 🔄 Navigation Tabs — EXACT SAME BEHAVIOR AS TRAINERS
+//------------------------------------------------------------
+(function initNavTabs() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  const token = params.get("token");
+
+  if (!id || !token) return;
+
+  document.getElementById("goPokemon").onclick = () =>
+    window.location.href = `/public/picker-pokemon/?id=${id}&token=${token}`;
+
+  document.getElementById("goTrainers").onclick = () =>
+    window.location.href = `/public/picker/?id=${id}&token=${token}`;
+
+  document.getElementById("goShop").onclick = () =>
+    window.location.href = `/public/picker-shop/?id=${id}&token=${token}`;
+})();
+

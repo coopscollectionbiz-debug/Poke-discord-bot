@@ -1,158 +1,203 @@
-// ==========================================================
-// Coop’s Collection — Static Shop (Client-Side Only)
-// ==========================================================
-// • Static prices
-// • Static item list
-// • Popup confirmation + reward preview
-// • Fully client-side (no API calls yet)
-// ==========================================================
+// ======================================================================
+// 🛒 Coop’s Collection — SHOP TAB SCRIPT (FINAL VERSION)
+// ======================================================================
+// Uses ONLY the existing backend APIs:
+//   GET  /api/user
+//   POST /api/updateUser
+//   POST /api/rewardPokemon
+//   POST /api/rewardTrainer
+// ======================================================================
 
-// ==========================================================
-// 📘 SHOP ITEMS (STATIC)
-// ==========================================================
-const SHOP_ITEMS = [
-  {
-    id: "pokeball",
-    name: "Poké Ball",
-    price: 100,
-    description: "Roll for 1 random Pokémon (base odds).",
-    image: "/public/sprites/items/pokeball.png",
-    type: "roll"
-  },
-  {
-    id: "greatball",
-    name: "Great Ball",
-    price: 200,
-    description: "Roll for 1 random Pokémon (boosted Uncommon+).",
-    image: "/public/sprites/items/greatball.png",
-    type: "roll"
-  },
-  {
-    id: "ultraball",
-    name: "Ultra Ball",
-    price: 400,
-    description: "Roll for 1 random Pokémon (boosted Rare+).",
-    image: "/public/sprites/items/ultraball.png",
-    type: "roll"
-  },
-  {
-    id: "stone",
-    name: "Evolution Stone",
-    price: 300,
-    description: "Used to evolve eligible Pokémon.",
-    image: "/public/sprites/items/evolution_stone.png",
-    type: "item"
-  },
-  {
-    id: "starter_bundle",
-    name: "Starter Bundle",
-    price: 0,
-    description: "1 Common • 1 Uncommon • 1 Rare • 1 Rare Trainer",
-    image: "/public/sprites/items/starter.png",
-    type: "bundle"
-  }
-];
+let user = null;
+let userId = null;
+let userToken = null;
 
-// ==========================================================
-// 📦 DOM REFS
-// ==========================================================
-const shopGrid = document.getElementById("shopGrid");
-const overlay = document.getElementById("shopPopupOverlay");
-const popup = document.getElementById("shopPopup");
+// ======================================================
+// 💰 CENTRAL SHOP COST TABLE
+// ======================================================
+const ITEM_COSTS = {
+  pokeball: 500,
+  greatball: 1000,
+  ultraball: 2500,
+  evo_stone: 5000
+};
 
-// ==========================================================
-// 🚀 INITIAL RENDER
-// ==========================================================
-window.addEventListener("DOMContentLoaded", () => {
-  renderShop();
-});
 
-// ==========================================================
-// 🛒 RENDER SHOP ITEMS
-// ==========================================================
-function renderShop() {
-  shopGrid.innerHTML = "";
+// -----------------------------------------------------
+// 🔐 Load User
+// -----------------------------------------------------
+async function loadUser() {
+  const params = new URLSearchParams(window.location.search);
+  userId = params.get("id");
+  userToken = params.get("token");
 
-  SHOP_ITEMS.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "shop-card";
+  const res = await fetch(`/api/user?id=${userId}&token=${userToken}`);
+  if (!res.ok) throw new Error("Failed to load user");
 
-    card.innerHTML = `
-      <img class="shop-img" src="${item.image}" alt="${item.name}">
-      <h3>${item.name}</h3>
-      <p class="shop-desc">${item.description}</p>
-      <p class="shop-price">${item.price === 0 ? "FREE" : item.price + " CC"}</p>
-      <button class="shop-btn" data-id="${item.id}">Buy</button>
-    `;
+  user = await res.json();
+  updateUI();
+}
 
-    const btn = card.querySelector(".shop-btn");
-    btn.addEventListener("click", () => openConfirm(item));
-
-    shopGrid.appendChild(card);
+// -----------------------------------------------------
+// 💾 Save User
+// -----------------------------------------------------
+async function saveUser() {
+  const res = await fetch("/api/updateUser", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: userId, token: userToken, user })
   });
+
+  if (!res.ok) throw new Error("Failed to save user");
 }
 
-// ==========================================================
-// 🟦 POPUP — CONFIRM PURCHASE
-// ==========================================================
-function openConfirm(item) {
-  popup.innerHTML = `
-    <h2>Purchase ${item.name}?</h2>
-    <img class="popup-img" src="${item.image}">
-    <p>${item.description}</p>
-    <p class="popup-price">${item.price === 0 ? "FREE" : item.price + " CC"}</p>
+// -----------------------------------------------------
+// 🎁 Pokémon Reward (pokéballs)
+// -----------------------------------------------------
+async function givePokemonReward(ballType) {
+  const res = await fetch("/api/rewardPokemon", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: userId,
+      token: userToken,
+      source: ballType
+    })
+  });
 
-    <div class="popup-buttons">
-      <button id="confirmBuy" class="confirm-btn">Confirm</button>
-      <button id="cancelBuy" class="cancel-btn">Cancel</button>
-    </div>
-  `;
-
-  overlay.style.display = "flex";
-
-  document.getElementById("cancelBuy").onclick = closePopup;
-
-  document.getElementById("confirmBuy").onclick = () => {
-    handlePurchase(item);
-    closePopup();
-  };
+  if (!res.ok) throw new Error("Failed to roll Pokémon");
 }
 
-function closePopup() {
-  overlay.classList.add("fadeOut");
-  setTimeout(() => {
-    overlay.style.display = "none";
-    overlay.classList.remove("fadeOut");
-  }, 250);
+// -----------------------------------------------------
+// 🎁 Trainer Reward (specific tier)
+// -----------------------------------------------------
+async function giveTrainerReward(tier) {
+  const res = await fetch("/api/rewardTrainer", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: userId,
+      token: userToken,
+      tier
+    })
+  });
+
+  if (!res.ok) throw new Error("Failed to roll Trainer");
 }
 
-// ==========================================================
-// ⭐ PURCHASE HANDLER (STATIC FOR NOW)
-// ==========================================================
-function handlePurchase(item) {
-  console.log(`Purchased: ${item.name}`);
+// -----------------------------------------------------
+// 🕒 Weekly Pack Eligibility
+// -----------------------------------------------------
+function canClaimWeeklyPack() {
+  if (!user.lastWeeklyPack) return true;
 
-  // Temporary reward popup (static demo)
-  if (item.type === "roll") {
-    showReward("pokémon", item.name);
-  } else if (item.type === "item") {
-    showReward("item", item.name);
-  } else if (item.type === "bundle") {
-    showReward("bundle", item.name);
+  const last = new Date(user.lastWeeklyPack).getTime();
+  const now = Date.now();
+
+  return (now - last) >= 7 * 24 * 60 * 60 * 1000;
+}
+
+// -----------------------------------------------------
+// 🛒 UI Update
+// -----------------------------------------------------
+function updateUI() {
+  document.getElementById("ccCount").textContent = user.cc;
+  document.getElementById("stoneCount").textContent = user.items?.evolution_stone || 0;
+
+  const weeklyBtn = document.querySelector("[data-item='weekly']");
+  weeklyBtn.disabled = !canClaimWeeklyPack();
+  weeklyBtn.textContent = canClaimWeeklyPack() ? "Claim Weekly Pack" : "Weekly Pack (Claimed)";
+}
+
+// -----------------------------------------------------
+// 💰 Spend CC
+// -----------------------------------------------------
+function charge(cost) {
+  if (user.cc < cost) {
+    alert("Not enough CC!");
+    return false;
   }
+  user.cc -= cost;
+  return true;
 }
 
-// ==========================================================
-// 🎁 MINI REWARD POPUP
-// ==========================================================
-function showReward(type, name) {
-  popup.innerHTML = `
-    <h2>🎉 Reward Received!</h2>
-    <p>You received a <strong>${name}</strong> ${type}!</p>
-    <button id="closeReward" class="confirm-btn">Close</button>
-  `;
+// -----------------------------------------------------
+// 💎 Buy Evolution Stone
+// -----------------------------------------------------
+async function buyStone(cost) {
+  if (!charge(cost)) return;
 
-  overlay.style.display = "flex";
+  user.items.evolution_stone = (user.items.evolution_stone || 0) + 1;
 
-  document.getElementById("closeReward").onclick = closePopup;
+  updateUI();
+  await saveUser();
+  alert("Evolution Stone added!");
 }
+
+// -----------------------------------------------------
+// 🧪 Poké Ball Purchases
+// -----------------------------------------------------
+async function buyPokeball(type, cost) {
+  if (!charge(cost)) return;
+
+  updateUI();
+  await saveUser();
+  await givePokemonReward(type);
+
+  alert(`${type} reward added!`);
+}
+
+// -----------------------------------------------------
+// 🎁 Weekly Pack (3 common, 2 uncommon, 1 rare — both Pokémon & Trainers)
+// -----------------------------------------------------
+async function claimWeeklyPack() {
+  if (!canClaimWeeklyPack()) return alert("Already claimed!");
+
+  // ---- Pokémon ----
+  await givePokemonReward("common");
+  await givePokemonReward("common");
+  await givePokemonReward("common");
+
+  await givePokemonReward("uncommon");
+  await givePokemonReward("uncommon");
+
+  await givePokemonReward("rare");
+
+  // ---- Trainers ----
+  await giveTrainerReward("common");
+  await giveTrainerReward("common");
+  await giveTrainerReward("common");
+
+  await giveTrainerReward("uncommon");
+  await giveTrainerReward("uncommon");
+
+  await giveTrainerReward("rare");
+
+  // Mark timestamp
+  user.lastWeeklyPack = new Date().toISOString();
+  await saveUser();
+
+  updateUI();
+  alert("Weekly Pack collected!");
+}
+
+// -----------------------------------------------------
+// 🎯 Bind Buttons
+// -----------------------------------------------------
+window.addEventListener("DOMContentLoaded", () => {
+  loadUser();
+
+document.querySelector("[data-item='pokeball']").onclick = () =>
+  buyPokeball("pokeball", ITEM_COSTS.pokeball);
+
+document.querySelector("[data-item='greatball']").onclick = () =>
+  buyPokeball("greatball", ITEM_COSTS.greatball);
+
+document.querySelector("[data-item='ultraball']").onclick = () =>
+  buyPokeball("ultraball", ITEM_COSTS.ultraball);
+
+document.querySelector("[data-item='evo_stone']").onclick = () =>
+  buyStone(ITEM_COSTS.evo_stone);
+
+  document.querySelector("[data-item='weekly']").onclick = claimWeeklyPack;
+});

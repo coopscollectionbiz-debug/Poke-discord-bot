@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coop’s Collection — Pokémon Management</title>
 
-    <!-- ===========================================================
-         Styles
-    =========================================================== -->
     <link rel="stylesheet" href="/public/picker-pokemon/style.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
@@ -16,135 +13,198 @@
   </head>
 
   <body>
+
     <!-- ===========================================================
          Header
     =========================================================== -->
     <header>
       <h1>Pokémon Management Portal</h1>
-      <p>⭐ Build your team · 🧬 Evolve with stones · 💝 Donate for CC</p>
+      <p>⭐ Build your team · 🧬 Evolve with stones · 💝 Donate for CC · 🛒 Shop</p>
     </header>
 
-<!-- ===========================================================
-     Navigation Tabs (Pokémon ↔ Trainers)
-=========================================================== -->
-<div id="navTabs" class="nav-tabs">
-  <button id="goPokemon" class="nav-tab active">⭐ Manage Pokémon</button>
-  <button id="goTrainers" class="nav-tab">🧑 Manage Trainers</button>
-</div>
-
+    <!-- ===========================================================
+         Navigation Tabs
+    =========================================================== -->
+    <div id="navTabs" class="nav-tabs">
+      <button id="goPokemon" class="nav-tab active">⭐ Manage Pokémon</button>
+      <button id="goTrainers" class="nav-tab">🧑 Manage Trainers</button>
+      <button id="goShop" class="nav-tab">🛒 Shop</button>
+    </div>
 
     <!-- ===========================================================
          Player Stats Bar
     =========================================================== -->
     <div id="statsBar">
-  <div class="stat-item">
-    <img src="/public/sprites/items/evolution_stone.png"
-         alt="Evolution Stone"
-         class="stat-icon">
-    <span id="stoneCount">0</span> Stones
-  </div>
+      <div class="stat-item">
+        <img src="/public/sprites/items/evolution_stone.png" class="stat-icon">
+        <span id="stoneCount">0</span> Stones
+      </div>
 
-  <div class="stat-item">
-    <img src="/public/sprites/items/cc_coin.png"
-         alt="Collector Coin"
-         class="stat-icon">
-    <span id="ccCount">0</span> CC
-  </div>
+      <div class="stat-item">
+        <img src="/public/sprites/items/cc_coin.png" class="stat-icon">
+        <span id="ccCount">0</span> CC
+      </div>
 
-  <div class="stat-item">
-    <img src="/public/sprites/items/tp_icon.png"
-         alt="Trainer Points"
-         class="stat-icon">
-    <span id="tpCount">0</span> TP
-  </div>
+      <div class="stat-item">
+        <img src="/public/sprites/items/tp_icon.png" class="stat-icon">
+        <span id="tpCount">0</span> TP
+      </div>
 
-  <div class="stat-item">
-    <img src="/public/sprites/items/rank_badge.png"
-         alt="Rank Badge"
-         class="stat-icon">
-    <span id="rankLabel">Novice Trainer</span>
-  </div>
-</div>
-
-    <!-- ===========================================================
-         Mode Buttons
-    =========================================================== -->
-    <div id="modeToggle">
-      <button class="mode-btn active" data-mode="team">⭐ Change Team</button>
-      <button class="mode-btn" data-mode="evolve">🧬 Evolve</button>
-      <button class="mode-btn" data-mode="donate">💝 Donate</button>
-    </div>
-
-    <!-- ===========================================================
-         Toggles + Search (Restored IDs)
-    =========================================================== -->
-    <div id="controls">
-      <input
-        type="text"
-        id="search"
-        placeholder="🔍 Search Pokémon..."
-        autocomplete="off"
-      />
-
-      <select id="rarityFilter">
-        <option value="">All Rarities</option>
-        <option value="common">Common</option>
-        <option value="uncommon">Uncommon</option>
-        <option value="rare">Rare</option>
-        <option value="epic">Epic</option>
-        <option value="legendary">Legendary</option>
-        <option value="mythic">Mythic</option>
-      </select>
-
-      <select id="typeFilter">
-        <option value="">All Types</option>
-        <option value="fire">Fire</option>
-        <option value="water">Water</option>
-        <option value="grass">Grass</option>
-        <option value="electric">Electric</option>
-        <option value="psychic">Psychic</option>
-        <option value="fighting">Fighting</option>
-        <option value="dark">Dark</option>
-        <option value="fairy">Fairy</option>
-        <option value="steel">Steel</option>
-        <option value="ghost">Ghost</option>
-        <option value="rock">Rock</option>
-        <option value="ground">Ground</option>
-        <option value="poison">Poison</option>
-        <option value="ice">Ice</option>
-        <option value="dragon">Dragon</option>
-        <option value="bug">Bug</option>
-        <option value="flying">Flying</option>
-        <option value="normal">Normal</option>
-      </select>
-
-      <div class="toggle-group">
-        <button id="ownedToggle" class="mode-btn">✅ Show Owned</button>
-        <button id="unownedToggle" class="mode-btn">❌ Show Unowned</button>
-        <button id="shinyToggle" class="mode-btn">🌟 Shiny Mode OFF</button>
+      <div class="stat-item">
+        <img src="/public/sprites/items/rank_badge.png" class="stat-icon">
+        <span id="rankLabel">Novice Trainer</span>
       </div>
     </div>
 
     <!-- ===========================================================
-         Pokémon Grid
+         Pokémon Panel (DEFAULT ACTIVE)
     =========================================================== -->
-    <div id="pokemonGrid"></div>
+    <div id="pokemonPanel">
+
+      <div id="modeToggle">
+        <button class="mode-btn active" data-mode="team">⭐ Change Team</button>
+        <button class="mode-btn" data-mode="evolve">🧬 Evolve</button>
+        <button class="mode-btn" data-mode="donate">💝 Donate</button>
+      </div>
+
+      <div id="controls">
+        <input type="text" id="search" placeholder="🔍 Search Pokémon..." autocomplete="off"/>
+
+        <select id="rarityFilter">
+          <option value="">All Rarities</option>
+          <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
+          <option value="rare">Rare</option>
+          <option value="epic">Epic</option>
+          <option value="legendary">Legendary</option>
+          <option value="mythic">Mythic</option>
+        </select>
+
+        <select id="typeFilter">
+          <option value="">All Types</option>
+          <option value="fire">Fire</option>
+          <option value="water">Water</option>
+          <option value="grass">Grass</option>
+          <option value="electric">Electric</option>
+          <option value="psychic">Psychic</option>
+          <option value="fighting">Fighting</option>
+          <option value="dark">Dark</option>
+          <option value="fairy">Fairy</option>
+          <option value="steel">Steel</option>
+          <option value="ghost">Ghost</option>
+          <option value="rock">Rock</option>
+          <option value="ground">Ground</option>
+          <option value="poison">Poison</option>
+          <option value="ice">Ice</option>
+          <option value="dragon">Dragon</option>
+          <option value="bug">Bug</option>
+          <option value="flying">Flying</option>
+          <option value="normal">Normal</option>
+        </select>
+
+        <div class="toggle-group">
+          <button id="ownedToggle" class="mode-btn">✅ Show Owned</button>
+          <button id="unownedToggle" class="mode-btn">❌ Show Unowned</button>
+          <button id="shinyToggle" class="mode-btn">🌟 Shiny Mode OFF</button>
+        </div>
+      </div>
+
+      <div id="pokemonGrid"></div>
+
+      <footer>
+        <p id="teamCounter">0/6 selected</p>
+        <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
+        <p id="teamStatus" class="status-msg"></p>
+        <p style="margin-top:1rem;color:#777;">
+          Opened via <code>/changepokemon</code> · Session valid for 10 minutes
+        </p>
+      </footer>
+
+    </div>
 
     <!-- ===========================================================
-         Footer / Team Info (Restored IDs)
+         Trainer Panel
     =========================================================== -->
-    <footer>
-      <p id="teamCounter">0/6 selected</p>
-      <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
-      <p id="teamStatus" class="status-msg"></p>
-      <p style="margin-top:1rem;color:#777;">
-        Opened via <code>/changepokemon</code> · Session valid for 10 minutes
-      </p>
-    </footer>
+    <div id="trainerPanel" style="display:none;">
+      <div id="trainerGrid"></div>
+      <p style="margin-top:1rem;color:#777;">Opened via <code>/changetrainer</code></p>
+    </div>
+
+    <!-- ===========================================================
+         SHOP PANEL (NEW)
+    =========================================================== -->
+    <div id="shopPanel" style="display:none; padding: 20px;">
+
+      <h2 style="margin-top:0;">🛒 Shop</h2>
+
+      <!-- Poké Balls -->
+      <section class="shop-section">
+        <h3>Poké Balls</h3>
+        <div class="shop-grid">
+
+          <div class="shop-item">
+            <img src="/public/sprites/items/pokeball.png" class="item-icon" />
+            <h4>Poké Ball</h4>
+            <p class="price">500 CC</p>
+            <button class="buy-btn" data-item="pokeball">Buy</button>
+          </div>
+
+          <div class="shop-item">
+            <img src="/public/sprites/items/greatball.png" class="item-icon" />
+            <h4>Great Ball</h4>
+            <p class="price">1000 CC</p>
+            <button class="buy-btn" data-item="greatball">Buy</button>
+          </div>
+
+          <div class="shop-item">
+            <img src="/public/sprites/items/ultraball.png" class="item-icon" />
+            <h4>Ultra Ball</h4>
+            <p class="price">2500 CC</p>
+            <button class="buy-btn" data-item="ultraball">Buy</button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Evolution Stones -->
+      <section class="shop-section">
+        <h3>Evolution Stones</h3>
+        <div class="shop-grid">
+
+          <div class="shop-item">
+            <img src="/public/sprites/items/evolutionstone.png" class="item-icon" />
+            <h4>Evolution Stone</h4>
+            <p class="price">1000 CC</p>
+            <button class="buy-btn" data-item="evo_stone">Buy</button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Weekly Pack -->
+      <section class="shop-section">
+        <h3>Weekly Pack</h3>
+        <p class="subtitle">Free once every 7 days — resets Sunday at 00:00 UTC</p>
+
+        <div class="shop-grid">
+
+          <div class="shop-item special">
+            <img src="/public/sprites/items/weeklypack.png" class="item-icon" />
+            <h4>Weekly Pack</h4>
+            <p class="price">FREE</p>
+            <button class="buy-btn" data-item="weekly" id="weeklyBtn">Claim</button>
+            <p id="weeklyStatus"></p>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
 
     <!-- ===========================================================
          Script
     =========================================================== -->
     <script type="module" src="/public/picker-pokemon/script.js"></script>
+
   </body>
 </html>

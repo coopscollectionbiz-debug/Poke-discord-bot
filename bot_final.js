@@ -57,6 +57,10 @@ app.get("/public/picker-pokemon", (_, res) =>
   res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
 );
 
+app.get("/public/picker-shop", (_, res) =>
+  res.sendFile(path.join(staticPath, "picker-shop", "index.html"))
+);
+
 // Health
 app.get("/", (_, res) => res.send("Bot running"));
 app.get("/healthz", (_, res) =>
@@ -393,70 +397,6 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   console.log(`✅ Reward granted to ${interactionUser.username}`);
 }
 
-// ==========================================================
-// 💬 Passive TP Gain from Messages (RNG Entry Point)
-// ==========================================================
-client.on("messageCreate", async (message) => {
-  if (message.author.bot || !message.guild) return;
-
-  const userId = message.author.id;
-  const now = Date.now();
-  if (userCooldowns.has(userId) && now - userCooldowns.get(userId) < MESSAGE_COOLDOWN) return;
-  userCooldowns.set(userId, now);
-
-  trainerData[userId] ??= {
-    id: userId,
-    tp: 0,
-    cc: 0,
-    pokemon: {},
-    trainers: {},
-    displayedTrainer: null,
-    onboardingComplete: false,
-  };
-  const userObj = trainerData[userId];
-
-  userObj.tp += MESSAGE_TP_GAIN;
-  if (Math.random() < MESSAGE_CC_CHANCE) {
-    userObj.cc += MESSAGE_CC_GAIN;
-    await message.react("💰").catch(() => {});
-  }
-
-  try {
-    const member = await message.guild.members.fetch(userId);
-    await updateUserRole(member, userObj.tp, message.channel);
-  } catch (err) {
-    console.warn("⚠️ Rank update failed:", err.message);
-  }
-
-  // ✅ Single RNG gate (true 3% chance overall)
-  if (Math.random() < MESSAGE_REWARD_CHANCE) {
-    console.log(`🎲 RNG PASSED for ${message.author.username}`);
-    await tryGiveRandomReward(userObj, message.author, message);
-  }
-
-  if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
-});
-
-// ==========================================================
-// 💖 TP Gain from Reactions (RNG Entry Point)
-// ==========================================================
-client.on("messageReactionAdd", async (reaction, user) => {
-  if (user.bot || !reaction.message.guild) return;
-
-  const userId = user.id;
-  const now = Date.now();
-  if (rewardCooldowns.has(userId) && now - rewardCooldowns.get(userId) < REWARD_COOLDOWN) return;
-  rewardCooldowns.set(userId, now);
-
-  trainerData[userId] ??= {
-    id: userId,
-    tp: 0,
-    cc: 0,
-    pokemon: {},
-    trainers: {},
-    displayedTrainer: null,
-    onboardingComplete: false,
-  };
   const userObj = trainerData[userId];
 
   userObj.tp += MESSAGE_TP_GAIN;
@@ -621,16 +561,25 @@ function normalizeUserSchema(id, user) {
   user.id ??= id;
   user.tp ??= 0;
   user.cc ??= 0;
+
   user.pokemon ??= {};
   user.trainers ??= {};
+
   user.displayedPokemon ??= [];
   user.displayedTrainer ??= null;
+
   user.lastDaily ??= 0;
+  user.lastRecruit ??= 0;
+  user.lastQuest ??= 0;
+  user.lastWeeklyPack ??= 0;
+
   user.onboardingComplete ??= false;
   user.onboardingDate ??= null;
   user.starterPokemon ??= null;
+
   user.items ??= { evolution_stone: 0 };
-  user.purchases ??= []; // for one-time shop items like starter_pack
+  user.purchases ??= [];
+
   return user;
 }
 
@@ -649,15 +598,25 @@ client.on("messageCreate", async (message) => {
   userCooldowns.set(userId, now);
 
   // Ensure user data exists
-  trainerData[userId] ??= {
-    id: userId,
-    tp: 0,
-    cc: 0,
-    pokemon: {},
-    trainers: {},
-    displayedTrainer: null,
-    onboardingComplete: false,
-  };
+ trainerData[userId] ??= {
+  id: userId,
+  tp: 0,
+  cc: 0,
+  pokemon: {},
+  trainers: {},
+  displayedTrainer: null,
+  displayedPokemon: [],
+  onboardingComplete: false,
+  onboardingDate: null,
+  starterPokemon: null,
+  lastDaily: 0,
+  lastRecruit: 0,
+  lastQuest: 0,
+  lastWeeklyPack: 0,       // ✅ REQUIRED
+  items: { evolution_stone: 0 },
+  purchases: [],
+};
+
   const userObj = trainerData[userId];
 
 // 🪙 Give base TP for chatting
@@ -703,14 +662,24 @@ client.on("messageReactionAdd", async (reaction, user) => {
   rewardCooldowns.set(userId, now);
 
   trainerData[userId] ??= {
-    id: userId,
-    tp: 0,
-    cc: 0,
-    pokemon: {},
-    trainers: {},
-    displayedTrainer: null,
-    onboardingComplete: false,
-  };
+  id: userId,
+  tp: 0,
+  cc: 0,
+  pokemon: {},
+  trainers: {},
+  displayedTrainer: null,
+  displayedPokemon: [],
+  onboardingComplete: false,
+  onboardingDate: null,
+  starterPokemon: null,
+  lastDaily: 0,
+  lastRecruit: 0,
+  lastQuest: 0,
+  lastWeeklyPack: 0,       // ✅ REQUIRED
+  items: { evolution_stone: 0 },
+  purchases: [],
+};
+
   const userObj = trainerData[userId];
 
   // 🪙 Gain TP for reaction
@@ -739,6 +708,128 @@ if (Math.random() < MESSAGE_CC_CHANCE) {
   }
 
   if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
+});
+
+// ==========================================================
+// 🛍️ SHOP API — GET USER  (FINAL FIXED VERSION)
+// ==========================================================
+app.get("/api/user", (req, res) => {
+  const { id, token } = req.query;
+
+  if (!validateToken(id, token))
+    return res.status(403).json({ error: "Invalid or expired token" });
+
+ const user = trainerData[id];
+if (!user)
+  return res.status(404).json({ error: "User not found" });
+
+// MUST reassign — otherwise missing fields never persist
+trainerData[id] = normalizeUserSchema(id, user);
+
+// Ensure rank is correct
+trainerData[id].rank = getRank(trainerData[id].tp);
+
+return res.json(trainerData[id]);
+
+});
+
+
+// ==========================================================
+// 🛍️ SHOP API — UPDATE USER
+// ==========================================================
+app.post("/api/updateUser", express.json(), async (req, res) => {
+  const { id, token, user } = req.body;
+
+  if (!validateToken(id, token))
+    return res.status(403).json({ error: "Invalid or expired token" });
+
+  if (!trainerData[id])
+    return res.status(404).json({ error: "User not found" });
+
+  // Merge provided fields
+  trainerData[id] = normalizeUserSchema(
+  id,
+  { ...trainerData[id], ...user }
+);
+
+  await saveTrainerDataLocal(trainerData);
+  debouncedDiscordSave();
+
+  res.json({ success: true });
+});
+
+// ==========================================================
+// 🛍️ SHOP API — POKÉMON REWARD
+// ==========================================================
+app.post("/api/rewardPokemon", express.json(), async (req, res) => {
+  const { id, token, source } = req.body;
+
+  if (!validateToken(id, token))
+    return res.status(403).json({ error: "Invalid token" });
+
+  const user = trainerData[id];
+  if (!user)
+    return res.status(404).json({ error: "User not found" });
+
+  const allPokemon = await getAllPokemon();
+
+  // Use existing weighted random system
+  const reward = selectRandomPokemonForUser(allPokemon, user);
+  const shiny = rollForShiny(user.tp || 0);
+
+  user.pokemon ??= {};
+  user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
+  if (shiny) user.pokemon[reward.id].shiny++;
+  else user.pokemon[reward.id].normal++;
+
+  await saveTrainerDataLocal(trainerData);
+  debouncedDiscordSave();
+
+  res.json({
+    success: true,
+    reward: reward.id,
+    shiny
+  });
+});
+
+// ==========================================================
+// 🛍️ SHOP API — TRAINER REWARD (specific tier)
+// ==========================================================
+app.post("/api/rewardTrainer", express.json(), async (req, res) => {
+  const { id, token, tier } = req.body;
+
+  if (!validateToken(id, token))
+    return res.status(403).json({ error: "Invalid token" });
+
+  const user = trainerData[id];
+  if (!user)
+    return res.status(404).json({ error: "User not found" });
+
+  const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
+  const flat = await getFlattenedTrainers();
+
+  const filtered = flat.filter(t => t.tier === tier);
+  if (!filtered.length)
+    return res.status(400).json({ error: `No trainers of tier ${tier}` });
+
+  const reward = filtered[Math.floor(Math.random() * filtered.length)];
+
+  user.trainers ??= {};
+  const key =
+  (reward.spriteFile || reward.filename || reward.file || "")
+    .trim()
+    .toLowerCase();
+
+user.trainers[key] = (user.trainers[key] || 0) + 1;
+
+
+  await saveTrainerDataLocal(trainerData);
+  debouncedDiscordSave();
+
+  res.json({
+    success: true,
+    reward: reward.spriteFile,
+  });
 });
 
 

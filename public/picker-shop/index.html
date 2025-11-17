@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Coop’s Collection — Shop</title>
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="/public/picker-shop/style.css" />
+  <link rel="stylesheet" href="style.css" />
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
     rel="stylesheet"
@@ -14,46 +13,84 @@
 </head>
 
 <body>
-  <!-- ===========================================================
-       HEADER
-  =========================================================== -->
   <header>
     <h1>🛒 Shop</h1>
-    <p>Get Poké Balls • Evolution Items • Bundles</p>
+    <p>Buy items using your CC balance</p>
   </header>
 
-  <!-- ===========================================================
-       NAVIGATION TABS (MATCHES OTHER PICKERS)
-  =========================================================== -->
-  <nav class="top-nav">
-    <a href="/public/picker-pokemon/index.html?id={{id}}&token={{token}}" class="nav-btn">
-      Manage Pokémon
-    </a>
-
-    <a href="/public/picker/index.html?id={{id}}&token={{token}}" class="nav-btn">
-      Manage Trainers
-    </a>
-
-    <a href="/public/picker-shop/index.html?id={{id}}&token={{token}}" class="nav-btn active">
-      Shop
-    </a>
-  </nav>
-
-  <!-- ===========================================================
-       SHOP GRID
-  =========================================================== -->
-  <section id="shopGrid" class="shop-grid"></section>
-
-  <!-- ===========================================================
-       POPUP (CONFIRMATION / REWARDS)
-  =========================================================== -->
-  <div id="shopPopupOverlay" class="popup-overlay">
-    <div id="shopPopup" class="popup-card"></div>
+  <div id="statsBar">
+    <div>💰 CC: <span id="ccCount">0</span></div>
+    <div>💎 Stones: <span id="stoneCount">0</span></div>
   </div>
 
-  <!-- ===========================================================
-       SCRIPTS
-  =========================================================== -->
-  <script src="/public/picker-shop/script.js"></script>
+  <main>
+
+    <!-- Poké Balls -->
+    <section class="shop-section">
+      <h2>Poké Balls</h2>
+
+      <div class="shop-grid">
+
+        <div class="shop-item">
+          <img src="/public/sprites/items/pokeball.png" class="item-icon" />
+          <h3>Poké Ball</h3>
+          <p class="price">500 CC</p>
+          <button class="buy-btn" data-item="pokeball">Buy</button>
+        </div>
+
+        <div class="shop-item">
+          <img src="/public/sprites/items/greatball.png" class="item-icon" />
+          <h3>Great Ball</h3>
+          <p class="price">1000 CC</p>
+          <button class="buy-btn" data-item="greatball">Buy</button>
+        </div>
+
+        <div class="shop-item">
+          <img src="/public/sprites/items/ultraball.png" class="item-icon" />
+          <h3>Ultra Ball</h3>
+          <p class="price">2500 CC</p>
+          <button class="buy-btn" data-item="ultraball">Buy</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Evolution Stones -->
+    <section class="shop-section">
+      <h2>Evolution</h2>
+
+      <div class="shop-grid">
+
+        <div class="shop-item">
+          <img src="/public/sprites/items/evolutionstone.png" class="item-icon" />
+          <h3>Evolution Stone</h3>
+          <p class="price">1000 CC</p>
+          <button class="buy-btn" data-item="evo_stone">Buy</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Weekly Pack -->
+    <section class="shop-section">
+      <h2>Weekly Pack</h2>
+      <p class="subtitle">Free once every 7 days — resets Sunday at 00:00 UTC</p>
+
+      <div class="shop-grid">
+
+        <div class="shop-item special">
+          <img src="/public/sprites/items/weeklypack.png" class="item-icon" />
+          <h3>Weekly Pack</h3>
+          <p class="price">FREE</p>
+          <button class="buy-btn" data-item="weekly">Claim</button>
+          <p id="weeklyStatus"></p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>

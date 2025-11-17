@@ -894,27 +894,41 @@ async function handleDonationConfirm(pokeId, overlay) {
   }
 }
 
-// ===========================================================
-// 🔄 Navigation Tabs — Preserve ID & Token Across Pickers
-// ===========================================================
+//------------------------------------------------------------
+// 🔄 Navigation Tabs — EXACT SAME BEHAVIOR AS TRAINERS
+//------------------------------------------------------------
 (function initNavTabs() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
   const token = params.get("token");
+
   if (!id || !token) return;
 
   const goPokemon = document.getElementById("goPokemon");
   const goTrainers = document.getElementById("goTrainers");
+  const goShop = document.getElementById("goShop");
 
+  // ⭐ Pokémon
   if (goPokemon) {
     goPokemon.addEventListener("click", () => {
-      // Already here
+      window.location.href =
+        `/public/picker-pokemon/index.html?id=${id}&token=${token}`;
     });
   }
 
+  // 🧑 Trainers (already correct)
   if (goTrainers) {
     goTrainers.addEventListener("click", () => {
-      window.location.href = `/public/picker/index.html?id=${id}&token=${token}`;
+      window.location.href =
+        `/public/picker/index.html?id=${id}&token=${token}`;
+    });
+  }
+
+  // 🛒 Shop — EXACT SAME PATTERN AS TRAINERS
+  if (goShop) {
+    goShop.addEventListener("click", () => {
+      window.location.href =
+        `/public/picker-shop/index.html?id=${id}&token=${token}`;
     });
   }
 })();

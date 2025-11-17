@@ -1,118 +1,173 @@
-/* =============================
-   SHOP GRID
-=============================*/
+/* ===========================================================
+   Coop’s Collection — SHOP TAB (Unified Theme)
+   Matches picker-pokemon styling exactly
+   =========================================================== */
+
+/* ---------- Root Theme Variables ---------- */
+:root {
+  --bg: #0f1013;
+  --card: #1a1c20;
+  --card-hover: #22252b;
+  --border: #2a2d33;
+  --brand: #3b82f6;
+  --brand-hover: #2563eb;
+  --accent: #facc15;
+  --text: #ffffff;
+  --text-dim: #9ca3af;
+}
+
+/* ---------- Global Styles ---------- */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  font-family: "Inter", sans-serif;
+  color: var(--text);
+}
+
+/* ---------- Header ---------- */
+header {
+  text-align: center;
+  padding: 24px 0 12px;
+}
+
+header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+header p {
+  margin: 6px 0 0;
+  color: var(--text-dim);
+  font-size: 15px;
+}
+
+/* ---------- Stats Bar (same as picker-pokemon) ---------- */
+#statsBar {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 10px 0;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.stat-item .stat-icon {
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+/* ---------- Container ---------- */
+main {
+  width: 92%;
+  max-width: 900px;
+  margin: 24px auto 60px;
+}
+
+/* ---------- Sections ---------- */
+.shop-section {
+  margin-bottom: 40px;
+}
+
+.shop-section h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  margin: -4px 0 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* ---------- Grid ---------- */
 .shop-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
-  padding: 10px;
 }
 
+/* ---------- Shop Item Cards ---------- */
 .shop-item {
-  background: #1e1e2e;
-  border-radius: 16px;
-  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
   text-align: center;
-  border: 2px solid #2a2a3d;
-  transition: 0.2s;
+  transition: 0.15s ease;
 }
 
 .shop-item:hover {
-  transform: translateY(-4px);
-  border-color: var(--brand);
+  background: var(--card-hover);
+  transform: translateY(-2px);
 }
 
-.shop-item img {
-  width: 96px;
-  height: 96px;
+/* Special (Weekly Pack) */
+.shop-item.special {
+  background: #272134;
+  border-color: #7c3aed;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+}
+
+/* ---------- Icons ---------- */
+.item-icon {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 10px;
   image-rendering: pixelated;
 }
 
-.shop-item-name {
+/* ---------- Text ---------- */
+.shop-item h3 {
+  margin: 6px 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.price {
+  font-size: 14px;
   font-weight: 600;
-  margin-top: 8px;
-  font-size: 1.1em;
+  color: var(--accent);
+  margin-bottom: 12px;
 }
 
-.shop-item-description {
-  font-size: 0.85em;
-  opacity: 0.8;
-  margin: 6px 0 10px;
-}
-
-.shop-item-price {
-  font-size: 1em;
-  color: var(--gold);
-  margin-bottom: 10px;
-}
-
-.shop-buy-btn {
-  background: var(--brand);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 10px;
-  cursor: pointer;
+/* ---------- Buttons ---------- */
+.buy-btn {
   width: 100%;
-  transition: 0.2s;
-  font-weight: 600;
-}
-
-.shop-buy-btn:hover {
-  background: var(--brand-dark);
-}
-
-/* =============================
-   POPUP
-=============================*/
-.popup-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.7);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 5000;
-}
-
-.popup-card {
-  background: #1e1e2e;
-  padding: 20px;
-  border-radius: 20px;
-  text-align: center;
-  border: 2px solid var(--brand);
-  max-width: 320px;
-  animation: popupFade 0.2s ease;
-}
-
-.popup-card img {
-  width: 96px;
-  height: 96px;
-  image-rendering: pixelated;
-  margin-bottom: 10px;
-}
-
-.confirm-btn, .cancel-btn {
-  border: none;
-  padding: 8px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  margin: 6px;
-  font-weight: 600;
-}
-
-.confirm-btn {
+  padding: 10px 0;
   background: var(--brand);
-  color: white;
+  border-radius: 8px;
+  border: none;
+  color: var(--bg);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s ease;
 }
 
-.cancel-btn {
-  background: #444;
-  color: white;
+.buy-btn:hover {
+  background: var(--brand-hover);
 }
 
-@keyframes popupFade {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+/* Disabled button */
+.buy-btn:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+/* ---------- Status Label (Weekly Pack) ---------- */
+#weeklyStatus {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
 }

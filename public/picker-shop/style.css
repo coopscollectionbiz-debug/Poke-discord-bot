@@ -1,6 +1,6 @@
 /* ===========================================================
    Coop’s Collection — SHOP TAB (Unified Theme)
-   Matches picker-pokemon styling exactly
+   Matches picker-pokemon + trainer styling exactly
    =========================================================== */
 
 /* ---------- Root Theme Variables ---------- */
@@ -43,7 +43,42 @@ header p {
   font-size: 15px;
 }
 
-/* ---------- Stats Bar (same as picker-pokemon) ---------- */
+/* ===========================================================
+   Navigation Tabs (Shared Across All Pickers)
+=========================================================== */
+
+.nav-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 1rem auto 1.5rem;
+}
+
+.nav-tab {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-tab:hover {
+  border-color: #00ff9d;
+}
+
+.nav-tab.active {
+  background: #00ff9d;
+  color: #0d1117;
+  box-shadow: 0 0 8px #00ff9d60;
+}
+
+/* ===========================================================
+   Stats Bar (same as Pokémon Picker)
+=========================================================== */
+
 #statsBar {
   display: flex;
   justify-content: center;
@@ -127,13 +162,23 @@ main {
   image-rendering: pixelated;
 }
 
-/* ---------- Text ---------- */
+/* ---------- Item Title ---------- */
 .shop-item h3 {
   margin: 6px 0 4px;
   font-size: 17px;
   font-weight: 700;
 }
 
+/* ---------- Item Descriptions ---------- */
+.desc {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 4px 0 6px;
+  line-height: 1.3;
+  min-height: 34px; /* keeps grid aligned even with different text lengths */
+}
+
+/* ---------- Price ---------- */
 .price {
   font-size: 14px;
   font-weight: 600;
@@ -170,4 +215,75 @@ main {
   margin-top: 8px;
   font-size: 13px;
   color: var(--text-dim);
+}
+
+/* ---------- Responsive Adjustments ---------- */
+@media (max-width: 520px) {
+  .shop-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .item-icon {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* ===========================================================
+   Shop Confirmation Modal (reuses trainer picker styling)
+=========================================================== */
+
+#shopModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#shopModal {
+  background: #161b22;
+  border: 2px solid #00ff9d;
+  border-radius: 14px;
+  padding: 1.8rem;
+  text-align: center;
+  max-width: 420px;
+  width: 90%;
+  color: white;
+  box-shadow: 0 0 20px #00ff9d60;
+}
+
+#shopModal img {
+  width: 90px;
+  height: auto;
+  image-rendering: pixelated;
+  margin-bottom: 0.5rem;
+}
+
+#shopModal .modal-buttons {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+#shopModal .modal-btn {
+  background: #00ff9d;
+  color: #0d1117;
+  border: none;
+  padding: 10px 22px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#shopModal .modal-btn.cancel {
+  background: #30363d;
+  color: white;
+}
+
+#shopModal .modal-btn:hover {
+  transform: scale(1.03);
 }

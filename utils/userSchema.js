@@ -138,7 +138,6 @@ export function validateUserSchema(user, userId, username) {
   out.lastWeeklyPack = null;
 }
 
-
   // Inventory
   if (!out.items || typeof out.items !== "object") {
     out.items = { evolution_stone: 0 };

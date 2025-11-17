@@ -272,6 +272,33 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   if (now - last < REWARD_COOLDOWN) return;
   rewardCooldowns.set(interactionUser.id, now);
 
+// ======================================================
+// 🎯 RANDOM REWARD PITY SYSTEM (NO SHINY IMPACT)
+// ======================================================
+userObj.luck ??= 0;
+
+const BASE_CHANCE = MESSAGE_REWARD_CHANCE;  // 0.02 (2%)
+const MAX_CHANCE = 0.12;                    // 12% hard cap (tweakable)
+const PITY_INCREMENT = 0.01;                // +1% per failed attempt
+
+// Increase pity every time tryGiveRandomReward runs
+userObj.luck = Math.min(MAX_CHANCE, userObj.luck + PITY_INCREMENT);
+
+// Final chance for this attempt
+const finalChance = Math.min(MAX_CHANCE, BASE_CHANCE + userObj.luck);
+
+// If the roll FAILS, exit quietly — pity remains for next time
+if (Math.random() >= finalChance) {
+  // pity grows automatically above
+  return;
+}
+
+// If we reach here → reward WILL happen
+// Reset pity immediately
+userObj.luck = 0;
+
+
+
   // Load Pokémon + flattened trainer pool for correct names
   const allPokemon = await getAllPokemon();
   const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
@@ -556,6 +583,10 @@ function normalizeUserSchema(id, user) {
   user.items ??= { evolution_stone: 0 };
   user.purchases ??= [];
 
+  user.luck ??= 0;           // user's pity meter  
+  user.luckTimestamp ??= 0;  // last increment/decay tick  
+
+
   return user;
 }
 
@@ -591,6 +622,9 @@ client.on("messageCreate", async (message) => {
   lastWeeklyPack: 0,       // ✅ REQUIRED
   items: { evolution_stone: 0 },
   purchases: [],
+  luck: 0,
+  luckTimestamp: 0,
+
 };
 
   const userObj = trainerData[userId];
@@ -616,9 +650,7 @@ try {
 }
 
   // 🎲 3% chance for bonus Pokémon or Trainer
-  if (Math.random() < MESSAGE_REWARD_CHANCE) {
-    await tryGiveRandomReward(userObj, message.author, message);
-  }
+  await tryGiveRandomReward(userObj, message.author, message);
 
   // Periodic autosave
   if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
@@ -654,6 +686,9 @@ client.on("messageReactionAdd", async (reaction, user) => {
   lastWeeklyPack: 0,       // ✅ REQUIRED
   items: { evolution_stone: 0 },
   purchases: [],
+  luck: 0,
+  luckTimestamp: 0,
+
 };
 
   const userObj = trainerData[userId];
@@ -679,9 +714,7 @@ if (Math.random() < MESSAGE_CC_CHANCE) {
   }
 
   // 3% chance for random reward
-  if (Math.random() < REACTION_REWARD_CHANCE) {
-    await tryGiveRandomReward(userObj, user, reaction.message);
-  }
+ await tryGiveRandomReward(userObj, user, reaction.message);
 
   if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
 });

@@ -76,7 +76,7 @@ header p {
 }
 
 /* ===========================================================
-   Stats Bar (same as Pokémon Picker)
+   Stats Bar
 =========================================================== */
 
 #statsBar {
@@ -140,6 +140,10 @@ main {
   padding: 18px;
   text-align: center;
   transition: 0.15s ease;
+  min-height: 260px; /* Ensures icons + descriptions do not collapse */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .shop-item:hover {
@@ -158,8 +162,9 @@ main {
 .item-icon {
   width: 72px;
   height: 72px;
-  margin-bottom: 10px;
+  margin: 0 auto 10px;
   image-rendering: pixelated;
+  display: block;
 }
 
 /* ---------- Item Title ---------- */
@@ -175,7 +180,7 @@ main {
   font-size: 0.85rem;
   margin: 4px 0 6px;
   line-height: 1.3;
-  min-height: 34px; /* keeps grid aligned even with different text lengths */
+  min-height: 38px; /* ensures equal spacing across items */
 }
 
 /* ---------- Price ---------- */
@@ -198,6 +203,7 @@ main {
   font-weight: 700;
   cursor: pointer;
   transition: 0.15s ease;
+  margin-top: auto; /* pushes button to bottom */
 }
 
 .buy-btn:hover {
@@ -217,7 +223,10 @@ main {
   color: var(--text-dim);
 }
 
-/* ---------- Responsive Adjustments ---------- */
+/* ===========================================================
+   Responsive
+=========================================================== */
+
 @media (max-width: 520px) {
   .shop-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -230,7 +239,7 @@ main {
 }
 
 /* ===========================================================
-   Shop Confirmation Modal (reuses trainer picker styling)
+   Shop Confirmation Modal (Shared UI)
 =========================================================== */
 
 #shopModalOverlay {
@@ -277,6 +286,7 @@ main {
   font-weight: 700;
   border-radius: 10px;
   cursor: pointer;
+  transition: 0.15s ease;
 }
 
 #shopModal .modal-btn.cancel {

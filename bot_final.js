@@ -972,8 +972,10 @@ app.post("/api/claim-weekly", express.json(), async (req, res) => {
 });
 
 // ==========================================================
-// 🧰 WEEKLY PACK — Single Atomic Backend Generator (v2, Optimized)
+// 🧰 WEEKLY PACK — Single Atomic Backend Generator (CACHED)
 // ==========================================================
+import { getPokemonCached } from "./utils/pokemonCache.js";
+
 app.post("/api/weekly-pack", express.json(), async (req, res) => {
   const { id, token } = req.body;
 
@@ -985,9 +987,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
   if (!user)
     return res.status(404).json({ error: "User not found" });
 
-  // ======================================================
-  // ⏳ Cooldown Check (7 days)
-  // ======================================================
+  // Cooldown
   const last = user.lastWeeklyPack ? new Date(user.lastWeeklyPack).getTime() : 0;
   const now = Date.now();
   const sevenDays = 7 * 24 * 60 * 60 * 1000;
@@ -996,26 +996,22 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
     return res.status(400).json({ error: "Weekly pack already claimed." });
   }
 
-  // ======================================================
-  // 🔥 Set cooldown FIRST (prevents refresh exploits)
-  // ======================================================
+  // 🔥 Set cooldown FIRST (blocks refresh spam)
   user.lastWeeklyPack = new Date().toISOString();
-
-  // ======================================================
-  // ⚡ PRELOAD POKÉMON + TRAINERS ONCE (major speedup)
-  // ======================================================
-  const allPokemon = await getAllPokemon();
-
-  const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
-  const flat = await getFlattenedTrainers();
 
   const results = [];
 
   // ======================================================
-  // Helper: Award Pokémon (fast, no extra loads)
+  // Cached Pokémon data (1 load, reused for all 6 pulls)
   // ======================================================
-  function givePokemon(tier) {
-    const reward = selectRandomPokemonForUser(allPokemon, user, tier);
+  const cachedPokemon = await getPokemonCached();   // ❗ NEW
+  // (cachedTrainer already loaded via flattened trainer call)
+
+  // ------------------------------------------------------
+  // Pokémon Pull Helper
+  // ------------------------------------------------------
+  async function givePokemon(tier) {
+    const reward = selectRandomPokemonForUser(cachedPokemon, user, tier);
     const shiny = rollForShiny(user.tp || 0);
 
     user.pokemon ??= {};
@@ -1036,10 +1032,13 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
     });
   }
 
-  // ======================================================
-  // Helper: Award Trainer (fast, no extra loads)
-  // ======================================================
-  function giveTrainer(tier) {
+  // ------------------------------------------------------
+  // Trainer Pull Helper (already optimized)
+  // ------------------------------------------------------
+  async function giveTrainer(tier) {
+    const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
+    const flat = await getFlattenedTrainers();
+
     const pool = flat.filter(t => (t.tier || t.rarity) === tier);
     if (!pool.length) return;
 
@@ -1055,7 +1054,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
       .replace(/_/g, " ")
       .replace(/\s+/g, " ")
       .trim()
-      .replace(/\b\w/g, c => c.toUpperCase());
+      .replace(/\b\w/g, (c) => c.toUpperCase());
 
     let file =
       reward.spriteFile ||
@@ -1085,36 +1084,30 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
   }
 
   // ======================================================
-  // 🎁 Weekly Pack Structure (6 Pokémon + 6 Trainers)
+  // 🎁 Weekly Pack Structure (6 + 6)
   // ======================================================
+  await givePokemon("common");
+  await givePokemon("common");
+  await givePokemon("common");
+  await givePokemon("uncommon");
+  await givePokemon("uncommon");
+  await givePokemon("rare");
 
-  // Pokémon (3 common, 2 uncommon, 1 rare)
-  givePokemon("common");
-  givePokemon("common");
-  givePokemon("common");
-  givePokemon("uncommon");
-  givePokemon("uncommon");
-  givePokemon("rare");
-
-  // Trainers (3 common, 2 uncommon, 1 rare)
-  giveTrainer("common");
-  giveTrainer("common");
-  giveTrainer("common");
-  giveTrainer("uncommon");
-  giveTrainer("uncommon");
-  giveTrainer("rare");
+  await giveTrainer("common");
+  await giveTrainer("common");
+  await giveTrainer("common");
+  await giveTrainer("uncommon");
+  await giveTrainer("uncommon");
+  await giveTrainer("rare");
 
   // ======================================================
-  // 💾 Save ONCE (massive performance gain)
+  // Save ONCE
   // ======================================================
   await saveTrainerDataLocal(trainerData);
   debouncedDiscordSave();
 
   console.log(`🎁 Weekly pack generated for ${id}`);
 
-  // ======================================================
-  // 📦 Return clean reward list
-  // ======================================================
   return res.json({
     success: true,
     rewards: results

@@ -151,7 +151,8 @@ export function selectRandomTrainerForUser(trainerPool, user) {
         id: v.id ?? key ?? `trainer-${i}`,
         name: v.name || key,
         tier: normalizeTier(v.tier || v.rarity),
-        spriteFile: v.spriteFile || v.sprites?.[0] || `${v.id}.png`,
+        spriteFile: v.spriteFile || v.sprites?.[0] || `${key}.png`,
+        groupName: key,     // <-- THIS FIXES THE ERROR
         raw: v,
       }));
 
@@ -164,8 +165,7 @@ export function selectRandomTrainerForUser(trainerPool, user) {
     rarity: chosen.tier,
     spriteFile: chosen.spriteFile,
     filename: chosen.spriteFile,
-    groupName: chosen.raw.groupName || chosen.name || chosen.id
-
+    groupName: chosen.groupName   // <-- NOW SAFE
   };
 }
 

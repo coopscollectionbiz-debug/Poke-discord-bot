@@ -38,6 +38,11 @@ export const USER_SCHEMA_TEMPLATE = {
   // Inventory + shop
   items: "object { evolution_stone: number }",
   purchases: "array of strings (e.g. 'starter_pack')",
+
+// Luck / Pity System
+luck: "number (pity meter, default 0)",
+luckTimestamp: "timestamp (last message timestamp)",
+
 };
 
 
@@ -83,6 +88,11 @@ export function createNewUser(userId, username) {
 
     // Permanent purchase flags
     purchases: [],
+
+// Luck / Pity system
+luck: 0,
+luckTimestamp: 0,
+
   };
 }
 
@@ -136,6 +146,10 @@ export function validateUserSchema(user, userId, username) {
 
   // Permanent shop purchases
   if (!Array.isArray(out.purchases)) out.purchases = [];
+
+// Luck / Pity corrections
+if (out.luck == null) out.luck = 0;
+if (out.luckTimestamp == null) out.luckTimestamp = 0;
 
   // DEPRECATED: ownedPokemon → pokemon
   if (out.ownedPokemon) {

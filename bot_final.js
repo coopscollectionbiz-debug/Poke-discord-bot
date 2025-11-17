@@ -112,11 +112,11 @@ const AUTOSAVE_INTERVAL = 1000 * 60 * 3;
 const POKEBEACH_CHECK_INTERVAL = 1000 * 60 * 120;
 const PORT = process.env.PORT || 10000;
 const MESSAGE_TP_GAIN = 2;
-const MESSAGE_CC_CHANCE = 0.025;
-const MESSAGE_CC_GAIN = 10;
+const MESSAGE_CC_CHANCE = 0.02;
+const MESSAGE_CC_GAIN = 100;
 const MESSAGE_COOLDOWN = 7000;
-const MESSAGE_REWARD_CHANCE = 0.025;
-const REACTION_REWARD_CHANCE = 0.025;
+const MESSAGE_REWARD_CHANCE = 0.02;
+const REACTION_REWARD_CHANCE = 0.02;
 const REWARD_COOLDOWN = 7000;
 const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
 
@@ -283,7 +283,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // ======================================================
     // 🎲 50/50 Pokémon vs Trainer (passive rewards only)
     // ======================================================
-    if (Math.random() < 0.5) {
+    if (Math.random() < 0.61) {
       // 🟢 Pokémon reward (uses Pokémon weights)
       isPokemon = true;
       reward = selectRandomPokemonForUser(allPokemon, userObj);
@@ -396,30 +396,6 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
   console.log(`✅ Reward granted to ${interactionUser.username}`);
 }
-
-  const userObj = trainerData[userId];
-
-  userObj.tp += MESSAGE_TP_GAIN;
-  if (Math.random() < MESSAGE_CC_CHANCE) {
-    userObj.cc += MESSAGE_CC_GAIN;
-    await reaction.message.react("💰").catch(() => {});
-  }
-
-  try {
-    const member = await reaction.message.guild.members.fetch(userId);
-    await updateUserRole(member, userObj.tp, reaction.message.channel);
-  } catch (err) {
-    console.warn("⚠️ Rank update failed:", err.message);
-  }
-
-  // ✅ Single RNG gate (3% total)
-  if (Math.random() < REACTION_REWARD_CHANCE) {
-    console.log(`🎲 RNG PASSED (reaction) for ${user.username}`);
-    await tryGiveRandomReward(userObj, user, reaction.message);
-  }
-
-  if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
-});
 
 // ==========================================================
 // 📂 COMMAND LOADER

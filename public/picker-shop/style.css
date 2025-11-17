@@ -313,3 +313,8 @@ main {
     transform: rotate(360deg);
   }
 }
+
+.modal-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}

@@ -9,18 +9,18 @@ import { getRank } from "./rankSystem.js";
 // 🎯 BASE WEIGHTS (Pokéball baseline)
 // ==========================================================
 export const POKEMON_RARITY_WEIGHTS = {
-  common: 50,
+  common: 52,
   uncommon: 34,
-  rare: 10,
+  rare: 8,
   epic: 4,
   legendary: 1.5,
   mythic: 0.5,
 };
 
 export const TRAINER_RARITY_WEIGHTS = {
-  common: 50,
+  common: 52,
   uncommon: 34,
-  rare: 10,
+  rare: 8,
   epic: 4,
   legendary: 1.5,
   mythic: 0.5,

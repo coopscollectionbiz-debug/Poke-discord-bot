@@ -773,8 +773,8 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
       rarity: reward.rarity || reward.tier,
       shiny,
       sprite: shiny
-        ? `/public/sprites/shiny/${reward.id}.gif`
-        : `/public/sprites/pokemon/${reward.id}.gif`
+        ? `/public/sprites/pokemon/shiny/${reward.id}.gif`
+        : `/public/sprites/pokemon/normal/${reward.id}.gif`
     }
   });
 });

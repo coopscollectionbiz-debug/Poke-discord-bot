@@ -56,6 +56,27 @@ async function saveUser() {
   if (!res.ok) throw new Error("Failed to save user");
 }
 
+
+function showLoadingModal() {
+  const overlay = document.createElement("div");
+  overlay.id = "shopModalOverlay";
+
+  const modal = document.createElement("div");
+  modal.id = "shopModal";
+
+  modal.innerHTML = `
+    <h2 style="color:#00ff9d; margin-top:0;">Processing...</h2>
+    <p style="color:#ccc;">Please wait</p>
+    <div class="spinner"></div>
+  `;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Return a function to close the modal
+  return () => overlay.remove();
+}
+
 // ======================================================
 // Shop modals
 // ======================================================
@@ -146,7 +167,7 @@ function charge(cost) {
 }
 
 // ======================================================
-// ⭐ BUY EVOLUTION STONE
+// ⭐ BUY EVOLUTION STONE (with loading modal)
 // ======================================================
 async function buyStone(cost) {
   showShopModal({
@@ -154,13 +175,19 @@ async function buyStone(cost) {
     message: `Buy an Evolution Stone for ${cost} CC?`,
     sprites: ["/public/sprites/items/evolution_stone.png"],
     onConfirm: async () => {
+
       if (!charge(cost)) return;
+
+      // 🔄 SHOW LOADING
+      const closeLoading = showLoadingModal();
 
       user.items.evolution_stone =
         (user.items.evolution_stone || 0) + 1;
 
       await saveUser();
       updateUI();
+
+      closeLoading(); // 🔄 CLOSE LOADING
 
       showShopModal({
         title: "Purchase Complete!",
@@ -173,7 +200,7 @@ async function buyStone(cost) {
 }
 
 // ======================================================
-// ⭐ BUY POKEBALL
+// ⭐ BUY POKEBALL (with loading modal)
 // ======================================================
 async function buyPokeball(type, cost) {
   const ballSprite = `/public/sprites/items/${type}.png`;
@@ -189,6 +216,9 @@ async function buyPokeball(type, cost) {
       updateUI();
       await saveUser();
 
+      // 🔄 SHOW LOADING
+      const closeLoading = showLoadingModal();
+
       const reward = await fetch("/api/rewardPokemon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -199,6 +229,8 @@ async function buyPokeball(type, cost) {
         })
       }).then(r => r.json());
 
+      closeLoading(); // 🔄 CLOSE LOADING
+
       if (!reward.success) {
         showShopModal({
           title: "Error",
@@ -208,19 +240,19 @@ async function buyPokeball(type, cost) {
         return;
       }
 
+      // show result modal
       showShopModal({
         title: "You caught a Pokémon!",
         message: `${reward.pokemon.rarity.toUpperCase()} ${reward.pokemon.name}`,
         sprites: [reward.pokemon.sprite],
         onConfirm: () => {}
       });
-
     }
   });
 }
 
 // ======================================================
-// 🎁 WEEKLY PACK
+// 🎁 WEEKLY PACK (with loading modal)
 // ======================================================
 async function claimWeeklyPack() {
   if (!canClaimWeeklyPack()) return;
@@ -261,17 +293,24 @@ async function claimWeeklyPack() {
   await pushTrainer("uncommon");
   await pushTrainer("rare");
 
+  // 🔄 SHOW LOADING (covers save + UI update)
+  const closeLoading = showLoadingModal();
+
   user.lastWeeklyPack = new Date().toISOString();
   await saveUser();
   updateUI();
 
-  showShopModal({
-  title: "Weekly Pack Rewards!",
-  message: rewards.map(r => `${r.rarity} ${r.name}`).join("<br>"),
-  sprites: ["/public/sprites/items/starter_pack.png", ...rewards.map(r => r.sprite)],
-  onConfirm: () => {}
-});
+  closeLoading(); // 🔄 CLOSE LOADING
 
+  showShopModal({
+    title: "Weekly Pack Rewards!",
+    message: rewards.map(r => `${r.rarity} ${r.name}`).join("<br>"),
+    sprites: [
+      "/public/sprites/items/starter_pack.png",
+      ...rewards.map(r => r.sprite)
+    ],
+    onConfirm: () => {}
+  });
 }
 
 // ======================================================

@@ -29,8 +29,8 @@ import { broadcastReward } from "../utils/broadcastReward.js";
 // ==========================================================
 // ⚖️ Constants
 // ==========================================================
-const DAILY_TP_REWARD = 50;
-const DAILY_CC_REWARD = 25;
+const DAILY_TP_REWARD = 100;
+const DAILY_CC_REWARD = 500;
 let lastDailySave = 0; // 🧠 Debounce control (1 minute)
 
 // ==========================================================

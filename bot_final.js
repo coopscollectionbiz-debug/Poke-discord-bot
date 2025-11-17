@@ -286,7 +286,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     if (Math.random() < 0.61) {
       // 🟢 Pokémon reward (uses Pokémon weights)
       isPokemon = true;
-      reward = selectRandomPokemonForUser(allPokemon, userObj);
+      reward = selectRandomPokemonForUser(allPokemon, userObj, null);
       isShiny = rollForShiny(userObj.tp || 0);
 
       userObj.pokemon ??= {};
@@ -735,10 +735,10 @@ app.post("/api/updateUser", express.json(), async (req, res) => {
 });
 
 // ==========================================================
-// 🛍️ SHOP API — POKÉMON REWARD
+// 🛍️ SHOP API — POKÉMON REWARD (Ball-Aware Version)
 // ==========================================================
 app.post("/api/rewardPokemon", express.json(), async (req, res) => {
-  const { id, token, source } = req.body;
+  const { id, token, source } = req.body;  // source = pokeball, greatball, ultraball
 
   if (!validateToken(id, token))
     return res.status(403).json({ error: "Invalid token" });
@@ -749,10 +749,13 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
 
   const allPokemon = await getAllPokemon();
 
-  // Use existing weighted random system
-  const reward = selectRandomPokemonForUser(allPokemon, user);
+  // 🎯 Tier-first + Rank-aware + Ball-aware weighted selection
+  const reward = selectRandomPokemonForUser(allPokemon, user, source);
+
+  // ✨ Shiny roll
   const shiny = rollForShiny(user.tp || 0);
 
+  // 🗃️ Record ownership
   user.pokemon ??= {};
   user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
   if (shiny) user.pokemon[reward.id].shiny++;
@@ -761,10 +764,18 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
   await saveTrainerDataLocal(trainerData);
   debouncedDiscordSave();
 
+  // 🎁 Frontend expects full details
   res.json({
     success: true,
-    reward: reward.id,
-    shiny
+    pokemon: {
+      id: reward.id,
+      name: reward.name,
+      rarity: reward.rarity || reward.tier,
+      shiny,
+      sprite: shiny
+        ? `/public/sprites/shiny/${reward.id}.gif`
+        : `/public/sprites/pokemon/${reward.id}.gif`
+    }
   });
 });
 

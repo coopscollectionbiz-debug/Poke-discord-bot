@@ -771,7 +771,6 @@ function openEvolutionModal(baseId) {
   grid.appendChild(card);
 });
 
-
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
   modal.querySelector(".confirm-btn").addEventListener("click", async () => {
     if (!selectedTarget) return;

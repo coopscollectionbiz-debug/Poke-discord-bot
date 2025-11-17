@@ -1,12 +1,12 @@
 // ==========================================================
-// weightedRandom.js (Fractional RNG Version)
-// Coop’s Collection — Tier-First, Rank-Aware, Fractional Weights
+// weightedRandom.js — Coop’s Collection (Gacha-Aligned Version)
+// Tier-First · Rank-Aware · Ball-Aware · Fractional Safe
 // ==========================================================
 
 import { getRank } from "./rankSystem.js";
 
 // ==========================================================
-// ⚖️ Base rarity/tier weights (fractional allowed!)
+// 🎯 BASE WEIGHTS (Pokéball baseline)
 // ==========================================================
 export const POKEMON_RARITY_WEIGHTS = {
   common: 50,
@@ -27,24 +27,37 @@ export const TRAINER_RARITY_WEIGHTS = {
 };
 
 // ==========================================================
-// Normalize label
+// 🎯 BALL MULTIPLIER TABLE (Industry-accurate gacha scaling)
 // ==========================================================
-function normalizeTier(value) {
-  const t = String(value || "common").toLowerCase();
-  return (
-    {
-      common: "common",
-      uncommon: "uncommon",
-      rare: "rare",
-      epic: "epic",
-      legendary: "legendary",
-      mythic: "mythic",
-    }[t] || "common"
-  );
-}
+export const BALL_MULTIPLIERS = {
+  pokeball: {
+    common:    1.00,
+    uncommon:  1.00,
+    rare:      1.00,
+    epic:      1.00,
+    legendary: 1.00,
+    mythic:    1.00,
+  },
+  greatball: {
+    common:    0.86,
+    uncommon:  0.95,
+    rare:      1.22,
+    epic:      1.28,
+    legendary: 1.40,
+    mythic:    1.35,
+  },
+  ultraball: {
+    common:    0.72,
+    uncommon:  0.85,
+    rare:      1.55,
+    epic:      1.78,
+    legendary: 2.15,
+    mythic:    2.40,
+  },
+};
 
 // ==========================================================
-// 💪 Rank multipliers (fractional safe!)
+// 🎯 Rank multipliers (per rare+ tier)
 // ==========================================================
 export const RANK_WEIGHT_MULTIPLIERS = {
   "Novice Trainer":       { rare: 1.0,  epic: 1.0,  legendary: 1.0,  mythic: 1.0 },
@@ -63,131 +76,108 @@ export const RANK_WEIGHT_MULTIPLIERS = {
 };
 
 // ==========================================================
-// 🎲 FRACTIONAL weighted random choice
-// Pure probability roll, no rounding, no bags
+// 🔧 Normalize tier name
 // ==========================================================
-function fractionalRandomChoice(list, weights) {
+function normalizeTier(value) {
+  const t = String(value || "").toLowerCase();
+  return (
+    {
+      common: "common",
+      uncommon: "uncommon",
+      rare: "rare",
+      epic: "epic",
+      legendary: "legendary",
+      mythic: "mythic",
+    }[t] || "common"
+  );
+}
+
+// ==========================================================
+// 🎲 Core function: weighted roll with Ball + Rank multipliers
+// ==========================================================
+function weightedRoll(list, baseWeights, user, ballType = "pokeball") {
   if (!Array.isArray(list) || list.length === 0) return null;
 
+  // Load multipliers
+  const rank = getRank(user.tp || 0);
+  const rankBuffs = RANK_WEIGHT_MULTIPLIERS[rank] || {};
+  const ballBuffs = BALL_MULTIPLIERS[ballType] || BALL_MULTIPLIERS.pokeball;
+
   let total = 0;
-  const tiers = list.map((item) => {
+
+  const weighted = list.map((item) => {
     const tier = normalizeTier(item.tier || item.rarity);
-    const w = weights[tier] ?? 0;
+    let w = baseWeights[tier] ?? 0;
+
+    // Apply rank buff
+    if (rankBuffs[tier]) w *= rankBuffs[tier];
+
+    // Apply ball buff
+    if (ballBuffs[tier]) w *= ballBuffs[tier];
+
     total += w;
-    return { item, weight: w };
+    return { item, w };
   });
 
   if (total <= 0) return list[Math.floor(Math.random() * list.length)];
 
   let roll = Math.random() * total;
 
-  for (const { item, weight } of tiers) {
-    roll -= weight;
+  for (const { item, w } of weighted) {
+    roll -= w;
     if (roll <= 0) return item;
   }
 
-  return tiers[tiers.length - 1].item;
+  return weighted[weighted.length - 1].item;
 }
 
 // ==========================================================
-// 🎲 FRACTIONAL weighted random with rank multipliers
+// 🎯 Pokémon selector (tier-aware, rank-aware, ball-aware)
 // ==========================================================
-function fractionalRandomChoiceWithRank(list, weights, user) {
-  if (!Array.isArray(list) || list.length === 0) return null;
-
-  const rank = getRank(user.tp || 0);
-  const buffs = RANK_WEIGHT_MULTIPLIERS[rank] || {};
-
-  let total = 0;
-  const weightedList = list.map((item) => {
-    const tier = normalizeTier(item.tier || item.rarity);
-    let w = weights[tier] ?? 0;
-
-    if (buffs[tier]) w *= buffs[tier];
-
-    total += w;
-    return { item, weight: w };
-  });
-
-  if (total <= 0)
-    return list[Math.floor(Math.random() * list.length)];
-
-  let roll = Math.random() * total;
-
-  for (const { item, weight } of weightedList) {
-    roll -= weight;
-    if (roll <= 0) return item;
-  }
-
-  return weightedList[weightedList.length - 1].item;
+export function selectRandomPokemonForUser(pool, user, source = "pokeball") {
+  const valid = ["pokeball", "greatball", "ultraball"];
+  const ballType = valid.includes(source) ? source : "pokeball";
+  return weightedRoll(pool, POKEMON_RARITY_WEIGHTS, user, ballType);
 }
 
-// ==========================================================
-// 🧩 Convenience wrapper: Pokémon
-// ==========================================================
-export function selectRandomPokemonForUser(pokemonPool, user) {
-  return fractionalRandomChoiceWithRank(
-    pokemonPool,
-    POKEMON_RARITY_WEIGHTS,
-    user
-  );
-}
 
 // ==========================================================
-// 🧩 Convenience wrapper: Trainer
+// 🎯 Trainer selector (same logic, pre-flattened)
 // ==========================================================
 export function selectRandomTrainerForUser(trainerPool, user) {
-  // Flatten trainerPool objects into usable trainer entries
-  const entries = Array.isArray(trainerPool)
+  const flat = Array.isArray(trainerPool)
     ? trainerPool
-    : Object.entries(trainerPool).map(([k, v]) => ({ key: k, ...v }));
+    : Object.entries(trainerPool).map(([key, v], i) => ({
+        id: v.id ?? key ?? `trainer-${i}`,
+        name: v.name || key,
+        tier: normalizeTier(v.tier || v.rarity),
+        spriteFile: v.spriteFile || v.sprites?.[0] || `${v.id}.png`,
+        raw: v,
+      }));
 
-  const normalized = entries.map((trainer, i) => ({
-    id: trainer.id || trainer.key || `trainer-${i}`,
-    name: trainer.name || trainer.key,
-    tier: normalizeTier(trainer.tier || trainer.rarity || "common"),
-    sprites: trainer.sprites || [trainer.spriteFile || `${trainer.id}.png`],
-    spriteFile: trainer.spriteFile || (trainer.sprites?.[0] ?? `${trainer.id}.png`),
-    raw: trainer,
-  }));
-
-  const chosen = fractionalRandomChoiceWithRank(
-    normalized,
-    TRAINER_RARITY_WEIGHTS,
-    user
-  );
+  const chosen = weightedRoll(flat, TRAINER_RARITY_WEIGHTS, user, "pokeball");
 
   return {
     id: chosen.id,
     name: chosen.name,
     tier: chosen.tier,
     rarity: chosen.tier,
-    sprites: chosen.sprites,
     spriteFile: chosen.spriteFile,
     filename: chosen.spriteFile,
-    groupName: chosen.raw.key || chosen.id,
+    groupName: chosen.raw.key || chosen.id
   };
 }
 
 // ==========================================================
-// 🧪 Simulation helper (fractional safe)
+// 🧪 Optional simulation
 // ==========================================================
 export function simulateDrops(pool, iterations = 10000) {
-  const counts = {
-    common: 0,
-    uncommon: 0,
-    rare: 0,
-    epic: 0,
-    legendary: 0,
-    mythic: 0,
-  };
+  const counts = { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 0, mythic: 0 };
 
   for (let i = 0; i < iterations; i++) {
-    const pick = fractionalRandomChoice(pool, TRAINER_RARITY_WEIGHTS);
-    if (pick)
-      counts[normalizeTier(pick.tier || pick.rarity)]++;
+    const pick = weightedRoll(pool, TRAINER_RARITY_WEIGHTS, { tp: 0 }, "pokeball");
+    if (pick) counts[normalizeTier(pick.tier)]++;
   }
 
-  console.log("🎲 Simulated distribution:", counts);
   return counts;
 }

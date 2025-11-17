@@ -27,7 +27,7 @@ export default {
         "https://coopscollection-bot.onrender.com";
 
       // Default starting page → Pokémon picker
-      const pickerUrl = `${baseUrl}/public/picker-pokemon/?id=${userId}&token=${token}`;
+      const pickerUrl = `${baseUrl}/public/picker-pokemon?id=${userId}&token=${token}`;
 
       // 🟡 Ephemeral confirmation embed
       const embed = new EmbedBuilder()

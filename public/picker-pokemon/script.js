@@ -895,40 +895,40 @@ async function handleDonationConfirm(pokeId, overlay) {
 }
 
 //------------------------------------------------------------
-// 🔄 Navigation Tabs — EXACT SAME BEHAVIOR AS TRAINERS
+// 🔄 Navigation Tabs — Unified Token-Safe Routing
 //------------------------------------------------------------
 (function initNavTabs() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
   const token = params.get("token");
 
-  if (!id || !token) return;
+  if (!id || !token) {
+    console.warn("❌ Missing ID or token in URL — tabs disabled.");
+    return;
+  }
 
-  const goPokemon = document.getElementById("goPokemon");
+  const goPokemon  = document.getElementById("goPokemon");
   const goTrainers = document.getElementById("goTrainers");
-  const goShop = document.getElementById("goShop");
+  const goShop     = document.getElementById("goShop");
 
-  // ⭐ Pokémon
+  // ⭐ Pokémon Tab
   if (goPokemon) {
-    goPokemon.addEventListener("click", () => {
-      window.location.href =
-        `/public/picker-pokemon/index.html?id=${id}&token=${token}`;
-    });
+    goPokemon.onclick = () => {
+      window.location.href = `/public/picker-pokemon/?id=${id}&token=${token}`;
+    };
   }
 
-  // 🧑 Trainers (already correct)
+  // 🧑 Trainers Tab
   if (goTrainers) {
-    goTrainers.addEventListener("click", () => {
-      window.location.href =
-        `/public/picker/index.html?id=${id}&token=${token}`;
-    });
+    goTrainers.onclick = () => {
+      window.location.href = `/public/picker/?id=${id}&token=${token}`;
+    };
   }
 
-  // 🛒 Shop — EXACT SAME PATTERN AS TRAINERS
+  // 🛒 Shop Tab
   if (goShop) {
-    goShop.addEventListener("click", () => {
-      window.location.href =
-        `/public/picker-shop/index.html?id=${id}&token=${token}`;
-    });
+    goShop.onclick = () => {
+      window.location.href = `/public/picker-shop/?id=${id}&token=${token}`;
+    };
   }
 })();

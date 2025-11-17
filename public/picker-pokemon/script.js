@@ -712,53 +712,65 @@ function openEvolutionModal(baseId) {
   let selectedTarget = null;
 
   evoList.forEach(targetId => {
-    const target = pokemonData[targetId];
-    if (!target) return;
-    const sprite = shinyMode
-      ? `/public/sprites/pokemon/shiny/${targetId}.gif`
-      : `/public/sprites/pokemon/normal/${targetId}.gif`;
-    const cost = getEvolutionCost(base, target);
-    const stones = userData.items?.evolution_stone ?? 0;
-    const enough = stones >= cost;
+  const target = pokemonData[targetId];
+  if (!target) return;
+  
+  const sprite = shinyMode
+    ? `/public/sprites/pokemon/shiny/${targetId}.gif`
+    : `/public/sprites/pokemon/normal/${targetId}.gif`;
 
-    const card = document.createElement("div");
-card.className = "evo-card"; // ⭐ REQUIRED so we can target the right elements
-card.style.cssText = `
-  background: var(--card);
-  border: 2px solid ${enough ? "var(--border)" : "#555"};
-  border-radius: 10px;
-  padding: 10px;
-  cursor: ${enough ? "pointer" : "not-allowed"};
-  opacity: ${enough ? "1" : "0.5"};
-  position: relative;
-`;
+  const cost = getEvolutionCost(base, target);
+  const stones = userData.items?.evolution_stone ?? 0;
+  const enough = stones >= cost;
 
-    card.innerHTML = `
-      <img src="${sprite}" style="width: 80px; height: 80px; image-rendering: pixelated;">
-      <div style="font-weight: 600; margin-top: 0.5rem;">${target.name}</div>
-      <div style="color: #aaa; text-transform: capitalize;">${target.tier}</div>
-      <div style="margin-top: 0.5rem; color: var(--brand); font-weight: 700;">
-        <img src="/public/sprites/items/evolution_stone.png" style="width: 16px; height: 16px; vertical-align: middle; image-rendering: pixelated;"> ${cost}
-      </div>
-    `;
-if (enough) {
-  card.addEventListener("click", () => {
-    // Reset highlight on all evo cards
-    grid.querySelectorAll(".evo-card").forEach(c => {
-      c.style.borderColor = "var(--border)";
+  // --------------------------------------------
+  // ⭐ Required EVO-CARD wrapper
+  // --------------------------------------------
+  const card = document.createElement("div");
+  card.className = "evo-card";
+  card.style.cssText = `
+    background: var(--card);
+    border: 2px solid ${enough ? "var(--border)" : "#555"};
+    border-radius: 10px;
+    padding: 10px;
+    cursor: ${enough ? "pointer" : "not-allowed"};
+    opacity: ${enough ? "1" : "0.5"};
+    position: relative;
+  `;
+
+  card.innerHTML = `
+    <img src="${sprite}" style="width:80px;height:80px;image-rendering:pixelated;">
+    <div style="font-weight:600;margin-top:0.5rem;">${target.name}</div>
+    <div style="color:#aaa;text-transform:capitalize;">${target.tier}</div>
+    <div style="margin-top:0.5rem;color:var(--brand);font-weight:700;">
+      <img src="/public/sprites/items/evolution_stone.png"
+           style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
+      ${cost}
+    </div>
+  `;
+
+  // --------------------------------------------
+  // ⭐ FIXED SELECTION LOGIC
+  // --------------------------------------------
+  if (enough) {
+    card.addEventListener("click", () => {
+      // Reset highlight
+      grid.querySelectorAll(".evo-card").forEach(c => {
+        c.style.borderColor = "var(--border)";
+      });
+
+      // Highlight THIS card
+      card.style.borderColor = "var(--brand)";
+      selectedTarget = targetId;
+
+      // Enable confirm button
+      modal.querySelector(".confirm-btn").disabled = false;
     });
+  }
 
-    // Highlight selected
-    card.style.borderColor = "var(--brand)";
-    selectedTarget = targetId;
+  grid.appendChild(card);
+});
 
-    // Enable Confirm button
-    modal.querySelector(".confirm-btn").disabled = false;
-  });
-}
-
-    grid.appendChild(card);
-  });
 
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
   modal.querySelector(".confirm-btn").addEventListener("click", async () => {

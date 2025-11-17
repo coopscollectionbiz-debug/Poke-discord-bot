@@ -815,7 +815,7 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
 });
 
 // ==========================================================
-// 🛍️ SHOP API — TRAINER REWARD (specific tier)
+// 🛍️ SHOP API — TRAINER REWARD (FIXED + NORMALIZED)
 // ==========================================================
 app.post("/api/rewardTrainer", express.json(), async (req, res) => {
   const { id, token, tier } = req.body;
@@ -828,38 +828,68 @@ app.post("/api/rewardTrainer", express.json(), async (req, res) => {
     return res.status(404).json({ error: "User not found" });
 
   const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
-
-  // 🔥 Flattened list contains: { groupName, tier, filename }
   const flat = await getFlattenedTrainers();
 
-  // Filter tier
-  const filtered = flat.filter(t => t.tier === tier);
-  if (!filtered.length)
+  // Filter by tier
+  const pool = flat.filter(t => (t.tier || t.rarity) === tier);
+  if (!pool.length)
     return res.status(400).json({ error: `No trainers of tier ${tier}` });
 
-  const reward = filtered[Math.floor(Math.random() * filtered.length)];
+  // Pick one
+  const reward = pool[Math.floor(Math.random() * pool.length)];
 
-  // Normalize name
-  const trainerName = reward.groupName
+  // ------------------------------
+  // 🧼 NAME NORMALIZATION (FIXED)
+  // ------------------------------
+  let cleanedName =
+    reward.name ||
+    reward.displayName ||
+    reward.groupName ||
+    (reward.filename ? reward.filename.replace(".png", "") : "trainer");
+
+  cleanedName = cleanedName
     .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
     .replace(/\b\w/g, c => c.toUpperCase());
 
-  const spriteFile = reward.filename.toLowerCase().trim();
+  // ------------------------------
+  // 🧼 FILE + SPRITE NORMALIZATION (FIXED)
+  // ------------------------------
+  let cleanedFile =
+    reward.spriteFile ||
+    reward.filename ||
+    reward.file ||
+    "";
 
-  // Save trainer
+  cleanedFile = cleanedFile
+    .trim()
+    .toLowerCase()
+    .replace(/^trainers?_2\//, "")
+    .replace(/\.png\.png$/, ".png")
+    .replace(/\s+/g, "");
+
+  const spriteUrl = `${spritePaths.trainers}${cleanedFile}`;
+
+  // ------------------------------
+  // 🧼 SAVE TO USER INVENTORY
+  // ------------------------------
   user.trainers ??= {};
-  user.trainers[spriteFile] = (user.trainers[spriteFile] || 0) + 1;
+  user.trainers[cleanedFile] = (user.trainers[cleanedFile] || 0) + 1;
 
   await saveTrainerDataLocal(trainerData);
   debouncedDiscordSave();
 
+  // ------------------------------
+  // ⭐ SEND FULL, CLEAN TRAINER OBJECT
+  // ------------------------------
   res.json({
     success: true,
     trainer: {
-      name: trainerName,
-      rarity: reward.tier,
-      sprite: `${spritePaths.trainers}${spriteFile}`,
-      file: spriteFile
+      name: cleanedName,
+      rarity: reward.tier || reward.rarity || "common",
+      sprite: spriteUrl,
+      file: cleanedFile
     }
   });
 });

@@ -21,9 +21,6 @@ window.ITEM_COSTS = {
   evo_stone: 5000,
 };
 
-// EXPOSE GLOBAL FOR INDEX PRICE INJECTION
-window.ITEM_COSTS = ITEM_COSTS;
-
 // ======================================================
 // 🔐 LOAD USER
 // ======================================================

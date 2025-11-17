@@ -11,15 +11,14 @@ import { rarityEmojis, rarityColors } from "/public/spriteconfig.js";
 window.rarityEmojis = rarityEmojis;
 window.rarityColors = rarityColors;
 
-
 // ======================================================
-// 💰 SHOP COST TABLE
+// STATIC ITEM COSTS (must match bot shop backend)
 // ======================================================
-const ITEM_COSTS = {
+window.ITEM_COSTS = {
   pokeball: 500,
   greatball: 1000,
   ultraball: 2500,
-  evo_stone: 5000
+  evo_stone: 5000,
 };
 
 // EXPOSE GLOBAL FOR INDEX PRICE INJECTION

@@ -1,12 +1,6 @@
 // ======================================================================
 // 🛒 Coop's Collection — SHOP TAB SCRIPT (TOKEN-ONLY VERSION)
 // ======================================================================
-// Uses backend APIs:
-//   GET  /api/user
-//   POST /api/updateUser
-//   POST /api/rewardPokemon
-//   POST /api/rewardTrainer
-// ======================================================================
 
 let user = null;
 let userId = null;
@@ -22,6 +16,9 @@ const ITEM_COSTS = {
   evo_stone: 5000
 };
 
+// EXPOSE GLOBAL FOR INDEX PRICE INJECTION
+window.ITEM_COSTS = ITEM_COSTS;
+
 // ======================================================
 // 🔐 LOAD USER
 // ======================================================
@@ -30,10 +27,17 @@ async function loadUser() {
   userId = params.get("id");
   token  = params.get("token");
 
-  if (!userId || !token) throw new Error("Missing id or token");
+  // Do NOT throw here — it breaks all buttons.
+  if (!userId || !token) {
+    console.warn("Missing id or token in URL");
+    return;
+  }
 
   const res = await fetch(`/api/user?id=${userId}&token=${token}`);
-  if (!res.ok) throw new Error("Failed to load user");
+  if (!res.ok) {
+    console.error("Failed to load user");
+    return;
+  }
 
   user = await res.json();
   updateUI();
@@ -101,7 +105,6 @@ async function giveTrainerReward(tier) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id: userId, token, tier })
   });
-
   if (!res.ok) throw new Error("Failed to roll Trainer");
 }
 
@@ -109,16 +112,16 @@ async function giveTrainerReward(tier) {
 // 🕒 WEEKLY PACK ELIGIBILITY
 // ======================================================
 function canClaimWeeklyPack() {
-  if (!user.lastWeeklyPack) return true;
-
-  const last = new Date(user.lastWeeklyPack).getTime();
-  return (Date.now() - last) >= 7 * 24 * 60 * 60 * 1000;
+  if (!user || !user.lastWeeklyPack) return true;
+  return (Date.now() - new Date(user.lastWeeklyPack).getTime()) >= 7 * 24 * 60 * 60 * 1000;
 }
 
 // ======================================================
 // 🛒 UPDATE SHOP UI
 // ======================================================
 function updateUI() {
+  if (!user) return;
+
   document.getElementById("ccCount").textContent = user.cc;
   document.getElementById("stoneCount").textContent =
     user.items?.evolution_stone || 0;
@@ -126,8 +129,8 @@ function updateUI() {
   const weekly = document.querySelector("[data-item='weekly']");
   weekly.disabled = !canClaimWeeklyPack();
   weekly.textContent = canClaimWeeklyPack()
-    ? "Claim Weekly Pack"
-    : "Weekly Pack (Claimed)";
+    ? "Claim"
+    : "Claimed";
 }
 
 // ======================================================
@@ -142,13 +145,15 @@ function charge(cost) {
   return true;
 }
 
+// ======================================================
+// ⭐ BUY EVOLUTION STONE
+// ======================================================
 async function buyStone(cost) {
   showShopModal({
     title: "Confirm Purchase?",
     message: `Buy an Evolution Stone for ${cost} CC?`,
-    sprites: ["/public/sprites/items/evolutionstone.png"],
+    sprites: ["/public/sprites/items/evolution_stone.png"],
     onConfirm: async () => {
-
       if (!charge(cost)) return;
 
       user.items.evolution_stone =
@@ -160,13 +165,16 @@ async function buyStone(cost) {
       showShopModal({
         title: "Purchase Complete!",
         message: "You bought an Evolution Stone!",
-        sprites: ["/public/sprites/items/evolutionstone.png"],
+        sprites: ["/public/sprites/items/evolution_stone.png"],
         onConfirm: () => {}
       });
     }
   });
 }
 
+// ======================================================
+// ⭐ BUY POKEBALL
+// ======================================================
 async function buyPokeball(type, cost) {
   const ballSprite = `/public/sprites/items/${type}.png`;
 
@@ -176,13 +184,11 @@ async function buyPokeball(type, cost) {
     sprites: [ballSprite],
     onConfirm: async () => {
 
-      // Not enough CC
       if (!charge(cost)) return;
 
       updateUI();
       await saveUser();
 
-      // Roll Pokémon & receive full reward info
       const reward = await fetch("/api/rewardPokemon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -193,27 +199,15 @@ async function buyPokeball(type, cost) {
         })
       }).then(r => r.json());
 
-      // reward.format:
-      // {
-      //   success: true,
-      //   pokemon: {
-      //     name: "Pikachu",
-      //     rarity: "rare",
-      //     sprite: "/public/.../pikachu.png"
-      //   }
-      // }
-
       if (!reward.success) {
         showShopModal({
           title: "Error",
           message: "Reward could not be generated.",
-          sprites: [],
           onConfirm: () => {}
         });
         return;
       }
 
-      // Success popup showing the captured Pokémon
       showShopModal({
         title: "You caught a Pokémon!",
         message: `${reward.pokemon.rarity.toUpperCase()} ${reward.pokemon.name}`,
@@ -221,7 +215,7 @@ async function buyPokeball(type, cost) {
         onConfirm: () => {}
       });
 
-    } // end onConfirm
+    }
   });
 }
 
@@ -229,7 +223,7 @@ async function buyPokeball(type, cost) {
 // 🎁 WEEKLY PACK
 // ======================================================
 async function claimWeeklyPack() {
-  if (!canClaimWeeklyPack()) return alert("Already claimed!");
+  if (!canClaimWeeklyPack()) return;
 
   const rewards = [];
 
@@ -272,11 +266,12 @@ async function claimWeeklyPack() {
   updateUI();
 
   showShopModal({
-    title: "Weekly Pack Rewards!",
-    message: rewards.map(r => `${r.rarity} ${r.name}`).join("<br>"),
-    sprites: rewards.map(r => r.sprite),
-    onConfirm: () => {}
-  });
+  title: "Weekly Pack Rewards!",
+  message: rewards.map(r => `${r.rarity} ${r.name}`).join("<br>"),
+  sprites: ["/public/sprites/items/starter_pack.png", ...rewards.map(r => r.sprite)],
+  onConfirm: () => {}
+});
+
 }
 
 // ======================================================
@@ -309,7 +304,6 @@ window.addEventListener("DOMContentLoaded", () => {
   const id = params.get("id");
   const urlToken = params.get("token");
 
-  // Correct check
   if (!id || !urlToken) return;
 
   const goPokemon  = document.getElementById("goPokemon");

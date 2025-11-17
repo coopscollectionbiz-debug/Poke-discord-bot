@@ -6,6 +6,12 @@ let user = null;
 let userId = null;
 let token = null;
 
+import { rarityEmojis, rarityColors } from "/public/spriteconfig.js";
+
+window.rarityEmojis = rarityEmojis;
+window.rarityColors = rarityColors;
+
+
 // ======================================================
 // 💰 SHOP COST TABLE
 // ======================================================
@@ -200,7 +206,7 @@ async function buyStone(cost) {
 }
 
 // ======================================================
-// ⭐ BUY POKEBALL (with loading modal)
+// ⭐ BUY POKEBALL — now includes colored rarity + emoji
 // ======================================================
 async function buyPokeball(type, cost) {
   const ballSprite = `/public/sprites/items/${type}.png`;
@@ -216,9 +222,6 @@ async function buyPokeball(type, cost) {
       updateUI();
       await saveUser();
 
-      // 🔄 SHOW LOADING
-      const closeLoading = showLoadingModal();
-
       const reward = await fetch("/api/rewardPokemon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -229,8 +232,6 @@ async function buyPokeball(type, cost) {
         })
       }).then(r => r.json());
 
-      closeLoading(); // 🔄 CLOSE LOADING
-
       if (!reward.success) {
         showShopModal({
           title: "Error",
@@ -240,13 +241,29 @@ async function buyPokeball(type, cost) {
         return;
       }
 
-      // show result modal
+      // -------------------------------
+      // ⭐ Build tier display
+      // -------------------------------
+      const rarity = reward.pokemon.rarity;
+      const emoji = window.rarityEmojis?.[rarity] ?? "";
+      const color = window.rarityColors?.[rarity] ?? "#fff";
+
+      const rarityHTML = `
+        <span style="color:${color}; font-weight:700;">
+          ${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}
+        </span>
+      `;
+
+      // -------------------------------
+      // ⭐ Final popup with styled rarity
+      // -------------------------------
       showShopModal({
         title: "You caught a Pokémon!",
-        message: `${reward.pokemon.rarity.toUpperCase()} ${reward.pokemon.name}`,
+        message: `${rarityHTML}<br>${reward.pokemon.name}`,
         sprites: [reward.pokemon.sprite],
         onConfirm: () => {}
       });
+
     }
   });
 }

@@ -1,7 +1,7 @@
 // ======================================================================
-// 🛒 Coop’s Collection — SHOP TAB SCRIPT (FINAL VERSION)
+// 🛒 Coop's Collection — SHOP TAB SCRIPT (TOKEN-ONLY VERSION)
 // ======================================================================
-// Uses ONLY the existing backend APIs:
+// Uses backend APIs:
 //   GET  /api/user
 //   POST /api/updateUser
 //   POST /api/rewardPokemon
@@ -10,10 +10,10 @@
 
 let user = null;
 let userId = null;
-let userToken = null;
+let token = null;
 
 // ======================================================
-// 💰 CENTRAL SHOP COST TABLE
+// 💰 SHOP COST TABLE
 // ======================================================
 const ITEM_COSTS = {
   pokeball: 500,
@@ -22,96 +22,117 @@ const ITEM_COSTS = {
   evo_stone: 5000
 };
 
-
-// -----------------------------------------------------
-// 🔐 Load User
-// -----------------------------------------------------
+// ======================================================
+// 🔐 LOAD USER
+// ======================================================
 async function loadUser() {
   const params = new URLSearchParams(window.location.search);
   userId = params.get("id");
-  userToken = params.get("token");
+  token  = params.get("token");
 
-  const res = await fetch(`/api/user?id=${userId}&token=${userToken}`);
+  if (!userId || !token) throw new Error("Missing id or token");
+
+  const res = await fetch(`/api/user?id=${userId}&token=${token}`);
   if (!res.ok) throw new Error("Failed to load user");
 
   user = await res.json();
   updateUI();
 }
 
-// -----------------------------------------------------
-// 💾 Save User
-// -----------------------------------------------------
+// ======================================================
+// 💾 SAVE USER
+// ======================================================
 async function saveUser() {
   const res = await fetch("/api/updateUser", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: userId, token: userToken, user })
+    body: JSON.stringify({ id: userId, token, user })
   });
 
   if (!res.ok) throw new Error("Failed to save user");
 }
 
-// -----------------------------------------------------
-// 🎁 Pokémon Reward (pokéballs)
-// -----------------------------------------------------
-async function givePokemonReward(ballType) {
-  const res = await fetch("/api/rewardPokemon", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      id: userId,
-      token: userToken,
-      source: ballType
-    })
-  });
+// ======================================================
+// Shop modals
+// ======================================================
 
-  if (!res.ok) throw new Error("Failed to roll Pokémon");
+function showShopModal({ title, message, sprites = [], onConfirm }) {
+  const overlay = document.createElement("div");
+  overlay.id = "shopModalOverlay";
+
+  const modal = document.createElement("div");
+  modal.id = "shopModal";
+
+  let spriteHTML = sprites
+    .map(src => `<img src="${src}" alt="sprite">`)
+    .join("");
+
+  modal.innerHTML = `
+    <h2 style="color:#00ff9d; margin-top:0;">${title}</h2>
+    <div>${spriteHTML}</div>
+    <p style="margin:1rem 0; color:#ccc;">${message}</p>
+
+    <div class="modal-buttons">
+      <button class="modal-btn cancel">Cancel</button>
+      <button class="modal-btn confirm">Confirm</button>
+    </div>
+  `;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  modal.querySelector(".cancel").onclick = () => overlay.remove();
+  modal.querySelector(".confirm").onclick = async () => {
+    await onConfirm();
+    overlay.remove();
+  };
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
 }
 
-// -----------------------------------------------------
-// 🎁 Trainer Reward (specific tier)
-// -----------------------------------------------------
+// ======================================================
+// 🎁 TRAINER REWARD
+// ======================================================
 async function giveTrainerReward(tier) {
   const res = await fetch("/api/rewardTrainer", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      id: userId,
-      token: userToken,
-      tier
-    })
+    body: JSON.stringify({ id: userId, token, tier })
   });
 
   if (!res.ok) throw new Error("Failed to roll Trainer");
 }
 
-// -----------------------------------------------------
-// 🕒 Weekly Pack Eligibility
-// -----------------------------------------------------
+// ======================================================
+// 🕒 WEEKLY PACK ELIGIBILITY
+// ======================================================
 function canClaimWeeklyPack() {
   if (!user.lastWeeklyPack) return true;
 
   const last = new Date(user.lastWeeklyPack).getTime();
-  const now = Date.now();
-
-  return (now - last) >= 7 * 24 * 60 * 60 * 1000;
+  return (Date.now() - last) >= 7 * 24 * 60 * 60 * 1000;
 }
 
-// -----------------------------------------------------
-// 🛒 UI Update
-// -----------------------------------------------------
+// ======================================================
+// 🛒 UPDATE SHOP UI
+// ======================================================
 function updateUI() {
   document.getElementById("ccCount").textContent = user.cc;
-  document.getElementById("stoneCount").textContent = user.items?.evolution_stone || 0;
+  document.getElementById("stoneCount").textContent =
+    user.items?.evolution_stone || 0;
 
-  const weeklyBtn = document.querySelector("[data-item='weekly']");
-  weeklyBtn.disabled = !canClaimWeeklyPack();
-  weeklyBtn.textContent = canClaimWeeklyPack() ? "Claim Weekly Pack" : "Weekly Pack (Claimed)";
+  const weekly = document.querySelector("[data-item='weekly']");
+  weekly.disabled = !canClaimWeeklyPack();
+  weekly.textContent = canClaimWeeklyPack()
+    ? "Claim Weekly Pack"
+    : "Weekly Pack (Claimed)";
 }
 
-// -----------------------------------------------------
-// 💰 Spend CC
-// -----------------------------------------------------
+// ======================================================
+// 💰 CC SPENDING HELPERS
+// ======================================================
 function charge(cost) {
   if (user.cc < cost) {
     alert("Not enough CC!");
@@ -121,104 +142,189 @@ function charge(cost) {
   return true;
 }
 
-// -----------------------------------------------------
-// 💎 Buy Evolution Stone
-// -----------------------------------------------------
 async function buyStone(cost) {
-  if (!charge(cost)) return;
+  showShopModal({
+    title: "Confirm Purchase?",
+    message: `Buy an Evolution Stone for ${cost} CC?`,
+    sprites: ["/public/sprites/items/evolutionstone.png"],
+    onConfirm: async () => {
 
-  user.items.evolution_stone = (user.items.evolution_stone || 0) + 1;
+      if (!charge(cost)) return;
 
-  updateUI();
-  await saveUser();
-  alert("Evolution Stone added!");
+      user.items.evolution_stone =
+        (user.items.evolution_stone || 0) + 1;
+
+      await saveUser();
+      updateUI();
+
+      showShopModal({
+        title: "Purchase Complete!",
+        message: "You bought an Evolution Stone!",
+        sprites: ["/public/sprites/items/evolutionstone.png"],
+        onConfirm: () => {}
+      });
+    }
+  });
 }
 
-// -----------------------------------------------------
-// 🧪 Poké Ball Purchases
-// -----------------------------------------------------
 async function buyPokeball(type, cost) {
-  if (!charge(cost)) return;
+  const ballSprite = `/public/sprites/items/${type}.png`;
 
-  updateUI();
-  await saveUser();
-  await givePokemonReward(type);
+  showShopModal({
+    title: "Confirm Purchase?",
+    message: `Buy a ${type.replace("ball"," Ball")} for ${cost} CC?`,
+    sprites: [ballSprite],
+    onConfirm: async () => {
 
-  alert(`${type} reward added!`);
+      // Not enough CC
+      if (!charge(cost)) return;
+
+      updateUI();
+      await saveUser();
+
+      // Roll Pokémon & receive full reward info
+      const reward = await fetch("/api/rewardPokemon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: userId,
+          token,
+          source: type
+        })
+      }).then(r => r.json());
+
+      // reward.format:
+      // {
+      //   success: true,
+      //   pokemon: {
+      //     name: "Pikachu",
+      //     rarity: "rare",
+      //     sprite: "/public/.../pikachu.png"
+      //   }
+      // }
+
+      if (!reward.success) {
+        showShopModal({
+          title: "Error",
+          message: "Reward could not be generated.",
+          sprites: [],
+          onConfirm: () => {}
+        });
+        return;
+      }
+
+      // Success popup showing the captured Pokémon
+      showShopModal({
+        title: "You caught a Pokémon!",
+        message: `${reward.pokemon.rarity.toUpperCase()} ${reward.pokemon.name}`,
+        sprites: [reward.pokemon.sprite],
+        onConfirm: () => {}
+      });
+
+    } // end onConfirm
+  });
 }
 
-// -----------------------------------------------------
-// 🎁 Weekly Pack (3 common, 2 uncommon, 1 rare — both Pokémon & Trainers)
-// -----------------------------------------------------
+// ======================================================
+// 🎁 WEEKLY PACK
+// ======================================================
 async function claimWeeklyPack() {
   if (!canClaimWeeklyPack()) return alert("Already claimed!");
 
-  // ---- Pokémon ----
-  await givePokemonReward("common");
-  await givePokemonReward("common");
-  await givePokemonReward("common");
+  const rewards = [];
 
-  await givePokemonReward("uncommon");
-  await givePokemonReward("uncommon");
+  async function pushPokemon(tier) {
+    const result = await fetch("/api/rewardPokemon", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: userId, token, source: tier })
+    }).then(r => r.json());
+    rewards.push(result.pokemon);
+  }
 
-  await givePokemonReward("rare");
+  async function pushTrainer(tier) {
+    const result = await fetch("/api/rewardTrainer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: userId, token, tier })
+    }).then(r => r.json());
+    rewards.push(result.trainer);
+  }
 
-  // ---- Trainers ----
-  await giveTrainerReward("common");
-  await giveTrainerReward("common");
-  await giveTrainerReward("common");
+  // Pokémon
+  await pushPokemon("common");
+  await pushPokemon("common");
+  await pushPokemon("common");
+  await pushPokemon("uncommon");
+  await pushPokemon("uncommon");
+  await pushPokemon("rare");
 
-  await giveTrainerReward("uncommon");
-  await giveTrainerReward("uncommon");
+  // Trainers
+  await pushTrainer("common");
+  await pushTrainer("common");
+  await pushTrainer("common");
+  await pushTrainer("uncommon");
+  await pushTrainer("uncommon");
+  await pushTrainer("rare");
 
-  await giveTrainerReward("rare");
-
-  // Mark timestamp
   user.lastWeeklyPack = new Date().toISOString();
   await saveUser();
-
   updateUI();
-  alert("Weekly Pack collected!");
+
+  showShopModal({
+    title: "Weekly Pack Rewards!",
+    message: rewards.map(r => `${r.rarity} ${r.name}`).join("<br>"),
+    sprites: rewards.map(r => r.sprite),
+    onConfirm: () => {}
+  });
 }
 
-// -----------------------------------------------------
-// 🎯 Bind Buttons
-// -----------------------------------------------------
+// ======================================================
+// 🎯 BUTTON BINDINGS
+// ======================================================
 window.addEventListener("DOMContentLoaded", () => {
   loadUser();
 
-document.querySelector("[data-item='pokeball']").onclick = () =>
-  buyPokeball("pokeball", ITEM_COSTS.pokeball);
+  document.querySelector("[data-item='pokeball']").onclick =
+    () => buyPokeball("pokeball", ITEM_COSTS.pokeball);
 
-document.querySelector("[data-item='greatball']").onclick = () =>
-  buyPokeball("greatball", ITEM_COSTS.greatball);
+  document.querySelector("[data-item='greatball']").onclick =
+    () => buyPokeball("greatball", ITEM_COSTS.greatball);
 
-document.querySelector("[data-item='ultraball']").onclick = () =>
-  buyPokeball("ultraball", ITEM_COSTS.ultraball);
+  document.querySelector("[data-item='ultraball']").onclick =
+    () => buyPokeball("ultraball", ITEM_COSTS.ultraball);
 
-document.querySelector("[data-item='evo_stone']").onclick = () =>
-  buyStone(ITEM_COSTS.evo_stone);
+  document.querySelector("[data-item='evo_stone']").onclick =
+    () => buyStone(ITEM_COSTS.evo_stone);
 
-  document.querySelector("[data-item='weekly']").onclick = claimWeeklyPack;
+  document.querySelector("[data-item='weekly']").onclick =
+    claimWeeklyPack;
 });
 
-//------------------------------------------------------------
-// 🔄 Navigation Tabs — EXACT SAME BEHAVIOR AS TRAINERS
-//------------------------------------------------------------
+// ======================================================
+// 🔄 NAVIGATION TABS — TOKEN SAFE
+// ======================================================
 (function initNavTabs() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
-  const token = params.get("token");
+  const urlToken = params.get("token");
 
-  if (!id || !token) return;
+  // Correct check
+  if (!id || !urlToken) return;
 
-  document.getElementById("goPokemon").onclick = () =>
-    window.location.href = `/public/picker-pokemon/?id=${id}&token=${token}`;
+  const goPokemon  = document.getElementById("goPokemon");
+  const goTrainers = document.getElementById("goTrainers");
+  const goShop     = document.getElementById("goShop");
 
-  document.getElementById("goTrainers").onclick = () =>
-    window.location.href = `/public/picker/?id=${id}&token=${token}`;
+  if (goPokemon)
+    goPokemon.onclick = () =>
+      window.location.href = `/public/picker-pokemon/?id=${id}&token=${urlToken}`;
 
-  document.getElementById("goShop").onclick = () =>
-    window.location.href = `/public/picker-shop/?id=${id}&token=${token}`;
+  if (goTrainers)
+    goTrainers.onclick = () =>
+      window.location.href = `/public/picker/?id=${id}&token=${urlToken}`;
+
+  if (goShop)
+    goShop.onclick = () =>
+      window.location.href = `/public/picker-shop/?id=${id}&token=${urlToken}`;
 })();
-

@@ -13,11 +13,27 @@
 </head>
 
 <body>
+
+  <!-- ===========================================================
+       Header
+  ============================================================ -->
   <header>
     <h1>🛒 Shop</h1>
-    <p>Buy items using your CC balance</p>
+    <p>Use your CC to buy items and grow your team</p>
   </header>
 
+  <!-- ===========================================================
+       Navigation Tabs
+  ============================================================ -->
+  <div id="navTabs" class="nav-tabs">
+    <button id="goPokemon" class="nav-tab">⭐ Manage Pokémon</button>
+    <button id="goTrainers" class="nav-tab">🧑 Manage Trainers</button>
+    <button id="goShop" class="nav-tab active">🛒 Shop</button>
+  </div>
+
+  <!-- ===========================================================
+       Stats Bar
+  ============================================================ -->
   <div id="statsBar">
     <div>💰 CC: <span id="ccCount">0</span></div>
     <div>💎 Stones: <span id="stoneCount">0</span></div>
@@ -25,72 +41,109 @@
 
   <main>
 
-    <!-- Poké Balls -->
+    <!-- ===========================================================
+         Poké Balls
+    ============================================================ -->
     <section class="shop-section">
       <h2>Poké Balls</h2>
 
       <div class="shop-grid">
 
-        <div class="shop-item">
-          <img src="/public/sprites/items/pokeball.png" class="item-icon" />
-          <h3>Poké Ball</h3>
-          <p class="price">500 CC</p>
-          <button class="buy-btn" data-item="pokeball">Buy</button>
-        </div>
+        <!-- Poké Ball -->
+        <<div class="shop-item">
+  <img src="/public/sprites/items/pokeball.png" class="item-icon" />
+  <h3>Poké Ball</h3>
+  <p class="desc">Gives 1 random Pokémon. Higher chance of Common.</p>
+  <p class="price" id="price-pokeball">– CC</p>
+  <button class="buy-btn" data-item="pokeball">Buy</button>
+</div>
 
+        <!-- Great Ball -->
         <div class="shop-item">
-          <img src="/public/sprites/items/greatball.png" class="item-icon" />
-          <h3>Great Ball</h3>
-          <p class="price">1000 CC</p>
-          <button class="buy-btn" data-item="greatball">Buy</button>
-        </div>
+  <img src="/public/sprites/items/greatball.png" class="item-icon" />
+  <h3>Great Ball</h3>
+  <p class="desc">Gives 1 random Pokémon with improved rarity.</p>
+  <p class="price" id="price-greatball">– CC</p>
+  <button class="buy-btn" data-item="greatball">Buy</button>
+</div>
 
+        <!-- Ultra Ball -->
         <div class="shop-item">
-          <img src="/public/sprites/items/ultraball.png" class="item-icon" />
-          <h3>Ultra Ball</h3>
-          <p class="price">2500 CC</p>
-          <button class="buy-btn" data-item="ultraball">Buy</button>
-        </div>
+  <img src="/public/sprites/items/ultraball.png" class="item-icon" />
+  <h3>Ultra Ball</h3>
+  <p class="desc">Gives 1 random Pokémon. Best chance for Rare+.</p>
+  <p class="price" id="price-ultraball">– CC</p>
+  <button class="buy-btn" data-item="ultraball">Buy</button>
+</div>
 
       </div>
     </section>
 
-    <!-- Evolution Stones -->
+    <!-- ===========================================================
+         Evolution Stones
+    ============================================================ -->
     <section class="shop-section">
       <h2>Evolution</h2>
 
       <div class="shop-grid">
 
+        <!-- Evolution Stone -->
         <div class="shop-item">
-          <img src="/public/sprites/items/evolutionstone.png" class="item-icon" />
-          <h3>Evolution Stone</h3>
-          <p class="price">1000 CC</p>
-          <button class="buy-btn" data-item="evo_stone">Buy</button>
-        </div>
+  <img src="/public/sprites/items/evolutionstone.png" class="item-icon" />
+  <h3>Evolution Stone</h3>
+  <p class="desc">Evolves eligible Pokémon in your collection.</p>
+  <p class="price" id="price-evo_stone">– CC</p>
+  <button class="buy-btn" data-item="evo_stone">Buy</button>
+</div>
 
       </div>
     </section>
 
-    <!-- Weekly Pack -->
+    <!-- ===========================================================
+         Weekly Pack
+    ============================================================ -->
     <section class="shop-section">
       <h2>Weekly Pack</h2>
-      <p class="subtitle">Free once every 7 days — resets Sunday at 00:00 UTC</p>
+      <p class="subtitle">Claim a premium bundle once every 7 days!</p>
 
       <div class="shop-grid">
 
-        <div class="shop-item special">
-          <img src="/public/sprites/items/weeklypack.png" class="item-icon" />
-          <h3>Weekly Pack</h3>
-          <p class="price">FREE</p>
-          <button class="buy-btn" data-item="weekly">Claim</button>
-          <p id="weeklyStatus"></p>
-        </div>
+       <div class="shop-item special">
+  <img src="/public/sprites/items/weeklypack.png" class="item-icon" />
+  <h3>Weekly Pack</h3>
+  <p class="desc">3 Common • 2 Uncommon • 1 Rare Pokémon & Trainers.</p>
+  <p class="price">FREE</p>
+  <button class="buy-btn" data-item="weekly">Claim</button>
+  <p id="weeklyStatus"></p>
+</div>
 
       </div>
     </section>
 
   </main>
 
+  <!-- ===========================================================
+       Script
+  ============================================================ -->
   <script src="script.js"></script>
+  <script>
+    // Inject dynamic prices from script.js ITEM_COSTS
+    document.addEventListener("DOMContentLoaded", () => {
+      const priceMap = {
+        pokeball:      "price-pokeball",
+        greatball:     "price-greatball",
+        ultraball:     "price-ultraball",
+        evo_stone:     "price-evo_stone",
+      };
+
+      for (const key in priceMap) {
+        const el = document.getElementById(priceMap[key]);
+        if (el && window.ITEM_COSTS && window.ITEM_COSTS[key]) {
+          el.textContent = `${window.ITEM_COSTS[key]} CC`;
+        }
+      }
+    });
+  </script>
+
 </body>
 </html>

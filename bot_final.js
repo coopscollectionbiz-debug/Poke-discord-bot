@@ -828,46 +828,41 @@ app.post("/api/rewardTrainer", express.json(), async (req, res) => {
     return res.status(404).json({ error: "User not found" });
 
   const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
+
+  // 🔥 Flattened list contains: { groupName, tier, filename }
   const flat = await getFlattenedTrainers();
 
+  // Filter tier
   const filtered = flat.filter(t => t.tier === tier);
   if (!filtered.length)
     return res.status(400).json({ error: `No trainers of tier ${tier}` });
 
   const reward = filtered[Math.floor(Math.random() * filtered.length)];
 
-  // Normalize names
-  const trainerName =
-    reward.name ||
-    reward.displayName ||
-    reward.groupName ||
-    (reward.filename ? reward.filename.replace(".png", "") : "Trainer");
+  // Normalize name
+  const trainerName = reward.groupName
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
 
-  const cleanedFile = (reward.spriteFile || reward.filename || reward.file)
-    .trim()
-    .toLowerCase();
+  const spriteFile = reward.filename.toLowerCase().trim();
 
-  // Save trainer to user inventory
+  // Save trainer
   user.trainers ??= {};
-  user.trainers[cleanedFile] = (user.trainers[cleanedFile] || 0) + 1;
+  user.trainers[spriteFile] = (user.trainers[spriteFile] || 0) + 1;
 
   await saveTrainerDataLocal(trainerData);
   debouncedDiscordSave();
 
-  // FIXED: Send full trainer object matching frontend expectation
   res.json({
     success: true,
     trainer: {
       name: trainerName,
-      rarity: reward.tier ?? reward.rarity ?? "common",
-      sprite: `${spritePaths.trainers}${cleanedFile}`,
-      file: cleanedFile,
+      rarity: reward.tier,
+      sprite: `${spritePaths.trainers}${spriteFile}`,
+      file: spriteFile
     }
   });
 });
-
-
-
 
 // ==========================================================
 // ⚡ INTERACTION HANDLER (Slash Commands + Buttons)

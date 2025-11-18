@@ -30,9 +30,13 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
+
 // Local saver — writes trainerData.json to disk & marks dirty
-
-
+import {
+  enqueueSave,
+  shutdownFlush,
+  saveTrainerDataLocal
+} from "./utils/saveQueue.js";
 
 // ==========================================================
 // 🔒 PER-USER WRITE LOCK MANAGER (Option A)
@@ -68,7 +72,6 @@ async function withUserLock(userId, fn) {
 function lockUser(userId, fn) {
   return withUserLock(userId, fn);
 }
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -121,17 +124,11 @@ export const rarityColors = {
   success: 0x00ff9d,    // used for confirmations
 };
 
-
 // ==========================================================
 // 📦 Internal Utilities
 // ==========================================================
 import { getRank, getRankTiers } from "./utils/rankSystem.js";
 import { safeReply } from "./utils/safeReply.js";
-import {
-  enqueueSave,
-  shutdownFlush,
-  saveTrainerDataLocal
-} from "./utils/saveQueue.js";
 import { reloadUserFromDiscord, ensureUserInitialized } from "./utils/userInitializer.js";
 import { getAllPokemon, getAllTrainers } from "./utils/dataLoader.js";
 import {
@@ -148,6 +145,7 @@ import {
   createTrainerRewardEmbed,
 } from "./utils/embedBuilders.js";
 import { sanitizeTrainerData } from "./utils/sanitizeTrainerData.js";
+
 // ==========================================================
 // ⚙️ Global Constants
 // ==========================================================
@@ -162,6 +160,7 @@ const MESSAGE_REWARD_CHANCE = 0.02;
 const REACTION_REWARD_CHANCE = 0.02;
 const REWARD_COOLDOWN = 7000;
 const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
+
 
 
 // ===========================================================

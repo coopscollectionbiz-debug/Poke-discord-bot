@@ -1475,8 +1475,6 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
   });
 });
 
-app.listen(PORT, () => console.log(`✅ Listening on port ${PORT}`));
-
  // ==========================================================
 // 🤖 BOT READY EVENT
 // ==========================================================
@@ -1587,7 +1585,13 @@ client.once("ready", async () => {
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });
-});
+
+// ==========================================================
+// 🚀 LAUNCH WEB SERVER
+// ==========================================================
+app.listen(PORT, () =>
+  console.log(`✅ Listening on port ${PORT}`)
+);
 
 // ==========================================================
 // 🚀 LAUNCH

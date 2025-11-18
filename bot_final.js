@@ -952,6 +952,7 @@ app.post("/api/rewardTrainer", express.json(), async (req, res) => {
     }
   });
 });
+});
 
 // ==========================================================
 // ⚡ INTERACTION HANDLER (Slash Commands + Buttons)

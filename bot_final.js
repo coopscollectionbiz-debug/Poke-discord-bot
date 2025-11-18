@@ -146,7 +146,6 @@ import { sanitizeTrainerData } from "./utils/sanitizeTrainerData.js";
 // ⚙️ Global Constants
 // ==========================================================
 const TRAINERDATA_PATH = "./trainerData.json";
-const AUTOSAVE_INTERVAL = 1000 * 60 * 3;
 const POKEBEACH_CHECK_INTERVAL = 1000 * 60 * 120;
 const PORT = process.env.PORT || 10000;
 const MESSAGE_TP_GAIN = 2;
@@ -216,6 +215,9 @@ const rewardCooldowns = new Map();
 const userCooldowns = new Map();
 const RANK_TIERS = getRankTiers();
 
+let dirty = false; // 🚨 tracks unsaved changes for 15-min backups
+
+
 // ==========================================================
 // 🤖 Discord Client Setup
 // ==========================================================
@@ -254,16 +256,6 @@ async function loadTrainerData() {
 
   for (const [id, user] of Object.entries(loaded)) normalizeUserSchema(id, user);
   return loaded;
-}
-
-async function saveTrainerDataLocal(data) {
-  try {
-    await enqueueSave(data);
-    console.log(`💾 Local save queued (${Object.keys(data).length} users)`);
-  } catch (err) {
-    console.error("❌ Local save failed:", err.message);
-    throw err;
-  }
 }
 
 async function saveDataToDiscord(data) {
@@ -405,7 +397,6 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
     // Save
     await saveTrainerDataLocal(trainerData);
-    debouncedDiscordSave();
 
     // Sprite URL
     let spriteUrl;
@@ -506,13 +497,30 @@ async function loadCommands() {
 // 💾 SAVE MANAGEMENT
 // ==========================================================
 function debouncedDiscordSave() {
-  if (commandSaveQueue) clearTimeout(commandSaveQueue);
-  commandSaveQueue = setTimeout(async () => {
-    await saveDataToDiscord(trainerData);
-    commandSaveQueue = null;
-  }, 10_000);
+  // 🚫 No more debounced saves — only mark as dirty
+  dirty = true;
+  console.log("📝 debouncedDiscordSave() called — marked dirty (no immediate Discord backup)");
 }
-setInterval(() => saveDataToDiscord(trainerData), AUTOSAVE_INTERVAL);
+
+// ==========================================================
+// 🕒 15-MINUTE DISCORD BACKUP (only if data changed)
+// ==========================================================
+setInterval(async () => {
+  if (!dirty) {
+    console.log("⏳ 15-minute save tick — no changes, skipping");
+    return;
+  }
+
+  console.log("💾 15-minute interval — saving trainerData to Discord...");
+  try {
+    await saveDataToDiscord(trainerData);
+    dirty = false; // 🔄 reset flag
+    console.log("✅ Discord backup complete (15-minute interval)");
+  } catch (err) {
+    console.error("❌ Interval Discord save failed:", err.message);
+  }
+}, 15 * 60 * 1000);
+
 
 // ==========================================================
 // 🛑 GRACEFUL SHUTDOWN
@@ -696,8 +704,6 @@ try {
   // 🎲 3% chance for bonus Pokémon or Trainer
   await tryGiveRandomReward(userObj, message.author, message);
 
-  // Periodic autosave
-  if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
 });
 
 // ==========================================================
@@ -760,7 +766,6 @@ if (Math.random() < MESSAGE_CC_CHANCE) {
   // 3% chance for random reward
  await tryGiveRandomReward(userObj, user, reaction.message);
 
-  if (Math.random() < 0.1) await saveDataToDiscord(trainerData);
 });
 
 // ==========================================================
@@ -806,7 +811,6 @@ app.post("/api/updateUser", express.json(), async (req, res) => {
 );
 
   await saveTrainerDataLocal(trainerData);
-  debouncedDiscordSave();
 
   res.json({ success: true });
 });
@@ -848,7 +852,6 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
     else user.pokemon[reward.id].normal++;
 
     await saveTrainerDataLocal(trainerData);
-    debouncedDiscordSave();
 
     res.json({
       success: true,
@@ -930,7 +933,6 @@ app.post("/api/rewardTrainer", express.json(), async (req, res) => {
   user.trainers[cleanedFile] = (user.trainers[cleanedFile] || 0) + 1;
 
   await saveTrainerDataLocal(trainerData);
-  debouncedDiscordSave();
 
   // ------------------------------
   // ⭐ SEND FULL, CLEAN TRAINER OBJECT
@@ -959,14 +961,14 @@ client.on("interactionCreate", async (interaction) => {
 
     try {
       await command.execute(
-        interaction,
-        trainerData,
-        saveTrainerDataLocal,
-        saveDataToDiscord,
-        client
-      );
+  interaction,
+  trainerData,
+  saveTrainerDataLocal,
+  saveDataToDiscord,
+  client
+);
       await saveTrainerDataLocal(trainerData);
-      debouncedDiscordSave();
+
     } catch (err) {
       console.error(`❌ ${interaction.commandName}:`, err.message);
       await safeReply(interaction, {
@@ -1018,7 +1020,7 @@ app.post("/api/claim-weekly", express.json(), async (req, res) => {
   user.lastWeeklyPack = new Date().toISOString();
 
   await saveTrainerDataLocal(trainerData);
-  debouncedDiscordSave();
+
 
   res.json({ success: true });
 });
@@ -1137,7 +1139,6 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
 
     // One save at end
     await saveTrainerDataLocal(trainerData);
-    debouncedDiscordSave();
 
     res.json({
       success: true,
@@ -1200,17 +1201,6 @@ app.post("/api/set-trainer", express.json(), async (req, res) => {
     user.displayedTrainer = file;
     trainerData[id] = user;
     await saveTrainerDataLocal(trainerData);
-
-    // 🧠 Smart Discord backup throttle (1× per minute max)
-    const now = Date.now();
-    if (now - lastTrainerSave > 60_000) {
-      lastTrainerSave = now;
-      await saveDataToDiscord(trainerData).catch(err =>
-        console.warn("⚠️ Debounced Discord save failed:", err.message)
-      );
-    } else {
-      console.log("💾 Skipped Discord backup (debounced save)");
-    }
 
     console.log(`✅ ${id} equipped trainer ${file}`);
 
@@ -1301,9 +1291,6 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
     const now = Date.now();
     if (now - lastTeamSave > 60_000) {
       lastTeamSave = now;
-      await saveDataToDiscord(trainerData).catch(err =>
-        console.warn("⚠️ Debounced Discord save failed:", err.message)
-      );
     }
 
     res.json({ success: true });
@@ -1408,7 +1395,6 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
     user.pokemon[targetId][variant] += 1;
 
     await saveTrainerDataLocal(trainerData);
-    await saveDataToDiscord(trainerData);
 
     return res.json({
       success: true,
@@ -1474,7 +1460,6 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
   user.cc = (user.cc ?? 0) + finalValue;
 
   await saveTrainerDataLocal(trainerData);
-  await saveDataToDiscord(trainerData);
 
   res.json({
     success: true,

@@ -29,8 +29,7 @@ dotenv.config();
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import { getPokemonCached } from "./pokemonCache.js";
-
+import { getPokemonCached } from "./utils/pokemonCache.js";
 
 // ==========================================================
 // 🔒 PER-USER WRITE LOCK MANAGER (Option A)

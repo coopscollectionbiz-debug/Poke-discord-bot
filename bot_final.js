@@ -32,11 +32,8 @@ import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 
 // Local saver — writes trainerData.json to disk & marks dirty
-import {
-  enqueueSave,
-  shutdownFlush,
-  saveTrainerDataLocal
-} from "./utils/saveManager.js";
+import { saveTrainerDataLocal } from "./utils/saveManager.js";
+import { enqueueSave, shutdownFlush } from "./utils/saveQueue.js";
 
 
 // ==========================================================

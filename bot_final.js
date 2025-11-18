@@ -30,6 +30,9 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
+// Local saver — writes trainerData.json to disk & marks dirty
+
+
 
 // ==========================================================
 // 🔒 PER-USER WRITE LOCK MANAGER (Option A)
@@ -124,7 +127,11 @@ export const rarityColors = {
 // ==========================================================
 import { getRank, getRankTiers } from "./utils/rankSystem.js";
 import { safeReply } from "./utils/safeReply.js";
-import { enqueueSave, shutdownFlush } from "./utils/saveQueue.js";
+import {
+  enqueueSave,
+  shutdownFlush,
+  saveTrainerDataLocal
+} from "./utils/saveQueue.js";
 import { reloadUserFromDiscord, ensureUserInitialized } from "./utils/userInitializer.js";
 import { getAllPokemon, getAllTrainers } from "./utils/dataLoader.js";
 import {

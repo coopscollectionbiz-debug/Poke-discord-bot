@@ -1581,7 +1581,7 @@ client.once("ready", async () => {
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });
-
+});
 
 // ==========================================================
 // 🚀 LAUNCH

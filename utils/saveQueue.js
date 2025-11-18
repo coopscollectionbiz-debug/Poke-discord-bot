@@ -158,3 +158,20 @@ export function getQueueLength() {
 export function isCurrentlyFlushing() {
   return isFlushing;
 }
+
+// ==========================================================
+// 📝 saveTrainerDataLocal — compatibility wrapper
+// Ensures bot_final.js continues to function unchanged
+// Internally just enqueues a save via the queue system
+// ==========================================================
+export async function saveTrainerDataLocal(data) {
+  try {
+    // Immediately enqueue through the queue-based saver
+    await enqueueSave(data);
+    return { localSuccess: true };
+  } catch (err) {
+    console.error("❌ saveTrainerDataLocal failed:", err.message);
+    return { localSuccess: false, error: err.message };
+  }
+}
+

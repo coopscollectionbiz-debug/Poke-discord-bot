@@ -222,7 +222,9 @@ const userCooldowns = new Map();
 const RANK_TIERS = getRankTiers();
 
 let dirty = false; // 🚨 tracks unsaved changes for 15-min backups
-
+global.markDirty = () => {
+  dirty = true;
+};
 
 // ==========================================================
 // 🤖 Discord Client Setup

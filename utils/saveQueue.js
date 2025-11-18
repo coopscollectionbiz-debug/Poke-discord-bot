@@ -166,12 +166,16 @@ export function isCurrentlyFlushing() {
 // ==========================================================
 export async function saveTrainerDataLocal(data) {
   try {
-    // Immediately enqueue through the queue-based saver
     await enqueueSave(data);
+
+    // ✅ Auto-mark dirty for Discord 15-minute backups
+    if (typeof global.markDirty === "function") {
+      global.markDirty();
+    }
+
     return { localSuccess: true };
   } catch (err) {
     console.error("❌ saveTrainerDataLocal failed:", err.message);
     return { localSuccess: false, error: err.message };
   }
 }
-

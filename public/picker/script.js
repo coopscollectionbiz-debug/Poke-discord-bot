@@ -89,6 +89,11 @@ async function loadData() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
+// ⭐ Capture equipped trainer from backend (supports both new + legacy keys)
+const equipped = data.equipped || data.displayedTrainer || null;
+window.currentEquippedTrainer = equipped;
+console.log("Equipped Trainer:", equipped);
+
 
     if (data.owned) {
       ownedTrainers = Array.isArray(data.owned)
@@ -150,18 +155,19 @@ function render(filter = "") {
     spriteFiles.forEach((fileName) => {
       if (typeof fileName !== "string") return;
 
-      // Normalize filename comparison - handle both "filename.png" and "path/filename.png"
-      const normalizedFileName = fileName.toLowerCase();
-      const owns = ownedTrainers.some((ownedFile) => {
-        const normalizedOwned = ownedFile.toLowerCase();
-        // Check exact match first
-        if (normalizedOwned === normalizedFileName) return true;
-        // Check if owned file ends with the sprite filename (handles paths)
-        if (normalizedOwned.endsWith(normalizedFileName)) return true;
-        // Check if sprite filename ends with owned file (handles reverse)
-        if (normalizedFileName.endsWith(normalizedOwned)) return true;
-        return false;
-      });
+// Determine ownership by filename match ignoring extensions
+const owns = ownedTrainers.some((owned) => {
+  const a = owned.toLowerCase().replace(".png","").replace(".gif","").trim();
+  const b = fileName.toLowerCase().replace(".png","").replace(".gif","").trim();
+  return a === b;
+});
+
+// Determine equipped state
+const isEquipped =
+  window.currentEquippedTrainer &&
+  window.currentEquippedTrainer.toLowerCase().includes(
+    fileName.toLowerCase().replace(".png","").replace(".gif","")
+  );
 
       // Debug logging for first few trainers
       if (spriteFiles.indexOf(fileName) === 0) {
@@ -178,6 +184,8 @@ const imgPath = `${TRAINER_SPRITE_PATH}${fileName}`;
 
 const card = document.createElement("div");
 card.className = `trainer-card ${owns ? "owned" : "unowned"}`;
+if (isEquipped) card.classList.add("equipped");
+
 
 // -------------------------------------------------------
 // Sprite wrapper
@@ -305,13 +313,20 @@ async function selectTrainer(name, file) {
 
     const data = await res.json();
     if (data.success) {
-      createTrainerModal({
-        title: "Trainer Equipped!",
-        message: `${name} is now your active trainer.`,
-        sprite: `${TRAINER_SPRITE_PATH}${file}`,
-        confirmText: "OK",
-      });
-    }
+  // Update equipped trainer in memory
+  window.currentEquippedTrainer = file;
+
+  // Re-render grid to highlight newly equipped card
+  render();
+
+  createTrainerModal({
+    title: "Trainer Equipped!",
+    message: `${name} is now your active trainer.`,
+    sprite: `${TRAINER_SPRITE_PATH}${file}`,
+    confirmText: "OK",
+  });
+}
+
   } catch (err) {
     console.error("❌ selectTrainer failed:", err);
   }

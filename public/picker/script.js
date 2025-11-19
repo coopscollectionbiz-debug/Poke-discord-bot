@@ -81,12 +81,14 @@ async function loadData() {
       ownedTrainers = [];
     }
 
-    // Pull CC from shop endpoint
-    const shopRes = await fetch(`/api/user?preset=pokemon&id=${userId}&token=${token}`);
-    if (shopRes.ok) {
-      const shopData = await shopRes.json();
-      userCC = shopData.cc ?? 0;
-    }
+// =======================
+// Fetch CC for header bar
+// =======================
+const userRes = await fetch(`/api/user?id=${userId}&token=${token}`);
+const userData = await userRes.json();
+
+const ccDisplay = document.getElementById("ccDisplay");
+ccDisplay.textContent = `CC: ${userData.cc ?? 0}`;
 
     render();
 

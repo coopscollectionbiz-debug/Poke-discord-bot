@@ -118,13 +118,10 @@ async function loadData() {
 // UPDATE STICKY CC BAR
 // ===========================================================
 function updateCCDisplay() {
-  const ccBar = document.getElementById("ccDisplayBar");
-  if (!ccBar) return;
+  const ccDisplay = document.getElementById("ccDisplay");
+  if (!ccDisplay) return;
 
-  ccBar.innerHTML = `
-    <img src="/public/sprites/items/cc_coin.png" class="cc-icon" />
-    ${userCC.toLocaleString()} CC
-  `;
+  ccDisplay.textContent = `${userCC.toLocaleString()} CC`;
 }
 
 // ===========================================================
@@ -160,9 +157,7 @@ function render(filter = "") {
 if (showOwnedOnly && !owns) return;
 if (showUnownedOnly && owns) return;
 
-const imgPath = owns
-  ? `${TRAINER_SPRITE_PATH}${fileName}`
-  : `${GRAY_PATH}${fileName}`;
+const imgPath = `${TRAINER_SPRITE_PATH}${fileName}`;
 
 const card = document.createElement("div");
 card.className = `trainer-card ${owns ? "owned" : "unowned"}`;

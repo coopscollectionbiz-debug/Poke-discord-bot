@@ -1,6 +1,6 @@
 /* ===========================================================
-   Coop's Collection — Trainer Picker Styles (Updated Full Version)
-   =========================================================== */
+   Coop's Collection — Trainer Picker Styles (Clean Final)
+=========================================================== */
 
 body {
   font-family: "Inter", Arial, sans-serif;
@@ -12,7 +12,7 @@ body {
 }
 
 /* ===========================================================
-   Sticky CC Bar (NEW)
+   Sticky CC Bar
 =========================================================== */
 #ccBar {
   position: sticky;
@@ -38,10 +38,11 @@ body {
   font-size: 1.1rem;
 }
 
-/* Small CC coin (on cards) */
+/* Small CC coin (universally consistent size) */
 .cc-icon-small {
   width: 16px;
   height: 16px;
+  vertical-align: middle;
 }
 
 /* ===========================================================
@@ -49,7 +50,6 @@ body {
 =========================================================== */
 header {
   padding: 2rem 1rem 1rem;
-  position: relative;
 }
 
 h1 {
@@ -63,7 +63,7 @@ p {
   color: #ccc;
 }
 
-/* 🔙 Return Button */
+/* Return Button */
 .return-btn {
   position: absolute;
   top: 1rem;
@@ -83,9 +83,9 @@ p {
   background: #00ff9d22;
 }
 
-/* -----------------------------------------------------------
+/* ===========================================================
    Controls
------------------------------------------------------------ */
+=========================================================== */
 .controls {
   display: flex;
   justify-content: center;
@@ -118,9 +118,9 @@ p {
   font-weight: 600;
 }
 
-/* -----------------------------------------------------------
+/* ===========================================================
    Trainer Grid
------------------------------------------------------------ */
+=========================================================== */
 #trainerGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -131,9 +131,9 @@ p {
   justify-items: center;
 }
 
-/* -----------------------------------------------------------
+/* ===========================================================
    Trainer Cards
------------------------------------------------------------ */
+=========================================================== */
 .trainer-card {
   background: #161b22;
   border: 2px solid #30363d;
@@ -142,55 +142,41 @@ p {
   cursor: pointer;
   transition: all 0.15s ease;
   position: relative;
-  overflow: hidden;
   width: 130px;
   min-height: 190px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  overflow: hidden;
 }
 
 .trainer-card img {
   width: 100px;
   height: auto;
   transition: opacity 0.25s ease;
-  margin: 0 auto;
   display: block;
 }
 
 /* Trainer Name */
-.trainer-card p.trainer-name {
+.trainer-name {
   margin-top: 0.5rem;
   font-size: 0.9rem;
   color: #eee;
   font-weight: 600;
 }
 
-/* -----------------------------------------------------------
-   NEW — Price Row (Coin + Amount)
------------------------------------------------------------ */
-.trainer-price-row {
+/* Price Tag Under Sprite */
+.price-tag {
   display: flex;
   align-items: center;
   gap: 4px;
   margin-top: 4px;
-}
-
-.trainer-price-row img {
-  width: 18px;
-  height: 18px;
-}
-
-.trainer-price-row span {
-  font-size: 0.85rem;
-  font-weight: 700;
   color: #facc15;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
-/* -----------------------------------------------------------
-   Hover & State Effects
------------------------------------------------------------ */
+/* Hover Effects */
 .trainer-card.owned:hover {
   transform: scale(1.05);
   border-color: #00ff9d;
@@ -202,31 +188,23 @@ p {
   border-color: #50555d;
 }
 
-/* -----------------------------------------------------------
-   Lock Overlay for Unowned Trainers
------------------------------------------------------------ */
+/* ===========================================================
+   Lock Overlay (small + clean)
+=========================================================== */
 .sprite-wrapper {
   position: relative;
-  display: inline-block;
 }
 
 .lock-overlay {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 5px;
+  right: 5px;
   background: rgba(0,0,0,0.55);
-  padding: 4px 6px;
+  padding: 3px 6px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   gap: 4px;
-  backdrop-filter: blur(2px);
-}
-
-.lock-overlay span {
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 600;
 }
 
 .trainer-card.unowned img {
@@ -234,28 +212,15 @@ p {
   opacity: 0.8;
 }
 
-/* -----------------------------------------------------------
-   Tier + Emoji Display
------------------------------------------------------------ */
+/* ===========================================================
+   Tier Display
+=========================================================== */
 .trainer-tier {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 3px;
+  margin-top: 4px;
   font-weight: 600;
-  font-size: 0.85em;
+  font-size: 0.85rem;
 }
 
-.trainer-tier .tier-text {
-  text-transform: capitalize;
-}
-
-.trainer-tier .tier-emoji {
-  font-size: 1.1em;
-  margin-top: 1px;
-}
-
-/* Tier Colors */
 .tier-text.common { color: #9ca3af; }
 .tier-text.uncommon { color: #10b981; }
 .tier-text.rare { color: #3b82f6; }
@@ -263,80 +228,16 @@ p {
 .tier-text.legendary { color: #facc15; }
 .tier-text.mythic { color: #ef4444; }
 
-/* -----------------------------------------------------------
-   Selection Highlight
------------------------------------------------------------ */
-.trainer-card.selected {
-  border-color: #00ff9d;
-  box-shadow: 0 0 10px #00ff9d70;
-  transform: scale(1.04);
-}
-
 /* ===========================================================
-   Sticky Navigation Tabs
-=========================================================== */
-.nav-tabs {
-  position: sticky;
-  top: 55px; /* Below CC bar */
-  z-index: 8000;
-  background: #0d1117;
-  padding: 10px 0;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  border-bottom: 1px solid #30363d;
-}
-
-.nav-tab {
-  background: #161b22;
-  border: 1px solid #30363d;
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.nav-tab:hover {
-  border-color: #00ff9d;
-}
-
-.nav-tab.active {
-  background: #00ff9d;
-  color: #0d1117;
-  box-shadow: 0 0 8px #00ff9d60;
-}
-
-/* ===========================================================
-   Fullscreen Processing Overlay (NEW)
-=========================================================== */
-#processingOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  z-index: 99999;
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-
-#processingOverlay p {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #00ff9d;
-}
-
-/* ===========================================================
-   Trainer Modal
+   Modal
 =========================================================== */
 #trainerModalOverlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.75);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 9999;
 }
 
@@ -345,19 +246,31 @@ p {
   border: 2px solid #00ff9d;
   border-radius: 14px;
   padding: 2rem;
-  text-align: center;
-  max-width: 420px;
   width: 90%;
-  color: white;
+  max-width: 420px;
+  text-align: center;
   box-shadow: 0 0 20px #00ff9d60;
 }
 
-#trainerModal img {
+.modal-sprite {
   width: 120px;
   height: auto;
   image-rendering: pixelated;
 }
 
+/* Price inside modal */
+.modal-price-row {
+  margin: 10px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  color: #facc15;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Modal buttons */
 .modal-buttons {
   display: flex;
   justify-content: center;
@@ -370,8 +283,8 @@ p {
   color: #0d1117;
   border: none;
   padding: 10px 22px;
-  font-weight: 700;
   border-radius: 10px;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -384,35 +297,21 @@ p {
   transform: scale(1.03);
 }
 
-.purchase-btn {
-  background: #00ff9d;
-  color: #0d1117;
-  border: none;
-  padding: 6px 10px;
-  font-weight: 700;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  margin-top: 6px;
-}
-
-.purchase-btn:hover {
-  transform: scale(1.05);
-}
-
-.modal-price-row {
-  margin-top: 10px;
-  display: flex;
+/* ===========================================================
+   Processing Overlay
+=========================================================== */
+#processingOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: none;
+  z-index: 90000;
   justify-content: center;
   align-items: center;
-  gap: 6px;
-  font-size: 1rem;
+}
+
+#processingOverlay p {
   font-weight: 700;
-  color: #facc15;
+  font-size: 1.4rem;
+  color: #00ff9d;
 }
-
-.cc-icon-small {
-  width: 20px;
-  height: 20px;
-}
-

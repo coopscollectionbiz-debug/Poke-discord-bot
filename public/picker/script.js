@@ -279,7 +279,7 @@ async function selectTrainer(name, file) {
 // ===========================================================
 // BUY TRAINER
 // ===========================================================
-ffunction askToBuyTrainer(name, file, rarity, price) {
+function askToBuyTrainer(name, file, rarity, price) {
   const canAfford = userCC >= price;
   const delta = price - userCC;
 

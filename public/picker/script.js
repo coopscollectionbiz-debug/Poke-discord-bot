@@ -10,6 +10,19 @@ const TRAINER_DATA_FILE = "/public/trainerSprites.json";
 
 const API_USER = "/api/user-trainers";
 const API_SET  = "/api/set-trainer";
+const API_PURCHASE = "/api/unlock-trainer";
+
+// ===========================================================
+// 💰 Tier-Based Trainer Costs (Option A)
+// ===========================================================
+const TRAINER_COSTS = {
+  common: 2500,
+  uncommon: 7500,
+  rare: 15000,
+  epic: 35000,
+  legendary: 75000,
+  mythic: 150000,
+};
 
 // ===========================================================
 // GLOBAL STATE (Unified Token)
@@ -22,6 +35,8 @@ let token  = null;
 let showOwnedOnly   = false;
 let showUnownedOnly = false;
 let selectedRarity  = "all";
+
+let userCC = 0; // <-- CC from shop API
 
 // ===========================================================
 // INITIALIZATION
@@ -47,20 +62,30 @@ async function loadData() {
       return;
     }
 
+    // Load sprite definitions
     const spriteRes = await fetch(TRAINER_DATA_FILE);
     allTrainers = await spriteRes.json();
 
+    // Load ownership + CC
     const res = await fetch(`${API_USER}?id=${userId}&token=${token}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
 
+    // Owned list
     if (data.owned) {
       if (Array.isArray(data.owned)) ownedTrainers = data.owned;
       else if (typeof data.owned === "object") ownedTrainers = Object.keys(data.owned);
       else ownedTrainers = [];
     } else {
       ownedTrainers = [];
+    }
+
+    // Pull CC from shop endpoint
+    const shopRes = await fetch(`/api/user?preset=pokemon&id=${userId}&token=${token}`);
+    if (shopRes.ok) {
+      const shopData = await shopRes.json();
+      userCC = shopData.cc ?? 0;
     }
 
     render();
@@ -84,6 +109,7 @@ function render(filter = "") {
     const rarity      = (info.tier || "common").toLowerCase();
     const tierDisplay = rarity.charAt(0).toUpperCase() + rarity.slice(1);
     const emoji       = rarityEmojis?.[rarity] || "⚬";
+    const price       = TRAINER_COSTS[rarity] ?? 5000;
 
     if (selectedRarity !== "all" && rarity !== selectedRarity) return;
     if (filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
@@ -124,7 +150,7 @@ function render(filter = "") {
       if (!owned) {
         const lock = document.createElement("div");
         lock.className = "lock-overlay";
-        lock.innerHTML = "<span>🔒</span>";
+        lock.innerHTML = `<span>🔒 ${price.toLocaleString()} CC</span>`;
         wrapper.appendChild(lock);
       }
 
@@ -138,7 +164,11 @@ function render(filter = "") {
         </div>
       `;
 
-      if (owned) card.onclick = () => askToEquipTrainer(name, fileName);
+      if (owned) {
+        card.onclick = () => askToEquipTrainer(name, fileName);
+      } else {
+        card.onclick = () => askToBuyTrainer(name, fileName, rarity, price);
+      }
 
       grid.appendChild(card);
     });
@@ -183,13 +213,14 @@ function setupControls() {
 }
 
 // ===========================================================
-// EQUIP TRAINER WITH CONFIRMATION
+// EQUIP TRAINER (OWNED)
 // ===========================================================
 function askToEquipTrainer(name, file) {
   createTrainerModal({
     title: "Equip This Trainer?",
-    message: `Would you like to equip **${name}** as your displayed Trainer?`,
+    message: `Would you like to equip **${name}**?`,
     sprite: `${TRAINER_SPRITE_PATH}${file}`,
+    confirmText: "Equip",
     onConfirm: () => selectTrainer(name, file),
   });
 }
@@ -206,33 +237,75 @@ async function selectTrainer(name, file) {
     if (data.success) {
       createTrainerModal({
         title: "Trainer Equipped!",
-        message: `${name} is now your displayed Trainer.`,
+        message: `${name} is now your active trainer.`,
         sprite: `${TRAINER_SPRITE_PATH}${file}`,
+        confirmText: "OK",
         onConfirm: () => {},
       });
     } else {
       createTrainerModal({
         title: "Error",
-        message: "Failed to equip trainer.",
+        message: data.error || "Failed to equip trainer.",
         sprite: `${TRAINER_SPRITE_PATH}${file}`,
-        onConfirm: () => {},
       });
     }
   } catch (err) {
     console.error("❌ selectTrainer failed:", err);
-    createTrainerModal({
-      title: "Connection Error",
-      message: "Could not connect to the server.",
-      sprite: `${TRAINER_SPRITE_PATH}${file}`,
-      onConfirm: () => {},
+  }
+}
+
+// ===========================================================
+// BUY TRAINER (UNOWNED)
+// ===========================================================
+function askToBuyTrainer(name, file, rarity, price) {
+  const canAfford = userCC >= price;
+
+  createTrainerModal({
+    title: "Unlock Trainer?",
+    message: `Buy **${name}** for **${price.toLocaleString()} CC**?`,
+    sprite: `${TRAINER_SPRITE_PATH}${file}`,
+    confirmText: canAfford ? "Buy" : `Need ${price - userCC} more CC`,
+    confirmDisabled: !canAfford,
+    onConfirm: () => purchaseTrainer(file),
+  });
+}
+
+async function purchaseTrainer(file) {
+  try {
+    const res = await fetch(API_PURCHASE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: userId, token, file }),
     });
+
+    const data = await res.json();
+
+    if (data.success) {
+      createTrainerModal({
+        title: "Trainer Unlocked!",
+        message: "You can now equip this trainer.",
+        sprite: `${TRAINER_SPRITE_PATH}${file}`,
+        confirmText: "OK",
+      });
+
+      // reload ownership + CC
+      loadData();
+    } else {
+      createTrainerModal({
+        title: "Purchase Failed",
+        message: data.error || "Could not purchase trainer.",
+        sprite: `${TRAINER_SPRITE_PATH}${file}`,
+      });
+    }
+  } catch (err) {
+    console.error("❌ purchaseTrainer failed:", err);
   }
 }
 
 // ===========================================================
 // MODAL BUILDER
 // ===========================================================
-function createTrainerModal({ title, message, sprite, onConfirm }) {
+function createTrainerModal({ title, message, sprite, onConfirm, confirmText = "Confirm", confirmDisabled = false }) {
   const overlay = document.createElement("div");
   overlay.id = "trainerModalOverlay";
 
@@ -240,13 +313,13 @@ function createTrainerModal({ title, message, sprite, onConfirm }) {
   modal.id = "trainerModal";
 
   modal.innerHTML = `
-    <h2 style="color:#00ff9d;margin-top:0;">${title}</h2>
+    <h2 class="modal-title">${title}</h2>
     <img src="${sprite}" alt="trainer"/>
-    <p style="margin:1rem 0;color:#ccc;">${message}</p>
+    <p class="modal-message">${message}</p>
 
     <div class="modal-buttons">
       <button class="modal-btn cancel">Cancel</button>
-      <button class="modal-btn confirm">Confirm</button>
+      <button class="modal-btn confirm" ${confirmDisabled ? "disabled" : ""}>${confirmText}</button>
     </div>
   `;
 
@@ -255,7 +328,7 @@ function createTrainerModal({ title, message, sprite, onConfirm }) {
 
   modal.querySelector(".cancel").onclick = () => overlay.remove();
   modal.querySelector(".confirm").onclick = async () => {
-    await onConfirm();
+    if (!confirmDisabled && onConfirm) await onConfirm();
     overlay.remove();
   };
 
@@ -265,43 +338,25 @@ function createTrainerModal({ title, message, sprite, onConfirm }) {
 }
 
 // ======================================================
-// 🔄 NAVIGATION TABS — ALWAYS USE CURRENT TOKEN
+// NAVIGATION TABS — ALWAYS USE CURRENT TOKEN
 // ======================================================
-(function initNavTabs() {
-  function getSafeParams() {
-    // Prefer in-memory values
-    if (userId && token) {
-      return { id: userId, token };
-    }
+function initNavTabs() {
+  const params = new URLSearchParams(window.location.search);
+  const id    = params.get("id");
+  const tok   = params.get("token");
 
-    // Fall back to URL if memory is empty
-    const params = new URLSearchParams(window.location.search);
-    return {
-      id: params.get("id"),
-      token: params.get("token"),
-    };
-  }
-
-  const { id, token: urlToken } = getSafeParams();
-
-  if (!id || !urlToken) {
-    console.warn("❌ Missing id/token — navigation disabled");
-    return;
-  }
+  if (!id || !tok) return;
 
   const goPokemon  = document.getElementById("goPokemon");
   const goTrainers = document.getElementById("goTrainers");
   const goShop     = document.getElementById("goShop");
 
-  if (goPokemon)
-    goPokemon.onclick = () =>
-      window.location.href = `/public/picker-pokemon/?id=${id}&token=${urlToken}`;
+  if (goPokemon)  goPokemon.onclick  = () =>
+    (window.location.href = `/public/picker-pokemon/?id=${id}&token=${tok}`);
 
-  if (goTrainers)
-    goTrainers.onclick = () =>
-      window.location.href = `/public/picker/?id=${id}&token=${urlToken}`;
+  if (goTrainers) goTrainers.onclick = () =>
+    (window.location.href = `/public/picker/?id=${id}&token=${tok}`);
 
-  if (goShop)
-    goShop.onclick = () =>
-      window.location.href = `/public/picker-shop/?id=${id}&token=${urlToken}`;
-})();
+  if (goShop)     goShop.onclick     = () =>
+    (window.location.href = `/public/picker-shop/?id=${id}&token=${tok}`);
+}

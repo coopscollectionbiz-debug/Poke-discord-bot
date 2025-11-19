@@ -11,6 +11,8 @@
     <header>
 
       <h1>🎨 Choose Your Trainer</h1>
+<p id="ccDisplay" class="subtitle" style="color:#00ff9d;font-weight:600;">CC: ...</p>
+
       <p class="subtitle">
         Select a Trainer to display on your profile. Only owned Trainers can be equipped.
       </p>
@@ -64,5 +66,40 @@
     </footer>
 
     <script type="module" src="script.js"></script>
+
+<script>
+  window.showPurchaseModal = (title, message, sprite, onConfirm) => {
+    const overlay = document.createElement("div");
+    overlay.id = "trainerModalOverlay";
+
+    const modal = document.createElement("div");
+    modal.id = "trainerModal";
+
+    modal.innerHTML = `
+      <h2 style="color:#ef4444;margin-top:0;">${title}</h2>
+      <img src="${sprite}" alt="trainer"/>
+      <p style="margin:1rem 0;color:#ccc;">${message}</p>
+
+      <div class="modal-buttons">
+        <button class="modal-btn cancel">Cancel</button>
+        <button class="modal-btn confirm">Buy for CC</button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    modal.querySelector(".cancel").onclick = () => overlay.remove();
+    modal.querySelector(".confirm").onclick = async () => {
+      await onConfirm();
+      overlay.remove();
+    };
+
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+  }
+</script>
+
   </body>
 </html>

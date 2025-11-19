@@ -79,6 +79,19 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const staticPath = path.join(__dirname, "public");
 
+// ==========================================================
+// 🎯 Trainer Tier Costs
+// ==========================================================
+export const TRAINER_COSTS = {
+  common: 2500,
+  uncommon: 7500,
+  rare: 15000,
+  epic: 35000,
+  legendary: 75000,
+  mythic: 150000,
+};
+
+
 // ✅ Serve all /public assets with correct MIME headers
 app.use(
   "/public",
@@ -134,7 +147,6 @@ import { reloadUserFromDiscord, ensureUserInitialized } from "./utils/userInitia
 import { getAllPokemon, getAllTrainers } from "./utils/dataLoader.js";
 import {
   selectRandomPokemonForUser,
-  selectRandomTrainerForUser,
 } from "./utils/weightedRandom.js";
 import { rollForShiny } from "./shinyOdds.js";
 import { rarityEmojis, spritePaths } from "./spriteconfig.js";
@@ -143,7 +155,6 @@ import { updateUserRole } from "./utils/updateUserRole.js";
 import { broadcastReward } from "./utils/broadcastReward.js";
 import {
   createPokemonRewardEmbed,
-  createTrainerRewardEmbed,
 } from "./utils/embedBuilders.js";
 import { sanitizeTrainerData } from "./utils/sanitizeTrainerData.js";
 
@@ -346,63 +357,39 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // Load Pokémon + Trainer pools
     // ============================
     const allPokemon = await getAllPokemon();
-    const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
-    const flatTrainers = await getFlattenedTrainers();
 
     let reward = null;
     let isShiny = false;
-    let isPokemon = false;
+    let isPokemon = true; // always Pokémon now
+
+
 
     try {
-      // ================================
-      // 🎲 50/50 Pokémon vs Trainer
-      // ================================
-      if (Math.random() < 0.61) {
-        isPokemon = true;
-        reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball");
-        isShiny = rollForShiny(userObj.tp || 0);
+// 🎲 Pokémon-Only Reward (No Trainers)
+// ================================
+// Always select a Pokémon
+reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball");
+isShiny = rollForShiny(userObj.tp || 0);
 
-        userObj.pokemon ??= {};
-        userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-        if (isShiny) userObj.pokemon[reward.id].shiny++;
-        else userObj.pokemon[reward.id].normal++;
+// Ensure inventory exists
+userObj.pokemon ??= {};
+userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
 
-      } else {
-        isPokemon = false;
-        reward = selectRandomTrainerForUser(flatTrainers, userObj);
+// Increment inventory
+if (isShiny) {
+  userObj.pokemon[reward.id].shiny++;
+} else {
+  userObj.pokemon[reward.id].normal++;
+}
 
-        // Name normalization
-        reward.name =
-          reward.name ||
-          reward.displayName ||
-          reward.groupName ||
-          (reward.filename ? reward.filename.replace(".png", "") : "Trainer");
+console.log(
+  `🎁 Pokemon reward → ${isShiny ? "✨ shiny " : ""}${reward.name} (${reward.tier})`
+);
 
-        reward.name = reward.name
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, c => c.toUpperCase())
-          .trim();
-
-        reward.tier = reward.tier || reward.rarity || "common";
-
-        // Trainer inventory increment
-        userObj.trainers ??= {};
-        const trainerKey =
-          reward.spriteFile ||
-          reward.filename ||
-          `${reward.id}.png`;
-
-        userObj.trainers[trainerKey] =
-          (userObj.trainers[trainerKey] || 0) + 1;
-
-        console.log(`🎁 Trainer reward → ${reward.name} (${reward.tier}) key=${trainerKey}`);
-      }
-
-    } catch (err) {
-      console.error("❌ Reward selection failed:", err);
-      return;
-    }
-
+} catch (err) {
+  console.error("❌ Reward selection failed:", err);
+  return;
+}
     // Save
     await saveTrainerDataLocal(trainerData);
 
@@ -412,46 +399,36 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       spriteUrl = isShiny
         ? `${spritePaths.shiny}${reward.id}.gif`
         : `${spritePaths.pokemon}${reward.id}.gif`;
-    } else {
-      const cleanFile = (reward.filename || reward.spriteFile || `${reward.id}.png`)
-        .replace(/^trainers?_2\//, "")
-        .replace(/\s+/g, "")
-        .toLowerCase();
-      spriteUrl = `${spritePaths.trainers}${cleanFile}`;
     }
-
     // Embed
-    const embed = isPokemon
-      ? createPokemonRewardEmbed(reward, isShiny, spriteUrl)
-      : createTrainerRewardEmbed(reward, spriteUrl);
+    const embed = createPokemonRewardEmbed(reward, isShiny, spriteUrl);
 
     // Public announcement
     try {
-      const announcement = isPokemon
-        ? `🎉 <@${interactionUser.id}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`
-        : `👥 <@${interactionUser.id}> recruited **${reward.name}**!`;
+      const announcement = `🎉 <@${interactionUser.id}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`;
+
       await msgOrInteraction.channel.send({ content: announcement, embeds: [embed] });
     } catch (err) {
       console.warn("⚠️ Public reward announcement failed:", err.message);
     }
 
-    // Global broadcast
-    try {
-      await broadcastReward(client, {
-        user: interactionUser,
-        type: isPokemon ? "pokemon" : "trainer",
-        item: {
-          id: reward.id,
-          name: reward.name,
-          rarity: reward.rarity || reward.tier || "common",
-          spriteFile: !isPokemon ? reward.filename || reward.spriteFile : null,
-        },
-        shiny: isShiny,
-        source: "random encounter",
-      });
-    } catch (err) {
-      console.error("❌ broadcastReward failed:", err.message);
-    }
+    // Global broadcast (Pokémon-only)
+try {
+  await broadcastReward(client, {
+    user: interactionUser,
+    type: "pokemon",
+    item: {
+      id: reward.id,
+      name: reward.name,
+      rarity: reward.tier || "common",
+      spriteFile: `${reward.id}.gif`, // safe; broadcastReward will path-resolve
+    },
+    shiny: isShiny,
+    source: "random encounter",
+  });
+} catch (err) {
+  console.error("❌ broadcastReward failed:", err.message);
+
 
     console.log(`✅ Reward granted to ${interactionUser.username}`);
   });
@@ -624,7 +601,12 @@ function normalizeUserSchema(id, user) {
   user.cc ??= 0;
 
   user.pokemon ??= {};
-  user.trainers ??= {};
+  // Convert trainers to array of filenames (unique unlockables)
+if (!Array.isArray(user.trainers)) {
+  // Convert old object maps like {file.png: 3} → ["file.png"]
+  user.trainers = Object.keys(user.trainers || {});
+}
+
 
   user.displayedPokemon ??= [];
   user.displayedTrainer ??= null;
@@ -670,7 +652,7 @@ client.on("messageCreate", async (message) => {
   tp: 0,
   cc: 0,
   pokemon: {},
-  trainers: {},
+  trainers: [],
   displayedTrainer: null,
   displayedPokemon: [],
   onboardingComplete: false,
@@ -732,7 +714,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
   tp: 0,
   cc: 0,
   pokemon: {},
-  trainers: {},
+  trainers: [],
   displayedTrainer: null,
   displayedPokemon: [],
   onboardingComplete: false,
@@ -877,87 +859,6 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
 });
 
 // ==========================================================
-// 🛍️ SHOP API — TRAINER REWARD (FIXED + NORMALIZED)
-// ==========================================================
-app.post("/api/rewardTrainer", express.json(), async (req, res) => {
-  const { id, token, tier } = req.body;
-
-  await withUserLock(id, async () => {
-    if (!validateToken(id, token))
-      return res.status(403).json({ error: "Invalid token" });
-
-    const user = trainerData[id];
-    if (!user)
-      return res.status(404).json({ error: "User not found" });
-
-  const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
-  const flat = await getFlattenedTrainers();
-
-  // Filter by tier
-  const pool = flat.filter(t => (t.tier || t.rarity) === tier);
-  if (!pool.length)
-    return res.status(400).json({ error: `No trainers of tier ${tier}` });
-
-  // Pick one
-  const reward = pool[Math.floor(Math.random() * pool.length)];
-
-  // ------------------------------
-  // 🧼 NAME NORMALIZATION (FIXED)
-  // ------------------------------
-  let cleanedName =
-    reward.name ||
-    reward.displayName ||
-    reward.groupName ||
-    (reward.filename ? reward.filename.replace(".png", "") : "trainer");
-
-  cleanedName = cleanedName
-    .replace(/_/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, c => c.toUpperCase());
-
-  // ------------------------------
-  // 🧼 FILE + SPRITE NORMALIZATION (FIXED)
-  // ------------------------------
-  let cleanedFile =
-    reward.spriteFile ||
-    reward.filename ||
-    reward.file ||
-    "";
-
-  cleanedFile = cleanedFile
-    .trim()
-    .toLowerCase()
-    .replace(/^trainers?_2\//, "")
-    .replace(/\.png\.png$/, ".png")
-    .replace(/\s+/g, "");
-
-  const spriteUrl = `${spritePaths.trainers}${cleanedFile}`;
-
-  // ------------------------------
-  // 🧼 SAVE TO USER INVENTORY
-  // ------------------------------
-  user.trainers ??= {};
-  user.trainers[cleanedFile] = (user.trainers[cleanedFile] || 0) + 1;
-
-  await saveTrainerDataLocal(trainerData);
-
-  // ------------------------------
-  // ⭐ SEND FULL, CLEAN TRAINER OBJECT
-  // ------------------------------
-  res.json({
-    success: true,
-    trainer: {
-      name: cleanedName,
-      rarity: reward.tier || reward.rarity || "common",
-      sprite: spriteUrl,
-      file: cleanedFile
-    }
-  });
-});
-});
-
-// ==========================================================
 // ⚡ INTERACTION HANDLER (Slash Commands + Buttons)
 // ==========================================================
 client.on("interactionCreate", async (interaction) => {
@@ -1035,7 +936,7 @@ app.post("/api/claim-weekly", express.json(), async (req, res) => {
 });
 
 // ==========================================================
-// 🧰 WEEKLY PACK — Forced Rarity + Atomic User Lock
+// 🧰 WEEKLY PACK — Pokémon Only (Forced Rarity + Atomic Lock)
 // ==========================================================
 app.post("/api/weekly-pack", express.json(), async (req, res) => {
   const { id, token } = req.body;
@@ -1057,7 +958,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
       return res.status(400).json({ error: "Weekly pack already claimed." });
     }
 
-    // Lock cooldown immediately
+    // Set cooldown immediately
     user.lastWeeklyPack = new Date().toISOString();
 
     const results = [];
@@ -1069,6 +970,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
       return pool[Math.floor(Math.random() * pool.length)];
     };
 
+    // ----------- Give Pokémon (forced rarity structure) ------------
     async function givePokemon(tier) {
       const reward = pick(tier);
       if (!reward) return;
@@ -1077,6 +979,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
 
       user.pokemon ??= {};
       user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
+
       if (shiny) user.pokemon[reward.id].shiny++;
       else user.pokemon[reward.id].normal++;
 
@@ -1092,46 +995,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
       });
     }
 
-    async function giveTrainer(tier) {
-      const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
-      const flat = await getFlattenedTrainers();
-
-      const pool = flat.filter(t => (t.tier || t.rarity) === tier);
-      if (!pool.length) return;
-
-      const reward = pool[Math.floor(Math.random() * pool.length)];
-      const file = (reward.spriteFile || reward.filename || reward.file || "")
-        .trim()
-        .toLowerCase()
-        .replace(/^trainers?_2\//, "")
-        .replace(/\.png\.png$/, ".png");
-
-      const sprite = `${spritePaths.trainers}${file}`;
-
-      let name =
-        reward.name ||
-        reward.displayName ||
-        reward.groupName ||
-        file.replace(".png", "");
-
-      name = name
-        .replace(/_/g, " ")
-        .replace(/\s+/g, " ")
-        .replace(/\b\w/g, c => c.toUpperCase());
-
-      user.trainers ??= {};
-      user.trainers[file] = (user.trainers[file] || 0) + 1;
-
-      results.push({
-        type: "trainer",
-        name,
-        rarity: tier,
-        sprite,
-        file
-      });
-    }
-
-    // Apply forced rarity structure
+    // --------- Final Pokémon-only weekly pack ----------
     await givePokemon("common");
     await givePokemon("common");
     await givePokemon("common");
@@ -1139,14 +1003,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
     await givePokemon("uncommon");
     await givePokemon("rare");
 
-    await giveTrainer("common");
-    await giveTrainer("common");
-    await giveTrainer("common");
-    await giveTrainer("uncommon");
-    await giveTrainer("uncommon");
-    await giveTrainer("rare");
-
-    // One save at end
+    // Save once
     await saveTrainerDataLocal(trainerData);
 
     res.json({
@@ -1170,12 +1027,9 @@ app.get("/api/user-trainers", (req, res) => {
     return res.status(404).json({ error: "User not found in memory" });
   }
 
-  const owned =
-    typeof user.trainers === "object"
-      ? Object.keys(user.trainers)
-      : Array.isArray(user.trainers)
-      ? user.trainers
-      : [];
+  const owned = Array.isArray(user.trainers)
+  ? user.trainers
+  : Object.keys(user.trainers || {});
 
   res.json({ owned });
 });
@@ -1219,6 +1073,89 @@ app.post("/api/set-trainer", express.json(), async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+
+// ===========================================================
+// Purchase Trainer
+// ===========================================================
+app.post("/api/unlock-trainer", express.json(), async (req, res) => {
+  const { id, token, file } = req.body;
+
+  if (!validateToken(id, token))
+    return res.status(403).json({ error: "Invalid or expired token" });
+
+  await lockUser(id, async () => {
+    const user = trainerData[id];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (!user.trainers) user.trainers = [];
+    if (user.trainers.includes(file))
+      return res.status(400).json({ error: "Trainer already owned" });
+
+    // Load trainer info to get tier
+    const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
+    const trainers = await getFlattenedTrainers();
+
+    const trainer = trainers.find(t =>
+      (t.spriteFile || t.filename || "").toLowerCase() === file.toLowerCase()
+    );
+
+    if (!trainer) {
+      return res.status(404).json({ error: "Trainer not found" });
+    }
+
+    const tier = (trainer.tier || trainer.rarity || "common").toLowerCase();
+
+    // Tier-based pricing
+    const cost = TRAINER_COSTS[tier];
+    if (!cost) {
+      return res.status(400).json({ error: `Unknown trainer tier: ${tier}` });
+    }
+
+    if ((user.cc ?? 0) < cost) {
+      return res.status(400).json({ error: `Requires ${cost} CC` });
+    }
+
+    // Deduct CC + award trainer
+    user.cc -= cost;
+    user.trainers.push(file);
+
+    await saveTrainerDataLocal(trainerData);
+
+    res.json({
+      success: true,
+      file,
+      cost,
+      tier
+    });
+  });
+});
+
+// ==========================================================
+// 🛍️ TRAINER SHOP — LIST ALL BUYABLE TRAINERS
+// ==========================================================
+app.get("/api/shop-trainers", async (req, res) => {
+  try {
+    const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
+    const trainers = await getFlattenedTrainers();
+
+    const list = trainers.map(t => {
+      const tier = (t.tier || t.rarity || "common").toLowerCase();
+      return {
+        file: t.spriteFile || t.filename,
+        name: t.name || t.displayName || t.groupName || "Trainer",
+        tier,
+        cost: TRAINER_COSTS[tier]
+      };
+    });
+
+    res.json({ success: true, trainers: list });
+  } catch (err) {
+    console.error("❌ /api/shop-trainers failed:", err.message);
+    res.status(500).json({ success: false });
+  }
+});
+
 
 // ===========================================================
 // 🧩 POKÉMON PICKER API ENDPOINTS (Supports 6-Pokémon Teams)
@@ -1509,8 +1446,9 @@ client.once("ready", async () => {
       if (!user.displayedTrainer) continue;
       const normalized = user.displayedTrainer.toLowerCase().trim();
       const ownsTrainer =
-        user.trainers &&
-        Object.keys(user.trainers).some(t => t.toLowerCase().trim() === normalized);
+  Array.isArray(user.trainers) &&
+  user.trainers.some(t => t.toLowerCase().trim() === normalized);
+
 
       if (!validTrainerFiles.has(normalized) || !ownsTrainer) {
         console.warn(

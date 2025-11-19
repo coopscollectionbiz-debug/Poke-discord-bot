@@ -1428,53 +1428,52 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
 // 💝 Donate Pokémon (normal + shiny supported, 5× CC for shiny)
 app.post("/api/pokemon/donate", express.json(), async (req, res) => {
   const { id, token, pokeId, shiny } = req.body;
+
   if (!validateToken(id, token))
     return res.status(403).json({ error: "Invalid or expired token" });
 
-  const user = trainerData[id];
-  if (!user) return res.status(404).json({ error: "User not found" });
+  await lockUser(id, async () => {
+    const user = trainerData[id];
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-  const pokemonData = JSON.parse(fsSync.readFileSync("public/pokemonData.json", "utf8"));
-  const p = pokemonData[pokeId];
-  if (!p) return res.status(400).json({ error: "Invalid Pokémon ID" });
+    const pokemonData = JSON.parse(fsSync.readFileSync("public/pokemonData.json", "utf8"));
+    const p = pokemonData[pokeId];
+    if (!p) return res.status(400).json({ error: "Invalid Pokémon ID" });
 
-  // 💰 Base CC rewards by rarity
-  const ccMap = {
-    common: 250,
-    uncommon: 500,
-    rare: 1000,
-    epic: 2500,
-    legendary: 5000,
-    mythic: 10000,
-  };
+    const ccMap = {
+      common: 250,
+      uncommon: 500,
+      rare: 1000,
+      epic: 2500,
+      legendary: 5000,
+      mythic: 10000,
+    };
 
-  const baseValue = ccMap[p.tier] ?? 0;
-  const variant = shiny ? "shiny" : "normal";
-  const owned = user.pokemon?.[pokeId]?.[variant] || 0;
+    const baseValue = ccMap[p.tier] ?? 0;
+    const variant = shiny ? "shiny" : "normal";
+    const owned = user.pokemon?.[pokeId]?.[variant] || 0;
 
-  if (owned <= 0)
-    return res.status(400).json({
-      error: `You don’t own a ${shiny ? "shiny " : ""}${p.name} to donate.`,
+    if (owned <= 0)
+      return res.status(400).json({
+        error: `You don’t own a ${shiny ? "shiny " : ""}${p.name} to donate.`,
+      });
+
+    const finalValue = shiny ? baseValue * 5 : baseValue;
+
+    user.pokemon[pokeId][variant] -= 1;
+    if (user.pokemon[pokeId].normal <= 0 && user.pokemon[pokeId].shiny <= 0)
+      delete user.pokemon[pokeId];
+
+    user.cc = (user.cc ?? 0) + finalValue;
+
+    await saveTrainerDataLocal(trainerData);
+
+    res.json({
+      success: true,
+      donated: { name: p.name, shiny },
+      gainedCC: finalValue,
+      totalCC: user.cc,
     });
-
-  // 🧮 Reward 5× CC if shiny
-  const finalValue = shiny ? baseValue * 5 : baseValue;
-
-  // 🧹 Remove one copy of the correct variant
-  user.pokemon[pokeId][variant] -= 1;
-  if (user.pokemon[pokeId].normal <= 0 && user.pokemon[pokeId].shiny <= 0)
-    delete user.pokemon[pokeId];
-
-  // 💰 Add coins
-  user.cc = (user.cc ?? 0) + finalValue;
-
-  await saveTrainerDataLocal(trainerData);
-
-  res.json({
-    success: true,
-    donated: { name: p.name, shiny },
-    gainedCC: finalValue,
-    totalCC: user.cc,
   });
 });
 

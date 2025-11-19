@@ -169,14 +169,6 @@ const isEquipped =
     fileName.toLowerCase().replace(".png","").replace(".gif","")
   );
 
-      // Debug logging for first few trainers
-      if (spriteFiles.indexOf(fileName) === 0) {
-        console.log(`Checking ${fileName}: owned=${owns}`, {
-          fileName: normalizedFileName,
-          ownedList: ownedTrainers
-        });
-      }
-
 if (showOwnedOnly && !owns) return;
 if (showUnownedOnly && owns) return;
 

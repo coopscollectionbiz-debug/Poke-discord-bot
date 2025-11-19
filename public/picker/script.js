@@ -84,7 +84,7 @@ async function loadData() {
     const spriteRes = await fetch(TRAINER_DATA_FILE);
     allTrainers = await spriteRes.json();
 
-    // Load owned trainers
+    // Load owned trainers + CC (from one endpoint)
     const res = await fetch(`${API_USER}?id=${userId}&token=${token}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -98,10 +98,11 @@ async function loadData() {
       ownedTrainers = [];
     }
 
-    // Load CC
-    const userRes = await fetch(`/api/user?id=${userId}&token=${token}`);
-    const userData = await userRes.json();
-    userCC = userData.cc ?? 0;
+    // Get CC from the same response
+    userCC = data.cc ?? 0;
+
+    console.log("✅ Loaded owned trainers:", ownedTrainers);
+    console.log("✅ User CC:", userCC);
 
     updateCCDisplay();
 
@@ -149,10 +150,26 @@ function render(filter = "") {
     spriteFiles.forEach((fileName) => {
       if (typeof fileName !== "string") return;
 
-      const owns = ownedTrainers.some((t) => {
-  const base = t.split("/").pop().toLowerCase();
-  return base === fileName.toLowerCase();
-});
+      // Normalize filename comparison - handle both "filename.png" and "path/filename.png"
+      const normalizedFileName = fileName.toLowerCase();
+      const owns = ownedTrainers.some((ownedFile) => {
+        const normalizedOwned = ownedFile.toLowerCase();
+        // Check exact match first
+        if (normalizedOwned === normalizedFileName) return true;
+        // Check if owned file ends with the sprite filename (handles paths)
+        if (normalizedOwned.endsWith(normalizedFileName)) return true;
+        // Check if sprite filename ends with owned file (handles reverse)
+        if (normalizedFileName.endsWith(normalizedOwned)) return true;
+        return false;
+      });
+
+      // Debug logging for first few trainers
+      if (spriteFiles.indexOf(fileName) === 0) {
+        console.log(`Checking ${fileName}: owned=${owns}`, {
+          fileName: normalizedFileName,
+          ownedList: ownedTrainers
+        });
+      }
 
 if (showOwnedOnly && !owns) return;
 if (showUnownedOnly && owns) return;

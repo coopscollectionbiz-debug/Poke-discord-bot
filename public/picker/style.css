@@ -27,15 +27,21 @@ body {
   border-bottom: 1px solid #30363d;
 }
 
-#ccBar img {
-  width: 22px;
-  height: 22px;
+#ccBar img.cc-icon {
+  width: 24px;
+  height: 24px;
 }
 
 #ccBar span {
   color: #00ff9d;
   font-weight: 700;
   font-size: 1.1rem;
+}
+
+/* Small CC coin (on cards) */
+.cc-icon-small {
+  width: 16px;
+  height: 16px;
 }
 
 /* ===========================================================
@@ -208,18 +214,19 @@ p {
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 22px;
-  height: 22px;
-  background: rgba(0, 0, 0, 0.45);
-  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  padding: 4px 6px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 4px;
+  backdrop-filter: blur(2px);
 }
 
 .lock-overlay span {
   color: #fff;
-  font-size: 13px;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .trainer-card.unowned img {
@@ -377,7 +384,6 @@ p {
   transform: scale(1.03);
 }
 
-/* Purchase button inside cards */
 .purchase-btn {
   background: #00ff9d;
   color: #0d1117;
@@ -393,3 +399,20 @@ p {
 .purchase-btn:hover {
   transform: scale(1.05);
 }
+
+.modal-price-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #facc15;
+}
+
+.cc-icon-small {
+  width: 20px;
+  height: 20px;
+}
+

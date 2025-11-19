@@ -181,16 +181,11 @@ img.onerror = () => card.remove();
 
 wrapper.appendChild(img);
 
-// Lock overlay (non-grayscale)
+// Lock icon overlay for unowned trainers
 if (!owns) {
   const lock = document.createElement("div");
   lock.className = "lock-overlay";
-
-  lock.innerHTML = `
-    <img src="/public/sprites/items/cc_coin.png" class="cc-icon-small" />
-    <span>${price.toLocaleString()}</span>
-  `;
-
+  lock.innerHTML = `🔒`;
   wrapper.appendChild(lock);
 }
 

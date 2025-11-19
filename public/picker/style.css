@@ -157,6 +157,30 @@ p {
   display: block;
 }
 
+/* Grayscale for unowned trainers */
+.trainer-card.unowned img {
+  filter: grayscale(1);
+  opacity: 0.8;
+}
+
+/* ===========================================================
+   Lock Overlay (small icon only)
+=========================================================== */
+.sprite-wrapper {
+  position: relative;
+}
+
+.lock-overlay {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1;
+}
+
 /* Trainer Name */
 .trainer-name {
   margin-top: 0.5rem;
@@ -189,30 +213,6 @@ p {
 }
 
 /* ===========================================================
-   Lock Overlay (small + clean)
-=========================================================== */
-.sprite-wrapper {
-  position: relative;
-}
-
-.lock-overlay {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: rgba(0,0,0,0.55);
-  padding: 3px 6px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.trainer-card.unowned img {
-  filter: grayscale(1);
-  opacity: 0.8;
-}
-
-/* ===========================================================
    Tier Display
 =========================================================== */
 .trainer-tier {
@@ -227,6 +227,27 @@ p {
 .tier-text.epic { color: #a855f7; }
 .tier-text.legendary { color: #facc15; }
 .tier-text.mythic { color: #ef4444; }
+
+/* ===========================================================
+   Trainer Price Display
+=========================================================== */
+.trainer-price {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+  color: #facc15;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.trainer-price img.cc-icon-small {
+  width: 12px;
+  height: 12px;
+  filter: none !important;
+  opacity: 1 !important;
+}
 
 /* ===========================================================
    Modal

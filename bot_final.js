@@ -168,8 +168,8 @@ const MESSAGE_TP_GAIN = 2;
 const MESSAGE_CC_CHANCE = 0.02;
 const MESSAGE_CC_GAIN = 100;
 const MESSAGE_COOLDOWN = 7000;
-const MESSAGE_REWARD_CHANCE = 0.02;
-const REACTION_REWARD_CHANCE = 0.02;
+const MESSAGE_REWARD_CHANCE = 0.01;
+const REACTION_REWARD_CHANCE = 0.01;
 const REWARD_COOLDOWN = 7000;
 const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
 
@@ -335,9 +335,9 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // ================================
     userObj.luck ??= 0;
 
-    const BASE_CHANCE = MESSAGE_REWARD_CHANCE;  // 0.02
-    const MAX_CHANCE = 0.10;                    // 10%
-    const PITY_INCREMENT = 0.005;               // +0.5%
+    const BASE_CHANCE = MESSAGE_REWARD_CHANCE;  // 0.01
+    const MAX_CHANCE = 0.05;                    // 10%
+    const PITY_INCREMENT = 0.003;               // +0.5%
 
     // Increase pity every call
     userObj.luck = Math.min(MAX_CHANCE, userObj.luck + PITY_INCREMENT);
@@ -413,24 +413,25 @@ console.log(
     }
 
     // Global broadcast (Pokémon-only)
-try {
-  await broadcastReward(client, {
-    user: interactionUser,
-    type: "pokemon",
-    item: {
-      id: reward.id,
-      name: reward.name,
-      rarity: reward.tier || "common",
-      spriteFile: `${reward.id}.gif`, // safe; broadcastReward will path-resolve
-    },
-    shiny: isShiny,
-    source: "random encounter",
-  });
-} catch (err) {
-  console.error("❌ broadcastReward failed:", err.message);
-}
+    try {
+      await broadcastReward(client, {
+        user: interactionUser,
+        type: "pokemon",
+        item: {
+          id: reward.id,
+          name: reward.name,
+          rarity: reward.tier || "common",
+          spriteFile: `${reward.id}.gif`, // safe; broadcastReward will path-resolve
+        },
+        shiny: isShiny,
+        source: "random encounter",
+      });
+    } catch (err) {
+      console.error("❌ broadcastReward failed:", err.message);
+    }
 
-console.log(`✅ Reward granted to ${interactionUser.username}`);
+    console.log(`✅ Reward granted to ${interactionUser.username}`);
+  }); // Close task async arrow function
 
   // Chain lock
   const newLock = lock.then(task).catch(err => {

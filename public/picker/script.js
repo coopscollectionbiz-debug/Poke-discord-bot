@@ -216,6 +216,19 @@ tierEl.innerHTML = `
 card.appendChild(tierEl);
 
 // -------------------------------------------------------
+// Price (only for unowned trainers)
+// -------------------------------------------------------
+if (!owns) {
+  const priceEl = document.createElement("div");
+  priceEl.className = "trainer-price";
+  priceEl.innerHTML = `
+    <img src="/public/sprites/items/cc_coin.png" class="cc-icon-small" />
+    <span>${price.toLocaleString()}</span>
+  `;
+  card.appendChild(priceEl);
+}
+
+// -------------------------------------------------------
 // Click actions
 // -------------------------------------------------------
 card.onclick = owns

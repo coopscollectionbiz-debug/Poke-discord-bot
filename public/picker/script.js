@@ -153,53 +153,74 @@ function render(filter = "") {
       if (typeof fileName !== "string") return;
 
       const owns = ownedTrainers.some((t) => {
-        const base = t.split("/").pop().toLowerCase();
-        return base === fileName.toLowerCase();
-      });
+  const base = t.split("/").pop().toLowerCase();
+  return base === fileName.toLowerCase();
+});
 
-      if (showOwnedOnly && !owns) return;
-      if (showUnownedOnly && owns) return;
+if (showOwnedOnly && !owns) return;
+if (showUnownedOnly && owns) return;
 
-      const imgPath = owns
-        ? `${TRAINER_SPRITE_PATH}${fileName}`
-        : `${GRAY_PATH}${fileName}`;
+const imgPath = owns
+  ? `${TRAINER_SPRITE_PATH}${fileName}`
+  : `${GRAY_PATH}${fileName}`;
 
-      const card = document.createElement("div");
-      card.className = `trainer-card ${owns ? "owned" : "unowned"}`;
+const card = document.createElement("div");
+card.className = `trainer-card ${owns ? "owned" : "unowned"}`;
 
-      const wrapper = document.createElement("div");
-      wrapper.className = "sprite-wrapper";
+// -------------------------------------------------------
+// Sprite wrapper
+// -------------------------------------------------------
+const wrapper = document.createElement("div");
+wrapper.className = "sprite-wrapper";
 
-      const img = document.createElement("img");
-      img.src = imgPath;
-      img.alt = name;
-      img.loading = "lazy";
-      img.onerror = () => card.remove();
-      wrapper.appendChild(img);
+const img = document.createElement("img");
+img.src = imgPath;
+img.alt = name;
+img.loading = "lazy";
+img.onerror = () => card.remove();
 
-      if (!owns) {
-        const lock = document.createElement("div");
-        lock.className = "lock-overlay";
-        lock.innerHTML = `<img src="/public/sprites/items/cc_coin.png" class="cc-icon-small"/> ${price.toLocaleString()}`;
-        wrapper.appendChild(lock);
-      }
+wrapper.appendChild(img);
 
-      card.appendChild(wrapper);
+// Lock overlay (non-grayscale)
+if (!owns) {
+  const lock = document.createElement("div");
+  lock.className = "lock-overlay";
 
-      card.innerHTML += `
-        <p class="trainer-name">${name}</p>
-        <div class="trainer-tier">
-          <span class="tier-text ${rarity}">${tierDisplay}</span>
-          <span class="tier-emoji">${emoji}</span>
-        </div>
-      `;
+  lock.innerHTML = `
+    <img src="/public/sprites/items/cc_coin.png" class="cc-icon-small" />
+    <span>${price.toLocaleString()}</span>
+  `;
 
-      if (owns) {
-        card.onclick = () => askToEquipTrainer(name, fileName);
-      } else {
-        card.onclick = () =>
-          askToBuyTrainer(name, fileName, rarity, price);
-      }
+  wrapper.appendChild(lock);
+}
+
+card.appendChild(wrapper);
+
+// -------------------------------------------------------
+// Name
+// -------------------------------------------------------
+const nameEl = document.createElement("p");
+nameEl.className = "trainer-name";
+nameEl.textContent = name;
+card.appendChild(nameEl);
+
+// -------------------------------------------------------
+// Tier
+// -------------------------------------------------------
+const tierEl = document.createElement("div");
+tierEl.className = "trainer-tier";
+tierEl.innerHTML = `
+  <span class="tier-text ${rarity}">${tierDisplay}</span>
+  <span class="tier-emoji">${emoji}</span>
+`;
+card.appendChild(tierEl);
+
+// -------------------------------------------------------
+// Click actions
+// -------------------------------------------------------
+card.onclick = owns
+  ? () => askToEquipTrainer(name, fileName)
+  : () => askToBuyTrainer(name, fileName, rarity, price);
 
       grid.appendChild(card);
     });

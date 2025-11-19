@@ -5,29 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trainer Picker | Coop’s Collection</title>
     <link rel="stylesheet" href="style.css" />
+
+    <style>
+      /* CC header styling */
+      #ccBar {
+        position: sticky;
+        top: 0;
+        z-index: 9000;
+        background: #0d1117;
+        padding: 10px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        border-bottom: 1px solid #30363d;
+      }
+      #ccBar img {
+        width: 22px;
+        height: 22px;
+      }
+      #ccBar span {
+        color: #00ff9d;
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+    </style>
   </head>
 
   <body>
-    <header>
 
+    <!-- ===========================================================
+         Sticky CC Bar (NEW)
+    ============================================================ -->
+    <div id="ccBar">
+      <img src="/public/sprites/items/cc_coin.png" alt="CC" />
+      <span id="ccDisplay">...</span>
+    </div>
+
+    <header>
       <h1>🎨 Choose Your Trainer</h1>
-<p id="ccDisplay" class="subtitle" style="color:#00ff9d;font-weight:600;">CC: ...</p>
 
       <p class="subtitle">
         Select a Trainer to display on your profile. Only owned Trainers can be equipped.
       </p>
     </header>
 
-<!-- ===========================================================
-     Navigation Tabs (Pokémon ↔ Trainers)
-=========================================================== -->
-<div id="navTabs" class="nav-tabs">
-  <button id="goPokemon" class="nav-tab">⭐ Manage Pokémon</button>
-  <button id="goTrainers" class="nav-tab active">🧑 Manage Trainers</button>
-  <button id="goShop" class="nav-tab">🛒 Shop</button>
-</div>
+    <!-- ===========================================================
+         Navigation Tabs
+    ============================================================ -->
+    <div id="navTabs" class="nav-tabs">
+      <button id="goPokemon" class="nav-tab">⭐ Manage Pokémon</button>
+      <button id="goTrainers" class="nav-tab active">🧑 Manage Trainers</button>
+      <button id="goShop" class="nav-tab">🛒 Shop</button>
+    </div>
 
-
+    <!-- ===========================================================
+         Controls
+    ============================================================ -->
     <section class="controls">
       <input
         type="text"
@@ -52,6 +86,9 @@
       </div>
     </section>
 
+    <!-- ===========================================================
+         Trainer Grid
+    ============================================================ -->
     <main>
       <div id="trainerGrid" class="grid">
         <p class="notice">Loading trainer data...</p>
@@ -67,39 +104,87 @@
 
     <script type="module" src="script.js"></script>
 
-<script>
-  window.showPurchaseModal = (title, message, sprite, onConfirm) => {
-    const overlay = document.createElement("div");
-    overlay.id = "trainerModalOverlay";
+    <!-- ===========================================================
+         Purchase Modal
+    ============================================================ -->
+    <script>
+      window.showPurchaseModal = (title, message, sprite, onConfirm) => {
+        const overlay = document.createElement("div");
+        overlay.id = "trainerModalOverlay";
 
-    const modal = document.createElement("div");
-    modal.id = "trainerModal";
+        const modal = document.createElement("div");
+        modal.id = "trainerModal";
 
-    modal.innerHTML = `
-      <h2 style="color:#ef4444;margin-top:0;">${title}</h2>
-      <img src="${sprite}" alt="trainer"/>
-      <p style="margin:1rem 0;color:#ccc;">${message}</p>
+        modal.innerHTML = `
+          <h2 style="color:#ef4444;margin-top:0;">${title}</h2>
+          <img src="${sprite}" alt="trainer" style="max-width:160px;" />
+          <p style="margin:1rem 0;color:#ccc;">${message}</p>
 
-      <div class="modal-buttons">
-        <button class="modal-btn cancel">Cancel</button>
-        <button class="modal-btn confirm">Buy for CC</button>
+          <div class="modal-buttons">
+            <button class="modal-btn cancel">Cancel</button>
+            <button class="modal-btn confirm">Buy</button>
+          </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        modal.querySelector(".cancel").onclick = () => overlay.remove();
+        modal.querySelector(".confirm").onclick = async () => {
+          await onConfirm();
+          overlay.remove();
+        };
+
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) overlay.remove();
+        });
+      };
+    </script>
+
+    <!-- ===========================================================
+         GLOBAL PROCESSING MODAL (NEW)
+    ============================================================ -->
+    <style>
+      #processingOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(4px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 5000;
+      }
+
+      #processingBox {
+        background: #111827;
+        padding: 2rem 2.5rem;
+        border-radius: 14px;
+        border: 1px solid #374151;
+        color: #fff;
+        font-size: 1.3rem;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      }
+    </style>
+
+    <div id="processingOverlay">
+      <div id="processingBox">
+        ⏳ Processing...
       </div>
-    `;
+    </div>
 
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-
-    modal.querySelector(".cancel").onclick = () => overlay.remove();
-    modal.querySelector(".confirm").onclick = async () => {
-      await onConfirm();
-      overlay.remove();
-    };
-
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) overlay.remove();
-    });
-  }
-</script>
+    <script>
+      window.showProcessing = () => {
+        const el = document.getElementById("processingOverlay");
+        if (el) el.style.display = "flex";
+      };
+      window.hideProcessing = () => {
+        const el = document.getElementById("processingOverlay");
+        if (el) el.style.display = "none";
+      };
+    </script>
 
   </body>
 </html>

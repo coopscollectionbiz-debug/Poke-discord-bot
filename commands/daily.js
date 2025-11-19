@@ -20,7 +20,7 @@ import { safeReply } from "../utils/safeReply.js";
 import { saveTrainerDataLocal } from "../utils/saveQueue.js";
 
 // User lock system (same as bot_final)
-import { userLocks } from "./utils/userLocks.js";
+import { userLocks } from "../utils/userLocks.js";
 
 
 export default {

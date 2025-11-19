@@ -44,7 +44,7 @@ import {
 // Prevents lost Pokémon, lost Trainers, and overwrite collisions
 // ==========================================================
 
-const userLocks = new Map();
+export const userLocks = new Map();
 
 /**
  * Acquire a lock for a specific user.

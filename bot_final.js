@@ -1028,11 +1028,16 @@ app.get("/api/user-trainers", (req, res) => {
   }
 
   const owned = Array.isArray(user.trainers)
-  ? user.trainers
-  : Object.keys(user.trainers || {});
+    ? user.trainers
+    : Object.keys(user.trainers || {});
 
-  res.json({ owned });
+  // ⭐ FIX: Return CC so the trainer page has the correct value
+  res.json({
+    owned,
+    cc: user.cc ?? 0
+  });
 });
+
 
 // ===========================================================
 // ✅ POST — Equip Trainer (Debounced Discord Save)

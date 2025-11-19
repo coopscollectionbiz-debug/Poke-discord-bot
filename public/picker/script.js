@@ -279,23 +279,24 @@ async function selectTrainer(name, file) {
 // ===========================================================
 // BUY TRAINER
 // ===========================================================
-function askToBuyTrainer(name, file, rarity, price) {
+ffunction askToBuyTrainer(name, file, rarity, price) {
   const canAfford = userCC >= price;
   const delta = price - userCC;
 
-  const message = canAfford
-    ? `Buy **${name}** for **${price.toLocaleString()} CC**?`
-    : `This trainer costs **${price.toLocaleString()} CC**.<br>You need **${delta.toLocaleString()} CC** more.`;
-
   createTrainerModal({
     title: "Unlock Trainer?",
-    message,
     sprite: `${TRAINER_SPRITE_PATH}${file}`,
+    price,
+    message: canAfford
+      ? `Purchase <strong>${name}</strong>?`
+      : `This trainer costs <strong>${price.toLocaleString()} CC</strong>.<br>You need <strong>${delta.toLocaleString()} CC</strong> more.`,
     confirmText: canAfford ? "Buy" : `Need ${delta.toLocaleString()} CC`,
     confirmDisabled: !canAfford,
-    onConfirm: () => purchaseTrainer(file, price),
+    onConfirm: () => purchaseTrainer(file, price)
   });
 }
+
+
 
 
 // ===========================================================
@@ -356,8 +357,8 @@ async function purchaseTrainer(file, price) {
 function createTrainerModal({
   title,
   message,
-  price = null,
   sprite,
+  price = null,
   onConfirm,
   confirmText = "Confirm",
   confirmDisabled = false,
@@ -368,23 +369,23 @@ function createTrainerModal({
   const modal = document.createElement("div");
   modal.id = "trainerModal";
 
-  // Build price row if applicable
-  const priceRow = price
-    ? `
-      <div class="modal-price-row">
-        <img src="/public/sprites/items/cc_coin.png" class="cc-icon-small" />
-        <span>${price.toLocaleString()} CC</span>
-      </div>
-    `
-    : "";
-
   modal.innerHTML = `
     <h2 class="modal-title">${title}</h2>
-    <img src="${sprite}" alt="trainer" />
+
+    <img src="${sprite}" class="modal-sprite" alt="trainer" />
+
+    ${
+      price !== null
+        ? `
+          <div class="modal-price-row">
+            <img src="/public/sprites/items/cc_coin.png" class="cc-icon-small" />
+            <span>${price.toLocaleString()} CC</span>
+          </div>
+        `
+        : ""
+    }
 
     <p class="modal-message">${message}</p>
-
-    ${priceRow}
 
     <div class="modal-buttons">
       <button class="modal-btn cancel">Cancel</button>
@@ -398,7 +399,6 @@ function createTrainerModal({
   document.body.appendChild(overlay);
 
   modal.querySelector(".cancel").onclick = () => overlay.remove();
-
   modal.querySelector(".confirm").onclick = async () => {
     if (!confirmDisabled && onConfirm) await onConfirm();
     overlay.remove();

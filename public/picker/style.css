@@ -336,3 +336,8 @@ p {
   font-size: 1.4rem;
   color: #00ff9d;
 }
+
+.trainer-card.equipped {
+  border-color: #00ff9d;
+  box-shadow: 0 0 12px #00ff9d80;
+}

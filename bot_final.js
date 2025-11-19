@@ -412,7 +412,7 @@ console.log(
       console.warn("⚠️ Public reward announcement failed:", err.message);
     }
 
- // Global broadcast (Pokémon-only)
+    // Global broadcast (Pokémon-only)
 try {
   await broadcastReward(client, {
     user: interactionUser,
@@ -431,17 +431,15 @@ try {
 }
 
 console.log(`✅ Reward granted to ${interactionUser.username}`);
-}; // <-- THIS closes:  const task = async () => { ... }
 
-// Chain lock
-const newLock = lock.then(task).catch(err => {
-  console.error("❌ Atomic lock error in tryGiveRandomReward:", err);
-});
+  // Chain lock
+  const newLock = lock.then(task).catch(err => {
+    console.error("❌ Atomic lock error in tryGiveRandomReward:", err);
+  });
 
-userLocks.set(userId, newLock);
-return newLock;
-} // <-- closes tryGiveRandomReward function
-
+  userLocks.set(userId, newLock);
+  return newLock;
+}
 
 // ==========================================================
 // 📂 COMMAND LOADER

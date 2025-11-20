@@ -338,6 +338,7 @@ p {
 }
 
 .trainer-card.equipped {
-  border-color: #00ff9d;
-  box-shadow: 0 0 12px #00ff9d80;
+  outline: 3px solid #facc15;
+  box-shadow: 0 0 12px #facc15aa;
 }
+

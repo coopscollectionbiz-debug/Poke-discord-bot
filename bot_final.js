@@ -1443,7 +1443,9 @@ client.once("ready", async () => {
       process.exit(1); // ⛔ prevents wipe
     }
 
-    //trainerData = sanitizeTrainerData(trainerData); // 🧼 Clean it immediately
+    // ❗ DO NOT SAVE HERE
+    // trainerData = sanitizeTrainerData(trainerData);
+    // await saveDataToDiscord(trainerData);
 
   } catch (err) {
     console.error("❌ Trainer data load failed:", err.message);
@@ -1466,13 +1468,7 @@ client.once("ready", async () => {
     console.error("❌ PokéBeach initial check failed:", err.message);
   }
 
-  // 🪣 Save immediately after cleaning
-  try {
-    await saveDataToDiscord(trainerData);
-  } catch (err) {
-    console.error("❌ Initial Discord save failed:", err.message);
-  }
-
+  // AFTER startup, normal saves happen via saveQueue
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });

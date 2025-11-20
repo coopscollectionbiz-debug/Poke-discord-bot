@@ -1,181 +1,130 @@
 // ==========================================================
-// utils/saveQueue.js
-// Save queue with debouncing and serialization
+// utils/saveQueue.js (SAFE VERSION — CORRUPTION PROOF)
+// ==========================================================
+// • Prevents empty saves
+// • Prevents partial trainerData wipes
+// • Never writes {} or tiny objects
+// • Serialized save queue with write lock
+// • Atomic temp → replace write to prevent file corruption
 // ==========================================================
 
-import { atomicWriteJson } from "./atomicWrite.js";
+import fs from "fs/promises";
+import path from "path";
 
-// Queue state
+const TRAINERDATA_PATH = path.resolve("./trainerData.json");
+const TEMP_PATH = path.resolve("./trainerData.json.tmp");
+
 let saveQueue = [];
-let saveTimer = null;
-let isFlushing = false;
-let isShuttingDown = false;
+let isProcessing = false;
 
-// Configuration
-const DEBOUNCE_MS = 5000; // 5 seconds debounce by default
-const TRAINERDATA_PATH = "./trainerData.json";
+// ==========================================================
+// 🔒 VALIDATION RULES
+// ==========================================================
 
-/**
- * Enqueue a save operation
- * Debounces and coalesces multiple saves
- * @param {Object} data - Trainer data to save
- * @returns {Promise<Object>} Result of save operation
- */
-export async function enqueueSave(data) {
-  if (isShuttingDown) {
-    throw new Error("Cannot enqueue saves during shutdown");
+function isTrainerDataValid(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+
+  const keys = Object.keys(data);
+
+  // Reject completely empty saves
+  if (keys.length === 0) return false;
+
+  // Reject partial loads — your real trainerData normally has 200+ entries
+  if (keys.length < 20) {
+    console.error(`⛔ BLOCKED SAVE — trainerData has too few users (${keys.length})`);
+    return false;
   }
 
-  return new Promise((resolve, reject) => {
-    // Add to queue
-    saveQueue.push({ data, resolve, reject });
+  // Per-user sanity checks
+  for (const [id, user] of Object.entries(data)) {
+    if (!user || typeof user !== "object") return false;
 
-    // Clear existing timer
-    if (saveTimer) {
-      clearTimeout(saveTimer);
-    }
+    // Required fields
+    if (typeof user.cc !== "number") return false;
+    if (typeof user.tp !== "number") return false;
+    if (typeof user.pokemon !== "object") return false;
 
-    // Set new debounce timer
-    saveTimer = setTimeout(() => {
-      processSaveQueue();
-    }, DEBOUNCE_MS);
-  });
+    // If any user has a broken trainers list → invalid save
+    if (!user.trainers || typeof user.trainers !== "object") return false;
+  }
+
+  return true;
 }
 
-/**
- * Process all queued saves
- * Only the latest save is executed (coalescing)
- */
-async function processSaveQueue() {
-  if (isFlushing || saveQueue.length === 0) {
+// ==========================================================
+// 💾 Atomic write (never writes empty data)
+// ==========================================================
+async function atomicWriteJson(filePath, json) {
+  const jsonString = JSON.stringify(json, null, 2);
+
+  // DO NOT WRITE `{}` EVER
+  if (jsonString.trim() === "{}") {
+    throw new Error("Refusing to write EMPTY trainerData.json");
+  }
+
+  // Write to temp file first
+  await fs.writeFile(TEMP_PATH, jsonString);
+  // Replace original in one atomic move
+  await fs.rename(TEMP_PATH, filePath);
+}
+
+// ==========================================================
+// 🚀 Queue processor
+// ==========================================================
+async function processQueue() {
+  if (isProcessing) return;
+  isProcessing = true;
+
+  while (saveQueue.length > 0) {
+    const data = saveQueue.shift();
+
+    try {
+      if (!isTrainerDataValid(data)) {
+        console.error("⛔ Save skipped — trainerData INVALID or too small.");
+        continue;
+      }
+
+      await atomicWriteJson(TRAINERDATA_PATH, data);
+      console.log("💾 trainerData.json saved safely");
+    } catch (err) {
+      console.error("❌ Save failed:", err.message);
+    }
+  }
+
+  isProcessing = false;
+}
+
+// ==========================================================
+// 📥 Public enqueue function
+// ==========================================================
+export async function enqueueSave(data) {
+  // Reject invalid or empty data
+  if (!isTrainerDataValid(data)) {
+    console.error("⛔ enqueueSave BLOCKED — invalid trainerData");
     return;
   }
 
-  isFlushing = true;
-  saveTimer = null;
-
-  // Get all queued items
-  const batch = saveQueue.slice();
-  saveQueue = [];
-
-  // Use the latest data from the batch
-  // Note: In this bot, all commands share the same trainerData reference,
-  // so all queued saves contain the same object with the latest state.
-  // If different data objects are enqueued, only the last one is persisted.
-  const latestItem = batch[batch.length - 1];
-  const { data } = latestItem;
-
-  try {
-    // Perform atomic local save using atomicWriteJson
-    await atomicWriteJson(TRAINERDATA_PATH, data);
-    console.log(`💾 Queued save: ${Object.keys(data).length} users`);
-
-    // Resolve all promises
-    batch.forEach(item => item.resolve({ 
-      localSuccess: true,
-      errors: []
-    }));
-  } catch (err) {
-    console.error("❌ Save queue processing failed:", err.message);
-    // Reject all promises with the same error
-    batch.forEach(item => item.reject(err));
-  } finally {
-    isFlushing = false;
-
-    // If more saves were queued during processing, schedule next batch
-    if (saveQueue.length > 0 && !isShuttingDown) {
-      saveTimer = setTimeout(() => {
-        processSaveQueue();
-      }, DEBOUNCE_MS);
-    }
-  }
-}
-
-/**
- * Flush all pending saves with timeout
- * Used during graceful shutdown
- * @param {number} timeoutMs - Maximum time to wait for flush
- * @returns {Promise<boolean>} True if flushed successfully
- */
-export async function shutdownFlush(timeoutMs = 10000) {
-  isShuttingDown = true;
-
-  // Clear debounce timer and process immediately
-  if (saveTimer) {
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
-
-  // Create timeout promise
-  const timeoutPromise = new Promise((resolve) => {
-    setTimeout(() => resolve(false), timeoutMs);
-  });
-
-  // Create flush promise
-  const flushPromise = (async () => {
-    let attempts = 0;
-    const maxAttempts = 5;
-    
-    while ((saveQueue.length > 0 || isFlushing) && attempts < maxAttempts) {
-      await processSaveQueue();
-      // Small delay to ensure flush completes
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-    }
-    
-    if (attempts >= maxAttempts && saveQueue.length > 0) {
-      console.warn(`⚠️ Max flush attempts (${maxAttempts}) reached with ${saveQueue.length} saves remaining`);
-      return false;
-    }
-    
-    return true;
-  })();
-
-  // Race between timeout and flush
-  const result = await Promise.race([flushPromise, timeoutPromise]);
-  
-  if (!result) {
-    console.warn("⚠️ Save queue flush timed out");
-  } else {
-    console.log("✅ Save queue flushed successfully");
-  }
-
-  return result;
-}
-
-/**
- * Get current queue length (for testing/monitoring)
- * @returns {number} Number of pending saves
- */
-export function getQueueLength() {
-  return saveQueue.length;
-}
-
-/**
- * Check if currently flushing (for testing/monitoring)
- * @returns {boolean} True if flushing
- */
-export function isCurrentlyFlushing() {
-  return isFlushing;
+  saveQueue.push(data);
+  processQueue();
 }
 
 // ==========================================================
-// 📝 saveTrainerDataLocal — compatibility wrapper
-// Ensures bot_final.js continues to function unchanged
-// Internally just enqueues a save via the queue system
+// 🔄 saveTrainerDataLocal — wrapper for codebase compatibility
 // ==========================================================
-export async function saveTrainerDataLocal(data) {
-  try {
-    await enqueueSave(data);
+export async function saveTrainerDataLocal(trainerData) {
+  await enqueueSave(trainerData);
+}
 
-    // ✅ Auto-mark dirty for Discord 15-minute backups
-    if (typeof global.markDirty === "function") {
-      global.markDirty();
-    }
+// ==========================================================
+// 🛑 Shutdown flush (optional)
+// ==========================================================
+export async function shutdownFlush(timeout = 5000) {
+  const start = Date.now();
 
-    return { localSuccess: true };
-  } catch (err) {
-    console.error("❌ saveTrainerDataLocal failed:", err.message);
-    return { localSuccess: false, error: err.message };
+  while ((isProcessing || saveQueue.length > 0) &&
+         Date.now() - start < timeout) {
+    await new Promise(res => setTimeout(res, 100));
   }
+
+  return !(isProcessing || saveQueue.length > 0);
 }

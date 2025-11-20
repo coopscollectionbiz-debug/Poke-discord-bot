@@ -1102,8 +1102,12 @@ app.post("/api/unlock-trainer", express.json(), async (req, res) => {
     const trainers = await getFlattenedTrainers();
 
     const trainer = trainers.find(t =>
-      (t.spriteFile || t.filename || "").toLowerCase() === file.toLowerCase()
-    );
+  t.sprites && t.sprites.some(s => {
+    const fname = (s.file || s).toLowerCase();
+    return fname === file.toLowerCase();
+  })
+);
+
 
     if (!trainer) {
       return res.status(404).json({ error: "Trainer not found" });

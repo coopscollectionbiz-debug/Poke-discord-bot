@@ -135,10 +135,15 @@ function weightedRoll(list, baseWeights, user, ballType = "pokeball") {
 // 🎯 Pokémon selector (tier-aware, rank-aware, ball-aware)
 // ==========================================================
 export function selectRandomPokemonForUser(pool, user, source = "pokeball") {
+  // 🔧 FIX: ensure pool is an array; your pokemonData is an object
+  const list = Array.isArray(pool) ? pool : Object.values(pool);
+
   const valid = ["pokeball", "greatball", "ultraball"];
   const ballType = valid.includes(source) ? source : "pokeball";
-  return weightedRoll(pool, POKEMON_RARITY_WEIGHTS, user, ballType);
+
+  return weightedRoll(list, POKEMON_RARITY_WEIGHTS, user, ballType);
 }
+
 
 
 // ==========================================================

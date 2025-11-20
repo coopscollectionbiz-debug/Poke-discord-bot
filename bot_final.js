@@ -909,12 +909,14 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
       ) {
         try {
           await broadcastReward(client, {
-  user: { id, username: user.username || "Unknown" },
+  userId: id,
+  username: user.username || null,
   type: "pokemon",
   item: reward,
   shiny,
   source,
 });
+
 
         } catch (err) {
           console.warn("⚠️ Broadcast failed:", err.message);

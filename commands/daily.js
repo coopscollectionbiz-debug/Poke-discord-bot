@@ -22,8 +22,6 @@ import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
 import { spritePaths } from "../spriteconfig.js";
-import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
-
 
 // DAILY CONSTANTS
 const DAILY_CC = 500;

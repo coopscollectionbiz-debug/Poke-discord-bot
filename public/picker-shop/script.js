@@ -243,11 +243,29 @@ async function buyPokeball(type, cost) {
       `;
 
       showShopModal({
-        title: "You caught a Pokémon!",
-        message: `${rarityHTML}<br>${reward.pokemon.name}`,
-        sprites: [reward.pokemon.sprite],
-        onConfirm: () => {},
-      });
+  title: "You caught a Pokémon!",
+  message: `${rarityHTML}<br>${reward.pokemon.name}`,
+  sprites: [reward.pokemon.sprite],
+  onConfirm: () => {},
+});
+
+// 🔒 Disable cancel AFTER reward is shown
+setTimeout(() => {
+  const overlay = document.getElementById("shopModalOverlay");
+  if (!overlay) return;
+
+  const cancelBtn = overlay.querySelector(".modal-btn.cancel");
+  if (cancelBtn) {
+    cancelBtn.disabled = true;
+    cancelBtn.textContent = "Reward Locked";
+    cancelBtn.style.opacity = "0.5";
+
+    // Remove event listener (clone button trick)
+    const clone = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(clone, cancelBtn);
+  }
+}, 50);
+
     },
   });
 }

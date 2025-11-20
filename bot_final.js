@@ -806,7 +806,7 @@ app.post("/api/updateUser", express.json(), async (req, res) => {
 });
 
 // ==========================================================
-// 🛍️ SHOP API — POKÉMON REWARD (Ball-Aware + Atomic User Lock)
+// 🛍️ SHOP API — POKÉMON REWARD (Atomic, CC-safe, Exploit-proof)
 // ==========================================================
 app.post("/api/rewardPokemon", express.json(), async (req, res) => {
   const { id, token, source } = req.body;
@@ -819,45 +819,80 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
 
   await lockUser(id, async () => {
     const user = trainerData[id];
-    const allPokemon = await getAllPokemon();
 
-    // 🎯 Ball-aware selection
+    // ======================================================
+    // ✅ 1. SERVER-SIDE CC DEDUCTION (SECURE)
+    // ======================================================
+    const costMap = {
+      pokeball: 500,
+      greatball: 1000,
+      ultraball: 2500,
+    };
+
+    const cost = costMap[source];
+    if (!cost)
+      return res.json({ success: false, error: "Invalid Poké Ball type" });
+
+    if ((user.cc ?? 0) < cost)
+      return res.json({
+        success: false,
+        error: `Not enough CC. Requires ${cost} CC.`,
+      });
+
+    // Deduct CC BEFORE generating reward (prevents cancel exploit)
+    user.cc -= cost;
+
+    // ======================================================
+    // 🎯 2. SELECT POKÉMON (rank-buffed + ball-aware)
+    // ======================================================
+    const allPokemon = await getAllPokemon();
     const reward = selectRandomPokemonForUser(allPokemon, user, source);
 
     if (!reward) {
       return res.json({
         success: false,
-        error: "No Pokémon could be selected."
+        error: "No Pokémon could be selected.",
       });
     }
 
-    // ✨ Shiny roll
+    // ======================================================
+    // ✨ 3. SHINY ROLL
+    // ======================================================
     const shiny = rollForShiny(user.tp || 0);
 
-    // 🗃️ Safe atomic inventory update
+    // ======================================================
+    // 🗂️ 4. SAFE INVENTORY UPDATE
+    // ======================================================
     user.pokemon ??= {};
     user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
 
     if (shiny) user.pokemon[reward.id].shiny++;
     else user.pokemon[reward.id].normal++;
 
+    // ======================================================
+    // 💾 5. SAVE ATOMICALLY
+    // ======================================================
     await saveTrainerDataLocal(trainerData);
 
+    // ======================================================
+    // 🖼️ 6. RESPONSE TO SHOP
+    // ======================================================
     res.json({
-  success: true,
-  pokemon: {
-    id: reward.id,
-    name: reward.name,
-    rarity: reward.tier || reward.rarity || "common",
-    shiny,
-    sprite: shiny
-      ? `${spritePaths.shiny}${reward.id}.gif`
-      : `${spritePaths.pokemon}${reward.id}.gif`
-  }
-});
-
+      success: true,
+      pokemon: {
+        id: reward.id,
+        name: reward.name,
+        rarity: reward.tier || reward.rarity || "common",
+        shiny,
+        sprite: shiny
+          ? `${spritePaths.shiny}${reward.id}.gif`
+          : `${spritePaths.pokemon}${reward.id}.gif`,
+      },
+      cc: user.cc, // send updated CC back to UI
+    });
   });
 });
+
 
 // ==========================================================
 // ⚡ INTERACTION HANDLER (Slash Commands + Buttons)

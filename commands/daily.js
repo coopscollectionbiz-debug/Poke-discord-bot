@@ -1,13 +1,13 @@
 // ==========================================================
-// 🗓️ Coop's Collection — /daily (Final v13, Safe + Correct)
+// 🗓️ Coop's Collection — /daily (Universal UTC Reset v14)
 // ==========================================================
 // Rewards:
 //   • TWO Pokémon (rank-buffed)
 //   • +500 CC
 //   • +100 TP
-//   • 10% Evolution Stone chance
+//   • 10% Evolution Stone
 //   • Three embeds with sprites
-//   • Schema-safe + URL-safe
+//   • Resets daily at 00:00 UTC for ALL USERS
 // ==========================================================
 
 import {
@@ -27,75 +27,85 @@ import { spritePaths } from "../spriteconfig.js";
 const DAILY_CC = 500;
 const DAILY_TP = 100;
 const EVOLUTION_STONE_CHANCE = 0.10;
-const COOLDOWN_MS = 86400000; // 24 hours
 
+// Returns YYYY-MM-DD (UTC)
+function getUTCDateString() {
+  return new Date().toISOString().split("T")[0];
+}
 
 export const data = new SlashCommandBuilder()
   .setName("daily")
-  .setDescription("Claim your daily reward (2 Pokémon + CC + TP)");
+  .setDescription("Claim your daily reward (2 Pokémon + CC + TP + stone chance)");
 
 
 // ==========================================================
-// 🧩 EXECUTE DAILY
+// 🧩 EXECUTE DAILY (Universal Reset)
 // ==========================================================
-export async function execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
+export async function execute(
+  interaction,
+  trainerData,
+  saveTrainerDataLocal,
+  saveDataToDiscord,
+  client
+) {
   try {
     await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
     const userId = interaction.user.id;
+    const today = getUTCDateString();
 
     // ======================================================
-    // ENSURE USER EXISTS (Normalized schema)
+    // ENSURE USER EXISTS
     // ======================================================
     trainerData[userId] ??= {};
-    trainerData[userId] = normalizeUserSchema(userId, trainerData[userId]);
     const user = trainerData[userId];
 
-    // ======================================================
-    // COOLDOWN CHECK
-    // ======================================================
-    const now = Date.now();
+    user.cc ??= 0;
+    user.tp ??= 0;
+    user.items ??= { evolution_stone: 0 };
+    user.items.evolution_stone ??= 0;
+    user.pokemon ??= {};
+    user.lastDaily ??= "1970-01-01"; // default
 
-    if (user.lastDaily && now - user.lastDaily < COOLDOWN_MS) {
-      const remaining = COOLDOWN_MS - (now - user.lastDaily);
-      const hours = Math.floor(remaining / 3600000);
-      const minutes = Math.floor((remaining % 3600000) / 60000);
-
+    // ======================================================
+    // UNIVERSAL UTC RESET CHECK
+    // ======================================================
+    if (user.lastDaily === today) {
       return safeReply(interaction, {
-        content: `⏳ You've already claimed your daily!\nCome back in **${hours}h ${minutes}m**.`,
-        ephemeral: true
+        content: `⏳ You've already claimed your daily today!\nResets at **00:00 UTC**.`,
+        ephemeral: true,
       });
     }
 
     // ======================================================
-    // LOAD POKEMON POOL
+    // LOAD ALL POKEMON
     // ======================================================
     const allPokemon = await getAllPokemon();
     if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
       return safeReply(interaction, {
-        content: "❌ Daily reward failed — Pokémon data unavailable.",
-        ephemeral: true
+        content: "❌ Could not load Pokémon data.",
+        ephemeral: true,
       });
     }
 
     // ======================================================
-    // TWO RANK-BUFFED ROLLS
+    // TWO RANDOM ROLLS
     // ======================================================
     const pick1 = selectRandomPokemonForUser(allPokemon, user, "pokeball");
     const pick2 = selectRandomPokemonForUser(allPokemon, user, "pokeball");
 
     if (!pick1 || !pick2) {
       return safeReply(interaction, {
-        content: "❌ Daily failed — Unable to select Pokémon.",
+        content: "❌ Daily failed — Pokémon selection error.",
         ephemeral: true
       });
     }
 
-    // Shiny results
+    // Shiny rolls
     const shiny1 = rollForShiny(user.tp);
     const shiny2 = rollForShiny(user.tp);
 
-    // Correct sprite URLs
+    // Sprite URLs
     const sprite1 = shiny1
       ? `${spritePaths.shiny}${pick1.id}.gif`
       : `${spritePaths.pokemon}${pick1.id}.gif`;
@@ -105,16 +115,16 @@ export async function execute(interaction, trainerData, saveTrainerDataLocal, sa
       : `${spritePaths.pokemon}${pick2.id}.gif`;
 
     // ======================================================
-    // SAVE TO USER INVENTORY
+    // SAVE TO INVENTORY
     // ======================================================
-    function addPokemon(p, shiny) {
-      user.pokemon[p.id] ??= { normal: 0, shiny: 0 };
-      if (shiny) user.pokemon[p.id].shiny++;
-      else user.pokemon[p.id].normal++;
+    function addMon(pick, shiny) {
+      user.pokemon[pick.id] ??= { normal: 0, shiny: 0 };
+      if (shiny) user.pokemon[pick.id].shiny++;
+      else user.pokemon[pick.id].normal++;
     }
 
-    addPokemon(pick1, shiny1);
-    addPokemon(pick2, shiny2);
+    addMon(pick1, shiny1);
+    addMon(pick2, shiny2);
 
     // ======================================================
     // BROADCAST RARE+ OR SHINY
@@ -127,7 +137,7 @@ export async function execute(interaction, trainerData, saveTrainerDataLocal, sa
           type: "pokemon",
           item: pick,
           shiny,
-          source: "daily"
+          source: "daily",
         }).catch(() => {});
       }
     }
@@ -136,7 +146,7 @@ export async function execute(interaction, trainerData, saveTrainerDataLocal, sa
     await maybeBroadcast(pick2, shiny2);
 
     // ======================================================
-    // CURRENCY / STONE
+    // CC / TP / STONE
     // ======================================================
     user.cc += DAILY_CC;
     user.tp += DAILY_TP;
@@ -147,15 +157,14 @@ export async function execute(interaction, trainerData, saveTrainerDataLocal, sa
       stoneAwarded = true;
     }
 
-    user.lastDaily = now;
+    // Mark today's claim
+    user.lastDaily = today;
 
-    // ======================================================
-    // SAVE (queued)
-    // ======================================================
+    // Queue save
     await enqueueSave(trainerData);
 
     // ======================================================
-    // EMBEDS — Pokémon 1, Pokémon 2, Summary
+    // EMBEDS
     // ======================================================
     const embed1 = new EmbedBuilder()
       .setTitle(`🎁 Daily Pokémon #1 ${shiny1 ? "✨" : ""}`)
@@ -175,33 +184,33 @@ export async function execute(interaction, trainerData, saveTrainerDataLocal, sa
       )
       .setImage(sprite2);
 
-    const rewardEmbed = new EmbedBuilder()
+    const summary = new EmbedBuilder()
       .setTitle("🗓️ Daily Rewards")
       .setColor("#28a745")
       .addFields(
         { name: "💰 CC", value: `+${DAILY_CC}`, inline: true },
         { name: "⭐ TP", value: `+${DAILY_TP}`, inline: true },
-        { name: "📊 New Balance", value: `${user.cc} CC | ${user.tp} TP`, inline: false }
+        { name: "📊 New Balance", value: `${user.cc} CC | ${user.tp} TP` }
       );
 
     if (stoneAwarded) {
-      rewardEmbed.addFields({
+      summary.addFields({
         name: "💎 Evolution Stone",
-        value: "You received **1x Evolution Stone**!"
+        value: "You gained **1x Evolution Stone**!"
       });
-      rewardEmbed.setThumbnail(`${spritePaths.items}evolution_stone.png`);
+      summary.setThumbnail(`${spritePaths.items}evolution_stone.png`);
     }
 
     return safeReply(interaction, {
-      embeds: [embed1, embed2, rewardEmbed],
+      embeds: [embed1, embed2, summary],
       ephemeral: true
     });
 
   } catch (err) {
-    console.error("❌ DAILY ERROR:", err);
+    console.error("❌ /daily ERROR:", err);
 
     return safeReply(interaction, {
-      content: "❌ An error occurred processing your daily reward.",
+      content: "❌ An unexpected error occurred while processing your daily.",
       ephemeral: true
     });
   }

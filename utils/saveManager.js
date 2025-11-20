@@ -8,7 +8,9 @@
 
 import { enqueueSave } from "./saveQueue.js";
 
-// Validate data before saving
+// ----------------------------------------------------------
+// Validation
+// ----------------------------------------------------------
 function validateTrainerData(data) {
   if (!data || typeof data !== "object") return false;
   if (Object.keys(data).length < 1) return false;
@@ -23,7 +25,9 @@ function validateTrainerData(data) {
   return true;
 }
 
-// Unified save API
+// ----------------------------------------------------------
+// Simple save (legacy)
+// ----------------------------------------------------------
 export async function saveTrainerData(trainerData) {
   if (!validateTrainerData(trainerData)) {
     console.warn("❌ saveTrainerData refused invalid object");
@@ -31,9 +35,45 @@ export async function saveTrainerData(trainerData) {
   }
 
   await enqueueSave(trainerData);
-
   return true;
 }
 
-// Backwards compatibility
-export const atomicSave = saveTrainerData;
+// ----------------------------------------------------------
+// NEW atomicSave (correct output for /adminsave)
+// ----------------------------------------------------------
+export async function atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+  const errors = [];
+
+  // Validate data
+  if (!validateTrainerData(trainerData)) {
+    const msg = "❌ saveTrainerData refused invalid object";
+    console.warn(msg);
+    errors.push(msg);
+    return { ok: false, errors };
+  }
+
+  try {
+    // Local save via queue
+    await enqueueSave(trainerData);
+  } catch (err) {
+    const msg = `❌ Local save failed: ${err.message}`;
+    console.error(msg);
+    errors.push(msg);
+  }
+
+  try {
+    // Optional cloud save
+    if (saveDataToDiscord) {
+      await saveDataToDiscord(trainerData);
+    }
+  } catch (err) {
+    const msg = `❌ Discord save failed: ${err.message}`;
+    console.error(msg);
+    errors.push(msg);
+  }
+
+  return {
+    ok: errors.length === 0,
+    errors,
+  };
+}

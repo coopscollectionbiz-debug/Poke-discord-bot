@@ -885,29 +885,35 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
       // ----------------------------------------
       await saveTrainerDataLocal(trainerData);
 
-      // ----------------------------------------
-      // 7️⃣ BROADCAST IF RARE+
-      // ----------------------------------------
-      const rarity = reward.tier || reward.rarity || "common";
-      if (
-        shiny ||
-        ["rare", "epic", "legendary", "mythic"].includes(rarity.toLowerCase())
-      ) {
-        try {
-          await broadcastReward(client, {
-  userId: id,
-  username: user.username || null,
-  type: "pokemon",
-  item: reward,
-  shiny,
-  source,
-});
+// ----------------------------------------
+// 7️⃣ BROADCAST IF RARE+
+// ----------------------------------------
+const rarity = reward.tier || reward.rarity || "common";
+if (
+  shiny ||
+  ["rare", "epic", "legendary", "mythic"].includes(rarity.toLowerCase())
+) {
+  try {
+    const discordUser =
+      client.users.cache.get(id) || (await client.users.fetch(id));
 
+    await broadcastReward(client, {
+      user: discordUser,
+      type: "pokemon",
+      item: {
+        id: reward.id,
+        name: reward.name,
+        rarity,
+        spriteFile: `${reward.id}.gif`
+      },
+      shiny,
+      source,
+    });
 
-        } catch (err) {
-          console.warn("⚠️ Broadcast failed:", err.message);
-        }
-      }
+  } catch (err) {
+    console.warn("⚠️ Broadcast failed:", err.message);
+  }
+}
 
       // ----------------------------------------
       // 8️⃣ RESPOND TO FRONTEND WITH NEW CC & SPRITE

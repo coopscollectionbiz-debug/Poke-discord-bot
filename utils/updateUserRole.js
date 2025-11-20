@@ -6,7 +6,6 @@
 
 import { EmbedBuilder } from "discord.js";
 import { getRank, getRankTiers } from "../utils/rankSystem.js";
-import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
 
 const RANK_TIERS = getRankTiers();
 

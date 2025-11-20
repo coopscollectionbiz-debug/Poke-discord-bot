@@ -21,9 +21,10 @@ import path from "path";
 import { safeReply } from "../utils/safeReply.js";
 import { enqueueSave } from "../utils/saveQueue.js";
 
-import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
-import { broadcastReward } from "../utils/broadcastReward.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
+import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
+import { rollForShiny } from "../shinyOdds.js";
+import { broadcastReward } from "../utils/broadcastReward.js";
 
 const TRAINERDATA_PATH = path.resolve("./trainerData.json");
 
@@ -57,18 +58,14 @@ export async function execute(interaction, client) {
         cc: 0,
         tp: 0,
         items: { evolution_stone: 0 },
-        pokemon: {},   // Unified format { id: {normal, shiny} }
+        pokemon: {},
         trainers: [],
         equipped: null,
         lastDaily: 0
       };
     } else {
-      // ensure items exists
-      if (!trainerData[userId].items)
-        trainerData[userId].items = { evolution_stone: 0 };
-
-      if (trainerData[userId].items.evolution_stone == null)
-        trainerData[userId].items.evolution_stone = 0;
+      trainerData[userId].items ??= { evolution_stone: 0 };
+      trainerData[userId].items.evolution_stone ??= 0;
     }
 
     const user = trainerData[userId];
@@ -90,47 +87,49 @@ export async function execute(interaction, client) {
     }
 
     // ======================================================
-// GENERATE POKÉMON REWARD (rank-buffed odds)
-// ======================================================
-const allPokemon = await getAllPokemon();
-const roll = selectRandomPokemonForUser(allPokemon, user, "daily");
+    // GENERATE POKÉMON REWARD (rank-buffed odds)
+    // ======================================================
+    const allPokemon = await getAllPokemon();
+    const chosen = selectRandomPokemonForUser(allPokemon, user, "pokeball");
 
-if (!roll) {
-  console.error("❌ DAILY: No Pokémon could be selected! allPokemon length = ", allPokemon.length);
-  return safeReply(interaction, {
-    content: "❌ Daily reward failed — no Pokémon available to roll.",
-    ephemeral: true,
-  });
-}
+    if (!chosen) {
+      console.error("❌ DAILY: No Pokémon could be selected! allPokemon length =", allPokemon.length);
+      return safeReply(interaction, {
+        content: "❌ Daily reward failed — no Pokémon available to roll.",
+        ephemeral: true,
+      });
+    }
 
-const { id, name, rarity, shiny, spriteFile } = roll;
+    const id = chosen.id;
+    const name = chosen.name;
+    const rarity = chosen.tier || chosen.rarity || "common";
 
+    // Shiny roll (weightedRandom does NOT include shiny)
+    const shiny = rollForShiny(user.tp || 0);
+
+    const spriteFile = shiny
+      ? `/public/sprites/pokemon/shiny/${id}.gif`
+      : `/public/sprites/pokemon/normal/${id}.gif`;
 
     // ======================================================
     // SAVE POKÉMON TO USER INVENTORY
     // ======================================================
-    if (!user.pokemon[id]) {
-      user.pokemon[id] = { normal: 0, shiny: 0 };
-    }
-    if (shiny) {
-      user.pokemon[id].shiny += 1;
-    } else {
-      user.pokemon[id].normal += 1;
-    }
+    user.pokemon[id] ??= { normal: 0, shiny: 0 };
+    if (shiny) user.pokemon[id].shiny += 1;
+    else user.pokemon[id].normal += 1;
 
     // ======================================================
-// BROADCAST RARE+ OR SHINY
-// ======================================================
-if (shiny || ["rare", "epic", "legendary", "mythic"].includes(rarity)) {
-  broadcastReward(client, {
-    user: { id: userId, username: interaction.user.username },
-    type: "pokemon",
-    item: { id, name, rarity, spriteFile },
-    shiny,
-    source: "daily"
-  });
-}
-
+    // BROADCAST RARE+ OR SHINY
+    // ======================================================
+    if (shiny || ["rare", "epic", "legendary", "mythic"].includes(rarity)) {
+      broadcastReward(client, {
+        user: { id: userId, username: interaction.user.username },
+        type: "pokemon",
+        item: { id, name, rarity, spriteFile },
+        shiny,
+        source: "daily"
+      });
+    }
 
     // ======================================================
     // CURRENCY + TP

@@ -1,13 +1,13 @@
 // ==========================================================
-// 🗓️ Coop's Collection — /daily (UTC Reset + Icon/Rarity Update v15)
+// 🗓️ Coop's Collection — /daily (UTC Reset + Rarity Colors + Custom Emojis v16)
 // ==========================================================
 // Rewards:
 //   • TWO Pokémon (rank-buffed)
 //   • +500 CC
 //   • +100 TP
-//   • 10% Evolution Stone
-//   • Pokémon embeds show rarity symbols
-//   • CC + TP icons use actual sprites
+//   • 10% Evolution Stone chance
+//   • Pokémon embeds colored by rarity
+//   • Custom emoji for CC + TP
 //   • Reset every day at 00:00 UTC
 // ==========================================================
 
@@ -22,12 +22,21 @@ import { getAllPokemon } from "../utils/dataLoader.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
-import { spritePaths, rarityEmojis } from "../spriteconfig.js";
+import { spritePaths, rarityEmojis, rarityColors } from "../spriteconfig.js";
 
-// DAILY CONSTANTS
+// ==========================================================
+// CONSTANTS
+// ==========================================================
 const DAILY_CC = 500;
 const DAILY_TP = 100;
 const EVOLUTION_STONE_CHANCE = 0.10;
+
+// Custom server emojis
+const COIN_EMOJI = "<:coopcoin:1437892112959148093>";
+const TP_EMOJI   = "<:tp_icon:1437892250922123364>";
+
+// Permanent daily embed color (Option D)
+const DAILY_COLOR = "#F7C843";
 
 // Returns YYYY-MM-DD (UTC)
 function getUTCDateString() {
@@ -69,7 +78,7 @@ export async function execute(
     user.lastDaily ??= "1970-01-01";
 
     // ======================================================
-    // UNIVERSAL RESET CHECK
+    // DAILY CLAIM CHECK
     // ======================================================
     if (user.lastDaily === today) {
       return safeReply(interaction, {
@@ -79,7 +88,7 @@ export async function execute(
     }
 
     // ======================================================
-    // LOAD POKÉMON
+    // LOAD POKÉMON DATA
     // ======================================================
     const allPokemon = await getAllPokemon();
     if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
@@ -126,7 +135,7 @@ export async function execute(
     addMon(pick2, shiny2);
 
     // ======================================================
-    // BROADCAST
+    // BROADCAST RARES + SHINIES
     // ======================================================
     const maybeBroadcast = async (pick, shiny) => {
       const rarity = (pick.tier || pick.rarity || "common").toLowerCase();
@@ -156,14 +165,13 @@ export async function execute(
       stoneAwarded = true;
     }
 
-    // Stamp claim
     user.lastDaily = today;
 
-    // Queue save
+    // SAVE
     await enqueueSave(trainerData);
 
     // ======================================================
-    // EMBEDS (with icons + rarity)
+    // BUILD EMBEDS (RARITY COLORS)
     // ======================================================
     const rarity1 = (pick1.tier || pick1.rarity || "common").toLowerCase();
     const rarity2 = (pick2.tier || pick2.rarity || "common").toLowerCase();
@@ -171,9 +179,12 @@ export async function execute(
     const emoji1 = rarityEmojis[rarity1] ?? "";
     const emoji2 = rarityEmojis[rarity2] ?? "";
 
+    const color1 = rarityColors[rarity1] ?? "#5bc0de";
+    const color2 = rarityColors[rarity2] ?? "#5bc0de";
+
     const embed1 = new EmbedBuilder()
       .setTitle(`🎁 Pokémon #1 ${shiny1 ? "✨" : ""}`)
-      .setColor("#5bc0de")
+      .setColor(color1)
       .setDescription(
         `${emoji1} **${pick1.name}**\n` +
         `Rarity: **${rarity1.toUpperCase()}**`
@@ -182,30 +193,31 @@ export async function execute(
 
     const embed2 = new EmbedBuilder()
       .setTitle(`🎁 Pokémon #2 ${shiny2 ? "✨" : ""}`)
-      .setColor("#5bc0de")
+      .setColor(color2)
       .setDescription(
         `${emoji2} **${pick2.name}**\n` +
         `Rarity: **${rarity2.toUpperCase()}**`
       )
       .setImage(sprite2);
 
+    // ======================================================
+    // SUMMARY EMBED (PERMANENT COLOR — OPTION D)
+    // ======================================================
     const summary = new EmbedBuilder()
       .setTitle("🗓️ Daily Rewards")
-      .setColor("#28a745")
+      .setColor(DAILY_COLOR)
       .addFields(
         {
-          name: "💰 CC",
-          value: `${DAILY_CC}  \n` +
-                 `![coin](${spritePaths.items}CC_coin.png)`
+          name: `${COIN_EMOJI} CC`,
+          value: `+${DAILY_CC}`
         },
         {
-          name: "⭐ TP",
-          value: `${DAILY_TP}  \n` +
-                 `![tp](${spritePaths.items}tp_icon.png)`
+          name: `${TP_EMOJI} TP`,
+          value: `+${DAILY_TP}`
         },
         {
           name: "📊 New Balance",
-          value: `${user.cc} CC | ${user.tp} TP`
+          value: `${COIN_EMOJI} ${user.cc}  |  ${TP_EMOJI} ${user.tp}`
         }
       );
 

@@ -212,38 +212,37 @@ async function buyPokeball(type, cost) {
     message: `Buy a ${type.replace("ball", " Ball")} for ${cost} CC?`,
     sprites: [ballSprite],
     onConfirm: async () => {
-
-      // 🚨 DO NOT DEDUCT CC YET
-      // Only check if they have enough:
-      if (user.cc < cost) {
-        alert("Not enough CC!");
-        return;
-      }
+      // 🛡️ IMPORTANT: no local charge(), no saveUser() here.
+      // Server is the source of truth for CC & inventory.
 
       const reward = await fetch("/api/rewardPokemon", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: userId, token, source: type }),
-      }).then(r => r.json());
+      }).then((r) => r.json());
 
       if (!reward.success) {
-        alert("⚠️ Reward could not be generated.\nYour CC was NOT deducted.");
+        showShopModal({
+          title: "Error",
+          message: reward.error || "Reward could not be generated.",
+          onConfirm: () => {},
+        });
         return;
       }
 
-      // ✅ Only now deduct CC (AFTER success!)
-      user.cc -= cost;
-      await saveUser();
-      updateUI();
+      // 🔄 Update CC from server response
+      if (typeof reward.cc === "number") {
+        user.cc = reward.cc;
+        updateUI();
+      }
 
-      // 🎉 Show result modal
       const rarity = reward.pokemon.rarity;
       const emoji = rarityEmojis[rarity] ?? "";
       const color = rarityColors[rarity] ?? "#fff";
 
       const rarityHTML = `
         <span style="color:${color};font-weight:700;">
-          ${emoji} ${rarity.toUpperCase()}
+          ${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}
         </span>
       `;
 
@@ -251,10 +250,10 @@ async function buyPokeball(type, cost) {
         title: "You caught a Pokémon!",
         message: `${rarityHTML}<br>${reward.pokemon.name}`,
         sprites: [reward.pokemon.sprite],
-        onConfirm: () => {}
+        onConfirm: () => {},
       });
 
-      // 🔒 Disable cancel
+      // 🔒 Disable cancel AFTER reward is shown
       setTimeout(() => {
         const overlay = document.getElementById("shopModalOverlay");
         if (!overlay) return;
@@ -264,6 +263,9 @@ async function buyPokeball(type, cost) {
           cancelBtn.disabled = true;
           cancelBtn.textContent = "Reward Locked";
           cancelBtn.style.opacity = "0.5";
+
+          const clone = cancelBtn.cloneNode(true);
+          cancelBtn.parentNode.replaceChild(clone, cancelBtn);
         }
       }, 50);
     },

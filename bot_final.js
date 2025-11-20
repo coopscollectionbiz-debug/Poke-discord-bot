@@ -1286,9 +1286,8 @@ res.json({
 });
 
 });
-// ✅ POST — set full Pokémon team (up to 6) — Debounced Discord Save
-let lastTeamSave = 0; // global throttle timestamp
 
+// ✅ POST — set full Pokémon team (up to 6) — Ghost Pokémon Auto-Clean
 app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   try {
     const { id, token, team } = req.body;
@@ -1304,23 +1303,42 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       if (!user)
         return res.status(404).json({ success: false, error: "User not found" });
 
-      const normalized = [...new Set(team.map(n => Number(n)).filter(n => Number.isInteger(n)))];
-      if (normalized.length === 0 || normalized.length > 6)
-        return res.status(400).json({ success: false, error: "Team must be 1–6 unique IDs" });
-
-      // Ensure ownership
+      // ==========================================================
+      // ⭐ 1. AUTO-PURGE GHOST / UNOWNED POKÉMON FROM SAVED TEAM
+      // ==========================================================
       const owns = pid => {
         const p = user.pokemon?.[pid];
         return !!p && (p.normal > 0 || p.shiny > 0);
       };
+
+      user.displayedPokemon = (user.displayedPokemon || []).filter(pid => owns(pid));
+
+      // ==========================================================
+      // ⭐ 2. Normalize NEW submitted team
+      // ==========================================================
+      const normalized = [...new Set(team.map(n => Number(n)).filter(n => Number.isInteger(n)))];
+
+      if (normalized.length === 0 || normalized.length > 6)
+        return res.status(400).json({ success: false, error: "Team must be 1–6 unique IDs" });
+
+      // ==========================================================
+      // ⭐ 3. Validate ownership ONLY for new team (not old)
+      // ==========================================================
       const unowned = normalized.filter(pid => !owns(pid));
       if (unowned.length)
-        return res.status(400).json({ success: false, error: `Unowned Pokémon: ${unowned.join(", ")}` });
+        return res.status(400).json({
+          success: false,
+          error: `Unowned Pokémon: ${unowned.join(", ")}`
+        });
 
+      // ==========================================================
+      // ⭐ 4. Save clean team
+      // ==========================================================
       user.displayedPokemon = normalized;
       trainerData[id] = user;
 
       await saveTrainerDataLocal(trainerData);
+
       res.json({ success: true });
     });
 

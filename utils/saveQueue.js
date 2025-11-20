@@ -67,10 +67,8 @@ export function enqueueSave(trainerData) {
     // Write trainerData.json atomically
     await atomicWriteJson(TRAINERDATA_PATH, trainerData);
 
-    // Mark bot_final.js as dirty so 15-minute backups fire
-    if (global.markDirty) global.markDirty();
+    console.log("💾 Saved trainerData.json");
 
-    console.log("💾 Saved trainerData.json (dirty flag set)");
   }).catch(err => console.error("❌ Save error:", err));
 
   return queue;

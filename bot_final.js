@@ -232,11 +232,6 @@ const rewardCooldowns = new Map();
 const userCooldowns = new Map();
 const RANK_TIERS = getRankTiers();
 
-let dirty = false; // 🚨 tracks unsaved changes for 15-min backups
-global.markDirty = () => {
-  dirty = true;
-};
-
 // ==========================================================
 // 🤖 Discord Client Setup
 // ==========================================================
@@ -482,30 +477,21 @@ async function loadCommands() {
 // 💾 SAVE MANAGEMENT
 // ==========================================================
 function debouncedDiscordSave() {
-  // 🚫 No more debounced saves — only mark as dirty
-  dirty = true;
-  console.log("📝 debouncedDiscordSave() called — marked dirty (no immediate Discord backup)");
+  console.log("ℹ️ debouncedDiscordSave() called — no-op (Discord now saves every 15 minutes regardless).");
 }
 
 // ==========================================================
-// 🕒 15-MINUTE DISCORD BACKUP (only if data changed)
+// 🕒 15-MINUTE DISCORD BACKUP (ALWAYS RUNS)
 // ==========================================================
 setInterval(async () => {
-  if (!dirty) {
-    console.log("⏳ 15-minute save tick — no changes, skipping");
-    return;
-  }
-
   console.log("💾 15-minute interval — saving trainerData to Discord...");
   try {
     await saveDataToDiscord(trainerData);
-    dirty = false; // 🔄 reset flag
     console.log("✅ Discord backup complete (15-minute interval)");
   } catch (err) {
     console.error("❌ Interval Discord save failed:", err.message);
   }
 }, 15 * 60 * 1000);
-
 
 // ==========================================================
 // 🛑 GRACEFUL SHUTDOWN

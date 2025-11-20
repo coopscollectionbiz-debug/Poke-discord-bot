@@ -143,31 +143,41 @@ export async function broadcastReward(
     }
 
     // ======================================================
-    // 🧱 Embed builder
-    // ======================================================
-    const title =
-      type === "pokemon"
-        ? shiny
-          ? `${emoji} ✨ Shiny Pokémon Discovered!`
-          : `${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)} Pokémon Found!`
-        : `${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)} Trainer Recruited!`;
+// 🧱 Embed builder (FIXED USERNAME HANDLING)
+// ======================================================
 
-    const description =
-      type === "pokemon"
-        ? `**${user.username}** caught **${displayName}**!\n${rarityDisplay}\n🌿 *A wild Pokémon appeared!*`
-        : `**${user.username}** recruited **${displayName}**!\n${rarityDisplay}\n🏫 *A new ally joins the adventure!*`;
+// Safely resolve username across all Discord account types
+const nameSafe =
+  user.globalName ||
+  user.displayName ||
+  user.username ||
+  (user.tag ?? null) ||
+  `User ${user.id}`;
 
-    const embed = new EmbedBuilder()
-      .setTitle(title)
-      .setDescription(description)
-      .setColor(
-        shiny ? 0xffd700 : rarityColors[rarity] || (type === "trainer" ? 0x5865f2 : 0x43b581)
-      )
-      .setThumbnail(spriteUrl)
-      .setFooter({
-        text: `🌟 Coop’s Collection Broadcast${isBypassSource ? " (Bypass)" : ""}`,
-      })
-      .setTimestamp();
+const title =
+  type === "pokemon"
+    ? shiny
+      ? `${emoji} ✨ Shiny Pokémon Discovered!`
+      : `${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)} Pokémon Found!`
+    : `${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)} Trainer Recruited!`;
+
+const description =
+  type === "pokemon"
+    ? `**${nameSafe}** caught **${displayName}**!\n${rarityDisplay}\n🌿 *A wild Pokémon appeared!*`
+    : `**${nameSafe}** recruited **${displayName}**!\n${rarityDisplay}\n🏫 *A new ally joins the adventure!*`;
+
+const embed = new EmbedBuilder()
+  .setTitle(title)
+  .setDescription(description)
+  .setColor(
+    shiny ? 0xffd700 : rarityColors[rarity] || (type === "trainer" ? 0x5865f2 : 0x43b581)
+  )
+  .setThumbnail(spriteUrl)
+  .setFooter({
+    text: `🌟 Coop’s Collection Broadcast${isBypassSource ? " (Bypass)" : ""}`,
+  })
+  .setTimestamp();
+
 
     // ======================================================
     // 📡 Broadcast routing

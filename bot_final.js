@@ -783,7 +783,7 @@ return res.json(trainerData[id]);
 
 
 // ==========================================================
-// 🛍️ SHOP API — UPDATE USER
+// 🛍️ SHOP API — UPDATE USER (NOW ATOMIC SAFE)
 // ==========================================================
 app.post("/api/updateUser", express.json(), async (req, res) => {
   const { id, token, user } = req.body;
@@ -794,16 +794,19 @@ app.post("/api/updateUser", express.json(), async (req, res) => {
   if (!trainerData[id])
     return res.status(404).json({ error: "User not found" });
 
-  // Merge provided fields
-  trainerData[id] = normalizeUserSchema(
-  id,
-  { ...trainerData[id], ...user }
-);
+  await lockUser(id, async () => {
+    // Merge fields safely
+    trainerData[id] = normalizeUserSchema(
+      id,
+      { ...trainerData[id], ...user }
+    );
 
-  await saveTrainerDataLocal(trainerData);
+    await saveTrainerDataLocal(trainerData);
 
-  res.json({ success: true });
+    res.json({ success: true });
+  });
 });
+
 
 // ==========================================================
 // 🛍️ SHOP API — POKÉMON REWARD (Atomic, CC-safe, Exploit-proof)

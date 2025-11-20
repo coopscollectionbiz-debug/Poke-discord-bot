@@ -139,22 +139,27 @@ function flattenTrainerSprites(spritesObj) {
     const lowerKey = key.toLowerCase();
 
     const spriteArray = Array.isArray(info.sprites)
-      ? info.sprites
-          .map((s) => {
-            // ✅ String entries
-            if (typeof s === "string") return s.toLowerCase();
+  ? info.sprites
+      .map((s) => {
+        // Case 1: simple string
+        if (typeof s === "string") {
+          return s.toLowerCase();
+        }
 
-            // ✅ Object entries (support { file, disabled })
-            if (s && typeof s === "object" && typeof s.file === "string") {
-              if (s.disabled) return null; // skip disabled sprites
-              return s.file.toLowerCase();
-            }
+        // Case 2: object entry { file, disabled }
+        if (typeof s === "object" && s?.file) {
+          if (s.disabled) return null;
+          return String(s.file).toLowerCase();
+        }
 
-            // ❌ Unknown or invalid entry
-            return null;
-          })
-          .filter(Boolean) // remove nulls
-      : [`${lowerKey}.png`];
+        return null;
+      })
+      .filter(Boolean)
+  : (() => {
+      // If no sprites array, create a fallback string → .png
+      const fallback = `${lowerKey}.png`;
+      return [fallback];
+    })();
 
     flat.push({
       id: lowerKey,

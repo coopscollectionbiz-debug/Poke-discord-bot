@@ -10,7 +10,7 @@
 // Uses:
 //  • trainerData.json unified schema
 //  • weightedRandom -> selectRandomPokemonForUser
-//  • queueSave for safe writes
+//  
 // ==========================================================
 
 import {
@@ -22,7 +22,7 @@ import fs from "fs/promises";
 import path from "path";
 
 import { safeReply } from "../utils/safeReply.js";
-import { queueSave } from "../utils/saveManager.js";
+import { saveUser } from "../utils/saveManager.js";
 
 import { getRank } from "../utils/rankSystem.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
@@ -130,9 +130,10 @@ export async function execute(interaction, client) {
     user.lastDaily = now;
 
     // ======================================================
-    // SAVE DATA (SAFE)
-    // ======================================================
-    queueSave(allUsers);
+// SAVE UPDATED USER ONLY
+// ======================================================
+await saveUser(userId, user);
+
 
     // ======================================================
     // EMBED RESPONSE

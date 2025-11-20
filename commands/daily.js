@@ -23,6 +23,7 @@ import { enqueueSave } from "../utils/saveQueue.js";
 
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
+import { getAllPokemon } from "../utils/dataLoader.js";
 
 const TRAINERDATA_PATH = path.resolve("./trainerData.json");
 
@@ -89,10 +90,21 @@ export async function execute(interaction, client) {
     }
 
     // ======================================================
-    // GENERATE POKÉMON REWARD (rank-buffed odds)
-    // ======================================================
-    const roll = await selectRandomPokemonForUser(userId, null, "daily");
-    const { id, name, rarity, shiny, spriteFile } = roll;
+// GENERATE POKÉMON REWARD (rank-buffed odds)
+// ======================================================
+const allPokemon = await getAllPokemon();
+const roll = selectRandomPokemonForUser(allPokemon, user, "daily");
+
+if (!roll) {
+  console.error("❌ DAILY: No Pokémon could be selected! allPokemon length = ", allPokemon.length);
+  return safeReply(interaction, {
+    content: "❌ Daily reward failed — no Pokémon available to roll.",
+    ephemeral: true,
+  });
+}
+
+const { id, name, rarity, shiny, spriteFile } = roll;
+
 
     // ======================================================
     // SAVE POKÉMON TO USER INVENTORY

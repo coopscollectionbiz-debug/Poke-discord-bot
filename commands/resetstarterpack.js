@@ -1,83 +1,108 @@
 // ==========================================================
-// 🛠️ Coop's Collection Discord Bot — /resetstarterpack (Admin Command)
-// ==========================================================
-// Features:
-//  • Requires Administrator permission
-//  • Resets Starter Pack claim for a specific user OR all users
-//  • Uses atomicSave() pattern for consistent persistence
-//  • Fully deferred (no "application did not respond")
+// /resetstarterpack – Admin (Race-Safe v4.3)
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { safeReply } from "../utils/safeReply.js";
+import { lockUser } from "../utils/userLocks.js";
+import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
+import { atomicSave } from "../utils/saveManager.js";
 
 export default {
   data: new SlashCommandBuilder()
     .setName("resetstarterpack")
-    .setDescription("Admin: reset a user's Starter Pack claim so they can claim it again.")
+    .setDescription("Admin: Reset a user's Starter Pack claim so they can claim it again.")
     .addUserOption(option =>
       option
         .setName("user")
-        .setDescription("User whose Starter Pack you want to reset. Leave blank to reset for all users.")
+        .setDescription("User whose Starter Pack claim you want to reset. Leave blank to reset globally.")
         .setRequired(false)
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, atomicSave) {
+  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
     try {
-      // ✅ Prevents Discord from timing out
       await interaction.deferReply({ ephemeral: true });
 
       const targetUser = interaction.options.getUser("user");
 
+      // ======================================================
+      // 🔹 CASE 1 — RESET A SINGLE USER (PER-USER LOCKED)
+      // ======================================================
       if (targetUser) {
-        // Reset for a specific user
         const userId = targetUser.id;
-        const user = trainerData[userId];
-        if (!user) {
-          await interaction.editReply(`⚠️ No trainer data found for <@${userId}>.`);
-          return;
-        }
 
-        user.purchases = Array.isArray(user.purchases)
-          ? user.purchases.filter(p => p !== "starter_pack")
+        return lockUser(userId, async () => {
+          let user = trainerData[userId];
+
+          if (!user) {
+            return safeReply(interaction, {
+              content: `⚠️ No trainer data found for <@${userId}>.`,
+              ephemeral: true,
+            });
+          }
+
+          // Normalize before editing
+          user = normalizeUserSchema(userId, user);
+          trainerData[userId] = user;
+
+          // Remove starter_pack entry
+          user.purchases = Array.isArray(user.purchases)
+            ? user.purchases.filter(p => p !== "starter_pack")
+            : [];
+
+          // Atomic save
+          await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+
+          console.log(
+            `🔁 Starter Pack reset for ${targetUser.username} (${userId}) by ${interaction.user.username}.`
+          );
+
+          return safeReply(interaction, {
+            content: `✅ Starter Pack reset for **${targetUser.username}**.\nThey can now reclaim it via \`/shop\`.`,
+            ephemeral: true,
+          });
+        });
+      }
+
+      // ======================================================
+      // 🔹 CASE 2 — GLOBAL RESET (NO LOCK — FULL DATA MUTATION)
+      // ======================================================
+      // saveQueue + atomicSave already serialize full-dataset writes.
+      // Locking each user individually would create hundreds of chained locks.
+
+      let count = 0;
+
+      for (const [id, user] of Object.entries(trainerData)) {
+        trainerData[id] = normalizeUserSchema(id, user);
+
+        const beforeCount = trainerData[id].purchases?.length || 0;
+
+        trainerData[id].purchases = trainerData[id].purchases
+          ? trainerData[id].purchases.filter(p => p !== "starter_pack")
           : [];
 
-        await atomicSave(trainerData);
-
-        await interaction.editReply(
-          `✅ Starter Pack reset for <@${userId}>.\nThey can now claim it again via \`/shop\`.`
-        );
-
-        console.log(`🔁 Starter Pack reset for ${targetUser.username} (${userId}) by ${interaction.user.username}.`);
-      } else {
-        // Reset for ALL users
-        let count = 0;
-        for (const [userId, user] of Object.entries(trainerData)) {
-          if (user.purchases && Array.isArray(user.purchases)) {
-            const before = user.purchases.length;
-            user.purchases = user.purchases.filter(p => p !== "starter_pack");
-            if (before !== user.purchases.length) count++;
-          }
-        }
-
-        await atomicSave(trainerData);
-
-        await interaction.editReply(
-          `✅ Starter Pack reset for **${count}** users.\nAll affected users can now claim it again via \`/shop\`.`
-        );
-
-        console.log(`🔁 Global Starter Pack reset completed by ${interaction.user.username}. (${count} users)`);
+        const afterCount = trainerData[id].purchases.length;
+        if (afterCount !== beforeCount) count++;
       }
+
+      await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+
+      console.log(
+        `🔁 GLOBAL Starter Pack reset by ${interaction.user.username}. Affected users: ${count}`
+      );
+
+      return safeReply(interaction, {
+        content: `✅ Starter Pack reset for **${count}** users.`,
+        ephemeral: true,
+      });
+
     } catch (err) {
-      console.error("❌ /resetstarterpack failed:", err);
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          content: `❌ Error resetting Starter Pack: ${err.message}`,
-          ephemeral: true,
-        });
-      } else {
-        await interaction.editReply(`❌ Error resetting Starter Pack: ${err.message}`);
-      }
+      console.error("❌ /resetstarterpack error:", err);
+      return safeReply(interaction, {
+        content: `❌ Error resetting Starter Pack: ${err.message}`,
+        ephemeral: true,
+      });
     }
   },
 };

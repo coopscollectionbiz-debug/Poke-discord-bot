@@ -1,11 +1,5 @@
 // ==========================================================
-// /addinventory — Expanded Admin Command (v2.2)
-// ==========================================================
-// Supports:
-//  • Pokémon (normal / shiny)
-//  • Trainers
-//  • Shop Items (Evolution Stone, etc.)
-// ❌ Starter Pack intentionally excluded
+// /addinventory — Expanded Admin Command (v3.0, Race-Safe)
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
@@ -14,18 +8,8 @@ import { findPokemonByName, getFlattenedTrainers } from "../utils/dataLoader.js"
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
-
-// ==========================================================
-// 🪙 Grantable Items (match /shop)
-// ==========================================================
-const SHOP_ITEMS = {
-  evolution_stone: {
-    id: "evolution_stone",
-    name: "Evolution Stone",
-    emoji: "<:evolution_stone:1437892171381473551>",
-  },
-  // ❌ Starter Pack purposely excluded from this list
-};
+import { lockUser } from "../utils/userLocks.js";   // ⭐ Correct import
+import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -46,23 +30,26 @@ export default {
         .setRequired(true)
     )
     .addStringOption(option =>
-      option
-        .setName("name")
-        .setDescription("Name of the Pokémon, Trainer, or Item")
-        .setRequired(true)
+      option.setName("name").setDescription("Name of the Pokémon, Trainer, or Item").setRequired(true)
     )
     .addBooleanOption(option =>
-      option.setName("shiny").setDescription("Add as shiny (for Pokémon only)")
+      option.setName("shiny").setDescription("Add as shiny (Pokémon only)")
     )
     .addIntegerOption(option =>
-      option.setName("quantity").setDescription("Quantity to add (default 1)")
+      option.setName("quantity").setDescription("Quantity (default 1)")
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
+  async execute(
+    interaction,
+    trainerData,
+    saveTrainerDataLocal,
+    saveDataToDiscord,
+    client
+  ) {
+
     await interaction.deferReply({ ephemeral: true });
 
-    // 🔒 Permission check
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
       return safeReply(interaction, {
         content: "⛔ You do not have permission to use this command.",
@@ -75,86 +62,101 @@ export default {
     const name = interaction.options.getString("name");
     const shiny = interaction.options.getBoolean("shiny") || false;
     const quantity = interaction.options.getInteger("quantity") || 1;
-    const userData = await ensureUserInitialized(targetUser.id, targetUser.username, trainerData, client);
 
-    try {
-      // ======================================================
-      // 🟢 Pokémon
-      // ======================================================
-      if (type === "pokemon") {
-        const pokemon = await findPokemonByName(name);
-        if (!pokemon)
-          return safeReply(interaction, { content: `⛔ Pokémon "${name}" not found.`, ephemeral: true });
+    const userId = targetUser.id;
 
-        if (!userData.pokemon[pokemon.id]) userData.pokemon[pokemon.id] = { normal: 0, shiny: 0 };
-        if (shiny) userData.pokemon[pokemon.id].shiny += quantity;
-        else userData.pokemon[pokemon.id].normal += quantity;
+    return lockUser(userId, async () => {
+      let userData = await ensureUserInitialized(
+        userId,
+        targetUser.username,
+        trainerData,
+        client
+      );
 
-        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+      try {
+        // ======================================================
+        // 🟢 Pokémon
+        // ======================================================
+        if (type === "pokemon") {
+          const pokemon = await findPokemonByName(name);
+          if (!pokemon)
+            return safeReply(interaction, {
+              content: `⛔ Pokémon "${name}" not found.`,
+              ephemeral: true,
+            });
 
-        return safeReply(interaction, {
-          content: `✅ Added **${quantity}× ${shiny ? "Shiny " : ""}${pokemon.name}** to **${targetUser.username}**.`,
-          ephemeral: true,
-        });
-      }
+          userData.pokemon ??= {};
+          userData.pokemon[pokemon.id] ??= { normal: 0, shiny: 0 };
 
-      // ======================================================
-      // 🔵 Trainer
-      // ======================================================
-      if (type === "trainer") {
-        const allTrainers = await getFlattenedTrainers();
-        const trainer = findTrainerByQuery(allTrainers, name);
-        if (!trainer)
-          return safeReply(interaction, { content: `⛔ Trainer "${name}" not found.`, ephemeral: true });
+          if (shiny) userData.pokemon[pokemon.id].shiny += quantity;
+          else userData.pokemon[pokemon.id].normal += quantity;
+        }
 
-        const trainerKey = getTrainerKey(trainer);
-        userData.trainers[trainerKey] = true;
+        // ======================================================
+        // 🔵 Trainer
+        // ======================================================
+        else if (type === "trainer") {
+          const allTrainers = await getFlattenedTrainers();
+          const trainer = findTrainerByQuery(allTrainers, name);
+          if (!trainer)
+            return safeReply(interaction, {
+              content: `⛔ Trainer "${name}" not found.`,
+              ephemeral: true,
+            });
 
-        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+          const trainerKey = getTrainerKey(trainer);
 
-        return safeReply(interaction, {
-          content: `✅ Added **${trainer.name}** to **${targetUser.username}**.`,
-          ephemeral: true,
-        });
-      }
+          userData.trainers ??= [];
 
-      // ======================================================
-      // 🟣 Item (Shop-based)
-      // ======================================================
-      if (type === "item") {
-        const key = name.toLowerCase().replace(/\s+/g, "_");
-        const item = SHOP_ITEMS[key];
-        if (!item)
+          if (!userData.trainers.includes(trainerKey)) {
+            userData.trainers.push(trainerKey);
+          }
+        }
+
+        // ======================================================
+        // 🟣 Items  (⚠ Requires SHOP_ITEMS imported!)
+        // ======================================================
+        else if (type === "item") {
+          const key = name.toLowerCase().replace(/\s+/g, "_");
+
+          if (!globalThis.SHOP_ITEMS || !globalThis.SHOP_ITEMS[key]) {
+            return safeReply(interaction, {
+              content: `⛔ Item "${name}" not recognized.`,
+              ephemeral: true,
+            });
+          }
+
+          const item = globalThis.SHOP_ITEMS[key];
+
+          userData.items ??= {};
+          userData.items[item.id] ??= 0;
+          userData.items[item.id] += quantity;
+        }
+
+        else {
           return safeReply(interaction, {
-            content: `⛔ Item "${name}" not recognized or not grantable.`,
+            content: "⛔ Invalid type.",
             ephemeral: true,
           });
+        }
 
-        userData.items ??= {};
-        userData.items[item.id] ??= 0;
-        userData.items[item.id] += quantity;
+        // Schema cleanup
+        trainerData[userId] = normalizeUserSchema(userId, userData);
 
         await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
         return safeReply(interaction, {
-          content: `✅ Granted **${quantity}× ${item.emoji} ${item.name}** to **${targetUser.username}**.`,
+          content: `✅ Added inventory to **${targetUser.username}** successfully.`,
+          ephemeral: true,
+        });
+
+      } catch (err) {
+        console.error("❌ Add inventory error:", err);
+        return safeReply(interaction, {
+          content: `❌ Error: ${err.message}`,
           ephemeral: true,
         });
       }
-
-      // ======================================================
-      // 🚫 Invalid
-      // ======================================================
-      return safeReply(interaction, {
-        content: "⛔ Invalid type. Must be 'pokemon', 'trainer', or 'item'.",
-        ephemeral: true,
-      });
-    } catch (err) {
-      console.error("❌ Add inventory error:", err);
-      return safeReply(interaction, {
-        content: `❌ Error: ${err.message}`,
-        ephemeral: true,
-      });
-    }
+    });
   },
 };

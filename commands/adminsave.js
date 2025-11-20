@@ -1,5 +1,5 @@
 // ==========================================================
-// /adminsave – Force save trainerData to disk + Discord storage (SafeReply Refactor)
+// /adminsave – Force save trainerData to disk + Discord storage
 // Coop's Collection Discord Bot
 // ==========================================================
 
@@ -18,40 +18,70 @@ export default {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   // ==========================================================
-  // ⚙️ Command Execution (SafeReply Refactor)
+  // ⚙️ Command Execution
   // ==========================================================
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    // ✅ Defer reply immediately to prevent timeout
+  async execute(
+    interaction,
+    trainerData,
+    saveTrainerDataLocal,
+    saveDataToDiscord,
+    client
+  ) {
+    // Prevent Discord timeout
     await interaction.deferReply({ ephemeral: true });
 
     try {
-      // ✅ Use atomic save for consistency
-      const result = await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+      // -------------------------------------------
+      // 🔒 Perform atomic save (local + Discord)
+      // -------------------------------------------
+      const result = await atomicSave(
+        trainerData,
+        saveTrainerDataLocal,
+        saveDataToDiscord
+      );
 
+      // -------------------------------------------
+      // 📦 Build confirmation embed
+      // -------------------------------------------
       const embed = new EmbedBuilder()
         .setTitle("💾 Manual Save Complete")
-        .setDescription("✅ Trainer data successfully saved to both local and cloud storage.")
+        .setDescription(
+          "✅ Trainer data successfully saved to **local disk** and **Discord cloud backup**."
+        )
         .setColor(0x00ae86)
         .setTimestamp();
 
-      // Show any warnings
-      if (result.errors.length > 0) {
+      // -------------------------------------------
+      // ⚠️ Optional warnings from atomicSave()
+      // -------------------------------------------
+      const errors = Array.isArray(result?.errors) ? result.errors : [];
+
+      if (errors.length > 0) {
         embed.addFields({
           name: "⚠️ Warnings",
-          value: result.errors.join("\n")
+          value: errors.join("\n")
         });
       }
 
-      await safeReply(interaction, { embeds: [embed], ephemeral: true });
+      // -------------------------------------------
+      // 📨 Respond to admin
+      // -------------------------------------------
+      await safeReply(interaction, {
+        embeds: [embed],
+        ephemeral: true
+      });
 
-      console.log(`✅ Admin save executed by ${interaction.user.username}`);
+      console.log(
+        `💾 /adminsave executed manually by ${interaction.user.username}`
+      );
     } catch (err) {
       console.error("❌ Admin save failed:", err);
       await handleCommandError(err, interaction, "adminsave");
+
       await safeReply(interaction, {
-        content: "❌ An error occurred while saving trainer data.",
-        ephemeral: true,
+        content: "❌ An unexpected error occurred while saving trainer data.",
+        ephemeral: true
       });
     }
-  },
+  }
 };

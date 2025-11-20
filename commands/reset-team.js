@@ -1,11 +1,11 @@
 // ==========================================================
-// /resetteam – Admin command to wipe a user's displayed Pokémon team
-// • Fixes ghost Pokémon stuck in team after donation/evolution
-// • Safe: does NOT remove any owned Pokémon or other data
+// /resetteam – Admin Reset of Displayed Pokémon Team (v4.3)
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
+import { lockUser } from "../utils/userLocks.js";
+import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 
@@ -21,47 +21,58 @@ export default {
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    // Defer reply early
+  async execute(
+    interaction,
+    trainerData,
+    saveTrainerDataLocal,
+    saveDataToDiscord,
+    client
+  ) {
+
+    // Prevent command timeout
     await interaction.deferReply({ ephemeral: true });
 
-    // Admin check (redundant but safe)
+    // Permission check
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
       return safeReply(interaction, {
         content: "⛔ You do not have permission to use this command.",
-        ephemeral: true
+        ephemeral: true,
       });
     }
 
-    // Get target user
     const target = interaction.options.getUser("user");
     const userId = target.id;
 
-    // Ensure user exists in datastore
-    const userData = await ensureUserInitialized(
-      userId,
-      target.username,
-      trainerData,
-      client
-    );
+    // ======================================================
+    // 🔒 PER-USER ATOMIC LOCK
+    // ======================================================
+    return lockUser(userId, async () => {
+      // Ensure user exists in datastore
+      let userData = await ensureUserInitialized(
+        userId,
+        target.username,
+        trainerData,
+        client
+      );
 
-    // Reset their Pokémon team
-    userData.currentTeam = [];
+      // Normalize schema BEFORE mutation
+      userData = normalizeUserSchema(userId, userData);
+      trainerData[userId] = userData;
 
-    // Save changes
-    try {
+      // ======================================================
+      // ⭐ CORRECT FIELD: currentTeam
+      // ======================================================
+      // Your entire bot uses `currentTeam` as the active display party.
+      // Always reset THIS field — NOT displayedPokemon.
+      userData.currentTeam = [];
+
+      // Save via unified atomic save system
       await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
       return safeReply(interaction, {
-        content: `✅ Successfully reset **${target.username}'s** Pokémon team.\nThey can now select a new team with **/changepokemon**.`,
-        ephemeral: true
+        content: `✅ Successfully reset **${target.username}'s** Pokémon team.\nThey can now choose a new team with **/changepokemon**.`,
+        ephemeral: true,
       });
-    } catch (err) {
-      console.error("❌ resetteam error:", err);
-      return safeReply(interaction, {
-        content: `❌ Error while saving: ${err.message}`,
-        ephemeral: true
-      });
-    }
-  }
+    });
+  },
 };

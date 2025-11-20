@@ -308,31 +308,27 @@ async function saveDataToDiscord(data) {
 // 🎁 DETERMINISTIC RANDOM REWARD SYSTEM (ATOMIC PER-USER LOCK)
 // ==========================================================
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
-  console.log("⚙️ tryGiveRandomReward executed for", interactionUser.username);
-
-  // ========== ATOMIC PER-USER LOCK ==========
   const userId = interactionUser.id;
-  if (!userLocks.has(userId)) {
-    userLocks.set(userId, Promise.resolve());
-  }
 
-  const lock = userLocks.get(userId);
+  await lockUser(userId, async () => {
+    console.log("⚙️ tryGiveRandomReward executed for", interactionUser.username);
 
-  const task = (async () => {
-    // ⏳ Cooldown (no RNG gating)
+    // =============================
+    // ⏳ COOLDOWN
+    // =============================
     const now = Date.now();
-    const last = rewardCooldowns.get(interactionUser.id) || 0;
+    const last = rewardCooldowns.get(userId) || 0;
     if (now - last < REWARD_COOLDOWN) return;
-    rewardCooldowns.set(interactionUser.id, now);
+    rewardCooldowns.set(userId, now);
 
-    // ================================
+    // =============================
     // 🎯 PITY SYSTEM (no shiny impact)
-    // ================================
+    // =============================
     userObj.luck ??= 0;
 
     const BASE_CHANCE = MESSAGE_REWARD_CHANCE;  // 0.01
-    const MAX_CHANCE = 0.05;                    // 10%
-    const PITY_INCREMENT = 0.003;               // +0.5%
+    const MAX_CHANCE = 0.05;                    // 5%
+    const PITY_INCREMENT = 0.003;               // +0.3%
 
     // Increase pity every call
     userObj.luck = Math.min(MAX_CHANCE, userObj.luck + PITY_INCREMENT);
@@ -340,74 +336,72 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // Final chance
     const finalChance = Math.min(MAX_CHANCE, BASE_CHANCE + userObj.luck);
 
-    // Reward fails → keep pity, exit
+    // Reward fails → keep pity meter, exit
     if (Math.random() >= finalChance) {
       return;
     }
 
-    // Guaranteed reward → reset pity
+    // Reward occurred → reset pity meter
     userObj.luck = 0;
 
-    // ============================
-    // Load Pokémon + Trainer pools
-    // ============================
+    // =============================
+    // 🎲 ALWAYS POKÉMON (no trainers)
+    // =============================
     const allPokemon = await getAllPokemon();
 
-    let reward = null;
+    let reward;
     let isShiny = false;
-    let isPokemon = true; // always Pokémon now
-
-
 
     try {
-// 🎲 Pokémon-Only Reward (No Trainers)
-// ================================
-// Always select a Pokémon
-reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball");
-isShiny = rollForShiny(userObj.tp || 0);
+      reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball");
+      isShiny = rollForShiny(userObj.tp || 0);
 
-// Ensure inventory exists
-userObj.pokemon ??= {};
-userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
+      userObj.pokemon ??= {};
+      userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
 
-// Increment inventory
-if (isShiny) {
-  userObj.pokemon[reward.id].shiny++;
-} else {
-  userObj.pokemon[reward.id].normal++;
-}
+      if (isShiny) userObj.pokemon[reward.id].shiny++;
+      else userObj.pokemon[reward.id].normal++;
 
-console.log(
-  `🎁 Pokemon reward → ${isShiny ? "✨ shiny " : ""}${reward.name} (${reward.tier})`
-);
-
-} catch (err) {
-  console.error("❌ Reward selection failed:", err);
-  return;
-}
-    // Save
-    await saveTrainerDataLocal(trainerData);
-
-    // Sprite URL
-    let spriteUrl;
-    if (isPokemon) {
-      spriteUrl = isShiny
-        ? `${spritePaths.shiny}${reward.id}.gif`
-        : `${spritePaths.pokemon}${reward.id}.gif`;
+      console.log(
+        `🎁 Pokemon reward → ${isShiny ? "✨ shiny " : ""}${reward.name} (${reward.tier})`
+      );
+    } catch (err) {
+      console.error("❌ Reward selection failed:", err);
+      return;
     }
-    // Embed
+
+    // =============================
+    // 💾 SAVE (atomic)
+    // =============================
+    await enqueueSave(trainerData);
+
+    // =============================
+    // 🖼️ SPRITE
+    // =============================
+    let spriteUrl = isShiny
+      ? `${spritePaths.shiny}${reward.id}.gif`
+      : `${spritePaths.pokemon}${reward.id}.gif`;
+
+    // =============================
+    // 📣 PUBLIC ANNOUNCEMENT
+    // =============================
     const embed = createPokemonRewardEmbed(reward, isShiny, spriteUrl);
 
-    // Public announcement
     try {
-      const announcement = `🎉 <@${interactionUser.id}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`;
+      const announcement =
+        `🎉 <@${userId}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`;
 
-      await msgOrInteraction.channel.send({ content: announcement, embeds: [embed] });
+      await msgOrInteraction.channel.send({
+        content: announcement,
+        embeds: [embed]
+      });
     } catch (err) {
-      console.warn("⚠️ Public reward announcement failed:", err.message);
+      console.warn("⚠️ Public announcement failed:", err.message);
     }
 
-    // Global broadcast (Pokémon-only)
+    // =============================
+    // 🌐 GLOBAL BROADCAST
+    // =============================
     try {
       await broadcastReward(client, {
         user: interactionUser,
@@ -416,7 +410,7 @@ console.log(
           id: reward.id,
           name: reward.name,
           rarity: reward.tier || "common",
-          spriteFile: `${reward.id}.gif`, // safe; broadcastReward will path-resolve
+          spriteFile: `${reward.id}.gif`
         },
         shiny: isShiny,
         source: "random encounter",
@@ -426,16 +420,9 @@ console.log(
     }
 
     console.log(`✅ Reward granted to ${interactionUser.username}`);
-  }); // Close task async arrow function
-
-  // Chain lock
-  const newLock = lock.then(task).catch(err => {
-    console.error("❌ Atomic lock error in tryGiveRandomReward:", err);
   });
-
-  userLocks.set(userId, newLock);
-  return newLock;
 }
+
 
 // ==========================================================
 // 📂 COMMAND LOADER
@@ -787,7 +774,7 @@ app.post("/api/updateUser", express.json(), async (req, res) => {
       { ...trainerData[id], ...user }
     );
 
-    await saveTrainerDataLocal(trainerData);
+    await enqueueSave(trainerData);
 
     res.json({ success: true });
   });
@@ -883,7 +870,7 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
       // ----------------------------------------
       // 6️⃣ SAVE TRAINER DATA
       // ----------------------------------------
-      await saveTrainerDataLocal(trainerData);
+      await enqueueSave(trainerData);
 
 // ----------------------------------------
 // 7️⃣ BROADCAST IF RARE+
@@ -956,14 +943,17 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     try {
-      await command.execute(
+  await command.execute(
   interaction,
   trainerData,
-  saveTrainerDataLocal,
+  lockUser,
+  enqueueSave,
   saveDataToDiscord,
   client
 );
-      await saveTrainerDataLocal(trainerData);
+
+
+
 
     } catch (err) {
       console.error(`❌ ${interaction.commandName}:`, err.message);
@@ -1013,7 +1003,7 @@ app.post("/api/claim-weekly", express.json(), async (req, res) => {
     }
 
     user.lastWeeklyPack = new Date().toISOString();
-    await saveTrainerDataLocal(trainerData);
+    await enqueueSave(trainerData);
 
     res.json({ success: true });
   });
@@ -1088,7 +1078,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
     await givePokemon("rare");
 
     // Save once
-    await saveTrainerDataLocal(trainerData);
+    await enqueueSave(trainerData);
 
     res.json({
       success: true,
@@ -1146,7 +1136,7 @@ app.post("/api/set-trainer", express.json(), async (req, res) => {
       user.displayedTrainer = file;
       trainerData[id] = user;
 
-      await saveTrainerDataLocal(trainerData);
+      await enqueueSave(trainerData);
 
       console.log(`✅ ${id} equipped trainer ${file}`);
 
@@ -1209,7 +1199,7 @@ app.post("/api/unlock-trainer", express.json(), async (req, res) => {
     user.cc -= cost;
     user.trainers.push(file);
 
-    await saveTrainerDataLocal(trainerData);
+    await enqueueSave(trainerData);
 
     res.json({
       success: true,
@@ -1331,7 +1321,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       user.displayedPokemon = normalized;
       trainerData[id] = user;
 
-      await saveTrainerDataLocal(trainerData);
+      await enqueueSave(trainerData);
 
       res.json({ success: true });
     });
@@ -1351,19 +1341,12 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
   if (!validateToken(id, token))
     return res.status(403).json({ error: "Invalid or expired token" });
 
-  const user = trainerData[id];
-  if (!user)
+  if (!trainerData[id])
     return res.status(404).json({ error: "User not found" });
 
-  // ======================================
-  // ATOMIC LOCK START
-  // ======================================
-  if (!userLocks.has(id)) {
-    userLocks.set(id, Promise.resolve());
-  }
-  const lock = userLocks.get(id);
+  await lockUser(id, async () => {
+    const user = trainerData[id];
 
-  const task = async () => {
     const pokemonData = JSON.parse(
       fsSync.readFileSync("public/pokemonData.json", "utf8")
     );
@@ -1381,24 +1364,19 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
       "epic-epic": 4,
       "legendary-legendary": 6,
       "mythic-mythic": 8,
-
       "common-uncommon": 1,
       "uncommon-rare": 2,
       "rare-epic": 5,
       "epic-legendary": 8,
       "legendary-mythic": 12,
-
       "common-rare": 4,
       "common-epic": 8,
       "common-legendary": 12,
-
       "uncommon-epic": 8,
       "uncommon-legendary": 12,
       "uncommon-mythic": 14,
-
       "rare-legendary": 8,
       "rare-mythic": 14,
-
       "epic-mythic": 12
     };
 
@@ -1407,7 +1385,6 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
     const key = `${currentTier}-${nextTier}`;
 
     const cost = COST_MAP[key] ?? 0;
-
     if (cost <= 0)
       return res.status(400).json({
         error: `Evolution path ${currentTier} ➝ ${nextTier} is not supported`
@@ -1417,9 +1394,8 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
       return res.status(400).json({ error: "Not enough Evolution Stones." });
 
     const variant = shiny ? "shiny" : "normal";
-    const owned = user.pokemon?.[baseId]?.[variant] || 0;
 
-    if (owned <= 0)
+    if (!user.pokemon?.[baseId]?.[variant])
       return res.status(400).json({
         error: `You do not own a ${shiny ? "shiny " : ""}${base.name}.`
       });
@@ -1436,7 +1412,7 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
     user.pokemon[targetId] ??= { normal: 0, shiny: 0 };
     user.pokemon[targetId][variant] += 1;
 
-    await saveTrainerDataLocal(trainerData);
+    await enqueueSave(trainerData);
 
     return res.json({
       success: true,
@@ -1448,15 +1424,9 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
       },
       stonesRemaining: user.items.evolution_stone
     });
-  };
-
-  const newLock = lock.then(task).catch(err => {
-    console.error("❌ evolve atomic lock error:", err);
   });
-
-  userLocks.set(id, newLock);
-  return newLock;
 });
+
 
 // 💝 Donate Pokémon (normal + shiny supported, 5× CC for shiny)
 app.post("/api/pokemon/donate", express.json(), async (req, res) => {
@@ -1499,7 +1469,7 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
 
     user.cc = (user.cc ?? 0) + finalValue;
 
-    await saveTrainerDataLocal(trainerData);
+    await enqueueSave(trainerData);
 
     res.json({
       success: true,

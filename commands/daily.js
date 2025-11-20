@@ -1,12 +1,13 @@
 // ==========================================================
-// 🗓️ Coop's Collection — /daily (Final Stable v12)
+// 🗓️ Coop's Collection — /daily (Final v13, Safe + Correct)
 // ==========================================================
 // Rewards:
-//   • TWO Pokémon (rank-buffed odds)
+//   • TWO Pokémon (rank-buffed)
 //   • +500 CC
 //   • +100 TP
-//   • 10% chance evolution stone
-//   • Rare+ or shiny receives broadcast
+//   • 10% Evolution Stone chance
+//   • Three embeds with sprites
+//   • Schema-safe + URL-safe
 // ==========================================================
 
 import {
@@ -14,158 +15,134 @@ import {
   EmbedBuilder
 } from "discord.js";
 
-import fs from "fs/promises";
-import path from "path";
-
 import { safeReply } from "../utils/safeReply.js";
 import { enqueueSave } from "../utils/saveQueue.js";
-
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
+import { spritePaths } from "../spriteconfig.js";
+import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
 
-import { spritePaths } from "../spriteconfig.js"; 
-// spritePaths.pokemonNormal
-// spritePaths.pokemonShiny
-// spritePaths.items.evolutionStone
-
-const TRAINERDATA_PATH = path.resolve("./trainerData.json");
 
 // DAILY CONSTANTS
 const DAILY_CC = 500;
 const DAILY_TP = 100;
 const EVOLUTION_STONE_CHANCE = 0.10;
+const COOLDOWN_MS = 86400000; // 24 hours
+
 
 export const data = new SlashCommandBuilder()
   .setName("daily")
   .setDescription("Claim your daily reward (2 Pokémon + CC + TP)");
 
-export async function execute(interaction, client) {
+
+// ==========================================================
+// 🧩 EXECUTE DAILY
+// ==========================================================
+export async function execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
     const userId = interaction.user.id;
 
     // ======================================================
-    // LOAD trainerData.json
+    // ENSURE USER EXISTS (Normalized schema)
     // ======================================================
-    let trainerData = {};
-    try {
-      trainerData = JSON.parse(await fs.readFile(TRAINERDATA_PATH, "utf8"));
-    } catch {
-      trainerData = {};
-    }
-
-    // Ensure user structure
-    trainerData[userId] ??= {
-      cc: 0,
-      tp: 0,
-      items: { evolution_stone: 0 },
-      pokemon: {},
-      trainers: [],
-      displayedTrainer: null,
-      displayedPokemon: [],
-      onboardingComplete: false,
-      onboardingDate: null,
-      starterPokemon: null,
-      lastDaily: 0
-    };
-
+    trainerData[userId] ??= {};
+    trainerData[userId] = normalizeUserSchema(userId, trainerData[userId]);
     const user = trainerData[userId];
-    user.items ??= { evolution_stone: 0 };
-    user.items.evolution_stone ??= 0;
 
     // ======================================================
     // COOLDOWN CHECK
     // ======================================================
     const now = Date.now();
-    const cooldown = 86400000; // 24h
 
-    if (user.lastDaily && now - user.lastDaily < cooldown) {
-      const remaining = cooldown - (now - user.lastDaily);
+    if (user.lastDaily && now - user.lastDaily < COOLDOWN_MS) {
+      const remaining = COOLDOWN_MS - (now - user.lastDaily);
       const hours = Math.floor(remaining / 3600000);
       const minutes = Math.floor((remaining % 3600000) / 60000);
 
       return safeReply(interaction, {
-        content: `⏳ You already claimed your daily.\nReturn in **${hours}h ${minutes}m**.`,
-        ephemeral: true,
+        content: `⏳ You've already claimed your daily!\nCome back in **${hours}h ${minutes}m**.`,
+        ephemeral: true
       });
     }
 
     // ======================================================
-    // GET ALL POKÉMON
+    // LOAD POKEMON POOL
     // ======================================================
     const allPokemon = await getAllPokemon();
-
-    // TWO ROLLS (rank buff included)
-    const picks = [
-      selectRandomPokemonForUser(allPokemon, user, "pokeball"),
-      selectRandomPokemonForUser(allPokemon, user, "pokeball")
-    ];
-
-    for (let i = 0; i < picks.length; i++) {
-      if (!picks[i]) {
-        return safeReply(interaction, {
-          content: "❌ Daily failed — No Pokémon available.",
-          ephemeral: true,
-        });
-      }
+    if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
+      return safeReply(interaction, {
+        content: "❌ Daily reward failed — Pokémon data unavailable.",
+        ephemeral: true
+      });
     }
 
-    // Roll shiny for both
+    // ======================================================
+    // TWO RANK-BUFFED ROLLS
+    // ======================================================
+    const pick1 = selectRandomPokemonForUser(allPokemon, user, "pokeball");
+    const pick2 = selectRandomPokemonForUser(allPokemon, user, "pokeball");
+
+    if (!pick1 || !pick2) {
+      return safeReply(interaction, {
+        content: "❌ Daily failed — Unable to select Pokémon.",
+        ephemeral: true
+      });
+    }
+
+    // Shiny results
     const shiny1 = rollForShiny(user.tp);
     const shiny2 = rollForShiny(user.tp);
 
-    const results = [
-      {
-        pick: picks[0],
-        shiny: shiny1,
-        sprite: shiny1
-          ? `${spritePaths.pokemonShiny}${picks[0].id}.gif`
-          : `${spritePaths.pokemonNormal}${picks[0].id}.gif`
-      },
-      {
-        pick: picks[1],
-        shiny: shiny2,
-        sprite: shiny2
-          ? `${spritePaths.pokemonShiny}${picks[1].id}.gif`
-          : `${spritePaths.pokemonNormal}${picks[1].id}.gif`
-      }
-    ];
+    // Correct sprite URLs
+    const sprite1 = shiny1
+      ? `${spritePaths.shiny}${pick1.id}.gif`
+      : `${spritePaths.pokemon}${pick1.id}.gif`;
+
+    const sprite2 = shiny2
+      ? `${spritePaths.shiny}${pick2.id}.gif`
+      : `${spritePaths.pokemon}${pick2.id}.gif`;
 
     // ======================================================
     // SAVE TO USER INVENTORY
     // ======================================================
-    for (const r of results) {
-      const id = r.pick.id;
-      user.pokemon[id] ??= { normal: 0, shiny: 0 };
-      if (r.shiny) user.pokemon[id].shiny++;
-      else user.pokemon[id].normal++;
+    function addPokemon(p, shiny) {
+      user.pokemon[p.id] ??= { normal: 0, shiny: 0 };
+      if (shiny) user.pokemon[p.id].shiny++;
+      else user.pokemon[p.id].normal++;
+    }
 
-      const rarity = r.pick.tier || r.pick.rarity || "common";
+    addPokemon(pick1, shiny1);
+    addPokemon(pick2, shiny2);
 
-      // Broadcast
-      if (r.shiny || ["rare", "epic", "legendary", "mythic"].includes(rarity)) {
-        broadcastReward(client, {
-          user: { id: userId, username: interaction.user.username },
+    // ======================================================
+    // BROADCAST RARE+ OR SHINY
+    // ======================================================
+    async function maybeBroadcast(pick, shiny) {
+      const rarity = (pick.tier || pick.rarity || "common").toLowerCase();
+      if (shiny || ["rare", "epic", "legendary", "mythic"].includes(rarity)) {
+        await broadcastReward(client, {
+          user: interaction.user,
           type: "pokemon",
-          item: { id, name: r.pick.name, rarity, spriteFile: r.sprite },
-          shiny: r.shiny,
+          item: pick,
+          shiny,
           source: "daily"
-        });
+        }).catch(() => {});
       }
     }
 
+    await maybeBroadcast(pick1, shiny1);
+    await maybeBroadcast(pick2, shiny2);
+
     // ======================================================
-    // CC + TP
+    // CURRENCY / STONE
     // ======================================================
     user.cc += DAILY_CC;
     user.tp += DAILY_TP;
 
-    // ======================================================
-    // EVOLUTION STONE
-    // ======================================================
     let stoneAwarded = false;
     if (Math.random() < EVOLUTION_STONE_CHANCE) {
       user.items.evolution_stone++;
@@ -175,37 +152,38 @@ export async function execute(interaction, client) {
     user.lastDaily = now;
 
     // ======================================================
-    // SAVE
+    // SAVE (queued)
     // ======================================================
     await enqueueSave(trainerData);
 
     // ======================================================
-    // THREE EMBEDS — POKEMON 1, POKEMON 2, REWARD SUMMARY
+    // EMBEDS — Pokémon 1, Pokémon 2, Summary
     // ======================================================
     const embed1 = new EmbedBuilder()
-      .setTitle("🎁 Daily Pokémon #1")
+      .setTitle(`🎁 Daily Pokémon #1 ${shiny1 ? "✨" : ""}`)
       .setColor("#5bc0de")
       .setDescription(
-        `${results[0].shiny ? "✨ " : ""}**${results[0].pick.name}**\n` +
-        `Rarity: **${(results[0].pick.tier || results[0].pick.rarity || "common").toUpperCase()}**`
+        `**${pick1.name}**\n` +
+        `Rarity: **${(pick1.tier || pick1.rarity || "common").toUpperCase()}**`
       )
-      .setImage(results[0].sprite);
+      .setImage(sprite1);
 
     const embed2 = new EmbedBuilder()
-      .setTitle("🎁 Daily Pokémon #2")
+      .setTitle(`🎁 Daily Pokémon #2 ${shiny2 ? "✨" : ""}`)
       .setColor("#5bc0de")
       .setDescription(
-        `${results[1].shiny ? "✨ " : ""}**${results[1].pick.name}**\n` +
-        `Rarity: **${(results[1].pick.tier || results[1].pick.rarity || "common").toUpperCase()}**`
+        `**${pick2.name}**\n` +
+        `Rarity: **${(pick2.tier || pick2.rarity || "common").toUpperCase()}**`
       )
-      .setImage(results[1].sprite);
+      .setImage(sprite2);
 
     const rewardEmbed = new EmbedBuilder()
       .setTitle("🗓️ Daily Rewards")
-      .setColor("#5bc0de")
+      .setColor("#28a745")
       .addFields(
         { name: "💰 CC", value: `+${DAILY_CC}`, inline: true },
         { name: "⭐ TP", value: `+${DAILY_TP}`, inline: true },
+        { name: "📊 New Balance", value: `${user.cc} CC | ${user.tp} TP`, inline: false }
       );
 
     if (stoneAwarded) {
@@ -213,7 +191,7 @@ export async function execute(interaction, client) {
         name: "💎 Evolution Stone",
         value: "You received **1x Evolution Stone**!"
       });
-      rewardEmbed.setThumbnail(spritePaths.items.evolutionStone);
+      rewardEmbed.setThumbnail(`${spritePaths.items}evolution_stone.png`);
     }
 
     return safeReply(interaction, {
@@ -223,8 +201,9 @@ export async function execute(interaction, client) {
 
   } catch (err) {
     console.error("❌ DAILY ERROR:", err);
+
     return safeReply(interaction, {
-      content: "❌ Something went wrong while processing /daily.",
+      content: "❌ An error occurred processing your daily reward.",
       ephemeral: true
     });
   }

@@ -1439,85 +1439,12 @@ client.once("ready", async () => {
       process.exit(1); // ⛔ prevents wipe
     }
 
-    trainerData = sanitizeTrainerData(trainerData); // 🧼 Clean it immediately
+    //trainerData = sanitizeTrainerData(trainerData); // 🧼 Clean it immediately
 
   } catch (err) {
     console.error("❌ Trainer data load failed:", err.message);
     console.error("❌ Startup aborted to prevent DATA LOSS.");
     process.exit(1); // ⛔ stops bot before it wipes JSON
-  }
-
-
-  // ==========================================================
-  // 🧹 AUTO-CLEAN: Remove invalid or unowned displayedTrainer & displayedPokemon
-  // ==========================================================
-  try {
-    // ---------- TRAINER CLEANUP ----------
-    const trainerSpriteDir = path.join(process.cwd(), "public/sprites/trainers_2");
-    const validTrainerFiles = new Set(
-      fsSync
-        .readdirSync(trainerSpriteDir)
-        .filter(f => f.toLowerCase().endsWith(".png"))
-        .map(f => f.toLowerCase())
-    );
-
-    let cleanedTrainers = 0;
-    for (const [id, user] of Object.entries(trainerData)) {
-      if (!user.displayedTrainer) continue;
-      const normalized = user.displayedTrainer.toLowerCase().trim();
-      const ownsTrainer =
-  Array.isArray(user.trainers) &&
-  user.trainers.some(t => t.toLowerCase().trim() === normalized);
-
-
-      if (!validTrainerFiles.has(normalized) || !ownsTrainer) {
-        console.warn(
-          `⚠️ Removed invalid or unowned trainer for ${id}: ${user.displayedTrainer}`
-        );
-        delete user.displayedTrainer;
-        cleanedTrainers++;
-      }
-    }
-
-    // ---------- POKÉMON CLEANUP ----------
-    const pokemonPath = path.join(process.cwd(), "public/pokemonData.json");
-    let validPokemonIDs = new Set();
-    try {
-      const pokemonData = JSON.parse(fsSync.readFileSync(pokemonPath, "utf8"));
-      validPokemonIDs = new Set(Object.keys(pokemonData).map(k => Number(k)));
-    } catch (err) {
-      console.warn("⚠️ Could not read pokemonData.json — skipping displayedPokemon validation.");
-    }
-
-    let cleanedPokemon = 0;
-    for (const [id, user] of Object.entries(trainerData)) {
-      if (!Array.isArray(user.displayedPokemon)) continue;
-      const before = user.displayedPokemon.length;
-      user.displayedPokemon = user.displayedPokemon.filter(pid => {
-        const owned =
-          user.pokemon?.[pid] &&
-          ((typeof user.pokemon[pid] === "number" && user.pokemon[pid] > 0) ||
-            user.pokemon[pid].normal > 0 ||
-            user.pokemon[pid].shiny > 0);
-        return validPokemonIDs.has(Number(pid)) && owned;
-      });
-      if (user.displayedPokemon.length < before) {
-        cleanedPokemon++;
-        console.warn(`⚠️ Removed invalid or unowned Pokémon for ${id}`);
-      }
-    }
-
-    // ---------- SUMMARY ----------
-    if (cleanedTrainers > 0 || cleanedPokemon > 0) {
-      console.log(
-        `🧹 Cleaned ${cleanedTrainers} invalid/unowned trainer(s) and ${cleanedPokemon} invalid/unowned Pokémon team(s)`
-      );
-      await saveDataToDiscord(trainerData);
-    } else {
-      console.log("✅ No invalid or unowned displayedTrainer/displayedPokemon entries found");
-    }
-  } catch (err) {
-    console.error("❌ Auto-clean failed:", err.message);
   }
 
   // ==========================================================

@@ -908,13 +908,14 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
         ["rare", "epic", "legendary", "mythic"].includes(rarity.toLowerCase())
       ) {
         try {
-          await broadcastReward(req.app.get("client"), {
-            user: { id, username: user.username || "Unknown" },
-            type: "pokemon",
-            item: reward,
-            shiny,
-            source,
-          });
+          await broadcastReward(client, {
+  user: { id, username: user.username || "Unknown" },
+  type: "pokemon",
+  item: reward,
+  shiny,
+  source,
+});
+
         } catch (err) {
           console.warn("⚠️ Broadcast failed:", err.message);
         }
@@ -1004,26 +1005,24 @@ app.post("/api/claim-weekly", express.json(), async (req, res) => {
   if (!validateToken(id, token))
     return res.status(403).json({ error: "Invalid or expired token" });
 
-  const user = trainerData[id];
-  if (!user)
-    return res.status(404).json({ error: "User not found" });
+  await lockUser(id, async () => {
+    const user = trainerData[id];
+    if (!user)
+      return res.status(404).json({ error: "User not found" });
 
-  // 🔥 HARD COOL DOWN CHECK
-  const last = user.lastWeeklyPack ? new Date(user.lastWeeklyPack).getTime() : 0;
-  const now = Date.now();
-  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    const last = user.lastWeeklyPack ? new Date(user.lastWeeklyPack).getTime() : 0;
+    const now = Date.now();
+    const sevenDays = 604800000;
 
-  if (now - last < sevenDays) {
-    return res.status(400).json({ error: "Weekly pack already claimed." });
-  }
+    if (now - last < sevenDays) {
+      return res.status(400).json({ error: "Weekly pack already claimed." });
+    }
 
-  // Set cooldown FIRST (prevents spam + refresh exploits)
-  user.lastWeeklyPack = new Date().toISOString();
+    user.lastWeeklyPack = new Date().toISOString();
+    await saveTrainerDataLocal(trainerData);
 
-  await saveTrainerDataLocal(trainerData);
-
-
-  res.json({ success: true });
+    res.json({ success: true });
+  });
 });
 
 // ==========================================================
@@ -1138,35 +1137,31 @@ let lastTrainerSave = 0; // global throttle timestamp
 app.post("/api/set-trainer", express.json(), async (req, res) => {
   try {
     const { id, token, name, file } = req.body;
-    if (!id || !token || !file) {
-      console.warn("⚠️ Missing fields in /api/set-trainer", req.body);
-      return res.status(400).json({ success: false, error: "Missing id, token, or file" });
-    }
 
-    // ✅ Validate token
-    if (!validateToken(id, token)) {
-      console.warn("⚠️ Invalid or expired token for", id);
+    if (!id || !token || !file)
+      return res.status(400).json({ success: false, error: "Missing id/token/file" });
+
+    if (!validateToken(id, token))
       return res.status(403).json({ success: false, error: "Invalid or expired token" });
-    }
 
-    // ✅ Ensure user exists
-    const user = trainerData[id];
-    if (!user) {
-      console.warn("⚠️ User not found:", id);
-      return res.status(404).json({ success: false, error: "User not found" });
-    }
+    await lockUser(id, async () => {
+      const user = trainerData[id];
+      if (!user)
+        return res.status(404).json({ success: false, error: "User not found" });
 
-    // ✅ Equip trainer locally
-    user.displayedTrainer = file;
-    trainerData[id] = user;
-    await saveTrainerDataLocal(trainerData);
+      user.displayedTrainer = file;
+      trainerData[id] = user;
 
-    console.log(`✅ ${id} equipped trainer ${file}`);
+      await saveTrainerDataLocal(trainerData);
 
-    res.json({ success: true });
+      console.log(`✅ ${id} equipped trainer ${file}`);
+
+      res.json({ success: true });
+    });
+
   } catch (err) {
     console.error("❌ /api/set-trainer failed:", err.message);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false });
   }
 });
 
@@ -1271,24 +1266,25 @@ app.get("/api/user-pokemon", (req, res) => {
   if (!user)
     return res.status(404).json({ error: "User not found" });
 
-  // --- ensure schema consistency ---
-  user.items ??= { evolution_stone: 0 };
-  user.cc ??= 0;
-  user.tp ??= 0;
-  user.rank = getRank(user.tp);   // always derive from TP
-  user.pokemon ??= {};
-  user.displayedPokemon ??= [];
+  // --- ensure schema consistency (read-safe) ---
+const items = user.items ?? { evolution_stone: 0 };
+const cc = user.cc ?? 0;
+const tp = user.tp ?? 0;
+const rank = getRank(tp);
+const pokemon = user.pokemon ?? {};
+const currentTeam = user.displayedPokemon ?? [];
 
-  // flatten response for front-end
-  res.json({
-    id: user.id,
-    cc: user.cc,
-    tp: user.tp,
-    rank: user.rank,
-    items: user.items,
-    pokemon: user.pokemon,
-    currentTeam: user.displayedPokemon,
-  });
+// flatten response for front-end
+res.json({
+  id: user.id,
+  cc,
+  tp,
+  rank,
+  items,
+  pokemon,
+  currentTeam,
+});
+
 });
 // ✅ POST — set full Pokémon team (up to 6) — Debounced Discord Save
 let lastTeamSave = 0; // global throttle timestamp
@@ -1297,52 +1293,40 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   try {
     const { id, token, team } = req.body;
 
-    // Basic validation
-    if (!id || !token || !Array.isArray(team)) {
-      return res.status(400).json({ success: false, error: "Missing id, token, or team array" });
-    }
-    if (!validateToken(id, token)) {
+    if (!id || !token || !Array.isArray(team))
+      return res.status(400).json({ success: false, error: "Missing id/token/team" });
+
+    if (!validateToken(id, token))
       return res.status(403).json({ success: false, error: "Invalid or expired token" });
-    }
-    const user = trainerData[id];
-    if (!user) {
-      return res.status(404).json({ success: false, error: "User not found" });
-    }
 
-    // Normalize & validate team list (1–6 unique ints)
-    const normalized = [...new Set(team.map(n => Number(n)).filter(n => Number.isInteger(n)))];
-    if (normalized.length === 0 || normalized.length > 6) {
-      return res.status(400).json({ success: false, error: "Team must contain 1–6 valid Pokémon IDs" });
-    }
+    await lockUser(id, async () => {
+      const user = trainerData[id];
+      if (!user)
+        return res.status(404).json({ success: false, error: "User not found" });
 
-    // (Optional) ensure each chosen ID is actually owned
-    const owns = (pid) => {
-      const p = user.pokemon?.[pid];
-      return !!p && ((typeof p === "number" && p > 0) || p.normal > 0 || p.shiny > 0);
-    };
-    const unowned = normalized.filter(pid => !owns(pid));
-    if (unowned.length) {
-      return res.status(400).json({ success: false, error: `You don't own: ${unowned.join(", ")}` });
-    }
+      const normalized = [...new Set(team.map(n => Number(n)).filter(n => Number.isInteger(n)))];
+      if (normalized.length === 0 || normalized.length > 6)
+        return res.status(400).json({ success: false, error: "Team must be 1–6 unique IDs" });
 
-    // ✅ Schema-compliant write
-    delete user.team; // no team field in schema
-    user.displayedPokemon = normalized;                // <-- array of up to 6
-    // lead is the first element; no separate field needed
+      // Ensure ownership
+      const owns = pid => {
+        const p = user.pokemon?.[pid];
+        return !!p && (p.normal > 0 || p.shiny > 0);
+      };
+      const unowned = normalized.filter(pid => !owns(pid));
+      if (unowned.length)
+        return res.status(400).json({ success: false, error: `Unowned Pokémon: ${unowned.join(", ")}` });
 
-    trainerData[id] = user;
-    await saveTrainerDataLocal(trainerData);
+      user.displayedPokemon = normalized;
+      trainerData[id] = user;
 
-    // Debounced Discord backup
-    const now = Date.now();
-    if (now - lastTeamSave > 60_000) {
-      lastTeamSave = now;
-    }
+      await saveTrainerDataLocal(trainerData);
+      res.json({ success: true });
+    });
 
-    res.json({ success: true });
   } catch (err) {
-    console.error("❌ /api/set-pokemon-team failed:", err.message);
-    res.status(500).json({ success: false, error: err.message });
+    console.error("❌ /api/set-pokemon-team:", err.message);
+    res.status(500).json({ success: false });
   }
 });
 

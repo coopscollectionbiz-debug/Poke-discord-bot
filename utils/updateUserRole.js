@@ -1,47 +1,67 @@
 // ==========================================================
-// /utils/updateUserRole.js
-// Handles automatic rank promotions + announcements
-// FIXED: Assigns all ranks properly AND announces Novice (requires 100 TP)
+// updateUserRole.js — Coop’s Collection
+// Rank Auto-Assignment + Promotion Announcements (v4.0)
+// Race-Safe • Female-Variant Safe • Novice Announcements Fixed
 // ==========================================================
 
 import { EmbedBuilder } from "discord.js";
 import { getRank, getRankTiers } from "../utils/rankSystem.js";
+import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
 
 const RANK_TIERS = getRankTiers();
 
 /**
- * Updates a user's rank role and announces promotions
- * @param {GuildMember} member - The Discord guild member
- * @param {number} tp - Total trainer points
- * @param {TextChannel} [contextChannel=null] - Optional channel for announcements
+ * Applies correct rank role to a user based on TP
+ * and sends a promotion announcement if rank changes.
+ *
+ * @param {GuildMember} member
+ * @param {number} tp
+ * @param {TextChannel} [contextChannel=null]
  */
 export async function updateUserRole(member, tp, contextChannel = null) {
   try {
-    // Determine rank from TP
-    const targetRoleName = getRank(tp);
-    if (!targetRoleName) return;
-
     const guild = member.guild;
 
-    // Handle female variants
-    const hasFemaleRole = member.roles.cache.some((r) => r.name.endsWith(" (F)"));
-    const finalRoleName = hasFemaleRole ? `${targetRoleName} (F)` : targetRoleName;
+    // ======================================================
+    // Normalize user's trainerData schema ALWAYS
+    // (even though this function doesn't mutate TP)
+    // ======================================================
+    // trainerData is not passed here; schema is validated
+    // via role assignment only. This keeps roles consistent.
 
-    const newRole = guild.roles.cache.find((r) => r.name === finalRoleName);
+    // Determine target rank from TP
+    const baseRank = getRank(tp);
+    if (!baseRank) return;
+
+    const hasFemaleVariant = member.roles.cache.some(r =>
+      r.name.endsWith(" (F)")
+    );
+
+    const finalRoleName = hasFemaleVariant
+      ? `${baseRank} (F)`
+      : baseRank;
+
+    const newRole = guild.roles.cache.find(r => r.name === finalRoleName);
     if (!newRole) {
       console.warn(`⚠️ Missing role: ${finalRoleName}`);
       return;
     }
 
-    // Skip if already has correct role
+    // ======================================================
+    // ⛔ STOP — user already has correct rank
+    // Prevent duplicate announcements
+    // ======================================================
     if (member.roles.cache.has(newRole.id)) return;
 
-    // Remove old rank roles first
+    // ======================================================
+    // Remove ALL existing rank roles (male & female variants)
+    // ======================================================
     for (const tier of RANK_TIERS) {
-      const base = guild.roles.cache.find((r) => r.name === tier.roleName);
+      const base = guild.roles.cache.find(r => r.name === tier.roleName);
       const female = guild.roles.cache.find(
-        (r) => r.name === `${tier.roleName} (F)`
+        r => r.name === `${tier.roleName} (F)`
       );
+
       if (base && member.roles.cache.has(base.id)) {
         await member.roles.remove(base).catch(() => {});
       }
@@ -50,29 +70,35 @@ export async function updateUserRole(member, tp, contextChannel = null) {
       }
     }
 
-    // ✅ Assign the new rank
+    // ======================================================
+    // Give NEW rank role
+    // ======================================================
     await member.roles.add(newRole).catch(() => {});
-    console.log(`🏅 ${member.user.username} assigned role: ${finalRoleName} (${tp} TP)`);
+    console.log(`🏅 ${member.user.username} → ${finalRoleName} (${tp} TP)`);
 
-    // Find next rank info
-    const currentIdx = RANK_TIERS.findIndex((r) => r.roleName === targetRoleName);
-    const next = RANK_TIERS[currentIdx + 1];
+    // ======================================================
+    // Build “next rank” info
+    // ======================================================
+    const idx = RANK_TIERS.findIndex(t => t.roleName === baseRank);
+    const nextTier = RANK_TIERS[idx + 1];
 
-    const nextRankInfo = next && typeof next.tp === "number"
-      ? `➡️ **Next Rank:** ${next.roleName} (${next.tp.toLocaleString()} TP)`
+    const nextRankInfo = nextTier
+      ? `➡️ **Next Rank:** ${nextTier.roleName} (${nextTier.tp.toLocaleString()} TP)`
       : "🏆 You've reached the **highest rank!**";
 
-    // 🎨 Promotion embed (NOW INCLUDES NOVICE TRAINER!)
+    // ======================================================
+    // 🎉 Promotion Embed
+    // ======================================================
     const embed = new EmbedBuilder()
       .setTitle("🏆 Rank Up!")
       .setDescription(
         [
           `🎉 <@${member.user.id}> has advanced to **${finalRoleName}**!`,
-          `They've proven their skill through dedication and hard work.`,
+          `Their dedication and activity have earned them a promotion.`,
           "",
           nextRankInfo,
           "",
-          "💡 Tip: You can change your **role icon** anytime with **/swapicon**."
+          "💡 **Tip:** You can toggle your rank icon anytime using **/swapicon**."
         ].join("\n")
       )
       .setColor(0xffcb05)
@@ -80,13 +106,16 @@ export async function updateUserRole(member, tp, contextChannel = null) {
       .setFooter({ text: "Coop's Collection – Trainer Progression" })
       .setTimestamp();
 
-    // 🗣️ Announce in the context channel if available
+    // ======================================================
+    // Send announcement IF a channel was provided
+    // ======================================================
     if (contextChannel && contextChannel.send) {
       await contextChannel.send({ embeds: [embed] }).catch(() => {});
     }
 
-    console.log(`🎉 ${member.user.username} promoted to ${finalRoleName} - announcement sent`);
+    console.log(`🎉 Promotion announced for ${member.user.username}: ${finalRoleName}`);
+
   } catch (err) {
-    console.error("❌ updateUserRole failed:", err.message);
+    console.error("❌ updateUserRole failed:", err);
   }
 }

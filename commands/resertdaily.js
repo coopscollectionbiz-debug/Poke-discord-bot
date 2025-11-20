@@ -1,13 +1,12 @@
 // ==========================================================
-// 🕐 /resetdaily – Admin Tool
-// ==========================================================
-// Allows authorized users (admins) to reset another user's daily cooldown.
-// Useful for testing or manual corrections.
+// 🕐 /resetdaily – Admin Tool (Race-Safe v3.2)
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { atomicSave } from "../utils/saveManager.js";
+import { lockUser } from "../utils/userLocks.js";
+import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -29,7 +28,16 @@ export default {
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
     try {
+      // Prevent Discord timeout
       await interaction.deferReply({ ephemeral: true });
+
+      // Permission check
+      if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
+        return safeReply(interaction, {
+          content: "⛔ You do not have permission to use this command.",
+          ephemeral: true,
+        });
+      }
 
       const targetUser = interaction.options.getUser("user");
       const resetStreak = interaction.options.getBoolean("resetstreak") || false;
@@ -42,32 +50,54 @@ export default {
       }
 
       const userId = targetUser.id;
-      const user = trainerData[userId];
 
-      if (!user) {
-        return safeReply(interaction, {
-          content: `❌ No trainer data found for <@${userId}>.`,
+      // ======================================================
+      // 🔒 ATOMIC LOCK (ALL operations inside this block)
+      // ======================================================
+      return lockUser(userId, async () => {
+        let user = trainerData[userId];
+
+        if (!user) {
+          return safeReply(interaction, {
+            content: `❌ No trainer data found for <@${userId}>.`,
+            ephemeral: true,
+          });
+        }
+
+        // Normalize BEFORE making changes
+        user = normalizeUserSchema(userId, user);
+        trainerData[userId] = user;
+
+        // ======================================================
+        // 🌀 RESET DAILY
+        // ======================================================
+        user.lastDaily = 0;
+
+        if (resetStreak) {
+          // Don’t assume a streak object exists
+          user.dailyStreak = 0;
+        }
+
+        // ======================================================
+        // 💾 SAVE (atomic local + Discord)
+        // ======================================================
+        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+
+        // ======================================================
+        // 🟢 REPLY TO ADMIN
+        // ======================================================
+        await safeReply(interaction, {
+          content: `✅ Daily reset for **${targetUser.username}** ${
+            resetStreak ? "and streak cleared." : "successfully."
+          }`,
           ephemeral: true,
         });
-      }
 
-      // ✅ Reset their daily cooldown
-      user.lastDaily = 0;
-      if (resetStreak && user.daily) {
-        user.daily.streak = 0;
-      }
-
-      // 💾 Save changes
-      await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-
-      await safeReply(interaction, {
-        content: `✅ Daily reset for **${targetUser.username}** ${
-          resetStreak ? "and streak cleared." : "successfully."
-        }`,
-        ephemeral: true,
+        console.log(
+          `🧭 /resetdaily used by ${interaction.user.tag} on ${targetUser.tag}`
+        );
       });
 
-      console.log(`🧭 /resetdaily used by ${interaction.user.tag} on ${targetUser.tag}`);
     } catch (err) {
       console.error("❌ /resetdaily error:", err);
       return safeReply(interaction, {

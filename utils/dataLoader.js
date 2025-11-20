@@ -138,36 +138,34 @@ function flattenTrainerSprites(spritesObj) {
   for (const [key, info] of Object.entries(spritesObj)) {
     const lowerKey = key.toLowerCase();
 
-    const spriteArray = Array.isArray(info.sprites)
-  ? info.sprites
-      .map((s) => {
-        // Case 1: simple string
-        if (typeof s === "string") {
-          return s.toLowerCase();
-        }
+    // Build sprite array from strings or {file}
+    let spriteArray = [];
 
-        // Case 2: object entry { file, disabled }
-        if (typeof s === "object" && s?.file) {
-          if (s.disabled) return null;
-          return String(s.file).toLowerCase();
-        }
+    if (Array.isArray(info.sprites)) {
+      spriteArray = info.sprites
+        .map(s => {
+          if (typeof s === "string") return s.toLowerCase();
+          if (typeof s === "object" && s?.file && !s.disabled)
+            return String(s.file).toLowerCase();
+          return null;
+        })
+        .filter(Boolean);
+    }
 
-        return null;
-      })
-      .filter(Boolean)
-  : (() => {
-      // If no sprites array, create a fallback string → .png
-      const fallback = `${lowerKey}.png`;
-      return [fallback];
-    })();
+    // 🔒 Fallback — if no valid sprites, generate a predictable filename
+    if (spriteArray.length === 0) {
+      spriteArray = [`${lowerKey}.png`];
+    }
+
+    const spriteFile = spriteArray[0];
 
     flat.push({
       id: lowerKey,
       name: lowerKey.charAt(0).toUpperCase() + lowerKey.slice(1),
       tier: info.tier || "Common",
       sprites: spriteArray,
-      filename: spriteArray[0],
-      spriteFile: spriteArray[0],
+      filename: spriteFile,
+      spriteFile: spriteFile,
     });
   }
 

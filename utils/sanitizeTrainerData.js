@@ -7,7 +7,15 @@ export async function sanitizeTrainerData(trainerData) {
   const flat = await getFlattenedTrainers();
 
   // Valid sprite filenames: ["lass-gen4.png", "sailor-gen3.png", "miku-fire.png", ...]
-  const VALID = new Set(flat.map(t => t.spriteFile.toLowerCase()));
+  const VALID = new Set(
+  flat
+    .map(t => t?.spriteFile && typeof t.spriteFile === "string"
+      ? t.spriteFile.toLowerCase()
+      : null
+    )
+    .filter(Boolean)
+);
+
 
   let fixedUsers = 0;
   let removed = 0;

@@ -844,17 +844,18 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
     await saveTrainerDataLocal(trainerData);
 
     res.json({
-      success: true,
-      pokemon: {
-        id: reward.id,
-        name: reward.name,
-        rarity: reward.tier || reward.rarity || "common",
-        shiny,
-        sprite: shiny
-          ? `/public/sprites/pokemon/shiny/${reward.id}.gif`
-          : `/public/sprites/pokemon/normal/${reward.id}.gif`
-      }
-    });
+  success: true,
+  pokemon: {
+    id: reward.id,
+    name: reward.name,
+    rarity: reward.tier || reward.rarity || "common",
+    shiny,
+    sprite: shiny
+      ? `${spritePaths.shiny}${reward.id}.gif`
+      : `${spritePaths.pokemon}${reward.id}.gif`
+  }
+});
+
   });
 });
 

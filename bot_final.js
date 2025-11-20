@@ -809,89 +809,141 @@ app.post("/api/updateUser", express.json(), async (req, res) => {
 // 🛍️ SHOP API — POKÉMON REWARD (Atomic, CC-safe, Exploit-proof)
 // ==========================================================
 app.post("/api/rewardPokemon", express.json(), async (req, res) => {
-  const { id, token, source } = req.body;
-
-  if (!validateToken(id, token))
-    return res.status(403).json({ error: "Invalid token" });
-
-  if (!trainerData[id])
-    return res.status(404).json({ error: "User not found" });
-
-  await lockUser(id, async () => {
-    const user = trainerData[id];
+  try {
+    const { id, token, source } = req.body;
 
     // ======================================================
-    // ✅ 1. SERVER-SIDE CC DEDUCTION (SECURE)
+    // 🔐 TOKEN & USER VALIDATION
     // ======================================================
-    const costMap = {
+    if (!validateToken(id, token))
+      return res.status(403).json({ success: false, error: "Invalid token" });
+
+    if (!trainerData[id])
+      return res.status(404).json({ success: false, error: "User not found" });
+
+    // ======================================================
+    // 🧱 COST MAP (canonical)
+    // ======================================================
+    const COST = {
       pokeball: 500,
       greatball: 1000,
       ultraball: 2500,
     };
 
-    const cost = costMap[source];
-    if (!cost)
-      return res.json({ success: false, error: "Invalid Poké Ball type" });
-
-    if ((user.cc ?? 0) < cost)
+    if (!COST[source]) {
       return res.json({
         success: false,
-        error: `Not enough CC. Requires ${cost} CC.`,
-      });
-
-    // Deduct CC BEFORE generating reward (prevents cancel exploit)
-    user.cc -= cost;
-
-    // ======================================================
-    // 🎯 2. SELECT POKÉMON (rank-buffed + ball-aware)
-    // ======================================================
-    const allPokemon = await getAllPokemon();
-    const reward = selectRandomPokemonForUser(allPokemon, user, source);
-
-    if (!reward) {
-      return res.json({
-        success: false,
-        error: "No Pokémon could be selected.",
+        error: `Invalid Poké Ball type: ${source}`,
       });
     }
 
     // ======================================================
-    // ✨ 3. SHINY ROLL
+    // 🔒 ATOMIC USER LOCK
     // ======================================================
-    const shiny = rollForShiny(user.tp || 0);
+    await lockUser(id, async () => {
+      const user = trainerData[id];
 
-    // ======================================================
-    // 🗂️ 4. SAFE INVENTORY UPDATE
-    // ======================================================
-    user.pokemon ??= {};
-    user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
+      // ----------------------------------------
+      // 1️⃣ SERVER-SIDE CC CHECK
+      // ----------------------------------------
+      if ((user.cc ?? 0) < COST[source]) {
+        return res.json({
+          success: false,
+          error: `Not enough CC — requires ${COST[source]} CC.`,
+        });
+      }
 
-    if (shiny) user.pokemon[reward.id].shiny++;
-    else user.pokemon[reward.id].normal++;
+      // ----------------------------------------
+      // 2️⃣ LOAD POKEMON POOL
+      // ----------------------------------------
+      const allPokemon = await getAllPokemon();
+      if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
+        return res.json({
+          success: false,
+          error: "Pokémon pool unavailable.",
+        });
+      }
 
-    // ======================================================
-    // 💾 5. SAVE ATOMICALLY
-    // ======================================================
-    await saveTrainerDataLocal(trainerData);
+      // ----------------------------------------
+      // 3️⃣ SELECT POKÉMON (ball + rank aware)
+      // ----------------------------------------
+      const reward = selectRandomPokemonForUser(allPokemon, user, source);
+      if (!reward) {
+        return res.json({
+          success: false,
+          error: "No Pokémon could be selected.",
+        });
+      }
 
-    // ======================================================
-    // 🖼️ 6. RESPONSE TO SHOP
-    // ======================================================
-    res.json({
-      success: true,
-      pokemon: {
-        id: reward.id,
-        name: reward.name,
-        rarity: reward.tier || reward.rarity || "common",
-        shiny,
-        sprite: shiny
-          ? `${spritePaths.shiny}${reward.id}.gif`
-          : `${spritePaths.pokemon}${reward.id}.gif`,
-      },
-      cc: user.cc, // send updated CC back to UI
+      // ----------------------------------------
+      // 4️⃣ SHINY ROLL
+      // ----------------------------------------
+      const shiny = rollForShiny(user.tp || 0);
+
+      // ----------------------------------------
+      // 5️⃣ APPLY CHARGES & ITEMS (Atomic)
+      // ----------------------------------------
+      user.cc -= COST[source];
+
+      user.pokemon ??= {};
+      user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
+
+      if (shiny) user.pokemon[reward.id].shiny++;
+      else user.pokemon[reward.id].normal++;
+
+      // ----------------------------------------
+      // 6️⃣ SAVE TRAINER DATA
+      // ----------------------------------------
+      await saveTrainerDataLocal(trainerData);
+
+      // ----------------------------------------
+      // 7️⃣ BROADCAST IF RARE+
+      // ----------------------------------------
+      const rarity = reward.tier || reward.rarity || "common";
+      if (
+        shiny ||
+        ["rare", "epic", "legendary", "mythic"].includes(rarity.toLowerCase())
+      ) {
+        try {
+          await broadcastReward(req.app.get("client"), {
+            user: { id, username: user.username || "Unknown" },
+            type: "pokemon",
+            item: reward,
+            shiny,
+            source,
+          });
+        } catch (err) {
+          console.warn("⚠️ Broadcast failed:", err.message);
+        }
+      }
+
+      // ----------------------------------------
+      // 8️⃣ RESPOND TO FRONTEND WITH NEW CC & SPRITE
+      // ----------------------------------------
+      return res.json({
+        success: true,
+        pokemon: {
+          id: reward.id,
+          name: reward.name,
+          rarity,
+          shiny,
+          sprite: shiny
+            ? `${spritePaths.shiny}${reward.id}.gif`
+            : `${spritePaths.pokemon}${reward.id}.gif`,
+        },
+        cc: user.cc,
+      });
     });
-  });
+
+  } catch (err) {
+    console.error("❌ /api/rewardPokemon ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error while generating Pokémon reward.",
+    });
+  }
 });
+
 
 
 // ==========================================================

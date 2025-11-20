@@ -1,71 +1,38 @@
 // utils/sanitizeTrainerData.js
-export function sanitizeTrainerData(trainerData) {
+// NEW SCHEMA SANITIZER — SAFE FOR FLATTENED TRAINERS
+
+import { getFlattenedTrainers } from "./dataLoader.js";
+
+export async function sanitizeTrainerData(trainerData) {
+  const flat = await getFlattenedTrainers();
+
+  // Valid sprite filenames: ["lass-gen4.png", "sailor-gen3.png", "miku-fire.png", ...]
+  const VALID = new Set(flat.map(t => t.spriteFile.toLowerCase()));
+
   let fixedUsers = 0;
   let removed = 0;
 
   for (const [userId, user] of Object.entries(trainerData)) {
-    if (!user.trainers) continue;
+    if (!Array.isArray(user.trainers)) continue;
 
-    // ==========================================
-    // NEW SCHEMA: trainers = [ "file.png", ... ]
-    // ==========================================
-    if (Array.isArray(user.trainers)) {
-      const before = user.trainers.length;
+    const before = user.trainers.length;
 
-      const cleaned = [
-        ...new Set( // dedupe
-          user.trainers.filter(
-            (t) =>
-              typeof t === "string" &&
-              (t.endsWith(".png") ||
-               t.endsWith(".jpg") ||
-               t.endsWith(".gif"))
-          )
-        ),
-      ];
+    // Only keep trainers the user actually owns AND exist in the new system
+    const cleaned = user.trainers
+      .map(s => String(s).toLowerCase())
+      .filter(sprite => VALID.has(sprite));
 
-      if (cleaned.length !== before) {
-        removed += before - cleaned.length;
-        fixedUsers++;
-      }
+    removed += before - cleaned.length;
 
-      user.trainers = cleaned;
-      continue;
-    }
+    // Replace user's trainer list
+    user.trainers = [...new Set(cleaned)];
 
-    // ==========================================
-    // LEGACY SCHEMA: trainers = { "file.png": 3 }
-    // → convert to array of filenames
-    // ==========================================
-    if (typeof user.trainers === "object") {
-      const cleanedObj = {};
-      let hadInvalid = false;
-
-      for (const [key, val] of Object.entries(user.trainers)) {
-        if (
-          typeof key === "string" &&
-          (key.endsWith(".png") ||
-           key.endsWith(".jpg") ||
-           key.endsWith(".gif"))
-        ) {
-          cleanedObj[key] = val;
-        } else {
-          hadInvalid = true;
-          removed++;
-        }
-      }
-
-      if (hadInvalid) {
-        fixedUsers++;
-      }
-
-      // 🔄 Move to new schema: array of filenames
-      user.trainers = Object.keys(cleanedObj);
-    }
+    if (before !== cleaned.length) fixedUsers++;
   }
 
   console.log(
-    `🧹 Sanitized trainerData in memory → fixed ${fixedUsers} users, removed ${removed} bad entries.`
+    `🧹 Sanitized trainerData → fixed ${fixedUsers} users, removed ${removed} invalid trainers.`
   );
+
   return trainerData;
 }

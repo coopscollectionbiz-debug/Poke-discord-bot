@@ -1427,11 +1427,26 @@ client.once("ready", async () => {
 
   try {
     trainerData = await loadTrainerData();
+
+    // ❗ ABSOLUTE SANITY CHECK — DO NOT PROCEED WITH EMPTY DATA
+    if (
+      !trainerData ||
+      typeof trainerData !== "object" ||
+      Array.isArray(trainerData) ||
+      Object.keys(trainerData).length === 0
+    ) {
+      console.error("❌ FATAL: Loaded EMPTY or INVALID trainerData. Startup aborted.");
+      process.exit(1); // ⛔ prevents wipe
+    }
+
     trainerData = sanitizeTrainerData(trainerData); // 🧼 Clean it immediately
+
   } catch (err) {
     console.error("❌ Trainer data load failed:", err.message);
-    trainerData = {};
+    console.error("❌ Startup aborted to prevent DATA LOSS.");
+    process.exit(1); // ⛔ stops bot before it wipes JSON
   }
+
 
   // ==========================================================
   // 🧹 AUTO-CLEAN: Remove invalid or unowned displayedTrainer & displayedPokemon

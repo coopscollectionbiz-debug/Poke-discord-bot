@@ -50,11 +50,11 @@ export async function execute(
   trainerData,
   saveTrainerDataLocal,
   saveDataToDiscord,
-  client,
-  passedLockUser,   // lock injected by bot_final
-  enqueueSave        // not used but part of signature
-) {
-  const lockUser = passedLockUser;
+  lockUser,
+  enqueueSave,
+  client
+)
+ {
 
   try {
     await interaction.deferReply({ ephemeral: true });

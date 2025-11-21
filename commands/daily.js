@@ -1,5 +1,5 @@
 // ==========================================================
-// /daily — Coop’s Collection (Race-Safe v17.3)
+// /daily — Coop’s Collection (Race-Safe v18.0)
 // ==========================================================
 
 import {
@@ -9,13 +9,16 @@ import {
 
 import { safeReply } from "../utils/safeReply.js";
 import { atomicSave } from "../utils/saveManager.js";
-import { lockUser } from "../utils/userLocks.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
+import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { spritePaths, rarityEmojis, rarityColors } from "../spriteconfig.js";
 
+// ==========================================================
+// Constants
+// ==========================================================
 const DAILY_CC = 500;
 const DAILY_TP = 100;
 const EVOLUTION_STONE_CHANCE = 0.10;
@@ -25,7 +28,7 @@ const TP_EMOJI   = "<:tp_icon:1437892250922123364>";
 const DAILY_COLOR = "#F7C843";
 
 // ==========================================================
-// 🕛 UTC date string helper
+// 🕛 UTC date helper
 // ==========================================================
 function getUTCDateString() {
   return new Date().toISOString().split("T")[0];
@@ -48,9 +51,10 @@ export async function execute(
   saveTrainerDataLocal,
   saveDataToDiscord,
   client,
-  passedLockUser // OPTIONAL injection from bot_final
+  passedLockUser,   // lock injected by bot_final
+  enqueueSave        // not used but part of signature
 ) {
-  const lock = passedLockUser || lockUser;
+  const lockUser = passedLockUser;
 
   try {
     await interaction.deferReply({ ephemeral: true });
@@ -58,20 +62,22 @@ export async function execute(
     const userId = interaction.user.id;
 
     // ======================================================
-    // ⭐ Execute ENTIRE DAILY inside atomic per-user lock
+    // ⭐ Lock entire daily to prevent race conditions
     // ======================================================
-    return lock(userId, async () => {
+    return lockUser(userId, async () => {
 
-      let user = trainerData[userId] ?? {};
-
-      // Normalize BEFORE logic
-      user = normalizeUserSchema(userId, user);
-      trainerData[userId] = user;
+      // Ensure user exists & is initialized
+      let user = await ensureUserInitialized(
+        userId,
+        interaction.user.username,
+        trainerData,
+        client
+      );
 
       const today = getUTCDateString();
 
       // ======================================================
-      // Already claimed today?
+      // Already claimed?
       // ======================================================
       if (user.lastDaily === today) {
         return safeReply(interaction, {
@@ -92,7 +98,7 @@ export async function execute(
       }
 
       // ======================================================
-      // Draw 2 rank-aware Pokémon
+      // Draw 2 Pokémon — rank aware
       // ======================================================
       const pick1 = selectRandomPokemonForUser(allPokemon, user, "pokeball");
       const pick2 = selectRandomPokemonForUser(allPokemon, user, "pokeball");
@@ -108,23 +114,35 @@ export async function execute(
       const shiny2 = rollForShiny(user.tp);
 
       // ======================================================
+      // Initialize inventory safety
+      // ======================================================
+      user.pokemon ??= {};
+      user.items ??= {};
+      user.items.evolution_stone ??= 0;
+
+      // ======================================================
       // Apply Pokémon to inventory
       // ======================================================
       user.pokemon[pick1.id] ??= { normal: 0, shiny: 0 };
       user.pokemon[pick2.id] ??= { normal: 0, shiny: 0 };
 
-      if (shiny1) user.pokemon[pick1.id].shiny++;
-      else user.pokemon[pick1.id].normal++;
+      shiny1
+        ? user.pokemon[pick1.id].shiny++
+        : user.pokemon[pick1.id].normal++;
 
-      if (shiny2) user.pokemon[pick2.id].shiny++;
-      else user.pokemon[pick2.id].normal++;
+      shiny2
+        ? user.pokemon[pick2.id].shiny++
+        : user.pokemon[pick2.id].normal++;
 
       // ======================================================
-      // Apply daily CC + TP + Stone
+      // Apply CC + TP
       // ======================================================
       user.cc += DAILY_CC;
       user.tp += DAILY_TP;
 
+      // ======================================================
+      // Evolution stone roll
+      // ======================================================
       let stoneAwarded = false;
       if (Math.random() < EVOLUTION_STONE_CHANCE) {
         user.items.evolution_stone++;
@@ -134,43 +152,36 @@ export async function execute(
       user.lastDaily = today;
 
       // ======================================================
-      // Rare+ or Shiny broadcast
+      // Rare & shiny broadcast system
       // ======================================================
-      const broadcastMaybe = async (pick, shiny) => {
+      const maybeBroadcast = async (pick, isShiny) => {
         const rarity = (pick.tier || pick.rarity || "common").toLowerCase();
-        const shouldBroadcast =
-          shiny || ["rare", "epic", "legendary", "mythic"].includes(rarity);
-
-        if (!shouldBroadcast) return;
+        if (!isShiny && !["rare", "epic", "legendary", "mythic"].includes(rarity))
+          return;
 
         try {
           await broadcastReward(client, {
             user: interaction.user,
             type: "pokemon",
-            item: {
-              id: pick.id,
-              name: pick.name,
-              rarity,
-              spriteFile: `${pick.id}.gif`
-            },
-            shiny,
+            item: pick,
+            shiny: isShiny,
             source: "daily"
           });
         } catch (err) {
-          console.warn("⚠️ Broadcast failed:", err.message);
+          console.warn("⚠️ Broadcast failed:", err);
         }
       };
 
-      await broadcastMaybe(pick1, shiny1);
-      await broadcastMaybe(pick2, shiny2);
+      await maybeBroadcast(pick1, shiny1);
+      await maybeBroadcast(pick2, shiny2);
 
       // ======================================================
-      // Atomic Save
+      // Atomic save
       // ======================================================
       await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
       // ======================================================
-      // Build Embeds
+      // Build embeds
       // ======================================================
       const sprite1 = shiny1
         ? `${spritePaths.shiny}${pick1.id}.gif`

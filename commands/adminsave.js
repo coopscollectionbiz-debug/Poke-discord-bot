@@ -14,28 +14,35 @@ export default {
     .setDescription("Force-save all trainer data to disk AND Discord cloud backup.")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
-    // Prevent Discord timeout
+  async execute(
+    interaction,
+    trainerData,
+    saveTrainerDataLocal,
+    saveDataToDiscord,
+    lockUser,          // ✔ now included
+    enqueueSave,       // ✔ now included
+    client             // ✔ now included
+  ) {
     await interaction.deferReply({ ephemeral: true });
 
     try {
-      // =====================================================
-      // 1️⃣ Atomic local save (queued disk write)
-      // =====================================================
+      // ===========================================
+      // 1️⃣ Atomic local save
+      // ===========================================
       const result = await atomicSave(
         trainerData,
         saveTrainerDataLocal,
-        saveDataToDiscord   // this will NOT upload, only queue local save
+        saveDataToDiscord
       );
 
-      // =====================================================
-      // 2️⃣ FORCED DISCORD BACKUP (this is what was missing)
-      // =====================================================
+      // ===========================================
+      // 2️⃣ Forced Discord cloud backup
+      // ===========================================
       await saveDataToDiscord(trainerData);
 
-      // =====================================================
+      // ===========================================
       // 3️⃣ Confirmation embed
-      // =====================================================
+      // ===========================================
       const embed = new EmbedBuilder()
         .setTitle("💾 Manual Save Complete")
         .setDescription(
@@ -45,11 +52,8 @@ export default {
         .setTimestamp();
 
       const errors = Array.isArray(result?.errors) ? result.errors : [];
-      if (errors.length > 0) {
-        embed.addFields({
-          name: "⚠️ Warnings",
-          value: errors.join("\n")
-        });
+      if (errors.length) {
+        embed.addFields({ name: "⚠️ Warnings", value: errors.join("\n") });
       }
 
       await safeReply(interaction, { embeds: [embed], ephemeral: true });

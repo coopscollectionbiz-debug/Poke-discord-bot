@@ -32,10 +32,11 @@ export default {
   async execute(
     interaction,
     trainerData,
-    saveTrainerDataLocal,
-    saveDataToDiscord,
-    client,
-    lockUser       // ⭐ comes from bot_final.js
+    saveTrainerDataLocal,  // 3
+    saveDataToDiscord,     // 4
+    lockUser,              // 5
+    enqueueSave,           // 6 (not used here)
+    client                 // 7
   ) {
 
     await interaction.deferReply({ ephemeral: true });
@@ -85,6 +86,7 @@ export default {
         userData.cc = (userData.cc ?? 0) + amount;
       }
 
+      // Finalize save (atomic / safe)
       await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
     });
 

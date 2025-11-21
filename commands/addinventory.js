@@ -1,5 +1,5 @@
 // ==========================================================
-// /addinventory — Expanded Admin Command (v3.0, Race-Safe)
+// /addinventory — Expanded Admin Command (v3.1, Race-Safe)
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
@@ -8,7 +8,6 @@ import { findPokemonByName, getFlattenedTrainers } from "../utils/dataLoader.js"
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
-import { lockUser } from "../utils/userLocks.js";   // ⭐ Correct import
 
 export default {
   data: new SlashCommandBuilder()
@@ -44,11 +43,14 @@ export default {
     trainerData,
     saveTrainerDataLocal,
     saveDataToDiscord,
+    lockUser,
+    enqueueSave,
     client
   ) {
 
     await interaction.deferReply({ ephemeral: true });
 
+    // Permission validation
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
       return safeReply(interaction, {
         content: "⛔ You do not have permission to use this command.",
@@ -64,8 +66,11 @@ export default {
 
     const userId = targetUser.id;
 
+    // ==========================================================
+    // 🔒 ATOMIC USER LOCK
+    // ==========================================================
     return lockUser(userId, async () => {
-      let userData = await ensureUserInitialized(
+      let user = await ensureUserInitialized(
         userId,
         targetUser.username,
         trainerData,
@@ -78,17 +83,18 @@ export default {
         // ======================================================
         if (type === "pokemon") {
           const pokemon = await findPokemonByName(name);
-          if (!pokemon)
+          if (!pokemon) {
             return safeReply(interaction, {
               content: `⛔ Pokémon "${name}" not found.`,
               ephemeral: true,
             });
+          }
 
-          userData.pokemon ??= {};
-          userData.pokemon[pokemon.id] ??= { normal: 0, shiny: 0 };
+          user.pokemon ??= {};
+          user.pokemon[pokemon.id] ??= { normal: 0, shiny: 0 };
 
-          if (shiny) userData.pokemon[pokemon.id].shiny += quantity;
-          else userData.pokemon[pokemon.id].normal += quantity;
+          if (shiny) user.pokemon[pokemon.id].shiny += quantity;
+          else user.pokemon[pokemon.id].normal += quantity;
         }
 
         // ======================================================
@@ -97,23 +103,24 @@ export default {
         else if (type === "trainer") {
           const allTrainers = await getFlattenedTrainers();
           const trainer = findTrainerByQuery(allTrainers, name);
-          if (!trainer)
+
+          if (!trainer) {
             return safeReply(interaction, {
               content: `⛔ Trainer "${name}" not found.`,
               ephemeral: true,
             });
+          }
 
           const trainerKey = getTrainerKey(trainer);
+          user.trainers ??= [];
 
-          userData.trainers ??= [];
-
-          if (!userData.trainers.includes(trainerKey)) {
-            userData.trainers.push(trainerKey);
+          if (!user.trainers.includes(trainerKey)) {
+            user.trainers.push(trainerKey);
           }
         }
 
         // ======================================================
-        // 🟣 Items  (⚠ Requires SHOP_ITEMS imported!)
+        // 🟣 Items
         // ======================================================
         else if (type === "item") {
           const key = name.toLowerCase().replace(/\s+/g, "_");
@@ -127,21 +134,21 @@ export default {
 
           const item = globalThis.SHOP_ITEMS[key];
 
-          userData.items ??= {};
-          userData.items[item.id] ??= 0;
-          userData.items[item.id] += quantity;
+          user.items ??= {};
+          user.items[item.id] ??= 0;
+          user.items[item.id] += quantity;
         }
 
         else {
           return safeReply(interaction, {
-            content: "⛔ Invalid type.",
+            content: "⛔ Invalid inventory type.",
             ephemeral: true,
           });
         }
 
-        // Schema cleanup
-        trainerData[userId] = normalizeUserSchema(userId, userData);
-
+        // ======================================================
+        // 💾 SAVE — atomicSave handles both local & backup sync
+        // ======================================================
         await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
         return safeReply(interaction, {

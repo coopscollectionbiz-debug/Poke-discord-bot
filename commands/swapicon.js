@@ -1,29 +1,38 @@
 // ==========================================================
-// /swapicon — Toggle between default & female rank icon (v3.0)
-// Race-Safe • Schema-Safe • Role-Safe
+// /swapicon — Toggle between default & female rank icon (v7.0)
+// Race-Safe • No normalizeUserSchema • Uses injected lockUser
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { getRank } from "../utils/rankSystem.js";
-import { lockUser } from "../utils/userLocks.js";
 
 export default {
   data: new SlashCommandBuilder()
     .setName("swapicon")
     .setDescription("Swap between your default and female rank icon."),
 
-  async execute(interaction, trainerData) {
+  async execute(
+    interaction,
+    trainerData,
+    saveTrainerDataLocal,   // unused but kept for signature consistency
+    saveDataToDiscord,      // unused here
+    lockUser,               // ⭐ injected by bot_final.js
+    enqueueSave,            // unused here
+    client                  // unused here
+  ) {
+
     await interaction.deferReply({ ephemeral: true });
 
     const userId = interaction.user.id;
     const guild = interaction.guild;
 
     // ======================================================
-    // 🔒 Race-safe: lock user during role swap
+    // 🔒 Race-safe: lock user during rank icon swap
     // ======================================================
     return lockUser(userId, async () => {
-      let user = trainerData[userId];
+
+      const user = trainerData[userId];
 
       if (!user) {
         return safeReply(interaction, {
@@ -32,15 +41,12 @@ export default {
         });
       }
 
-      // Always normalize before reading schema
-      user = normalizeUserSchema(userId, user);
-      trainerData[userId] = user;
-
+      // Rank is based ONLY on TP now — schema is guaranteed by ensureUserInitialized
       const tp = user.tp ?? 0;
       const baseRank = getRank(tp);
       const femaleRank = `${baseRank} (F)`;
 
-      // Fetch roles
+      // Look for roles
       const baseRole = guild.roles.cache.find(r => r.name === baseRank);
       const femaleRole = guild.roles.cache.find(r => r.name === femaleRank);
 
@@ -57,7 +63,7 @@ export default {
 
       try {
         // ======================================================
-        // CASE 1: Currently default → swap to female
+        // CASE 1: Has base → swap to female icon
         // ======================================================
         if (hasBase) {
           await member.roles.remove(baseRole);
@@ -76,7 +82,7 @@ export default {
         }
 
         // ======================================================
-        // CASE 2: Currently female → swap to default
+        // CASE 2: Has female → swap to default icon
         // ======================================================
         if (hasFemale) {
           await member.roles.remove(femaleRole);
@@ -95,7 +101,7 @@ export default {
         }
 
         // ======================================================
-        // CASE 3: User has neither role (rank changed recently)
+        // CASE 3: Has neither → default fallback
         // ======================================================
         await member.roles.add(baseRole);
 
@@ -117,6 +123,6 @@ export default {
           ephemeral: true
         });
       }
-    }); // end lockUser
+    });
   }
 };

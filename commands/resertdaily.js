@@ -1,10 +1,9 @@
 // ==========================================================
-// 🕐 /resetdaily – Admin Tool (Race-Safe, No Unknown Interaction v4.0)
+// 🕐 /resetdaily – Admin Tool (Race-Safe, v5.0)
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { atomicSave } from "../utils/saveManager.js";
-import { lockUser } from "../utils/userLocks.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -13,67 +12,76 @@ export default {
     .addUserOption(opt =>
       opt
         .setName("user")
-        .setDescription("The user whose daily cooldown to reset.")
+        .setDescription("User whose daily cooldown to reset.")
         .setRequired(true)
     )
     .addBooleanOption(opt =>
       opt
         .setName("resetstreak")
-        .setDescription("Also reset the user's daily streak count.")
+        .setDescription("Reset daily streak as well?")
         .setRequired(false)
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
+  // *** IMPORTANT ***
+  // Your commands must use the SAME argument signature that bot_final.js injects:
+  async execute(
+    interaction,
+    trainerData,
+    saveTrainerDataLocal,
+    saveDataToDiscord,
+    lockUser,        // 5
+    enqueueSave,     // 6
+    client           // 7
+  ) {
+
     try {
-      // IMPORTANT: Only ONE reply path → ALWAYS defer first
+      // always defer first
       await interaction.deferReply({ ephemeral: true });
 
-      // Permission check AFTER defer (safe)
+      // permission check
       if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
-        return interaction.editReply("⛔ You do not have permission to use this command.");
+        return interaction.editReply("⛔ You do not have permission.");
       }
 
       const targetUser = interaction.options.getUser("user");
       const resetStreak = interaction.options.getBoolean("resetstreak") || false;
 
       if (!targetUser) {
-        return interaction.editReply("❌ Invalid user specified.");
+        return interaction.editReply("❌ Invalid user.");
       }
 
       const userId = targetUser.id;
 
       // ======================================================
-      // 🔒 ATOMIC LOCK — All mutations must occur inside here
+      // 🔒 ATOMIC LOCK — required for all mutations
       // ======================================================
       await lockUser(userId, async () => {
-        let user = trainerData[userId];
+        const user = trainerData[userId];
 
         if (!user) {
-          return interaction.editReply(`❌ No trainer data found for <@${userId}>.`);
+          return interaction.editReply(
+            `❌ <@${userId}> has no trainer data.`
+          );
         }
 
-        // Ensure schema is valid
-        user = normalizeUserSchema(userId, user);
-        trainerData[userId] = user;
-
-        // ======================================================
-        // 🌀 RESET DAILY
-        // ======================================================
+        // -----------------------------
+        // RESET FIELDS (no schema call)
+        // -----------------------------
         user.lastDaily = 0;
 
         if (resetStreak) {
-          user.dailyStreak = 0; // safe even if field never existed
+          user.dailyStreak = 0;
         }
 
-        // ======================================================
-        // 💾 SAVE (atomic + Discord)
-        // ======================================================
+        // -----------------------------
+        // SAVE
+        // -----------------------------
         await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
-        // ======================================================
-        // 🟢 SINGLE FINAL REPLY
-        // ======================================================
+        // -----------------------------
+        // REPLY
+        // -----------------------------
         await interaction.editReply(
           `✅ Daily reset for **${targetUser.username}**${
             resetStreak ? " (streak cleared)." : "."
@@ -81,16 +89,18 @@ export default {
         );
       });
 
-      console.log(`🧭 /resetdaily used by ${interaction.user.tag} on ${targetUser.tag}`);
+      console.log(
+        `🧭 /resetdaily used by ${interaction.user.tag} → ${targetUser.tag}`
+      );
 
     } catch (err) {
       console.error("❌ /resetdaily error:", err);
+
       try {
-        await interaction.editReply(`❌ Failed to reset daily: ${err.message}`);
+        await interaction.editReply(`❌ Failed: ${err.message}`);
       } catch {
-        // fallback only if reply was somehow already handled
-        console.warn("⚠️ Failed to editReply; interaction likely expired.");
+        console.warn("⚠ EditReply failed — interaction likely already resolved.");
       }
     }
-  },
+  }
 };

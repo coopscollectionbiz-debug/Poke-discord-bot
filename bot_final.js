@@ -925,9 +925,10 @@ client.on("interactionCreate", async (interaction) => {
   await command.execute(
   interaction,
   trainerData,
-  lockUser,
-  enqueueSave,
-  saveDataToDiscord,
+  saveTrainerDataLocal,   // 3rd argument
+  saveDataToDiscord,      // 4th
+  lockUser,               // 5th
+  enqueueSave,            // 6th
   client
 );
 

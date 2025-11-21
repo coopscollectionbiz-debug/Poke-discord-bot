@@ -4,6 +4,8 @@
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
+import { atomicSave } from "../utils/saveManager.js";
+
 
 export default {
   data: new SlashCommandBuilder()

@@ -1,15 +1,17 @@
 // ==========================================================
-// utils/saveManager.js — AUTO-REPAIR VERSION (Option B)
+// utils/saveManager.js — AUTO-REPAIR (Option A, DisplayedPokemon Canonical)
 // ==========================================================
-// • Validates AND auto-repairs trainerData
-// • Never rejects due to old schema fields
-// • Fully compatible with ALL commands
+// • Auto-repairs users safely
+// • NO currentTeam anywhere
+// • Uses displayedPokemon as canonical team field
+// • Never rejects saves
+// • 100% compatible with dashboard + commands
 // ==========================================================
 
 import { enqueueSave } from "./saveQueue.js";
 
 // ----------------------------------------------------------
-// 🧪 AUTO-REPAIR USER SCHEMA
+// 🧪 AUTO-REPAIR USER SCHEMA (REAL BOT SCHEMA)
 // ----------------------------------------------------------
 function normalizeUserForSave(userId, user) {
   if (!user || typeof user !== "object") return {};
@@ -25,27 +27,29 @@ function normalizeUserForSave(userId, user) {
         ? user.pokemon
         : {},
 
-    // Trainer list (array)
-    trainers: Array.isArray(user.trainers) ? user.trainers : [],
+    // Trainer list (array OR legacy object map)
+    trainers: Array.isArray(user.trainers)
+      ? user.trainers
+      : Object.keys(user.trainers || {}),
 
-    // Items (object)
-    items: user.items && typeof user.items === "object" ? user.items : {},
+    // Items
+    items:
+      user.items && typeof user.items === "object"
+        ? user.items
+        : { evolution_stone: 0 },
 
-    // Purchases (array)
+    // Purchases
     purchases: Array.isArray(user.purchases) ? user.purchases : [],
 
-    // TEAM MIGRATION:
-    // displayedPokemon → currentTeam (one-time auto conversion)
-    currentTeam: Array.isArray(user.currentTeam)
-      ? user.currentTeam
-      : Array.isArray(user.displayedPokemon)
-        ? user.displayedPokemon
-        : [],
+    // ⭐ CANONICAL TEAM FIELD (your real schema)
+    displayedPokemon: Array.isArray(user.displayedPokemon)
+      ? user.displayedPokemon
+      : [],
 
-    // Legacy field removed
-    // displayedPokemon is intentionally discarded
+    // Trainer icon
+    displayedTrainer: user.displayedTrainer ?? null,
 
-    // Date fields (string/number/null allowed)
+    // Date fields
     lastDaily:
       typeof user.lastDaily === "string" || typeof user.lastDaily === "number"
         ? user.lastDaily
@@ -60,20 +64,25 @@ function normalizeUserForSave(userId, user) {
     lastRecruit:
       typeof user.lastRecruit === "number" ? user.lastRecruit : 0,
 
-    // Luck system normalization
+    // Onboarding (unchanged)
+    onboardingComplete: !!user.onboardingComplete,
+    onboardingDate: user.onboardingDate ?? null,
+    starterPokemon: user.starterPokemon ?? null,
+
+    // Luck system
     luck: typeof user.luck === "number" ? user.luck : 0,
     luckTimestamp: typeof user.luckTimestamp === "number" ? user.luckTimestamp : 0,
   };
 }
 
 // ----------------------------------------------------------
-// AUTO-REPAIR VALIDATION
+// AUTO-REPAIR VALIDATION (NEVER rejects)
 // ----------------------------------------------------------
 function validateTrainerData(data) {
   if (!data || typeof data !== "object") return false;
   if (Object.keys(data).length < 1) return false;
 
-  // We NEVER reject users — we auto-repair them
+  // Auto-repair ALL users in place
   for (const [id, user] of Object.entries(data)) {
     data[id] = normalizeUserForSave(id, user);
   }
@@ -82,7 +91,7 @@ function validateTrainerData(data) {
 }
 
 // ----------------------------------------------------------
-// Simple save (legacy)
+// Simple save (legacy) — still works
 // ----------------------------------------------------------
 export async function saveTrainerData(trainerData) {
   if (!validateTrainerData(trainerData)) {
@@ -95,7 +104,7 @@ export async function saveTrainerData(trainerData) {
 }
 
 // ----------------------------------------------------------
-// NEW atomicSave
+// NEW atomicSave — local + discord
 // ----------------------------------------------------------
 export async function atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord) {
   const errors = [];

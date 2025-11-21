@@ -151,10 +151,11 @@ export default {
           confirmationText = `**${quantity}× Item: ${item.name}**`;
         }
 
-        // ======================================================
-        // 💾 SAVE
-        // ======================================================
-        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+// 💾 SAVE — atomicSave handles both local & backup sync
+// ======================================================
+await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+
+
 
         // ======================================================
         // ✅ Confirmation reply

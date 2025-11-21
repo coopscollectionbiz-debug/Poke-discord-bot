@@ -44,35 +44,7 @@ import {
 // Prevents lost Pokémon, lost Trainers, and overwrite collisions
 // ==========================================================
 
-import { lockUser } from "../utils/userLocks.js";
-
-/**
- * Acquire a lock for a specific user.
- * Ensures only ONE write operation runs at a time per user.
- */
-async function withUserLock(userId, fn) {
-  const existing = userLocks.get(userId) || Promise.resolve();
-
-  let release;
-  const lock = new Promise(resolve => (release = resolve));
-
-  userLocks.set(userId, existing.then(() => lock));
-
-  try {
-    return await fn();
-  } finally {
-    release();
-    // Clean chain if this was the last pending lock
-    if (userLocks.get(userId) === lock) {
-      userLocks.delete(userId);
-    }
-  }
-}
-
-// Simple alias so all endpoints use the same API
-function lockUser(userId, fn) {
-  return withUserLock(userId, fn);
-}
+import { lockUser } from "./utils/userLocks.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

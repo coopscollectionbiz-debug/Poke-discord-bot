@@ -1,11 +1,10 @@
 // ==========================================================
-// utils/saveQueue.js (FINAL SAFE VERSION)
+// utils/saveQueue.js — FINAL SAFE VERSION (Schema-Agnostic)
 // ==========================================================
 // • The ONLY place where trainerData.json is written
-// • Atomic: temp → rename to prevent corruption
+// • Atomic: temp → rename (no corruption)
 // • Serialized queue so writes never overlap
-// • NEVER writes empty or tiny objects
-// • All other code should call enqueueSave(trainerData)
+// • Never rejects saves based on schema (saveManager handles that)
 // ==========================================================
 
 import fs from "fs/promises";
@@ -18,21 +17,13 @@ let queue = Promise.resolve();
 let lastJsonString = null;
 
 // ----------------------------------------------------------
-// 🛡️ Schema validator (prevents corrupted saves)
+// 🛡️ Minimal validity check: only reject EMPTY data
 // ----------------------------------------------------------
-function isTrainerDataValid(data) {
+function isTrainerDataSafe(data) {
   if (!data || typeof data !== "object") return false;
 
   const keys = Object.keys(data);
   if (keys.length < 1) return false;
-
-  for (const [id, user] of Object.entries(data)) {
-    if (!user || typeof user !== "object") return false;
-    if (typeof user.tp !== "number") return false;
-    if (typeof user.cc !== "number") return false;
-    if (typeof user.pokemon !== "object") return false;
-    if (!user.trainers || typeof user.trainers !== "object") return false;
-  }
 
   return true;
 }
@@ -47,10 +38,10 @@ async function atomicWriteJson(filePath, json) {
   if (jsonString === lastJsonString) return;
   lastJsonString = jsonString;
 
-  // Write to temp
+  // Write temp file
   await fs.writeFile(TEMP_PATH, jsonString, "utf8");
 
-  // Replace original (atomic on most filesystems)
+  // Atomic rename
   await fs.rename(TEMP_PATH, TRAINERDATA_PATH);
 }
 
@@ -59,14 +50,13 @@ async function atomicWriteJson(filePath, json) {
 // ----------------------------------------------------------
 export function enqueueSave(trainerData) {
   queue = queue.then(async () => {
-    if (!isTrainerDataValid(trainerData)) {
-      console.warn("⚠️ Refusing invalid trainerData save");
+
+    if (!isTrainerDataSafe(trainerData)) {
+      console.warn("⚠️ Refusing save: trainerData appears EMPTY");
       return;
     }
 
-    // Write trainerData.json atomically
     await atomicWriteJson(TRAINERDATA_PATH, trainerData);
-
     console.log("💾 Saved trainerData.json");
 
   }).catch(err => console.error("❌ Save error:", err));
@@ -75,7 +65,7 @@ export function enqueueSave(trainerData) {
 }
 
 // ----------------------------------------------------------
-// 🚦 Shutdown flush (used on SIGINT)
+// 🚦 Shutdown flush (SIGINT)
 // ----------------------------------------------------------
 export async function shutdownFlush(timeout = 5000) {
   let done = false;

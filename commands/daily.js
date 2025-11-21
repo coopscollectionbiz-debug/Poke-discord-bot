@@ -10,8 +10,6 @@ import {
 import { safeReply } from "../utils/safeReply.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { lockUser } from "../utils/userLocks.js";
-import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
-
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";

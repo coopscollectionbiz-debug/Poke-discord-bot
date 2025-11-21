@@ -5,7 +5,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { lockUser } from "../utils/userLocks.js";
-import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
 
 export default {
   data: new SlashCommandBuilder()

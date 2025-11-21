@@ -7,7 +7,6 @@ import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { getRank } from "../utils/rankSystem.js";
 import { lockUser } from "../utils/userLocks.js";
-import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
 
 export default {
   data: new SlashCommandBuilder()

@@ -9,7 +9,6 @@ import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.j
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { lockUser } from "../utils/userLocks.js";   // ⭐ Correct import
-import { normalizeUserSchema } from "../utils/sanitizeTrainerData.js";
 
 export default {
   data: new SlashCommandBuilder()

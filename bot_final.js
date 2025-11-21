@@ -44,7 +44,7 @@ import {
 // Prevents lost Pokémon, lost Trainers, and overwrite collisions
 // ==========================================================
 
-import { userLocks } from "./utils/userLocks.js";
+import { lockUser } from "../utils/userLocks.js";
 
 /**
  * Acquire a lock for a specific user.
@@ -481,26 +481,33 @@ setInterval(async () => {
 }, 15 * 60 * 1000);
 
 // ==========================================================
-// 🛑 GRACEFUL SHUTDOWN
+// 🛑 GRACEFUL SHUTDOWN (Fixed — Final Backup Guaranteed)
 // ==========================================================
 async function gracefulShutdown(signal) {
   console.log(`\n🛑 Received ${signal}, shutting down...`);
   isReady = false;
+
   try {
-    console.log("💾 Flushing pending saves...");
+    console.log("💾 Flushing pending local saves...");
     const flushed = await shutdownFlush(10_000);
-    if (!flushed) console.warn("⚠️ Some saves may not have completed");
-    console.log("☁️ Final Discord backup...");
+    if (!flushed) console.warn("⚠️ Some local saves may not have completed");
+
+    console.log("☁️ Uploading FINAL Discord backup (waiting for completion)...");
     await saveDataToDiscord(trainerData);
-    console.log("✅ Shutdown complete");
-    process.exit(0);
+
+    console.log("🧹 Destroying Discord client gracefully...");
+    await client.destroy();
+
+    console.log("✅ Shutdown complete. Process will exit naturally.");
   } catch (err) {
     console.error("❌ Shutdown error:", err.message);
-    process.exit(1);
   }
 }
+
+// Bind signals
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+
 
 // ==========================================================
 // 📰 POKÉBEACH SCRAPER (Simplified Link-Only, every 2 hours)

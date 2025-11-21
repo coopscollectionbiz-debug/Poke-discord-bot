@@ -1,61 +1,81 @@
 // ==========================================================
-// utils/saveManager.js — FINAL SCHEMA-SAFE VERSION
+// utils/saveManager.js — AUTO-REPAIR VERSION (Option B)
 // ==========================================================
-// • Validates trainerData using CURRENT schema
-// • No unnecessary hard failures
-// • Calls saveQueue for disk writes
-// • Compatible with all updated commands
+// • Validates AND auto-repairs trainerData
+// • Never rejects due to old schema fields
+// • Fully compatible with ALL commands
 // ==========================================================
 
 import { enqueueSave } from "./saveQueue.js";
 
 // ----------------------------------------------------------
-// 🧪 UPDATED TRAINER DATA VALIDATION (schema-accurate)
+// 🧪 AUTO-REPAIR USER SCHEMA
+// ----------------------------------------------------------
+function normalizeUserForSave(userId, user) {
+  if (!user || typeof user !== "object") return {};
+
+  return {
+    // Required numeric fields
+    tp: typeof user.tp === "number" ? user.tp : 0,
+    cc: typeof user.cc === "number" ? user.cc : 0,
+
+    // Pokémon inventory (object)
+    pokemon:
+      user.pokemon && typeof user.pokemon === "object" && !Array.isArray(user.pokemon)
+        ? user.pokemon
+        : {},
+
+    // Trainer list (array)
+    trainers: Array.isArray(user.trainers) ? user.trainers : [],
+
+    // Items (object)
+    items: user.items && typeof user.items === "object" ? user.items : {},
+
+    // Purchases (array)
+    purchases: Array.isArray(user.purchases) ? user.purchases : [],
+
+    // TEAM MIGRATION:
+    // displayedPokemon → currentTeam (one-time auto conversion)
+    currentTeam: Array.isArray(user.currentTeam)
+      ? user.currentTeam
+      : Array.isArray(user.displayedPokemon)
+        ? user.displayedPokemon
+        : [],
+
+    // Legacy field removed
+    // displayedPokemon is intentionally discarded
+
+    // Date fields (string/number/null allowed)
+    lastDaily:
+      typeof user.lastDaily === "string" || typeof user.lastDaily === "number"
+        ? user.lastDaily
+        : 0,
+
+    lastWeeklyPack:
+      typeof user.lastWeeklyPack === "string" ? user.lastWeeklyPack : null,
+
+    lastQuest:
+      typeof user.lastQuest === "number" ? user.lastQuest : 0,
+
+    lastRecruit:
+      typeof user.lastRecruit === "number" ? user.lastRecruit : 0,
+
+    // Luck system normalization
+    luck: typeof user.luck === "number" ? user.luck : 0,
+    luckTimestamp: typeof user.luckTimestamp === "number" ? user.luckTimestamp : 0,
+  };
+}
+
+// ----------------------------------------------------------
+// AUTO-REPAIR VALIDATION
 // ----------------------------------------------------------
 function validateTrainerData(data) {
   if (!data || typeof data !== "object") return false;
   if (Object.keys(data).length < 1) return false;
 
+  // We NEVER reject users — we auto-repair them
   for (const [id, user] of Object.entries(data)) {
-    if (!user || typeof user !== "object") return false;
-
-    // Required numeric fields
-    if (typeof user.tp !== "number") return false;
-    if (typeof user.cc !== "number") return false;
-
-    // Pokémon inventory must be an object
-    if (typeof user.pokemon !== "object" || Array.isArray(user.pokemon)) {
-      return false;
-    }
-
-    // Trainers is now ALWAYS an array
-    if (!Array.isArray(user.trainers)) return false;
-
-    // Items must be object or missing (we allow missing)
-    if (user.items && typeof user.items !== "object") return false;
-
-    // Purchases must be array or missing
-    if (user.purchases && !Array.isArray(user.purchases)) return false;
-
-    // Displayed Pokémon (team) must be array
-    if (user.displayedPokemon && !Array.isArray(user.displayedPokemon)) return false;
-
-    // CurrentTeam must be array if present
-    if (user.currentTeam && !Array.isArray(user.currentTeam)) return false;
-
-    // Date fields: allow string, null, or undefined
-    if (user.lastDaily && typeof user.lastDaily !== "string" && typeof user.lastDaily !== "number") {
-      return false;
-    }
-    if (user.lastWeeklyPack && typeof user.lastWeeklyPack !== "string") {
-      return false;
-    }
-    if (user.lastQuest && typeof user.lastQuest !== "number") return false;
-    if (user.lastRecruit && typeof user.lastRecruit !== "number") return false;
-
-    // Luck fields
-    if (typeof user.luck !== "number") return false;
-    if (typeof user.luckTimestamp !== "number") return false;
+    data[id] = normalizeUserForSave(id, user);
   }
 
   return true;
@@ -75,7 +95,7 @@ export async function saveTrainerData(trainerData) {
 }
 
 // ----------------------------------------------------------
-// NEW atomicSave (correct output for /adminsave)
+// NEW atomicSave
 // ----------------------------------------------------------
 export async function atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord) {
   const errors = [];

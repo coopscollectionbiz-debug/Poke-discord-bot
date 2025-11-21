@@ -38,6 +38,45 @@ import {
   saveTrainerDataLocal
 } from "./utils/saveQueue.js";
 
+// ==========================================================
+// 🔧 SCHEMA NORMALIZATION
+// ==========================================================
+function normalizeUserSchema(id, user) {
+  user.id ??= id;
+  user.tp ??= 0;
+  user.cc ??= 0;
+
+  user.pokemon ??= {};
+  // Convert trainers to array of filenames (unique unlockables)
+if (!Array.isArray(user.trainers)) {
+  // Convert old object maps like {file.png: 3} → ["file.png"]
+  user.trainers = Object.keys(user.trainers || {});
+}
+
+
+  user.displayedPokemon ??= [];
+  user.displayedTrainer ??= null;
+
+  user.lastDaily ??= 0;
+  user.lastRecruit ??= 0;
+  user.lastQuest ??= 0;
+  if (!user.lastWeeklyPack || user.lastWeeklyPack === "0" || isNaN(new Date(user.lastWeeklyPack))) {
+    user.lastWeeklyPack = null;
+}
+
+  user.onboardingComplete ??= false;
+  user.onboardingDate ??= null;
+  user.starterPokemon ??= null;
+
+  user.items ??= { evolution_stone: 0 };
+  user.purchases ??= [];
+
+  user.luck ??= 0;           // user's pity meter  
+  user.luckTimestamp ??= 0;  // last increment/decay tick  
+
+
+  return user;
+}
 
 // ==========================================================
 // 🔒 PER-USER WRITE LOCK MANAGER (Option A)
@@ -544,45 +583,6 @@ async function checkPokeBeach() {
 }
 setInterval(checkPokeBeach, POKEBEACH_CHECK_INTERVAL);
 
-// ==========================================================
-// 🔧 SCHEMA NORMALIZATION
-// ==========================================================
-function normalizeUserSchema(id, user) {
-  user.id ??= id;
-  user.tp ??= 0;
-  user.cc ??= 0;
-
-  user.pokemon ??= {};
-  // Convert trainers to array of filenames (unique unlockables)
-if (!Array.isArray(user.trainers)) {
-  // Convert old object maps like {file.png: 3} → ["file.png"]
-  user.trainers = Object.keys(user.trainers || {});
-}
-
-
-  user.displayedPokemon ??= [];
-  user.displayedTrainer ??= null;
-
-  user.lastDaily ??= 0;
-  user.lastRecruit ??= 0;
-  user.lastQuest ??= 0;
-  if (!user.lastWeeklyPack || user.lastWeeklyPack === "0" || isNaN(new Date(user.lastWeeklyPack))) {
-    user.lastWeeklyPack = null;
-}
-
-  user.onboardingComplete ??= false;
-  user.onboardingDate ??= null;
-  user.starterPokemon ??= null;
-
-  user.items ??= { evolution_stone: 0 };
-  user.purchases ??= [];
-
-  user.luck ??= 0;           // user's pity meter  
-  user.luckTimestamp ??= 0;  // last increment/decay tick  
-
-
-  return user;
-}
 
 // ==========================================================
 // 💬 Passive TP Gain from Messages

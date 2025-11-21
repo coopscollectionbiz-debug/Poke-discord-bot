@@ -1,5 +1,6 @@
 // ==========================================================
-// /addinventory — Expanded Admin Command (v3.1, Race-Safe)
+// /addinventory — Expanded Admin Command (v3.2, Race-Safe)
+// Includes: Confirmation of EXACT items added
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
@@ -28,7 +29,7 @@ export default {
         .setRequired(true)
     )
     .addStringOption(option =>
-      option.setName("name").setDescription("Name of the Pokémon, Trainer, or Item").setRequired(true)
+      option.setName("name").setDescription("Name of Pokémon, Trainer, or Item").setRequired(true)
     )
     .addBooleanOption(option =>
       option.setName("shiny").setDescription("Add as shiny (Pokémon only)")
@@ -47,7 +48,6 @@ export default {
     enqueueSave,
     client
   ) {
-
     await interaction.deferReply({ ephemeral: true });
 
     // Permission validation
@@ -65,6 +65,9 @@ export default {
     const quantity = interaction.options.getInteger("quantity") || 1;
 
     const userId = targetUser.id;
+
+    // String for confirmation later
+    let confirmationText = "";
 
     // ==========================================================
     // 🔒 ATOMIC USER LOCK
@@ -93,8 +96,13 @@ export default {
           user.pokemon ??= {};
           user.pokemon[pokemon.id] ??= { normal: 0, shiny: 0 };
 
-          if (shiny) user.pokemon[pokemon.id].shiny += quantity;
-          else user.pokemon[pokemon.id].normal += quantity;
+          if (shiny) {
+            user.pokemon[pokemon.id].shiny += quantity;
+          } else {
+            user.pokemon[pokemon.id].normal += quantity;
+          }
+
+          confirmationText = `**${quantity}× ${shiny ? "✨ Shiny " : ""}${pokemon.name}**`;
         }
 
         // ======================================================
@@ -117,6 +125,8 @@ export default {
           if (!user.trainers.includes(trainerKey)) {
             user.trainers.push(trainerKey);
           }
+
+          confirmationText = `**Trainer: ${trainer.name}**`;
         }
 
         // ======================================================
@@ -137,22 +147,20 @@ export default {
           user.items ??= {};
           user.items[item.id] ??= 0;
           user.items[item.id] += quantity;
-        }
 
-        else {
-          return safeReply(interaction, {
-            content: "⛔ Invalid inventory type.",
-            ephemeral: true,
-          });
+          confirmationText = `**${quantity}× Item: ${item.name}**`;
         }
 
         // ======================================================
-        // 💾 SAVE — atomicSave handles both local & backup sync
+        // 💾 SAVE
         // ======================================================
         await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
+        // ======================================================
+        // ✅ Confirmation reply
+        // ======================================================
         return safeReply(interaction, {
-          content: `✅ Added inventory to **${targetUser.username}** successfully.`,
+          content: `✅ Added ${confirmationText} to **${targetUser.username}**.`,
           ephemeral: true,
         });
 

@@ -42,41 +42,157 @@ import {
 // 🔧 SCHEMA NORMALIZATION
 // ==========================================================
 function normalizeUserSchema(id, user) {
-  user.id ??= id;
-  user.tp ??= 0;
-  user.cc ??= 0;
 
-  user.pokemon ??= {};
-  // Convert trainers to array of filenames (unique unlockables)
-if (!Array.isArray(user.trainers)) {
-  // Convert old object maps like {file.png: 3} → ["file.png"]
-  user.trainers = Object.keys(user.trainers || {});
-}
+  if (!user || typeof user !== "object") user = {};
 
+  // ==========================================================
+  // 1️⃣ CORE FIELDS
+  // ==========================================================
+  user.id = user.id || id;
 
-  user.displayedPokemon ??= [];
-  user.displayedTrainer ??= null;
+  user.tp = Number.isFinite(user.tp) ? user.tp : 0;
+  user.cc = Number.isFinite(user.cc) ? user.cc : 0;
 
-  user.lastDaily ??= 0;
-  user.lastRecruit ??= 0;
-  user.lastQuest ??= 0;
-  if (!user.lastWeeklyPack || user.lastWeeklyPack === "0" || isNaN(new Date(user.lastWeeklyPack))) {
+  // ==========================================================
+  // 2️⃣ POKÉMON INVENTORY (must be { id: {normal, shiny} })
+  // ==========================================================
+  if (!user.pokemon || typeof user.pokemon !== "object" || Array.isArray(user.pokemon)) {
+    user.pokemon = {};
+  }
+
+  // Repair individual Pokémon entries
+  for (const [pid, entry] of Object.entries(user.pokemon)) {
+    if (!entry || typeof entry !== "object") {
+      user.pokemon[pid] = { normal: 0, shiny: 0 };
+      continue;
+    }
+    entry.normal = Number.isFinite(entry.normal) ? entry.normal : 0;
+    entry.shiny = Number.isFinite(entry.shiny) ? entry.shiny : 0;
+
+    // Auto-delete empty shells
+    if (entry.normal <= 0 && entry.shiny <= 0) {
+      delete user.pokemon[pid];
+    }
+  }
+
+  // ==========================================================
+  // 3️⃣ TRAINERS (array of filenames)
+  // backwards compatible with old object maps
+  // ==========================================================
+  if (Array.isArray(user.trainers)) {
+    // Ensure all entries are strings
+    user.trainers = user.trainers
+      .filter(t => typeof t === "string")
+      .map(t => t.trim());
+  } else if (user.trainers && typeof user.trainers === "object") {
+    // legacy: { "file.png": 1, "other.png": 1 }
+    user.trainers = Object.keys(user.trainers);
+  } else {
+    user.trainers = [];
+  }
+
+  // Remove duplicates
+  user.trainers = [...new Set(user.trainers)];
+
+  // ==========================================================
+  // 4️⃣ DISPLAYED TEAM (canonical)
+  // must be array of Pokémon IDs the user owns
+  // ==========================================================
+  if (!Array.isArray(user.displayedPokemon)) {
+    user.displayedPokemon = [];
+  }
+
+  // Auto-clean ghost Pokémon
+  user.displayedPokemon = user.displayedPokemon
+    .filter(id => {
+      const owned = user.pokemon[id];
+      return owned && (owned.normal > 0 || owned.shiny > 0);
+    })
+    .map(id => Number(id));
+
+  // ==========================================================
+  // 5️⃣ DISPLAYED TRAINER
+  // ==========================================================
+  if (typeof user.displayedTrainer !== "string") {
+    user.displayedTrainer = null;
+  } else {
+    user.displayedTrainer = user.displayedTrainer.trim();
+    if (!user.trainers.includes(user.displayedTrainer)) {
+      // user no longer owns this trainer → unequip
+      user.displayedTrainer = null;
+    }
+  }
+
+  // ==========================================================
+  // 6️⃣ DATE FIELDS (daily, recruit, quest, weeklyPack)
+  // ==========================================================
+  user.lastDaily =
+    typeof user.lastDaily === "number" || typeof user.lastDaily === "string"
+      ? user.lastDaily
+      : 0;
+
+  user.lastRecruit =
+    typeof user.lastRecruit === "number" ? user.lastRecruit : 0;
+
+  user.lastQuest =
+    typeof user.lastQuest === "number" ? user.lastQuest : 0;
+
+  // weeklyPack: must be ISO string or null
+  if (
+    typeof user.lastWeeklyPack === "string" &&
+    !isNaN(new Date(user.lastWeeklyPack))
+  ) {
+    // valid
+  } else {
     user.lastWeeklyPack = null;
-}
+  }
 
-  user.onboardingComplete ??= false;
-  user.onboardingDate ??= null;
-  user.starterPokemon ??= null;
+  // ==========================================================
+  // 7️⃣ ONBOARDING FLOW
+  // ==========================================================
+  user.onboardingComplete = !!user.onboardingComplete;
+  user.onboardingDate =
+    typeof user.onboardingDate === "string" || typeof user.onboardingDate === "number"
+      ? user.onboardingDate
+      : null;
 
-  user.items ??= { evolution_stone: 0 };
-  user.purchases ??= [];
+  user.starterPokemon =
+    typeof user.starterPokemon === "number" ||
+    typeof user.starterPokemon === "string" ||
+    user.starterPokemon === null
+      ? user.starterPokemon
+      : null;
 
-  user.luck ??= 0;           // user's pity meter  
-  user.luckTimestamp ??= 0;  // last increment/decay tick  
+  // ==========================================================
+  // 8️⃣ ITEMS (future safe)
+  // ==========================================================
+  if (!user.items || typeof user.items !== "object" || Array.isArray(user.items)) {
+    user.items = {};
+  }
 
+  // Always ensure evolution_stone exists
+  user.items.evolution_stone = Number.isFinite(user.items.evolution_stone)
+    ? user.items.evolution_stone
+    : 0;
+
+  // ==========================================================
+  // 9️⃣ PURCHASES
+  // ==========================================================
+  if (!Array.isArray(user.purchases)) {
+    user.purchases = [];
+  }
+
+  // ==========================================================
+  // 🔟 LUCK SYSTEM
+  // ==========================================================
+  user.luck = Number.isFinite(user.luck) ? user.luck : 0;
+  user.luckTimestamp = Number.isFinite(user.luckTimestamp)
+    ? user.luckTimestamp
+    : 0;
 
   return user;
 }
+
 
 // ==========================================================
 // 🔒 PER-USER WRITE LOCK MANAGER (Option A)

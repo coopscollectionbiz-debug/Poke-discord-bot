@@ -896,9 +896,9 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
     // 🧱 COST MAP (canonical)
     // ======================================================
     const COST = {
-      pokeball: 500,
-      greatball: 1000,
-      ultraball: 2500,
+      pokeball: 1000,
+      greatball: 1500,
+      ultraball: 3000,
     };
 
     if (!COST[source]) {

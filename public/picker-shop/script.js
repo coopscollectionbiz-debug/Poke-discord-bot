@@ -15,9 +15,9 @@ window.rarityColors = rarityColors;
 // STATIC ITEM COSTS (must match bot shop backend)
 // ======================================================
 window.ITEM_COSTS = {
-  pokeball: 500,
-  greatball: 1000,
-  ultraball: 2500,
+  pokeball: 1000,
+  greatball: 1500,
+  ultraball: 3000,
   evo_stone: 5000,
 };
 

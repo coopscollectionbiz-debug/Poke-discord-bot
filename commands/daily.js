@@ -19,9 +19,9 @@ import { spritePaths, rarityEmojis, rarityColors } from "../spriteconfig.js";
 // ==========================================================
 // Constants
 // ==========================================================
-const DAILY_CC = 500;
+const DAILY_CC = 1000;
 const DAILY_TP = 100;
-const EVOLUTION_STONE_CHANCE = 0.10;
+const EVOLUTION_STONE_CHANCE = 0.25;
 
 const COIN_EMOJI = "<:coopcoin:1437892112959148093>";
 const TP_EMOJI   = "<:tp_icon:1437892250922123364>";

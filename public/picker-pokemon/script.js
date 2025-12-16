@@ -10,7 +10,7 @@
    Show Owned/Unowned: Filters visibility in Change Team mode
 =========================================================== */
 
-let userId, userToken;
+let userId;
 let userData = {};
 let pokemonData = {};
 let currentMode = "team"; // "team" | "evolve" | "donate"
@@ -151,12 +151,16 @@ function getDonationValue(tier, isShiny) {
 // 🌐 API Utilities
 // ===========================================================
 async function fetchUserData() {
-  const params = new URLSearchParams({ id: userId, token: userToken });
-  const res = await fetch(`/api/user-pokemon?${params}`);
+  const params = new URLSearchParams({ id: userId });
+  const res = await fetch(`/api/user-pokemon?${params}`, {
+    credentials: "same-origin"
+  });
+
   if (!res.ok) {
     const errorText = await res.text();
     throw new Error(`Failed to fetch: ${res.status} - ${errorText}`);
   }
+
   userData = await res.json();
   userData.items ??= { evolution_stone: 0 };
   userData.pokemon ??= {};
@@ -165,9 +169,10 @@ async function fetchUserData() {
 }
 
 async function saveTeam() {
-  const body = { id: userId, token: userToken, team: selectedTeam };
+  const body = { id: userId, team: selectedTeam };
   const res = await fetch("/api/set-pokemon-team", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
@@ -176,9 +181,10 @@ async function saveTeam() {
 }
 
 async function evolvePokemon(baseId, targetId) {
-  const body = { id: userId, token: userToken, baseId, targetId, shiny: shinyMode };
+  const body = { id: userId, baseId, targetId, shiny: shinyMode };
   const res = await fetch("/api/pokemon/evolve", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
@@ -187,9 +193,10 @@ async function evolvePokemon(baseId, targetId) {
 }
 
 async function donatePokemon(pokeId) {
-  const body = { id: userId, token: userToken, pokeId, shiny: shinyMode };
+  const body = { id: userId, pokeId, shiny: shinyMode };
   const res = await fetch("/api/pokemon/donate", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
@@ -531,10 +538,22 @@ async function init() {
     userId = params.get("id");
     userToken = params.get("token");
     
-    if (!userId || !userToken) {
-      document.body.innerHTML = "<p class='error'>❌ Missing credentials. Use /changepokemon in Discord.</p>";
-      return;
-    }
+    userId = params.get("id");
+
+if (!userId) {
+  document.body.innerHTML = "<p class='error'>❌ Missing user id.</p>";
+  return;
+}
+
+// Optional: if user hits picker directly (no /auth/dashboard cookie), API will 403.
+// Show a clearer message:
+try {
+  await fetchUserData();
+} catch (err) {
+  document.body.innerHTML = "<p class='error'>❌ Session expired. Please re-open the dashboard link from Discord.</p>";
+  return;
+}
+
 
     // Load Pokemon data
     const pokeRes = await fetch("/public/pokemonData.json");
@@ -963,24 +982,11 @@ async function handleDonationConfirm(pokeId, overlay) {
 // 🔄 NAVIGATION TABS — ALWAYS USE CURRENT TOKEN
 // ======================================================
 (function initNavTabs() {
-  function getSafeParams() {
-    // Prefer in-memory values
-    if (userId && token) {
-      return { id: userId, token };
-    }
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
 
-    // Fall back to URL if memory is empty
-    const params = new URLSearchParams(window.location.search);
-    return {
-      id: params.get("id"),
-      token: params.get("token"),
-    };
-  }
-
-  const { id, token: urlToken } = getSafeParams();
-
-  if (!id || !urlToken) {
-    console.warn("❌ Missing id/token — navigation disabled");
+  if (!id) {
+    console.warn("❌ Missing id — navigation disabled");
     return;
   }
 
@@ -990,13 +996,13 @@ async function handleDonationConfirm(pokeId, overlay) {
 
   if (goPokemon)
     goPokemon.onclick = () =>
-      window.location.href = `/public/picker-pokemon/?id=${id}&token=${urlToken}`;
+      window.location.href = `/public/picker-pokemon/?id=${encodeURIComponent(id)}`;
 
   if (goTrainers)
     goTrainers.onclick = () =>
-      window.location.href = `/public/picker/?id=${id}&token=${urlToken}`;
+      window.location.href = `/public/picker/?id=${encodeURIComponent(id)}`;
 
   if (goShop)
     goShop.onclick = () =>
-      window.location.href = `/public/picker-shop/?id=${id}&token=${urlToken}`;
+      window.location.href = `/public/picker-shop/?id=${encodeURIComponent(id)}`;
 })();

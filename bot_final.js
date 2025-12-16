@@ -206,6 +206,29 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const staticPath = path.join(__dirname, "public");
 
+// 🌐 Cookie Parser
+import cookieParser from "cookie-parser";
+app.use(cookieParser());
+
+const isProd = process.env.NODE_ENV === "production";
+
+app.get("/auth/dashboard", (req, res) => {
+  const { id, code } = req.query;
+
+  if (!id || !code) return res.status(400).send("Missing id/code");
+  if (!validateToken(id, code)) return res.status(403).send("Invalid or expired link.");
+
+  res.cookie("dashboard_session", code, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "Lax",
+    path: "/",
+    maxAge: 10 * 60 * 1000,
+  });
+
+  res.redirect(`/public/picker-pokemon?id=${encodeURIComponent(id)}`);
+});
+
 // ==========================================================
 // 🎯 Trainer Tier Costs
 // ==========================================================
@@ -343,6 +366,12 @@ function validateToken(userId, token) {
 function getChannelIdForToken(token) {
   const entry = activeTokens.get(token);
   return entry ? entry.channelId : null;
+}
+
+function requireDashboardSession(req, userId) {
+  const sessionToken = req.cookies?.dashboard_session;
+  if (!sessionToken) return false;
+  return validateToken(String(userId), sessionToken);
 }
 
 // Export if using ES modules
@@ -830,23 +859,19 @@ if (Math.random() < MESSAGE_CC_CHANCE) {
 // 🛍️ SHOP API — GET USER  (FINAL FIXED VERSION)
 // ==========================================================
 app.get("/api/user", (req, res) => {
-  const { id, token } = req.query;
+  const { id } = req.query;
 
-  if (!validateToken(id, token))
-    return res.status(403).json({ error: "Invalid or expired token" });
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id))
+    return res.status(403).json({ error: "Invalid or expired session" });
 
- const user = trainerData[id];
-if (!user)
-  return res.status(404).json({ error: "User not found" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
 
-// MUST reassign — otherwise missing fields never persist
-trainerData[id] = normalizeUserSchema(id, user);
+  trainerData[id] = normalizeUserSchema(id, user);
+  trainerData[id].rank = getRank(trainerData[id].tp);
 
-// Ensure rank is correct
-trainerData[id].rank = getRank(trainerData[id].tp);
-
-return res.json(trainerData[id]);
-
+  return res.json(trainerData[id]);
 });
 
 
@@ -854,40 +879,31 @@ return res.json(trainerData[id]);
 // 🛍️ SHOP API — UPDATE USER (NOW ATOMIC SAFE)
 // ==========================================================
 app.post("/api/updateUser", express.json(), async (req, res) => {
-  const { id, token, user } = req.body;
+  const { id, user } = req.body;
 
-  if (!validateToken(id, token))
-    return res.status(403).json({ error: "Invalid or expired token" });
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id))
+    return res.status(403).json({ error: "Invalid or expired session" });
 
-  if (!trainerData[id])
-    return res.status(404).json({ error: "User not found" });
+  if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
 
   await lockUser(id, async () => {
-    // Merge fields safely
-    trainerData[id] = normalizeUserSchema(
-      id,
-      { ...trainerData[id], ...user }
-    );
-
+    trainerData[id] = normalizeUserSchema(id, { ...trainerData[id], ...user });
     await enqueueSave(trainerData);
-
     res.json({ success: true });
   });
 });
-
 
 // ==========================================================
 // 🛍️ SHOP API — POKÉMON REWARD (Atomic, CC-safe, Exploit-proof)
 // ==========================================================
 app.post("/api/rewardPokemon", express.json(), async (req, res) => {
   try {
-    const { id, token, source } = req.body;
+    const { id, source } = req.body;
 
-    // ======================================================
-    // 🔐 TOKEN & USER VALIDATION
-    // ======================================================
-    if (!validateToken(id, token))
-      return res.status(403).json({ success: false, error: "Invalid token" });
+    if (!id) return res.status(400).json({ success: false, error: "Missing id" });
+    if (!requireDashboardSession(req, id))
+      return res.status(403).json({ success: false, error: "Invalid or expired session" });
 
     if (!trainerData[id])
       return res.status(404).json({ success: false, error: "User not found" });
@@ -1080,15 +1096,15 @@ if (interaction.isButton()) {
 });
 
 app.post("/api/claim-weekly", express.json(), async (req, res) => {
-  const { id, token } = req.body;
+  const { id } = req.body;
 
-  if (!validateToken(id, token))
-    return res.status(403).json({ error: "Invalid or expired token" });
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id))
+    return res.status(403).json({ error: "Invalid or expired session" });
 
   await lockUser(id, async () => {
     const user = trainerData[id];
-    if (!user)
-      return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const last = user.lastWeeklyPack ? new Date(user.lastWeeklyPack).getTime() : 0;
     const now = Date.now();
@@ -1109,13 +1125,13 @@ app.post("/api/claim-weekly", express.json(), async (req, res) => {
 // 🧰 WEEKLY PACK — Pokémon Only (Forced Rarity + Atomic Lock)
 // ==========================================================
 app.post("/api/weekly-pack", express.json(), async (req, res) => {
-  const { id, token } = req.body;
+  const { id } = req.body;
 
-  if (!validateToken(id, token))
-    return res.status(403).json({ error: "Invalid or expired token" });
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id))
+    return res.status(403).json({ error: "Invalid or expired session" });
 
-  if (!trainerData[id])
-    return res.status(404).json({ error: "User not found" });
+  if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
 
   await lockUser(id, async () => {
     const user = trainerData[id];
@@ -1134,13 +1150,12 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
     const results = [];
     const allPokemon = await getPokemonCached();
 
-    const poolFor = tier => allPokemon.filter(p => p.tier === tier);
-    const pick = tier => {
+    const poolFor = (tier) => allPokemon.filter((p) => p.tier === tier);
+    const pick = (tier) => {
       const pool = poolFor(tier);
       return pool[Math.floor(Math.random() * pool.length)];
     };
 
-    // ----------- Give Pokémon (forced rarity structure) ------------
     async function givePokemon(tier) {
       const reward = pick(tier);
       if (!reward) return;
@@ -1161,11 +1176,10 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
         shiny,
         sprite: shiny
           ? `/public/sprites/pokemon/shiny/${reward.id}.gif`
-          : `/public/sprites/pokemon/normal/${reward.id}.gif`
+          : `/public/sprites/pokemon/normal/${reward.id}.gif`,
       });
     }
 
-    // --------- Final Pokémon-only weekly pack ----------
     await givePokemon("common");
     await givePokemon("common");
     await givePokemon("common");
@@ -1173,13 +1187,9 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
     await givePokemon("uncommon");
     await givePokemon("rare");
 
-    // Save once
     await enqueueSave(trainerData);
 
-    res.json({
-      success: true,
-      rewards: results
-    });
+    res.json({ success: true, rewards: results });
   });
 });
 
@@ -1187,27 +1197,24 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
 // 🧩 TRAINER PICKER API ENDPOINT (Memory-based)
 // ===========================================================
 app.get("/api/user-trainers", (req, res) => {
-  const { id, token } = req.query;
-  if (!validateToken(id, token)) {
-    return res.status(403).json({ error: "Invalid or expired token" });
-  }
+  const { id } = req.query;
+
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id))
+    return res.status(403).json({ error: "Invalid or expired session" });
 
   const user = trainerData[id];
-  if (!user) {
-    return res.status(404).json({ error: "User not found in memory" });
-  }
+  if (!user) return res.status(404).json({ error: "User not found in memory" });
 
   const owned = Array.isArray(user.trainers)
     ? user.trainers
     : Object.keys(user.trainers || {});
 
-  // ⭐ FIX: Return CC so the trainer page has the correct value
   res.json({
     owned,
-    cc: user.cc ?? 0
+    cc: user.cc ?? 0,
   });
 });
-
 
 // ===========================================================
 // ✅ POST — Equip Trainer (Debounced Discord Save)
@@ -1216,13 +1223,13 @@ let lastTrainerSave = 0; // global throttle timestamp
 
 app.post("/api/set-trainer", express.json(), async (req, res) => {
   try {
-    const { id, token, name, file } = req.body;
+    const { id, name, file } = req.body;
 
-    if (!id || !token || !file)
-      return res.status(400).json({ success: false, error: "Missing id/token/file" });
+    if (!id || !file)
+      return res.status(400).json({ success: false, error: "Missing id/file" });
 
-    if (!validateToken(id, token))
-      return res.status(403).json({ success: false, error: "Invalid or expired token" });
+    if (!requireDashboardSession(req, id))
+      return res.status(403).json({ success: false, error: "Invalid or expired session" });
 
     await lockUser(id, async () => {
       const user = trainerData[id];
@@ -1235,25 +1242,23 @@ app.post("/api/set-trainer", express.json(), async (req, res) => {
       await enqueueSave(trainerData);
 
       console.log(`✅ ${id} equipped trainer ${file}`);
-
       res.json({ success: true });
     });
-
   } catch (err) {
     console.error("❌ /api/set-trainer failed:", err.message);
     res.status(500).json({ success: false });
   }
 });
 
-
 // ===========================================================
 // Purchase Trainer
 // ===========================================================
 app.post("/api/unlock-trainer", express.json(), async (req, res) => {
-  const { id, token, file } = req.body;
+  const { id, file } = req.body;
 
-  if (!validateToken(id, token))
-    return res.status(403).json({ error: "Invalid or expired token" });
+  if (!id || !file) return res.status(400).json({ error: "Missing id/file" });
+  if (!requireDashboardSession(req, id))
+    return res.status(403).json({ error: "Invalid or expired session" });
 
   await lockUser(id, async () => {
     const user = trainerData[id];
@@ -1263,46 +1268,32 @@ app.post("/api/unlock-trainer", express.json(), async (req, res) => {
     if (user.trainers.includes(file))
       return res.status(400).json({ error: "Trainer already owned" });
 
-    // Load trainer info to get tier
     const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
     const trainers = await getFlattenedTrainers();
 
-    const trainer = trainers.find(t =>
-  t.sprites && t.sprites.some(s => {
-    const fname = (s.file || s).toLowerCase();
-    return fname === file.toLowerCase();
-  })
-);
+    const trainer = trainers.find(
+      (t) =>
+        t.sprites &&
+        t.sprites.some((s) => {
+          const fname = (s.file || s).toLowerCase();
+          return fname === file.toLowerCase();
+        })
+    );
 
-
-    if (!trainer) {
-      return res.status(404).json({ error: "Trainer not found" });
-    }
+    if (!trainer) return res.status(404).json({ error: "Trainer not found" });
 
     const tier = (trainer.tier || trainer.rarity || "common").toLowerCase();
-
-    // Tier-based pricing
     const cost = TRAINER_COSTS[tier];
-    if (!cost) {
-      return res.status(400).json({ error: `Unknown trainer tier: ${tier}` });
-    }
 
-    if ((user.cc ?? 0) < cost) {
-      return res.status(400).json({ error: `Requires ${cost} CC` });
-    }
+    if (!cost) return res.status(400).json({ error: `Unknown trainer tier: ${tier}` });
+    if ((user.cc ?? 0) < cost) return res.status(400).json({ error: `Requires ${cost} CC` });
 
-    // Deduct CC + award trainer
     user.cc -= cost;
     user.trainers.push(file);
 
     await enqueueSave(trainerData);
 
-    res.json({
-      success: true,
-      file,
-      cost,
-      tier
-    });
+    res.json({ success: true, file, cost, tier });
   });
 });
 
@@ -1338,9 +1329,11 @@ app.get("/api/shop-trainers", async (req, res) => {
 
 // ✅ GET full user Pokémon data (for web picker)
 app.get("/api/user-pokemon", (req, res) => {
-  const { id, token } = req.query;
-  if (!validateToken(id, token))
-    return res.status(403).json({ error: "Invalid or expired token" });
+  const { id } = req.query;
+
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id))
+    return res.status(403).json({ error: "Invalid or expired session" });
 
   const user = trainerData[id];
   if (!user)
@@ -1370,50 +1363,38 @@ res.json({
 // ✅ POST — set full Pokémon team (up to 6) — Ghost Pokémon Auto-Clean
 app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   try {
-    const { id, token, team } = req.body;
+    const { id, team } = req.body;
 
-    if (!id || !token || !Array.isArray(team))
-      return res.status(400).json({ success: false, error: "Missing id/token/team" });
+    if (!id || !Array.isArray(team))
+      return res.status(400).json({ success: false, error: "Missing id/team" });
 
-    if (!validateToken(id, token))
-      return res.status(403).json({ success: false, error: "Invalid or expired token" });
+    if (!requireDashboardSession(req, id))
+      return res.status(403).json({ success: false, error: "Invalid or expired session" });
 
     await lockUser(id, async () => {
       const user = trainerData[id];
       if (!user)
         return res.status(404).json({ success: false, error: "User not found" });
 
-      // ==========================================================
-      // ⭐ 1. AUTO-PURGE GHOST / UNOWNED POKÉMON FROM SAVED TEAM
-      // ==========================================================
-      const owns = pid => {
+      const owns = (pid) => {
         const p = user.pokemon?.[pid];
         return !!p && (p.normal > 0 || p.shiny > 0);
       };
 
-      user.displayedPokemon = (user.displayedPokemon || []).filter(pid => owns(pid));
+      user.displayedPokemon = (user.displayedPokemon || []).filter((pid) => owns(pid));
 
-      // ==========================================================
-      // ⭐ 2. Normalize NEW submitted team
-      // ==========================================================
-      const normalized = [...new Set(team.map(n => Number(n)).filter(n => Number.isInteger(n)))];
+      const normalized = [...new Set(team.map((n) => Number(n)).filter((n) => Number.isInteger(n)))];
 
       if (normalized.length === 0 || normalized.length > 6)
         return res.status(400).json({ success: false, error: "Team must be 1–6 unique IDs" });
 
-      // ==========================================================
-      // ⭐ 3. Validate ownership ONLY for new team (not old)
-      // ==========================================================
-      const unowned = normalized.filter(pid => !owns(pid));
+      const unowned = normalized.filter((pid) => !owns(pid));
       if (unowned.length)
         return res.status(400).json({
           success: false,
-          error: `Unowned Pokémon: ${unowned.join(", ")}`
+          error: `Unowned Pokémon: ${unowned.join(", ")}`,
         });
 
-      // ==========================================================
-      // ⭐ 4. Save clean team
-      // ==========================================================
       user.displayedPokemon = normalized;
       trainerData[id] = user;
 
@@ -1421,7 +1402,6 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
 
       res.json({ success: true });
     });
-
   } catch (err) {
     console.error("❌ /api/set-pokemon-team:", err.message);
     res.status(500).json({ success: false });
@@ -1432,26 +1412,22 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
 // 🧬 EVOLVE — Atomic Per-User Lock Version
 // ==========================================================
 app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
-  const { id, token, baseId, targetId, shiny } = req.body;
+  const { id, baseId, targetId, shiny } = req.body;
 
-  if (!validateToken(id, token))
-    return res.status(403).json({ error: "Invalid or expired token" });
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id))
+    return res.status(403).json({ error: "Invalid or expired session" });
 
-  if (!trainerData[id])
-    return res.status(404).json({ error: "User not found" });
+  if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
 
   await lockUser(id, async () => {
     const user = trainerData[id];
 
-    const pokemonData = JSON.parse(
-      fsSync.readFileSync("public/pokemonData.json", "utf8")
-    );
-
+    const pokemonData = JSON.parse(fsSync.readFileSync("public/pokemonData.json", "utf8"));
     const base = pokemonData[baseId];
     const target = pokemonData[targetId];
 
-    if (!base || !target)
-      return res.status(400).json({ error: "Invalid Pokémon IDs" });
+    if (!base || !target) return res.status(400).json({ error: "Invalid Pokémon IDs" });
 
     const COST_MAP = {
       "common-common": 1,
@@ -1473,7 +1449,7 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
       "uncommon-mythic": 14,
       "rare-legendary": 8,
       "rare-mythic": 14,
-      "epic-mythic": 12
+      "epic-mythic": 12,
     };
 
     const currentTier = base.tier;
@@ -1483,7 +1459,7 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
     const cost = COST_MAP[key] ?? 0;
     if (cost <= 0)
       return res.status(400).json({
-        error: `Evolution path ${currentTier} ➝ ${nextTier} is not supported`
+        error: `Evolution path ${currentTier} ➝ ${nextTier} is not supported`,
       });
 
     if (!user.items || user.items.evolution_stone < cost)
@@ -1493,12 +1469,9 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
 
     if (!user.pokemon?.[baseId]?.[variant])
       return res.status(400).json({
-        error: `You do not own a ${shiny ? "shiny " : ""}${base.name}.`
+        error: `You do not own a ${shiny ? "shiny " : ""}${base.name}.`,
       });
 
-    // ======================
-    // APPLY EVOLUTION
-    // ======================
     user.items.evolution_stone -= cost;
 
     user.pokemon[baseId][variant] -= 1;
@@ -1512,24 +1485,19 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
 
     return res.json({
       success: true,
-      evolved: {
-        from: base.name,
-        to: target.name,
-        shiny,
-        cost
-      },
-      stonesRemaining: user.items.evolution_stone
+      evolved: { from: base.name, to: target.name, shiny, cost },
+      stonesRemaining: user.items.evolution_stone,
     });
   });
 });
 
-
 // 💝 Donate Pokémon (normal + shiny supported, 5× CC for shiny)
 app.post("/api/pokemon/donate", express.json(), async (req, res) => {
-  const { id, token, pokeId, shiny } = req.body;
+  const { id, pokeId, shiny } = req.body;
 
-  if (!validateToken(id, token))
-    return res.status(403).json({ error: "Invalid or expired token" });
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id))
+    return res.status(403).json({ error: "Invalid or expired session" });
 
   await lockUser(id, async () => {
     const user = trainerData[id];

@@ -1,10 +1,9 @@
 // ======================================================================
-// 🛒 Coop's Collection — SHOP TAB SCRIPT (MODULE VERSION)
+// 🛒 Coop's Collection — SHOP TAB SCRIPT (COOKIE SESSION VERSION)
 // ======================================================================
 
 let user = null;
 let userId = null;
-let token = null;
 
 import { rarityEmojis, rarityColors } from "/public/spriteconfig.js";
 
@@ -22,21 +21,27 @@ window.ITEM_COSTS = {
 };
 
 // ======================================================
-// 🔐 LOAD USER
+// 🔐 LOAD USER (cookie session)
 // ======================================================
 async function loadUser() {
   const params = new URLSearchParams(window.location.search);
   userId = params.get("id");
-  token = params.get("token");
 
-  if (!userId || !token) {
-    console.warn("Missing id or token in URL");
+  if (!userId) {
+    console.warn("Missing id in URL");
+    document.body.innerHTML =
+      "<p class='error'>❌ Missing user id. Please open the dashboard link from Discord.</p>";
     return;
   }
 
-  const res = await fetch(`/api/user?id=${userId}&token=${token}`);
+  const res = await fetch(`/api/user?id=${encodeURIComponent(userId)}`, {
+    credentials: "same-origin",
+  });
+
   if (!res.ok) {
     console.error("Failed to load user");
+    document.body.innerHTML =
+      "<p class='error'>❌ Session expired. Please re-open the dashboard link from Discord.</p>";
     return;
   }
 
@@ -45,13 +50,14 @@ async function loadUser() {
 }
 
 // ======================================================
-// 💾 SAVE USER
+// 💾 SAVE USER (cookie session)
 // ======================================================
 async function saveUser() {
   const res = await fetch("/api/updateUser", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: userId, token, user }),
+    body: JSON.stringify({ id: userId, user }),
   });
 
   if (!res.ok) throw new Error("Failed to save user");
@@ -89,9 +95,7 @@ function showShopModal({ title, message, sprites = [], onConfirm }) {
   const modal = document.createElement("div");
   modal.id = "shopModal";
 
-  const spriteHTML = sprites
-    .map((src) => `<img src="${src}" alt="sprite">`)
-    .join("");
+  const spriteHTML = sprites.map((src) => `<img src="${src}" alt="sprite">`).join("");
 
   modal.innerHTML = `
     <h2 style="color:#00ff9d;margin-top:0;">${title}</h2>
@@ -138,10 +142,7 @@ function showShopModal({ title, message, sprites = [], onConfirm }) {
 function canClaimWeeklyPack() {
   if (!user || !user.lastWeeklyPack) return true;
 
-  return (
-    Date.now() - new Date(user.lastWeeklyPack).getTime() >
-    7 * 24 * 60 * 60 * 1000
-  );
+  return Date.now() - new Date(user.lastWeeklyPack).getTime() > 7 * 24 * 60 * 60 * 1000;
 }
 
 // ======================================================
@@ -150,20 +151,21 @@ function canClaimWeeklyPack() {
 function updateUI() {
   if (!user) return;
 
-  document.getElementById("ccCount").textContent = user.cc;
-  document.getElementById("stoneCount").textContent =
-    user.items?.evolution_stone || 0;
+  document.getElementById("ccCount").textContent = user.cc ?? 0;
+  document.getElementById("stoneCount").textContent = user.items?.evolution_stone || 0;
 
   const weeklyBtn = document.querySelector("[data-item='weekly']");
-  weeklyBtn.disabled = !canClaimWeeklyPack();
-  weeklyBtn.textContent = canClaimWeeklyPack() ? "Claim" : "Claimed";
+  if (weeklyBtn) {
+    weeklyBtn.disabled = !canClaimWeeklyPack();
+    weeklyBtn.textContent = canClaimWeeklyPack() ? "Claim" : "Claimed";
+  }
 }
 
 // ======================================================
-// CC SPENDING
+// CC SPENDING (client-side only for evo stone purchase UI)
 // ======================================================
 function charge(cost) {
-  if (user.cc < cost) {
+  if ((user.cc ?? 0) < cost) {
     alert("Not enough CC!");
     return false;
   }
@@ -184,8 +186,8 @@ async function buyStone(cost) {
 
       const closeLoading = showLoadingModal();
 
-      user.items.evolution_stone =
-        (user.items.evolution_stone || 0) + 1;
+      user.items ??= {};
+      user.items.evolution_stone = (user.items.evolution_stone || 0) + 1;
 
       await saveUser();
       updateUI();
@@ -202,7 +204,7 @@ async function buyStone(cost) {
 }
 
 // ======================================================
-// BUY POKEBALL
+// BUY POKEBALL (server authoritative)
 // ======================================================
 async function buyPokeball(type, cost) {
   const ballSprite = `/public/sprites/items/${type}.png`;
@@ -212,13 +214,11 @@ async function buyPokeball(type, cost) {
     message: `Buy a ${type.replace("ball", " Ball")} for ${cost} CC?`,
     sprites: [ballSprite],
     onConfirm: async () => {
-      // 🛡️ IMPORTANT: no local charge(), no saveUser() here.
-      // Server is the source of truth for CC & inventory.
-
       const reward = await fetch("/api/rewardPokemon", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: userId, token, source: type }),
+        body: JSON.stringify({ id: userId, source: type }),
       }).then((r) => r.json());
 
       if (!reward.success) {
@@ -230,7 +230,6 @@ async function buyPokeball(type, cost) {
         return;
       }
 
-      // 🔄 Update CC from server response
       if (typeof reward.cc === "number") {
         user.cc = reward.cc;
         updateUI();
@@ -253,7 +252,6 @@ async function buyPokeball(type, cost) {
         onConfirm: () => {},
       });
 
-      // 🔒 Disable cancel AFTER reward is shown
       setTimeout(() => {
         const overlay = document.getElementById("shopModalOverlay");
         if (!overlay) return;
@@ -273,7 +271,7 @@ async function buyPokeball(type, cost) {
 }
 
 // ======================================================
-// WEEKLY PACK — NEW SINGLE-CALL VERSION (uses /api/weekly-pack)
+// WEEKLY PACK — Single call (cookie session)
 // ======================================================
 async function claimWeeklyPack() {
   if (!canClaimWeeklyPack()) return;
@@ -283,14 +281,12 @@ async function claimWeeklyPack() {
 
   const closeLoading = showLoadingModal();
 
-  // ======================================================
-  // 🚀 NEW: Single-server-call weekly pack
-  // ======================================================
   const res = await fetch("/api/weekly-pack", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: userId, token })
-  }).then(r => r.json());
+    body: JSON.stringify({ id: userId }),
+  }).then((r) => r.json());
 
   closeLoading();
 
@@ -302,14 +298,10 @@ async function claimWeeklyPack() {
 
   const rewards = res.rewards || [];
 
-  // Force reload user so cooldown updates
   await loadUser();
   updateUI();
 
-  // ======================================================
-  // Build pretty reward lines
-  // ======================================================
-  const rewardLines = rewards.map(r => {
+  const rewardLines = rewards.map((r) => {
     const emoji = window.rarityEmojis?.[r.rarity] ?? "";
     const color = window.rarityColors?.[r.rarity] ?? "#fff";
     return `
@@ -319,17 +311,11 @@ async function claimWeeklyPack() {
     `;
   });
 
-  // ======================================================
-  // Show final modal
-  // ======================================================
   showShopModal({
     title: "Weekly Pack Rewards!",
     message: rewardLines.join("<br>"),
-    sprites: [
-      "/public/sprites/items/starter_pack.png",
-      ...rewards.map(r => r.sprite)
-    ],
-    onConfirm: () => {}
+    sprites: ["/public/sprites/items/starter_pack.png", ...rewards.map((r) => r.sprite)],
+    onConfirm: () => {},
   });
 }
 
@@ -355,21 +341,12 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ======================================================
-// TOKEN-SAFE NAVIGATION
+// TOKEN-FREE NAVIGATION
 // ======================================================
 (function initNavTabs() {
-  function getSafeParams() {
-    if (userId && token) return { id: userId, token };
-
-    const params = new URLSearchParams(window.location.search);
-    return {
-      id: params.get("id"),
-      token: params.get("token"),
-    };
-  }
-
-  const { id, token: safeToken } = getSafeParams();
-  if (!id || !safeToken) return;
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  if (!id) return;
 
   const goPokemon = document.getElementById("goPokemon");
   const goTrainers = document.getElementById("goTrainers");
@@ -377,13 +354,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (goPokemon)
     goPokemon.onclick = () =>
-      (window.location.href = `/public/picker-pokemon/?id=${id}&token=${safeToken}`);
+      (window.location.href = `/public/picker-pokemon/?id=${encodeURIComponent(id)}`);
 
   if (goTrainers)
     goTrainers.onclick = () =>
-      (window.location.href = `/public/picker/?id=${id}&token=${safeToken}`);
+      (window.location.href = `/public/picker/?id=${encodeURIComponent(id)}`);
 
   if (goShop)
     goShop.onclick = () =>
-      (window.location.href = `/public/picker-shop/?id=${id}&token=${safeToken}`);
+      (window.location.href = `/public/picker-shop/?id=${encodeURIComponent(id)}`);
 })();

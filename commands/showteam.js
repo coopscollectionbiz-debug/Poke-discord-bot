@@ -50,18 +50,25 @@ export default {
     // IMPORTANT: match your actual sprite path convention.
     // Your starter embed uses `${spritePaths.pokemon}normal/${id}.gif`
     const team = teamIds
-      .map(id => {
-        const p = allPokemon.find(x => x.id === Number(id));
-        if (!p) return null;
+  .map(id => {
+    const p = allPokemon.find(x => x.id === Number(id));
+    if (!p) return null;
 
-        return {
-          id: p.id,
-          name: p.name,
-          tier: (p.tier || p.rarity || "common"),
-          spriteUrl: `${spritePaths.pokemon}normal/${p.id}.gif`,
-        };
-      })
-      .filter(Boolean);
+    const owned = user.pokemon?.[p.id];
+    const isShiny = (owned?.shiny || 0) > 0;
+
+    return {
+      id: p.id,
+      name: p.name,
+      tier: (p.tier || p.rarity || "common"),
+      isShiny, // ✅ pass through to canvas
+      spriteUrl: isShiny
+        ? `${spritePaths.shiny}${p.id}.gif`
+        : `${spritePaths.pokemon}${p.id}.gif`,
+    };
+  })
+  .filter(Boolean);
+
 
     // Trainer sprite
     const trainerFile = user.displayedTrainer || null;

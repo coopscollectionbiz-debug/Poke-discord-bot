@@ -289,22 +289,39 @@ export async function renderTrainerCardCanvas({
 
     ctx.drawImage(trainerImg, dx, dy, dw, dh);
 
-    // Tier badge under sprite
-    const badgeH = 38;
-    const bx = pad + 20;
-    const by = dy + dh + 14;
+    // Tier badge under sprite (centered + never clipped)
+const badgeH = 38;
+const trainerBadgeText = `${trainerTierEmoji} ${trainerTierKey.toUpperCase()}`.trim();
 
-    const trainerBadgeText = `${trainerTierEmoji} ${trainerTierKey.toUpperCase()}`.trim();
-    drawCenteredBadge(ctx, {
-      x: bx,
-      y: by,
-      text: trainerBadgeText,
-      font: `600 18px ${FONT_STACK}`,
-      bgColor: trainerTierColor,
-      height: badgeH,
-      radius: 12,
-      maxWidth: leftW - 40,
-    });
+// Measure first so we can center the badge perfectly
+ctx.font = `600 18px ${FONT_STACK}`;
+const m = ctx.measureText(trainerBadgeText);
+const paddingX = 14;
+const badgeW = Math.min(Math.ceil(m.width + paddingX * 2), leftW - 40);
+
+// Center horizontally in left panel
+const bx = pad + Math.floor((leftW - badgeW) / 2);
+
+// Clamp vertically so it never goes below the panel
+const panelTop = pad;
+const panelBottom = H - pad;
+const maxBy = panelBottom - badgeH - 12;
+
+let by = dy + dh + 14;
+if (by > maxBy) by = maxBy;
+
+// Draw the badge (uses your perfect centering function)
+drawCenteredBadge(ctx, {
+  x: bx,
+  y: by,
+  text: trainerBadgeText,
+  font: `600 18px ${FONT_STACK}`,
+  bgColor: trainerTierColor,
+  height: badgeH,
+  radius: 12,
+  maxWidth: leftW - 40,
+});
+
   } else {
     ctx.fillStyle = "rgba(255,255,255,0.5)";
     ctx.font = `500 18px ${FONT_STACK}`;
@@ -371,11 +388,11 @@ export async function renderTrainerCardCanvas({
       ctx.fillText("Sprite failed", x + 14, y + 95);
     }
 
-    // name (shiny-aware)
-    ctx.fillStyle = "rgba(255,255,255,0.92)";
-    ctx.font = `600 18px ${FONT_STACK}`;
-    const nameText = p.isShiny ? `✨ ${p.name}` : p.name;
-    ctx.fillText(nameText, x + 110, y + 88);
+    // name
+ctx.fillStyle = "rgba(255,255,255,0.92)";
+ctx.font = `600 18px ${FONT_STACK}`;
+ctx.fillText(p.name, x + 110, y + 88);
+
 
     // id
     ctx.fillStyle = "rgba(255,255,255,0.75)";

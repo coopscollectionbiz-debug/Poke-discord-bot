@@ -1,4 +1,4 @@
-// commands/showfullteamcard.js
+// commands/showteam.js
 import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import fs from "fs";
 import path from "path";
@@ -23,19 +23,15 @@ const spriteToTrainerMap = buildSpriteToTrainerMap(trainerSprites);
 export default {
   data: new SlashCommandBuilder()
     .setName("showteam")
-    .setDescription("Show your trainer + full team as a canvas card.")
-    .addUserOption(opt =>
-      opt.setName("user").setDescription("Show another user's card (optional)").setRequired(false)
-    ),
+    .setDescription("Show your trainer + full team as a canvas card."),
 
   async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, client) {
-    await interaction.deferReply({ ephemeral: false });
-
-    const target = interaction.options.getUser("user") || interaction.user;
+    // ✅ Public reply
+    await interaction.deferReply();
 
     const user = await ensureUserInitialized(
-      target.id,
-      target.username,
+      interaction.user.id,
+      interaction.user.username,
       trainerData,
       client
     );
@@ -43,43 +39,60 @@ export default {
     const allPokemon = await getAllPokemon();
 
     // Team ids: prefer displayedPokemon, else first 6 owned
-    const displayed = Array.isArray(user.displayedPokemon) ? user.displayedPokemon.slice(0, 6) : [];
+    const displayed = Array.isArray(user.displayedPokemon)
+      ? user.displayedPokemon.slice(0, 6)
+      : [];
+
     const teamIds = displayed.length
       ? displayed
       : Object.keys(user.pokemon || {}).map(Number).slice(0, 6);
 
-    // IMPORTANT: match your actual sprite path convention.
-    // Your starter embed uses `${spritePaths.pokemon}normal/${id}.gif`
+    // Normalize sprite bases
+    const normalBase = spritePaths.pokemon.includes("/normal/")
+      ? spritePaths.pokemon
+      : `${spritePaths.pokemon}normal/`;
+
+    const shinyBase = spritePaths.shiny.includes("/shiny/")
+      ? spritePaths.shiny
+      : `${spritePaths.shiny}shiny/`;
+
     const team = teamIds
-  .map(id => {
-    const p = allPokemon.find(x => x.id === Number(id));
-    if (!p) return null;
+      .map(id => {
+        const p = allPokemon.find(x => x.id === Number(id));
+        if (!p) return null;
 
-    const owned = user.pokemon?.[p.id];
-    const isShiny = (owned?.shiny || 0) > 0;
+        const owned = user.pokemon?.[p.id];
+        const isShiny = (owned?.shiny || 0) > 0;
 
-    return {
-      id: p.id,
-      name: p.name,
-      tier: (p.tier || p.rarity || "common"),
-      isShiny, // ✅ pass through to canvas
-      spriteUrl: isShiny
-        ? `${spritePaths.shiny}${p.id}.gif`
-        : `${spritePaths.pokemon}${p.id}.gif`,
-    };
-  })
-  .filter(Boolean);
-
+        return {
+          id: p.id,
+          name: p.name,
+          tier: (p.tier || p.rarity || "common"),
+          isShiny,
+          spriteUrl: isShiny
+            ? `${shinyBase}${p.id}.gif`
+            : `${normalBase}${p.id}.gif`,
+        };
+      })
+      .filter(Boolean);
 
     // Trainer sprite
-    const trainerFile = user.displayedTrainer || null;
-    const trainerSpriteUrl = trainerFile ? `${spritePaths.trainers}${trainerFile}` : "";
+    const trainerFile = user.displayedTrainer || "";
+    const trainerSpriteUrl = trainerFile
+      ? `${spritePaths.trainers}${trainerFile}`
+      : "";
 
-    const displayName =
-      interaction.guild?.members?.cache?.get(target.id)?.displayName ||
-      target.username;
+    // Display name = member displayName if possible
+    const member = interaction.guild
+      ? await interaction.guild.members.fetch(interaction.user.id).catch(() => null)
+      : null;
 
-    const avatarUrl = target.displayAvatarURL({ extension: "png", size: 256 });
+    const displayName = member?.displayName || interaction.user.username;
+
+    const avatarUrl = interaction.user.displayAvatarURL({
+      extension: "png",
+      size: 256,
+    });
 
     const png = await renderTrainerCardCanvas({
       displayName,
@@ -87,7 +100,7 @@ export default {
       rankLabel: getRank(user.tp),
       tp: user.tp,
       trainerSpriteUrl,
-      trainerSpriteFileName: trainerFile || "",
+      trainerSpriteFileName: trainerFile,
       spriteToTrainerMap,
       team,
     });

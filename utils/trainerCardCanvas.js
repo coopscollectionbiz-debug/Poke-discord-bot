@@ -11,8 +11,32 @@ const TIER_COLORS = {
   mythic: "#ef4444",
 };
 
+// Softer + symbol-friendly fonts on Linux/Render
+const FONT_STACK =
+  "ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'DejaVu Sans', 'Noto Sans', Arial, sans-serif";
+
+const SAFE_RARITY = {
+  common: "•",
+  uncommon: "✦",
+  rare: "★",
+  epic: "✮✮",
+  legendary: "✮✮✮",
+  mythic: "✮✮✮✮",
+};
+
 function normTier(t) {
   return String(t || "common").toLowerCase();
+}
+
+// Strip variation selectors that can render as tofu boxes on canvas fonts
+function stripVariationSelectors(s) {
+  return String(s || "").replace(/[\uFE0E\uFE0F]/g, "");
+}
+
+function getTierMark(tierKey) {
+  const raw = rarityEmojis?.[tierKey] ?? SAFE_RARITY[tierKey] ?? "";
+  const cleaned = stripVariationSelectors(raw).trim();
+  return cleaned || SAFE_RARITY[tierKey] || "";
 }
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -42,10 +66,42 @@ function drawCircleImage(ctx, img, cx, cy, r) {
   ctx.restore();
 }
 
+// Keep aspect ratio (prevents "squished" sprites)
+function drawImageContain(ctx, img, x, y, boxW, boxH) {
+  const sw = img.width || 1;
+  const sh = img.height || 1;
+
+  const scale = Math.min(boxW / sw, boxH / sh);
+  const dw = Math.floor(sw * scale);
+  const dh = Math.floor(sh * scale);
+
+  const dx = x + Math.floor((boxW - dw) / 2);
+  const dy = y + Math.floor((boxH - dh) / 2);
+
+  ctx.drawImage(img, dx, dy, dw, dh);
+}
+
+// Stack multiple centered lines with proper spacing
+function drawStackedCenteredText(ctx, lines, x, startY, maxWidth, lineGap = 6) {
+  let y = startY;
+  for (const { text, font, color } of lines) {
+    ctx.font = font;
+    ctx.fillStyle = color;
+
+    const m = ctx.measureText(text);
+    const tx = x + (maxWidth - m.width) / 2;
+
+    ctx.textBaseline = "alphabetic";
+    ctx.fillText(text, tx, y);
+
+    y += (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) + lineGap;
+  }
+}
+
 /**
  * Loads sprites reliably:
  * - If url ends with .gif, try .png first (canvas-friendly), then fallback to .gif
- * - If url is already .png, load directly
+ * - Otherwise load directly
  */
 async function loadSprite(url) {
   if (!url) throw new Error("Missing sprite URL");
@@ -66,34 +122,32 @@ async function loadSprite(url) {
  * Draw a badge where the text is PERFECTLY centered (both axes),
  * and the width auto-sizes to the text (with optional cap).
  */
-function drawCenteredBadge(ctx, {
-  x,
-  y,
-  text,
-  font = "bold 16px sans-serif",
-  bgColor,
-  textColor = "#0b1220",
-  paddingX = 14,
-  height = 30,
-  radius = 10,
-  maxWidth = Infinity,
-}) {
+function drawCenteredBadge(
+  ctx,
+  {
+    x,
+    y,
+    text,
+    font = `600 16px ${FONT_STACK}`,
+    bgColor,
+    textColor = "#0b1220",
+    paddingX = 14,
+    height = 30,
+    radius = 10,
+    maxWidth = Infinity,
+  }
+) {
   ctx.font = font;
 
   const metrics = ctx.measureText(text);
   const textW = metrics.width;
 
-  const badgeW = Math.min(
-    Math.ceil(textW + paddingX * 2),
-    maxWidth
-  );
+  const badgeW = Math.min(Math.ceil(textW + paddingX * 2), maxWidth);
 
-  // Background
   ctx.fillStyle = bgColor;
   roundRect(ctx, x, y, badgeW, height, radius);
   ctx.fill();
 
-  // Perfect centering using font metrics
   const textX = x + (badgeW - textW) / 2;
   const textY =
     y +
@@ -101,6 +155,7 @@ function drawCenteredBadge(ctx, {
     (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
 
   ctx.fillStyle = textColor;
+  ctx.textBaseline = "alphabetic";
   ctx.fillText(text, textX, textY);
 
   return badgeW;
@@ -116,10 +171,9 @@ export function buildSpriteToTrainerMap(trainerSprites) {
     if (!Array.isArray(entry?.sprites)) continue;
 
     for (const s of entry.sprites) {
-      // Only strings (you said you don't want {file: ...} entries)
       if (typeof s !== "string") continue;
 
-      const filename = s.toLowerCase();                 // "acerola-masters.png"
+      const filename = s.toLowerCase(); // "acerola-masters.png"
       const basename = filename.replace(/\.(png|gif)$/i, ""); // "acerola-masters"
 
       if (!map.has(filename)) map.set(filename, { key, tier });
@@ -133,12 +187,16 @@ export function buildSpriteToTrainerMap(trainerSprites) {
 export async function renderTrainerCardCanvas({
   displayName,
   avatarUrl,
-  trainerSpriteUrl,      // full URL to the trainer sprite
-  trainerSpriteFileName, // e.g. "acerola-masters.png"
-  spriteToTrainerMap,    // Map from buildSpriteToTrainerMap()
-  team, 		 // [{ id, name, tier, spriteUrl, isShiny }]
+
+  // replaces "TRAINER" above avatar
+  rankLabel, // string (already computed in command)
+  tp, // number
+
+  trainerSpriteUrl,
+  trainerSpriteFileName,
+  spriteToTrainerMap,
+  team, // [{ id, name, tier, spriteUrl, isShiny }]
 }) {
-  // Canvas sizing
   const W = 1200;
   const H = 520;
 
@@ -172,34 +230,53 @@ export async function renderTrainerCardCanvas({
 
   const trainerTierKey = normTier(hit?.tier || "common");
   const trainerTierColor = TIER_COLORS[trainerTierKey] || TIER_COLORS.common;
-  const trainerTierEmoji = rarityEmojis[trainerTierKey] || "";
+  const trainerTierEmoji = getTierMark(trainerTierKey);
 
-  // Header text (left)
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 28px sans-serif";
-  drawCenteredText(ctx, "TRAINER", pad, pad + 44, leftW);
+  // ======= Rank + TP (centered above avatar) =======
+  const safeRank = (rankLabel ? String(rankLabel) : "RANK").toUpperCase();
+  const safeTp = Number.isFinite(tp) ? Math.floor(tp) : 0;
+
+  drawStackedCenteredText(
+    ctx,
+    [
+      { text: safeRank, font: `600 26px ${FONT_STACK}`, color: "#ffffff" },
+      {
+        text: `TP: ${safeTp.toLocaleString()}`,
+        font: `500 18px ${FONT_STACK}`,
+        color: "rgba(255,255,255,0.85)",
+      },
+    ],
+    pad,
+    pad + 48,
+    leftW,
+    4
+  );
 
   // Avatar
   let avatarImg = null;
-  try { avatarImg = await loadSprite(avatarUrl); } catch {}
+  try {
+    avatarImg = await loadSprite(avatarUrl);
+  } catch {}
+
   const avatarCx = pad + leftW / 2;
-  const avatarCy = pad + 105;
+  const avatarCy = pad + 128;
   if (avatarImg) drawCircleImage(ctx, avatarImg, avatarCx, avatarCy, 44);
 
   // Display name
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 26px sans-serif";
-  drawCenteredText(ctx, displayName, pad, pad + 180, leftW);
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  ctx.font = `600 26px ${FONT_STACK}`;
+  drawCenteredText(ctx, displayName, pad, pad + 210, leftW);
 
   // Trainer sprite
   let trainerImg = null;
-  try { trainerImg = await loadSprite(trainerSpriteUrl); } catch {}
+  try {
+    trainerImg = await loadSprite(trainerSpriteUrl);
+  } catch {}
 
   if (trainerImg) {
     const spriteMaxW = 260;
     const spriteMaxH = 220;
 
-    // Fit within box
     const sw = trainerImg.width || 1;
     const sh = trainerImg.height || 1;
     const scale = Math.min(spriteMaxW / sw, spriteMaxH / sh);
@@ -208,21 +285,21 @@ export async function renderTrainerCardCanvas({
     const dh = Math.floor(sh * scale);
 
     const dx = pad + Math.floor((leftW - dw) / 2);
-    const dy = pad + 210;
+    const dy = pad + 240;
 
     ctx.drawImage(trainerImg, dx, dy, dw, dh);
 
-    // Tier badge under sprite (centered + emoji)
+    // Tier badge under sprite
     const badgeH = 38;
     const bx = pad + 20;
-    const by = dy + dh + 16;
+    const by = dy + dh + 14;
 
     const trainerBadgeText = `${trainerTierEmoji} ${trainerTierKey.toUpperCase()}`.trim();
     drawCenteredBadge(ctx, {
       x: bx,
       y: by,
       text: trainerBadgeText,
-      font: "bold 18px sans-serif",
+      font: `600 18px ${FONT_STACK}`,
       bgColor: trainerTierColor,
       height: badgeH,
       radius: 12,
@@ -230,13 +307,13 @@ export async function renderTrainerCardCanvas({
     });
   } else {
     ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.font = "18px sans-serif";
-    drawCenteredText(ctx, "Trainer sprite failed to load", pad, pad + 320, leftW);
+    ctx.font = `500 18px ${FONT_STACK}`;
+    drawCenteredText(ctx, "Trainer sprite failed to load", pad, pad + 340, leftW);
   }
 
   // Right side: Team grid (2x3)
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 26px sans-serif";
+  ctx.font = `600 26px ${FONT_STACK}`;
   ctx.fillText("TEAM", rightX + 18, pad + 44);
 
   const cols = 3;
@@ -259,51 +336,50 @@ export async function renderTrainerCardCanvas({
     roundRect(ctx, x, y, tileW, tileH, 16);
     ctx.fill();
 
-    const p = team[i];
+    const p = team?.[i];
     if (!p) {
       ctx.fillStyle = "rgba(255,255,255,0.35)";
-      ctx.font = "18px sans-serif";
+      ctx.font = `500 18px ${FONT_STACK}`;
       ctx.fillText("Empty", x + 14, y + 30);
       continue;
     }
 
     const tierKey = normTier(p.tier);
     const tierColor = TIER_COLORS[tierKey] || TIER_COLORS.common;
-    const tierEmoji = rarityEmojis[tierKey] || "";
+    const tierEmoji = getTierMark(tierKey);
 
-    // tier badge (perfectly centered + emoji)
+    // tier badge (emoji + perfectly centered)
     const badgeText = `${tierEmoji} ${tierKey.toUpperCase()}`.trim();
     drawCenteredBadge(ctx, {
       x: x + 12,
       y: y + 12,
       text: badgeText,
-      font: "bold 16px sans-serif",
+      font: `600 16px ${FONT_STACK}`,
       bgColor: tierColor,
       height: 30,
       radius: 10,
       maxWidth: tileW - 24,
     });
 
-    // sprite
+    // sprite (aspect-ratio preserved)
     try {
       const img = await loadSprite(p.spriteUrl);
-      ctx.drawImage(img, x + 14, y + 50, 86, 86);
+      drawImageContain(ctx, img, x + 14, y + 50, 86, 86);
     } catch {
       ctx.fillStyle = "rgba(255,255,255,0.35)";
-      ctx.font = "14px sans-serif";
+      ctx.font = `500 14px ${FONT_STACK}`;
       ctx.fillText("Sprite failed", x + 14, y + 95);
     }
 
-    // name
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 18px sans-serif";
+    // name (shiny-aware)
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.font = `600 18px ${FONT_STACK}`;
     const nameText = p.isShiny ? `✨ ${p.name}` : p.name;
-ctx.fillText(nameText, x + 110, y + 88);
-
+    ctx.fillText(nameText, x + 110, y + 88);
 
     // id
     ctx.fillStyle = "rgba(255,255,255,0.75)";
-    ctx.font = "16px sans-serif";
+    ctx.font = `500 16px ${FONT_STACK}`;
     ctx.fillText(`#${p.id}`, x + 110, y + 112);
   }
 

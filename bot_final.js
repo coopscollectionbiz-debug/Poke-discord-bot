@@ -666,40 +666,58 @@ process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
 
 // ==========================================================
-// 📰 POKÉBEACH SCRAPER (Simplified Link-Only, every 2 hours)
+// 📰 POKÉBEACH RSS (Front Page News) — Link-only, every 2 hours
 // ==========================================================
+const POKEBEACH_RSS = "https://www.pokebeach.com/forums/forum/front-page-news.18/index.rss";
+
 async function checkPokeBeach() {
   try {
     const newsChannel = await client.channels.fetch(process.env.NEWS_CHANNEL_ID);
     if (!newsChannel) return console.error("❌ NEWS_CHANNEL_ID invalid or missing.");
 
-    console.log("📰 Checking PokéBeach...");
-    const res = await fetch("https://www.pokebeach.com/");
+    console.log("📰 Checking PokéBeach RSS...");
+
+    const res = await fetch(POKEBEACH_RSS, {
+      redirect: "follow",
+      headers: {
+        // Make it look like a normal browser request (helps even for RSS sometimes)
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
+        "accept": "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7",
+        "accept-language": "en-US,en;q=0.9",
+      },
+    });
+
     if (!res.ok) {
-      console.error(`❌ Fetch failed: HTTP ${res.status}`);
+      console.error(`❌ PokéBeach RSS fetch failed: HTTP ${res.status}`);
       return;
     }
 
-    const html = await res.text();
-    const articles = [];
-    const pattern =
-      /<h[23][^>]*>[\s\S]*?<a[^>]+href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi;
+    const xml = await res.text();
 
-    for (const match of html.matchAll(pattern)) {
-      const link = match[1];
-      const title = decode(match[2] || "").replace(/<[^>]+>/g, "").trim();
-      if (link && title && link.includes("/20") && !link.includes("comment")) {
-        articles.push({
-          link: link.startsWith("http")
-            ? link
-            : `https://www.pokebeach.com${link}`,
-          title,
-        });
-      }
+    // Very simple RSS parse: pull <item> blocks, then <title> and <link>
+    const items = [...xml.matchAll(/<item\b[\s\S]*?<\/item>/gi)].map((m) => m[0]);
+
+    const articles = [];
+    for (const item of items) {
+      const titleMatch = item.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>|<title>([\s\S]*?)<\/title>/i);
+      const linkMatch = item.match(/<link>([\s\S]*?)<\/link>/i);
+
+      const rawTitle = (titleMatch?.[1] || titleMatch?.[2] || "").trim();
+      const rawLink = (linkMatch?.[1] || "").trim();
+
+      const title = decode(rawTitle).replace(/<[^>]+>/g, "").trim();
+      const link = rawLink;
+
+      if (!title || !link) continue;
+      // Keep only actual PokéBeach article links (not random forum links)
+      if (!link.includes("pokebeach.com/20")) continue;
+
+      articles.push({ title, link });
     }
 
     if (!articles.length) {
-      console.log("⚠️ No articles found.");
+      console.log("⚠️ No articles found in RSS.");
       return;
     }
 
@@ -717,7 +735,7 @@ async function checkPokeBeach() {
       return;
     }
 
-    console.log(`📢 Posting ${newArticles.length} new PokéBeach article(s)!`);
+    console.log(`📢 Posting ${Math.min(3, newArticles.length)} new PokéBeach article(s)!`);
     for (const article of newArticles.slice(0, 3)) {
       await newsChannel.send(`${article.title}\n${article.link}`);
       await new Promise((r) => setTimeout(r, 1000));
@@ -726,7 +744,6 @@ async function checkPokeBeach() {
     console.error("❌ PokéBeach check failed:", err.message);
   }
 }
-setInterval(checkPokeBeach, POKEBEACH_CHECK_INTERVAL);
 
 
 // ==========================================================

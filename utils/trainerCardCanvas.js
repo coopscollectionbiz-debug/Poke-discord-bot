@@ -136,7 +136,7 @@ export async function renderTrainerCardCanvas({
   trainerSpriteUrl,      // full URL to the trainer sprite
   trainerSpriteFileName, // e.g. "acerola-masters.png"
   spriteToTrainerMap,    // Map from buildSpriteToTrainerMap()
-  team,                  // [{ id, name, tier, spriteUrl }]
+  team, 		 // [{ id, name, tier, spriteUrl, isShiny }]
 }) {
   // Canvas sizing
   const W = 1200;
@@ -297,7 +297,9 @@ export async function renderTrainerCardCanvas({
     // name
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 18px sans-serif";
-    ctx.fillText(p.name, x + 110, y + 88);
+    const nameText = p.isShiny ? `✨ ${p.name}` : p.name;
+ctx.fillText(nameText, x + 110, y + 88);
+
 
     // id
     ctx.fillStyle = "rgba(255,255,255,0.75)";

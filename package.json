@@ -15,7 +15,7 @@
     "cleanup": "node cleanupTrainerData.js"
   },
   "dependencies": {
-    "@napi-rs/canvas": "^0.1.81",
+    "@napi-rs/canvas": "^0.1.84",
     "canvas": "^3.2.0",
     "cookie-parser": "^1.4.7",
     "discord.js": "^14.14.1",

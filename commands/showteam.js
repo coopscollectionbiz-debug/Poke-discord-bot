@@ -11,6 +11,7 @@ import {
   buildSpriteToTrainerMap,
   renderTrainerCardCanvas,
 } from "../utils/trainerCardCanvas.js";
+import { getRank } from "../utils/rankSystem.js";
 
 // Load trainer sprite JSON once
 const __filename = fileURLToPath(import.meta.url);
@@ -21,7 +22,7 @@ const spriteToTrainerMap = buildSpriteToTrainerMap(trainerSprites);
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("teamcard")
+    .setName("showteam")
     .setDescription("Show your trainer + full team as a canvas card.")
     .addUserOption(opt =>
       opt.setName("user").setDescription("Show another user's card (optional)").setRequired(false)
@@ -83,6 +84,8 @@ export default {
     const png = await renderTrainerCardCanvas({
       displayName,
       avatarUrl,
+      rankLabel: getRank(user.tp),
+      tp: user.tp,
       trainerSpriteUrl,
       trainerSpriteFileName: trainerFile || "",
       spriteToTrainerMap,

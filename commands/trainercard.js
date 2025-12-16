@@ -332,10 +332,10 @@ const trainerInfo = (() => {
   }
 
   // filename -> key lookup
-  const file = user.displayedTrainer.toLowerCase();
-  const base = file.split("-")[0].replace(".png", "");
+  const file = path.basename(user.displayedTrainer).toLowerCase();
+  const key = file.replace(/\.(png|gif)$/i, "");
 
-  const entry = trainerSprites[base];
+  const entry = trainerSprites[key];
   if (!entry) {
     return { name: base.charAt(0).toUpperCase() + base.slice(1), rarity: "Common", emoji: rarityEmojis.common };
   }

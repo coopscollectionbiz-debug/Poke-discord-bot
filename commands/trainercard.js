@@ -29,6 +29,31 @@ const __dirname = path.dirname(__filename);
 const trainerSpritesPath = path.join(__dirname, "../trainerSprites.json");
 const trainerSprites = JSON.parse(fs.readFileSync(trainerSpritesPath, "utf-8"));
 
+// Build fast lookup: sprite filename -> { key, tier }
+const spriteToTrainer = (() => {
+  const map = new Map();
+
+  for (const [key, entry] of Object.entries(trainerSprites)) {
+    const tier = String(entry?.tier || "common");
+
+    if (!Array.isArray(entry?.sprites)) continue;
+
+    for (const s of entry.sprites) {
+      // You said you don't want {file: ...} entries
+      if (typeof s !== "string") continue;
+
+      const filename = s.toLowerCase();                       // "acerola-masters.png"
+      const basename = filename.replace(/\.(png|gif)$/i, "");  // "acerola-masters"
+
+      // If duplicates exist, keep the first and log (or choose a rule)
+      if (!map.has(filename)) map.set(filename, { key, tier });
+      if (!map.has(basename)) map.set(basename, { key, tier });
+    }
+  }
+
+  return map;
+})();
+
 // ==========================================================
 // SLASH COMMAND
 // ==========================================================
@@ -328,35 +353,22 @@ const trainerPath = user.displayedTrainer
 // Trainer info (name, rarity, emoji)
 const trainerInfo = (() => {
   if (!user.displayedTrainer) {
-    return {
-      name: "Unknown",
-      rarityKey: "common",
-      rarityLabel: "Common",
-      emoji: rarityEmojis.common
-    };
+    return { name: "Unknown", rarityKey: "common", rarityLabel: "Common", emoji: rarityEmojis.common };
   }
 
-  const file = path.basename(user.displayedTrainer).toLowerCase(); // may-contest.png
-  const key = file.replace(/\.(png|gif)$/i, "");                   // may-contest
+  const file = path.basename(user.displayedTrainer).toLowerCase(); // "acerola-masters.png"
+  const bare = file.replace(/\.(png|gif)$/i, "");                  // "acerola-masters"
 
-  // Primary lookup (exact match)
-  let entry = trainerSprites[key];
+  // ✅ Canonical: sprite -> owning key/tier
+  const hit = spriteToTrainer.get(file) || spriteToTrainer.get(bare);
 
-  // Safe fallback: strip generation suffix ONLY
-  if (!entry) {
-    const noGen = key.replace(/-gen\d+[a-z]*$/i, "");
-    entry = trainerSprites[noGen];
-  }
-
-  const rarityKey = String(entry?.tier || entry?.rarity || "common").toLowerCase();
+  const rarityKey = String(hit?.tier || "common").toLowerCase();
   const rarityLabel = rarityKey.charAt(0).toUpperCase() + rarityKey.slice(1);
 
-  const displayName =
-    entry?.name ||
-    key
-      .replace(/-gen\d+[a-z]*$/i, "")
-      .replace(/[-_]+/g, " ")
-      .replace(/\b\w/g, c => c.toUpperCase());
+  // Name: use key when known, otherwise derive from filename
+  const displayName = hit?.key
+    ? hit.key.replace(/[-_]+/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+    : bare.replace(/[-_]+/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 
   return {
     name: displayName,

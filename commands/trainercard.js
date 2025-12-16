@@ -372,18 +372,15 @@ const trainerInfo = (() => {
 const embed = new EmbedBuilder()
   .setAuthor({ name: `${username}'s Trainer Card`, iconURL: avatarURL })
   .setColor(rarityColors[trainerInfo.rarityKey] || 0x5865f2)
-  .setDescription(
-    `🏆 **Rank:** ${rank}\n` +
-    `${TP_EMOJI} **${user.tp}** | ${CC_EMOJI} **${user.cc || 0}**\n\n` +
-
-    `🧍 **Trainer:** ${trainerInfo.name} — ${trainerInfo.rarityLabel} ${trainerInfo.emoji}\n\n`
-
-    `📊 **Pokémon Owned:** ${pokemonOwned}\n` +
-    `✨ **Shiny Pokémon:** ${shinyCount}\n` +
-    `🧍 **Trainers:** ${trainerCount}\n\n` +
-
-    `🌀 **Team:**`
-  )
+ .setDescription(
+  `🏆 **Rank:** ${rank}\n` +
+  `${TP_EMOJI} **${user.tp}** | ${CC_EMOJI} **${user.cc || 0}**\n\n` +
+  `🧍 **Trainer:** ${trainerInfo.name} — ${trainerInfo.rarityLabel} ${trainerInfo.emoji}\n\n` +
+  `📊 **Pokémon Owned:** ${pokemonOwned}\n` +
+  `✨ **Shiny Pokémon:** ${shinyCount}\n` +
+  `🧍 **Trainers:** ${trainerCount}\n\n` +
+  `🌀 **Team:**`
+)
   .setFooter({ text: "Coop's Collection • /trainercard" });
 
 // ➤ Add 2×3 Pokémon Team Grid

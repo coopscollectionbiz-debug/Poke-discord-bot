@@ -1,6 +1,6 @@
 // utils/trainerCardCanvas.js
 import { createCanvas, loadImage } from "@napi-rs/canvas";
-import path from "path";
+import { rarityEmojis } from "../spriteconfig.js";
 
 const TIER_COLORS = {
   common: "#9ca3af",
@@ -42,6 +42,70 @@ function drawCircleImage(ctx, img, cx, cy, r) {
   ctx.restore();
 }
 
+/**
+ * Loads sprites reliably:
+ * - If url ends with .gif, try .png first (canvas-friendly), then fallback to .gif
+ * - If url is already .png, load directly
+ */
+async function loadSprite(url) {
+  if (!url) throw new Error("Missing sprite URL");
+
+  if (url.toLowerCase().endsWith(".gif")) {
+    const png = url.replace(/\.gif$/i, ".png");
+    try {
+      return await loadImage(png);
+    } catch {
+      return await loadImage(url);
+    }
+  }
+
+  return await loadImage(url);
+}
+
+/**
+ * Draw a badge where the text is PERFECTLY centered (both axes),
+ * and the width auto-sizes to the text (with optional cap).
+ */
+function drawCenteredBadge(ctx, {
+  x,
+  y,
+  text,
+  font = "bold 16px sans-serif",
+  bgColor,
+  textColor = "#0b1220",
+  paddingX = 14,
+  height = 30,
+  radius = 10,
+  maxWidth = Infinity,
+}) {
+  ctx.font = font;
+
+  const metrics = ctx.measureText(text);
+  const textW = metrics.width;
+
+  const badgeW = Math.min(
+    Math.ceil(textW + paddingX * 2),
+    maxWidth
+  );
+
+  // Background
+  ctx.fillStyle = bgColor;
+  roundRect(ctx, x, y, badgeW, height, radius);
+  ctx.fill();
+
+  // Perfect centering using font metrics
+  const textX = x + (badgeW - textW) / 2;
+  const textY =
+    y +
+    height / 2 +
+    (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
+
+  ctx.fillStyle = textColor;
+  ctx.fillText(text, textX, textY);
+
+  return badgeW;
+}
+
 // Build canonical lookup: sprite filename -> { key, tier }
 export function buildSpriteToTrainerMap(trainerSprites) {
   const map = new Map();
@@ -55,8 +119,8 @@ export function buildSpriteToTrainerMap(trainerSprites) {
       // Only strings (you said you don't want {file: ...} entries)
       if (typeof s !== "string") continue;
 
-      const filename = s.toLowerCase();
-      const basename = filename.replace(/\.(png|gif)$/i, "");
+      const filename = s.toLowerCase();                 // "acerola-masters.png"
+      const basename = filename.replace(/\.(png|gif)$/i, ""); // "acerola-masters"
 
       if (!map.has(filename)) map.set(filename, { key, tier });
       if (!map.has(basename)) map.set(basename, { key, tier });
@@ -69,7 +133,7 @@ export function buildSpriteToTrainerMap(trainerSprites) {
 export async function renderTrainerCardCanvas({
   displayName,
   avatarUrl,
-  trainerSpriteUrl,      // full URL/path to the trainer sprite
+  trainerSpriteUrl,      // full URL to the trainer sprite
   trainerSpriteFileName, // e.g. "acerola-masters.png"
   spriteToTrainerMap,    // Map from buildSpriteToTrainerMap()
   team,                  // [{ id, name, tier, spriteUrl }]
@@ -101,12 +165,14 @@ export async function renderTrainerCardCanvas({
   roundRect(ctx, rightX, pad, rightW, H - pad * 2, 20);
   ctx.fill();
 
-  // Resolve trainer tier via canonical map
+  // Resolve trainer tier via canonical map (sprite filename -> tier)
   const tFile = String(trainerSpriteFileName || "").toLowerCase();
   const tBare = tFile.replace(/\.(png|gif)$/i, "");
   const hit = spriteToTrainerMap?.get(tFile) || spriteToTrainerMap?.get(tBare);
+
   const trainerTierKey = normTier(hit?.tier || "common");
   const trainerTierColor = TIER_COLORS[trainerTierKey] || TIER_COLORS.common;
+  const trainerTierEmoji = rarityEmojis[trainerTierKey] || "";
 
   // Header text (left)
   ctx.fillStyle = "#ffffff";
@@ -115,7 +181,7 @@ export async function renderTrainerCardCanvas({
 
   // Avatar
   let avatarImg = null;
-  try { avatarImg = await loadImage(avatarUrl); } catch {}
+  try { avatarImg = await loadSprite(avatarUrl); } catch {}
   const avatarCx = pad + leftW / 2;
   const avatarCy = pad + 105;
   if (avatarImg) drawCircleImage(ctx, avatarImg, avatarCx, avatarCy, 44);
@@ -127,7 +193,7 @@ export async function renderTrainerCardCanvas({
 
   // Trainer sprite
   let trainerImg = null;
-  try { trainerImg = await loadImage(trainerSpriteUrl); } catch {}
+  try { trainerImg = await loadSprite(trainerSpriteUrl); } catch {}
 
   if (trainerImg) {
     const spriteMaxW = 260;
@@ -146,19 +212,22 @@ export async function renderTrainerCardCanvas({
 
     ctx.drawImage(trainerImg, dx, dy, dw, dh);
 
-    // Tier badge under sprite
-    const badgeW = 200;
+    // Tier badge under sprite (centered + emoji)
     const badgeH = 38;
-    const bx = pad + Math.floor((leftW - badgeW) / 2);
+    const bx = pad + 20;
     const by = dy + dh + 16;
 
-    ctx.fillStyle = trainerTierColor;
-    roundRect(ctx, bx, by, badgeW, badgeH, 12);
-    ctx.fill();
-
-    ctx.fillStyle = "#0b1220";
-    ctx.font = "bold 18px sans-serif";
-    drawCenteredText(ctx, trainerTierKey.toUpperCase(), bx, by + 26, badgeW);
+    const trainerBadgeText = `${trainerTierEmoji} ${trainerTierKey.toUpperCase()}`.trim();
+    drawCenteredBadge(ctx, {
+      x: bx,
+      y: by,
+      text: trainerBadgeText,
+      font: "bold 18px sans-serif",
+      bgColor: trainerTierColor,
+      height: badgeH,
+      radius: 12,
+      maxWidth: leftW - 40,
+    });
   } else {
     ctx.fillStyle = "rgba(255,255,255,0.5)";
     ctx.font = "18px sans-serif";
@@ -179,11 +248,11 @@ export async function renderTrainerCardCanvas({
   const tileH = Math.floor((H - pad * 2 - gridTop + pad - gap * (rows - 1)) / rows);
 
   for (let i = 0; i < cols * rows; i++) {
-    const r = Math.floor(i / cols);
-    const c = i % cols;
+    const rr = Math.floor(i / cols);
+    const cc = i % cols;
 
-    const x = rightX + 18 + c * (tileW + gap);
-    const y = gridTop + r * (tileH + gap);
+    const x = rightX + 18 + cc * (tileW + gap);
+    const y = gridTop + rr * (tileH + gap);
 
     // tile bg
     ctx.fillStyle = "rgba(255,255,255,0.06)";
@@ -200,19 +269,24 @@ export async function renderTrainerCardCanvas({
 
     const tierKey = normTier(p.tier);
     const tierColor = TIER_COLORS[tierKey] || TIER_COLORS.common;
+    const tierEmoji = rarityEmojis[tierKey] || "";
 
-    // tier badge
-    ctx.fillStyle = tierColor;
-    roundRect(ctx, x + 12, y + 12, 110, 30, 10);
-    ctx.fill();
-
-    ctx.fillStyle = "#0b1220";
-    ctx.font = "bold 16px sans-serif";
-    ctx.fillText(tierKey.toUpperCase(), x + 20, y + 33);
+    // tier badge (perfectly centered + emoji)
+    const badgeText = `${tierEmoji} ${tierKey.toUpperCase()}`.trim();
+    drawCenteredBadge(ctx, {
+      x: x + 12,
+      y: y + 12,
+      text: badgeText,
+      font: "bold 16px sans-serif",
+      bgColor: tierColor,
+      height: 30,
+      radius: 10,
+      maxWidth: tileW - 24,
+    });
 
     // sprite
     try {
-      const img = await loadImage(p.spriteUrl);
+      const img = await loadSprite(p.spriteUrl);
       ctx.drawImage(img, x + 14, y + 50, 86, 86);
     } catch {
       ctx.fillStyle = "rgba(255,255,255,0.35)";

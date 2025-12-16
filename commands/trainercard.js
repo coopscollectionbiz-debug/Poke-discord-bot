@@ -328,23 +328,41 @@ const trainerPath = user.displayedTrainer
 // Trainer info (name, rarity, emoji)
 const trainerInfo = (() => {
   if (!user.displayedTrainer) {
-    return { name: "Unknown", rarity: "Common", emoji: rarityEmojis.common };
+    return {
+      name: "Unknown",
+      rarityKey: "common",
+      rarityLabel: "Common",
+      emoji: rarityEmojis.common
+    };
   }
 
-  // filename -> key lookup
-  const file = path.basename(user.displayedTrainer).toLowerCase();
-  const key = file.replace(/\.(png|gif)$/i, "");
+  const file = path.basename(user.displayedTrainer).toLowerCase(); // may-contest.png
+  const key = file.replace(/\.(png|gif)$/i, "");                   // may-contest
 
-  const entry = trainerSprites[key];
+  // Primary lookup (exact match)
+  let entry = trainerSprites[key];
+
+  // Safe fallback: strip generation suffix ONLY
   if (!entry) {
-    return { name: base.charAt(0).toUpperCase() + base.slice(1), rarity: "Common", emoji: rarityEmojis.common };
+    const noGen = key.replace(/-gen\d+[a-z]*$/i, "");
+    entry = trainerSprites[noGen];
   }
 
-  const rarity = (entry.tier || "common").toLowerCase();
+  const rarityKey = String(entry?.tier || entry?.rarity || "common").toLowerCase();
+  const rarityLabel = rarityKey.charAt(0).toUpperCase() + rarityKey.slice(1);
+
+  const displayName =
+    entry?.name ||
+    key
+      .replace(/-gen\d+[a-z]*$/i, "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, c => c.toUpperCase());
+
   return {
-    name: base.charAt(0).toUpperCase() + base.slice(1),
-    rarity,
-    emoji: rarityEmojis[rarity] || "⚬"
+    name: displayName,
+    rarityKey,
+    rarityLabel,
+    emoji: rarityEmojis[rarityKey] || "⚬"
   };
 })();
 

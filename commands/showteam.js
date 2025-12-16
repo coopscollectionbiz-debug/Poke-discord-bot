@@ -29,7 +29,7 @@ export default {
     ),
 
   async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, client) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ ephemeral: false });
 
     const target = interaction.options.getUser("user") || interaction.user;
 

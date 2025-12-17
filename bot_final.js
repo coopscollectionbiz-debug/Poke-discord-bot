@@ -264,8 +264,8 @@ app.get("/public/picker-pokemon", (_, res) =>
   res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
 );
 
-app.get("/public/picker-shop", (_, res) =>
-  res.sendFile(path.join(staticPath, "picker-shop", "index.html"))
+app.get("/public/dashboardstore", (_, res) =>
+  res.sendFile(path.join(staticPath, "dashboardstore", "index.html"))
 );
 
 // Health

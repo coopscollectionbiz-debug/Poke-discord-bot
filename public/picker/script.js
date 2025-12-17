@@ -514,5 +514,5 @@ function initNavTabs() {
 
   if (goShop)
     goShop.onclick = () =>
-      (window.location.href = `/public/picker-shop/?id=${encodeURIComponent(id)}`);
+      (window.location.href = `/public/dashboardshop/?id=${encodeURIComponent(id)}`);
 }

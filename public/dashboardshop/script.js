@@ -28,20 +28,31 @@ async function loadUser() {
   userId = params.get("id");
 
   if (!userId) {
-    console.warn("Missing id in URL");
-    document.body.innerHTML =
-      "<p class='error'>❌ Missing user id. Please open the dashboard link from Discord.</p>";
+    document.body.innerHTML = `
+      <div style="padding:2rem;text-align:center;color:#ccc">
+        <h2>🔒 Dashboard Access Required</h2>
+        <p>Please open this page from Discord using the /dashboard command.</p>
+      </div>
+    `;
     return;
   }
 
   const res = await fetch(`/api/user?id=${encodeURIComponent(userId)}`, {
-    credentials: "same-origin",
+    credentials: "same-origin"
   });
 
+  if (res.status === 403) {
+    document.body.innerHTML = `
+      <div style="padding:2rem;text-align:center;color:#ccc">
+        <h2>⏱ Session Expired</h2>
+        <p>Please return to Discord and re-open the dashboard.</p>
+      </div>
+    `;
+    return;
+  }
+
   if (!res.ok) {
-    console.error("Failed to load user");
-    document.body.innerHTML =
-      "<p class='error'>❌ Session expired. Please re-open the dashboard link from Discord.</p>";
+    document.body.innerHTML = "<p>Failed to load dashboard.</p>";
     return;
   }
 
@@ -362,5 +373,5 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (goShop)
     goShop.onclick = () =>
-      (window.location.href = `/public/picker-shop/?id=${encodeURIComponent(id)}`);
+      (window.location.href = `/public/dashboardshop/?id=${encodeURIComponent(id)}`);
 })();

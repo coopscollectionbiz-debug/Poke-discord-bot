@@ -1695,9 +1695,6 @@ if (process.env.REGISTER_COMMANDS === "true") {
 // ==========================================================
 console.log("🚀 About to login to Discord... BOT_TOKEN present?", !!process.env.BOT_TOKEN);
 
-const ok = await verifyBotToken();
-if (!ok) process.exit(1);
-
 client.login(process.env.BOT_TOKEN)
   .then(() => console.log("✅ client.login() resolved"))
   .catch((err) => {

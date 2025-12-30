@@ -383,6 +383,7 @@ let discordSaveCount = 0;
 let commandSaveQueue = null;
 let isReady = false;
 let isSaving = false;
+let shuttingDown = false;
 const startTime = Date.now();
 const rewardCooldowns = new Map();
 const userCooldowns = new Map();
@@ -429,32 +430,47 @@ async function loadTrainerData() {
 }
 
 async function saveDataToDiscord(data) {
+  if (shuttingDown) {
+    console.log("⚠️ Skipping Discord save — shutting down");
+    return;
+  }
+
   if (isSaving) {
-    console.log("⏳ Save in progress – queued...");
-    return new Promise((resolve) => {
-      const interval = setInterval(() => {
-        if (!isSaving) {
-          clearInterval(interval);
-          resolve(saveDataToDiscord(data));
-        }
-      }, 100);
-    });
+    console.log("⏳ Save already running — skip");
+    return;
   }
 
   isSaving = true;
+
   try {
-    const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
-    const buffer = Buffer.from(JSON.stringify(data, null, 2));
-    const file = new AttachmentBuilder(buffer, {
-      name: `trainerData-${new Date().toISOString()}.json`,
-    });
-    await storageChannel.send({
-      content: `📦 #${++discordSaveCount}`,
-      files: [file],
-    });
+    if (!client.isReady()) {
+      console.log("⚠️ Discord not ready — skipping backup");
+      return;
+    }
+
+    let channel;
+    try {
+      channel =
+        client.channels.cache.get(process.env.STORAGE_CHANNEL_ID) ??
+        await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
+    } catch {
+      console.log("⚠️ Backup channel fetch failed — skipping");
+      return;
+    }
+
+    if (!channel?.isTextBased?.() || typeof channel.send !== "function") {
+      console.log("⚠️ Backup channel unusable — skipping");
+      return;
+    }
+
+    const payload = Buffer.from(JSON.stringify(data, null, 2));
+    const file = new AttachmentBuilder(payload, { name: "trainerData.json" });
+
+    await channel.send({ files: [file] });
+    discordSaveCount++;
     console.log(`✅ Discord backup #${discordSaveCount}`);
   } catch (err) {
-    console.error("❌ Discord save failed:", err.message);
+    console.error("❌ Discord save failed:", err?.message || err);
   } finally {
     isSaving = false;
   }
@@ -626,41 +642,62 @@ function debouncedDiscordSave() {
 // ==========================================================
 // 🕒 15-MINUTE DISCORD BACKUP (ALWAYS RUNS)
 // ==========================================================
-setInterval(async () => {
+const discordBackupInterval = setInterval(async () => {
+  if (shuttingDown) return;
+
   console.log("💾 15-minute interval — saving trainerData to Discord...");
   try {
     await saveDataToDiscord(trainerData);
     console.log("✅ Discord backup complete (15-minute interval)");
   } catch (err) {
-    console.error("❌ Interval Discord save failed:", err.message);
+    console.error("❌ Interval Discord save failed:", err?.message || err);
   }
 }, 15 * 60 * 1000);
 
 // ==========================================================
 // 🛑 GRACEFUL SHUTDOWN (Fixed — Final Backup Guaranteed)
 // ==========================================================
+
 async function gracefulShutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+ try { clearInterval(discordBackupInterval); } catch {}
+
   console.log(`\n🛑 Received ${signal}, shutting down...`);
   isReady = false;
 
+  const hardTimeout = setTimeout(() => {
+    console.log("⏲️ Hard shutdown timeout — forcing exit");
+    process.exit(0);
+  }, 25000);
+
   try {
     console.log("💾 Flushing pending local saves...");
-    const flushed = await shutdownFlush(10_000);
-    if (!flushed) console.warn("⚠️ Some local saves may not have completed");
+    await Promise.race([
+      shutdownFlush(10_000),
+      new Promise(res => setTimeout(res, 8000)),
+    ]);
 
-    console.log("☁️ Uploading FINAL Discord backup (waiting for completion)...");
-    await saveDataToDiscord(trainerData);
+    console.log("☁️ Uploading FINAL Discord backup...");
+    await Promise.race([
+      saveDataToDiscord(trainerData),
+      new Promise(res => setTimeout(res, 8000)),
+    ]);
 
-    console.log("🧹 Destroying Discord client gracefully...");
-    await client.destroy();
-
-    console.log("✅ Shutdown complete. Process will exit naturally.");
+    console.log("🧹 Destroying Discord client...");
+    await Promise.race([
+      client.destroy(),
+      new Promise(res => setTimeout(res, 2000)),
+    ]);
   } catch (err) {
-    console.error("❌ Shutdown error:", err.message);
+    console.error("❌ Shutdown error:", err?.message || err);
+  } finally {
+    clearTimeout(hardTimeout);
+    process.exit(0);
   }
 }
 
-// Bind signals
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
@@ -1614,7 +1651,7 @@ client.once("ready", async () => {
 // ==========================================================
 // 🚀 LAUNCH WEB SERVER
 // ==========================================================
-app.listen(PORT, () =>
+app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ Listening on port ${PORT}`)
 );
 

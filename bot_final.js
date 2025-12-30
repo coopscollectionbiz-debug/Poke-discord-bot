@@ -1686,11 +1686,35 @@ app.listen(PORT, "0.0.0.0", () =>
   }
 })();
 
+//Verify Token
+async function verifyBotToken() {
+  try {
+    const res = await fetch("https://discord.com/api/v10/users/@me", {
+      headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` },
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.error(`❌ BOT_TOKEN invalid for REST: HTTP ${res.status} ${text}`);
+      return false;
+    }
+
+    const me = await res.json();
+    console.log(`✅ BOT_TOKEN REST check OK: ${me.username}#${me.discriminator} (${me.id})`);
+    return true;
+  } catch (e) {
+    console.error("❌ BOT_TOKEN REST check failed (network/DNS?):", e?.message || e);
+    return false;
+  }
+}
+
 // ==========================================================
 // 🚀 LAUNCH
 // ==========================================================
-// Login (and log if it fails)
 console.log("🚀 About to login to Discord... BOT_TOKEN present?", !!process.env.BOT_TOKEN);
+
+const ok = await verifyBotToken();
+if (!ok) process.exit(1);
 
 client.login(process.env.BOT_TOKEN)
   .then(() => console.log("✅ client.login() resolved"))

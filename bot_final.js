@@ -38,6 +38,9 @@ import {
   saveTrainerDataLocal
 } from "./utils/saveQueue.js";
 
+process.on("unhandledRejection", (err) => console.error("❌ Unhandled Rejection:", err));
+process.on("uncaughtException", (err) => console.error("❌ Uncaught Exception:", err));
+
 // ==========================================================
 // 🔧 SCHEMA NORMALIZATION
 // ==========================================================
@@ -623,9 +626,10 @@ async function loadCommands() {
   console.log(`📡 Registering ${commandsJSON.length} commands...`);
 
   try {
-    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
-      body: commandsJSON,
-    });
+    await rest.put(
+  Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+  { body: commandsJSON }
+);
     console.log("✅ Commands registered globally");
   } catch (err) {
     console.error("❌ Command registration failed:", err.message);
@@ -1629,24 +1633,19 @@ client.once("ready", async () => {
   }
 
   // ==========================================================
-  // 🧩 LOAD COMMANDS & INITIAL NEWS CHECK
+  // 📰 INITIAL NEWS CHECK (commands are registered at boot now)
   // ==========================================================
-  try {
-    await loadCommands();
-  } catch (err) {
-    console.error("❌ Command registration failed:", err.message);
-  }
-
   try {
     await checkPokeBeach();
   } catch (err) {
-    console.error("❌ PokéBeach initial check failed:", err.message);
+    console.error("❌ PokéBeach initial check failed:", err?.message || err);
   }
 
   // AFTER startup, normal saves happen via saveQueue
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });
+
 
 // ==========================================================
 // 🚀 LAUNCH WEB SERVER
@@ -1655,7 +1654,20 @@ app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ Listening on port ${PORT}`)
 );
 
+// Register slash commands ASAP (does NOT require gateway ready)
+(async () => {
+  try {
+    await loadCommands();
+  } catch (err) {
+    console.error("❌ loadCommands() failed at boot:", err?.message || err);
+  }
+})();
+
 // ==========================================================
 // 🚀 LAUNCH
 // ==========================================================
-client.login(process.env.BOT_TOKEN);
+// Login (and log if it fails)
+client.login(process.env.BOT_TOKEN).catch((err) => {
+  console.error("❌ client.login failed:", err?.message || err);
+  process.exit(1);
+});

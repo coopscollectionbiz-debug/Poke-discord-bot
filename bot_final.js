@@ -406,6 +406,32 @@ const client = new Client({
 client.commands = new Collection();
 
 // ==========================================================
+// 🛰️ DISCORD CONNECTION / INTERACTION DEBUG
+// ==========================================================
+client.on("ready", () => {
+  console.log("🟢 Discord READY (event)");
+});
+
+client.on("error", (e) => console.error("❌ Discord client error:", e));
+client.on("shardError", (e) => console.error("❌ Discord shardError:", e));
+
+client.on("disconnect", (event) => {
+  console.error("🔴 Discord DISCONNECT:", event?.code, event?.reason);
+});
+
+client.on("reconnecting", () => {
+  console.log("🟡 Discord RECONNECTING...");
+});
+
+client.on("warn", (w) => console.warn("⚠️ Discord warn:", w));
+
+// Log when Discord sends ANY interaction to your bot
+client.on("interactionCreate", (i) => {
+  const kind = i.isChatInputCommand() ? "slash" : i.isButton() ? "button" : "other";
+  console.log(`⚡ interactionCreate (${kind}) guild=${i.guildId} user=${i.user?.id} name=${i.commandName || i.customId}`);
+});
+
+// ==========================================================
 // 💾 Trainer Data Load & Save
 // ==========================================================
 async function loadTrainerData() {
@@ -1122,9 +1148,6 @@ client.on("interactionCreate", async (interaction) => {
   client
 );
 
-
-
-
     } catch (err) {
       console.error(`❌ ${interaction.commandName}:`, err.message);
       await safeReply(interaction, {
@@ -1667,7 +1690,11 @@ app.listen(PORT, "0.0.0.0", () =>
 // 🚀 LAUNCH
 // ==========================================================
 // Login (and log if it fails)
-client.login(process.env.BOT_TOKEN).catch((err) => {
-  console.error("❌ client.login failed:", err?.message || err);
-  process.exit(1);
-});
+console.log("🚀 About to login to Discord... BOT_TOKEN present?", !!process.env.BOT_TOKEN);
+
+client.login(process.env.BOT_TOKEN)
+  .then(() => console.log("✅ client.login() resolved"))
+  .catch((err) => {
+    console.error("❌ client.login failed:", err?.stack || err);
+    process.exit(1);
+  });

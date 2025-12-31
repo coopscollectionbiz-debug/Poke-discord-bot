@@ -1130,33 +1130,67 @@ if (
 // ⚡ INTERACTION HANDLER (Slash Commands + Buttons)
 // ==========================================================
 client.on("interactionCreate", async (interaction) => {
-  // 🧭 Slash Command Handling
-  if (interaction.isChatInputCommand()) {
-    const command = client.commands.get(interaction.commandName);
-    if (!command) {
-      return safeReply(interaction, { content: "❌ Unknown command.", ephemeral: true });
+  try {
+    // ============================
+    // Slash Commands
+    // ============================
+    if (interaction.isChatInputCommand()) {
+      // Optional: block while booting
+      if (!isReady) {
+        return safeReply(interaction, {
+          content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.",
+          ephemeral: true,
+        });
+      }
+
+      const command = client.commands.get(interaction.commandName);
+      if (!command) {
+        return safeReply(interaction, {
+          content: "❌ Unknown command.",
+          ephemeral: true,
+        });
+      }
+
+      // ✅ CRITICAL: acknowledge instantly so Discord never times out
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferReply({ ephemeral: true }).catch(() => {});
+      }
+
+      // Run command
+      await command.execute(
+        interaction,
+        trainerData,
+        saveTrainerDataLocal,
+        saveDataToDiscord,
+        lockUser,
+        enqueueSave,
+        client
+      );
+
+      return;
     }
 
-    try {
-  await command.execute(
-  interaction,
-  trainerData,
-  saveTrainerDataLocal,   // 3rd argument
-  saveDataToDiscord,      // 4th
-  lockUser,               // 5th
-  enqueueSave,            // 6th
-  client
-);
-
-    } catch (err) {
-      console.error(`❌ ${interaction.commandName}:`, err.message);
-      await safeReply(interaction, {
-        content: `❌ Error executing \`${interaction.commandName}\`.`,
-        ephemeral: true,
-      });
+    // ============================
+    // Buttons
+    // ============================
+    if (interaction.isButton()) {
+      // If you intentionally ignore shop buttons, that's fine.
+      // But ANY button you don't handle should be acknowledged or it'll show "Interaction Failed"
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferUpdate().catch(() => {});
+      }
+      return;
     }
-    return;
+  } catch (err) {
+    console.error("❌ interactionCreate handler error:", err?.stack || err);
+
+    return safeReply(interaction, {
+      content: "❌ Command crashed. Check Render logs.",
+      ephemeral: true,
+    });
   }
+});
+
 
 // ==========================================================
 // 🧩 Button Interactions (v7.1)

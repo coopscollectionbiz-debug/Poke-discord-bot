@@ -1125,7 +1125,6 @@ if (
 });
 
 
-
 // ==========================================================
 // ⚡ INTERACTION HANDLER (Slash Commands + Buttons)
 // ==========================================================
@@ -1180,8 +1179,8 @@ client.on("interactionCreate", async (interaction) => {
         await interaction.deferUpdate().catch(() => {});
       }
 
-      // Optional: shop buttons intentionally no-op here
-      // confirm_*, cancel_*, disabled_* are handled elsewhere
+      // Shop buttons intentionally no-op here
+      // (confirm_ / cancel_ / disabled_ handled elsewhere)
       if (
         id.startsWith("confirm_") ||
         id.startsWith("cancel_") ||
@@ -1190,15 +1189,14 @@ client.on("interactionCreate", async (interaction) => {
         return;
       }
 
-      // Any other buttons are currently no-op
+      // All other buttons currently no-op
       return;
     }
   } catch (err) {
     console.error("❌ interactionCreate handler error:", err?.stack || err);
 
-    // Safety fallback
     try {
-      if (interaction && !interaction.replied && !interaction.deferred) {
+      if (!interaction.deferred && !interaction.replied) {
         await interaction.reply({
           content: "❌ Command crashed. Check Render logs.",
           ephemeral: true,
@@ -1703,7 +1701,6 @@ client.once("ready", async () => {
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });
-
 
 // ==========================================================
 // 🚀 LAUNCH WEB SERVER

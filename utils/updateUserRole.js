@@ -1,7 +1,7 @@
 // ==========================================================
 // updateUserRole.js — Coop’s Collection
-// Rank Auto-Assignment + Promotion Announcements (v4.0)
-// Race-Safe • Female-Variant Safe • Novice Announcements Fixed
+// Rank Auto-Assignment + Promotion Announcements (v5.0)
+// REST-minimized • Coalesced role set update • Female-variant safe
 // ==========================================================
 
 import { EmbedBuilder } from "discord.js";
@@ -9,9 +9,71 @@ import { getRank, getRankTiers } from "../utils/rankSystem.js";
 
 const RANK_TIERS = getRankTiers();
 
+// ----------------------------------------------------------
+// Cache rank role IDs per guild to avoid repeated name scans
+// guildId -> { male: Map<rankName, roleId>, female: Map<rankName, roleId>, allRankRoleIds: Set<roleId> }
+// ----------------------------------------------------------
+const guildRankRoleCache = new Map();
+
+function buildGuildRoleCache(guild) {
+  const male = new Map();
+  const female = new Map();
+  const allRankRoleIds = new Set();
+
+  for (const tier of RANK_TIERS) {
+    const baseName = tier.roleName;
+
+    const baseRole = guild.roles.cache.find((r) => r.name === baseName);
+    if (baseRole) {
+      male.set(baseName, baseRole.id);
+      allRankRoleIds.add(baseRole.id);
+    }
+
+    const femaleRole = guild.roles.cache.find((r) => r.name === `${baseName} (F)`);
+    if (femaleRole) {
+      female.set(baseName, femaleRole.id);
+      allRankRoleIds.add(femaleRole.id);
+    }
+  }
+
+  const cache = { male, female, allRankRoleIds };
+  guildRankRoleCache.set(guild.id, cache);
+  return cache;
+}
+
+function getGuildRoleCache(guild) {
+  // If roles changed (new roles / renamed), you can clear this map on demand.
+  return guildRankRoleCache.get(guild.id) || buildGuildRoleCache(guild);
+}
+
+function memberHasFemaleVariant(member, cache) {
+  // If they have ANY female rank role, treat as female variant
+  for (const roleId of cache.female.values()) {
+    if (member.roles.cache.has(roleId)) return true;
+  }
+  // Fallback: also detect by name if cache misses (rare)
+  return member.roles.cache.some((r) => r.name.endsWith(" (F)"));
+}
+
+function getCurrentRankRoleId(member, cache) {
+  // Find any rank role the member currently has (male or female)
+  for (const roleId of cache.allRankRoleIds) {
+    if (member.roles.cache.has(roleId)) return roleId;
+  }
+  return null;
+}
+
+function roleIdToName(guild, roleId) {
+  return guild.roles.cache.get(roleId)?.name || null;
+}
+
 /**
  * Applies correct rank role to a user based on TP
  * and sends a promotion announcement if rank changes.
+ *
+ * REST minimized:
+ * - No per-tier remove() calls
+ * - ONE roles.set() call when a change is needed
  *
  * @param {GuildMember} member
  * @param {number} tp
@@ -21,99 +83,79 @@ export async function updateUserRole(member, tp, contextChannel = null) {
   try {
     const guild = member.guild;
 
-    // ======================================================
-    // Normalize user's trainerData schema ALWAYS
-    // (even though this function doesn't mutate TP)
-    // ======================================================
-    // trainerData is not passed here; schema is validated
-    // via role assignment only. This keeps roles consistent.
-
-    // Determine target rank from TP
     const baseRank = getRank(tp);
     if (!baseRank) return;
 
-    const hasFemaleVariant = member.roles.cache.some(r =>
-      r.name.endsWith(" (F)")
-    );
+    const cache = getGuildRoleCache(guild);
 
-    const finalRoleName = hasFemaleVariant
-      ? `${baseRank} (F)`
-      : baseRank;
+    // Determine whether to use female variant
+    const hasFemale = memberHasFemaleVariant(member, cache);
 
-    const newRole = guild.roles.cache.find(r => r.name === finalRoleName);
-    if (!newRole) {
-      console.warn(`⚠️ Missing role: ${finalRoleName}`);
-      return;
+    const targetRoleId = hasFemale
+      ? cache.female.get(baseRank)
+      : cache.male.get(baseRank);
+
+    if (!targetRoleId) {
+      // Cache might be stale (roles renamed/added). Rebuild once and retry.
+      const rebuilt = buildGuildRoleCache(guild);
+      const retryRoleId = hasFemale
+        ? rebuilt.female.get(baseRank)
+        : rebuilt.male.get(baseRank);
+
+      if (!retryRoleId) {
+        console.warn(`⚠️ Missing role for rank: ${hasFemale ? `${baseRank} (F)` : baseRank}`);
+        return;
+      }
+      // continue with retryRoleId
+      return await updateUserRole(member, tp, contextChannel);
     }
 
-    // ======================================================
-    // ⛔ STOP — user already has correct rank
-    // Prevent duplicate announcements
-    // ======================================================
-    if (member.roles.cache.has(newRole.id)) return;
+    const currentRankRoleId = getCurrentRankRoleId(member, cache);
 
-    // ======================================================
-    // Remove ALL existing rank roles (male & female variants)
-    // ======================================================
-    for (const tier of RANK_TIERS) {
-      const base = guild.roles.cache.find(r => r.name === tier.roleName);
-      const female = guild.roles.cache.find(
-        r => r.name === `${tier.roleName} (F)`
-      );
+    // Already correct? bail (no REST, no announcement)
+    if (currentRankRoleId === targetRoleId) return;
 
-      if (base && member.roles.cache.has(base.id)) {
-        await member.roles.remove(base).catch(() => {});
-      }
-      if (female && member.roles.cache.has(female.id)) {
-        await member.roles.remove(female).catch(() => {});
-      }
-    }
+    // Build new roles array: keep all non-rank roles, replace rank role with target
+    const keptRoleIds = member.roles.cache
+      .filter((r) => !cache.allRankRoleIds.has(r.id))
+      .map((r) => r.id);
 
-    // ======================================================
-    // Give NEW rank role
-    // ======================================================
-    await member.roles.add(newRole).catch(() => {});
+    const nextRoleIds = [...keptRoleIds, targetRoleId];
+
+    // ✅ ONE REST call: set final role set
+    await member.roles.set(nextRoleIds).catch(() => {});
+
+    const finalRoleName = roleIdToName(guild, targetRoleId) || (hasFemale ? `${baseRank} (F)` : baseRank);
     console.log(`🏅 ${member.user.username} → ${finalRoleName} (${tp} TP)`);
 
-    // ======================================================
-    // Build “next rank” info
-    // ======================================================
-    const idx = RANK_TIERS.findIndex(t => t.roleName === baseRank);
-    const nextTier = RANK_TIERS[idx + 1];
+    // Promotion embed only if a channel was provided
+    if (contextChannel && typeof contextChannel.send === "function") {
+      const idx = RANK_TIERS.findIndex((t) => t.roleName === baseRank);
+      const nextTier = RANK_TIERS[idx + 1];
 
-    const nextRankInfo = nextTier
-      ? `➡️ **Next Rank:** ${nextTier.roleName} (${nextTier.tp.toLocaleString()} TP)`
-      : "🏆 You've reached the **highest rank!**";
+      const nextRankInfo = nextTier
+        ? `➡️ **Next Rank:** ${nextTier.roleName} (${nextTier.tp.toLocaleString()} TP)`
+        : "🏆 You've reached the **highest rank!**";
 
-    // ======================================================
-    // 🎉 Promotion Embed
-    // ======================================================
-    const embed = new EmbedBuilder()
-      .setTitle("🏆 Rank Up!")
-      .setDescription(
-        [
-          `🎉 <@${member.user.id}> has advanced to **${finalRoleName}**!`,
-          `Their dedication and activity have earned them a promotion.`,
-          "",
-          nextRankInfo,
-          "",
-          "💡 **Tip:** You can toggle your rank icon anytime using **/swapicon**."
-        ].join("\n")
-      )
-      .setColor(0xffcb05)
-      .setThumbnail(member.user.displayAvatarURL({ size: 128 }))
-      .setFooter({ text: "Coop's Collection – Trainer Progression" })
-      .setTimestamp();
+      const embed = new EmbedBuilder()
+        .setTitle("🏆 Rank Up!")
+        .setDescription(
+          [
+            `🎉 <@${member.user.id}> has advanced to **${finalRoleName}**!`,
+            `Their dedication and activity have earned them a promotion.`,
+            "",
+            nextRankInfo,
+            "",
+            "💡 **Tip:** You can toggle your rank icon anytime using **/swapicon**.",
+          ].join("\n")
+        )
+        .setColor(0xffcb05)
+        .setThumbnail(member.user.displayAvatarURL({ size: 128 }))
+        .setFooter({ text: "Coop's Collection – Trainer Progression" })
+        .setTimestamp();
 
-    // ======================================================
-    // Send announcement IF a channel was provided
-    // ======================================================
-    if (contextChannel && contextChannel.send) {
       await contextChannel.send({ embeds: [embed] }).catch(() => {});
     }
-
-    console.log(`🎉 Promotion announced for ${member.user.username}: ${finalRoleName}`);
-
   } catch (err) {
     console.error("❌ updateUserRole failed:", err);
   }

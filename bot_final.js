@@ -42,6 +42,82 @@ process.on("unhandledRejection", (err) => console.error("❌ Unhandled Rejection
 process.on("uncaughtException", (err) => console.error("❌ Uncaught Exception:", err));
 
 // ==========================================================
+// 🧵 ROLE UPDATE QUEUE (reduces REST spam)
+// - Coalesces many TP changes into one role update per user.
+// - Only hits REST when rank actually changes.
+// ==========================================================
+const ROLE_FLUSH_INTERVAL_MS = 3000; // flush every 3s
+const MEMBER_CACHE_TTL_MS = 60_000;  // reuse fetched members for 60s
+
+const pendingRoleUpdates = new Map(); // userId -> { guildId, channel, tp }
+const memberCache = new Map();        // key `${guildId}:${userId}` -> { member, ts }
+
+async function getMemberCached(guild, userId) {
+  const key = `${guild.id}:${userId}`;
+  const cached = memberCache.get(key);
+  const now = Date.now();
+
+  if (cached && now - cached.ts < MEMBER_CACHE_TTL_MS) {
+    return cached.member;
+  }
+
+  // Prefer cache first (no REST)
+  let member = guild.members.cache.get(userId);
+  if (!member) {
+    // This is REST — but now it happens at most once per TTL per user
+    member = await guild.members.fetch(userId);
+  }
+
+  memberCache.set(key, { member, ts: now });
+  return member;
+}
+
+function queueRoleUpdate({ guild, userId, tp, channel }) {
+  if (!guild || !userId) return;
+  const existing = pendingRoleUpdates.get(userId);
+
+  // Keep the latest TP and most recent channel ref
+  pendingRoleUpdates.set(userId, {
+    guildId: guild.id,
+    guild,
+    userId,
+    tp,
+    channel: channel || existing?.channel || null,
+  });
+}
+
+// Flush loop
+setInterval(async () => {
+  if (!pendingRoleUpdates.size) return;
+
+  // Snapshot & clear quickly so we don't block incoming events
+  const batch = [...pendingRoleUpdates.values()];
+  pendingRoleUpdates.clear();
+
+  for (const job of batch) {
+    try {
+      const userObj = trainerData[job.userId];
+      if (!userObj) continue;
+
+      // If you store rank, use it. If not, compare computed rank.
+      const oldRank = userObj.rank || getRank(userObj.tp || 0);
+      const newRank = getRank(job.tp || 0);
+
+      // Nothing changed? Skip ALL REST.
+      if (oldRank === newRank) continue;
+
+      // Update stored rank (optional, but helps future comparisons)
+      userObj.rank = newRank;
+
+      const member = await getMemberCached(job.guild, job.userId);
+      await updateUserRole(member, job.tp, job.channel || null);
+    } catch (err) {
+      console.warn("⚠️ role queue flush failed:", err?.message || err);
+    }
+  }
+}, ROLE_FLUSH_INTERVAL_MS);
+
+// ==========================================================
 // 🔧 SCHEMA NORMALIZATION
 // ==========================================================
 function normalizeUserSchema(id, user) {
@@ -859,12 +935,12 @@ if (Math.random() < MESSAGE_CC_CHANCE) {
   } catch {}
 }
 
-try {
-  const member = await message.guild.members.fetch(userId);
-  await updateUserRole(member, userObj.tp, message.channel);
-} catch (err) {
-  console.warn("⚠️ Rank update failed (messageCreate):", err.message);
-}
+queueRoleUpdate({
+  guild: message.guild,
+  userId,
+  tp: userObj.tp,
+  channel: message.channel,
+});
 
   // 🎲 3% chance for bonus Pokémon or Trainer
   await tryGiveRandomReward(userObj, message.author, message);
@@ -921,12 +997,12 @@ if (Math.random() < MESSAGE_CC_CHANCE) {
   } catch {}
 }
 
-  try {
-    const member = await reaction.message.guild.members.fetch(userId);
-    await updateUserRole(member, userObj.tp, reaction.message.channel);
-  } catch (err) {
-    console.warn("⚠️ Rank update failed (reaction):", err.message);
-  }
+queueRoleUpdate({
+  guild: reaction.message.guild,
+  userId,
+  tp: userObj.tp,
+  channel: reaction.message.channel,
+});
 
   // 3% chance for random reward
  await tryGiveRandomReward(userObj, user, reaction.message);

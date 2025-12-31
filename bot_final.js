@@ -425,12 +425,6 @@ client.on("reconnecting", () => {
 
 client.on("warn", (w) => console.warn("⚠️ Discord warn:", w));
 
-// Log when Discord sends ANY interaction to your bot
-client.on("interactionCreate", (i) => {
-  const kind = i.isChatInputCommand() ? "slash" : i.isButton() ? "button" : "other";
-  console.log(`⚡ interactionCreate (${kind}) guild=${i.guildId} user=${i.user?.id} name=${i.commandName || i.customId}`);
-});
-
 // ==========================================================
 // 💾 Trainer Data Load & Save
 // ==========================================================
@@ -1126,32 +1120,117 @@ if (
 
 
 // ==========================================================
-// ⚡ INTERACTION HANDLER (Slash Commands + Buttons)
+// ⚡ INTERACTION HANDLER (Slash Commands + Buttons) — SAFE PATCHED
+// Fixes InteractionAlreadyReplied WITHOUT touching command files.
 // ==========================================================
 client.on("interactionCreate", async (interaction) => {
+  const kind = interaction.isChatInputCommand()
+    ? "slash"
+    : interaction.isButton()
+    ? "button"
+    : "other";
+
+  console.log(
+    `⚡ interactionCreate (${kind}) guild=${interaction.guildId} user=${interaction.user?.id} name=${
+      interaction.commandName || interaction.customId
+    } deferred=${interaction.deferred} replied=${interaction.replied}`
+  );
+
+  // ----------------------------------------------------------
+  // 🔧 Patch interaction methods to be "safe" (no-throw)
+  // This prevents commands from crashing if they call deferReply
+  // after the interaction was already acked elsewhere.
+  // ----------------------------------------------------------
+  try {
+    // Patch deferReply
+    if (typeof interaction.deferReply === "function") {
+      const _deferReply = interaction.deferReply.bind(interaction);
+      interaction.deferReply = async (opts) => {
+        if (interaction.deferred || interaction.replied) return;
+        try {
+          return await _deferReply(opts);
+        } catch (e) {
+          if (e?.code === "InteractionAlreadyReplied") return;
+          throw e;
+        }
+      };
+    }
+
+    // Patch reply
+    if (typeof interaction.reply === "function") {
+      const _reply = interaction.reply.bind(interaction);
+      interaction.reply = async (opts) => {
+        if (interaction.replied) return;
+        try {
+          return await _reply(opts);
+        } catch (e) {
+          if (e?.code === "InteractionAlreadyReplied") return;
+          throw e;
+        }
+      };
+    }
+
+    // Patch deferUpdate (buttons)
+    if (typeof interaction.deferUpdate === "function") {
+      const _deferUpdate = interaction.deferUpdate.bind(interaction);
+      interaction.deferUpdate = async () => {
+        // For component interactions, "replied" can be true after update/reply
+        if (interaction.deferred || interaction.replied) return;
+        try {
+          return await _deferUpdate();
+        } catch (e) {
+          if (e?.code === "InteractionAlreadyReplied") return;
+          throw e;
+        }
+      };
+    }
+
+    // Patch update (buttons)
+    if (typeof interaction.update === "function") {
+      const _update = interaction.update.bind(interaction);
+      interaction.update = async (opts) => {
+        if (interaction.deferred || interaction.replied) return;
+        try {
+          return await _update(opts);
+        } catch (e) {
+          if (e?.code === "InteractionAlreadyReplied") return;
+          throw e;
+        }
+      };
+    }
+  } catch (patchErr) {
+    console.warn("⚠️ interaction patch failed:", patchErr?.message || patchErr);
+  }
+
   try {
     // ============================
     // Slash Commands
     // ============================
     if (interaction.isChatInputCommand()) {
-      // Block while booting
       if (!isReady) {
-        return safeReply(interaction, {
-          content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.",
-          ephemeral: true,
-        });
+        // Don't rely on safeReply here; reply safely
+        try {
+          if (!interaction.deferred && !interaction.replied) {
+            await interaction.reply({
+              content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.",
+              ephemeral: true,
+            });
+          }
+        } catch {}
+        return;
       }
 
       const command = client.commands.get(interaction.commandName);
       if (!command) {
-        return safeReply(interaction, {
-          content: "❌ Unknown command.",
-          ephemeral: true,
-        });
+        try {
+          if (!interaction.deferred && !interaction.replied) {
+            await interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
+          }
+        } catch {}
+        return;
       }
 
-      // ❗ IMPORTANT:
-      // Do NOT defer here. Commands may already defer/reply themselves.
+      // ❗ Do NOT defer here — commands can do whatever they do.
       await command.execute(
         interaction,
         trainerData,
@@ -1161,7 +1240,6 @@ client.on("interactionCreate", async (interaction) => {
         enqueueSave,
         client
       );
-
       return;
     }
 
@@ -1171,31 +1249,27 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.isButton()) {
       const id = interaction.customId ?? "";
 
-      // Always ACK so Discord never shows "Interaction Failed"
+      // Always ACK so Discord doesn't show "Interaction Failed"
       if (!interaction.deferred && !interaction.replied) {
         await interaction.deferUpdate().catch(() => {});
       }
 
-      // Shop buttons intentionally no-op here (handled elsewhere if needed)
-      if (
-        id.startsWith("confirm_") ||
-        id.startsWith("cancel_") ||
-        id.startsWith("disabled_")
-      ) {
+      // Shop buttons are intentionally no-op here
+      if (id.startsWith("confirm_") || id.startsWith("cancel_") || id.startsWith("disabled_")) {
         return;
       }
 
-      // Other buttons currently no-op
+      // Other buttons currently no-op (trainer cards etc handled elsewhere)
       return;
     }
   } catch (err) {
     console.error("❌ interactionCreate handler error:", err?.stack || err);
 
-    // If the command already deferred/replied, we must edit/follow-up instead of replying
+    // Try to respond without throwing another InteractionAlreadyReplied
     try {
       if (interaction?.deferred) {
         await interaction.editReply("❌ Command crashed. Check Render logs.").catch(() => {});
-      } else if (interaction && !interaction.replied) {
+      } else if (!interaction?.replied) {
         await interaction.reply({
           content: "❌ Command crashed. Check Render logs.",
           ephemeral: true,

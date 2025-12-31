@@ -1150,11 +1150,8 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
-      // ✅ Always ACK immediately
-      if (!interaction.deferred && !interaction.replied) {
-        await interaction.deferReply({ ephemeral: true }).catch(() => {});
-      }
-
+      // ❗ IMPORTANT:
+      // Do NOT defer here. Commands may already defer/reply themselves.
       await command.execute(
         interaction,
         trainerData,
@@ -1169,18 +1166,17 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     // ============================
-    // Buttons (ACK-only, routed elsewhere if needed)
+    // Buttons (ACK-only)
     // ============================
     if (interaction.isButton()) {
       const id = interaction.customId ?? "";
 
-      // ✅ ALWAYS ACK so Discord never shows "Interaction Failed"
+      // Always ACK so Discord never shows "Interaction Failed"
       if (!interaction.deferred && !interaction.replied) {
         await interaction.deferUpdate().catch(() => {});
       }
 
-      // Shop buttons intentionally no-op here
-      // (confirm_ / cancel_ / disabled_ handled elsewhere)
+      // Shop buttons intentionally no-op here (handled elsewhere if needed)
       if (
         id.startsWith("confirm_") ||
         id.startsWith("cancel_") ||
@@ -1189,25 +1185,27 @@ client.on("interactionCreate", async (interaction) => {
         return;
       }
 
-      // All other buttons currently no-op
+      // Other buttons currently no-op
       return;
     }
   } catch (err) {
     console.error("❌ interactionCreate handler error:", err?.stack || err);
 
+    // If the command already deferred/replied, we must edit/follow-up instead of replying
     try {
-      if (!interaction.deferred && !interaction.replied) {
+      if (interaction?.deferred) {
+        await interaction.editReply("❌ Command crashed. Check Render logs.").catch(() => {});
+      } else if (interaction && !interaction.replied) {
         await interaction.reply({
           content: "❌ Command crashed. Check Render logs.",
           ephemeral: true,
-        });
+        }).catch(() => {});
       }
     } catch {}
 
     return;
   }
 });
-
 
 app.post("/api/claim-weekly", express.json(), async (req, res) => {
   const { id } = req.body;

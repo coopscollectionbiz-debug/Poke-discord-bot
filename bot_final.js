@@ -1135,7 +1135,7 @@ client.on("interactionCreate", async (interaction) => {
     // Slash Commands
     // ============================
     if (interaction.isChatInputCommand()) {
-      // Optional: block while booting
+      // Block while booting
       if (!isReady) {
         return safeReply(interaction, {
           content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.",
@@ -1151,12 +1151,11 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
-      // ✅ CRITICAL: acknowledge instantly so Discord never times out
+      // ✅ Always ACK immediately
       if (!interaction.deferred && !interaction.replied) {
         await interaction.deferReply({ ephemeral: true }).catch(() => {});
       }
 
-      // Run command
       await command.execute(
         interaction,
         trainerData,
@@ -1171,44 +1170,46 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     // ============================
-    // Buttons
+    // Buttons (ACK-only, routed elsewhere if needed)
     // ============================
     if (interaction.isButton()) {
-      // If you intentionally ignore shop buttons, that's fine.
-      // But ANY button you don't handle should be acknowledged or it'll show "Interaction Failed"
+      const id = interaction.customId ?? "";
+
+      // ✅ ALWAYS ACK so Discord never shows "Interaction Failed"
       if (!interaction.deferred && !interaction.replied) {
         await interaction.deferUpdate().catch(() => {});
       }
+
+      // Optional: shop buttons intentionally no-op here
+      // confirm_*, cancel_*, disabled_* are handled elsewhere
+      if (
+        id.startsWith("confirm_") ||
+        id.startsWith("cancel_") ||
+        id.startsWith("disabled_")
+      ) {
+        return;
+      }
+
+      // Any other buttons are currently no-op
       return;
     }
   } catch (err) {
     console.error("❌ interactionCreate handler error:", err?.stack || err);
 
-    return safeReply(interaction, {
-      content: "❌ Command crashed. Check Render logs.",
-      ephemeral: true,
-    });
-  }
-});
+    // Safety fallback
+    try {
+      if (interaction && !interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: "❌ Command crashed. Check Render logs.",
+          ephemeral: true,
+        });
+      }
+    } catch {}
 
-
-// ==========================================================
-// 🧩 Button Interactions (v7.1)
-// ==========================================================
-if (interaction.isButton()) {
-  const id = interaction.customId;
-
-  // ✅ Allow Shop buttons (confirm/cancel/disabled)
-  const allowedPrefixes = ["confirm_", "cancel_", "disabled_"];
-  if (allowedPrefixes.some(prefix => id.startsWith(prefix))) {
-    // Shop handles its own interactions
     return;
   }
-
-  // ✅ Let all other buttons (like trainercard carousels) fall through
-  return; // avoids “Unknown button interaction.”
-}
 });
+
 
 app.post("/api/claim-weekly", express.json(), async (req, res) => {
   const { id } = req.body;

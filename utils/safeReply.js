@@ -1,18 +1,32 @@
 // utils/safeReply.js
 // ==========================================
-// Provides a unified, safe way to reply or follow up
-// with Discord interactions without causing
-// "Unknown interaction" or "Interaction already acknowledged" errors.
+// Safe interaction responder (v2)
+// - Handles reply / editReply / followUp correctly
+// - Swallows common Discord "late interaction" errors
 // ==========================================
+
+function shouldSwallow(err) {
+  const code = err?.code;
+  const msg = String(err?.message || "");
+
+  // discord.js / API variants
+  if (code === "InteractionAlreadyReplied") return true;
+  if (code === 40060) return true; // interaction already acknowledged (API)
+  if (code === 10062) return true; // Unknown interaction (too late)
+  if (msg.includes("Unknown interaction")) return true;
+  if (msg.includes("already been acknowledged")) return true;
+  if (msg.includes("Interaction has already been acknowledged")) return true;
+
+  return false;
+}
 
 /**
  * Safely respond to an interaction by detecting whether it's
  * already been replied to, deferred, or is a fresh interaction.
  *
- * @param {import("discord.js").Interaction} interaction - The Discord interaction.
- * @param {Object} options - Message options (embeds, content, components, etc.)
- * @param {boolean} [options.ephemeral] - Whether the response should be ephemeral.
- * @param {boolean} [options.editIfReplied=false] - If true, edits the previous reply instead of followUp.
+ * @param {import("discord.js").Interaction} interaction
+ * @param {Object} options - { content, embeds, components, ephemeral, ... }
+ * @param {boolean} [editIfReplied=false] - If true, edits instead of followUp when already replied.
  */
 export async function safeReply(interaction, options = {}, editIfReplied = false) {
   try {
@@ -21,27 +35,21 @@ export async function safeReply(interaction, options = {}, editIfReplied = false
       return;
     }
 
-    // Convert ephemeral to flags if needed
-    if (options.ephemeral !== undefined && !options.flags) {
-      options.flags = options.ephemeral ? 64 : 0;
-      delete options.ephemeral;
-    }
-
-    if (interaction.deferred && !interaction.replied) {
-      // Deferred, but not yet replied
+    // If deferred, editReply is the correct path
+    if (interaction.deferred) {
       return await interaction.editReply(options);
     }
 
+    // If already replied, either edit or followUp
     if (interaction.replied) {
-      if (editIfReplied) {
-        return await interaction.editReply(options);
-      }
+      if (editIfReplied) return await interaction.editReply(options);
       return await interaction.followUp(options);
     }
 
     // Fresh interaction
     return await interaction.reply(options);
   } catch (err) {
-    console.error("❌ safeReply error:", err.message);
+    if (shouldSwallow(err)) return;
+    console.error("❌ safeReply error:", err?.stack || err);
   }
 }

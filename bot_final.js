@@ -696,9 +696,9 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
 
 // ==========================================================
-// 📂 COMMAND LOADER
+// 📂 COMMAND LOADER (LOCAL ONLY - no REST)
 // ==========================================================
-async function loadCommands() {
+async function loadLocalCommands() {
   const commandsPath = path.resolve("./commands");
   const files = (await fs.readdir(commandsPath)).filter((f) => f.endsWith(".js"));
 
@@ -706,30 +706,35 @@ async function loadCommands() {
     try {
       const imported = await import(`./commands/${file}`);
       const command = imported.default || imported;
-      if (!command?.data?.name) {
-        console.warn(`⚠️ ${file}: invalid command data`);
+
+      if (!command?.data?.name || typeof command.execute !== "function") {
+        console.warn(`⚠️ ${file}: invalid command export`);
         continue;
       }
+
       client.commands.set(command.data.name, command);
       console.log(`✅ Loaded: ${command.data.name}`);
     } catch (err) {
-      console.error(`❌ ${file}:`, err.message);
+      console.error(`❌ ${file}:`, err?.stack || err);
     }
   }
 
+  console.log(`📦 Local commands loaded: ${client.commands.size}`);
+}
+
+// ==========================================================
+// 🌐 COMMAND REGISTRATION (REST) - ONLY WHEN ENABLED
+// ==========================================================
+async function registerCommands() {
   const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
   const commandsJSON = client.commands.map((c) => c.data.toJSON());
-  console.log(`📡 Registering ${commandsJSON.length} commands...`);
 
-  try {
-    await rest.put(
-  Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-  { body: commandsJSON }
-);
-    console.log("✅ Commands registered globally");
-  } catch (err) {
-    console.error("❌ Command registration failed:", err.message);
-  }
+  console.log(`📡 Registering ${commandsJSON.length} commands (REST)...`);
+  await rest.put(
+    Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+    { body: commandsJSON }
+  );
+  console.log("✅ Commands registered");
 }
 
 // ==========================================================
@@ -1195,10 +1200,6 @@ if (
 });
 
 
-// ==========================================================
-// ⚡ INTERACTION HANDLER (Slash Commands + Buttons) — SAFE PATCHED
-// Fixes InteractionAlreadyReplied WITHOUT touching command files.
-// ==========================================================
 client.on("interactionCreate", async (interaction) => {
   const kind = interaction.isChatInputCommand()
     ? "slash"
@@ -1214,99 +1215,116 @@ client.on("interactionCreate", async (interaction) => {
 
   // ----------------------------------------------------------
   // 🔧 Patch interaction methods to be "safe" (no-throw)
-  // This prevents commands from crashing if they call deferReply
-  // after the interaction was already acked elsewhere.
   // ----------------------------------------------------------
   try {
-    // Patch deferReply
+    const swallow = (e) => {
+      const code = e?.code;
+      const msg = String(e?.message || "");
+      if (code === "InteractionAlreadyReplied") return true;
+      if (code === 10062) return true; // Unknown interaction
+      if (msg.includes("Unknown interaction")) return true;
+      if (msg.includes("already been acknowledged")) return true;
+      return false;
+    };
+
     if (typeof interaction.deferReply === "function") {
       const _deferReply = interaction.deferReply.bind(interaction);
       interaction.deferReply = async (opts) => {
         if (interaction.deferred || interaction.replied) return;
-        try {
-          return await _deferReply(opts);
-        } catch (e) {
-          if (e?.code === "InteractionAlreadyReplied") return;
-          throw e;
-        }
+        try { return await _deferReply(opts); }
+        catch (e) { if (swallow(e)) return; throw e; }
       };
     }
 
-    // Patch reply
     if (typeof interaction.reply === "function") {
       const _reply = interaction.reply.bind(interaction);
       interaction.reply = async (opts) => {
-        if (interaction.replied) return;
+        if (interaction.replied || interaction.deferred) return;
+        try { return await _reply(opts); }
+        catch (e) { if (swallow(e)) return; throw e; }
+      };
+    }
+
+    if (typeof interaction.editReply === "function") {
+      const _editReply = interaction.editReply.bind(interaction);
+      interaction.editReply = async (opts) => {
+        if (!interaction.deferred && !interaction.replied) return;
+        try { return await _editReply(opts); }
+        catch (e) { if (swallow(e)) return; throw e; }
+      };
+    }
+
+    if (typeof interaction.followUp === "function") {
+      const _followUp = interaction.followUp.bind(interaction);
+      interaction.followUp = async (opts) => {
         try {
-          return await _reply(opts);
+          if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply({ ephemeral: !!opts?.ephemeral }).catch(() => {});
+          }
+          return await _followUp(opts);
         } catch (e) {
-          if (e?.code === "InteractionAlreadyReplied") return;
+          if (swallow(e)) return;
           throw e;
         }
       };
     }
 
-    // Patch deferUpdate (buttons)
     if (typeof interaction.deferUpdate === "function") {
       const _deferUpdate = interaction.deferUpdate.bind(interaction);
       interaction.deferUpdate = async () => {
-        // For component interactions, "replied" can be true after update/reply
         if (interaction.deferred || interaction.replied) return;
-        try {
-          return await _deferUpdate();
-        } catch (e) {
-          if (e?.code === "InteractionAlreadyReplied") return;
-          throw e;
-        }
+        try { return await _deferUpdate(); }
+        catch (e) { if (swallow(e)) return; throw e; }
       };
     }
 
-    // Patch update (buttons)
     if (typeof interaction.update === "function") {
       const _update = interaction.update.bind(interaction);
       interaction.update = async (opts) => {
         if (interaction.deferred || interaction.replied) return;
-        try {
-          return await _update(opts);
-        } catch (e) {
-          if (e?.code === "InteractionAlreadyReplied") return;
-          throw e;
-        }
+        try { return await _update(opts); }
+        catch (e) { if (swallow(e)) return; throw e; }
       };
     }
   } catch (patchErr) {
     console.warn("⚠️ interaction patch failed:", patchErr?.message || patchErr);
   }
 
-  try {
-    // ============================
-    // Slash Commands
-    // ============================
-    if (interaction.isChatInputCommand()) {
+  // ----------------------------------------------------------
+  // ✅ Slash Commands
+  // ----------------------------------------------------------
+  if (interaction.isChatInputCommand()) {
+    // ACK-only fallback (prevents infinite "thinking", does NOT overwrite command output)
+    const fallbackTimer = setTimeout(async () => {
+      try {
+        if (!interaction.deferred && !interaction.replied) {
+          await interaction.deferReply({ ephemeral: true }).catch(() => {});
+        }
+      } catch {}
+    }, 2500);
+
+    try {
       if (!isReady) {
-        // Don't rely on safeReply here; reply safely
-        try {
-          if (!interaction.deferred && !interaction.replied) {
-            await interaction.reply({
-              content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.",
-              ephemeral: true,
-            });
-          }
-        } catch {}
+        if (!interaction.deferred && !interaction.replied) {
+          await interaction.reply({
+            content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.",
+            ephemeral: true,
+          });
+        }
         return;
       }
 
       const command = client.commands.get(interaction.commandName);
       if (!command) {
-        try {
-          if (!interaction.deferred && !interaction.replied) {
-            await interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
-          }
-        } catch {}
+        console.warn(`❌ Unknown command: ${interaction.commandName} (loaded=${client.commands.size})`);
+        if (!interaction.deferred && !interaction.replied) {
+          await interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
+        } else if (interaction.deferred) {
+          await interaction.editReply("❌ Unknown command.").catch(() => {});
+        }
         return;
       }
 
-      // ❗ Do NOT defer here — commands can do whatever they do.
       await command.execute(
         interaction,
         trainerData,
@@ -1317,41 +1335,36 @@ client.on("interactionCreate", async (interaction) => {
         client
       );
       return;
-    }
-
-    // ============================
-    // Buttons (ACK-only)
-    // ============================
-    if (interaction.isButton()) {
-      const id = interaction.customId ?? "";
-
-      // Always ACK so Discord doesn't show "Interaction Failed"
-      if (!interaction.deferred && !interaction.replied) {
-        await interaction.deferUpdate().catch(() => {});
-      }
-
-      // Shop buttons are intentionally no-op here
-      if (id.startsWith("confirm_") || id.startsWith("cancel_") || id.startsWith("disabled_")) {
-        return;
-      }
-
-      // Other buttons currently no-op (trainer cards etc handled elsewhere)
+    } catch (err) {
+      console.error("❌ Slash command crashed:", err?.stack || err);
+      try {
+        if (interaction.deferred) {
+          await interaction.editReply("❌ Command crashed. Check Render logs.").catch(() => {});
+        } else if (!interaction.replied) {
+          await interaction.reply({
+            content: "❌ Command crashed. Check Render logs.",
+            ephemeral: true,
+          }).catch(() => {});
+        }
+      } catch {}
       return;
+    } finally {
+      clearTimeout(fallbackTimer);
     }
-  } catch (err) {
-    console.error("❌ interactionCreate handler error:", err?.stack || err);
+  }
 
-    // Try to respond without throwing another InteractionAlreadyReplied
-    try {
-      if (interaction?.deferred) {
-        await interaction.editReply("❌ Command crashed. Check Render logs.").catch(() => {});
-      } else if (!interaction?.replied) {
-        await interaction.reply({
-          content: "❌ Command crashed. Check Render logs.",
-          ephemeral: true,
-        }).catch(() => {});
-      }
-    } catch {}
+  // ----------------------------------------------------------
+  // ✅ Buttons (ACK-only)
+  // ----------------------------------------------------------
+  if (interaction.isButton()) {
+    const id = interaction.customId ?? "";
+
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferUpdate().catch(() => {});
+    }
+
+    // intentionally no-op buttons
+    if (id.startsWith("confirm_") || id.startsWith("cancel_") || id.startsWith("disabled_")) return;
 
     return;
   }
@@ -1812,6 +1825,14 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
+ // ✅ Load local commands FIRST
+  await loadLocalCommands();
+
+// Register only if enabled
+  if (process.env.REGISTER_COMMANDS === "true") {
+    await registerCommands();
+  }
+
   try {
     trainerData = await loadTrainerData();
 
@@ -1856,19 +1877,6 @@ client.once("ready", async () => {
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ Listening on port ${PORT}`)
 );
-
-// Register slash commands ONLY when explicitly enabled
-if (process.env.REGISTER_COMMANDS === "true") {
-  (async () => {
-    try {
-      await loadCommands();
-    } catch (err) {
-      console.error("❌ loadCommands() failed at boot:", err?.message || err);
-    }
-  })();
-} else {
-  console.log("⏭️ Skipping slash command registration (REGISTER_COMMANDS != true)");
-}
 
 // ==========================================================
 // 🚀 LAUNCH

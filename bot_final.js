@@ -517,8 +517,13 @@ let lastInteractionAtMs = null;
 // Mark when the gateway is truly ready at least once
 client.once("ready", () => {
   hasBeenReadyOnce = true;
+
+  // ✅ Seed this so watchdog never treats fresh boot as "no interactions"
+  if (!lastInteractionAtMs) lastInteractionAtMs = Date.now();
+
   console.log("🧠 hasBeenReadyOnce = true");
 });
+
 
 // Track incoming interactions (slash commands, buttons, etc)
 client.on("interactionCreate", () => {
@@ -577,7 +582,10 @@ setInterval(() => {
 setInterval(() => {
   if (!hasBeenReadyOnce) return;
 
-  const ageMs = lastInteractionAtMs ? Date.now() - lastInteractionAtMs : Infinity;
+  // ✅ Don't restart until we've actually seen at least one interaction
+  if (!lastInteractionAtMs) return;
+
+  const ageMs = Date.now() - lastInteractionAtMs;
 
   // If no interactions for 60 minutes, assume gateway is dead
   if (ageMs > 60 * 60 * 1000) {
@@ -585,6 +593,7 @@ setInterval(() => {
     process.exit(1);
   }
 }, 60_000);
+
 
 // ==========================================================
 // 💾 Trainer Data Load & Save

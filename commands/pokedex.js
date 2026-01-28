@@ -17,8 +17,29 @@ import {
 
 import { safeReply } from "../utils/safeReply.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
-import { spritePaths, rarityEmojis, typeEmojis } from "../spriteconfig.js";
+import { spritePaths, rarityEmojis } from "../spriteconfig.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+
+const typeEmojis = {
+  normal: "⚪",
+  fire: "🔥",
+  water: "💧",
+  electric: "⚡",
+  grass: "🌿",
+  ice: "❄️",
+  fighting: "🥊",
+  poison: "☠️",
+  ground: "⛰️",
+  flying: "🕊️",
+  psychic: "🔮",
+  bug: "🐛",
+  rock: "🪨",
+  ghost: "👻",
+  dragon: "🐉",
+  dark: "🌑",
+  steel: "⚙️",
+  fairy: "✨",
+};
 
 export default {
   data: new SlashCommandBuilder()

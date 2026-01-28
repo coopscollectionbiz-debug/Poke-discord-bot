@@ -1,9 +1,10 @@
 // ==========================================================
 // 📘 /pokedex — Enhanced Pokémon Viewer (Ephemeral Version)
 // ==========================================================
-// • Shows rarity, types, evolutions, shiny status
-// • Dynamic shiny toggle
-// • Consistent with dashboard + trainer card UI
+// • Ephemeral
+// • Shows rarity, types, evolutions
+// • Shiny toggle is ALWAYS allowed (even if unowned)
+// • Ownership is shown separately for Normal vs Shiny (with counts)
 // ==========================================================
 
 import {
@@ -11,7 +12,7 @@ import {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
 } from "discord.js";
 
 import { safeReply } from "../utils/safeReply.js";
@@ -23,28 +24,34 @@ export default {
   data: new SlashCommandBuilder()
     .setName("pokedex")
     .setDescription("View Pokédex info for a Pokémon.")
-    .addStringOption(opt =>
-      opt
-        .setName("name")
-        .setDescription("Pokémon name")
-        .setRequired(true)
+    .addStringOption((opt) =>
+      opt.setName("name").setDescription("Pokémon name").setRequired(true)
     ),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
+  // NOTE: Keep signature consistent with your command loader invocation.
+  // In your bot file you call:
+  // command.execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, lockUser, enqueueSave, client)
+  async execute(
+    interaction,
+    trainerData,
+    saveTrainerDataLocal,
+    saveDataToDiscord,
+    lockUser,
+    enqueueSave,
+    client
+  ) {
     try {
       await interaction.deferReply({ ephemeral: true });
 
-      const name = interaction.options.getString("name");
+      const name = interaction.options.getString("name", true).trim();
       const all = await getAllPokemon();
 
-      let poke = all.find(
-        p => p.name.toLowerCase() === name.toLowerCase()
-      );
+      const poke = all.find((p) => p.name?.toLowerCase() === name.toLowerCase());
 
       if (!poke) {
         return safeReply(interaction, {
           content: `❌ Pokémon "**${name}**" not found.`,
-          ephemeral: true
+          ephemeral: true,
         });
       }
 
@@ -55,116 +62,138 @@ export default {
         client
       );
 
-      const owns = user.pokemon?.[poke.id];
-      const shinyOwned = owns?.shiny > 0;
+      // ======================================================
+      // OWNERSHIP (separate normal vs shiny + counts)
+      // ======================================================
+      const entry = user.pokemon?.[poke.id];
+      const normalOwned = Number.isFinite(entry?.normal) ? entry.normal : 0;
+      const shinyOwned = Number.isFinite(entry?.shiny) ? entry.shiny : 0;
+
+      const ownsNormal = normalOwned > 0;
+      const ownsShiny = shinyOwned > 0;
 
       // ======================================================
       // SPRITE LOGIC — normal/shiny support
+      // Uses your canonical spritePaths where possible.
+      // If your spritePaths are already full URLs, this will work as-is.
       // ======================================================
       const getSprite = (isShiny) =>
         isShiny
-          ? `${spritePaths.pokemon}shiny/${poke.id}.gif`
-          : `${spritePaths.pokemon}normal/${poke.id}.gif`;
+          ? `${spritePaths.shiny}${poke.id}.gif`
+          : `${spritePaths.pokemon}${poke.id}.gif`;
 
-      let currentShiny = false;
+      // Which sprite is currently being viewed (toggleable)
+      let currentShinyView = false;
 
       // ======================================================
-      // BUILD FULL EMBED (patched safely)
+      // EMBED BUILDER (safe/defensive)
       // ======================================================
       const buildEmbed = () => {
         const rarity = (poke.tier || poke.rarity || "common").toLowerCase();
 
-        // SAFE TYPES (patched)
-        const types = Array.isArray(poke.types) && poke.types.length
-          ? poke.types.map(t => `${typeEmojis[t] || ""} ${t}`).join(" / ")
-          : "Unknown";
+        const types =
+          Array.isArray(poke.types) && poke.types.length
+            ? poke.types.map((t) => `${typeEmojis?.[t] || ""} ${t}`).join(" / ")
+            : "Unknown";
 
-        // SAFE EVOLUTION LINE (patched)
-        const evo = Array.isArray(poke.evolutionLine) && poke.evolutionLine.length
-          ? poke.evolutionLine.join(" → ")
-          : "None";
+        const evo =
+          Array.isArray(poke.evolutionLine) && poke.evolutionLine.length
+            ? poke.evolutionLine.join(" → ")
+            : "None";
+
+        const viewing = currentShinyView ? "✨ Shiny" : "Normal";
 
         return new EmbedBuilder()
           .setTitle(`#${poke.id} — ${poke.name}`)
           .setColor(0x3b82f6)
           .setDescription(
-            `${rarityEmojis[rarity] || ""} **${rarity.toUpperCase()}**\n\n` +
-            `**Type:** ${types}\n` +
-            `**Evolutions:** ${evo}\n\n` +
-            `**Owned:** ${owns ? "Yes" : "No"}\n` +
-            `**Shiny Owned:** ${shinyOwned ? "✨ Yes" : "No"}`
+            `${rarityEmojis?.[rarity] || ""} **${rarity.toUpperCase()}**\n\n` +
+              `**Type:** ${types}\n` +
+              `**Evolutions:** ${evo}\n` +
+              `**Viewing:** ${viewing}\n\n` +
+              `**Owned (Normal):** ${
+                ownsNormal ? `✅ Yes (${normalOwned})` : "❌ No"
+              }\n` +
+              `**Owned (Shiny):** ${
+                ownsShiny ? `✨ ✅ Yes (${shinyOwned})` : "❌ No"
+              }`
           )
-          .setImage(getSprite(currentShiny))
-          .setFooter({
-            text: "Coop's Collection — /pokedex"
-          });
+          .setImage(getSprite(currentShinyView))
+          .setFooter({ text: "Coop's Collection — /pokedex" });
       };
 
       // ======================================================
-      // COMPONENTS
+      // COMPONENTS (always allow shiny viewing)
       // ======================================================
       const shinyButton = new ButtonBuilder()
         .setCustomId("toggle_shiny")
         .setLabel("⭐ View Shiny")
         .setStyle(ButtonStyle.Primary)
-        .setDisabled(!shinyOwned);
+        .setDisabled(false);
 
       const closeButton = new ButtonBuilder()
         .setCustomId("close_pokedex")
         .setLabel("Close")
         .setStyle(ButtonStyle.Secondary);
 
-      const row = new ActionRowBuilder().addComponents(
-        shinyButton,
-        closeButton
-      );
+      const row = new ActionRowBuilder().addComponents(shinyButton, closeButton);
 
       // ======================================================
-      // SEND INITIAL MESSAGE
+      // SEND INITIAL MESSAGE (ephemeral)
       // ======================================================
       const msg = await interaction.editReply({
         embeds: [buildEmbed()],
-        components: [row]
+        components: [row],
       });
 
       // ======================================================
       // COLLECTOR
       // ======================================================
       const collector = msg.createMessageComponentCollector({
-        time: 120000,
-        filter: i => i.user.id === interaction.user.id
+        time: 120_000,
+        filter: (i) => i.user.id === interaction.user.id,
       });
 
-      collector.on("collect", async i => {
+      collector.on("collect", async (i) => {
         if (i.customId === "toggle_shiny") {
-          currentShiny = !currentShiny;
+          currentShinyView = !currentShinyView;
 
-          shinyButton.setLabel(
-            currentShiny ? "⭐ View Normal" : "⭐ View Shiny"
-          );
+          shinyButton.setLabel(currentShinyView ? "⭐ View Normal" : "⭐ View Shiny");
 
           await i.update({
             embeds: [buildEmbed()],
-            components: [row]
+            components: [row],
           });
+          return;
         }
 
         if (i.customId === "close_pokedex") {
           collector.stop("closed");
-          return i.update({
+          await i.update({
             content: "❌ Closed.",
             embeds: [],
-            components: []
+            components: [],
           });
+          return;
         }
       });
 
+      collector.on("end", async () => {
+        // Optional: disable buttons when collector ends so it feels clean
+        try {
+          shinyButton.setDisabled(true);
+          closeButton.setDisabled(true);
+          await interaction.editReply({
+            components: [new ActionRowBuilder().addComponents(shinyButton, closeButton)],
+          });
+        } catch {}
+      });
     } catch (err) {
       console.error("❌ /pokedex error:", err);
       return safeReply(interaction, {
         content: "❌ Failed to load Pokédex entry.",
-        ephemeral: true
+        ephemeral: true,
       });
     }
-  }
+  },
 };

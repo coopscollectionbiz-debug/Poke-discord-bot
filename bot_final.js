@@ -38,8 +38,16 @@ import {
   saveTrainerDataLocal
 } from "./utils/saveQueue.js";
 
-process.on("unhandledRejection", (err) => console.error("❌ Unhandled Rejection:", err));
-process.on("uncaughtException", (err) => console.error("❌ Uncaught Exception:", err));
+process.on("unhandledRejection", (err) => {
+  console.error("❌ Unhandled Rejection:", err);
+  process.exit(1);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("❌ Uncaught Exception:", err);
+  process.exit(1);
+});
+
 
 // ==========================================================
 // 🧵 ROLE UPDATE QUEUE (reduces REST spam)
@@ -347,11 +355,6 @@ app.get("/public/dashboardstore", (_, res) =>
   res.sendFile(path.join(staticPath, "dashboardstore", "index.html"))
 );
 
-// Health
-app.get("/", (_, res) => res.send("Bot running"));
-app.get("/healthz", (_, res) =>
-  res.json({ ready: isReady, uptime: Math.floor((Date.now() - startTime) / 1000) })
-);
 
 // ==========================================================
 // 🎨 Color Palette (Matches CSS theme)
@@ -491,15 +494,89 @@ client.on("ready", () => {
 client.on("error", (e) => console.error("❌ Discord client error:", e));
 client.on("shardError", (e) => console.error("❌ Discord shardError:", e));
 
-client.on("disconnect", (event) => {
-  console.error("🔴 Discord DISCONNECT:", event?.code, event?.reason);
+client.on("shardDisconnect", (event, id) => {
+  console.error("🔴 shardDisconnect", { id, code: event?.code, reason: event?.reason });
+});
+client.on("shardReconnecting", (id) => console.log("🟡 shardReconnecting", { id }));
+client.on("shardResume", (id) => console.log("🟢 shardResume", { id }));
+client.on("shardError", (e) => console.error("❌ shardError", e));
+
+// ==========================================================
+// 🩺 DISCORD HEALTH + INTERACTION WATCHDOG (FINAL + UNIFIED)
+// ==========================================================
+
+// Tracks last successful Discord REST call
+let lastDiscordOk = Date.now();
+
+// Tracks whether the bot has ever fully connected
+let hasBeenReadyOnce = false;
+
+// Tracks last time an interaction event was received (ms)
+let lastInteractionAtMs = null;
+
+// Mark when the gateway is truly ready at least once
+client.once("ready", () => {
+  hasBeenReadyOnce = true;
+  console.log("🧠 hasBeenReadyOnce = true");
 });
 
-client.on("reconnecting", () => {
-  console.log("🟡 Discord RECONNECTING...");
+// Track incoming interactions (slash commands, buttons, etc)
+client.on("interactionCreate", () => {
+  lastInteractionAtMs = Date.now();
 });
 
-client.on("warn", (w) => console.warn("⚠️ Discord warn:", w));
+// ✅ Health endpoint (uses unified vars)
+app.get("/healthz", (_, res) => {
+  res.json({
+    appReadyFlag: isReady,
+    discordJsReady: !!client.readyAt,
+    wsPing: client.ws?.ping ?? null,
+    uptime: Math.floor(process.uptime()),
+    lastDiscordOkAgeSec: Math.round((Date.now() - lastDiscordOk) / 1000),
+    lastInteractionAt: lastInteractionAtMs ? new Date(lastInteractionAtMs).toISOString() : null,
+  });
+});
+
+// ----------------------------------------------------------
+// 🔍 REST PROBE — proves outbound + auth + Discord API works
+// ----------------------------------------------------------
+setInterval(async () => {
+  try {
+    if (!client.user) return; // not logged in yet
+    await client.user.fetch(true); // lightweight REST proof
+    lastDiscordOk = Date.now();
+  } catch (e) {
+    console.error("❌ Discord REST probe failed:", e?.message || e);
+  }
+}, 60_000);
+
+// ----------------------------------------------------------
+// 🚨 RESTART IF DISCORD REST IS UNHEALTHY
+// ----------------------------------------------------------
+setInterval(() => {
+  if (!hasBeenReadyOnce) return; // don't restart during initial boot
+
+  const age = Date.now() - lastDiscordOk;
+  if (age > 5 * 60_000) {
+    console.error(`❌ Discord REST unhealthy for ${Math.round(age / 1000)}s — exiting`);
+    process.exit(1);
+  }
+}, 60_000);
+
+// ----------------------------------------------------------
+// 🚨 RESTART IF INTERACTIONS STOP ARRIVING (ZOMBIE GATEWAY)
+// ----------------------------------------------------------
+setInterval(() => {
+  if (!hasBeenReadyOnce) return;
+
+  const ageMs = lastInteractionAtMs ? Date.now() - lastInteractionAtMs : Infinity;
+
+  // If no interactions for 60 minutes, assume gateway is dead
+  if (ageMs > 60 * 60 * 1000) {
+    console.error("❌ No interactions received for 60 minutes — restarting");
+    process.exit(1);
+  }
+}, 60_000);
 
 // ==========================================================
 // 💾 Trainer Data Load & Save
@@ -948,7 +1025,12 @@ queueRoleUpdate({
 });
 
   // 🎲 3% chance for bonus Pokémon or Trainer
-  await tryGiveRandomReward(userObj, message.author, message);
+  setImmediate(() => {
+  tryGiveRandomReward(userObj, message.author, message).catch((e) =>
+    console.warn("⚠️ tryGiveRandomReward failed:", e?.message || e)
+  );
+});
+
 
 });
 
@@ -1010,7 +1092,12 @@ queueRoleUpdate({
 });
 
   // 3% chance for random reward
- await tryGiveRandomReward(userObj, user, reaction.message);
+ setImmediate(() => {
+  tryGiveRandomReward(userObj, user, reaction.message).catch((e) =>
+    console.warn("⚠️ tryGiveRandomReward failed:", e?.message || e)
+  );
+});
+
 
 });
 

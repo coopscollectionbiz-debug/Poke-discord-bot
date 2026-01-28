@@ -21,6 +21,7 @@ let lastJsonString = null;
 // ----------------------------------------------------------
 function isTrainerDataSafe(data) {
   if (!data || typeof data !== "object") return false;
+  if (Array.isArray(data)) return false;
 
   const keys = Object.keys(data);
   if (keys.length < 1) return false;
@@ -31,53 +32,61 @@ function isTrainerDataSafe(data) {
 // ----------------------------------------------------------
 // 💾 Atomic write
 // ----------------------------------------------------------
-async function atomicWriteJson(filePath, json) {
+async function atomicWriteJson(json) {
   const jsonString = JSON.stringify(json, null, 2);
 
   // Avoid unnecessary writes
   if (jsonString === lastJsonString) return;
   lastJsonString = jsonString;
 
-  // Write temp file
-  await fs.writeFile(TEMP_PATH, jsonString, "utf8");
+  try {
+    // Write temp file
+    await fs.writeFile(TEMP_PATH, jsonString, "utf8");
 
-  // Atomic rename
-  await fs.rename(TEMP_PATH, TRAINERDATA_PATH);
+    // Atomic rename (same directory)
+    await fs.rename(TEMP_PATH, TRAINERDATA_PATH);
+  } catch (err) {
+    // Best-effort cleanup of temp file
+    try { await fs.unlink(TEMP_PATH); } catch {}
+    throw err;
+  }
 }
 
 // ----------------------------------------------------------
 // 🚀 Public: enqueue save
 // ----------------------------------------------------------
 export function enqueueSave(trainerData) {
-  queue = queue.then(async () => {
+  queue = queue
+    .then(async () => {
+      if (!isTrainerDataSafe(trainerData)) {
+        console.warn("⚠️ Refusing save: trainerData appears EMPTY/INVALID");
+        return;
+      }
 
-    if (!isTrainerDataSafe(trainerData)) {
-      console.warn("⚠️ Refusing save: trainerData appears EMPTY");
-      return;
-    }
-
-    await atomicWriteJson(TRAINERDATA_PATH, trainerData);
-    console.log("💾 Saved trainerData.json");
-
-  }).catch(err => console.error("❌ Save error:", err));
+      await atomicWriteJson(trainerData);
+      console.log("💾 Saved trainerData.json");
+    })
+    .catch((err) => {
+      console.error("❌ Save error:", err);
+      // Keep queue alive even after an error
+    });
 
   return queue;
 }
 
 // ----------------------------------------------------------
-// 🚦 Shutdown flush (SIGINT)
+// 🚦 Shutdown flush (SIGINT/SIGTERM)
 // ----------------------------------------------------------
 export async function shutdownFlush(timeout = 5000) {
-  let done = false;
-
-  queue.then(() => done = true);
-
-  const start = Date.now();
-  while (!done && Date.now() - start < timeout) {
-    await new Promise(r => setTimeout(r, 50));
+  try {
+    await Promise.race([
+      queue,
+      new Promise((resolve) => setTimeout(resolve, timeout)),
+    ]);
+    return true;
+  } catch {
+    return false;
   }
-
-  return done;
 }
 
 // Compatibility export

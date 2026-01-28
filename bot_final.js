@@ -525,6 +525,14 @@ client.on("interactionCreate", () => {
   lastInteractionAtMs = Date.now();
 });
 
+// 🚨 If we never reach Discord ready within 5 minutes, restart the instance.
+setTimeout(() => {
+  if (!hasBeenReadyOnce) {
+    console.error("❌ Startup watchdog: never reached Discord READY — exiting to restart");
+    process.exit(1);
+  }
+}, 5 * 60_000);
+
 // ✅ Health endpoint (uses unified vars)
 app.get("/healthz", (_, res) => {
   res.json({
@@ -605,12 +613,11 @@ async function loadTrainerData() {
   return loaded;
 }
 
-async function saveDataToDiscord(data) {
-  if (shuttingDown) {
+async function saveDataToDiscord(data, { force = false } = {}) {
+  if (shuttingDown && !force) {
     console.log("⚠️ Skipping Discord save — shutting down");
     return;
   }
-
   if (isSaving) {
     console.log("⏳ Save already running — skip");
     return;
@@ -861,11 +868,12 @@ async function gracefulShutdown(signal) {
       new Promise(res => setTimeout(res, 8000)),
     ]);
 
-    console.log("☁️ Uploading FINAL Discord backup...");
-    await Promise.race([
-      saveDataToDiscord(trainerData),
-      new Promise(res => setTimeout(res, 8000)),
-    ]);
+    console.log("☁️ Uploading FINAL Discord backup (forced)...");
+await Promise.race([
+  saveDataToDiscord(trainerData, { force: true }),
+  new Promise(res => setTimeout(res, 8000)),
+]);
+
 
     console.log("🧹 Destroying Discord client...");
     await Promise.race([
@@ -1970,9 +1978,19 @@ app.listen(PORT, "0.0.0.0", () =>
 // ==========================================================
 console.log("🚀 About to login to Discord... BOT_TOKEN present?", !!process.env.BOT_TOKEN);
 
-client.login(process.env.BOT_TOKEN)
+async function loginWithTimeout(ms = 60_000) {
+  return Promise.race([
+    client.login(process.env.BOT_TOKEN),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Discord login timeout after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
+loginWithTimeout(60_000)
   .then(() => console.log("✅ client.login() resolved"))
   .catch((err) => {
-    console.error("❌ client.login failed:", err?.stack || err);
+    console.error("❌ client.login failed/timeout:", err?.stack || err);
     process.exit(1);
   });
+

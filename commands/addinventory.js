@@ -1,6 +1,7 @@
 // ==========================================================
-// /addinventory — Expanded Admin Command (v3.2, Race-Safe)
+// /addinventory — Expanded Admin Command (v3.3, Race-Safe)
 // Includes: Confirmation of EXACT items added
+// ✅ Adds support for Shiny Dust via Item path
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
@@ -9,6 +10,14 @@ import { findPokemonByName, getFlattenedTrainers } from "../utils/dataLoader.js"
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+
+function normalizeKey(input) {
+  return String(input || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
 
 export default {
   data: new SlashCommandBuilder()
@@ -62,7 +71,9 @@ export default {
     const type = interaction.options.getString("type");
     const name = interaction.options.getString("name");
     const shiny = interaction.options.getBoolean("shiny") || false;
-    const quantity = interaction.options.getInteger("quantity") || 1;
+
+    let quantity = interaction.options.getInteger("quantity") || 1;
+    if (!Number.isFinite(quantity) || quantity < 1) quantity = 1;
 
     const userId = targetUser.id;
 
@@ -130,32 +141,62 @@ export default {
         }
 
         // ======================================================
-        // 🟣 Items
+        // 🟣 Items (including Shiny Dust)
         // ======================================================
         else if (type === "item") {
-          const key = name.toLowerCase().replace(/\s+/g, "_");
+          // Normalize & alias
+          const raw = String(name || "").trim();
+          const rawLower = raw.toLowerCase();
 
-          if (!globalThis.SHOP_ITEMS || !globalThis.SHOP_ITEMS[key]) {
-            return safeReply(interaction, {
-              content: `⛔ Item "${name}" not recognized.`,
-              ephemeral: true,
-            });
+          const aliasMap = {
+            "shiny dust": "shiny_dust",
+            "shinydust": "shiny_dust",
+            "shiny-dust": "shiny_dust",
+            "shiny_dust": "shiny_dust",
+          };
+
+          const key = aliasMap[rawLower] || normalizeKey(raw);
+
+          // ✅ Special-case: Shiny Dust as a balance on the user
+          if (key === "shiny_dust") {
+            user.shinyDust ??= 0;
+            user.shinyDust += quantity;
+
+            confirmationText = `**${quantity}× ✨ Shiny Dust**`;
+          } else {
+            if (!globalThis.SHOP_ITEMS || !globalThis.SHOP_ITEMS[key]) {
+              return safeReply(interaction, {
+                content: `⛔ Item "${name}" not recognized.`,
+                ephemeral: true,
+              });
+            }
+
+            const item = globalThis.SHOP_ITEMS[key];
+
+            // If your SHOP_ITEMS defines shiny dust as an item id, still route to shinyDust
+            if (item?.id === "shiny_dust") {
+              user.shinyDust ??= 0;
+              user.shinyDust += quantity;
+              confirmationText = `**${quantity}× ✨ ${item.name || "Shiny Dust"}**`;
+            } else {
+              user.items ??= {};
+              user.items[item.id] ??= 0;
+              user.items[item.id] += quantity;
+
+              confirmationText = `**${quantity}× Item: ${item.name}**`;
+            }
           }
-
-          const item = globalThis.SHOP_ITEMS[key];
-
-          user.items ??= {};
-          user.items[item.id] ??= 0;
-          user.items[item.id] += quantity;
-
-          confirmationText = `**${quantity}× Item: ${item.name}**`;
+        } else {
+          return safeReply(interaction, {
+            content: `⛔ Invalid type.`,
+            ephemeral: true,
+          });
         }
 
-// 💾 SAVE — atomicSave handles both local & backup sync
-// ======================================================
-await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-
-
+        // ======================================================
+        // 💾 SAVE — atomicSave handles both local & backup sync
+        // ======================================================
+        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
 
         // ======================================================
         // ✅ Confirmation reply
@@ -164,7 +205,6 @@ await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
           content: `✅ Added ${confirmationText} to **${targetUser.username}**.`,
           ephemeral: true,
         });
-
       } catch (err) {
         console.error("❌ Add inventory error:", err);
         return safeReply(interaction, {

@@ -18,7 +18,7 @@
     =========================================================== -->
     <header>
       <h1>Pokémon Management Portal</h1>
-      <p>⭐ Build your team · 🧬 Evolve with stones · 💝 Donate for CC · 🛒 Shop</p>
+      <p>⭐ Build your team · 🧬 Evolve with stones · 💝 Donate for CC · ✨ Convert · 🛒 Shop</p>
     </header>
 
     <!-- ===========================================================
@@ -62,6 +62,16 @@
         <span id="tpCount">0</span> TP
       </div>
 
+      <!-- ✅ NEW: Shiny Dust -->
+      <div class="stat-item">
+        <img
+          src="/public/sprites/items/shiny_dust.png"
+          class="stat-icon"
+          alt="Shiny Dust"
+        />
+        <span id="dustCount">0</span> Dust
+      </div>
+
       <div class="stat-item">
         <img
           src="/public/sprites/items/rank_badge.png"
@@ -80,6 +90,8 @@
         <button class="mode-btn active" data-mode="team" type="button">⭐ Change Team</button>
         <button class="mode-btn" data-mode="evolve" type="button">🧬 Evolve</button>
         <button class="mode-btn" data-mode="donate" type="button">💝 Donate</button>
+        <!-- ✅ NEW -->
+        <button class="mode-btn" data-mode="convert" type="button">✨ Convert</button>
       </div>
 
       <div id="controls">
@@ -143,13 +155,10 @@
       <div id="pokemonGrid"></div>
 
       <footer>
-        <!-- IMPORTANT: script updates this textContent -->
         <p id="teamCounter">0/6 selected</p>
 
-        <!-- IMPORTANT: script binds to this ID -->
         <button id="saveTeamBtn" class="save-btn" type="button">💾 Save Team</button>
 
-        <!-- Old status area (script doesn't use it anymore, but harmless to keep) -->
         <p id="teamStatus" class="status-msg"></p>
 
         <p style="margin-top:1rem;color:#777;">
@@ -160,7 +169,6 @@
 
     <!-- ===========================================================
          Trainer Panel (legacy — not used by picker-pokemon script)
-         Kept so your portal layout remains intact.
     =========================================================== -->
     <div id="trainerPanel" style="display:none;">
       <div id="trainerGrid"></div>
@@ -169,7 +177,6 @@
 
     <!-- ===========================================================
          SHOP PANEL (legacy — not used by picker-pokemon script)
-         Kept so your portal layout remains intact.
     =========================================================== -->
     <div id="shopPanel" style="display:none; padding: 20px;">
       <h2 style="margin-top:0;">🛒 Shop</h2>
@@ -216,8 +223,10 @@
 
       <!-- Weekly Pack -->
       <section class="shop-section">
-        <h3>Weekly Pack</h3>
-        <p class="subtitle">Free once every 7 days — resets Sunday at 00:00 UTC</p>
+  <h3>Weekly Pack</h3>
+  <p class="subtitle">Free once every 7 days — resets Sunday at 00:00 UTC</p>
+  <p id="weeklyCountdown" class="subtitle" style="margin-top:-6px; color:#aaa;"></p>
+
 
         <div class="shop-grid">
           <div class="shop-item special">

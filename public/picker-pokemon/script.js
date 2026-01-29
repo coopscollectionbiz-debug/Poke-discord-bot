@@ -522,7 +522,11 @@ function renderPokemonGrid() {
       </div>
     `;
 
-    if (!locked) card.addEventListener("click", () => onPokemonClick(id));
+    card.addEventListener("click", () => {
+  if (locked) return showBlockedActionModal(id);
+  onPokemonClick(id);
+});
+
 
     container.appendChild(card);
     shown++;
@@ -809,6 +813,90 @@ function createConfirmModal({ title, message, onConfirm, onCancel }) {
 
   overlay.appendChild(modal);
 }
+
+function showBlockedActionModal(pokeId) {
+  const p = pokemonData[pokeId];
+  if (!p) return;
+
+  const overlay = createOverlay();
+
+  // Decide message based on mode
+  let title = "⚠️ Action Unavailable";
+  let message = "You can’t do that right now.";
+  let borderColor = "var(--brand)";
+
+  const owned = ownedCounts(pokeId);
+  const stones = userData.items?.evolution_stone ?? 0;
+
+  if (currentMode === "team") {
+    title = "🔒 Not Owned Yet";
+    message = `You don’t own ${p.name} yet.`;
+    borderColor = "var(--border)";
+  }
+
+  if (currentMode === "evolve") {
+    borderColor = "#ef4444";
+
+    const evos = getEvoList(p);
+    if (!evos.length) {
+      title = "🧬 No Evolutions";
+      message = `${p.name} doesn’t have an evolution in this bot yet.`;
+    } else if (owned.any <= 0) {
+      title = "🔒 Not Owned";
+      message = `You need to own ${p.name} before evolving it.`;
+    } else {
+      const minCost = minEvolutionCostFor(pokeId);
+      if (minCost <= 0) {
+        title = "🧬 Evolution Not Available";
+        message = `Evolution data for ${p.name} is missing costs right now.`;
+      } else if (stones < minCost) {
+        title = "🪨 Not Enough Stones";
+        message = `You need at least ${minCost} evolution stones to evolve ${p.name}.\nYou currently have ${stones}.`;
+      } else {
+        // Fallback (shouldn’t normally hit if your lock logic is correct)
+        title = "⚠️ Evolution Blocked";
+        message = `You can’t evolve ${p.name} right now.`;
+      }
+    }
+  }
+
+  // Donate mode normally never shows locked cards because you filter to owned-only,
+  // but we’ll keep it safe anyway.
+  if (currentMode === "donate") {
+    title = "🔒 Not Owned";
+    message = `You don’t own ${p.name}, so you can’t donate it.`;
+    borderColor = "#facc15";
+  }
+
+  const sprite =
+    owned.any > 0
+      ? `/public/sprites/pokemon/normal/${pokeId}.gif`
+      : `/public/sprites/pokemon/grayscale/${pokeId}.gif`;
+
+  const modal = document.createElement("div");
+  modal.style.cssText = `
+    background: var(--card);
+    border: 2px solid ${borderColor};
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 460px;
+    width: 92%;
+  `;
+
+  modal.innerHTML = `
+    <h2 style="margin:0 0 0.75rem;color:${borderColor};">${title}</h2>
+    <img src="${sprite}" style="width:96px;height:96px;image-rendering:pixelated;margin:0.5rem 0 0.75rem;">
+    <p style="white-space:pre-line;color:#ccc;font-weight:650;margin:0 0 1.25rem;">${message}</p>
+    <button class="ok-btn" style="background:${borderColor};color:var(--bg);border:none;padding:10px 24px;border-radius:10px;cursor:pointer;font-weight:800;">
+      OK
+    </button>
+  `;
+
+  modal.querySelector(".ok-btn").addEventListener("click", () => closeOverlay(overlay));
+  overlay.appendChild(modal);
+}
+
 
 // ===========================================================
 // ⭐ Variant Choice Modal (Team / Evolve / Donate)

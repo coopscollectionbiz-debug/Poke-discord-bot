@@ -70,16 +70,22 @@ function toTeamObj(entry) {
   return null;
 }
 
-function isDisplayedVariant(user, pokeId, variant) {
-  const teamRaw = Array.isArray(user.displayedPokemon)
-    ? user.displayedPokemon
-    : [];
+function isDisplayedOnTeam(user, pokeId, variant, { anyVariant = true } = {}) {
+  const teamRaw = Array.isArray(user.displayedPokemon) ? user.displayedPokemon : [];
   const team = teamRaw.map(toTeamObj).filter(Boolean);
-  const pid = Number(pokeId);
-  const v = normVariant(variant);
-  return team.some((t) => t.id === pid && t.variant === v);
-}
 
+  const pid = Number(pokeId);
+  if (!Number.isInteger(pid)) return false;
+
+  if (anyVariant) {
+    // safest: if this species is displayed at all (normal OR shiny), block actions
+    return team.some((t) => Number(t.id) === pid);
+  }
+
+  // strict: only block if the exact variant is displayed
+  const v = normVariant(variant);
+  return team.some((t) => Number(t.id) === pid && t.variant === v);
+}
 
 // ==========================================================
 // 🧵 ROLE UPDATE QUEUE (reduces REST spam)
@@ -1972,11 +1978,11 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
       typeof variant === "string" ? normVariant(variant) : (shiny ? "shiny" : "normal");
 
     // 🚫 NEW RULE: can't evolve if currently displayed on team (variant-aware)
-    if (isDisplayedVariant(user, bId, chosenVariant)) {
-      return res.status(400).json({
-        error: `You can’t evolve your ${chosenVariant} ${base.name} because it’s currently displayed on your team. Remove it from your team first.`,
-      });
-    }
+    if (isDisplayedOnTeam(user, bId, chosenVariant, { anyVariant: true })) {
+  return res.status(400).json({
+    error: `You can’t evolve ${base.name} because it’s currently displayed on your team. Remove it from your team first.`,
+  });
+}
 
     const ownedCount = user.pokemon?.[bId]?.[chosenVariant] || 0;
     if (ownedCount <= 0) {
@@ -2064,11 +2070,12 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
       typeof variant === "string" ? normVariant(variant) : (shiny ? "shiny" : "normal");
 
     // 🚫 NEW RULE: can't donate if currently displayed on team
-    if (isDisplayedVariant(u, pid, chosenVariant)) {
-      return res.status(400).json({
-        error: `You can’t donate your ${chosenVariant} ${p.name} because it’s currently displayed on your team. Remove it from your team first.`,
-      });
-    }
+    if (isDisplayedOnTeam(u, pid, chosenVariant, { anyVariant: true })) {
+  return res.status(400).json({
+    error: `You can’t donate ${p.name} because it’s currently displayed on your team. Remove it from your team first.`,
+  });
+}
+
 
     const owned = u.pokemon?.[pid]?.[chosenVariant] || 0;
     if (owned <= 0) {

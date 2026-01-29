@@ -13,7 +13,6 @@
   </head>
 
   <body>
-
     <!-- ===========================================================
          Header
     =========================================================== -->
@@ -24,34 +23,51 @@
 
     <!-- ===========================================================
          Navigation Tabs
+         (JS handles redirects using goPokemon/goTrainers/goShop)
     =========================================================== -->
     <div id="navTabs" class="nav-tabs">
-      <button id="goPokemon" class="nav-tab active">⭐ Manage Pokémon</button>
-      <button id="goTrainers" class="nav-tab">🧑 Manage Trainers</button>
-      <button id="goShop" class="nav-tab">🛒 Shop</button>
+      <button id="goPokemon" class="nav-tab active" type="button">⭐ Manage Pokémon</button>
+      <button id="goTrainers" class="nav-tab" type="button">🧑 Manage Trainers</button>
+      <button id="goShop" class="nav-tab" type="button">🛒 Shop</button>
     </div>
 
     <!-- ===========================================================
-         Player Stats Bar
+         Player Stats Bar (Sticky HUD)
     =========================================================== -->
     <div id="statsBar">
       <div class="stat-item">
-        <img src="/public/sprites/items/evolution_stone.png" class="stat-icon">
+        <img
+          src="/public/sprites/items/evolution_stone.png"
+          class="stat-icon"
+          alt="Stones"
+        />
         <span id="stoneCount">0</span> Stones
       </div>
 
       <div class="stat-item">
-        <img src="/public/sprites/items/cc_coin.png" class="stat-icon">
+        <img
+          src="/public/sprites/items/cc_coin.png"
+          class="stat-icon"
+          alt="CC"
+        />
         <span id="ccCount">0</span> CC
       </div>
 
       <div class="stat-item">
-        <img src="/public/sprites/items/tp_icon.png" class="stat-icon">
+        <img
+          src="/public/sprites/items/tp_icon.png"
+          class="stat-icon"
+          alt="TP"
+        />
         <span id="tpCount">0</span> TP
       </div>
 
       <div class="stat-item">
-        <img src="/public/sprites/items/rank_badge.png" class="stat-icon">
+        <img
+          src="/public/sprites/items/rank_badge.png"
+          class="stat-icon"
+          alt="Rank"
+        />
         <span id="rankLabel">Novice Trainer</span>
       </div>
     </div>
@@ -60,15 +76,19 @@
          Pokémon Panel (DEFAULT ACTIVE)
     =========================================================== -->
     <div id="pokemonPanel">
-
       <div id="modeToggle">
-        <button class="mode-btn active" data-mode="team">⭐ Change Team</button>
-        <button class="mode-btn" data-mode="evolve">🧬 Evolve</button>
-        <button class="mode-btn" data-mode="donate">💝 Donate</button>
+        <button class="mode-btn active" data-mode="team" type="button">⭐ Change Team</button>
+        <button class="mode-btn" data-mode="evolve" type="button">🧬 Evolve</button>
+        <button class="mode-btn" data-mode="donate" type="button">💝 Donate</button>
       </div>
 
       <div id="controls">
-        <input type="text" id="search" placeholder="🔍 Search Pokémon..." autocomplete="off"/>
+        <input
+          type="text"
+          id="search"
+          placeholder="🔍 Search Pokémon..."
+          autocomplete="off"
+        />
 
         <select id="rarityFilter">
           <option value="">All Rarities</option>
@@ -102,28 +122,45 @@
           <option value="normal">Normal</option>
         </select>
 
+        <!-- Toggle group (Shiny toggle removed in JS; keep element for backward compat) -->
         <div class="toggle-group">
-          <button id="ownedToggle" class="mode-btn">✅ Show Owned</button>
-          <button id="unownedToggle" class="mode-btn">❌ Show Unowned</button>
-          <button id="shinyToggle" class="mode-btn">🌟 Shiny Mode OFF</button>
+          <!-- IMPORTANT: IDs must match JS -->
+          <button id="ownedToggle" class="mode-btn" type="button">✅ Show Owned</button>
+          <button id="unownedToggle" class="mode-btn" type="button">❌ Show Unowned</button>
+
+          <!-- Keep for compatibility; script hides it safely -->
+          <button
+            id="shinyToggle"
+            class="mode-btn"
+            type="button"
+            style="display:none;"
+          >
+            🌟 Shiny Mode OFF
+          </button>
         </div>
       </div>
 
       <div id="pokemonGrid"></div>
 
       <footer>
+        <!-- IMPORTANT: script updates this textContent -->
         <p id="teamCounter">0/6 selected</p>
-        <button id="saveTeamBtn" class="save-btn">💾 Save Team</button>
+
+        <!-- IMPORTANT: script binds to this ID -->
+        <button id="saveTeamBtn" class="save-btn" type="button">💾 Save Team</button>
+
+        <!-- Old status area (script doesn't use it anymore, but harmless to keep) -->
         <p id="teamStatus" class="status-msg"></p>
+
         <p style="margin-top:1rem;color:#777;">
           Opened via <code>/changepokemon</code> · Session valid for 10 minutes
         </p>
       </footer>
-
     </div>
 
     <!-- ===========================================================
-         Trainer Panel
+         Trainer Panel (legacy — not used by picker-pokemon script)
+         Kept so your portal layout remains intact.
     =========================================================== -->
     <div id="trainerPanel" style="display:none;">
       <div id="trainerGrid"></div>
@@ -131,38 +168,36 @@
     </div>
 
     <!-- ===========================================================
-         SHOP PANEL (NEW)
+         SHOP PANEL (legacy — not used by picker-pokemon script)
+         Kept so your portal layout remains intact.
     =========================================================== -->
     <div id="shopPanel" style="display:none; padding: 20px;">
-
       <h2 style="margin-top:0;">🛒 Shop</h2>
 
       <!-- Poké Balls -->
       <section class="shop-section">
         <h3>Poké Balls</h3>
         <div class="shop-grid">
-
           <div class="shop-item">
-            <img src="/public/sprites/items/pokeball.png" class="item-icon" />
+            <img src="/public/sprites/items/pokeball.png" class="item-icon" alt="Poké Ball" />
             <h4>Poké Ball</h4>
             <p class="price">500 CC</p>
-            <button class="buy-btn" data-item="pokeball">Buy</button>
+            <button class="buy-btn" data-item="pokeball" type="button">Buy</button>
           </div>
 
           <div class="shop-item">
-            <img src="/public/sprites/items/greatball.png" class="item-icon" />
+            <img src="/public/sprites/items/greatball.png" class="item-icon" alt="Great Ball" />
             <h4>Great Ball</h4>
             <p class="price">1000 CC</p>
-            <button class="buy-btn" data-item="greatball">Buy</button>
+            <button class="buy-btn" data-item="greatball" type="button">Buy</button>
           </div>
 
           <div class="shop-item">
-            <img src="/public/sprites/items/ultraball.png" class="item-icon" />
+            <img src="/public/sprites/items/ultraball.png" class="item-icon" alt="Ultra Ball" />
             <h4>Ultra Ball</h4>
             <p class="price">2500 CC</p>
-            <button class="buy-btn" data-item="ultraball">Buy</button>
+            <button class="buy-btn" data-item="ultraball" type="button">Buy</button>
           </div>
-
         </div>
       </section>
 
@@ -170,14 +205,12 @@
       <section class="shop-section">
         <h3>Evolution Stones</h3>
         <div class="shop-grid">
-
           <div class="shop-item">
-            <img src="/public/sprites/items/evolution_stone.png" class="item-icon" />
+            <img src="/public/sprites/items/evolution_stone.png" class="item-icon" alt="Evolution Stone" />
             <h4>Evolution Stone</h4>
             <p class="price">1000 CC</p>
-            <button class="buy-btn" data-item="evo_stone">Buy</button>
+            <button class="buy-btn" data-item="evo_stone" type="button">Buy</button>
           </div>
-
         </div>
       </section>
 
@@ -187,24 +220,20 @@
         <p class="subtitle">Free once every 7 days — resets Sunday at 00:00 UTC</p>
 
         <div class="shop-grid">
-
           <div class="shop-item special">
-            <img src="/public/sprites/items/starter_pack.png" class="item-icon" />
+            <img src="/public/sprites/items/starter_pack.png" class="item-icon" alt="Weekly Pack" />
             <h4>Weekly Pack</h4>
             <p class="price">FREE</p>
-            <button class="buy-btn" data-item="weekly" id="weeklyBtn">Claim</button>
+            <button class="buy-btn" data-item="weekly" id="weeklyBtn" type="button">Claim</button>
             <p id="weeklyStatus"></p>
           </div>
-
         </div>
       </section>
-
     </div>
 
     <!-- ===========================================================
          Script
     =========================================================== -->
     <script type="module" src="/public/picker-pokemon/script.js"></script>
-
   </body>
 </html>

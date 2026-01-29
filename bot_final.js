@@ -570,7 +570,7 @@ setInterval(() => {
   if (!hasBeenReadyOnce) return; // don't restart during initial boot
 
   const age = Date.now() - lastDiscordOk;
-  if (age > 5 * 60_000) {
+  if (age > 60 * 60_000) {
     console.error(`❌ Discord REST unhealthy for ${Math.round(age / 1000)}s — exiting`);
     process.exit(1);
   }
@@ -578,11 +578,20 @@ setInterval(() => {
 
 // ----------------------------------------------------------
 // 🚨 RESTART IF INTERACTIONS STOP ARRIVING (ZOMBIE GATEWAY)
+// - DO NOT trigger until we've seen at least 1 interaction.
+// - Seed lastInteractionAtMs at ready so we don't get Infinity.
 // ----------------------------------------------------------
+
+// Seed at ready so "no interactions" doesn't instantly become Infinity.
+client.once("ready", () => {
+  lastInteractionAtMs = Date.now();
+});
+
 setInterval(() => {
   if (!hasBeenReadyOnce) return;
 
-  // ✅ Don't restart until we've actually seen at least one interaction
+  // If we've never seen an interaction, don't restart.
+  // (Some bots can go hours with no slash usage.)
   if (!lastInteractionAtMs) return;
 
   const ageMs = Date.now() - lastInteractionAtMs;
@@ -593,7 +602,6 @@ setInterval(() => {
     process.exit(1);
   }
 }, 60_000);
-
 
 // ==========================================================
 // 💾 Trainer Data Load & Save
@@ -1987,7 +1995,7 @@ app.listen(PORT, "0.0.0.0", () =>
 // ==========================================================
 console.log("🚀 About to login to Discord... BOT_TOKEN present?", !!process.env.BOT_TOKEN);
 
-async function loginWithTimeout(ms = 60_000) {
+async function loginWithTimeout(ms = 180_000) {
   return Promise.race([
     client.login(process.env.BOT_TOKEN),
     new Promise((_, reject) =>

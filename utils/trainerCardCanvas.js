@@ -28,6 +28,11 @@ function normTier(t) {
   return String(t || "common").toLowerCase();
 }
 
+function normVariant(v) {
+  const s = String(v ?? "normal").toLowerCase().trim();
+  return s === "shiny" ? "shiny" : "normal";
+}
+
 // Strip variation selectors that can render as tofu boxes on canvas fonts
 function stripVariationSelectors(s) {
   return String(s || "").replace(/[\uFE0E\uFE0F]/g, "");
@@ -94,7 +99,7 @@ function drawStackedCenteredText(ctx, lines, x, startY, maxWidth, lineGap = 6) {
     ctx.textBaseline = "alphabetic";
     ctx.fillText(text, tx, y);
 
-    y += (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) + lineGap;
+    y += m.actualBoundingBoxAscent + m.actualBoundingBoxDescent + lineGap;
   }
 }
 
@@ -106,16 +111,18 @@ function drawStackedCenteredText(ctx, lines, x, startY, maxWidth, lineGap = 6) {
 async function loadSprite(url) {
   if (!url) throw new Error("Missing sprite URL");
 
-  if (url.toLowerCase().endsWith(".gif")) {
-    const png = url.replace(/\.gif$/i, ".png");
+  const u = String(url);
+
+  if (u.toLowerCase().endsWith(".gif")) {
+    const png = u.replace(/\.gif$/i, ".png");
     try {
       return await loadImage(png);
     } catch {
-      return await loadImage(url);
+      return await loadImage(u);
     }
   }
 
-  return await loadImage(url);
+  return await loadImage(u);
 }
 
 /**
@@ -161,6 +168,56 @@ function drawCenteredBadge(
   return badgeW;
 }
 
+// Simple text ellipsis for long names
+function ellipsize(ctx, text, maxW) {
+  const s = String(text ?? "");
+  if (!s) return "";
+  if (ctx.measureText(s).width <= maxW) return s;
+
+  const ell = "…";
+  let lo = 0;
+  let hi = s.length;
+
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const candidate = s.slice(0, mid) + ell;
+    if (ctx.measureText(candidate).width <= maxW) lo = mid + 1;
+    else hi = mid;
+  }
+
+  const cut = Math.max(0, lo - 1);
+  return s.slice(0, cut) + ell;
+}
+
+function resolveVariantFromTeamEntry(p) {
+  // Supports:
+  // - new shape: { variant:"normal"|"shiny" }
+  // - old shape: { isShiny: boolean }
+  // - legacy flags: { shiny: true } / { is_shiny: true }
+  if (!p || typeof p !== "object") return "normal";
+  if (p.variant != null) return normVariant(p.variant);
+  if (p.isShiny === true || p.shiny === true || p.is_shiny === true) return "shiny";
+  return "normal";
+}
+
+function resolveSpriteUrlForTeamEntry(p) {
+  // Prefer explicit spriteUrl if provided (dashboard can send exact URL)
+  if (p?.spriteUrl) return String(p.spriteUrl);
+
+  // Otherwise build from spritePaths + variant
+  const id = Number(p?.id);
+  if (!Number.isFinite(id)) return "";
+
+  const v = resolveVariantFromTeamEntry(p);
+
+  // Honor spritePaths.shiny if your config has it
+  if (v === "shiny") {
+    if (spritePaths?.shiny) return `${spritePaths.shiny}${id}.gif`;
+    return `${spritePaths.pokemon}shiny/${id}.gif`;
+  }
+  return `${spritePaths.pokemon}normal/${id}.gif`;
+}
+
 // Build canonical lookup: sprite filename -> { key, tier }
 export function buildSpriteToTrainerMap(trainerSprites) {
   const map = new Map();
@@ -193,9 +250,13 @@ export async function renderTrainerCardCanvas({
   tp, // number
 
   trainerSpriteUrl,
-  trainerSpriteFileName,
+  trainerSpriteFileName, // optional
   spriteToTrainerMap,
-  team, // [{ id, name, tier, spriteUrl, isShiny }]
+
+  // TEAM entries:
+  // ✅ preferred: [{ id, name, tier, variant:"normal"|"shiny", spriteUrl? }]
+  // ✅ supported: [{ id, name, tier, isShiny:true|false, spriteUrl? }]
+  team,
 }) {
   const W = 1200;
   const H = 520;
@@ -224,7 +285,11 @@ export async function renderTrainerCardCanvas({
   ctx.fill();
 
   // Resolve trainer tier via canonical map (sprite filename -> tier)
-  const tFile = String(trainerSpriteFileName || "").toLowerCase();
+  const inferredFile =
+    trainerSpriteFileName ||
+    (trainerSpriteUrl ? path.basename(String(trainerSpriteUrl)) : "");
+
+  const tFile = String(inferredFile || "").toLowerCase();
   const tBare = tFile.replace(/\.(png|gif)$/i, "");
   const hit = spriteToTrainerMap?.get(tFile) || spriteToTrainerMap?.get(tBare);
 
@@ -290,38 +355,35 @@ export async function renderTrainerCardCanvas({
     ctx.drawImage(trainerImg, dx, dy, dw, dh);
 
     // Tier badge under sprite (centered + never clipped)
-const badgeH = 38;
-const trainerBadgeText = `${trainerTierEmoji} ${trainerTierKey.toUpperCase()}`.trim();
+    const badgeH = 38;
+    const trainerBadgeText = `${trainerTierEmoji} ${trainerTierKey.toUpperCase()}`.trim();
 
-// Measure first so we can center the badge perfectly
-ctx.font = `600 18px ${FONT_STACK}`;
-const m = ctx.measureText(trainerBadgeText);
-const paddingX = 14;
-const badgeW = Math.min(Math.ceil(m.width + paddingX * 2), leftW - 40);
+    // Measure first so we can center the badge perfectly
+    ctx.font = `600 18px ${FONT_STACK}`;
+    const m = ctx.measureText(trainerBadgeText);
+    const paddingX = 14;
+    const badgeW = Math.min(Math.ceil(m.width + paddingX * 2), leftW - 40);
 
-// Center horizontally in left panel
-const bx = pad + Math.floor((leftW - badgeW) / 2);
+    // Center horizontally in left panel
+    const bx = pad + Math.floor((leftW - badgeW) / 2);
 
-// Clamp vertically so it never goes below the panel
-const panelTop = pad;
-const panelBottom = H - pad;
-const maxBy = panelBottom - badgeH - 12;
+    // Clamp vertically so it never goes below the panel
+    const panelBottom = H - pad;
+    const maxBy = panelBottom - badgeH - 12;
 
-let by = dy + dh + 14;
-if (by > maxBy) by = maxBy;
+    let by = dy + dh + 14;
+    if (by > maxBy) by = maxBy;
 
-// Draw the badge (uses your perfect centering function)
-drawCenteredBadge(ctx, {
-  x: bx,
-  y: by,
-  text: trainerBadgeText,
-  font: `600 18px ${FONT_STACK}`,
-  bgColor: trainerTierColor,
-  height: badgeH,
-  radius: 12,
-  maxWidth: leftW - 40,
-});
-
+    drawCenteredBadge(ctx, {
+      x: bx,
+      y: by,
+      text: trainerBadgeText,
+      font: `600 18px ${FONT_STACK}`,
+      bgColor: trainerTierColor,
+      height: badgeH,
+      radius: 12,
+      maxWidth: leftW - 40,
+    });
   } else {
     ctx.fillStyle = "rgba(255,255,255,0.5)";
     ctx.font = `500 18px ${FONT_STACK}`;
@@ -365,6 +427,9 @@ drawCenteredBadge(ctx, {
     const tierColor = TIER_COLORS[tierKey] || TIER_COLORS.common;
     const tierEmoji = getTierMark(tierKey);
 
+    const variant = resolveVariantFromTeamEntry(p);
+    const shinyMark = variant === "shiny" ? "✨ " : "";
+
     // tier badge (emoji + perfectly centered)
     const badgeText = `${tierEmoji} ${tierKey.toUpperCase()}`.trim();
     drawCenteredBadge(ctx, {
@@ -379,8 +444,9 @@ drawCenteredBadge(ctx, {
     });
 
     // sprite (aspect-ratio preserved)
+    const spriteUrl = resolveSpriteUrlForTeamEntry(p);
     try {
-      const img = await loadSprite(p.spriteUrl);
+      const img = await loadSprite(spriteUrl);
       drawImageContain(ctx, img, x + 14, y + 50, 86, 86);
     } catch {
       ctx.fillStyle = "rgba(255,255,255,0.35)";
@@ -388,16 +454,20 @@ drawCenteredBadge(ctx, {
       ctx.fillText("Sprite failed", x + 14, y + 95);
     }
 
-    // name
-ctx.fillStyle = "rgba(255,255,255,0.92)";
-ctx.font = `600 18px ${FONT_STACK}`;
-ctx.fillText(p.name, x + 110, y + 88);
+    // name (ellipsis + shiny mark)
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.font = `600 18px ${FONT_STACK}`;
+    const nameMaxW = tileW - 110 - 14; // from nameX to tile end padding
+    const nameX = x + 110;
+    const nameY = y + 88;
+    const safeName = ellipsize(ctx, `${shinyMark}${p.name ?? "Unknown"}`, nameMaxW);
+    ctx.fillText(safeName, nameX, nameY);
 
-
-    // id
+    // id + variant
     ctx.fillStyle = "rgba(255,255,255,0.75)";
     ctx.font = `500 16px ${FONT_STACK}`;
-    ctx.fillText(`#${p.id}`, x + 110, y + 112);
+    const idLine = `#${p.id}${variant === "shiny" ? " • Shiny" : ""}`;
+    ctx.fillText(idLine, nameX, y + 112);
   }
 
   return canvas.toBuffer("image/png");

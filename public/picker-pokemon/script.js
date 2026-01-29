@@ -1323,103 +1323,89 @@ function openEvolutionModal(baseId) {
   let selectedTarget = null;
 
   function renderEvoTargets() {
-    grid.innerHTML = "";
-    selectedTarget = null;
-    confirmBtn.disabled = true;
+  grid.innerHTML = "";
+  selectedTarget = null;
+  confirmBtn.disabled = true;
 
-    const stones = userData.items?.evolution_stone ?? 0;
-const dust = userData.items?.shiny_dust ?? 0;
+  const stones = userData.items?.evolution_stone ?? 0;
+  const dust = userData.items?.shiny_dust ?? 0;
 
-evoList.forEach((targetId) => {
-  const target = pokemonData[targetId];
-  if (!target) return;
+  evoList.forEach((targetId) => {
+    const target = pokemonData[targetId];
+    if (!target) return;
 
-  const sprite =
-    chosenVariant === "shiny"
-      ? `/public/sprites/pokemon/shiny/${targetId}.gif`
-      : `/public/sprites/pokemon/normal/${targetId}.gif`;
+    const sprite =
+      chosenVariant === "shiny"
+        ? `/public/sprites/pokemon/shiny/${targetId}.gif`
+        : `/public/sprites/pokemon/normal/${targetId}.gif`;
 
-  const stoneCost = getEvolutionCost(base, target);
-  const enoughStones = stones >= stoneCost && stoneCost > 0;
+    const stoneCost = getEvolutionCost(base, target);
+    const enoughStones = stones >= stoneCost && stoneCost > 0;
 
-  // ✅ shiny dust required only when evolving shiny variant
-  const dustReq =
-    chosenVariant === "shiny"
-      ? shinyEvolveDustCost(base.tier, target.tier)
-      : 0;
+    // ✅ shiny dust required only when evolving shiny variant
+    const dustReq =
+      chosenVariant === "shiny"
+        ? shinyEvolveDustCost(base.tier, target.tier)
+        : 0;
 
-  const enoughDust = dust >= dustReq; // dustReq can be 0
-  const ownsThisVariant = ownsVariant(baseId, chosenVariant);
+    const enoughDust = dust >= dustReq; // dustReq can be 0
+    const ownsThisVariant = ownsVariant(baseId, chosenVariant);
 
-  const allowed = enoughStones && ownsThisVariant && enoughDust;
+    const allowed = enoughStones && ownsThisVariant && enoughDust;
 
-  const card = document.createElement("div");
-  card.className = "evo-card";
-  card.style.cssText = `
-    background: var(--card);
-    border: 2px solid ${allowed ? "var(--border)" : "#555"};
-    border-radius: 10px;
-    padding: 10px;
-    cursor: ${allowed ? "pointer" : "not-allowed"};
-    opacity: ${allowed ? "1" : "0.5"};
-    position: relative;
-    user-select: none;
-  `;
+    const card = document.createElement("div");
+    card.className = "evo-card";
+    card.style.cssText = `
+      background: var(--card);
+      border: 2px solid ${allowed ? "var(--border)" : "#555"};
+      border-radius: 10px;
+      padding: 10px;
+      cursor: ${allowed ? "pointer" : "not-allowed"};
+      opacity: ${allowed ? "1" : "0.5"};
+      position: relative;
+      user-select: none;
+    `;
 
-  const dustRow =
-    chosenVariant === "shiny" && dustReq > 0
-      ? `
-        <div style="margin-top:6px;color:#facc15;font-weight:900;">
-          <img src="/public/sprites/items/shiny_dust.png"
-               style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
-          ${dustReq}
-          <span style="color:#aaa;font-weight:800;">(you have ${dust})</span>
-        </div>
-      `
-      : "";
+    const dustRow =
+      chosenVariant === "shiny" && dustReq > 0
+        ? `
+          <div style="margin-top:6px;color:#facc15;font-weight:900;">
+            <img src="/public/sprites/items/shiny_dust.png"
+                 style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
+            ${dustReq}
+            <span style="color:#aaa;font-weight:800;">(you have ${dust})</span>
+          </div>
+        `
+        : "";
 
-  card.innerHTML = `
-    <img src="${sprite}" style="width:80px;height:80px;image-rendering:pixelated;">
-    <div style="font-weight:600;margin-top:0.5rem;">${target.name}</div>
-    <div style="color:#aaa;text-transform:capitalize;">${target.tier}</div>
+    card.innerHTML = `
+      <img src="${sprite}" style="width:80px;height:80px;image-rendering:pixelated;">
+      <div style="font-weight:600;margin-top:0.5rem;">${target.name}</div>
+      <div style="color:#aaa;text-transform:capitalize;">${target.tier}</div>
 
-    <div style="margin-top:0.5rem;color:var(--brand);font-weight:800;">
-      <img src="/public/sprites/items/evolution_stone.png"
-           style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
-      ${stoneCost}
-      <span style="color:#aaa;font-weight:800;">(you have ${stones})</span>
-    </div>
+      <div style="margin-top:0.5rem;color:var(--brand);font-weight:800;">
+        <img src="/public/sprites/items/evolution_stone.png"
+             style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
+        ${stoneCost}
+        <span style="color:#aaa;font-weight:800;">(you have ${stones})</span>
+      </div>
 
-    ${dustRow}
-  `;
+      ${dustRow}
+    `;
 
-  if (allowed) {
-    card.addEventListener("click", () => {
-      grid.querySelectorAll(".evo-card").forEach((c) => (c.style.borderColor = "var(--border)"));
-      card.style.borderColor = "var(--brand)";
-      selectedTarget = targetId;
-      confirmBtn.disabled = false;
-    });
-  }
+    if (allowed) {
+      card.addEventListener("click", () => {
+        grid.querySelectorAll(".evo-card").forEach((c) => (c.style.borderColor = "var(--border)"));
+        card.style.borderColor = "var(--brand)";
+        selectedTarget = targetId;
+        confirmBtn.disabled = false;
+      });
+    }
 
-  grid.appendChild(card);
-});
+    grid.appendChild(card);
+  });
+}
 
-
-      if (allowed) {
-        card.addEventListener("click", () => {
-          grid
-            .querySelectorAll(".evo-card")
-            .forEach((c) => (c.style.borderColor = "var(--border)"));
-          card.style.borderColor = "var(--brand)";
-          selectedTarget = targetId;
-          confirmBtn.disabled = false;
-        });
-      }
-
-      grid.appendChild(card);
-    });
-  }
 
   function setVariantAndRender(v) {
     chosenVariant = normVariant(v);
@@ -1576,23 +1562,24 @@ const dustPreview =
 
 
   modal.innerHTML = `
-    <h2 style="color: #facc15;">💝 Donate ${v === "shiny" ? "✨ " : ""}${p.name}?</h2>
-    <img src="${sprite}" style="width: 96px; height: 96px; image-rendering: pixelated; margin: 1rem 0;">
-    <p style="margin-top:-0.25rem;color:#aaa;font-weight:700;">
-      Variant: ${v === "shiny" ? "✨ Shiny" : "Normal"}
-    </p>
-    <p>You'll receive <b style="color: #facc15;">💰 ${ccValue} CC</b></p>
-${dustPreview > 0
-  ? `<p style="color:#facc15;font-weight:900;margin-top:-6px;">
-       ✨ +${dustPreview} Shiny Dust
-     </p>`
-  : ""
-}
-    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
-      <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
-      <button class="confirm-btn" style="background: #facc15; color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
-    </div>
-  `;
+  <h2 style="color: #facc15;">💝 Donate ${v === "shiny" ? "✨ " : ""}${p.name}?</h2>
+  <img src="${sprite}" style="width: 96px; height: 96px; image-rendering: pixelated; margin: 1rem 0;">
+  <p style="margin-top:-0.25rem;color:#aaa;font-weight:700;">
+    Variant: ${v === "shiny" ? "✨ Shiny" : "Normal"}
+  </p>
+  <p>You'll receive <b style="color: #facc15;">💰 ${ccValue} CC</b></p>
+  ${
+    dustPreview > 0
+      ? `<p style="color:#facc15;font-weight:900;margin-top:-6px;">
+           ✨ +${dustPreview} Shiny Dust
+         </p>`
+      : ""
+  }
+  <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+    <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
+    <button class="confirm-btn" style="background: #facc15; color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
+  </div>
+`;
 
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
   modal.querySelector(".confirm-btn").addEventListener("click", async () => {

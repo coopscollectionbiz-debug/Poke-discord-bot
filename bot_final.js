@@ -50,6 +50,38 @@ process.on("uncaughtException", (err) => {
 
 
 // ==========================================================
+// 🧠 Pokémon Variant Helpers (GLOBAL, SINGLE SOURCE)
+// ==========================================================
+function normVariant(v) {
+  return String(v || "normal").toLowerCase() === "shiny" ? "shiny" : "normal";
+}
+
+function toTeamObj(entry) {
+  if (typeof entry === "number") return { id: entry, variant: "normal" };
+  if (typeof entry === "string") {
+    const n = Number(entry);
+    return Number.isInteger(n) ? { id: n, variant: "normal" } : null;
+  }
+  if (entry && typeof entry === "object") {
+    const pid = Number(entry.id);
+    if (!Number.isInteger(pid)) return null;
+    return { id: pid, variant: normVariant(entry.variant) };
+  }
+  return null;
+}
+
+function isDisplayedVariant(user, pokeId, variant) {
+  const teamRaw = Array.isArray(user.displayedPokemon)
+    ? user.displayedPokemon
+    : [];
+  const team = teamRaw.map(toTeamObj).filter(Boolean);
+  const pid = Number(pokeId);
+  const v = normVariant(variant);
+  return team.some((t) => t.id === pid && t.variant === v);
+}
+
+
+// ==========================================================
 // 🧵 ROLE UPDATE QUEUE (reduces REST spam)
 // - Coalesces many TP changes into one role update per user.
 // - Only hits REST when rank actually changes.
@@ -182,20 +214,34 @@ function normalizeUserSchema(id, user) {
   user.trainers = [...new Set(user.trainers)];
 
   // ==========================================================
-  // 4️⃣ DISPLAYED TEAM (canonical)
-  // must be array of Pokémon IDs the user owns
-  // ==========================================================
-  if (!Array.isArray(user.displayedPokemon)) {
-    user.displayedPokemon = [];
-  }
+// 4️⃣ DISPLAYED TEAM (canonical)
+// NEW FORMAT: [{ id: Number, variant: "normal"|"shiny" }]
+// Backwards compatible with legacy [Number, Number, ...]
+// ==========================================================
+if (!Array.isArray(user.displayedPokemon)) {
+  user.displayedPokemon = [];
+}
 
-  // Auto-clean ghost Pokémon
+// Convert legacy [243,245] => [{id:243, variant:"normal"}, ...]
+if (user.displayedPokemon.length && typeof user.displayedPokemon[0] !== "object") {
   user.displayedPokemon = user.displayedPokemon
-    .filter(id => {
-      const owned = user.pokemon[id];
-      return owned && (owned.normal > 0 || owned.shiny > 0);
-    })
-    .map(id => Number(id));
+    .map((pid) => ({ id: Number(pid), variant: "normal" }))
+    .filter((t) => Number.isInteger(t.id));
+}
+
+// Normalize + remove ghosts (must own that specific variant)
+user.displayedPokemon = user.displayedPokemon
+  .map((t) => ({
+    id: Number(t?.id),
+    variant: t?.variant === "shiny" ? "shiny" : "normal",
+  }))
+  .filter((t) => Number.isInteger(t.id))
+  .filter((t) => {
+    const owned = user.pokemon?.[t.id];
+    if (!owned) return false;
+    return Number(owned?.[t.variant] || 0) > 0;
+  });
+
 
   // ==========================================================
   // 5️⃣ DISPLAYED TRAINER
@@ -998,6 +1044,7 @@ client.on("messageCreate", async (message) => {
 
   const userId = message.author.id;
   const username = message.author.username;
+  trainerData[userId] = normalizeUserSchema(userId, trainerData[userId]);
 
   // Prevent spam with cooldown
   const now = Date.now();
@@ -1066,6 +1113,8 @@ client.on("messageReactionAdd", async (reaction, user) => {
   if (user.bot || !reaction.message.guild) return;
 
   const userId = user.id;
+  trainerData[userId] = normalizeUserSchema(userId, trainerData[userId]);
+
 
   // Prevent spam with cooldown
   const now = Date.now();
@@ -1723,98 +1772,162 @@ app.get("/api/user-pokemon", (req, res) => {
     return res.status(403).json({ error: "Invalid or expired session" });
 
   const user = trainerData[id];
-  if (!user)
-    return res.status(404).json({ error: "User not found" });
+  if (!user) return res.status(404).json({ error: "User not found" });
 
   // --- ensure schema consistency (read-safe) ---
-const items = user.items ?? { evolution_stone: 0 };
-const cc = user.cc ?? 0;
-const tp = user.tp ?? 0;
-const rank = getRank(tp);
-const pokemon = user.pokemon ?? {};
-const currentTeam = user.displayedPokemon ?? [];
+  // This will:
+  // - normalize pokemon inventory {normal, shiny}
+  // - convert legacy displayedPokemon [243,245] -> [{id:243,variant:"normal"},...]
+  // - remove "ghost" displayed entries not owned for that variant
+  trainerData[id] = normalizeUserSchema(id, user);
 
-// flatten response for front-end
-res.json({
-  id: user.id,
-  cc,
-  tp,
-  rank,
-  items,
-  pokemon,
-  currentTeam,
+  const u = trainerData[id];
+
+  const items = u.items ?? { evolution_stone: 0 };
+  const cc = u.cc ?? 0;
+  const tp = u.tp ?? 0;
+  const rank = getRank(tp);
+  const pokemon = u.pokemon ?? {};
+  const currentTeam = Array.isArray(u.displayedPokemon) ? u.displayedPokemon : [];
+
+  // flatten response for front-end
+  return res.json({
+    id: u.id,
+    cc,
+    tp,
+    rank,
+    items,
+    pokemon,
+    currentTeam, // NEW FORMAT: [{ id: Number, variant: "normal" | "shiny" }]
+  });
 });
 
-});
 
-// ✅ POST — set full Pokémon team (up to 6) — Ghost Pokémon Auto-Clean
+// ✅ POST — set full Pokémon team (up to 6) — Variant-safe + Ghost Auto-Clean
+// NEW TEAM FORMAT (frontend -> backend):
+// team = [{ id: 243, variant: "normal" }, { id: 245, variant: "shiny" }, ...]
+// Back-compat accepted:
+// team = [243,245,3]  (treated as normal variants)
+// team = [{ id: 243 }, ...] (missing variant -> normal)
 app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   try {
     const { id, team } = req.body;
 
-    if (!id || !Array.isArray(team))
+    if (!id || !Array.isArray(team)) {
       return res.status(400).json({ success: false, error: "Missing id/team" });
+    }
 
-    if (!requireDashboardSession(req, id))
-      return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    if (!requireDashboardSession(req, id)) {
+      return res
+        .status(403)
+        .json({ success: false, error: "Invalid or expired session" });
+    }
 
     await lockUser(id, async () => {
       const user = trainerData[id];
-      if (!user)
-        return res.status(404).json({ success: false, error: "User not found" });
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, error: "User not found" });
+      }
 
-      const owns = (pid) => {
-        const p = user.pokemon?.[pid];
-        return !!p && (p.normal > 0 || p.shiny > 0);
+      // Normalize schema + migrate displayedPokemon to variant objects if needed
+      trainerData[id] = normalizeUserSchema(id, user);
+      const u = trainerData[id];
+
+      const ownsVariant = (pid, variant) => {
+        const p = u.pokemon?.[pid];
+        if (!p) return false;
+        return (p[variant] ?? 0) > 0;
       };
 
-      user.displayedPokemon = (user.displayedPokemon || []).filter((pid) => owns(pid));
+      // 1) Auto-clean existing displayedPokemon (remove ghost variant slots)
+      u.displayedPokemon = Array.isArray(u.displayedPokemon) ? u.displayedPokemon : [];
+      u.displayedPokemon = u.displayedPokemon
+        .map(toTeamObj)
+        .filter(Boolean)
+        .filter((slot) => ownsVariant(slot.id, slot.variant));
 
-      const normalized = [...new Set(team.map((n) => Number(n)).filter((n) => Number.isInteger(n)))];
+      // 2) Parse incoming team
+      const parsed = team.map(toTeamObj).filter(Boolean);
 
-      if (normalized.length === 0 || normalized.length > 6)
-        return res.status(400).json({ success: false, error: "Team must be 1–6 unique IDs" });
+      // 3) Enforce constraints: 1–6 unique slots
+      // Unique = (id + variant) pair. Allow same Pokémon in both variants if they own both.
+      const dedupMap = new Map(); // key "id:variant" -> slot
+      for (const slot of parsed) {
+        const key = `${slot.id}:${slot.variant}`;
+        if (!dedupMap.has(key)) dedupMap.set(key, slot);
+      }
+      const normalized = [...dedupMap.values()];
 
-      const unowned = normalized.filter((pid) => !owns(pid));
-      if (unowned.length)
+      if (normalized.length === 0 || normalized.length > 6) {
         return res.status(400).json({
           success: false,
-          error: `Unowned Pokémon: ${unowned.join(", ")}`,
+          error: "Team must be 1–6 unique slots (unique = Pokémon + variant).",
         });
+      }
 
-      user.displayedPokemon = normalized;
-      trainerData[id] = user;
+      // 4) Validate ownership per variant (IMPORTANT for your new UI rules)
+      const unowned = normalized.filter((slot) => !ownsVariant(slot.id, slot.variant));
+      if (unowned.length) {
+        const list = unowned.map((s) => `#${s.id} (${s.variant})`).join(", ");
+        return res.status(400).json({
+          success: false,
+          error: `Unowned Pokémon slots: ${list}`,
+        });
+      }
+
+      // 5) Save
+      u.displayedPokemon = normalized;
+      trainerData[id] = u;
 
       await enqueueSave(trainerData);
 
-      res.json({ success: true });
+      return res.json({ success: true, currentTeam: u.displayedPokemon });
     });
   } catch (err) {
-    console.error("❌ /api/set-pokemon-team:", err.message);
-    res.status(500).json({ success: false });
+    console.error("❌ /api/set-pokemon-team:", err?.message || err);
+    return res.status(500).json({ success: false });
   }
 });
 
+
 // ==========================================================
-// 🧬 EVOLVE — Atomic Per-User Lock Version
+// 🧬 EVOLVE — Atomic Per-User Lock Version (variant-aware)
+// ✅ Supports evolving normal OR shiny (via {shiny:true/false} OR {variant:"normal"|"shiny"})
+// ✅ NEW: blocks evolving a Pokémon variant if it's currently displayed on the user's team
 // ==========================================================
 app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
-  const { id, baseId, targetId, shiny } = req.body;
+  const { id, baseId, targetId, shiny, variant } = req.body;
 
   if (!id) return res.status(400).json({ error: "Missing id" });
-  if (!requireDashboardSession(req, id))
+  if (baseId == null || targetId == null)
+    return res.status(400).json({ error: "Missing baseId/targetId" });
+
+  if (!requireDashboardSession(req, id)) {
     return res.status(403).json({ error: "Invalid or expired session" });
+  }
 
   if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
 
   await lockUser(id, async () => {
+    // Normalize user so pokemon + displayedPokemon are consistent
+    trainerData[id] = normalizeUserSchema(id, trainerData[id]);
     const user = trainerData[id];
 
-    const pokemonData = JSON.parse(fsSync.readFileSync("public/pokemonData.json", "utf8"));
-    const base = pokemonData[baseId];
-    const target = pokemonData[targetId];
+    const pokemonData = JSON.parse(
+      fsSync.readFileSync("public/pokemonData.json", "utf8")
+    );
 
-    if (!base || !target) return res.status(400).json({ error: "Invalid Pokémon IDs" });
+    const bId = Number(baseId);
+    const tId = Number(targetId);
+
+    const base = pokemonData[bId];
+    const target = pokemonData[tId];
+
+    if (!base || !target) {
+      return res.status(400).json({ error: "Invalid Pokémon IDs" });
+    }
 
     const COST_MAP = {
       "common-common": 1,
@@ -1839,59 +1952,100 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
       "epic-mythic": 12,
     };
 
-    const currentTier = base.tier;
-    const nextTier = target.tier;
+    const currentTier = String(base.tier || "common").toLowerCase();
+    const nextTier = String(target.tier || "common").toLowerCase();
     const key = `${currentTier}-${nextTier}`;
 
     const cost = COST_MAP[key] ?? 0;
-    if (cost <= 0)
+    if (cost <= 0) {
       return res.status(400).json({
         error: `Evolution path ${currentTier} ➝ ${nextTier} is not supported`,
       });
+    }
 
-    if (!user.items || user.items.evolution_stone < cost)
+    if (!user.items || (user.items.evolution_stone ?? 0) < cost) {
       return res.status(400).json({ error: "Not enough Evolution Stones." });
+    }
 
-    const variant = shiny ? "shiny" : "normal";
+    // Determine variant (prefer explicit "variant", fall back to boolean "shiny")
+    const chosenVariant =
+      typeof variant === "string" ? normVariant(variant) : (shiny ? "shiny" : "normal");
 
-    if (!user.pokemon?.[baseId]?.[variant])
+    // 🚫 NEW RULE: can't evolve if currently displayed on team (variant-aware)
+    if (isDisplayedVariant(user, bId, chosenVariant)) {
       return res.status(400).json({
-        error: `You do not own a ${shiny ? "shiny " : ""}${base.name}.`,
+        error: `You can’t evolve your ${chosenVariant} ${base.name} because it’s currently displayed on your team. Remove it from your team first.`,
       });
+    }
 
+    const ownedCount = user.pokemon?.[bId]?.[chosenVariant] || 0;
+    if (ownedCount <= 0) {
+      return res.status(400).json({
+        error: `You do not own a ${chosenVariant === "shiny" ? "shiny " : ""}${base.name}.`,
+      });
+    }
+
+    // Spend stones
     user.items.evolution_stone -= cost;
 
-    user.pokemon[baseId][variant] -= 1;
-    if (user.pokemon[baseId].normal <= 0 && user.pokemon[baseId].shiny <= 0)
-      delete user.pokemon[baseId];
+    // Remove 1 base
+    user.pokemon ??= {};
+    user.pokemon[bId] ??= { normal: 0, shiny: 0 };
+    user.pokemon[bId][chosenVariant] -= 1;
 
-    user.pokemon[targetId] ??= { normal: 0, shiny: 0 };
-    user.pokemon[targetId][variant] += 1;
+    if ((user.pokemon[bId].normal ?? 0) <= 0 && (user.pokemon[bId].shiny ?? 0) <= 0) {
+      delete user.pokemon[bId];
+    }
+
+    // Add 1 target (same variant)
+    user.pokemon[tId] ??= { normal: 0, shiny: 0 };
+    user.pokemon[tId][chosenVariant] += 1;
 
     await enqueueSave(trainerData);
 
     return res.json({
       success: true,
-      evolved: { from: base.name, to: target.name, shiny, cost },
+      evolved: {
+        from: base.name,
+        to: target.name,
+        variant: chosenVariant,
+        shiny: chosenVariant === "shiny", // for backward compat in the frontend
+        cost,
+      },
       stonesRemaining: user.items.evolution_stone,
     });
   });
 });
 
+// ==========================================================
 // 💝 Donate Pokémon (normal + shiny supported, 5× CC for shiny)
+// ✅ NEW: blocks donating a Pokémon variant if it's displayed
+// ✅ Back-compat: accepts {shiny:true/false} OR {variant:"normal"|"shiny"}
+// ==========================================================
 app.post("/api/pokemon/donate", express.json(), async (req, res) => {
-  const { id, pokeId, shiny } = req.body;
+  const { id, pokeId, shiny, variant } = req.body;
 
   if (!id) return res.status(400).json({ error: "Missing id" });
-  if (!requireDashboardSession(req, id))
+  if (pokeId == null) return res.status(400).json({ error: "Missing pokeId" });
+
+  if (!requireDashboardSession(req, id)) {
     return res.status(403).json({ error: "Invalid or expired session" });
+  }
 
   await lockUser(id, async () => {
     const user = trainerData[id];
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const pokemonData = JSON.parse(fsSync.readFileSync("public/pokemonData.json", "utf8"));
-    const p = pokemonData[pokeId];
+    // Ensure schema + displayedPokemon normalized (so team checks are reliable)
+    trainerData[id] = normalizeUserSchema(id, user);
+    const u = trainerData[id];
+
+    const pokemonData = JSON.parse(
+      fsSync.readFileSync("public/pokemonData.json", "utf8")
+    );
+
+    const pid = Number(pokeId);
+    const p = pokemonData[pid];
     if (!p) return res.status(400).json({ error: "Invalid Pokémon ID" });
 
     const ccMap = {
@@ -1903,33 +2057,52 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
       mythic: 10000,
     };
 
-    const baseValue = ccMap[p.tier] ?? 0;
-    const variant = shiny ? "shiny" : "normal";
-    const owned = user.pokemon?.[pokeId]?.[variant] || 0;
+    const baseValue = ccMap[String(p.tier || "common").toLowerCase()] ?? 0;
 
-    if (owned <= 0)
+    // Determine requested variant (prefer explicit "variant", fall back to boolean "shiny")
+    const chosenVariant =
+      typeof variant === "string" ? normVariant(variant) : (shiny ? "shiny" : "normal");
+
+    // 🚫 NEW RULE: can't donate if currently displayed on team
+    if (isDisplayedVariant(u, pid, chosenVariant)) {
       return res.status(400).json({
-        error: `You don’t own a ${shiny ? "shiny " : ""}${p.name} to donate.`,
+        error: `You can’t donate your ${chosenVariant} ${p.name} because it’s currently displayed on your team. Remove it from your team first.`,
       });
+    }
 
-    const finalValue = shiny ? baseValue * 5 : baseValue;
+    const owned = u.pokemon?.[pid]?.[chosenVariant] || 0;
+    if (owned <= 0) {
+      return res.status(400).json({
+        error: `You don’t own a ${chosenVariant === "shiny" ? "shiny " : ""}${p.name} to donate.`,
+      });
+    }
 
-    user.pokemon[pokeId][variant] -= 1;
-    if (user.pokemon[pokeId].normal <= 0 && user.pokemon[pokeId].shiny <= 0)
-      delete user.pokemon[pokeId];
+    const finalValue = chosenVariant === "shiny" ? baseValue * 5 : baseValue;
 
-    user.cc = (user.cc ?? 0) + finalValue;
+    // Apply donation
+    u.pokemon ??= {};
+    u.pokemon[pid] ??= { normal: 0, shiny: 0 };
+
+    u.pokemon[pid][chosenVariant] -= 1;
+
+    // Clean empty shells
+    if ((u.pokemon[pid].normal ?? 0) <= 0 && (u.pokemon[pid].shiny ?? 0) <= 0) {
+      delete u.pokemon[pid];
+    }
+
+    u.cc = (u.cc ?? 0) + finalValue;
 
     await enqueueSave(trainerData);
 
-    res.json({
+    return res.json({
       success: true,
-      donated: { name: p.name, shiny },
+      donated: { id: pid, name: p.name, variant: chosenVariant },
       gainedCC: finalValue,
-      totalCC: user.cc,
+      totalCC: u.cc,
     });
   });
 });
+
 
  // ==========================================================
 // 🤖 BOT READY EVENT

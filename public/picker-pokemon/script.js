@@ -141,21 +141,21 @@ const CC_MAP = {
 };
 
 const SHINY_DUST_REWARD = {
-  common: 1,
-  uncommon: 2,
-  rare: 3,
-  epic: 5,
-  legendary: 8,
-  mythic: 13,
-};
-
-const SHINY_CRAFT_COST = {
-  common: 5,
+  common: 6,
   uncommon: 10,
   rare: 15,
   epic: 25,
   legendary: 40,
-  mythic: 65,
+  mythic: 60,
+};
+
+const SHINY_CRAFT_COST = {
+  common: 15,
+  uncommon: 25,
+  rare: 40,
+  epic: 60,
+  legendary: 80,
+  mythic: 120,
 };
 
 function dustCostForTier(tier) {
@@ -1530,6 +1530,11 @@ function openDonationConfirmModal(pokeId, variant) {
     : `/public/sprites/pokemon/normal/${pokeId}.gif`;
 
   const ccValue = getDonationValue(p.tier, v === "shiny");
+const dustPreview =
+  v === "shiny"
+    ? (SHINY_DUST_REWARD[String(p.tier).toLowerCase()] ?? 0)
+    : 0;
+
 
   modal.innerHTML = `
     <h2 style="color: #facc15;">💝 Donate ${v === "shiny" ? "✨ " : ""}${p.name}?</h2>
@@ -1538,6 +1543,12 @@ function openDonationConfirmModal(pokeId, variant) {
       Variant: ${v === "shiny" ? "✨ Shiny" : "Normal"}
     </p>
     <p>You'll receive <b style="color: #facc15;">💰 ${ccValue} CC</b></p>
+${dustPreview > 0
+  ? `<p style="color:#facc15;font-weight:900;margin-top:-6px;">
+       ✨ +${dustPreview} Shiny Dust
+     </p>`
+  : ""
+}
     <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
       <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
       <button class="confirm-btn" style="background: #facc15; color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>

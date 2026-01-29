@@ -679,6 +679,40 @@ const client = new Client({
 });
 client.commands = new Collection();
 
+client.on("debug", (m) => {
+  // discord.js can be noisy; filter to gateway-ish lines
+  if (
+    m.includes("Gateway") ||
+    m.includes("WS") ||
+    m.includes("Shard") ||
+    m.includes("IDENTIFY") ||
+    m.includes("RESUME")
+  ) {
+    console.log("🧪 discord.js debug:", m);
+  }
+});
+
+client.on("shardReady", (id) => console.log("🟢 shardReady", { id }));
+client.on("shardResume", (id) => console.log("🟢 shardResume", { id }));
+client.on("shardDisconnect", (event, id) =>
+  console.log("🔴 shardDisconnect", { id, code: event?.code, reason: event?.reason })
+);
+client.on("shardError", (e) => console.log("❌ shardError", e?.message || e));
+
+client.ws.on("debug", (m) => {
+  if (
+    m.includes("Connecting") ||
+    m.includes("Connected") ||
+    m.includes("Identifying") ||
+    m.includes("Resuming") ||
+    m.includes("Closed") ||
+    m.includes("Heartbeat")
+  ) {
+    console.log("🧪 ws debug:", m);
+  }
+});
+
+
 // ==========================================================
 // 🛰️ DISCORD CONNECTION / INTERACTION DEBUG
 // ==========================================================

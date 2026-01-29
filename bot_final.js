@@ -87,12 +87,12 @@ function tierKey(t) {
 }
 
 const DUST_REWARD_BY_TIER = {
-  common: 6,
-  uncommon: 10,
-  rare: 15,
-  epic: 25,
-  legendary: 40,
-  mythic: 60,
+  common: 4,
+  uncommon: 7,
+  rare: 12,
+  epic: 18,
+  legendary: 22,
+  mythic: 30,
 };
 
 const SHINY_CRAFT_COST_BY_TIER = {
@@ -103,6 +103,59 @@ const SHINY_CRAFT_COST_BY_TIER = {
   legendary: 80,
   mythic: 120,
 };
+
+// ==========================================================
+// ✨ NON-SHINY → DUST (Probability Rolls by Tier)
+// - Used when donating NORMAL variants for Shiny Dust
+// - Each entry is an independent roll (can stack)
+// ==========================================================
+const NON_SHINY_DUST_CHANCE_BY_TIER = {
+  common: [
+    { chance: 0.97, dust: 0 },
+    { chance: 0.03, dust: 1 },        // EV = 0.03
+  ],
+
+  uncommon: [
+    { chance: 0.94, dust: 0 },
+    { chance: 0.06, dust: 1 },        // EV = 0.06
+  ],
+
+  rare: [
+    { chance: 0.88, dust: 0 },
+    { chance: 0.10, dust: 1 },
+    { chance: 0.02, dust: 2 },        // EV = 0.14
+  ],
+
+  epic: [
+    { chance: 0.70, dust: 0 },
+    { chance: 0.22, dust: 1 },
+    { chance: 0.08, dust: 2 },        // EV = 0.38
+  ],
+
+  legendary: [
+    { chance: 0.65, dust: 0 },
+    { chance: 0.25, dust: 2 },
+    { chance: 0.10, dust: 3 },        // EV = 0.80
+  ],
+
+  mythic: [
+    { chance: 0.53, dust: 0 },
+    { chance: 0.35, dust: 3 },
+    { chance: 0.12, dust: 5 },        // EV = 1.65
+  ],
+};
+
+// ==========================================================
+// 🎲 Weighted Roll Helper (used by donate API)
+// ==========================================================
+function rollWeightedDust(table = []) {
+  let r = Math.random();
+  for (const entry of table) {
+    r -= Number(entry.chance) || 0;
+    if (r <= 0) return Number(entry.dust) || 0;
+  }
+  return 0; // safety fallback
+}
 
 // ----- item helpers (map-safe; no schema churn) -----
 function getItem(user, key) {
@@ -131,6 +184,28 @@ function craftCostForTier(tier) {
 // Shiny evolve dust uses the "difference" rule
 function shinyEvolveDustCost(baseTier, targetTier) {
   return Math.max(0, craftCostForTier(targetTier) - craftCostForTier(baseTier));
+}
+
+// ==========================================================
+// 🗓️ NON-SHINY DUST WEEKLY CAP (UTC ISO WEEK)
+// ==========================================================
+const NON_SHINY_DUST_WEEKLY_CAP = 8;
+
+function getISOWeekKeyUTC(date = new Date()) {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const day = d.getUTCDay() || 7; // Sun=0 -> 7
+  d.setUTCDate(d.getUTCDate() + 4 - day); // nearest Thursday
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+function ensureNonShinyDustWeek(u) {
+  const key = getISOWeekKeyUTC();
+  if (u.nonShinyDustWeekKey !== key) {
+    u.nonShinyDustWeekKey = key;
+    u.nonShinyDustEarnedThisWeek = 0;
+  }
 }
 
 
@@ -369,6 +444,16 @@ for (const [k, v] of Object.entries(user.items)) {
 // keep this ONE legacy guarantee if you want stones to always show up
 user.items.evolution_stone = Number.isFinite(user.items.evolution_stone)
   ? user.items.evolution_stone
+  : 0;
+
+// ==========================================================
+// 🧾 NON-SHINY DUST WEEKLY CAP TRACKING
+// ==========================================================
+user.nonShinyDustWeekKey =
+  typeof user.nonShinyDustWeekKey === "string" ? user.nonShinyDustWeekKey : "";
+
+user.nonShinyDustEarnedThisWeek = Number.isFinite(user.nonShinyDustEarnedThisWeek)
+  ? Math.max(0, Math.floor(user.nonShinyDustEarnedThisWeek))
   : 0;
 
 
@@ -2106,7 +2191,9 @@ if (dustCost > 0) {
 // ==========================================================
 // 💝 Donate Pokémon (normal + shiny supported, 5× CC for shiny)
 // ✅ blocks donating a Pokémon variant if it's displayed
-// ✅ awards shiny dust on shiny donation (by tier)
+// ✅ awards shiny dust:
+//    - shiny donation: fixed dust by tier
+//    - non-shiny donation: probability-based dust by tier
 // ==========================================================
 app.post("/api/pokemon/donate", express.json(), async (req, res) => {
   const { id, pokeId, shiny, variant } = req.body;
@@ -2143,7 +2230,9 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
     const baseValue = ccMap[String(p.tier || "common").toLowerCase()] ?? 0;
 
     const chosenVariant =
-      typeof variant === "string" ? normVariant(variant) : (shiny ? "shiny" : "normal");
+      typeof variant === "string"
+        ? normVariant(variant)
+        : (shiny ? "shiny" : "normal");
 
     if (isDisplayedVariant(u, pid, chosenVariant)) {
       return res.status(400).json({
@@ -2158,11 +2247,42 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
       });
     }
 
+    // --------------------------
+    // ✅ CC reward (unchanged)
+    // --------------------------
     const finalValue = chosenVariant === "shiny" ? baseValue * 5 : baseValue;
-    const tier = tierKey(p.tier || "common");
-    const dustReward = chosenVariant === "shiny" ? (DUST_REWARD_BY_TIER[tier] ?? 0) : 0;
 
+    // --------------------------
+    // ✅ Dust reward (NEW for non-shiny)
+    // --------------------------
+    const tier = tierKey(p.tier || "common");
+
+    let dustReward = 0;
+
+if (chosenVariant === "shiny") {
+  // fixed dust for shiny donation (NOT capped here)
+  dustReward = (DUST_REWARD_BY_TIER[tier] ?? 0);
+} else {
+  // ✅ weekly cap applies only to NON-SHINY dust
+  ensureNonShinyDustWeek(u);
+
+  const earned = u.nonShinyDustEarnedThisWeek ?? 0;
+  const remaining = Math.max(0, NON_SHINY_DUST_WEEKLY_CAP - earned);
+
+  if (remaining > 0) {
+    const table = NON_SHINY_DUST_CHANCE_BY_TIER?.[tier] ?? [{ chance: 1, dust: 0 }];
+    const rolled = rollWeightedDust(table);
+
+    dustReward = Math.min(rolled, remaining);
+    u.nonShinyDustEarnedThisWeek = earned + dustReward;
+  } else {
+    dustReward = 0;
+  }
+}
+
+    // --------------------------
     // Apply donation
+    // --------------------------
     u.pokemon ??= {};
     u.pokemon[pid] ??= { normal: 0, shiny: 0 };
     u.pokemon[pid][chosenVariant] -= 1;
@@ -2179,14 +2299,21 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
 
     await enqueueSave(trainerData);
 
-    return res.json({
-      success: true,
-      donated: { id: pid, name: p.name, variant: chosenVariant },
-      gainedCC: finalValue,
-      totalCC: u.cc,
-      shinyDustGained: dustReward,
-      shinyDustTotal: getItem(u, "shiny_dust"),
-    });
+    const nonShinyDustWeeklyRemaining =
+  chosenVariant === "shiny"
+    ? null
+    : Math.max(0, NON_SHINY_DUST_WEEKLY_CAP - (u.nonShinyDustEarnedThisWeek ?? 0));
+
+return res.json({
+  success: true,
+  donated: { id: pid, name: p.name, variant: chosenVariant },
+  gainedCC: finalValue,
+  totalCC: u.cc,
+  shinyDustGained: dustReward,
+  shinyDustTotal: getItem(u, "shiny_dust"),
+  nonShinyDustWeeklyRemaining,
+});
+
   });
 });
 

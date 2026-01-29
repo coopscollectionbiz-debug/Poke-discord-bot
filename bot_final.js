@@ -1981,8 +1981,6 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
 
     const pokemonData = await getPokemonDataCached();
 
-    );
-
     const bId = Number(baseId);
     const tId = Number(targetId);
 
@@ -2128,7 +2126,6 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
     const u = trainerData[id];
 
     const pokemonData = await getPokemonDataCached();
-    );
 
     const pid = Number(pokeId);
     const p = pokemonData[pid];
@@ -2215,8 +2212,7 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
     trainerData[id] = normalizeUserSchema(id, trainerData[id]);
     const user = trainerData[id];
 
-    cconst pokemonData = await getPokemonDataCached();
-    );
+    const pokemonData = await getPokemonDataCached();
 
     const pid = Number(pokeId);
     const p = pokemonData[pid];

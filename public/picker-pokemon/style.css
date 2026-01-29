@@ -6,6 +6,10 @@
    - Mode Buttons (#modeToggle .mode-btn)
    - Grid (#pokemonGrid .pokemon-card)
    - JS overlay modals (generic .overlay / .modal)
+   Notes:
+   ✅ Fix: only grayscale Pokémon sprite, not type/badge icons
+   ✅ Add: convert-cost helper (gold)
+   ✅ Add: badge fit helpers to prevent overlap on tiny cards
 =========================================================== */
 
 :root{
@@ -15,7 +19,7 @@
   --brand:#00ff9d;
   --text:#ffffff;
   --muted:#cccccc;
-  --gold:#ffd700;
+  --gold:#facc15;
   --danger:#ef4444;
   --info:#3b82f6;
 }
@@ -329,8 +333,8 @@ a:hover { text-decoration: underline; }
 .tier-text.uncommon  { color: #10b981; }
 .tier-text.rare      { color: #3b82f6; }
 .tier-text.epic      { color: #a855f7; }
-.tier-text.legendary { color: #facc15; }
-.tier-text.mythic    { color: #ef4444; }
+.tier-text.legendary { color: var(--gold); }
+.tier-text.mythic    { color: var(--danger); }
 
 /* Type icons */
 .type-icons {
@@ -362,12 +366,15 @@ a:hover { text-decoration: underline; }
   opacity: 0.85;
 }
 
-.pokemon-card.unowned img {
+/* ✅ IMPORTANT FIX:
+   Do NOT grayscale all images (that would grayscale type icons and badge icons too).
+   Only grayscale the Pokémon sprite itself. */
+.pokemon-card.unowned img.poke-sprite {
   filter: grayscale(1);
   opacity: 0.9;
 }
 
-/* Locked (TEAM unowned / EVOLVE ineligible / DONATE none) */
+/* Locked (TEAM unowned / EVOLVE ineligible / DONATE none / CONVERT blocked) */
 .pokemon-card.locked {
   cursor: not-allowed;
   opacity: 0.65;
@@ -475,9 +482,24 @@ a:hover { text-decoration: underline; }
 }
 
 .donate-value {
-  border-color: #facc15;
-  color: #facc15;
+  border-color: var(--gold);
+  color: var(--gold);
   box-shadow: 0 0 4px rgba(250,204,21,0.35);
+}
+
+/* ✅ Optional helper if you add class="evolve-cost convert-cost" in convert mode */
+.convert-cost {
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 4px rgba(250,204,21,0.35);
+}
+
+/* ✅ Prevent badge text from overflowing on small cards */
+.count-label,
+.evolve-cost,
+.donate-value {
+  max-width: calc(100% - 12px);
+  white-space: nowrap;
 }
 
 /* -----------------------------------------------------------
@@ -508,7 +530,7 @@ a:hover { text-decoration: underline; }
 }
 
 .modal.gold {
-  border-color: #facc15;
+  border-color: var(--gold);
   box-shadow: 0 0 20px rgba(250,204,21,0.35);
 }
 
@@ -519,7 +541,7 @@ a:hover { text-decoration: underline; }
   line-height: 1.2;
 }
 
-.modal.gold h2 { color: #facc15; }
+.modal.gold h2 { color: var(--gold); }
 
 .modal p { color: #ccc; }
 
@@ -542,7 +564,7 @@ a:hover { text-decoration: underline; }
 
 .btn-primary { background: var(--brand); color: var(--bg); }
 .btn-secondary { background: var(--border); color: #fff; }
-.btn-gold { background: #facc15; color: var(--bg); }
+.btn-gold { background: var(--gold); color: var(--bg); }
 
 .btn:hover { transform: translateY(-1px) scale(1.03); }
 .btn-primary:hover { box-shadow: 0 0 12px #00ff9d60; }

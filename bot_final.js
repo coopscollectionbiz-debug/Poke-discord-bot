@@ -24,6 +24,7 @@ import {
 import { REST, Routes } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
+import { getPokemonDataCached } from "./utils/pokemonDataCache.js";
 
 // 🌐 EXPRESS — canonical static setup
 import express from "express";
@@ -50,7 +51,7 @@ process.on("uncaughtException", (err) => {
 
 
 // ==========================================================
-// 🧠 Pokémon Variant Helpers (GLOBAL, SINGLE SOURCE)
+// 🧠 Pokémon Variant + Items Helpers (GLOBAL, SINGLE SOURCE)
 // ==========================================================
 function normVariant(v) {
   return String(v || "normal").toLowerCase() === "shiny" ? "shiny" : "normal";
@@ -70,22 +71,68 @@ function toTeamObj(entry) {
   return null;
 }
 
-function isDisplayedOnTeam(user, pokeId, variant, { anyVariant = true } = {}) {
+function isDisplayedVariant(user, pokeId, variant) {
   const teamRaw = Array.isArray(user.displayedPokemon) ? user.displayedPokemon : [];
   const team = teamRaw.map(toTeamObj).filter(Boolean);
-
   const pid = Number(pokeId);
-  if (!Number.isInteger(pid)) return false;
-
-  if (anyVariant) {
-    // safest: if this species is displayed at all (normal OR shiny), block actions
-    return team.some((t) => Number(t.id) === pid);
-  }
-
-  // strict: only block if the exact variant is displayed
   const v = normVariant(variant);
-  return team.some((t) => Number(t.id) === pid && t.variant === v);
+  return team.some((t) => t.id === pid && t.variant === v);
 }
+
+// ==========================================================
+// ✨ SHINY DUST ECONOMY (Single Source of Truth)
+// ==========================================================
+function tierKey(t) {
+  return String(t || "common").toLowerCase();
+}
+
+const DUST_REWARD_BY_TIER = {
+  common: 6,
+  uncommon: 10,
+  rare: 15,
+  epic: 25,
+  legendary: 40,
+  mythic: 60,
+};
+
+const SHINY_CRAFT_COST_BY_TIER = {
+  common: 15,
+  uncommon: 25,
+  rare: 40,
+  epic: 60,
+  legendary: 80,
+  mythic: 120,
+};
+
+// ----- item helpers (map-safe; no schema churn) -----
+function getItem(user, key) {
+  const v = user?.items?.[key];
+  return Number.isFinite(v) ? v : 0;
+}
+function addItem(user, key, amount) {
+  user.items ??= {};
+  const add = Math.max(0, Math.floor(Number(amount) || 0));
+  user.items[key] = getItem(user, key) + add;
+  return user.items[key];
+}
+function spendItem(user, key, amount) {
+  user.items ??= {};
+  const cost = Math.max(0, Math.floor(Number(amount) || 0));
+  if (getItem(user, key) < cost) return false;
+  user.items[key] = getItem(user, key) - cost;
+  return true;
+}
+
+// Craft cost for converting normal -> shiny by tier
+function craftCostForTier(tier) {
+  return SHINY_CRAFT_COST_BY_TIER[tierKey(tier)] ?? 0;
+}
+
+// Shiny evolve dust uses the "difference" rule
+function shinyEvolveDustCost(baseTier, targetTier) {
+  return Math.max(0, craftCostForTier(targetTier) - craftCostForTier(baseTier));
+}
+
 
 // ==========================================================
 // 🧵 ROLE UPDATE QUEUE (reduces REST spam)
@@ -303,16 +350,27 @@ user.displayedPokemon = user.displayedPokemon
       : null;
 
   // ==========================================================
-  // 8️⃣ ITEMS (future safe)
-  // ==========================================================
-  if (!user.items || typeof user.items !== "object" || Array.isArray(user.items)) {
-    user.items = {};
-  }
+// 8️⃣ ITEMS (future-safe map)
+// ==========================================================
+if (!user.items || typeof user.items !== "object" || Array.isArray(user.items)) {
+  user.items = {};
+}
 
-  // Always ensure evolution_stone exists
-  user.items.evolution_stone = Number.isFinite(user.items.evolution_stone)
-    ? user.items.evolution_stone
-    : 0;
+// sanitize all item values to non-negative integers
+for (const [k, v] of Object.entries(user.items)) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) {
+    delete user.items[k];
+    continue;
+  }
+  user.items[k] = Math.max(0, Math.floor(n));
+}
+
+// keep this ONE legacy guarantee if you want stones to always show up
+user.items.evolution_stone = Number.isFinite(user.items.evolution_stone)
+  ? user.items.evolution_stone
+  : 0;
+
 
   // ==========================================================
   // 9️⃣ PURCHASES
@@ -1073,7 +1131,7 @@ client.on("messageCreate", async (message) => {
   lastRecruit: 0,
   lastQuest: 0,
   lastWeeklyPack: null,       // ✅ REQUIRED
-  items: { evolution_stone: 0 },
+  items: {},
   purchases: [],
   luck: 0,
   luckTimestamp: 0,
@@ -1109,7 +1167,6 @@ queueRoleUpdate({
   );
 });
 
-
 });
 
 // ==========================================================
@@ -1142,7 +1199,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
   lastRecruit: 0,
   lastQuest: 0,
   lastWeeklyPack: null,       // ✅ REQUIRED
-  items: { evolution_stone: 0 },
+  items: {},
   purchases: [],
   luck: 0,
   luckTimestamp: 0,
@@ -1789,7 +1846,7 @@ app.get("/api/user-pokemon", (req, res) => {
 
   const u = trainerData[id];
 
-  const items = u.items ?? { evolution_stone: 0 };
+  const items = (u.items && typeof u.items === "object") ? u.items : {};
   const cc = u.cc ?? 0;
   const tp = u.tp ?? 0;
   const rank = getRank(tp);
@@ -1841,6 +1898,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       trainerData[id] = normalizeUserSchema(id, user);
       const u = trainerData[id];
 
+      
       const ownsVariant = (pid, variant) => {
         const p = u.pokemon?.[pid];
         if (!p) return false;
@@ -1921,8 +1979,8 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
     trainerData[id] = normalizeUserSchema(id, trainerData[id]);
     const user = trainerData[id];
 
-    const pokemonData = JSON.parse(
-      fsSync.readFileSync("public/pokemonData.json", "utf8")
+    const pokemonData = await getPokemonDataCached();
+
     );
 
     const bId = Number(baseId);
@@ -1977,12 +2035,19 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
     const chosenVariant =
       typeof variant === "string" ? normVariant(variant) : (shiny ? "shiny" : "normal");
 
+const baseTier = tierKey(base.tier || "common");
+const targetTier = tierKey(target.tier || "common");
+const dustCost = chosenVariant === "shiny"
+  ? shinyEvolveDustCost(baseTier, targetTier)
+  : 0;
+
+
     // 🚫 NEW RULE: can't evolve if currently displayed on team (variant-aware)
-    if (isDisplayedOnTeam(user, bId, chosenVariant, { anyVariant: true })) {
-  return res.status(400).json({
-    error: `You can’t evolve ${base.name} because it’s currently displayed on your team. Remove it from your team first.`,
-  });
-}
+    if (isDisplayedVariant(user, bId, chosenVariant)) {
+      return res.status(400).json({
+        error: `You can’t evolve your ${chosenVariant} ${base.name} because it’s currently displayed on your team. Remove it from your team first.`,
+      });
+    }
 
     const ownedCount = user.pokemon?.[bId]?.[chosenVariant] || 0;
     if (ownedCount <= 0) {
@@ -1992,7 +2057,21 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
     }
 
     // Spend stones
-    user.items.evolution_stone -= cost;
+user.items.evolution_stone -= cost;
+
+// Spend dust if shiny evolve
+if (dustCost > 0) {
+  const ok = spendItem(user, "shiny_dust", dustCost);
+  if (!ok) {
+    // refund stones (since we are mid-operation)
+    user.items.evolution_stone += cost;
+    return res.status(400).json({
+      error: `Not enough Shiny Dust. Requires ${dustCost}.`,
+      dustRequired: dustCost,
+      dustAvailable: getItem(user, "shiny_dust"),
+    });
+  }
+}
 
     // Remove 1 base
     user.pokemon ??= {};
@@ -2010,23 +2089,26 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
     await enqueueSave(trainerData);
 
     return res.json({
-      success: true,
-      evolved: {
-        from: base.name,
-        to: target.name,
-        variant: chosenVariant,
-        shiny: chosenVariant === "shiny", // for backward compat in the frontend
-        cost,
-      },
-      stonesRemaining: user.items.evolution_stone,
-    });
+  success: true,
+  evolved: {
+    from: base.name,
+    to: target.name,
+    variant: chosenVariant,
+    shiny: chosenVariant === "shiny",
+    cost,                 // stones
+    dustCost,             // NEW
+  },
+  stonesRemaining: user.items.evolution_stone,
+  shinyDustRemaining: getItem(user, "shiny_dust"),
+});
+
   });
 });
 
 // ==========================================================
 // 💝 Donate Pokémon (normal + shiny supported, 5× CC for shiny)
-// ✅ NEW: blocks donating a Pokémon variant if it's displayed
-// ✅ Back-compat: accepts {shiny:true/false} OR {variant:"normal"|"shiny"}
+// ✅ blocks donating a Pokémon variant if it's displayed
+// ✅ awards shiny dust on shiny donation (by tier)
 // ==========================================================
 app.post("/api/pokemon/donate", express.json(), async (req, res) => {
   const { id, pokeId, shiny, variant } = req.body;
@@ -2042,12 +2124,10 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
     const user = trainerData[id];
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    // Ensure schema + displayedPokemon normalized (so team checks are reliable)
     trainerData[id] = normalizeUserSchema(id, user);
     const u = trainerData[id];
 
-    const pokemonData = JSON.parse(
-      fsSync.readFileSync("public/pokemonData.json", "utf8")
+    const pokemonData = await getPokemonDataCached();
     );
 
     const pid = Number(pokeId);
@@ -2065,17 +2145,14 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
 
     const baseValue = ccMap[String(p.tier || "common").toLowerCase()] ?? 0;
 
-    // Determine requested variant (prefer explicit "variant", fall back to boolean "shiny")
     const chosenVariant =
       typeof variant === "string" ? normVariant(variant) : (shiny ? "shiny" : "normal");
 
-    // 🚫 NEW RULE: can't donate if currently displayed on team
-    if (isDisplayedOnTeam(u, pid, chosenVariant, { anyVariant: true })) {
-  return res.status(400).json({
-    error: `You can’t donate ${p.name} because it’s currently displayed on your team. Remove it from your team first.`,
-  });
-}
-
+    if (isDisplayedVariant(u, pid, chosenVariant)) {
+      return res.status(400).json({
+        error: `You can’t donate your ${chosenVariant} ${p.name} because it’s currently displayed on your team. Remove it from your team first.`,
+      });
+    }
 
     const owned = u.pokemon?.[pid]?.[chosenVariant] || 0;
     if (owned <= 0) {
@@ -2085,19 +2162,23 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
     }
 
     const finalValue = chosenVariant === "shiny" ? baseValue * 5 : baseValue;
+    const tier = tierKey(p.tier || "common");
+    const dustReward = chosenVariant === "shiny" ? (DUST_REWARD_BY_TIER[tier] ?? 0) : 0;
 
     // Apply donation
     u.pokemon ??= {};
     u.pokemon[pid] ??= { normal: 0, shiny: 0 };
-
     u.pokemon[pid][chosenVariant] -= 1;
 
-    // Clean empty shells
     if ((u.pokemon[pid].normal ?? 0) <= 0 && (u.pokemon[pid].shiny ?? 0) <= 0) {
       delete u.pokemon[pid];
     }
 
     u.cc = (u.cc ?? 0) + finalValue;
+
+    if (dustReward > 0) {
+      addItem(u, "shiny_dust", dustReward);
+    }
 
     await enqueueSave(trainerData);
 
@@ -2106,10 +2187,90 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
       donated: { id: pid, name: p.name, variant: chosenVariant },
       gainedCC: finalValue,
       totalCC: u.cc,
+      shinyDustGained: dustReward,
+      shinyDustTotal: getItem(u, "shiny_dust"),
     });
   });
 });
 
+
+// ==========================================================
+// ✨ Convert Normal -> Shiny (Atomic, variant-aware)
+// Costs dust by tier of the Pokémon being converted.
+// Blocks converting if the NORMAL variant is currently displayed.
+// ==========================================================
+app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
+  const { id, pokeId } = req.body;
+
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (pokeId == null) return res.status(400).json({ error: "Missing pokeId" });
+
+  if (!requireDashboardSession(req, id)) {
+    return res.status(403).json({ error: "Invalid or expired session" });
+  }
+
+  if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
+
+  await lockUser(id, async () => {
+    trainerData[id] = normalizeUserSchema(id, trainerData[id]);
+    const user = trainerData[id];
+
+    cconst pokemonData = await getPokemonDataCached();
+    );
+
+    const pid = Number(pokeId);
+    const p = pokemonData[pid];
+    if (!p) return res.status(400).json({ error: "Invalid Pokémon ID" });
+
+    if (isDisplayedVariant(user, pid, "normal")) {
+      return res.status(400).json({
+        error: `You can’t convert ${p.name} to shiny because its normal variant is currently displayed on your team. Remove it from your team first.`,
+      });
+    }
+
+    const tier = tierKey(p.tier || "common");
+    const dustCost = SHINY_CRAFT_COST_BY_TIER[tier] ?? 0;
+
+    user.pokemon ??= {};
+    user.pokemon[pid] ??= { normal: 0, shiny: 0 };
+
+    if ((user.pokemon[pid].normal ?? 0) <= 0) {
+      return res.status(400).json({ error: `You do not own a normal ${p.name} to convert.` });
+    }
+
+    if (getItem(user, "shiny_dust") < dustCost) {
+      return res.status(400).json({
+        error: `Not enough Shiny Dust. Requires ${dustCost}.`,
+        dustRequired: dustCost,
+        dustAvailable: getItem(user, "shiny_dust"),
+      });
+    }
+
+    const ok = spendItem(user, "shiny_dust", dustCost);
+    if (!ok) return res.status(400).json({ error: "Not enough Shiny Dust." });
+
+    user.pokemon[pid].normal -= 1;
+    user.pokemon[pid].shiny += 1;
+
+    if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) {
+      delete user.pokemon[pid];
+    }
+
+    await enqueueSave(trainerData);
+
+    return res.json({
+      success: true,
+      converted: { id: pid, name: p.name },
+      tier,
+      dustCost,
+      shinyDustRemaining: getItem(user, "shiny_dust"),
+      counts: {
+        normal: user.pokemon?.[pid]?.normal ?? 0,
+        shiny: user.pokemon?.[pid]?.shiny ?? 0,
+      },
+    });
+  });
+});
 
  // ==========================================================
 // 🤖 BOT READY EVENT

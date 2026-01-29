@@ -10,6 +10,8 @@
 //  • Autosave / Graceful Shutdown / Express Health Endpoint
 // ==========================================================
 
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
 import fs from "fs/promises";
 import * as fsSync from "fs";
 import fetch from "node-fetch";

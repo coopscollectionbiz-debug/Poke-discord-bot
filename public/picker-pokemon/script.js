@@ -141,12 +141,13 @@ const CC_MAP = {
 };
 
 const SHINY_DUST_REWARD = {
-  common: 6,
-  uncommon: 10,
-  rare: 15,
-  epic: 25,
-  legendary: 40,
-  mythic: 60,
+  const DUST_REWARD_BY_TIER = {
+  common: 4,
+  uncommon: 7,
+  rare: 12,
+  epic: 18,
+  legendary: 22,
+  mythic: 30,
 };
 
 const SHINY_CRAFT_COST = {

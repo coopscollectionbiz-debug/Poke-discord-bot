@@ -693,7 +693,10 @@ client.on("shardDisconnect", (event, id) => {
   console.error("🔴 shardDisconnect", { id, code: event?.code, reason: event?.reason });
 });
 client.on("shardReconnecting", (id) => console.log("🟡 shardReconnecting", { id }));
-client.on("shardResume", (id) => console.log("🟢 shardResume", { id }));
+client.on("shardResume", (id) => {
+  console.log("🟢 shardResume", { id });
+  lastGatewayOk = Date.now();
+});
 client.on("shardError", (e) => console.error("❌ shardError", e));
 
 // ==========================================================
@@ -702,6 +705,7 @@ client.on("shardError", (e) => console.error("❌ shardError", e));
 
 // Tracks last successful Discord REST call
 let lastDiscordOk = Date.now();
+let lastGatewayOk = Date.now();
 
 // Tracks whether the bot has ever fully connected
 let hasBeenReadyOnce = false;
@@ -709,20 +713,10 @@ let hasBeenReadyOnce = false;
 // Tracks last time an interaction event was received (ms)
 let lastInteractionAtMs = null;
 
-// Mark when the gateway is truly ready at least once
-client.once("ready", () => {
-  hasBeenReadyOnce = true;
-
-  // ✅ Seed this so watchdog never treats fresh boot as "no interactions"
-  if (!lastInteractionAtMs) lastInteractionAtMs = Date.now();
-
-  console.log("🧠 hasBeenReadyOnce = true");
-});
-
-
 // Track incoming interactions (slash commands, buttons, etc)
 client.on("interactionCreate", () => {
   lastInteractionAtMs = Date.now();
+  lastGatewayOk = Date.now(); // ✅ ADD THIS
 });
 
 // 🚨 If we never reach Discord ready within 5 minutes, restart the instance.
@@ -759,14 +753,19 @@ setInterval(async () => {
 }, 60_000);
 
 // ----------------------------------------------------------
-// 🚨 RESTART IF DISCORD REST IS UNHEALTHY
+// 🚨 RESTART ONLY IF BOTH REST + GATEWAY LOOK DEAD
 // ----------------------------------------------------------
 setInterval(() => {
-  if (!hasBeenReadyOnce) return; // don't restart during initial boot
+  if (!hasBeenReadyOnce) return;
 
-  const age = Date.now() - lastDiscordOk;
-  if (age > 60 * 60_000) {
-    console.error(`❌ Discord REST unhealthy for ${Math.round(age / 1000)}s — exiting`);
+  const restAgeMs = Date.now() - lastDiscordOk;
+  const gatewayAgeMs = Date.now() - lastGatewayOk;
+
+  // REST dead for 60m AND gateway dead for 30m => truly unhealthy
+  if (restAgeMs > 60 * 60_000 && gatewayAgeMs > 30 * 60_000) {
+    console.error(
+      `❌ Discord unhealthy — REST ${Math.round(restAgeMs / 1000)}s, Gateway ${Math.round(gatewayAgeMs / 1000)}s — exiting`
+    );
     process.exit(1);
   }
 }, 60_000);
@@ -776,11 +775,6 @@ setInterval(() => {
 // - DO NOT trigger until we've seen at least 1 interaction.
 // - Seed lastInteractionAtMs at ready so we don't get Infinity.
 // ----------------------------------------------------------
-
-// Seed at ready so "no interactions" doesn't instantly become Infinity.
-client.once("ready", () => {
-  lastInteractionAtMs = Date.now();
-});
 
 setInterval(() => {
   if (!hasBeenReadyOnce) return;
@@ -862,8 +856,9 @@ async function saveDataToDiscord(data, { force = false } = {}) {
     const file = new AttachmentBuilder(payload, { name: "trainerData.json" });
 
     await channel.send({ files: [file] });
-    discordSaveCount++;
-    console.log(`✅ Discord backup #${discordSaveCount}`);
+lastDiscordOk = Date.now(); // ✅ REST proven healthy by backup send
+discordSaveCount++;
+console.log(`✅ Discord backup #${discordSaveCount}`);
   } catch (err) {
     console.error("❌ Discord save failed:", err?.message || err);
   } finally {
@@ -2401,6 +2396,11 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
+  // ✅ mark "we were ready at least once" for watchdogs
+  hasBeenReadyOnce = true;
+  lastGatewayOk = Date.now();
+  if (!lastInteractionAtMs) lastInteractionAtMs = Date.now();
+
  // ✅ Load local commands FIRST
   await loadLocalCommands();
 
@@ -2468,7 +2468,7 @@ async function loginWithTimeout(ms = 180_000) {
   ]);
 }
 
-loginWithTimeout(60_000)
+loginWithTimeout(180_000)
   .then(() => console.log("✅ client.login() resolved"))
   .catch((err) => {
     console.error("❌ client.login failed/timeout:", err?.stack || err);

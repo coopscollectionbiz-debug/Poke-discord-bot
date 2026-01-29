@@ -13,6 +13,34 @@ import {
 } from "../utils/trainerCardCanvas.js";
 import { getRank } from "../utils/rankSystem.js";
 
+// ---- local helpers (keep showteam self-contained) ----
+function normVariant(v) {
+  return String(v || "normal").toLowerCase() === "shiny" ? "shiny" : "normal";
+}
+function toTeamObj(entry) {
+  if (typeof entry === "number") return { id: entry, variant: "normal" };
+  if (typeof entry === "string") {
+    const n = Number(entry);
+    return Number.isInteger(n) ? { id: n, variant: "normal" } : null;
+  }
+  if (entry && typeof entry === "object") {
+    const pid = Number(entry.id);
+    if (!Number.isInteger(pid)) return null;
+    return { id: pid, variant: normVariant(entry.variant) };
+  }
+  return null;
+}
+function ensureTrailingSlash(s) {
+  return String(s || "").endsWith("/") ? String(s || "") : `${String(s || "")}/`;
+}
+function ensureSpriteBase(base, folderName) {
+  // If base already includes "/normal/" or "/shiny/", keep it.
+  // Otherwise append folderName + "/"
+  const b = ensureTrailingSlash(base);
+  if (b.toLowerCase().includes(`/${folderName.toLowerCase()}/`)) return b;
+  return `${b}${folderName}/`;
+}
+
 // Load trainer sprite JSON once
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,8 +54,7 @@ export default {
     .setDescription("Show your trainer + full team as a canvas card."),
 
   async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, client) {
-    // ✅ Public reply
-    await interaction.deferReply();
+    await interaction.deferReply(); // public
 
     const user = await ensureUserInitialized(
       interaction.user.id,
@@ -38,51 +65,44 @@ export default {
 
     const allPokemon = await getAllPokemon();
 
-    // Team ids: prefer displayedPokemon, else first 6 owned
-    const displayed = Array.isArray(user.displayedPokemon)
-      ? user.displayedPokemon.slice(0, 6)
-      : [];
+    // ✅ Variant-safe: displayedPokemon is canonical
+    const displayedRaw = Array.isArray(user.displayedPokemon) ? user.displayedPokemon : [];
+    const displayed = displayedRaw.map(toTeamObj).filter(Boolean).slice(0, 6);
 
-    const teamIds = displayed.length
-      ? displayed
-      : Object.keys(user.pokemon || {}).map(Number).slice(0, 6);
+    // fallback: first 6 owned NORMAL (variant-safe + deterministic)
+    const fallback = Object.keys(user.pokemon || {})
+      .map((k) => Number(k))
+      .filter(Number.isInteger)
+      .slice(0, 6)
+      .map((id) => ({ id, variant: "normal" }));
 
-    // Normalize sprite bases
-    const normalBase = spritePaths.pokemon.includes("/normal/")
-      ? spritePaths.pokemon
-      : `${spritePaths.pokemon}normal/`;
+    const teamSlots = displayed.length ? displayed : fallback;
 
-    const shinyBase = spritePaths.shiny.includes("/shiny/")
-      ? spritePaths.shiny
-      : `${spritePaths.shiny}shiny/`;
+    // sprite bases (handles either ".../pokemon/" or ".../pokemon/normal/")
+    const normalBase = ensureSpriteBase(spritePaths.pokemon, "normal");
+    const shinyBase = ensureSpriteBase(spritePaths.shiny, "shiny");
 
-    const team = teamIds
-      .map(id => {
-        const p = allPokemon.find(x => x.id === Number(id));
+    const team = teamSlots
+      .map((slot) => {
+        const p = allPokemon.find((x) => x.id === Number(slot.id));
         if (!p) return null;
-
-        const owned = user.pokemon?.[p.id];
-        const isShiny = (owned?.shiny || 0) > 0;
 
         return {
           id: p.id,
           name: p.name,
           tier: (p.tier || p.rarity || "common"),
-          isShiny,
-          spriteUrl: isShiny
-            ? `${shinyBase}${p.id}.gif`
-            : `${normalBase}${p.id}.gif`,
+          isShiny: slot.variant === "shiny",
+          spriteUrl:
+            slot.variant === "shiny"
+              ? `${shinyBase}${p.id}.gif`
+              : `${normalBase}${p.id}.gif`,
         };
       })
       .filter(Boolean);
 
-    // Trainer sprite
     const trainerFile = user.displayedTrainer || "";
-    const trainerSpriteUrl = trainerFile
-      ? `${spritePaths.trainers}${trainerFile}`
-      : "";
+    const trainerSpriteUrl = trainerFile ? `${spritePaths.trainers}${trainerFile}` : "";
 
-    // Display name = member displayName if possible
     const member = interaction.guild
       ? await interaction.guild.members.fetch(interaction.user.id).catch(() => null)
       : null;

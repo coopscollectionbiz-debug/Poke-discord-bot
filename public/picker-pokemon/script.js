@@ -141,7 +141,6 @@ const CC_MAP = {
 };
 
 const SHINY_DUST_REWARD = {
-  const DUST_REWARD_BY_TIER = {
   common: 4,
   uncommon: 7,
   rare: 12,

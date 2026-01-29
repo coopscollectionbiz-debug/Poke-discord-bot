@@ -1328,44 +1328,83 @@ function openEvolutionModal(baseId) {
     confirmBtn.disabled = true;
 
     const stones = userData.items?.evolution_stone ?? 0;
+const dust = userData.items?.shiny_dust ?? 0;
 
-    evoList.forEach((targetId) => {
-      const target = pokemonData[targetId];
-      if (!target) return;
+evoList.forEach((targetId) => {
+  const target = pokemonData[targetId];
+  if (!target) return;
 
-      const sprite =
-        chosenVariant === "shiny"
-          ? `/public/sprites/pokemon/shiny/${targetId}.gif`
-          : `/public/sprites/pokemon/normal/${targetId}.gif`;
+  const sprite =
+    chosenVariant === "shiny"
+      ? `/public/sprites/pokemon/shiny/${targetId}.gif`
+      : `/public/sprites/pokemon/normal/${targetId}.gif`;
 
-      const cost = getEvolutionCost(base, target);
-      const enough = stones >= cost && cost > 0;
-      const ownsThisVariant = ownsVariant(baseId, chosenVariant);
-      const allowed = enough && ownsThisVariant;
+  const stoneCost = getEvolutionCost(base, target);
+  const enoughStones = stones >= stoneCost && stoneCost > 0;
 
-      const card = document.createElement("div");
-      card.className = "evo-card";
-      card.style.cssText = `
-        background: var(--card);
-        border: 2px solid ${allowed ? "var(--border)" : "#555"};
-        border-radius: 10px;
-        padding: 10px;
-        cursor: ${allowed ? "pointer" : "not-allowed"};
-        opacity: ${allowed ? "1" : "0.5"};
-        position: relative;
-        user-select: none;
-      `;
+  // ✅ shiny dust required only when evolving shiny variant
+  const dustReq =
+    chosenVariant === "shiny"
+      ? shinyEvolveDustCost(base.tier, target.tier)
+      : 0;
 
-      card.innerHTML = `
-        <img src="${sprite}" style="width:80px;height:80px;image-rendering:pixelated;">
-        <div style="font-weight:600;margin-top:0.5rem;">${target.name}</div>
-        <div style="color:#aaa;text-transform:capitalize;">${target.tier}</div>
-        <div style="margin-top:0.5rem;color:var(--brand);font-weight:700;">
-          <img src="/public/sprites/items/evolution_stone.png"
+  const enoughDust = dust >= dustReq; // dustReq can be 0
+  const ownsThisVariant = ownsVariant(baseId, chosenVariant);
+
+  const allowed = enoughStones && ownsThisVariant && enoughDust;
+
+  const card = document.createElement("div");
+  card.className = "evo-card";
+  card.style.cssText = `
+    background: var(--card);
+    border: 2px solid ${allowed ? "var(--border)" : "#555"};
+    border-radius: 10px;
+    padding: 10px;
+    cursor: ${allowed ? "pointer" : "not-allowed"};
+    opacity: ${allowed ? "1" : "0.5"};
+    position: relative;
+    user-select: none;
+  `;
+
+  const dustRow =
+    chosenVariant === "shiny" && dustReq > 0
+      ? `
+        <div style="margin-top:6px;color:#facc15;font-weight:900;">
+          <img src="/public/sprites/items/shiny_dust.png"
                style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
-          ${cost}
+          ${dustReq}
+          <span style="color:#aaa;font-weight:800;">(you have ${dust})</span>
         </div>
-      `;
+      `
+      : "";
+
+  card.innerHTML = `
+    <img src="${sprite}" style="width:80px;height:80px;image-rendering:pixelated;">
+    <div style="font-weight:600;margin-top:0.5rem;">${target.name}</div>
+    <div style="color:#aaa;text-transform:capitalize;">${target.tier}</div>
+
+    <div style="margin-top:0.5rem;color:var(--brand);font-weight:800;">
+      <img src="/public/sprites/items/evolution_stone.png"
+           style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
+      ${stoneCost}
+      <span style="color:#aaa;font-weight:800;">(you have ${stones})</span>
+    </div>
+
+    ${dustRow}
+  `;
+
+  if (allowed) {
+    card.addEventListener("click", () => {
+      grid.querySelectorAll(".evo-card").forEach((c) => (c.style.borderColor = "var(--border)"));
+      card.style.borderColor = "var(--brand)";
+      selectedTarget = targetId;
+      confirmBtn.disabled = false;
+    });
+  }
+
+  grid.appendChild(card);
+});
+
 
       if (allowed) {
         card.addEventListener("click", () => {

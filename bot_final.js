@@ -736,6 +736,13 @@ client.on("shardResume", (id) => {
 client.on("shardError", (e) => console.error("❌ shardError", e));
 
 // ==========================================================
+// 🧠 Gateway traffic heartbeat (raw packets)
+// ==========================================================
+client.on("raw", () => {
+  lastGatewayOk = Date.now();
+});
+
+// ==========================================================
 // 🩺 DISCORD HEALTH + INTERACTION WATCHDOG (FINAL + UNIFIED)
 // ==========================================================
 
@@ -811,28 +818,6 @@ setInterval(() => {
     console.error(
       `❌ Discord unhealthy — REST ${Math.round(restAgeMs / 1000)}s, Gateway ${Math.round(gatewayAgeMs / 1000)}s — exiting`
     );
-    process.exit(1);
-  }
-}, 60_000);
-
-// ----------------------------------------------------------
-// 🚨 RESTART IF INTERACTIONS STOP ARRIVING (ZOMBIE GATEWAY)
-// - DO NOT trigger until we've seen at least 1 interaction.
-// - Seed lastInteractionAtMs at ready so we don't get Infinity.
-// ----------------------------------------------------------
-
-setInterval(() => {
-  if (!hasBeenReadyOnce) return;
-
-  // If we've never seen an interaction, don't restart.
-  // (Some bots can go hours with no slash usage.)
-  if (!lastInteractionAtMs) return;
-
-  const ageMs = Date.now() - lastInteractionAtMs;
-
-  // If no interactions for 60 minutes, assume gateway is dead
-  if (ageMs > 60 * 60 * 1000) {
-    console.error("❌ No interactions received for 60 minutes — restarting");
     process.exit(1);
   }
 }, 60_000);
@@ -2444,7 +2429,6 @@ client.once("ready", async () => {
   // ✅ mark "we were ready at least once" for watchdogs
   hasBeenReadyOnce = true;
   lastGatewayOk = Date.now();
-  if (!lastInteractionAtMs) lastInteractionAtMs = Date.now();
 
  // ✅ Load local commands FIRST
   await loadLocalCommands();

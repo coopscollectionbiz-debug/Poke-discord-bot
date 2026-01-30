@@ -2491,7 +2491,7 @@ app.listen(PORT, "0.0.0.0", () =>
 );
 
 // ==========================================================
-// 🚀 LAUNCH (SMART LOGIN: PREFLIGHT + RETRY, NO EXIT ON TIMEOUT)
+// 🚀 LAUNCH (SMART LOGIN: HANDLE 429 "TEMP BLOCK" + NO READY WATCHDOG KILL)
 // ==========================================================
 console.log("🚀 About to login to Discord... BOT_TOKEN present?", !!process.env.BOT_TOKEN);
 
@@ -2499,53 +2499,77 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+// Returns { ok, status, blocked, retryAfterMs }
 async function discordPreflight() {
   const token = process.env.BOT_TOKEN;
   if (!token) throw new Error("BOT_TOKEN missing");
 
-  // 1) Simple network reachability
+  // Helper to fetch + parse JSON safely
+  async function fetchJson(url, opts) {
+    const res = await fetch(url, opts);
+    const text = await res.text();
+    let json = null;
+    try { json = text ? JSON.parse(text) : null; } catch {}
+    return { res, text, json };
+  }
+
+  // 1) /gateway (reachability)
   try {
-    const ping = await fetch("https://discord.com/api/v10/gateway", {
+    const gw = await fetch("https://discord.com/api/v10/gateway", {
       headers: { "user-agent": "coops-bot-preflight" },
     });
-    console.log("🌐 preflight /gateway status:", ping.status);
+    console.log("🌐 preflight /gateway status:", gw.status);
   } catch (e) {
     console.error("🌐 preflight /gateway failed:", e?.message || e);
   }
 
-  // 2) Token validity + bot gateway info (most important)
-  try {
-    const botGw = await fetch("https://discord.com/api/v10/gateway/bot", {
+  // 2) /gateway/bot (token + rate limit signal)
+  const { res: botGw, text, json } = await fetchJson(
+    "https://discord.com/api/v10/gateway/bot",
+    {
       headers: {
         Authorization: `Bot ${token}`,
         "user-agent": "coops-bot-preflight",
       },
-    });
-
-    const text = await botGw.text();
-    console.log("🔑 preflight /gateway/bot status:", botGw.status);
-
-    if (!botGw.ok) {
-      console.log("🔑 preflight body:", text.slice(0, 500));
     }
+  );
 
-    // Make decisions based on status
-    if (botGw.status === 401 || botGw.status === 403) {
-      // Token invalid/revoked or missing bot auth
-      throw new Error(`BOT_TOKEN invalid (status ${botGw.status})`);
-    }
+  console.log("🔑 preflight /gateway/bot status:", botGw.status);
 
-    if (botGw.status === 429) {
-      // Rate limited – surface it but don't kill the process
-      console.warn("⏳ Discord preflight rate-limited (429). Will still attempt login with backoff.");
-    }
-
-    // If 200, we're good.
-    return botGw.status;
-  } catch (e) {
-    // If we can't even hit /gateway/bot, this is likely network/DNS/egress
-    throw new Error(`Preflight /gateway/bot failed: ${e?.message || e}`);
+  if (!botGw.ok) {
+    console.log("🔑 preflight body:", (text || "").slice(0, 500));
   }
+
+  // Token invalid/revoked
+  if (botGw.status === 401 || botGw.status === 403) {
+    throw new Error(`BOT_TOKEN invalid (status ${botGw.status})`);
+  }
+
+  // Discord temp-block / rate limit
+  if (botGw.status === 429) {
+    // Discord sometimes returns { retry_after: <seconds> } or just a message
+    const retryAfterSec =
+      (typeof json?.retry_after === "number" ? json.retry_after : null);
+
+    // If not provided, wait a conservative long time
+    const retryAfterMs =
+      retryAfterSec != null
+        ? clamp(Math.ceil(retryAfterSec * 1000), 60_000, 30 * 60_000)
+        : 10 * 60_000; // 10 minutes fallback
+
+    return {
+      ok: false,
+      status: 429,
+      blocked: true,
+      retryAfterMs,
+    };
+  }
+
+  return { ok: botGw.ok, status: botGw.status, blocked: false, retryAfterMs: 0 };
 }
 
 async function loginOnceWithTimeout(timeoutMs = 180_000) {
@@ -2557,49 +2581,79 @@ async function loginOnceWithTimeout(timeoutMs = 180_000) {
   ]);
 }
 
-async function loginLoop() {
-  // Run preflight once at boot (logs helpful signals)
-  try {
-    await discordPreflight();
-    console.log("✅ Discord preflight complete");
-  } catch (e) {
-    console.error("❌ Discord preflight failed:", e?.message || e);
-    // Don't exit — keep going into retry loop (network may recover)
-  }
+let loginCompleted = false;
 
+// IMPORTANT: only enforce "must reach READY" AFTER login succeeds.
+// (Otherwise you kill the process while Discord is 429-blocking you.)
+function startReadyWatchdog() {
+  setTimeout(() => {
+    if (!loginCompleted) return; // still not logged in, don't kill
+    if (!hasBeenReadyOnce) {
+      console.error("❌ Startup watchdog: login completed but never reached Discord READY — exiting to restart");
+      process.exit(1);
+    }
+  }, 5 * 60_000);
+}
+
+async function loginLoop() {
   let attempt = 0;
 
   while (true) {
     attempt++;
 
-    // Backoff: 5s,10s,15s... up to 2 minutes
-    const backoffMs = Math.min(120_000, 5_000 * attempt);
-
+    // Always preflight before attempting login
     try {
-      console.log(`🔌 Discord login attempt #${attempt}...`);
-      await loginOnceWithTimeout(180_000);
-      console.log("✅ client.login() resolved");
-      return; // success — stop looping
-    } catch (err) {
-      const msg = err?.message || String(err);
+      const pf = await discordPreflight();
 
-      // If token is bad, retrying forever is pointless — log loudly and pause longer.
-      // (We cannot reliably detect this from login alone; preflight is the real check.)
-      if (msg.includes("401") || msg.toLowerCase().includes("invalid token")) {
-        console.error("🚫 Likely invalid BOT_TOKEN. Fix env var in Render. Will retry in 5 minutes.");
-        await sleep(5 * 60_000);
+      if (pf.blocked) {
+        console.warn(
+          `⛔ Discord API rate-limited / temp blocked (429). Sleeping ${Math.round(
+            pf.retryAfterMs / 1000
+          )}s before retry...`
+        );
+        await sleep(pf.retryAfterMs);
+        continue; // do NOT attempt login while blocked
+      }
+
+      console.log("✅ Discord preflight OK — attempting login...");
+    } catch (e) {
+      const msg = e?.message || String(e);
+      console.error("❌ Discord preflight failed:", msg);
+
+      // If token is bad, retrying is pointless; wait longer but keep alive.
+      if (msg.includes("BOT_TOKEN invalid")) {
+        console.error("🚫 Fix BOT_TOKEN in Render env vars. Retrying in 10 minutes.");
+        await sleep(10 * 60_000);
         continue;
       }
 
+      // Network hiccup: backoff and retry
+      const backoffMs = clamp(5_000 * attempt, 5_000, 120_000);
+      console.log(`⏳ Preflight backoff ${Math.round(backoffMs / 1000)}s...`);
+      await sleep(backoffMs);
+      continue;
+    }
+
+    // Login attempt
+    try {
+      console.log(`🔌 Discord login attempt #${attempt}...`);
+      await loginOnceWithTimeout(180_000);
+      loginCompleted = true;
+      console.log("✅ client.login() resolved");
+      startReadyWatchdog(); // only now
+      return;
+    } catch (err) {
       console.error("❌ client.login failed/timeout:", err?.stack || err);
+
+      // Backoff, but not too aggressive
+      const backoffMs = clamp(10_000 * attempt, 10_000, 120_000);
       console.log(`⏳ Waiting ${Math.round(backoffMs / 1000)}s before retry...`);
       await sleep(backoffMs);
     }
   }
 }
 
-// Fire and forget
 loginLoop().catch((e) => {
-  // This should basically never happen, but don't kill the process.
   console.error("❌ loginLoop crashed:", e?.stack || e);
+  // keep process alive; Render will restart if needed
 });

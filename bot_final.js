@@ -755,13 +755,22 @@ client.on("interactionCreate", () => {
   lastGatewayOk = Date.now(); // ✅ ADD THIS
 });
 
-// 🚨 If we never reach Discord ready within 5 minutes, restart the instance.
+// 🚨 Startup watchdog — DO NOT kill the process while login is still pending / rate-limited.
 setTimeout(() => {
+  // If we never even completed a login, don't exit.
+  // (Your loginLoop handles backoff/sleep on 429. Exiting just makes it worse.)
+  if (!loginCompleted) {
+    console.warn("⏳ Startup watchdog: login not completed yet (likely 429/backoff) — staying alive");
+    return;
+  }
+
+  // If login completed but READY never fired, then restart
   if (!hasBeenReadyOnce) {
-    console.error("❌ Startup watchdog: never reached Discord READY — exiting to restart");
+    console.error("❌ Startup watchdog: login completed but never reached Discord READY — exiting to restart");
     process.exit(1);
   }
 }, 5 * 60_000);
+
 
 // ✅ Health endpoint (uses unified vars)
 app.get("/healthz", (_, res) => {

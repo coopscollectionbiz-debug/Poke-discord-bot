@@ -2491,23 +2491,115 @@ app.listen(PORT, "0.0.0.0", () =>
 );
 
 // ==========================================================
-// 🚀 LAUNCH
+// 🚀 LAUNCH (SMART LOGIN: PREFLIGHT + RETRY, NO EXIT ON TIMEOUT)
 // ==========================================================
 console.log("🚀 About to login to Discord... BOT_TOKEN present?", !!process.env.BOT_TOKEN);
 
-async function loginWithTimeout(ms = 180_000) {
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function discordPreflight() {
+  const token = process.env.BOT_TOKEN;
+  if (!token) throw new Error("BOT_TOKEN missing");
+
+  // 1) Simple network reachability
+  try {
+    const ping = await fetch("https://discord.com/api/v10/gateway", {
+      headers: { "user-agent": "coops-bot-preflight" },
+    });
+    console.log("🌐 preflight /gateway status:", ping.status);
+  } catch (e) {
+    console.error("🌐 preflight /gateway failed:", e?.message || e);
+  }
+
+  // 2) Token validity + bot gateway info (most important)
+  try {
+    const botGw = await fetch("https://discord.com/api/v10/gateway/bot", {
+      headers: {
+        Authorization: `Bot ${token}`,
+        "user-agent": "coops-bot-preflight",
+      },
+    });
+
+    const text = await botGw.text();
+    console.log("🔑 preflight /gateway/bot status:", botGw.status);
+
+    if (!botGw.ok) {
+      console.log("🔑 preflight body:", text.slice(0, 500));
+    }
+
+    // Make decisions based on status
+    if (botGw.status === 401 || botGw.status === 403) {
+      // Token invalid/revoked or missing bot auth
+      throw new Error(`BOT_TOKEN invalid (status ${botGw.status})`);
+    }
+
+    if (botGw.status === 429) {
+      // Rate limited – surface it but don't kill the process
+      console.warn("⏳ Discord preflight rate-limited (429). Will still attempt login with backoff.");
+    }
+
+    // If 200, we're good.
+    return botGw.status;
+  } catch (e) {
+    // If we can't even hit /gateway/bot, this is likely network/DNS/egress
+    throw new Error(`Preflight /gateway/bot failed: ${e?.message || e}`);
+  }
+}
+
+async function loginOnceWithTimeout(timeoutMs = 180_000) {
   return Promise.race([
     client.login(process.env.BOT_TOKEN),
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`Discord login timeout after ${ms}ms`)), ms)
+      setTimeout(() => reject(new Error(`Discord login timeout after ${timeoutMs}ms`)), timeoutMs)
     ),
   ]);
 }
 
-loginWithTimeout(180_000)
-  .then(() => console.log("✅ client.login() resolved"))
-  .catch((err) => {
-    console.error("❌ client.login failed/timeout:", err?.stack || err);
-    process.exit(1);
-  });
+async function loginLoop() {
+  // Run preflight once at boot (logs helpful signals)
+  try {
+    await discordPreflight();
+    console.log("✅ Discord preflight complete");
+  } catch (e) {
+    console.error("❌ Discord preflight failed:", e?.message || e);
+    // Don't exit — keep going into retry loop (network may recover)
+  }
 
+  let attempt = 0;
+
+  while (true) {
+    attempt++;
+
+    // Backoff: 5s,10s,15s... up to 2 minutes
+    const backoffMs = Math.min(120_000, 5_000 * attempt);
+
+    try {
+      console.log(`🔌 Discord login attempt #${attempt}...`);
+      await loginOnceWithTimeout(180_000);
+      console.log("✅ client.login() resolved");
+      return; // success — stop looping
+    } catch (err) {
+      const msg = err?.message || String(err);
+
+      // If token is bad, retrying forever is pointless — log loudly and pause longer.
+      // (We cannot reliably detect this from login alone; preflight is the real check.)
+      if (msg.includes("401") || msg.toLowerCase().includes("invalid token")) {
+        console.error("🚫 Likely invalid BOT_TOKEN. Fix env var in Render. Will retry in 5 minutes.");
+        await sleep(5 * 60_000);
+        continue;
+      }
+
+      console.error("❌ client.login failed/timeout:", err?.stack || err);
+      console.log(`⏳ Waiting ${Math.round(backoffMs / 1000)}s before retry...`);
+      await sleep(backoffMs);
+    }
+  }
+}
+
+// Fire and forget
+loginLoop().catch((e) => {
+  // This should basically never happen, but don't kill the process.
+  console.error("❌ loginLoop crashed:", e?.stack || e);
+});

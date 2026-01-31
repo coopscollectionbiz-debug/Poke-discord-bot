@@ -694,13 +694,41 @@ client.on("debug", (m) => {
   }
 });
 
-client.on("shardReady", (id) => console.log("🟢 shardReady", { id }));
-client.on("shardResume", (id) => console.log("🟢 shardResume", { id }));
-client.on("shardDisconnect", (event, id) =>
-  console.log("🔴 shardDisconnect", { id, code: event?.code, reason: event?.reason })
-);
-client.on("shardError", (e) => console.log("❌ shardError", e?.message || e));
+// ==========================================================
+// 🛰️ DISCORD TELEMETRY (SINGLE SOURCE OF TRUTH)
+// ==========================================================
+let lastDiscordOk = Date.now();
+let lastGatewayOk = Date.now();
+let lastInteractionAtMs = null;
+let hasBeenReadyOnce = false;
 
+// Shard lifecycle events
+client.on("shardReady", (id) => console.log("🟢 shardReady", { id }));
+
+client.on("shardResume", (id) => {
+  console.log("🟢 shardResume", { id });
+  lastGatewayOk = Date.now();
+});
+
+client.on("shardReconnecting", (id) => console.log("🟡 shardReconnecting", { id }));
+
+client.on("shardDisconnect", (event, id) => {
+  console.log("🔴 shardDisconnect", {
+    id,
+    code: event?.code,
+    reason: event?.reason,
+  });
+});
+
+client.on("shardError", (e) => console.error("❌ shardError:", e?.message || e));
+client.on("error", (e) => console.error("❌ Discord client error:", e?.message || e));
+
+// True gateway heartbeat (raw packets)
+client.on("raw", () => {
+  lastGatewayOk = Date.now();
+});
+
+// Optional: ws debug (log-only)
 client.ws.on("debug", (m) => {
   if (
     m.includes("Connecting") ||
@@ -714,62 +742,9 @@ client.ws.on("debug", (m) => {
   }
 });
 
-
-// ==========================================================
-// 🛰️ DISCORD CONNECTION / INTERACTION DEBUG
-// ==========================================================
-client.on("ready", () => {
-  console.log("🟢 Discord READY (event)");
-});
-
-client.on("error", (e) => console.error("❌ Discord client error:", e));
-client.on("shardError", (e) => console.error("❌ Discord shardError:", e));
-
-client.on("shardDisconnect", (event, id) => {
-  console.error("🔴 shardDisconnect", { id, code: event?.code, reason: event?.reason });
-});
-client.on("shardReconnecting", (id) => console.log("🟡 shardReconnecting", { id }));
-client.on("shardResume", (id) => {
-  console.log("🟢 shardResume", { id });
-  lastGatewayOk = Date.now();
-});
-client.on("shardError", (e) => console.error("❌ shardError", e));
-
-// ==========================================================
-// 🧠 Gateway traffic heartbeat (raw packets)
-// ==========================================================
-client.on("raw", () => {
-  lastGatewayOk = Date.now();
-});
-
 // ==========================================================
 // 🩺 DISCORD HEALTH + INTERACTION WATCHDOG (FINAL + UNIFIED)
 // ==========================================================
-
-// Tracks last successful Discord REST call
-let lastDiscordOk = Date.now();
-let lastGatewayOk = Date.now();
-
-// Tracks whether the bot has ever fully connected
-let hasBeenReadyOnce = false;
-
-// Tracks last time an interaction event was received (ms)
-let lastInteractionAtMs = null;
-
-// Track incoming interactions (slash commands, buttons, etc)
-client.on("interactionCreate", () => {
-  lastInteractionAtMs = Date.now();
-  lastGatewayOk = Date.now(); // ✅ ADD THIS
-});
-
-// 🚨 Startup watchdog — DO NOT kill the process while login is still pending / rate-limited.
-setTimeout(() => {
-  // If we never even completed a login, don't exit.
-  // (Your loginLoop handles backoff/sleep on 429. Exiting just makes it worse.)
-  if (!loginCompleted) {
-    console.warn("⏳ Startup watchdog: login not completed yet (likely 429/backoff) — staying alive");
-    return;
-  }
 
   // If login completed but READY never fired, then restart
   if (!hasBeenReadyOnce) {
@@ -787,9 +762,11 @@ app.get("/healthz", (_, res) => {
     wsPing: client.ws?.ping ?? null,
     uptime: Math.floor(process.uptime()),
     lastDiscordOkAgeSec: Math.round((Date.now() - lastDiscordOk) / 1000),
+    lastGatewayOkAgeSec: Math.round((Date.now() - lastGatewayOk) / 1000), // ✅ add
     lastInteractionAt: lastInteractionAtMs ? new Date(lastInteractionAtMs).toISOString() : null,
   });
 });
+
 
 // ----------------------------------------------------------
 // 🔍 REST PROBE — proves outbound + auth + Discord API works
@@ -1535,6 +1512,9 @@ if (
 
 
 client.on("interactionCreate", async (interaction) => {
+  // ✅ TELEMETRY (consolidated)
+  lastInteractionAtMs = Date.now();
+
   const kind = interaction.isChatInputCommand()
     ? "slash"
     : interaction.isButton()
@@ -1571,13 +1551,20 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     if (typeof interaction.reply === "function") {
-      const _reply = interaction.reply.bind(interaction);
-      interaction.reply = async (opts) => {
-        if (interaction.replied || interaction.deferred) return;
-        try { return await _reply(opts); }
-        catch (e) { if (swallow(e)) return; throw e; }
-      };
+  const _reply = interaction.reply.bind(interaction);
+  interaction.reply = async (opts) => {
+    if (interaction.replied) return;
+
+    // ✅ If we already deferred, reply() must become editReply()
+    if (interaction.deferred) {
+      try { return await interaction.editReply(opts); }
+      catch (e) { if (swallow(e)) return; throw e; }
     }
+
+    try { return await _reply(opts); }
+    catch (e) { if (swallow(e)) return; throw e; }
+  };
+}
 
     if (typeof interaction.editReply === "function") {
       const _editReply = interaction.editReply.bind(interaction);
@@ -1635,7 +1622,7 @@ client.on("interactionCreate", async (interaction) => {
           await interaction.deferReply({ ephemeral: true }).catch(() => {});
         }
       } catch {}
-    }, 2500);
+    }, 1500);
 
     try {
       if (!isReady) {
@@ -1660,15 +1647,18 @@ client.on("interactionCreate", async (interaction) => {
       }
 
       await command.execute(
-        interaction,
-        trainerData,
-        saveTrainerDataLocal,
-        saveDataToDiscord,
-        lockUser,
-        enqueueSave,
-        client
-      );
-      return;
+  interaction,
+  trainerData,
+  saveTrainerDataLocal,
+  saveDataToDiscord,
+  lockUser,
+  enqueueSave,
+  client
+);
+
+clearTimeout(fallbackTimer); // ✅ only clear after command completed
+return;
+
     } catch (err) {
       console.error("❌ Slash command crashed:", err?.stack || err);
       try {
@@ -1683,7 +1673,7 @@ client.on("interactionCreate", async (interaction) => {
       } catch {}
       return;
     } finally {
-      clearTimeout(fallbackTimer);
+   
     }
   }
 

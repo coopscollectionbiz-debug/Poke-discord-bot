@@ -755,20 +755,6 @@ app.get("/healthz", (_, res) => {
   });
 });
 
-
-// ----------------------------------------------------------
-// 🔍 REST PROBE — proves outbound + auth + Discord API works
-// ----------------------------------------------------------
-setInterval(async () => {
-  try {
-    if (!client.user) return; // not logged in yet
-    await client.user.fetch(true); // lightweight REST proof
-    lastDiscordOk = Date.now();
-  } catch (e) {
-    console.error("❌ Discord REST probe failed:", e?.message || e);
-  }
-}, 60_000);
-
 // ----------------------------------------------------------
 // 🚨 RESTART ONLY IF BOTH REST + GATEWAY LOOK DEAD
 // ----------------------------------------------------------
@@ -2479,58 +2465,53 @@ async function discordPreflight() {
   const token = process.env.BOT_TOKEN;
   if (!token) throw new Error("BOT_TOKEN missing");
 
-  // Helper to fetch + parse JSON safely
-  async function fetchJson(url, opts) {
-    const res = await fetch(url, opts);
-    const text = await res.text();
-    let json = null;
-    try { json = text ? JSON.parse(text) : null; } catch {}
-    return { res, text, json };
+  const url = "https://discord.com/api/v10/gateway/bot";
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bot ${token}`,
+      "user-agent": "coops-bot-preflight",
+      "accept": "application/json",
+    },
+  });
+
+  const text = await res.text();
+
+  // ✅ Cloudflare/HTML block detection (your logs show this exact case)
+  const looksHtml =
+    /<!doctype html/i.test(text) ||
+    /<html/i.test(text) ||
+    /cloudflare/i.test(text) ||
+    /access denied/i.test(text);
+
+  if (looksHtml) {
+    console.warn("⛔ Discord Cloudflare HTML block detected. Cooling off for 6 hours.");
+    return {
+      ok: false,
+      status: res.status,
+      blocked: true,
+      retryAfterMs: 6 * 60 * 60 * 1000, // 6 hours
+    };
   }
 
-  // 1) /gateway (reachability)
-  try {
-    const gw = await fetch("https://discord.com/api/v10/gateway", {
-      headers: { "user-agent": "coops-bot-preflight" },
-    });
-    console.log("🌐 preflight /gateway status:", gw.status);
-  } catch (e) {
-    console.error("🌐 preflight /gateway failed:", e?.message || e);
-  }
+  let json = null;
+  try { json = text ? JSON.parse(text) : null; } catch {}
 
-  // 2) /gateway/bot (token + rate limit signal)
-  const { res: botGw, text, json } = await fetchJson(
-    "https://discord.com/api/v10/gateway/bot",
-    {
-      headers: {
-        Authorization: `Bot ${token}`,
-        "user-agent": "coops-bot-preflight",
-      },
-    }
-  );
-
-  console.log("🔑 preflight /gateway/bot status:", botGw.status);
-
-  if (!botGw.ok) {
-    console.log("🔑 preflight body:", (text || "").slice(0, 500));
-  }
+  console.log("🔑 preflight /gateway/bot status:", res.status);
 
   // Token invalid/revoked
-  if (botGw.status === 401 || botGw.status === 403) {
-    throw new Error(`BOT_TOKEN invalid (status ${botGw.status})`);
+  if (res.status === 401 || res.status === 403) {
+    throw new Error(`BOT_TOKEN invalid (status ${res.status})`);
   }
 
   // Discord temp-block / rate limit
-  if (botGw.status === 429) {
-    // Discord sometimes returns { retry_after: <seconds> } or just a message
+  if (res.status === 429) {
     const retryAfterSec =
       (typeof json?.retry_after === "number" ? json.retry_after : null);
 
-    // If not provided, wait a conservative long time
     const retryAfterMs =
       retryAfterSec != null
         ? clamp(Math.ceil(retryAfterSec * 1000), 60_000, 30 * 60_000)
-        : 10 * 60_000; // 10 minutes fallback
+        : 30 * 60_000; // safer fallback than 10m
 
     return {
       ok: false,
@@ -2540,7 +2521,7 @@ async function discordPreflight() {
     };
   }
 
-  return { ok: botGw.ok, status: botGw.status, blocked: false, retryAfterMs: 0 };
+  return { ok: res.ok, status: res.status, blocked: false, retryAfterMs: 0 };
 }
 
 async function loginOnceWithTimeout(timeoutMs = 180_000) {

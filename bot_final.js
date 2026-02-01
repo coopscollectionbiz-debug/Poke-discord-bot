@@ -742,18 +742,6 @@ client.ws.on("debug", (m) => {
   }
 });
 
-// ==========================================================
-// 🩺 DISCORD HEALTH + INTERACTION WATCHDOG (FINAL + UNIFIED)
-// ==========================================================
-
-  // If login completed but READY never fired, then restart
-  if (!hasBeenReadyOnce) {
-    console.error("❌ Startup watchdog: login completed but never reached Discord READY — exiting to restart");
-    process.exit(1);
-  }
-}, 5 * 60_000);
-
-
 // ✅ Health endpoint (uses unified vars)
 app.get("/healthz", (_, res) => {
   res.json({

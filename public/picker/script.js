@@ -1,12 +1,11 @@
 // ===========================================================
 // Coop's Collection — Trainer Picker (COOKIE SESSION VERSION)
-// No token in URL/body. Uses HttpOnly cookie "dashboard_session".
+// Hardened + Server-authoritative refresh
 // ===========================================================
 
 import { rarityEmojis } from "/public/spriteconfig.js";
 
 const TRAINER_SPRITE_PATH = "/public/sprites/trainers_2/";
-const GRAY_PATH = "/public/sprites/trainers_2/grayscale/";
 const TRAINER_DATA_FILE = "/public/trainerSprites.json";
 
 const API_USER = "/api/user-trainers";
@@ -14,7 +13,7 @@ const API_SET = "/api/set-trainer";
 const API_PURCHASE = "/api/unlock-trainer";
 
 // ===========================================================
-// 💰 Tier-Based Trainer Costs
+// 💰 Tier-Based Trainer Costs (UI only; server is authoritative)
 // ===========================================================
 const TRAINER_COSTS = {
   common: 2500,
@@ -37,25 +36,63 @@ let showUnownedOnly = false;
 let selectedRarity = "all";
 
 let userCC = 0;
-
-// Lock to prevent double purchase attempts
 let purchaseInProgress = false;
 
-// Equipped trainer
+// Equipped trainer (filename)
 window.currentEquippedTrainer = null;
 
 // ===========================================================
-// PROCESSING OVERLAY
+// HELPERS
 // ===========================================================
-window.showProcessing = () => {
-  const overlay = document.getElementById("processingOverlay");
-  if (overlay) overlay.style.display = "flex";
-};
+function normFile(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(".png", "")
+    .replace(".gif", "")
+    .trim();
+}
 
-window.hideProcessing = () => {
-  const overlay = document.getElementById("processingOverlay");
-  if (overlay) overlay.style.display = "none";
-};
+function showSessionExpired() {
+  const grid = document.getElementById("trainerGrid");
+  if (grid) {
+    grid.innerHTML =
+      "<p class='error'>⏱ Session expired. Please return to Discord and re-open the dashboard link.</p>";
+  }
+
+  // Disable controls so they don’t spam calls
+  const search = document.getElementById("search");
+  const ownedToggle = document.getElementById("ownedToggle");
+  const unownedToggle = document.getElementById("unownedToggle");
+  const rarityFilter = document.getElementById("rarityFilter");
+
+  if (search) search.disabled = true;
+  if (ownedToggle) ownedToggle.disabled = true;
+  if (unownedToggle) unownedToggle.disabled = true;
+  if (rarityFilter) rarityFilter.disabled = true;
+}
+
+async function fetchJSON(url, opts = {}) {
+  const res = await fetch(url, {
+    credentials: "same-origin",
+    ...opts,
+  });
+
+  // 403 = cookie session expired/invalid
+  if (res.status === 403) {
+    const err = new Error("SESSION_EXPIRED");
+    err.code = 403;
+    throw err;
+  }
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    // Some endpoints might not return JSON on error
+  }
+
+  return { res, data };
+}
 
 // ===========================================================
 // INITIALIZATION
@@ -70,55 +107,37 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===========================================================
-// LOAD TRAINER DATA + CC + OWNERSHIP
+// LOAD TRAINER DATA + OWNERSHIP + CC + EQUIPPED
 // ===========================================================
 async function loadData() {
   try {
     const grid = document.getElementById("trainerGrid");
 
     if (!userId) {
-      grid.innerHTML =
-        "<p class='error'>❌ Missing user ID. Please open the dashboard link from Discord.</p>";
+      if (grid) {
+        grid.innerHTML =
+          "<p class='error'>❌ Missing user ID. Please open the dashboard link from Discord.</p>";
+      }
       return;
     }
 
-    // Load trainer definitions
+    // 1) Load trainer definitions
     const spriteRes = await fetch(TRAINER_DATA_FILE, { credentials: "same-origin" });
     allTrainers = await spriteRes.json();
 
-    // Load owned trainers + CC (+ equipped trainer) using cookie session
-    const res = await fetch(`${API_USER}?id=${encodeURIComponent(userId)}`, {
-      credentials: "same-origin",
-    });
+    // 2) Load owned trainers + CC (+ equipped trainer) using cookie session
+    await refreshUserState();
 
-    if (!res.ok) {
-      grid.innerHTML =
-        "<p class='error'>❌ Session expired. Please re-open the dashboard link from Discord.</p>";
+    updateCCDisplay();
+    render(document.getElementById("search")?.value || "");
+  } catch (err) {
+    console.error("❌ loadData failed:", err);
+
+    if (err?.code === 403 || err?.message === "SESSION_EXPIRED") {
+      showSessionExpired();
       return;
     }
 
-    const data = await res.json();
-
-    // ⭐ Capture equipped trainer from backend (supports both new + legacy keys)
-    const equipped = data.equipped || data.displayedTrainer || null;
-    window.currentEquippedTrainer = equipped;
-    console.log("Equipped Trainer:", equipped);
-
-    if (data.owned) {
-      ownedTrainers = Array.isArray(data.owned) ? data.owned : Object.keys(data.owned);
-    } else {
-      ownedTrainers = [];
-    }
-
-    userCC = data.cc ?? 0;
-
-    console.log("✅ Loaded owned trainers:", ownedTrainers);
-    console.log("✅ User CC:", userCC);
-
-    updateCCDisplay();
-    render();
-  } catch (err) {
-    console.error("❌ loadData failed:", err);
     const grid = document.getElementById("trainerGrid");
     if (grid) {
       grid.innerHTML =
@@ -128,12 +147,31 @@ async function loadData() {
 }
 
 // ===========================================================
+// REFRESH USER STATE (server-authoritative)
+// ===========================================================
+async function refreshUserState() {
+  const { data } = await fetchJSON(`${API_USER}?id=${encodeURIComponent(userId)}`);
+
+  // Equipped trainer: backend may return equipped OR displayedTrainer
+  const equipped = data?.equipped || data?.displayedTrainer || null;
+  window.currentEquippedTrainer = equipped;
+
+  // Owned trainers can be array or legacy object-map
+  if (data?.owned) {
+    ownedTrainers = Array.isArray(data.owned) ? data.owned : Object.keys(data.owned);
+  } else {
+    ownedTrainers = [];
+  }
+
+  userCC = data?.cc ?? 0;
+}
+
+// ===========================================================
 // UPDATE STICKY CC BAR
 // ===========================================================
 function updateCCDisplay() {
   const ccDisplay = document.getElementById("ccDisplay");
   if (!ccDisplay) return;
-
   ccDisplay.textContent = `${(userCC ?? 0).toLocaleString()} CC`;
 }
 
@@ -143,39 +181,36 @@ function updateCCDisplay() {
 function render(filter = "") {
   const grid = document.getElementById("trainerGrid");
   if (!grid) return;
+
   grid.innerHTML = "";
 
-  Object.entries(allTrainers).forEach(([name, info]) => {
-    const rarity = (info.tier || "common").toLowerCase();
+  const searchTerm = String(filter || "").toLowerCase().trim();
+
+  Object.entries(allTrainers || {}).forEach(([name, info]) => {
+    const rarity = String(info?.tier || "common").toLowerCase();
     const tierDisplay = rarity.charAt(0).toUpperCase() + rarity.slice(1);
     const emoji = rarityEmojis?.[rarity] || "⚬";
     const price = TRAINER_COSTS[rarity] ?? 5000;
 
     if (selectedRarity !== "all" && rarity !== selectedRarity) return;
-    if (filter && !name.toLowerCase().includes(filter.toLowerCase())) return;
+    if (searchTerm && !String(name).toLowerCase().includes(searchTerm)) return;
 
-    const spriteFiles = Array.isArray(info.sprites)
+    const spriteFiles = Array.isArray(info?.sprites)
       ? info.sprites
-      : Array.isArray(info.files)
+      : Array.isArray(info?.files)
       ? info.files
       : [];
 
     spriteFiles.forEach((fileName) => {
       if (typeof fileName !== "string") return;
 
-      // Determine ownership by filename match ignoring extensions
-      const owns = ownedTrainers.some((owned) => {
-        const a = String(owned).toLowerCase().replace(".png", "").replace(".gif", "").trim();
-        const b = String(fileName).toLowerCase().replace(".png", "").replace(".gif", "").trim();
-        return a === b;
-      });
+      // Ownership by filename match (no extension)
+      const owns = ownedTrainers.some((owned) => normFile(owned) === normFile(fileName));
 
-      // Determine equipped state
+      // Equipped exact match (no false positives)
       const isEquipped =
         window.currentEquippedTrainer &&
-        String(window.currentEquippedTrainer)
-          .toLowerCase()
-          .includes(String(fileName).toLowerCase().replace(".png", "").replace(".gif", ""));
+        normFile(window.currentEquippedTrainer) === normFile(fileName);
 
       if (showOwnedOnly && !owns) return;
       if (showUnownedOnly && owns) return;
@@ -186,9 +221,7 @@ function render(filter = "") {
       card.className = `trainer-card ${owns ? "owned" : "unowned"}`;
       if (isEquipped) card.classList.add("equipped");
 
-      // -------------------------------------------------------
       // Sprite wrapper
-      // -------------------------------------------------------
       const wrapper = document.createElement("div");
       wrapper.className = "sprite-wrapper";
 
@@ -210,17 +243,13 @@ function render(filter = "") {
 
       card.appendChild(wrapper);
 
-      // -------------------------------------------------------
       // Name
-      // -------------------------------------------------------
       const nameEl = document.createElement("p");
       nameEl.className = "trainer-name";
       nameEl.textContent = name;
       card.appendChild(nameEl);
 
-      // -------------------------------------------------------
       // Tier
-      // -------------------------------------------------------
       const tierEl = document.createElement("div");
       tierEl.className = "trainer-tier";
       tierEl.innerHTML = `
@@ -229,9 +258,7 @@ function render(filter = "") {
       `;
       card.appendChild(tierEl);
 
-      // -------------------------------------------------------
-      // Price (only for unowned trainers)
-      // -------------------------------------------------------
+      // Price (only for unowned)
       if (!owns) {
         const priceEl = document.createElement("div");
         priceEl.className = "trainer-price";
@@ -242,9 +269,7 @@ function render(filter = "") {
         card.appendChild(priceEl);
       }
 
-      // -------------------------------------------------------
       // Click actions
-      // -------------------------------------------------------
       card.onclick = owns
         ? () => askToEquipTrainer(name, fileName)
         : () => askToBuyTrainer(name, fileName, rarity, price);
@@ -263,9 +288,7 @@ function render(filter = "") {
 // ===========================================================
 function setupControls() {
   const search = document.getElementById("search");
-  if (search) {
-    search.addEventListener("input", (e) => render(e.target.value));
-  }
+  if (search) search.addEventListener("input", (e) => render(e.target.value));
 
   const ownedToggle = document.getElementById("ownedToggle");
   const unownedToggle = document.getElementById("unownedToggle");
@@ -314,19 +337,18 @@ function askToEquipTrainer(name, file) {
 
 async function selectTrainer(name, file) {
   try {
-    const res = await fetch(API_SET, {
+    window.showProcessing?.();
+
+    const { data } = await fetchJSON(API_SET, {
       method: "POST",
-      credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: userId, name, file }),
     });
 
-    const data = await res.json();
-
-    if (!data.success) {
+    if (!data?.success) {
       return createTrainerModal({
         title: "Equip Failed",
-        message: data.error || "Could not equip trainer.",
+        message: data?.error || "Could not equip trainer.",
         sprite: `${TRAINER_SPRITE_PATH}${file}`,
         confirmText: "OK",
       });
@@ -335,7 +357,7 @@ async function selectTrainer(name, file) {
     // Update equipped trainer in memory
     window.currentEquippedTrainer = file;
 
-    // Re-render grid to highlight newly equipped card
+    // Re-render grid
     render(document.getElementById("search")?.value || "");
 
     createTrainerModal({
@@ -346,12 +368,20 @@ async function selectTrainer(name, file) {
     });
   } catch (err) {
     console.error("❌ selectTrainer failed:", err);
+
+    if (err?.code === 403 || err?.message === "SESSION_EXPIRED") {
+      showSessionExpired();
+      return;
+    }
+
     createTrainerModal({
       title: "Equip Failed",
       message: "Network error. Please try again.",
       sprite: `${TRAINER_SPRITE_PATH}${file}`,
       confirmText: "OK",
     });
+  } finally {
+    window.hideProcessing?.();
   }
 }
 
@@ -375,45 +405,36 @@ function askToBuyTrainer(name, file, rarity, price) {
   });
 }
 
-// ===========================================================
-// PURCHASE API — SAFE, WITH REFRESH PROTECTION
-// ===========================================================
 async function purchaseTrainer(file) {
   if (purchaseInProgress) return;
   purchaseInProgress = true;
 
-  showProcessing();
+  window.showProcessing?.();
 
   try {
-    const res = await fetch(API_PURCHASE, {
+    const { data } = await fetchJSON(API_PURCHASE, {
       method: "POST",
-      credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: userId, file }),
     });
 
-    const data = await res.json();
-
-    if (!data.success) {
-      hideProcessing();
-      purchaseInProgress = false;
+    if (!data?.success) {
       return createTrainerModal({
         title: "Purchase Failed",
-        message: data.error || "Could not purchase trainer.",
+        message: data?.error || "Could not purchase trainer.",
         sprite: `${TRAINER_SPRITE_PATH}${file}`,
         confirmText: "OK",
       });
     }
 
-    // Server-authoritative updates
-    if (typeof data.cc === "number") userCC = data.cc;
-    ownedTrainers.push(data.file || file);
+    // Optimistic add (UI immediately shows owned)
+    ownedTrainers.push(data?.file || file);
+
+    // ✅ Server-authoritative refresh (CC + owned list)
+    await refreshUserState();
 
     updateCCDisplay();
     render(document.getElementById("search")?.value || "");
-
-    hideProcessing();
-    purchaseInProgress = false;
 
     createTrainerModal({
       title: "Trainer Unlocked!",
@@ -423,19 +444,26 @@ async function purchaseTrainer(file) {
     });
   } catch (err) {
     console.error("❌ purchaseTrainer failed:", err);
-    hideProcessing();
-    purchaseInProgress = false;
+
+    if (err?.code === 403 || err?.message === "SESSION_EXPIRED") {
+      showSessionExpired();
+      return;
+    }
+
     createTrainerModal({
       title: "Purchase Failed",
       message: "Network error. Please try again.",
       sprite: `${TRAINER_SPRITE_PATH}${file}`,
       confirmText: "OK",
     });
+  } finally {
+    window.hideProcessing?.();
+    purchaseInProgress = false;
   }
 }
 
 // ===========================================================
-// MODAL BUILDER
+// MODAL BUILDER (matches your current HTML/CSS)
 // ===========================================================
 function createTrainerModal({
   title,

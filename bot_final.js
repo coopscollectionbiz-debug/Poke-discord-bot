@@ -754,6 +754,46 @@ client.on("debug", (m) => {
 });
 
 // ==========================================================
+// 🔐 Discord Login Throttle (Gateway Safety)
+// ==========================================================
+let lastLoginAttempt = 0;
+let loginInProgress = false;
+
+const LOGIN_COOLDOWN = 60_000; // 60 seconds
+
+async function safeLogin() {
+  // Prevent concurrent login attempts
+  if (loginInProgress) {
+    console.warn("⏳ safeLogin called while login already in progress — skipping");
+    return;
+  }
+
+  loginInProgress = true;
+
+  try {
+    const now = Date.now();
+
+    // Enforce gateway cooldown
+    if (now - lastLoginAttempt < LOGIN_COOLDOWN) {
+      const wait = LOGIN_COOLDOWN - (now - lastLoginAttempt);
+      console.warn(`⏳ Login throttled. Waiting ${Math.ceil(wait / 1000)}s`);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+
+    lastLoginAttempt = Date.now();
+
+    console.log("🔑 Attempting Discord login...");
+    await client.login(process.env.BOT_TOKEN);
+
+  } catch (err) {
+    console.error("❌ Discord login failed:", err?.message || err);
+    throw err; // let loginLoop decide backoff strategy
+  } finally {
+    loginInProgress = false;
+  }
+}
+
+// ==========================================================
 // 🛰️ DISCORD TELEMETRY (SINGLE SOURCE OF TRUTH)
 // ==========================================================
 let lastDiscordOk = Date.now();
@@ -2890,9 +2930,12 @@ async function discordPreflight() {
 
 async function loginOnceWithTimeout(timeoutMs = 180_000) {
   return Promise.race([
-    client.login(process.env.BOT_TOKEN),
+    safeLogin(), // ✅ use throttled login
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`Discord login timeout after ${timeoutMs}ms`)), timeoutMs)
+      setTimeout(
+        () => reject(new Error(`Discord login timeout after ${timeoutMs}ms`)),
+        timeoutMs
+      )
     ),
   ]);
 }

@@ -210,6 +210,7 @@ function ensureNonShinyDustWeek(u) {
   }
 }
 
+const COMMAND_TIMEOUT_MS = 25_000;
 
 // ==========================================================
 // 🧵 ROLE UPDATE QUEUE (reduces REST spam)
@@ -1177,57 +1178,57 @@ client.on("messageCreate", async (message) => {
   userCooldowns.set(userId, now);
 
   // Ensure user data exists
- trainerData[userId] ??= {
-  id: userId,
-  tp: 0,
-  cc: 0,
-  pokemon: {},
-  trainers: [],
-  displayedTrainer: null,
-  displayedPokemon: [],
-  onboardingComplete: false,
-  onboardingDate: null,
-  starterPokemon: null,
-  lastDaily: 0,
-  lastRecruit: 0,
-  lastQuest: 0,
-  lastWeeklyPack: null,       // ✅ REQUIRED
-  items: {},
-  purchases: [],
-  luck: 0,
-  luckTimestamp: 0,
-
-};
+  trainerData[userId] ??= {
+    id: userId,
+    tp: 0,
+    cc: 0,
+    pokemon: {},
+    trainers: [],
+    displayedTrainer: null,
+    displayedPokemon: [],
+    onboardingComplete: false,
+    onboardingDate: null,
+    starterPokemon: null,
+    lastDaily: 0,
+    lastRecruit: 0,
+    lastQuest: 0,
+    lastWeeklyPack: null,
+    items: {},
+    purchases: [],
+    luck: 0,
+    luckTimestamp: 0,
+  };
 
   const userObj = trainerData[userId];
 
-// 🪙 Give base TP for chatting
-userObj.tp += MESSAGE_TP_GAIN;
+  // 🪙 Give base TP for chatting
+  userObj.tp += MESSAGE_TP_GAIN;
 
-// 💰 Chance to earn CC
-if (Math.random() < MESSAGE_CC_CHANCE) {
-  userObj.cc ??= 0;
-  userObj.cc += MESSAGE_CC_GAIN;
+  // 💰 Chance to earn CC
+  if (Math.random() < MESSAGE_CC_CHANCE) {
+    userObj.cc ??= 0;
+    userObj.cc += MESSAGE_CC_GAIN;
 
-  try {
-    await message.react("💰").catch(() => {}); // optional fun emoji indicator
-  } catch {}
-}
+    try {
+      await message.react("💰").catch(() => {});
+    } catch {}
+  }
 
-queueRoleUpdate({
-  guild: message.guild,
-  userId,
-  tp: userObj.tp,
-  channel: message.channel,
-});
+  // 🔥 fire-and-forget save (safe, debounced) — SAVE AFTER MUTATIONS
+  enqueueSave(trainerData);
 
-  // 🎲 3% chance for bonus Pokémon or Trainer
+  queueRoleUpdate({
+    guild: message.guild,
+    userId,
+    tp: userObj.tp,
+    channel: message.channel,
+  });
+
   setImmediate(() => {
-  tryGiveRandomReward(userObj, message.author, message).catch((e) =>
-    console.warn("⚠️ tryGiveRandomReward failed:", e?.message || e)
-  );
-});
-
+    tryGiveRandomReward(userObj, message.author, message).catch((e) =>
+      console.warn("⚠️ tryGiveRandomReward failed:", e?.message || e)
+    );
+  });
 });
 
 // ==========================================================
@@ -1239,64 +1240,63 @@ client.on("messageReactionAdd", async (reaction, user) => {
   const userId = user.id;
   trainerData[userId] = normalizeUserSchema(userId, trainerData[userId]);
 
-
   // Prevent spam with cooldown
   const now = Date.now();
   if (rewardCooldowns.has(userId) && now - rewardCooldowns.get(userId) < REWARD_COOLDOWN) return;
   rewardCooldowns.set(userId, now);
 
   trainerData[userId] ??= {
-  id: userId,
-  tp: 0,
-  cc: 0,
-  pokemon: {},
-  trainers: [],
-  displayedTrainer: null,
-  displayedPokemon: [],
-  onboardingComplete: false,
-  onboardingDate: null,
-  starterPokemon: null,
-  lastDaily: 0,
-  lastRecruit: 0,
-  lastQuest: 0,
-  lastWeeklyPack: null,       // ✅ REQUIRED
-  items: {},
-  purchases: [],
-  luck: 0,
-  luckTimestamp: 0,
-
-};
+    id: userId,
+    tp: 0,
+    cc: 0,
+    pokemon: {},
+    trainers: [],
+    displayedTrainer: null,
+    displayedPokemon: [],
+    onboardingComplete: false,
+    onboardingDate: null,
+    starterPokemon: null,
+    lastDaily: 0,
+    lastRecruit: 0,
+    lastQuest: 0,
+    lastWeeklyPack: null,
+    items: {},
+    purchases: [],
+    luck: 0,
+    luckTimestamp: 0,
+  };
 
   const userObj = trainerData[userId];
 
   // 🪙 Gain TP for reaction
-userObj.tp += MESSAGE_TP_GAIN;
+  userObj.tp += MESSAGE_TP_GAIN;
 
-// 💰 Chance to earn CC
-if (Math.random() < MESSAGE_CC_CHANCE) {
-  userObj.cc ??= 0;
-  userObj.cc += MESSAGE_CC_GAIN;
+  // 💰 Chance to earn CC
+  if (Math.random() < MESSAGE_CC_CHANCE) {
+    userObj.cc ??= 0;
+    userObj.cc += MESSAGE_CC_GAIN;
 
-  try {
-    await reaction.message.react("💰").catch(() => {});
-  } catch {}
-}
+    try {
+      await reaction.message.react("💰").catch(() => {});
+    } catch {}
+  }
 
-queueRoleUpdate({
-  guild: reaction.message.guild,
-  userId,
-  tp: userObj.tp,
-  channel: reaction.message.channel,
-});
+  // 🔥 fire-and-forget save (safe, debounced) — SAVE AFTER MUTATIONS
+  enqueueSave(trainerData);
+
+  queueRoleUpdate({
+    guild: reaction.message.guild,
+    userId,
+    tp: userObj.tp,
+    channel: reaction.message.channel,
+  });
 
   // 3% chance for random reward
- setImmediate(() => {
-  tryGiveRandomReward(userObj, user, reaction.message).catch((e) =>
-    console.warn("⚠️ tryGiveRandomReward failed:", e?.message || e)
-  );
-});
-
-
+  setImmediate(() => {
+    tryGiveRandomReward(userObj, user, reaction.message).catch((e) =>
+      console.warn("⚠️ tryGiveRandomReward failed:", e?.message || e)
+    );
+  });
 });
 
 // ==========================================================
@@ -1585,71 +1585,88 @@ client.on("interactionCreate", async (interaction) => {
     console.warn("⚠️ interaction patch failed:", patchErr?.message || patchErr);
   }
 
-  // ----------------------------------------------------------
-  // ✅ Slash Commands
-  // ----------------------------------------------------------
-  if (interaction.isChatInputCommand()) {
-    // ACK-only fallback (prevents infinite "thinking", does NOT overwrite command output)
-    const fallbackTimer = setTimeout(async () => {
-      try {
-        if (!interaction.deferred && !interaction.replied) {
-          await interaction.deferReply({ ephemeral: true }).catch(() => {});
-        }
-      } catch {}
-    }, 1500);
-
-    try {
-      if (!isReady) {
-        if (!interaction.deferred && !interaction.replied) {
-          await interaction.reply({
-            content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.",
-            ephemeral: true,
-          });
-        }
-        return;
-      }
-
-      const command = client.commands.get(interaction.commandName);
-      if (!command) {
-        console.warn(`❌ Unknown command: ${interaction.commandName} (loaded=${client.commands.size})`);
-        if (!interaction.deferred && !interaction.replied) {
-          await interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
-        } else if (interaction.deferred) {
-          await interaction.editReply("❌ Unknown command.").catch(() => {});
-        }
-        return;
-      }
-
-      await command.execute(
-  interaction,
-  trainerData,
-  saveTrainerDataLocal,
-  saveDataToDiscord,
-  lockUser,
-  enqueueSave,
-  client
-);
-
-clearTimeout(fallbackTimer); // ✅ only clear after command completed
-return;
-
-    } catch (err) {
-      console.error("❌ Slash command crashed:", err?.stack || err);
-      try {
-        if (interaction.deferred) {
-          await interaction.editReply("❌ Command crashed. Check Render logs.").catch(() => {});
-        } else if (!interaction.replied) {
-          await interaction.reply({
-            content: "❌ Command crashed. Check Render logs.",
-            ephemeral: true,
-          }).catch(() => {});
-        }
-      } catch {}
-      return;
-    } finally {
-   
+// ----------------------------------------------------------
+// ✅ Slash Commands (HARDENED: immediate ACK + timeout)
+// ----------------------------------------------------------
+if (interaction.isChatInputCommand()) {
+  // ✅ IMMEDIATE ACK (prevents "The application did not respond")
+  try {
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply({ ephemeral: true }).catch(() => {});
     }
+  } catch {}
+
+  const startedAt = Date.now();
+
+  try {
+    if (!isReady) {
+      await interaction
+        .editReply("⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.")
+        .catch(() => {});
+      return;
+    }
+
+    const command = client.commands.get(interaction.commandName);
+    if (!command) {
+      console.warn(
+        `❌ Unknown command: ${interaction.commandName} (loaded=${client.commands.size})`
+      );
+      await interaction.editReply("❌ Unknown command.").catch(() => {});
+      return;
+    }
+
+    let timedOut = false;
+
+    // Run command with timeout
+    await Promise.race([
+      (async () => {
+        await command.execute(
+          interaction,
+          trainerData,
+          saveTrainerDataLocal,
+          saveDataToDiscord,
+          lockUser,
+          enqueueSave,
+          client
+        );
+      })(),
+      new Promise((_, reject) =>
+        setTimeout(() => {
+          timedOut = true;
+          reject(new Error(`Command timeout after ${COMMAND_TIMEOUT_MS}ms`));
+        }, COMMAND_TIMEOUT_MS)
+      ),
+    ]).catch(async (e) => {
+      console.warn("⚠️ Slash command timed out:", e?.message || e);
+
+      // Only edit if we have an open deferred reply to edit
+      if (interaction.deferred && !interaction.replied) {
+        await interaction
+          .editReply("⏳ Still working… try again in a moment.")
+          .catch(() => {});
+      }
+    });
+
+    // If the command timed out, we already handled messaging
+    if (timedOut) return;
+
+    const ms = Date.now() - startedAt;
+    if (ms > 2500) {
+      console.warn(`⏱️ Slow slash command: ${interaction.commandName} took ${ms}ms`);
+    }
+
+    // If command finished but never replied, close it cleanly
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply("✅ Done.").catch(() => {});
+    }
+
+    return;
+  } catch (err) {
+    console.error("❌ Slash command crashed:", err?.stack || err);
+    await interaction.editReply("❌ Command crashed. Check Render logs.").catch(() => {});
+    return;
   }
+}
 
   // ----------------------------------------------------------
   // ✅ Buttons (ACK-only)
@@ -1662,7 +1679,12 @@ return;
     }
 
     // intentionally no-op buttons
-    if (id.startsWith("confirm_") || id.startsWith("cancel_") || id.startsWith("disabled_")) return;
+    if (
+      id.startsWith("confirm_") ||
+      id.startsWith("cancel_") ||
+      id.startsWith("disabled_")
+    )
+      return;
 
     return;
   }
@@ -1693,6 +1715,7 @@ app.post("/api/claim-weekly", express.json(), async (req, res) => {
     res.json({ success: true });
   });
 });
+
 
 // ==========================================================
 // 🧰 WEEKLY PACK — Pokémon Only (Forced Rarity + Atomic Lock)

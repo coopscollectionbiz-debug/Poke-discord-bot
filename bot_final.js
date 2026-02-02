@@ -210,6 +210,9 @@ function shinyEvolveDustCost(baseTier, targetTier) {
 // ==========================================================
 // 🗓️ NON-SHINY DUST WEEKLY CAP (UTC ISO WEEK)
 // ==========================================================
+// ==========================================================
+// 🗓️ NON-SHINY DUST WEEKLY CAP (UTC ISO WEEK)
+// ==========================================================
 const NON_SHINY_DUST_WEEKLY_CAP = 8;
 
 function getISOWeekKeyUTC(date = new Date()) {
@@ -223,9 +226,22 @@ function getISOWeekKeyUTC(date = new Date()) {
 
 function ensureNonShinyDustWeek(u) {
   const key = getISOWeekKeyUTC();
+
+  // sanitize fields
+  if (typeof u.nonShinyDustWeekKey !== "string") u.nonShinyDustWeekKey = "";
+  u.nonShinyDustEarnedThisWeek = Number.isFinite(u.nonShinyDustEarnedThisWeek)
+    ? Math.max(0, Math.floor(u.nonShinyDustEarnedThisWeek))
+    : 0;
+
+  // roll week if changed
   if (u.nonShinyDustWeekKey !== key) {
     u.nonShinyDustWeekKey = key;
     u.nonShinyDustEarnedThisWeek = 0;
+  }
+
+  // clamp to cap
+  if (u.nonShinyDustEarnedThisWeek > NON_SHINY_DUST_WEEKLY_CAP) {
+    u.nonShinyDustEarnedThisWeek = NON_SHINY_DUST_WEEKLY_CAP;
   }
 }
 
@@ -469,15 +485,9 @@ user.items.evolution_stone = Number.isFinite(user.items.evolution_stone)
   : 0;
 
 // ==========================================================
-// 🧾 NON-SHINY DUST WEEKLY CAP TRACKING
+// 🧾 NON-SHINY DUST WEEKLY CAP TRACKING (normalize + roll week)
 // ==========================================================
-user.nonShinyDustWeekKey =
-  typeof user.nonShinyDustWeekKey === "string" ? user.nonShinyDustWeekKey : "";
-
-user.nonShinyDustEarnedThisWeek = Number.isFinite(user.nonShinyDustEarnedThisWeek)
-  ? Math.max(0, Math.floor(user.nonShinyDustEarnedThisWeek))
-  : 0;
-
+ensureNonShinyDustWeek(user);
 
   // ==========================================================
   // 9️⃣ PURCHASES
@@ -568,9 +578,16 @@ app.get("/public/picker-pokemon", (_, res) =>
   res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
 );
 
-app.get("/public/dashboardstore", (_, res) =>
-  res.sendFile(path.join(staticPath, "dashboardstore", "index.html"))
+// ✅ Shop page (new canonical)
+app.get("/public/dashboardshop", (_, res) =>
+  res.sendFile(path.join(staticPath, "dashboardshop", "index.html"))
 );
+
+// ✅ Backward compat alias
+app.get("/public/dashboardstore", (_, res) =>
+  res.sendFile(path.join(staticPath, "dashboardshop", "index.html"))
+);
+
 
 
 // ==========================================================
@@ -630,6 +647,25 @@ const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
 // We'll keep all active tokens in memory for 10 minutes
 const activeTokens = new Map();
 
+// ✅ Token garbage collection (prevents memory growth)
+// Runs every 5 minutes and deletes expired tokens
+setInterval(() => {
+  const now = Date.now();
+  let removed = 0;
+
+  for (const [token, entry] of activeTokens.entries()) {
+    if (!entry || typeof entry.expires !== "number" || now > entry.expires) {
+      activeTokens.delete(token);
+      removed++;
+    }
+  }
+
+  if (removed > 0) {
+    console.log(`🧹 Token GC removed ${removed} expired token(s)`);
+  }
+}, 5 * 60 * 1000);
+
+
 /**
  * Generate a secure token linked to both the user and the channel
  * @param {string} userId - The Discord user ID
@@ -685,8 +721,10 @@ let isReady = false;
 let isSaving = false;
 let shuttingDown = false;
 const startTime = Date.now();
-const rewardCooldowns = new Map();
-const userCooldowns = new Map();
+// Cooldowns
+const rewardCooldowns = new Map();    // ✅ ONLY for random encounter rewards
+const reactionCooldowns = new Map();  // ✅ ONLY for reaction TP throttling
+const userCooldowns = new Map();      // ✅ message TP throttling
 const RANK_TIERS = getRankTiers();
 
 // ==========================================================
@@ -1328,10 +1366,11 @@ client.on("messageReactionAdd", async (reaction, user) => {
   const userId = user.id;
   trainerData[userId] = normalizeUserSchema(userId, trainerData[userId]);
 
-  // Prevent spam with cooldown
-  const now = Date.now();
-  if (rewardCooldowns.has(userId) && now - rewardCooldowns.get(userId) < REWARD_COOLDOWN) return;
-  rewardCooldowns.set(userId, now);
+// Prevent spam with cooldown (✅ reactions use their own map)
+const now = Date.now();
+if (reactionCooldowns.has(userId) && now - reactionCooldowns.get(userId) < REWARD_COOLDOWN) return;
+reactionCooldowns.set(userId, now);
+
 
   trainerData[userId] ??= {
     id: userId,
@@ -1408,23 +1447,124 @@ app.get("/api/user", (req, res) => {
 
 
 // ==========================================================
-// 🛍️ SHOP API — UPDATE USER (NOW ATOMIC SAFE)
+// 🛍️ SHOP API — UPDATE USER (HARDENED / WHITELISTED)
 // ==========================================================
-app.post("/api/updateUser", express.json(), async (req, res) => {
-  const { id, user } = req.body;
+app.post("/api/updateUser", express.json({ limit: "32kb" }), async (req, res) => {
+  try {
+    const { id, user } = req.body;
 
-  if (!id) return res.status(400).json({ error: "Missing id" });
-  if (!requireDashboardSession(req, id))
-    return res.status(403).json({ error: "Invalid or expired session" });
+    if (!id) return res.status(400).json({ error: "Missing id" });
+    if (!requireDashboardSession(req, id))
+      return res.status(403).json({ error: "Invalid or expired session" });
 
-  if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
+    const current = trainerData[id];
+    if (!current) return res.status(404).json({ error: "User not found" });
 
-  await lockUser(id, async () => {
-    trainerData[id] = normalizeUserSchema(id, { ...trainerData[id], ...user });
-    await enqueueSave(trainerData);
-    res.json({ success: true });
-  });
+    // Must be a plain object
+    if (!user || typeof user !== "object" || Array.isArray(user)) {
+      return res.status(400).json({ error: "Invalid user payload" });
+    }
+
+    // Prevent prototype pollution attempts
+    for (const k of Object.keys(user)) {
+      if (k === "__proto__" || k === "constructor" || k === "prototype") {
+        return res.status(400).json({ error: "Invalid key" });
+      }
+    }
+
+    // --- build patch from a strict whitelist only ---
+    const patch = {};
+
+    // ✅ Allow only displayedTrainer (string)
+    if (typeof user.displayedTrainer === "string") {
+      patch.displayedTrainer = user.displayedTrainer.trim().slice(0, 64);
+    }
+
+    // ✅ Allow only displayedPokemon (team) with strict normalization
+    if (Array.isArray(user.displayedPokemon)) {
+      patch.displayedPokemon = normalizeDisplayedPokemon(user.displayedPokemon, 6);
+    }
+
+    // If nothing valid was provided, don't write
+    if (Object.keys(patch).length === 0) {
+      return res.status(400).json({ error: "No valid fields to update" });
+    }
+
+    await lockUser(id, async () => {
+      // Normalize the existing record first (ensures schema is sane)
+      const base = normalizeUserSchema(id, trainerData[id]);
+
+      // Apply patch only (NO blind merge of arbitrary user fields)
+      const next = normalizeUserSchema(id, { ...base, ...patch });
+
+      // Server-authoritative fields
+      next.rank = getRank(next.tp);
+
+      trainerData[id] = next;
+      await enqueueSave(trainerData);
+
+      return res.json({ success: true });
+    });
+  } catch (err) {
+    console.error("updateUser error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
+
+// -------------------------
+// Team normalization helper
+// -------------------------
+function normalizeDisplayedPokemon(rawTeam, maxSize = 6) {
+  // Accepts entries like:
+  //  - number: 25
+  //  - string: "25"
+  //  - object: { id: 25, variant: "normal"|"shiny" } (and legacy {id, shiny:true})
+  const out = [];
+  const seen = new Set();
+
+  const normVariant = (v) => {
+    const s = String(v ?? "normal").toLowerCase().trim();
+    return s === "shiny" ? "shiny" : "normal";
+  };
+
+  const toTeamObj = (entry) => {
+    if (typeof entry === "number") {
+      return Number.isInteger(entry) ? { id: entry, variant: "normal" } : null;
+    }
+    if (typeof entry === "string") {
+      const n = Number(entry);
+      return Number.isInteger(n) ? { id: n, variant: "normal" } : null;
+    }
+    if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+      const id = Number(entry.id);
+      if (!Number.isInteger(id)) return null;
+
+      const legacyIsShiny =
+        entry.variant == null && (entry.shiny === true || entry.isShiny === true);
+
+      return { id, variant: legacyIsShiny ? "shiny" : normVariant(entry.variant) };
+    }
+    return null;
+  };
+
+  for (const entry of Array.isArray(rawTeam) ? rawTeam : []) {
+    const obj = toTeamObj(entry);
+    if (!obj) continue;
+
+    // Hard bounds (Pokédex id sanity); adjust if you have >1025 etc
+    if (obj.id < 1 || obj.id > 2000) continue;
+
+    // Prevent duplicate slots of same id+variant
+    const key = `${obj.id}:${obj.variant}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    out.push(obj);
+    if (out.length >= maxSize) break;
+  }
+
+  return out;
+}
 
 // ==========================================================
 // 🛍️ SHOP API — POKÉMON REWARD (Atomic, CC-safe, Exploit-proof)
@@ -1778,33 +1918,6 @@ if (interaction.isChatInputCommand()) {
   }
 });
 
-app.post("/api/claim-weekly", express.json(), async (req, res) => {
-  const { id } = req.body;
-
-  if (!id) return res.status(400).json({ error: "Missing id" });
-  if (!requireDashboardSession(req, id))
-    return res.status(403).json({ error: "Invalid or expired session" });
-
-  await lockUser(id, async () => {
-    const user = trainerData[id];
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const last = user.lastWeeklyPack ? new Date(user.lastWeeklyPack).getTime() : 0;
-    const now = Date.now();
-    const sevenDays = 604800000;
-
-    if (now - last < sevenDays) {
-      return res.status(400).json({ error: "Weekly pack already claimed." });
-    }
-
-    user.lastWeeklyPack = new Date().toISOString();
-    await enqueueSave(trainerData);
-
-    res.json({ success: true });
-  });
-});
-
-
 // ==========================================================
 // 🧰 WEEKLY PACK — Pokémon Only (Forced Rarity + Atomic Lock)
 // ==========================================================
@@ -1890,94 +2003,148 @@ app.get("/api/user-trainers", (req, res) => {
   const user = trainerData[id];
   if (!user) return res.status(404).json({ error: "User not found in memory" });
 
-  const owned = Array.isArray(user.trainers)
-    ? user.trainers
-    : Object.keys(user.trainers || {});
+  // ✅ keep schema consistent
+  trainerData[id] = normalizeUserSchema(id, user);
+  const u = trainerData[id];
 
-  res.json({
+  const owned = Array.isArray(u.trainers) ? u.trainers : Object.keys(u.trainers || {});
+
+  return res.json({
     owned,
-    cc: user.cc ?? 0,
+    cc: u.cc ?? 0,
+    equipped: u.displayedTrainer || null, // ✅ add this
   });
 });
+
 
 // ===========================================================
 // ✅ POST — Equip Trainer (Debounced Discord Save)
 // ===========================================================
 let lastTrainerSave = 0; // global throttle timestamp
 
-app.post("/api/set-trainer", express.json(), async (req, res) => {
+app.post("/api/set-trainer", express.json({ limit: "8kb" }), async (req, res) => {
   try {
-    const { id, name, file } = req.body;
+    const { id, file } = req.body;
 
-    if (!id || !file)
+    if (!id || !file) {
       return res.status(400).json({ success: false, error: "Missing id/file" });
+    }
 
-    if (!requireDashboardSession(req, id))
+    if (!requireDashboardSession(req, id)) {
       return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    }
 
     await lockUser(id, async () => {
-      const user = trainerData[id];
-      if (!user)
+      if (!trainerData[id]) {
         return res.status(404).json({ success: false, error: "User not found" });
+      }
 
-      user.displayedTrainer = file;
+      trainerData[id] = normalizeUserSchema(id, trainerData[id]);
+      const user = trainerData[id];
+
+      const requested = String(file).trim().toLowerCase();
+
+      // ✅ confirm file exists in trainer catalog AND get canonical filename
+      const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
+      const trainers = await getFlattenedTrainers();
+
+      const match = trainers.find((t) =>
+        Array.isArray(t.sprites) &&
+        t.sprites.some((s) => String(s.file || s).trim().toLowerCase() === requested)
+      );
+      if (!match) {
+        return res.status(404).json({ success: false, error: "Trainer not found" });
+      }
+
+      const canonicalFile =
+        match.sprites
+          .map((s) => String(s.file || s).trim())
+          .find((f) => f.toLowerCase() === requested) || String(file).trim();
+
+      // ✅ ownership check (case-insensitive)
+      const ownedLower = new Set((user.trainers || []).map((x) => String(x).trim().toLowerCase()));
+      if (!ownedLower.has(canonicalFile.toLowerCase())) {
+        return res.status(400).json({ success: false, error: "You do not own this trainer." });
+      }
+
+      user.displayedTrainer = canonicalFile;
       trainerData[id] = user;
 
       await enqueueSave(trainerData);
 
-      console.log(`✅ ${id} equipped trainer ${file}`);
-      res.json({ success: true });
+      console.log(`✅ ${id} equipped trainer ${canonicalFile}`);
+      return res.json({ success: true, equipped: canonicalFile });
     });
   } catch (err) {
-    console.error("❌ /api/set-trainer failed:", err.message);
-    res.status(500).json({ success: false });
+    console.error("❌ /api/set-trainer failed:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Server error" });
   }
 });
 
 // ===========================================================
 // Purchase Trainer
 // ===========================================================
-app.post("/api/unlock-trainer", express.json(), async (req, res) => {
+app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res) => {
   const { id, file } = req.body;
 
-  if (!id || !file) return res.status(400).json({ error: "Missing id/file" });
+  if (!id || !file) return res.status(400).json({ success: false, error: "Missing id/file" });
   if (!requireDashboardSession(req, id))
-    return res.status(403).json({ error: "Invalid or expired session" });
+    return res.status(403).json({ success: false, error: "Invalid or expired session" });
 
   await lockUser(id, async () => {
+    if (!trainerData[id]) return res.status(404).json({ success: false, error: "User not found" });
+
+    // ✅ normalize user first
+    trainerData[id] = normalizeUserSchema(id, trainerData[id]);
     const user = trainerData[id];
-    if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (!user.trainers) user.trainers = [];
-    if (user.trainers.includes(file))
-      return res.status(400).json({ error: "Trainer already owned" });
+    const requested = String(file).trim().toLowerCase();
 
+    // Pull canonical trainers list
     const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
     const trainers = await getFlattenedTrainers();
 
-    const trainer = trainers.find(
-      (t) =>
-        t.sprites &&
-        t.sprites.some((s) => {
-          const fname = (s.file || s).toLowerCase();
-          return fname === file.toLowerCase();
-        })
+    // Find exact matching sprite filename in your trainer data
+    const match = trainers.find((t) =>
+      Array.isArray(t.sprites) &&
+      t.sprites.some((s) => String(s.file || s).trim().toLowerCase() === requested)
     );
 
-    if (!trainer) return res.status(404).json({ error: "Trainer not found" });
+    if (!match) return res.status(404).json({ success: false, error: "Trainer not found" });
 
-    const tier = (trainer.tier || trainer.rarity || "common").toLowerCase();
+    // Canonical filename (prevents weird casing / duplicates)
+    const canonicalFile =
+      match.sprites
+        .map((s) => String(s.file || s).trim())
+        .find((f) => f.toLowerCase() === requested) || String(file).trim();
+
+    // Ensure array + de-dupe (case-insensitive)
+    user.trainers = Array.isArray(user.trainers) ? user.trainers : [];
+    const ownedLower = new Set(user.trainers.map((x) => String(x).trim().toLowerCase()));
+    if (ownedLower.has(canonicalFile.toLowerCase())) {
+      return res.status(400).json({ success: false, error: "Trainer already owned" });
+    }
+
+    const tier = String(match.tier || match.rarity || "common").toLowerCase();
     const cost = TRAINER_COSTS[tier];
+    if (!cost) return res.status(400).json({ success: false, error: `Unknown trainer tier: ${tier}` });
 
-    if (!cost) return res.status(400).json({ error: `Unknown trainer tier: ${tier}` });
-    if ((user.cc ?? 0) < cost) return res.status(400).json({ error: `Requires ${cost} CC` });
+    if ((user.cc ?? 0) < cost) {
+      return res.status(400).json({ success: false, error: `Requires ${cost} CC` });
+    }
 
     user.cc -= cost;
-    user.trainers.push(file);
+    user.trainers.push(canonicalFile);
 
     await enqueueSave(trainerData);
 
-    res.json({ success: true, file, cost, tier });
+    return res.json({
+      success: true,
+      file: canonicalFile,
+      cost,
+      tier,
+      cc: user.cc,          // ✅ important for frontend
+    });
   });
 });
 
@@ -2003,6 +2170,61 @@ app.get("/api/shop-trainers", async (req, res) => {
   } catch (err) {
     console.error("❌ /api/shop-trainers failed:", err.message);
     res.status(500).json({ success: false });
+  }
+});
+
+// ======================================================
+// 🛒 SHOP — BUY EVOLUTION STONE (SERVER AUTHORITATIVE)
+// POST /api/shop/buy-stone { id }
+// Returns: { success:true, cc:<number>, stones:<number> }
+// ======================================================
+app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    if (!id) return res.status(400).json({ success: false, error: "Missing id" });
+    if (!requireDashboardSession(req, id))
+      return res.status(403).json({ success: false, error: "Invalid or expired session" });
+
+    if (!trainerData[id])
+      return res.status(404).json({ success: false, error: "User not found" });
+
+    const COST = 5000; // must match frontend + your ITEM_COSTS
+
+    await lockUser(id, async () => {
+      // normalize for safety
+      trainerData[id] = normalizeUserSchema(id, trainerData[id]);
+      const user = trainerData[id];
+
+      user.cc ??= 0;
+      user.items ??= {};
+      user.items.evolution_stone = Number.isFinite(user.items.evolution_stone)
+        ? user.items.evolution_stone
+        : 0;
+
+      if (user.cc < COST) {
+        return res.status(400).json({
+          success: false,
+          error: `Not enough CC — requires ${COST} CC.`,
+          cc: user.cc,
+        });
+      }
+
+      // ✅ atomic mutation
+      user.cc -= COST;
+      user.items.evolution_stone += 1;
+
+      await enqueueSave(trainerData);
+
+      return res.json({
+        success: true,
+        cc: user.cc,
+        stones: user.items.evolution_stone,
+      });
+    });
+  } catch (err) {
+    console.error("❌ /api/shop/buy-stone:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
 

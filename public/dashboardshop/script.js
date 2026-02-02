@@ -1,5 +1,8 @@
 // ======================================================================
 // 🛒 Coop's Collection — SHOP TAB SCRIPT (COOKIE SESSION VERSION)
+// ✅ UPDATED: No more full-user saves (prevents /api/updateUser abuse)
+// ✅ UPDATED: Evolution Stone purchase is now SERVER-AUTHORITATIVE
+//            (calls /api/shop/buy-stone — backend to be added next)
 // ======================================================================
 
 let user = null;
@@ -38,7 +41,7 @@ async function loadUser() {
   }
 
   const res = await fetch(`/api/user?id=${encodeURIComponent(userId)}`, {
-    credentials: "same-origin"
+    credentials: "same-origin",
   });
 
   if (res.status === 403) {
@@ -61,17 +64,18 @@ async function loadUser() {
 }
 
 // ======================================================
-// 💾 SAVE USER (cookie session)
+// 💾 SAVE USER (PATCH ONLY — NEVER SEND FULL USER)
+// NOTE: Keep this for cosmetic fields only (whitelisted on backend)
 // ======================================================
-async function saveUser() {
+async function saveUserPatch(patch) {
   const res = await fetch("/api/updateUser", {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: userId, user }),
+    body: JSON.stringify({ id: userId, user: patch }),
   });
 
-  if (!res.ok) throw new Error("Failed to save user");
+  if (!res.ok) throw new Error("Failed to save user patch");
 }
 
 // ======================================================
@@ -106,7 +110,9 @@ function showShopModal({ title, message, sprites = [], onConfirm }) {
   const modal = document.createElement("div");
   modal.id = "shopModal";
 
-  const spriteHTML = sprites.map((src) => `<img src="${src}" alt="sprite">`).join("");
+  const spriteHTML = sprites
+    .map((src) => `<img src="${src}" alt="sprite">`)
+    .join("");
 
   modal.innerHTML = `
     <h2 style="color:#00ff9d;margin-top:0;">${title}</h2>
@@ -152,8 +158,10 @@ function showShopModal({ title, message, sprites = [], onConfirm }) {
 // ======================================================
 function canClaimWeeklyPack() {
   if (!user || !user.lastWeeklyPack) return true;
-
-  return Date.now() - new Date(user.lastWeeklyPack).getTime() > 7 * 24 * 60 * 60 * 1000;
+  return (
+    Date.now() - new Date(user.lastWeeklyPack).getTime() >
+    7 * 24 * 60 * 60 * 1000
+  );
 }
 
 // ======================================================
@@ -163,7 +171,8 @@ function updateUI() {
   if (!user) return;
 
   document.getElementById("ccCount").textContent = user.cc ?? 0;
-  document.getElementById("stoneCount").textContent = user.items?.evolution_stone || 0;
+  document.getElementById("stoneCount").textContent =
+    user.items?.evolution_stone || 0;
 
   const weeklyBtn = document.querySelector("[data-item='weekly']");
   if (weeklyBtn) {
@@ -173,19 +182,18 @@ function updateUI() {
 }
 
 // ======================================================
-// CC SPENDING (client-side only for evo stone purchase UI)
+// UI-ONLY affordability helper (NO MUTATION)
 // ======================================================
-function charge(cost) {
-  if ((user.cc ?? 0) < cost) {
-    alert("Not enough CC!");
-    return false;
-  }
-  user.cc -= cost;
-  return true;
+function canAfford(cost) {
+  return (user?.cc ?? 0) >= cost;
 }
 
 // ======================================================
-// BUY EVOLUTION STONE
+// BUY EVOLUTION STONE (SERVER AUTHORITATIVE)
+// Requires backend route: POST /api/shop/buy-stone { id }
+// Expected response:
+//   { success:true, cc:<number>, stones:<number> }
+//   OR { success:false, error:"..." }
 // ======================================================
 async function buyStone(cost) {
   showShopModal({
@@ -193,16 +201,58 @@ async function buyStone(cost) {
     message: `Buy an Evolution Stone for ${cost} CC?`,
     sprites: ["/public/sprites/items/evolution_stone.png"],
     onConfirm: async () => {
-      if (!charge(cost)) return;
+      // Quick UI hint only; server will enforce anyway
+      if (!canAfford(cost)) {
+        showShopModal({
+          title: "Not enough CC",
+          message: "You don’t have enough CC for this purchase.",
+          onConfirm: () => {},
+        });
+        return;
+      }
 
       const closeLoading = showLoadingModal();
 
-      user.items ??= {};
-      user.items.evolution_stone = (user.items.evolution_stone || 0) + 1;
+      let res;
+      try {
+        res = await fetch("/api/shop/buy-stone", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: userId }),
+        }).then((r) => r.json());
+      } catch (e) {
+        closeLoading();
+        showShopModal({
+          title: "Error",
+          message: "Network error. Please try again.",
+          onConfirm: () => {},
+        });
+        return;
+      }
 
-      await saveUser();
-      updateUI();
       closeLoading();
+
+      if (!res?.success) {
+        showShopModal({
+          title: "Error",
+          message: res?.error || "Purchase failed.",
+          onConfirm: () => {},
+        });
+        return;
+      }
+
+      // Update local view from server response
+      if (typeof res.cc === "number") user.cc = res.cc;
+      user.items ??= {};
+      if (typeof res.stones === "number") {
+        user.items.evolution_stone = res.stones;
+      } else {
+        // Fallback: if backend returns a delta, still handle gracefully
+        user.items.evolution_stone = (user.items.evolution_stone || 0) + 1;
+      }
+
+      updateUI();
 
       showShopModal({
         title: "Purchase Complete!",
@@ -325,7 +375,10 @@ async function claimWeeklyPack() {
   showShopModal({
     title: "Weekly Pack Rewards!",
     message: rewardLines.join("<br>"),
-    sprites: ["/public/sprites/items/starter_pack.png", ...rewards.map((r) => r.sprite)],
+    sprites: [
+      "/public/sprites/items/starter_pack.png",
+      ...rewards.map((r) => r.sprite),
+    ],
     onConfirm: () => {},
   });
 }
@@ -336,19 +389,28 @@ async function claimWeeklyPack() {
 window.addEventListener("DOMContentLoaded", () => {
   loadUser();
 
-  document.querySelector("[data-item='pokeball']").onclick = () =>
-    buyPokeball("pokeball", window.ITEM_COSTS.pokeball);
+  const pokeballBtn = document.querySelector("[data-item='pokeball']");
+  const greatballBtn = document.querySelector("[data-item='greatball']");
+  const ultraballBtn = document.querySelector("[data-item='ultraball']");
+  const stoneBtn = document.querySelector("[data-item='evo_stone']");
+  const weeklyBtn = document.querySelector("[data-item='weekly']");
 
-  document.querySelector("[data-item='greatball']").onclick = () =>
-    buyPokeball("greatball", window.ITEM_COSTS.greatball);
+  if (pokeballBtn)
+    pokeballBtn.onclick = () =>
+      buyPokeball("pokeball", window.ITEM_COSTS.pokeball);
 
-  document.querySelector("[data-item='ultraball']").onclick = () =>
-    buyPokeball("ultraball", window.ITEM_COSTS.ultraball);
+  if (greatballBtn)
+    greatballBtn.onclick = () =>
+      buyPokeball("greatball", window.ITEM_COSTS.greatball);
 
-  document.querySelector("[data-item='evo_stone']").onclick = () =>
-    buyStone(window.ITEM_COSTS.evo_stone);
+  if (ultraballBtn)
+    ultraballBtn.onclick = () =>
+      buyPokeball("ultraball", window.ITEM_COSTS.ultraball);
 
-  document.querySelector("[data-item='weekly']").onclick = claimWeeklyPack;
+  if (stoneBtn)
+    stoneBtn.onclick = () => buyStone(window.ITEM_COSTS.evo_stone);
+
+  if (weeklyBtn) weeklyBtn.onclick = claimWeeklyPack;
 });
 
 // ======================================================
@@ -365,7 +427,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (goPokemon)
     goPokemon.onclick = () =>
-      (window.location.href = `/public/picker-pokemon/?id=${encodeURIComponent(id)}`);
+      (window.location.href = `/public/picker-pokemon/?id=${encodeURIComponent(
+        id
+      )}`);
 
   if (goTrainers)
     goTrainers.onclick = () =>
@@ -373,5 +437,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (goShop)
     goShop.onclick = () =>
-      (window.location.href = `/public/dashboardshop/?id=${encodeURIComponent(id)}`);
+      (window.location.href = `/public/dashboardshop/?id=${encodeURIComponent(
+        id
+      )}`);
 })();

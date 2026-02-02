@@ -27,6 +27,7 @@ import { REST, Routes } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
 import { getPokemonDataCached } from "./utils/pokemonDataCache.js";
+import crypto from "crypto";
 
 // 🌐 EXPRESS — canonical static setup
 import express from "express";
@@ -43,13 +44,31 @@ import {
 
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Rejection:", err);
-  process.exit(1);
+  // do NOT exit; avoid login loops / temp bans
 });
 
 process.on("uncaughtException", (err) => {
   console.error("❌ Uncaught Exception:", err);
-  process.exit(1);
+  // do NOT exit; if you want, set a flag and let your health watchdog decide later
 });
+
+
+function withTimeout(promise, ms, label = "op") {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
+//Save stuck failsafe
+setInterval(() => {
+  if (isSaving) {
+    console.warn("⚠️ isSaving stuck — forcing unlock (failsafe)");
+    isSaving = false;
+  }
+}, 5 * 60 * 1000);
 
 
 // ==========================================================
@@ -617,11 +636,12 @@ const activeTokens = new Map();
  * @param {string} channelId - The Discord channel ID where /changetrainer was used
  */
 function generateToken(userId, channelId) {
-  const token = Math.random().toString(36).substring(2, 12);
+  // ✅ strong, unguessable, URL-safe
+  const token = crypto.randomBytes(18).toString("base64url");
   activeTokens.set(token, {
     id: userId,
     channelId,
-    expires: Date.now() + 10 * 60 * 1000 // 10 min expiration
+    expires: Date.now() + 10 * 60 * 1000,
   });
   return token;
 }
@@ -778,40 +798,95 @@ setInterval(() => {
 // 💾 Trainer Data Load & Save
 // ==========================================================
 async function loadTrainerData() {
+  const LOAD_TIMEOUT_MS = 25_000;
+
+  const withTimeout = (p, ms, label) =>
+    Promise.race([
+      p,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout: ${label} after ${ms}ms`)), ms)
+      ),
+    ]);
+
   console.log("📦 Loading trainer data from Discord...");
+
   let loaded = {};
+
   try {
-    const storageChannel = await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
-    const messages = await storageChannel.messages.fetch({ limit: 50 });
+    const storageChannel = await withTimeout(
+      client.channels.fetch(process.env.STORAGE_CHANNEL_ID),
+      10_000,
+      "channels.fetch(STORAGE_CHANNEL_ID)"
+    );
+
+    const messages = await withTimeout(
+      storageChannel.messages.fetch({ limit: 50 }),
+      10_000,
+      "messages.fetch(limit=50)"
+    );
+
     const backups = messages
-      .filter(
-        (m) => m.attachments.size > 0 && m.attachments.first().name.startsWith("trainerData")
-      )
+      .filter((m) => {
+        const att = m.attachments.first();
+        if (!att) return false;
+        const name = String(att.name || "");
+        // Accept both trainerData.json and trainerData*.json
+        return name.toLowerCase().startsWith("trainerdata") && name.toLowerCase().endsWith(".json");
+      })
       .sort((a, b) => b.createdTimestamp - a.createdTimestamp);
+
     if (backups.size > 0) {
-      const res = await fetch(backups.first().attachments.first().url);
-      loaded = JSON.parse(await res.text());
+      const att = backups.first().attachments.first();
+
+      const res = await withTimeout(
+        fetch(att.url),
+        LOAD_TIMEOUT_MS,
+        "fetch(backup attachment)"
+      );
+
+      const text = await withTimeout(res.text(), LOAD_TIMEOUT_MS, "res.text()");
+      loaded = JSON.parse(text);
+
       console.log(`✅ Loaded ${Object.keys(loaded).length} users`);
+    } else {
+      console.log("⚠️ No backups found in storage channel.");
     }
   } catch (err) {
-    console.error("❌ Discord load failed:", err.message);
+    console.error("❌ Discord load failed:", err?.message || err);
   }
 
-  for (const [id, user] of Object.entries(loaded)) normalizeUserSchema(id, user);
-  return loaded;
+  if (loaded && typeof loaded === "object" && !Array.isArray(loaded)) {
+    for (const [id, user] of Object.entries(loaded)) normalizeUserSchema(id, user);
+    return loaded;
+  }
+
+  return {};
 }
+
+
 
 async function saveDataToDiscord(data, { force = false } = {}) {
   if (shuttingDown && !force) {
     console.log("⚠️ Skipping Discord save — shutting down");
     return;
   }
-  if (isSaving) {
+
+  if (isSaving && !force) {
     console.log("⏳ Save already running — skip");
     return;
   }
 
   isSaving = true;
+
+  const SAVE_TIMEOUT_MS = 25_000;
+
+  const withTimeout = (p, ms, label) =>
+    Promise.race([
+      p,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout: ${label} after ${ms}ms`)), ms)
+      ),
+    ]);
 
   try {
     if (!client.isReady()) {
@@ -823,9 +898,13 @@ async function saveDataToDiscord(data, { force = false } = {}) {
     try {
       channel =
         client.channels.cache.get(process.env.STORAGE_CHANNEL_ID) ??
-        await client.channels.fetch(process.env.STORAGE_CHANNEL_ID);
-    } catch {
-      console.log("⚠️ Backup channel fetch failed — skipping");
+        (await withTimeout(
+          client.channels.fetch(process.env.STORAGE_CHANNEL_ID),
+          10_000,
+          "channels.fetch(STORAGE_CHANNEL_ID)"
+        ));
+    } catch (e) {
+      console.log("⚠️ Backup channel fetch failed — skipping", e?.message || e);
       return;
     }
 
@@ -834,13 +913,20 @@ async function saveDataToDiscord(data, { force = false } = {}) {
       return;
     }
 
-    const payload = Buffer.from(JSON.stringify(data, null, 2));
+    // ✅ IMPORTANT: compact JSON (much faster + smaller)
+    const jsonString = JSON.stringify(data);
+    const payload = Buffer.from(jsonString, "utf8");
     const file = new AttachmentBuilder(payload, { name: "trainerData.json" });
 
-    await channel.send({ files: [file] });
-lastDiscordOk = Date.now(); // ✅ REST proven healthy by backup send
-discordSaveCount++;
-console.log(`✅ Discord backup #${discordSaveCount}`);
+    await withTimeout(
+      channel.send({ files: [file] }),
+      SAVE_TIMEOUT_MS,
+      "channel.send(trainerData.json)"
+    );
+
+    lastDiscordOk = Date.now();
+    discordSaveCount++;
+    console.log(`✅ Discord backup #${discordSaveCount} (${Math.round(payload.length / 1024)} KB)`);
   } catch (err) {
     console.error("❌ Discord save failed:", err?.message || err);
   } finally {
@@ -1018,10 +1104,12 @@ function debouncedDiscordSave() {
 }
 
 // ==========================================================
-// 🕒 15-MINUTE DISCORD BACKUP (ALWAYS RUNS)
+// 🕒 15-MINUTE DISCORD BACKUP (FIRST RUN AFTER 15 MINUTES)
 // ==========================================================
 const discordBackupInterval = setInterval(async () => {
   if (shuttingDown) return;
+  if (!client.isReady() || !isReady) return;
+  if (isSaving) return;
 
   console.log("💾 15-minute interval — saving trainerData to Discord...");
   try {
@@ -2413,52 +2501,83 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
-  // ✅ mark "we were ready at least once" for watchdogs
   hasBeenReadyOnce = true;
   lastGatewayOk = Date.now();
+  isReady = false;
 
- // ✅ Load local commands FIRST
-  await loadLocalCommands();
-
-// Register only if enabled
-  if (process.env.REGISTER_COMMANDS === "true") {
-    await registerCommands();
-  }
-
+  // Load local commands FIRST
   try {
-    trainerData = await loadTrainerData();
-
-    // ❗ ABSOLUTE SANITY CHECK — DO NOT PROCEED WITH EMPTY DATA
-    if (
-      !trainerData ||
-      typeof trainerData !== "object" ||
-      Array.isArray(trainerData) ||
-      Object.keys(trainerData).length === 0
-    ) {
-      console.error("❌ FATAL: Loaded EMPTY or INVALID trainerData. Startup aborted.");
-      process.exit(1); // ⛔ prevents wipe
-    }
-
-    // ❗ DO NOT SAVE HERE
-    // trainerData = sanitizeTrainerData(trainerData);
-    // await saveDataToDiscord(trainerData);
-
-  } catch (err) {
-    console.error("❌ Trainer data load failed:", err.message);
-    console.error("❌ Startup aborted to prevent DATA LOSS.");
-    process.exit(1); // ⛔ stops bot before it wipes JSON
+    await loadLocalCommands();
+  } catch (e) {
+    console.error("❌ loadLocalCommands failed:", e?.message || e);
   }
 
-  // ==========================================================
-  // 📰 INITIAL NEWS CHECK (commands are registered at boot now)
-  // ==========================================================
+  // Register only if enabled (REST)
+  if (process.env.REGISTER_COMMANDS === "true") {
+    try {
+      await registerCommands();
+    } catch (e) {
+      console.warn("⚠️ registerCommands failed (continuing):", e?.message || e);
+    }
+  }
+
+  // Attempt load once
+  async function attemptLoad() {
+    const loaded = await loadTrainerData();
+    const ok =
+      loaded &&
+      typeof loaded === "object" &&
+      !Array.isArray(loaded) &&
+      Object.keys(loaded).length > 0;
+
+    if (ok) {
+      trainerData = loaded;
+      return true;
+    }
+    return false;
+  }
+
+  const ok = await attemptLoad();
+
+  if (!ok) {
+    // CRITICAL: do NOT exit (prevents relogin loops / temp bans)
+    console.error("⛔ Startup: trainerData not available yet. Bot will stay ONLINE but NOT READY.");
+    isReady = false;
+
+    // Retry in background with backoff
+  let retryMs = 60_000;            // 1 minute
+const maxRetryMs = 30 * 60_000;  // 30 minutes
+
+async function retryLoadLoop() {
+  if (shuttingDown) return;
+
+  console.log(`🔁 Retrying trainerData load... (${Math.round(retryMs / 1000)}s delay)`);
+  const ok2 = await attemptLoad();
+
+  if (ok2) {
+    isReady = true;
+    console.log("✨ Bot is now READY (trainerData loaded)!");
+    try { await checkPokeBeach(); } catch {}
+    return;
+  }
+
+  retryMs = Math.min(maxRetryMs, Math.floor(retryMs * 1.5));
+  setTimeout(retryLoadLoop, retryMs);
+}
+
+// kick it off
+setTimeout(retryLoadLoop, retryMs);
+
+    return;
+  }
+
+  // Initial news check (don’t block readiness forever)
   try {
     await checkPokeBeach();
   } catch (err) {
-    console.error("❌ PokéBeach initial check failed:", err?.message || err);
+    console.warn("⚠️ PokéBeach initial check failed (continuing):", err?.message || err);
   }
 
-  // AFTER startup, normal saves happen via saveQueue
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });

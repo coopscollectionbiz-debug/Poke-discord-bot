@@ -15,7 +15,7 @@ dns.setDefaultResultOrder("ipv4first");
 import fs from "fs/promises";
 import * as fsSync from "fs";
 import fetch from "node-fetch";
-import { decode } from "html-entities";
+
 import {
   Client,
   GatewayIntentBits,
@@ -628,7 +628,7 @@ import { sanitizeTrainerData } from "./utils/sanitizeTrainerData.js";
 // ⚙️ Global Constants
 // ==========================================================
 const TRAINERDATA_PATH = "./trainerData.json";
-const POKEBEACH_CHECK_INTERVAL = 1000 * 60 * 120;
+
 const PORT = process.env.PORT || 10000;
 const MESSAGE_TP_GAIN = 2;
 const MESSAGE_CC_CHANCE = 0.02;
@@ -1245,88 +1245,6 @@ await Promise.race([
 
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-
-
-// ==========================================================
-// 📰 POKÉBEACH RSS (Front Page News) — Link-only, every 2 hours
-// ==========================================================
-const POKEBEACH_RSS = "https://www.pokebeach.com/forums/forum/front-page-news.18/index.rss";
-
-async function checkPokeBeach() {
-  try {
-    const newsChannel = await client.channels.fetch(process.env.NEWS_CHANNEL_ID);
-    if (!newsChannel) return console.error("❌ NEWS_CHANNEL_ID invalid or missing.");
-
-    console.log("📰 Checking PokéBeach RSS...");
-
-    const res = await fetch(POKEBEACH_RSS, {
-      redirect: "follow",
-      headers: {
-        // Make it look like a normal browser request (helps even for RSS sometimes)
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
-        "accept": "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7",
-        "accept-language": "en-US,en;q=0.9",
-      },
-    });
-
-    if (!res.ok) {
-      console.error(`❌ PokéBeach RSS fetch failed: HTTP ${res.status}`);
-      return;
-    }
-
-    const xml = await res.text();
-
-    // Very simple RSS parse: pull <item> blocks, then <title> and <link>
-    const items = [...xml.matchAll(/<item\b[\s\S]*?<\/item>/gi)].map((m) => m[0]);
-
-    const articles = [];
-    for (const item of items) {
-      const titleMatch = item.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>|<title>([\s\S]*?)<\/title>/i);
-      const linkMatch = item.match(/<link>([\s\S]*?)<\/link>/i);
-
-      const rawTitle = (titleMatch?.[1] || titleMatch?.[2] || "").trim();
-      const rawLink = (linkMatch?.[1] || "").trim();
-
-      const title = decode(rawTitle).replace(/<[^>]+>/g, "").trim();
-      const link = rawLink;
-
-      if (!title || !link) continue;
-      // Keep only actual PokéBeach article links (not random forum links)
-      if (!link.includes("pokebeach.com/20")) continue;
-
-      articles.push({ title, link });
-    }
-
-    if (!articles.length) {
-      console.log("⚠️ No articles found in RSS.");
-      return;
-    }
-
-    // Check Discord for duplicates
-    const history = await newsChannel.messages.fetch({ limit: 50 });
-    const posted = new Set();
-    for (const msg of history.values()) {
-      const urls = msg.content.match(/https:\/\/www\.pokebeach\.com\/\d{4}\/[^\s]+/g);
-      if (urls) urls.forEach((u) => posted.add(u));
-    }
-
-    const newArticles = articles.filter((a) => !posted.has(a.link));
-    if (!newArticles.length) {
-      console.log("✅ No new articles.");
-      return;
-    }
-
-    console.log(`📢 Posting ${Math.min(3, newArticles.length)} new PokéBeach article(s)!`);
-    for (const article of newArticles.slice(0, 3)) {
-      await newsChannel.send(`${article.title}\n${article.link}`);
-      await new Promise((r) => setTimeout(r, 1000));
-    }
-  } catch (err) {
-    console.error("❌ PokéBeach check failed:", err.message);
-  }
-}
-
 
 // ==========================================================
 // 💬 Passive TP Gain from Messages
@@ -2345,7 +2263,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       trainerData[id] = normalizeUserSchema(id, user);
       const u = trainerData[id];
 
-      
+
       const ownsVariant = (pid, variant) => {
         const p = u.pokemon?.[pid];
         if (!p) return false;
@@ -2819,7 +2737,6 @@ async function retryLoadLoop() {
   if (ok2) {
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
-    try { await checkPokeBeach(); } catch {}
     return;
   }
 
@@ -2833,12 +2750,6 @@ setTimeout(retryLoadLoop, retryMs);
     return;
   }
 
-  // Initial news check (don’t block readiness forever)
-  try {
-    await checkPokeBeach();
-  } catch (err) {
-    console.warn("⚠️ PokéBeach initial check failed (continuing):", err?.message || err);
-  }
 
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");

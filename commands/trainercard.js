@@ -29,6 +29,7 @@ import { spritePaths, rarityEmojis } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { enqueueSave } from "../utils/saveQueue.js";
 
 // Load trainer sprite data
 const __filename = fileURLToPath(import.meta.url);
@@ -268,7 +269,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
         user.onboardingStage = "trainer_selection";
 
         trainerData[interaction.user.id] = user;
-        await saveDataToDiscord(trainerData);
+        await enqueueSave(trainerData);
 
         collector.stop("chosen");
         return trainerSelection(interaction, user, trainerData, saveDataToDiscord);
@@ -359,7 +360,7 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
       delete user.onboardingStage;
 
       trainerData[interaction.user.id] = user;
-      await saveDataToDiscord(trainerData);
+      await enqueueSave(trainerData);
 
       collector.stop("chosen");
       return showTrainerCard(interaction, user, trainerData, saveDataToDiscord);
@@ -395,9 +396,9 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
     // (safe because this does NOT invent Pokémon — it only uses owned)
     if (!Array.isArray(user.displayedPokemon) || user.displayedPokemon.length === 0) {
       user.displayedPokemon = team;
-      if (trainerData && saveDataToDiscord) {
+      if (trainerData) {
         trainerData[interaction.user.id] = user;
-        await saveDataToDiscord(trainerData);
+        await enqueueSave(trainerData);
       }
     }
 

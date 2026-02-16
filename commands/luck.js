@@ -16,6 +16,8 @@ export default {
     .setDescription("Shows your random reward luck meter (pity system)"),
 
   async execute(interaction, trainerData) {
+    await interaction.deferReply({ ephemeral: true });
+
     const userId = interaction.user.id;
 
     // Ensure user exists
@@ -56,12 +58,12 @@ export default {
       .setTitle("🍀 Your Luck Meter (Random Reward Pity)")
       .setDescription(
 `Each time you chat or react and **don’t** get a random reward, your luck increases.
-When you *do* get a reward → your luck resets to 0.  
+When you *do* get a reward → your luck resets to 0.
 
 **Final Chance:** \`${percent}%\`
 **Bonus (pity) Only:** \`${percentLuckOnly}%\`
 
-**Meter:**  
+**Meter:**
 \`${bar}\`
 `
       );

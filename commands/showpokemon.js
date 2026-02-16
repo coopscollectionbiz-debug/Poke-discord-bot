@@ -10,7 +10,8 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
-  PermissionFlagsBits // ✅ Added import
+  PermissionFlagsBits, // ✅ Added import
+  MessageFlags,
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
@@ -70,11 +71,11 @@ export async function execute(interaction, trainerData) {
   if (!user) {
     return safeReply(interaction, {
       content: "❌ You don't have a trainer profile yet. Run /trainercard first.",
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   // =============================================
   // FILTER DATA - Using helper for Pokemon data + cache
@@ -148,7 +149,7 @@ export async function execute(interaction, trainerData) {
   const msg = await safeReply(interaction, {
     embeds: [embed],
     components: [row, pokedexRow],
-    ephemeral: true
+    flags: MessageFlags.Ephemeral
   });
 
   // =============================================
@@ -162,7 +163,7 @@ export async function execute(interaction, trainerData) {
 
   collector.on("collect", async (i) => {
     if (i.user.id !== userId)
-      return safeReply(i, { content: "⚠️ This menu isn't yours.", ephemeral: true });
+      return safeReply(i, { content: "⚠️ This menu isn't yours.", flags: MessageFlags.Ephemeral });
 
     // PAGINATION
     if (i.customId === "next_page") {
@@ -192,7 +193,7 @@ export async function execute(interaction, trainerData) {
     if (i.customId.startsWith("inspect_")) {
       const id = parseInt(i.customId.replace("inspect_", ""));
       const p = allPokemon.find((x) => x.id === id);
-      if (!p) return safeReply(i, { content: "Pokémon not found.", ephemeral: true });
+      if (!p) return safeReply(i, { content: "Pokémon not found.", flags: MessageFlags.Ephemeral });
 
       const normalSprite = `${spritePaths.pokemon}${p.id}.gif`;
       const shinySprite = `${spritePaths.shiny}${p.id}.gif`;
@@ -232,7 +233,7 @@ export async function execute(interaction, trainerData) {
 
       inner.on("collect", async (b) => {
         if (b.user.id !== userId)
-          return safeReply(b, { content: "⚠️ This entry isn't yours.", ephemeral: true });
+          return safeReply(b, { content: "⚠️ This entry isn't yours.", flags: MessageFlags.Ephemeral });
 
         if (b.customId === "toggle_shiny") {
           shinyView = !shinyView;

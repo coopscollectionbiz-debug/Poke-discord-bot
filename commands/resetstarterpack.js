@@ -2,7 +2,7 @@
 // /resetstarterpack – Admin (Race-Safe v6.0)
 // ==========================================================
 
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { atomicSave } from "../utils/saveManager.js";
 
@@ -30,7 +30,7 @@ export default {
   ) {
 
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       // Permission check
       if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {

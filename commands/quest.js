@@ -3,7 +3,7 @@
 // Coop's Collection Discord Bot
 // ==========================================================
 
-import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
@@ -29,7 +29,7 @@ export default {
     .setDescription("Complete a quest and receive a random reward! (70% Pokémon, 30% Trainer, +50 CC)"),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const id = interaction.user.id;
     const user = await ensureUserInitialized(id, interaction.user.username, trainerData, client);
@@ -44,7 +44,7 @@ export default {
       const secondsRemaining = Math.ceil((QUEST_COOLDOWN_MS - timeSinceLastQuest) / 1000);
       return safeReply(interaction, {
         content: `⏱️ Wait ${secondsRemaining}s before starting another quest.`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -77,7 +77,7 @@ export default {
         console.error("❌ Quest save failed:", err);
         return safeReply(interaction, {
           content: "❌ Failed to save quest reward. Please try again.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -96,7 +96,7 @@ export default {
         .setThumbnail(spriteUrl)
         .setFooter({ text: `+${QUEST_CC_REWARD} CC | Balance: ${user.cc} CC` });
 
-      await safeReply(interaction, { embeds: [embed], ephemeral: true });
+      await safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     // ==========================================================
@@ -116,7 +116,7 @@ export default {
         console.error("❌ Quest save failed:", err);
         return safeReply(interaction, {
           content: "❌ Failed to save quest reward. Please try again.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -127,7 +127,7 @@ export default {
         .setThumbnail(`${spritePaths.trainers}${file}`)
         .setFooter({ text: `+${QUEST_CC_REWARD} CC | Balance: ${user.cc} CC` });
 
-      await safeReply(interaction, { embeds: [embed], ephemeral: true });
+      await safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
     }
   }
 };

@@ -3,7 +3,7 @@
 // Coop's Collection Discord Bot (SafeReply Refactor + Trainer Key Standardization)
 // ==========================================================
 
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import {
   validateAmount,
   validateUserResources,
@@ -62,7 +62,7 @@ export default {
   // ⚙️ Command Execution (SafeReply Refactor)
   // ==========================================================
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const senderId = interaction.user.id;
     const receiver = interaction.options.getUser("target");
@@ -72,12 +72,12 @@ export default {
 
     // Basic validation
     if (!receiver)
-      return safeReply(interaction, { content: "❌ Invalid user.", ephemeral: true });
+      return safeReply(interaction, { content: "❌ Invalid user.", flags: MessageFlags.Ephemeral });
 
     if (receiver.id === senderId)
       return safeReply(interaction, {
         content: "⚠️ You can't gift yourself.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
 
     // Validate amount for CC/Pokemon
@@ -86,7 +86,7 @@ export default {
       if (!amountValidation.valid)
         return safeReply(interaction, {
           content: `❌ ${amountValidation.error}`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
     }
 
@@ -105,7 +105,7 @@ export default {
         if (!resourceCheck.valid)
           return safeReply(interaction, {
             content: `❌ ${resourceCheck.error}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         sender.cc -= amount;
@@ -120,14 +120,14 @@ export default {
         if (!itemName)
           return safeReply(interaction, {
             content: "❌ You must specify which Pokémon to gift.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         const nameValidation = validateNameQuery(itemName);
         if (!nameValidation.valid)
           return safeReply(interaction, {
             content: `❌ ${nameValidation.error}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         // ✅ Error handling on findPokemonByName
@@ -138,14 +138,14 @@ export default {
           console.error("❌ Error finding Pokémon:", err);
           return safeReply(interaction, {
             content: "❌ Error searching for Pokémon. Please try again.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
         if (!targetPokemon)
           return safeReply(interaction, {
             content: `⚠️ Pokémon \"${itemName}\" not found.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         const key = targetPokemon.id.toString();
@@ -155,13 +155,13 @@ export default {
         if (senderCount < amount)
           return safeReply(interaction, {
             content: `❌ You don't own ${amount}× ${targetPokemon.name}.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         if (senderCount - amount === 0)
           return safeReply(interaction, {
             content: `⚠️ You can't gift your last ${targetPokemon.name}.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         if (!sender.pokemon[key]) sender.pokemon[key] = { normal: 0, shiny: 0 };
@@ -181,21 +181,21 @@ export default {
         if (amount && amount !== 1) {
           return safeReply(interaction, {
             content: "⚠️ Trainer gifts are always 1. Ignore the amount parameter.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
         if (!itemName)
           return safeReply(interaction, {
             content: "❌ You must specify which Trainer to gift.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         const nameValidation = validateNameQuery(itemName);
         if (!nameValidation.valid)
           return safeReply(interaction, {
             content: `❌ ${nameValidation.error}`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         const flatTrainers = await getFlattenedTrainers();
@@ -204,7 +204,7 @@ export default {
         if (!targetTrainer)
           return safeReply(interaction, {
             content: `⚠️ Trainer \"${itemName}\" not found.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         // ✅ Use standardized trainer key handler
@@ -212,14 +212,14 @@ export default {
         if (!sender.trainers[spriteKey])
           return safeReply(interaction, {
             content: `❌ You don't own ${targetTrainer.name}.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         const senderTrainerCount = Object.keys(sender.trainers).length;
         if (senderTrainerCount <= 1)
           return safeReply(interaction, {
             content: `⚠️ You can't gift your only trainer sprite.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         delete sender.trainers[spriteKey];
@@ -232,7 +232,7 @@ export default {
       // ✅ Confirmation + Atomic Save
       // ==========================================================
       const embed = createSuccessEmbed("🎁 Gift Sent!", description, { color: 0x57f287 });
-      await safeReply(interaction, { embeds: [embed], ephemeral: true });
+      await safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
 
       try {
         await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
@@ -244,7 +244,7 @@ export default {
       console.error("❌ Gift command error:", err);
       return safeReply(interaction, {
         content: `❌ An error occurred: ${err.message}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },

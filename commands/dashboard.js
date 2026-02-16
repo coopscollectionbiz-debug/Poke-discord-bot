@@ -5,7 +5,7 @@
 // Sends ephemeral confirmation in Discord.
 // ===========================================================
 
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import { generateToken } from "../bot_final.js";
 
 export default {
@@ -41,7 +41,7 @@ export default {
 
       await interaction.reply({
         embeds: [embed],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
 
       console.log(`🎫 Dashboard token generated for ${interaction.user.username}`);
@@ -52,7 +52,7 @@ export default {
       try {
         await interaction.followUp({
           content: "❌ Something went wrong generating your dashboard link.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } catch (e) {
         console.error("❌ followUp also failed inside /dashboard:", e);

@@ -2,7 +2,7 @@
 // 🕐 /resetdaily – Admin Tool (Race-Safe, v5.0)
 // ==========================================================
 
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { atomicSave } from "../utils/saveManager.js";
 
 export default {
@@ -37,7 +37,7 @@ export default {
 
     try {
       // always defer first
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       // permission check
       if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {

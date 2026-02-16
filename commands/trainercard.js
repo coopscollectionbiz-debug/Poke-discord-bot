@@ -19,6 +19,7 @@ import {
   ButtonStyle,
   ActionRowBuilder,
   ComponentType,
+  MessageFlags,
 } from "discord.js";
 import fs from "fs";
 import path from "path";
@@ -165,7 +166,7 @@ export default {
     .setDescription("View or create your Trainer Card!"),
 
   async execute(interaction, trainerData, _saveTrainerDataLocal, saveDataToDiscord, client) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const user = await ensureUserInitialized(
       interaction.user.id,

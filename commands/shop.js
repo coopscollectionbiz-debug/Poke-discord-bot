@@ -17,6 +17,7 @@ import {
   ButtonStyle,
   ComponentType,
   PermissionFlagsBits,
+  MessageFlags,
 } from "discord.js";
 
 import { getAllPokemon, getAllTrainers } from "../utils/dataLoader.js";
@@ -67,7 +68,7 @@ async function handlePurchaseCost(i, user, item, saveLocal, saveDiscord, confirm
   if (item.cost > 0 && user.cc < item.cost) {
     await safeInteractionReply(i, {
       content: `❌ Not enough CC. Need **${item.cost}**, have **${user.cc}**.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     await closeShopMessage(i, confirmCollector, mainCollector);
     return false;
@@ -125,7 +126,7 @@ export default {
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const userId = interaction.user.id;
       const user = (trainerData[userId] ??= {
@@ -177,11 +178,11 @@ export default {
 
       collector.on("collect", async (i) => {
         if (i.user.id !== userId)
-          return safeInteractionReply(i, { content: "❌ This shop isn’t yours.", ephemeral: true });
+          return safeInteractionReply(i, { content: "❌ This shop isn’t yours.", flags: MessageFlags.Ephemeral });
 
         const item = SHOP_ITEMS.find((x) => x.id === i.values[0]);
         if (!item)
-          return safeInteractionReply(i, { content: "❌ Invalid item.", ephemeral: true });
+          return safeInteractionReply(i, { content: "❌ Invalid item.", flags: MessageFlags.Ephemeral });
 
         // Build confirmation embed
         const confirmEmbed = createSuccessEmbed(
@@ -224,7 +225,7 @@ export default {
 
           const confirmedItem = SHOP_ITEMS.find((x) => x.id === itemId);
           if (!confirmedItem)
-            return safeInteractionReply(btn, { content: "❌ Invalid item reference.", ephemeral: true });
+            return safeInteractionReply(btn, { content: "❌ Invalid item reference.", flags: MessageFlags.Ephemeral });
 
           // ❌ Cancel pressed
           if (action === "cancel") {
@@ -242,7 +243,7 @@ export default {
           if (confirmedItem.id === "starter_pack") {
             user.purchases ??= [];
             if (user.purchases.includes("starter_pack")) {
-              await safeInteractionReply(btn, { content: "⚠️ Already claimed.", ephemeral: true });
+              await safeInteractionReply(btn, { content: "⚠️ Already claimed.", flags: MessageFlags.Ephemeral });
               await closeShopMessage(btn, confirmCollector, collector);
               return;
             }
@@ -370,7 +371,7 @@ export default {
     } catch (err) {
       console.error("❌ /shop failed:", err);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: `❌ Error: ${err.message}`, ephemeral: true });
+        await interaction.reply({ content: `❌ Error: ${err.message}`, flags: MessageFlags.Ephemeral });
       } else {
         await interaction.editReply(`❌ Error: ${err.message}`);
       }

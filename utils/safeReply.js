@@ -25,7 +25,7 @@ function shouldSwallow(err) {
  * already been replied to, deferred, or is a fresh interaction.
  *
  * @param {import("discord.js").Interaction} interaction
- * @param {Object} options - { content, embeds, components, ephemeral, ... }
+ * @param {Object} options - { content, embeds, components, flags, ... }
  * @param {boolean} [editIfReplied=false] - If true, edits instead of followUp when already replied.
  */
 export async function safeReply(interaction, options = {}, editIfReplied = false) {

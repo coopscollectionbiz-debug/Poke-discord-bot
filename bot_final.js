@@ -1740,7 +1740,7 @@ client.on("interactionCreate", async (interaction) => {
       interaction.followUp = async (opts) => {
         try {
           if (!interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: !!opts?.ephemeral }).catch(() => {});
+            await interaction.deferReply({ flags: opts?.ephemeral ? 64 : 0 }).catch(() => {});
           }
           return await _followUp(opts);
         } catch (e) {

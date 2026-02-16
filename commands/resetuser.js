@@ -4,7 +4,7 @@
 // while keeping TP and CC intact.
 // ==========================================================
 
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { atomicSave } from "../utils/saveManager.js";
 
 export default {
@@ -21,7 +21,7 @@ export default {
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord) {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const target = interaction.options.getUser("user");
       const id = target.id;

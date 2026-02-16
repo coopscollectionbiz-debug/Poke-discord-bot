@@ -3,7 +3,7 @@
 // Restores trainers + displayedTrainer from old backup
 // ==========================================================
 
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import fs from "fs";
 
 export default {
@@ -13,7 +13,7 @@ export default {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData, saveTrainerDataLocal) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const OLD_FILE = "./oldTrainerBackup.json";
 

@@ -3,7 +3,7 @@
 // Race-Safe • No normalizeUserSchema • Uses injected lockUser
 // ==========================================================
 
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { getRank } from "../utils/rankSystem.js";
 
@@ -22,7 +22,7 @@ export default {
     client                  // unused here
   ) {
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const userId = interaction.user.id;
     const guild = interaction.guild;
@@ -37,7 +37,7 @@ export default {
       if (!user) {
         return safeReply(interaction, {
           content: "⚠️ You don't have trainer data yet. Use `/trainercard` first.",
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
 
@@ -53,7 +53,7 @@ export default {
       if (!baseRole || !femaleRole) {
         return safeReply(interaction, {
           content: "⚠️ Your rank roles are missing. Please notify an admin.",
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
 
@@ -77,7 +77,7 @@ export default {
                 .setColor(0xff69b4)
                 .setTimestamp()
             ],
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
           });
         }
 
@@ -96,7 +96,7 @@ export default {
                 .setColor(0x5865f2)
                 .setTimestamp()
             ],
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
           });
         }
 
@@ -113,14 +113,14 @@ export default {
               .setColor(0x43b581)
               .setTimestamp()
           ],
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
 
       } catch (err) {
         console.error("❌ swapicon failed:", err);
         return safeReply(interaction, {
           content: "❌ Something went wrong while swapping your icons.",
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
     });

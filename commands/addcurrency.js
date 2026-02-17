@@ -2,7 +2,7 @@
 // /addcurrency – Add TP or CC to a user's account (Safe, Locked)
 // ==========================================================
 
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
@@ -39,13 +39,13 @@ export default {
     client                 // 7
   ) {
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Permission check
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
       return safeReply(interaction, {
         content: "⛔ You do not have permission to use this command.",
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -57,14 +57,14 @@ export default {
     if (amount <= 0) {
       return safeReply(interaction, {
         content: "❌ Amount must be greater than 0.",
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     if (amount > 1_000_000) {
       return safeReply(interaction, {
         content: "❌ Amount exceeds maximum (1,000,000).",
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -92,7 +92,7 @@ export default {
 
     return safeReply(interaction, {
       content: `✅ Added **${amount} ${type.toUpperCase()}** to **${targetUser.username}**.`,
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 };

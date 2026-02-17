@@ -3,7 +3,7 @@
 // Coop's Collection Discord Bot
 // ==========================================================
 
-import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { findPokemonByName } from "../utils/dataLoader.js";
 import { validateNameQuery } from "../utils/validators.js";
@@ -25,7 +25,7 @@ export default {
     ),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const input = interaction.options.getString("name").trim();
 
@@ -34,7 +34,7 @@ export default {
     if (!validation.valid) {
       return safeReply(interaction, {
         content: `❌ ${validation.error}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -44,7 +44,7 @@ export default {
     if (!pokemon) {
       return safeReply(interaction, {
         content: `❌ Pokémon **${input}** not found.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -63,6 +63,6 @@ export default {
       .setFooter({ text: "Pokémon data sourced from Coop's Collection" })
       .setTimestamp();
 
-    await safeReply(interaction, { embeds: [embed], ephemeral: true });
+    await safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
   },
 };

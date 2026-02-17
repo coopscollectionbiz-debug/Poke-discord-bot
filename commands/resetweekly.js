@@ -6,6 +6,7 @@
 import {
   SlashCommandBuilder,
   PermissionFlagsBits,
+  MessageFlags,
 } from "discord.js";
 
 export default {
@@ -22,7 +23,7 @@ export default {
 
   async execute(interaction, trainerData, saveLocal, saveDiscord) {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       // Pick target user
       const target =

@@ -5,7 +5,7 @@
 // Fully compatible with updated showTrainerCard().
 // ==========================================================
 
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 import { safeReply } from "../utils/safeReply.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
@@ -19,7 +19,7 @@ export default {
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
     try {
       // Always public
-      await interaction.deferReply({ ephemeral: false });
+      await interaction.deferReply();
 
       const userId = interaction.user.id;
       const username = interaction.user.username;
@@ -29,7 +29,7 @@ export default {
       if (!user) {
         return safeReply(interaction, {
           content: "⚠️ You don’t have a Trainer Card yet! Use `/trainercard` to create one.",
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
 
@@ -48,7 +48,7 @@ export default {
       console.error("❌ /showcard error:", err);
       await safeReply(interaction, {
         content: "❌ Failed to show Trainer Card. Please try again later.",
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
   }

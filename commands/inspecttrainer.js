@@ -9,7 +9,8 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  PermissionFlagsBits
+  PermissionFlagsBits,
+  MessageFlags,
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
@@ -54,7 +55,7 @@ export default {
   // ⚙️ Command Execution
   // ==========================================================
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const targetUser = interaction.options.getUser("user");
     const filterRarity = interaction.options.getString("rarity") || "all";
@@ -62,7 +63,7 @@ export default {
     if (!trainerData[targetUser.id]) {
       return safeReply(interaction, {
         content: `❌ ${targetUser.username} doesn't have a trainer profile yet.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -72,7 +73,7 @@ export default {
     if (ownedTrainerKeys.length === 0) {
       return safeReply(interaction, {
         content: `⚠️ ${targetUser.username} doesn't own any trainers yet.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -92,7 +93,7 @@ export default {
     if (filtered.length === 0) {
       return safeReply(interaction, {
         content: `⚠️ No trainers found matching **${filterRarity}** rarity.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -152,7 +153,7 @@ export default {
       if (i.user.id !== interaction.user.id) {
         return safeReply(i, {
           content: "⚠️ You can't control this menu.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 

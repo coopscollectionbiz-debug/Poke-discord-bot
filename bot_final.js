@@ -1671,7 +1671,7 @@ client.on("interactionCreate", async (interaction) => {
       interaction.followUp = async (opts) => {
         try {
           if (!interaction.deferred && !interaction.replied) {
-            await interaction.deferReply({ ephemeral: !!opts?.ephemeral }).catch(() => {});
+            await interaction.deferReply({ flags: opts?.ephemeral ? 64 : 0 }).catch(() => {});
           }
           return await _followUp(opts);
         } catch (e) {
@@ -1703,22 +1703,18 @@ client.on("interactionCreate", async (interaction) => {
   }
 
 // ----------------------------------------------------------
-// ✅ Slash Commands (HARDENED: immediate ACK + timeout)
+// ✅ Slash Commands (HARDENED: timeout guard)
 // ----------------------------------------------------------
 if (interaction.isChatInputCommand()) {
-  // ✅ IMMEDIATE ACK (prevents "The application did not respond")
-  try {
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferReply({ ephemeral: true }).catch(() => {});
-    }
-  } catch {}
+  // NOTE: Each command handles its own deferReply() to control
+  // whether the response is public or ephemeral.
 
   const startedAt = Date.now();
 
   try {
     if (!isReady) {
       await interaction
-        .editReply("⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.")
+        .reply({ content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.", flags: 64 })
         .catch(() => {});
       return;
     }
@@ -1728,7 +1724,7 @@ if (interaction.isChatInputCommand()) {
       console.warn(
         `❌ Unknown command: ${interaction.commandName} (loaded=${client.commands.size})`
       );
-      await interaction.editReply("❌ Unknown command.").catch(() => {});
+      await interaction.reply({ content: "❌ Unknown command.", flags: 64 }).catch(() => {});
       return;
     }
 

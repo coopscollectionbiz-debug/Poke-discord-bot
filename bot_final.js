@@ -723,7 +723,6 @@ let shuttingDown = false;
 const startTime = Date.now();
 // Cooldowns
 const rewardCooldowns = new Map();    // ✅ ONLY for random encounter rewards
-const reactionCooldowns = new Map();  // ✅ ONLY for reaction TP throttling
 const userCooldowns = new Map();      // ✅ message TP throttling
 const RANK_TIERS = getRankTiers();
 
@@ -1315,74 +1314,6 @@ client.on("messageCreate", async (message) => {
   });
 });
 
-// ==========================================================
-// 💖 TP Gain from Reactions
-// ==========================================================
-client.on("messageReactionAdd", async (reaction, user) => {
-  if (user.bot || !reaction.message.guild) return;
-
-  const userId = user.id;
-  trainerData[userId] = normalizeUserSchema(userId, trainerData[userId]);
-
-// Prevent spam with cooldown (✅ reactions use their own map)
-const now = Date.now();
-if (reactionCooldowns.has(userId) && now - reactionCooldowns.get(userId) < REWARD_COOLDOWN) return;
-reactionCooldowns.set(userId, now);
-
-
-  trainerData[userId] ??= {
-    id: userId,
-    tp: 0,
-    cc: 0,
-    pokemon: {},
-    trainers: [],
-    displayedTrainer: null,
-    displayedPokemon: [],
-    onboardingComplete: false,
-    onboardingDate: null,
-    starterPokemon: null,
-    lastDaily: 0,
-    lastRecruit: 0,
-    lastQuest: 0,
-    lastWeeklyPack: null,
-    items: {},
-    purchases: [],
-    luck: 0,
-    luckTimestamp: 0,
-  };
-
-  const userObj = trainerData[userId];
-
-  // 🪙 Gain TP for reaction
-  userObj.tp += MESSAGE_TP_GAIN;
-
-  // 💰 Chance to earn CC
-  if (Math.random() < MESSAGE_CC_CHANCE) {
-    userObj.cc ??= 0;
-    userObj.cc += MESSAGE_CC_GAIN;
-
-    try {
-      await reaction.message.react("💰").catch(() => {});
-    } catch {}
-  }
-
-  // 🔥 fire-and-forget save (safe, debounced) — SAVE AFTER MUTATIONS
-  enqueueSave(trainerData);
-
-  queueRoleUpdate({
-    guild: reaction.message.guild,
-    userId,
-    tp: userObj.tp,
-    channel: reaction.message.channel,
-  });
-
-  // 3% chance for random reward
-  setImmediate(() => {
-    tryGiveRandomReward(userObj, user, reaction.message).catch((e) =>
-      console.warn("⚠️ tryGiveRandomReward failed:", e?.message || e)
-    );
-  });
-});
 
 // ==========================================================
 // 🛍️ SHOP API — GET USER  (FINAL FIXED VERSION)

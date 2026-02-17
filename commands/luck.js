@@ -55,7 +55,7 @@ export default {
       .setColor(rarityColors.success ?? "#00ff9d")
       .setTitle("🍀 Your Luck Meter (Random Reward Pity)")
       .setDescription(
-`Each time you chat or react and **don’t** get a random reward, your luck increases.
+`Each time you chat and **don't** get a random reward, your luck increases.
 When you *do* get a reward → your luck resets to 0.  
 
 **Final Chance:** \`${percent}%\`

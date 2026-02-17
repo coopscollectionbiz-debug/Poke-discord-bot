@@ -64,7 +64,7 @@ async function terminateShop(i, confirmCollector, mainCollector) {
 }
 
 // Handles cost deduction and insufficient funds
-async function handlePurchaseCost(i, user, item, saveLocal, saveDiscord, confirmCollector, mainCollector) {
+async function handlePurchaseCost(i, user, item, saveLocal, confirmCollector, mainCollector) {
   if (item.cost > 0 && user.cc < item.cost) {
     await safeInteractionReply(i, {
       content: `❌ Not enough CC. Need **${item.cost}**, have **${user.cc}**.`,
@@ -77,7 +77,6 @@ async function handlePurchaseCost(i, user, item, saveLocal, saveDiscord, confirm
   if (item.cost > 0) {
     user.cc -= item.cost;
     await saveLocal();
-    await saveDiscord();
   }
   return true;
 }
@@ -293,7 +292,6 @@ export default {
             try {
               user.purchases.push("starter_pack");
               await saveTrainerDataLocal(trainerData);
-              await saveDataToDiscord(trainerData);
 
               for (const b of broadcastQueue) {
                 await broadcastReward(client, {
@@ -336,7 +334,6 @@ export default {
               user,
               confirmedItem,
               () => saveTrainerDataLocal(trainerData),
-              () => saveDataToDiscord(trainerData),
               confirmCollector,
               collector
             );
@@ -345,7 +342,6 @@ export default {
             user.items ??= { evolution_stone: 0 };
             user.items.evolution_stone++;
             await saveTrainerDataLocal(trainerData);
-            await saveDataToDiscord(trainerData);
 
             const successEmbed = createSuccessEmbed(
               `${EVO_STONE} Evolution Stone Purchased!`,

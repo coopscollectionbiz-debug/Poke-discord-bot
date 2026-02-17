@@ -53,6 +53,8 @@ process.on("uncaughtException", (err) => {
 });
 
 
+let isSaving = false;
+
 function withTimeout(promise, ms, label = "op") {
   return Promise.race([
     promise,
@@ -718,7 +720,6 @@ let trainerData = {};
 let discordSaveCount = 0;
 let commandSaveQueue = null;
 let isReady = false;
-let isSaving = false;
 let shuttingDown = false;
 const startTime = Date.now();
 // Cooldowns
@@ -1006,6 +1007,7 @@ async function saveDataToDiscord(data, { force = false } = {}) {
     console.log(`✅ Discord backup #${discordSaveCount} (${Math.round(payload.length / 1024)} KB)`);
   } catch (err) {
     console.error("❌ Discord save failed:", err?.message || err);
+    throw err;  // let callers know it failed
   } finally {
     isSaving = false;
   }

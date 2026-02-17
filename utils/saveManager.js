@@ -24,12 +24,11 @@ export async function saveTrainerData(trainerData) {
 }
 
 // ----------------------------------------------------------
-// atomicSave — local + Discord backup
+// atomicSave — local save only (Discord backup handled by 1-minute interval)
 // ----------------------------------------------------------
 export async function atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord) {
   const errors = [];
 
-  // 1️⃣ Local save
   try {
     await enqueueSave(trainerData);
   } catch (err) {
@@ -37,17 +36,5 @@ export async function atomicSave(trainerData, saveTrainerDataLocal, saveDataToDi
     console.error(msg);
     errors.push(msg);
   }
-
-  // 2️⃣ Discord save
-  try {
-    if (saveDataToDiscord) {
-      await saveDataToDiscord(trainerData);
-    }
-  } catch (err) {
-    const msg = `❌ Discord save failed: ${err.message}`;
-    console.error(msg);
-    errors.push(msg);
-  }
-
   return { ok: errors.length === 0, errors };
 }

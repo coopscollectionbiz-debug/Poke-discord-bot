@@ -2,7 +2,7 @@
 // /resetteam – Admin Reset of Displayed Pokémon Team (v7.0)
 // ==========================================================
 
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { atomicSave } from "../utils/saveManager.js";
 
@@ -30,13 +30,13 @@ export default {
   ) {
 
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       // Permission
       if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
         return safeReply(interaction, {
           content: "⛔ You do not have permission to use this command.",
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
 
@@ -53,7 +53,7 @@ export default {
         if (!user) {
           return safeReply(interaction, {
             content: `❌ User <@${userId}> has no saved data.`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
           });
         }
 
@@ -70,7 +70,7 @@ export default {
 
         return safeReply(interaction, {
           content: `✅ Reset **${target.username}'s** displayed Pokémon team.\nThey can now pick a new team in the dashboard.`,
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
 
       });
@@ -78,7 +78,7 @@ export default {
       console.error("❌ /resetteam failed:", err);
       return safeReply(interaction, {
         content: `❌ Error resetting team: ${err.message}`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
   }

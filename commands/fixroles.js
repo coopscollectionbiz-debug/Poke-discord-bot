@@ -4,7 +4,8 @@
 import {
   SlashCommandBuilder,
   EmbedBuilder,
-  PermissionFlagsBits
+  PermissionFlagsBits,
+  MessageFlags
 } from "discord.js";
 import { getRank, getRankTiers } from "../utils/rankSystem.js";
 
@@ -15,7 +16,7 @@ export default {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const guild = interaction.guild;
     const rankTiers = getRankTiers();
 

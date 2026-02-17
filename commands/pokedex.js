@@ -16,6 +16,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
 } from "discord.js";
 
 import { safeReply } from "../utils/safeReply.js";
@@ -118,7 +119,7 @@ export default {
     client
   ) {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const name = interaction.options.getString("name", true).trim();
       const all = await getAllPokemon();
@@ -138,7 +139,7 @@ export default {
       if (!poke) {
         return safeReply(interaction, {
           content: `❌ Pokémon "**${name}**" not found.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -269,7 +270,7 @@ export default {
       console.error("❌ /pokedex error:", err);
       return safeReply(interaction, {
         content: "❌ Failed to load Pokédex entry.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },

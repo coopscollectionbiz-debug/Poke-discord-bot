@@ -3,7 +3,7 @@
 // Coop's Collection Discord Bot
 // ==========================================================
 
-import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { handleCommandError } from "../utils/errorHandler.js";
 import { safeReply } from "../utils/safeReply.js";
 import { atomicSave } from "../utils/saveManager.js";
@@ -23,7 +23,7 @@ export default {
     enqueueSave,       // ✔ now included
     client             // ✔ now included
   ) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
       // ===========================================
@@ -56,7 +56,7 @@ export default {
         embed.addFields({ name: "⚠️ Warnings", value: errors.join("\n") });
       }
 
-      await safeReply(interaction, { embeds: [embed], ephemeral: true });
+      await safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
 
       console.log(`💾 /adminsave executed manually by ${interaction.user.tag}`);
 
@@ -66,7 +66,7 @@ export default {
 
       await safeReply(interaction, {
         content: "❌ An unexpected error occurred while saving trainer data.",
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
   }

@@ -4,7 +4,8 @@
 
 import {
   SlashCommandBuilder,
-  EmbedBuilder
+  EmbedBuilder,
+  MessageFlags
 } from "discord.js";
 
 import { safeReply } from "../utils/safeReply.js";
@@ -57,7 +58,7 @@ export async function execute(
  {
 
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const userId = interaction.user.id;
 
@@ -93,7 +94,7 @@ export async function execute(
       if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
         return safeReply(interaction, {
           content: "❌ Pokémon data unavailable.",
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
 
@@ -106,7 +107,7 @@ export async function execute(
       if (!pick1 || !pick2) {
         return safeReply(interaction, {
           content: "❌ Daily failed — no Pokémon could be selected.",
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
 
@@ -225,7 +226,7 @@ export async function execute(
 
       return safeReply(interaction, {
         embeds: [embed1, embed2, summary],
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     });
 
@@ -234,7 +235,7 @@ export async function execute(
 
     return safeReply(interaction, {
       content: "❌ An error occurred processing your daily reward.",
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 }

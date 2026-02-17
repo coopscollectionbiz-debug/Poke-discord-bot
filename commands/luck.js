@@ -5,7 +5,8 @@
 
 import {
   SlashCommandBuilder,
-  EmbedBuilder
+  EmbedBuilder,
+  MessageFlags
 } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { rarityColors } from "../bot_final.js"; // color palette
@@ -16,6 +17,8 @@ export default {
     .setDescription("Shows your random reward luck meter (pity system)"),
 
   async execute(interaction, trainerData) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
     const userId = interaction.user.id;
 
     // Ensure user exists
@@ -23,7 +26,7 @@ export default {
     if (!user) {
       return safeReply(interaction, {
         content: "❌ You haven’t earned any progress yet. Try chatting to begin!",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -55,17 +58,17 @@ export default {
       .setColor(rarityColors.success ?? "#00ff9d")
       .setTitle("🍀 Your Luck Meter (Random Reward Pity)")
       .setDescription(
-`Each time you chat and **don't** get a random reward, your luck increases.
-When you *do* get a reward → your luck resets to 0.  
+`Each time you chat or react and **don’t** get a random reward, your luck increases.
+When you *do* get a reward → your luck resets to 0.
 
 **Final Chance:** \`${percent}%\`
 **Bonus (pity) Only:** \`${percentLuckOnly}%\`
 
-**Meter:**  
+**Meter:**
 \`${bar}\`
 `
       );
 
-    await safeReply(interaction, { embeds: [embed], ephemeral: true });
+    await safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 };

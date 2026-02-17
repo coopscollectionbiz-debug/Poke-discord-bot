@@ -9,7 +9,8 @@ import {
   StringSelectMenuBuilder,
   ButtonBuilder,
   ButtonStyle,
-  PermissionFlagsBits
+  PermissionFlagsBits,
+  MessageFlags
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
@@ -41,7 +42,7 @@ export default {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const id = interaction.user.id;
     const user = await ensureUserInitialized(id, interaction.user.username, trainerData, client);
@@ -53,7 +54,7 @@ export default {
       const secondsRemaining = Math.ceil((RECRUIT_COOLDOWN_MS - timeSinceLastRecruit) / 1000);
       return safeReply(interaction, {
         content: `⏱️ Wait ${secondsRemaining}s before recruiting again.`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -61,7 +62,7 @@ export default {
     if (user.cc < RECRUIT_COST_CC) {
       return safeReply(interaction, {
         content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -90,7 +91,7 @@ export default {
         new ActionRowBuilder().addComponents(menu),
         new ActionRowBuilder().addComponents(cancel)
       ],
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
 
     // 🕐 Collector
@@ -102,7 +103,7 @@ export default {
     collector.on("collect", async (i) => {
       if (i.customId === "cancel_recruit") {
         collector.stop();
-        return safeReply(i, { content: "❌ Recruitment cancelled.", ephemeral: true });
+        return safeReply(i, { content: "❌ Recruitment cancelled.", flags: MessageFlags.Ephemeral });
       }
 
       if (i.customId === "recruit_type") {
@@ -112,7 +113,7 @@ export default {
         if (user.cc < RECRUIT_COST_CC) {
           return safeReply(i, {
             content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
           });
         }
 
@@ -128,7 +129,7 @@ export default {
       if (reason === "time") {
         await safeReply(interaction, {
           content: "⏱️ Recruitment timed out – try again later.",
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
     });
@@ -142,7 +143,7 @@ async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDa
   if (user.cc < RECRUIT_COST_CC) {
     return safeReply(i, {
       content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -166,7 +167,7 @@ async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDa
     console.error("❌ Recruitment save failed:", err);
     return safeReply(i, {
       content: "❌ Failed to complete recruitment. Please try again.",
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -181,7 +182,7 @@ async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDa
     .setThumbnail(spriteUrl)
     .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
 
-  await safeReply(i, { embeds: [embed], ephemeral: true });
+  await safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });
 
   // 🌟 Rare Sightings Broadcast (Epic+ and all Shiny)
   await postRareSightings(client, pick, i.user, true, shiny);
@@ -194,7 +195,7 @@ async function recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDa
   if (user.cc < RECRUIT_COST_CC) {
     return safeReply(i, {
       content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -215,7 +216,7 @@ async function recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDa
     console.error("❌ Recruitment save failed:", err);
     return safeReply(i, {
       content: "❌ Failed to complete recruitment. Please try again.",
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -226,7 +227,7 @@ async function recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDa
     .setThumbnail(`${spritePaths.trainers}${file}`)
     .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
 
-  await safeReply(i, { embeds: [embed], ephemeral: true });
+  await safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });
 
   // 🌟 Rare Sightings Broadcast (Epic+)
   await postRareSightings(client, pick, i.user, false, false);

@@ -4,7 +4,7 @@
 // ✅ Adds support for Shiny Dust via Item path
 // ==========================================================
 
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { findPokemonByName, getFlattenedTrainers } from "../utils/dataLoader.js";
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
@@ -57,13 +57,13 @@ export default {
     enqueueSave,
     client
   ) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Permission validation
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
       return safeReply(interaction, {
         content: "⛔ You do not have permission to use this command.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -100,7 +100,7 @@ export default {
           if (!pokemon) {
             return safeReply(interaction, {
               content: `⛔ Pokémon "${name}" not found.`,
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
           }
 
@@ -126,7 +126,7 @@ export default {
           if (!trainer) {
             return safeReply(interaction, {
               content: `⛔ Trainer "${name}" not found.`,
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
           }
 
@@ -167,7 +167,7 @@ export default {
             if (!globalThis.SHOP_ITEMS || !globalThis.SHOP_ITEMS[key]) {
               return safeReply(interaction, {
                 content: `⛔ Item "${name}" not recognized.`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
               });
             }
 
@@ -189,7 +189,7 @@ export default {
         } else {
           return safeReply(interaction, {
             content: `⛔ Invalid type.`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -203,13 +203,13 @@ export default {
         // ======================================================
         return safeReply(interaction, {
           content: `✅ Added ${confirmationText} to **${targetUser.username}**.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } catch (err) {
         console.error("❌ Add inventory error:", err);
         return safeReply(interaction, {
           content: `❌ Error: ${err.message}`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     });

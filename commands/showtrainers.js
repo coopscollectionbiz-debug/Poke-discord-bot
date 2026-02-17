@@ -8,7 +8,7 @@
 // Levels:
 // 1️⃣ Trainer Class List  →  2️⃣ Class Variants  →  3️⃣ Individual Sprite
 //
-// ✅ Ephemeral & paginated
+// ✅ Public & paginated
 // ✅ Back/forward navigation
 // ✅ Uses centralized spritePaths.js
 // ✅ Handles nested trainerSprites.json
@@ -21,6 +21,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
   PermissionFlagsBits, // ✅ Added import
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
@@ -66,14 +67,14 @@ export default {
   // ⚙️ Execution
   // ==========================================================
   async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply();
 
     const userId = interaction.user.id;
     const user = trainerData[userId];
     if (!user) {
       return safeReply(interaction, {
         content: "❌ You don’t have a trainer profile yet. Use `/trainercard` first!",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -122,7 +123,7 @@ export default {
     if (rows.length === 0) {
       return safeReply(interaction, {
         content: "⚠️ No trainers match your current filters or ownership status.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -289,7 +290,7 @@ export default {
     const message = await safeReply(interaction, {
       embeds: [embed],
       components: [navRow, trainerRow],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     // ==========================================================
@@ -301,7 +302,7 @@ export default {
       if (i.user.id !== interaction.user.id)
         return safeReply(i, {
           content: "⚠️ You can’t control this menu.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
 
       if (i.customId === "prev" && currentPage > 0) currentPage--;
@@ -327,7 +328,7 @@ export default {
         const className = variant?.name;
         const rendered = renderSprite(spriteFile, className);
         if (!rendered)
-          return safeReply(i, { content: "❌ Sprite not found.", ephemeral: true });
+          return safeReply(i, { content: "❌ Sprite not found.", flags: MessageFlags.Ephemeral });
         return safeReply(i, {
           embeds: [rendered.embed],
           components: [rendered.row],

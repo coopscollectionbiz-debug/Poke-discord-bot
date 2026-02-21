@@ -1695,7 +1695,10 @@ client.on("interactionCreate", async (interaction) => {
     if (typeof interaction.update === "function") {
       const _update = interaction.update.bind(interaction);
       interaction.update = async (opts) => {
-        if (interaction.deferred || interaction.replied) return;
+        if (interaction.replied) return;
+        if (interaction.deferred) {
+          return interaction.editReply(opts).catch(() => {});
+        }
         try { return await _update(opts); }
         catch (e) { if (swallow(e)) return; throw e; }
       };
@@ -1784,22 +1787,19 @@ if (interaction.isChatInputCommand()) {
 }
 
   // ----------------------------------------------------------
-  // ✅ Buttons (ACK-only)
+  // ✅ Buttons — only ACK known no-op buttons; let collectors handle the rest
   // ----------------------------------------------------------
   if (interaction.isButton()) {
     const id = interaction.customId ?? "";
 
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.deferUpdate().catch(() => {});
-    }
-
-    // intentionally no-op buttons
-    if (
+    const noopButton =
       id.startsWith("confirm_") ||
       id.startsWith("cancel_") ||
-      id.startsWith("disabled_")
-    )
-      return;
+      id.startsWith("disabled_");
+
+    if (noopButton && !interaction.deferred && !interaction.replied) {
+      await interaction.deferUpdate().catch(() => {});
+    }
 
     return;
   }

@@ -255,6 +255,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
     collector.on("collect", async (i) => {
       if (i.customId === "select_starter") {
+        await i.deferUpdate();
         const p = allStarters[index];
 
         const shiny = rollForShiny(user.tp || 0);
@@ -349,6 +350,7 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
 
   collector.on("collect", async (i) => {
     if (i.customId === "confirm_trainer") {
+      await i.deferUpdate();
       const t = trainers[index];
 
       // ✅ trainers is canonical array in your bot normalizeUserSchema()

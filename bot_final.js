@@ -649,8 +649,8 @@ const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
 // We'll keep all active tokens in memory for 10 minutes
 const activeTokens = new Map();
 
-// ✅ Token garbage collection (prevents memory growth)
-// Runs every 5 minutes and deletes expired tokens
+// ✅ Garbage collection — prevents memory growth on long-running process
+// Runs every 5 minutes: cleans expired tokens, stale cooldowns, and cached members
 setInterval(() => {
   const now = Date.now();
   let removed = 0;
@@ -662,8 +662,12 @@ setInterval(() => {
     }
   }
 
+  for (const [k, ts] of userCooldowns) if (now - ts > 60_000) { userCooldowns.delete(k); removed++; }
+  for (const [k, ts] of rewardCooldowns) if (now - ts > 60_000) { rewardCooldowns.delete(k); removed++; }
+  for (const [k, { ts }] of memberCache) if (now - ts > 2 * MEMBER_CACHE_TTL_MS) { memberCache.delete(k); removed++; }
+
   if (removed > 0) {
-    console.log(`🧹 Token GC removed ${removed} expired token(s)`);
+    console.log(`🧹 GC removed ${removed} expired entry(s)`);
   }
 }, 5 * 60 * 1000);
 
@@ -2797,7 +2801,7 @@ function startReadyWatchdog() {
 async function loginLoop() {
   let attempt = 0;
 
-  while (true) {
+  while (!shuttingDown) {
     attempt++;
 
     // Always preflight before attempting login

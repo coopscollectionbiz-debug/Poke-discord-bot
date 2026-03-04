@@ -1,7 +1,7 @@
 /**
  * spriteConfig.js
  * Centralized sprite URL map and rarity emoji set for CoopBot v1.2
- * Used by trainercard.js, showpokemon.js, showtrainers.js, and pokedex.js
+ * Used by trainercard.js, showtrainers.js, and pokedex.js
  */
 
 export const rarityEmojis = {

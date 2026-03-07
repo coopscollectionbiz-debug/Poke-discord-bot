@@ -307,16 +307,12 @@ setInterval(async () => {
       const userObj = trainerData[job.userId];
       if (!userObj) continue;
 
-      // If you store rank, use it. If not, compare computed rank.
-      const oldRank = userObj.rank || getRank(userObj.tp || 0);
       const newRank = getRank(job.tp || 0);
+      if (!newRank) continue;
 
-      // Nothing changed? Skip ALL REST.
-      if (oldRank === newRank) continue;
-
-      // Update stored rank (optional, but helps future comparisons)
+      // Let updateUserRole decide — it checks actual Discord roles
+      // and no-ops cheaply if the member already has the correct role.
       userObj.rank = newRank;
-
       const member = await getMemberCached(job.guild, job.userId);
       await updateUserRole(member, job.tp, job.channel || null);
     } catch (err) {

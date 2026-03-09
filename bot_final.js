@@ -307,14 +307,17 @@ setInterval(async () => {
       const userObj = trainerData[job.userId];
       if (!userObj) continue;
 
+      const oldRank = userObj.rank || null;
       const newRank = getRank(job.tp || 0);
       if (!newRank) continue;
 
-      // Let updateUserRole decide — it checks actual Discord roles
-      // and no-ops cheaply if the member already has the correct role.
       userObj.rank = newRank;
       const member = await getMemberCached(job.guild, job.userId);
-      await updateUserRole(member, job.tp, job.channel || null);
+
+      // Only announce (via channel) on genuine rank-ups.
+      // Silent fix when rank name is unchanged but Discord role is stale.
+      const channel = oldRank !== newRank ? job.channel : null;
+      await updateUserRole(member, job.tp, channel);
     } catch (err) {
       console.warn("⚠️ role queue flush failed:", err?.message || err);
     }

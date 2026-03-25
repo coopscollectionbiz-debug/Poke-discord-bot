@@ -48,6 +48,7 @@ export default {
           lastRecruit: 0,
           lastQuest: 0,
           lastWeeklyPack: null,
+          weeklyPackClaimed: false,
           items: { evolution_stone: 0 },
           purchases: [],
           luck: 0,
@@ -56,7 +57,7 @@ export default {
       }
 
       // Reset weekly pack
-      trainerData[id].lastWeeklyPack = null;
+      trainerData[id].weeklyPackClaimed = false;
 
       // Save
       await saveLocal(trainerData);

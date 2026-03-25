@@ -226,7 +226,7 @@ function getISOWeekKeyUTC(date = new Date()) {
   return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
 }
 
-function ensureNonShinyDustWeek(u) {
+function ensureWeeklyReset(u) {
   const key = getISOWeekKeyUTC();
 
   // sanitize fields
@@ -239,6 +239,7 @@ function ensureNonShinyDustWeek(u) {
   if (u.nonShinyDustWeekKey !== key) {
     u.nonShinyDustWeekKey = key;
     u.nonShinyDustEarnedThisWeek = 0;
+    u.weeklyPackClaimed = false;
   }
 
   // clamp to cap
@@ -437,15 +438,10 @@ user.displayedPokemon = user.displayedPokemon
   user.lastQuest =
     typeof user.lastQuest === "number" ? user.lastQuest : 0;
 
-  // weeklyPack: must be ISO string or null
-  if (
-    typeof user.lastWeeklyPack === "string" &&
-    !isNaN(new Date(user.lastWeeklyPack))
-  ) {
-    // valid
-  } else {
-    user.lastWeeklyPack = null;
-  }
+  // weeklyPack: deprecated field kept for safe rollout
+  if (user.lastWeeklyPack === undefined) user.lastWeeklyPack = null;
+  // weeklyPack: claimed flag (reset by ensureWeeklyReset)
+  user.weeklyPackClaimed = !!user.weeklyPackClaimed;
 
   // ==========================================================
   // 7️⃣ ONBOARDING FLOW
@@ -488,7 +484,7 @@ user.items.evolution_stone = Number.isFinite(user.items.evolution_stone)
 // ==========================================================
 // 🧾 NON-SHINY DUST WEEKLY CAP TRACKING (normalize + roll week)
 // ==========================================================
-ensureNonShinyDustWeek(user);
+ensureWeeklyReset(user);
 
   // ==========================================================
   // 9️⃣ PURCHASES
@@ -1281,6 +1277,7 @@ client.on("messageCreate", async (message) => {
     lastRecruit: 0,
     lastQuest: 0,
     lastWeeklyPack: null,
+    weeklyPackClaimed: false,
     items: {},
     purchases: [],
     luck: 0,
@@ -1823,16 +1820,13 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
   await lockUser(id, async () => {
     const user = trainerData[id];
 
-    const last = user.lastWeeklyPack ? new Date(user.lastWeeklyPack).getTime() : 0;
-    const now = Date.now();
-    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    ensureWeeklyReset(user);
 
-    if (now - last < sevenDays) {
+    if (user.weeklyPackClaimed) {
       return res.status(400).json({ error: "Weekly pack already claimed." });
     }
 
-    // Set cooldown immediately
-    user.lastWeeklyPack = new Date().toISOString();
+    user.weeklyPackClaimed = true;
 
     const results = [];
     const allPokemon = await getPokemonCached();
@@ -2150,6 +2144,8 @@ app.get("/api/user-pokemon", (req, res) => {
   const pokemon = u.pokemon ?? {};
   const currentTeam = Array.isArray(u.displayedPokemon) ? u.displayedPokemon : [];
 
+  ensureWeeklyReset(u);
+
   // flatten response for front-end
   return res.json({
     id: u.id,
@@ -2159,6 +2155,7 @@ app.get("/api/user-pokemon", (req, res) => {
     items,
     pokemon,
     currentTeam, // NEW FORMAT: [{ id: Number, variant: "normal" | "shiny" }]
+    nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
   });
 });
 
@@ -2476,7 +2473,7 @@ if (chosenVariant === "shiny") {
   dustReward = (DUST_REWARD_BY_TIER[tier] ?? 0);
 } else {
   // ✅ weekly cap applies only to NON-SHINY dust
-  ensureNonShinyDustWeek(u);
+  ensureWeeklyReset(u);
 
   const earned = u.nonShinyDustEarnedThisWeek ?? 0;
   const remaining = Math.max(0, NON_SHINY_DUST_WEEKLY_CAP - earned);

@@ -33,7 +33,8 @@ export const USER_SCHEMA_TEMPLATE = {
   lastDaily: "timestamp",
   lastRecruit: "timestamp",
   lastQuest: "timestamp",
-  lastWeeklyPack: "timestamp or null",
+  lastWeeklyPack: "deprecated — kept for safe rollout, no longer read",
+  weeklyPackClaimed: "boolean (reset each ISO week)",
 
   // Inventory + shop
   items: "object { evolution_stone: number }",
@@ -80,6 +81,7 @@ export function createNewUser(userId, username) {
     lastRecruit: 0,
     lastQuest: 0,
     lastWeeklyPack: null,
+    weeklyPackClaimed: false,
 
     // Inventory
     items: {
@@ -134,9 +136,8 @@ export function validateUserSchema(user, userId, username) {
   if (out.lastDaily == null) out.lastDaily = 0;
   if (out.lastRecruit == null) out.lastRecruit = 0;
   if (out.lastQuest == null) out.lastQuest = 0;
-  if (out.lastWeeklyPack == null || out.lastWeeklyPack === "0" || isNaN(new Date(out.lastWeeklyPack))) {
-  out.lastWeeklyPack = null;
-}
+  if (out.lastWeeklyPack === undefined) out.lastWeeklyPack = null;
+  out.weeklyPackClaimed = !!out.weeklyPackClaimed;
 
   // Inventory
   if (!out.items || typeof out.items !== "object") {

@@ -9,6 +9,7 @@ let user = null;
 let userId = null;
 
 import { rarityEmojis, rarityColors } from "/public/spriteconfig.js";
+import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
 
 window.rarityEmojis = rarityEmojis;
 window.rarityColors = rarityColors;
@@ -157,11 +158,8 @@ function showShopModal({ title, message, sprites = [], onConfirm }) {
 // WEEKLY PACK ELIGIBILITY
 // ======================================================
 function canClaimWeeklyPack() {
-  if (!user || !user.lastWeeklyPack) return true;
-  return (
-    Date.now() - new Date(user.lastWeeklyPack).getTime() >
-    7 * 24 * 60 * 60 * 1000
-  );
+  if (!user) return false;
+  return !user.weeklyPackClaimed;
 }
 
 // ======================================================
@@ -178,6 +176,20 @@ function updateUI() {
   if (weeklyBtn) {
     weeklyBtn.disabled = !canClaimWeeklyPack();
     weeklyBtn.textContent = canClaimWeeklyPack() ? "Claim" : "Claimed";
+  }
+
+  updateTimers();
+}
+
+function updateTimers() {
+  if (!user) return;
+
+  const weeklyEl = document.getElementById("weeklyStatus");
+  if (weeklyEl) {
+    const msUntilReset = getNextMondayUTC().getTime() - Date.now();
+    weeklyEl.textContent = canClaimWeeklyPack()
+      ? "Available now!"
+      : `Resets in ${formatCountdown(msUntilReset)}`;
   }
 }
 
@@ -388,6 +400,9 @@ async function claimWeeklyPack() {
 // ======================================================
 window.addEventListener("DOMContentLoaded", () => {
   loadUser();
+
+  // Tick countdown timers every 30s
+  setInterval(updateTimers, 30_000);
 
   const pokeballBtn = document.querySelector("[data-item='pokeball']");
   const greatballBtn = document.querySelector("[data-item='greatball']");

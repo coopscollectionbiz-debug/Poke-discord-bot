@@ -26,6 +26,7 @@ let showOwnedOnly = false;
 let showUnownedOnly = false;
 
 import { rarityEmojis } from "/public/spriteconfig.js";
+import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
 
 // ===========================================================
 // 🎨 Type ID to Name Mapping (for filtering)
@@ -377,6 +378,14 @@ function flashCounter(id, color) {
   setTimeout(() => el.classList.remove("pulse"), 400);
 }
 
+function updateDustTimer() {
+  const el = document.getElementById("dustStatus");
+  if (!el || !userData) return;
+  const earned = userData.nonShinyDustEarnedThisWeek ?? 0;
+  const countdown = formatCountdown(getNextMondayUTC().getTime() - Date.now());
+  el.textContent = `${earned}/8 shiny dust received from donations this week — resets in ${countdown}`;
+}
+
 function updateHUD() {
   const stones = userData.items?.evolution_stone ?? 0;
   const dust = userData.items?.shiny_dust ?? 0;
@@ -395,6 +404,8 @@ function updateHUD() {
   if (ccEl) ccEl.textContent = cc;
   if (tpEl) tpEl.textContent = tp;
   if (rankEl) rankEl.textContent = rank;
+
+  updateDustTimer();
 }
 
 function refreshStats(newData, prevData) {
@@ -430,6 +441,13 @@ function setMode(mode) {
   // Optional: hide owned/unowned toggles outside Team mode
   const tg = document.querySelector(".toggle-group");
   if (tg) tg.style.display = mode === "team" ? "flex" : "none";
+
+  // Show dust cap only in donate mode
+  const dustEl = document.getElementById("dustStatus");
+  if (dustEl) {
+    dustEl.style.display = mode === "donate" ? "block" : "none";
+    if (mode === "donate") updateDustTimer();
+  }
 
   renderPokemonGrid();
   updateTeamCounter();
@@ -817,6 +835,7 @@ async function init() {
     updateHUD();
     updateTeamCounter();
     initStickyHUD();
+    setInterval(updateDustTimer, 30_000);
     initToggles();
     renderPokemonGrid();
     startWeeklyPackCountdown();

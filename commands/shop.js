@@ -250,12 +250,25 @@ export default {
             const allPokemon = await getAllPokemon();
             const allTrainers = await getAllTrainers();
 
+            const pokemonByTier = (tier) => allPokemon.filter((p) => p.tier === tier);
+            const pickPokemon = (tier) => {
+              const pool = pokemonByTier(tier);
+              return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+            };
+
             const rewards = [
-              selectRandomPokemonForUser(allPokemon, user, "common"),
-              selectRandomPokemonForUser(allPokemon, user, "uncommon"),
-              selectRandomPokemonForUser(allPokemon, user, "rare"),
-            ];
-            const rareTrainer = selectRandomTrainerForUser(allTrainers, user, "rare");
+              pickPokemon("common"),
+              pickPokemon("uncommon"),
+              pickPokemon("rare"),
+            ].filter(Boolean);
+
+            const rareTrainers = allTrainers.filter(
+              (t) => (t.tier || "").toLowerCase() === "rare"
+            );
+            const rareTrainer = selectRandomTrainerForUser(
+              rareTrainers.length > 0 ? rareTrainers : allTrainers,
+              user
+            );
 
             const shinyPulled = [];
             const rewardEmbeds = [];

@@ -19,8 +19,8 @@ window.rarityColors = rarityColors;
 // ======================================================
 window.ITEM_COSTS = {
   pokeball: 1000,
-  greatball: 1500,
-  ultraball: 3000,
+  greatball: 2000,
+  ultraball: 4000,
   evo_stone: 5000,
 };
 

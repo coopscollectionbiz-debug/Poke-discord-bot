@@ -173,8 +173,9 @@ export async function execute(
         }
       };
 
-      await maybeBroadcast(pick1, shiny1);
-      await maybeBroadcast(pick2, shiny2);
+      // Fire-and-forget: broadcasts are informational, don't block the command
+      maybeBroadcast(pick1, shiny1);
+      maybeBroadcast(pick2, shiny2);
 
       // ======================================================
       // Atomic save

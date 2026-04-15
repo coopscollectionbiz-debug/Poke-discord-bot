@@ -180,17 +180,25 @@ const embed = new EmbedBuilder()
 
 
     // ======================================================
-    // 📡 Broadcast routing
+    // 📡 Broadcast routing (with 5s timeout per send)
     // ======================================================
-    if (globalChannel) await globalChannel.send({ embeds: [embed] }).catch(console.error);
+    const safeSend = (ch, payload) =>
+      Promise.race([
+        ch.send(payload),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("channel.send timeout")), 5_000)
+        ),
+      ]).catch(err => console.error("⚠️ Broadcast send failed:", err.message));
+
+    if (globalChannel) await safeSend(globalChannel, { embeds: [embed] });
     if (rareChannel && (isRareTier || shiny))
-      await rareChannel.send({ embeds: [embed] }).catch(console.error);
+      await safeSend(rareChannel, { embeds: [embed] });
     if (
       localChannel &&
       localChannel.id !== globalChannel?.id &&
       localChannel.id !== rareChannel?.id
     )
-      await localChannel.send({ embeds: [embed] }).catch(console.error);
+      await safeSend(localChannel, { embeds: [embed] });
 
     console.log(
       `📢 Broadcasted ${type} (${displayName}) [${rarity}${shiny ? "✨" : ""}] for ${user.username} | Source: ${source}`
@@ -206,7 +214,15 @@ const embed = new EmbedBuilder()
 async function safeFetchChannel(client, id) {
   if (!id) return null;
   try {
-    return await client.channels.fetch(id);
+    // Prefer cache to avoid REST calls; fall back to fetch with timeout
+    const cached = client.channels.cache.get(id);
+    if (cached) return cached;
+    return await Promise.race([
+      client.channels.fetch(id),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("channel fetch timeout")), 5_000)
+      ),
+    ]);
   } catch {
     return null;
   }

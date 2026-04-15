@@ -294,7 +294,7 @@ export default {
               await saveTrainerDataLocal(trainerData);
 
               for (const b of broadcastQueue) {
-                await broadcastReward(client, {
+                broadcastReward(client, {
                   user: btn.user,
                   type: b.type,
                   item: b.item,

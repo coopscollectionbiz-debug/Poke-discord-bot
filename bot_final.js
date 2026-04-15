@@ -2720,7 +2720,7 @@ async function discordPreflight() {
 
   const text = await res.text();
 
-  // ✅ Cloudflare/HTML block detection (your logs show this exact case)
+  // HTML detection — log the actual response so we can diagnose
   const looksHtml =
     /<!doctype html/i.test(text) ||
     /<html/i.test(text) ||
@@ -2728,6 +2728,9 @@ async function discordPreflight() {
     /access denied/i.test(text);
 
   if (looksHtml) {
+    const snippet = text.slice(0, 500).replace(/\n/g, " ");
+    console.warn(`⛔ Preflight got HTML (status ${res.status})`);
+    console.warn(`⛔ Response snippet: ${snippet}`);
     console.warn("⛔ Discord Cloudflare HTML block detected. Cooling off for 6 hours.");
     return {
       ok: false,

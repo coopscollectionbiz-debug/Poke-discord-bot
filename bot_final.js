@@ -1108,24 +1108,20 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     }
 
     // =============================
-    // 🌐 GLOBAL BROADCAST
+    // 🌐 GLOBAL BROADCAST (fire-and-forget — don't hold the lock)
     // =============================
-    try {
-      await broadcastReward(client, {
-        user: interactionUser,
-        type: "pokemon",
-        item: {
-          id: reward.id,
-          name: reward.name,
-          rarity: reward.tier || "common",
-          spriteFile: `${reward.id}.gif`
-        },
-        shiny: isShiny,
-        source: "random encounter",
-      });
-    } catch (err) {
-      console.error("❌ broadcastReward failed:", err.message);
-    }
+    broadcastReward(client, {
+      user: interactionUser,
+      type: "pokemon",
+      item: {
+        id: reward.id,
+        name: reward.name,
+        rarity: reward.tier || "common",
+        spriteFile: `${reward.id}.gif`
+      },
+      shiny: isShiny,
+      source: "random encounter",
+    }).catch(err => console.error("❌ broadcastReward failed:", err.message));
 
     console.log(`✅ Reward granted to ${interactionUser.username}`);
   });
@@ -1554,11 +1550,9 @@ if (
   shiny ||
   ["rare", "epic", "legendary", "mythic"].includes(rarity.toLowerCase())
 ) {
-  try {
-    const discordUser =
-      client.users.cache.get(id) || (await client.users.fetch(id));
-
-    await broadcastReward(client, {
+  const discordUser = client.users.cache.get(id);
+  if (discordUser) {
+    broadcastReward(client, {
       user: discordUser,
       type: "pokemon",
       item: {
@@ -1569,10 +1563,7 @@ if (
       },
       shiny,
       source,
-    });
-
-  } catch (err) {
-    console.warn("⚠️ Broadcast failed:", err.message);
+    }).catch(err => console.warn("⚠️ Broadcast failed:", err.message));
   }
 }
 

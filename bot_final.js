@@ -1472,8 +1472,8 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
     // ======================================================
     const COST = {
       pokeball: 1000,
-      greatball: 1500,
-      ultraball: 3000,
+      greatball: 2000,
+      ultraball: 4000,
     };
 
     if (!COST[source]) {

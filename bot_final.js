@@ -2711,17 +2711,15 @@ async function discordPreflight() {
 
   const text = await res.text();
 
-  // HTML detection — log the actual response so we can diagnose
+  // HTML detection — only match actual HTML pages, not JSON containing "cloudflare"
   const looksHtml =
     /<!doctype html/i.test(text) ||
-    /<html/i.test(text) ||
-    /cloudflare/i.test(text) ||
-    /access denied/i.test(text);
+    /<html/i.test(text);
 
   if (looksHtml) {
-    const snippet = text.slice(0, 500).replace(/\n/g, " ");
+    const snippet = text.slice(0, 1500).replace(/\n/g, " ");
     console.warn(`⛔ Preflight got HTML (status ${res.status})`);
-    console.warn(`⛔ Response snippet: ${snippet}`);
+    console.warn(`⛔ Response: ${snippet}`);
     console.warn("⛔ Discord Cloudflare HTML block detected. Cooling off for 6 hours.");
     return {
       ok: false,
@@ -2735,6 +2733,10 @@ async function discordPreflight() {
   try { json = text ? JSON.parse(text) : null; } catch {}
 
   console.log("🔑 preflight /gateway/bot status:", res.status);
+  if (res.status !== 200) {
+    const snippet = text.slice(0, 1500).replace(/\n/g, " ");
+    console.warn(`⚠️ Preflight response: ${snippet}`);
+  }
 
   // Token invalid/revoked
   if (res.status === 401 || res.status === 403) {

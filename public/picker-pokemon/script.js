@@ -483,6 +483,12 @@ function initToggles() {
       renderPokemonGrid();
     });
   }
+
+  // Default to owned active in (Change) Team mode so users don't just see a wall of grayed-out unowned Pokémon.
+  if (currentMode === "team" && ownedBtn) {
+    showOwnedOnly = true;
+    ownedBtn.classList.add("active");
+  }
 }
 
 // ===========================================================

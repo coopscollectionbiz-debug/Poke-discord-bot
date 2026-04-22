@@ -16,6 +16,7 @@ import { rollForShiny } from "../shinyOdds.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { spritePaths, rarityEmojis, rarityColors } from "../spriteconfig.js";
+import { logEvent } from "../utils/eventLog.js";
 
 // ==========================================================
 // Constants
@@ -181,6 +182,29 @@ export async function execute(
       // Atomic save
       // ======================================================
       await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+
+      // 📜 Event log — daily claim is a major faucet: fixed CC/TP plus
+      // two Pokemon and a stone roll. Track what hit so admins can see
+      // per-day accrual and any shiny/stone luck.
+      logEvent("daily_claim", userId, {
+        ccAwarded: DAILY_CC,
+        tpAwarded: DAILY_TP,
+        stoneAwarded,
+        pokemon: [
+          {
+            pokemonId: pick1.id,
+            pokemonName: pick1.name,
+            tier: (pick1.tier || "common").toLowerCase(),
+            shiny: shiny1,
+          },
+          {
+            pokemonId: pick2.id,
+            pokemonName: pick2.name,
+            tier: (pick2.tier || "common").toLowerCase(),
+            shiny: shiny2,
+          },
+        ],
+      });
 
       // ======================================================
       // Build embeds

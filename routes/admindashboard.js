@@ -1,110 +1,260 @@
-// routes/adminDashboard.js
-import express from "express";
+// ==========================================================
+// routes/admindashboard.js — Admin API router
+// ==========================================================
+//
+// PURPOSE
+// -------
+// Provides read-only analytics endpoints for the admin dashboard:
+//   • GET /api/admin/users       — per-user summary list
+//   • GET /api/admin/user/:id    — full record for drill-down
+//   • GET /api/admin/stats       — server-wide aggregates
+//   • GET /api/admin/events      — timestamped event log
+//
+// DUAL AUTH MODEL
+// ---------------
+// Every endpoint accepts EITHER of:
+//
+//   1. A session cookie minted via /admindashboard slash command +
+//      /auth/admin redirect. This is the normal, human-facing path.
+//      Handled by requireAdminSession(req) — returns the admin's
+//      Discord user ID or null.
+//
+//   2. A shared-secret header/query/cookie: x-admin-token /
+//      ?token=... / admin_token cookie, compared against the
+//      ADMIN_DASH_TOKEN env var. This is the script-friendly path
+//      for curl/ops tooling where spinning up a Discord session
+//      isn't practical.
+//
+// Either passing grants full access. The write-endpoint TODO will
+// be added later behind the same guard.
+//
+// WHY READ-ONLY FOR NOW
+// ---------------------
+// Shipping read-only means the admin dashboard cannot cause any
+// game state changes, which dramatically limits blast radius if
+// something goes wrong. Write endpoints can be added later as a
+// deliberate, testable follow-up.
+// ==========================================================
 
+import express from "express";
+import { getRank } from "../utils/rankSystem.js";
+import { readEvents } from "../utils/eventLog.js";
+
+/**
+ * Mount the admin dashboard API onto an Express app.
+ *
+ * @param {import("express").Express} app
+ * @param {object} deps
+ * @param {() => object} deps.getTrainerData - Returns the live trainerData map
+ * @param {(req: import("express").Request) => string|null} deps.requireAdminSession - Cookie session checker
+ */
 export function mountAdminDashboard(app, deps) {
-  // deps = { getTrainerData: () => trainerDataObject, saveTrainerData: async (trainerDataObject) => void }
+  const { getTrainerData, requireAdminSession } = deps;
   const router = express.Router();
 
-  // ---- SIMPLE TOKEN GATE ----
-  // Visit: /admindashboard?token=YOUR_TOKEN
-  // Or send header: x-admin-token: YOUR_TOKEN
+  // ----------------------------------------------------------
+  // 🔐 Auth: session cookie OR shared-secret token
+  // ----------------------------------------------------------
   const ADMIN_TOKEN = process.env.ADMIN_DASH_TOKEN || "";
 
-  function requireAdmin(req, res, next) {
-    if (!ADMIN_TOKEN) {
-      return res
-        .status(500)
-        .send("ADMIN_DASH_TOKEN is not set on the server.");
+  /**
+   * Middleware that passes if ANY auth method succeeds:
+   *   - valid admin_session cookie (via requireAdminSession)
+   *   - ADMIN_DASH_TOKEN matches query ?token / x-admin-token header / admin_token cookie
+   */
+  function requireAuth(req, res, next) {
+    // Path 1: Discord-linked session
+    const adminUserId = requireAdminSession(req);
+    if (adminUserId) {
+      req.adminUserId = adminUserId;
+      return next();
     }
 
-    const token =
-      req.query.token ||
-      req.headers["x-admin-token"] ||
-      (req.cookies ? req.cookies["admin_token"] : null);
+    // Path 2: shared-secret token
+    if (ADMIN_TOKEN) {
+      const supplied =
+        req.query.token ||
+        req.headers["x-admin-token"] ||
+        (req.cookies ? req.cookies["admin_token"] : null);
+      if (supplied && supplied === ADMIN_TOKEN) {
+        req.adminUserId = "shared-token";
+        return next();
+      }
+    }
 
-    if (token !== ADMIN_TOKEN) return res.status(401).send("Unauthorized");
-    next();
+    return res.status(403).json({ error: "Admin authentication required" });
   }
 
-  // Optional convenience: set cookie once
-  router.get("/admin/login", (req, res) => {
-    const token = req.query.token;
-    if (!token || token !== ADMIN_TOKEN) return res.status(401).send("Unauthorized");
-    res.cookie("admin_token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false, // set true if behind HTTPS
-      maxAge: 1000 * 60 * 60 * 8, // 8 hours
-    });
-    res.redirect("/admindashboard");
-  });
+  // ----------------------------------------------------------
+  // 🧮 Helpers
+  // ----------------------------------------------------------
 
-  // Serve the dashboard UI (static file)
-  router.get("/admindashboard", requireAdmin, (req, res) => {
-    // This assumes you mount /public as static and place files in /public/admindashboard
-    res.sendFile("index.html", { root: "public/admindashboard" });
-  });
+  /**
+   * Given a user record, find the most recent of their cooldown
+   * timestamps. Used for "last active" sorting and 24h/7d buckets.
+   */
+  function lastActiveOf(u) {
+    const candidates = [
+      toNumber(u?.lastDaily),
+      toNumber(u?.lastRecruit),
+      toNumber(u?.lastQuest),
+      toNumber(u?.lastWeeklyPack),
+    ].filter((n) => n > 0);
+    return candidates.length ? Math.max(...candidates) : 0;
+  }
 
-  // ---- API: list all users ----
-  router.get("/api/admin/users", requireAdmin, (req, res) => {
-    const trainerData = deps.getTrainerData();
-    if (!trainerData || typeof trainerData !== "object") return res.json({ users: [] });
+  function toNumber(v) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  /**
+   * Count unique Pokemon species (not variant count).
+   */
+  function pokemonSpeciesCount(u) {
+    return u?.pokemon ? Object.keys(u.pokemon).length : 0;
+  }
+
+  /**
+   * trainers is normalized to an array post-normalizeUserSchema.
+   * Fall back defensively in case we're reading pre-normalized data.
+   */
+  function trainerCount(u) {
+    if (!u?.trainers) return 0;
+    if (Array.isArray(u.trainers)) return u.trainers.length;
+    return Object.keys(u.trainers).length;
+  }
+
+  // ==========================================================
+  // 📋 GET /api/admin/users — summary list
+  // ==========================================================
+  // Returns ONE row per user with just the fields needed for the
+  // table view. Full records come from /api/admin/user/:id when
+  // the admin clicks into a row. This keeps the response small
+  // even at many hundreds of users.
+  router.get("/api/admin/users", requireAuth, (req, res) => {
+    const trainerData = getTrainerData() || {};
 
     const users = Object.entries(trainerData).map(([userId, u]) => ({
       userId,
-      // Common fields you use (safe if missing)
-      name: u?.name ?? u?.username ?? u?.displayName ?? "",
-      rank: u?.rank ?? "",
-      tp: Number(u?.tp ?? 0),
-      cc: Number(u?.cc ?? 0),
-
-      // Counts
-      pokemonCount: u?.pokemon ? Object.keys(u.pokemon).length : 0,
-      trainerCount: u?.trainers ? Object.keys(u.trainers).length : 0,
-
-      // Anything else you want surfaced quickly
-      lastDaily: u?.lastDaily ?? null,
-      lastWeekly: u?.lastWeekly ?? null,
-      createdAt: u?.createdAt ?? null,
-      updatedAt: u?.updatedAt ?? null,
-
-      // Full object for drilldown (UI can request full by id too; but returning here is convenient)
-      raw: u,
+      name: u?.name ?? "",
+      rank: u?.rank ?? getRank(toNumber(u?.tp)),
+      tp: toNumber(u?.tp),
+      cc: toNumber(u?.cc),
+      pokemonCount: pokemonSpeciesCount(u),
+      trainerCount: trainerCount(u),
+      lastActive: lastActiveOf(u),
+      onboardingComplete: !!u?.onboardingComplete,
     }));
 
-    res.json({ users });
+    res.json({ users, total: users.length });
   });
 
-  // ---- API: single user ----
-  router.get("/api/admin/user/:id", requireAdmin, (req, res) => {
-    const trainerData = deps.getTrainerData();
-    const user = trainerData?.[req.params.id];
+  // ==========================================================
+  // 🔍 GET /api/admin/user/:id — full record drill-down
+  // ==========================================================
+  router.get("/api/admin/user/:id", requireAuth, (req, res) => {
+    const trainerData = getTrainerData() || {};
+    const user = trainerData[req.params.id];
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json({ userId: req.params.id, user });
   });
 
-  // ---- API: update basic fields ----
-  // Body: { tp?: number, cc?: number, rank?: string, name?: string }
-  router.post("/api/admin/user/:id", requireAdmin, express.json(), async (req, res) => {
-    const trainerData = deps.getTrainerData();
-    const id = req.params.id;
-    if (!trainerData?.[id]) return res.status(404).json({ error: "User not found" });
+  // ==========================================================
+  // 📊 GET /api/admin/stats — server-wide aggregates
+  // ==========================================================
+  // Computed on each request. At ~200 users this is cheap enough
+  // that caching would be premature. If it ever slows down, wrap
+  // in a 60-second in-memory cache.
+  router.get("/api/admin/stats", requireAuth, (req, res) => {
+    const trainerData = getTrainerData() || {};
+    const now = Date.now();
+    const DAY = 24 * 60 * 60 * 1000;
 
-    const u = trainerData[id];
-    const patch = req.body || {};
+    let totalUsers = 0;
+    let totalCC = 0;
+    let totalTP = 0;
+    let totalPokemonSpecies = 0;
+    let totalPokemonVariants = 0;
+    let totalTrainers = 0;
+    let onboarded = 0;
+    let active24h = 0;
+    let active7d = 0;
+    const topByTp = [];
 
-    // Minimal validation
-    if (patch.tp !== undefined) u.tp = Math.max(0, Number(patch.tp) || 0);
-    if (patch.cc !== undefined) u.cc = Math.max(0, Number(patch.cc) || 0);
-    if (patch.rank !== undefined) u.rank = String(patch.rank);
-    if (patch.name !== undefined) u.name = String(patch.name);
+    for (const [userId, u] of Object.entries(trainerData)) {
+      totalUsers++;
+      totalCC += toNumber(u?.cc);
+      totalTP += toNumber(u?.tp);
+      totalPokemonSpecies += pokemonSpeciesCount(u);
+      totalTrainers += trainerCount(u);
+      if (u?.onboardingComplete) onboarded++;
 
-    // Mark updated timestamp if you use one
-    u.updatedAt = new Date().toISOString();
+      // Variants = sum of normal + shiny counts across all species.
+      // Gives a truer "pokemon owned" total than species count alone.
+      if (u?.pokemon) {
+        for (const v of Object.values(u.pokemon)) {
+          totalPokemonVariants += toNumber(v?.normal) + toNumber(v?.shiny);
+        }
+      }
 
-    await deps.saveTrainerData(trainerData);
+      const last = lastActiveOf(u);
+      if (last > 0) {
+        if (now - last <= DAY) active24h++;
+        if (now - last <= 7 * DAY) active7d++;
+      }
 
-    res.json({ ok: true, userId: id, user: u });
+      topByTp.push({
+        userId,
+        name: u?.name ?? "",
+        tp: toNumber(u?.tp),
+        rank: u?.rank ?? getRank(toNumber(u?.tp)),
+      });
+    }
+
+    // Top 10 by TP.
+    topByTp.sort((a, b) => b.tp - a.tp);
+    const topTen = topByTp.slice(0, 10);
+
+    res.json({
+      totalUsers,
+      onboarded,
+      totalCC,
+      totalTP,
+      totalPokemonSpecies,
+      totalPokemonVariants,
+      totalTrainers,
+      active24h,
+      active7d,
+      topByTp: topTen,
+    });
+  });
+
+  // ==========================================================
+  // 📜 GET /api/admin/events — event log with filters
+  // ==========================================================
+  // Query params:
+  //   type     — event type filter (e.g. "roll", "donate")
+  //   userId   — only events for this user
+  //   since    — epoch ms lower bound
+  //   until    — epoch ms upper bound
+  //   limit    — default 100, max 1000
+  //   offset   — for pagination
+  router.get("/api/admin/events", requireAuth, async (req, res) => {
+    const limit = Math.min(1000, Math.max(1, toNumber(req.query.limit) || 100));
+    const offset = Math.max(0, toNumber(req.query.offset) || 0);
+
+    const filters = {
+      type: req.query.type || null,
+      userId: req.query.userId || null,
+      since: req.query.since ? toNumber(req.query.since) : null,
+      until: req.query.until ? toNumber(req.query.until) : null,
+      limit,
+      offset,
+    };
+
+    const { total, events } = await readEvents(filters);
+    res.json({ total, events, limit, offset });
   });
 
   app.use(router);

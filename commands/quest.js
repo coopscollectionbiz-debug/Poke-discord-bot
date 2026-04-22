@@ -12,6 +12,7 @@ import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { logEvent } from "../utils/eventLog.js";
 
 // ==========================================================
 // ⏱️ Constants
@@ -81,6 +82,16 @@ export default {
         });
       }
 
+      // 📜 Event log — quest Pokemon reward
+      logEvent("quest_claim", id, {
+        rewardType: "pokemon",
+        pokemonId: pick.id,
+        pokemonName: pick.name,
+        tier: (pick.tier || "common").toLowerCase(),
+        shiny,
+        ccAwarded: QUEST_CC_REWARD,
+      });
+
       const spriteUrl = shiny
         ? `${spritePaths.shiny}${pick.id}.gif`
         : `${spritePaths.pokemon}${pick.id}.gif`;
@@ -119,6 +130,15 @@ export default {
           flags: MessageFlags.Ephemeral,
         });
       }
+
+      // 📜 Event log — quest Trainer reward
+      logEvent("quest_claim", id, {
+        rewardType: "trainer",
+        trainerFile: file,
+        trainerName: pick.name,
+        tier: (pick.tier || "common").toLowerCase(),
+        ccAwarded: QUEST_CC_REWARD,
+      });
 
       const embed = new EmbedBuilder()
         .setColor(0x5865f2)

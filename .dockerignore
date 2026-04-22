@@ -1,0 +1,30 @@
+# ==========================================================
+# Coop's Collection Bot - Safe .gitignore for Render
+# ==========================================================
+
+# Node dependencies
+node_modules/
+.env
+
+# Logs, cache, temp files
+*.log
+.cache/
+tmp/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local training data / backups
+trainerData.json
+trainerData_backup*.json
+trainerData.backup.*.json
+*.zip
+
+# keep sprites folder in deploys
+!public/sprites/
+!public/sprites/**
+!public/
+
+# Optional: ignore large raw assets not used at runtime
+raw_assets/

@@ -22,19 +22,21 @@ export const rarityColors = {
   mythic: "#ef4444",     // red
 };
 
+const BASE = process.env.RENDER_EXTERNAL_URL || 'https://poke-discord-bot-2.onrender.com';
+
 export const spritePaths = {
   // Pokémon sprites (Gen 1–5)
-  pokemon: 'https://poke-discord-bot-2.onrender.com/public/sprites/pokemon/normal/',
-  shiny: 'https://poke-discord-bot-2.onrender.com/public/sprites/pokemon/shiny/',
-  grayscale: 'https://poke-discord-bot-2.onrender.com/public/sprites/pokemon/grayscale/',
+  pokemon: `${BASE}/public/sprites/pokemon/normal/`,
+  shiny: `${BASE}/public/sprites/pokemon/shiny/`,
+  grayscale: `${BASE}/public/sprites/pokemon/grayscale/`,
 
   // Trainer sprites
-  trainers: 'https://poke-discord-bot-2.onrender.com/public/sprites/trainers_2/',
-  trainersGray: 'https://poke-discord-bot-2.onrender.com/public/sprites/trainers_2/grayscale/',
+  trainers: `${BASE}/public/sprites/trainers_2/`,
+  trainersGray: `${BASE}/public/sprites/trainers_2/grayscale/`,
 
   // Type icons (1–17)
-  types: 'https://poke-discord-bot-2.onrender.com/public/sprites/types/',
+  types: `${BASE}/public/sprites/types/`,
 
   // NEW: item icons (e.g. Poké Ball placeholder)
-  items: 'https://poke-discord-bot-2.onrender.com/public/sprites/items/'
+  items: `${BASE}/public/sprites/items/`
 };

@@ -24,6 +24,7 @@ import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { logEvent } from "../utils/eventLog.js";
 
 
 // ==========================================================
@@ -171,6 +172,16 @@ async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDa
     });
   }
 
+  // 📜 Event log — recruit is a CC sink + Pokemon faucet
+  logEvent("recruit", i.user.id, {
+    rewardType: "pokemon",
+    pokemonId: pick.id,
+    pokemonName: pick.name,
+    tier: (pick.tier || "common").toLowerCase(),
+    shiny,
+    ccSpent: RECRUIT_COST_CC,
+  });
+
   const spriteUrl = shiny
     ? `${spritePaths.shiny}${pick.id}.gif`
     : `${spritePaths.pokemon}${pick.id}.gif`;
@@ -219,6 +230,15 @@ async function recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDa
       flags: MessageFlags.Ephemeral
     });
   }
+
+  // 📜 Event log — recruit (trainer variant)
+  logEvent("recruit", i.user.id, {
+    rewardType: "trainer",
+    trainerFile: file,
+    trainerName: pick.name,
+    tier: (pick.tier || "common").toLowerCase(),
+    ccSpent: RECRUIT_COST_CC,
+  });
 
   const embed = new EmbedBuilder()
     .setColor(0x5865f2)

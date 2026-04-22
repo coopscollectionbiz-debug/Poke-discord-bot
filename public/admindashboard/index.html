@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coop's Collection — Admin Dashboard</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+</head>
+
+<body>
+
+  <!-- ===========================================================
+       Header
+  ============================================================ -->
+  <header>
+    <h1>🛡️ Admin Dashboard</h1>
+    <p>Read-only analytics for the Coop's Collection bot</p>
+  </header>
+
+  <!-- ===========================================================
+       Session Expired Banner
+       Shown when any API call returns 403. Replaces page content
+       with a hint to re-run the /admindashboard command.
+  ============================================================ -->
+  <div id="sessionBanner" class="session-banner" hidden>
+    <h2>🔒 Session expired</h2>
+    <p>Your admin session has ended. Run <code>/admindashboard</code> again in Discord to get a fresh link.</p>
+  </div>
+
+  <!-- ===========================================================
+       Summary Cards
+  ============================================================ -->
+  <section id="summary" class="summary-grid">
+    <div class="card">
+      <div class="card-label">Total Users</div>
+      <div class="card-value" id="statTotalUsers">—</div>
+      <div class="card-sub" id="statOnboarded">—</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Active (24h)</div>
+      <div class="card-value" id="statActive24h">—</div>
+      <div class="card-sub">7-day: <span id="statActive7d">—</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Total CC</div>
+      <div class="card-value" id="statTotalCC">—</div>
+      <div class="card-sub">TP: <span id="statTotalTP">—</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Pokémon Owned</div>
+      <div class="card-value" id="statPokemonVariants">—</div>
+      <div class="card-sub"><span id="statPokemonSpecies">—</span> unique</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Trainers</div>
+      <div class="card-value" id="statTrainers">—</div>
+      <div class="card-sub">total recruited</div>
+    </div>
+  </section>
+
+  <!-- ===========================================================
+       Top by TP leaderboard (compact)
+  ============================================================ -->
+  <section class="panel">
+    <h2>🏆 Top 10 by TP</h2>
+    <ol id="topByTp" class="top-list"></ol>
+  </section>
+
+  <!-- ===========================================================
+       Tab Nav: Users / Events
+  ============================================================ -->
+  <div id="tabNav" class="nav-tabs">
+    <button id="tabUsers" class="nav-tab active">👥 Users</button>
+    <button id="tabEvents" class="nav-tab">📜 Event Log</button>
+  </div>
+
+  <!-- ===========================================================
+       Users Tab
+  ============================================================ -->
+  <section id="usersPanel" class="panel">
+    <div class="panel-header">
+      <h2>Users</h2>
+      <input id="userSearch" type="search" placeholder="Search by name…" />
+    </div>
+    <div class="table-wrap">
+      <table id="usersTable">
+        <thead>
+          <tr>
+            <th data-sort="name">Name</th>
+            <th data-sort="rank">Rank</th>
+            <th data-sort="tp">TP</th>
+            <th data-sort="cc">CC</th>
+            <th data-sort="pokemonCount">Pokémon</th>
+            <th data-sort="trainerCount">Trainers</th>
+            <th data-sort="lastActive">Last Active</th>
+          </tr>
+        </thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===========================================================
+       Events Tab
+  ============================================================ -->
+  <section id="eventsPanel" class="panel" hidden>
+    <div class="panel-header">
+      <h2>Event Log</h2>
+      <div class="filter-row">
+        <select id="eventTypeFilter">
+          <option value="">All types</option>
+          <option value="roll">roll</option>
+          <option value="donate">donate</option>
+          <option value="evolve">evolve</option>
+          <option value="convert">convert</option>
+          <option value="daily_claim">daily_claim</option>
+          <option value="weekly_claim">weekly_claim</option>
+          <option value="quest_claim">quest_claim</option>
+          <option value="recruit">recruit</option>
+          <option value="stone_purchase">stone_purchase</option>
+        </select>
+        <input id="eventUserFilter" type="text" placeholder="Filter by User ID" />
+        <button id="eventRefresh">Refresh</button>
+      </div>
+    </div>
+    <div id="eventMeta" class="event-meta"></div>
+    <ol id="eventList" class="event-list"></ol>
+    <div class="pager">
+      <button id="eventPrev" disabled>← Newer</button>
+      <span id="eventPageInfo"></span>
+      <button id="eventNext">Older →</button>
+    </div>
+  </section>
+
+  <!-- ===========================================================
+       User Drill-Down Modal
+  ============================================================ -->
+  <div id="userModal" class="modal" hidden>
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 id="modalTitle">User Details</h2>
+        <button id="modalClose">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody">Loading…</div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

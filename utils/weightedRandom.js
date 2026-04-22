@@ -100,8 +100,18 @@ function weightedRoll(list, baseWeights, user, ballType = "pokeball") {
 
   // Load multipliers
   const rank = getRank(user.tp || 0);
-  const rankBuffs = RANK_WEIGHT_MULTIPLIERS[rank] || {};
+  let rankBuffs = RANK_WEIGHT_MULTIPLIERS[rank] || {};
   const ballBuffs = BALL_MULTIPLIERS[ballType] || BALL_MULTIPLIERS.pokeball;
+
+  // For filtered balls, floor legendary/mythic rank multipliers to epic's
+  // so they never lose share when lower tiers are filtered out of the pool
+  if (ballType !== "pokeball" && rankBuffs.epic) {
+    const ceil = rankBuffs.epic;
+    rankBuffs = { ...rankBuffs,
+      legendary: Math.max(rankBuffs.legendary || 1.0, ceil),
+      mythic:    Math.max(rankBuffs.mythic    || 1.0, ceil),
+    };
+  }
 
   let total = 0;
 
@@ -132,14 +142,41 @@ function weightedRoll(list, baseWeights, user, ballType = "pokeball") {
 }
 
 // ==========================================================
+// 🎯 Ball tier gates (pool filter before weighted roll)
+// — Great Ball: no Common
+// — Ultra Ball: no Common or Uncommon (Rare+)
+// ==========================================================
+function filterPokemonPoolByBall(list, ballType) {
+  if (!Array.isArray(list) || list.length === 0) return list;
+
+  if (ballType === "greatball") {
+    return list.filter((p) => normalizeTier(p?.tier || p?.rarity) !== "common");
+  }
+
+  if (ballType === "ultraball") {
+    return list.filter((p) => {
+      const t = normalizeTier(p?.tier || p?.rarity);
+      return t !== "common" && t !== "uncommon";
+    });
+  }
+
+  return list;
+}
+
+// ==========================================================
 // 🎯 Pokémon selector (tier-aware, rank-aware, ball-aware)
 // ==========================================================
 export function selectRandomPokemonForUser(pool, user, source = "pokeball") {
   // 🔧 FIX: ensure pool is an array; your pokemonData is an object
-  const list = Array.isArray(pool) ? pool : Object.values(pool);
+  let list = Array.isArray(pool) ? pool : Object.values(pool);
 
   const valid = ["pokeball", "greatball", "ultraball"];
   const ballType = valid.includes(source) ? source : "pokeball";
+
+  const filtered = filterPokemonPoolByBall(list, ballType);
+  if (filtered.length > 0) {
+    list = filtered;
+  }
 
   return weightedRoll(list, POKEMON_RARITY_WEIGHTS, user, ballType);
 }

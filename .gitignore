@@ -21,6 +21,10 @@ trainerData_backup*.json
 trainerData.backup.*.json
 *.zip
 
+# Append-only event log (per-instance local state)
+*.ndjson
+*.ndjson.tmp
+
 # keep sprites folder in deploys
 !public/sprites/
 !public/sprites/**

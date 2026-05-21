@@ -297,6 +297,9 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   justify-content: center;
   z-index: 1000;
 }
+/* [hidden] attribute's UA `display: none` loses to `.modal { display: flex }`
+   on cascade order. Restore it explicitly so toggling `modal.hidden` works. */
+.modal[hidden] { display: none; }
 .modal-backdrop {
   position: absolute;
   inset: 0;

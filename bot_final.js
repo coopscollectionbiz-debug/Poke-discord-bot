@@ -527,7 +527,9 @@ app.get("/auth/dashboard", (req, res) => {
   const { id, code } = req.query;
 
   if (!id || !code) return res.status(400).send("Missing id/code");
-  if (!validateToken(id, code)) return res.status(403).send("Invalid or expired link.");
+  // expectedType "dashboard" prevents admin tokens from being burned
+  // on the player flow, and vice versa below.
+  if (!validateToken(id, code, "dashboard")) return res.status(403).send("Invalid or expired link.");
 
   res.cookie("dashboard_session", code, {
     httpOnly: true,
@@ -538,6 +540,30 @@ app.get("/auth/dashboard", (req, res) => {
   });
 
   res.redirect(`/public/picker-pokemon?id=${encodeURIComponent(id)}`);
+});
+
+// ==========================================================
+// 🔐 /auth/admin — mirrors /auth/dashboard for admin sessions
+// ==========================================================
+// Expects an admin-typed token from /admindashboard slash command.
+// Sets a separate admin_session cookie so player and admin
+// sessions can coexist in the same browser without stepping on
+// each other.
+app.get("/auth/admin", (req, res) => {
+  const { id, code } = req.query;
+
+  if (!id || !code) return res.status(400).send("Missing id/code");
+  if (!validateToken(id, code, "admin")) return res.status(403).send("Invalid or expired admin link.");
+
+  res.cookie("admin_session", code, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "Lax",
+    path: "/",
+    maxAge: 10 * 60 * 1000,
+  });
+
+  res.redirect("/public/admindashboard");
 });
 
 // ==========================================================
@@ -585,6 +611,27 @@ app.get("/public/dashboardstore", (_, res) =>
   res.sendFile(path.join(staticPath, "dashboardshop", "index.html"))
 );
 
+// ✅ Admin dashboard — the UI itself doesn't gate, but every
+// /api/admin/* endpoint checks requireAdminSession. This is just
+// the static shell; the frontend JS fails gracefully (redirects
+// to Discord instructions) if the API calls return 403.
+app.get("/public/admindashboard", (_, res) =>
+  res.sendFile(path.join(staticPath, "admindashboard", "index.html"))
+);
+
+// ==========================================================
+// 🛡️ Mount admin API (routes/admindashboard.js)
+// ==========================================================
+// getTrainerData returns the live binding via closure so the
+// router always sees the current in-memory state (trainerData
+// gets reassigned during load / reload).
+// requireAdminSession is declared below as a function
+// declaration, so hoisting makes it available here.
+mountAdminDashboard(app, {
+  getTrainerData: () => trainerData,
+  requireAdminSession,
+});
+
 
 
 // ==========================================================
@@ -620,6 +667,15 @@ import {
   createPokemonRewardEmbed,
 } from "./utils/embedBuilders.js";
 import { sanitizeTrainerData } from "./utils/sanitizeTrainerData.js";
+// ==========================================================
+// 📜 Event log — analytics-only, never throws
+// ==========================================================
+import {
+  logEvent,
+  pruneEvents,
+  shutdown as shutdownEventLog,
+} from "./utils/eventLog.js";
+import { mountAdminDashboard } from "./routes/admindashboard.js";
 
 // ==========================================================
 // ⚙️ Global Constants
@@ -668,28 +724,45 @@ setInterval(() => {
 
 
 /**
- * Generate a secure token linked to both the user and the channel
+ * Generate a secure token linked to both the user and the channel.
+ *
+ * The `type` field lets us distinguish between regular player
+ * dashboard tokens and admin dashboard tokens. Even though they
+ * share the same activeTokens Map, requireAdminSession enforces
+ * type === "admin" so a leaked player token can't be used to hit
+ * admin endpoints.
+ *
  * @param {string} userId - The Discord user ID
- * @param {string} channelId - The Discord channel ID where /changetrainer was used
+ * @param {string} channelId - The Discord channel ID where the command was used
+ * @param {string} [type="dashboard"] - Token type: "dashboard" (default) or "admin"
  */
-function generateToken(userId, channelId) {
+function generateToken(userId, channelId, type = "dashboard") {
   // ✅ strong, unguessable, URL-safe
   const token = crypto.randomBytes(18).toString("base64url");
   activeTokens.set(token, {
     id: userId,
     channelId,
+    type,
     expires: Date.now() + 10 * 60 * 1000,
   });
   return token;
 }
 
 /**
- * Validate that a token belongs to a specific user and isn't expired
+ * Validate that a token belongs to a specific user and isn't expired.
+ * If expectedType is provided, also enforces that the token was
+ * issued for that type (prevents a dashboard token from being used
+ * on an admin endpoint).
+ *
+ * @param {string} userId - The Discord user ID to match
+ * @param {string} token - The token to check
+ * @param {string|null} [expectedType=null] - If set, entry.type must match
  */
-function validateToken(userId, token) {
+function validateToken(userId, token, expectedType = null) {
   const entry = activeTokens.get(token);
   if (!entry) return false;
   if (entry.id !== userId) return false;
+  if (expectedType && entry.type !== expectedType) return false;
   if (Date.now() > entry.expires) {
     activeTokens.delete(token);
     return false;
@@ -708,11 +781,33 @@ function getChannelIdForToken(token) {
 function requireDashboardSession(req, userId) {
   const sessionToken = req.cookies?.dashboard_session;
   if (!sessionToken) return false;
-  return validateToken(String(userId), sessionToken);
+  // Player dashboard tokens are the legacy default "dashboard" type.
+  return validateToken(String(userId), sessionToken, "dashboard");
+}
+
+/**
+ * Admin session check. Unlike requireDashboardSession this doesn't
+ * require the caller to supply a userId — admin endpoints usually
+ * operate on arbitrary users, so we trust the cookie itself.
+ *
+ * Returns the authenticated admin user's Discord ID on success, or
+ * null if the session is missing/invalid/expired/wrong-type.
+ */
+function requireAdminSession(req) {
+  const sessionToken = req.cookies?.admin_session;
+  if (!sessionToken) return null;
+  const entry = activeTokens.get(sessionToken);
+  if (!entry) return null;
+  if (entry.type !== "admin") return null;
+  if (Date.now() > entry.expires) {
+    activeTokens.delete(sessionToken);
+    return null;
+  }
+  return entry.id;
 }
 
 // Export if using ES modules
-export { generateToken, validateToken, getChannelIdForToken };
+export { generateToken, validateToken, getChannelIdForToken, requireAdminSession };
 
 
 let trainerData = {};
@@ -1219,6 +1314,10 @@ async function gracefulShutdown(signal) {
       new Promise(res => setTimeout(res, 8000)),
     ]);
 
+    // Event log is append-only with no in-memory buffer, but we
+    // call shutdown() as a hook in case buffering is added later.
+    try { await shutdownEventLog(); } catch {}
+
     console.log("☁️ Uploading FINAL Discord backup (forced)...");
 await Promise.race([
   saveDataToDiscord(trainerData, { force: true }),
@@ -1542,6 +1641,17 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
       // ----------------------------------------
       await enqueueSave(trainerData);
 
+      // 📜 Event log — captures every ball roll for the admin analytics
+      // panel. logEvent never throws, so this can't interrupt the roll.
+      logEvent("roll", id, {
+        ball: source,
+        cost: COST[source],
+        pokemonId: reward.id,
+        pokemonName: reward.name,
+        tier: reward.tier || reward.rarity || "common",
+        shiny,
+      });
+
 // ----------------------------------------
 // 7️⃣ BROADCAST IF RARE+
 // ----------------------------------------
@@ -1861,6 +1971,17 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
 
     await enqueueSave(trainerData);
 
+    // 📜 Event log — weekly pack is a scheduled CC/Pokemon faucet;
+    // track the exact rewards so admins can see what showed up.
+    logEvent("weekly_claim", id, {
+      rewards: results.map((r) => ({
+        pokemonId: r.id,
+        pokemonName: r.name,
+        tier: r.rarity,
+        shiny: r.shiny,
+      })),
+    });
+
     res.json({ success: true, rewards: results });
   });
 });
@@ -2090,6 +2211,13 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
       user.items.evolution_stone += 1;
 
       await enqueueSave(trainerData);
+
+      // 📜 Event log — tracks CC sink into the shop for analytics
+      // on what players are spending on.
+      logEvent("stone_purchase", id, {
+        cost: COST,
+        stonesAfter: user.items.evolution_stone,
+      });
 
       return res.json({
         success: true,
@@ -2371,6 +2499,20 @@ if (dustCost > 0) {
 
     await enqueueSave(trainerData);
 
+    // 📜 Event log — evolution consumes stones (and sometimes dust)
+    // so admins can track stone/dust sink pressure.
+    logEvent("evolve", id, {
+      fromId: bId,
+      fromName: base.name,
+      fromTier: currentTier,
+      toId: tId,
+      toName: target.name,
+      toTier: nextTier,
+      variant: chosenVariant,
+      stoneCost: cost,
+      dustCost,
+    });
+
     return res.json({
   success: true,
   evolved: {
@@ -2499,6 +2641,18 @@ if (chosenVariant === "shiny") {
 
     await enqueueSave(trainerData);
 
+    // 📜 Event log — donations are half of the CC-flow picture (rolls
+    // being the other half). Tracks the Pokemon given up, its tier,
+    // and the CC/dust returned.
+    logEvent("donate", id, {
+      pokemonId: pid,
+      pokemonName: p.name,
+      tier: String(p.tier || "common").toLowerCase(),
+      variant: chosenVariant,
+      ccGained: finalValue,
+      dustGained: dustReward,
+    });
+
     const nonShinyDustWeeklyRemaining =
   chosenVariant === "shiny"
     ? null
@@ -2581,6 +2735,15 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
 
     await enqueueSave(trainerData);
 
+    // 📜 Event log — shiny conversion is a dust sink worth tracking
+    // for analytics on how players are spending their non-shiny dust.
+    logEvent("convert", id, {
+      pokemonId: pid,
+      pokemonName: p.name,
+      tier,
+      dustCost,
+    });
+
     return res.json({
       success: true,
       converted: { id: pid, name: p.name },
@@ -2604,6 +2767,13 @@ client.once("ready", async () => {
   hasBeenReadyOnce = true;
   lastGatewayOk = Date.now();
   isReady = false;
+
+  // 🧹 Prune old events on startup, then schedule a daily prune.
+  // Keeps the NDJSON log bounded without needing a separate worker.
+  try { await pruneEvents(); } catch {}
+  setInterval(() => {
+    pruneEvents().catch(() => {});
+  }, 24 * 60 * 60 * 1000);
 
   // Load local commands FIRST
   try {

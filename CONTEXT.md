@@ -27,7 +27,7 @@ Progress toward a species + **Variant's** next **Level**.
 _Avoid_: XP (TP is already the chat-activity points), experience points
 
 **Catch level**:
-The **Level** rolled when a Pokémon is caught, set by its **Stage**, with legendaries and mythics that don't evolve rolling high.
+The **Level** rolled the first time a player catches a species + **Variant**, set by its **Stage**, with Stage 1 legendaries and mythics rolling high.
 _Avoid_: wild level, spawn level
 
 ### Trainer
@@ -97,4 +97,4 @@ _Avoid_: comeback mechanic, rubber-banding, luck boost
 > **Dev:** What if I want CC on the line?
 > **Domain expert:** Then it's a **Wager battle** — they have to accept first, it uses one of each player's **Battle cap**, and both of you earn EXP.
 > **Dev:** I caught a second Charmander — does it get its own **Level**?
-> **Domain expert:** No. Your Charmanders share one **Level**; the new one's **Catch level** turns into EXP for it.
+> **Domain expert:** No. Your Charmanders share one **Level**; the new one adds EXP to it instead.

@@ -8,6 +8,33 @@ A Discord-native Pokémon collector game. Players earn points and ranks for chat
 
 Game terms (Tier, Stage, Team, Battle rating, and so on) are defined in [`CONTEXT.md`](CONTEXT.md).
 
+## Battles
+
+Players battle each other's Teams. The bot simulates the whole fight with Gen 5 stats, moves, and type matchups, then plays it back in the channel as a few image frames followed by the result.
+
+- `/battle opponent:@user` starts an Open battle. It runs right away and costs nothing. Only the Challenger earns EXP, and both players' Battle ratings change.
+- `/battle opponent:@user wager:100` offers a Wager battle. The bot holds the Challenger's CC until the Defender accepts or declines, or for 15 minutes. A Defender with less CC than the Stake can accept with everything they have, and the Challenger gets the difference back. Both players earn EXP, and the winner takes the pot. A restart refunds any Stake still waiting for an answer.
+- `/leaderboard` shows the top 10 Battle ratings and your position.
+
+Each player can start 10 battles per UTC day, and at most 3 against the same opponent. A Wager battle counts for both players. When one Team is much stronger, the Underdog sometimes gets a surge that raises its Levels for that battle, so lopsided fights are rarely but not never upsets.
+
+### Levels
+
+Every species and Variant a player owns has one Level, from 1 to 100. A first catch rolls a Catch level based on the Pokémon's Stage. A duplicate catch adds half the EXP needed for the next Level. Pokémon owned before battles existed, gifts, and admin grants start at the bottom of their catch range. Stone evolution and shiny crafting keep the higher of the two Levels. Battles pay EXP for every opponent the Team knocks out, more for higher-level opponents, and every Team member gets it.
+
+Levels show on the dashboard, on `/showteam` and `/trainercard`, and in `/inspectpokemon` (admin-only).
+
+Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps) is in `utils/battle/tuning.js`. The design and the reasons for each number are in [`docs/superpowers/specs/2026-11-02-battles-design.md`](docs/superpowers/specs/2026-11-02-battles-design.md).
+
+### Battle data
+
+`battleData.json` holds Gen 5 base stats, level-up moves, move power, and the type chart. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. To regenerate it:
+
+```bash
+npm run generate:battle-data
+node tests/battleData.test.js
+```
+
 ## Setup
 
 ### Prerequisites
@@ -90,9 +117,12 @@ npm run test:validation   # schema validation
 npm run test:migration    # schema migration
 ```
 
+`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim (`battleSim`), Levels and catches (`training`), EXP, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), `/leaderboard` (`leaderboard`), frames (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
+
 ## Common gotchas
 
 - **Slash commands missing** — confirm `CLIENT_ID` matches the application that owns `BOT_TOKEN`, and that the bot was invited with the `applications.commands` scope.
 - **Bot online but ignores commands** — Privileged Gateway Intents weren't enabled on the Bot page.
 - **Role-rank changes don't apply** — bot's role must be *above* the rank roles in the server's role list, and it needs `Manage Roles`.
 - **Backups not appearing** — bot lacks `Attach Files` or `View Channel` in `STORAGE_CHANNEL_ID`.
+- **Battles never show up** — the bot posts battles and wager offers as new messages, so it needs `Send Messages` and `Attach Files` in the channel where `/battle` runs.

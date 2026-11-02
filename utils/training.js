@@ -15,6 +15,7 @@ import {
 const pokemonData = JSON.parse(fs.readFileSync(new URL("../pokemonData.json", import.meta.url), "utf8"));
 
 export const trainingKey = (id, variant) => `${id}:${variant}`;
+export const speciesName = (id) => pokemonData[id]?.name ?? `#${id}`;
 
 // Medium Fast growth: Level³ total EXP.
 export const expForLevel = (level) => (level <= 1 ? 0 : level ** 3);

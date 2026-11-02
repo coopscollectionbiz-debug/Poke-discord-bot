@@ -1,0 +1,42 @@
+// ==========================================================
+// utils/battle/tuning.js
+// Every battle and leveling tunable in one place. Values come from the
+// battles spec (docs/superpowers/specs/2026-11-02-battles-design.md);
+// tests/battleBalance.test.js checks the battle ones against the
+// spec's upset targets.
+// ==========================================================
+
+export const IV = 15; // fixed for everyone: no IVs/EVs/natures
+export const LEVEL_CAP = 100;
+
+// Randomness: a notch above Gen 5 (85–100% roll, 1/16 and 1/8 crits).
+export const DAMAGE_ROLL_MIN = 0.8;
+export const CRIT_CHANCE = 1 / 12;
+export const HIGH_CRIT_CHANCE = 1 / 8; // moves with critRatio >= 2
+export const CRIT_MULT = 2;
+export const MOVE_RANDOM_CHANCE = 0.1;
+export const TURN_CAP = 300;
+
+// Underdog surge: chance grows with the Power rating ratio.
+export const SURGE = { minRatio: 1.25, perRatio: 0.05, maxChance: 0.2, statMult: 1.6 };
+
+// Catch level by Stage (or "legendary": Tier legendary/mythic at Stage 1).
+export const CATCH_RANGES = {
+  1: { min: 2, max: 15, tailMax: 35 },
+  2: { min: 16, max: 32, tailMax: 50 },
+  3: { min: 32, max: 45, tailMax: 65 },
+  legendary: { min: 40, max: 55, tailMax: 75 },
+};
+export const CATCH_SKEW = 2; // > 1 leans rolls toward the low end
+export const CATCH_TAIL_CHANCE = 0.03;
+export const DUPLICATE_LEVEL_SHARE = 0.5; // of the EXP needed for the next Level
+
+// Battle EXP (Gen V formula). 0.035 ≈ 2 months from Lv 5 → 100 at 10 battles/day.
+export const BST_YIELD_SCALE = 0.035;
+export const TRAINER_BATTLE_MULT = 1.5;
+export const WIN_EXP_MULT = 1.5;
+
+export const ELO = { start: 1000, k: 32 };
+export const CAPS = { perDay: 10, perOpponent: 3 };
+export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000 };
+export const PLAYBACK = { frames: 4, delayMs: 2500 };

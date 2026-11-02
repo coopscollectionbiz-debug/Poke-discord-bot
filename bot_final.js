@@ -511,6 +511,7 @@ ensureWeeklyReset(user);
 // ==========================================================
 
 import { lockUser } from "./utils/userLocks.js";
+import { grantCatch, carryLevel } from "./utils/training.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1159,11 +1160,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball");
       isShiny = rollForShiny(userObj.tp || 0);
 
-      userObj.pokemon ??= {};
-      userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-
-      if (isShiny) userObj.pokemon[reward.id].shiny++;
-      else userObj.pokemon[reward.id].normal++;
+      grantCatch(userObj, reward.id, isShiny ? "shiny" : "normal");
 
       console.log(
         `🎁 Pokemon reward → ${isShiny ? "✨ shiny " : ""}${reward.name} (${reward.tier})`
@@ -1630,11 +1627,7 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
       // ----------------------------------------
       user.cc -= COST[source];
 
-      user.pokemon ??= {};
-      user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-
-      if (shiny) user.pokemon[reward.id].shiny++;
-      else user.pokemon[reward.id].normal++;
+      grantCatch(user, reward.id, shiny ? "shiny" : "normal");
 
       // ----------------------------------------
       // 6️⃣ SAVE TRAINER DATA
@@ -1944,11 +1937,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
 
       const shiny = rollForShiny(user.tp || 0);
 
-      user.pokemon ??= {};
-      user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-
-      if (shiny) user.pokemon[reward.id].shiny++;
-      else user.pokemon[reward.id].normal++;
+      grantCatch(user, reward.id, shiny ? "shiny" : "normal");
 
       results.push({
         type: "pokemon",
@@ -2496,6 +2485,7 @@ if (dustCost > 0) {
     // Add 1 target (same variant)
     user.pokemon[tId] ??= { normal: 0, shiny: 0 };
     user.pokemon[tId][chosenVariant] += 1;
+    carryLevel(user, { id: bId, variant: chosenVariant }, { id: tId, variant: chosenVariant });
 
     await enqueueSave(trainerData);
 
@@ -2728,6 +2718,7 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
 
     user.pokemon[pid].normal -= 1;
     user.pokemon[pid].shiny += 1;
+    carryLevel(user, { id: pid, variant: "normal" }, { id: pid, variant: "shiny" });
 
     if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) {
       delete user.pokemon[pid];

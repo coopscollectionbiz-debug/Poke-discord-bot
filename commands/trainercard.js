@@ -26,6 +26,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { rollForShiny } from "../shinyOdds.js";
+import { grantCatch } from "../utils/training.js";
 import { spritePaths, rarityEmojis } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";
@@ -260,10 +261,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
         const shiny = rollForShiny(user.tp || 0);
 
-        user.pokemon ??= {};
-        user.pokemon[p.id] ??= { normal: 0, shiny: 0 };
-        if (shiny) user.pokemon[p.id].shiny += 1;
-        else user.pokemon[p.id].normal += 1;
+        grantCatch(user, p.id, shiny ? "shiny" : "normal");
 
         // ✅ Write CANONICAL variant-safe team immediately
         user.displayedPokemon = [{ id: p.id, variant: shiny ? "shiny" : "normal" }];

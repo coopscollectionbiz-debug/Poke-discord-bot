@@ -24,6 +24,9 @@ let currentMode = "team"; // "team" | "evolve" | "donate" | "convert"
 let selectedTeam = []; // [{id:Number, variant:"normal"|"shiny"}]
 let showOwnedOnly = false;
 let showUnownedOnly = false;
+// Multi-select (Donate mode). In-memory only, so leaving the page resets it.
+let multiSelectOn = false;
+const multiSelected = new Set(); // Pokémon IDs
 
 import { rarityEmojis } from "/public/spriteconfig.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
@@ -348,6 +351,15 @@ async function donatePokemon(pokeId, variant) {
   });
 }
 
+async function donateBulk(mode, items) {
+  const body = { id: userId, mode, items };
+  return await apiJSON("/api/pokemon/donate-bulk", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 async function convertPokemonToShiny(pokeId) {
   const body = { id: userId, pokeId };
   return await apiJSON("/api/pokemon/convert-to-shiny", {
@@ -433,6 +445,11 @@ function refreshStats(newData, prevData) {
 // ===========================================================
 function setMode(mode) {
   currentMode = mode;
+
+  if (mode !== "donate") {
+    multiSelectOn = false;
+    multiSelected.clear();
+  }
 
   document.querySelectorAll("#modeToggle .mode-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.mode === mode);
@@ -520,6 +537,11 @@ function renderPokemonGrid() {
   if (!container) return;
   container.innerHTML = "";
 
+  // Drop picks that stopped being selectable after a refresh.
+  for (const pid of multiSelected) if (multiSelectBlock(pid)) multiSelected.delete(pid);
+  updateBulkUI();
+  const inMultiSelect = currentMode === "donate" && multiSelectOn;
+
   const searchEl = document.getElementById("search");
   const rarityEl = document.getElementById("rarityFilter");
   const typeEl = document.getElementById("typeFilter");
@@ -566,21 +588,24 @@ function renderPokemonGrid() {
     } else if (currentMode === "evolve") {
       locked = !isEvolutionEligibleAnyVariant(id);
     } else if (currentMode === "donate") {
-      locked = !isOwnedAny;
+      locked = !isOwnedAny || (inMultiSelect && multiSelectBlock(id) !== null);
     } else if (currentMode === "convert") {
       const dust = userData.items?.shiny_dust ?? 0;
       const cost = dustCostForTier(tier);
       locked = owned.normal <= 0 || owned.shiny > 0 || dust < cost || cost <= 0;
     }
 
-    // Sprite path (display normal art as primary; locked uses grayscale)
-    const spritePath = locked
+    // Sprite path (display normal art as primary; locked uses grayscale).
+    // Multi-select locks cards you own, so they stay in color: grayscale means "unowned".
+    const spritePath = locked && !inMultiSelect
       ? `/public/sprites/pokemon/grayscale/${id}.gif`
       : `/public/sprites/pokemon/normal/${id}.gif`;
 
     const card = document.createElement("div");
     card.className = `pokemon-card ${isOwnedAny ? "owned" : "unowned"}`;
     if (locked) card.classList.add("locked");
+    const multiPicked = inMultiSelect && multiSelected.has(id);
+    if (multiPicked) card.classList.add("multi-selected");
     card.dataset.id = id;
 
     // Selected state + team badge
@@ -658,6 +683,7 @@ function renderPokemonGrid() {
         <img src="${spritePath}" class="poke-sprite" alt="${name}">
         ${teamBadgeHTML}
         ${locked ? `<div class="lock-overlay"><span>🔒</span></div>` : ""}
+        ${multiPicked ? `<div class="multi-check" aria-label="Selected">✓</div>` : ""}
         ${countHTML}
         ${badgeHTML}
       </div>
@@ -691,7 +717,7 @@ function renderPokemonGrid() {
 function onPokemonClick(id) {
   if (currentMode === "team") toggleTeamSelection(id);
   else if (currentMode === "evolve") openEvolutionModal(id);
-  else if (currentMode === "donate") openDonationModal(id);
+  else if (currentMode === "donate") multiSelectOn ? toggleMultiSelected(id) : openDonationModal(id);
   else if (currentMode === "convert") openConvertModal(id);
 }
 
@@ -855,6 +881,19 @@ async function init() {
     document.querySelectorAll("#modeToggle .mode-btn").forEach((btn) => {
       btn.addEventListener("click", () => setMode(btn.dataset.mode));
     });
+
+    // Bulk donate (Donate mode)
+    document.getElementById("donateDuplicatesBtn")?.addEventListener("click", openDonateDuplicatesModal);
+    document.getElementById("multiSelectToggle")?.addEventListener("click", () => {
+      multiSelectOn = !multiSelectOn;
+      multiSelected.clear();
+      renderPokemonGrid();
+    });
+    document.getElementById("multiSelectClear")?.addEventListener("click", () => {
+      multiSelected.clear();
+      renderPokemonGrid();
+    });
+    document.getElementById("multiSelectDonate")?.addEventListener("click", openMultiSelectDonateModal);
 
     // Save button (server-authoritative refetch + normalize)
     const saveBtn = document.getElementById("saveTeamBtn");
@@ -1079,6 +1118,9 @@ function showBlockedActionModal(pokeId) {
     title = "🔒 Not Owned";
     message = `You don’t own ${p.name}, so you can’t donate it.`;
     borderColor = "#facc15";
+
+    const block = multiSelectOn ? multiSelectBlock(pokeId) : null;
+    if (block) ({ title, message } = block);
   }
 
   if (currentMode === "convert") {
@@ -1706,6 +1748,281 @@ async function handleDonationConfirm(pokeId, variant, overlay) {
     alert("❌ " + (err?.message || "Donation failed"));
     closeOverlay(overlay);
   }
+}
+
+// ===========================================================
+// 🧹 Bulk Donate — Donate Duplicates + Multi-select
+// Server re-checks every row (utils/bulkDonate.js); these are UI hints.
+// ===========================================================
+
+// The server checks the SAVED Team. selectedTeam also holds unsaved
+// Change Team edits, so it can't be used for these locks.
+function onSavedTeam(pid, variant) {
+  return (userData.currentTeam || [])
+    .map(toTeamObj)
+    .filter(Boolean)
+    .some((s) => s.id === Number(pid) && s.variant === variant);
+}
+
+function onlyVariant(pid) {
+  return ownedCounts(pid).shiny === 1 ? "shiny" : "normal";
+}
+
+// Every copy past the first, per variant (shinies included).
+function duplicateRows() {
+  const rows = [];
+  const ids = Object.keys(userData.pokemon || {}).map(Number).sort((a, b) => a - b);
+  for (const pid of ids) {
+    if (!pokemonData[pid]) continue; // server rejects unknown IDs
+    const owned = ownedCounts(pid);
+    for (const variant of ["normal", "shiny"]) {
+      if (owned[variant] > 1) rows.push({ pokeId: pid, variant, count: owned[variant] - 1 });
+    }
+  }
+  return rows;
+}
+
+function multiSelectRows() {
+  return [...multiSelected].map((pid) => ({ pokeId: pid, variant: onlyVariant(pid), count: 1 }));
+}
+
+// Why a card can't be picked in Multi-select, or null if it can.
+function multiSelectBlock(pid) {
+  const name = pokemonData[pid]?.name || `#${pid}`;
+  const owned = ownedCounts(pid);
+
+  if (owned.normal > 1 || owned.shiny > 1) {
+    const have = owned.normal > 1 ? `${owned.normal} ${name}` : `${owned.shiny} shiny ${name}`;
+    return {
+      title: "🔒 More Than One Copy",
+      message: `You have ${have}. Use Donate Duplicates to bring it down to 1, then select it.`,
+    };
+  }
+  if (owned.normal === 1 && owned.shiny === 1) {
+    return {
+      title: "🔒 You Own Both Variants",
+      message: `You have a normal and a shiny ${name}. Turn off Multi-select and tap it to choose which one to donate.`,
+    };
+  }
+  if (owned.any !== 1) return { title: "🔒 Not Owned", message: `You don’t own ${name}.` };
+  if (onSavedTeam(pid, onlyVariant(pid))) {
+    return { title: "🔒 On Your Team", message: `${name} is on your Team. Remove it from your Team first.` };
+  }
+  return null;
+}
+
+function bulkTotals(rows) {
+  let cc = 0;
+  let dust = 0;
+  let copies = 0;
+  for (const r of rows) {
+    const tier = tierOf(pokemonData[r.pokeId]);
+    const shiny = r.variant === "shiny";
+    cc += getDonationValue(tier, shiny) * r.count;
+    // Only shiny dust is guaranteed; random dust from normals is a surprise on the result.
+    if (shiny) dust += (SHINY_DUST_REWARD[tier] ?? 0) * r.count;
+    copies += r.count;
+  }
+  return { cc, dust, copies };
+}
+
+const fmtCC = (n) => Number(n || 0).toLocaleString("en-US");
+
+// Called from renderPokemonGrid, which runs after every state change.
+function updateBulkUI() {
+  const row = document.getElementById("bulkDonateRow");
+  if (row) row.style.display = currentMode === "donate" ? "flex" : "none";
+
+  const dupBtn = document.getElementById("donateDuplicatesBtn");
+  if (dupBtn) {
+    const { copies } = bulkTotals(duplicateRows());
+    dupBtn.textContent = `🧹 Donate Duplicates (${copies})`;
+    dupBtn.disabled = copies === 0;
+  }
+
+  const toggle = document.getElementById("multiSelectToggle");
+  if (toggle) {
+    toggle.classList.toggle("active", multiSelectOn);
+    toggle.setAttribute("aria-pressed", String(multiSelectOn));
+  }
+
+  const bar = document.getElementById("multiSelectBar");
+  if (bar) bar.style.display = multiSelectOn ? "flex" : "none";
+  document.body.classList.toggle("multi-select-on", multiSelectOn);
+
+  const summary = document.getElementById("multiSelectSummary");
+  if (summary) {
+    const { cc } = bulkTotals(multiSelectRows());
+    summary.textContent = `${multiSelected.size} selected · 💰 ${fmtCC(cc)} CC`;
+  }
+  const donateBtn = document.getElementById("multiSelectDonate");
+  if (donateBtn) donateBtn.disabled = multiSelected.size === 0;
+}
+
+function toggleMultiSelected(id) {
+  const pid = Number(id);
+  if (multiSelected.has(pid)) multiSelected.delete(pid);
+  else multiSelected.add(pid);
+  renderPokemonGrid();
+}
+
+function openDonateDuplicatesModal() {
+  const rows = duplicateRows();
+  if (!rows.length) return;
+  const { copies } = bulkTotals(rows);
+  openBulkConfirmModal({
+    mode: "duplicates",
+    rows,
+    title: `🧹 Donate ${copies} duplicate${copies === 1 ? "" : "s"}?`,
+    subtitle: "You'll keep 1 of each.",
+  });
+}
+
+function openMultiSelectDonateModal() {
+  const rows = multiSelectRows();
+  if (!rows.length) return;
+  openBulkConfirmModal({
+    mode: "multiselect",
+    rows,
+    title: `💝 Donate ${rows.length} Pokémon?`,
+    subtitle: rows.length === 1 ? "This is your only copy." : "These are your only copies.",
+  });
+}
+
+function openBulkConfirmModal({ mode, rows, title, subtitle }) {
+  const { cc, dust } = bulkTotals(rows);
+  const overlay = createOverlay();
+  const modal = document.createElement("div");
+  modal.style.cssText = `
+    background: var(--card); border: 2px solid #facc15;
+    border-radius: 14px; padding: 1.5rem; text-align: center;
+    max-width: 560px; width: 92%; max-height: 90vh;
+    display: flex; flex-direction: column;
+  `;
+
+  const tiles = rows
+    .map((r) => {
+      const name = pokemonData[r.pokeId]?.name || `#${r.pokeId}`;
+      const shiny = r.variant === "shiny";
+      return `
+        <div class="bulk-tile${shiny ? " shiny" : ""}">
+          <img src="/public/sprites/pokemon/${shiny ? "shiny" : "normal"}/${r.pokeId}.gif" alt="${name}">
+          <div class="bulk-tile-name">${name}</div>
+          <div class="bulk-tile-count">${shiny ? "✨ " : ""}−${r.count}</div>
+        </div>`;
+    })
+    .join("");
+
+  modal.innerHTML = `
+    <h2 style="color:#facc15;margin:0 0 0.25rem;">${title}</h2>
+    <p style="color:#ccc;margin:0 0 0.75rem;font-weight:600;">${subtitle}</p>
+    <div class="bulk-grid">${tiles}</div>
+    <p style="color:#facc15;font-weight:800;margin:0.75rem 0 0;">💰 +${fmtCC(cc)} CC</p>
+    ${dust > 0 ? `<p style="color:#facc15;font-weight:900;margin:0.25rem 0 0;">✨ +${dust} Shiny Dust</p>` : ""}
+    <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
+      <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
+      <button class="confirm-btn" style="background: #facc15; color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
+    </div>
+  `;
+
+  modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
+  modal.querySelector(".confirm-btn").addEventListener("click", () => {
+    withActionLock(() => handleBulkDonate(mode, rows, overlay));
+  });
+
+  overlay.appendChild(modal);
+}
+
+async function handleBulkDonate(mode, rows, overlay) {
+  const prev = structuredClone(userData);
+  let res;
+
+  try {
+    res = await donateBulk(mode, rows);
+    if (!res?.success) throw new Error(res?.error || "Donation failed");
+  } catch (err) {
+    closeOverlay(overlay);
+    await refreshAfterBulk(prev);
+    // err.status means the server answered and rejected the whole batch.
+    // No status means the request may never have arrived, or arrived and
+    // the reply was lost, so don't claim nothing happened.
+    return err?.status
+      ? showBulkErrorModal("Nothing was donated.", err.message)
+      : showBulkErrorModal(
+          "Couldn’t reach the server.",
+          "Your collection has been refreshed. Check it before trying again."
+        );
+  }
+
+  closeOverlay(overlay);
+  if (mode === "multiselect") multiSelected.clear();
+  showBulkResultModal(res);
+  await refreshAfterBulk(prev);
+}
+
+// Server-authoritative refresh, same steps as the single-donate flow.
+async function refreshAfterBulk(prev) {
+  try {
+    await fetchUserData();
+    selectedTeam = normalizeTeam(userData.currentTeam);
+    clampTeamTo6Unique();
+    refreshStats(userData, prev);
+    renderPokemonGrid();
+    updateTeamCounter();
+  } catch (err) {
+    console.error("refreshAfterBulk failed:", err);
+  }
+}
+
+function showBulkResultModal(res) {
+  const overlay = createOverlay();
+  const modal = document.createElement("div");
+  modal.style.cssText = `
+    background: var(--card); border: 2px solid #facc15;
+    border-radius: 14px; padding: 2rem; text-align: center;
+    max-width: 420px; width: 92%;
+  `;
+
+  modal.innerHTML = `
+    <h2 style="color: #facc15;">💰 Donation Complete!</h2>
+    <p>You donated ${res.donatedCopies} Pokémon for ${fmtCC(res.gainedCC)} CC.</p>
+    ${
+      (res.shinyDustGained ?? 0) > 0
+        ? `<p style="color:#facc15;font-weight:900;">✨ +${res.shinyDustGained} Shiny Dust</p>`
+        : ""
+    }
+    <button class="ok-btn" style="background: #facc15; color: var(--bg); border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">OK</button>
+  `;
+
+  modal.querySelector(".ok-btn").addEventListener("click", () => closeOverlay(overlay));
+  overlay.appendChild(modal);
+}
+
+function showBulkErrorModal(title, message) {
+  const overlay = createOverlay();
+  const modal = document.createElement("div");
+  modal.style.cssText = `
+    background: var(--card); border: 2px solid #ef4444;
+    border-radius: 14px; padding: 2rem; text-align: center;
+    max-width: 420px; width: 92%;
+  `;
+
+  const h2 = document.createElement("h2");
+  h2.style.cssText = "color:#ef4444;margin:0 0 0.75rem;";
+  h2.textContent = title;
+
+  const p = document.createElement("p");
+  p.style.cssText = "color:#ccc;font-weight:650;margin:0 0 1.25rem;";
+  p.textContent = message; // server text: keep it out of innerHTML
+
+  const ok = document.createElement("button");
+  ok.textContent = "OK";
+  ok.style.cssText =
+    "background:#ef4444;color:var(--bg);border:none;padding:10px 24px;border-radius:10px;cursor:pointer;font-weight:800;";
+  ok.addEventListener("click", () => closeOverlay(overlay));
+
+  modal.append(h2, p, ok);
+  overlay.appendChild(modal);
 }
 
 // ======================================================

@@ -10,10 +10,8 @@ import { getTraining, addExp, trainingKey, speciesName } from "../training.js";
 import { getMove } from "./data.js";
 import { movesLearned } from "./moveset.js";
 import { simulateBattle } from "./sim.js";
-import { teamPower, surgeChance } from "./power.js";
+import { teamPower, rollSurge } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, capBlock, recordStart } from "./rewards.js";
-import { createRng } from "./rng.js";
-import { SURGE } from "./tuning.js";
 
 // The Team in slot order, skipping slots whose variant is no longer owned.
 export function buildTeam(user) {
@@ -63,13 +61,8 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
   }
 
   const powers = teams.map(teamPower);
-  const odds = surgeChance(powers[0], powers[1]);
-  const surge = odds.underdog !== null && createRng(seed).next() < odds.chance ? { side: odds.underdog } : null;
-  const result = simulateBattle({
-    sides: teams.map((members) => ({ members })),
-    seed: seed + 1,
-    surge: surge && { side: surge.side, statMult: SURGE.statMult },
-  });
+  const surge = rollSurge(powers, seed);
+  const result = simulateBattle({ sides: teams.map((members) => ({ members })), seed: seed + 1, surge });
 
   const ids = [challengerId, defenderId];
   const users = [challenger, defender];

@@ -313,9 +313,11 @@ a:hover { text-decoration: underline; }
   cursor: not-allowed;
 }
 
-/* Keep the last row of cards + footer reachable above the bar */
-body.multi-select-on {
-  padding-bottom: 80px;
+/* Keep the last row of cards + footer reachable above the bar.
+   On the panel, not body: body is height:100%, so its padding
+   doesn't extend the scrollable page. The bar wraps to ~66px on phones. */
+body.multi-select-on #pokemonPanel {
+  padding-bottom: 96px;
 }
 
 /* Confirmation modal tile grid */

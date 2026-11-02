@@ -48,7 +48,7 @@ Glossary: `CONTEXT.md`.
 - Fallback typed attack for mons with no damaging moves (Abra, Ditto, Wobbuffet, Unown, Magikarp <15).
 - Turn order by Speed, random tiebreak. Turn cap → winner by remaining team HP%.
 - Seeded RNG; seed logged for reproducibility.
-- Sim runs and **persists all results first**; display is a replay.
+- Sim runs and **applies and saves all results first**; display is a replay, so a failed replay never changes results. (A hard crash before the next Discord backup can still lose them, like any other action.)
 
 ## Battle rating (Elo)
 - Moves for both players after every Open and Wager battle. Start 1000, K 32 (proposed defaults).

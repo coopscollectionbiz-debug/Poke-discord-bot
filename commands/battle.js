@@ -6,9 +6,9 @@
 
 import {
   SlashCommandBuilder, MessageFlags, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType,
+  PermissionFlagsBits,
 } from "discord.js";
 import { randomInt, randomUUID } from "crypto";
-import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { logEvent } from "../utils/eventLog.js";
 import { battleBlock, buildTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
 import { playBattle } from "../utils/battle/playback.js";
@@ -23,10 +23,16 @@ export const data = new SlashCommandBuilder()
   .addIntegerOption((o) =>
     o.setName("wager").setDescription("CC each of you puts in the pot (they must accept)").setMinValue(1));
 
+// Battles and wager offers are posted as new channel messages.
+const CHANNEL_PERMISSIONS = [
+  PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles,
+];
+
 export function refusal(reason, opponentId) {
   return {
     self: "You can't battle yourself.",
     bot: "You can't battle a bot.",
+    no_perms: "I can't post battles in this channel. Try another one.",
     no_team_challenger: "Set a Team on your dashboard before battling.",
     no_team_defender: `<@${opponentId}> hasn't set a team yet.`,
     cap_daily: "You've used all 10 battles for today. Battles reset at midnight UTC.",
@@ -35,6 +41,7 @@ export function refusal(reason, opponentId) {
     defender_cap_opponent: "You two have battled 3 times today.",
     insufficient_cc: "You don't have that much CC.",
     pending_exists: "You already have a wager waiting for an answer.",
+    post_failed: "I couldn't post the wager here, so your Stake was refunded.",
   }[reason] ?? "That battle can't happen right now.";
 }
 
@@ -45,15 +52,15 @@ export function displayNames(interaction, opponent) {
   };
 }
 
-export async function execute(interaction, trainerData, _saveLocal, _saveDiscord, lockUser, enqueueSave, client) {
+export async function execute(interaction, trainerData, _saveLocal, _saveDiscord, lockUser, enqueueSave) {
   const opponent = interaction.options.getUser("opponent", true);
   const wager = interaction.options.getInteger("wager");
   const challengerId = interaction.user.id;
   const refuse = (reason) => interaction.reply({ content: refusal(reason, opponent.id), flags: MessageFlags.Ephemeral });
 
   if (opponent.bot) return refuse("bot");
+  if (interaction.appPermissions && !interaction.appPermissions.has(CHANNEL_PERMISSIONS)) return refuse("no_perms");
 
-  await ensureUserInitialized(challengerId, interaction.user.username, trainerData, client);
   const mode = wager != null ? "wager" : "open";
   const early = battleBlock({ trainerData, challengerId, defenderId: opponent.id, mode });
   if (early) return refuse(early);
@@ -63,7 +70,9 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   const seed = randomInt(0, 2 ** 31 - 1);
   const outcome = await withBothLocks(lockUser, challengerId, opponent.id, async () => {
     const out = runBattle({ trainerData, challengerId, defenderId: opponent.id, mode, seed });
-    // Save before the replay starts, so a crash mid-animation can't lose results.
+    // Results are applied and saved before the replay, so a failed or slow
+    // replay never changes them. (A hard crash before the next Discord backup
+    // can still lose them, like any other action: startup loads that backup.)
     if (out.ok) await enqueueSave(trainerData, { force: true });
     return out;
   });
@@ -73,44 +82,64 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
     defenderId: opponent.id, mode, seed, winnerId: outcome.winnerId, turns: outcome.result.turns, surge: !!outcome.surge,
   });
   await interaction.editReply("⚔️ Your battle is starting below.");
-  await playBattle(interaction.channel, outcome, displayNames(interaction, opponent));
+  try {
+    await playBattle(interaction.channel, outcome, displayNames(interaction, opponent));
+  } catch (err) {
+    console.warn("⚠️ battle post failed:", err?.message || err);
+    await interaction.editReply("Your battle counted, but I couldn't post it in this channel.").catch(() => {});
+  }
 }
 
 // ----------------------------------------------------------
 // Wager battles: hold the Challenger's Stake, post an offer the Defender
 // must accept within 15 minutes, then run the battle with both Stakes.
+// Other commands and the dashboard replace a player's record in
+// trainerData with a copy, so every step re-reads the live record inside
+// its lock; never hold a user object across an await.
 // ----------------------------------------------------------
 async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, stake) {
   const challengerId = interaction.user.id;
   const defenderId = opponent.id;
-  const challenger = trainerData[challengerId];
+  const live = () => trainerData[challengerId];
   const nonce = randomUUID();
   const names = displayNames(interaction, opponent);
   const save = () => enqueueSave(trainerData, { force: true });
+  const refund = () => lockUser(challengerId, async () => {
+    const amount = refundWager(live(), nonce);
+    if (amount) await save();
+    return amount;
+  });
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const offered = await lockUser(challengerId, async () => {
-    const r = offerWager(challenger, { defenderId, stake, channelId: interaction.channelId, nonce, now: Date.now() });
+    const r = offerWager(live(), { defenderId, stake, channelId: interaction.channelId, nonce, now: Date.now() });
     if (r.ok) await save();
     return r;
   });
   if (!offered.ok) return interaction.editReply(refusal(offered.reason, defenderId));
 
-  const defenderCc = trainerData[defenderId]?.cc ?? 0;
-  const acceptLabel = defenderCc >= 1 && defenderCc < stake ? `Accept All-in (${defenderCc} CC)` : `Accept (${stake} CC)`;
-  const power = (id) => teamPower(buildTeam(trainerData[id]));
-  // A new channel message (not an edited reply) so the Defender is notified.
-  const message = await interaction.channel.send({
-    content: `⚔️ <@${challengerId}> challenges <@${defenderId}> to a Wager battle for ${stake} CC!`,
-    embeds: [new EmbedBuilder().setColor(0xf1c40f).setDescription(
-      `Power rating: ${names[challengerId]} ${power(challengerId)} · ${names[defenderId]} ${power(defenderId)}\n` +
-      "The winner takes the pot. This offer expires in 15 minutes.")],
-    components: [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`wager_accept:${nonce}`).setLabel(acceptLabel).setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId(`wager_decline:${nonce}`).setLabel("Decline").setStyle(ButtonStyle.Secondary),
-    )],
-  });
-  await lockUser(challengerId, async () => { attachMessage(challenger, nonce, message.id); await save(); });
+  let message;
+  try {
+    const defenderCc = trainerData[defenderId]?.cc ?? 0;
+    const acceptLabel = defenderCc >= 1 && defenderCc < stake ? `Accept All-in (${defenderCc} CC)` : `Accept (${stake} CC)`;
+    const power = (id) => teamPower(buildTeam(trainerData[id]));
+    // A new channel message (not an edited reply) so the Defender is notified.
+    message = await interaction.channel.send({
+      content: `⚔️ <@${challengerId}> challenges <@${defenderId}> to a Wager battle for ${stake} CC!`,
+      embeds: [new EmbedBuilder().setColor(0xf1c40f).setDescription(
+        `Power rating: ${names[challengerId]} ${power(challengerId)} · ${names[defenderId]} ${power(defenderId)}\n` +
+        "The winner takes the pot. This offer expires in 15 minutes.")],
+      components: [new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`wager_accept:${nonce}`).setLabel(acceptLabel).setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`wager_decline:${nonce}`).setLabel("Decline").setStyle(ButtonStyle.Secondary),
+      )],
+    });
+    await lockUser(challengerId, async () => { attachMessage(live(), nonce, message.id); await save(); });
+  } catch (err) {
+    console.warn("⚠️ wager offer post failed:", err?.message || err);
+    await refund();
+    return interaction.editReply(refusal("post_failed", defenderId));
+  }
   await interaction.editReply("⚔️ Wager offered. Your Stake is held until they answer.");
 
   const closeOffer = (content) => message.edit({ content, embeds: [], components: [] }).catch(() => {});
@@ -124,24 +153,24 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     if (i.user.id !== defenderId) {
       return i.reply({ content: "This wager isn't for you.", flags: MessageFlags.Ephemeral });
     }
+    await i.deferUpdate();
     if (i.customId.startsWith("wager_decline")) {
+      if (!(await refund())) return i.followUp({ content: "This wager is no longer open.", flags: MessageFlags.Ephemeral });
       collector.stop("declined");
-      await lockUser(challengerId, async () => { if (refundWager(challenger, nonce)) await save(); });
-      return i.update({ content: `<@${defenderId}> declined. Stake refunded.`, embeds: [], components: [] });
+      return closeOffer(`<@${defenderId}> declined. Stake refunded.`);
     }
 
-    await i.deferUpdate();
     const outcome = await withBothLocks(lockUser, challengerId, defenderId, async () => {
       // A second click (or a click after expiry) finds the offer already settled.
-      if (challenger.pendingWager?.nonce !== nonce) return { error: "no_wager" };
+      if (live()?.pendingWager?.nonce !== nonce) return { error: "no_wager" };
       // Teams and caps are checked again now: either player may have changed since the offer.
       const block = battleBlock({ trainerData, challengerId, defenderId, mode: "wager" });
       if (block) {
-        refundWager(challenger, nonce);
+        refundWager(live(), nonce);
         await save();
         return { canceled: block };
       }
-      const accepted = acceptStake(challenger, trainerData[defenderId], nonce, Date.now());
+      const accepted = acceptStake(live(), trainerData[defenderId], nonce, Date.now());
       if (!accepted.ok) return { error: accepted.reason };
       const out = runBattle({
         trainerData, challengerId, defenderId, mode: "wager", stake: accepted.stake, seed: randomInt(0, 2 ** 31 - 1),
@@ -165,16 +194,15 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
       winnerId: outcome.winnerId, turns: outcome.result.turns, surge: !!outcome.surge,
     });
     await closeOffer(`✅ <@${defenderId}> accepted! The battle is below.`);
-    await playBattle(interaction.channel, outcome, names);
+    await playBattle(interaction.channel, outcome, names).catch((err) =>
+      console.warn("⚠️ wager battle post failed:", err?.message || err));
   });
 
+  // Any end other than an answer (timeout, deleted message or channel)
+  // refunds the Stake. refundWager is nonce-checked, so this is safe even
+  // if an accept or decline already settled the offer.
   collector.on("end", async (_, reason) => {
-    if (reason !== "time") return;
-    const refunded = await lockUser(challengerId, async () => {
-      const amount = refundWager(challenger, nonce);
-      if (amount) await save();
-      return amount;
-    });
-    if (refunded) await closeOffer("Wager expired. Stake refunded.");
+    if (reason === "answered" || reason === "declined") return;
+    if (await refund()) await closeOffer(reason === "time" ? "Wager expired. Stake refunded." : "Wager canceled. Stake refunded.");
   });
 }

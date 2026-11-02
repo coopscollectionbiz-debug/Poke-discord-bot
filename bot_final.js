@@ -512,6 +512,7 @@ ensureWeeklyReset(user);
 
 import { lockUser } from "./utils/userLocks.js";
 import { grantCatch, carryLevel } from "./utils/training.js";
+import { refundAllPending } from "./utils/battle/wager.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2752,6 +2753,26 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
  // ==========================================================
 // 🤖 BOT READY EVENT
 // ==========================================================
+// ==========================================================
+// ⚔️ Wager battles: refund Stakes left pending by a restart
+// Offer buttons die with the old process, so every pending Stake is
+// refunded once trainerData is loaded, and the offer message is edited.
+// ==========================================================
+async function refundPendingWagersOnStartup() {
+  const refunded = refundAllPending(trainerData);
+  if (!refunded.length) return;
+  await enqueueSave(trainerData, { force: true });
+  console.log(`⚔️ Refunded ${refunded.length} pending wager stake(s) after restart`);
+  for (const { channelId, messageId } of refunded) {
+    if (!channelId || !messageId) continue;
+    try {
+      const channel = await client.channels.fetch(channelId);
+      const message = await channel.messages.fetch(messageId);
+      await message.edit({ content: "Wager expired (bot restarted). Stake refunded.", embeds: [], components: [] });
+    } catch {}
+  }
+}
+
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
@@ -2816,6 +2837,7 @@ async function retryLoadLoop() {
   const ok2 = await attemptLoad();
 
   if (ok2) {
+    await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
     return;
@@ -2831,7 +2853,7 @@ setTimeout(retryLoadLoop, retryMs);
     return;
   }
 
-
+  await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });

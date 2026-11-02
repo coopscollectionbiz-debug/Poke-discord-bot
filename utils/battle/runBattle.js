@@ -13,6 +13,13 @@ import { simulateBattle } from "./sim.js";
 import { teamPower, rollSurge } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, capBlock, recordStart } from "./rewards.js";
 
+// Locks both players in a fixed (ascending id) order so two battles between
+// the same pair, started from either side, can't deadlock.
+export function withBothLocks(lockUser, idA, idB, fn) {
+  const [first, second] = [String(idA), String(idB)].sort();
+  return lockUser(first, () => (first === second ? fn() : lockUser(second, fn)));
+}
+
 // The Team in slot order, skipping slots whose variant is no longer owned.
 export function buildTeam(user) {
   return normalizeTeam(user.displayedPokemon, 6)
@@ -43,22 +50,29 @@ function applyExp(user, side, result, sideIndex) {
   });
 }
 
+// Read-only: why this battle can't happen right now, or null. /battle runs it
+// before deferring (instant ephemeral refusals) and runBattle re-runs it under lock.
+export function battleBlock({ trainerData, challengerId, defenderId, mode, now = new Date() }) {
+  if (challengerId === defenderId) return "self";
+  if (!buildTeam(trainerData[challengerId] ?? {}).length) return "no_team_challenger";
+  if (!buildTeam(trainerData[defenderId] ?? {}).length) return "no_team_defender";
+  const day = utcDay(now);
+  const blockFor = (user, opponentId) => (user?.battle?.day === day ? capBlock(user.battle, opponentId) : null);
+  const block = blockFor(trainerData[challengerId], defenderId);
+  if (block) return `cap_${block}`;
+  const defenderBlock = mode === "wager" && blockFor(trainerData[defenderId], challengerId);
+  if (defenderBlock) return `defender_cap_${defenderBlock}`;
+  return null;
+}
+
 export function runBattle({ trainerData, challengerId, defenderId, mode, stake = 0, seed, now = new Date() }) {
-  if (challengerId === defenderId) return { ok: false, reason: "self" };
+  const reason = battleBlock({ trainerData, challengerId, defenderId, mode, now });
+  if (reason) return { ok: false, reason };
   const challenger = trainerData[challengerId];
   const defender = trainerData[defenderId];
-  const teams = [buildTeam(challenger ?? {}), buildTeam(defender ?? {})];
-  if (!teams[0].length) return { ok: false, reason: "no_team_challenger" };
-  if (!teams[1].length) return { ok: false, reason: "no_team_defender" };
-
+  const teams = [buildTeam(challenger), buildTeam(defender)];
   const day = utcDay(now);
   const records = [getBattleRecord(challenger, day), getBattleRecord(defender, day)];
-  const block = capBlock(records[0], defenderId);
-  if (block) return { ok: false, reason: `cap_${block}` };
-  if (mode === "wager") {
-    const defenderBlock = capBlock(records[1], challengerId);
-    if (defenderBlock) return { ok: false, reason: `defender_cap_${defenderBlock}` };
-  }
 
   const powers = teams.map(teamPower);
   const surge = rollSurge(powers, seed);

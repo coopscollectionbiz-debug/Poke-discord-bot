@@ -511,7 +511,7 @@ ensureWeeklyReset(user);
 // ==========================================================
 
 import { lockUser } from "./utils/userLocks.js";
-import { grantCatch, carryLevel } from "./utils/training.js";
+import { grantCatch, carryLevel, levelsForUser } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -2264,6 +2264,7 @@ app.get("/api/user-pokemon", (req, res) => {
     items,
     pokemon,
     currentTeam, // NEW FORMAT: [{ id: Number, variant: "normal" | "shiny" }]
+    levels: levelsForUser(u), // { "6:normal": 23 } for every owned variant
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
   });
 });

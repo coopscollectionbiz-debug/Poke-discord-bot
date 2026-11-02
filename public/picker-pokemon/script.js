@@ -641,13 +641,14 @@ function renderPokemonGrid() {
       }
     }
 
-    // Count label (show both normal and shiny counts when owned)
+    // Count label (Level + count for each owned variant)
     let countHTML = "";
     if (owned.any > 0) {
       const parts = [];
-      if (owned.normal > 0) parts.push(`x${owned.normal}`);
-      if (owned.shiny > 0) parts.push(`✨x${owned.shiny}`);
-      countHTML = `<div class="count-label bottom-left">${parts.join(" · ")}</div>`;
+      const lv = (variant) => userData.levels?.[`${id}:${variant}`];
+      if (owned.normal > 0) parts.push(`Lv ${lv("normal") ?? "?"} x${owned.normal}`);
+      if (owned.shiny > 0) parts.push(`✨Lv ${lv("shiny") ?? "?"} x${owned.shiny}`);
+      countHTML = `<div class="count-label bottom-left">${parts.join("<br>")}</div>`;
     }
 
     // Team badge number

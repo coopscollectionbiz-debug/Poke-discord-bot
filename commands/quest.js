@@ -6,6 +6,7 @@
 import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
+import { grantCatch } from "../utils/training.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { safeReply } from "../utils/safeReply.js";
@@ -66,9 +67,7 @@ export default {
       const pick = pool[Math.floor(Math.random() * pool.length)];
 
       const shiny = rollForShiny(user.tp || 0);
-      const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
-      shiny ? record.shiny++ : record.normal++;
-      user.pokemon[pick.id] = record;
+      grantCatch(user, pick.id, shiny ? "shiny" : "normal");
 
       user.cc = (user.cc || 0) + QUEST_CC_REWARD;
 

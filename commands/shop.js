@@ -26,6 +26,7 @@ import {
   selectRandomTrainerForUser,
 } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
+import { grantCatch } from "../utils/training.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
 import { spritePaths } from "../spriteconfig.js";
 import {
@@ -276,9 +277,7 @@ export default {
 
             for (const reward of rewards) {
               const shiny = rollForShiny(user.tp || 0);
-              user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-              if (shiny) user.pokemon[reward.id].shiny++;
-              else user.pokemon[reward.id].normal++;
+              grantCatch(user, reward.id, shiny ? "shiny" : "normal");
 
               const spriteURL = shiny
                 ? `${spritePaths.shiny}${reward.id}.gif`

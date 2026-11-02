@@ -13,6 +13,7 @@ import { atomicSave } from "../utils/saveManager.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
+import { grantCatch } from "../utils/training.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { spritePaths, rarityEmojis, rarityColors } from "../spriteconfig.js";
@@ -125,16 +126,8 @@ export async function execute(
       // ======================================================
       // Apply Pokémon to inventory
       // ======================================================
-      user.pokemon[pick1.id] ??= { normal: 0, shiny: 0 };
-      user.pokemon[pick2.id] ??= { normal: 0, shiny: 0 };
-
-      shiny1
-        ? user.pokemon[pick1.id].shiny++
-        : user.pokemon[pick1.id].normal++;
-
-      shiny2
-        ? user.pokemon[pick2.id].shiny++
-        : user.pokemon[pick2.id].normal++;
+      grantCatch(user, pick1.id, shiny1 ? "shiny" : "normal");
+      grantCatch(user, pick2.id, shiny2 ? "shiny" : "normal");
 
       // ======================================================
       // Apply CC + TP

@@ -17,8 +17,10 @@ export const CRIT_MULT = 2;
 export const MOVE_RANDOM_CHANCE = 0.1;
 export const TURN_CAP = 300;
 
-// Underdog surge: chance grows with the Power rating ratio.
-export const SURGE = { minRatio: 1.25, perRatio: 0.05, maxChance: 0.2, statMult: 1.6 };
+// Underdog surge: chance grows with the Power rating ratio; a surge raises
+// the Underdog's Levels until the gap is `residual`. Tuned by
+// tests/battleBalance.test.js: even 43%, 2× 5.0%, 3× 2.1%, 5×+ 0.6%.
+export const SURGE = { minRatio: 1.25, perRatio: 0.15, maxChance: 0.2, residual: 1.3 };
 
 // Catch level by Stage (or "legendary": Tier legendary/mythic at Stage 1).
 export const CATCH_RANGES = {

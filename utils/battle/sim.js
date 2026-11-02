@@ -16,16 +16,16 @@ import {
 
 const SHEDINJA = 292;
 
-function buildMon(member, statMult) {
+function buildMon(member, levelMult) {
   const species = getSpecies(member.speciesId);
-  const s = computeStats(species.baseStats, member.level);
-  const boost = (v) => Math.floor(v * statMult);
+  const level = Math.min(100, Math.round(member.level * levelMult));
+  const s = computeStats(species.baseStats, level);
   const maxHp = member.speciesId === SHEDINJA ? 1 : s.hp;
   return {
     speciesId: member.speciesId,
-    level: member.level,
+    level,
     types: species.types,
-    atk: boost(s.atk), def: boost(s.def), spa: boost(s.spa), spd: boost(s.spd), spe: boost(s.spe),
+    atk: s.atk, def: s.def, spa: s.spa, spd: s.spd, spe: s.spe,
     maxHp,
     hp: maxHp,
     moves: autoMoveset(member.speciesId, member.level).map(getMove),
@@ -71,7 +71,7 @@ function damage(move, attacker, target, rng) {
 export function simulateBattle({ sides, seed, surge }) {
   const rng = createRng(seed);
   const teams = sides.map((side, i) =>
-    side.members.map((m) => buildMon(m, surge && surge.side === i ? surge.statMult : 1)));
+    side.members.map((m) => buildMon(m, surge && surge.side === i ? surge.levelMult : 1)));
   const snapshot = () => teams.map((t) => t.map((m) => m.hp / m.maxHp));
   const activeSlot = (i) => teams[i].findIndex((m) => m.hp > 0);
   const snapshots = [snapshot()];

@@ -6,6 +6,8 @@ Discord bot for a Pokémon collector game. Built on `discord.js` v14 with an Exp
 
 A Discord-native Pokémon collector game. Players earn points and ranks for chatting in the channels, and may randomly catch a Pokémon along the way. A companion web dashboard lets them manage their collection and spend points on catching pokemon or updating their trainer.
 
+Game terms (Tier, Stage, Team, Battle rating, and so on) are defined in [`CONTEXT.md`](CONTEXT.md).
+
 ## Setup
 
 ### Prerequisites

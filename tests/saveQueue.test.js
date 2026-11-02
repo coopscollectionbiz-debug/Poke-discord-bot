@@ -6,7 +6,6 @@
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
-import { enqueueSave, getQueueLength, shutdownFlush } from "../utils/saveQueue.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,6 +75,10 @@ async function runTests() {
   console.log("=" .repeat(50));
 
   await setup();
+
+  // Import after setup() changes directory. saveQueue.js resolves ./trainerData.json once,
+  // when it loads, so a top-level import would aim every write at the project root instead.
+  const { enqueueSave, shutdownFlush } = await import("../utils/saveQueue.js");
 
   try {
     // Test 1: Basic enqueue and save

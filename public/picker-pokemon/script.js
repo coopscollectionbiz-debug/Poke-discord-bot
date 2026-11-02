@@ -24,12 +24,14 @@ let currentMode = "team"; // "team" | "evolve" | "donate" | "convert"
 let selectedTeam = []; // [{id:Number, variant:"normal"|"shiny"}]
 let showOwnedOnly = false;
 let showUnownedOnly = false;
-// Multi-select (Donate mode). In-memory only, so leaving the page resets it.
+// Multi-select (Donate mode). In-memory only; a reload resets it, and the
+// pageshow handler below resets it on a back/forward cache restore.
 let multiSelectOn = false;
 const multiSelected = new Set(); // Pokémon IDs
 
 import { rarityEmojis } from "/public/spriteconfig.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
+import * as bulkRules from "/public/picker-pokemon/bulkRules.js";
 
 // ===========================================================
 // 🎨 Type ID to Name Mapping (for filtering)
@@ -1004,6 +1006,16 @@ async function init() {
 
 window.addEventListener("DOMContentLoaded", init);
 
+// Back from the Shop or Trainer page can restore this page from the
+// back/forward cache with its old state. Multi-select ends when the
+// player leaves the page, so turn it off on restore.
+window.addEventListener("pageshow", (e) => {
+  if (!e.persisted || !multiSelectOn) return;
+  multiSelectOn = false;
+  multiSelected.clear();
+  renderPokemonGrid();
+});
+
 // ===========================================================
 // 🧩 Modal System
 // ===========================================================
@@ -1755,60 +1767,24 @@ async function handleDonationConfirm(pokeId, variant, overlay) {
 // Server re-checks every row (utils/bulkDonate.js); these are UI hints.
 // ===========================================================
 
-// The server checks the SAVED Team. selectedTeam also holds unsaved
-// Change Team edits, so it can't be used for these locks.
-function onSavedTeam(pid, variant) {
-  return (userData.currentTeam || [])
-    .map(toTeamObj)
-    .filter(Boolean)
-    .some((s) => s.id === Number(pid) && s.variant === variant);
-}
-
+// Rules live in bulkRules.js (tested); these bind them to page state.
 function onlyVariant(pid) {
-  return ownedCounts(pid).shiny === 1 ? "shiny" : "normal";
+  return bulkRules.onlyVariant(userData.pokemon, pid);
 }
 
-// Every copy past the first, per variant (shinies included).
 function duplicateRows() {
-  const rows = [];
-  const ids = Object.keys(userData.pokemon || {}).map(Number).sort((a, b) => a - b);
-  for (const pid of ids) {
-    if (!pokemonData[pid]) continue; // server rejects unknown IDs
-    const owned = ownedCounts(pid);
-    for (const variant of ["normal", "shiny"]) {
-      if (owned[variant] > 1) rows.push({ pokeId: pid, variant, count: owned[variant] - 1 });
-    }
-  }
-  return rows;
+  return bulkRules.duplicateRows(userData.pokemon, pokemonData);
 }
 
 function multiSelectRows() {
   return [...multiSelected].map((pid) => ({ pokeId: pid, variant: onlyVariant(pid), count: 1 }));
 }
 
-// Why a card can't be picked in Multi-select, or null if it can.
+// The server checks the SAVED Team. selectedTeam also holds unsaved
+// Change Team edits, so it can't be used for these locks.
 function multiSelectBlock(pid) {
-  const name = pokemonData[pid]?.name || `#${pid}`;
-  const owned = ownedCounts(pid);
-
-  if (owned.normal > 1 || owned.shiny > 1) {
-    const have = owned.normal > 1 ? `${owned.normal} ${name}` : `${owned.shiny} shiny ${name}`;
-    return {
-      title: "🔒 More Than One Copy",
-      message: `You have ${have}. Use Donate Duplicates to bring it down to 1, then select it.`,
-    };
-  }
-  if (owned.normal === 1 && owned.shiny === 1) {
-    return {
-      title: "🔒 You Own Both Variants",
-      message: `You have a normal and a shiny ${name}. Turn off Multi-select and tap it to choose which one to donate.`,
-    };
-  }
-  if (owned.any !== 1) return { title: "🔒 Not Owned", message: `You don’t own ${name}.` };
-  if (onSavedTeam(pid, onlyVariant(pid))) {
-    return { title: "🔒 On Your Team", message: `${name} is on your Team. Remove it from your Team first.` };
-  }
-  return null;
+  const savedTeam = (userData.currentTeam || []).map(toTeamObj).filter(Boolean);
+  return bulkRules.multiSelectBlock(pid, { pokemon: userData.pokemon, pokemonData, savedTeam });
 }
 
 function bulkTotals(rows) {

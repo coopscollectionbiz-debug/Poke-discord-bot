@@ -4,7 +4,9 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { buildTeam, runBattle } from "../utils/battle/runBattle.js";
+import { buildTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
+import { buildResultEmbed, playBattle } from "../utils/battle/playback.js";
+import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { grantCatch } from "../utils/training.js";
 
@@ -84,5 +86,51 @@ section("Refusals and caps");
 
 section("Determinism");
 assertEqual(open(world(), 42), open(world(), 42), "same inputs + seed → same outcome");
+
+section("Both locks");
+{
+  const order = [];
+  const spyLock = (id, fn) => lockUser(id, async () => { order.push(id); return fn(); });
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const timeout = new Promise((r) => setTimeout(() => r("deadlock"), 2000));
+  const both = Promise.all([
+    withBothLocks(spyLock, "B", "A", async () => { await sleep(20); return 1; }),
+    withBothLocks(spyLock, "A", "B", async () => 2),
+  ]);
+  assertEqual(await Promise.race([both, timeout]), [1, 2], "overlapping pairs both finish (no deadlock)");
+  assertEqual(order.slice(0, 2), ["A", "B"], "locks are taken in ascending id order");
+}
+
+section("Result embed");
+{
+  const td = world();
+  const out = open(td, 1);
+  out.exp.A[0] = { ...out.exp.A[0], fromLevel: 33, toLevel: 34, learned: ["Flamethrower"] };
+  const names = { A: "Ash", B: "Gary" };
+  const embed = buildResultEmbed(out, names).data;
+  assertTrue(embed.title.includes(names[out.winnerId]), "title names the winner");
+  const text = JSON.stringify(embed.fields);
+  assertTrue(text.includes(`Lv 33 → 34 · learned Flamethrower`), "EXP lines show level-ups and learned moves");
+  assertTrue(text.includes(`Ash ${td.A.battle.rating}`) && text.includes(`Gary ${td.B.battle.rating}`), "both Battle ratings are shown");
+  assertTrue(!text.includes("Pot"), "Open battles have no pot");
+  const wager = runBattle({ trainerData: world(), challengerId: "A", defenderId: "B", mode: "wager", stake: 30, seed: 3, now: NOW });
+  assertTrue(JSON.stringify(buildResultEmbed(wager, names).data.fields).includes("60 CC"), "Wager battles show the pot");
+}
+
+section("Playback");
+{
+  const out = open(world(), 4);
+  const sent = [];
+  const edits = [];
+  const channel = { send: async (opts) => { sent.push(opts); return { edit: async (o) => { edits.push(o); } }; } };
+  await playBattle(channel, out, { A: "Ash", B: "Gary" }, { frames: 4, delayMs: 0 });
+  assertEqual(sent.length, 1, "one new channel message (so mentions notify)");
+  assertTrue(sent[0].content.includes("<@A> challenged <@B>!") && sent[0].files.length === 1, "first message mentions both players with the start frame");
+  assertEqual(edits.length, Math.min(4, out.result.turns), "one edit per frame");
+  assertTrue(edits.at(-1).embeds?.length === 1 && edits.slice(0, -1).every((e) => !e.embeds), "result embed arrives with the last frame");
+  const failing = { send: async () => ({ edit: async () => { throw new Error("Unknown Message"); } }) };
+  await playBattle(failing, out, { A: "Ash", B: "Gary" }, { frames: 4, delayMs: 0 });
+  assertTrue(true, "a failed edit stops playback without throwing");
+}
 
 finish();

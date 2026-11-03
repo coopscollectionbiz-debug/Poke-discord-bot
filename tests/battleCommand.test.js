@@ -28,7 +28,7 @@ const trainer = (id) => {
 };
 
 // One fake guild channel; every message gets a controllable collector.
-function harness({ sendFails = false, perms = true } = {}) {
+function harness({ sendFails = false, perms = true, offeredReplyFails = false } = {}) {
   const trainerData = { A: trainer("A"), B: trainer("B") };
   const log = { replies: [], edits: [], messages: [] };
   const collectors = [];
@@ -63,7 +63,11 @@ function harness({ sendFails = false, perms = true } = {}) {
     },
     reply: async (o) => { log.replies.push(o.content); },
     deferReply: async () => {},
-    editReply: async (o) => { log.edits.push(typeof o === "string" ? o : o.content); },
+    editReply: async (o) => {
+      const text = typeof o === "string" ? o : o.content;
+      if (offeredReplyFails && text.includes("Wager offered")) throw new Error("503 Service Unavailable");
+      log.edits.push(text);
+    },
   });
   const button = (userId, customId) => ({
     user: { id: userId },
@@ -159,6 +163,29 @@ section("Double click: Accept then Decline");
   assertTrue(!offer.edits.some((e) => e.content?.includes("declined")), "a late Decline doesn't overwrite 'accepted'");
   assertEqual(late.replies, ["This wager is no longer open."], "the late click gets a private note");
   assertEqual(t.totalCc(), 200, "no CC moved by the late click");
+}
+
+section("A failed reply after the offer is posted");
+{
+  const t = harness({ offeredReplyFails: true });
+  let threw = false;
+  await t.run("A", "B", 50).catch(() => { threw = true; });
+  assertTrue(!threw, "the command doesn't throw");
+  assertEqual(t.collectors.length, 1, "the offer still listens for Accept and Decline");
+  t.collectors[0].stop("time");
+  await t.collectors[0].ended;
+  assertEqual([t.trainerData.A.cc, t.trainerData.A.pendingWager], [100, null], "expiry still refunds the Stake");
+}
+
+section("The offer never shows the Defender's balance");
+{
+  const t = harness();
+  t.trainerData.B.cc = 30;
+  await t.run("A", "B", 50);
+  const { opts } = t.log.messages[0];
+  assertEqual(opts.components[0].components[0].data.label, "Accept (50 CC)", "the button shows the Stake, not B's balance");
+  assertTrue(!JSON.stringify(opts).includes("30 CC"), "B's 30 CC appears nowhere in the offer");
+  assertTrue(opts.embeds[0].data.description.includes("everything you have"), "the offer explains going All-in");
 }
 
 section("Missing channel permissions");

@@ -119,21 +119,24 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
   if (!offered.ok) return interaction.editReply(refusal(offered.reason, defenderId));
 
   const power = (id) => teamPower(buildTeam(trainerData[id]));
-  // The Defender decides on the rating the offer shows, so Accept refuses
-  // a Challenger Team that got stronger after the offer.
-  const offeredPower = power(challengerId);
+  // Everything between holding the Stake and listening for the buttons is
+  // either inside this try (a failure refunds) or can't throw, so a Stake is
+  // never held with nobody listening.
   let message;
+  let offeredPower; // Accept refuses a Challenger Team stronger than the offer showed
   try {
-    const defenderCc = trainerData[defenderId]?.cc ?? 0;
-    const acceptLabel = defenderCc >= 1 && defenderCc < stake ? `Accept All-in (${defenderCc} CC)` : `Accept (${stake} CC)`;
+    offeredPower = power(challengerId);
     // A new channel message (not an edited reply) so the Defender is notified.
+    // The label is always the full Stake: showing an All-in amount would make
+    // the Defender's balance public.
     message = await interaction.channel.send({
       content: `⚔️ <@${challengerId}> challenges <@${defenderId}> to a Wager battle for ${stake} CC!`,
       embeds: [new EmbedBuilder().setColor(0xf1c40f).setDescription(
         `Power rating: ${names[challengerId]} ${offeredPower} · ${names[defenderId]} ${power(defenderId)}\n` +
-        "The winner takes the pot. This offer expires in 15 minutes.")],
+        "The winner takes the pot. Short on CC? Accepting puts in everything you have.\n" +
+        "This offer expires in 15 minutes.")],
       components: [new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`wager_accept:${nonce}`).setLabel(acceptLabel).setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`wager_accept:${nonce}`).setLabel(`Accept (${stake} CC)`).setStyle(ButtonStyle.Success),
         new ButtonBuilder().setCustomId(`wager_decline:${nonce}`).setLabel("Decline").setStyle(ButtonStyle.Secondary),
       )],
     });
@@ -141,9 +144,8 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
   } catch (err) {
     console.warn("⚠️ wager offer post failed:", err?.message || err);
     await refund();
-    return interaction.editReply(refusal("post_failed", defenderId));
+    return interaction.editReply(refusal("post_failed", defenderId)).catch(() => {});
   }
-  await interaction.editReply("⚔️ Wager offered. Your Stake is held until they answer.");
 
   const closeOffer = (content) => message.edit({ content, embeds: [], components: [] }).catch(() => {});
   const collector = message.createMessageComponentCollector({
@@ -210,4 +212,7 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     if (reason === "answered" || reason === "declined") return;
     if (await refund()) await closeOffer(reason === "time" ? "Wager expired. Stake refunded." : "Wager canceled. Stake refunded.");
   });
+
+  // Last, once the buttons are live: if this reply fails, the offer still works.
+  await interaction.editReply("⚔️ Wager offered. Your Stake is held until they answer.").catch(() => {});
 }

@@ -20,7 +20,7 @@ Each player can start 10 battles per UTC day, and at most 3 against the same opp
 
 ### Levels
 
-Every species and Variant a player owns has one Level, from 1 to 100. A first catch rolls a Catch level based on the Pokémon's Stage. A duplicate catch adds half the EXP needed for the next Level. Pokémon owned before battles existed, gifts, and admin grants start at the bottom of their catch range. Stone evolution and shiny crafting keep the higher of the two Levels. Battles pay EXP for every opponent the Team knocks out, more for higher-level opponents, and every Team member gets it.
+Every species and Variant a player owns has one Level, from 1 to 100. A first catch rolls a Catch level based on the Pokémon's Stage. A duplicate catch adds half the EXP needed for the next Level. Pokémon owned before battles existed, gifts, and admin grants start at the bottom of their catch range. If the player has no Level for that species and Variant yet, their next catch of it rolls a Catch level. Stone evolution and shiny crafting keep the higher of the two Levels. Battles pay EXP for every opponent the Team knocks out, more for higher-level opponents, and every Team member gets it.
 
 Levels show on the dashboard, on `/showteam` and `/trainercard`, and in `/inspectpokemon` (admin-only).
 

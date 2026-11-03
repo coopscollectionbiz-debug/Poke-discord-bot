@@ -56,16 +56,17 @@ function chooseMove(attacker, target, rng) {
     expectedDamage(m, attacker, target) > expectedDamage(best, attacker, target) ? m : best);
 }
 
+// One hit: the damage plus what playback narrates (miss, crit, effectiveness).
 function damage(move, attacker, target, rng) {
-  if (move.accuracy !== true && rng.next() >= move.accuracy / 100) return 0;
   const eff = typeMult(move, target);
-  if (eff === 0) return 0;
+  if (move.accuracy !== true && rng.next() >= move.accuracy / 100) return { amount: 0, eff, crit: false, missed: true };
+  if (eff === 0) return { amount: 0, eff, crit: false, missed: false };
   const [a, d] = attackStats(move, attacker, target);
   const base = Math.floor(Math.floor((Math.floor((2 * attacker.level) / 5 + 2) * move.power * a) / d) / 50) + 2;
   const stab = attacker.types.includes(move.type) ? 1.5 : 1;
   const crit = rng.next() < (move.critRatio >= 2 ? HIGH_CRIT_CHANCE : CRIT_CHANCE) ? CRIT_MULT : 1;
   const roll = DAMAGE_ROLL_MIN + rng.next() * (1 - DAMAGE_ROLL_MIN);
-  return Math.max(1, Math.floor(base * stab * eff * crit * roll));
+  return { amount: Math.max(1, Math.floor(base * stab * eff * crit * roll)), eff, crit: crit > 1, missed: false };
 }
 
 export function simulateBattle({ sides, seed, surge }) {
@@ -76,6 +77,7 @@ export function simulateBattle({ sides, seed, surge }) {
   const activeSlot = (i) => teams[i].findIndex((m) => m.hp > 0);
   const snapshots = [snapshot()];
   const knockouts = [];
+  const log = []; // per turn, the hits in order
 
   for (let turn = 1; turn <= TURN_CAP; turn++) {
     const slots = [activeSlot(0), activeSlot(1)];
@@ -83,20 +85,27 @@ export function simulateBattle({ sides, seed, surge }) {
     const choices = [chooseMove(mons[0], mons[1], rng), chooseMove(mons[1], mons[0], rng)];
     const first = mons[0].spe !== mons[1].spe ? (mons[0].spe > mons[1].spe ? 0 : 1) : (rng.next() < 0.5 ? 0 : 1);
 
+    const events = [];
     for (const i of [first, 1 - first]) {
       const attacker = mons[i];
       const target = mons[1 - i];
       if (attacker.hp <= 0 || target.hp <= 0) continue;
-      target.hp = Math.max(0, target.hp - damage(choices[i], attacker, target, rng));
+      const hit = damage(choices[i], attacker, target, rng);
+      target.hp = Math.max(0, target.hp - hit.amount);
+      events.push({
+        side: i, slot: slots[i], targetSlot: slots[1 - i], move: choices[i].name, damage: hit.amount,
+        crit: hit.crit, eff: hit.eff, missed: hit.missed, hpAfter: target.hp / target.maxHp, fainted: target.hp === 0,
+      });
       if (target.hp === 0) knockouts.push({ turn, side: 1 - i, slot: slots[1 - i], bySide: i, bySlot: slots[i] });
     }
 
+    log.push(events);
     snapshots.push(snapshot());
     const out = [0, 1].find((i) => activeSlot(i) === -1);
-    if (out !== undefined) return { winner: 1 - out, turns: turn, endedBy: "knockout", snapshots, knockouts };
+    if (out !== undefined) return { winner: 1 - out, turns: turn, endedBy: "knockout", snapshots, knockouts, log };
   }
 
   // Turn cap: more total HP fraction wins; an exact tie goes to the Defender (side 1).
   const total = (i) => snapshots.at(-1)[i].reduce((a, b) => a + b, 0);
-  return { winner: total(0) > total(1) ? 0 : 1, turns: TURN_CAP, endedBy: "turnCap", snapshots, knockouts };
+  return { winner: total(0) > total(1) ? 0 : 1, turns: TURN_CAP, endedBy: "turnCap", snapshots, knockouts, log };
 }

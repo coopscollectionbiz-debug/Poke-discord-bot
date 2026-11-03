@@ -49,6 +49,19 @@ assertTrue(r.snapshots.at(-1)[1 - r.winner].every((hp) => hp === 0), "every lose
 assertEqual(r.snapshots.length, r.turns + 1, "one snapshot per turn plus the start");
 assertTrue(r.knockouts.length >= 2, "knockouts are recorded");
 
+section("Turn log (what playback narrates)");
+assertEqual(r.log.length, r.turns, "one log entry per turn");
+assertTrue(r.log.every((events) => events.length >= 1 && events.length <= 2), "each turn has one or two attacks");
+assertTrue(r.log.every((events, t) => events.every((e) => e.hpAfter === r.snapshots[t + 1][1 - e.side][e.targetSlot])),
+  "each hit's HP matches the end-of-turn snapshot");
+assertEqual(
+  r.log.flatMap((events, t) => events.filter((e) => e.fainted).map((e) => ({ turn: t + 1, side: 1 - e.side, slot: e.targetSlot }))),
+  r.knockouts.map(({ turn, side, slot }) => ({ turn, side, slot })),
+  "fainting hits match the knockouts");
+assertTrue(r.log.flat().every((e) => typeof e.move === "string" && e.move && typeof e.crit === "boolean" && typeof e.eff === "number"),
+  "each hit names its move and records crit and effectiveness");
+assertTrue(r.log.flat().every((e) => !e.missed || e.damage === 0), "a miss does no damage");
+
 section("Stalemate");
 assertTrue(autoMoveset(19, 5).every((m) => getMove(m).type === "Normal"), "Rattata Lv 5 only has Normal moves");
 assertTrue(autoMoveset(92, 20).every((m) => effectiveness(getMove(m).type, ["Normal"]) === 0), "Gastly Lv 20 can't hit Normal types");

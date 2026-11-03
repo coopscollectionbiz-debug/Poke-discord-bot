@@ -46,6 +46,11 @@ atLevel(kept, 6, "normal", 40);
 grantCatch(kept, 6, "normal");
 assertTrue(getTraining(kept, 6, "normal").level >= 40, "a surviving record isn't overwritten by a re-catch");
 assertEqual(getTraining({}, 6, "shiny"), { exp: expForLevel(32), level: 32 }, "no record → bottom of the catch range");
+// Deliberate: owners from before Levels get the same roll a new player gets.
+const veteran = { pokemon: { 65: { normal: 5, shiny: 0 } } };
+const sat = getTraining(veteran, 65, "normal").level;
+const reroll = grantCatch(veteran, 65, "normal", () => 0.999);
+assertTrue(reroll.isNew && reroll.level >= sat, "owned before Levels → the next catch rolls a Catch level, never below where it sat");
 
 section("addExp");
 const capped = {};

@@ -5,6 +5,7 @@
 // ==========================================================
 
 import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { fileURLToPath } from "url";
 
 const FONT = "system-ui, 'DejaVu Sans', 'Noto Sans', Arial, sans-serif";
 const SPRITES = new URL("../../public/sprites/pokemon/", import.meta.url);
@@ -20,7 +21,7 @@ export function pickFrameTurns(totalTurns, frames) {
 async function sprite(cache, folder, id) {
   const key = `${folder}/${id}`;
   if (!cache.has(key)) {
-    cache.set(key, await loadImage(new URL(`${folder}/${id}.gif`, SPRITES).pathname).catch(() => null));
+    cache.set(key, await loadImage(fileURLToPath(new URL(`${folder}/${id}.gif`, SPRITES))).catch(() => null));
   }
   return cache.get(key);
 }

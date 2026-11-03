@@ -28,7 +28,7 @@ Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps) is in
 
 ### Battle data
 
-`battleData.json` holds Gen 5 base stats, level-up moves, move power, and the type chart. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. Battle images are animated GIFs: the runtime dependency `omggif` reads each sprite's animation frames, and `@napi-rs/canvas` encodes the result. To regenerate it:
+`battleData.json` holds Gen 5 base stats, level-up moves, move power, and the type chart. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. Battle images are animated GIFs: `@napi-rs/canvas` draws each frame, the runtime dependency `omggif` reads each sprite's animation frames, and the runtime dependency `gifenc` encodes the result. `utils/battle/render.js` encodes each frame as soon as it's drawn and decodes sprite frames only as an image reaches them, which keeps a 6v6 battle to about 60 MB, and it pauses between frames so a battle never stalls the bot's other commands. To regenerate it:
 
 ```bash
 npm run generate:battle-data
@@ -117,7 +117,7 @@ npm run test:validation   # schema validation
 npm run test:migration    # schema migration
 ```
 
-`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim (`battleSim`), Levels and catches (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), the `/battle` command and wager buttons driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), turn narration and the animated frames (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
+`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim (`battleSim`), Levels and catches (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), the `/battle` command and wager buttons driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), turn narration, the animated frames, decoding sprites as they play, colors that only appear late in an image, and rendering without stalling the bot (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
 
 ## Common gotchas
 

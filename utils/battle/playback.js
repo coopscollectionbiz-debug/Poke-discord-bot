@@ -93,8 +93,9 @@ function header(outcome) {
 export async function playBattle(channel, outcome, names, { maxUpdates, delayMs } = PLAYBACK) {
   const sides = outcome.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = outcome.result;
+  const sprites = new Map(); // each sprite GIF is read once per battle
   const image = async (opts) => new AttachmentBuilder(
-    await renderBattleFrame({ sides, surgeSide: outcome.surge?.side ?? null, ...opts }),
+    await renderBattleFrame({ sides, surgeSide: outcome.surge?.side ?? null, sprites, ...opts }),
     { name: "battle.gif" },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.

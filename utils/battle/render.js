@@ -3,12 +3,19 @@
 // One animated GIF per playback update: both Teams in centered rows, the
 // fighting pair spotlit, game-style HP bars, and a text box narrating the
 // turn. Sprites play their own GIF animation.
+//
+// Memory: frames are encoded as they're drawn and sprite frames are decoded
+// as an image reaches them, so a 6v6 battle adds about 60 MB rather than 270
+// (measured on macOS). The production machine has about 220 MB free.
 // ==========================================================
 
-import { createCanvas, GifEncoder, ImageData } from "@napi-rs/canvas";
+import { createCanvas, ImageData } from "@napi-rs/canvas";
 import { GifReader } from "omggif";
+import gifenc from "gifenc"; // CommonJS without named-export hints, so Node needs the default import
 import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
+
+const { GIFEncoder, quantize, nearestColorIndex } = gifenc;
 
 const FONT = "system-ui, 'DejaVu Sans', 'Noto Sans', Arial, sans-serif";
 const SPRITES = new URL("../../public/sprites/pokemon/", import.meta.url);
@@ -58,73 +65,49 @@ export function turnText(event, sides) {
   return [`${attacker} used ${event.move}!`, notes.join(" ")];
 }
 
-// Every frame of a sprite GIF, composited the way a browser plays it.
-async function loadSprite(folder, id) {
+// A sprite GIF, read but not decoded: spritePlayer decodes its frames as an
+// image plays (12 sprites decoded up front took about 60 MB at peak).
+export async function loadSprite(folder, id) {
   try {
     const gif = new GifReader(await readFile(fileURLToPath(new URL(`${folder}/${id}.gif`, SPRITES))));
-    const { width, height } = gif;
-    const pixels = new Uint8ClampedArray(width * height * 4);
-    const frames = [];
+    const starts = [];
     let duration = 0;
     for (let i = 0; i < gif.numFrames(); i++) {
-      const info = gif.frameInfo(i);
-      const previous = info.disposal === 3 ? pixels.slice() : null;
-      gif.decodeAndBlitFrameRGBA(i, pixels);
-      const canvas = createCanvas(width, height);
-      canvas.getContext("2d").putImageData(new ImageData(pixels.slice(), width, height), 0, 0);
-      frames.push({ start: duration, canvas });
-      duration += (info.delay || 10) * 10;
-      if (info.disposal === 2) {
-        for (let y = info.y; y < info.y + info.height; y++) {
-          pixels.fill(0, (y * width + info.x) * 4, (y * width + info.x + info.width) * 4);
-        }
-      }
-      if (previous) pixels.set(previous);
+      starts.push(duration);
+      duration += (gif.frameInfo(i).delay || 10) * 10;
     }
-    return { width, height, frames, duration };
+    return { gif, width: gif.width, height: gif.height, starts, duration };
   } catch {
     return null; // missing or unreadable sprite: the tile renders without it
   }
 }
 
-function spriteAt(sprite, ms) {
-  const t = ms % sprite.duration;
-  let frame = sprite.frames[0];
-  for (const f of sprite.frames) {
-    if (f.start > t) break;
-    frame = f;
-  }
-  return frame.canvas;
-}
-
-const u32 = (u8) => (u8.byteOffset % 4 ? new Uint32Array(u8.slice().buffer) : new Uint32Array(u8.buffer, u8.byteOffset, u8.byteLength / 4));
-
-// GIF frames after the first store only what changed: pixels equal to the
-// previous frame become transparent (it shows through) and the frame is
-// cropped to the changed box. Smaller files load faster, which shortens the
-// blank flash Discord's mobile app shows while an updated image loads.
-export function deltaFrame(prev, next, width, height) {
-  const a = u32(prev), b = u32(next);
-  let minX = width, minY = height, maxX = -1, maxY = -1;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0, i = y * width; x < width; x++, i++) {
-      if (a[i] === b[i]) continue;
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      maxY = y;
+// Plays one sprite through one image: returns a canvas showing the frame at
+// `ms`, composited the way a browser plays it. Handles GIF disposal 0-2; a
+// test checks no sprite uses 3 (restore), which would need a saved frame.
+export function spritePlayer(sprite) {
+  const { gif, starts, width, height } = sprite;
+  const img = new ImageData(width, height);
+  const canvas = createCanvas(width, height);
+  let index = -1, drawn = -1;
+  return (ms) => {
+    const t = ms % sprite.duration;
+    let k = 0;
+    while (k + 1 < starts.length && starts[k + 1] <= t) k++;
+    if (k < index) { img.data.fill(0); index = -1; } // looped or went back: start over
+    while (index < k) {
+      const f = index >= 0 ? gif.frameInfo(index) : null;
+      if (f?.disposal === 2) {
+        for (let y = f.y; y < f.y + f.height; y++) img.data.fill(0, (y * width + f.x) * 4, (y * width + f.x + f.width) * 4);
+      }
+      gif.decodeAndBlitFrameRGBA(++index, img.data);
     }
-  }
-  if (maxX < 0) return { left: 0, top: 0, width: 1, height: 1, data: new Uint8Array(4) };
-  const w = maxX - minX + 1, h = maxY - minY + 1;
-  const out = new Uint32Array(w * h);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = (minY + y) * width + minX + x;
-      if (a[i] !== b[i]) out[y * w + x] = b[i];
+    if (drawn !== k) {
+      canvas.getContext("2d").putImageData(img, 0, 0);
+      drawn = k;
     }
-  }
-  return { left: minX, top: minY, width: w, height: h, data: new Uint8Array(out.buffer) };
+    return canvas;
+  };
 }
 
 function pill(ctx, x, y, w, h, r = h / 2) {
@@ -238,9 +221,15 @@ function frameState(f, { hpBefore, events }) {
  * - screens: text-box screens ([line1, line2] each) shown in turn when there
  *   are no events, like the games' end-of-battle messages
  * - a member with levelUp: true shows its Level in green (the result image)
+ * - sprites: a Map of loaded sprite GIFs to share between one battle's images
  */
-export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null }) {
-  const load = (s, i, folder) => loadSprite(folder, sides[s].members[i].speciesId);
+export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map() }) {
+  const load = (s, i, folder) => {
+    const id = sides[s].members[i].speciesId;
+    const key = `${folder}/${id}`;
+    if (!sprites.has(key)) sprites.set(key, loadSprite(folder, id));
+    return sprites.get(key);
+  };
   const live = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>
     load(s, i, hpBefore[s][i] > 0 ? m.variant : "grayscale")))));
   const gray = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>
@@ -250,13 +239,15 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
+  const players = new Map();
+  const play = (sprite, ms) => {
+    if (!players.has(sprite)) players.set(sprite, spritePlayer(sprite));
+    return players.get(sprite)(ms);
+  };
   const total = events.length
     ? Math.max(events.length * ANIMATION.eventFrames + ANIMATION.holdFrames, ANIMATION.turnMs / ANIMATION.delayMs)
     : ANIMATION.idleFrames * screens.length;
-  const encoder = new GifEncoder(W, H, { repeat: 0, quality: 10 });
-  let prev = null;
-
-  for (let f = 0; f < total; f++) {
+  const draw = (f) => {
     const state = frameState(f, { hpBefore, events });
     const ms = f * ANIMATION.delayMs;
 
@@ -319,7 +310,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
         const hidden = state.hidden?.side === s && state.hidden.slot === i;
         const sprite = frac <= 0 ? (gray[s][i] ?? live[s][i]) : live[s][i];
         if (sprite && !hidden) {
-          const img = frac <= 0 ? sprite.frames[0].canvas : spriteAt(sprite, ms);
+          const img = play(sprite, frac <= 0 ? 0 : ms);
           const dy = state.lunge?.side === s && state.lunge.slot === i ? state.lunge.dy : 0;
           ctx.globalAlpha = frac <= 0 ? 0.45 : fighting || active[s] === -1 ? 1 : 0.7;
           ctx.drawImage(img, Math.round(cx - sprite.width / 2), Math.round(floor + 6 - sprite.height + dy));
@@ -377,15 +368,50 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     ctx.fillText(fitText(ctx, line1 ?? "", W - 2 * PAD - 36), PAD + 18, ty + 27);
     if (!state.lines?.partial) ctx.fillText(fitText(ctx, line2 ?? "", W - 2 * PAD - 36), PAD + 18, ty + 51);
 
-    const { data } = ctx.getImageData(0, 0, W, H);
-    const rgba = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-    const delay = events.length && f === total - 1 ? ANIMATION.freezeMs : ANIMATION.delayMs;
-    if (!prev) encoder.addFrame(rgba, W, H, { delay });
-    else {
-      const d = deltaFrame(prev, rgba, W, H);
-      encoder.addFrame(d.data, d.width, d.height, { delay, left: d.left, top: d.top });
+  };
+  const pause = () => new Promise((resolve) => setImmediate(resolve)); // lets other commands run
+
+  // One palette for the whole image, from its first and last frames, so a
+  // color that only shows up later (a red HP bar, a fainted gray) is in it.
+  // canvas.data() is the canvas's own pixels, not a copy; frames are opaque,
+  // so its premultiplied alpha changes nothing.
+  draw(total - 1);
+  const sample = new Uint8Array(W * H * 8);
+  sample.set(canvas.data(), W * H * 4);
+  draw(0);
+  sample.set(canvas.data(), 0);
+  const palette = quantize(sample, 255);
+  const clear = palette.length; // the transparent index: "same as the last frame"
+  await pause();
+
+  // Each frame is mapped to the palette and written as soon as it's drawn, into
+  // reused buffers. Pixels that match the previous frame are written as `clear`,
+  // so later frames store only what changed and the file stays small.
+  const nearest = new Int16Array(1 << 16).fill(-1); // RGB565 color -> palette index
+  let cur = new Uint8Array(W * H), prev = new Uint8Array(W * H);
+  const changes = new Uint8Array(W * H);
+  const gif = GIFEncoder();
+  for (let f = 0; f < total; f++) {
+    if (f > 0) draw(f);
+    const px = canvas.data();
+    for (let i = 0, p = 0; i < cur.length; i++, p += 4) {
+      const key = ((px[p] >> 3) << 11) | ((px[p + 1] >> 2) << 5) | (px[p + 2] >> 3);
+      let idx = nearest[key];
+      if (idx < 0) idx = nearest[key] = nearestColorIndex(palette, [px[p], px[p + 1], px[p + 2]]);
+      cur[i] = idx;
     }
-    prev = rgba.slice();
+    const delay = events.length && f === total - 1 ? ANIMATION.freezeMs : ANIMATION.delayMs;
+    if (f === 0) gif.writeFrame(cur, W, H, { palette: [...palette, [0, 0, 0]], delay });
+    else {
+      for (let i = 0; i < cur.length; i++) changes[i] = cur[i] === prev[i] ? clear : cur[i];
+      // dispose 1 keeps each frame under the next; gifenc's default for a
+      // transparent frame clears it, which would blank the unchanged pixels.
+      gif.writeFrame(changes, W, H, { delay, transparent: true, transparentIndex: clear, dispose: 1 });
+    }
+    [cur, prev] = [prev, cur];
+    await pause();
   }
-  return encoder.finish();
+  gif.finish();
+  const bytes = gif.bytesView();
+  return Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 }

@@ -4,7 +4,7 @@
 // ==========================================================
 
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
-import { battleInfo } from "../commands/inspectpokemon.js";
+import inspectpokemon, { battleInfo } from "../commands/inspectpokemon.js";
 import { expForLevel } from "../utils/training.js";
 
 section("/inspectpokemon battle info");
@@ -15,5 +15,9 @@ assertTrue(text.includes("**Your ✨ shiny Lv 2**"), "shows the shiny variant's 
 assertTrue(/HP \d+ · Atk \d+ · Def \d+ · SpA \d+ · SpD \d+ · Spe \d+/.test(text), "shows stats at that Level");
 assertTrue(text.includes("Moves: ") && text.includes("Vine Whip"), "shows the auto-picked moves by name");
 assertEqual(battleInfo({}, 1), "Base stats: HP 45 · Atk 49 · Def 49 · SpA 65 · SpD 65 · Spe 45", "not owned → base stats only");
+
+section("/inspectpokemon is for every player");
+// Players need it to see their own Levels, stats, and moves; it's read-only and ephemeral.
+assertEqual(inspectpokemon.data.toJSON().default_member_permissions ?? null, null, "no admin-only default permission");
 
 finish();

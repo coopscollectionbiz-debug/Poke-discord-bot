@@ -13,7 +13,7 @@ Game terms (Tier, Stage, Team, Battle rating, and so on) are defined in [`CONTEX
 Players battle each other's Teams. The bot simulates the whole fight with Gen 5 stats, moves, and type matchups, then plays it back in the channel as a few image frames followed by the result.
 
 - `/battle opponent:@user` starts an Open battle. It runs right away and costs nothing. Only the Challenger earns EXP, and both players' Battle ratings change.
-- `/battle opponent:@user wager:100` offers a Wager battle. The bot holds the Challenger's CC until the Defender accepts or declines, or for 15 minutes. A Defender with less CC than the Stake can accept with everything they have, and the Challenger gets the difference back. Both players earn EXP, and the winner takes the pot. A restart refunds any Stake still waiting for an answer.
+- `/battle opponent:@user wager:100` offers a Wager battle. The bot holds the Challenger's CC until the Defender accepts or declines, or for 15 minutes. A Defender with less CC than the Stake can accept with everything they have, and the Challenger gets the difference back. Both players earn EXP, and the winner takes the pot. If the Challenger's Team gets stronger before the Defender answers, Accept cancels the offer instead. A restart refunds any Stake still waiting for an answer.
 - `/leaderboard` shows the top 10 Battle ratings and your position.
 
 Each player can start 10 battles per UTC day, and at most 3 against the same opponent. A Wager battle counts for both players. When one Team is much stronger, the Underdog sometimes gets a surge that raises its Levels for that battle, so lopsided fights are rarely but not never upsets.

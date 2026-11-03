@@ -11,14 +11,14 @@ Glossary: `CONTEXT.md`.
 - Any channel. Defender is @mentioned. No opt-out.
 - **Battle cap**: 10 battles started per UTC day (same reset as /daily, `commands/daily.js:35-36`), max 3 per opponent per day (your call).
   - Open battle: counts for Challenger only.
-  - Wager battle: counts for **both** players, and toward the pair's 3/day in either direction. Defender at cap → Accept disabled.
+  - Wager battle: counts for **both** players, and toward the pair's 3/day in either direction. Defender at cap → Accept cancels the offer and refunds the Stake.
   - Declined/expired wagers count for nothing.
 
 ## Wagers
 - Stake held from the Challenger on offer; one pending wager per Challenger; 15-minute window (your call).
 - Accept/Decline buttons only work for the Defender; accept shows both Power ratings.
 - No house cut, no maximum. Min stake 1 CC. **All-in**: Defender with less CC can accept for their whole balance; Challenger's excess refunded.
-- Both Teams read at the moment of acceptance; if either is empty then, cancel and refund both.
+- Both Teams read at the moment of acceptance; if either is empty then, or the Challenger's Power rating is higher than the offer showed, cancel and refund the Stake.
 - Pending stakes persisted on the user record; bot restart refunds all pending stakes and edits the offer to "expired".
 
 ## Fairness & randomness

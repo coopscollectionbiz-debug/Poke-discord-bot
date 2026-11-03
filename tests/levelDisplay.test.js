@@ -18,6 +18,9 @@ assertEqual(battleInfo({}, 1), "Base stats: HP 45 · Atk 49 · Def 49 · SpA 65 
 
 section("/inspectpokemon is for every player");
 // Players need it to see their own Levels, stats, and moves; it's read-only and ephemeral.
-assertEqual(inspectpokemon.data.toJSON().default_member_permissions ?? null, null, "no admin-only default permission");
+// An explicit null (not an omitted field) is what clears the old admin-only
+// setting when commands are re-registered.
+const body = JSON.stringify(inspectpokemon.data.toJSON()); // what registration sends
+assertTrue(body.includes('"default_member_permissions":null'), "sends an explicit null default permission");
 
 finish();

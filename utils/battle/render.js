@@ -201,9 +201,11 @@ function frameState(f, { hpBefore, events }) {
  * - hpBefore: each side's HP fractions at the start of the shown turn
  * - events: that turn's hits from the sim log (none for the start and result)
  * - badge: text between the rows ("VS", "TURN 3", "FINAL")
- * - text: the text box when there are no events
+ * - screens: text-box screens ([line1, line2] each) shown in turn when there
+ *   are no events, like the games' end-of-battle messages
+ * - a member with levelUp: true shows its Level in green (the result image)
  */
-export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", text = ["", ""], surgeSide = null, winnerSide = null }) {
+export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null }) {
   const load = (s, i, folder) => loadSprite(folder, sides[s].members[i].speciesId);
   const live = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>
     load(s, i, hpBefore[s][i] > 0 ? m.variant : "grayscale")))));
@@ -214,7 +216,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
-  const total = events.length ? events.length * ANIMATION.eventFrames + ANIMATION.holdFrames : ANIMATION.idleFrames;
+  const total = events.length ? events.length * ANIMATION.eventFrames + ANIMATION.holdFrames : ANIMATION.idleFrames * screens.length;
   const encoder = new GifEncoder(W, H, { repeat: 0, quality: 10 });
 
   for (let f = 0; f < total; f++) {
@@ -301,7 +303,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
         ctx.fillStyle = frac <= 0 ? "#7d8396" : "#ffffff";
         ctx.fillText(label, startX, top + 152);
         ctx.font = `600 12px ${FONT}`;
-        ctx.fillStyle = frac <= 0 ? "#7d8396" : "#c9cfe0";
+        ctx.fillStyle = m.levelUp ? "#5ee08a" : frac <= 0 ? "#7d8396" : "#c9cfe0";
         ctx.fillText(level, startX + nameW + 6, top + 152);
         drawHpBar(ctx, cx, top + 158, frac);
       }
@@ -330,7 +332,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     ctx.lineWidth = 3;
     ctx.strokeStyle = "#3a4256";
     ctx.stroke();
-    const [line1, line2] = state.lines ? turnText(state.lines, sides) : text;
+    const [line1, line2] = state.lines ? turnText(state.lines, sides) : screens[Math.floor(f / ANIMATION.idleFrames)];
     ctx.fillStyle = "#1d2233";
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";

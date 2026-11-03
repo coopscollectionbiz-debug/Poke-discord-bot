@@ -57,13 +57,10 @@ function expLines(entries) {
 export function buildResultEmbed(outcome, names) {
   const side = winnerSideOf(outcome);
   const winner = names[outcome.winnerId];
-  const { turns, endedBy, snapshots } = outcome.result;
-  const standing = snapshots.at(-1)[side].filter((hp) => hp > 0).length;
+  const { turns, endedBy } = outcome.result;
   const mvp = mvpOf(outcome);
   const lines = [
-    endedBy === "turnCap"
-      ? `Time ran out after **${turns}** turns, and ${winner}'s Team had more HP left.`
-      : `Won in **${turns}** ${turns === 1 ? "turn" : "turns"} with **${standing}/${outcome.sides[side].members.length}** Pokémon still standing.`,
+    endedBy === "turnCap" && `Time ran out after **${turns}** turns, and ${winner}'s Team had more HP left.`,
     mvp && `⭐ MVP: **${mvp.name}** with ${plural(mvp.kos, "knockout")}`,
     outcome.surge && "🔥 Underdog surge!",
     outcome.mode === "wager" && `💰 ${winner} takes the **${2 * outcome.stake} CC** pot!`,

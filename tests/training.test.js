@@ -50,7 +50,7 @@ assertEqual(getTraining({}, 6, "shiny"), { exp: expForLevel(32), level: 32 }, "n
 const veteran = { pokemon: { 65: { normal: 5, shiny: 0 } } };
 const sat = getTraining(veteran, 65, "normal").level;
 const reroll = grantCatch(veteran, 65, "normal", () => 0.999);
-assertTrue(reroll.isNew && reroll.level >= sat, "owned before Levels → the next catch rolls a Catch level, never below where it sat");
+assertTrue(reroll.isNew && reroll.level > sat, "owned before Levels → the next catch rolls a Catch level (a high roll lands above where it sat)");
 
 section("addExp");
 const capped = {};

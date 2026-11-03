@@ -9,32 +9,74 @@
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { renderBattleFrame, pickFrameTurns } from "./render.js";
 import { PLAYBACK } from "./tuning.js";
+import { trainingKey } from "../training.js";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const signed = (n) => `${n >= 0 ? "+" : ""}${n}`;
+const list = (items) => new Intl.ListFormat("en", { type: "conjunction" }).format(items);
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const winnerSideOf = (outcome) => outcome.sides.findIndex((s) => s.userId === outcome.winnerId);
+
+// The winner's Pokémon with the most knockouts (the earlier one on a tie).
+function mvpOf(outcome) {
+  const side = winnerSideOf(outcome);
+  const counts = new Map();
+  for (const k of outcome.result.knockouts) if (k.bySide === side) counts.set(k.bySlot, (counts.get(k.bySlot) ?? 0) + 1);
+  if (!counts.size) return null;
+  const [slot, kos] = [...counts].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0];
+  return { name: outcome.sides[side].members[slot].name, kos };
+}
+
+// The result image's text box, like the games' end-of-battle messages:
+// who won and the MVP, then any level-ups and new moves.
+export function resultScreens(outcome, names) {
+  const winner = names[outcome.winnerId];
+  const loser = names[outcome.sides[1 - winnerSideOf(outcome)].userId];
+  const mvp = mvpOf(outcome);
+  const screens = [[
+    outcome.result.endedBy === "turnCap" ? `Time's up! ${winner} wins on HP left.` : `${winner} defeated ${loser}!`,
+    mvp ? `${mvp.name} was the MVP with ${plural(mvp.kos, "knockout")}!` : "",
+  ]];
+  const ups = Object.values(outcome.exp).flat().filter((e) => e.toLevel > e.fromLevel);
+  if (ups.length) {
+    const grew = [...Map.groupBy(ups, (e) => e.toLevel)]
+      .map(([level, es]) => `${list(es.map((e) => e.name))} grew to Lv${level}!`).join(" ");
+    const learned = ups.filter((e) => e.learned.length).map((e) => `${e.name} learned ${list(e.learned)}!`).join(" ");
+    screens.push([grew, learned]);
+  }
+  return screens;
+}
 
 function expLines(entries) {
   return entries.slice(0, 6).map((e) => {
-    if (e.toLevel === e.fromLevel) return `${e.name} Lv ${e.fromLevel} (${signed(e.gained)} EXP)`;
-    const learned = e.learned.length ? ` · learned ${e.learned.join(", ")}` : "";
-    return `${e.name} Lv ${e.fromLevel} → ${e.toLevel}${learned}`;
+    if (e.toLevel === e.fromLevel) return `${e.name} Lv ${e.fromLevel} · +${e.gained} EXP`;
+    const learned = e.learned.length ? ` · learned **${list(e.learned)}**` : "";
+    return `⬆️ **${e.name}** Lv ${e.fromLevel} → **${e.toLevel}**${learned}`;
   }).join("\n") || "—";
 }
 
 export function buildResultEmbed(outcome, names) {
+  const side = winnerSideOf(outcome);
+  const winner = names[outcome.winnerId];
+  const { turns, endedBy, snapshots } = outcome.result;
+  const standing = snapshots.at(-1)[side].filter((hp) => hp > 0).length;
+  const mvp = mvpOf(outcome);
+  const lines = [
+    endedBy === "turnCap"
+      ? `Time ran out after **${turns}** turns, and ${winner}'s Team had more HP left.`
+      : `Won in **${turns}** ${turns === 1 ? "turn" : "turns"} with **${standing}/${outcome.sides[side].members.length}** Pokémon still standing.`,
+    mvp && `⭐ MVP: **${mvp.name}** with ${plural(mvp.kos, "knockout")}`,
+    outcome.surge && "🔥 Underdog surge!",
+    outcome.mode === "wager" && `💰 ${winner} takes the **${2 * outcome.stake} CC** pot!`,
+  ].filter(Boolean);
   const embed = new EmbedBuilder()
     .setColor(0xf1c40f)
-    .setTitle(`🏆 ${names[outcome.winnerId]} wins!`);
-  if (outcome.surge) embed.setDescription("🔥 Underdog surge!");
-  if (outcome.mode === "wager") {
-    embed.addFields({ name: "Pot", value: `${2 * outcome.stake} CC to ${names[outcome.winnerId]}` });
-  }
+    .setTitle(`🏆 ${winner} defeated ${names[outcome.sides[1 - side].userId]}!`)
+    .setDescription(lines.join("\n"));
   for (const [userId, entries] of Object.entries(outcome.exp)) {
-    const label = outcome.mode === "wager" ? `EXP — ${names[userId]}` : "EXP";
-    embed.addFields({ name: label, value: expLines(entries) });
+    embed.addFields({ name: `EXP · ${names[userId]}`, value: expLines(entries) });
   }
   const rating = Object.entries(outcome.rating)
-    .map(([userId, r]) => `${names[userId]} ${r.to} (${signed(r.to - r.from)})`)
+    .map(([userId, r]) => `${names[userId]} **${r.to}** ${r.to >= r.from ? "▲" : "▼"}${Math.abs(r.to - r.from)}`)
     .join("\n");
   embed.addFields({ name: "Battle rating", value: rating });
   return embed;
@@ -53,7 +95,7 @@ function header(outcome) {
 // the @mentioned players; edits never do) and replays the battle on it.
 export async function playBattle(channel, outcome, names, { maxUpdates, delayMs } = PLAYBACK) {
   const sides = outcome.sides.map((s) => ({ name: names[s.userId], members: s.members }));
-  const { snapshots, log, turns: total, endedBy } = outcome.result;
+  const { snapshots, log, turns: total } = outcome.result;
   const image = async (opts) => new AttachmentBuilder(
     await renderBattleFrame({ sides, surgeSide: outcome.surge?.side ?? null, ...opts }),
     { name: "battle.gif" },
@@ -69,7 +111,7 @@ export async function playBattle(channel, outcome, names, { maxUpdates, delayMs 
   const leads = sides.map((s) => s.members[0]?.name).join(" and ");
   const message = await channel.send({
     content: header(outcome),
-    files: [await image({ hpBefore: snapshots[0], text: ["The battle begins!", `${leads} lead off.`] })],
+    files: [await image({ hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] })],
   });
   try {
     let shown = 0;
@@ -79,12 +121,17 @@ export async function playBattle(channel, outcome, names, { maxUpdates, delayMs 
       await message.edit({ files: [file] });
       shown = turn;
     }
-    const winnerSide = outcome.sides.findIndex((s) => s.userId === outcome.winnerId);
+    // The result image shows each Pokémon's new Level (green when it grew).
+    const newLevel = new Map(Object.entries(outcome.exp).flatMap(([userId, es]) => es.map((e) => [`${userId}/${e.key}`, e.toLevel])));
+    const grownSides = outcome.sides.map((s, i) => ({
+      ...sides[i],
+      members: s.members.map((m) => {
+        const level = newLevel.get(`${s.userId}/${trainingKey(m.speciesId, m.variant)}`);
+        return level > m.level ? { ...m, level, levelUp: true } : m;
+      }),
+    }));
     const file = await paced(() => image({
-      hpBefore: snapshots[total],
-      badge: "FINAL",
-      winnerSide,
-      text: [`${names[outcome.winnerId]} wins the battle!`, endedBy === "turnCap" ? "Turn limit reached: the Team with more HP left wins." : ""],
+      sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(outcome), screens: resultScreens(outcome, names),
     }));
     await message.edit({ files: [file], embeds: [buildResultEmbed(outcome, names)] });
   } catch (err) {

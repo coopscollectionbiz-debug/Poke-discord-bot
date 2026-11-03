@@ -44,9 +44,11 @@ const attack = await renderBattleFrame({
 const reader = new GifReader(attack);
 assertEqual(attack.subarray(0, 6).toString(), "GIF89a", "renders a GIF");
 assertEqual([reader.width, reader.numFrames()], [FRAME_WIDTH, ANIMATION.eventFrames + ANIMATION.holdFrames], "one attack plays, then holds");
-const idleGif = await renderBattleFrame({ sides, hpBefore: [[1, 1, 1, 1, 1, 1], [1]], text: ["The battle begins!", ""] });
+const idleGif = await renderBattleFrame({ sides, hpBefore: [[1, 1, 1, 1, 1, 1], [1]], screens: [["The battle begins!", ""]] });
 const idle = new GifReader(idleGif);
 assertEqual(idle.numFrames(), ANIMATION.idleFrames, "with no attacks it loops the idle animation");
+const twoScreens = new GifReader(await renderBattleFrame({ sides, hpBefore: [[1, 1, 1, 1, 1, 1], [0]], screens: [["Ash defeated Gary!", ""], ["Charizard grew to Lv37!", ""]], winnerSide: 0 }));
+assertEqual(twoScreens.numFrames(), 2 * ANIMATION.idleFrames, "each text screen gets its own stretch of the loop");
 assertTrue(!Buffer.from(decodeFrame(idle, 0)).equals(Buffer.from(decodeFrame(idle, 10))), "sprites animate between frames");
 // A missing sprite (#9999) still renders the frame.
 if (process.env.BATTLE_FRAME_OUT) fs.writeFileSync(process.env.BATTLE_FRAME_OUT, attack);

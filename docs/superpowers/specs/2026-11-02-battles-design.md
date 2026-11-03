@@ -55,7 +55,7 @@ Glossary: `CONTEXT.md`.
 - W/L stored alongside. `/leaderboard`: top 10 + your position, only players with ≥1 battle. No roles, no seasons.
 
 ## Display
-- "Watch it happen" (revised after the first live test): an animated image of both Teams, edited once per turn about 2 s apart, up to 12 updates (longer battles spread evenly). The fighting pair is spotlit, HP drains, and a game-style text box narrates each hit ("Luxray used Spark! It's super effective!"), from a per-turn log the sim records without changing any random draw. Then a final image and the result embed: winner, surge banner, EXP, level-ups, newly learned moves, rating changes.
+- "Watch it happen" (revised after the first live test): an animated image of both Teams, edited once per turn about 2 s apart, up to 12 updates (longer battles spread evenly). The fighting pair is spotlit, HP drains, and a game-style text box narrates each hit ("Luxray used Spark! It's super effective!"), from a per-turn log the sim records without changing any random draw. Then a final image (its text box cycles: the win and the MVP, then level-ups and new moves) and the result embed: winner, MVP (the winner's Pokémon with the most knockouts), surge banner, pot, EXP, level-ups, newly learned moves, rating changes.
 - Levels visible on: dashboard (collection cards, team picker — "Lv N", no EXP bar), /inspectpokemon (Level, stats, auto-moves), trainer card / /showteam canvas, /trainercard embed, battle frames.
 
 ## Open checks (no figure until measured)

@@ -97,6 +97,36 @@ function spriteAt(sprite, ms) {
   return frame.canvas;
 }
 
+const u32 = (u8) => (u8.byteOffset % 4 ? new Uint32Array(u8.slice().buffer) : new Uint32Array(u8.buffer, u8.byteOffset, u8.byteLength / 4));
+
+// GIF frames after the first store only what changed: pixels equal to the
+// previous frame become transparent (it shows through) and the frame is
+// cropped to the changed box. Smaller files load faster, which shortens the
+// blank flash Discord's mobile app shows while an updated image loads.
+export function deltaFrame(prev, next, width, height) {
+  const a = u32(prev), b = u32(next);
+  let minX = width, minY = height, maxX = -1, maxY = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0, i = y * width; x < width; x++, i++) {
+      if (a[i] === b[i]) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      maxY = y;
+    }
+  }
+  if (maxX < 0) return { left: 0, top: 0, width: 1, height: 1, data: new Uint8Array(4) };
+  const w = maxX - minX + 1, h = maxY - minY + 1;
+  const out = new Uint32Array(w * h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (minY + y) * width + minX + x;
+      if (a[i] !== b[i]) out[y * w + x] = b[i];
+    }
+  }
+  return { left: minX, top: minY, width: w, height: h, data: new Uint8Array(out.buffer) };
+}
+
 function pill(ctx, x, y, w, h, r = h / 2) {
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, r);
@@ -224,6 +254,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     ? Math.max(events.length * ANIMATION.eventFrames + ANIMATION.holdFrames, ANIMATION.turnMs / ANIMATION.delayMs)
     : ANIMATION.idleFrames * screens.length;
   const encoder = new GifEncoder(W, H, { repeat: 0, quality: 10 });
+  let prev = null;
 
   for (let f = 0; f < total; f++) {
     const state = frameState(f, { hpBefore, events });
@@ -347,10 +378,14 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     if (!state.lines?.partial) ctx.fillText(fitText(ctx, line2 ?? "", W - 2 * PAD - 36), PAD + 18, ty + 51);
 
     const { data } = ctx.getImageData(0, 0, W, H);
-    const freeze = events.length && f === total - 1;
-    encoder.addFrame(new Uint8Array(data.buffer, data.byteOffset, data.byteLength), W, H, {
-      delay: freeze ? ANIMATION.freezeMs : ANIMATION.delayMs,
-    });
+    const rgba = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+    const delay = events.length && f === total - 1 ? ANIMATION.freezeMs : ANIMATION.delayMs;
+    if (!prev) encoder.addFrame(rgba, W, H, { delay });
+    else {
+      const d = deltaFrame(prev, rgba, W, H);
+      encoder.addFrame(d.data, d.width, d.height, { delay, left: d.left, top: d.top });
+    }
+    prev = rgba.slice();
   }
   return encoder.finish();
 }

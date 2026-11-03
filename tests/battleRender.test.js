@@ -7,7 +7,7 @@ import fs from "fs";
 import { GifReader } from "omggif";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import {
-  pickFrameTurns, renderBattleFrame, tileCenter, turnText, ANIMATION, FRAME_WIDTH,
+  pickFrameTurns, renderBattleFrame, tileCenter, turnText, deltaFrame, ANIMATION, FRAME_WIDTH,
 } from "../utils/battle/render.js";
 
 section("Frame turns");
@@ -19,6 +19,29 @@ assertEqual(pickFrameTurns(49, 12).length, 12, "longer battles are capped at 12 
 
 section("Centered rows");
 assertTrue([1, 2, 5, 6].every((n) => tileCenter(n, 0) + tileCenter(n, n - 1) === FRAME_WIDTH), "every row is centered");
+
+section("Delta frames");
+{
+  // 4x3 RGBA: one pixel changes at (2, 1); everything else must become transparent and be cropped away.
+  const px = (rgb) => [...rgb, 255];
+  const prev = new Uint8Array(Array.from({ length: 12 }, () => px([10, 20, 30])).flat());
+  const next = prev.slice();
+  next.set(px([200, 0, 0]), (1 * 4 + 2) * 4);
+  assertEqual(deltaFrame(prev, next, 4, 3), { left: 2, top: 1, width: 1, height: 1, data: new Uint8Array([200, 0, 0, 255]) },
+    "only the changed pixel is kept, cropped to its box");
+  const two = next.slice();
+  two.set(px([0, 200, 0]), (0 * 4 + 0) * 4);
+  const d = deltaFrame(next, two, 4, 3);
+  assertEqual([d.left, d.top, d.width, d.height], [0, 0, 1, 1], "the box covers just the change");
+  const wide = prev.slice();
+  wide.set(px([1, 1, 1]), 0);
+  wide.set(px([2, 2, 2]), (2 * 4 + 3) * 4);
+  const w = deltaFrame(prev, wide, 4, 3);
+  const alpha = (x, y) => w.data[(y * w.width + x) * 4 + 3];
+  assertEqual([w.width, w.height, alpha(3, 2), alpha(1, 0)], [4, 3, 255, 0], "unchanged pixels inside the box are transparent");
+  assertEqual(deltaFrame(prev, prev.slice(), 4, 3), { left: 0, top: 0, width: 1, height: 1, data: new Uint8Array(4) },
+    "no change is a single transparent pixel");
+}
 
 section("Turn text");
 const mon = (speciesId, level, name, variant = "normal") => ({ speciesId, level, variant, name });

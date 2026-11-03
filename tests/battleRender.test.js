@@ -43,10 +43,14 @@ const attack = await renderBattleFrame({
 });
 const reader = new GifReader(attack);
 assertEqual(attack.subarray(0, 6).toString(), "GIF89a", "renders a GIF");
-assertEqual([reader.width, reader.numFrames()], [FRAME_WIDTH, ANIMATION.eventFrames + ANIMATION.holdFrames], "one attack plays, then holds");
-// A turn's image must never loop back to its first frame (HP would jump back
-// up and drain again) no matter how long the next edit takes to show.
-assertTrue(reader.frameInfo(reader.numFrames() - 1).delay * 10 >= 10 * 60 * 1000, "a turn holds its last frame instead of replaying");
+assertEqual(reader.width, FRAME_WIDTH, "full frame width");
+// Discord ignores a long last-frame hold and loops each GIF once its regular
+// frames run out (seen in a screen recording), so a turn must play long
+// enough on 100 ms frames alone to still be showing when the next update lands.
+const playedMs = (r) => Array.from({ length: r.numFrames() - 1 }, (_, i) => r.frameInfo(i).delay * 10).reduce((a, b) => a + b, 0);
+assertTrue(playedMs(reader) >= ANIMATION.turnMs - ANIMATION.delayMs, "a one-attack turn plays for the full turn length");
+const twoHits = new GifReader(await renderBattleFrame({ sides, hpBefore: [[1, 0.5, 0, 0.1, 1, 1], [0.9]], events: [hit({ side: 1, slot: 0, targetSlot: 0, hpAfter: 0.8 }), hit({ hpAfter: 0.4 })], badge: "TURN 3" }));
+assertTrue(playedMs(twoHits) >= ANIMATION.turnMs - ANIMATION.delayMs, "a two-attack turn plays for the full turn length");
 const idleGif = await renderBattleFrame({ sides, hpBefore: [[1, 1, 1, 1, 1, 1], [1]], screens: [["The battle begins!", ""]] });
 const idle = new GifReader(idleGif);
 assertEqual(idle.numFrames(), ANIMATION.idleFrames, "with no attacks it loops the idle animation");

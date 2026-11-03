@@ -44,6 +44,9 @@ const attack = await renderBattleFrame({
 const reader = new GifReader(attack);
 assertEqual(attack.subarray(0, 6).toString(), "GIF89a", "renders a GIF");
 assertEqual([reader.width, reader.numFrames()], [FRAME_WIDTH, ANIMATION.eventFrames + ANIMATION.holdFrames], "one attack plays, then holds");
+// A turn's image must never loop back to its first frame (HP would jump back
+// up and drain again) no matter how long the next edit takes to show.
+assertTrue(reader.frameInfo(reader.numFrames() - 1).delay * 10 >= 10 * 60 * 1000, "a turn holds its last frame instead of replaying");
 const idleGif = await renderBattleFrame({ sides, hpBefore: [[1, 1, 1, 1, 1, 1], [1]], screens: [["The battle begins!", ""]] });
 const idle = new GifReader(idleGif);
 assertEqual(idle.numFrames(), ANIMATION.idleFrames, "with no attacks it loops the idle animation");

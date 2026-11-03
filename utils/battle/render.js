@@ -27,8 +27,10 @@ const INK = "#0e1120";
 
 // GIF timing: 100 ms frames; an attack takes 7 of them, then the scene holds
 // (sprites still moving) and freezes on its last frame until playback's next
-// edit replaces it, so an attack never replays. Start and result images loop.
-export const ANIMATION = { delayMs: 100, eventFrames: 7, holdFrames: 10, idleFrames: 20, freezeMs: 4000 };
+// edit replaces it. The freeze is the longest a GIF frame can last (65535
+// hundredths of a second, ~11 min): a shorter one let slow edits show the
+// turn replay, with HP jumping back up. Start and result images loop.
+export const ANIMATION = { delayMs: 100, eventFrames: 7, holdFrames: 10, idleFrames: 20, freezeMs: 655_350 };
 
 export function pickFrameTurns(totalTurns, frames) {
   const turns = Array.from({ length: frames }, (_, i) => Math.max(1, Math.round((totalTurns * (i + 1)) / frames)));

@@ -118,16 +118,19 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
   });
   if (!offered.ok) return interaction.editReply(refusal(offered.reason, defenderId));
 
+  const power = (id) => teamPower(buildTeam(trainerData[id]));
+  // The Defender decides on the rating the offer shows, so Accept refuses
+  // a Challenger Team that got stronger after the offer.
+  const offeredPower = power(challengerId);
   let message;
   try {
     const defenderCc = trainerData[defenderId]?.cc ?? 0;
     const acceptLabel = defenderCc >= 1 && defenderCc < stake ? `Accept All-in (${defenderCc} CC)` : `Accept (${stake} CC)`;
-    const power = (id) => teamPower(buildTeam(trainerData[id]));
     // A new channel message (not an edited reply) so the Defender is notified.
     message = await interaction.channel.send({
       content: `⚔️ <@${challengerId}> challenges <@${defenderId}> to a Wager battle for ${stake} CC!`,
       embeds: [new EmbedBuilder().setColor(0xf1c40f).setDescription(
-        `Power rating: ${names[challengerId]} ${power(challengerId)} · ${names[defenderId]} ${power(defenderId)}\n` +
+        `Power rating: ${names[challengerId]} ${offeredPower} · ${names[defenderId]} ${power(defenderId)}\n` +
         "The winner takes the pot. This offer expires in 15 minutes.")],
       components: [new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(`wager_accept:${nonce}`).setLabel(acceptLabel).setStyle(ButtonStyle.Success),
@@ -164,7 +167,8 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
       // A second click (or a click after expiry) finds the offer already settled.
       if (live()?.pendingWager?.nonce !== nonce) return { error: "no_wager" };
       // Teams and caps are checked again now: either player may have changed since the offer.
-      const block = battleBlock({ trainerData, challengerId, defenderId, mode: "wager" });
+      const block = battleBlock({ trainerData, challengerId, defenderId, mode: "wager" })
+        || (power(challengerId) > offeredPower ? "team_changed" : null);
       if (block) {
         refundWager(live(), nonce);
         await save();
@@ -186,7 +190,8 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     }
     collector.stop("answered");
     if (outcome.canceled) {
-      const why = outcome.canceled.startsWith("no_team") ? "a Team is empty" : "one of you is out of battles";
+      const why = outcome.canceled === "team_changed" ? `<@${challengerId}>'s Team got stronger since the offer`
+        : outcome.canceled.startsWith("no_team") ? "a Team is empty" : "one of you is out of battles";
       return closeOffer(`Wager canceled — ${why}. Stake refunded.`);
     }
     logEvent("battle", challengerId, {

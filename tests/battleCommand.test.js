@@ -91,6 +91,21 @@ section("Accept after the Challenger's record was replaced");
   assertEqual(t.trainerData.A.pendingWager, null, "live record's pending wager is cleared");
   assertEqual(t.totalCc(), 200, "no CC minted or lost (pot paid to the winner)");
   assertEqual(refundAllPending(t.trainerData), [], "a restart refunds nothing more");
+  assertEqual(t.log.messages.length, 2, "the battle is posted");
+}
+
+section("Challenger's Team gets stronger after the offer");
+{
+  const t = harness();
+  await t.run("A", "B", 50);
+  const nonce = t.trainerData.A.pendingWager.nonce;
+  // B saw A's Pikachu in the offer; A swaps in a Mewtwo before B answers.
+  grantCatch(t.trainerData.A, 150, "normal", () => 0.5);
+  t.trainerData.A.displayedPokemon = [{ id: 150, variant: "normal" }];
+  await t.collectors[0].h.collect(t.button("B", `wager_accept:${nonce}`));
+  assertEqual([t.trainerData.A.cc, t.trainerData.B.cc, t.trainerData.A.pendingWager], [100, 100, null], "the Stake is refunded");
+  assertEqual(t.log.messages.length, 1, "no battle runs");
+  assertTrue(t.log.messages[0].edits.at(-1)?.content.includes("Team got stronger"), "the offer says why it closed");
 }
 
 section("Expiry and decline after a replaced record");

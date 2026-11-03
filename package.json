@@ -24,6 +24,7 @@
     "express": "^5.1.0",
     "html-entities": "^2.6.0",
     "node-fetch": "^3.3.2",
+    "omggif": "1.0.10",
     "uuid": "^13.0.0"
   },
   "engines": {

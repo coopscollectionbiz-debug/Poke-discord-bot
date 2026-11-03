@@ -41,4 +41,5 @@ export const WIN_EXP_MULT = 1.5;
 export const ELO = { start: 1000, k: 32 };
 export const CAPS = { perDay: 10, perOpponent: 3 };
 export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000 };
-export const PLAYBACK = { frames: 4, delayMs: 2500 };
+// Playback: one image per turn, 2 s apart; longer battles are spread over 12.
+export const PLAYBACK = { maxUpdates: 12, delayMs: 2000 };

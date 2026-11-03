@@ -27,9 +27,7 @@ assertTrue(ids.every((id) => data.species[id]), "every pokemonData id has battle
 const typeMismatches = ids.filter((id) =>
   JSON.stringify(data.species[id]?.types) !==
   JSON.stringify(pokemonData[id].types.map((t) => TYPE_ID_TO_NAME[t])));
-// pokemonData.json has Fairy stripped without Normal restored for these four
-// (Togepi, Snubbull, Granbull, Togekiss); Showdown's Gen 5 types are right.
-assertEqual(typeMismatches, ["175", "209", "210", "468"], "types match pokemonData except its 4 known Fairy-era mistakes");
+assertEqual(typeMismatches, [], "types match pokemonData");
 assertEqual(data.species["25"].baseStats, { hp: 35, atk: 55, def: 30, spa: 50, spd: 40, spe: 90 }, "Pikachu has Gen 5 base stats");
 assertEqual(data.species["35"].types, ["Normal"], "Clefairy is Normal in Gen 5");
 

@@ -2557,8 +2557,7 @@
     "tier": "common",
     "region": "Johto",
     "types": [
-      1,
-      3
+      1
     ],
     "flavor": "It transforms the kindness and joy of others into happiness, which it stores in its shell.",
     "evolvesTo": [
@@ -3050,7 +3049,9 @@
     "name": "Snubbull",
     "tier": "uncommon",
     "region": "Johto",
-    "types": [],
+    "types": [
+      1
+    ],
     "flavor": "Small Pok\u00e9mon flee from its scary face. It is, however, considered by women to be cute.",
     "evolvesTo": [
       210
@@ -3062,7 +3063,9 @@
     "name": "Granbull",
     "tier": "rare",
     "region": "Johto",
-    "types": [],
+    "types": [
+      1
+    ],
     "flavor": "It is timid in spite of its looks. If it becomes enraged, however, it will strike with its huge fangs.",
     "evolvesTo": [],
     "evolvesFrom": [
@@ -6759,6 +6762,7 @@
     "tier": "epic",
     "region": "Sinnoh",
     "types": [
+      1,
       3
     ],
     "flavor": "It shares many blessings with people who respect one another\u2019s rights and avoid needless strife.",

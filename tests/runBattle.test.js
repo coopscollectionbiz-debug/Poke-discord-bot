@@ -111,7 +111,7 @@ section("Result embed");
   const loser = out.winnerId === "A" ? "B" : "A";
   const embed = buildResultEmbed(out, names).data;
   assertEqual(embed.title, `🏆 ${names[out.winnerId]} defeated ${names[loser]}!`, "title names the winner and loser");
-  assertTrue(/Won in \*\*\d+\*\* turns?/.test(embed.description), "description sums up the battle");
+  assertTrue(!embed.description.includes("Won in") && embed.description.includes("MVP"), "description leads with the MVP, no turn count");
   const text = JSON.stringify(embed.fields);
   assertTrue(text.includes(`⬆️ **${out.exp.A[0].name}** Lv 33 → **34** · learned **Flamethrower**`), "EXP lines show level-ups and learned moves");
   assertTrue(text.includes(`Ash **${td.A.battle.rating}**`) && text.includes(`Gary **${td.B.battle.rating}**`), "both Battle ratings are shown");

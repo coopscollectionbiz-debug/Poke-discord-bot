@@ -36,6 +36,9 @@ export default {
   data: new SlashCommandBuilder()
     .setName("inspectpokemon")
     .setDescription("Inspect details about a specific Pokémon by name or ID.")
+    // Explicit null so re-registering clears the old admin-only setting;
+    // Discord's docs don't say what an omitted field does on overwrite.
+    .setDefaultMemberPermissions(null)
     .addStringOption((option) =>
       option
         .setName("name")

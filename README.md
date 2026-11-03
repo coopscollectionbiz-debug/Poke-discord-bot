@@ -117,7 +117,7 @@ npm run test:validation   # schema validation
 npm run test:migration    # schema migration
 ```
 
-`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim (`battleSim`), Levels and catches (`training`), EXP, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), the `/battle` command and wager buttons driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), frames (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
+`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim (`battleSim`), Levels and catches (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), the `/battle` command and wager buttons driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), frames (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
 
 ## Common gotchas
 

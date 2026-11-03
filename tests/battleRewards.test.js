@@ -3,13 +3,38 @@
 // Power rating, Underdog surge odds, Gen V EXP, Elo, Battle caps.
 // ==========================================================
 
-import { assertEqual, assertTrue, section, finish } from "./harness.js";
+import { assertEqual, assertTrue, assertBetween, section, finish } from "./harness.js";
 import { teamPower, surgeChance, rollSurge } from "../utils/battle/power.js";
 import { createRng } from "../utils/battle/rng.js";
 import { SURGE } from "../utils/battle/tuning.js";
 import {
   koExp, teamExp, eloUpdate, utcDay, getBattleRecord, capBlock, recordStart,
 } from "../utils/battle/rewards.js";
+import { expForLevel, levelForExp } from "../utils/training.js";
+import { readFileSync } from "fs";
+
+const battleData = JSON.parse(readFileSync(new URL("../battleData.json", import.meta.url)));
+
+section("Leveling pace");
+{
+  // The spec's "about 2 months from Lv 5 to 100 at 10 battles a day": half
+  // wins (6 knockouts), half losses (3), against equal-Level Teams of the
+  // species closest to the average base stat total.
+  const ids = Object.keys(battleData.species);
+  const bstOf = (id) => Object.values(battleData.species[id].baseStats).reduce((a, b) => a + b, 0);
+  const avg = ids.reduce((t, id) => t + bstOf(id), 0) / ids.length;
+  const typical = ids.reduce((best, id) => (Math.abs(bstOf(id) - avg) < Math.abs(bstOf(best) - avg) ? id : best));
+  let level = 5, exp = expForLevel(5), battles = 0;
+  while (level < 100) {
+    battles++;
+    const foes = (n) => Array.from({ length: n }, () => ({ speciesId: typical, level }));
+    const [win] = teamExp({ members: [{ level }], knockedOut: foes(6), won: true });
+    const [loss] = teamExp({ members: [{ level }], knockedOut: foes(3), won: false });
+    exp += (win + loss) / 2;
+    level = Math.min(100, levelForExp(exp));
+  }
+  assertBetween(battles / 10, 45, 70, "Lv 5 → 100 takes about 2 months (in days) at 10 battles a day");
+}
 
 section("Power rating");
 assertTrue(teamPower([{ speciesId: 6, level: 50 }]) > teamPower([{ speciesId: 6, level: 20 }]), "higher Level → higher Power rating");

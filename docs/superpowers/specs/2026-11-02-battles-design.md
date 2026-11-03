@@ -67,7 +67,7 @@ Glossary: `CONTEXT.md`.
 
 ## Numbers and edge cases (locked in the post-plan walkthrough)
 Targets are design goals the Monte Carlo test enforces, not measurements.
-- **Leveling pace:** ~2 months from Lv 5 → 100 at 10 battles/day, 50% win rate → `BST_YIELD_SCALE = 0.035` (model: `pace.mjs` in the session scratchpad — 6-member Team vs equal-Level teams of average BST 416.2 across the 649 Gen 5 species; Lv 30 ≈ 5 days, Lv 50 ≈ 14, Lv 100 ≈ 56).
+- **Leveling pace:** ~2 months from Lv 5 → 100 at 10 battles/day, 50% win rate → `BST_YIELD_SCALE = 0.035` (measured by the "Leveling pace" test in `tests/battleRewards.test.js` with the real EXP code: half wins, half losses, against equal-Level Teams of the species closest to the average base stat total; Lv 100 ≈ 56 days).
 - **Battle EXP** depends on each knocked-out foe's Level vs the recipient's Level and the foe's BST (Gen V formula). E.g. a Lv 30 member gets 13 / 58 / 136 / 305 / 521 EXP per knockout of an average foe at Lv 10 / 20 / 30 / 45 / 60 (node one-liner at scale 0.035).
 - **Duplicate catch:** +½ of the EXP the species+Variant needs for its next Level (0 at Lv 100). Replaces the catch-level-based rule (which gave ~12 EXP for a typical duplicate).
 - **Catch ranges** (lean low; ~3% roll into the tail): Stage 1: 2–15 (tail 35) · Stage 2: 16–32 (tail 50) · Stage 3: 32–45 (tail 65) · Tier legendary/mythic at Stage 1: 40–55 (tail 75). Legendary range covers 47 species (node script over pokemonData.json; includes Phione). Evolution stones cost 5,000 CC each (`bot_final.js:2188`), which gates the evolve-floor jump.

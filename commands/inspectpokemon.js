@@ -12,6 +12,7 @@ import { getTraining } from "../utils/training.js";
 import { getSpecies, getMove } from "../utils/battle/data.js";
 import { computeStats } from "../utils/battle/stats.js";
 import { autoMoveset } from "../utils/battle/moveset.js";
+import { formatTypesLine } from "./pokedex.js";
 
 const statLine = (s) => `HP ${s.hp} · Atk ${s.atk} · Def ${s.def} · SpA ${s.spa} · SpD ${s.spd} · Spe ${s.spe}`;
 
@@ -27,6 +28,15 @@ export function battleInfo(user, speciesId) {
     const label = variant === "shiny" ? `✨ shiny Lv ${level}` : `Lv ${level}`;
     return `**Your ${label}** · ${statLine(computeStats(species.baseStats, level))}\nMoves: ${moves}`;
   }).join("\n\n");
+}
+
+// Rarity, type, and region, with the field names pokemonData uses.
+export function infoLines(pokemon) {
+  return (
+    `**Rarity:** ${String(pokemon.tier ?? "unknown").toUpperCase()}\n` +
+    `**Type:** ${formatTypesLine(pokemon.types)}\n` +
+    `**Region:** ${pokemon.region ?? "Unknown"}\n`
+  );
 }
 
 // ==========================================================
@@ -76,9 +86,7 @@ export default {
     const embed = new EmbedBuilder()
       .setTitle(`${pokemon.name}  #${pokemon.id}`)
       .setDescription(
-        `**Rarity:** ${pokemon.rarity?.toUpperCase() ?? "Unknown"}\n` +
-          (pokemon.type ? `**Type:** ${pokemon.type}\n` : "") +
-          (pokemon.generation ? `**Generation:** ${pokemon.generation}\n` : "") +
+        infoLines(pokemon) +
           (getSpecies(pokemon.id) ? `\n${battleInfo(trainerData[interaction.user.id], pokemon.id)}` : "")
       )
       .setImage(spriteUrl)

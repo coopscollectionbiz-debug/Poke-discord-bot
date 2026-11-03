@@ -4,7 +4,8 @@
 // ==========================================================
 
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
-import inspectpokemon, { battleInfo } from "../commands/inspectpokemon.js";
+import inspectpokemon, { battleInfo, infoLines } from "../commands/inspectpokemon.js";
+import { findPokemonByName } from "../utils/dataLoader.js";
 import { expForLevel } from "../utils/training.js";
 
 section("/inspectpokemon battle info");
@@ -15,6 +16,15 @@ assertTrue(text.includes("**Your ✨ shiny Lv 2**"), "shows the shiny variant's 
 assertTrue(/HP \d+ · Atk \d+ · Def \d+ · SpA \d+ · SpD \d+ · Spe \d+/.test(text), "shows stats at that Level");
 assertTrue(text.includes("Moves: ") && text.includes("Vine Whip"), "shows the auto-picked moves by name");
 assertEqual(battleInfo({}, 1), "Base stats: HP 45 · Atk 49 · Def 49 · SpA 65 · SpD 65 · Spe 45", "not owned → base stats only");
+
+section("/inspectpokemon header");
+// Real data, since pokemonData's field names (tier, types, region) are what broke this.
+const togekiss = await findPokemonByName("togekiss");
+const header = infoLines(togekiss);
+assertTrue(header.includes(`**Rarity:** ${togekiss.tier.toUpperCase()}`), "shows the rarity tier");
+assertTrue(header.includes("Normal") && header.includes("Flying"), "shows the types");
+assertTrue(header.includes(`**Region:** ${togekiss.region}`), "shows the region");
+assertTrue(!/unknown/i.test(header), "nothing reads Unknown");
 
 section("/inspectpokemon is for every player");
 // Players need it to see their own Levels, stats, and moves; it's read-only and ephemeral.

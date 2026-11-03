@@ -88,6 +88,8 @@ npm run test:validation   # schema validation
 npm run test:migration    # schema migration
 ```
 
+`npm test` runs every `tests/*.test.js`. `addInventory` checks that `/addinventory` adds Shiny Dust to `items.shiny_dust`, where the dashboard and shiny evolutions read it.
+
 ## Common gotchas
 
 - **Slash commands missing** — confirm `CLIENT_ID` matches the application that owns `BOT_TOKEN`, and that the bot was invited with the `applications.commands` scope.

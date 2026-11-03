@@ -26,11 +26,13 @@ const GOLD = "#f5c84c";
 const INK = "#0e1120";
 
 // GIF timing: 100 ms frames; an attack takes 7 of them, then the scene holds
-// (sprites still moving) and freezes on its last frame until playback's next
-// edit replaces it. The freeze is the longest a GIF frame can last (65535
-// hundredths of a second, ~11 min): a shorter one let slow edits show the
-// turn replay, with HP jumping back up. Start and result images loop.
-export const ANIMATION = { delayMs: 100, eventFrames: 7, holdFrames: 10, idleFrames: 20, freezeMs: 655_350 };
+// with sprites still moving. Discord ignores a long last-frame delay and loops
+// a GIF once its regular frames run out, replaying the turn (HP jumps back
+// up), so each turn runs turnMs on regular frames: longer than the ~2.5-2.8 s
+// a screen recording measured between playback updates. The final frame
+// still asks for the GIF maximum (~11 min) for viewers that honor it.
+// Start and result images loop.
+export const ANIMATION = { delayMs: 100, eventFrames: 7, holdFrames: 10, idleFrames: 20, turnMs: 4000, freezeMs: 655_350 };
 
 export function pickFrameTurns(totalTurns, frames) {
   const turns = Array.from({ length: frames }, (_, i) => Math.max(1, Math.round((totalTurns * (i + 1)) / frames)));
@@ -218,7 +220,9 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
-  const total = events.length ? events.length * ANIMATION.eventFrames + ANIMATION.holdFrames : ANIMATION.idleFrames * screens.length;
+  const total = events.length
+    ? Math.max(events.length * ANIMATION.eventFrames + ANIMATION.holdFrames, ANIMATION.turnMs / ANIMATION.delayMs)
+    : ANIMATION.idleFrames * screens.length;
   const encoder = new GifEncoder(W, H, { repeat: 0, quality: 10 });
 
   for (let f = 0; f < total; f++) {

@@ -20,7 +20,7 @@ Each player can start 10 battles per UTC day, and at most 3 against the same opp
 
 ### Levels
 
-Every species and Variant a player owns has one Level, from 1 to 100. A first catch rolls a Catch level based on the Pokémon's Stage. A duplicate catch adds half the EXP needed for the next Level. Pokémon owned before battles existed, gifts, and admin grants start at the bottom of their catch range. If the player has no Level for that species and Variant yet, their next catch of it rolls a Catch level. Stone evolution and shiny crafting keep the higher of the two Levels. Battles pay EXP for every opponent the Team knocks out, more for higher-level opponents, and every Team member gets it.
+Every species and Variant a player owns has one Level, from 1 to 100. A first catch rolls a Catch level based on the Pokémon's Stage. A duplicate catch adds half the EXP needed for the next Level. A species and Variant the player hasn't caught since Levels arrived (owned from before battles, or only received as a gift or admin grant) shows the bottom of its catch range until their next catch of it, which rolls a Catch level. Stone evolution and shiny crafting keep the higher of the two Levels. Battles pay EXP for every opponent the Team knocks out, more for higher-level opponents, and every Team member gets it.
 
 Levels show on the dashboard, on `/showteam` and `/trainercard`, and in `/inspectpokemon`.
 
@@ -103,7 +103,7 @@ TRAINERDATA_DIR=/data                               # persistent volume path on 
 npm start
 ```
 
-On first run with `REGISTER_COMMANDS=true`, slash commands register to your `GUILD_ID` (instant). After that, set `REGISTER_COMMANDS=false` to avoid re-registering on every boot.
+On first run with `REGISTER_COMMANDS=true`, slash commands register to your `GUILD_ID` (instant). After that, set `REGISTER_COMMANDS=false` to avoid re-registering on every boot. Set it to `true` again for one run whenever a command's name, options, or permissions change.
 
 ### 7. Verify
 

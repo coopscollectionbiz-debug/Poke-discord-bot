@@ -1,8 +1,9 @@
 // ==========================================================
 // utils/battle/playback.js
-// "Watch it happen": posts a battle frame in the channel, edits it a few
-// times at evenly spaced turns, then adds the result embed. Results are
-// already saved before this runs; a failed edit just stops the replay.
+// "Watch it happen": posts a battle image in the channel, edits it once
+// per turn (up to PLAYBACK.maxUpdates, spread evenly over longer battles),
+// then shows the result with the embed. Results are already saved before
+// this runs; a failed edit just stops the replay.
 // ==========================================================
 
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -50,24 +51,42 @@ function header(outcome) {
 
 // Sends a new channel message (a fresh message is what actually notifies
 // the @mentioned players; edits never do) and replays the battle on it.
-export async function playBattle(channel, outcome, names, { frames, delayMs } = PLAYBACK) {
+export async function playBattle(channel, outcome, names, { maxUpdates, delayMs } = PLAYBACK) {
   const sides = outcome.sides.map((s) => ({ name: names[s.userId], members: s.members }));
-  const frame = async (turn, caption) => new AttachmentBuilder(
-    await renderBattleFrame({ sides, hp: outcome.result.snapshots[turn], caption, surgeSide: outcome.surge?.side ?? null }),
-    { name: "battle.png" },
+  const { snapshots, log, turns: total, endedBy } = outcome.result;
+  const image = async (opts) => new AttachmentBuilder(
+    await renderBattleFrame({ sides, surgeSide: outcome.surge?.side ?? null, ...opts }),
+    { name: "battle.gif" },
   );
+  // Renders the next image during the wait, so rendering doesn't stretch the pace.
+  const paced = async (render) => {
+    const started = Date.now();
+    const file = await render();
+    await sleep(Math.max(0, delayMs - (Date.now() - started)));
+    return file;
+  };
 
-  const message = await channel.send({ content: header(outcome), files: [await frame(0, "Battle start")] });
-  const turns = pickFrameTurns(outcome.result.turns, frames);
+  const leads = sides.map((s) => s.members[0]?.name).join(" and ");
+  const message = await channel.send({
+    content: header(outcome),
+    files: [await image({ hpBefore: snapshots[0], text: ["The battle begins!", `${leads} lead off.`] })],
+  });
   try {
-    for (const turn of turns) {
-      await sleep(delayMs);
-      const last = turn === turns.at(-1);
-      await message.edit({
-        files: [await frame(turn, last ? `Turn ${turn} — ${names[outcome.winnerId]} wins!` : `Turn ${turn}`)],
-        ...(last ? { embeds: [buildResultEmbed(outcome, names)] } : {}),
-      });
+    let shown = 0;
+    for (const turn of pickFrameTurns(total, maxUpdates)) {
+      const badge = turn - shown > 1 ? `TURNS ${shown + 1}–${turn}` : `TURN ${turn}`;
+      const file = await paced(() => image({ hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }));
+      await message.edit({ files: [file] });
+      shown = turn;
     }
+    const winnerSide = outcome.sides.findIndex((s) => s.userId === outcome.winnerId);
+    const file = await paced(() => image({
+      hpBefore: snapshots[total],
+      badge: "FINAL",
+      winnerSide,
+      text: [`${names[outcome.winnerId]} wins the battle!`, endedBy === "turnCap" ? "Turn limit reached: the Team with more HP left wins." : ""],
+    }));
+    await message.edit({ files: [file], embeds: [buildResultEmbed(outcome, names)] });
   } catch (err) {
     console.warn("⚠️ battle playback stopped:", err?.message || err);
   }

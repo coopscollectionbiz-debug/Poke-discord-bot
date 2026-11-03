@@ -6,6 +6,7 @@
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { buildTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
 import { buildResultEmbed, playBattle } from "../utils/battle/playback.js";
+import { pickFrameTurns } from "../utils/battle/render.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { grantCatch } from "../utils/training.js";
@@ -123,13 +124,14 @@ section("Playback");
   const sent = [];
   const edits = [];
   const channel = { send: async (opts) => { sent.push(opts); return { edit: async (o) => { edits.push(o); } }; } };
-  await playBattle(channel, out, { A: "Ash", B: "Gary" }, { frames: 4, delayMs: 0 });
+  await playBattle(channel, out, { A: "Ash", B: "Gary" }, { maxUpdates: 12, delayMs: 0 });
   assertEqual(sent.length, 1, "one new channel message (so mentions notify)");
   assertTrue(sent[0].content.includes("<@A> challenged <@B>!") && sent[0].files.length === 1, "first message mentions both players with the start frame");
-  assertEqual(edits.length, Math.min(4, out.result.turns), "one edit per frame");
-  assertTrue(edits.at(-1).embeds?.length === 1 && edits.slice(0, -1).every((e) => !e.embeds), "result embed arrives with the last frame");
+  assertEqual(sent[0].files[0].name, "battle.gif", "frames are animated GIFs");
+  assertEqual(edits.length, pickFrameTurns(out.result.turns, 12).length + 1, "one edit per turn (up to 12), then the result");
+  assertTrue(edits.at(-1).embeds?.length === 1 && edits.slice(0, -1).every((e) => !e.embeds), "result embed arrives with the final image");
   const failing = { send: async () => ({ edit: async () => { throw new Error("Unknown Message"); } }) };
-  await playBattle(failing, out, { A: "Ash", B: "Gary" }, { frames: 4, delayMs: 0 });
+  await playBattle(failing, out, { A: "Ash", B: "Gary" }, { maxUpdates: 12, delayMs: 0 });
   assertTrue(true, "a failed edit stops playback without throwing");
 }
 

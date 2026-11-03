@@ -10,7 +10,7 @@ Game terms (Tier, Stage, Team, Battle rating, and so on) are defined in [`CONTEX
 
 ## Battles
 
-Players battle each other's Teams. The bot simulates the whole fight with Gen 5 stats, moves, and type matchups, then plays it back in the channel as a few image frames followed by the result.
+Players battle each other's Teams. The bot simulates the whole fight with Gen 5 stats, moves, and type matchups, then replays it in the channel turn by turn as animated images: the two Pokémon fighting are spotlit, HP bars drain, and a game-style text box narrates each move. Battles longer than 12 turns are spread over 12 updates. A final image and embed show the result.
 
 - `/battle opponent:@user` starts an Open battle. It runs right away and costs nothing. Only the Challenger earns EXP, and both players' Battle ratings change.
 - `/battle opponent:@user wager:100` offers a Wager battle. The bot holds the Challenger's CC until the Defender accepts or declines, or for 15 minutes. A Defender with less CC than the Stake can accept with everything they have, and the Challenger gets the difference back. Both players earn EXP, and the winner takes the pot. If the Challenger's Team gets stronger before the Defender answers, Accept cancels the offer instead. A restart refunds any Stake still waiting for an answer.
@@ -28,7 +28,7 @@ Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps) is in
 
 ### Battle data
 
-`battleData.json` holds Gen 5 base stats, level-up moves, move power, and the type chart. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. To regenerate it:
+`battleData.json` holds Gen 5 base stats, level-up moves, move power, and the type chart. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. Battle images are animated GIFs: the runtime dependency `omggif` reads each sprite's animation frames, and `@napi-rs/canvas` encodes the result. To regenerate it:
 
 ```bash
 npm run generate:battle-data
@@ -117,7 +117,7 @@ npm run test:validation   # schema validation
 npm run test:migration    # schema migration
 ```
 
-`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim (`battleSim`), Levels and catches (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), the `/battle` command and wager buttons driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), frames (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
+`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim (`battleSim`), Levels and catches (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), the `/battle` command and wager buttons driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), turn narration and the animated frames (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
 
 ## Common gotchas
 

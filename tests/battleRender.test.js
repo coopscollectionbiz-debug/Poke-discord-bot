@@ -151,6 +151,9 @@ section("The attacker's own HP");
   const near = ([a, b, c], [x, y, z]) => Math.abs(a - x) + Math.abs(b - y) + Math.abs(c - z) < 15;
   assertTrue(near(at(first), [0x3a, 0x42, 0x56]), `Charizard's bar starts nearly empty (${at(first)})`);
   assertTrue(near(at(end), [0x3f, 0xd4, 0x6c]), `and ends green after draining (${at(end)})`);
+  const attack = new Uint8Array(r.width * r.height * 4);
+  for (let i = 0; i < ANIMATION.eventFrames; i++) r.decodeAndBlitFrameRGBA(i, attack);
+  assertTrue(near(at(attack), [0x3f, 0xd4, 0x6c]), `it fills during the attack's own frames, not after (${at(attack)})`);
 }
 {
   const sprites = new Map();

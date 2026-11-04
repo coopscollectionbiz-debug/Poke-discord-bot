@@ -80,8 +80,14 @@ Targets are design goals the Monte Carlo test enforces, not measurements.
 ## Simplifications (ponytail pass)
 - No EXP bar anywhere; dashboard shows "Lv N" only.
 - Sim models power, type, accuracy, STAB, crits, damage roll. No fixed-damage moves (their base power ≤ 1 already filters fixed-damage and variable-power moves out).
-- Added after the first live tests, with Gen 5 rules from Pokémon Showdown: priority; multi-hit (2–5 hits at 35/35/15/15%, fixed 2 or 3, Triple Kick's 10/20/30 power with an accuracy check per kick, each hit its own crit and roll, stopping when the target faints); drain (heals `round(dealt × ½)`); recoil (`round(total dealt × fraction)`, at least 1); crash (a missed or immune Jump Kick / High Jump Kick costs `floor(max HP / 2)`). Drain and recoil use the HP the target actually lost.
-- A Pokémon fainting from its own recoil or crash is a knockout for the Pokémon it attacked (EXP and MVP). If both sides run out in one move, the side whose Pokémon fainted last wins (Gen 5 rule; the recoil user's side).
-- Still not modeled: Sucker Punch failing when the target already moved, Revenge and Avalanche doubling after being hit (both still go last at 60 power), Dragon Tail and Circle Throw forcing a switch, stat changes (Close Combat, Overheat), and other side effects. Move choice counts expected hits for multi-hit moves but ignores drain and recoil.
+- Added after the first live tests, following Pokémon Showdown's Gen 5 rules:
+  - Move priority decides turn order before Speed does.
+  - A 2 to 5 hit move hits 2 or 3 times 35% of the time each, and 4 or 5 times 15% each. Fixed multi-hit moves hit 2 or 3 times. Triple Kick's kicks have 10, 20, and 30 power, and each kick checks accuracy. Every hit rolls its own crit and damage, and the hits stop when the target faints.
+  - Drain heals the user `round(dealt × 1/2)`.
+  - Recoil costs the user `round(total dealt × fraction)`, at least 1 HP.
+  - A Jump Kick or High Jump Kick that misses, or hits an immune target, costs the user `floor(max HP / 2)`.
+  - Drain and recoil use the HP the target actually lost.
+- A Pokémon that faints from its own recoil or crash is a knockout for the Pokémon it attacked, for EXP and MVP. If both sides run out in one move, the side whose Pokémon fainted last wins. That's the Gen 5 rule, and it means the recoil user's side wins.
+- Still not modeled: Sucker Punch failing when the target already moved, Revenge and Avalanche doubling after being hit, Dragon Tail and Circle Throw forcing a switch, stat changes from moves like Close Combat and Overheat, and other side effects. Revenge and Avalanche still go last, at 60 power. Move choice counts the expected hits of multi-hit moves but ignores drain and recoil.
 - No schema-file registration; `training`/`battle`/`pendingWager` are created on first use (live load/save paths mutate users in place and keep unknown fields).
 - Commit per task; spec and plan are committed.

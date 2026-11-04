@@ -41,6 +41,15 @@ for (const m of g5.moves) {
     power: m.basePower,
     accuracy: m.accuracy,
     critRatio: m.critRatio ?? 1,
+    // Effects the sim models, stored only on the moves that have them.
+    ...(m.drain && { drain: m.drain }),
+    ...(m.recoil && { recoil: m.recoil }),
+    ...(m.hasCrashDamage && { crash: true }),
+    ...(m.multihit && { multihit: m.multihit }),
+    ...(m.multiaccuracy && { multiaccuracy: true }),
+    // Triple Kick's 10, 20, then 30 power is a Showdown callback, not data.
+    ...(m.id === "triplekick" && { risingPower: true }),
+    ...(m.priority && { priority: m.priority }),
   };
 }
 

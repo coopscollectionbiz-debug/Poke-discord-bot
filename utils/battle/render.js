@@ -54,15 +54,33 @@ export const tileCenter = (count, i) => (W - count * TILE_W) / 2 + TILE_W * (i +
 export function turnText(event, sides) {
   const attacker = sides[event.side].members[event.slot].name;
   const target = sides[1 - event.side].members[event.targetSlot].name;
+  // Showdown's wording, in the order the games show it; "Hit 3 times!" is Gen 5's.
   const notes = event.missed ? [`${attacker}'s attack missed!`]
     : event.eff === 0 ? [`It doesn't affect ${target}...`]
     : [
       event.crit && "A critical hit!",
       event.eff > 1 && "It's super effective!",
       event.eff < 1 && "It's not very effective...",
-      event.fainted && `${target} fainted!`,
-    ].filter(Boolean);
-  return [`${attacker} used ${event.move}!`, notes.join(" ")];
+      event.hits && `Hit ${event.hits} ${event.hits === 1 ? "time" : "times"}!`,
+      event.drain && `${target} had its energy drained!`,
+      event.recoil && `${attacker} was damaged by the recoil!`,
+    ];
+  notes.push(
+    event.crash && `${attacker} kept going and crashed!`,
+    event.fainted && `${target} fainted!`,
+    event.userFainted && `${attacker} fainted!`,
+  );
+  return [`${attacker} used ${event.move}!`, notes.filter(Boolean).join(" ")];
+}
+
+// The text box's two lines. When the second line is too long (a recoil
+// knockout can be), its first sentences move up beside the move name until
+// the rest fits, as the games' text boxes wrap.
+export function wrapLines(line1, line2, fits) {
+  const sentences = line2.split(/(?<=!|\.\.\.) /); // "Mr. Mime" isn't a sentence end
+  let top = line1;
+  while (!fits(sentences.join(" ")) && sentences.length > 1 && fits(`${top} ${sentences[0]}`)) top += ` ${sentences.shift()}`;
+  return [top, sentences.join(" ")];
 }
 
 // A sprite GIF, read but not decoded: spritePlayer decodes its frames as an
@@ -198,13 +216,21 @@ function frameState(f, { hpBefore, events }) {
   const hp = hpBefore.map((row) => [...row]);
   if (!events.length) return { hp, lunge: null, hidden: null, lines: null };
   const done = Math.min(events.length, Math.floor(f / ANIMATION.eventFrames));
-  for (let e = 0; e < done; e++) hp[1 - events[e].side][events[e].targetSlot] = events[e].hpAfter;
+  for (let e = 0; e < done; e++) {
+    hp[1 - events[e].side][events[e].targetSlot] = events[e].hpAfter;
+    if ("userHpAfter" in events[e]) hp[events[e].side][events[e].slot] = events[e].userHpAfter;
+  }
   if (done === events.length) return { hp, lunge: null, hidden: null, lines: events.at(-1) };
   const e = events[done];
   const phase = f % ANIMATION.eventFrames;
   const from = hp[1 - e.side][e.targetSlot];
-  // Lunge (frames 0-1), flash on impact (2, 4), HP drains (2-5), effect text (4+).
+  // Lunge (frames 0-1), flash on impact (2, 4), HP drains (2-5), effect text (4+),
+  // then the attacker's own HP moves for drain, recoil or a crash (4-6).
   if (phase >= 2) hp[1 - e.side][e.targetSlot] = from + (e.hpAfter - from) * Math.min(1, (phase - 2) / 3);
+  if ("userHpAfter" in e && phase >= 4) {
+    const own = hp[e.side][e.slot];
+    hp[e.side][e.slot] = own + (e.userHpAfter - own) * Math.min(1, (phase - 4) / 2);
+  }
   return {
     hp,
     lunge: phase < 2 ? { side: e.side, slot: e.slot, dy: (e.side === 0 ? 1 : -1) * (phase === 0 ? 4 : 8) } : null,
@@ -232,8 +258,10 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
   };
   const live = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>
     load(s, i, hpBefore[s][i] > 0 ? m.variant : "grayscale")))));
+  const faints = (s, i) => events.some((e) =>
+    (e.fainted && 1 - e.side === s && e.targetSlot === i) || (e.userFainted && e.side === s && e.slot === i));
   const gray = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>
-    (hpBefore[s][i] > 0 && events.some((e) => e.fainted && 1 - e.side === s && e.targetSlot === i) ? load(s, i, "grayscale") : null)))));
+    (hpBefore[s][i] > 0 && faints(s, i) ? load(s, i, "grayscale") : null)))));
   // The fighting pair: each side's first Pokémon still standing (as in the sim).
   const active = winnerSide === null ? hpBefore.map((row) => row.findIndex((f) => f > 0)) : [-1, -1];
 
@@ -360,13 +388,16 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     ctx.lineWidth = 3;
     ctx.strokeStyle = "#3a4256";
     ctx.stroke();
-    const [line1, line2] = state.lines ? turnText(state.lines, sides) : screens[Math.floor(f / ANIMATION.idleFrames)];
     ctx.fillStyle = "#1d2233";
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
     ctx.font = `600 17px ${FONT}`;
-    ctx.fillText(fitText(ctx, line1 ?? "", W - 2 * PAD - 36), PAD + 18, ty + 27);
-    if (!state.lines?.partial) ctx.fillText(fitText(ctx, line2 ?? "", W - 2 * PAD - 36), PAD + 18, ty + 51);
+    const lineW = W - 2 * PAD - 36;
+    const [line1, line2] = state.lines?.partial ? [turnText(state.lines, sides)[0], ""]
+      : state.lines ? wrapLines(...turnText(state.lines, sides), (t) => ctx.measureText(t).width <= lineW)
+      : screens[Math.floor(f / ANIMATION.idleFrames)];
+    ctx.fillText(fitText(ctx, line1 ?? "", lineW), PAD + 18, ty + 27);
+    ctx.fillText(fitText(ctx, line2 ?? "", lineW), PAD + 18, ty + 51);
 
   };
   const pause = () => new Promise((resolve) => setImmediate(resolve)); // lets other commands run

@@ -45,6 +45,21 @@ assertTrue(data.species["129"].levelMoves.some(([l, m]) => l === 15 && m === "ta
 const bulbaLevels = data.species["1"].levelMoves.map(([l]) => l);
 assertEqual(bulbaLevels, [...bulbaLevels].sort((a, b) => a - b), "levelMoves are ascending");
 
+section("Move effects");
+assertEqual(data.moves.gigadrain?.drain, [1, 2], "Giga Drain heals half the damage");
+assertEqual(data.moves.bravebird?.recoil, [33, 100], "Brave Bird has 33% recoil");
+assertEqual(data.moves.headsmash?.recoil, [1, 2], "Head Smash has 50% recoil");
+assertEqual(data.moves.highjumpkick?.crash, true, "High Jump Kick crashes on a miss");
+assertEqual(data.moves.bulletseed?.multihit, [2, 5], "Bullet Seed hits 2 to 5 times");
+assertEqual(data.moves.doublekick?.multihit, 2, "Double Kick hits twice");
+assertEqual([data.moves.triplekick?.multihit, data.moves.triplekick?.multiaccuracy, data.moves.triplekick?.risingPower], [3, true, true],
+  "Triple Kick kicks 3 times, checks accuracy each kick, and gets stronger");
+assertEqual(data.moves.quickattack?.priority, 1, "Quick Attack has +1 priority");
+assertEqual(data.moves.extremespeed?.priority, 2, "Extreme Speed has +2 priority");
+assertEqual(data.moves.vitalthrow?.priority, -1, "Vital Throw has -1 priority");
+assertEqual(Object.keys(data.moves.flamethrower), ["name", "type", "category", "power", "accuracy", "critRatio"],
+  "a move without effects stores no effect fields");
+
 section("Type chart");
 assertEqual(data.typeChart.Ghost?.Steel, 0.5, "Ghost vs Steel is 0.5 in Gen 5");
 assertEqual(data.typeChart.Normal?.Ghost, 0, "Normal can't hit Ghost");

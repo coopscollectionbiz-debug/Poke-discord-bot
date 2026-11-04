@@ -12,6 +12,8 @@ Game terms (Tier, Stage, Team, Battle rating, and so on) are defined in [`CONTEX
 
 Players battle each other's Teams. The bot simulates the whole fight with Gen 5 stats, moves, and type matchups, then replays it in the channel turn by turn as animated images: the two Pokémon fighting are spotlit, HP bars drain, and a game-style text box narrates each move. Battles longer than 12 turns are spread over 12 updates. A final image and embed show the result: who won, the MVP (the winner's Pokémon with the most knockouts), level-ups, new moves, and rating changes.
 
+Moves follow Gen 5 rules for priority (Quick Attack goes first, Vital Throw goes last), multi-hit moves (Bullet Seed hits 2 to 5 times), drain (Giga Drain heals the user half the damage it deals), recoil (Double-Edge hurts the user too), and crashing (a missed High Jump Kick costs the user half its max HP). A Pokémon that faints from its own recoil or crash counts as a knockout for the Pokémon it attacked. When both last Pokémon faint from one move, the side whose Pokémon fainted last wins, which is the recoil user's, as in Gen 5. The sim leaves out abilities (except Shedinja's Wonder Guard), items, status conditions, stat changes, and moves' other side effects.
+
 - `/battle opponent:@user` starts an Open battle. It runs right away and costs nothing. Only the Challenger earns EXP, and both players' Battle ratings change.
 - `/battle opponent:@user wager:100` offers a Wager battle. The bot holds the Challenger's CC until the Defender accepts or declines, or for 15 minutes. A Defender with less CC than the Stake can accept with everything they have, and the Challenger gets the difference back. Both players earn EXP, and the winner takes the pot. If the Challenger's Team gets stronger before the Defender answers, Accept cancels the offer instead. A restart refunds any Stake still waiting for an answer.
 - `/leaderboard` shows the top 10 Battle ratings and your position.
@@ -28,7 +30,7 @@ Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps) is in
 
 ### Battle data
 
-`battleData.json` holds Gen 5 base stats, level-up moves, move power, and the type chart. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. Battle images are animated GIFs: `@napi-rs/canvas` draws each frame, the runtime dependency `omggif` reads each sprite's animation frames, and the runtime dependency `gifenc` encodes the result. `utils/battle/render.js` encodes each frame as soon as it's drawn and decodes sprite frames only as an image reaches them, which keeps a 6v6 battle to about 60 MB, and it pauses between frames so a battle never stalls the bot's other commands. To regenerate it:
+`battleData.json` holds Gen 5 base stats, level-up moves, move power and effects (priority, hit counts, drain, recoil, and crash damage), and the type chart. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. Battle images are animated GIFs: `@napi-rs/canvas` draws each frame, the runtime dependency `omggif` reads each sprite's animation frames, and the runtime dependency `gifenc` encodes the result. `utils/battle/render.js` encodes each frame as soon as it's drawn and decodes sprite frames only as an image reaches them, which keeps a 6v6 battle to about 60 MB, and it pauses between frames so a battle never stalls the bot's other commands. To regenerate it:
 
 ```bash
 npm run generate:battle-data
@@ -117,7 +119,7 @@ npm run test:validation   # schema validation
 npm run test:migration    # schema migration
 ```
 
-`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim (`battleSim`), Levels and catches (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), the `/battle` command and wager buttons driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), turn narration, the animated frames, decoding sprites as they play, colors that only appear late in an image, and rendering without stalling the bot (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
+`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim, including priority, multi-hit, drain, recoil, crash damage, and recoil knockouts (`battleSim`), Levels and catches (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), the `/battle` command and wager buttons driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), turn narration and how it wraps, the animated frames, the attacker's own HP changing, decoding sprites as they play, colors that only appear late in an image, and rendering without stalling the bot (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
 
 ## Common gotchas
 

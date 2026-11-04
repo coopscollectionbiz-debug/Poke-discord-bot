@@ -8,7 +8,7 @@ import { performance } from "perf_hooks";
 import { GifReader } from "omggif";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import {
-  pickFrameTurns, renderBattleFrame, tileCenter, turnText, loadSprite, spritePlayer, ANIMATION, FRAME_WIDTH,
+  pickFrameTurns, renderBattleFrame, tileCenter, turnText, wrapLines, loadSprite, spritePlayer, ANIMATION, FRAME_WIDTH,
 } from "../utils/battle/render.js";
 
 section("Frame turns");
@@ -36,6 +36,27 @@ assertEqual(turnText(hit({ crit: true, eff: 2, hpAfter: 0, fainted: true }), sid
 assertEqual(turnText(hit({ eff: 0.5 }), sides)[1], "It's not very effective...", "resisted");
 assertEqual(turnText(hit({ eff: 0, damage: 0 }), sides)[1], "It doesn't affect Blastoise...", "immune");
 assertEqual(turnText(hit({ missed: true, damage: 0 }), sides)[1], "Charizard's attack missed!", "a miss");
+assertEqual(turnText(hit({ move: "Bullet Seed", hits: 3 }), sides), ["Charizard used Bullet Seed!", "Hit 3 times!"], "a multi-hit move says how many times it hit");
+assertEqual(turnText(hit({ hits: 1, eff: 2, hpAfter: 0, fainted: true }), sides)[1], "It's super effective! Hit 1 time! Blastoise fainted!", "a multi-hit move that knocks out on the first hit");
+assertEqual(turnText(hit({ move: "Giga Drain", drain: 12, userHpAfter: 0.6 }), sides)[1], "Blastoise had its energy drained!", "drain");
+assertEqual(turnText(hit({ move: "Flare Blitz", crit: true, hpAfter: 0, fainted: true, recoil: 9, userHpAfter: 0, userFainted: true }), sides)[1],
+  "A critical hit! Charizard was damaged by the recoil! Blastoise fainted! Charizard fainted!", "recoil, then both faint");
+assertEqual(turnText(hit({ move: "High Jump Kick", missed: true, damage: 0, crash: 60, userHpAfter: 0.5 }), sides)[1],
+  "Charizard's attack missed! Charizard kept going and crashed!", "a crash after a miss");
+assertEqual(turnText(hit({ eff: 0, damage: 0, crash: 60, userHpAfter: 0, userFainted: true }), sides)[1],
+  "It doesn't affect Blastoise... Charizard kept going and crashed! Charizard fainted!", "kicking an immune target can make the user faint");
+
+section("Text box wrapping");
+// When a hit's effects overflow the second line, its first sentences move up
+// beside the move name, as the games' text boxes wrap.
+assertEqual(wrapLines("Charizard used Flare Blitz!", "It's super effective!", (t) => t.length <= 30),
+  ["Charizard used Flare Blitz!", "It's super effective!"], "effects that fit stay on the second line");
+assertEqual(wrapLines("A used B!", "One! Two! Three is long! Four fainted!", (t) => t.length <= 30),
+  ["A used B! One! Two!", "Three is long! Four fainted!"], "sentences move up until the rest fits");
+assertEqual(wrapLines("X used Y!", "Mr. Mime fainted! Mime Jr. fainted!", (t) => t.length <= 30),
+  ["X used Y! Mr. Mime fainted!", "Mime Jr. fainted!"], "names with periods stay whole");
+assertEqual(wrapLines("X used Y!", "It doesn't affect Z... X kept going and crashed!", (t) => t.length <= 32),
+  ["X used Y! It doesn't affect Z...", "X kept going and crashed!"], "a sentence can end in an ellipsis");
 
 section("Render");
 const decodeFrame = (reader, i) => { const px = new Uint8Array(reader.width * reader.height * 4); reader.decodeAndBlitFrameRGBA(i, px); return px; };
@@ -113,6 +134,31 @@ section("Colors that only appear later");
   const off = Math.abs(red - 0xef) + Math.abs(green - 0x4b) + Math.abs(blue - 0x4b);
   // A palette from the first frame alone came out 28 off (228, 72, 61).
   assertTrue(off < 15, `the low-HP bar shows its red (${red}, ${green}, ${blue})`);
+}
+
+section("The attacker's own HP");
+{
+  // Charizard, first on Ash's row, drains from 10% to 90% HP.
+  const r = new GifReader(await renderBattleFrame({
+    sides, hpBefore: [[0.1, 1, 1, 1, 1, 1], [0.9]], events: [hit({ move: "Giga Drain", hpAfter: 0.5, drain: 50, userHpAfter: 0.9 })], badge: "TURN 5",
+  }));
+  // A point 70% along Charizard's HP bar: empty at 10% HP, filled at 90%.
+  const at = (px) => [...px.subarray((179 * r.width + tileCenter(6, 0) + 30) * 4, (179 * r.width + tileCenter(6, 0) + 30) * 4 + 3)];
+  const first = new Uint8Array(r.width * r.height * 4);
+  r.decodeAndBlitFrameRGBA(0, first);
+  const end = new Uint8Array(r.width * r.height * 4);
+  for (let i = 0; i < r.numFrames(); i++) r.decodeAndBlitFrameRGBA(i, end);
+  const near = ([a, b, c], [x, y, z]) => Math.abs(a - x) + Math.abs(b - y) + Math.abs(c - z) < 15;
+  assertTrue(near(at(first), [0x3a, 0x42, 0x56]), `Charizard's bar starts nearly empty (${at(first)})`);
+  assertTrue(near(at(end), [0x3f, 0xd4, 0x6c]), `and ends green after draining (${at(end)})`);
+}
+{
+  const sprites = new Map();
+  await renderBattleFrame({
+    sides, hpBefore: [[1, 1, 1, 1, 1, 1], [0.9]], badge: "TURN 6", sprites,
+    events: [hit({ move: "Flare Blitz", hpAfter: 0.5, recoil: 99, userHpAfter: 0, userFainted: true })],
+  });
+  assertTrue(sprites.has("grayscale/6"), "an attacker that faints from its own recoil turns gray");
 }
 
 section("Sprites decode as they play");

@@ -46,7 +46,7 @@ Glossary: `CONTEXT.md`.
 - No abilities (except Shedinja's Wonder Guard)/items/status. Fixed stats (no IV/EV/nature). Shiny = no stat bonus. Full HP each battle.
 - Move choice: highest expected damage vs current foe, small random chance otherwise.
 - Fallback typed attack for mons with no damaging moves (Abra, Ditto, Wobbuffet, Unown, Magikarp <15).
-- Turn order by Speed, random tiebreak. Turn cap → winner by remaining team HP%.
+- Turn order by move priority, then Speed, random tiebreak. Turn cap → winner by remaining team HP%.
 - Seeded RNG; seed logged for reproducibility.
 - Sim runs and **applies and saves all results first**; display is a replay, so a failed replay never changes results. (A hard crash before the next Discord backup can still lose them, like any other action.)
 
@@ -79,6 +79,9 @@ Targets are design goals the Monte Carlo test enforces, not measurements.
 
 ## Simplifications (ponytail pass)
 - No EXP bar anywhere; dashboard shows "Lv N" only.
-- Sim models power, type, accuracy, STAB, crits, damage roll. No recoil, drain, multi-hit, priority, or fixed-damage moves (their base power ≤ 1 already filters fixed-damage and variable-power moves out).
+- Sim models power, type, accuracy, STAB, crits, damage roll. No fixed-damage moves (their base power ≤ 1 already filters fixed-damage and variable-power moves out).
+- Added after the first live tests, with Gen 5 rules from Pokémon Showdown: priority; multi-hit (2–5 hits at 35/35/15/15%, fixed 2 or 3, Triple Kick's 10/20/30 power with an accuracy check per kick, each hit its own crit and roll, stopping when the target faints); drain (heals `round(dealt × ½)`); recoil (`round(total dealt × fraction)`, at least 1); crash (a missed or immune Jump Kick / High Jump Kick costs `floor(max HP / 2)`). Drain and recoil use the HP the target actually lost.
+- A Pokémon fainting from its own recoil or crash is a knockout for the Pokémon it attacked (EXP and MVP). If both sides run out in one move, the side whose Pokémon fainted last wins (Gen 5 rule; the recoil user's side).
+- Still not modeled: Sucker Punch failing when the target already moved, Revenge and Avalanche doubling after being hit (both still go last at 60 power), Dragon Tail and Circle Throw forcing a switch, stat changes (Close Combat, Overheat), and other side effects. Move choice counts expected hits for multi-hit moves but ignores drain and recoil.
 - No schema-file registration; `training`/`battle`/`pendingWager` are created on first use (live load/save paths mutate users in place and keep unknown fields).
 - Commit per task; spec and plan are committed.

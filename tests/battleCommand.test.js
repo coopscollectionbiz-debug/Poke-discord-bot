@@ -185,7 +185,7 @@ section("The offer never shows the Defender's balance");
   const { opts } = t.log.messages[0];
   assertEqual(opts.components[0].components[0].data.label, "Accept (50 CC)", "the button shows the Stake, not B's balance");
   assertTrue(!JSON.stringify(opts).includes("30 CC"), "B's 30 CC appears nowhere in the offer");
-  assertTrue(opts.embeds[0].data.description.includes("everything you have"), "the offer explains going All-in");
+  assertTrue(opts.embeds[0].data.description.includes("accepting puts you all in"), "the offer explains going All-in");
 }
 
 section("Missing channel permissions");

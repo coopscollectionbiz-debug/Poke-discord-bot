@@ -133,7 +133,7 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
       content: `⚔️ <@${challengerId}> challenges <@${defenderId}> to a Wager battle for ${stake} CC!`,
       embeds: [new EmbedBuilder().setColor(0xf1c40f).setDescription(
         `Power rating: ${names[challengerId]} ${offeredPower} · ${names[defenderId]} ${power(defenderId)}\n` +
-        "The winner takes the pot. Short on CC? Accepting puts in everything you have.\n" +
+        "Winner takes all. If you don't have enough Coop Coins, accepting puts you all in.\n" +
         "This offer expires in 15 minutes.")],
       components: [new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(`wager_accept:${nonce}`).setLabel(`Accept (${stake} CC)`).setStyle(ButtonStyle.Success),
@@ -214,5 +214,5 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
   });
 
   // Last, once the buttons are live: if this reply fails, the offer still works.
-  await interaction.editReply("⚔️ Wager offered. Your Stake is held until they answer.").catch(() => {});
+  await interaction.editReply("⚔️ Wager offered. Your Coop Coin Stake is held until they respond.").catch(() => {});
 }

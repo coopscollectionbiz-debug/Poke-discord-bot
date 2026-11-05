@@ -27,7 +27,7 @@ Progress toward a species + **Variant's** next **Level**.
 _Avoid_: XP (TP is already the chat-activity points), experience points
 
 **Catch level**:
-The **Level** rolled the first time a player catches a species + **Variant**, set by its **Stage**, with Stage 1 legendaries and mythics rolling high. For Pokémon owned before Levels existed, the next catch counts as the first.
+The **Level** rolled the first time a player catches a species + **Variant**, set by its **Stage**, with Stage 1 legendaries and mythics rolling high. For Pokémon owned before Levels existed, or after a player's last copy is gone, the next catch counts as the first.
 _Avoid_: wild level, spawn level
 
 ### Trainer

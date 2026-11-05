@@ -22,7 +22,7 @@ Each player can start 10 battles per UTC day, and at most 3 against the same opp
 
 ### Levels
 
-Every species and Variant a player owns has one Level, from 1 to 100. A first catch rolls a Catch level based on the Pokémon's Stage. A duplicate catch adds half the EXP needed for the next Level. A species and Variant the player hasn't caught since Levels arrived (owned from before battles, or only received as a gift or admin grant) shows the bottom of its catch range until their next catch of it, which rolls a Catch level. Stone evolution and shiny crafting keep the higher of the two Levels. Battles pay EXP for every opponent the Team knocks out, more for higher-level opponents, and every Team member gets it.
+Every species and Variant a player owns has one Level, from 1 to 100. A first catch rolls a Catch level based on the Pokémon's Stage. A duplicate catch adds half the EXP needed for the next Level. A species and Variant the player hasn't caught since Levels arrived (owned from before battles, or only received as a gift or admin grant) shows the bottom of its catch range until their next catch of it, which rolls a Catch level. Stone evolution and shiny crafting keep the higher of the two Levels. A Level resets when the player has no copies of that species and Variant left, whether they gifted, donated, evolved, or crafted the last one into a shiny, so their next catch rolls a new Catch level. Battles pay EXP for every opponent the Team knocks out, more for higher-level opponents, and every Team member gets it.
 
 Levels show on the dashboard, on `/showteam` and `/trainercard`, and in `/inspectpokemon`.
 
@@ -119,7 +119,7 @@ npm run test:validation   # schema validation
 npm run test:migration    # schema migration
 ```
 
-`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim, including priority, multi-hit, drain, recoil, crash damage, and recoil knockouts (`battleSim`), Levels and catches (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), the `/battle` command and wager buttons driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), turn narration and how it wraps, the animated frames, the attacker's own HP changing, decoding sprites as they play, colors that only appear late in an image, and rendering without stalling the bot (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
+`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim, including priority, multi-hit, drain, recoil, crash damage, and recoil knockouts (`battleSim`), Levels, catches, and Level resets (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles and playback (`runBattle`), Stakes (`wager`), the `/battle` command and wager buttons driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), turn narration and how it wraps, the animated frames, the attacker's own HP changing, decoding sprites as they play, colors that only appear late in an image, and rendering without stalling the bot (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
 
 ## Common gotchas
 

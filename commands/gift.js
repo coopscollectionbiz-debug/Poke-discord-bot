@@ -18,6 +18,7 @@ import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { resetLevelIfGone } from "../utils/training.js";
 
 // ==========================================================
 // 🧩 Command Definition
@@ -168,6 +169,7 @@ export default {
         if (!recipient.pokemon[key]) recipient.pokemon[key] = { normal: 0, shiny: 0 };
 
         sender.pokemon[key].normal = Math.max(0, (sender.pokemon[key].normal || 0) - amount);
+        resetLevelIfGone(sender, key, "normal");
         recipient.pokemon[key].normal = (recipient.pokemon[key].normal || 0) + amount;
 
         description = `🧬 ${interaction.user.username} sent **${amount}× ${targetPokemon.name}** to ${receiver.username}!`;

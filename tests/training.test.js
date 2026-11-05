@@ -6,7 +6,7 @@
 import { assertEqual, assertTrue, assertBetween, section, finish } from "./harness.js";
 import {
   trainingKey, expForLevel, levelForExp, catchBand, floorLevel, rollCatchLevel,
-  getTraining, addExp, grantCatch, carryLevel, levelsForUser,
+  getTraining, addExp, grantCatch, carryLevel, levelsForUser, resetLevelIfGone,
 } from "../utils/training.js";
 import { validateUserSchema } from "../utils/userSchema.js";
 
@@ -41,10 +41,6 @@ const dup = grantCatch(user, 4, "normal");
 assertEqual([user.pokemon[4].normal, dup.isNew, dup.expGained, user.training["4:normal"].exp], [2, false, 165, 1165], "duplicate adds half the next Level's EXP");
 atLevel(user, 4, "normal", 100);
 assertEqual(grantCatch(user, 4, "normal").expGained, 0, "duplicate at Lv 100 gives nothing");
-const kept = { pokemon: { 6: { normal: 0, shiny: 0 } } };
-atLevel(kept, 6, "normal", 40);
-grantCatch(kept, 6, "normal");
-assertTrue(getTraining(kept, 6, "normal").level >= 40, "a surviving record isn't overwritten by a re-catch");
 assertEqual(getTraining({}, 6, "shiny"), { exp: expForLevel(32), level: 32 }, "no record → bottom of the catch range");
 // Deliberate: owners from before Levels get the same roll a new player gets.
 const veteran = { pokemon: { 65: { normal: 5, shiny: 0 } } };
@@ -66,6 +62,32 @@ assertEqual(getTraining(evo, 2, "normal").level, 30, "Bulbasaur Lv 30 → Ivysau
 atLevel(evo, 4, "normal", 2);
 carryLevel(evo, { id: 4, variant: "normal" }, { id: 6, variant: "normal" });
 assertEqual(getTraining(evo, 6, "normal").level, floorLevel(6), "Charmander Lv 2 → never-owned Charizard gets the Stage 3 floor");
+
+section("resetLevelIfGone (gift, donate, evolve, shiny craft)");
+const gave = { pokemon: { 6: { normal: 0, shiny: 1 } } };
+atLevel(gave, 6, "normal", 40);
+atLevel(gave, 6, "shiny", 50);
+resetLevelIfGone(gave, 6, "normal");
+resetLevelIfGone(gave, 6, "shiny");
+assertEqual(getTraining(gave, 6, "normal").level, floorLevel(6), "no copies left → back to the bottom of the catch range");
+assertEqual(getTraining(gave, 6, "shiny").level, 50, "the Variant still owned keeps its Level");
+assertTrue(grantCatch(gave, 6, "normal", () => 0.5).isNew, "the next catch rolls a new Catch level, not duplicate EXP");
+const emptied = { pokemon: {} }; // the routes delete a species entry once both counts hit 0
+atLevel(emptied, 6, "normal", 40);
+resetLevelIfGone(emptied, 6, "normal");
+assertEqual(emptied.training["6:normal"], undefined, "a deleted species entry counts as none left");
+// The evolve route's order: remove the base, add the target, carry, then reset.
+const evolved = { pokemon: { 5: { normal: 1, shiny: 0 } } };
+atLevel(evolved, 4, "normal", 40);
+carryLevel(evolved, { id: 4, variant: "normal" }, { id: 5, variant: "normal" });
+resetLevelIfGone(evolved, 4, "normal");
+assertEqual([getTraining(evolved, 5, "normal").level, getTraining(evolved, 4, "normal").level], [40, floorLevel(4)], "evolving the last Charmander: Charmeleon gets Lv 40, Charmander resets");
+const regained = { pokemon: { 4: { normal: 1, shiny: 0 } } };
+atLevel(regained, 5, "normal", 60);
+resetLevelIfGone(regained, 5, "normal"); // gave away the last Lv 60 Charmeleon
+atLevel(regained, 4, "normal", 10);
+carryLevel(regained, { id: 4, variant: "normal" }, { id: 5, variant: "normal" });
+assertEqual(getTraining(regained, 5, "normal").level, floorLevel(5), "evolving into a Pokémon given away earlier ignores its old Level");
 
 section("levelsForUser");
 const owner = { pokemon: { 1: { normal: 1, shiny: 0 }, 6: { normal: 0, shiny: 1 } } };

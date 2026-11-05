@@ -3,8 +3,8 @@
 // Levels and EXP, stored once per species + Variant:
 //   user.training["6:normal"] = { exp }   (Level is derived from exp)
 // No record means the Pokémon sits at the bottom of its catch range, so
-// existing collections need no migration. Records survive the count
-// reaching 0, so a re-caught Pokémon comes back at its old Level.
+// existing collections need no migration. Losing the last copy deletes the
+// record (resetLevelIfGone), so the next catch rolls a new Catch level.
 // ==========================================================
 
 import fs from "fs";
@@ -68,7 +68,7 @@ export function addExp(user, id, variant, amount) {
 }
 
 // Every catch goes through here: +1 count, then either a Catch level roll
-// (first time) or duplicate EXP (record already exists, even at count 0).
+// (first time) or duplicate EXP (record already exists).
 // Gifts and admin grants don't use this — they add count only.
 export function grantCatch(user, speciesId, variant, rand = Math.random) {
   user.pokemon ??= {};
@@ -94,6 +94,13 @@ export function grantCatch(user, speciesId, variant, rand = Math.random) {
 export function carryLevel(user, from, to) {
   const exp = Math.max(getTraining(user, to.id, to.variant).exp, getTraining(user, from.id, from.variant).exp);
   setExp(user, to.id, to.variant, exp);
+}
+
+// Every path that removes copies (gift, donate, evolve, shiny craft) calls
+// this after its count change. Evolve and shiny craft call it after
+// carryLevel, which still needs the source's Level.
+export function resetLevelIfGone(user, id, variant) {
+  if ((user.pokemon?.[id]?.[variant] ?? 0) <= 0) delete user.training?.[trainingKey(id, variant)];
 }
 
 export function levelsForUser(user) {

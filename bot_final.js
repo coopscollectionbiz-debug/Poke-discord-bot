@@ -511,7 +511,7 @@ ensureWeeklyReset(user);
 // ==========================================================
 
 import { lockUser } from "./utils/userLocks.js";
-import { grantCatch, carryLevel, levelsForUser } from "./utils/training.js";
+import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -2488,6 +2488,7 @@ if (dustCost > 0) {
     user.pokemon[tId] ??= { normal: 0, shiny: 0 };
     user.pokemon[tId][chosenVariant] += 1;
     carryLevel(user, { id: bId, variant: chosenVariant }, { id: tId, variant: chosenVariant });
+    resetLevelIfGone(user, bId, chosenVariant);
 
     await enqueueSave(trainerData);
 
@@ -2624,6 +2625,7 @@ if (chosenVariant === "shiny") {
     if ((u.pokemon[pid].normal ?? 0) <= 0 && (u.pokemon[pid].shiny ?? 0) <= 0) {
       delete u.pokemon[pid];
     }
+    resetLevelIfGone(u, pid, chosenVariant);
 
     u.cc = (u.cc ?? 0) + finalValue;
 
@@ -2721,6 +2723,7 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
     user.pokemon[pid].normal -= 1;
     user.pokemon[pid].shiny += 1;
     carryLevel(user, { id: pid, variant: "normal" }, { id: pid, variant: "shiny" });
+    resetLevelIfGone(user, pid, "normal");
 
     if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) {
       delete user.pokemon[pid];

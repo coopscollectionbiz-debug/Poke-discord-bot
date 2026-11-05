@@ -30,9 +30,9 @@ Glossary: `CONTEXT.md`.
 ## Levels & EXP
 - Stored per species + Variant in a new sibling map (e.g. `training: { "6:normal": { level, exp } }`), not inside `pokemon[id]`. Count model untouched (~104 server refs / 22 files + 15 dashboard refs — grep; feat/bulk-donate +1313 lines on counts — `git diff --stat`).
 - No record ⇒ Level = bottom of the Catch-level range for its Stage/Tier. No migration.
-- Record survives count reaching 0.
+- Record is deleted when the count reaches 0 (gift, donation, evolution, shiny craft), so the next catch rolls a Catch level again. (Changed after the first live tests; the record used to survive.)
 - **Catch level**: range by Stage, with a high range for non-evolving legendary/mythic (27 legendaries + 20 mythics are stage 1 — node script over pokemonData.json). Wide, skewed low, rare high tail. Same roll from every source (chat, /daily, /recruit, /quest, shop balls, starter).
-- No record ⇒ Level = Catch level. Record exists (any count, including 0) ⇒ duplicate ⇒ +½ of the next Level's EXP (see Numbers); count still +1.
+- No record ⇒ Level = Catch level. Record exists ⇒ duplicate ⇒ +½ of the next Level's EXP (see Numbers); count still +1.
 - Gifts and admin grants: count only, never EXP, never a roll.
 - Stone evolution: target Level = max(target Level-or-floor, base Level); base keeps its Level. No auto-evolve. **Floor applies** (user's call): a Lv 2 Charmander → never-owned Charizard lands at the stage-3 floor. ⇒ Stage floors (esp. stage 3 + legendary) and stone prices are now the dominant leveling-balance knobs.
 - Shiny craft (normal→shiny): shiny Level = max(shiny Level-or-floor, normal Level) — same rule as evolve.

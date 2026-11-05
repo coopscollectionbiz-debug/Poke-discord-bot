@@ -165,6 +165,30 @@ test("multiSelectBlock explains each lock", () => {
   assertEqual(block(150), null, "a lone shiny is selectable");
 });
 
+test("More Than One Copy says 'then select it' only when Donate Duplicates unlocks the card", () => {
+  const { user } = serverDonate("duplicates", duplicateRows(makeCollection(), pokemonData));
+  const after = user.pokemon;
+
+  for (const pid of [19, 92]) {
+    const name = pokemonData[pid].name;
+    assertTrue(
+      block(pid)?.message.endsWith(", then select it."),
+      `${name} message says it can be selected (got: ${block(pid)?.message})`
+    );
+    assertEqual(block(pid, after), null, `${name} is selectable after Donate Duplicates`);
+  }
+
+  // Pidgey x4 · ✨x2 ends at 1 of each; Charmander x3 ends at its Team copy.
+  for (const [pid, lock] of [[16, "🔒 You Own Both Variants"], [4, "🔒 On Your Team"]]) {
+    const name = pokemonData[pid].name;
+    assertTrue(
+      !block(pid)?.message.includes("select it"),
+      `${name} message doesn't say it can be selected (got: ${block(pid)?.message})`
+    );
+    assertEqual(block(pid, after)?.title, lock, `${name} is still locked after Donate Duplicates`);
+  }
+});
+
 test("the Team lock matches the variant on the Team", () => {
   assertEqual(block(7), null, "Team has shiny Squirtle, player owns only a normal: selectable");
   assertEqual(

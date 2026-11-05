@@ -45,9 +45,13 @@ export function multiSelectBlock(pid, { pokemon, pokemonData, savedTeam }) {
 
   if (owned.normal > 1 || owned.shiny > 1) {
     const have = owned.normal > 1 ? `${owned.normal} ${name}` : `${owned.shiny} shiny ${name}`;
+    // Say "then select it" only if what Donate Duplicates leaves can be selected.
+    // A normal and a shiny, or a Team copy, stays locked.
+    const left = { [pid]: { normal: Math.min(owned.normal, 1), shiny: Math.min(owned.shiny, 1) } };
+    const unlocks = multiSelectBlock(pid, { pokemon: left, pokemonData, savedTeam }) === null;
     return {
       title: "🔒 More Than One Copy",
-      message: `You have ${have}. Use Donate Duplicates to bring it down to 1, then select it.`,
+      message: `You have ${have}. Use Donate Duplicates to bring it down to 1${unlocks ? ", then select it" : ""}.`,
     };
   }
   if (owned.normal === 1 && owned.shiny === 1) {

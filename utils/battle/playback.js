@@ -3,7 +3,8 @@
 // "Watch it happen": posts a battle image in the channel, edits it once
 // per turn (up to PLAYBACK.maxUpdates, spread evenly over longer battles),
 // then shows the result with the embed. Results are already saved before
-// this runs; a failed edit just stops the replay.
+// this runs; a failed edit just stops the replay. At most
+// PLAYBACK.maxAtOnce replays run at once; the rest wait in line.
 // ==========================================================
 
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -88,9 +89,42 @@ function header(outcome) {
   return `${intro}\n🔥 The crowd is behind <@${outcome.sides[outcome.surge.side].userId}>! Underdog surge!`;
 }
 
+// First come, first served: at most `limit` holders at once. acquire()
+// resolves to a release function; while waiting, onPlace(n) hears the
+// caller's place in line each time it changes (1 = next).
+export function createQueue(limit) {
+  let running = 0;
+  const waiting = [];
+  const release = () => {
+    running--;
+    const next = waiting.shift();
+    if (next) {
+      running++;
+      next.start();
+    }
+    waiting.forEach((w, i) => w.onPlace(i + 1));
+  };
+  return {
+    acquire(onPlace = () => {}) {
+      if (running < limit) {
+        running++;
+        return Promise.resolve(release);
+      }
+      return new Promise((resolve) => {
+        waiting.push({ onPlace, start: () => resolve(release) });
+        onPlace(waiting.length);
+      });
+    },
+  };
+}
+
+// Rendering is what costs CPU and memory, so only the replay waits; the
+// results were saved before playBattle runs.
+const replays = createQueue(PLAYBACK.maxAtOnce);
+
 // Sends a new channel message (a fresh message is what actually notifies
 // the @mentioned players; edits never do) and replays the battle on it.
-export async function playBattle(channel, outcome, names, { maxUpdates, delayMs } = PLAYBACK) {
+export async function playBattle(channel, outcome, names, { maxUpdates, delayMs, queue = replays } = PLAYBACK) {
   const sides = outcome.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = outcome.result;
   const sprites = new Map(); // each sprite GIF is read once per battle
@@ -106,33 +140,54 @@ export async function playBattle(channel, outcome, names, { maxUpdates, delayMs 
     return file;
   };
 
-  const leads = sides.map((s) => s.members[0]?.name).join(" and ");
-  const message = await channel.send({
-    content: header(outcome),
-    files: [await image({ hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] })],
-  });
+  // A battle that has to wait posts its header now, so the players are
+  // notified, and shows its place in line until a replay slot frees up.
+  let message = null;
+  let placeShown = Promise.resolve();
+  const showPlace = (n) => {
+    const content = `${header(outcome)}\n⏳ Wow, lots of battles right now! You're #${n} in line.`;
+    placeShown = placeShown
+      .then(async () => {
+        if (message) await message.edit({ content });
+        else message = await channel.send({ content });
+      })
+      .catch(() => {});
+  };
+  const release = await queue.acquire(showPlace);
   try {
-    let shown = 0;
-    for (const turn of pickFrameTurns(total, maxUpdates)) {
-      const badge = turn - shown > 1 ? `TURNS ${shown + 1}–${turn}` : `TURN ${turn}`;
-      const file = await paced(() => image({ hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }));
-      await message.edit({ files: [file] });
-      shown = turn;
+    await placeShown; // a late "in line" edit would otherwise cover the battle
+    const leads = sides.map((s) => s.members[0]?.name).join(" and ");
+    const start = {
+      content: header(outcome),
+      files: [await image({ hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] })],
+    };
+    if (message) await message.edit(start);
+    else message = await channel.send(start);
+    try {
+      let shown = 0;
+      for (const turn of pickFrameTurns(total, maxUpdates)) {
+        const badge = turn - shown > 1 ? `TURNS ${shown + 1}–${turn}` : `TURN ${turn}`;
+        const file = await paced(() => image({ hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }));
+        await message.edit({ files: [file] });
+        shown = turn;
+      }
+      // The result image shows each Pokémon's new Level (green when it grew).
+      const newLevel = new Map(Object.entries(outcome.exp).flatMap(([userId, es]) => es.map((e) => [`${userId}/${e.key}`, e.toLevel])));
+      const grownSides = outcome.sides.map((s, i) => ({
+        ...sides[i],
+        members: s.members.map((m) => {
+          const level = newLevel.get(`${s.userId}/${trainingKey(m.speciesId, m.variant)}`);
+          return level > m.level ? { ...m, level, levelUp: true } : m;
+        }),
+      }));
+      const file = await paced(() => image({
+        sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(outcome), screens: resultScreens(outcome, names),
+      }));
+      await message.edit({ files: [file], embeds: [buildResultEmbed(outcome, names)] });
+    } catch (err) {
+      console.warn("⚠️ battle playback stopped:", err?.message || err);
     }
-    // The result image shows each Pokémon's new Level (green when it grew).
-    const newLevel = new Map(Object.entries(outcome.exp).flatMap(([userId, es]) => es.map((e) => [`${userId}/${e.key}`, e.toLevel])));
-    const grownSides = outcome.sides.map((s, i) => ({
-      ...sides[i],
-      members: s.members.map((m) => {
-        const level = newLevel.get(`${s.userId}/${trainingKey(m.speciesId, m.variant)}`);
-        return level > m.level ? { ...m, level, levelUp: true } : m;
-      }),
-    }));
-    const file = await paced(() => image({
-      sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(outcome), screens: resultScreens(outcome, names),
-    }));
-    await message.edit({ files: [file], embeds: [buildResultEmbed(outcome, names)] });
-  } catch (err) {
-    console.warn("⚠️ battle playback stopped:", err?.message || err);
+  } finally {
+    release(); // even a failed replay frees its slot
   }
 }

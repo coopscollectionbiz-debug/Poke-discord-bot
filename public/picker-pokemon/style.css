@@ -454,6 +454,31 @@ body.multi-select-on #pokemonPanel {
   letter-spacing: 0.1px;
 }
 
+/* Level tags under the name: one per owned variant */
+.poke-levels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin: 2px 0 4px;
+}
+.poke-level {
+  background: #0e1120;
+  border: 1px solid #00ff9d55;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--brand);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.poke-level.shiny {
+  border-color: rgba(250, 204, 21, 0.45);
+  color: var(--gold);
+}
+
 /* Tier Display */
 .pokemon-tier {
   display: flex;

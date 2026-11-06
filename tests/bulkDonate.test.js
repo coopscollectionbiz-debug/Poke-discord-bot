@@ -353,6 +353,26 @@ test("returns one event per copy for the admin log", () => {
 });
 
 // ==========================================================
+// Levels
+// ==========================================================
+test("a donated-away Pokémon's Level resets; one with a copy left keeps its Level", () => {
+  const user = makeUser({
+    pokemon: {
+      41: { normal: 1, shiny: 0 },
+      16: { normal: 4, shiny: 0 },
+    },
+    displayedPokemon: [],
+    training: { "41:normal": { exp: 27000 }, "16:normal": { exp: 8000 } },
+  });
+
+  assertEqual(run(user, "multiselect", [{ pokeId: 41, variant: "normal", count: 1 }]).error, undefined, "multiselect: no error");
+  assertEqual(user.training["41:normal"], undefined, "Zubat's Level goes with its last copy");
+
+  assertEqual(run(user, "duplicates", [{ pokeId: 16, variant: "normal", count: 3 }]).error, undefined, "duplicates: no error");
+  assertEqual(user.training["16:normal"], { exp: 8000 }, "Pidgey keeps its Level with one copy left");
+});
+
+// ==========================================================
 // Summary
 // ==========================================================
 console.log("\n" + "=".repeat(60));

@@ -76,7 +76,7 @@ function typeNameFromId(t) {
   return "unknown";
 }
 
-function formatTypesLine(typesArr) {
+export function formatTypesLine(typesArr) {
   if (!Array.isArray(typesArr) || typesArr.length === 0) return "Unknown";
 
   return typesArr

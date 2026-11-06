@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { getTraining } from "../utils/training.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { spritePaths } from "../spriteconfig.js";
 import {
@@ -92,6 +93,7 @@ export default {
           name: p.name,
           tier: (p.tier || p.rarity || "common"),
           isShiny: slot.variant === "shiny",
+          level: getTraining(user, p.id, slot.variant === "shiny" ? "shiny" : "normal").level,
           spriteUrl:
             slot.variant === "shiny"
               ? `${shinyBase}${p.id}.gif`

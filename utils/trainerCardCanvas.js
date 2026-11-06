@@ -466,8 +466,8 @@ export async function renderTrainerCardCanvas({
     // id + variant
     ctx.fillStyle = "rgba(255,255,255,0.75)";
     ctx.font = `500 16px ${FONT_STACK}`;
-    const idLine = `#${p.id}${variant === "shiny" ? " • Shiny" : ""}`;
-    ctx.fillText(idLine, nameX, y + 112);
+    const idLine = `Lv ${p.level ?? "?"} · #${p.id}${variant === "shiny" ? " • Shiny" : ""}`;
+    ctx.fillText(ellipsize(ctx, idLine, nameMaxW), nameX, y + 112);
   }
 
   return canvas.toBuffer("image/png");

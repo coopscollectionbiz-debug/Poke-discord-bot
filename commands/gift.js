@@ -18,6 +18,7 @@ import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { resetLevelIfGone } from "../utils/training.js";
 
 // Moves `amount` normal copies of one Pokémon. Returns why it can't, or null once moved.
 // Separate from execute() so tests can run it without the save writing trainerData.json.
@@ -33,6 +34,7 @@ export function giftPokemon(sender, recipient, key, name, amount) {
   if (!recipient.pokemon[key]) recipient.pokemon[key] = { normal: 0, shiny: 0 };
 
   sender.pokemon[key].normal = normal - amount;
+  resetLevelIfGone(sender, key, "normal");
   recipient.pokemon[key].normal = (recipient.pokemon[key].normal || 0) + amount;
   return null;
 }

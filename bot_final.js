@@ -522,6 +522,8 @@ ensureWeeklyReset(user);
 // ==========================================================
 
 import { lockUser } from "./utils/userLocks.js";
+import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
+import { refundAllPending } from "./utils/battle/wager.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1170,11 +1172,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball");
       isShiny = rollForShiny(userObj.tp || 0);
 
-      userObj.pokemon ??= {};
-      userObj.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-
-      if (isShiny) userObj.pokemon[reward.id].shiny++;
-      else userObj.pokemon[reward.id].normal++;
+      grantCatch(userObj, reward.id, isShiny ? "shiny" : "normal");
 
       console.log(
         `🎁 Pokemon reward → ${isShiny ? "✨ shiny " : ""}${reward.name} (${reward.tier})`
@@ -1641,11 +1639,7 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
       // ----------------------------------------
       user.cc -= COST[source];
 
-      user.pokemon ??= {};
-      user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-
-      if (shiny) user.pokemon[reward.id].shiny++;
-      else user.pokemon[reward.id].normal++;
+      grantCatch(user, reward.id, shiny ? "shiny" : "normal");
 
       // ----------------------------------------
       // 6️⃣ SAVE TRAINER DATA
@@ -1955,11 +1949,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
 
       const shiny = rollForShiny(user.tp || 0);
 
-      user.pokemon ??= {};
-      user.pokemon[reward.id] ??= { normal: 0, shiny: 0 };
-
-      if (shiny) user.pokemon[reward.id].shiny++;
-      else user.pokemon[reward.id].normal++;
+      grantCatch(user, reward.id, shiny ? "shiny" : "normal");
 
       results.push({
         type: "pokemon",
@@ -2285,6 +2275,7 @@ app.get("/api/user-pokemon", (req, res) => {
     items,
     pokemon,
     currentTeam, // NEW FORMAT: [{ id: Number, variant: "normal" | "shiny" }]
+    levels: levelsForUser(u), // { "6:normal": 23 } for every owned variant
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
   });
 });
@@ -2507,6 +2498,8 @@ if (dustCost > 0) {
     // Add 1 target (same variant)
     user.pokemon[tId] ??= { normal: 0, shiny: 0 };
     user.pokemon[tId][chosenVariant] += 1;
+    carryLevel(user, { id: bId, variant: chosenVariant }, { id: tId, variant: chosenVariant });
+    resetLevelIfGone(user, bId, chosenVariant);
 
     await enqueueSave(trainerData);
 
@@ -2634,6 +2627,7 @@ if (chosenVariant === "shiny") {
     if ((u.pokemon[pid].normal ?? 0) <= 0 && (u.pokemon[pid].shiny ?? 0) <= 0) {
       delete u.pokemon[pid];
     }
+    resetLevelIfGone(u, pid, chosenVariant);
 
     u.cc = (u.cc ?? 0) + finalValue;
 
@@ -2786,6 +2780,8 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
 
     user.pokemon[pid].normal -= 1;
     user.pokemon[pid].shiny += 1;
+    carryLevel(user, { id: pid, variant: "normal" }, { id: pid, variant: "shiny" });
+    resetLevelIfGone(user, pid, "normal");
 
     if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) {
       delete user.pokemon[pid];
@@ -2819,6 +2815,26 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
  // ==========================================================
 // 🤖 BOT READY EVENT
 // ==========================================================
+// ==========================================================
+// ⚔️ Wager battles: refund Stakes left pending by a restart
+// Offer buttons die with the old process, so every pending Stake is
+// refunded once trainerData is loaded, and the offer message is edited.
+// ==========================================================
+async function refundPendingWagersOnStartup() {
+  const refunded = refundAllPending(trainerData);
+  if (!refunded.length) return;
+  await enqueueSave(trainerData, { force: true });
+  console.log(`⚔️ Refunded ${refunded.length} pending wager stake(s) after restart`);
+  for (const { channelId, messageId } of refunded) {
+    if (!channelId || !messageId) continue;
+    try {
+      const channel = await client.channels.fetch(channelId);
+      const message = await channel.messages.fetch(messageId);
+      await message.edit({ content: "Wager expired (bot restarted). Stake refunded.", embeds: [], components: [] });
+    } catch {}
+  }
+}
+
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
@@ -2883,6 +2899,7 @@ async function retryLoadLoop() {
   const ok2 = await attemptLoad();
 
   if (ok2) {
+    await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
     return;
@@ -2898,7 +2915,7 @@ setTimeout(retryLoadLoop, retryMs);
     return;
   }
 
-
+  await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });

@@ -2,13 +2,21 @@
 
 Status: repository guidance prepared; external activation and end-to-end validation are pending. Adding AGENTS.md does not enable a service. Do not treat this document as evidence that reviews are running.
 
+## Live setup progress
+
+- GitHub CLI authentication and repository admin/push access verified with network access. Sandboxed CLI calls without network access had reported an invalid token; that result alone was not conclusive.
+- Branch `codex/automatic-pr-review` published at `ed1dfefb07f412e257ad2c8943864871a7084ee8`; [configuration PR #39](https://github.com/coopscollectionbiz-debug/Poke-discord-bot/pull/39) targets master. No merge, deployment, or protection changes were performed.
+- The initial PR inspection returned no reviews or status checks and `REVIEW_REQUIRED`. A [manual Codex review request](https://github.com/coopscollectionbiz-debug/Poke-discord-bot/pull/39#issuecomment-6673245757) was posted to test connectivity. No acknowledgement was present at the first check.
+- Codex review settings still redirect to account sign-in in the available browser. Automatic-review activation is not verified. This documentation update is a subsequent-commit trigger test; its result must be observed separately.
+- Existing master rules still require one approval and dismiss stale approvals. No required status-check rule was returned. No bot approval or passing review check has been demonstrated.
+
 ## Audit (2026-11-05)
 
 Audited master at `9da64b198dc67e13a4ec506f97ec9f1afdf241ca`.
 
 - Node 22.x, ES modules, discord.js, Express. No tracked `.github` configuration, Actions workflows, CODEOWNERS, or AGENTS.md on master.
 - Effective master rules require a PR and one approval, dismiss stale reviews on push, prevent branch deletion and force pushes. Code-owner review and thread resolution are not required. No required status check was returned by the effective branch rules. Bypass actors were not audited.
-- The connected GitHub account reports admin/push access, but the connector rejects branch creation with `403 Resource not accessible by integration`. Account permission does not imply integration permission. Local `gh auth status` reports an invalid token. Authenticated Actions permission endpoints could not be audited; public requests returned 401. App installations, secrets, workflow token defaults, and billing remain unverified.
+- The connected GitHub account reports admin/push access, but the connector rejected branch creation with `403 Resource not accessible by integration`. Account permission does not imply integration permission. CLI authentication was subsequently verified with network access (see live progress above). Actions permission endpoints were not authenticated during the initial audit; public requests returned 401. Secrets, workflow token defaults, and billing remain unverified.
 - Existing tests include atomic-write and save-queue tests. The save-queue test imports `getQueueLength`, absent from master's save-queue exports. No application tests were executed for this documentation-only configuration.
 
 ## Selected integration

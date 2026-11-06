@@ -96,6 +96,12 @@
 
       <p id="dustStatus" class="timer-status" style="display:none;"></p>
 
+      <!-- Bulk donate (Donate mode only; JS shows/hides) -->
+      <div id="bulkDonateRow" style="display:none;">
+        <button id="donateDuplicatesBtn" class="mode-btn" type="button">🧹 Donate Duplicates (0)</button>
+        <button id="multiSelectToggle" class="mode-btn" type="button" aria-pressed="false">☑️ Multi-select</button>
+      </div>
+
       <div id="controls">
         <input
           type="text"
@@ -167,6 +173,13 @@
           Opened via Discord command · Session valid for 10 minutes
         </p>
       </footer>
+
+      <!-- Multi-select action bar (pinned to the bottom while Multi-select is on) -->
+      <div id="multiSelectBar" style="display:none;">
+        <span id="multiSelectSummary">0 selected</span>
+        <button id="multiSelectClear" type="button">Clear</button>
+        <button id="multiSelectDonate" type="button" disabled>Donate</button>
+      </div>
     </div>
 
     <!-- ===========================================================

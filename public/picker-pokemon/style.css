@@ -233,6 +233,134 @@ a:hover { text-decoration: underline; }
 }
 
 /* -----------------------------------------------------------
+   Bulk Donate (Donate mode): button row, multi-select, action bar
+----------------------------------------------------------- */
+#bulkDonateRow {
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 0 1rem;
+}
+
+#bulkDonateRow .mode-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pokemon-card.multi-selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.45);
+}
+
+.multi-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--bg);
+  font-weight: 900;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+#multiSelectBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000; /* above the grid + sticky HUD, below modal overlays (9999) */
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--card);
+  border-top: 2px solid var(--gold);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.5);
+}
+
+#multiSelectSummary {
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+#multiSelectBar button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#multiSelectClear {
+  background: var(--border);
+  color: #fff;
+}
+
+#multiSelectDonate {
+  background: var(--gold);
+  color: var(--bg);
+}
+
+#multiSelectDonate:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Keep the last row of cards + footer reachable above the bar.
+   On the panel, not body: body is height:100%, so its padding
+   doesn't extend the scrollable page. The bar wraps to ~66px on phones. */
+body.multi-select-on #pokemonPanel {
+  padding-bottom: 96px;
+}
+
+/* Confirmation modal tile grid */
+.bulk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  overflow-y: auto;
+  min-height: 0; /* lets the grid shrink + scroll inside the flex modal */
+  padding: 2px;
+}
+
+.bulk-tile {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 4px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.bulk-tile.shiny {
+  border-color: var(--gold);
+}
+
+.bulk-tile img {
+  width: 56px;
+  height: 56px;
+  image-rendering: pixelated;
+}
+
+.bulk-tile-name {
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bulk-tile-count {
+  color: var(--gold);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+/* -----------------------------------------------------------
    Save Button + Team Counter
 ----------------------------------------------------------- */
 .save-btn {

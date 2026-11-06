@@ -5,7 +5,7 @@
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { buildTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
-import { buildResultEmbed, playBattle, resultScreens } from "../utils/battle/playback.js";
+import { buildResultEmbed, createQueue, playBattle, resultScreens } from "../utils/battle/playback.js";
 import { pickFrameTurns } from "../utils/battle/render.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
@@ -157,6 +157,62 @@ section("Playback");
   const failing = { send: async () => ({ edit: async () => { throw new Error("Unknown Message"); } }) };
   await playBattle(failing, out, { A: "Ash", B: "Gary" }, { maxUpdates: 12, delayMs: 0 });
   assertTrue(true, "a failed edit stops playback without throwing");
+}
+
+section("Replay line");
+{
+  const tick = () => new Promise((r) => setImmediate(r));
+  const q = createQueue(2);
+  const order = [];
+  const places = { c: [], d: [] };
+  const a = await q.acquire();
+  const b = await q.acquire();
+  const c = q.acquire((n) => places.c.push(n)).then((release) => { order.push("c"); return release; });
+  const d = q.acquire((n) => places.d.push(n)).then((release) => { order.push("d"); return release; });
+  await tick();
+  assertEqual(order, [], "only 2 replay at once; the rest wait");
+  assertEqual([places.c, places.d], [[1], [2]], "each newcomer hears its place in line");
+  a();
+  await tick();
+  assertEqual(order, ["c"], "a freed slot goes to the first in line");
+  assertEqual(places.d, [2, 1], "everyone behind moves up one");
+  b();
+  (await c)();
+  (await d)();
+  await tick();
+  assertEqual(order, ["c", "d"], "first come, first served");
+  let free = false;
+  q.acquire().then(() => { free = true; });
+  await tick();
+  assertTrue(free, "every slot comes back once its replay ends");
+}
+{
+  const tick = () => new Promise((r) => setImmediate(r));
+  const out = open(world(), 4);
+  const q = createQueue(1);
+  const hold = await q.acquire();
+  const sent = [];
+  const edits = [];
+  const channel = { send: async (opts) => { sent.push(opts); return { edit: async (o) => { edits.push(o); } }; } };
+  const playing = playBattle(channel, out, { A: "Ash", B: "Gary" }, { maxUpdates: 12, delayMs: 0, queue: q });
+  await tick();
+  assertEqual(sent.length, 1, "a waiting battle still posts right away (so mentions notify)");
+  assertTrue(sent[0].content.includes("<@A> challenged <@B>!") && sent[0].content.includes("You're #1 in line"),
+    "the waiting message shows both players and their place");
+  assertTrue(!sent[0].files?.length, "no image is rendered while waiting");
+  hold();
+  await playing;
+  assertEqual(sent.length, 1, "the battle replays on the waiting message, not a new one");
+  assertTrue(edits[0].files.length === 1 && !edits[0].content.includes("in line"), "the start frame replaces the place in line");
+  assertEqual(edits.length, pickFrameTurns(out.result.turns, 12).length + 2, "start frame, one edit per turn, then the result");
+
+  const broken = { send: async () => { throw new Error("Missing Permissions"); } };
+  const failed = await playBattle(broken, out, { A: "Ash", B: "Gary" }, { maxUpdates: 12, delayMs: 0, queue: q }).catch(() => "threw");
+  assertEqual(failed, "threw", "a battle that can't be posted still tells the caller");
+  let free = false;
+  q.acquire().then(() => { free = true; });
+  await tick();
+  assertTrue(free, "a failed replay frees its slot");
 }
 
 finish();

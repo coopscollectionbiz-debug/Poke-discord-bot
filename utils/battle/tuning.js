@@ -42,4 +42,7 @@ export const ELO = { start: 1000, k: 32 };
 export const CAPS = { perDay: 10, perOpponent: 3 };
 export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000 };
 // Playback: one image per turn, 2 s apart; longer battles are spread over 12.
-export const PLAYBACK = { maxUpdates: 12, delayMs: 2000 };
+// At most maxAtOnce replays render at once; the rest wait in line. In local
+// tests turns kept the 2 s pace with up to 5 at once and slipped at 6; a Fly
+// shared CPU is about half as fast, so 2 keeps a margin.
+export const PLAYBACK = { maxUpdates: 12, delayMs: 2000, maxAtOnce: 2 };

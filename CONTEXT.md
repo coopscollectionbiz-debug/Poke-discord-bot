@@ -44,7 +44,7 @@ _Avoid_: sell, release
 ## Example dialogue
 
 > **Dev:** If someone has Pidgey x4 and ✨x2, how many duplicates do they have?
-> **Domain expert:** Four — three normal duplicates and one shiny duplicate. They keep one of each variant.
+> **Domain expert:** Four. Three normal duplicates and one shiny duplicate. They keep one of each variant.
 > **Dev:** And a single normal Pikachu plus a single shiny Pikachu?
 > **Domain expert:** No duplicates. Each variant has only one copy.
 > **Dev:** For Pokédex completion, does that Pikachu pair count as 2 toward Kanto?

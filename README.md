@@ -6,6 +6,8 @@ Discord bot for a Pokémon collector game. Built on `discord.js` v14 with an Exp
 
 A Discord-native Pokémon collector game. Players earn points and ranks for chatting in the channels, and may randomly catch a Pokémon along the way. A companion web dashboard lets them manage their collection and spend points on catching pokemon or updating their trainer.
 
+In the dashboard's Donate mode, **Donate Duplicates** donates every copy past the first of each Pokémon and variant, and **Multi-select** donates several single copies at once. Both show a confirmation first and donate all or nothing. Domain terms such as duplicate, variant, and Team are defined in [`CONTEXT.md`](./CONTEXT.md).
+
 ## Setup
 
 ### Prerequisites
@@ -83,10 +85,14 @@ In your test server, run `/dashboard` — the bot should reply with an ephemeral
 ## Tests
 
 ```bash
-npm test                  # runs run-tests.js
+npm test                  # runs run-tests.js (every tests/*.test.js)
 npm run test:validation   # schema validation
 npm run test:migration    # schema migration
 ```
+
+`tests/bulkDonate.test.js` covers the bulk donation rules in `utils/bulkDonate.js`: trimming duplicates per variant, which Pokémon Multi-select accepts, rejecting a list that changed after the player saw it, and CC and Shiny Dust rewards against the weekly cap.
+
+`tests/bulkRules.test.js` covers `public/picker-pokemon/bulkRules.js`, which decides what the dashboard offers: the Donate Duplicates list and the reason each locked card can't be multi-selected. It also runs those lists through `utils/bulkDonate.js` to check that the server accepts every row the dashboard offers and refuses every locked card.
 
 ## Common gotchas
 

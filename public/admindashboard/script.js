@@ -302,7 +302,7 @@
       case "roll":
         return `${d.ball || "?"} → ${d.pokemonName || "?"} (${d.tier || "?"})${d.shiny ? " ✨" : ""}`;
       case "donate":
-        return `${d.pokemonName || "?"} (${d.tier || "?"}, ${d.variant || "normal"}) → +${fmtNumber(d.ccGained)} CC${d.dustGained ? `, +${d.dustGained} dust` : ""}`;
+        return `${d.pokemonName || "?"} (${d.tier || "?"}, ${d.variant || "normal"}) → +${fmtNumber(d.ccGained)} CC${d.dustGained ? `, +${d.dustGained} dust` : ""}${d.source ? ` [${d.source}]` : ""}`;
       case "evolve":
         return `${d.fromName || "?"} → ${d.toName || "?"} (${d.variant || "normal"}, ${d.stoneCost}💎${d.dustCost ? ` +${d.dustCost} dust` : ""})`;
       case "convert":

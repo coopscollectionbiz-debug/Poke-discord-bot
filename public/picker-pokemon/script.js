@@ -1434,10 +1434,18 @@ function openEvolutionModal(baseId) {
 
   let selectedTarget = null;
 
+  function selectTarget(card, targetId) {
+    grid.querySelectorAll(".evo-card").forEach((c) => (c.style.borderColor = "var(--border)"));
+    card.style.borderColor = "var(--brand)";
+    selectedTarget = targetId;
+    confirmBtn.disabled = false;
+  }
+
   function renderEvoTargets() {
     grid.innerHTML = "";
     selectedTarget = null;
     confirmBtn.disabled = true;
+    const choices = [];
 
     const stones = userData.items?.evolution_stone ?? 0;
     const dust = userData.items?.shiny_dust ?? 0;
@@ -1504,16 +1512,15 @@ function openEvolutionModal(baseId) {
       `;
 
       if (allowed) {
-        card.addEventListener("click", () => {
-          grid.querySelectorAll(".evo-card").forEach((c) => (c.style.borderColor = "var(--border)"));
-          card.style.borderColor = "var(--brand)";
-          selectedTarget = targetId;
-          confirmBtn.disabled = false;
-        });
+        card.addEventListener("click", () => selectTarget(card, targetId));
+        choices.push([card, targetId]);
       }
 
       grid.appendChild(card);
     });
+
+    // Only one evolution, and it's affordable: select it so Evolve is one tap.
+    if (grid.children.length === 1 && choices.length === 1) selectTarget(...choices[0]);
   }
 
   function setVariantAndRender(v) {

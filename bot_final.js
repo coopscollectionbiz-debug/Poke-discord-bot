@@ -34,6 +34,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
+import { bulkDonate } from "./utils/bulkDonate.js";
 
 // Local saver — writes trainerData.json to disk & marks dirty
 import {
@@ -108,6 +109,16 @@ function isDisplayedVariant(user, pokeId, variant) {
 function tierKey(t) {
   return String(t || "common").toLowerCase();
 }
+
+// CC paid per donated copy (shiny pays 5×). Shared by single + bulk donate.
+const DONATION_CC_BY_TIER = {
+  common: 250,
+  uncommon: 500,
+  rare: 1000,
+  epic: 2500,
+  legendary: 5000,
+  mythic: 10000,
+};
 
 const DUST_REWARD_BY_TIER = {
   common: 4,
@@ -2553,16 +2564,7 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
     const p = pokemonData[pid];
     if (!p) return res.status(400).json({ error: "Invalid Pokémon ID" });
 
-    const ccMap = {
-      common: 250,
-      uncommon: 500,
-      rare: 1000,
-      epic: 2500,
-      legendary: 5000,
-      mythic: 10000,
-    };
-
-    const baseValue = ccMap[String(p.tier || "common").toLowerCase()] ?? 0;
+    const baseValue = DONATION_CC_BY_TIER[String(p.tier || "common").toLowerCase()] ?? 0;
 
     const chosenVariant =
       typeof variant === "string"
@@ -2662,6 +2664,62 @@ return res.json({
   nonShinyDustWeeklyRemaining,
 });
 
+  });
+});
+
+// ==========================================================
+// 💝 Bulk Donate — Donate Duplicates + Multi-select
+// Rules + rewards live in utils/bulkDonate.js (all-or-nothing).
+// NOTE: unlike the single donate above, "duplicates" mode may donate
+// extras of a Team variant. It always keeps 1 copy, so the Team slot
+// stays valid. Multi-select still refuses Team members.
+// ==========================================================
+app.post("/api/pokemon/donate-bulk", express.json({ limit: "100kb" }), async (req, res) => {
+  const { id, mode, items } = req.body;
+
+  if (!id) return res.status(400).json({ error: "Missing id" });
+
+  if (!requireDashboardSession(req, id)) {
+    return res.status(403).json({ error: "Invalid or expired session" });
+  }
+
+  await lockUser(id, async () => {
+    const user = trainerData[id];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    trainerData[id] = normalizeUserSchema(id, user);
+    const u = trainerData[id];
+    ensureWeeklyReset(u); // dust cap must reflect the current week before rolling
+
+    const result = bulkDonate({
+      user: u,
+      mode,
+      items,
+      pokemonData: await getPokemonDataCached(),
+      economy: {
+        ccByTier: DONATION_CC_BY_TIER,
+        shinyDustByTier: DUST_REWARD_BY_TIER,
+        normalDustChanceByTier: NON_SHINY_DUST_CHANCE_BY_TIER,
+        normalDustWeeklyCap: NON_SHINY_DUST_WEEKLY_CAP,
+        rollDust: rollWeightedDust,
+      },
+      isOnTeam: (pid, variant) => isDisplayedVariant(u, pid, variant),
+    });
+
+    if (result.error) return res.status(400).json({ error: result.error });
+
+    await enqueueSave(trainerData);
+
+    // One event per copy, same shape as single donate, so admin analytics
+    // count bulk donations without special-casing. logEvent never throws.
+    for (const ev of result.events) logEvent("donate", id, { ...ev, source: mode });
+
+    return res.json({
+      success: true,
+      donatedCopies: result.donatedCopies,
+      gainedCC: result.gainedCC,
+      shinyDustGained: result.shinyDustGained,
+    });
   });
 });
 

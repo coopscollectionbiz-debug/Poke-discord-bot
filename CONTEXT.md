@@ -15,8 +15,16 @@ A species' position in its evolution line — 1 for a base form, 2 and 3 for eac
 _Avoid_: evolution tier, evolution level, form
 
 **Variant**:
-Whether a Pokémon is normal or shiny; each species + **Variant** pair is collected, leveled, and placed on a **Team** separately.
-_Avoid_: shiny status, version
+Whether a Pokémon is normal or shiny. Each species + **Variant** pair is counted, collected, leveled, and placed on a **Team** separately.
+_Avoid_: form, version, shiny status
+
+**Copy**:
+One owned unit of a Pokémon in a specific variant.
+_Avoid_: instance, unit
+
+**Duplicate**:
+Any copy beyond the first of the same Pokémon *and* variant. Pidgey x4 · ✨x2 has 3 normal duplicates and 1 shiny duplicate. One normal plus one shiny of the same Pokémon is not a duplicate.
+_Avoid_: extra, spare
 
 **Level**:
 A player's strength with one species + **Variant**, from 1 to 100, shared by every copy of it they own.
@@ -37,8 +45,14 @@ A player's title on the TP ladder (Novice Trainer → Legend), earned by chattin
 _Avoid_: using "rank" for battle standing — that's **Battle rating**
 
 **Team**:
-The up-to-6 Pokémon a player shows on their trainer card; the same **Team** fights in their **Battles**, in slot order.
+The up-to-6 Pokémon a player shows on their trainer card, one slot per Pokémon, each slot a specific **Variant**; the same **Team** fights in their **Battles**, in slot order.
 _Avoid_: party, lineup, battle team, displayed Pokémon
+
+### Economy
+
+**Donation**:
+Permanently giving up a copy in exchange for CC, and sometimes Shiny Dust.
+_Avoid_: sell, release
 
 ### Battles
 
@@ -90,7 +104,16 @@ _Avoid_: weaker player, loser
 A rare, announced boost to the **Underdog's** whole **Team** for one **Battle**, likelier the wider the **Power rating** gap.
 _Avoid_: comeback mechanic, rubber-banding, luck boost
 
+## Flagged ambiguities
+
+- "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.
+
 ## Example dialogue
+
+> **Dev:** If someone has Pidgey x4 and ✨x2, how many duplicates do they have?
+> **Domain expert:** Four. Three normal duplicates and one shiny duplicate. They keep one of each variant.
+> **Dev:** And a single normal Pikachu plus a single shiny Pikachu?
+> **Domain expert:** No duplicates. Each variant has only one copy.
 
 > **Dev:** If I challenge someone way weaker than me, do they lose anything?
 > **Domain expert:** In an **Open battle** the **Defender** never loses CC or Pokémon — only their **Battle rating** moves, and Elo barely moves it when a much stronger **Team** wins. Your EXP shrinks when you knock out Pokémon far below your **Level**, so picking on weak teams doesn't pay.

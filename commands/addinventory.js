@@ -11,6 +11,14 @@ import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.j
 import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 
+// Shiny Dust lives with the other items, where the dashboard and shiny
+// evolutions read it.
+function addShinyDust(user, quantity) {
+  user.items ??= {};
+  const current = Number.isFinite(user.items.shiny_dust) ? user.items.shiny_dust : 0;
+  user.items.shiny_dust = current + quantity;
+}
+
 function normalizeKey(input) {
   return String(input || "")
     .trim()
@@ -157,10 +165,9 @@ export default {
 
           const key = aliasMap[rawLower] || normalizeKey(raw);
 
-          // ✅ Special-case: Shiny Dust as a balance on the user
+          // ✅ Special-case: Shiny Dust isn't a shop item
           if (key === "shiny_dust") {
-            user.shinyDust ??= 0;
-            user.shinyDust += quantity;
+            addShinyDust(user, quantity);
 
             confirmationText = `**${quantity}× ✨ Shiny Dust**`;
           } else {
@@ -173,10 +180,9 @@ export default {
 
             const item = globalThis.SHOP_ITEMS[key];
 
-            // If your SHOP_ITEMS defines shiny dust as an item id, still route to shinyDust
+            // If your SHOP_ITEMS defines shiny dust as an item id, still route it the same way
             if (item?.id === "shiny_dust") {
-              user.shinyDust ??= 0;
-              user.shinyDust += quantity;
+              addShinyDust(user, quantity);
               confirmationText = `**${quantity}× ✨ ${item.name || "Shiny Dust"}**`;
             } else {
               user.items ??= {};

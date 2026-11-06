@@ -20,6 +20,25 @@ import { atomicSave } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { resetLevelIfGone } from "../utils/training.js";
 
+// Moves `amount` normal copies of one Pokémon. Returns why it can't, or null once moved.
+// Separate from execute() so tests can run it without the save writing trainerData.json.
+export function giftPokemon(sender, recipient, key, name, amount) {
+  const normal = sender.pokemon[key]?.normal || 0;
+  const shiny = sender.pokemon[key]?.shiny || 0;
+
+  // Only normals move, so only normals can cover the amount. Counting shinies
+  // here let 1 normal + 3 shiny send 3 normals, creating 2 from nothing.
+  if (normal < amount) return `❌ You don't have ${amount}× normal ${name} to gift. Shiny Pokémon can't be gifted.`;
+  if (normal + shiny - amount === 0) return `⚠️ You can't gift your last ${name}.`;
+
+  if (!recipient.pokemon[key]) recipient.pokemon[key] = { normal: 0, shiny: 0 };
+
+  sender.pokemon[key].normal = normal - amount;
+  resetLevelIfGone(sender, key, "normal");
+  recipient.pokemon[key].normal = (recipient.pokemon[key].normal || 0) + amount;
+  return null;
+}
+
 // ==========================================================
 // 🧩 Command Definition
 // ==========================================================
@@ -149,28 +168,9 @@ export default {
             flags: MessageFlags.Ephemeral,
           });
 
-        const key = targetPokemon.id.toString();
-        const senderRecord = sender.pokemon[key];
-        const senderCount = senderRecord ? (senderRecord.normal || 0) + (senderRecord.shiny || 0) : 0;
-
-        if (senderCount < amount)
-          return safeReply(interaction, {
-            content: `❌ You don't own ${amount}× ${targetPokemon.name}.`,
-            flags: MessageFlags.Ephemeral,
-          });
-
-        if (senderCount - amount === 0)
-          return safeReply(interaction, {
-            content: `⚠️ You can't gift your last ${targetPokemon.name}.`,
-            flags: MessageFlags.Ephemeral,
-          });
-
-        if (!sender.pokemon[key]) sender.pokemon[key] = { normal: 0, shiny: 0 };
-        if (!recipient.pokemon[key]) recipient.pokemon[key] = { normal: 0, shiny: 0 };
-
-        sender.pokemon[key].normal = Math.max(0, (sender.pokemon[key].normal || 0) - amount);
-        resetLevelIfGone(sender, key, "normal");
-        recipient.pokemon[key].normal = (recipient.pokemon[key].normal || 0) + amount;
+        const refusal = giftPokemon(sender, recipient, targetPokemon.id.toString(), targetPokemon.name, amount);
+        if (refusal)
+          return safeReply(interaction, { content: refusal, flags: MessageFlags.Ephemeral });
 
         description = `🧬 ${interaction.user.username} sent **${amount}× ${targetPokemon.name}** to ${receiver.username}!`;
       }

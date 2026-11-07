@@ -24,6 +24,7 @@ let currentMode = "team"; // "team" | "evolve" | "donate" | "convert"
 let selectedTeam = []; // [{id:Number, variant:"normal"|"shiny"}]
 let showOwnedOnly = false;
 let showUnownedOnly = false;
+let regions = []; // [{ name, ids }], built once from pokemonData in init()
 // Multi-select (Donate mode). In-memory only; a reload resets it, and the
 // pageshow handler below resets it on a back/forward cache restore.
 let multiSelectOn = false;
@@ -31,6 +32,7 @@ const multiSelected = new Set(); // Pokémon IDs
 
 import { rarityEmojis } from "/public/spriteconfig.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
+import { getRegions, countOwned } from "/public/picker-pokemon/regions.js";
 import * as bulkRules from "/public/picker-pokemon/bulkRules.js";
 
 // ===========================================================
@@ -553,6 +555,7 @@ function renderPokemonGrid() {
   const typeFilter = (typeEl?.value || "").toLowerCase();
 
   const ids = Object.keys(pokemonData).map(Number).sort((a, b) => a - b);
+  const cardsByRegion = {};
   let shown = 0;
 
   for (const id of ids) {
@@ -704,8 +707,19 @@ function renderPokemonGrid() {
       onPokemonClick(id);
     });
 
-    container.appendChild(card);
+    (cardsByRegion[p.region] ??= []).push(card);
     shown++;
+  }
+
+  // Only regions with a visible card get a header. The count is full-region
+  // Pokédex completion, so it ignores the mode and filters above.
+  for (const region of regions) {
+    const cards = cardsByRegion[region.name];
+    if (!cards) continue;
+    const header = document.createElement("h2");
+    header.className = "region-header";
+    header.innerHTML = `${region.name} <span class="region-count">${countOwned(region, userData.pokemon)}/${region.ids.length}<span class="sr-only"> owned</span></span>`;
+    container.append(header, ...cards);
   }
 
   if (shown === 0) {
@@ -852,6 +866,7 @@ async function init() {
     const pokeRes = await fetch("/public/pokemonData.json", { credentials: "same-origin" });
     if (!pokeRes.ok) throw new Error("Pokemon data failed");
     pokemonData = await pokeRes.json();
+    regions = getRegions(pokemonData);
 
     // Load user data (cookie session; backend will 403 if invalid)
     try {

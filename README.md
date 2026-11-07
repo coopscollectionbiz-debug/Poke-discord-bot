@@ -4,7 +4,7 @@ Discord bot for a Pokémon collector game. Built on `discord.js` v14 with an Exp
 
 ## About
 
-A Discord-native Pokémon collector game. Players earn points and ranks for chatting in the channels, and may randomly catch a Pokémon along the way. A companion web dashboard lets them manage their collection and spend points on catching pokemon or updating their trainer.
+A Discord-native Pokémon collector game. Players earn points and ranks for chatting in the channels, and may randomly catch a Pokémon along the way. A companion web dashboard lets them manage their collection and spend points on catching pokemon or updating their trainer. The dashboard's Pokémon page groups the list by region in all four modes: Change Team, Evolve, Donate, and Convert. Each region header shows the player's Pokédex completion for that region, such as "Kanto 75/151". The count always covers the whole region and ignores the page's filters. `CONTEXT.md` defines how Pokédex completion is counted.
 
 In the dashboard's Donate mode, **Donate Duplicates** donates every copy past the first of each Pokémon and variant, and **Multi-select** donates several single copies at once. Both show a confirmation first and donate all or nothing. Domain terms such as duplicate, variant, and Team are defined in [`CONTEXT.md`](./CONTEXT.md).
 
@@ -89,6 +89,16 @@ npm test                  # runs run-tests.js (every tests/*.test.js)
 npm run test:validation   # schema validation
 npm run test:migration    # schema migration
 ```
+
+`npm test` runs every `tests/*.test.js` file:
+
+- `atomicWrite.test.js`: atomic file writes
+- `saveQueue.test.js`: the save queue
+- `regions.test.js`: region grouping and per-region Pokédex completion counts
+
+`tests/addInventory.test.js` checks that `/addinventory` adds Shiny Dust to `items.shiny_dust`, where the dashboard and shiny evolutions read it.
+
+`tests/gift.test.js` covers gifting Pokémon: only normal copies move, the sender's last copy can't be gifted, and no gift creates or destroys copies.
 
 `tests/bulkDonate.test.js` covers the bulk donation rules in `utils/bulkDonate.js`: trimming duplicates per variant, which Pokémon Multi-select accepts, rejecting a list that changed after the player saw it, and CC and Shiny Dust rewards against the weekly cap.
 

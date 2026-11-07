@@ -399,6 +399,34 @@ body.multi-select-on #pokemonPanel {
   margin: 0 auto 2rem;
 }
 
+/* Region headers sit inside the grid and span a full row; body is centered, so align left explicitly */
+.region-header {
+  grid-column: 1 / -1;
+  text-align: left;
+  margin: 0.5rem 0 0;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+.region-count {
+  margin-left: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #8b949e;
+}
+
+/* Read by screen readers, hidden on screen: "Kanto 75/151 owned" */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .pokemon-card {
   background: var(--card);
   border: 2px solid var(--border);

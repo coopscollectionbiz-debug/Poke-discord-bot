@@ -48,6 +48,14 @@ _Avoid_: using "rank" for battle standing — that's **Battle rating**
 The up-to-6 Pokémon a player shows on their trainer card, one slot per Pokémon, each slot a specific **Variant**; the same **Team** fights in their **Battles**, in slot order.
 _Avoid_: party, lineup, battle team, displayed Pokémon
 
+**Region**:
+A named set of Pokémon that share a home region: Kanto, Johto, Hoenn, Sinnoh, or Unova. The game's Pokémon data puts every Pokémon in exactly one region.
+_Avoid_: region group, generation, gen
+
+**Pokédex completion**:
+The number of distinct Pokémon a player owns at least one copy of, out of all the Pokémon in a region. It counts what the player owns now. It drops when a player gives up their last copy of a Pokémon, because the game keeps no record of past catches.
+_Avoid_: dex count, seen/caught
+
 ### Economy
 
 **Donation**:
@@ -107,6 +115,7 @@ _Avoid_: comeback mechanic, rubber-banding, luck boost
 ## Flagged ambiguities
 
 - "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.
+- "Pokédex completion" is counted per Pokémon, not per variant. A player holding one normal and one shiny Pikachu has 1 toward Kanto, not 2.
 
 ## Example dialogue
 

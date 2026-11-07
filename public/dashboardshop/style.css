@@ -260,6 +260,10 @@ main {
   text-align: center;
   max-width: 420px;
   width: 90%;
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   color: white;
   box-shadow: 0 0 20px #00ff9d60;
 }

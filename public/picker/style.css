@@ -269,6 +269,10 @@ p {
   padding: 2rem;
   width: 90%;
   max-width: 420px;
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   text-align: center;
   box-shadow: 0 0 20px #00ff9d60;
 }

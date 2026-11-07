@@ -1036,11 +1036,7 @@ window.addEventListener("pageshow", (e) => {
 // ===========================================================
 function createOverlay() {
   const overlay = document.createElement("div");
-  overlay.style.cssText = `
-    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 9999;
-  `;
+  overlay.className = "overlay";
   document.body.appendChild(overlay);
   return overlay;
 }
@@ -1430,7 +1426,7 @@ function openEvolutionModal(baseId) {
       <span style="font-size: 2rem;">➡️</span>
     </div>
 
-    <div class="evo-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin: 1rem 0;"></div>
+    <div class="evo-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); gap: 1rem; margin: 1rem 0;"></div>
 
     <div style="display: flex; gap: 1rem; justify-content: center;">
       <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>

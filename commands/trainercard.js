@@ -26,6 +26,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { rollForShiny } from "../shinyOdds.js";
+import { grantCatch, getTraining } from "../utils/training.js";
 import { spritePaths, rarityEmojis } from "../spriteconfig.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";
@@ -260,10 +261,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
 
         const shiny = rollForShiny(user.tp || 0);
 
-        user.pokemon ??= {};
-        user.pokemon[p.id] ??= { normal: 0, shiny: 0 };
-        if (shiny) user.pokemon[p.id].shiny += 1;
-        else user.pokemon[p.id].normal += 1;
+        grantCatch(user, p.id, shiny ? "shiny" : "normal");
 
         // ✅ Write CANONICAL variant-safe team immediately
         user.displayedPokemon = [{ id: p.id, variant: shiny ? "shiny" : "normal" }];
@@ -494,7 +492,8 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
                 const shinyMark = normVariant(slot.variant) === "shiny" ? "✨ " : "";
                 const tier = String(p.tier || p.rarity || "common").toLowerCase();
                 const emoji = rarityEmojis[tier] || "⚬";
-                return `${shinyMark}**${p.name}** ${emoji}`;
+                const level = getTraining(user, p.id, normVariant(slot.variant)).level;
+                return `${shinyMark}**${p.name}** Lv ${level} ${emoji}`;
               })
               .join(" | ")
           : "—";

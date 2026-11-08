@@ -12,7 +12,8 @@
     "test:helper": "node test-trainer-data-helper.js",
     "test:cleanup": "node test-cleanup-trainer-data.js",
     "repair": "node repairTrainerData.js",
-    "cleanup": "node cleanupTrainerData.js"
+    "cleanup": "node cleanupTrainerData.js",
+    "generate:battle-data": "node tools/generate-battle-data.mjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.84",
@@ -21,8 +22,10 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "express": "^5.1.0",
+    "gifenc": "1.0.3",
     "html-entities": "^2.6.0",
     "node-fetch": "^3.3.2",
+    "omggif": "1.0.10",
     "uuid": "^13.0.0"
   },
   "engines": {
@@ -36,5 +39,9 @@
     "coops-collection"
   ],
   "author": "Ross 'Coop' Cooper",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@pkmn/data": "0.10.12",
+    "@pkmn/dex": "0.10.12"
+  }
 }

@@ -14,6 +14,7 @@ import {
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
+import { grantCatch } from "../utils/training.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import {
@@ -153,10 +154,7 @@ async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDa
   const pick = selectRandomPokemonForUser(pool, user);
   const shiny = rollForShiny(user.tp || 0);
 
-  user.pokemon ??= {};
-  const record = user.pokemon[pick.id] ?? { normal: 0, shiny: 0 };
-  shiny ? record.shiny++ : record.normal++;
-  user.pokemon[pick.id] = record;
+  grantCatch(user, pick.id, shiny ? "shiny" : "normal");
 
   user.cc -= RECRUIT_COST_CC;
   user.lastRecruit = Date.now();

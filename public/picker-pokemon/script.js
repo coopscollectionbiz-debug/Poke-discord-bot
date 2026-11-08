@@ -673,11 +673,19 @@ function renderPokemonGrid() {
 
     // Count label (show both normal and shiny counts when owned)
     let countHTML = "";
+    let levelHTML = "";
     if (owned.any > 0) {
       const parts = [];
       if (owned.normal > 0) parts.push(`x${owned.normal}`);
       if (owned.shiny > 0) parts.push(`✨x${owned.shiny}`);
       countHTML = `<div class="count-label bottom-left">${parts.join(" · ")}</div>`;
+
+      // Level tag per owned variant, under the name (like the battle screen)
+      const lv = (variant) => userData.levels?.[`${id}:${variant}`] ?? "?";
+      const tags = [];
+      if (owned.normal > 0) tags.push(`<span class="poke-level">Lv ${lv("normal")}</span>`);
+      if (owned.shiny > 0) tags.push(`<span class="poke-level shiny">✨ Lv ${lv("shiny")}</span>`);
+      levelHTML = `<div class="poke-levels">${tags.join("")}</div>`;
     }
 
     // Team badge number
@@ -693,6 +701,7 @@ function renderPokemonGrid() {
         ${badgeHTML}
       </div>
       <div class="pokemon-name">${name}</div>
+      ${levelHTML}
       <div class="type-icons" style="display:flex; gap:4px; justify-content:center; margin:4px 0;">
         ${typeIcons}
       </div>

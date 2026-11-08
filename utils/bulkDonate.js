@@ -2,7 +2,7 @@
 // utils/bulkDonate.js — Donate Duplicates + Multi-select rules
 // ==========================================================
 //
-// Pure: no I/O, so tests can run it without booting the bot.
+// Pure: bulkDonate() does no I/O, so tests can run it without booting the bot.
 // The caller (POST /api/pokemon/donate-bulk) holds the user lock,
 // runs ensureWeeklyReset first, saves, and writes the event log.
 //
@@ -16,6 +16,8 @@
 //                 variants are allowed: the copy kept is the Team copy.
 //   multiselect — exactly 1 copy of that Pokémon in total, not on Team.
 // ==========================================================
+
+import { resetLevelIfGone } from "./training.js";
 
 const VARIANTS = new Set(["normal", "shiny"]);
 
@@ -109,6 +111,7 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
     if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) {
       delete user.pokemon[pid];
     }
+    resetLevelIfGone(user, pid, variant);
   }
 
   user.cc = (user.cc ?? 0) + gainedCC;

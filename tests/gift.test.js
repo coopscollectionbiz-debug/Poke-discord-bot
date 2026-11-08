@@ -1,7 +1,8 @@
 // ==========================================================
 // tests/gift.test.js
 // /gift moves normal copies only, so it must never send more normals
-// than the sender has, whatever shiny copies they also own.
+// than the sender has, whatever shiny copies they also own. Giving away
+// the last normal also resets that Level.
 // ==========================================================
 
 import { giftPokemon } from "../commands/gift.js";
@@ -35,6 +36,17 @@ const copies = (...users) => users.reduce((t, u) => t + (u.pokemon[25]?.normal ?
   const recipient = { pokemon: {} };
   check(giftPokemon(sender, recipient, "25", "Pikachu", 1) === null, "the last normal can go while shinies remain");
   check(JSON.stringify(sender.pokemon[25]) === JSON.stringify({ normal: 0, shiny: 2 }), "the shinies stay with the sender");
+}
+
+{
+  // Levels are per species + Variant, so the shiny Level stays with the shiny copies.
+  const sender = { pokemon: { 25: { normal: 1, shiny: 1 } }, training: { "25:normal": { exp: 8000 }, "25:shiny": { exp: 27000 } } };
+  giftPokemon(sender, { pokemon: {} }, "25", "Pikachu", 1);
+  check(JSON.stringify(sender.training) === JSON.stringify({ "25:shiny": { exp: 27000 } }), "gifting the last normal resets its Level; the shiny keeps its Level");
+
+  const keeper = { pokemon: { 25: { normal: 2, shiny: 0 } }, training: { "25:normal": { exp: 8000 } } };
+  giftPokemon(keeper, { pokemon: {} }, "25", "Pikachu", 1);
+  check(keeper.training["25:normal"]?.exp === 8000, "a sender with a normal left keeps its Level");
 }
 
 check(giftPokemon(owner(1, 0), { pokemon: {} }, "25", "Pikachu", 1)?.includes("last"), "the very last copy can't be gifted");

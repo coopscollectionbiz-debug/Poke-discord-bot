@@ -109,13 +109,28 @@ The player whose **Team** has the lower **Power rating** going into a **Battle**
 _Avoid_: weaker player, loser
 
 **Underdog surge**:
-A rare, announced boost to the **Underdog's** whole **Team** for one **Battle**, likelier the wider the **Power rating** gap.
+A rare, announced boost to the **Underdog's** whole **Team** for one **Battle** or **Challenge** fight, likelier the wider the **Power rating** gap.
 _Avoid_: comeback mechanic, rubber-banding, luck boost
+
+### Challenges
+
+**Challenge**:
+A fight between a player's **Team** and a fixed Kanto team: one of the 8 Gym Leaders, the **Elite Four run**, Blue, or Red. It is not a **Battle**: no other player takes part.
+_Avoid_: PvE battle, gym battle, NPC battle, raid
+
+**Badge**:
+What a player earns by beating a Gym Leader's **Challenge** for the first time. A player holds at most 8, one per Gym Leader.
+_Avoid_: medal, gym token
+
+**Elite Four run**:
+One **Challenge** against Lorelei, Bruno, Agatha, and Lance back to back, in which the player's Pokémon keep their damage from fight to fight. All 8 **Badges** unlock it, and losing any fight ends the run.
+_Avoid_: gauntlet, E4 challenge, league
 
 ## Flagged ambiguities
 
 - "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.
 - "Pokédex completion" is counted per Pokémon, not per variant. A player holding one normal and one shiny Pikachu has 1 toward Kanto, not 2.
+- "Challenge" is not what a **Challenger** does. A **Challenger** starts a **Battle** against another player. A **Challenge** has no **Challenger** or **Defender**, only the player and the Kanto team they face.
 
 ## Example dialogue
 

@@ -36,12 +36,22 @@ import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate } from "./utils/bulkDonate.js";
 
-// Local saver — writes trainerData.json to disk & marks dirty
+// Local saver — writes trainerData.json (in TRAINERDATA_DIR) & marks dirty
 import {
   enqueueSave,
   shutdownFlush,
-  saveTrainerDataLocal
+  saveTrainerDataLocal,
+  requireLoadBeforeWrite,
+  markLoaded,
+  getDirtyVersion,
+  isWriteBlocked,
 } from "./utils/saveQueue.js";
+import { readLocalCandidates, readFileCandidate, setSeqAtLeast, nextSeq, dataDir } from "./persistence/localStore.js";
+import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup } from "./persistence/discordBackups.js";
+import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/loader.js";
+
+// Nothing may be written to disk until player data has been loaded.
+requireLoadBeforeWrite();
 
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Rejection:", err);
@@ -933,6 +943,16 @@ client.ws.on("debug", (m) => {
   }
 });
 
+// ✅ Readiness: 200 only once player data is loaded and commands are served.
+// (Use /healthz for liveness; never restart the bot on a failing /readyz —
+// that risks Discord login loops.)
+let loadBlockedReason = null;
+let loadedFrom = null;
+app.get("/readyz", (_, res) => {
+  const body = { ready: isReady, loadedFrom, loadBlockedReason };
+  res.status(isReady ? 200 : 503).json(body);
+});
+
 // ✅ Health endpoint (uses unified vars)
 app.get("/healthz", (_, res) => {
   res.json({
@@ -967,73 +987,33 @@ setInterval(() => {
 // ==========================================================
 // 💾 Trainer Data Load & Save
 // ==========================================================
+// Picks the newest valid snapshot (local current/previous, or the newest
+// bot-posted Discord backups) — see persistence/loader.js. Returns
+// { ok, data, chosen } or { ok:false, blocked }.
 async function loadTrainerData() {
-  const LOAD_TIMEOUT_MS = 25_000;
+  const channelId = process.env.STORAGE_CHANNEL_ID;
+  console.log(`📦 Loading trainer data (local dir: ${dataDir()}, plus Discord backups)...`);
 
-  const withTimeout = (p, ms, label) =>
-    Promise.race([
-      p,
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout: ${label} after ${ms}ms`)), ms)
-      ),
-    ]);
+  const result = await loadBestSnapshot({
+    readLocalCandidates,
+    fetchDiscordCandidates: () => fetchDiscordCandidates(client, channelId),
+    readFileCandidate: (file) => readFileCandidate(file, null, "restore-file"),
+    fetchDiscordMessageCandidate: (id) => fetchDiscordMessageCandidate(client, channelId, id),
+  });
 
-  console.log("📦 Loading trainer data from Discord...");
-
-  let loaded = {};
-
-  try {
-    const storageChannel = await withTimeout(
-      client.channels.fetch(process.env.STORAGE_CHANNEL_ID),
-      10_000,
-      "channels.fetch(STORAGE_CHANNEL_ID)"
-    );
-
-    const messages = await withTimeout(
-      storageChannel.messages.fetch({ limit: 50 }),
-      10_000,
-      "messages.fetch(limit=50)"
-    );
-
-    const backups = messages
-      .filter((m) => {
-        const att = m.attachments.first();
-        if (!att) return false;
-        const name = String(att.name || "");
-        // Accept both trainerData.json and trainerData*.json
-        return name.toLowerCase().startsWith("trainerdata") && name.toLowerCase().endsWith(".json");
-      })
-      .sort((a, b) => b.createdTimestamp - a.createdTimestamp);
-
-    if (backups.size > 0) {
-      const att = backups.first().attachments.first();
-
-      const res = await withTimeout(
-        fetch(att.url),
-        LOAD_TIMEOUT_MS,
-        "fetch(backup attachment)"
-      );
-
-      const text = await withTimeout(res.text(), LOAD_TIMEOUT_MS, "res.text()");
-      loaded = JSON.parse(text);
-
-      console.log(`✅ Loaded ${Object.keys(loaded).length} users`);
-    } else {
-      console.log("⚠️ No backups found in storage channel.");
-    }
-  } catch (err) {
-    console.error("❌ Discord load failed:", err?.message || err);
+  for (const r of result.rejected || []) console.warn(`  ↳ ${describeSnapshot({ ok: false, ...r })}`);
+  if (!result.ok) {
+    console.error(`⛔ Player data NOT loaded: ${result.blocked}`);
+    return { ok: false, blocked: result.blocked };
   }
 
-  if (loaded && typeof loaded === "object" && !Array.isArray(loaded)) {
-    for (const [id, user] of Object.entries(loaded)) normalizeUserSchema(id, user);
-    return loaded;
-  }
-
-  return {};
+  const { chosen } = result;
+  console.log(`✅ Loaded ${chosen.userCount} users from ${describeSnapshot(chosen)}${result.restored ? " (OPERATOR RESTORE)" : ""}`);
+  setSeqAtLeast(result.maxSeq);
+  const data = chosen.data;
+  for (const [id, user] of Object.entries(data)) normalizeUserSchema(id, user);
+  return { ok: true, data, chosen };
 }
-
-
 
 async function saveDataToDiscord(data, { force = false } = {}) {
   if (shuttingDown && !force) {
@@ -1064,6 +1044,13 @@ async function saveDataToDiscord(data, { force = false } = {}) {
       return;
     }
 
+    // Never upload before player data is loaded (or empty data): a shutdown
+    // during startup used to post {} as the newest backup.
+    if (isWriteBlocked() || !data || typeof data !== "object" || !Object.keys(data).length) {
+      console.log("⚠️ Player data not loaded — skipping Discord backup");
+      return;
+    }
+
     let channel;
     try {
       channel =
@@ -1083,20 +1070,15 @@ async function saveDataToDiscord(data, { force = false } = {}) {
       return;
     }
 
-    // ✅ IMPORTANT: compact JSON (much faster + smaller)
-    const jsonString = JSON.stringify(data);
-    const payload = Buffer.from(jsonString, "utf8");
-    const file = new AttachmentBuilder(payload, { name: "trainerData.json" });
-
-    await withTimeout(
-      channel.send({ files: [file] }),
-      SAVE_TIMEOUT_MS,
-      "channel.send(trainerData.json)"
-    );
+    // Compact JSON attachment (unchanged format) + metadata in the message
+    // text (seq/users/sha256/savedAt) — see persistence/discordBackups.js.
+    const version = getDirtyVersion();
+    const { meta } = await uploadBackup(channel, data, { seq: nextSeq(), timeoutMs: SAVE_TIMEOUT_MS });
+    lastUploadedDirtyVersion = version;
 
     lastDiscordOk = Date.now();
     discordSaveCount++;
-    console.log(`✅ Discord backup #${discordSaveCount} (${Math.round(payload.length / 1024)} KB)`);
+    console.log(`✅ Discord backup #${discordSaveCount} (${Math.round(meta.bytes / 1024)} KB, ${meta.userCount} users, seq ${meta.seq})`);
   } catch (err) {
     console.error("❌ Discord save failed:", err?.message || err);
     throw err;  // let callers know it failed
@@ -1267,21 +1249,25 @@ function debouncedDiscordSave() {
 }
 
 // ==========================================================
-// 🕒 15-MINUTE DISCORD BACKUP (FIRST RUN AFTER 15 MINUTES)
+// 🕒 OFF-MACHINE DISCORD BACKUP — every 5 minutes, only when data changed
+// (the local volume snapshot is the primary copy; this is for recovery)
 // ==========================================================
+const DISCORD_BACKUP_INTERVAL_MS = 5 * 60 * 1000;
+let lastUploadedDirtyVersion = -1; // -1: upload at the first interval after start
+
 const discordBackupInterval = setInterval(async () => {
   if (shuttingDown) return;
   if (!client.isReady() || !isReady) return;
   if (isSaving) return;
+  if (getDirtyVersion() === lastUploadedDirtyVersion) return; // nothing changed
 
-  console.log("💾 15-minute interval — saving trainerData to Discord...");
+  console.log("💾 Backup interval — saving trainerData to Discord...");
   try {
     await saveDataToDiscord(trainerData);
-    console.log("✅ Discord backup complete (15-minute interval)");
   } catch (err) {
     console.error("❌ Interval Discord save failed:", err?.message || err);
   }
-}, 15 * 60 * 1000);
+}, DISCORD_BACKUP_INTERVAL_MS);
 
 // ==========================================================
 // 🛑 GRACEFUL SHUTDOWN (Fixed — Final Backup Guaranteed)
@@ -2805,18 +2791,31 @@ client.once("ready", async () => {
 
   // Attempt load once
   async function attemptLoad() {
-    const loaded = await loadTrainerData();
-    const ok =
-      loaded &&
-      typeof loaded === "object" &&
-      !Array.isArray(loaded) &&
-      Object.keys(loaded).length > 0;
-
-    if (ok) {
-      trainerData = loaded;
-      return true;
+    let result;
+    try {
+      result = await loadTrainerData();
+    } catch (e) {
+      result = { ok: false, blocked: `load error: ${e?.message || e}` };
     }
-    return false;
+
+    if (!result.ok) {
+      loadBlockedReason = result.blocked || "unknown";
+      return false;
+    }
+
+    trainerData = result.data;
+    loadBlockedReason = null;
+    loadedFrom = result.chosen.source;
+    markLoaded(); // writes allowed from here on
+
+    // Put the loaded snapshot on local disk right away if it didn't come
+    // from there (first boot on a new volume, or Discord was newer).
+    if (result.chosen.source !== "local") {
+      enqueueSave(trainerData, { force: true }).then((saved) =>
+        console.log(saved ? "💾 Loaded snapshot written to local storage" : "⚠️ Could not write loaded snapshot locally (will retry)")
+      );
+    }
+    return true;
   }
 
   const ok = await attemptLoad();

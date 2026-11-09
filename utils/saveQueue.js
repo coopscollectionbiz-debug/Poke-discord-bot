@@ -11,13 +11,14 @@
 //   reject) and the save is retried with exponential backoff that neither
 //   new saves nor the max-wait timer can bypass. Forced flushes (shutdown,
 //   battles) ignore the backoff.
+// • Writes go to TRAINERDATA_DIR (default ".") through
+//   persistence/localStore.js: fsync'd, previous generation kept, metadata.
+// • Load gate: once requireLoadBeforeWrite() is called (bot startup),
+//   nothing is written until markLoaded(), so a half-started process can
+//   never overwrite good snapshots.
 // ==========================================================
 
-import fs from "fs/promises";
-import path from "path";
-
-const TRAINERDATA_PATH = path.resolve("./trainerData.json");
-const TEMP_PATH = path.resolve("./trainerData.json.tmp");
+import { writeSnapshot } from "../persistence/localStore.js";
 
 // Tune these (tests may override through __setSaveQueueTestHooks):
 const DEFAULT_TIMING = {
@@ -59,19 +60,32 @@ function isTrainerDataSafe(data) {
 }
 
 // ----------------------------------------------------------
-// 💾 Atomic write (stringify only here)
+// 💾 Durable write (stringify only here) — see persistence/localStore.js
 // ----------------------------------------------------------
-async function atomicWriteJson(json) {
-  const jsonString = JSON.stringify(json, null, 2);
-  try {
-    await fs.writeFile(TEMP_PATH, jsonString, "utf8");
-    await fs.rename(TEMP_PATH, TRAINERDATA_PATH);
-  } catch (err) {
-    try { await fs.unlink(TEMP_PATH); } catch {}
-    throw err;
-  }
+const defaultWriter = (data) => writeSnapshot(data);
+let writeJson = defaultWriter;
+
+// ----------------------------------------------------------
+// 🚧 Load gate
+// ----------------------------------------------------------
+let gateActive = false; // set by requireLoadBeforeWrite()
+let loaded = false;     // set by markLoaded()
+
+/** Bot startup: refuse every write until markLoaded() is called. */
+export function requireLoadBeforeWrite() {
+  gateActive = true;
+  loaded = false;
 }
-let writeJson = atomicWriteJson;
+
+/** Player data is loaded; writes may proceed. */
+export function markLoaded() {
+  loaded = true;
+}
+
+export const isWriteBlocked = () => gateActive && !loaded;
+
+/** Number of changes enqueued so far (used to skip unchanged Discord uploads). */
+export const getDirtyVersion = () => dirtyVersion;
 
 // Waiters resolve with true when their version reached disk, false when the
 // write failed or was refused. They never reject and never hang: callers
@@ -217,6 +231,11 @@ export function enqueueSave(trainerData, opts = {}) {
     console.warn("⚠️ Refusing save: trainerData appears EMPTY/INVALID");
     return Promise.resolve(false);
   }
+  // Before player data is loaded, nothing may reach disk.
+  if (isWriteBlocked()) {
+    console.warn("⚠️ Refusing save: player data not loaded yet");
+    return Promise.resolve(false);
+  }
 
   latestData = trainerData;
   dirtyVersion++;
@@ -278,7 +297,9 @@ export function __setSaveQueueTestHooks({ writer, timing: t } = {}) {
 
 export function __resetSaveQueueForTests() {
   clearTimers();
-  writeJson = atomicWriteJson;
+  writeJson = defaultWriter;
+  gateActive = false;
+  loaded = false;
   timing = { ...DEFAULT_TIMING };
   lastWriteAt = 0;
   latestData = null;

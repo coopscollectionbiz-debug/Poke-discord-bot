@@ -30,7 +30,11 @@ export function buildMon(member, levelMult = 1) {
     types: species.types,
     atk: s.atk, def: s.def, spa: s.spa, spd: s.spd, spe: s.spe,
     maxHp,
-    hp: maxHp,
+    // hpFraction carries damage between Elite Four fights: absent is full HP,
+    // 0 is fainted, and any sliver above 0 keeps at least 1 HP.
+    hp: member.hpFraction === undefined ? maxHp
+      : member.hpFraction <= 0 ? 0
+      : Math.max(1, Math.round(maxHp * member.hpFraction)),
     moves: autoMoveset(member.speciesId, member.level).map(getMove),
   };
 }

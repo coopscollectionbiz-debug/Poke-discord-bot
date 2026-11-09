@@ -233,4 +233,25 @@ section("Drain in battles");
   assertTrue(drains.every(replays), "battles with drain replay to their snapshots");
 }
 
+section("Starting HP");
+{
+  const vsBlastoise = (members, seed = 1) =>
+    simulateBattle({ sides: [{ members }, { members: [{ speciesId: 9, level: 50 }] }], seed });
+  const maxHp = buildMon({ speciesId: 6, level: 50 }).maxHp;
+  const half = vsBlastoise([{ speciesId: 6, level: 50, hpFraction: 0.5 }]);
+  assertTrue(Math.abs(half.snapshots[0][0][0] - 0.5) <= 1 / maxHp, `hpFraction 0.5 starts at half HP (got ${half.snapshots[0][0][0]})`);
+
+  const fainted = vsBlastoise([{ speciesId: 6, level: 50, hpFraction: 0 }, { speciesId: 9, level: 50 }], 4);
+  assertEqual(fainted.snapshots[0][0][0], 0, "hpFraction 0 starts fainted");
+  assertTrue(!fainted.log.flat().some((e) => e.side === 0 && e.slot === 0), "a fainted member never acts");
+  assertTrue(!fainted.knockouts.some((k) => k.side === 0 && k.slot === 0), "a fainted member is never counted as knocked out");
+
+  const sliver = vsBlastoise([{ speciesId: 6, level: 50, hpFraction: 0.0001 }]);
+  assertEqual(sliver.snapshots[0][0][0], 1 / maxHp, "a sliver of HP rounds up to 1");
+
+  const carried = [{ speciesId: 6, level: 50, hpFraction: 0.3 }, { speciesId: 25, level: 40, hpFraction: 0.8 }];
+  assertEqual(JSON.stringify(vsBlastoise(carried, 9)), JSON.stringify(vsBlastoise(carried, 9)), "carried HP is deterministic");
+  assertTrue(vsBlastoise(carried, 9).snapshots[0][0][1] < 1, "a carried member's first snapshot shows its damage");
+}
+
 finish();

@@ -6,3 +6,14 @@ node_modules
 trainerData*.json
 trainerData*.tmp
 snapshots
+
+# Player data and runtime state never go into an image (D-24).
+**/oldTrainerBackup.json
+**/*Backup*.json
+**/*backup*.json
+**/trainerData*.json
+**/trainerData*.tmp
+**/*.ndjson
+**/*.ndjson.tmp
+**/snapshots
+*.bundle

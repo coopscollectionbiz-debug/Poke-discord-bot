@@ -11,7 +11,7 @@ import {
 import { randomInt, randomUUID } from "crypto";
 import { logEvent } from "../utils/eventLog.js";
 import { battleBlock, buildTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
-import { playBattle } from "../utils/battle/playback.js";
+import { playBattle, expSummary } from "../utils/battle/playback.js";
 import { teamPower } from "../utils/battle/power.js";
 import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/battle/wager.js";
 import { WAGER } from "../utils/battle/tuning.js";
@@ -52,6 +52,15 @@ export function displayNames(interaction, opponent) {
   };
 }
 
+// A player's EXP goes in a message only they can see, sent once the replay
+// ends so it doesn't show level-ups early. Discord accepts follow-ups for 15
+// minutes after the interaction, so a Challenger whose Wager was accepted
+// near the end of the offer window can miss theirs; the EXP still counts.
+function sendExp(reply, outcome, userId, names) {
+  return reply.followUp({ content: expSummary(outcome, userId, names), flags: MessageFlags.Ephemeral })
+    .catch((err) => console.warn("⚠️ EXP message failed:", err?.message || err));
+}
+
 export async function execute(interaction, trainerData, _saveLocal, _saveDiscord, lockUser, enqueueSave) {
   const opponent = interaction.options.getUser("opponent", true);
   const wager = interaction.options.getInteger("wager");
@@ -82,12 +91,14 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
     defenderId: opponent.id, mode, seed, winnerId: outcome.winnerId, turns: outcome.result.turns, surge: !!outcome.surge,
   });
   await interaction.editReply("⚔️ Your battle is starting below.");
+  const names = displayNames(interaction, opponent);
   try {
-    await playBattle(interaction.channel, outcome, displayNames(interaction, opponent));
+    await playBattle(interaction.channel, outcome, names);
   } catch (err) {
     console.warn("⚠️ battle post failed:", err?.message || err);
     await interaction.editReply("Your battle counted, but I couldn't post it in this channel.").catch(() => {});
   }
+  await sendExp(interaction, outcome, challengerId, names); // only the Challenger earns EXP in an Open battle
 }
 
 // ----------------------------------------------------------
@@ -203,6 +214,8 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     await closeOffer(`✅ <@${defenderId}> accepted! The battle is below.`);
     await playBattle(interaction.channel, outcome, names).catch((err) =>
       console.warn("⚠️ wager battle post failed:", err?.message || err));
+    // The Challenger's /battle and the Defender's Accept click are the two interactions to reply on.
+    await Promise.all([sendExp(interaction, outcome, challengerId, names), sendExp(i, outcome, defenderId, names)]);
   });
 
   // Any end other than an answer (timeout, deleted message or channel)

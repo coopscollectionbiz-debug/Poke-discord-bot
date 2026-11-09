@@ -2,7 +2,8 @@
 // utils/battle/playback.js
 // "Watch it happen": posts a battle image in the channel, edits it once
 // per turn (up to PLAYBACK.maxUpdates, spread evenly over longer battles),
-// then shows the result with the embed. Results are already saved before
+// then shows the result image with a Battle rating embed. (/battle sends
+// each player's EXP privately afterward.) Results are already saved before
 // this runs; a failed edit just stops the replay. At most
 // PLAYBACK.maxAtOnce replays run at once; the rest wait in line.
 // ==========================================================
@@ -47,32 +48,21 @@ export function resultScreens(outcome, names) {
   return screens;
 }
 
-function expLines(entries) {
-  return entries.slice(0, 6).map((e) => {
-    if (e.toLevel === e.fromLevel) return `${e.name} Lv ${e.fromLevel} · +${e.gained} EXP`;
-    const learned = e.learned.length ? ` · learned **${list(e.learned)}**` : "";
-    return `⬆️ **${e.name}** Lv ${e.fromLevel} → **${e.toLevel}**${learned}`;
-  }).join("\n") || "—";
+// One player's EXP, sent only to them: the result image shows level-ups but
+// not how much EXP each Pokémon gained.
+export function expSummary(outcome, userId, names) {
+  const opponentId = outcome.sides.find((s) => s.userId !== userId).userId;
+  const lines = outcome.exp[userId].map((e) => {
+    const level = e.toLevel > e.fromLevel ? `Lv ${e.fromLevel} → **${e.toLevel}**` : `Lv ${e.fromLevel}`;
+    return `${e.name} ${level} · +${e.gained} EXP`;
+  });
+  return [`EXP from your battle with ${names[opponentId]}:`, ...lines].join("\n");
 }
 
+// Only the rating changes: everything else is on the result image or in
+// the message header.
 export function buildResultEmbed(outcome, names) {
-  const side = winnerSideOf(outcome);
-  const winner = names[outcome.winnerId];
-  const { turns, endedBy } = outcome.result;
-  const mvp = mvpOf(outcome);
-  const lines = [
-    endedBy === "turnCap" && `Time ran out after **${turns}** turns, and ${winner}'s Team had more HP left.`,
-    mvp && `⭐ MVP: **${mvp.name}** with ${plural(mvp.kos, "knockout")}`,
-    outcome.surge && "🔥 Underdog surge!",
-    outcome.mode === "wager" && `💰 ${winner} takes the **${2 * outcome.stake} CC** pot!`,
-  ].filter(Boolean);
-  const embed = new EmbedBuilder()
-    .setColor(0xf1c40f)
-    .setTitle(`🏆 ${winner} defeated ${names[outcome.sides[1 - side].userId]}!`)
-    .setDescription(lines.join("\n"));
-  for (const [userId, entries] of Object.entries(outcome.exp)) {
-    embed.addFields({ name: `EXP · ${names[userId]}`, value: expLines(entries) });
-  }
+  const embed = new EmbedBuilder().setColor(0xf1c40f);
   const rating = Object.entries(outcome.rating)
     .map(([userId, r]) => `${names[userId]} **${r.to}** ${r.to >= r.from ? "▲" : "▼"}${Math.abs(r.to - r.from)}`)
     .join("\n");

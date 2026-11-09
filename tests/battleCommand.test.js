@@ -6,6 +6,7 @@
 // the live record; CC must never be minted or stranded.
 // ==========================================================
 
+import { MessageFlags } from "discord.js";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { execute } from "../commands/battle.js";
 import { lockUser } from "../utils/userLocks.js";
@@ -28,10 +29,15 @@ const trainer = (id) => {
 };
 
 // One fake guild channel; every message gets a controllable collector.
-function harness({ sendFails = false, perms = true, offeredReplyFails = false } = {}) {
+function harness({ sendFails = false, perms = true, offeredReplyFails = false, followUpFails = null } = {}) {
   const trainerData = { A: trainer("A"), B: trainer("B") };
-  const log = { replies: [], edits: [], messages: [] };
+  const log = { replies: [], edits: [], messages: [], followUps: [] };
   const collectors = [];
+  // Records who got each follow-up, and whether the battle's result embed was already showing.
+  const followUp = (userId) => async (o) => {
+    if (followUpFails === userId) throw new Error("Invalid Webhook Token");
+    log.followUps.push({ userId, ...o, afterResult: !!log.messages.at(-1)?.edits.at(-1)?.embeds });
+  };
   const channel = {
     send: async (opts) => {
       if (sendFails) throw new Error("Missing Permissions");
@@ -68,6 +74,7 @@ function harness({ sendFails = false, perms = true, offeredReplyFails = false } 
       if (offeredReplyFails && text.includes("Wager offered")) throw new Error("503 Service Unavailable");
       log.edits.push(text);
     },
+    followUp: followUp(userId),
   });
   const button = (userId, customId) => ({
     user: { id: userId },
@@ -76,7 +83,7 @@ function harness({ sendFails = false, perms = true, offeredReplyFails = false } 
     deferUpdate: async () => {},
     update: async () => {},
     reply: async function (o) { this.replies.push(o.content); },
-    followUp: async function (o) { this.replies.push(o.content); },
+    followUp: async function (o) { this.replies.push(o.content); return followUp(userId)(o); },
   });
   const run = (userId, opponentId, wager) =>
     execute(interaction(userId, opponentId, wager), trainerData, null, null, lockUser, async () => {}, null);
@@ -186,6 +193,33 @@ section("The offer never shows the Defender's balance");
   assertEqual(opts.components[0].components[0].data.label, "Accept (50 CC)", "the button shows the Stake, not B's balance");
   assertTrue(!JSON.stringify(opts).includes("30 CC"), "B's 30 CC appears nowhere in the offer");
   assertTrue(opts.embeds[0].data.description.includes("accepting puts you all in"), "the offer explains going All-in");
+}
+
+section("Private EXP messages");
+{
+  const t = harness();
+  await t.run("A", "B");
+  assertEqual(t.log.followUps.map((f) => f.userId), ["A"], "Open battle: only the Challenger gets an EXP message");
+  const [a] = t.log.followUps;
+  assertEqual(a.flags, MessageFlags.Ephemeral, "only they can see it");
+  assertTrue(a.content.startsWith("EXP from your battle with B:") && a.content.includes("Pikachu"), "it lists their Team's EXP");
+  assertTrue(a.afterResult, "it arrives after the result is shown");
+
+  const w = harness();
+  await w.run("A", "B", 50);
+  await w.collectors[0].h.collect(w.button("B", `wager_accept:${w.trainerData.A.pendingWager.nonce}`));
+  assertEqual(w.log.followUps.map((f) => f.userId).sort(), ["A", "B"], "Wager battle: each player gets their own");
+  assertTrue(w.log.followUps.every((f) => f.flags === MessageFlags.Ephemeral && f.afterResult), "both private, both after the result");
+  assertTrue(w.log.followUps.find((f) => f.userId === "B").content.startsWith("EXP from your battle with A:"), "the Defender's names the Challenger");
+
+  // Accepted late: the Challenger's /battle is over 15 minutes old, so Discord refuses its follow-up.
+  const late = harness({ followUpFails: "A" });
+  await late.run("A", "B", 50);
+  let threw = false;
+  await late.collectors[0].h.collect(late.button("B", `wager_accept:${late.trainerData.A.pendingWager.nonce}`))
+    .catch(() => { threw = true; });
+  assertTrue(!threw, "a refused Challenger follow-up doesn't throw");
+  assertEqual(late.log.followUps.map((f) => f.userId), ["B"], "the Defender still gets theirs");
 }
 
 section("Missing channel permissions");

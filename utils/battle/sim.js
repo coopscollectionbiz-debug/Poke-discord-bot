@@ -136,6 +136,11 @@ export function simulateBattle({ sides, seed, surge }) {
   const log = []; // per turn, the hits in order
   let lastFaintSide = null;
 
+  // A side can start with nobody able to battle: an Elite Four run can win a
+  // fight on a double knockout and reach the next one with every Pokémon fainted.
+  const outAtStart = [0, 1].filter((i) => activeSlot(i) === -1);
+  if (outAtStart.length) return { winner: outAtStart.includes(0) ? 1 : 0, turns: 0, endedBy: "knockout", snapshots, knockouts, log };
+
   for (let turn = 1; turn <= TURN_CAP; turn++) {
     const slots = [activeSlot(0), activeSlot(1)];
     const mons = slots.map((s, i) => teams[i][s]);

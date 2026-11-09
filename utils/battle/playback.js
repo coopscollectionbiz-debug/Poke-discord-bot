@@ -147,7 +147,8 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
   else message = await channel.send(start);
   try {
     let shown = 0;
-    for (const turn of pickFrameTurns(total, maxUpdates)) {
+    // A fight lost before anyone moves (0 turns) goes straight to the result.
+    for (const turn of total ? pickFrameTurns(total, maxUpdates) : []) {
       const badge = turn - shown > 1 ? `TURNS ${shown + 1}–${turn}` : `TURN ${turn}`;
       const file = await paced(() => image({ hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }));
       await message.edit({ files: [file] });

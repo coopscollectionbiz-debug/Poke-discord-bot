@@ -15,6 +15,7 @@ import { CHALLENGES } from "../utils/challenge/roster.js";
 import { badgeEmoji } from "../utils/challenge/badgeEmojis.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { PLAYBACK } from "../utils/battle/tuning.js";
+import { simulateBattle } from "../utils/battle/sim.js";
 
 PLAYBACK.delayMs = 0;
 const NOW = new Date("2026-11-09T12:00:00Z");
@@ -136,6 +137,19 @@ section("Single fights in public");
   await playChallenge(win.channel, brockWin, challengeNames(brockWin, "A"));
   const w = texts(win);
   assertTrue(w.includes("Earned the Boulder Badge") && w.includes("2,500 CC"), "a first win shows the Badge and prize");
+}
+
+section("A fight lost before a move is made");
+{
+  // An Elite Four fight that starts with every Pokémon fainted (after a double-knockout win) has 0 turns.
+  const base = outcomeOf(player([10], 5), "brock");
+  const fainted = base.fights[0].sides[0].members.map((m) => ({ ...m, hpFraction: 0 }));
+  const result = simulateBattle({ sides: [{ members: fainted }, { members: base.fights[0].sides[1].members }], seed: 1 });
+  const zero = { ...base, fights: [{ ...base.fights[0], sides: [{ ...base.fights[0].sides[0], members: fainted }, base.fights[0].sides[1]], result }] };
+  const rec = recorder();
+  await playChallenge(rec.channel, zero, challengeNames(zero, "A"));
+  assertEqual([rec.sent.length, rec.edits.length], [1, 1], "the start frame, then straight to the result");
+  assertEqual(rec.edits[0].embeds?.[0]?.toJSON().title, "Gym Leader Brock wins!", "with the result embed");
 }
 
 section("Replay slots");

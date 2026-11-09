@@ -14,6 +14,10 @@ import { CHALLENGES } from "../utils/challenge/roster.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { CHALLENGE } from "../utils/battle/tuning.js";
+import { simulateBattle } from "../utils/battle/sim.js";
+import { teamPower, rollSurge } from "../utils/battle/power.js";
+import { createRng } from "../utils/battle/rng.js";
+import { readFileSync } from "fs";
 
 const D = new Date("2026-11-09T12:00:00Z");
 const D1 = new Date("2026-11-10T00:00:01Z");
@@ -208,6 +212,24 @@ section("Carried HP and fixed Levels");
   assertEqual(MIDTEAM.map((sid) => lost.t.A.training[`${sid}:normal`].exp - startExp[`${sid}:normal`].exp), perMember,
     "each member's EXP rises by the sum of its per-fight gains");
   assertEqual(lost.o.exp.A.map((e) => e.gained), perMember, "the EXP report shows the summed gains");
+}
+
+section("A win with every Pokémon fainted");
+{
+  // Gen 5: when both last Pokémon faint on one recoil move, the recoil user's side wins.
+  const ids = Object.keys(JSON.parse(readFileSync(new URL("../battleData.json", import.meta.url))).species).map(Number);
+  let found = null;
+  for (let seed = 0; seed < 50000 && !found; seed++) {
+    const rng = createRng(seed);
+    const team = Array.from({ length: 6 }, () => ({ speciesId: ids[rng.int(ids.length)], variant: "normal", level: 50 }));
+    const first = simulateBattle({ sides: [{ members: team }, { members: CHALLENGES.elite4.opponents[0].team }], seed: seed + 1, surge: null });
+    if (first.winner === 0 && first.snapshots.at(-1)[0].every((hp) => hp === 0)
+      && rollSurge([teamPower(team), teamPower(CHALLENGES.elite4.opponents[0].team)], seed)?.side !== 0) found = { team, seed };
+  }
+  assertTrue(found !== null, "fixture: a team that beats Lorelei with every Pokémon fainted");
+  const s = simulateChallenge({ team: found.team, opponents: CHALLENGES.elite4.opponents, seed: found.seed });
+  assertEqual([s.fights.length, s.fights[0].won, s.fights[1].won, s.cleared], [2, true, false, false], "the run ends at the next fight");
+  assertEqual(s.fights[1].result.turns, 0, "which is lost before a move is made");
 }
 
 section("Surge side");

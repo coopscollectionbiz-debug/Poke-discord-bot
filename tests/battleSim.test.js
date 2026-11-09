@@ -252,6 +252,11 @@ section("Starting HP");
   const carried = [{ speciesId: 6, level: 50, hpFraction: 0.3 }, { speciesId: 25, level: 40, hpFraction: 0.8 }];
   assertEqual(JSON.stringify(vsBlastoise(carried, 9)), JSON.stringify(vsBlastoise(carried, 9)), "carried HP is deterministic");
   assertTrue(vsBlastoise(carried, 9).snapshots[0][0][1] < 1, "a carried member's first snapshot shows its damage");
+
+  // An Elite Four run can win a fight on a double knockout (recoil) and reach the next with nobody standing.
+  const nobody = vsBlastoise([{ speciesId: 6, level: 50, hpFraction: 0 }, { speciesId: 25, level: 50, hpFraction: 0 }]);
+  assertEqual([nobody.winner, nobody.turns, nobody.endedBy, nobody.log, nobody.knockouts, nobody.snapshots.length],
+    [1, 0, "knockout", [], [], 1], "a side with nobody able to battle loses at once");
 }
 
 finish();

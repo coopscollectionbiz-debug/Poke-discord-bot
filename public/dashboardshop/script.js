@@ -473,4 +473,8 @@ window.addEventListener("DOMContentLoaded", () => {
   if (goBag)
     goBag.onclick = () =>
       (window.location.href = `/public/bag/?id=${encodeURIComponent(id)}`);
+  const goAchievements = document.getElementById("goAchievements");
+  if (goAchievements)
+    goAchievements.onclick = () =>
+      (window.location.href = `/public/achievements/?id=${encodeURIComponent(id)}`);
 })();

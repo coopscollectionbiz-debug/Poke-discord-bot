@@ -29,7 +29,7 @@ const lastFour = (id, level) => {
   return out.slice(-4);
 };
 assertEqual(autoMoveset(1, 30), lastFour(1, 30), "Bulbasaur Lv 30 knows its last 4 learned moves");
-const speciesIds = Array.from({ length: 649 }, (_, i) => i + 1);
+const speciesIds = Array.from({ length: 1025 }, (_, i) => i + 1).filter((id) => getSpecies(id));
 const levels = [1, 5, 10, 16, 25, 32, 40, 50, 64, 80, 100];
 assertTrue(
   speciesIds.every((id) => levels.every((l) => JSON.stringify(knownMoves(id, l)) === JSON.stringify(lastFour(id, l)))),

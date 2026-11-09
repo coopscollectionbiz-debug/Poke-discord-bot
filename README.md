@@ -12,7 +12,7 @@ Game terms (Tier, Stage, Variant, duplicate, Team, Battle rating, and so on) are
 
 ## Battles
 
-Players battle each other's Teams. The bot simulates the whole fight with Gen 5 stats, moves, and type matchups, then replays it in the channel turn by turn as animated images: the two Pokémon fighting are spotlit, HP bars drain, and a game-style text box narrates each move. Battles longer than 12 turns are spread over 12 updates. A final image shows who won, the MVP (the winner's Pokémon with the most knockouts), level-ups, and new moves, and an embed under it shows each player's Battle rating change. When the replay ends, each player who earned EXP gets a message only they can see with each Pokémon's EXP gain, then the move message described under [Moves](#moves) if a Pokémon with 4 moves learned a new one. Discord allows these replies only within 15 minutes of a command, so a Challenger whose Wager was accepted near the end of the offer may not get them; the EXP and new moves still count. At most 2 battles replay at once. When more start, each extra battle's message shows its place in line until its replay begins. The results count right away; only the replay waits.
+Players battle each other's Teams. The bot simulates the whole fight with Gen 5 stats and moves for #1–649, each later species' own modern stats and moves, and the modern 18-type chart (Fairy included), then replays it in the channel turn by turn as animated images: the two Pokémon fighting are spotlit, HP bars drain, and a game-style text box narrates each move. Battles longer than 12 turns are spread over 12 updates. A final image shows who won, the MVP (the winner's Pokémon with the most knockouts), level-ups, and new moves, and an embed under it shows each player's Battle rating change. When the replay ends, each player who earned EXP gets a message only they can see with each Pokémon's EXP gain, then the move message described under [Moves](#moves) if a Pokémon with 4 moves learned a new one. Discord allows these replies only within 15 minutes of a command, so a Challenger whose Wager was accepted near the end of the offer may not get them; the EXP and new moves still count. At most 2 battles replay at once. When more start, each extra battle's message shows its place in line until its replay begins. The results count right away; only the replay waits.
 
 Moves follow Gen 5 rules for priority, multi-hit, drain, recoil, and crash damage. Quick Attack goes first and Vital Throw goes last. Bullet Seed hits 2 to 5 times. Giga Drain heals the user half the damage it deals, and Double-Edge hurts the user as well as the target. A missed High Jump Kick costs the user half its max HP. A Pokémon that faints from its own recoil or crash counts as a knockout for the Pokémon it attacked. When both last Pokémon faint from one move, the side whose Pokémon fainted last wins. With recoil, that's the user's side, as in Gen 5. The sim has no abilities except Shedinja's Wonder Guard, and no items, status conditions, stat changes, or other move side effects.
 
@@ -30,13 +30,13 @@ Levels show on the dashboard, on `/showteam` and `/trainercard`, and in `/inspec
 
 ### Moves
 
-Each species and Variant a player owns knows up to 4 moves from its Gen 5 level-up learnset, and every copy shares them. When a Level-up teaches a move and the Pokémon already knows 4, it learns the new move and forgets its oldest one. After a battle, `/daily`, `/quest`, `/recruit`, or the `/shop` Starter Pack, the player also gets a private message about each such move. It has one button per current move, to forget that move instead, and a ✖ Don't learn button. The message asks one question at a time, and its buttons work for 10 minutes. If the player doesn't answer, the new move stays learned and the oldest stays forgotten. A move the player turns down isn't offered again, though an evolution can still learn it from its own learnset. Level-ups from chat catches and the dashboard don't send the message. Stone evolution and shiny crafting pass the player's chosen moves on, unless the target already has chosen moves of its own. `/inspectpokemon` shows the moves of each Variant the player owns.
+Each species and Variant a player owns knows up to 4 moves from its level-up learnset, and every copy shares them. When a Level-up teaches a move and the Pokémon already knows 4, it learns the new move and forgets its oldest one. After a battle, `/daily`, `/quest`, `/recruit`, or the `/shop` Starter Pack, the player also gets a private message about each such move. It has one button per current move, to forget that move instead, and a ✖ Don't learn button. The message asks one question at a time, and its buttons work for 10 minutes. If the player doesn't answer, the new move stays learned and the oldest stays forgotten. A move the player turns down isn't offered again, though an evolution can still learn it from its own learnset. Level-ups from chat catches and the dashboard don't send the message. Stone evolution and shiny crafting pass the player's chosen moves on, unless the target already has chosen moves of its own. `/inspectpokemon` shows the moves of each Variant the player owns.
 
 Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps, how long move buttons work) is in `utils/battle/tuning.js`. The design and the reasons for each number are in [`docs/superpowers/specs/2026-11-02-battles-design.md`](docs/superpowers/specs/2026-11-02-battles-design.md).
 
 ### Battle data
 
-`battleData.json` holds Gen 5 base stats, level-up moves, each move's power and effects, and the type chart. The effects it stores are priority, hit counts, drain, recoil, and crash damage. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. Battle images are animated GIFs: `@napi-rs/canvas` draws each frame, the runtime dependency `omggif` reads each sprite's animation frames, and the runtime dependency `gifenc` encodes the result. `utils/battle/render.js` encodes each frame as soon as it's drawn and decodes sprite frames only as an image reaches them, which keeps a 6v6 battle to about 60 MB, and it pauses between frames so a battle never stalls the bot's other commands. To regenerate it:
+`battleData.json` holds base stats, level-up moves, each move's power and effects, and the type chart for all 1,025 species: Gen 5 values for #1–649 (plus Fairy moves for the 22 species retyped to Fairy), the latest generation's values for #650–1025, and the modern 18-type chart. The effects it stores are priority, hit counts, drain, recoil, and crash damage. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. Battle images are animated GIFs: `@napi-rs/canvas` draws each frame, the runtime dependency `omggif` reads each sprite's animation frames, and the runtime dependency `gifenc` encodes the result. `utils/battle/render.js` encodes each frame as soon as it's drawn and decodes sprite frames only as an image reaches them, which keeps a 6v6 battle to about 60 MB, and it pauses between frames so a battle never stalls the bot's other commands. To regenerate it:
 
 ```bash
 npm run generate:battle-data
@@ -101,7 +101,8 @@ REGISTER_COMMANDS=true     # set true on first run; flip to false afterwards to 
 #### Optional — production-only
 
 ```bash
-RENDER_EXTERNAL_URL=https://your-app.onrender.com   # used by /dashboard in production
+PUBLIC_URL=https://your-app.fly.dev   # base for dashboard links and embed images (defaults to https://$FLY_APP_NAME.fly.dev)
+POKEMON_GENERATIONS=                 # Gens 6–9 to release, e.g. 7 or 6-9 (default: none; Gens 1–5 are always on)
 TRAINERDATA_DIR=/data                               # persistent volume path on Fly/Render
 ```
 
@@ -116,6 +117,19 @@ On first run with `REGISTER_COMMANDS=true`, slash commands register to your `GUI
 ### 7. Verify
 
 In your test server, run `/dashboard` — the bot should reply with an ephemeral link to the player dashboard.
+
+## Generations 6–9
+
+All 1,025 species are in the data, but only Gens 1–5 can be obtained unless `POKEMON_GENERATIONS` releases more (see `config/generations.js`). A configured generation that fails validation stays off. Owned Pokémon are never removed by switching a generation off. Sprites: Black/White-style animated GIFs where they exist, otherwise static Black/White-style pixel art, never 3D renders; credits at `/credits`. Data pipeline and release process: `docs/gen6-9/README.md`.
+
+```bash
+npm run generate:pokedex      # pokemonData.json (+ public copy), data/pokedex/forms.json
+npm run generate:battle-data  # battleData.json
+npm run import:sprites        # sprites + data/sprites/sprites.json (verifies audited SHA-1s)
+npm run generate:credits      # public/credits/index.html
+npm run validate:catalog      # release gate (add a generation number to check one)
+npm run report:balance        # docs/gen6-9/BALANCE-DATA.md
+```
 
 ## Tests
 

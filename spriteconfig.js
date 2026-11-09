@@ -22,10 +22,12 @@ export const rarityColors = {
   mythic: "#ef4444",     // red
 };
 
-const BASE = process.env.RENDER_EXTERNAL_URL || 'https://poke-discord-bot-2.onrender.com';
+// Fly.io host (utils/publicUrl.js); the old Render hosts are retired.
+import { publicBaseUrl } from './utils/publicUrl.js';
+const BASE = publicBaseUrl();
 
 export const spritePaths = {
-  // Pokémon sprites (Gen 1–5)
+  // Pokémon sprites (all generations). Prefer utils/sprites.js (manifest-checked).
   pokemon: `${BASE}/public/sprites/pokemon/normal/`,
   shiny: `${BASE}/public/sprites/pokemon/shiny/`,
   grayscale: `${BASE}/public/sprites/pokemon/grayscale/`,
@@ -34,7 +36,7 @@ export const spritePaths = {
   trainers: `${BASE}/public/sprites/trainers_2/`,
   trainersGray: `${BASE}/public/sprites/trainers_2/grayscale/`,
 
-  // Type icons (1–17)
+  // Type icons (1–18; 18 = Fairy)
   types: `${BASE}/public/sprites/types/`,
 
   // NEW: item icons (e.g. Poké Ball placeholder)

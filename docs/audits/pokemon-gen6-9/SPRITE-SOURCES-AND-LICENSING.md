@@ -1,0 +1,44 @@
+# Sprite Sources, Attribution and Licensing — Gen 6–9
+
+Read-only audit, 2026-11-09. This is not legal advice. It records what each source **publishes** about reuse, and flags where the bot would need a decision or permission.
+
+## 1. The rights picture in one paragraph
+
+Every Pokémon design is © Nintendo / Creatures / GAME FREAK (The Pokémon Company). **No** source below can grant rights in the characters. PokéAPI says so explicitly ("All image contents within are Copyright The Pokémon Company"), and the X/Y project says its sprites "are not open source, because we do not have the rights to the characters depicted." What the community sources *can* set is their own conditions on the fan artwork. All three Smogon projects allow **non-profit use with credit**, and the X/Y project adds a notice requirement and a no-redistribution request. The bot already serves official BW sprites (#1–649) under the same fan-use tolerance. Gen 6–9 adds **community-drawn** art, and its artists have stated terms.
+
+## 2. Source-by-source
+
+| Source | What it is | Original artists / leads | Published reuse conditions | Attribution | Commercial | Permission | Local redistribution (self-hosting copies) |
+|---|---|---|---|---|---|---|---|
+| **Smogon X/Y Sprite Project** (Gen 6) — https://www.smogon.com/forums/threads/x-y-sprite-project.3486712/ | BW-style 2D pixel sprites (96×96, 15 colours). Animations by the project's animators | Co-led by Layell (Ian Clail) and princessofmusic. Per-sprite spriter/animator in the tracker | Free for any project that is "not a for-profit product". Sites/projects must send **notice to the manager (Layell)** before implementing | **Required:** a credit page linking back to the thread. Individual spriters may be asked directly | **Non-profit only.** "Any games that charge money will not be accepted" | **Notice required** (explicit) | **Discouraged.** OP: "Please do not redistribute these sprites as it gives the false impression you created all of them." Hosting copies inside the bot, with a credit page, is the gray zone the notice is meant to cover |
+| **Smogon Sun/Moon Sprite Project** (Gen 7) — https://www.smogon.com/forums/threads/sun-moon-sprite-project.3577711/ | BW-style 2D sprites + animations | Thread by Layell. Showdown credits name Layell and leParagon as leads | "Free for use as long as the spriter or the project itself is credited" | **Required** (spriter or project) | **"Free for non-profit use"** | Not required (not stated) | Not stated |
+| **Smogon Sprite Project, Gen 8 onward** (Gen 8, Gen 9) — https://www.smogon.com/forums/threads/smogon-sprite-project.3647722/ | BW-style 2D sprites + animations | Thread by G.E.Z. Showdown credits name leParagon. Animators include Antiant, Uppa, PumpkinPastel and others in the tracker | Same wording as Sun/Moon | **Required** | **"Free for non-profit use"** | Not stated | Not stated |
+| **Pokémon Showdown sprite folders** (`gen5ani`, `gen5`) — https://play.pokemonshowdown.com/sprites/ | Host/mirror of the Smogon project output. Not a separate artwork source | Credits page: X/Y and Sun/Moon projects (Layell), Sun/Moon and Sword/Shield projects (leParagon) | The credits page states **no** reuse terms. The Smogon project terms above travel with the art | Inherit project terms | Inherit | Inherit | Hotlinking Showdown is a third-party dependency (see §4) |
+| **PokéAPI/sprites** — https://github.com/PokeAPI/sprites | Repository/mirror. Gen 6–9 BW-style files credited in its README to the Smogon community (links the Gen 8 thread and tracker) | Smogon spriters (650+). Official BW art (≤649) | Repository "distributed under CC0 1.0", while noting the images are © The Pokémon Company. **CC0 covers PokéAPI's own contribution only.** It cannot waive the Smogon artists' stated non-profit/credit terms | Project README credits Smogon. Follow the project terms | Inherit Smogon terms for 650+ | Inherit | CC0 for the repository. Smogon terms still apply to the art |
+| **Smogon forum attachments / trackers** (the four Google Sheets) | Upstream originals. Per-row artist and QC | Per row (`Animator` / `Spriter` / `QC` columns) | As the project thread | As project | Non-profit | As project | As project |
+| **PokéAPI `other/official-artwork`** | Official Sugimori-style artwork | The Pokémon Company | No licence. © The Pokémon Company | n/a | n/a | n/a | Fallback only. Not recommended for the collection look |
+| **Showdown `ani` / PokéAPI `other/showdown`; 3DS/HOME renders** | 3D model animations and renders | Game assets (ripped; PKParaíso credited for ripping) | © game publisher | — | — | — | **Rejected for style anyway** |
+
+## 3. Other sources discovered
+
+| Source | Finding | Status |
+|---|---|---|
+| Showdown `sprites.zip` (linked from the sprites index) | Bundle of the same Showdown folders | Duplicate. Not counted separately |
+| Older X/Y chart (`docs.google.com/spreadsheet/ccc?key=0Akua_VvFyhZTd…`) and 2016 Sun/Moon chart (`1SiHVq1d…`) linked from the threads | Superseded trackers | Not needed. Current trackers were used |
+| `spo.ink/amr`, `spo.ink/al7` ("download all finished sprites" links in the Gen 8 and Gen 7 threads) | Bundles of finished project sprites | **U — not fetched.** These are the same project output. Use them to cross-check during implementation |
+| Pokémon Essentials-compatible packs (Eevee Expo / Relic Castle "Gen 6–9 sprite" resources) | DS-style packs for fan games. Downloads generally sit behind forum accounts and carry their own credit lists, often including Smogon spriters | **U — not verified.** Not needed for coverage, because every species already has an in-style static. Licence terms would need a separate review if used |
+| PokéSprite / box-icon projects | Box icons only, not battle sprites | Not applicable |
+| Project Pokémon / PKParaíso sprite indexes | 3D model renders and animations | Rejected for style (same class as Showdown `ani`) |
+
+## 4. Flags for the bot
+
+1. **Commercial-use question (decision required).** All Gen 6–9 pixel art is offered for **non-profit use only**. The audit cannot tell whether Coop's Collection is non-profit. The account name `coopscollectionbiz` and the in-bot "shop" (in-game currency only, as far as the code shows) are not evidence either way. **If any part of the bot or its Discord community is monetised** (paid perks, donations tied to bot features, promotion of a business), the Smogon terms are arguably not met, and explicit permission from the project leads would be needed. Treat this as a blocker until the owner confirms.
+2. **Gen 6 notice requirement.** Before using X/Y-project sprites (all 72 Gen 6 species, plus the 48 X/Y/ORAS Megas and other Gen 6 forms), send notice to Layell as the thread requires. The X/Y thread also asks people not to redistribute. Hosting the files inside the bot's repository counts as redistribution in the ordinary sense. Mention it explicitly in the notice, or hotlink instead (see 4).
+3. **Credit page required.** Add a public credits page (for example a `/credits` route on the dashboard, plus a short line on `/pokedex` embeds or in the bot's about text) that links the three Smogon threads and lists per-sprite artists from the tracker `Animator`/`Spriter` columns (the `attribution_licensing` column of the inventory CSV already carries them). Today the repository has **no** sprite credits at all, even for PokéAPI-sourced files.
+4. **Hosting choice.** The bot serves sprites from its own `public/` folder through Express. Copying the Gen 6–9 files in keeps the current pattern and removes the runtime dependency on Showdown or GitHub uptime. It is also "redistribution". Hotlinking Showdown avoids that, but adds an external dependency, and Showdown can change or remove a file at any time (files are re-uploaded, e.g. 2026-07-14). **Recommendation:** self-host, but only after the notice and credit steps above, and record the source URL and SHA-1 of each imported file (the inventory CSV already has the preferred URL).
+5. **Unpublished tracker assets** (Spectrier and Calyrex-Shadow, on imgur). QC status is unknown and the project has not published them. Do not ship these without checking with the animator listed in the tracker.
+6. **Official artwork fallback.** It has no community licence and is plainly the rights holder's art. Use it only if the owner accepts the same fan-use posture as the existing official BW sprites. It is not needed for any species, because every species has a static pixel sprite.
+
+## 5. Per-asset attribution
+
+`pokemon-sprite-inventory.csv` → column `attribution_licensing`. It gives the project, the credit/non-profit condition, the X/Y notice condition where it applies, and the tracker's animator/spriter credit where one is listed (e.g. "tracker credit: Antiant"). Raw tracker rows, including QC names, are in `sources/smogon-trackers/`.

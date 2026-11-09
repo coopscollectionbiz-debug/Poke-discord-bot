@@ -49,7 +49,7 @@ The up-to-6 Pokémon a player shows on their trainer card, one slot per Pokémon
 _Avoid_: party, lineup, battle team, displayed Pokémon
 
 **Region**:
-A named set of Pokémon that share a home region: Kanto, Johto, Hoenn, Sinnoh, or Unova. The game's Pokémon data puts every Pokémon in exactly one region.
+A named set of Pokémon that share a home region: Kanto, Johto, Hoenn, Sinnoh, Unova, Kalos, Alola, Galar, or Paldea. The game's Pokémon data puts every Pokémon in exactly one region, by National Dex number: the Hisui-introduced species #899–905 belong to Galar, and alternate forms (Galarian Meowth, Mega Charizard…) count toward their base species, never as extra Pokémon. Kalos, Alola, Galar and Paldea only appear once their generation is released.
 _Avoid_: region group, generation, gen
 
 **Pokédex completion**:

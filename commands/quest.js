@@ -3,6 +3,7 @@
 // Coop's Collection Discord Bot
 // ==========================================================
 
+import { pokemonSpriteUrl } from "../utils/sprites.js";
 import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
@@ -17,6 +18,7 @@ import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { logEvent } from "../utils/eventLog.js";
 import { lockUser } from "../utils/userLocks.js";
 import { grantTrainer } from "../services/assets.js";
+import { trackProgress } from "../progression/achievements.js";
 import { recruitPool } from "./recruit.js";
 
 // ==========================================================
@@ -86,11 +88,12 @@ export default {
           .setColor(shiny ? 0xffd700 : 0x00ae86)
           .setTitle("🏆 Quest Complete!")
           .setDescription(withSaveNote(shiny ? `✨ You discovered a **Shiny ${pick.name}!**` : `You found a **${pick.name}!**`, ack))
-          .setThumbnail(shiny ? `${spritePaths.shiny}${pick.id}.gif` : `${spritePaths.pokemon}${pick.id}.gif`)
+          .setThumbnail(pokemonSpriteUrl(pick.id, shiny))
           .setFooter({ text: `+${QUEST_CC_REWARD} CC | Balance: ${user.cc} CC` });
       } else {
         const file = getTrainerKey(pick);
         grantTrainer(user, file);
+        trackProgress(user, [{ type: "trainers" }]); // achievements (same lock, same save)
         user.cc = (user.cc || 0) + QUEST_CC_REWARD;
         user.lastQuest = Date.now();
 

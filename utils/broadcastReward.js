@@ -7,6 +7,7 @@
 //  • Unified sprite resolution + clean embed handling
 // ==========================================================
 
+import { pokemonSpriteUrl } from "./sprites.js";
 import { EmbedBuilder } from "discord.js";
 import { spritePaths, rarityEmojis } from "../spriteconfig.js";
 import fs from "fs";
@@ -93,9 +94,7 @@ export async function broadcastReward(
     if (type === "pokemon") {
       // 🟢 Pokémon
       displayName = shiny ? `✨ Shiny ${item.name}` : item.name;
-      spriteUrl = shiny
-        ? `${spritePaths.shiny}${item.id}.gif`
-        : `${spritePaths.pokemon}${item.id}.gif`;
+      spriteUrl = pokemonSpriteUrl(item.id, shiny);
     } else {
       // 🔵 Trainer
       const base = spritePaths.trainers.endsWith("/")

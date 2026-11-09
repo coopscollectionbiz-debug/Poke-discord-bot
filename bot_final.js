@@ -55,6 +55,9 @@ import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
 import { handleInventoryRequest } from "./services/inventoryApi.js";
 import { createGameplayHandlers } from "./services/gameplay.js";
+import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
+import { rarityColors } from "./utils/rarityPalette.js";
+
 import {
   normVariant,
   toTeamObj,
@@ -539,16 +542,8 @@ mountAdminDashboard(app, {
 // ==========================================================
 // 🎨 Color Palette (Matches CSS theme)
 // ==========================================================
-export const rarityColors = {
-  common: 0x9ca3af,     // gray
-  uncommon: 0x10b981,   // green
-  rare: 0x3b82f6,       // blue
-  epic: 0xa855f7,       // purple
-  legendary: 0xfacc15,  // gold
-  mythic: 0xef4444,     // red
-  shiny: 0xffd700,      // shiny gold highlight
-  success: 0x00ff9d,    // used for confirmations
-};
+// rarityColors lives in utils/rarityPalette.js (moved verbatim).
+export { rarityColors };
 
 // ==========================================================
 // 📦 Internal Utilities
@@ -599,8 +594,7 @@ const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
 // ===========================================================
 // 🛡️ TOKEN MANAGEMENT (10-min access tokens for picker)
 // ===========================================================
-// We'll keep all active tokens in memory for 10 minutes
-const activeTokens = new Map();
+// Active tokens are kept in utils/dashboardAuth.js (10-minute lifetime).
 
 // ✅ Garbage collection — prevents memory growth on long-running process
 // Runs every 5 minutes: cleans expired tokens, stale cooldowns, and cached members
@@ -608,12 +602,7 @@ setInterval(() => {
   const now = Date.now();
   let removed = 0;
 
-  for (const [token, entry] of activeTokens.entries()) {
-    if (!entry || typeof entry.expires !== "number" || now > entry.expires) {
-      activeTokens.delete(token);
-      removed++;
-    }
-  }
+  removed += pruneExpiredTokens(now);
 
   for (const [k, ts] of userCooldowns) if (now - ts > 60_000) { userCooldowns.delete(k); removed++; }
   for (const [k, ts] of rewardCooldowns) if (now - ts > 60_000) { rewardCooldowns.delete(k); removed++; }
@@ -625,90 +614,8 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 
-/**
- * Generate a secure token linked to both the user and the channel.
- *
- * The `type` field lets us distinguish between regular player
- * dashboard tokens and admin dashboard tokens. Even though they
- * share the same activeTokens Map, requireAdminSession enforces
- * type === "admin" so a leaked player token can't be used to hit
- * admin endpoints.
- *
- * @param {string} userId - The Discord user ID
- * @param {string} channelId - The Discord channel ID where the command was used
- * @param {string} [type="dashboard"] - Token type: "dashboard" (default) or "admin"
- */
-function generateToken(userId, channelId, type = "dashboard") {
-  // ✅ strong, unguessable, URL-safe
-  const token = crypto.randomBytes(18).toString("base64url");
-  activeTokens.set(token, {
-    id: userId,
-    channelId,
-    type,
-    expires: Date.now() + 10 * 60 * 1000,
-  });
-  return token;
-}
-
-/**
- * Validate that a token belongs to a specific user and isn't expired.
- * If expectedType is provided, also enforces that the token was
- * issued for that type (prevents a dashboard token from being used
- * on an admin endpoint).
- *
- * @param {string} userId - The Discord user ID to match
- * @param {string} token - The token to check
- * @param {string|null} [expectedType=null] - If set, entry.type must match
- */
-function validateToken(userId, token, expectedType = null) {
-  const entry = activeTokens.get(token);
-  if (!entry) return false;
-  if (entry.id !== userId) return false;
-  if (expectedType && entry.type !== expectedType) return false;
-  if (Date.now() > entry.expires) {
-    activeTokens.delete(token);
-    return false;
-  }
-  return true;
-}
-
-/**
- * Retrieve the channel ID stored with a token
- */
-function getChannelIdForToken(token) {
-  const entry = activeTokens.get(token);
-  return entry ? entry.channelId : null;
-}
-
-function requireDashboardSession(req, userId) {
-  const sessionToken = req.cookies?.dashboard_session;
-  if (!sessionToken) return false;
-  // Player dashboard tokens are the legacy default "dashboard" type.
-  return validateToken(String(userId), sessionToken, "dashboard");
-}
-
-/**
- * Admin session check. Unlike requireDashboardSession this doesn't
- * require the caller to supply a userId — admin endpoints usually
- * operate on arbitrary users, so we trust the cookie itself.
- *
- * Returns the authenticated admin user's Discord ID on success, or
- * null if the session is missing/invalid/expired/wrong-type.
- */
-function requireAdminSession(req) {
-  const sessionToken = req.cookies?.admin_session;
-  if (!sessionToken) return null;
-  const entry = activeTokens.get(sessionToken);
-  if (!entry) return null;
-  if (entry.type !== "admin") return null;
-  if (Date.now() > entry.expires) {
-    activeTokens.delete(sessionToken);
-    return null;
-  }
-  return entry.id;
-}
-
-// Export if using ES modules
+// Token functions live in utils/dashboardAuth.js (moved verbatim) so
+// commands can import them without importing bot_final.js.
 export { generateToken, validateToken, getChannelIdForToken, requireAdminSession };
 
 

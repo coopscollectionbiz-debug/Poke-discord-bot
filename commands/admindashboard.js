@@ -26,7 +26,7 @@
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
-import { generateToken } from "../bot_final.js";
+import { generateToken } from "../utils/dashboardAuth.js";
 
 const ADMIN_ROLE_NAME = process.env.ADMIN_ROLE_NAME || "Developer";
 

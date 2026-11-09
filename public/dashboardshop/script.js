@@ -269,14 +269,19 @@ async function buyStone(cost) {
 
       showShopModal({
         title: "Purchase Complete!",
-        message: res.saveNotice ? `You bought an Evolution Stone!
-
-${res.saveNotice}` : "You bought an Evolution Stone!",
+        // The modal renders HTML, so escape the server's notice text.
+        message: res.saveNotice
+          ? `You bought an Evolution Stone!<br><br><span style="color:#facc15;">${escapeHtml(res.saveNotice)}</span>`
+          : "You bought an Evolution Stone!",
         sprites: ["/public/sprites/items/evolution_stone.png"],
         onConfirm: () => {},
       });
     },
   });
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
 
 function newRequestId() {

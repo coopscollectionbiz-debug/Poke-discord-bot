@@ -279,6 +279,7 @@ export function listInventory(user, { category = null } = {}) {
 export const REQUEST_ID_PATTERN = /^[A-Za-z0-9-]{8,64}$/; // no "_" → can't spell __proto__
 const REQUEST_KEEP = 50;
 const REQUEST_TTL_MS = 24 * 60 * 60 * 1000;
+const REQUEST_HARD_CAP = 200;
 
 /**
  * Look up a request id. Returns the stored result for a replay, a conflict
@@ -289,13 +290,30 @@ export function findRequest(user, requestId, payloadKey, now = Date.now()) {
   const hit = list.find((r) => r && r.id === requestId && now - (r.at || 0) < REQUEST_TTL_MS);
   if (!hit) return null;
   if (hit.payload !== payloadKey) return { conflict: true };
-  return { replay: true, result: hit.result };
+  return { replay: true, result: hit.result, entry: hit };
 }
 
+/**
+ * Record a request. `durable` starts false and is set only after a save of a
+ * snapshot that contains this change returns true. The entry lives in the
+ * player record, so it is saved (and restored after a restart) together
+ * with the change it describes: if the entry exists after a restart, the
+ * change does too.
+ */
 export function rememberRequest(user, requestId, payloadKey, result, now = Date.now()) {
   const list = (Array.isArray(user.itemRequests) ? user.itemRequests : []).filter((r) => r && now - (r.at || 0) < REQUEST_TTL_MS);
-  list.push({ id: requestId, payload: payloadKey, result, at: now });
-  user.itemRequests = list.slice(-REQUEST_KEEP);
+  const entry = { id: requestId, payload: payloadKey, result, at: now, durable: false };
+  list.push(entry);
+  // Trim to REQUEST_KEEP by dropping the oldest CONFIRMED entries first: an
+  // entry whose save is still pending must survive so a retry of that
+  // request can't apply twice. Hard cap REQUEST_HARD_CAP (24 h TTL anyway).
+  while (list.length > REQUEST_KEEP) {
+    const i = list.findIndex((r) => r.durable === true);
+    if (i < 0) break;
+    list.splice(i, 1);
+  }
+  user.itemRequests = list.slice(-REQUEST_HARD_CAP);
+  return entry;
 }
 
 // ----------------------------------------------------------
@@ -321,7 +339,16 @@ export async function runInventoryTransaction({ trainerData, userId, lock, save,
     if (requestId != null) {
       const seen = findRequest(user, requestId, payloadKey);
       if (seen?.conflict) return fail("This request id was already used for a different action.");
-      if (seen?.replay) return { ok: true, replayed: true, saved: true, note: "", result: seen.result };
+      if (seen?.replay) {
+        // Never re-run the mutation. Report "saved" only if a confirmed save
+        // contains it; otherwise ask the queue to save the CURRENT state (a
+        // whole-map snapshot that includes the original change) and report
+        // what actually happened. Local disk only; no network in the lock.
+        if (seen.entry.durable === true) return { ok: true, replayed: true, saved: true, persisted: "durable", note: "", result: seen.result };
+        const ack = await save(trainerData);
+        if (ack.saved) seen.entry.durable = true;
+        return { ok: true, replayed: true, saved: ack.saved, persisted: ack.saved ? "durable" : "pending", note: ack.note, result: seen.result };
+      }
     }
 
     let result;
@@ -332,9 +359,12 @@ export async function runInventoryTransaction({ trainerData, userId, lock, save,
     }
     if (!result?.ok) return result ?? fail("Rejected.");
 
-    if (requestId != null) rememberRequest(user, requestId, payloadKey, result);
+    const entry = requestId != null ? rememberRequest(user, requestId, payloadKey, result) : null;
     const ack = await save(trainerData);
-    return { ok: true, replayed: false, saved: ack.saved, note: ack.note, result };
+    // The flag itself reaches disk with the next save; until then a replay
+    // re-confirms by saving again (conservative, never over-claims).
+    if (entry && ack.saved) entry.durable = true;
+    return { ok: true, replayed: false, saved: ack.saved, persisted: ack.saved ? "durable" : "pending", note: ack.note, result };
   });
 }
 

@@ -54,7 +54,23 @@ import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/lo
 import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
 import { handleInventoryRequest } from "./services/inventoryApi.js";
-import { saveAndAck, SAVE_DELAYED_NOTE } from "./utils/saveManager.js";
+import { createGameplayHandlers } from "./services/gameplay.js";
+import {
+  normVariant,
+  toTeamObj,
+  isDisplayedVariant,
+  tierKey,
+  DONATION_CC_BY_TIER,
+  DUST_REWARD_BY_TIER,
+  SHINY_CRAFT_COST_BY_TIER,
+  craftCostForTier,
+  shinyEvolveDustCost,
+  NON_SHINY_DUST_WEEKLY_CAP,
+  getISOWeekKeyUTC,
+  ensureWeeklyReset,
+} from "./utils/economyRules.js";
+
+import { saveAndAck, SAVE_DELAYED_NOTE, saveAckFields } from "./utils/saveManager.js";
 
 // Nothing may be written to disk until player data has been loaded.
 requireLoadBeforeWrite();
@@ -90,69 +106,8 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 
-// ==========================================================
-// 🧠 Pokémon Variant + Items Helpers (GLOBAL, SINGLE SOURCE)
-// ==========================================================
-function normVariant(v) {
-  return String(v || "normal").toLowerCase() === "shiny" ? "shiny" : "normal";
-}
-
-function toTeamObj(entry) {
-  if (typeof entry === "number") return { id: entry, variant: "normal" };
-  if (typeof entry === "string") {
-    const n = Number(entry);
-    return Number.isInteger(n) ? { id: n, variant: "normal" } : null;
-  }
-  if (entry && typeof entry === "object") {
-    const pid = Number(entry.id);
-    if (!Number.isInteger(pid)) return null;
-    return { id: pid, variant: normVariant(entry.variant) };
-  }
-  return null;
-}
-
-function isDisplayedVariant(user, pokeId, variant) {
-  const teamRaw = Array.isArray(user.displayedPokemon) ? user.displayedPokemon : [];
-  const team = teamRaw.map(toTeamObj).filter(Boolean);
-  const pid = Number(pokeId);
-  const v = normVariant(variant);
-  return team.some((t) => t.id === pid && t.variant === v);
-}
-
-// ==========================================================
-// ✨ SHINY DUST ECONOMY (Single Source of Truth)
-// ==========================================================
-function tierKey(t) {
-  return String(t || "common").toLowerCase();
-}
-
-// CC paid per donated copy (shiny pays 5×). Shared by single + bulk donate.
-const DONATION_CC_BY_TIER = {
-  common: 250,
-  uncommon: 500,
-  rare: 1000,
-  epic: 2500,
-  legendary: 5000,
-  mythic: 10000,
-};
-
-const DUST_REWARD_BY_TIER = {
-  common: 4,
-  uncommon: 7,
-  rare: 12,
-  epic: 18,
-  legendary: 22,
-  mythic: 30,
-};
-
-const SHINY_CRAFT_COST_BY_TIER = {
-  common: 15,
-  uncommon: 25,
-  rare: 40,
-  epic: 60,
-  legendary: 80,
-  mythic: 120,
-};
+// (variant helpers, tier constants and dust/craft costs moved to
+// utils/economyRules.js so route handlers can be tested; values unchanged)
 
 // ==========================================================
 // ✨ NON-SHINY → DUST (Probability Rolls by Tier)
@@ -226,54 +181,8 @@ function spendItem(user, key, amount) {
   return consumeItem(user, key, cost).ok;
 }
 
-// Craft cost for converting normal -> shiny by tier
-function craftCostForTier(tier) {
-  return SHINY_CRAFT_COST_BY_TIER[tierKey(tier)] ?? 0;
-}
-
-// Shiny evolve dust uses the "difference" rule
-function shinyEvolveDustCost(baseTier, targetTier) {
-  return Math.max(0, craftCostForTier(targetTier) - craftCostForTier(baseTier));
-}
-
-// ==========================================================
-// 🗓️ NON-SHINY DUST WEEKLY CAP (UTC ISO WEEK)
-// ==========================================================
-// ==========================================================
-// 🗓️ NON-SHINY DUST WEEKLY CAP (UTC ISO WEEK)
-// ==========================================================
-const NON_SHINY_DUST_WEEKLY_CAP = 8;
-
-function getISOWeekKeyUTC(date = new Date()) {
-  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const day = d.getUTCDay() || 7; // Sun=0 -> 7
-  d.setUTCDate(d.getUTCDate() + 4 - day); // nearest Thursday
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
-}
-
-function ensureWeeklyReset(u) {
-  const key = getISOWeekKeyUTC();
-
-  // sanitize fields
-  if (typeof u.nonShinyDustWeekKey !== "string") u.nonShinyDustWeekKey = "";
-  u.nonShinyDustEarnedThisWeek = Number.isFinite(u.nonShinyDustEarnedThisWeek)
-    ? Math.max(0, Math.floor(u.nonShinyDustEarnedThisWeek))
-    : 0;
-
-  // roll week if changed
-  if (u.nonShinyDustWeekKey !== key) {
-    u.nonShinyDustWeekKey = key;
-    u.nonShinyDustEarnedThisWeek = 0;
-    u.weeklyPackClaimed = false;
-  }
-
-  // clamp to cap
-  if (u.nonShinyDustEarnedThisWeek > NON_SHINY_DUST_WEEKLY_CAP) {
-    u.nonShinyDustEarnedThisWeek = NON_SHINY_DUST_WEEKLY_CAP;
-  }
-}
+// (craftCostForTier, shinyEvolveDustCost, weekly dust cap and
+// ensureWeeklyReset moved to utils/economyRules.js; Release B qualification)
 
 const COMMAND_TIMEOUT_MS = 25_000;
 
@@ -1436,7 +1345,7 @@ app.use("/api", (req, res, next) => {
 // D14: dashboard replies say whether the change reached disk. On a failed
 // write the change stays in memory and is retried; the reply carries a
 // "saved with a delay" notice instead of an unqualified success.
-const saveAckFields = (ack) => (ack.saved ? { saved: true } : { saved: false, saveNotice: SAVE_DELAYED_NOTE });
+// saveAckFields now lives in utils/saveManager.js (shared with route handlers).
 
 app.post("/api/updateUser", express.json({ limit: "32kb" }), async (req, res) => {
   try {
@@ -1560,148 +1469,34 @@ function normalizeDisplayedPokemon(rawTeam, maxSize = 6) {
 // ==========================================================
 // 🛍️ SHOP API — POKÉMON REWARD (Atomic, CC-safe, Exploit-proof)
 // ==========================================================
-app.post("/api/rewardPokemon", express.json(), async (req, res) => {
-  try {
-    const { id, source } = req.body;
-
-    if (!id) return res.status(400).json({ success: false, error: "Missing id" });
-    if (!requireDashboardSession(req, id))
-      return res.status(403).json({ success: false, error: "Invalid or expired session" });
-
-    if (!trainerData[id])
-      return res.status(404).json({ success: false, error: "User not found" });
-
-    // ======================================================
-    // 🧱 COST MAP (canonical)
-    // ======================================================
-    const COST = {
-      pokeball: 1000,
-      greatball: 2000,
-      ultraball: 4000,
-    };
-
-    if (!COST[source]) {
-      return res.json({
-        success: false,
-        error: `Invalid Poké Ball type: ${source}`,
-      });
-    }
-
-    // ======================================================
-    // 🔒 ATOMIC USER LOCK
-    // ======================================================
-    await lockUser(id, async () => {
-      const user = trainerData[id];
-
-      // ----------------------------------------
-      // 1️⃣ SERVER-SIDE CC CHECK
-      // ----------------------------------------
-      if ((user.cc ?? 0) < COST[source]) {
-        return res.json({
-          success: false,
-          error: `Not enough CC — requires ${COST[source]} CC.`,
-        });
-      }
-
-      // ----------------------------------------
-      // 2️⃣ LOAD POKEMON POOL
-      // ----------------------------------------
-      const allPokemon = await getAllPokemon();
-      if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
-        return res.json({
-          success: false,
-          error: "Pokémon pool unavailable.",
-        });
-      }
-
-      // ----------------------------------------
-      // 3️⃣ SELECT POKÉMON (ball + rank aware)
-      // ----------------------------------------
-      const reward = selectRandomPokemonForUser(allPokemon, user, source);
-      if (!reward) {
-        return res.json({
-          success: false,
-          error: "No Pokémon could be selected.",
-        });
-      }
-
-      // ----------------------------------------
-      // 4️⃣ SHINY ROLL
-      // ----------------------------------------
-      const shiny = rollForShiny(user.tp || 0);
-
-      // ----------------------------------------
-      // 5️⃣ APPLY CHARGES & ITEMS (Atomic)
-      // ----------------------------------------
-      user.cc -= COST[source];
-
-      grantCatch(user, reward.id, shiny ? "shiny" : "normal");
-
-      // ----------------------------------------
-      // 6️⃣ SAVE TRAINER DATA
-      // ----------------------------------------
-      const saveAck = await saveAndAck(trainerData);
-
-      // 📜 Event log — captures every ball roll for the admin analytics
-      // panel. logEvent never throws, so this can't interrupt the roll.
-      logEvent("roll", id, {
-        ball: source,
-        cost: COST[source],
-        pokemonId: reward.id,
-        pokemonName: reward.name,
-        tier: reward.tier || reward.rarity || "common",
-        shiny,
-      });
-
-// ----------------------------------------
-// 7️⃣ BROADCAST IF RARE+
-// ----------------------------------------
-const rarity = reward.tier || reward.rarity || "common";
-if (
-  shiny ||
-  ["rare", "epic", "legendary", "mythic"].includes(rarity.toLowerCase())
-) {
-  const discordUser = client.users.cache.get(id);
-  if (discordUser) {
+// Gameplay handlers live in services/gameplay.js (tested); the routes below
+// only adapt HTTP. Prices, odds, costs and rewards are unchanged.
+const gameplay = createGameplayHandlers({
+  getTrainerData: () => trainerData,
+  lockUser,
+  save: saveAndAck,
+  normalizeUserSchema,
+  logEvent,
+  onRareCatch: ({ userId, pokemon, source }) => {
+    const discordUser = client.users.cache.get(userId);
+    if (!discordUser) return;
     broadcastReward(client, {
       user: discordUser,
       type: "pokemon",
-      item: {
-        id: reward.id,
-        name: reward.name,
-        rarity,
-        spriteFile: `${reward.id}.gif`
-      },
-      shiny,
+      item: { id: pokemon.id, name: pokemon.name, rarity: pokemon.rarity, spriteFile: `${pokemon.id}.gif` },
+      shiny: pokemon.shiny,
       source,
-    }).catch(err => console.warn("⚠️ Broadcast failed:", err.message));
-  }
-}
+    }).catch((err) => console.warn("⚠️ Broadcast failed:", err.message));
+  },
+});
 
-      // ----------------------------------------
-      // 8️⃣ RESPOND TO FRONTEND WITH NEW CC & SPRITE
-      // ----------------------------------------
-      return res.json({ ...saveAckFields(saveAck),
-        success: true,
-        pokemon: {
-          id: reward.id,
-          name: reward.name,
-          rarity,
-          shiny,
-          sprite: shiny
-            ? `${spritePaths.shiny}${reward.id}.gif`
-            : `${spritePaths.pokemon}${reward.id}.gif`,
-        },
-        cc: user.cc,
-      });
-    });
-
+app.post("/api/rewardPokemon", express.json(), async (req, res) => {
+  try {
+    const r = await gameplay.rewardPokemon({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(r.status).json(r.body);
   } catch (err) {
-    console.error("❌ /api/rewardPokemon ERROR:", err);
-    return res.status(500).json({
-      success: false,
-      error: "Internal server error while generating Pokémon reward.",
-    });
+    console.error("❌ /api/rewardPokemon:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
 
@@ -1911,73 +1706,13 @@ if (interaction.isChatInputCommand()) {
 // 🧰 WEEKLY PACK — Pokémon Only (Forced Rarity + Atomic Lock)
 // ==========================================================
 app.post("/api/weekly-pack", express.json(), async (req, res) => {
-  const { id } = req.body;
-
-  if (!id) return res.status(400).json({ error: "Missing id" });
-  if (!requireDashboardSession(req, id))
-    return res.status(403).json({ error: "Invalid or expired session" });
-
-  if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
-
-  // D6: every await happens BEFORE the claim flag is set. The flag and all
-  // six grants are applied in one synchronous block, then saved, so a
-  // failure can never leave the pack "claimed" with nothing granted.
-  let allPokemon;
   try {
-    allPokemon = await getPokemonCached();
+    const r = await gameplay.weeklyPack({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(r.status).json(r.body);
   } catch (err) {
-    console.error("❌ weekly-pack: Pokémon data unavailable:", err?.message || err);
-    return res.status(503).json({ error: "Rewards are unavailable right now. Please try again." });
+    console.error("❌ /api/weekly-pack:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
-
-  await lockUser(id, async () => {
-    const user = trainerData[id];
-
-    ensureWeeklyReset(user);
-
-    if (user.weeklyPackClaimed) {
-      return res.status(400).json({ error: "Weekly pack already claimed." });
-    }
-
-    const pick = (tier) => {
-      const pool = allPokemon.filter((p) => p.tier === tier);
-      return pool[Math.floor(Math.random() * pool.length)];
-    };
-
-    const results = [];
-    for (const tier of ["common", "common", "common", "uncommon", "uncommon", "rare"]) {
-      const reward = pick(tier);
-      if (!reward) continue;
-      const shiny = rollForShiny(user.tp || 0);
-      grantCatch(user, reward.id, shiny ? "shiny" : "normal");
-      results.push({
-        type: "pokemon",
-        id: reward.id,
-        name: reward.name,
-        rarity: reward.tier,
-        shiny,
-        sprite: shiny
-          ? `/public/sprites/pokemon/shiny/${reward.id}.gif`
-          : `/public/sprites/pokemon/normal/${reward.id}.gif`,
-      });
-    }
-    user.weeklyPackClaimed = true;
-
-    const saveAck = await saveAndAck(trainerData);
-
-    // 📜 Event log — weekly pack is a scheduled CC/Pokemon faucet;
-    // track the exact rewards so admins can see what showed up.
-    logEvent("weekly_claim", id, {
-      rewards: results.map((r) => ({
-        pokemonId: r.id,
-        pokemonName: r.name,
-        tier: r.rarity,
-        shiny: r.shiny,
-      })),
-    });
-
-    res.json({ ...saveAckFields(saveAck), success: true, rewards: results });
-  });
 });
 
 // ===========================================================
@@ -2375,158 +2110,13 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
 // ✅ NEW: blocks evolving a Pokémon variant if it's currently displayed on the user's team
 // ==========================================================
 app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
-  const { id, baseId, targetId, shiny, variant } = req.body;
-
-  if (!id) return res.status(400).json({ error: "Missing id" });
-  if (baseId == null || targetId == null)
-    return res.status(400).json({ error: "Missing baseId/targetId" });
-
-  if (!requireDashboardSession(req, id)) {
-    return res.status(403).json({ error: "Invalid or expired session" });
+  try {
+    const r = await gameplay.evolve({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(r.status).json(r.body);
+  } catch (err) {
+    console.error("❌ /api/pokemon/evolve:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
-
-  if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
-
-  await lockUser(id, async () => {
-    // Normalize user so pokemon + displayedPokemon are consistent
-    trainerData[id] = normalizeUserSchema(id, trainerData[id]);
-    const user = trainerData[id];
-
-    const pokemonData = await getPokemonDataCached();
-
-    const bId = Number(baseId);
-    const tId = Number(targetId);
-
-    const base = pokemonData[bId];
-    const target = pokemonData[tId];
-
-    if (!base || !target) {
-      return res.status(400).json({ error: "Invalid Pokémon IDs" });
-    }
-
-    const COST_MAP = {
-      "common-common": 1,
-      "uncommon-uncommon": 2,
-      "rare-rare": 3,
-      "epic-epic": 4,
-      "legendary-legendary": 6,
-      "mythic-mythic": 8,
-      "common-uncommon": 1,
-      "uncommon-rare": 2,
-      "rare-epic": 5,
-      "epic-legendary": 8,
-      "legendary-mythic": 12,
-      "common-rare": 4,
-      "common-epic": 8,
-      "common-legendary": 12,
-      "uncommon-epic": 8,
-      "uncommon-legendary": 12,
-      "uncommon-mythic": 14,
-      "rare-legendary": 8,
-      "rare-mythic": 14,
-      "epic-mythic": 12,
-    };
-
-    const currentTier = String(base.tier || "common").toLowerCase();
-    const nextTier = String(target.tier || "common").toLowerCase();
-    const key = `${currentTier}-${nextTier}`;
-
-    const cost = COST_MAP[key] ?? 0;
-    if (cost <= 0) {
-      return res.status(400).json({
-        error: `Evolution path ${currentTier} ➝ ${nextTier} is not supported`,
-      });
-    }
-
-    if (getQuantity(user, "evolution_stone") < cost) {
-      return res.status(400).json({ error: "Not enough Evolution Stones." });
-    }
-
-    // Determine variant (prefer explicit "variant", fall back to boolean "shiny")
-    const chosenVariant =
-      typeof variant === "string" ? normVariant(variant) : (shiny ? "shiny" : "normal");
-
-const baseTier = tierKey(base.tier || "common");
-const targetTier = tierKey(target.tier || "common");
-const dustCost = chosenVariant === "shiny"
-  ? shinyEvolveDustCost(baseTier, targetTier)
-  : 0;
-
-
-    // 🚫 NEW RULE: can't evolve if currently displayed on team (variant-aware)
-    if (isDisplayedVariant(user, bId, chosenVariant)) {
-      return res.status(400).json({
-        error: `You can’t evolve your ${chosenVariant} ${base.name} because it’s currently displayed on your team. Remove it from your team first.`,
-      });
-    }
-
-    const ownedCount = user.pokemon?.[bId]?.[chosenVariant] || 0;
-    if (ownedCount <= 0) {
-      return res.status(400).json({
-        error: `You do not own a ${chosenVariant === "shiny" ? "shiny " : ""}${base.name}.`,
-      });
-    }
-
-    // Spend stones (+ dust for a shiny evolve) all-or-nothing (Release B):
-    // nothing is deducted unless everything is available.
-    if (dustCost > 0 && getQuantity(user, "shiny_dust") < dustCost) {
-      return res.status(400).json({
-        error: `Not enough Shiny Dust. Requires ${dustCost}.`,
-        dustRequired: dustCost,
-        dustAvailable: getItem(user, "shiny_dust"),
-      });
-    }
-    const spent = consumeItems(user, { evolution_stone: cost, shiny_dust: dustCost });
-    if (!spent.ok) {
-      return res.status(400).json({ error: spent.error });
-    }
-
-    // Remove 1 base
-    user.pokemon ??= {};
-    user.pokemon[bId] ??= { normal: 0, shiny: 0 };
-    user.pokemon[bId][chosenVariant] -= 1;
-
-    if ((user.pokemon[bId].normal ?? 0) <= 0 && (user.pokemon[bId].shiny ?? 0) <= 0) {
-      delete user.pokemon[bId];
-    }
-
-    // Add 1 target (same variant)
-    user.pokemon[tId] ??= { normal: 0, shiny: 0 };
-    user.pokemon[tId][chosenVariant] += 1;
-    carryLevel(user, { id: bId, variant: chosenVariant }, { id: tId, variant: chosenVariant });
-    resetLevelIfGone(user, bId, chosenVariant);
-
-    const saveAck = await saveAndAck(trainerData);
-
-    // 📜 Event log — evolution consumes stones (and sometimes dust)
-    // so admins can track stone/dust sink pressure.
-    logEvent("evolve", id, {
-      fromId: bId,
-      fromName: base.name,
-      fromTier: currentTier,
-      toId: tId,
-      toName: target.name,
-      toTier: nextTier,
-      variant: chosenVariant,
-      stoneCost: cost,
-      dustCost,
-    });
-
-    return res.json({ ...saveAckFields(saveAck),
-  success: true,
-  evolved: {
-    from: base.name,
-    to: target.name,
-    variant: chosenVariant,
-    shiny: chosenVariant === "shiny",
-    cost,                 // stones
-    dustCost,             // NEW
-  },
-  stonesRemaining: getQuantity(user, "evolution_stone"),
-  shinyDustRemaining: getItem(user, "shiny_dust"),
-});
-
-  });
 });
 
 // ==========================================================
@@ -2725,86 +2315,13 @@ app.post("/api/pokemon/donate-bulk", express.json({ limit: "100kb" }), async (re
 // Blocks converting if the NORMAL variant is currently displayed.
 // ==========================================================
 app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
-  const { id, pokeId } = req.body;
-
-  if (!id) return res.status(400).json({ error: "Missing id" });
-  if (pokeId == null) return res.status(400).json({ error: "Missing pokeId" });
-
-  if (!requireDashboardSession(req, id)) {
-    return res.status(403).json({ error: "Invalid or expired session" });
+  try {
+    const r = await gameplay.convertToShiny({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(r.status).json(r.body);
+  } catch (err) {
+    console.error("❌ /api/pokemon/convert-to-shiny:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
-
-  if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
-
-  await lockUser(id, async () => {
-    trainerData[id] = normalizeUserSchema(id, trainerData[id]);
-    const user = trainerData[id];
-
-    const pokemonData = await getPokemonDataCached();
-
-    const pid = Number(pokeId);
-    const p = pokemonData[pid];
-    if (!p) return res.status(400).json({ error: "Invalid Pokémon ID" });
-
-    if (isDisplayedVariant(user, pid, "normal")) {
-      return res.status(400).json({
-        error: `You can’t convert ${p.name} to shiny because its normal variant is currently displayed on your team. Remove it from your team first.`,
-      });
-    }
-
-    const tier = tierKey(p.tier || "common");
-    const dustCost = SHINY_CRAFT_COST_BY_TIER[tier] ?? 0;
-
-    user.pokemon ??= {};
-    user.pokemon[pid] ??= { normal: 0, shiny: 0 };
-
-    if ((user.pokemon[pid].normal ?? 0) <= 0) {
-      return res.status(400).json({ error: `You do not own a normal ${p.name} to convert.` });
-    }
-
-    if (getItem(user, "shiny_dust") < dustCost) {
-      return res.status(400).json({
-        error: `Not enough Shiny Dust. Requires ${dustCost}.`,
-        dustRequired: dustCost,
-        dustAvailable: getItem(user, "shiny_dust"),
-      });
-    }
-
-    const ok = spendItem(user, "shiny_dust", dustCost);
-    if (!ok) return res.status(400).json({ error: "Not enough Shiny Dust." });
-
-    user.pokemon[pid].normal -= 1;
-    user.pokemon[pid].shiny += 1;
-    carryLevel(user, { id: pid, variant: "normal" }, { id: pid, variant: "shiny" });
-    resetLevelIfGone(user, pid, "normal");
-
-    if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) {
-      delete user.pokemon[pid];
-    }
-
-    const saveAck = await saveAndAck(trainerData);
-
-    // 📜 Event log — shiny conversion is a dust sink worth tracking
-    // for analytics on how players are spending their non-shiny dust.
-    logEvent("convert", id, {
-      pokemonId: pid,
-      pokemonName: p.name,
-      tier,
-      dustCost,
-    });
-
-    return res.json({ ...saveAckFields(saveAck),
-      success: true,
-      converted: { id: pid, name: p.name },
-      tier,
-      dustCost,
-      shinyDustRemaining: getItem(user, "shiny_dust"),
-      counts: {
-        normal: user.pokemon?.[pid]?.normal ?? 0,
-        shiny: user.pokemon?.[pid]?.shiny ?? 0,
-      },
-    });
-  });
 });
 
  // ==========================================================

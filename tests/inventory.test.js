@@ -209,8 +209,13 @@ section("Transactions: lock, replay, concurrency, failed save");
   assertTrue(!thrown.ok, "a throwing mutation is reported, not propagated");
 
   const many = { cc: 0, items: {} };
-  for (let i = 0; i < 70; i++) inv.rememberRequest(many, `r-${i}-xxxxxxx`, "p", { ok: true });
-  assertEqual(many.itemRequests.length, 50, "replay memory is bounded (50)");
+  for (let i = 0; i < 70; i++) inv.rememberRequest(many, `r-${i}-xxxxxxx`, "p", { ok: true }).durable = true;
+  assertTrue(many.itemRequests.length <= 51, "confirmed entries are trimmed to about 50");
+  const pending = { cc: 0, items: {} };
+  for (let i = 0; i < 70; i++) inv.rememberRequest(pending, `p-${i}-xxxxxxx`, "p", { ok: true });
+  assertTrue(pending.itemRequests.length === 70 && inv.findRequest(pending, "p-0-xxxxxxx", "p")?.replay, "entries whose save is still pending are never evicted early");
+  for (let i = 70; i < 260; i++) inv.rememberRequest(pending, `p-${i}-xxxxxxx`, "p", { ok: true });
+  assertEqual(pending.itemRequests.length, 200, "hard cap of 200 even if saves keep failing");
   inv.rememberRequest(many, "old-entry-xxxx", "p", {}, Date.now() - 25 * 3600 * 1000);
   assertEqual(inv.findRequest(many, "old-entry-xxxx", "p"), null, "entries expire after 24 h");
 }

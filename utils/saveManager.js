@@ -77,3 +77,11 @@ export async function saveAndAck(trainerData, { save = enqueueSave } = {}) {
 export function withSaveNote(text, ack) {
   return ack?.note ? `${text}\n\n${ack.note}` : text;
 }
+
+/**
+ * Fields every dashboard write reply carries (D14): `saved: true`, or
+ * `saved: false` plus the "saved with a delay" notice.
+ */
+export function saveAckFields(ack) {
+  return ack?.saved ? { saved: true } : { saved: false, saveNotice: ack?.note || SAVE_DELAYED_NOTE };
+}

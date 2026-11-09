@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node bot_final.js",
     "test": "node run-tests.js",
+    "test:safe": "node run-tests.js --make-temp",
     "test:validation": "node test-schema-validation.js",
     "test:migration": "node test-schema-migration.js",
     "test:helper": "node test-trainer-data-helper.js",

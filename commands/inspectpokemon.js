@@ -56,7 +56,7 @@ export default {
         .setRequired(true)
     ),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
+  async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const input = interaction.options.getString("name").trim();

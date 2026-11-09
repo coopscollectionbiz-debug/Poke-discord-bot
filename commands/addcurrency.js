@@ -4,7 +4,7 @@
 
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
-import { atomicSave } from "../utils/saveManager.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 
 export default {
@@ -79,6 +79,7 @@ export default {
     // ============================================
     // 🔒 ATOMIC PER-USER LOCKED MUTATION
     // ============================================
+    let saveAck = { saved: true, note: "" };
     await lockUser(targetUser.id, async () => {
       if (type === "tp") {
         userData.tp = (userData.tp ?? 0) + amount;
@@ -87,11 +88,11 @@ export default {
       }
 
       // Finalize save (atomic / safe)
-      await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+      saveAck = await saveAndAck(trainerData);
     });
 
     return safeReply(interaction, {
-      content: `✅ Added **${amount} ${type.toUpperCase()}** to **${targetUser.username}**.`,
+      content: withSaveNote(`✅ Added **${amount} ${type.toUpperCase()}** to **${targetUser.username}**.`, saveAck),
       flags: MessageFlags.Ephemeral
     });
   }

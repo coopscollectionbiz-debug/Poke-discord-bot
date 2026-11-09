@@ -111,13 +111,7 @@ export default {
       opt.setName("name").setDescription("Pokémon name").setRequired(true)
     ),
 
-  async execute(
-    interaction,
-    trainerData,
-    saveTrainerDataLocal,
-    saveDataToDiscord,
-    client
-  ) {
+  async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
     try {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 

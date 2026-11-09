@@ -3,7 +3,7 @@
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
-import { atomicSave } from "../utils/saveManager.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -77,16 +77,17 @@ export default {
         // -----------------------------
         // SAVE
         // -----------------------------
-        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+        const saveAck = await saveAndAck(trainerData);
 
         // -----------------------------
         // REPLY
         // -----------------------------
-        await interaction.editReply(
+        await interaction.editReply(withSaveNote(
           `✅ Daily reset for **${targetUser.username}**${
             resetStreak ? " (streak cleared)." : "."
-          }`
-        );
+          }`,
+          saveAck
+        ));
       });
 
       console.log(

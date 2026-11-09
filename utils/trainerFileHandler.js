@@ -4,6 +4,7 @@
 // ==========================================================
 
 import { spritePaths } from "../spriteconfig.js";
+import { grantTrainer, revokeTrainer, trainerCount } from "../services/assets.js";
 
 /**
  * Gets the standardized key for a trainer object
@@ -51,37 +52,28 @@ export function getTrainerSpriteUrl(trainer) {
 }
 
 /**
- * Checks if a user owns a trainer
+ * Checks if a user owns a trainer (ignores a trailing .png, case-insensitive).
+ * Ownership itself lives in services/assets.js; these wrappers keep the old API.
  * @param {Object} user - User object
  * @param {Object} trainer - Trainer object
  * @returns {boolean} Whether user owns the trainer
  */
 export function isTrainerOwned(user, trainer) {
   if (!user?.trainers || !trainer) return false;
-  
-  const trainerKey = normalizeTrainerKey(getTrainerKey(trainer));
-  
-  return Object.keys(user.trainers).some(ownedKey => 
-    normalizeTrainerKey(ownedKey) === trainerKey
-  );
+  const want = normalizeTrainerKey(getTrainerKey(trainer))?.toLowerCase();
+  const owned = Array.isArray(user.trainers) ? user.trainers : Object.keys(user.trainers);
+  return owned.some((k) => normalizeTrainerKey(String(k)).toLowerCase() === want);
 }
 
 /**
- * Adds a trainer to a user's collection
+ * Adds a trainer to a user's collection (user.trainers stays an array).
  * @param {Object} user - User object
  * @param {Object} trainer - Trainer object
  */
 export function addTrainer(user, trainer) {
-  if (!user || !trainer) return;
-  
-  if (!user.trainers) {
-    user.trainers = {};
-  }
-  
   const key = getTrainerKey(trainer);
-  if (key) {
-    user.trainers[key] = true;
-  }
+  if (!user || !key) return;
+  grantTrainer(user, key);
 }
 
 /**
@@ -90,12 +82,9 @@ export function addTrainer(user, trainer) {
  * @param {Object} trainer - Trainer object
  */
 export function removeTrainer(user, trainer) {
-  if (!user?.trainers || !trainer) return;
-  
   const key = getTrainerKey(trainer);
-  if (key) {
-    delete user.trainers[key];
-  }
+  if (!user?.trainers || !key) return;
+  revokeTrainer(user, key);
 }
 
 /**
@@ -104,8 +93,7 @@ export function removeTrainer(user, trainer) {
  * @returns {number} Number of trainers owned
  */
 export function getOwnedTrainerCount(user) {
-  if (!user?.trainers) return 0;
-  return Object.keys(user.trainers).length;
+  return trainerCount(user);
 }
 
 /**

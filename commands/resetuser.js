@@ -5,7 +5,9 @@
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
-import { atomicSave } from "../utils/saveManager.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
+import { lockUser } from "../utils/userLocks.js";
+import { clearTrainers } from "../services/assets.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -26,6 +28,7 @@ export default {
       const target = interaction.options.getUser("user");
       const id = target.id;
 
+      await lockUser(id, async () => {
       if (!trainerData[id]) {
         await interaction.editReply(`❌ No data found for **${target.username}**.`);
         return;
@@ -45,7 +48,7 @@ export default {
 
       // ✅ Full wipe of Pokémon & Trainer data
       targetData.pokemon = {};
-      targetData.trainers = {};
+      clearTrainers(targetData);
       targetData.displayedPokemon = [];
       targetData.displayedTrainer = null;
 
@@ -66,19 +69,21 @@ export default {
       targetData.cc = cc;
 
       // 💾 Save updated user data
-      await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+      const ack = await saveAndAck(trainerData);
 
-      // ✅ Confirmation
-      await interaction.editReply(
+      // ✅ Confirmation (with a delay note if the disk didn't confirm)
+      await interaction.editReply(withSaveNote(
         `✅ Successfully reset **${target.username}**!\n` +
           `- Daily timer cleared\n` +
           `- Pokémon & Trainer data wiped\n` +
           `- Onboarding fully reset\n` +
           `- TP: ${tp}\n` +
-          `- CC: ${cc}`
-      );
+          `- CC: ${cc}`,
+        ack
+      ));
 
       console.log(`✅ /resetuser: ${target.username} reset successfully.`);
+      });
 
     } catch (err) {
       console.error("❌ /resetuser error:", err);

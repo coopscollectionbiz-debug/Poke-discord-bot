@@ -54,7 +54,7 @@ A=poke-discord-bot-49shta
 flyctl volumes create trainerdata --region iad --size 1 -a $A --yes
 flyctl machines list -a $A                         # note the current machine ID (OLD)
 # run /adminsave in Discord, then:
-flyctl machine stop OLD -a $A                      # graceful: flushes and uploads the final backup
+flyctl machine update OLD -a $A --autostart=false --skip-start --yes   # graceful stop that STAYS stopped (plain `machine stop` gets auto-started by the proxy)
 flyctl machine clone OLD --attach-volume <VOLUME_ID>:/data --region iad -a $A
 flyctl machine destroy OLD -a $A --force           # only after the clone reports ready
 # then merge the A2 PR (deploys the code and the /data env onto the new machine)

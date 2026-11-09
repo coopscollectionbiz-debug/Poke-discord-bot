@@ -9,7 +9,7 @@ import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import {
   challengeLoss, getChallengeRecord, isUnlocked, challengeBlock, prizeSprite,
   previewChallenge, simulateChallenge, runChallenge,
-  startRun, continueRun, finishOpenRun, isRunStale, finishAllOpenRuns, attachRunMessage,
+  startRun, continueRun, finishOpenRun, isRunStale, finishAllOpenRuns, attachRunMessage, challengeLogEntry,
 } from "../utils/challenge/runChallenge.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
@@ -457,6 +457,15 @@ section("Interactive Elite Four run");
       "finishAllOpenRuns finishes every open run and says where its message is");
     assertEqual([td.A.challenge.run, td.B.challenge.run, td.C.challenge.attempts], [undefined, undefined, 0], "both runs are gone; C is untouched");
   }
+}
+
+section("Event log entry");
+{
+  const single = run(world(), "brock");
+  assertEqual(challengeLogEntry(single), { key: "brock", seed: 1, reached: 1, cleared: true, prize: true, ccLost: 0 }, "a single fight");
+  const breaks = [{ offered: true, slot: 0 }, { offered: false, slot: null }, { offered: true, slot: null }];
+  assertEqual(challengeLogEntry({ ...single, key: "elite4", breaks }).revives, [0, "none", null],
+    "a run lists each break's Revive: the slot, \"none\" when nothing fainted, or null for no pick");
 }
 
 section("Battle record untouched");

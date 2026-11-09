@@ -124,7 +124,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - `/challenge opponent:<choice>` has 11 choices: the 8 Gym Leaders, Elite Four, Blue, and Red. It replies privately with a preview: the leader's sprite, Badge, type, the prize (or "Rematch: EXP only"), the exact CC a loss would cost, and Fight! and Not now buttons.
 - Not now, or letting the preview expire after about 2 minutes, costs nothing. The bot holds nothing while a preview is open, so a restart leaves nothing to refund.
 - Fight! re-checks unlocks, attempts left, the Team, and pending wagers under the player's lock, and uses the Team as of the click. Then it posts a public intro card (sprite, Badge, type, prize, "Lose: 10% of their CC"), and the replay posts below it, the same way `/battle` does. A second click finds the fight already settled.
-- An Elite Four run replays in one message, fight after fight, with a header such as "Elite Four · Bruno (2 of 4)". Carried-over HP shows at the start of each fight. The run holds one replay slot (`PLAYBACK.maxAtOnce`) and ends with one result showing how far the player got, the EXP, and the prize if they cleared it.
+- An Elite Four run replays in one message, fight after fight, with a header such as "Elite Four · Bruno (2 of 4)". Carried-over HP shows at the start of each fight. Each fight holds a replay slot (`PLAYBACK.maxAtOnce`) only while it plays, and the run ends with one result showing how far the player got, the EXP, and the prize if they cleared it.
 - The result embed shows the winner, MVP, EXP and level-ups, the Badge or prize earned, and what unlocked. It has no rating lines.
 - Refusals are private. They cover a missing Team, a locked opponent (with what's missing), no attempts left, a pending wager, and the bot lacking permissions in the channel.
 - After a loss, the player's private reply shows the exact CC lost.
@@ -150,12 +150,13 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 
 - `utils/battle/sim.js`: accept a starting HP fraction per member, where 0 means fainted. The first snapshot reflects it.
 - `utils/challenge/roster.js`: the 14 opponent entries (8 Gym Leaders, 4 Elite Four members, Blue, Red) with type, Badge, display sprite, prize sprite key, team, and prize.
-- `utils/challenge/runChallenge.js`: the pure rules with no Discord code. It checks what's unlocked and the cap, runs one fight or the Elite Four run, applies EXP and prizes, and records the attempt.
-- `utils/battle/tuning.js`: the challenge cap of 5 per day.
-- `utils/battle/playback.js`: a leader is a name, not a `<@mention>`. Add the challenge result embed and the multi-fight replay in one message.
-- `commands/challenge.js`: the slash command.
+- `utils/challenge/runChallenge.js`: the pure rules with no Discord code. It checks what's unlocked and the cap, runs one fight, applies EXP and prizes, and records the attempt. `simulateChallenge` takes a Revive pick for the balance test. The interactive run is `startRun` and `continueRun` (one fight per step, kept at `challenge.run`), `finishOpenRun` and `finishAllOpenRuns` (the rest with no Revives), `isRunStale`, and `attachRunMessage`. Single fights and runs settle through the same code.
+- `utils/battle/tuning.js`: the challenge cap of 5 per day, the 60-second Revive window (`pickMs`), and the 15-minute stale-run limit (`staleRunMs`).
+- `utils/battle/playback.js`: a leader is a name, not a `<@mention>`. Add the challenge result embed, `playChallengeFight` (one fight of a run on its message, holding a replay slot only while it plays), the Revive line in the header, `showChoosing`, and `showRunResult`.
+- `commands/challenge.js`: the slash command, the Revive menu and its 60-second deadline, the run loop, and finishing a stale run on the next `/challenge`.
+- `bot_final.js`: `finishOpenRunsOnStartup` finishes every open run after a restart and edits its replay message, next to the wager refund.
 - `commands/trainercard.js` and `public/picker-pokemon/*`: the Badges line and row.
-- Event log entries `challenge` with the opponent, seed, how far the player got, the result, the prize, and the CC lost. The event log is admin-only, so it can hold the exact amount.
+- Event log entries `challenge` with the opponent, seed, how far the player got, the result, the prize, and the CC lost, plus each break's Revive for a run (`finished: "stale"` or `"restart"` when it was finished without Revives). The event log is admin-only, so it can hold the exact amount.
 - `README.md` gets a Challenges section (the ladder, the 5-a-day cap next to the 10-a-day Battle cap, prizes, the 10% loss, where Badges show), the new test files in Tests, the Badge emoji upload in Setup, and a gotcha for missing Badge emoji IDs.
 - `CONTEXT.md` already has Challenge, Badge, and Elite Four run.
 
@@ -164,7 +165,9 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - `tests/challengeRoster.test.js` checks that every team has 6 Pokémon, every species exists in `battleData.json`, every ace is the team's highest Level, and the prize table matches this spec. It also fails while any Badge emoji ID is missing (decided), so `npm test` fails on this branch until the art is uploaded and the IDs are pasted in.
 - `tests/battleSim.test.js` adds carried HP and checks that fainted members are skipped.
 - `tests/runChallenge.test.js` covers gating (8 Badges for the run, a cleared run for Blue, Red always open), the 5-per-day cap and its reset, the run stopping at the first loss, EXP summed with Levels fixed during the run, prizes paid once, the owned-sprite CC fallback, sprites written to the `trainers` array, no Underdog surge, and Battle rating left untouched. It covers the Revive in the sim: a break after each won fight but the last, the picked Pokémon back at full HP, no pick when nothing fainted, and a pick of a standing or missing slot reviving nothing. It also covers the loss: 10% rounded down, never more than the previewed amount, once per failed Elite Four run, nothing below 10 CC, EXP still paid, and a refusal while a wager is pending.
-- `tests/challengeCommand.test.js` uses stub Discord objects to cover the board, the refusals, the private preview and its amount, Fight!, Not now, expiry, a double click, the public intro card saying "10%" with no amount, and the replay message.
+- `tests/runChallenge.test.js` also covers the interactive run: one fight per step matching `simulateChallenge` with the same picks, stale or repeated steps, every challenge refused while a run is open, a record replaced or a Team member given away mid-run, finishing open runs, the 15-minute stale limit, and the event log entry.
+- `tests/challengePlayback.test.js` covers the result embed, a run replayed one fight at a time on one message with the slot free between fights, the Revive line in the header, the "choosing" line, the result-only edit, no leader as a mention, and no exact loss in public.
+- `tests/challengeCommand.test.js` uses stub Discord objects to cover the board, the refusals, the private preview and its amount, Fight!, Not now, expiry, a double click, the public intro card saying "10%" with no amount, the replay message, and the private result after the replay. For the run it covers the Revive menu (two rows for six fainted), a pick, the deadline, late and repeated clicks, a menu that can't be sent, refusals while a run is open, and a stale run.
 - `tests/challengeBalance.test.js` measures gate Levels against stand-in Teams and enforces the order in Difficulty. Its stand-in player revives the strongest fainted Pokémon (by Power rating) at each Elite Four break; it also prints the run's gate for a player who never picks. It also prints win rate by Level for each opponent and a leveling pace that includes 5 challenges a day.
 
 ## Measured (stand-in Teams, 200 per Level)
@@ -198,7 +201,7 @@ Run these in a test server against a local copy of `trainerData.json`, editing t
 1. Run `/challenge`. The board is private, shows 8 Gym rows with Badge emojis and types, and marks the Elite Four and Blue as locked with what's missing. Red is open, no Levels appear, and the board shows 5 attempts left.
 2. Give the player 12,345 CC and run `/challenge opponent:Brock`. A private preview shows Brock's sprite, the Boulder Badge, Rock type, the prize, "Lose: 1,234 CC", and Fight! and Not now. Click Not now. Nothing posts in the channel and the board still shows 5 attempts left.
 3. Run it again and let the preview sit for about 2 minutes. The buttons stop working and nothing changes.
-4. Run it again with a weak Team (all Pokémon below Lv 15) and click Fight!. A public intro card posts with "Lose: 10% of their CC" and no amount. The replay posts below it and Brock wins. The public result shows EXP, no rating lines, and no CC amount. The private reply says 1,234 CC was lost, the balance is 11,111, and the board shows 4 attempts left. Click Fight! again on the old preview. It says the fight is already settled.
+4. Run it again with a weak Team (all Pokémon below Lv 15) and click Fight!. The private message reads "⚔️ Your challenge is starting below." A public intro card posts with "Lose: 10% of their CC" and no amount. The replay posts below it and Brock wins. The public result shows EXP, no rating lines, and no CC amount. After the replay, the private reply says 1,234 CC was lost, the balance is 11,111, and the board shows 4 attempts left. Click Fight! again on the old preview. It says the fight is already settled.
 5. Open a preview showing "Lose: 1,111 CC", raise the player's CC to 50,000 in the data file, then click Fight! and lose. The loss is 1,111, not 5,000.
 6. Offer a `/battle` wager, then run `/challenge opponent:Brock`. It refuses privately because a wager is waiting. Decline the wager and the challenge works.
 7. Repeat Brock with a Team strong enough to win. The result shows the Badge, 2,500 CC, 1 stone, and 5 Dust. The board shows a check on Brock. The dashboard's Trainers tab shows the new Brock sprite, and its stats bar shows the new CC, stone, and Dust totals.
@@ -206,13 +209,29 @@ Run these in a test server against a local copy of `trainerData.json`, editing t
 9. Give the player every enabled Brock sprite, clear `won.brock`, and win again. The prize shows 7,500 CC in place of a sprite.
 10. Use all 5 attempts, then try once more. The private refusal says attempts reset at midnight UTC. Change `challenge.day` to yesterday and confirm the count resets.
 11. With fewer than 8 Badges, `/challenge opponent:Elite Four` refuses privately and says how many Badges are missing. `/challenge opponent:Blue` refuses and says to clear the Elite Four.
-12. Set all 8 Gym keys in `won` and run the Elite Four. The run plays in one message with "Elite Four · <name> (n of 4)" headers. A Pokémon damaged in one fight starts the next with that HP, and fainted ones don't come back. A loss ends the run with how far the player got and costs 10% once. A clear pays 4 sprites, 30,000 CC, 4 stones, and 40 Dust, and says Blue is unlocked.
-13. While two `/battle` replays are running, start an Elite Four run. Its message shows its place in line, and its fights play back to back once it starts.
+12. Set all 8 Gym keys in `won` and run the Elite Four. The run plays in one message with "Elite Four · <name> (n of 4)" headers. A Pokémon damaged in one fight starts the next with that HP, and fainted ones don't come back unless revived. A loss ends the run with how far the player got and costs 10% once. A clear pays 4 sprites, 30,000 CC, 4 stones, and 40 Dust, and says Blue is unlocked.
+13. While two `/battle` replays are running, start an Elite Four run. Its message shows its place in line, then its first fight plays.
 14. Challenge Blue, then Red, from a fresh account. Blue refuses and Red runs.
 15. Restart the bot during a replay. After restart, the result (EXP, attempt, prize or CC lost) is still on the player's record. Restart while a preview is open. Its buttons stop working and nothing was charged.
 16. Run `/trainercard`. It shows the Badges line with the count and earned emojis.
 17. Open the dashboard. The Badges row shows all 8, with unearned ones dimmed.
 18. Try to set `challenge` through the dashboard's `/api/updateUser`. The server ignores it.
+
+The Revive (use a record with all 8 Badges and a Team around Lv 70):
+
+19. Run `/challenge opponent:Elite Four` and click Fight!. The private message reads "⚔️ Your challenge is starting below.", and the intro card and replay post publicly.
+20. Win Lorelei with at least one Pokémon fainted. The public text adds "⏳ @Ash is choosing a Pokémon to revive…". The private menu reads "Next: Bruno · Fighting" with one button per fainted Pokémon and its Level. Check on a phone too that the menu shows up within a few seconds.
+21. Click one. The menu reads "<name> revived.", Bruno's header says "💊 @Ash revived <name>!", and that Pokémon starts at full HP while the others keep their damage. Double-click a button at the next break: only one Revive happens.
+22. At a later break, wait 60 seconds. The menu reads "No Pokémon was revived." with no buttons, and the next header says "💊 No Pokémon was revived."
+23. Win a fight with nothing fainted. The next fight starts with no menu.
+24. Finish the run. The private result arrives after the last replay, with the exact CC lost or the prize.
+25. During a pause, `/challenge opponent:Brock` and Fight! on a Brock preview opened before the run both refuse with "Finish your Elite Four run first." `/battle` still works.
+26. Restart the bot during a pick. On startup, the run's public message shows the result with "⚔️ The bot restarted, so @Ash's Elite Four run finished without Revives.", and the record shows the EXP and the prize or loss.
+27. Delete the replay message mid-run. Picks still arrive and the run still resolves.
+28. Run two `/battle` replays, then pick at a break. The next fight shows its place in line on the run's message, then plays.
+29. Set `CHALLENGE.staleRunMs` in `utils/battle/tuning.js` to 30 seconds, restart, start a run, and wait 30 seconds at a pick. (The bot keeps records in memory, so editing the data file without a restart changes nothing.) Run `/challenge`: it finishes the run first, the run's message says it "stopped unexpectedly and finished without Revives", and then the board appears. Let the menu time out, then set `staleRunMs` back to 15 minutes.
+30. Give away a Team member's last copy mid-run. It gets no EXP at the end and keeps no Level.
+31. Challenge Brock. The private result arrives after the replay.
 
 ## Not included
 

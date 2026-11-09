@@ -8,7 +8,7 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { execute, data, refusal, boardEmbed } from "../commands/challenge.js";
+import { execute, data, refusal, boardEmbed, reviveMenu } from "../commands/challenge.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { PLAYBACK, CHALLENGE } from "../utils/battle/tuning.js";
@@ -424,6 +424,18 @@ section("Elite Four run: picking a Revive");
   const finalFrame = t.log.seq.findLastIndex(([k, o]) => k === "public" && o.embeds?.length);
   assertTrue(privateAt > finalFrame && finalFrame > 0, "the private result arrives after the last replay");
   assertTrue(textOf(t.log.channel[1].edits.at(-1)).includes("cleared the Elite Four"), "the run ends with its result embed");
+}
+
+section("A Revive menu for six fainted Pokémon");
+{
+  // A double knockout can win a fight with all six fainted.
+  const names = ["Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard"];
+  const step = { nonce: "N", step: 1, next: CHALLENGES.elite4.opponents[2], fainted: names.map((name, slot) => ({ slot, name, level: 70 })) };
+  const menu = reviveMenu(step);
+  const rows = menu.components.map((r) => embedJson(r).components);
+  assertEqual(rows.map((r) => r.length), [5, 1], "six buttons take two rows of up to 5");
+  assertEqual(rows.flat().map((b) => b.custom_id), names.map((_, slot) => `challenge_revive:N:2:${slot}`), "each button names the run, the next fight, and the slot");
+  assertEqual([rows[1][0].label, menu.content], ["Charizard Lv 70", "Next: Agatha · Ghost\nPick a Pokémon to revive · 60 s"], "labels and the next opponent");
 }
 
 section("Elite Four run: no pick in time");

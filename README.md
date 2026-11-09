@@ -28,7 +28,7 @@ Every species and Variant a player owns has one Level, from 1 to 100. A first ca
 
 Levels show on the dashboard, on `/showteam` and `/trainercard`, and in `/inspectpokemon`.
 
-Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps, the challenge cap and loss) is in `utils/battle/tuning.js`. The design and the reasons for each number are in [`docs/superpowers/specs/2026-11-02-battles-design.md`](docs/superpowers/specs/2026-11-02-battles-design.md).
+Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps, the challenge cap and loss, the Revive window) is in `utils/battle/tuning.js`. The design and the reasons for each number are in [`docs/superpowers/specs/2026-11-02-battles-design.md`](docs/superpowers/specs/2026-11-02-battles-design.md).
 
 ### Battle data
 
@@ -41,12 +41,14 @@ node tests/battleData.test.js
 
 ## Challenges
 
-`/challenge` pits a player's Team against fixed Kanto teams: the 8 Gym Leaders, the Elite Four, Blue, and Red. Challenges use the same sim and replay as Battles, and leaders appear by name, never as a mention.
+`/challenge` pits a player's Team against fixed Kanto teams: the 8 Gym Leaders, the Elite Four, Blue, and Red. Challenges use the same sim and replay as Battles, with no Underdog surge, and leaders appear by name, never as a mention.
 
 - `/challenge` with no opponent shows a private board: each Gym Leader's Badge and type, which Badges the player has, what the Elite Four and Blue still need, and how many challenges are left today. It never shows Levels.
-- `/challenge opponent:Brock` shows a private preview: the leader's sprite, Badge, and type, the prize, and the exact CC a loss would cost, with Fight! and Not now buttons. Not now, or leaving the preview for 2 minutes, costs nothing. Fight! checks everything again, saves the result, then posts a public intro card and the replay.
+- `/challenge opponent:Brock` shows a private preview: the leader's sprite, Badge, and type, the prize, and the exact CC a loss would cost, with Fight! and Not now buttons. Not now, or leaving the preview for 2 minutes, costs nothing. Fight! checks everything again, saves the result, then posts a public intro card and the replay. The player's private result, with the exact CC lost or the prize, arrives after the replay ends.
 
-Gyms can be fought in any order, and beating a Gym Leader the first time earns their Badge. All 8 Badges unlock the Elite Four run: Lorelei, Bruno, Agatha, and Lance back to back, replayed in one message. Each Pokémon keeps its damage from one fight to the next, fainted ones stay fainted, and losing any fight ends the run. Clearing the run once unlocks Blue as a separate fight. Red is open to everyone from the start.
+Gyms can be fought in any order, and beating a Gym Leader the first time earns their Badge. All 8 Badges unlock the Elite Four run: Lorelei, Bruno, Agatha, and Lance back to back, replayed in one message. Each Pokémon keeps its damage from one fight to the next, fainted ones stay fainted unless revived, and losing any fight ends the run. There's no forfeit. Clearing the run once unlocks Blue as a separate fight. Red is open to everyone from the start.
+
+After each Elite Four fight the player wins, if any of their Pokémon fainted, they get a private menu with one button per fainted Pokémon and 60 seconds to pick one to Revive. It comes back at full HP for the next fight; with no pick, nothing is revived. Meanwhile the public replay says they're choosing, and the next fight's header says who was revived. The run is saved on the player's record after every fight. While it's open, other challenges are refused (`/battle` still works). If the bot restarts mid-run, or the run stops for 15 minutes, it finishes without Revives (at startup, or on the player's next `/challenge`), and its replay message shows the result.
 
 Each player gets 5 challenges per UTC day, separate from the 10 Battles, and an Elite Four run counts as one. Every challenge pays EXP for each knockout, win or lose. Challenges never change Battle rating or W/L.
 
@@ -166,10 +168,10 @@ npm run test:migration    # schema migration
 The challenge tests cover:
 
 - `challengeRoster`: the 14 teams and their Levels, the prize table, the leaders' sprites, the Badges, and the Badge line on `/trainercard`. Its check that every Badge emoji has an ID fails until Setup step 8 is done.
-- `runChallenge`: unlocks, the 5-a-day cap and its reset at midnight UTC, Elite Four HP carried between fights, EXP summed per run with Levels fixed, first-win prizes and the sprite fallback, the 10% loss and its cap at the previewed amount, and the surge reaching only the player's side.
-- `challengePlayback`: the result embed, the Elite Four run replaying in one message and one replay slot, no leader as a mention, and no exact loss in public.
-- `challengeCommand`: `/challenge` driven with stub Discord objects, covering the board, every refusal, the preview, Not now, expiry, Fight!, a double click, and changes to the player's record, Team, or wagers between the preview and Fight!.
-- `challengeBalance`: the Level at which stand-in Teams beat each challenge half the time, enforcing Giovanni < Elite Four run < Blue < Red, and printing win-rate curves, how often a surge flips a loss, and leveling pace with 5 challenges a day.
+- `runChallenge`: unlocks, the 5-a-day cap and its reset at midnight UTC, Elite Four HP carried between fights, Revives in the sim, EXP summed per run with Levels fixed, first-win prizes and the sprite fallback, the 10% loss and its cap at the previewed amount, and no Underdog surge. It also covers the interactive run saved on the record: one fight per step, stale or repeated steps, a record replaced or a Team member given away mid-run, finishing open runs, and the event log entry.
+- `challengePlayback`: the result embed, the Elite Four run replaying one fight at a time on one message with the replay slot free between fights, the Revive in each header, the "choosing" line and the result-only edit, no leader as a mention, and no exact loss in public.
+- `challengeCommand`: `/challenge` driven with stub Discord objects, covering the board, every refusal, the preview, Not now, expiry, Fight!, a double click, changes to the player's record, Team, or wagers between the preview and Fight!, and the private result arriving after the replay. For the Elite Four run it covers the Revive menu, a pick, the 60-second deadline, late and repeated clicks, a menu that can't be sent, refusals while a run is open, and a run that stopped unexpectedly.
+- `challengeBalance`: the Level at which stand-in Teams beat each challenge half the time, with a stand-in player who revives their strongest fainted Pokémon, enforcing Giovanni < Elite Four run < Blue < Red, and printing the run's gate with no Revives, win-rate curves, a one-Pokémon Team, and leveling pace with 5 challenges a day.
 
 `tests/addInventory.test.js` checks that `/addinventory` adds Shiny Dust to `items.shiny_dust`, where the dashboard and shiny evolutions read it.
 

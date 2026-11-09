@@ -285,6 +285,13 @@ export function finishAllOpenRuns(trainerData, now = new Date()) {
   });
 }
 
+// The event log's record of a finished challenge. A run lists each break's
+// Revive: the slot, "none" when nothing had fainted, or null for no pick.
+export const challengeLogEntry = (outcome) => ({
+  key: outcome.key, seed: outcome.seed, reached: outcome.fights.length, cleared: outcome.cleared, prize: !!outcome.prize, ccLost: outcome.ccLost,
+  ...(outcome.breaks && { revives: outcome.breaks.map((b) => (b.offered ? b.slot : "none")) }),
+});
+
 export function attachRunMessage(user, nonce, { channelId, messageId }) {
   const run = user?.challenge?.run;
   if (run?.nonce !== nonce) return;

@@ -17,7 +17,7 @@ import { logEvent } from "../utils/eventLog.js";
 import { CHALLENGES, CHALLENGE_KEYS, opponentName, displaySprite } from "../utils/challenge/roster.js";
 import {
   challengeBlock, previewChallenge, runChallenge, isUnlocked,
-  startRun, continueRun, finishOpenRun, isRunStale, attachRunMessage,
+  startRun, continueRun, finishOpenRun, isRunStale, attachRunMessage, challengeLogEntry,
 } from "../utils/challenge/runChallenge.js";
 import { badgeEmoji } from "../utils/challenge/badgeEmojis.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../public/picker-pokemon/badges.js";
@@ -97,11 +97,7 @@ const privateResult = (outcome) => {
   return outcome.prize ? `You won! 🎁 ${prizeText(outcome.key, outcome.prize)}` : "You won!";
 };
 
-const logChallenge = (userId, outcome, extra = {}) => logEvent("challenge", userId, {
-  key: outcome.key, seed: outcome.seed, reached: outcome.fights.length, cleared: outcome.cleared, prize: !!outcome.prize, ccLost: outcome.ccLost,
-  ...(outcome.breaks && { revives: outcome.breaks.map((b) => (b.offered ? b.slot : "none")) }),
-  ...extra,
-});
+const logChallenge = (userId, outcome, extra = {}) => logEvent("challenge", userId, { ...challengeLogEntry(outcome), ...extra });
 
 // A run with no step for CHALLENGE.staleRunMs stopped unexpectedly (its
 // command hit an error). Finishes it with no Revives and saves; the run's
@@ -125,7 +121,9 @@ async function finishStaleRun({ trainerData, userId, lockUser, enqueueSave, clie
   })().catch(() => {});
 }
 
-const reviveMenu = (step) => {
+// The private Revive menu for a Step with fainted Pokémon: one button each,
+// up to 5 per row (all 6 can faint in a win on a double knockout).
+export const reviveMenu = (step) => {
   const buttons = step.fainted.map((f) => new ButtonBuilder()
     .setCustomId(`challenge_revive:${step.nonce}:${step.step + 1}:${f.slot}`)
     .setLabel(`${f.name} Lv ${f.level}`)

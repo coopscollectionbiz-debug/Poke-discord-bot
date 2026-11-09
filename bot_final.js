@@ -420,6 +420,8 @@ import { lockUser } from "./utils/userLocks.js";
 import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
 import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
+import { finishAllOpenRuns, challengeLogEntry } from "./utils/challenge/runChallenge.js";
+import { showRunResult, challengeNames } from "./utils/battle/playback.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2309,6 +2311,28 @@ async function refundPendingWagersOnStartup() {
   }
 }
 
+// ==========================================================
+// An Elite Four run waits on the player's record between fights, and the
+// command playing it dies with the old process, so every open run is
+// finished at startup with no Revives, and its replay message gets the result.
+// ==========================================================
+async function finishOpenRunsOnStartup() {
+  const finished = finishAllOpenRuns(trainerData, new Date());
+  if (!finished.length) return;
+  await enqueueSave(trainerData, { force: true });
+  console.log(`⚔️ Finished ${finished.length} open Elite Four run(s) after restart`);
+  for (const { userId, outcome, channelId, messageId } of finished) {
+    logEvent("challenge", userId, { ...challengeLogEntry(outcome), finished: "restart" });
+    if (!channelId || !messageId) continue;
+    try {
+      const channel = await client.channels.fetch(channelId);
+      const message = await channel.messages.fetch(messageId);
+      await showRunResult(message, outcome, challengeNames(outcome, trainerData[userId]?.name || "Trainer"),
+        `⚔️ The bot restarted, so <@${userId}>'s Elite Four run finished without Revives.`);
+    } catch {}
+  }
+}
+
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
@@ -2403,6 +2427,7 @@ async function retryLoadLoop() {
 
   if (ok2) {
     await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
+    await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
     return;
@@ -2419,6 +2444,7 @@ setTimeout(retryLoadLoop, retryMs);
   }
 
   await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
+  await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });

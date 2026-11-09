@@ -56,7 +56,7 @@ The first win against each opponent pays the leader's trainer sprite, CC, evolut
 
 Losing costs 10% of the player's CC, rounded down, and that CC is gone. A failed Elite Four run costs it once. The loss is never more than the preview showed, even if the player's balance grew before they clicked Fight!. Public posts say "10% of their CC" and never the amount, because 10 times the amount would reveal the balance. A player can't challenge while one of their wager offers is waiting for an answer.
 
-Badges show on `/trainercard` and in a row under the dashboard's stats bar, with unearned ones dimmed. The 8 Badges are defined in `public/picker-pokemon/badges.js`, which the bot and the dashboard share. The teams and prizes are in `utils/challenge/roster.js`. The design, the prize table, and the measured difficulty of each challenge are in [`docs/superpowers/specs/2026-11-08-challenges-design.md`](docs/superpowers/specs/2026-11-08-challenges-design.md).
+Badges show on `/trainercard` and in a row under the dashboard's stats bar, with unearned ones dimmed. The 8 Badges are defined in `public/picker-pokemon/badges.js`, which the bot and the dashboard share. The Badge art is FireRed's trainer card badges, tinted with each badge's usual colors by `tools/tint-badges.mjs` (`npm run generate:badges`), which writes `public/sprites/badges/` from the sheet in `tools/badges/`. The teams and prizes are in `utils/challenge/roster.js`. The design, the prize table, and the measured difficulty of each challenge are in [`docs/superpowers/specs/2026-11-08-challenges-design.md`](docs/superpowers/specs/2026-11-08-challenges-design.md).
 
 ## Setup
 
@@ -135,12 +135,10 @@ In your test server, run `/dashboard` — the bot should reply with an ephemeral
 
 ### 8. Upload the Badge emojis
 
-`/challenge`, `/trainercard`, and the dashboard show the 8 Kanto Badges, and the art isn't in the repo yet.
+`/challenge` and `/trainercard` show the 8 Kanto Badges as application emojis. The art is in `public/sprites/badges/` (128×128 PNGs, which the dashboard also shows).
 
-1. Get 8 Badge PNGs (Boulder, Cascade, Thunder, Rainbow, Soul, Marsh, Volcano, Earth). Make each 128×128 and under 256 KiB.
-2. In the Developer Portal, open your application's **Emojis** page and upload each one with the name `utils/challenge/badgeEmojis.js` gives it (`boulder_badge`, `cascade_badge`, and so on).
-3. Paste each emoji's ID into `utils/challenge/badgeEmojis.js`.
-4. Copy the same PNGs into `public/sprites/badges/` as `boulder.png`, `cascade.png`, `thunder.png`, `rainbow.png`, `soul.png`, `marsh.png`, `volcano.png`, and `earth.png`.
+1. In the Developer Portal, open your application's **Emojis** page and upload each PNG from `public/sprites/badges/` with the name `utils/challenge/badgeEmojis.js` gives it (`boulder.png` as `boulder_badge`, `cascade.png` as `cascade_badge`, and so on).
+2. Paste each emoji's ID into `utils/challenge/badgeEmojis.js`.
 
 ## Generations 6–9
 
@@ -167,7 +165,7 @@ npm run test:migration    # schema migration
 
 The challenge tests cover:
 
-- `challengeRoster`: the 14 teams and their Levels, the prize table, the leaders' sprites, the Badges, and the Badge line on `/trainercard`. Its check that every Badge emoji has an ID fails until Setup step 8 is done.
+- `challengeRoster`: the 14 teams and their Levels, the prize table, the leaders' sprites, the Badges and their 128×128 images, and the Badge line on `/trainercard`. Its check that every Badge emoji has an ID fails until Setup step 8 is done.
 - `runChallenge`: unlocks, the 5-a-day cap and its reset at midnight UTC, Elite Four HP carried between fights, Revives in the sim, EXP summed per run with Levels fixed, first-win prizes and the sprite fallback, the 10% loss and its cap at the previewed amount, and no Underdog surge. It also covers the interactive run saved on the record: one fight per step, stale or repeated steps, a record replaced or a Team member given away mid-run, finishing open runs, the event log entry, and the dashboard never receiving an open run.
 - `challengePlayback`: the result embed, the Elite Four run replaying one fight at a time on one message with the replay slot free between fights, the Revive in each header, the "choosing" line and the result-only edit, no leader as a mention, and no exact loss in public.
 - `challengeCommand`: `/challenge` driven with stub Discord objects, covering the board, every refusal, the preview, Not now, expiry, Fight!, a double click, changes to the player's record, Team, or wagers between the preview and Fight!, and the private result arriving after the replay. For the Elite Four run it covers the Revive menu, a pick, the 60-second deadline, late and repeated clicks, a menu that can't be sent, refusals while a run is open, a run that stopped unexpectedly, and a run still playing that is left alone.

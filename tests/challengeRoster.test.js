@@ -7,6 +7,7 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
+import { existsSync, readFileSync } from "fs";
 import { getSpecies } from "../utils/battle/data.js";
 import {
   CHALLENGE_KEYS, CHALLENGES, opponentName, enabledSprites, displaySprite,
@@ -74,6 +75,18 @@ assertEqual(GYM_BADGES[0], { key: "brock", leader: "Brock", badge: "Boulder Badg
 assertEqual(GYM_BADGES.map((b) => b.badge), ["Boulder Badge", "Cascade Badge", "Thunder Badge", "Rainbow Badge", "Soul Badge", "Marsh Badge", "Volcano Badge", "Earth Badge"], "Badge names");
 assertEqual(earnedBadgeKeys({ challenge: { won: { misty: "d", brock: "d", red: "d" } } }), ["brock", "misty"], "earnedBadgeKeys: Gym keys only, in Gym order");
 assertEqual(earnedBadgeKeys({}), [], "earnedBadgeKeys: none without a record");
+{
+  // The dashboard shows these files, and the same PNGs are uploaded as the Badge emojis
+  // (Discord: 128×128, under 256 KiB). tools/tint-badges.mjs makes them.
+  const pngs = GYM_BADGES.map((b) => {
+    const file = new URL(`..${b.image}`, import.meta.url);
+    if (!existsSync(file)) return { file: b.image, missing: true };
+    const bytes = readFileSync(file);
+    return { file: b.image, png: bytes.toString("latin1", 1, 4) === "PNG", w: bytes.readUInt32BE(16), h: bytes.readUInt32BE(20), size: bytes.length };
+  });
+  const bad = pngs.filter((p) => p.missing || !p.png || p.w !== 128 || p.h !== 128 || p.size >= 256 * 1024);
+  assertEqual(bad.map((p) => p.file), [], "every Badge image is a 128×128 PNG under 256 KiB");
+}
 assertEqual(badgeEmoji("brock"), `<:boulder_badge:${BADGE_EMOJIS.brock.id}>`, "badgeEmoji renders <:name:id>");
 assertEqual(badgeLine({}), "🏅 **Badges:** 0/8", "badgeLine with no Badges");
 const two = badgeLine({ challenge: { won: { brock: "d", misty: "d" } } });

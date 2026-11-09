@@ -20,7 +20,8 @@
     "generate:credits": "node tools/generate-credits.mjs",
     "validate:catalog": "node tools/validate-catalog.mjs",
     "check:tier-rule": "node tools/check-tier-rule.mjs",
-    "report:balance": "node tools/balance-report.mjs"
+    "report:balance": "node tools/balance-report.mjs",
+    "generate:badges": "node tools/tint-badges.mjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.84",

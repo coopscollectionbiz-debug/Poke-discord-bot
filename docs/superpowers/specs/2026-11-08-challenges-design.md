@@ -189,11 +189,9 @@ Every figure in this section comes from `node tests/challengeBalance.test.js`.
 
 ## Manual steps
 
-1. Source 8 Kanto Badge PNGs. Resize them to 128×128 and keep each under 256 KiB.
-2. Upload them in the Discord Developer Portal under the app's Emojis, and copy each emoji ID into the constants file.
-3. Add the same PNGs to `public/sprites/badges/`.
-4. Set `REGISTER_COMMANDS=true` for one run to register `/challenge`, then set it back to `false`.
-5. Check the two canon Levels listed under Open checks.
+1. Upload the 8 PNGs in `public/sprites/badges/` in the Discord Developer Portal under the app's Emojis, and copy each emoji ID into the constants file. The art is FireRed's trainer card badges (pret/pokefirered `graphics/trainer_card/badges.png`), which the game draws in silver, tinted with each badge's usual colors and scaled to 128×128 by `tools/tint-badges.mjs` (decided 2026-11-10).
+2. Set `REGISTER_COMMANDS=true` for one run to register `/challenge`, then set it back to `false`.
+3. Check the two canon Levels listed under Open checks.
 
 ## Manual test plan
 

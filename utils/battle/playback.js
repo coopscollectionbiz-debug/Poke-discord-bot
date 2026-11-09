@@ -122,7 +122,8 @@ const replays = createQueue(PLAYBACK.maxAtOnce);
 // `finalEmbed`. A start frame that can't be posted throws; a later failed
 // edit stops the replay and returns null. `fight` is { sides, surge,
 // result, winnerId, exp }; `exp` sets the Levels on the result frame.
-async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed }) {
+// `paceStart` holds the previous fight's result frame up for a full delay.
+async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false }) {
   const sides = fight.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = fight.result;
   const image = async (opts) => new AttachmentBuilder(
@@ -139,10 +140,8 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
 
   // In an Elite Four run, a Pokémon that fainted in an earlier fight can't lead off.
   const leads = sides.map((s, i) => s.members[snapshots[0][i].findIndex((hp) => hp > 0)]?.name).join(" and ");
-  const start = {
-    content: heading,
-    files: [await image({ hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] })],
-  };
+  const startImage = () => image({ hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] });
+  const start = { content: heading, files: [paceStart ? await paced(startImage) : await startImage()] };
   if (message) await message.edit(start);
   else message = await channel.send(start);
   try {
@@ -281,7 +280,7 @@ export async function playChallenge(channel, outcome, names, { maxUpdates, delay
     for (const [i, fight] of outcome.fights.entries()) {
       const last = i === outcome.fights.length - 1;
       const opts = {
-        channel, message, heading: challengeHeader(outcome, i), names, sprites, maxUpdates, delayMs,
+        channel, message, heading: challengeHeader(outcome, i), names, sprites, maxUpdates, delayMs, paceStart: i > 0,
         fight: { ...fight, exp: last ? outcome.exp : {} },
         finalEmbed: last ? buildChallengeEmbed(outcome, names) : null,
       };

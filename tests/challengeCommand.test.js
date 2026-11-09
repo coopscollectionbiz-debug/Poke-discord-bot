@@ -28,6 +28,10 @@ function player(speciesIds, level) {
   return u;
 }
 const WEAK = () => player([10], 5);
+// Fight! picks a random seed, and a surge can lift a lone Caterpie to Lv 100,
+// which sometimes beats Brock. It never beat Giovanni in 2,000 runs, so tests
+// that need a loss fight him.
+const LOSES = "giovanni";
 const STRONG = () => player([150, 249, 250, 384, 483, 484], 100);
 
 const embedJson = (e) => (e?.toJSON ? e.toJSON() : e);
@@ -35,7 +39,7 @@ const textOf = (o) => (typeof o === "string" ? o
   : [o?.content ?? "", ...(o?.embeds ?? []).map((e) => JSON.stringify(embedJson(e)))].join("\n"));
 
 // One fake guild channel; the private reply gets a controllable collector.
-function harness(user = WEAK(), { perms = true } = {}) {
+function harness(user = WEAK(), { perms = true, save = async () => {} } = {}) {
   const trainerData = { A: user };
   const log = { replies: [], replyEdits: [], channel: [] };
   const collectors = [];
@@ -70,14 +74,16 @@ function harness(user = WEAK(), { perms = true } = {}) {
       updates: [],
       edits: [],
       followUps: [],
+      replies: [],
       update: async (o) => { b.updates.push(o); },
       deferUpdate: async () => {},
       editReply: async (o) => { b.edits.push(o); },
       followUp: async (o) => { b.followUps.push(o); },
+      reply: async (o) => { b.replies.push(o); },
     };
     return b;
   };
-  const run = (opponent) => execute(interaction(opponent), trainerData, null, null, lockUser, async () => {}, null);
+  const run = (opponent) => execute(interaction(opponent), trainerData, null, null, lockUser, save, null);
   const nonce = () => {
     const row = embedJson(log.replies.at(-1).components[0]);
     return row.components[0].custom_id.split(":")[1];
@@ -216,7 +222,7 @@ section("Not now and expiry");
 section("Fight! and a loss");
 {
   const t = harness();
-  await t.run("brock");
+  await t.run(LOSES);
   const b = await t.click("fight");
   assertTrue(textOf(b.edits[0]).includes("You lost 1,234 CC."), "the private reply shows the exact loss");
   assertEqual(b.edits[0].components, [], "and drops the buttons");
@@ -224,7 +230,7 @@ section("Fight! and a loss");
   assertEqual(t.log.channel.length, 2, "the intro card and the replay post");
   const intro = embedJson(t.log.channel[0].opts.embeds[0]);
   assertEqual(intro.fields.find((f) => f.name === "Lose").value, "10% of their CC", "the intro card says 10%");
-  assertEqual(intro.fields.find((f) => f.name === "Win").value, "Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "and the prize at stake");
+  assertEqual(intro.fields.find((f) => f.name === "Win").value, "Giovanni sprite, 12,000 CC, 3 stones, and 25 Dust", "and the prize at stake");
   assertTrue(!(t.log.channel[0].opts.content ?? "").includes("<@"), "the intro card mentions no one");
   const pub = t.publicText();
   assertTrue(!pub.includes("1,234") && !pub.includes("1234") && !pub.includes("11,111") && !pub.includes("11111"), "no amount or balance in public");
@@ -232,8 +238,34 @@ section("Fight! and a loss");
   assertEqual(t.collectors[0].ended !== null, true, "the preview stops listening");
 
   const again = await t.click("fight");
-  assertEqual(again.followUps[0], { content: "This challenge already happened.", flags: 64 }, "a second click finds it settled");
+  assertEqual([again.replies[0], again.updates, again.followUps], [{ content: "This challenge already happened.", flags: 64 }, [], []],
+    "a second click finds it settled, answered privately");
   assertEqual(t.trainerData.A.challenge.attempts, 1, "and uses no attempt");
+}
+
+section("Clicks while a Fight! is saving");
+{
+  // A forced save can wait behind a running flush; the preview must not take more clicks meanwhile.
+  let finishSave;
+  const t = harness(WEAK(), { save: () => new Promise((r) => { finishSave = r; }) });
+  await t.run(LOSES);
+  const nonce = t.log.replies[0].components[0].toJSON().components[0].custom_id.split(":")[1];
+  const fight = { user: { id: "A" }, customId: `challenge_fight:${nonce}`, updates: [], edits: [], replies: [], followUps: [],
+    update: async (o) => { fight.updates.push(o); }, deferUpdate: async () => {}, editReply: async (o) => { fight.edits.push(o); },
+    reply: async (o) => { fight.replies.push(o); }, followUp: async (o) => { fight.followUps.push(o); } };
+  const fighting = t.collectors[0].h.collect(fight);
+  await new Promise((r) => setTimeout(r, 0));
+  assertEqual(fight.updates[0], { content: "⚔️ Fighting…", embeds: [], components: [] }, "Fight! drops the buttons at once");
+  const notNow = await t.click("cancel");
+  assertEqual([notNow.replies[0], notNow.updates, notNow.followUps], [{ content: "This challenge already happened.", flags: 64 }, [], []],
+    "Not now during the save is answered privately and changes nothing");
+  t.collectors[0].stop("time");
+  await t.collectors[0].ended;
+  finishSave();
+  await fighting;
+  assertTrue(!t.log.replyEdits.some((e) => e.content === "Preview expired."), "expiry during the save doesn't cover the fight");
+  assertTrue(textOf(fight.edits.at(-1)).includes("You lost 1,234 CC."), "the fight finishes and shows its result");
+  assertEqual(t.trainerData.A.challenge.attempts, 1, "one attempt used");
 }
 
 section("Fight! and a first win");
@@ -250,7 +282,7 @@ section("Fight! and a first win");
 section("Review Focus: changes between preview and Fight!");
 {
   const t = harness();
-  await t.run("brock");
+  await t.run(LOSES);
   t.trainerData.A = structuredClone(t.trainerData.A); // e.g. a dashboard save
   await t.click("fight");
   assertEqual([t.trainerData.A.cc, t.trainerData.A.challenge?.attempts], [11111, 1], "the fight lands on the live record");
@@ -270,7 +302,7 @@ section("Review Focus: changes between preview and Fight!");
   assertEqual(wager.trainerData.A.cc, 12345, "and nothing is lost");
 
   const richer = harness();
-  await richer.run("brock");
+  await richer.run(LOSES);
   richer.trainerData.A.cc = 50000;
   const rb = await richer.click("fight");
   assertTrue(textOf(rb.edits[0]).includes("You lost 1,234 CC."), "the loss never exceeds what the preview showed");

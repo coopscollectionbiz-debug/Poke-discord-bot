@@ -139,6 +139,22 @@ section("Underdog surge at gate - 5");
   }
 }
 
+section("A one-Pokémon Team and the surge");
+{
+  // A Team of one is always the Underdog by a wide margin, so the surge fires
+  // at its maximum chance and lifts it to Lv 100 (buildMon's cap).
+  const lone = [{ speciesId: 6, variant: "normal", level: 30 }];
+  for (const key of CHALLENGE_KEYS) {
+    let wins = 0, surged = 0;
+    for (let i = 0; i < N; i++) {
+      const run = simulateChallenge({ team: lone, opponents: CHALLENGES[key].opponents, seed: simSeed(i) });
+      if (run.cleared) wins++;
+      if (run.fights.some((f) => f.surge)) surged++;
+    }
+    console.log(`  ${CHALLENGES[key].label.padEnd(10)} lone Lv 30 Charizard wins ${Math.round((100 * wins) / N)}% (surges in ${Math.round((100 * surged) / N)}%)`);
+  }
+}
+
 section("Leveling pace");
 {
   // battleRewards.test.js's model for 10 Battles a day: half wins (6

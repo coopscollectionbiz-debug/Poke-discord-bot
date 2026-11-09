@@ -121,16 +121,17 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   });
 
   collector.on("collect", async (i) => {
+    // The first click claims the preview before any await, so a second click
+    // (or the expiry) can never act on it, even while a Fight! is still saving.
+    if (settled) return i.reply({ content: refusal("settled"), flags: MessageFlags.Ephemeral });
+    settled = true;
     if (i.customId.startsWith("challenge_cancel")) {
-      if (settled) return i.followUp({ content: refusal("settled"), flags: MessageFlags.Ephemeral });
-      settled = true;
       collector.stop("cancel");
       return i.update({ content: "Not now.", embeds: [], components: [] });
     }
-    await i.deferUpdate();
+    // Drop the buttons right away: the save below can wait behind another one.
+    await i.update({ content: "⚔️ Fighting…", embeds: [], components: [] });
     const outcome = await lockUser(userId, async () => {
-      if (settled) return { ok: false, reason: "settled" };
-      settled = true;
       // Read the live record now: the dashboard or another command may have replaced it since the preview.
       const live = trainerData[userId];
       const atStake = live && previewChallenge(live, key);
@@ -140,7 +141,6 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
       return { ...out, atStake };
     });
 
-    if (outcome.reason === "settled") return i.followUp({ content: refusal("settled"), flags: MessageFlags.Ephemeral });
     collector.stop("fought");
     if (!outcome.ok) {
       return i.editReply({ content: refusal(outcome.reason, trainerData[userId]), embeds: [], components: [] }).catch(() => {});
@@ -162,6 +162,6 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   });
 
   collector.on("end", (_, reason) => {
-    if (reason === "time") interaction.editReply({ content: "Preview expired.", embeds: [], components: [] }).catch(() => {});
+    if (reason === "time" && !settled) interaction.editReply({ content: "Preview expired.", embeds: [], components: [] }).catch(() => {});
   });
 }

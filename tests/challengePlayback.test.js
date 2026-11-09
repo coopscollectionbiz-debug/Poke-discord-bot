@@ -122,6 +122,21 @@ section("Elite Four replay");
   assertTrue(!OPPONENT_KEYS.some((k) => texts(rec).includes(`<@${k}`)), "no leader is ever a mention");
 }
 
+section("Each fight's result stays up");
+{
+  // Fights 1-3's result frames must stay up a full delay before the next fight's start frame replaces them.
+  const delayMs = 600; // well above the ~0.2 s a frame takes to render
+  const stamps = [];
+  const channel = { send: async () => ({ edit: async () => { stamps.push(Date.now()); } }) };
+  await playChallenge(channel, runOut, runNames, { maxUpdates: 2, delayMs, queue: createQueue(1) });
+  let i = -1;
+  const gaps = runOut.fights.slice(0, -1).map((f) => {
+    i += pickFrameTurns(f.result.turns, 2).length + (i === -1 ? 1 : 2); // fight 0 starts with send(), later fights with an edit
+    return stamps[i + 1] - stamps[i];
+  });
+  assertTrue(gaps.every((g) => g >= delayMs * 0.9), `each fight's result shows for a full delay (${gaps.join(", ")} ms)`);
+}
+
 section("Single fights in public");
 {
   const lostTd = player([10], 5);

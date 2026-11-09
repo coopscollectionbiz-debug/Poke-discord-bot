@@ -38,6 +38,7 @@ import { enqueueSave } from "../utils/saveQueue.js";
 import { lockUser } from "../utils/userLocks.js";
 import { saveAndAck, SAVE_DELAYED_NOTE } from "../utils/saveManager.js";
 import { grantTrainer } from "../services/assets.js";
+import { badgeLine } from "../utils/challenge/badgeEmojis.js";
 
 // Load trainer sprite data
 const __filename = fileURLToPath(import.meta.url);
@@ -537,7 +538,8 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
           `🧍 **Trainer:** ${trainerInfo.name} — ${trainerInfo.rarityLabel} ${trainerInfo.emoji}\n\n` +
           `📊 **Pokémon Owned:** ${pokemonOwned}\n` +
           `✨ **Shiny Pokémon:** ${shinyCount}\n` +
-          `🧍 **Trainers:** ${trainerCount}\n\n` +
+          `🧍 **Trainers:** ${trainerCount}\n` +
+          `${badgeLine(user)}\n\n` +
           `🌀 **Team:**`
       )
       .setFooter({ text: "Coop's Collection • /trainercard" });

@@ -34,6 +34,7 @@ import { rarityEmojis } from "/public/spriteconfig.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
 import { getRegions, countOwned } from "/public/picker-pokemon/regions.js";
 import * as bulkRules from "/public/picker-pokemon/bulkRules.js";
+import { GYM_BADGES, earnedBadgeKeys } from "/public/picker-pokemon/badges.js";
 
 // ===========================================================
 // 🎨 Type ID to Name Mapping (for filtering)
@@ -448,6 +449,19 @@ function updateHUD() {
   if (ccEl) ccEl.textContent = cc;
   if (tpEl) tpEl.textContent = tp;
   if (rankEl) rankEl.textContent = rank;
+
+  const badgeRow = document.getElementById("badgeRow");
+  if (badgeRow) {
+    const earned = new Set(earnedBadgeKeys(userData));
+    badgeRow.replaceChildren(...GYM_BADGES.map((b) => {
+      const img = document.createElement("img");
+      img.src = b.image;
+      img.alt = b.badge;
+      img.title = b.badge;
+      img.className = earned.has(b.key) ? "earned" : "unearned";
+      return img;
+    }));
+  }
 
   updateDustTimer();
 }

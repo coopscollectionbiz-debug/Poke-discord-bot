@@ -109,6 +109,26 @@ a:hover { text-decoration: underline; }
   margin-right: 3px;
 }
 
+/* Badges row (/challenge), under the stats bar; wraps on narrow screens */
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.5rem 1rem;
+}
+
+.badge-row img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.badge-row img.unearned {
+  opacity: 0.25;
+  filter: grayscale(1);
+}
+
 /* Pulse animation for stats */
 @keyframes pulseUp {
   0% { transform: scale(1); color: var(--text); }

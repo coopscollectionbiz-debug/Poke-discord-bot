@@ -42,7 +42,7 @@ section("Catalog");
   assertEqual(new Set(ids).size, ids.length, "ids are unique");
   assertTrue(ids.every((id) => cat.ACHIEVEMENT_ID_PATTERN.test(id)), "ids are stable snake_case");
   assertTrue(all.length >= 80, `${all.length} achievements`);
-  assertEqual(Object.keys(cat.CATEGORIES).length, 7, "7 categories");
+  assertEqual(Object.keys(cat.CATEGORIES).length, 8, "8 categories (activity added in revision 2)");
   assertTrue(all.every((a) => cat.CATEGORIES[a.category] && a.name && a.description && Number.isSafeInteger(a.target) && a.target > 0 && Number.isSafeInteger(a.ap) && a.ap >= 0), "required metadata present");
   assertTrue(all.every((a) => ["state", "counter"].includes(a.metric.kind) && ["full", "baseline", "none"].includes(a.retro)), "metric kind and retroactivity declared");
   assertTrue(all.every((a) => Object.isFrozen(a)), "entries are frozen");
@@ -57,7 +57,7 @@ section("Catalog");
   assertEqual(cat.getAchievement("col_species_100").reward, { cc: 3000, items: { evolution_stone: 1 } }, "reward values match the design");
   assertEqual(cat.getAchievement("nope"), null, "unknown id → null");
   assertEqual(cat.getAchievement("__proto__"), null, "prototype key → null");
-  assertEqual(all.filter((a) => a.hidden).map((a) => a.id), ["col_mythic"], "one hidden achievement");
+  assertEqual(all.filter((a) => a.hidden).map((a) => a.id).sort(), ["bat_upset", "col_mythic", "col_mythic_all", "evo_family_eevee", "shiny_mythic"], "five hidden achievements");
   assertTrue(all.filter((a) => a.id.startsWith("meta_ap_")).every((a) => a.ap === 0), "meta AP achievements give 0 AP (no loop)");
 }
 
@@ -120,7 +120,7 @@ section("Targeted progress");
   assertTrue(w.ach.rank_master_trainer && !w.ach.rank_gym_leader, "30,000 TP → Master Trainer, not Gym Leader");
   assertTrue(w.ach.trainer_10 && !w.ach.trainer_50, "12 trainers → Trainer Collector I");
   assertTrue(w.ach.lvl_50 && !w.ach.lvl_100, "a Level 50+ Pokémon → Seasoned");
-  assertTrue(w.ap >= 100 && w.ap < 500 && w.ach.meta_ap_100 && !w.ach.meta_ap_500, `AP milestones follow AP (${w.ap} AP)`);
+  assertTrue([100, 500, 1500, 3000].every((n) => !!w.ach[`meta_ap_${n}`] === w.ap >= n), `AP milestones follow AP (${w.ap} AP)`);
 }
 
 // ======================= Retroactive =======================
@@ -260,8 +260,8 @@ section("Dashboard /api/achievements");
   assertEqual(H.view({ query: { id: "999999999999999999" }, isAuthorized: () => true }).status, 404, "unknown player: 404");
   assertEqual(H.view({ query: { id: A, category: "shiny" }, isAuthorized: () => true }).body.achievements.every((r) => r.category === "shiny"), true, "category filter");
   assertEqual(td, snap, "reads never mutate player data");
-  const hidden = H.view({ query: { id: B }, isAuthorized: () => true }).body.achievements.find((r) => r.id === "col_mythic");
-  assertTrue(hidden.name === "???" && hidden.progress === null && hidden.reward === null && !/Mythic/.test(hidden.description), "a locked hidden achievement reveals nothing");
+  const hidden = H.view({ query: { id: B }, isAuthorized: () => true }).body.achievements.find((r) => r.hidden && r.category === "collection");
+  assertTrue(hidden.name === "???" && hidden.progress === null && hidden.reward === null && hidden.ap === null && /^hidden_\d+$/.test(hidden.id) && !/Mythic/.test(hidden.description), "a locked hidden achievement reveals nothing");
 }
 
 // ======================= Discord view =======================
@@ -271,7 +271,7 @@ section("Discord /achievements view");
   const u = { tp: 600, pokemon: species(range(1, 30), [1]) };
   const v = D.buildAchievementsView(u, { nonce });
   const text = v.embeds[0].data.description;
-  assertTrue(/Pokémon Collection: \*\*\d+\/34\*\*/.test(text) && /First Partner/.test(text), "overview shows category totals and achievements");
+  assertTrue(/Pokémon Collection: \*\*\d+\/46\*\* \(\d+%\)/.test(text) && /First Partner/.test(text), "overview shows category totals and achievements");
   assertTrue(/pending approval/.test(text), "rewards are labelled pending approval");
   assertEqual(v.components[1].components.length, 2, "no Claim button when nothing is claimable");
   const total = cat.listAchievements().length;

@@ -49,8 +49,13 @@ function render() {
   grid.replaceChildren();
   if (!data) return;
   const summary = $("achSummary");
-  summary.replaceChildren(el("span", "chip", `${data.ap.toLocaleString()} AP`), el("span", "chip", `${data.unlocked}/${data.total} unlocked`));
-  for (const c of data.categories) summary.append(el("span", "chip", `${c.emoji} ${c.unlocked}/${c.total}`));
+  const pct = (a, b) => (b > 0 ? Math.floor((100 * a) / b) : 0);
+  summary.replaceChildren(el("span", "chip", `${data.ap.toLocaleString()} AP`), el("span", "chip", `${data.unlocked}/${data.total} unlocked · ${pct(data.unlocked, data.total)}%`));
+  for (const c of data.categories) {
+    const chip = el("span", "chip", `${c.emoji} ${c.unlocked}/${c.total}`);
+    chip.title = `${c.label}: ${pct(c.unlocked, c.total)}% complete`;
+    summary.append(chip);
+  }
 
   const f = $("achFilter").value;
   const list = data.achievements.filter(
@@ -61,7 +66,7 @@ function render() {
   for (const r of list) {
     const card = el("div", `shop-item bag-item ach-card${r.unlocked ? "" : " locked"}`);
     card.append(el("h3", null, `${r.unlocked ? "✅" : r.hidden ? "❔" : "🔒"} ${r.name}`));
-    card.append(el("p", "tier", `${r.tierName} · ${r.ap} AP`));
+    card.append(el("p", "tier", r.ap == null ? r.tierName : `${r.tierName} · ${r.ap} AP`));
     card.append(el("p", "desc", r.description));
     if (r.progress && !r.unlocked) {
       const wrap = el("div", "ach-bar");

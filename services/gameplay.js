@@ -220,7 +220,7 @@ export function createGameplayHandlers(deps) {
         user.pokemon[tId][chosenVariant] = (user.pokemon[tId][chosenVariant] ?? 0) + 1;
         carryLevel(user, { id: bId, variant: chosenVariant }, { id: tId, variant: chosenVariant });
         resetLevelIfGone(user, bId, chosenVariant);
-        trackProgress(user, [{ type: "evolved" }]);
+        trackProgress(user, [{ type: "evolved", species: tId, shiny: chosenVariant === "shiny" }]);
 
         return {
           ok: true,
@@ -357,7 +357,7 @@ export function createGameplayHandlers(deps) {
           };
         });
         user.weeklyPackClaimed = true;
-        trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: rewards.filter((r) => r.shiny).length }]);
+        trackProgress(user, [{ type: "weekly" }, { type: "pokemon" }, { type: "shiny", n: rewards.filter((r) => r.shiny).length }]);
         return { ok: true, rewards: results };
       },
     });

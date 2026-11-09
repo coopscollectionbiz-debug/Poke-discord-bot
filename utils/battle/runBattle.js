@@ -97,9 +97,15 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
     else r.losses++;
   });
 
-  // Release C: battle achievements (wins, rating, levels) for both players.
-  // Synchronous and targeted; runs inside the caller's withBothLocks.
-  for (const u of users) trackProgress(u, [{ type: "battle" }], now.getTime());
+  // Release C: battle achievements (wins, rating, levels, streaks) for both
+  // players. Runs exactly once per completed battle, in the same synchronous
+  // block as wins++/losses++ and inside the caller's withBothLocks, so a
+  // streak can never move without the win/loss it belongs to. "upset" uses
+  // the pre-battle ratings.
+  users.forEach((u, i) => {
+    const won = i === result.winner;
+    trackProgress(u, [{ type: "battle", won, upset: won && from[1 - i] - from[i] >= 200 }], now.getTime());
+  });
 
   recordStart(records[0], defenderId);
   if (mode === "wager") {

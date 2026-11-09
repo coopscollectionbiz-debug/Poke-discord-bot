@@ -147,7 +147,7 @@ export async function execute(
 
       user.lastDaily = today;
       // Release C: achievement progress (Pokémon, shinies, TP/rank).
-      trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: (shiny1 ? 1 : 0) + (shiny2 ? 1 : 0) }, { type: "tp" }]);
+      trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: (shiny1 ? 1 : 0) + (shiny2 ? 1 : 0) }, { type: "tp" }, { type: "daily", day: Math.floor(Date.parse(today) / 86_400_000) }]);
 
       // ======================================================
       // Rare & shiny broadcast system

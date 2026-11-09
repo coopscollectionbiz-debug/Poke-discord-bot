@@ -16,23 +16,57 @@
 // ==========================================================
 
 import fs from "fs";
-import { listAchievements, getAchievement, BY_METRIC, CATALOG_REVISION, CATEGORIES, TIER_NAMES } from "../catalog/achievements.js";
+import { listAchievements, getAchievement, BY_METRIC, CATALOG_REVISION, CATEGORIES, TIER_NAMES, REGIONS, TYPE_MASTERY_MIN } from "../catalog/achievements.js";
+import { TYPE_ID_TO_NAME } from "../utils/battle/data.js";
 import { levelsForUser } from "../utils/training.js";
 import { getQuantity, grantItem, validateHoldableItem } from "../services/inventory.js";
 import { grantCurrency } from "../services/assets.js";
 
-// Species facts (region, types, tier) for collection metrics, loaded once.
+// Species facts (region, types, tier, evolution family) for collection
+// metrics, loaded once. Families are the connected components of the
+// evolvesTo/evolvesFrom graph (edges to unknown ids are ignored, so
+// malformed or cyclic data cannot loop); a family's key is its lowest id.
 const SPECIES = (() => {
   const raw = JSON.parse(fs.readFileSync(new URL("../public/pokemonData.json", import.meta.url), "utf8"));
   const m = new Map();
   for (const p of Object.values(raw)) {
-    m.set(Number(p.id), { region: p.region, types: p.types || [], tier: String(p.tier || "common").toLowerCase() });
+    m.set(Number(p.id), { region: p.region, types: p.types || [], tier: String(p.tier || "common").toLowerCase(), links: [...(p.evolvesTo || []), ...(p.evolvesFrom || [])].map(Number), family: 0 });
   }
+  const parent = new Map([...m.keys()].map((id) => [id, id]));
+  const find = (x) => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
+  for (const [id, sp] of m) for (const t of sp.links) if (m.has(t) && t !== id) { const a = find(id), b = find(t); if (a !== b) parent.set(Math.max(a, b), Math.min(a, b)); }
+  for (const [id, sp] of m) sp.family = find(id);
+  return m;
+})();
+/** family key → member count (families of size 1 are not "families"). */
+export const FAMILY_SIZES = (() => {
+  const s = new Map();
+  for (const sp of SPECIES.values()) s.set(sp.family, (s.get(sp.family) || 0) + 1);
+  return s;
+})();
+export const familyCount = () => [...FAMILY_SIZES.values()].filter((n) => n >= 2).length;
+
+// Trainer file → tier (trainerSprites.json; every sprite of an entry maps to its tier).
+const TRAINER_TIER = (() => {
+  const m = new Map();
+  try {
+    const raw = JSON.parse(fs.readFileSync(new URL("../trainerSprites.json", import.meta.url), "utf8"));
+    for (const [key, info] of Object.entries(raw)) {
+      const tier = String(info?.tier || "common").toLowerCase();
+      const files = (Array.isArray(info?.sprites) ? info.sprites : []).map((s) => (typeof s === "string" ? s : s?.file)).filter(Boolean);
+      if (!files.length) files.push(`${key}.png`);
+      for (const f of files) m.set(String(f).toLowerCase(), tier);
+    }
+  } catch { /* no trainer tiers: tier metrics stay 0 */ }
   return m;
 })();
 
 export const dayNumber = (ms = Date.now()) => Math.floor(ms / 86_400_000);
-export const COUNTER_KEYS = Object.freeze(["shinyObtained", "evolutions", "donated", "purchases"]);
+export const COUNTER_KEYS = Object.freeze([
+  "shinyObtained", "evolutions", "donated", "purchases",
+  // Revision 2 (counted from the expansion on; never inferred from history)
+  "shinyEvolutions", "dailyClaims", "dailyStreak", "bestDailyStreak", "lastDailyDay", "weeklyClaims", "winStreak", "bestWinStreak", "upsetWins",
+]);
 const ID_PATTERN = /^[a-z][a-z0-9_]{1,47}$/;
 const DANGEROUS = new Set(["__proto__", "constructor", "prototype"]);
 const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
@@ -89,6 +123,16 @@ export function normalizeProgression(user) {
       }
     }
   }
+  // Distinct species evolved into (rev 2): sorted unique known species ids.
+  if (user.evoSpecies !== undefined) {
+    const raw = user.evoSpecies;
+    const ok = Array.isArray(raw) ? [...new Set(raw.filter((v) => Number.isSafeInteger(v) && SPECIES.has(v)))].sort((a, b) => a - b) : [];
+    if (!Array.isArray(raw) || ok.length !== raw.length || ok.some((v, i) => v !== raw[i])) {
+      legacy(user, "evoSpecies", raw, "invalid entries removed");
+      user.evoSpecies = ok;
+      changed = true;
+    }
+  }
   if (user.ach !== undefined) {
     const ap = sumAp(user);
     if (user.ap !== ap) {
@@ -108,11 +152,16 @@ function sumAp(user) {
 // ----------------------------------------------------------
 // Metrics
 // ----------------------------------------------------------
-const COLLECTION_PREFIXES = ["region:", "type:", "tier:"];
-const isCollectionKey = (k) => k === "uniqueSpecies" || k === "shinyCopies" || k === "shinySpecies" || COLLECTION_PREFIXES.some((p) => k.startsWith(p));
+const COLLECTION_PREFIXES = ["region:", "type:", "tier:", "shinyTier:", "family:"];
+const COLLECTION_KEYS = new Set(["uniqueSpecies", "shinyCopies", "shinySpecies", "regions", "shinyRegions", "familiesComplete", "typeMastery"]);
+const isCollectionKey = (k) => COLLECTION_KEYS.has(k) || COLLECTION_PREFIXES.some((p) => k.startsWith(p));
+const TYPE_IDS = Object.keys(TYPE_ID_TO_NAME);
 
+/** One pass over the player's Pokémon (current ownership). */
 function collectionMetrics(user) {
   const out = { uniqueSpecies: 0, shinyCopies: 0, shinySpecies: 0 };
+  const fam = new Map();
+  const shinyRegions = new Set();
   for (const [idStr, e] of Object.entries(user.pokemon || {})) {
     const normal = Number(e?.normal) || 0;
     const shiny = Number(e?.shiny) || 0;
@@ -125,8 +174,29 @@ function collectionMetrics(user) {
     out[r] = (out[r] || 0) + 1;
     for (const t of sp.types) out[`type:${t}`] = (out[`type:${t}`] || 0) + 1;
     out[`tier:${sp.tier}`] = (out[`tier:${sp.tier}`] || 0) + 1;
+    if (shiny > 0) {
+      out[`shinyTier:${sp.tier}`] = (out[`shinyTier:${sp.tier}`] || 0) + 1;
+      shinyRegions.add(sp.region);
+    }
+    fam.set(sp.family, (fam.get(sp.family) || 0) + 1);
+  }
+  out.regions = Object.keys(REGIONS).filter((r) => out[`region:${r}`] > 0).length;
+  out.shinyRegions = Object.keys(REGIONS).filter((r) => shinyRegions.has(r)).length;
+  out.typeMastery = TYPE_IDS.filter((t) => (out[`type:${t}`] || 0) >= TYPE_MASTERY_MIN).length;
+  out.familiesComplete = 0;
+  for (const [f, owned] of fam) {
+    out[`family:${f}`] = owned;
+    const size = FAMILY_SIZES.get(f);
+    if (size >= 2 && owned === size) out.familiesComplete++;
   }
   return out;
+}
+
+function trainerTierCount(user, tier) {
+  const list = Array.isArray(user.trainers) ? user.trainers : Object.keys(user.trainers || {});
+  let n = 0;
+  for (const t of list) if (typeof t === "string" && TRAINER_TIER.get(t.toLowerCase()) === tier) n++;
+  return n;
 }
 
 /**
@@ -138,8 +208,12 @@ export function computeMetrics(user, wanted) {
   let coll = null;
   for (const full of wanted) {
     const [kind, key] = [full.slice(0, full.indexOf(":")), full.slice(full.indexOf(":") + 1)];
-    if (kind === "counter") { out[full] = Math.max(0, Number(user.stats?.[key]) || 0); continue; }
+    if (kind === "counter") {
+      out[full] = key === "evolvedSpecies" ? (Array.isArray(user.evoSpecies) ? user.evoSpecies.length : 0) : Math.max(0, Number(user.stats?.[key]) || 0);
+      continue;
+    }
     if (isCollectionKey(key)) { coll ??= collectionMetrics(user); out[full] = coll[key] || 0; continue; }
+    if (key.startsWith("trainerTier:")) { out[full] = trainerTierCount(user, key.slice(12)); continue; }
     switch (key) {
       case "battleWins": out[full] = Number(user.battle?.wins) || 0; break;
       case "battleRating": out[full] = Number(user.battle?.rating) || 0; break;
@@ -155,16 +229,74 @@ export function computeMetrics(user, wanted) {
 
 const ALL_METRICS = [...BY_METRIC.keys()];
 const COLLECTION_METRICS = ALL_METRICS.filter((k) => k.startsWith("state:") && isCollectionKey(k.slice(6)));
+const TRAINER_METRICS = ALL_METRICS.filter((k) => k === "state:trainers" || k.startsWith("state:trainerTier:"));
 const EVENT_METRICS = {
   pokemon: [...COLLECTION_METRICS, "state:maxLevel", "state:tp"],
   shiny: ["counter:shinyObtained"],
-  evolved: ["counter:evolutions", ...COLLECTION_METRICS, "state:maxLevel"],
+  evolved: ["counter:evolutions", "counter:evolvedSpecies", "counter:shinyEvolutions", ...COLLECTION_METRICS, "state:maxLevel"],
   donated: ["counter:donated", ...COLLECTION_METRICS],
   purchase: ["counter:purchases"],
-  battle: ["state:battleWins", "state:battleRating", "state:maxLevel"],
+  battle: ["state:battleWins", "state:battleRating", "state:maxLevel", "counter:bestWinStreak", "counter:upsetWins"],
   tp: ["state:tp"],
-  trainers: ["state:trainers"],
+  trainers: TRAINER_METRICS,
+  daily: ["counter:dailyClaims", "counter:bestDailyStreak"],
+  weekly: ["counter:weeklyClaims"],
 };
+
+const bump = (user, key, n = 1) => {
+  user.stats ??= {};
+  user.stats[key] = (Number(user.stats[key]) || 0) + n;
+  return user.stats[key];
+};
+
+/**
+ * Apply one event's counter changes. Each event type is emitted exactly once
+ * per successful operation by its handler (see the hook list in the report),
+ * after the operation's own once-only guard; `daily` additionally refuses a
+ * second count for the same UTC day.
+ */
+function applyCounters(user, ev, n) {
+  switch (ev.type) {
+    case "shiny": if (n > 0) bump(user, "shinyObtained", n); break;
+    case "donated": if (n > 0) bump(user, "donated", n); break;
+    case "purchase": if (n > 0) bump(user, "purchases", n); break;
+    case "weekly": bump(user, "weeklyClaims"); break;
+    case "evolved": {
+      bump(user, "evolutions");
+      if (ev.shiny === true) bump(user, "shinyEvolutions");
+      const sid = Number(ev.species);
+      if (Number.isSafeInteger(sid) && SPECIES.has(sid)) {
+        const list = Array.isArray(user.evoSpecies) ? user.evoSpecies : (user.evoSpecies = []);
+        if (!list.includes(sid)) { list.push(sid); list.sort((a, b) => a - b); }
+      }
+      break;
+    }
+    case "battle": {
+      // Streaks only move on a confirmed result (won true/false).
+      if (ev.won === true) {
+        const s = bump(user, "winStreak");
+        if (s > (Number(user.stats.bestWinStreak) || 0)) user.stats.bestWinStreak = s;
+        if (ev.upset === true) bump(user, "upsetWins");
+      } else if (ev.won === false && user.stats?.winStreak) {
+        user.stats.winStreak = 0;
+      }
+      break;
+    }
+    case "daily": {
+      const day = Number(ev.day);
+      if (!Number.isSafeInteger(day) || day <= 0) break;
+      const s = (user.stats ??= {});
+      const last = Number(s.lastDailyDay) || 0;
+      if (day <= last) break; // same day (or clock went back): never counted twice
+      s.dailyClaims = (Number(s.dailyClaims) || 0) + 1;
+      s.dailyStreak = last === day - 1 && Number(s.dailyStreak) > 0 ? Number(s.dailyStreak) + 1 : 1;
+      if (s.dailyStreak > (Number(s.bestDailyStreak) || 0)) s.bestDailyStreak = s.dailyStreak;
+      s.lastDailyDay = day;
+      break;
+    }
+    default:
+  }
+}
 
 // ----------------------------------------------------------
 // Unlocking
@@ -221,8 +353,10 @@ export function retroEvaluate(user, now = Date.now()) {
 
 /**
  * Record gameplay events and re-check only the affected achievements.
- * events: [{ type: "pokemon"|"shiny"|"evolved"|"donated"|"purchase"|"battle"|"tp"|"trainers", n? }]
+ * events: [{ type: "pokemon"|"shiny"|"evolved"|"donated"|"purchase"|"battle"|"tp"|"trainers"|"daily"|"weekly", n? }]
+ *   evolved: { species, shiny }   battle: { won, upset }   daily: { day }
  * Counter events add n (default 1). Returns newly unlocked ids.
+ * Call only AFTER the operation succeeded, inside its lock, before its save.
  */
 export function trackProgress(user, events, now = Date.now()) {
   if (!user || typeof user !== "object") return [];
@@ -231,11 +365,7 @@ export function trackProgress(user, events, now = Date.now()) {
   for (const ev of events) {
     if (!ev || !EVENT_METRICS[ev.type]) continue;
     const n = Number.isSafeInteger(ev.n) && ev.n > 0 ? ev.n : ev.n === 0 ? 0 : 1;
-    const counter = { shiny: "shinyObtained", evolved: "evolutions", donated: "donated", purchase: "purchases" }[ev.type];
-    if (counter && n > 0) {
-      user.stats ??= {};
-      user.stats[counter] = (Number(user.stats[counter]) || 0) + n;
-    }
+    applyCounters(user, ev, n);
     for (const k of EVENT_METRICS[ev.type]) keys.add(k);
   }
   return newly.concat(evaluate(user, keys, now));
@@ -244,6 +374,7 @@ export function trackProgress(user, events, now = Date.now()) {
 // ----------------------------------------------------------
 // View (pure — never writes)
 // ----------------------------------------------------------
+const HIDDEN_ALIAS = new Map(listAchievements().filter((e) => e.hidden).map((e, i) => [e.id, `hidden_${i + 1}`]));
 export function achievementView(user, { policy, category = null } = {}) {
   const all = listAchievements();
   const metrics = computeMetrics(user, ALL_METRICS);
@@ -259,19 +390,21 @@ export function achievementView(user, { policy, category = null } = {}) {
     const isClaimed = own(claimed, e.id);
     const approved = !!e.reward && policy?.isApproved?.(e) === true;
     const concealed = e.hidden && !unlocked;
+    // A locked hidden achievement reveals nothing that hints at its
+    // condition: not its id, name, description, tier, AP, progress or reward.
     rows.push({
-      id: e.id,
+      id: concealed ? HIDDEN_ALIAS.get(e.id) : e.id,
       name: concealed ? "???" : e.name,
       description: concealed ? "A hidden achievement. Keep playing to discover it." : e.description,
       category: e.category,
-      tier: e.tier,
-      tierName: TIER_NAMES[e.tier],
-      ap: e.ap,
+      tier: concealed ? null : e.tier,
+      tierName: concealed ? "Hidden" : TIER_NAMES[e.tier],
+      ap: concealed ? null : e.ap,
       hidden: e.hidden,
       unlocked,
       unlockedDay: own(recorded, e.id) ? recorded[e.id] : null,
       progress: concealed ? null : { value: Math.min(value, e.target), target: e.target },
-      counterSince: e.metric.kind === "counter" && user.progression?.day ? user.progression.day : null,
+      counterSince: !concealed && e.metric.kind === "counter" && user.progression?.day ? user.progression.day : null,
       reward: concealed || !e.reward ? null : { ...e.reward, status: approved ? "available" : "pending_approval" },
       claimed: isClaimed,
       claimable: unlocked && approved && !isClaimed,

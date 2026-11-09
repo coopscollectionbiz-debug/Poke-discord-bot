@@ -100,11 +100,18 @@ section("Warm boot: already evaluated");
 
 section("Per-event progress cost");
 {
-  const kinds = [[{ type: "pokemon" }, { type: "shiny", n: 0 }, { type: "purchase" }], [{ type: "evolved" }], [{ type: "battle" }], [{ type: "donated", n: 3 }], [{ type: "tp" }]];
+  // Same mix as the revision-1 measurement (comparable), then a mix that
+  // includes the revision-2 events (daily, weekly, battle result, trainers).
+  const kinds = [[{ type: "pokemon" }, { type: "shiny", n: 0 }, { type: "purchase" }], [{ type: "evolved", species: 2 }], [{ type: "battle", won: true }], [{ type: "donated", n: 3 }], [{ type: "tp" }]];
+  const kinds2 = [...kinds, [{ type: "daily", day: 20000 }], [{ type: "weekly" }], [{ type: "battle", won: false }], [{ type: "trainers" }]];
   const N = 20_000;
   const t0 = performance.now();
   for (let i = 0; i < N; i++) P.trackProgress(data[ids[i % ids.length]], kinds[i % kinds.length], NOW);
   results.eventUs = (ms(t0) * 1000) / N;
+  const t2 = performance.now();
+  for (let i = 0; i < N; i++) P.trackProgress(data[ids[i % ids.length]], kinds2[i % kinds2.length], NOW);
+  results.eventUsRev2Mix = (ms(t2) * 1000) / N;
+  console.log(`   trackProgress (rev-2 event mix incl. daily/weekly/streak/trainers): ${fmt(results.eventUsRev2Mix)} µs/event`);
   // Worst case: the largest collection, capture event (full collection pass).
   const big = ids.reduce((a, b) => (Object.keys(data[a].pokemon).length >= Object.keys(data[b].pokemon).length ? a : b));
   const t1 = performance.now();

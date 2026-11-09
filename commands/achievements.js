@@ -56,15 +56,17 @@ export function buildAchievementsView(user, { category = ALL, page = 0, nonce, p
   const lines = slice.map((r) => {
     const icon = r.unlocked ? "✅" : r.hidden ? "❔" : "🔒";
     const prog = r.progress && !r.unlocked ? `\n> ${bar(r.progress.value, r.progress.target)} ${r.progress.value.toLocaleString("en-US")}/${r.progress.target.toLocaleString("en-US")}` : "";
-    return `${icon} **${r.name}** · ${r.tierName} · ${r.ap} AP\n> ${r.description}${prog}${rewardText(r)}`;
+    const meta = r.ap == null ? r.tierName : `${r.tierName} · ${r.ap} AP`;
+    return `${icon} **${r.name}** · ${meta}\n> ${r.description}${prog}${rewardText(r)}`;
   });
+  const pct = (a, b) => (b > 0 ? Math.floor((100 * a) / b) : 0);
   const header =
     cat === ALL
-      ? v.categories.map((c) => `${c.emoji} ${c.label}: **${c.unlocked}/${c.total}**`).join("\n") + "\n\n"
+      ? v.categories.map((c) => `${c.emoji} ${c.label}: **${c.unlocked}/${c.total}** (${pct(c.unlocked, c.total)}%)`).join("\n") + "\n\n"
       : "";
   const embed = new EmbedBuilder()
     .setColor(0xf5b301)
-    .setTitle(`🏅 Achievements · ${v.ap.toLocaleString("en-US")} AP · ${v.unlocked}/${v.total} unlocked`)
+    .setTitle(`🏅 Achievements · ${v.ap.toLocaleString("en-US")} AP · ${v.unlocked}/${v.total} (${pct(v.unlocked, v.total)}%)`)
     .setDescription((header + (lines.join("\n\n") || "No achievements here.")).slice(0, 4000))
     .setFooter({ text: `${cat === ALL ? "All categories" : CATEGORIES[cat].label} · Page ${p + 1}/${pages} · Rewards marked "pending approval" can't be claimed yet` });
 

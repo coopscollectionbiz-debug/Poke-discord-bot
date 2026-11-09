@@ -4,6 +4,8 @@
 // first win. Teams start from FireRed/LeafGreen and are filled to 6 from
 // later canon teams; Levels are shifted so each ace hits its target, and
 // they're written out literally (see the challenges spec, Draft rosters).
+// The Elite Four sit 1 Level below their draft so the run's gate Level
+// stays under Blue's (tests/challengeBalance.test.js).
 // ==========================================================
 
 import fs from "fs";
@@ -52,13 +54,13 @@ export const CHALLENGES = {
     prize: prize(30000, 4, 40),
     opponents: [
       opponent("lorelei", "Lorelei", "Elite Four", "Ice", "lorelei",
-        team([87, 54], [91, 53], [80, 54], [124, 56], [131, 56], [221, 55])),
+        team([87, 53], [91, 52], [80, 53], [124, 55], [131, 55], [221, 54])),
       opponent("bruno", "Bruno", "Elite Four", "Fighting", "bruno",
-        team([95, 52], [107, 54], [106, 54], [95, 55], [68, 57], [62, 54])),
+        team([95, 51], [107, 53], [106, 53], [95, 54], [68, 56], [62, 53])),
       opponent("agatha", "Agatha", "Elite Four", "Ghost", "agatha",
-        team([94, 54], [42, 54], [93, 53], [24, 56], [94, 58], [110, 55])),
+        team([94, 53], [42, 53], [93, 52], [24, 55], [94, 57], [110, 54])),
       opponent("lance", "Lance", "Elite Four", "Dragon", "lance",
-        team([130, 56], [148, 54], [148, 54], [142, 58], [149, 60], [6, 56])),
+        team([130, 55], [148, 53], [148, 53], [142, 57], [149, 59], [6, 55])),
     ],
   },
   blue: {

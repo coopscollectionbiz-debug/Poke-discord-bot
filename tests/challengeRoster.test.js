@@ -43,7 +43,7 @@ assertEqual(CHALLENGES.surge.opponents[0].trainerKey, "ltsurge", "Lt. Surge's sp
 
 section("Levels (Task 7 may retune; update with it)");
 assertEqual(GYMS.map((k) => ace(CHALLENGES[k].opponents[0])), [25, 30, 35, 40, 44, 48, 53, 58], "Gym aces");
-assertEqual(CHALLENGES.elite4.opponents.map(ace), [56, 57, 58, 60], "Elite Four aces");
+assertEqual(CHALLENGES.elite4.opponents.map(ace), [55, 56, 57, 59], "Elite Four aces");
 assertEqual(ace(CHALLENGES.blue.opponents[0]), 75, "Blue's ace");
 assertEqual(CHALLENGES.blue.opponents[0].team.at(-1).speciesId, 9, "Blue's ace is Blastoise");
 assertEqual(CHALLENGES.red.opponents[0].team.map((m) => m.level), [88, 80, 82, 84, 84, 84], "Red's HGSS Levels");

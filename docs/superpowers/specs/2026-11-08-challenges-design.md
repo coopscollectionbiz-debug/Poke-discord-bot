@@ -35,15 +35,16 @@ Sources: [pokemondb FRLG](https://pokemondb.net/firered-leafgreen/gymleaders-eli
 | Sabrina | Psychic | Marsh | 48 | Kadabra 43, Mr. Mime 42, Venomoth 43, Alakazam 48, Hypno 44, Slowbro 44 |
 | Blaine | Fire | Volcano | 53 | Growlithe 48, Ponyta 46, Rapidash 48, Arcanine 53, Magmar 49, Ninetales 49 |
 | Giovanni | Ground | Earth | 58 | Rhyhorn 53, Dugtrio 50, Nidoqueen 52, Nidoking 53, Rhydon 58, Persian 53 |
-| Lorelei | Ice | | 56 | Dewgong 54, Cloyster 53, Slowbro 54, Jynx 56, Lapras 56, Piloswine 55 |
-| Bruno | Fighting | | 57 | Onix 52, Hitmonchan 54, Hitmonlee 54, Onix 55, Machamp 57, Poliwrath 54 |
-| Agatha | Ghost | | 58 | Gengar 54, Golbat 54, Haunter 53, Arbok 56, Gengar 58, Weezing 55 |
-| Lance | Dragon | | 60 | Gyarados 56, Dragonair 54, Dragonair 54, Aerodactyl 58, Dragonite 60, Charizard 56 |
+| Lorelei | Ice | | 55 | Dewgong 53, Cloyster 52, Slowbro 53, Jynx 55, Lapras 55, Piloswine 54 |
+| Bruno | Fighting | | 56 | Onix 51, Hitmonchan 53, Hitmonlee 53, Onix 54, Machamp 56, Poliwrath 53 |
+| Agatha | Ghost | | 57 | Gengar 53, Golbat 53, Haunter 52, Arbok 55, Gengar 57, Weezing 54 |
+| Lance | Dragon | | 59 | Gyarados 55, Dragonair 53, Dragonair 53, Aerodactyl 57, Dragonite 59, Charizard 55 |
 | Blue | | | 75 | Pidgeot 71, Alakazam 69, Rhydon 71, Arcanine 71, Exeggutor 73, Blastoise 75 |
 | Red | | | 88 (canon) | Pikachu 88, Lapras 80, Snorlax 82, Venusaur 84, Charizard 84, Blastoise 84 |
 
 - Giovanni's sixth Pokémon is Persian (decided). His FRLG team has 5, and neither his Let's Go team nor HGSS has another Ground type for him. Persian is his signature outside the Gym.
 - The ace targets come from the interview (Gyms "a touch lower" than 30 → 65, so Giovanni tops out around 55 to 60, and the Elite Four sit around 55 to 60). The balance test tunes them.
+- Tuning: at the draft Levels (Elite Four aces 56, 57, 58, 60), the Elite Four run's gate tied Blue's at Lv 74. Every Elite Four Pokémon moved down 1 Level, which keeps the aces between 55 and 60 and puts the run's gate at Lv 73, under Blue's Lv 74 (`node tests/challengeBalance.test.js`, before and after the change).
 
 ## Difficulty
 
@@ -148,12 +149,17 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - `tests/challengeCommand.test.js` uses stub Discord objects to cover the board, the refusals, the private preview and its amount, Fight!, Not now, expiry, a double click, the public intro card saying "10%" with no amount, and the replay message.
 - `tests/challengeBalance.test.js` measures gate Levels against stand-in Teams and enforces the order in Difficulty. It also prints win rate by Level for each opponent and a leveling pace that includes 5 challenges a day.
 
-## Open checks (no figure until measured)
+## Measured (stand-in Teams, 200 per Level)
 
-- Gate Level per opponent and for the Elite Four run. These set the final ace targets. `node tests/challengeBalance.test.js`.
-- How sharply win rate climbs with Level against a fixed leader team. If it goes from near 0 to near 1 within a few Levels, retries barely matter and every challenge is a Level gate. The same test prints the curve.
-- How often a surge turns a loss into a win against each leader. The same test measures it.
-- Leveling pace with 10 Battles and 5 challenges a day. The same test measures it.
+Every figure in this section comes from `node tests/challengeBalance.test.js`.
+
+- Gate Levels: Brock 23, Misty 30, Lt. Surge 31, Erika 34, Koga 37, Sabrina 43, Blaine 48, Giovanni 50, Elite Four run 73, Blue 74, Red 86. The Gyms rise one by one, and the enforced order holds.
+- Win rate climbs steeply, so every challenge is a Level gate and retries barely matter. A 10% win rate becomes 90% over 6 Levels for Brock (Lv 20 → 26), 10 for Giovanni (45 → 55), 15 for Blue (67 → 82), and 18 for the Elite Four run (63 → 81) and Red (78 → 96).
+- The Underdog surge almost never matters. At 5 Levels under each gate, it fires in 0% of runs against every opponent except Erika (2%) and the Elite Four run (22%), because a Team that close to the gate is rarely 1.25× weaker. It turns a loss into a win only in the Elite Four run, for 10% of the runs lost without it, where carried damage weakens the Team in later fights.
+- Leveling pace: from Lv 73 (the Elite Four run's gate) to Lv 100 takes 27 days at 10 Battles a day, and 13 days with 5 cleared Elite Four runs a day too.
+
+## Open checks
+
 - Red's HGSS Levels. The pokemondb fetch cut off before Red's row, so those Levels came from a page summary. Check the HGSS page by hand.
 - Giovanni's FRLG ace. The fetch reported "Rhyhorn Lv 50", which looks like a transcription slip for Rhydon. Check the FRLG page by hand.
 - The message syntax for an application emoji (`<:name:id>`). Discord's emoji docs page doesn't state it. Confirm by posting one in a test server.

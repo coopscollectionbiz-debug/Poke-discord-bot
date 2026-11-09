@@ -8,6 +8,7 @@
 //  • Starter Pack broadcasts bypass cooldown
 // ==========================================================
 
+import { pokemonSpriteUrl } from "../utils/sprites.js";
 import { grantItem } from "../services/inventory.js";
 import {
   SlashCommandBuilder,
@@ -21,7 +22,7 @@ import {
   MessageFlags,
 } from "discord.js";
 
-import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
+import { getAllPokemon, getAcquirablePokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
 import { lockUser } from "../utils/userLocks.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
@@ -36,6 +37,7 @@ import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
 import { spritePaths } from "../spriteconfig.js";
+import { publicBaseUrl } from "../utils/publicUrl.js";
 import {
   createSuccessEmbed,
   createPokemonRewardEmbed,
@@ -79,7 +81,7 @@ const COOPCOIN = "<:coopcoin:1437892112959148093>";
 const COOPCOIN_IMG = "https://cdn.discordapp.com/emojis/1437892112959148093.webp?size=96";
 const EVO_STONE = "<:evolution_stone:1437892171381473551>";
 const STARTER_PACK = "<:starter_pack:1437896364087443479>";
-const POKEMART_IMG = `${process.env.RENDER_EXTERNAL_URL || "https://poke-discord-bot.onrender.com"}/public/sprites/items/Pokemart.png`;
+const POKEMART_IMG = `${publicBaseUrl()}/public/sprites/items/Pokemart.png`;
 
 // ==========================================================
 // 🛍️ Items
@@ -227,7 +229,7 @@ export default {
           // ====================================================
           if (confirmedItem.id === "starter_pack") {
             // Catalog look-ups (awaits) first; everything else inside the lock.
-            const allPokemon = await getAllPokemon();
+            const allPokemon = await getAcquirablePokemon(); // live generations only
             const allTrainers = await getFlattenedTrainers();
 
             await lockUser(userId, async () => {
@@ -256,7 +258,7 @@ export default {
               for (const reward of rewards) {
                 const shiny = rollForShiny(live.tp || 0);
                 grantCatch(live, reward.id, shiny ? "shiny" : "normal");
-                const spriteURL = shiny ? `${spritePaths.shiny}${reward.id}.gif` : `${spritePaths.pokemon}${reward.id}.gif`;
+                const spriteURL = pokemonSpriteUrl(reward.id, shiny);
                 rewardEmbeds.push(createPokemonRewardEmbed(reward, shiny, spriteURL));
                 broadcastQueue.push({ type: "pokemon", item: { id: reward.id, name: reward.name, rarity: reward.tier }, shiny });
                 if (shiny) shinyPulled.push(reward);

@@ -12,6 +12,7 @@
 //    (currentTeam is only an API response alias of displayedPokemon)
 // ==========================================================
 
+import { isGenerationLive } from "../utils/speciesCatalog.js";
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -205,7 +206,12 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
       { name: "Hoenn", ids: [252, 255, 258] },
       { name: "Sinnoh", ids: [387, 390, 393] },
       { name: "Unova", ids: [495, 498, 501] },
-    ];
+      // Gen 6–9 starters appear only once their generation is live.
+      { name: "Kalos", ids: [650, 653, 656], gen: 6 },
+      { name: "Alola", ids: [722, 725, 728], gen: 7 },
+      { name: "Galar", ids: [810, 813, 816], gen: 8 },
+      { name: "Paldea", ids: [906, 909, 912], gen: 9 },
+    ].filter((g) => !g.gen || isGenerationLive(g.gen));
 
     const allStarters = starGen
       .flatMap((g) => g.ids.map((id) => allPokemon.find((p) => p.id === id)))

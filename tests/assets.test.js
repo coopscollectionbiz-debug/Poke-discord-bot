@@ -18,7 +18,7 @@ import {
 import { saveAndAck, withSaveNote, SAVE_DELAYED_NOTE } from "../utils/saveManager.js";
 import { createNewUser, validateUserSchema } from "../utils/userSchema.js";
 import { giftTrainer, giftCoins } from "../commands/gift.js";
-import { chargeAndGrant, recruitPool, RECRUIT_MAX_DEX } from "../commands/recruit.js";
+import { chargeAndGrant, recruitPool } from "../commands/recruit.js";
 import { addTrainer, isTrainerOwned, getOwnedTrainerCount } from "../utils/trainerFileHandler.js";
 import { lockUsers } from "../utils/userLocks.js";
 
@@ -106,7 +106,7 @@ section("Recruit/quest pool is not empty (D11)");
   const all = Object.values(dex).map((p) => ({ ...p, id: Number(p.id) }));
   const pool = recruitPool(all);
   assertTrue(pool.length > 600, `pool has ${pool.length} Pokémon (filtering on a missing 'generation' field gave 0)`);
-  assertTrue(pool.every((p) => p.id >= 1 && p.id <= RECRUIT_MAX_DEX), "only national dex 1–649");
+  assertTrue(pool.every((p) => p.id >= 1 && p.id <= 649), "only released generations (default: national dex 1–649)");
 }
 
 section("Save acknowledgment (D14)");

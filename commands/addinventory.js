@@ -4,6 +4,7 @@
 // ✅ Adds support for Shiny Dust via Item path
 // ==========================================================
 
+import { isAcquirable } from "../utils/speciesCatalog.js";
 import { grantItem, isHoldable } from "../services/inventory.js";
 import { getCatalogItem } from "../catalog/items.js";
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
@@ -56,6 +57,9 @@ export default {
     .addIntegerOption(option =>
       option.setName("quantity").setDescription("Quantity (default 1)")
     )
+    .addBooleanOption(option =>
+      option.setName("allow_unreleased").setDescription("Admin testing: allow a Pokémon from a generation that is not released yet")
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(
@@ -81,6 +85,8 @@ export default {
     const type = interaction.options.getString("type");
     const name = interaction.options.getString("name");
     const shiny = interaction.options.getBoolean("shiny") || false;
+    // Generation controls: unreleased species need this explicit admin override.
+    const allowUnreleased = interaction.options.getBoolean("allow_unreleased") === true;
 
     let quantity = interaction.options.getInteger("quantity") || 1;
     if (!Number.isFinite(quantity) || quantity < 1) quantity = 1;
@@ -110,6 +116,13 @@ export default {
           if (!pokemon) {
             return safeReply(interaction, {
               content: `⛔ Pokémon "${name}" not found.`,
+              flags: MessageFlags.Ephemeral,
+            });
+          }
+
+          if (!isAcquirable(pokemon.id) && !allowUnreleased) {
+            return safeReply(interaction, {
+              content: `⛔ ${pokemon.name} is from Generation ${pokemon.generation}, which is not released yet. Re-run with \`allow_unreleased:True\` to grant it for testing.`,
               flags: MessageFlags.Ephemeral,
             });
           }

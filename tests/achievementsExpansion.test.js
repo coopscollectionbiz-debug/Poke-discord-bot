@@ -33,7 +33,9 @@ const { TYPE_ID_TO_NAME } = await import("../utils/battle/data.js");
 const store = await import("../persistence/localStore.js");
 
 const readJson = async (p) => JSON.parse(await fs.readFile(new URL(p, import.meta.url), "utf8"));
-const DEX = Object.values(await readJson("../public/pokemonData.json"));
+// Release C/Mastery entries are about the Gen 1–5 Pokédex (#1–649); Gens 6–9 have their own revision-3 entries.
+const FULL_DEX = Object.values(await readJson("../public/pokemonData.json"));
+const DEX = FULL_DEX.filter((p) => Number(p.id) <= 649);
 const TRAINERS = await readJson("../trainerSprites.json");
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const NOW = Date.UTC(2026, 10, 9, 12);
@@ -49,13 +51,13 @@ section("Catalog integrity (revision 2)");
 {
   const all = cat.listAchievements();
   const ids = all.map((a) => a.id);
-  assertEqual(cat.CATALOG_REVISION, 2, "catalog revision bumped to 2");
-  assertTrue(all.length >= 120 && all.length <= 145, `${all.length} achievements (target ~120–140)`);
+  assertEqual(cat.CATALOG_REVISION, 3, "catalog revision is 3 (Generations 6–9)");
+  assertEqual(all.length, 157, "157 achievements (141 + 16 for Generations 6–9)");
   assertEqual(new Set(ids).size, ids.length, "ids unique");
   // Every revision-1 entry is unchanged (ids, targets, metrics, AP, tiers).
   const REV1 = { col_first: [1, 5], col_species_500: [500, 100], col_region_unova_full: [156, 75], col_mythic: [1, 40], shiny_100: [100, 150], shiny_species_50: [50, 80], evo_100: [100, 50], bat_wins_500: [500, 100], bat_rating_1600: [1600, 60], trainer_250: [250, 80], don_5000: [5000, 80], econ_buy_100: [100, 30], meta_ap_1500: [1500, 0], lvl_100: [100, 60] };
   assertTrue(Object.entries(REV1).every(([id, [t, ap]]) => cat.getAchievement(id)?.target === t && cat.getAchievement(id)?.ap === ap), "revision-1 targets and AP preserved");
-  assertEqual([all.filter((a) => a.since === 1).length, all.filter((a) => a.since === 2).length], [83, all.length - 83], "83 revision-1 entries kept; the rest are marked revision 2");
+  assertEqual([all.filter((a) => a.since === 1).length, all.filter((a) => a.since === 2).length, all.filter((a) => a.since === 3).length], [83, 58, 16], "83 revision-1 and 58 revision-2 entries kept; 16 revision-3 entries");
   // Self-referential AP loops impossible: meta achievements give 0 AP.
   assertTrue(all.filter((a) => a.metric.key === "ap").every((a) => a.ap === 0), "AP milestones award 0 AP");
   assertTrue(all.every((a) => a.ap <= 250), "no single achievement is worth more than 250 AP");
@@ -88,15 +90,20 @@ section("Reachability against the real datasets");
   assertEqual([tierCount("legendary"), tierCount("mythic")], [cat.TIER_SPECIES.legendary, cat.TIER_SPECIES.mythic], "Legendary/Mythic totals match the dataset");
   assertEqual(P.familyCount(), cat.MULTI_MEMBER_FAMILIES, "225 multi-member evolution families in the graph");
   assertTrue(Object.keys(TYPE_ID_TO_NAME).every((t) => typeCount(t) >= cat.TYPE_MASTERY_MIN), "every type has enough species for Type Encyclopedia");
+  // Classic metrics are bounded by the Gen 1–5 data; the rest by all 1,025 species.
+  const fullCount = (f) => FULL_DEX.filter(f).length;
   const reach = {
-    uniqueSpecies: DEX.length, shinySpecies: DEX.length, regions: 5, shinyRegions: 5, familiesComplete: P.familyCount(),
-    typeMastery: Object.keys(TYPE_ID_TO_NAME).length, trainers: Object.keys(TRAINERS).length,
+    uniqueSpecies: FULL_DEX.length, classicSpecies: DEX.length, shinySpecies: FULL_DEX.length, regions: 5, regionsAll: 9, shinyRegions: 5, familiesComplete: P.familyCount(),
+    typeMastery: 17, typeMasteryAll: Object.keys(TYPE_ID_TO_NAME).length, trainers: Object.keys(TRAINERS).length,
     "trainerTier:legendary": trainerTier("legendary"), "trainerTier:mythic": trainerTier("mythic"),
-    "tier:legendary": tierCount("legendary"), "tier:mythic": tierCount("mythic"), "shinyTier:legendary": tierCount("legendary"), "shinyTier:mythic": tierCount("mythic"),
+    "classicTier:legendary": tierCount("legendary"), "classicTier:mythic": tierCount("mythic"),
+    "tier:legendary": fullCount((p) => p.tier === "legendary"), "tier:mythic": fullCount((p) => p.tier === "mythic"),
+    "shinyTier:legendary": fullCount((p) => p.tier === "legendary"), "shinyTier:mythic": fullCount((p) => p.tier === "mythic"),
     "family:133": P.FAMILY_SIZES.get(133),
   };
-  for (const r of Object.keys(cat.REGIONS)) reach[`region:${r}`] = regionSize(r);
-  for (const t of Object.keys(TYPE_ID_TO_NAME)) reach[`type:${t}`] = typeCount(t);
+  for (const r of Object.keys(cat.ALL_REGIONS)) reach[`region:${r}`] = fullCount((p) => p.region === r);
+  for (const t of Object.keys(TYPE_ID_TO_NAME)) reach[`type:${t}`] = fullCount((p) => p.types.includes(Number(t)));
+  assertTrue(all.filter((a) => a.metric.kind === "state").every((a) => reach[a.metric.key] !== undefined || !/^(region:|type:|tier:|classic|unique|regions)/.test(a.metric.key)), "every collection metric has a data bound");
   const bounded = all.filter((a) => a.metric.kind === "state" && reach[a.metric.key] !== undefined);
   const over = bounded.filter((a) => a.target > reach[a.metric.key]).map((a) => a.id);
   assertEqual(over, [], `no state achievement exceeds what the data allows (${bounded.length} checked)`);
@@ -373,7 +380,7 @@ section("Revision 1 → 2 upgrade: conservative and idempotent");
   assertTrue(Object.entries(before.ach).every(([id, d]) => u.ach[id] === d), "existing unlock days preserved");
   assertEqual(u.achClaimed, before.achClaimed, "claims untouched");
   assertEqual(u.stats.evolutions, 3, "existing counters untouched");
-  assertEqual(u.progression.rev, 2, "stamped with revision 2");
+  assertEqual(u.progression.rev, 3, "stamped with revision 3");
   assertEqual(u.progression.day, DAY - 30, "original tracking start day kept");
   assertEqual(u.ap, Object.keys(u.ach).reduce((s, id) => s + cat.getAchievement(id).ap, 0), "AP recalculated from all unlocks");
   const snap = clone(u);
@@ -424,7 +431,7 @@ section("Hidden privacy, dashboard and Discord with the larger catalog");
   assertTrue(after && after.unlocked && after.name === "Eeveelution Gallery" && after.ap === 40, "once unlocked, the details become visible");
   assertEqual(H.view({ query: { id: B }, isAuthorized: (id) => id === A }).status, 403, "cross-user view denied");
   assertEqual(H.view({ query: { id: A, category: "activity" }, isAuthorized: () => true }).body.achievements.length, 10, "activity category filter");
-  assertTrue(body.categories.length === 8 && body.total === cat.listAchievements().length, "category counts cover all 8 categories");
+  assertTrue(body.categories.length === 8 && body.total === cat.listAchievements().filter(cat.isAchievementActive).length, "category counts cover all 8 categories (released generations only)");
   // Discord: every page of every category within embed limits; no claim button (nothing approved).
   const nonce = "a1b2c3d4e5f6";
   let pages = 0;

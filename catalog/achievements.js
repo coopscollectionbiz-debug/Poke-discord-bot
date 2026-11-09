@@ -19,14 +19,21 @@
 // ==========================================================
 
 import { getRankTiers } from "../utils/rankSystem.js";
-import { TYPE_ID_TO_NAME } from "../utils/battle/data.js";
+import { TYPE_ID_TO_NAME, LEGACY_TYPE_IDS } from "../utils/battle/data.js";
+import { GENERATIONS, OPTIONAL_GENERATIONS } from "../config/generations.js";
+import { isGenerationLive } from "../utils/speciesCatalog.js";
 
 /**
  * Bump when a definition's target/metric changes or entries are added.
  * 1 = Release C (83). 2 = Mastery expansion (adds entries only; every
  * revision-1 id, target, metric and AP is unchanged).
+ * 3 = Generations 6–9: Fairy type, Kalos/Alola/Galar/Paldea region
+ * achievements and National Pokédex achievements (gated per generation).
+ * Every revision-1/2 id, target and AP is unchanged; the "complete the
+ * Gen 1–5 set" entries are pinned to Gen 1–5 species/types so new
+ * species can never move or shortcut their goalposts.
  */
-export const CATALOG_REVISION = 2;
+export const CATALOG_REVISION = 3;
 
 export const CATEGORIES = Object.freeze({
   collection: { label: "Pokémon Collection", emoji: "📚", order: 1 },
@@ -39,22 +46,29 @@ export const CATEGORIES = Object.freeze({
   special: { label: "Special Milestones", emoji: "🏅", order: 8 },
 });
 
-/** Supported Pokédex (pokemonData.json, national dex 1–649). */
+/** The original (Gen 1–5) Pokédex, national dex 1–649 — fixed targets of Release C entries. */
 export const SUPPORTED_SPECIES = 649;
-/** Legendary / Mythic species in the supported dataset (tier field). */
+/** Legendary / Mythic species in Gen 1–5 (tier field). */
 export const TIER_SPECIES = Object.freeze({ legendary: 48, mythic: 21 });
-/** Evolution families with 2+ members (connected components of evolvesTo/evolvesFrom). */
+/** Gen 1–5 evolution families with 2+ members (components of the Gen 1–5 evolution graph). */
 export const MULTI_MEMBER_FAMILIES = 225;
+/** The full National Pokédex once every generation is released. */
+export const NATIONAL_DEX = 1025;
 /** "Type Encyclopedia": this many species of every type (every type has 27+). */
 export const TYPE_MASTERY_MIN = 15;
 
 export const TIER_NAMES = Object.freeze({ 1: "Bronze", 2: "Silver", 3: "Gold", 4: "Platinum", 5: "Master" });
 
 // Region sizes (national dex 1–649), verified against pokemonData.json.
+// These five are the "classic" regions of World Traveler / Shiny Globetrotter.
 export const REGIONS = Object.freeze({ Kanto: 151, Johto: 100, Hoenn: 135, Sinnoh: 107, Unova: 156 });
+/** Gen 6–9 regions: full intended species sets (independent of what is enabled). */
+export const NEW_REGIONS = Object.freeze(Object.fromEntries(OPTIONAL_GENERATIONS.map((g) => [GENERATIONS[g].region, GENERATIONS[g].last - GENERATIONS[g].first + 1])));
+export const NEW_REGION_GENERATION = Object.freeze(Object.fromEntries(OPTIONAL_GENERATIONS.map((g) => [GENERATIONS[g].region, g])));
+export const ALL_REGIONS = Object.freeze({ ...REGIONS, ...NEW_REGIONS });
 
 const entries = [];
-/** Catalog revision that introduced the entry (1 = Release C, 2 = Mastery expansion). */
+/** Catalog revision that introduced the entry (1 = Release C, 2 = Mastery expansion, 3 = Gens 6–9). */
 let SINCE = 1;
 const add = (o) =>
   entries.push(
@@ -84,7 +98,8 @@ for (const [region, size] of Object.entries(REGIONS)) {
   add({ id: `col_region_${slug(region)}_half`, name: `${region} Explorer`, description: `Own ${half} of the ${size} Pokémon from ${region}.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: half, tier: 2, ap: 15, reward: { cc: 2000 }, retro: "full" });
   add({ id: `col_region_${slug(region)}_full`, name: `${region} Pokédex Complete`, description: `Own every one of the ${size} Pokémon from ${region}.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: size, tier: 5, ap: 75, reward: { badge: `badge_${slug(region)}`, title: `${region} Master` }, retro: "full" });
 }
-for (const [typeId, typeName] of Object.entries(TYPE_ID_TO_NAME)) {
+for (const typeId of LEGACY_TYPE_IDS) {
+  const typeName = TYPE_ID_TO_NAME[typeId];
   add({ id: `col_type_${slug(typeName)}`, name: `${typeName} Specialist`, description: `Own 15 different ${typeName}-type Pokémon.`, category: "collection", metric: { kind: "state", key: `type:${typeId}` }, target: 15, tier: 2, ap: 10, reward: { cc: 500 }, retro: "full" });
 }
 add({ id: "col_legendary", name: "Legend Seeker", description: "Own a Legendary Pokémon.", category: "collection", metric: { kind: "state", key: "tier:legendary" }, target: 1, tier: 3, ap: 20, reward: { badge: "badge_legend_seeker" }, retro: "full" });
@@ -139,7 +154,7 @@ for (const [n, name, ap, reward, tier] of [[1, "Customer", 5, null, 1], [25, "Re
 
 SINCE = 2;
 // ---- Pokédex mastery (state; retro full) ----
-add({ id: "col_species_649", name: "Pokédex Complete", description: `Own all ${SUPPORTED_SPECIES} supported Pokémon at the same time.`, category: "collection", metric: { kind: "state", key: "uniqueSpecies" }, target: SUPPORTED_SPECIES, tier: 5, ap: 150, retro: "full" });
+add({ id: "col_species_649", name: "Pokédex Complete", description: `Own all ${SUPPORTED_SPECIES} Pokémon from Generations 1–5 at the same time.`, category: "collection", metric: { kind: "state", key: "classicSpecies" }, target: SUPPORTED_SPECIES, tier: 5, ap: 150, retro: "full" });
 for (const [region, size] of Object.entries(REGIONS)) {
   const n = Math.ceil(size * 0.75);
   add({ id: `col_region_${slug(region)}_75`, name: `${region} Cartographer`, description: `Own ${n} of the ${size} Pokémon from ${region} at the same time.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: n, tier: 3, ap: 30, retro: "full" });
@@ -147,9 +162,9 @@ for (const [region, size] of Object.entries(REGIONS)) {
 add({ id: "col_world_traveler", name: "World Traveler", description: "Own a Pokémon from each of the 5 regions.", category: "collection", metric: { kind: "state", key: "regions" }, target: Object.keys(REGIONS).length, tier: 1, ap: 5, retro: "full" });
 add({ id: "col_legendary_10", name: "Legend Collector", description: "Own 10 different Legendary Pokémon.", category: "collection", metric: { kind: "state", key: "tier:legendary" }, target: 10, tier: 3, ap: 30, retro: "full" });
 add({ id: "col_legendary_25", name: "Legend Keeper", description: "Own 25 different Legendary Pokémon.", category: "collection", metric: { kind: "state", key: "tier:legendary" }, target: 25, tier: 4, ap: 60, retro: "full" });
-add({ id: "col_legendary_all", name: "Hall of Legends", description: `Own all ${TIER_SPECIES.legendary} Legendary Pokémon at the same time.`, category: "collection", metric: { kind: "state", key: "tier:legendary" }, target: TIER_SPECIES.legendary, tier: 5, ap: 100, retro: "full" });
-add({ id: "col_mythic_all", name: "Mythic Archive", description: `Own all ${TIER_SPECIES.mythic} Mythic Pokémon at the same time.`, category: "collection", metric: { kind: "state", key: "tier:mythic" }, target: TIER_SPECIES.mythic, tier: 5, ap: 100, retro: "full", hidden: true });
-add({ id: "col_type_all", name: "Type Encyclopedia", description: `Own ${TYPE_MASTERY_MIN} different Pokémon of every one of the ${Object.keys(TYPE_ID_TO_NAME).length} types.`, category: "collection", metric: { kind: "state", key: "typeMastery" }, target: Object.keys(TYPE_ID_TO_NAME).length, tier: 4, ap: 60, retro: "full" });
+add({ id: "col_legendary_all", name: "Hall of Legends", description: `Own all ${TIER_SPECIES.legendary} Legendary Pokémon from Generations 1–5 at the same time.`, category: "collection", metric: { kind: "state", key: "classicTier:legendary" }, target: TIER_SPECIES.legendary, tier: 5, ap: 100, retro: "full" });
+add({ id: "col_mythic_all", name: "Mythic Archive", description: `Own all ${TIER_SPECIES.mythic} Mythic Pokémon from Generations 1–5 at the same time.`, category: "collection", metric: { kind: "state", key: "classicTier:mythic" }, target: TIER_SPECIES.mythic, tier: 5, ap: 100, retro: "full", hidden: true });
+add({ id: "col_type_all", name: "Type Encyclopedia", description: `Own ${TYPE_MASTERY_MIN} different Pokémon of every one of the ${LEGACY_TYPE_IDS.length} original types.`, category: "collection", metric: { kind: "state", key: "typeMastery" }, target: LEGACY_TYPE_IDS.length, tier: 4, ap: 60, retro: "full" });
 
 // ---- Shiny mastery ----
 for (const [n, roman, ap] of [[100, "IV", 120], [150, "V", 150], [250, "VI", 200]]) {
@@ -215,7 +230,28 @@ for (const [n, roman, reward, tier] of [[100, "I", { cosmetic: "frame_decorated"
 SINCE = 2;
 add({ id: "meta_ap_3000", name: "Decorated IV", description: "Earn 3000 Achievement Points.", category: "special", metric: { kind: "state", key: "ap" }, target: 3000, tier: 5, ap: 0, retro: "full" });
 
+// ==========================================================
+// Revision 3 — Generations 6–9. Same shapes, AP and (pending) rewards as
+// the classic region/type entries. Entries with `generations` stay hidden
+// and cannot unlock until every listed generation is live.
+// ==========================================================
+SINCE = 3;
+add({ id: "col_type_fairy", name: "Fairy Specialist", description: "Own 15 different Fairy-type Pokémon.", category: "collection", metric: { kind: "state", key: "type:18" }, target: 15, tier: 2, ap: 10, reward: { cc: 500 }, retro: "full" });
+add({ id: "col_type_all_18", name: "Type Encyclopedia II", description: `Own ${TYPE_MASTERY_MIN} different Pokémon of every one of the ${Object.keys(TYPE_ID_TO_NAME).length} types, Fairy included.`, category: "collection", metric: { kind: "state", key: "typeMasteryAll" }, target: Object.keys(TYPE_ID_TO_NAME).length, tier: 4, ap: 60, retro: "full" });
+for (const [region, size] of Object.entries(NEW_REGIONS)) {
+  const generations = [NEW_REGION_GENERATION[region]];
+  const half = Math.ceil(size / 2), n75 = Math.ceil(size * 0.75);
+  add({ id: `col_region_${slug(region)}_half`, name: `${region} Explorer`, description: `Own ${half} of the ${size} Pokémon from ${region}.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: half, tier: 2, ap: 15, reward: { cc: 2000 }, retro: "full", generations });
+  add({ id: `col_region_${slug(region)}_75`, name: `${region} Cartographer`, description: `Own ${n75} of the ${size} Pokémon from ${region} at the same time.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: n75, tier: 3, ap: 30, retro: "full", generations });
+  add({ id: `col_region_${slug(region)}_full`, name: `${region} Pokédex Complete`, description: `Own every one of the ${size} Pokémon from ${region}.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: size, tier: 5, ap: 75, reward: { badge: `badge_${slug(region)}`, title: `${region} Master` }, retro: "full", generations });
+}
+add({ id: "col_world_traveler_9", name: "World Traveler II", description: `Own a Pokémon from each of the ${Object.keys(ALL_REGIONS).length} regions.`, category: "collection", metric: { kind: "state", key: "regionsAll" }, target: Object.keys(ALL_REGIONS).length, tier: 3, ap: 20, retro: "full", generations: [...OPTIONAL_GENERATIONS] });
+add({ id: "col_species_1025", name: "National Pokédex Complete", description: `Own all ${NATIONAL_DEX} Pokémon at the same time.`, category: "collection", metric: { kind: "state", key: "uniqueSpecies" }, target: NATIONAL_DEX, tier: 5, ap: 200, retro: "full", generations: [...OPTIONAL_GENERATIONS] });
+
 const BY_ID = new Map(entries.map((e) => [e.id, e]));
+
+/** False while an entry's generation(s) are not live: hidden, cannot unlock, not counted. */
+export const isAchievementActive = (e) => !e?.generations || e.generations.every((g) => isGenerationLive(g));
 export const ACHIEVEMENT_ID_PATTERN = /^[a-z][a-z0-9_]{1,47}$/;
 
 export const listAchievements = () => entries;

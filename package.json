@@ -14,7 +14,13 @@
     "test:cleanup": "node test-cleanup-trainer-data.js",
     "repair": "node repairTrainerData.js",
     "cleanup": "node cleanupTrainerData.js",
-    "generate:battle-data": "node tools/generate-battle-data.mjs"
+    "generate:battle-data": "node tools/generate-battle-data.mjs",
+    "generate:pokedex": "node tools/generate-pokedex.mjs",
+    "import:sprites": "node tools/import-sprites.mjs",
+    "generate:credits": "node tools/generate-credits.mjs",
+    "validate:catalog": "node tools/validate-catalog.mjs",
+    "check:tier-rule": "node tools/check-tier-rule.mjs",
+    "report:balance": "node tools/balance-report.mjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.84",

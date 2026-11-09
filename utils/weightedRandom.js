@@ -4,6 +4,7 @@
 // ==========================================================
 
 import { getRank } from "./rankSystem.js";
+import { acquirablePokemon } from "./speciesCatalog.js";
 
 // ==========================================================
 // 🎯 BASE WEIGHTS (Pokéball baseline)
@@ -169,6 +170,10 @@ function filterPokemonPoolByBall(list, ballType) {
 export function selectRandomPokemonForUser(pool, user, source = "pokeball") {
   // 🔧 FIX: ensure pool is an array; your pokemonData is an object
   let list = Array.isArray(pool) ? pool : Object.values(pool);
+  // Generation controls: never hand out a species from a disabled generation,
+  // whatever pool the caller passed (callers should already pass
+  // getAcquirablePokemon(); this is the backstop).
+  list = acquirablePokemon(list);
 
   const valid = ["pokeball", "greatball", "ultraball"];
   const ballType = valid.includes(source) ? source : "pokeball";

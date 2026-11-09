@@ -61,12 +61,12 @@ test("getRegions on the real Pokémon data", () => {
   const regions = getRegions(pokemonData);
   assertEqual(
     regions.map((r) => r.name),
-    ["Kanto", "Johto", "Hoenn", "Sinnoh", "Unova"],
-    "Five regions in Pokédex order"
+    ["Kanto", "Johto", "Hoenn", "Sinnoh", "Unova", "Kalos", "Alola", "Galar", "Paldea"],
+    "Nine regions in Pokédex order"
   );
   assertEqual(
     regions.map((r) => r.ids.length),
-    [151, 100, 135, 107, 156],
+    [151, 100, 135, 107, 156, 72, 88, 96, 120],
     "Region sizes match the data"
   );
   assertEqual(regions[0].ids.slice(0, 3), [1, 2, 3], "IDs ascend within a region");

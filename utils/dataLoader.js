@@ -4,6 +4,7 @@
 // Supports Pokémon data and Trainer sprites (tier-based).
 // ==========================================================
 
+import { acquirablePokemon, nameKey } from "./speciesCatalog.js";
 import fs from "fs/promises";
 
 // Cache for loaded JSON data
@@ -60,6 +61,15 @@ export async function getAllPokemon() {
     ...pokemon,
     id: Number(pokemon.id),
   }));
+}
+
+/**
+ * Species that may be newly acquired right now (live generations only,
+ * complete battle data/sprites/metadata). Use this for every encounter,
+ * reward and shop pool; use getAllPokemon() for display and look-ups.
+ */
+export async function getAcquirablePokemon() {
+  return acquirablePokemon(await getAllPokemon());
 }
 
 // ==========================================================
@@ -179,10 +189,12 @@ function flattenTrainerSprites(spritesObj) {
 export async function findPokemonByName(query) {
   const allPokemon = await getAllPokemon();
   const input = String(query).toLowerCase();
+  const key = nameKey(query);
   return (
     allPokemon.find(
       (p) =>
         p.name.toLowerCase() === input ||
+        nameKey(p.name) === key ||
         String(p.id) === input ||
         (p.aliases && p.aliases.map((a) => a.toLowerCase()).includes(input))
     ) || null

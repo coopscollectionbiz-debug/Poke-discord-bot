@@ -7,6 +7,7 @@
 
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import { generateToken } from "../utils/dashboardAuth.js";
+import { publicBaseUrl } from "../utils/publicUrl.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -21,10 +22,8 @@ export default {
       // 🔐 Generate a 10-minute access token
       const token = generateToken(userId, channelId);
 
-      // Base URL (supports Render auto-URL or fallback)
-      const baseUrl =
-        process.env.RENDER_EXTERNAL_URL ||
-        "https://coopscollection-bot.onrender.com";
+      // Base URL: PUBLIC_URL → Fly app URL (utils/publicUrl.js); no Render fallback.
+      const baseUrl = publicBaseUrl();
 
       // Default starting page → Pokémon picker
       const pickerUrl = `${baseUrl}/auth/dashboard?id=${userId}&code=${token}`;

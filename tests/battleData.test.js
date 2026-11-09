@@ -1,7 +1,8 @@
 // ==========================================================
 // tests/battleData.test.js
-// Checks the generated Gen 5 battleData.json against the game's own
-// pokemonData.json and a few known Gen 5 facts.
+// Checks the generated battleData.json against the game's own
+// pokemonData.json: Gen 5 stats/moves for #1–649, modern data for
+// #650–1025, modern 18-type chart.
 // ==========================================================
 
 import fs from "fs";
@@ -15,13 +16,13 @@ const pokemonData = read("pokemonData.json");
 const TYPE_ID_TO_NAME = {
   1: "Normal", 2: "Fighting", 3: "Flying", 4: "Poison", 5: "Ground", 6: "Rock",
   7: "Bug", 8: "Ghost", 9: "Steel", 10: "Fire", 11: "Water", 12: "Grass",
-  13: "Electric", 14: "Psychic", 15: "Ice", 16: "Dragon", 17: "Dark",
+  13: "Electric", 14: "Psychic", 15: "Ice", 16: "Dragon", 17: "Dark", 18: "Fairy",
 };
 const EXCLUDED_MOVES = ["dreameater", "snore", "focuspunch", "fakeout", "lastresort",
   "synchronoise", "futuresight", "doomdesire", "skydrop", "struggle"];
 
 section("Species");
-assertEqual(Object.keys(data.species).length, 649, "649 species");
+assertEqual(Object.keys(data.species).length, 1025, "1025 species");
 const ids = Object.keys(pokemonData);
 assertTrue(ids.every((id) => data.species[id]), "every pokemonData id has battle data");
 const typeMismatches = ids.filter((id) =>
@@ -29,7 +30,8 @@ const typeMismatches = ids.filter((id) =>
   JSON.stringify(pokemonData[id].types.map((t) => TYPE_ID_TO_NAME[t])));
 assertEqual(typeMismatches, [], "types match pokemonData");
 assertEqual(data.species["25"].baseStats, { hp: 35, atk: 55, def: 30, spa: 50, spd: 40, spe: 90 }, "Pikachu has Gen 5 base stats");
-assertEqual(data.species["35"].types, ["Normal"], "Clefairy is Normal in Gen 5");
+assertEqual(data.species["35"].types, ["Fairy"], "Clefairy is Fairy (modern typing)");
+assertEqual(data.species["35"].baseStats, { hp: 70, atk: 45, def: 48, spa: 60, spd: 65, spe: 35 }, "Clefairy keeps its Gen 5 base stats");
 
 section("Moves");
 assertEqual(data.moves.flamethrower?.power, 95, "Flamethrower is 95 power in Gen 5");
@@ -61,9 +63,9 @@ assertEqual(Object.keys(data.moves.flamethrower), ["name", "type", "category", "
   "a move without effects stores no effect fields");
 
 section("Type chart");
-assertEqual(data.typeChart.Ghost?.Steel, 0.5, "Ghost vs Steel is 0.5 in Gen 5");
+assertEqual(data.typeChart.Ghost?.Steel, undefined, "Ghost vs Steel is neutral (Gen 6+ chart)");
 assertEqual(data.typeChart.Normal?.Ghost, 0, "Normal can't hit Ghost");
-assertTrue(!JSON.stringify(data.typeChart).includes("Fairy"), "no Fairy type");
+assertEqual(data.typeChart.Fairy, { Fighting: 2, Poison: 0.5, Steel: 0.5, Fire: 0.5, Dragon: 2, Dark: 2 }, "Fairy attacking chart");
 const types = Object.values(TYPE_ID_TO_NAME);
 assertTrue(types.every((t) => data.moves[data.fallbackByType[t]]?.type === t), "every type has a fallback move of that type");
 

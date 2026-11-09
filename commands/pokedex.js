@@ -10,6 +10,8 @@
 // • Button reliably toggles sprite by rebuilding components each update
 // ==========================================================
 
+import { pokemonSpriteUrl, spriteRecord } from "../utils/sprites.js";
+import { nameKey, isGenerationLive } from "../utils/speciesCatalog.js";
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -126,9 +128,12 @@ export default {
         }
       }
 
-      const poke = all.find(
-        (p) => p?.name?.toLowerCase() === name.toLowerCase()
-      );
+      const poke = all.find((p) => nameKey(p?.name) === nameKey(name) || String(p?.id) === name);
+      // Unreleased generations: only players who already own the species see its entry.
+      const ownsIt = (id) => ((trainerData?.[interaction.user.id]?.pokemon?.[id]?.normal || 0) + (trainerData?.[interaction.user.id]?.pokemon?.[id]?.shiny || 0)) > 0;
+      if (poke && !isGenerationLive(poke.generation ?? 1) && !ownsIt(poke.id)) {
+        return safeReply(interaction, { content: `📖 **${poke.name}** isn't in the Pokédex yet.`, flags: MessageFlags.Ephemeral });
+      }
 
       if (!poke) {
         return safeReply(interaction, {
@@ -153,10 +158,7 @@ export default {
       const ownsShiny = shinyCount > 0;
 
       // Sprites (YOUR spritePaths are already full URLs)
-      const getSprite = (isShiny) =>
-        isShiny
-          ? `${spritePaths.shiny}${poke.id}.gif`
-          : `${spritePaths.pokemon}${poke.id}.gif`;
+      const getSprite = (isShiny) => pokemonSpriteUrl(poke.id, isShiny);
 
       let viewingShiny = false;
 
@@ -192,7 +194,7 @@ export default {
               `**Viewing:** ${viewingShiny ? "✨ Shiny sprite" : "Normal sprite"}`
           )
           .setImage(getSprite(viewingShiny))
-          .setFooter({ text: "Coop's Collection — /pokedex" });
+          .setFooter({ text: Number(poke.id) >= 650 ? `Coop's Collection — /pokedex · Sprite: ${spriteRecord(poke.id)?.credit?.project?.replace(/ \(.*$/, "") ?? "Smogon sprite project"} · /credits` : "Coop's Collection — /pokedex" });
       };
 
       // IMPORTANT: rebuild components each time so toggling always updates cleanly

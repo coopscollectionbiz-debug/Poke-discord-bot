@@ -35,6 +35,9 @@ const STRIPPED_ENV = [
   "RESTORE_FROM",
   "CONFIRM_RESTORE",
   "BATTLE_FRAME_OUT",
+  // Tests decide their own generation settings (config/generations.js).
+  "POKEMON_GENERATIONS",
+  "PUBLIC_URL",
 ];
 
 /** True if `child` is `parent` or inside it (case-insensitive on Windows). */

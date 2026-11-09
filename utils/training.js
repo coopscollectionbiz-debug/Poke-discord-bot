@@ -30,9 +30,12 @@ export function levelForExp(exp) {
 export function stageOf(speciesId) {
   let stage = 1;
   let p = pokemonData[speciesId];
-  while (p?.evolvesFrom?.length) {
+  // evolution.from covers species whose pre-evolution needs a regional form
+  // (e.g. Obstagoon from Galarian Linoone), which has no evolvesFrom link.
+  const prev = (q) => q?.evolvesFrom?.[0] ?? q?.evolution?.from;
+  for (let guard = 0; prev(p) && guard < 5; guard++) {
     stage++;
-    p = pokemonData[p.evolvesFrom[0]];
+    p = pokemonData[prev(p)];
   }
   return stage;
 }

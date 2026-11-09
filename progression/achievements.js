@@ -16,32 +16,38 @@
 // ==========================================================
 
 import fs from "fs";
-import { listAchievements, getAchievement, BY_METRIC, CATALOG_REVISION, CATEGORIES, TIER_NAMES, REGIONS, TYPE_MASTERY_MIN } from "../catalog/achievements.js";
-import { TYPE_ID_TO_NAME } from "../utils/battle/data.js";
+import { listAchievements, getAchievement, BY_METRIC, CATALOG_REVISION, CATEGORIES, TIER_NAMES, REGIONS, ALL_REGIONS, TYPE_MASTERY_MIN, isAchievementActive } from "../catalog/achievements.js";
+import { speciesOfKey, isSpeciesKey } from "../utils/forms.js";
+import { TYPE_ID_TO_NAME, LEGACY_TYPE_IDS } from "../utils/battle/data.js";
 import { levelsForUser } from "../utils/training.js";
 import { getQuantity, grantItem, validateHoldableItem } from "../services/inventory.js";
 import { grantCurrency } from "../services/assets.js";
 
-// Species facts (region, types, tier, evolution family) for collection
-// metrics, loaded once. Families are the connected components of the
-// evolvesTo/evolvesFrom graph (edges to unknown ids are ignored, so
-// malformed or cyclic data cannot loop); a family's key is its lowest id.
+// Species facts (region, types, tier, generation, evolution family) for
+// collection metrics, loaded once. Families are the connected components of
+// the Gen 1–5 evolution graph (Release C's family achievements are about
+// those 225 families; Gen 6–9 links such as Eevee → Sylveon never change
+// them). Edges to unknown ids are ignored, so malformed or cyclic data
+// cannot loop; a family's key is its lowest id. Gen 6+ species: family 0.
+const CLASSIC_MAX = 649;
 const SPECIES = (() => {
   const raw = JSON.parse(fs.readFileSync(new URL("../public/pokemonData.json", import.meta.url), "utf8"));
   const m = new Map();
   for (const p of Object.values(raw)) {
-    m.set(Number(p.id), { region: p.region, types: p.types || [], tier: String(p.tier || "common").toLowerCase(), links: [...(p.evolvesTo || []), ...(p.evolvesFrom || [])].map(Number), family: 0 });
+    const id = Number(p.id);
+    m.set(id, { region: p.region, types: p.types || [], tier: String(p.tier || "common").toLowerCase(), classic: id <= CLASSIC_MAX,
+      links: [...(p.evolvesTo || []), ...(p.evolvesFrom || [])].map(Number).filter((t) => id <= CLASSIC_MAX && t <= CLASSIC_MAX), family: 0 });
   }
-  const parent = new Map([...m.keys()].map((id) => [id, id]));
+  const parent = new Map([...m.keys()].filter((id) => id <= CLASSIC_MAX).map((id) => [id, id]));
   const find = (x) => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
-  for (const [id, sp] of m) for (const t of sp.links) if (m.has(t) && t !== id) { const a = find(id), b = find(t); if (a !== b) parent.set(Math.max(a, b), Math.min(a, b)); }
-  for (const [id, sp] of m) sp.family = find(id);
+  for (const [id, sp] of m) for (const t of sp.links) if (parent.has(t) && parent.has(id) && t !== id) { const a = find(id), b = find(t); if (a !== b) parent.set(Math.max(a, b), Math.min(a, b)); }
+  for (const [id, sp] of m) if (parent.has(id)) sp.family = find(id);
   return m;
 })();
-/** family key → member count (families of size 1 are not "families"). */
+/** family key → member count (families of size 1 are not "families"). Gen 1–5 only. */
 export const FAMILY_SIZES = (() => {
   const s = new Map();
-  for (const sp of SPECIES.values()) s.set(sp.family, (s.get(sp.family) || 0) + 1);
+  for (const sp of SPECIES.values()) if (sp.family) s.set(sp.family, (s.get(sp.family) || 0) + 1);
   return s;
 })();
 export const familyCount = () => [...FAMILY_SIZES.values()].filter((n) => n >= 2).length;
@@ -152,37 +158,57 @@ function sumAp(user) {
 // ----------------------------------------------------------
 // Metrics
 // ----------------------------------------------------------
-const COLLECTION_PREFIXES = ["region:", "type:", "tier:", "shinyTier:", "family:"];
-const COLLECTION_KEYS = new Set(["uniqueSpecies", "shinyCopies", "shinySpecies", "regions", "shinyRegions", "familiesComplete", "typeMastery"]);
+const COLLECTION_PREFIXES = ["region:", "type:", "tier:", "classicTier:", "shinyTier:", "family:"];
+const COLLECTION_KEYS = new Set(["uniqueSpecies", "classicSpecies", "shinyCopies", "shinySpecies", "regions", "regionsAll", "shinyRegions", "familiesComplete", "typeMastery", "typeMasteryAll"]);
 const isCollectionKey = (k) => COLLECTION_KEYS.has(k) || COLLECTION_PREFIXES.some((p) => k.startsWith(p));
 const TYPE_IDS = Object.keys(TYPE_ID_TO_NAME);
 
-/** One pass over the player's Pokémon (current ownership). */
-function collectionMetrics(user) {
-  const out = { uniqueSpecies: 0, shinyCopies: 0, shinySpecies: 0 };
-  const fam = new Map();
-  const shinyRegions = new Set();
-  for (const [idStr, e] of Object.entries(user.pokemon || {})) {
+/**
+ * Ownership by National Dex species. A form key ("52:galar", utils/forms.js)
+ * counts toward its base species, so a species is never counted twice.
+ * Unknown keys keep their old behaviour (counted as their own entry).
+ */
+function ownedBySpecies(user) {
+  const owned = new Map();
+  for (const [key, e] of Object.entries(user.pokemon || {})) {
     const normal = Number(e?.normal) || 0;
     const shiny = Number(e?.shiny) || 0;
     if (normal + shiny <= 0) continue;
+    const species = isSpeciesKey(key) ? Number(key) : (speciesOfKey(key) ?? key);
+    const cur = owned.get(species) || { normal: 0, shiny: 0 };
+    owned.set(species, { normal: cur.normal + normal, shiny: cur.shiny + shiny });
+  }
+  return owned;
+}
+
+/** One pass over the player's Pokémon (current ownership). */
+function collectionMetrics(user) {
+  const out = { uniqueSpecies: 0, classicSpecies: 0, shinyCopies: 0, shinySpecies: 0 };
+  const fam = new Map();
+  const shinyRegions = new Set();
+  for (const [id, e] of ownedBySpecies(user)) {
+    const { shiny } = e;
     out.uniqueSpecies++;
     if (shiny > 0) { out.shinySpecies++; out.shinyCopies += shiny; }
-    const sp = SPECIES.get(Number(idStr));
+    const sp = SPECIES.get(Number(id));
     if (!sp) continue;
+    if (sp.classic) out.classicSpecies++;
     const r = `region:${sp.region}`;
     out[r] = (out[r] || 0) + 1;
     for (const t of sp.types) out[`type:${t}`] = (out[`type:${t}`] || 0) + 1;
     out[`tier:${sp.tier}`] = (out[`tier:${sp.tier}`] || 0) + 1;
+    if (sp.classic) out[`classicTier:${sp.tier}`] = (out[`classicTier:${sp.tier}`] || 0) + 1;
     if (shiny > 0) {
       out[`shinyTier:${sp.tier}`] = (out[`shinyTier:${sp.tier}`] || 0) + 1;
       shinyRegions.add(sp.region);
     }
-    fam.set(sp.family, (fam.get(sp.family) || 0) + 1);
+    if (sp.family) fam.set(sp.family, (fam.get(sp.family) || 0) + 1);
   }
   out.regions = Object.keys(REGIONS).filter((r) => out[`region:${r}`] > 0).length;
+  out.regionsAll = Object.keys(ALL_REGIONS).filter((r) => out[`region:${r}`] > 0).length;
   out.shinyRegions = Object.keys(REGIONS).filter((r) => shinyRegions.has(r)).length;
-  out.typeMastery = TYPE_IDS.filter((t) => (out[`type:${t}`] || 0) >= TYPE_MASTERY_MIN).length;
+  out.typeMastery = LEGACY_TYPE_IDS.filter((t) => (out[`type:${t}`] || 0) >= TYPE_MASTERY_MIN).length;
+  out.typeMasteryAll = TYPE_IDS.filter((t) => (out[`type:${t}`] || 0) >= TYPE_MASTERY_MIN).length;
   out.familiesComplete = 0;
   for (const [f, owned] of fam) {
     out[`family:${f}`] = owned;
@@ -304,6 +330,7 @@ function applyCounters(user, ev, n) {
 function unlockWhere(user, entries, metrics, day, newly) {
   for (const e of entries) {
     if (own(user.ach || {}, e.id)) continue;
+    if (!isAchievementActive(e)) continue; // generation not released yet
     if ((metrics[`${e.metric.kind}:${e.metric.key}`] ?? 0) >= e.target) {
       user.ach ??= {};
       user.ach[e.id] = day;
@@ -376,7 +403,9 @@ export function trackProgress(user, events, now = Date.now()) {
 // ----------------------------------------------------------
 const HIDDEN_ALIAS = new Map(listAchievements().filter((e) => e.hidden).map((e, i) => [e.id, `hidden_${i + 1}`]));
 export function achievementView(user, { policy, category = null } = {}) {
-  const all = listAchievements();
+  // Entries of unreleased generations are not shown (an entry a player
+  // already holds — e.g. after a rollback — always stays visible).
+  const all = listAchievements().filter((e) => isAchievementActive(e) || own(user?.ach || {}, e.id));
   const metrics = computeMetrics(user, ALL_METRICS);
   const recorded = user.ach || {};
   const claimed = user.achClaimed || {};

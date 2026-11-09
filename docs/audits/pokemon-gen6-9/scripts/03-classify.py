@@ -10,6 +10,7 @@ from PIL import Image, ImageSequence
 ap = argparse.ArgumentParser()
 for a in ["results", "cache", "csv", "summary"]:
     ap.add_argument("--" + a, required=True)
+ap.add_argument("--manifest", help="optional: write the verified sprite source manifest (JSON) used by tools/import-sprites.mjs")
 args = ap.parse_args()
 R = json.load(open(args.results, encoding="utf8"))
 F, E = R["files"], R["entries"]
@@ -76,6 +77,13 @@ PROJECT = {6: "Smogon X/Y Sprite Project (lead Layell)", 7: "Smogon Sun/Moon Spr
            8: "Smogon Sprite Project Gen 8+ (lead G.E.Z.; leParagon)", 9: "Smogon Sprite Project Gen 8+ (lead G.E.Z.; leParagon)"}
 
 rows, stats = [], []
+manifest = []
+def asset(pick, kind):
+    if not pick: return None
+    s_, u, res = pick
+    return {"url": res.get("resolvedUrl") or u, "source": s_, "kind": kind, "sha1": res["sha1"], "bytes": res["bytes"],
+            "format": res["format"], "size": res["size"], "frames": res.get("frames", 1), "uniqueFrames": res.get("uniqueFrames", 1),
+            "maxColors": res["maxColors"], "alphaLevels": res["alphaLevels"]}
 mirror = collections.Counter()
 for e in E:
     sid, sd, pa, sh = e["spriteId"], e["sd"], e["pa"], e.get("sheet", {})
@@ -131,7 +139,13 @@ for e in E:
     if pa.get("bwStaticShiny"): sts_c.append(("pas", PA_RAW + pa["bwStaticShiny"]))
     static = next(((s, u, f(u)) for s, u in st_c if good_static(f(u))), None)
     static_rejected = [s for s, u in st_c if f(u) and f(u).get("ok") and not f(u).get("pixelStyle")]
+    # Prefer the shiny from the same source as the static normal (same drawing, recoloured).
+    if static: sts_c.sort(key=lambda c: c[0] != static[0])
     statics = next(((s, u, f(u)) for s, u in sts_c if good_static(f(u)) and (not static or f(u)["sha1"] != static[2]["sha1"])), None)
+    if static and statics and statics[0] != static[0]:
+        # Switch the normal to the shiny's source when that source has a valid normal too.
+        alt = next(((s, u, f(u)) for s, u in st_c if s == statics[0] and good_static(f(u)) and f(u)["sha1"] != statics[2]["sha1"]), None)
+        if alt: static = alt
     artwork = bool(pa.get("artwork"))
     render3d = bool(sd.get("dex") or sd.get("home") or pa.get("home"))
     ani3d = bool(sd.get("ani"))
@@ -205,11 +219,22 @@ for e in E:
         "missing_assets": "; ".join(missing),
     }
     rows.append(row)
+    normal_asset = asset(front, "animated") or asset(static, "static")
+    shiny_asset = asset(shiny, "animated") or asset(statics, "static")
+    if normal_asset and shiny_asset and normal_asset["sha1"] == shiny_asset["sha1"]:
+        shiny_asset = None  # never let the normal sprite stand in for a shiny
+    manifest.append({"dex": e["num"], "name": e["name"], "spriteId": sid, "kind": e["kind"], "category": e["category"],
+                     "classification": cls, "normal": normal_asset, "shiny": shiny_asset,
+                     "credit": {"project": PROJECT.get(max(6, gen_for_project), PROJECT[8]), "artist": artist or None,
+                                "trackerQc": (anim_sheet.get("qc") if front else sh.get("static", {}).get("qc")) or None}})
     stats.append({**row, "category": e["category"], "kind": e["kind"], "legendary": e["legendary"], "mythical": e["mythical"], "tags": e["tags"],
                   "frontSrc": front[0] if front else None, "shinySrc": shiny[0] if shiny else None, "ani3d": ani3d, "render3d": render3d,
                   "staticSrc": static[0] if static else None, "staticRejected": static_rejected, "bytes": fres.get("bytes") if fres else None,
                   "totalMs": fres.get("totalMs") if fres else None})
 
+if args.manifest:
+    json.dump({"generatedFrom": "docs/audits/pokemon-gen6-9 probe run " + R["generatedAt"], "rules": "normal: verified animated BW-style front, else verified static BW-style front; shiny: verified animated shiny distinct from normal, else verified static shiny distinct from the static normal; 3D sources never eligible",
+               "entries": manifest}, open(args.manifest, "w", encoding="utf8"), indent=1, ensure_ascii=False)
 with open(args.csv, "w", newline="", encoding="utf-8") as fh:
     w = csv.DictWriter(fh, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
 json.dump({"rows": stats, "mirror": mirror, "listingCounts": R["listingCounts"], "unmatchedSheetRows": R["unmatchedSheetRows"],

@@ -4,8 +4,11 @@
 // daily attempt, the first-win prize, and the 10% CC loss. The caller holds
 // the player's lock and saves afterward; nothing here touches Discord.
 // Challenges never touch user.battle (Battle rating, W/L, Battle caps).
+// An interactive Elite Four run plays one fight per step (startRun,
+// continueRun) and keeps its state on the record at challenge.run between steps.
 // ==========================================================
 
+import { randomUUID } from "crypto";
 import { CHALLENGES, enabledSprites } from "./roster.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.js";
 import { buildTeam, applyGains } from "../battle/runBattle.js";
@@ -39,6 +42,7 @@ export function isUnlocked(user, key) {
 // runs it before the preview, and runChallenge re-runs it under the lock.
 export function challengeBlock({ trainerData, userId, key, now = new Date() }) {
   const user = trainerData[userId];
+  if (user?.challenge?.run) return "run_open";
   if (!user || !buildTeam(user).length) return "no_team";
   if (!isUnlocked(user, key)) return key === "elite4" ? "locked_elite4" : "locked_blue";
   const attempts = user.challenge?.day === utcDay(now) ? user.challenge.attempts : 0;
@@ -127,27 +131,35 @@ function grantPrize(user, prize) {
   if (files.length) user.trainers = [...ownedTrainers(user), ...files];
 }
 
-export function runChallenge({ trainerData, userId, key, seed, maxLoss = Infinity, now = new Date() }) {
-  const reason = challengeBlock({ trainerData, userId, key, now });
-  if (reason) return { ok: false, reason };
-  const user = trainerData[userId];
+// The Outcome's view of one fight, in the shape playback reads.
+const outcomeFight = (userId, f) => ({
+  opponentKey: f.opponentKey,
+  sides: [
+    { userId, members: f.members, power: f.powers[0] },
+    { userId: f.opponentKey, members: f.foes, power: f.powers[1] },
+  ],
+  surge: f.surge,
+  result: f.result,
+  winnerId: f.won ? userId : f.opponentKey,
+  gains: f.gains,
+});
+
+const owns = (user, m) => (user.pokemon?.[m.speciesId]?.[m.variant] ?? 0) > 0;
+
+// Applies a finished challenge: EXP (`totals` per Team slot) to the members
+// the player still owns, then the first-win prize, Badge, and unlock, or the
+// loss of min(maxLoss, 10%). The attempt was counted already.
+function settle({ user, userId, key, team, totals, cleared, day, maxLoss }) {
+  const kept = team.flatMap((m, i) => (owns(user, m) ? [i] : []));
+  const exp = { [userId]: applyGains(user, kept.map((i) => team[i]), kept.map((i) => totals[i])) };
   const challenge = CHALLENGES[key];
-  const team = buildTeam(user);
-  const { fights, cleared } = simulateChallenge({ team, opponents: challenge.opponents, seed });
-
-  const totals = team.map((_, i) => fights.reduce((t, f) => t + f.gains[i], 0));
-  const exp = { [userId]: applyGains(user, team, totals) };
-
-  const day = utcDay(now);
-  const record = getChallengeRecord(user, day);
-  record.attempts++;
-
+  const won = user.challenge.won;
   let prize = null, badge = null, unlocked = null, ccLost = 0;
-  if (cleared && !(key in record.won)) {
+  if (cleared && !(key in won)) {
     const badgesBefore = earnedBadgeKeys(user).length;
     prize = prizeFor(user, key);
     grantPrize(user, prize);
-    record.won[key] = day;
+    won[key] = day;
     if (challenge.kind === "gym") {
       badge = key;
       if (badgesBefore === GYM_BADGES.length - 1) unlocked = "elite4";
@@ -157,28 +169,125 @@ export function runChallenge({ trainerData, userId, key, seed, maxLoss = Infinit
     ccLost = Math.min(maxLoss, challengeLoss(user.cc));
     user.cc = (user.cc ?? 0) - ccLost;
   }
+  return { exp, prize, badge, unlocked, ccLost };
+}
 
-  return {
-    ok: true,
-    key,
-    userId,
-    seed,
-    fights: fights.map((f) => ({
-      opponentKey: f.opponentKey,
-      sides: [
-        { userId, members: f.members, power: f.powers[0] },
-        { userId: f.opponentKey, members: f.foes, power: f.powers[1] },
-      ],
-      surge: f.surge,
-      result: f.result,
-      winnerId: f.won ? userId : f.opponentKey,
-      gains: f.gains,
-    })),
-    cleared,
-    exp,
-    prize,
-    badge,
-    unlocked,
-    ccLost,
+export function runChallenge({ trainerData, userId, key, seed, maxLoss = Infinity, now = new Date() }) {
+  const reason = challengeBlock({ trainerData, userId, key, now });
+  if (reason) return { ok: false, reason };
+  const user = trainerData[userId];
+  const team = buildTeam(user);
+  const { fights, cleared } = simulateChallenge({ team, opponents: CHALLENGES[key].opponents, seed });
+  const totals = team.map((_, i) => fights.reduce((t, f) => t + f.gains[i], 0));
+  const day = utcDay(now);
+  getChallengeRecord(user, day).attempts++;
+  const settled = settle({ user, userId, key, team, totals, cleared, day, maxLoss });
+  return { ok: true, key, userId, seed, fights: fights.map((f) => outcomeFight(userId, f)), cleared, ...settled };
+}
+
+// ==========================================================
+// The interactive Elite Four run
+// ==========================================================
+// challenge.run = { nonce, seed, maxLoss, day, team, hp, next, gains,
+// fights: [{ opponentKey, won }], breaks, updatedAt, channelId, messageId }.
+// `team` is frozen at Fight!, `hp` is the HP fractions after the last fight,
+// `next` is the index of the next fight, and `gains` is EXP per slot so far.
+// Fight i uses seed + 2i + 1, as in simulateChallenge, so a run whose picks
+// match a `pick` plays out exactly like simulateChallenge with it.
+
+const RUN = CHALLENGES.elite4.opponents;
+
+// Plays fight run.next with `members` and returns the Step. A loss or the last
+// fight settles the run and removes it from the record.
+function playStep(user, userId, members, now) {
+  const run = user.challenge.run;
+  const i = run.next;
+  const fight = simulateFight({ team: run.team, members, opponent: RUN[i], i, seed: run.seed });
+  run.gains = run.gains.map((g, slot) => g + fight.gains[slot]);
+  run.fights.push({ opponentKey: fight.opponentKey, won: fight.won });
+  run.hp = fight.result.snapshots.at(-1)[0];
+  run.next = i + 1;
+  run.updatedAt = now.getTime();
+  const fights = [
+    ...run.fights.slice(0, -1).map((f) => ({ opponentKey: f.opponentKey, winnerId: f.won ? userId : f.opponentKey })),
+    outcomeFight(userId, fight),
+  ];
+  const view = { key: "elite4", userId, fights, breaks: [...run.breaks] };
+  const base = { ok: true, nonce: run.nonce, step: i, view };
+  if (fight.won && run.next < RUN.length) {
+    const fainted = run.hp.flatMap((h, slot) => (h === 0 ? [{ slot, name: run.team[slot].name, level: run.team[slot].level }] : []));
+    return { ...base, ended: false, outcome: null, fainted, next: RUN[run.next] };
+  }
+  const cleared = fight.won;
+  delete user.challenge.run;
+  const settled = settle({
+    user, userId, key: "elite4", team: run.team, totals: run.gains, cleared, day: run.day, maxLoss: run.maxLoss ?? Infinity,
+  });
+  const outcome = { ok: true, key: "elite4", userId, seed: run.seed, fights, breaks: view.breaks, cleared, ...settled };
+  return { ...base, ended: true, outcome, fainted: [], next: null };
+}
+
+// Closes the break before fight run.next with a Revive of `slot` (when
+// something fainted; anything invalid revives nothing) and plays that fight.
+function breakThenPlay(user, userId, slot, now) {
+  const run = user.challenge.run;
+  const offered = run.hp.includes(0);
+  const carried = carryHp(run.team, run.hp, offered ? slot : null);
+  run.breaks.push({ offered, slot: carried.slot });
+  return playStep(user, userId, carried.members, now);
+}
+
+export function startRun({ trainerData, userId, seed, maxLoss = Infinity, channelId = null, now = new Date() }) {
+  const reason = challengeBlock({ trainerData, userId, key: "elite4", now });
+  if (reason) return { ok: false, reason };
+  const user = trainerData[userId];
+  const team = buildTeam(user);
+  const day = utcDay(now);
+  const record = getChallengeRecord(user, day);
+  record.attempts++;
+  record.run = {
+    nonce: randomUUID(), seed,
+    maxLoss: Number.isFinite(maxLoss) ? maxLoss : null, // the record is saved as JSON, which has no Infinity
+    day, team, hp: null, next: 0, gains: team.map(() => 0), fights: [], breaks: [],
+    updatedAt: now.getTime(), channelId, messageId: null,
   };
+  return playStep(user, userId, team, now);
+}
+
+// `step` is the index of the fight to play next; `slot` is the picked Revive,
+// null for no pick, or undefined when nothing had fainted.
+export function continueRun({ trainerData, userId, nonce, step, slot, now = new Date() }) {
+  const user = trainerData[userId];
+  const run = user?.challenge?.run;
+  if (!run || run.nonce !== nonce || run.next !== step) return { ok: false, reason: "stale_step" };
+  return breakThenPlay(user, userId, slot, now);
+}
+
+// Plays the rest of an open run with no Revives and settles it.
+export function finishOpenRun({ trainerData, userId, now = new Date() }) {
+  const user = trainerData[userId];
+  if (!user?.challenge?.run) return null;
+  let step;
+  do step = breakThenPlay(user, userId, null, now);
+  while (!step.ended);
+  return step.outcome;
+}
+
+export const isRunStale = (user, now = new Date()) =>
+  !!user?.challenge?.run && now.getTime() - user.challenge.run.updatedAt > CHALLENGE.staleRunMs;
+
+export function finishAllOpenRuns(trainerData, now = new Date()) {
+  return Object.keys(trainerData).flatMap((userId) => {
+    const run = trainerData[userId]?.challenge?.run;
+    if (!run) return [];
+    const { channelId, messageId } = run;
+    return [{ userId, outcome: finishOpenRun({ trainerData, userId, now }), channelId, messageId }];
+  });
+}
+
+export function attachRunMessage(user, nonce, { channelId, messageId }) {
+  const run = user?.challenge?.run;
+  if (run?.nonce !== nonce) return;
+  run.channelId = channelId;
+  run.messageId = messageId;
 }

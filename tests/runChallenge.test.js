@@ -9,6 +9,7 @@ import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import {
   challengeLoss, getChallengeRecord, isUnlocked, challengeBlock, prizeSprite,
   previewChallenge, simulateChallenge, runChallenge,
+  startRun, continueRun, finishOpenRun, isRunStale, finishAllOpenRuns, attachRunMessage,
 } from "../utils/challenge/runChallenge.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
@@ -42,7 +43,7 @@ const block = (td, key, now = D) => challengeBlock({ trainerData: td, userId: "A
 const sum = (xs) => xs.reduce((a, b) => a + b, 0);
 
 section("Loss amount");
-assertEqual(CHALLENGE, { perDay: 5, lossShare: 0.1, previewMs: 120000 }, "CHALLENGE tuning");
+assertEqual(CHALLENGE, { perDay: 5, lossShare: 0.1, previewMs: 120000, pickMs: 60000, staleRunMs: 900000 }, "CHALLENGE tuning");
 assertEqual([challengeLoss(12345), challengeLoss(9), challengeLoss(0), challengeLoss(undefined)], [1234, 0, 0, 0], "10% rounded down; nothing under 10 CC");
 
 section("Gating");
@@ -287,6 +288,175 @@ section("No Underdog surge");
   assertTrue(runs.every((r) => r.fights.every((f) => f.surge === null)), "no challenge fight ever surges");
   const td = world();
   assertTrue(run(td, "brock").fights.every((f) => f.surge === null), "and runChallenge reports none");
+}
+
+section("Interactive Elite Four run");
+{
+  const MIDTEAM = [6, 9, 3, 65, 68, 94];
+  const ready = (id, ids = STRONG, level = 100) => {
+    const u = player(id, ids, level);
+    u.challenge = { won: winAll(GYMS), day: null, attempts: 0 };
+    return u;
+  };
+  const start = (td, extra = {}) => startRun({ trainerData: td, userId: "A", seed: 1, maxLoss: 1234, channelId: "C1", now: D, ...extra });
+  // Picks the first fainted Pokémon, like the sim's pick below.
+  const cont = (td, step, extra = {}) => continueRun({
+    trainerData: td, userId: "A", nonce: step.nonce, step: step.step + 1, slot: step.fainted[0]?.slot, now: D, ...extra,
+  });
+  const finishLoop = (td, step) => {
+    while (!step.ended) step = cont(td, step);
+    return step.outcome;
+  };
+  // A seed whose run with `ids` at `level` survives fight 0 and passes `ok`.
+  const openRun = (ids, level, ok = () => true) => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const td = { A: ready("A", ids, level) };
+      const step = start(td, { seed });
+      if (!step.ended && ok(step)) return { td, step, seed };
+    }
+    return null;
+  };
+
+  {
+    const td = { A: ready("A") };
+    const before = structuredClone(td.A.training);
+    const step = start(td);
+    assertEqual([step.ok, step.step, step.ended, step.next.name], [true, 0, false, "Bruno"], "startRun plays Lorelei; Bruno is next");
+    assertEqual([td.A.challenge.attempts, td.A.challenge.run.next], [1, 1], "the attempt counts at Fight!, and the run waits on fight 1");
+    assertEqual([td.A.challenge.run.channelId, td.A.challenge.run.messageId], ["C1", null], "the run remembers its channel");
+    assertEqual([step.view.key, step.view.userId, step.view.fights.length, step.view.breaks], ["elite4", "A", 1, []], "the view so far");
+    assertTrue(step.view.fights[0].result && step.view.fights[0].sides[0].userId === "A", "the fight just played is complete");
+    assertEqual(td.A.training, before, "EXP waits for the end of the run");
+    assertEqual(td.A.challenge.run.updatedAt, D.getTime(), "updatedAt is the step's time");
+
+    assertEqual(["brock", "elite4", "red"].map((k) => block(td, k)), ["run_open", "run_open", "run_open"], "an open run blocks every challenge");
+    assertEqual(run(td, "brock"), { ok: false, reason: "run_open" }, "runChallenge refuses too");
+    assertEqual(start(td), { ok: false, reason: "run_open" }, "and so does a second startRun");
+    assertEqual(td.A.challenge.attempts, 1, "refusals aren't counted");
+  }
+
+  {
+    let same = 0, revives = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+      const td = { A: ready("A", MIDTEAM, 60) };
+      const sim = simulateChallenge({ team: buildTeam(td.A), opponents: CHALLENGES.elite4.opponents, seed, pick: ({ hp }) => hp.indexOf(0) });
+      const o = finishLoop(td, start(td, { seed }));
+      const totals = MIDTEAM.map((_, i) => sum(sim.fights.map((f) => f.gains[i])));
+      if (o.cleared === sim.cleared
+        && JSON.stringify(o.fights.map((f) => f.winnerId === "A")) === JSON.stringify(sim.fights.map((f) => f.won))
+        && JSON.stringify(o.breaks) === JSON.stringify(sim.breaks)
+        && JSON.stringify(o.exp.A.map((e) => e.gained)) === JSON.stringify(totals)) same++;
+      revives += o.breaks.filter((b) => b.slot !== null).length;
+    }
+    assertEqual(same, 30, "an interactive run with the same picks plays out exactly like simulateChallenge");
+    assertTrue(revives > 0, `fixture: those runs include Revives (${revives})`);
+  }
+
+  {
+    const { td, step } = openRun(STRONG, 100);
+    const snapshot = JSON.stringify(td);
+    const tries = [
+      cont(td, step, { nonce: "other" }),
+      cont(td, step, { step: 0 }),
+      cont(td, step, { step: 2 }),
+      continueRun({ trainerData: td, userId: "B", nonce: step.nonce, step: 1, slot: undefined, now: D }),
+    ];
+    assertTrue(tries.every((t) => t.ok === false && t.reason === "stale_step"), "a wrong nonce, a past or future step, or no run is stale_step");
+    assertEqual(JSON.stringify(td), snapshot, "and changes nothing");
+  }
+
+  {
+    const found = openRun(MIDTEAM, 60, (s) => s.fainted.length > 0);
+    assertTrue(found !== null, "fixture: a Lv 60 Team beats Lorelei with a Pokémon fainted");
+    const { td, step } = found;
+    assertEqual(step.fainted.map((f) => Object.keys(f)), step.fainted.map(() => ["slot", "name", "level"]), "fainted lists slot, name, and level");
+    assertTrue(step.fainted.every((f) => f.level === 60 && f.name === buildTeam(td.A)[f.slot].name), "for the HP-0 members");
+    const next = continueRun({ trainerData: td, userId: "A", nonce: step.nonce, step: 1, slot: null, now: D });
+    assertEqual(next.view.breaks[0], { offered: true, slot: null }, "no pick after something fainted is offered, with no slot");
+    assertTrue(step.fainted.every((f) => next.view.fights[1].result.snapshots[0][0][f.slot] === 0), "and the fainted stay fainted");
+    assertEqual(next.view.fights[0], { opponentKey: "lorelei", winnerId: "A" }, "earlier fights in the view are summaries");
+  }
+
+  {
+    const td = { A: ready("A") };
+    const o = finishLoop(td, start(td));
+    assertEqual([o.ok, o.key, o.fights.length, o.breaks.length, o.cleared, o.unlocked], [true, "elite4", 4, 3, true, "blue"], "a cleared run: 4 fights, 3 breaks, Blue unlocked");
+    assertTrue(o.prize && o.prize.cc === 30000 && td.A.cc === 12345 + 30000, "the prize is paid");
+    assertEqual([td.A.challenge.run, td.A.challenge.won.elite4, td.A.challenge.attempts], [undefined, "2026-11-09", 1], "the run is gone; the win has the run's day");
+    assertTrue(o.fights.at(-1).result && o.fights.at(-1).opponentKey === "lance", "the last fight is complete");
+
+    const late = { A: ready("A") };
+    const first = start(late);
+    const after = finishLoop(late, cont(late, first, { now: D1 }));
+    assertEqual([after.cleared, late.A.challenge.won.elite4], [true, "2026-11-09"], "a run that ends after midnight keeps its start day");
+
+    const lost = { A: ready("A", WEAK, 5) };
+    const l = start(lost, { maxLoss: 500 });
+    assertEqual([l.ended, l.outcome.cleared, l.outcome.ccLost, lost.A.cc, l.outcome.breaks], [true, false, 500, 12345 - 500, []],
+      "a run lost at Lorelei ends at once and costs at most the previewed amount");
+    assertEqual(lost.A.challenge.run, undefined, "and is closed");
+    const uncapped = { A: ready("A", WEAK, 5) };
+    assertEqual(start(uncapped, { maxLoss: undefined }).outcome.ccLost, 1234, "with no preview, 10%");
+  }
+
+  {
+    const { td, step } = openRun(STRONG, 100);
+    td.A = structuredClone(td.A);
+    const next = cont(td, step);
+    assertTrue(next.ok && next.step === 1, "a record replaced mid-run (the dashboard's save) continues from the live record");
+    assertTrue(finishLoop(td, next).cleared && td.A.challenge.run === undefined, "and finishes on it");
+  }
+
+  {
+    const found = openRun(MIDTEAM, 60);
+    const { td, step } = found;
+    td.A.pokemon[9].normal = 0;
+    delete td.A.training["9:normal"];
+    const o = finishLoop(td, step);
+    assertEqual(td.A.training["9:normal"], undefined, "a Team member given away mid-run gets no training record");
+    assertEqual(o.exp.A.map((e) => e.key), MIDTEAM.filter((id) => id !== 9).map((id) => `${id}:normal`), "and isn't in the EXP report");
+  }
+
+  {
+    const { td } = openRun(STRONG, 100);
+    const loaded = { A: JSON.parse(JSON.stringify(td.A)) }; // as a restart reads it
+    const o = finishOpenRun({ trainerData: loaded, userId: "A", now: D });
+    assertEqual([o.ok, o.cleared, o.fights.length], [true, true, 4], "finishOpenRun plays the rest of the run");
+    assertTrue(o.breaks.slice(1).every((b) => b.slot === null), "with no Revives");
+    assertEqual(loaded.A.challenge.run, undefined, "and closes it");
+    assertEqual(finishOpenRun({ trainerData: loaded, userId: "A", now: D }), null, "with no open run it returns null");
+
+    let lost = null;
+    for (let seed = 1; seed <= 200 && !lost; seed++) {
+      const t = { A: ready("A", MIDTEAM, 60) };
+      t.A.cc = 5000;
+      if (start(t, { seed }).ended) continue;
+      const o = finishOpenRun({ trainerData: t, userId: "A", now: D });
+      if (!o.cleared) lost = { o, t };
+    }
+    assertTrue(lost !== null, "fixture: a run finished this way that loses");
+    assertEqual([lost.o.ccLost, lost.t.A.cc], [500, 4500], "it charges 10% (under the previewed 1,234)");
+  }
+
+  {
+    const { td } = openRun(STRONG, 100);
+    const at = (ms) => new Date(D.getTime() + ms);
+    assertEqual([isRunStale(td.A, at(15 * 60 * 1000)), isRunStale(td.A, at(15 * 60 * 1000 + 1))], [false, true], "stale after 15 minutes");
+    assertEqual(isRunStale(world().A, at(10 ** 9)), false, "no run is never stale");
+  }
+
+  {
+    const td = { A: ready("A"), B: ready("B"), C: ready("C") };
+    const a = start(td);
+    startRun({ trainerData: td, userId: "B", seed: 2, maxLoss: 100, channelId: "C2", now: D });
+    attachRunMessage(td.A, "wrong", { channelId: "X", messageId: "X" });
+    assertEqual(td.A.challenge.run.messageId, null, "attachRunMessage ignores a wrong nonce");
+    attachRunMessage(td.A, a.nonce, { channelId: "C1", messageId: "M1" });
+    const done = finishAllOpenRuns(td, D);
+    assertEqual(done.map((d) => [d.userId, d.channelId, d.messageId, d.outcome.ok]), [["A", "C1", "M1", true], ["B", "C2", null, true]],
+      "finishAllOpenRuns finishes every open run and says where its message is");
+    assertEqual([td.A.challenge.run, td.B.challenge.run, td.C.challenge.attempts], [undefined, undefined, 0], "both runs are gone; C is untouched");
+  }
 }
 
 section("Battle record untouched");

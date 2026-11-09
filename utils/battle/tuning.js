@@ -19,8 +19,11 @@ export const TURN_CAP = 300;
 
 // Underdog surge: chance grows with the Power rating ratio; a surge raises
 // the Underdog's Levels until the gap is `residual`. Tuned by
-// tests/battleBalance.test.js: even 43%, 2× 5.0%, 3× 2.1%, 5×+ 0.6%.
-export const SURGE = { minRatio: 1.25, perRatio: 0.15, maxChance: 0.2, residual: 1.3 };
+// tests/battleBalance.test.js: even 45%, 2× 4.1%, 5×+ 0.34%. maxChance
+// matters most for a Team of one, which always surges at the cap and,
+// lifted to Lv 100, nearly always wins: a lone Lv 30 Charizard beats six
+// Lv 40s 7.8% of the time (it was 21% at the earlier 20% cap).
+export const SURGE = { minRatio: 1.25, perRatio: 0.15, maxChance: 0.08, residual: 1.3 };
 
 // Catch level by Stage (or "legendary": Tier legendary/mythic at Stage 1).
 export const CATCH_RANGES = {

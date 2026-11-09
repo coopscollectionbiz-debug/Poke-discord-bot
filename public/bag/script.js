@@ -16,6 +16,7 @@ function nav() {
   $("goTrainers").onclick = go("/public/picker/");
   $("goShop").onclick = go("/public/dashboardshop/");
   $("goBag").onclick = go("/public/bag/");
+  $("goAchievements").onclick = go("/public/achievements/");
 }
 
 function el(tag, cls, text) {

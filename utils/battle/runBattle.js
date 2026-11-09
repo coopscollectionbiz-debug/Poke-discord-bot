@@ -5,6 +5,7 @@
 // both players' locks and saves afterward; nothing here touches Discord.
 // ==========================================================
 
+import { trackProgress } from "../../progression/achievements.js";
 import { normalizeTeam } from "../teamNormalize.js";
 import { getTraining, addExp, trainingKey, speciesName } from "../training.js";
 import { getMove } from "./data.js";
@@ -95,6 +96,10 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
     if (i === result.winner) r.wins++;
     else r.losses++;
   });
+
+  // Release C: battle achievements (wins, rating, levels) for both players.
+  // Synchronous and targeted; runs inside the caller's withBothLocks.
+  for (const u of users) trackProgress(u, [{ type: "battle" }], now.getTime());
 
   recordStart(records[0], defenderId);
   if (mode === "wager") {

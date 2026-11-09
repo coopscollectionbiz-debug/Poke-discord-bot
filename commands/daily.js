@@ -2,6 +2,7 @@
 // /daily — Coop’s Collection (Race-Safe v18.0)
 // ==========================================================
 
+import { trackProgress } from "../progression/achievements.js";
 import { grantItem, normalizeInventory } from "../services/inventory.js";
 import {
   SlashCommandBuilder,
@@ -145,6 +146,8 @@ export async function execute(
       }
 
       user.lastDaily = today;
+      // Release C: achievement progress (Pokémon, shinies, TP/rank).
+      trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: (shiny1 ? 1 : 0) + (shiny2 ? 1 : 0) }, { type: "tp" }]);
 
       // ======================================================
       // Rare & shiny broadcast system

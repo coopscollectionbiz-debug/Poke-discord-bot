@@ -1,0 +1,9 @@
+/* Achievements page: reuses shop + bag styles; only these are new. */
+.ach-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.ach-summary .chip { padding: 6px 12px; border-radius: 999px; background: #262b36; font-weight: 600; }
+.ach-card.locked { opacity: 0.72; }
+.ach-card .tier { font-size: 0.8rem; opacity: 0.85; }
+.ach-bar { height: 8px; border-radius: 6px; background: #333a47; overflow: hidden; margin: 8px 0 4px; }
+.ach-bar > span { display: block; height: 100%; background: #f5b301; }
+.ach-card .reward { font-size: 0.85rem; margin-top: 6px; }
+.ach-card .claim-btn { margin-top: 8px; }

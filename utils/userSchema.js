@@ -1,4 +1,5 @@
 import { normalizeTrainers } from "../services/assets.js";
+import { normalizeInventory } from "../services/inventory.js";
 // ==========================================================
 // utils/userSchema.js
 // Unified user data schema and initialization
@@ -38,7 +39,7 @@ export const USER_SCHEMA_TEMPLATE = {
   weeklyPackClaimed: "boolean (reset each ISO week)",
 
   // Inventory + shop
-  items: "object { evolution_stone: number }",
+  items: "object { [catalogItemId]: non-negative integer } (catalog/items.js)",
   purchases: "array of strings (e.g. 'starter_pack')",
 
 // Luck / Pity System
@@ -144,12 +145,9 @@ export function validateUserSchema(user, userId, username) {
   out.weeklyPackClaimed = !!out.weeklyPackClaimed;
 
   // Inventory
-  if (!out.items || typeof out.items !== "object") {
-    out.items = { evolution_stone: 0 };
-  }
-  if (out.items.evolution_stone == null) {
-    out.items.evolution_stone = 0;
-  }
+  // Shared, idempotent inventory normalizer (Release B): integers only,
+  // evolution_stone always present, nothing dropped silently.
+  normalizeInventory(out);
 
   // Permanent shop purchases
   if (!Array.isArray(out.purchases)) out.purchases = [];

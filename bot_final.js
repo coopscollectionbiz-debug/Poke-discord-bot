@@ -52,6 +52,8 @@ import { readLocalCandidates, readFileCandidate, setSeqAtLeast, nextSeq, dataDir
 import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup, verifyUpload, newestChannelEpoch } from "./persistence/discordBackups.js";
 import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/loader.js";
 import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
+import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
+import { handleInventoryRequest } from "./services/inventoryApi.js";
 import { saveAndAck, SAVE_DELAYED_NOTE } from "./utils/saveManager.js";
 
 // Nothing may be written to disk until player data has been loaded.
@@ -205,23 +207,23 @@ function rollWeightedDust(table = []) {
   return 0; // safety fallback
 }
 
-// ----- item helpers (map-safe; no schema churn) -----
+// ----- item helpers: thin wrappers over services/inventory.js (Release B) -----
+// Same semantics as before for valid amounts; zero/negative amounts are a
+// no-op (as before), and a refused grant is logged instead of corrupting data.
 function getItem(user, key) {
-  const v = user?.items?.[key];
-  return Number.isFinite(v) ? v : 0;
+  return getQuantity(user, key);
 }
 function addItem(user, key, amount) {
-  user.items ??= {};
-  const add = Math.max(0, Math.floor(Number(amount) || 0));
-  user.items[key] = getItem(user, key) + add;
-  return user.items[key];
+  const add = Math.floor(Number(amount) || 0);
+  if (add <= 0) return getQuantity(user, key);
+  const r = grantItem(user, key, add);
+  if (!r.ok) console.warn(`⚠️ addItem(${key}, ${add}) refused: ${r.error}`);
+  return getQuantity(user, key);
 }
 function spendItem(user, key, amount) {
-  user.items ??= {};
-  const cost = Math.max(0, Math.floor(Number(amount) || 0));
-  if (getItem(user, key) < cost) return false;
-  user.items[key] = getItem(user, key) - cost;
-  return true;
+  const cost = Math.floor(Number(amount) || 0);
+  if (cost <= 0) return true;
+  return consumeItem(user, key, cost).ok;
 }
 
 // Craft cost for converting normal -> shiny by tier
@@ -460,24 +462,11 @@ user.displayedPokemon = user.displayedPokemon
   // ==========================================================
 // 8️⃣ ITEMS (future-safe map)
 // ==========================================================
-if (!user.items || typeof user.items !== "object" || Array.isArray(user.items)) {
-  user.items = {};
-}
-
-// sanitize all item values to non-negative integers
-for (const [k, v] of Object.entries(user.items)) {
-  const n = Number(v);
-  if (!Number.isFinite(n)) {
-    delete user.items[k];
-    continue;
-  }
-  user.items[k] = Math.max(0, Math.floor(n));
-}
-
-// keep this ONE legacy guarantee if you want stones to always show up
-user.items.evolution_stone = Number.isFinite(user.items.evolution_stone)
-  ? user.items.evolution_stone
-  : 0;
+// Release B: shared, idempotent normalizer. Same result as before for valid
+// data (non-negative integers, evolution_stone always present), but values
+// that can't be kept are recorded in user.itemsLegacy instead of being
+// silently deleted.
+normalizeInventory(user);
 
 // ==========================================================
 // 🧾 NON-SHINY DUST WEEKLY CAP TRACKING (normalize + roll week)
@@ -605,6 +594,9 @@ app.get("/public/picker-pokemon", (_, res) =>
 // ✅ Shop page (new canonical)
 app.get("/public/dashboardshop", (_, res) =>
   res.sendFile(path.join(staticPath, "dashboardshop", "index.html"))
+);
+app.get("/public/bag", (_, res) =>
+  res.sendFile(path.join(staticPath, "bag", "index.html"))
 );
 
 // ✅ Backward compat alias
@@ -1407,6 +1399,20 @@ app.get("/api/user", (req, res) => {
   return res.json(trainerData[id]);
 });
 
+// ==========================================================
+// 🎒 INVENTORY (Release B) — read-only, catalog-built rows only
+// Never returns the raw player record; never mutates (no normalization or
+// record creation on read). Same session check as every dashboard route.
+// ==========================================================
+app.get("/api/inventory", (req, res) => {
+  const { status, body } = handleInventoryRequest({
+    query: req.query,
+    isAuthorized: (id) => requireDashboardSession(req, id),
+    trainerData,
+  });
+  return res.status(status).json(body);
+});
+
 
 // ==========================================================
 // 🛍️ SHOP API — UPDATE USER (HARDENED / WHITELISTED)
@@ -2164,7 +2170,7 @@ app.get("/api/shop-trainers", async (req, res) => {
 // ======================================================
 app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
   try {
-    const { id } = req.body;
+    const { id, requestId } = req.body || {};
 
     if (!id) return res.status(400).json({ success: false, error: "Missing id" });
     if (!requireDashboardSession(req, id))
@@ -2172,46 +2178,51 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
 
     if (!trainerData[id])
       return res.status(404).json({ success: false, error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId)))
+      return res.status(400).json({ success: false, error: "Invalid request id" });
 
-    const COST = 5000; // must match frontend + your ITEM_COSTS
+    const COST = 5000; // must match frontend (unchanged in Release B)
 
-    await lockUser(id, async () => {
-      // normalize for safety
-      trainerData[id] = normalizeUserSchema(id, trainerData[id]);
-      const user = trainerData[id];
+    // Release B: one locked, all-or-nothing transaction through the inventory
+    // service. A repeated requestId (double click / retried request) returns
+    // the first result instead of buying a second stone.
+    const tx = await runInventoryTransaction({
+      trainerData,
+      userId: id,
+      lock: lockUser,
+      save: saveAndAck,
+      requestId: requestId ?? null,
+      payloadKey: "buy-stone:1",
+      mutate: (user) => {
+        normalizeUserSchema(id, user); // in place
+        user.cc ??= 0;
+        if (user.cc < COST) {
+          return { ok: false, error: `Not enough CC — requires ${COST} CC.`, cc: user.cc, status: 400 };
+        }
+        const granted = grantItem(user, "evolution_stone", 1);
+        if (!granted.ok) return { ok: false, error: granted.error, status: 400 };
+        user.cc -= COST;
+        return { ok: true, cc: user.cc, stones: granted.quantity };
+      },
+    });
 
-      user.cc ??= 0;
-      user.items ??= {};
-      user.items.evolution_stone = Number.isFinite(user.items.evolution_stone)
-        ? user.items.evolution_stone
-        : 0;
+    if (!tx.ok) {
+      const { status = 400, error, cc } = tx;
+      return res.status(status).json({ success: false, error, ...(cc != null ? { cc } : {}) });
+    }
 
-      if (user.cc < COST) {
-        return res.status(400).json({
-          success: false,
-          error: `Not enough CC — requires ${COST} CC.`,
-          cc: user.cc,
-        });
-      }
-
-      // ✅ atomic mutation
-      user.cc -= COST;
-      user.items.evolution_stone += 1;
-
-      const saveAck = await saveAndAck(trainerData);
-
+    if (!tx.replayed) {
       // 📜 Event log — tracks CC sink into the shop for analytics
       // on what players are spending on.
-      logEvent("stone_purchase", id, {
-        cost: COST,
-        stonesAfter: user.items.evolution_stone,
-      });
+      logEvent("stone_purchase", id, { cost: COST, stonesAfter: tx.result.stones });
+    }
 
-      return res.json({ ...saveAckFields(saveAck),
-        success: true,
-        cc: user.cc,
-        stones: user.items.evolution_stone,
-      });
+    return res.json({
+      ...saveAckFields({ saved: tx.saved, note: tx.note }),
+      success: true,
+      replayed: !!tx.replayed,
+      cc: tx.result.cc,
+      stones: tx.result.stones,
     });
   } catch (err) {
     console.error("❌ /api/shop/buy-stone:", err?.message || err);
@@ -2427,7 +2438,7 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
       });
     }
 
-    if (!user.items || (user.items.evolution_stone ?? 0) < cost) {
+    if (getQuantity(user, "evolution_stone") < cost) {
       return res.status(400).json({ error: "Not enough Evolution Stones." });
     }
 
@@ -2456,22 +2467,19 @@ const dustCost = chosenVariant === "shiny"
       });
     }
 
-    // Spend stones
-user.items.evolution_stone -= cost;
-
-// Spend dust if shiny evolve
-if (dustCost > 0) {
-  const ok = spendItem(user, "shiny_dust", dustCost);
-  if (!ok) {
-    // refund stones (since we are mid-operation)
-    user.items.evolution_stone += cost;
-    return res.status(400).json({
-      error: `Not enough Shiny Dust. Requires ${dustCost}.`,
-      dustRequired: dustCost,
-      dustAvailable: getItem(user, "shiny_dust"),
-    });
-  }
-}
+    // Spend stones (+ dust for a shiny evolve) all-or-nothing (Release B):
+    // nothing is deducted unless everything is available.
+    if (dustCost > 0 && getQuantity(user, "shiny_dust") < dustCost) {
+      return res.status(400).json({
+        error: `Not enough Shiny Dust. Requires ${dustCost}.`,
+        dustRequired: dustCost,
+        dustAvailable: getItem(user, "shiny_dust"),
+      });
+    }
+    const spent = consumeItems(user, { evolution_stone: cost, shiny_dust: dustCost });
+    if (!spent.ok) {
+      return res.status(400).json({ error: spent.error });
+    }
 
     // Remove 1 base
     user.pokemon ??= {};
@@ -2514,7 +2522,7 @@ if (dustCost > 0) {
     cost,                 // stones
     dustCost,             // NEW
   },
-  stonesRemaining: user.items.evolution_stone,
+  stonesRemaining: getQuantity(user, "evolution_stone"),
   shinyDustRemaining: getItem(user, "shiny_dust"),
 });
 

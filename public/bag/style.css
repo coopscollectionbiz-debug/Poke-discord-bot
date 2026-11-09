@@ -1,0 +1,9 @@
+/* Bag page: reuses the shop's styles; only the controls and badges are new. */
+.bag-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px; }
+.bag-controls label { display: flex; gap: 6px; align-items: center; font-weight: 600; }
+.bag-controls select, .bag-controls input { padding: 6px 10px; border-radius: 8px; border: 1px solid #444; background: #1f2430; color: inherit; }
+.bag-item .qty { font-size: 1.4rem; font-weight: 700; margin: 4px 0; }
+.bag-item .usage { font-style: italic; opacity: 0.85; font-size: 0.9rem; }
+.bag-badge { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; background: #3a3f4b; }
+.bag-badge.inactive { background: #5a4b1f; }
+.bag-empty { opacity: 0.85; padding: 24px 0; }

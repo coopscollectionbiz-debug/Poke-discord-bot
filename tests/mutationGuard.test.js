@@ -99,4 +99,16 @@ assertEqual(where(lines.filter((l) => /\bpostRareSightings\s*\(/.test(l.text))),
 section("D11: no filters on the non-existent `generation` field");
 assertEqual(where(lines.filter((l) => /\.generation\s*<=/.test(l.text))), [], "no p.generation filters");
 
+section("Release B: inventory is only changed through services/inventory.js");
+{
+  const itemWrites = lines.filter(
+    (l) =>
+      l.f !== "services/inventory.js" &&
+      /\.items\s*(\.[A-Za-z_$][\w$]*|\[[^\]]+\])\s*(\+\+|--|[-+*]?=(?!=)|\?\?=)/.test(l.text)
+  );
+  assertEqual(where(itemWrites), [], "no direct writes to user.items[...] (grantItem / consumeItem only)");
+  const itemsReplaced = lines.filter((l) => l.f !== "services/inventory.js" && /\.items\s*(=|\?\?=)\s*\{/.test(l.text));
+  assertEqual(where(itemsReplaced), [], "no code replaces user.items with a new object");
+}
+
 finish();

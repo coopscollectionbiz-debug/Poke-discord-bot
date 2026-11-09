@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coop’s Collection — Bag</title>
+  <link rel="stylesheet" href="/public/dashboardshop/style.css" />
+  <link rel="stylesheet" href="/public/bag/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <h1>🎒 Bag</h1>
+    <p>Everything you own, and what it's for</p>
+  </header>
+
+  <div id="navTabs" class="nav-tabs">
+    <button id="goPokemon" class="nav-tab" type="button">⭐ Manage Pokémon</button>
+    <button id="goTrainers" class="nav-tab" type="button">🧑 Manage Trainers</button>
+    <button id="goShop" class="nav-tab" type="button">🛒 Shop</button>
+    <button id="goBag" class="nav-tab active" type="button">🎒 Bag</button>
+  </div>
+
+  <main>
+    <section class="shop-section">
+      <div class="bag-controls">
+        <label>Category
+          <select id="bagCategory"><option value="">All items</option></select>
+        </label>
+        <label>Sort
+          <select id="bagSort">
+            <option value="default">Category, then rarity</option>
+            <option value="name">Name</option>
+            <option value="quantity">Quantity</option>
+          </select>
+        </label>
+        <input id="bagSearch" type="search" placeholder="Search items" aria-label="Search items" />
+      </div>
+      <p id="bagStatus" class="subtitle">Loading…</p>
+      <div id="bagGrid" class="shop-grid"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/public/bag/script.js"></script>
+</body>
+</html>

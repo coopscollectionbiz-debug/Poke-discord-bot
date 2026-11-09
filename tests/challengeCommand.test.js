@@ -3,14 +3,18 @@
 // Drives the real /challenge execute() and its preview buttons with stub
 // Discord objects. The fight must land on the live record (other commands
 // and the dashboard replace it with a copy), re-check everything at the
-// click, and never post the exact CC loss in public.
+// click, and never post the exact CC loss in public. Elite Four runs are
+// driven through their private Revive menus.
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { execute, data, refusal, boardEmbed } from "../commands/challenge.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
-import { PLAYBACK } from "../utils/battle/tuning.js";
+import { PLAYBACK, CHALLENGE } from "../utils/battle/tuning.js";
+import { simulateChallenge, startRun, attachRunMessage } from "../utils/challenge/runChallenge.js";
+import { CHALLENGES } from "../utils/challenge/roster.js";
+import { buildTeam } from "../utils/battle/runBattle.js";
 
 PLAYBACK.delayMs = 0;
 const quiet = console.log;
@@ -32,26 +36,54 @@ const WEAK = () => player([10], 5);
 // lone Lv 5 Caterpie can't beat.
 const LOSES = "giovanni";
 const STRONG = () => player([150, 249, 250, 384, 483, 484], 100);
+const allGyms = () => Object.fromEntries(GYMS.map((k) => [k, "d"]));
+// The command picks its own seed, so Elite Four tests use a Team that behaves
+// the same for any seed (pinned in "Elite Four fixture"): a Lv 5 Magikarp
+// leads and faints, and a Lv 100 Mewtwo and Lugia clear every fight.
+function runner() {
+  const u = player([129, 150, 249], 100);
+  u.training["129:normal"] = { exp: 5 ** 3 };
+  u.challenge = { won: allGyms(), day: null, attempts: 0 };
+  return u;
+}
+const tick = () => new Promise((r) => setTimeout(r, 5));
+async function until(cond, ms = 30000) {
+  const end = Date.now() + ms;
+  while (!cond()) {
+    if (Date.now() > end) throw new Error("timed out waiting");
+    await tick();
+  }
+}
 
 const embedJson = (e) => (e?.toJSON ? e.toJSON() : e);
 const textOf = (o) => (typeof o === "string" ? o
   : [o?.content ?? "", ...(o?.embeds ?? []).map((e) => JSON.stringify(embedJson(e)))].join("\n"));
 
-// One fake guild channel; the private reply gets a controllable collector.
-function harness(user = WEAK(), { perms = true, save = async () => {} } = {}) {
+// One fake guild channel; the private reply and each Revive menu get a
+// controllable collector. log.seq records public and private writes in order.
+function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail = false } = {}) {
   const trainerData = { A: user };
-  const log = { replies: [], replyEdits: [], channel: [] };
+  const log = { replies: [], replyEdits: [], channel: [], menus: [], seq: [] };
   const collectors = [];
+  let ids = 0;
+  const collectorStub = (opts) => ({ opts, h: {}, stopped: null, on(e, f) { this.h[e] = f; }, stop(reason) { this.stopped ??= reason; } });
   const message = (opts) => {
-    const m = { opts, edits: [], edit: async (o) => { m.edits.push(o); } };
+    const m = { id: `M${++ids}`, opts, edits: [], edit: async (o) => { m.edits.push(o); log.seq.push(["public", o]); } };
     log.channel.push(m);
+    log.seq.push(["public", opts]);
     return m;
   };
-  const channel = { send: async (opts) => message(opts) };
+  const channel = {
+    id: "C1",
+    send: async (opts) => message(opts),
+    messages: { fetch: async (id) => log.channel.find((m) => m.id === id) ?? Promise.reject(new Error("Unknown Message")) },
+  };
+  const client = { channels: { fetch: async (id) => (id === "C1" ? channel : Promise.reject(new Error("Unknown Channel"))) } };
   const interaction = (opponent) => ({
     user: { id: "A", username: "A" },
     member: { displayName: "Ash" },
     channel,
+    channelId: "C1",
     appPermissions: { has: () => perms },
     options: { getString: () => opponent ?? null },
     reply: async (o) => {
@@ -74,26 +106,53 @@ function harness(user = WEAK(), { perms = true, save = async () => {} } = {}) {
       edits: [],
       followUps: [],
       replies: [],
+      deferred: 0,
       update: async (o) => { b.updates.push(o); },
-      deferUpdate: async () => {},
-      editReply: async (o) => { b.edits.push(o); },
-      followUp: async (o) => { b.followUps.push(o); },
+      deferUpdate: async () => { b.deferred++; },
+      editReply: async (o) => { b.edits.push(o); log.seq.push(["private", o]); },
+      followUp: async (o) => {
+        b.followUps.push(o);
+        if (menusFail === "silent") return undefined; // bot_final's wrapper swallows "Unknown interaction"
+        if (menusFail) throw new Error("Unknown Webhook");
+        const menu = { id: `P${++ids}`, opts: o, from: b, collector: null };
+        menu.createMessageComponentCollector = (opts) => (menu.collector = collectorStub(opts));
+        log.menus.push(menu);
+        return menu;
+      },
       reply: async (o) => { b.replies.push(o); },
     };
     return b;
   };
-  const run = (opponent) => execute(interaction(opponent), trainerData, null, null, lockUser, save, null);
-  const nonce = () => {
-    const row = embedJson(log.replies.at(-1).components[0]);
-    return row.components[0].custom_id.split(":")[1];
-  };
+  const run = (opponent) => execute(interaction(opponent), trainerData, null, null, lockUser, save, client);
+  const nonceOf = (reply) => embedJson(reply.components[0]).components[0].custom_id.split(":")[1];
+  const nonce = () => nonceOf(log.replies.at(-1));
   const click = async (kind, c = collectors.at(-1)) => {
     const b = button(`challenge_${kind}:${nonce()}`);
     await c.h.collect(b);
     return b;
   };
   const publicText = () => log.channel.map((m) => [textOf(m.opts), ...m.edits.map(textOf)].join("\n")).join("\n");
-  return { trainerData, log, collectors, run, click, publicText };
+  const menuButtons = (menu) => menu.opts.components.flatMap((r) => embedJson(r).components);
+  // Clicks a Revive menu's button (the first by default) and returns the click.
+  const pick = async (menu, customId = menuButtons(menu)[0].custom_id) => {
+    const b = button(customId);
+    await menu.collector.h.collect(b);
+    return b;
+  };
+  // Clicks Fight! on the newest preview and answers each Revive menu with
+  // answer(menu, index) until the run ends. Resolves to the Fight! click.
+  const fightRun = async (answer) => {
+    const fight = button(`challenge_fight:${nonce()}`);
+    let done = false;
+    const playing = collectors.at(-1).h.collect(fight).then(() => { done = true; });
+    for (let seen = 0; !done;) {
+      await until(() => done || log.menus.length > seen);
+      if (log.menus.length > seen) await answer(log.menus[seen], seen++);
+    }
+    await playing;
+    return fight;
+  };
+  return { trainerData, log, collectors, run, click, publicText, button, nonce, nonceOf, channel, menuButtons, pick, fightRun };
 }
 
 section("Command shape");
@@ -254,7 +313,7 @@ section("Clicks while a Fight! is saving");
     reply: async (o) => { fight.replies.push(o); }, followUp: async (o) => { fight.followUps.push(o); } };
   const fighting = t.collectors[0].h.collect(fight);
   await new Promise((r) => setTimeout(r, 0));
-  assertEqual(fight.updates[0], { content: "⚔️ Fighting…", embeds: [], components: [] }, "Fight! drops the buttons at once");
+  assertEqual(fight.updates[0], { content: "⚔️ Your challenge is starting below.", embeds: [], components: [] }, "Fight! drops the buttons at once");
   const notNow = await t.click("cancel");
   assertEqual([notNow.replies[0], notNow.updates, notNow.followUps], [{ content: "This challenge already happened.", flags: 64 }, [], []],
     "Not now during the save is answered privately and changes nothing");
@@ -306,6 +365,162 @@ section("Review Focus: changes between preview and Fight!");
   const rb = await richer.click("fight");
   assertTrue(textOf(rb.edits[0]).includes("You lost 1,234 CC."), "the loss never exceeds what the preview showed");
   assertEqual(richer.trainerData.A.cc, 50000 - 1234, "balance after the capped loss");
+}
+
+section("Single fight: the private result comes after the replay");
+{
+  const t = harness();
+  await t.run(LOSES);
+  const b = await t.click("fight");
+  assertEqual(b.updates[0], { content: "⚔️ Your challenge is starting below.", embeds: [], components: [] }, "Fight! points to the channel first");
+  const privateAt = t.log.seq.findIndex(([k, o]) => k === "private" && textOf(o).includes("You lost 1,234 CC."));
+  const lastPublic = t.log.seq.findLastIndex(([k]) => k === "public");
+  assertTrue(privateAt > lastPublic && lastPublic > 0, "the exact loss arrives after the replay's last frame");
+}
+
+section("Elite Four fixture");
+{
+  const team = buildTeam(runner());
+  assertEqual(team.map((m) => [m.speciesId, m.level]), [[129, 5], [150, 100], [249, 100]], "Lv 5 Magikarp leads Lv 100 Mewtwo and Lugia");
+  const holds = Array.from({ length: 200 }, (_, seed) => [({ hp }) => hp.indexOf(0), () => null].every((pick) => {
+    const s = simulateChallenge({ team, opponents: CHALLENGES.elite4.opponents, seed, pick });
+    const hp = s.fights[0].result.snapshots.at(-1)[0];
+    return s.cleared && hp[0] === 0 && hp[1] > 0 && hp[2] > 0;
+  }));
+  assertTrue(holds.every(Boolean), "for 200 seeds, only Magikarp faints to Lorelei, and the run clears with or without Revives");
+}
+
+section("Elite Four run: picking a Revive");
+{
+  const t = harness(runner());
+  await t.run("elite4");
+  const clicks = [];
+  let earlier = null;
+  let atFirstBreak = null;
+  const fight = await t.fightRun(async (menu, k) => {
+    if (k === 0) atFirstBreak = t.log.channel[1].edits.at(-1)?.content;
+    const b = await t.pick(menu);
+    clicks.push(b);
+    if (k === 0) clicks.push(await t.pick(menu)); // a double click
+    if (k === 1) earlier = await t.pick(t.log.menus[0]); // an earlier break's button
+  });
+  const [menu0, menu1] = t.log.menus;
+  assertEqual(fight.updates[0], { content: "⚔️ Your challenge is starting below.", embeds: [], components: [] }, "Fight! points to the channel");
+  assertTrue(atFirstBreak.startsWith("⚔️ <@A> · Elite Four · Lorelei (1 of 4)") && atFirstBreak.endsWith("\n⏳ <@A> is choosing a Pokémon to revive…"),
+    "during the pick, the replay says the player is choosing");
+  assertEqual([menu0.opts.content, menu0.opts.flags], ["Next: Bruno · Fighting\nPick a Pokémon to revive · 60 s", 64], "the menu is private and names who's next");
+  assertEqual(t.menuButtons(menu0).map((b) => [b.label, b.style]), [["Magikarp Lv 5", 3]], "one button per fainted Pokémon");
+  assertEqual(menu0.from, fight, "the first menu uses the Fight! click's reply window");
+  assertEqual(clicks[0].updates, [{ content: "Magikarp revived.", components: [] }], "a click revives it");
+  assertEqual([clicks[1].updates, clicks[1].replies, clicks[1].deferred], [[], [], 1], "a second click is acknowledged and changes nothing");
+  assertTrue(t.publicText().includes("Bruno (2 of 4)\n💊 <@A> revived Magikarp!"), "the next header says who was revived");
+  if (menu1) {
+    assertEqual(menu1.from, clicks[0], "the next menu uses the newest click's reply window");
+    assertEqual([earlier.updates, earlier.replies, earlier.deferred], [[], [], 1], "an earlier break's button changes nothing");
+  }
+  assertEqual([t.trainerData.A.challenge.run, t.trainerData.A.challenge.won.elite4 !== undefined, t.trainerData.A.challenge.attempts],
+    [undefined, true, 1], "the run is cleared and closed, for one attempt");
+  const privateAt = t.log.seq.findIndex(([k, o]) => k === "private" && textOf(o).startsWith("You won! 🎁 Lorelei sprite"));
+  const finalFrame = t.log.seq.findLastIndex(([k, o]) => k === "public" && o.embeds?.length);
+  assertTrue(privateAt > finalFrame && finalFrame > 0, "the private result arrives after the last replay");
+  assertTrue(textOf(t.log.channel[1].edits.at(-1)).includes("cleared the Elite Four"), "the run ends with its result embed");
+}
+
+section("Elite Four run: no pick in time");
+{
+  CHALLENGE.pickMs = 30;
+  const t = harness(runner());
+  await t.run("elite4");
+  const fight = await t.fightRun(async () => {});
+  CHALLENGE.pickMs = 60000;
+  const menu0 = t.log.menus[0];
+  const closing = fight.edits.find((e) => e.message === menu0);
+  assertEqual([closing?.content, closing?.components, Object.keys(closing ?? {}).sort()], ["No Pokémon was revived.", [], ["components", "content", "message"]],
+    "at the deadline the menu loses its buttons");
+  assertTrue(t.log.menus.every((m) => m.from === fight), "with no pick, later menus use the Fight! click");
+  assertTrue(t.publicText().includes("Bruno (2 of 4)\n💊 No Pokémon was revived."), "the next header says nothing was revived");
+  const late = await t.pick(menu0);
+  assertEqual([late.replies, late.updates], [[{ content: "Too late. No Pokémon was revived.", flags: 64 }], []], "a click after the deadline is too late");
+  assertTrue(t.trainerData.A.challenge.won.elite4 !== undefined, "and the run still cleared");
+}
+
+section("Elite Four run: a Revive menu that can't be sent");
+{
+  const t = harness(runner(), { menusFail: true });
+  await t.run("elite4");
+  const fight = t.button(`challenge_fight:${t.nonce()}`);
+  await t.collectors.at(-1).h.collect(fight);
+  assertTrue(fight.followUps.length >= 1 && t.publicText().includes("Bruno (2 of 4)\n💊 No Pokémon was revived."), "counts as no pick, and the run goes on");
+  assertEqual(t.trainerData.A.challenge.run, undefined, "to its end");
+
+  const expired = harness(runner(), { menusFail: "silent" });
+  await expired.run("elite4");
+  const late = expired.button(`challenge_fight:${expired.nonce()}`);
+  await expired.collectors.at(-1).h.collect(late);
+  assertEqual(expired.trainerData.A.challenge.run, undefined, "a menu the bot's wrapper drops (an expired reply window) counts as no pick too");
+}
+
+section("Elite Four run: a loss at Lorelei");
+{
+  const u = WEAK();
+  u.challenge = { won: allGyms(), day: null, attempts: 0 };
+  const t = harness(u);
+  await t.run("elite4");
+  const fight = await t.fightRun(async () => {});
+  assertEqual([t.log.menus.length, t.trainerData.A.cc, t.trainerData.A.challenge.run], [0, 11111, undefined], "no menu; 10% lost; the run is closed");
+  assertTrue(textOf(fight.edits.at(-1)).includes("You lost 1,234 CC."), "the private result shows the amount");
+  assertTrue(!t.publicText().includes("1,234") && !t.publicText().includes("1234"), "the public replay never does");
+}
+
+section("While a run is open");
+{
+  CHALLENGE.pickMs = 200;
+  const t = harness(runner());
+  await t.run("brock");
+  const olderNonce = t.nonce();
+  const olderCollector = t.collectors.at(-1);
+  await t.run("elite4");
+  const playing = t.fightRun(async () => {});
+  await until(() => t.log.menus.length === 1);
+  await t.run("brock");
+  assertEqual(t.log.replies.at(-1), { content: "Finish your Elite Four run first.", flags: 64 }, "/challenge with an opponent refuses");
+  await t.run(null);
+  assertEqual(embedJson(t.log.replies.at(-1).embeds[0]).title, "Kanto challenges", "the board still works");
+  const old = t.button(`challenge_fight:${olderNonce}`);
+  await olderCollector.h.collect(old);
+  assertEqual(textOf(old.edits.at(-1)), "Finish your Elite Four run first.", "Fight! on an older preview refuses the same way");
+  await playing;
+  CHALLENGE.pickMs = 60000;
+  assertEqual(t.trainerData.A.challenge.attempts, 1, "only the run used an attempt");
+}
+
+section("A run that stopped unexpectedly");
+{
+  let saves = 0;
+  const t = harness(runner(), { save: async () => { saves++; } });
+  const step = startRun({ trainerData: t.trainerData, userId: "A", seed: 1, maxLoss: 1234, channelId: "C1", now: new Date() });
+  const replay = await t.channel.send({ content: "replay" });
+  attachRunMessage(t.trainerData.A, step.nonce, { channelId: "C1", messageId: replay.id });
+  t.trainerData.A.challenge.run.updatedAt -= 16 * 60 * 1000;
+  await t.run(null);
+  await until(() => replay.edits.length > 0);
+  assertEqual([t.trainerData.A.challenge.run, t.trainerData.A.challenge.won.elite4 !== undefined, saves > 0], [undefined, true, true],
+    "the next /challenge finishes it, applies the result, and saves");
+  assertEqual(replay.edits.at(-1).content, "⚔️ <@A>'s Elite Four run stopped unexpectedly and finished without Revives.", "the run's message says so");
+  assertEqual(embedJson(replay.edits.at(-1).embeds[0]).title, "🏆 Ash cleared the Elite Four!", "with the result");
+  assertEqual(embedJson(t.log.replies.at(-1).embeds[0]).title, "Kanto challenges", "then the board shows");
+
+  const preview = harness(runner());
+  startRun({ trainerData: preview.trainerData, userId: "A", seed: 1, maxLoss: 1234, channelId: "C1", now: new Date() });
+  preview.trainerData.A.challenge.run.updatedAt -= 16 * 60 * 1000;
+  await preview.run("brock");
+  assertEqual(embedJson(preview.log.replies.at(-1).embeds[0]).title, "Gym Leader Brock", "or the preview, after finishing it");
+
+  const fresh = harness(runner());
+  startRun({ trainerData: fresh.trainerData, userId: "A", seed: 1, maxLoss: 1234, channelId: "C1", now: new Date() });
+  fresh.trainerData.A.challenge.run.updatedAt -= 14 * 60 * 1000;
+  await fresh.run("brock");
+  assertEqual(fresh.log.replies.at(-1).content, "Finish your Elite Four run first.", "a run 14 minutes quiet is still open");
 }
 
 finish();

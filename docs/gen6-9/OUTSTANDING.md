@@ -25,9 +25,34 @@
 
 ## Decisions for the owner
 
-1. **Approve releasing Generation 7 first** (`POKEMON_GENERATIONS=7`) after the code release. See `RELEASE-CHECKLIST.md`.
-2. **Level requirements on Gen 6–9 evolutions** (`ENFORCE_LEVEL_EVOLUTIONS`). This is implemented because the bot has Levels. Turn it off for pure Stone evolutions, matching Gen 1–5.
-3. **Balance proposals** in `BALANCE.md` §3 (none implemented).
+Decided on 2026-11-09:
+- Keep the level requirements (113 evolutions).
+- Gen 1–5 evolutions unchanged.
+- Gen 7 is the first release; Gens 6, 8 and 9 stay off.
+- All forms stay off.
+- Sprite use is authorised, with credits.
+- No balance change without before/after numbers.
+
+Still open:
+1. **Merge Release C (PR #51)**, then this PR, and approve the code release (generations off).
+2. **Approve the Gen 7 release** (`GEN7-RELEASE-CHECKLIST.md`) after reviewing `GEN7-ENCOUNTER-COMPARISON.md`.
+3. **Balance proposals** in `BALANCE.md` §4. None are implemented. Each needs its own before/after numbers.
 4. **Fixing the Arceus shiny** (known issue 1).
 5. **Gen 9 timing.** It is 79% static today.
-6. **`RENDER_EXTERNAL_URL` in production.** If it is set to an `onrender.com` host it is now ignored. Confirm `PUBLIC_URL` or `FLY_APP_NAME` before the code release.
+6. **`PUBLIC_URL`.** Optionally set it to the Fly URL to make the embed host explicit (see qualification finding 2).
+
+## Release qualification findings (2026-11-09)
+
+1. **PR #51 is still open.** Head `0d4bbea9` is the same commit this branch is built on, GitHub reports it mergeable ("CLEAN"), there are no reviews, and there are **no CI checks** (the repository has no workflows). `master` (`440f9c73`) has not moved, so no reconciliation was needed.
+2. **The production secret `RENDER_EXTERNAL_URL` exists; its value can't be read.**
+   - The app has no custom domains; only `poke-discord-bot-49shta.fly.dev` serves `/public` (200 `image/gif` to Discord's crawler user-agent).
+   - The old Render hosts return 503/404.
+   - If the secret holds an `onrender.com` address, today's embeds already point at a dead host, and this release fixes that by falling back to `FLY_APP_NAME`.
+   - If it holds the Fly URL, it keeps being used.
+3. **`master` is unprotected and merges deploy production.** Run the suite on the merge commit before merging.
+4. **Correction:** an earlier balance draft said tier odds don't change when species are added. They do, because weights are per species. The corrected exact figures are in `BALANCE.md` / `GEN7-ENCOUNTER-COMPARISON.md`, verified against the live selector (`tests/gen69Balance.test.js`).
+5. **Achievement migration (revision 2 → 3)** was qualified against Release C's real code on 3,000 synthetic players (`tools/qualify-migration.mjs`, `MIGRATION-QUALIFICATION.json`):
+   - 0 existing unlocks removed or re-dated, AP always equals the sum of unlocks, and a second boot is a no-op.
+   - Rolling back to Release C loses 0 unlocks.
+   - Expected new unlocks, measured on the synthetic population (real shares depend on actual collections): Fairy Specialist (about 5%), Type Encyclopedia II (about 5%), and Decorated milestones crossed through that AP (about 0.1%).
+6. **Quests pick Pokémon uniformly** (7.4% Legendary today). That's existing behaviour, unaffected by this work, and listed as a proposal.

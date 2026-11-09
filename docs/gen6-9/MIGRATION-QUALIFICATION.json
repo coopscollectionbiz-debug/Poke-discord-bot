@@ -1,0 +1,20 @@
+{
+ "players": 3000,
+ "releaseCRevision": 2,
+ "newRevision": 3,
+ "newUnlocksByAchievement": {
+  "col_type_all_18": 151,
+  "col_type_fairy": 153,
+  "meta_ap_1500": 3
+ },
+ "existingUnlocksRemoved": 0,
+ "existingUnlockDaysChanged": 0,
+ "apNotEqualToSumOfUnlocks": 0,
+ "secondBootIsNoOp": true,
+ "rollback": {
+  "unlocksLostWhenReleaseCBootsMigratedRecords": 0,
+  "recordsWithOtherFieldChanges": 0
+ },
+ "problems": [],
+ "problemCount": 0
+}

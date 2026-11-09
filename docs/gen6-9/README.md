@@ -4,6 +4,9 @@ Branch `feature/gen6-9`, built on Release C (`origin/feature/release-c-achieveme
 
 Related documents:
 - `RELEASE-CHECKLIST.md`: per-generation release, deployment, backup and rollback.
+- `GEN7-RELEASE-CHECKLIST.md`: the concrete Gen 7 (Alola) release and rollback plan.
+- `GEN7-ENCOUNTER-COMPARISON.md`: exact before/after encounter probabilities for Gen 7.
+- `MIGRATION-QUALIFICATION.json`: cross-version achievement migration check (`tools/qualify-migration.mjs`).
 - `BALANCE.md` + `BALANCE-DATA.md`: economy impact and proposals.
 - `PATCH-NOTES-DRAFT.md`: player-facing notes.
 - `OUTSTANDING.md`: incomplete functionality and open decisions.
@@ -29,7 +32,7 @@ Related documents:
 | `/pokedex` | `commands/pokedex.js` | Accent/punctuation-insensitive names. Unreleased species visible only to owners. Sprite credit in the footer |
 | Credits | `/credits` → `public/credits/index.html`, `tools/generate-credits.mjs` | Projects, sources, and a per-species artist list from the trackers |
 | Release gate | `npm run validate:catalog [gen]` | Checks catalogue, battle data, sprite files and SHA-1s, evolution graph and form keys |
-| Tests | `tests/gen69Catalog`, `gen69Generations`, `gen69Achievements`, `gen69Display` + 7 updated suites | 44/44 test files pass (`npm run test:safe`) |
+| Tests | `tests/gen69Catalog`, `gen69Generations`, `gen69Achievements`, `gen69Display`, `gen69Balance` + 7 updated suites | 45/45 test files, 1,307 assertions pass (`npm run test:safe`) |
 
 ## Data sources and versions
 

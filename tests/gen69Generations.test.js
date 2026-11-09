@@ -148,6 +148,45 @@ section("Disabling never removes owned Pokémon");
   void conv;
 }
 
+section("Rollback of a released generation keeps newly acquired Pokémon fully usable");
+{
+  // Gen 7 live: a player catches Alola Pokémon through the real capture handler.
+  enable([7]);
+  const { state, h } = setup({ U: player({ tp: 300000 }), V: player() });
+  let tries = 0;
+  while (!Object.keys(state.td.U.pokemon).some((id) => Number(id) >= 722) && tries++ < 3000) {
+    await h.rewardPokemon({ body: { id: "U", source: "ultraball" }, isAuthorized: auth("U") });
+  }
+  const alolaIds = Object.keys(state.td.U.pokemon).map(Number).filter((id) => id >= 722 && id <= 809);
+  assertTrue(alolaIds.length > 0, `caught Alola species while Gen 7 was live (#${alolaIds.join(", #")})`);
+  const a = alolaIds[0];
+  state.td.U.displayedPokemon = [{ id: a, variant: "normal" }];
+  state.td.U.pokemon[a].normal = Math.max(2, state.td.U.pokemon[a].normal);
+  const { retroEvaluate, normalizeProgression } = await import("../progression/achievements.js");
+  const { validateUserSchema } = await import("../utils/userSchema.js");
+  retroEvaluate(state.td.U);
+  const snapshot = JSON.stringify({ pokemon: state.td.U.pokemon, training: state.td.U.training, ach: state.td.U.ach });
+
+  // Operator rolls Gen 7 back: restart with POKEMON_GENERATIONS unset.
+  enable([]);
+  validateUserSchema(state.td.U, "U", "u");
+  normalizeProgression(state.td.U);
+  retroEvaluate(state.td.U);
+  assertEqual(JSON.stringify({ pokemon: state.td.U.pokemon, training: state.td.U.training, ach: state.td.U.ach }), snapshot, "after rollback + reboot: Alola Pokémon, Levels and achievements byte-identical");
+  const { buildTeam } = await import("../utils/battle/runBattle.js");
+  const team = buildTeam(state.td.U);
+  assertTrue(team.length === 1 && team[0].speciesId === a && team[0].level >= 1, "an Alola Pokémon stays on the battle Team");
+  const { simulateBattle } = await import("../utils/battle/sim.js");
+  const sim = simulateBattle({ sides: [{ members: team }, { members: [{ speciesId: 25, variant: "normal", level: 30 }] }], seed: 3, surge: null });
+  assertTrue([0, 1].includes(sim.winner), "and can still battle");
+  const { giftPokemon } = await import("../commands/gift.js");
+  assertEqual(giftPokemon(state.td.U, state.td.V, String(a), "alola", 1), null, "and can still be gifted");
+  assertTrue(!C.isAcquirable(a) && C.speciesProblems(a).length === 0, "it is no longer acquirable, but its data stays complete");
+  const caught = [];
+  for (let i = 0; i < 200; i++) { const r = await h.rewardPokemon({ body: { id: "U", source: "ultraball" }, isAuthorized: auth("U") }); if (r.body?.pokemon) caught.push(r.body.pokemon.id); }
+  assertTrue(caught.length > 0 && caught.every((id) => id <= 649), "new catches are Gens 1–5 only again");
+}
+
 section("Admin /addinventory override");
 async function grant(name, allow) {
   const td = {};

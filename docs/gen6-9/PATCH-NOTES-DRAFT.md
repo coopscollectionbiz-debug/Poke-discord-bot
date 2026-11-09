@@ -38,8 +38,9 @@ There are two drafts: one for the code release (no new Pokémon yet) and a templ
 - **{REGION} starters** join the starter selection.
 - **New achievements:** {REGION} Explorer, {REGION} Cartographer and {REGION} Pokédex Complete.
 - **Rarity:**
-  - New Pokémon fit into the existing rarity tiers, and your odds of each tier are unchanged.
-  - With more Pokémon in each tier, any single Pokémon turns up a little less often.
+  - New Pokémon fit into the existing rarity tiers, and catch rules are unchanged.
+  - With more Pokémon to find, any single Pokémon turns up a little less often. For Alola that's about 8% less often.
+  - Legendary and Mythical encounters overall become slightly more frequent, because Alola brings many of them.
 
 Region-specific lines:
 - **Kalos:**

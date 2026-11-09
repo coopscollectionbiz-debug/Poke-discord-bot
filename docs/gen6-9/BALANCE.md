@@ -1,47 +1,64 @@
 # Gen 6–9 balance and economy
 
-This document separates **what the implementation does** (§1) from **proposed balance changes that are NOT implemented** (§3) and need an owner decision. All numbers come from `BALANCE-DATA.md` (`npm run report:balance`).
+This document separates **what the implementation does** (§1) from **proposed balance changes that are NOT implemented** (§4) and need an owner decision.
+
+All numbers are exact and come from `npm run report:balance` (→ `BALANCE-DATA.md`) and `npm run report:balance -- --gen7` (→ `GEN7-ENCOUNTER-COMPARISON.md`). `tests/gen69Balance.test.js` checks the model against the live selector by sampling.
+
+> **Correction (qualification, 2026-11-09).** An earlier draft said tier odds per draw stay at 52/34/8/4/1.5/0.5%. That was wrong. The selector (`utils/weightedRandom.js`) gives *each species* its tier's weight, so a tier's share of draws is *species in the tier × weight ÷ total weight*. Tier shares therefore shift when species are added, and today's actual shares are 55.4 / 33.2 / 8.4 / 2.5 / 0.46 / 0.07% (Poké Ball, no rank).
 
 ## 1. What the implementation does (no tuning changed)
 
-- **Tier odds per draw are unchanged:** common 52%, uncommon 34%, rare 8%, epic 4%, legendary 1.5%, mythic 0.5%. Ball and rank multipliers are unchanged too.
-- **Within a tier, every released species is equally likely** (existing behaviour). New species join their tier's pool only when their generation is released.
-- **Existing tiers are untouched.** New species get tiers from a written rule that restates the Gen 1–5 pattern (71% exact / 98% within one tier on Gen 1–5).
-- **New tier mix (376 species):**
-  - common 80, uncommon 40, rare 104, epic 90, legendary 45, mythic 17.
-  - Gen 6–9 has proportionally fewer uncommons and more epics than Gen 1–5. Most of that comes from the 31 Ultra Beasts and Paradox Pokémon (all epic) and from Gen 9's many single-stage species.
-- **Shiny odds** (`shinyOdds.js`) are unchanged per draw.
-- **Prices are unchanged:** Evolution Stone and Shiny Dust costs, Poké Ball prices, weekly pack composition, starter pack.
-- **Achievements:** new entries mirror the classic region and type entries. They pay AP only; rewards stay `pending_approval` (D-07), like every Release C reward.
+- No weight, multiplier, price or odds constant was changed:
+  - tier weights, ball and rank multipliers
+  - Stone, Dust and ball prices
+  - weekly pack composition and starter pack
+  - shiny odds
+- New species join pools only when their generation is released. The selector then treats them exactly like existing species of the same tier.
+- Existing tiers are untouched. New species get tiers from a written rule that restates the Gen 1–5 pattern (71% exact, 98% within one tier on Gen 1–5).
+- New achievements pay AP only. Rewards stay `pending_approval` (D-07).
 
-## 2. Impact by release scenario
+## 2. Gen 7 (first release): before → after
 
-| Scenario | Species | Chance a draw is a Gen 6–9 species | Odds of any one specific Gen 1–5 species vs today (common / rare / legendary / mythic) |
+Full tables are in `GEN7-ENCOUNTER-COMPARISON.md`. Alola adds 88 species: 15 common, 10 uncommon, 23 rare, 20 epic, 13 legendary, 7 mythic.
+
+| Measure (Poké Ball, no rank, unless stated) | Before | After |
+|---|---:|---:|
+| Common / Uncommon / Rare / Epic share | 55.38 / 33.16 / 8.42 / 2.51% | 55.39 / 32.41 / 8.80 / 2.78% |
+| Legendary share | 0.462% | 0.538% (0.424% existing + 0.114% Alola) |
+| Mythic share | 0.067% | 0.082% (0.062% existing + 0.020% Alola) |
+| Ultra Ball, Legend rank: Legendary / Mythic | 5.62% / 0.92% | 6.13% / 1.05% |
+| One specific existing species (any tier), e.g. Pikachu | 1 in 458 | 1 in 500 (**91.7%** of today) |
+| Mewtwo / Mew / Arceus | 1 in 31,173 | 1 in 33,987 (91.7%) |
+| Share of draws that are an Alola species | — | 8.3% (Poké Ball); 14.2% (Ultra Ball, Legend) |
+| `/quest`: any one existing species (uniform pick) | — | 88.1% of today |
+| Weekly/starter pack slot: common / uncommon / rare species | — | 91.7% / 93.8% / 87.7% of today |
+
+Key facts:
+- Under the weighted selector, **every existing species keeps the same relative odds**, at 91.7% of today's (91.2% at Master Trainer, 85.8% with an Ultra Ball at Legend). No tier is singled out.
+- **Legendary and Mythical rates per draw go up slightly** (Alola is legendary-heavy). The chance of an *existing* legendary goes down: 0.462% → 0.424%.
+- **Quests** pick uniformly from the whole pool. Today that already gives 7.4% Legendary and 3.2% Mythic per Pokémon quest. With Alola: 8.3% and 3.8%. That is existing behaviour, but more visible now; see §4.
+
+## 3. Later generations (cumulative, weighted selector)
+
+| Scenario | Any one existing species vs today | Share of draws from Gens 6–9 | Legendary / Mythic share |
 |---|---:|---:|---|
-| Gen 7 only | 737 | 8.5% | 92% / 88% / 79% / 75% |
-| Gens 6–7 | 809 | 15.9% | 83% / 80% / 73% / 64% |
-| Gens 6–8 | 905 | 23.1% | 75% / 68% / 60% / 60% |
-| All | 1025 | 30.0% | 67% / 61% / 52% / 55% |
+| + Gen 7 | 91.7% | 8.3% | 0.54% / 0.08% |
+| + Gens 6–7 | 84.1% | 15.9% | 0.53% / 0.09% |
+| + Gens 6–8 | 76.7% | 23.3% | 0.59% / 0.09% |
+| All | 69.7% | 30.3% | 0.62% / 0.08% |
 
-What this means:
-- **Collection difficulty.** Finishing a classic region gets slower in proportion to the dilution. With everything released, a player missing one specific Gen 1–5 legendary needs about twice as many legendary draws to find it.
-- **Legendary/Mythic availability.**
-  - Pools grow from 48 → 93 legendaries and 21 → 38 mythics with everything released.
-  - Total legendary/mythic draws per player don't change; they're spread over more species.
-  - Classic legendary achievements are pinned to the Gen 1–5 set (48/21), so they get harder in practice. Legend Collector/Keeper (10/25 different) get easier, because any generation counts.
-- **Daily rewards, shop, quests, recruit, weekly pack.** Same tier logic everywhere, so they all show the same dilution. Quest and recruit payouts are unchanged.
-- **Shiny acquisition.** Shinies per draw are unchanged, but the odds of a shiny of a specific species fall in step with the table.
-- **Trading/market.** There's no market yet (Release F). Gifting is unchanged: normal copies only. Rarer old species become relatively scarcer, which may raise their perceived value once trading exists.
-- **Evolution economy.**
-  - Gen 6–9 evolutions cost the same Stones per tier step as before.
-  - 113 of them also require the official level. Catch levels already scale by stage (2–15 / 16–32 / 32–45), so most second stages are caught at or above their evolution level, but late evolutions (e.g. Dragapult Lv 60, Kommo-o Lv 45) need battle EXP.
-  - This slows Stone spending slightly for new species only.
+Other effects:
+- **Collection difficulty:** completing a classic region slows by the same ratio.
+- **Classic achievements:** they stay pinned to the Gen 1–5 sets, so they get slightly harder in practice. "N different Legendaries" achievements get easier.
+- **Shiny:** odds per acquisition are unchanged; a shiny of a specific species falls by the same ratio.
+- **Trading:** none yet. Gifting is unchanged.
+- **Evolution:** Stone prices are unchanged. 113 new evolutions also need the official level. Catch levels already scale by stage, so most mid-stages are caught at or above their evolution level, but late ones (Dragapult Lv 60, Kommo-o Lv 45) need battle EXP.
 
-## 3. Proposals (NOT implemented; owner decision)
+## 4. Proposals (NOT implemented; each needs before/after numbers and owner approval)
 
-1. **Release one generation at a time.** The recommended order is Alola → Kalos → Galar → Paldea. Each step dilutes classic odds by 8–12%, instead of 33% at once.
-2. **Optional "new region" weighting.** In the release window, give the new generation its proportional share instead of more. Today's rule already does this, so the recommendation is no change. A "featured generation" boost would further dilute classic species and is **not** recommended.
-3. **Optional classic-species protection.** If classic completion is a priority, a future option is a per-tier 50/50 split between "classic" and "new" species (each pool stays uniform inside). This would keep classic odds at ≥ about 50–60% of today even with everything out, but make new species rarer per draw. Not implemented. It changes established gameplay and needs a design decision.
-4. **Legendary pool.** Consider moving some Gen 7–9 sub-legendaries (the Tapus, Loyal Three, Treasures of Ruin) to `epic` if legendary dilution is too strong. Today the rule follows the games' legendary flag.
-5. **Gen 9 visuals.** 95 of 120 species are static. Consider waiting for more animations (the audit can be re-run) before releasing Gen 9. This is a presentation matter, not economy.
-6. **Achievement rewards.** If D-07 approves rewards later, the new region entries reuse the classic values (2,000 CC for Explorer; badge + title for Complete). Price-check them against the total CC supply at that point.
+1. **Release one generation at a time**, starting with Alola: −8.3% per existing species, instead of −30% at once. *Process only; nothing to apply.*
+2. **Quest legendary rate.** Quests ignore tiers, so 1 in 12 Pokémon quests gives a Legendary today, rising to 1 in 11 with Alola. If that's unintended, give quests the weighted selector. That would change established gameplay, so it's out of scope here.
+3. **Classic-species protection** (only if classic completion speed matters more): a per-tier split between classic and new species. Not modelled or implemented. Would need its own before/after comparison.
+4. **Sub-legendaries.** Moving the Tapus and similar to `epic` would lower Alola's legendary contribution, from 0.114% back towards 0.06% per draw. Not applied.
+5. **Gen 9 visuals:** 95 of 120 species are static. Wait for more animations before releasing it.
+6. **Rewards** (if D-07 is approved later): the new region entries reuse the classic values.

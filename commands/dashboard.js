@@ -6,7 +6,7 @@
 // ===========================================================
 
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
-import { generateToken } from "../bot_final.js";
+import { generateToken } from "../utils/dashboardAuth.js";
 
 export default {
   data: new SlashCommandBuilder()

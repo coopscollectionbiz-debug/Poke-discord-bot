@@ -4,6 +4,8 @@
 // ✅ Adds support for Shiny Dust via Item path
 // ==========================================================
 
+import { grantItem, isHoldable } from "../services/inventory.js";
+import { getCatalogItem } from "../catalog/items.js";
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
 import { findPokemonByName, getFlattenedTrainers } from "../utils/dataLoader.js";
@@ -13,10 +15,10 @@ import { ensureUserInitialized } from "../utils/userInitializer.js";
 
 // Shiny Dust lives with the other items, where the dashboard and shiny
 // evolutions read it.
+// Returns null on success, or the reason the grant was refused.
 function addShinyDust(user, quantity) {
-  user.items ??= {};
-  const current = Number.isFinite(user.items.shiny_dust) ? user.items.shiny_dust : 0;
-  user.items.shiny_dust = current + quantity;
+  const r = grantItem(user, "shiny_dust", quantity);
+  return r.ok ? null : r.error;
 }
 
 function normalizeKey(input) {
@@ -167,9 +169,15 @@ export default {
 
           // ✅ Special-case: Shiny Dust isn't a shop item
           if (key === "shiny_dust") {
-            addShinyDust(user, quantity);
+            const refused = addShinyDust(user, quantity);
+            if (refused) return safeReply(interaction, { content: `⛔ ${refused}`, flags: MessageFlags.Ephemeral });
 
             confirmationText = `**${quantity}× ✨ Shiny Dust**`;
+          } else if (isHoldable(key)) {
+            // Release B: any obtainable bag item in the catalog (e.g. evolution_stone).
+            const granted = grantItem(user, key, quantity);
+            if (!granted.ok) return safeReply(interaction, { content: `⛔ ${granted.error}`, flags: MessageFlags.Ephemeral });
+            confirmationText = `**${quantity}× Item: ${getCatalogItem(key).name}**`;
           } else {
             if (!globalThis.SHOP_ITEMS || !globalThis.SHOP_ITEMS[key]) {
               return safeReply(interaction, {
@@ -182,12 +190,13 @@ export default {
 
             // If your SHOP_ITEMS defines shiny dust as an item id, still route it the same way
             if (item?.id === "shiny_dust") {
-              addShinyDust(user, quantity);
+              const refused = addShinyDust(user, quantity);
+              if (refused) return safeReply(interaction, { content: `⛔ ${refused}`, flags: MessageFlags.Ephemeral });
               confirmationText = `**${quantity}× ✨ ${item.name || "Shiny Dust"}**`;
             } else {
-              user.items ??= {};
-              user.items[item.id] ??= 0;
-              user.items[item.id] += quantity;
+              // Only items the catalog says can be held (no unknown/future ids).
+              const granted = grantItem(user, item.id, quantity);
+              if (!granted.ok) return safeReply(interaction, { content: `⛔ ${granted.error}`, flags: MessageFlags.Ephemeral });
 
               confirmationText = `**${quantity}× Item: ${item.name}**`;
             }

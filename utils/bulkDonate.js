@@ -17,6 +17,7 @@
 //   multiselect — exactly 1 copy of that Pokémon in total, not on Team.
 // ==========================================================
 
+import { grantItem } from "../services/inventory.js";
 import { resetLevelIfGone } from "./training.js";
 
 const VARIANTS = new Set(["normal", "shiny"]);
@@ -116,9 +117,8 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
 
   user.cc = (user.cc ?? 0) + gainedCC;
   if (shinyDustGained > 0) {
-    user.items ??= {};
-    const current = Number.isFinite(user.items.shiny_dust) ? user.items.shiny_dust : 0;
-    user.items.shiny_dust = current + shinyDustGained;
+    const r = grantItem(user, "shiny_dust", shinyDustGained);
+    if (!r.ok) console.warn(`⚠️ bulkDonate: shiny dust grant refused: ${r.error}`);
   }
 
   return { donatedCopies: events.length, gainedCC, shinyDustGained, events };

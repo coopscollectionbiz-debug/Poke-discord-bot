@@ -2,6 +2,7 @@
 // /daily — Coop’s Collection (Race-Safe v18.0)
 // ==========================================================
 
+import { grantItem, normalizeInventory } from "../services/inventory.js";
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -120,8 +121,7 @@ export async function execute(
       // Initialize inventory safety
       // ======================================================
       user.pokemon ??= {};
-      user.items ??= {};
-      user.items.evolution_stone ??= 0;
+      normalizeInventory(user); // idempotent; guarantees items.evolution_stone
 
       // ======================================================
       // Apply Pokémon to inventory
@@ -140,8 +140,8 @@ export async function execute(
       // ======================================================
       let stoneAwarded = false;
       if (Math.random() < EVOLUTION_STONE_CHANCE) {
-        user.items.evolution_stone++;
-        stoneAwarded = true;
+        // Same 1-stone reward as before, through the inventory service.
+        stoneAwarded = grantItem(user, "evolution_stone", 1).ok;
       }
 
       user.lastDaily = today;

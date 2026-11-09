@@ -9,7 +9,7 @@ import {
   MessageFlags
 } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
-import { rarityColors } from "../bot_final.js"; // color palette
+import { rarityColors } from "../utils/rarityPalette.js"; // color palette
 
 export default {
   data: new SlashCommandBuilder()

@@ -231,7 +231,8 @@ async function buyStone(cost) {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: userId }),
+          // One id per purchase click: a retried/double-sent request can't buy twice.
+          body: JSON.stringify({ id: userId, requestId: newRequestId() }),
         }).then((r) => r.json());
       } catch (e) {
         closeLoading();
@@ -268,12 +269,24 @@ async function buyStone(cost) {
 
       showShopModal({
         title: "Purchase Complete!",
-        message: "You bought an Evolution Stone!",
+        // The modal renders HTML, so escape the server's notice text.
+        message: res.saveNotice
+          ? `You bought an Evolution Stone!<br><br><span style="color:#facc15;">${escapeHtml(res.saveNotice)}</span>`
+          : "You bought an Evolution Stone!",
         sprites: ["/public/sprites/items/evolution_stone.png"],
         onConfirm: () => {},
       });
     },
   });
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
+function newRequestId() {
+  if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
 // ======================================================
@@ -455,4 +468,9 @@ window.addEventListener("DOMContentLoaded", () => {
       (window.location.href = `/public/dashboardshop/?id=${encodeURIComponent(
         id
       )}`);
+
+  const goBag = document.getElementById("goBag");
+  if (goBag)
+    goBag.onclick = () =>
+      (window.location.href = `/public/bag/?id=${encodeURIComponent(id)}`);
 })();

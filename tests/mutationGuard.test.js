@@ -70,16 +70,19 @@ assertEqual(where(unexplained), [], "no unacknowledged save in a player-facing p
 
 section("D6: weekly pack claims only after every await");
 {
-  const bot = read("bot_final.js");
-  const start = bot.indexOf('app.post("/api/weekly-pack"');
-  const end = bot.indexOf("\napp.", start + 10);
-  const route = bot.slice(start, end);
-  const lock = route.indexOf("await lockUser(");
-  const flag = route.indexOf("weeklyPackClaimed = true");
-  const save = route.indexOf("await saveAndAck(");
-  assertTrue(lock > 0 && flag > lock && save > flag, "lock → flag → save order");
-  const between = route.slice(route.indexOf("{", lock), flag);
-  assertTrue(!/\bawait\b/.test(between), "no await between taking the lock and setting the claim flag");
+  // The handler lives in services/gameplay.js (runtime-tested in
+  // tests/gameplayRoutes.test.js); the route in bot_final.js only delegates.
+  const g = read("services/gameplay.js");
+  const start = g.indexOf("async function weeklyPack(");
+  const end = g.indexOf("\n  return {", start);
+  const fn = g.slice(start, end);
+  const load = fn.indexOf("await loadPokemonCached(");
+  const tx = fn.indexOf("await runInventoryTransaction(");
+  const mutate = fn.indexOf("mutate: (user) => {");
+  const flag = fn.indexOf("weeklyPackClaimed = true");
+  assertTrue(load > 0 && tx > load && mutate > tx && flag > mutate, "load → lock/transaction → flag (inside the synchronous mutate)");
+  assertTrue(!/\bawait\b/.test(fn.slice(mutate, flag)), "no await between taking the lock and setting the claim flag");
+  assertTrue(/gameplay\.weeklyPack\(/.test(read("bot_final.js")), "the bot_final route delegates to the handler");
 }
 
 section("D8: dashboard writes are refused until ready");
@@ -98,5 +101,17 @@ assertEqual(where(lines.filter((l) => /\bpostRareSightings\s*\(/.test(l.text))),
 
 section("D11: no filters on the non-existent `generation` field");
 assertEqual(where(lines.filter((l) => /\.generation\s*<=/.test(l.text))), [], "no p.generation filters");
+
+section("Release B: inventory is only changed through services/inventory.js");
+{
+  const itemWrites = lines.filter(
+    (l) =>
+      l.f !== "services/inventory.js" &&
+      /\.items\s*(\.[A-Za-z_$][\w$]*|\[[^\]]+\])\s*(\+\+|--|[-+*]?=(?!=)|\?\?=)/.test(l.text)
+  );
+  assertEqual(where(itemWrites), [], "no direct writes to user.items[...] (grantItem / consumeItem only)");
+  const itemsReplaced = lines.filter((l) => l.f !== "services/inventory.js" && /\.items\s*(=|\?\?=)\s*\{/.test(l.text));
+  assertEqual(where(itemsReplaced), [], "no code replaces user.items with a new object");
+}
 
 finish();

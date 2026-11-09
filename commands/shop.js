@@ -8,6 +8,7 @@
 //  • Starter Pack broadcasts bypass cooldown
 // ==========================================================
 
+import { grantItem } from "../services/inventory.js";
 import {
   SlashCommandBuilder,
   StringSelectMenuBuilder,
@@ -303,9 +304,13 @@ ${
                 await closeShopMessage(btn, confirmCollector, collector);
                 return;
               }
+              const granted = grantItem(live, "evolution_stone", 1);
+              if (!granted.ok) {
+                await safeInteractionReply(btn, { content: `❌ ${granted.error}`, flags: MessageFlags.Ephemeral });
+                await closeShopMessage(btn, confirmCollector, collector);
+                return;
+              }
               live.cc -= confirmedItem.cost;
-              live.items ??= { evolution_stone: 0 };
-              live.items.evolution_stone = (live.items.evolution_stone || 0) + 1;
 
               const ack = await saveAndAck(trainerData);
 

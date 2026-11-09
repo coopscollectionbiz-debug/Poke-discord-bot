@@ -543,4 +543,8 @@ function initNavTabs() {
   if (goShop)
     goShop.onclick = () =>
       (window.location.href = `/public/dashboardshop/?id=${encodeURIComponent(id)}`);
+  const goBag = document.getElementById("goBag");
+  if (goBag)
+    goBag.onclick = () =>
+      (window.location.href = `/public/bag/?id=${encodeURIComponent(id)}`);
 }

@@ -98,6 +98,8 @@ section("Recruit charge-and-grant is all-or-nothing (D18)");
   const rich = { cc: 150, trainers: [] };
   const r2 = chargeAndGrant(rich, (u) => grantTrainer(u, "t.png"), 1234);
   assertTrue(r2.ok && rich.cc === 50 && rich.lastRecruit === 1234 && ownsTrainer(rich, "t.png"), "enough CC: charged once, granted once");
+  const r3 = chargeAndGrant({ cc: 150 }, () => ({ lesson: "taught" }));
+  assertEqual(r3.granted, { lesson: "taught" }, "the grant's result comes back (/recruit reads the catch's move lesson from it)");
 }
 
 section("Recruit/quest pool is not empty (D11)");

@@ -264,6 +264,15 @@ section("Move prompt after the EXP message");
   assertTrue(bMessages[0]?.content.startsWith("EXP from your battle") && bMessages[1]?.content.includes("learned **Slash**"),
     "Wager battle: the Defender's prompt follows their EXP message, on their Accept click");
   assertTrue(!w.log.followUps.some((f) => f.userId === "A" && f.components), "no prompt for a player with nothing to ask");
+
+  const c = harness();
+  onTeam(c.trainerData.A, 4, almost34);
+  onTeam(c.trainerData.B, 292);
+  await c.run("A", "B", 10);
+  await c.collectors[0].h.collect(c.button("B", `wager_accept:${c.trainerData.A.pendingWager.nonce}`));
+  const aMessages = c.log.followUps.filter((f) => f.userId === "A");
+  assertTrue(aMessages[0]?.content.startsWith("EXP from your battle") && aMessages[1]?.content.includes("learned **Slash**"),
+    "Wager battle: the Challenger's prompt follows their EXP message, on their /battle");
 }
 
 section("Missing channel permissions");

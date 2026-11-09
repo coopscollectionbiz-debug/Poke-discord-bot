@@ -17,11 +17,11 @@ Targets in this spec are design goals that a test enforces, not measurements. Ev
 
 - Every Gym Leader and Elite Four member fields 6 Pokémon. Each team starts from the leader's FireRed/LeafGreen team and is filled to 6 with on-type Pokémon from that leader's later canon teams (the Let's Go rematch first, then the HGSS rematch).
 - Each team keeps its canon Level spread, with the ace highest. The whole team shifts until the ace hits its target, and filled-in Pokémon take the rounded average of the shifted canon Levels. The roster file writes out every Level literally.
-- Blue fields his FireRed/LeafGreen Champion lineup with the Blastoise ace. The bot never records a player's starter (`starterPokemon` is `null` by default at `bot_final.js:1379`, and nothing writes it), so Blue can't counter it the way he does in the games.
+- Blue fields his FireRed/LeafGreen Champion lineup with the Blastoise ace. The bot never records a player's starter (`starterPokemon` is `null` by default at `bot_final.js:1373`, and nothing writes it), so Blue can't counter it the way he does in the games.
 - Red fields his HeartGold/SoulSilver team at its canon Levels.
 - Leaders use the same automatic moves as players: the last 4 damaging moves learned by Level (`utils/battle/moveset.js`). The sim has no status moves, so canon movesets wouldn't work.
 
-### Draft rosters (for approval)
+### Rosters
 
 Sources: [pokemondb FRLG](https://pokemondb.net/firered-leafgreen/gymleaders-elitefour), [pokemondb Let's Go](https://pokemondb.net/lets-go-pikachu-eevee/gymleaders-elitefour), [pokemondb HGSS](https://pokemondb.net/heartgold-soulsilver/gymleaders-elitefour). The scratch draft checked that every species exists in `battleData.json`. The roster test will repeat that check in the repo.
 
@@ -88,10 +88,10 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 | Red | 100,000 | 6 | 120 | Mythic |
 | Total | 229,000 | 28 | 325 | |
 
-- The sprite prize is the first enabled version of that leader's sprite the player doesn't own, in `trainerSprites.json` order. A player who owns every enabled version gets half its shop price in CC instead: 7,500 for Rare, 17,500 for Epic, 37,500 for Legendary, and 75,000 for Mythic (half of `TRAINER_COSTS`, `bot_final.js:585-592`).
-- Unlocked sprites go into the `trainers` array the way `/api/unlock-trainer` writes it (`bot_final.js:2119-2134`).
+- The sprite prize is the first enabled version of that leader's sprite the player doesn't own, in `trainerSprites.json` order. A player who owns every enabled version gets half its shop price in CC instead: 7,500 for Rare, 17,500 for Epic, 37,500 for Legendary, and 75,000 for Mythic (half of `TRAINER_COSTS` in `utils/trainerCosts.js`).
+- Unlocked sprites go into the `trainers` array the way `/api/unlock-trainer` writes it (`bot_final.js:2113-2128`).
 - Prize Dust goes straight into `items.shiny_dust` and doesn't count toward the 8-a-week cap on Dust from normal donations (`NON_SHINY_DUST_WEEKLY_CAP`, `bot_final.js:229`).
-- Reference values: `/daily` pays 1,000 CC (`commands/daily.js:25`), a stone costs 5,000 CC (`bot_final.js:2189`), shiny crafting costs 15 to 120 Dust (`bot_final.js:132-139`), and normal donations pay at most 8 Dust a week (`bot_final.js:229`).
+- Reference values: `/daily` pays 1,000 CC (`commands/daily.js:25`), a stone costs 5,000 CC (`bot_final.js:2183`), shiny crafting costs 15 to 120 Dust (`bot_final.js:132-139`), and normal donations pay at most 8 Dust a week (`bot_final.js:229`).
 
 ## Losing
 
@@ -118,7 +118,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - Badge art comes from 8 Badge PNGs. The same files are uploaded as the bot application's own emojis and served from `public/sprites/badges/`.
 - Discord confirms application emojis: an app can own up to 2,000, uploads are 128×128 and at most 256 KiB, the portal can manage them, and `USE_EXTERNAL_EMOJIS` isn't needed ([Discord emoji docs](https://docs.discord.com/developers/resources/emoji)). The emoji IDs live in a constants file. IDs aren't secrets.
 - `/trainercard` adds one description line with the Badge count out of 8 and the earned Badge emojis.
-- The dashboard adds a Badges row under the stats bar with all 8 images, unearned ones dimmed. The dashboard is `public/picker-pokemon/`, where `/auth/dashboard` lands (`bot_final.js:539-555`). `public/dashboard/` isn't served. `/api/user` already returns the whole player record (`bot_final.js:1427-1441`).
+- The dashboard adds a Badges row under the stats bar with all 8 images, unearned ones dimmed. The dashboard is `public/picker-pokemon/`, where `/auth/dashboard` lands (`bot_final.js:539-555`). `public/dashboard/` isn't served. `/api/user` already returns the whole player record (`bot_final.js:1421-1435`).
 - The 8 Gym Badges are defined once, in `public/picker-pokemon/badges.js`. It has no DOM access, so the bot can import it too, the same pattern `regions.js` uses.
 
 ## Data
@@ -128,7 +128,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - Like `training` and `battle`, `challenge` isn't registered in a schema file. The unused `sanitizeBeforeSave` → `stripDeprecatedFields` whitelist would wipe it if anyone ever wired that up (the battles spec gives the same warning).
 - Each attempt runs under the player's lock (`lockUser`). The command checks the cap and unlocks, simulates, applies EXP and prizes, records the attempt, and saves before the replay starts, the same order `/battle` uses.
 
-## Code changes (planned)
+## Code changes
 
 - `utils/battle/sim.js`: accept a starting HP fraction per member, where 0 means fainted. The first snapshot reflects it.
 - `utils/challenge/roster.js`: the 14 opponent entries (8 Gym Leaders, 4 Elite Four members, Blue, Red) with type, Badge, display sprite, prize sprite key, team, and prize.
@@ -141,7 +141,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - `README.md` gets a Challenges section (the ladder, the 5-a-day cap next to the 10-a-day Battle cap, prizes, the 10% loss, where Badges show), the new test files in Tests, the Badge emoji upload in Setup, and a gotcha for missing Badge emoji IDs.
 - `CONTEXT.md` already has Challenge, Badge, and Elite Four run.
 
-## Tests (planned)
+## Tests
 
 - `tests/challengeRoster.test.js` checks that every team has 6 Pokémon, every species exists in `battleData.json`, every ace is the team's highest Level, and the prize table matches this spec. It also fails while any Badge emoji ID is missing (decided), so `npm test` fails on this branch until the art is uploaded and the IDs are pasted in.
 - `tests/battleSim.test.js` adds carried HP and checks that fainted members are skipped.
@@ -170,7 +170,7 @@ Every figure in this section comes from `node tests/challengeBalance.test.js`.
 2. Upload them in the Discord Developer Portal under the app's Emojis, and copy each emoji ID into the constants file.
 3. Add the same PNGs to `public/sprites/badges/`.
 4. Set `REGISTER_COMMANDS=true` for one run to register `/challenge`, then set it back to `false`.
-5. Make the two roster calls listed under Draft rosters and check the two canon Levels listed under Open checks.
+5. Check the two canon Levels listed under Open checks.
 
 ## Manual test plan
 
@@ -201,4 +201,4 @@ There is no Hall of Fame or leaderboard for clears, no Champion title, no admin 
 
 ## Unrelated finding
 
-On load, every player's `trainers` becomes an array of filenames (`bot_final.js:1044` and `bot_final.js:380-393`). `/recruit` (`commands/recruit.js:215-216`) and `/quest` (`commands/quest.js:120`) write `user.trainers[file] = count` as if it were an object, and `JSON.stringify` drops string keys on an array. Trainers won from those commands are probably never saved. Nobody has reproduced this yet.
+On load, every player's `trainers` becomes an array of filenames (`bot_final.js:1038` and `bot_final.js:380-393`). `/recruit` (`commands/recruit.js:215-216`) and `/quest` (`commands/quest.js:120`) write `user.trainers[file] = count` as if it were an object, and `JSON.stringify` drops string keys on an array. Trainers won from those commands are probably never saved. Nobody has reproduced this yet.

@@ -24,11 +24,11 @@ Each player can start 10 battles per UTC day, and at most 3 against the same opp
 
 ### Levels
 
-Every species and Variant a player owns has one Level, from 1 to 100. A first catch rolls a Catch level based on the Pokémon's Stage. A duplicate catch adds half the EXP needed for the next Level. A species and Variant the player hasn't caught since Levels arrived (owned from before battles, or only received as a gift or admin grant) shows the bottom of its catch range until their next catch of it, which rolls a Catch level. Stone evolution and shiny crafting keep the higher of the two Levels. A Level resets when the player has no copies of that species and Variant left, whether they gifted, donated, evolved, or crafted the last one into a shiny, so their next catch rolls a new Catch level. Battles pay EXP for every opponent the Team knocks out, more for higher-level opponents, and every Team member gets it.
+Every species and Variant a player owns has one Level, from 1 to 100. A first catch rolls a Catch level based on the Pokémon's Stage. A duplicate catch adds half the EXP needed for the next Level. A species and Variant the player hasn't caught since Levels arrived (owned from before battles, or only received as a gift or admin grant) shows the bottom of its catch range until their next catch of it, which rolls a Catch level. Stone evolution and shiny crafting keep the higher of the two Levels. A Level resets when the player has no copies of that species and Variant left, whether they gifted, donated, evolved, or crafted the last one into a shiny, so their next catch rolls a new Catch level. Battles and challenges pay EXP for every opponent the Team knocks out, more for higher-level opponents, and every Team member gets it.
 
 Levels show on the dashboard, on `/showteam` and `/trainercard`, and in `/inspectpokemon`.
 
-Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps) is in `utils/battle/tuning.js`. The design and the reasons for each number are in [`docs/superpowers/specs/2026-11-02-battles-design.md`](docs/superpowers/specs/2026-11-02-battles-design.md).
+Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps, the challenge cap and loss) is in `utils/battle/tuning.js`. The design and the reasons for each number are in [`docs/superpowers/specs/2026-11-02-battles-design.md`](docs/superpowers/specs/2026-11-02-battles-design.md).
 
 ### Battle data
 
@@ -38,6 +38,23 @@ Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps) is in
 npm run generate:battle-data
 node tests/battleData.test.js
 ```
+
+## Challenges
+
+`/challenge` pits a player's Team against fixed Kanto teams: the 8 Gym Leaders, the Elite Four, Blue, and Red. Challenges use the same sim and replay as Battles, and leaders appear by name, never as a mention.
+
+- `/challenge` with no opponent shows a private board: each Gym Leader's Badge and type, which Badges the player has, what the Elite Four and Blue still need, and how many challenges are left today. It never shows Levels.
+- `/challenge opponent:Brock` shows a private preview: the leader's sprite, Badge, and type, the prize, and the exact CC a loss would cost, with Fight! and Not now buttons. Not now, or leaving the preview for 2 minutes, costs nothing. Fight! checks everything again, saves the result, then posts a public intro card and the replay.
+
+Gyms can be fought in any order, and beating a Gym Leader the first time earns their Badge. All 8 Badges unlock the Elite Four run: Lorelei, Bruno, Agatha, and Lance back to back, replayed in one message. Each Pokémon keeps its damage from one fight to the next, fainted ones stay fainted, and losing any fight ends the run. Clearing the run once unlocks Blue as a separate fight. Red is open to everyone from the start.
+
+Each player gets 5 challenges per UTC day, separate from the 10 Battles, and an Elite Four run counts as one. Every challenge pays EXP for each knockout, win or lose. Challenges never change Battle rating or W/L.
+
+The first win against each opponent pays the leader's trainer sprite, CC, evolution stones, and Shiny Dust; the Elite Four run pays all four sprites. The sprite is the first enabled version of that leader the player doesn't own. A player who owns them all gets half the sprite's shop price (`TRAINER_COSTS` in `utils/trainerCosts.js`) in CC instead. Prize Dust doesn't count toward the weekly cap on Dust from donations. Rematches pay EXP only.
+
+Losing costs 10% of the player's CC, rounded down, and that CC is gone. A failed Elite Four run costs it once. The loss is never more than the preview showed, even if the player's balance grew before they clicked Fight!. Public posts say "10% of their CC" and never the amount, because 10 times the amount would reveal the balance. A player can't challenge while one of their wager offers is waiting for an answer.
+
+Badges show on `/trainercard` and in a row under the dashboard's stats bar, with unearned ones dimmed. The 8 Badges are defined in `public/picker-pokemon/badges.js`, which the bot and the dashboard share. The teams and prizes are in `utils/challenge/roster.js`. The design, the prize table, and the measured difficulty of each challenge are in [`docs/superpowers/specs/2026-11-08-challenges-design.md`](docs/superpowers/specs/2026-11-08-challenges-design.md).
 
 ## Setup
 
@@ -114,6 +131,15 @@ On first run with `REGISTER_COMMANDS=true`, slash commands register to your `GUI
 
 In your test server, run `/dashboard` — the bot should reply with an ephemeral link to the player dashboard.
 
+### 8. Upload the Badge emojis
+
+`/challenge`, `/trainercard`, and the dashboard show the 8 Kanto Badges, and the art isn't in the repo yet.
+
+1. Get 8 Badge PNGs (Boulder, Cascade, Thunder, Rainbow, Soul, Marsh, Volcano, Earth). Make each 128×128 and under 256 KiB.
+2. In the Developer Portal, open your application's **Emojis** page and upload each one with the name `utils/challenge/badgeEmojis.js` gives it (`boulder_badge`, `cascade_badge`, and so on).
+3. Paste each emoji's ID into `utils/challenge/badgeEmojis.js`.
+4. Copy the same PNGs into `public/sprites/badges/` as `boulder.png`, `cascade.png`, `thunder.png`, `rainbow.png`, `soul.png`, `marsh.png`, `volcano.png`, and `earth.png`.
+
 ## Generations 6–9
 
 All 1,025 species are in the data, but only Gens 1–5 can be obtained unless `POKEMON_GENERATIONS` releases more (see `config/generations.js`). A configured generation that fails validation stays off. Owned Pokémon are never removed by switching a generation off. Sprites: Black/White-style animated GIFs where they exist, otherwise static Black/White-style pixel art, never 3D renders; credits at `/credits`. Data pipeline and release process: `docs/gen6-9/README.md`.
@@ -135,7 +161,15 @@ npm run test:validation   # schema validation
 npm run test:migration    # schema migration
 ```
 
-`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim, including priority, multi-hit, drain, recoil, crash damage, and recoil knockouts (`battleSim`), Levels, catches, and Level resets (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles, playback, the rating embed and EXP summary, and the replay line (`runBattle`), Stakes (`wager`), the `/battle` command, wager buttons, and who gets a private EXP message, driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), turn narration and how it wraps, the animated frames, the attacker's own HP changing, decoding sprites as they play, colors that only appear late in an image, and rendering without stalling the bot (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
+`npm test` runs every `tests/*.test.js`. The battle tests cover the generated data (`battleData`), the sim, including priority, multi-hit, drain, recoil, crash damage, recoil knockouts, and Pokémon starting a fight damaged or fainted (`battleSim`), Levels, catches, and Level resets (`training`), EXP, the 2-month leveling pace, Elo, and caps (`battleRewards`), whole battles, playback, the rating embed and EXP summary, and the replay line (`runBattle`), Stakes (`wager`), the `/battle` command, wager buttons, and who gets a private EXP message, driven with stub Discord objects (`battleCommand`), `/leaderboard` (`leaderboard`), turn narration and how it wraps, the animated frames, the attacker's own HP changing, decoding sprites as they play, colors that only appear late in an image, and rendering without stalling the bot (`battleRender`), `/inspectpokemon` text (`levelDisplay`), and Underdog win rates over 24,000 simulated battles (`battleBalance`).
+
+The challenge tests cover:
+
+- `challengeRoster`: the 14 teams and their Levels, the prize table, the leaders' sprites, the Badges, and the Badge line on `/trainercard`. Its check that every Badge emoji has an ID fails until Setup step 8 is done.
+- `runChallenge`: unlocks, the 5-a-day cap and its reset at midnight UTC, Elite Four HP carried between fights, EXP summed per run with Levels fixed, first-win prizes and the sprite fallback, the 10% loss and its cap at the previewed amount, and the surge reaching only the player's side.
+- `challengePlayback`: the result embed, the Elite Four run replaying in one message and one replay slot, no leader as a mention, and no exact loss in public.
+- `challengeCommand`: `/challenge` driven with stub Discord objects, covering the board, every refusal, the preview, Not now, expiry, Fight!, a double click, and changes to the player's record, Team, or wagers between the preview and Fight!.
+- `challengeBalance`: the Level at which stand-in Teams beat each challenge half the time, enforcing Giovanni < Elite Four run < Blue < Red, and printing win-rate curves, how often a surge flips a loss, and leveling pace with 5 challenges a day.
 
 `tests/addInventory.test.js` checks that `/addinventory` adds Shiny Dust to `items.shiny_dust`, where the dashboard and shiny evolutions read it.
 
@@ -151,4 +185,5 @@ npm run test:migration    # schema migration
 - **Bot online but ignores commands** — Privileged Gateway Intents weren't enabled on the Bot page.
 - **Role-rank changes don't apply** — bot's role must be *above* the rank roles in the server's role list, and it needs `Manage Roles`.
 - **Backups not appearing** — bot lacks `Attach Files` or `View Channel` in `STORAGE_CHANNEL_ID`.
-- **Battles never show up** — the bot posts battles and wager offers as new messages, so it needs `Send Messages` and `Attach Files` in the channel where `/battle` runs.
+- **Battles or challenges never show up** — the bot posts battles, wager offers, and challenges as new messages, so it needs `Send Messages` and `Attach Files` in the channel where `/battle` or `/challenge` runs.
+- **`npm test` fails at "every Badge emoji has an ID"** — the Badge emoji IDs in `utils/challenge/badgeEmojis.js` are empty until Setup step 8 is done. Until then, Badges show as raw text like `<:boulder_badge:>` in Discord.

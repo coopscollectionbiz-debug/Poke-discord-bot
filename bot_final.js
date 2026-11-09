@@ -2306,6 +2306,10 @@ client.once("ready", async () => {
     // Report-only integrity audit (counts by problem type; never IDs or values).
     try {
       const audit = auditTrainerData(trainerData);
+      // Release B: how many records had item values set aside (itemsLegacy) by
+      // the inventory normalizer — a count only, never ids or values.
+      const legacyItems = Object.values(trainerData).filter((u) => Array.isArray(u?.itemsLegacy) && u.itemsLegacy.length).length;
+      console.log(`🎒 Inventory: ${legacyItems} record(s) with set-aside item values (itemsLegacy)`);
       if (audit.usersWithProblems) {
         console.warn(`🩺 Data audit: ${audit.usersWithProblems}/${audit.users} records need attention`, audit.counts);
       } else {

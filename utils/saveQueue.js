@@ -82,7 +82,38 @@ export function markLoaded() {
   loaded = true;
 }
 
-export const isWriteBlocked = () => gateActive && !loaded;
+// ----------------------------------------------------------
+// 🔒 Fence (A2): once another process has taken over the data (a higher
+// epoch was seen), this process must never write again. Permanent.
+// ----------------------------------------------------------
+let fencedReason = null;
+export function fenceWrites(reason) {
+  if (fencedReason) return;
+  fencedReason = String(reason || "superseded");
+  console.error(`⛔ Writes FENCED: ${fencedReason}. This process will not save again.`);
+  latestData = null;
+  clearTimers();
+  resolveWaitersUpTo(Infinity, false);
+}
+export const isFenced = () => fencedReason !== null;
+
+export const isWriteBlocked = () => (gateActive && !loaded) || fencedReason !== null;
+
+// ----------------------------------------------------------
+// 🩺 Save health (A2 circuit breaker + /readyz)
+// After DEGRADED_AFTER consecutive failed writes the store is "degraded":
+// dashboard writes are refused until a write succeeds again.
+// ----------------------------------------------------------
+export const DEGRADED_AFTER = 3;
+export function getSaveHealth() {
+  return {
+    consecutiveFailures,
+    degraded: consecutiveFailures >= DEGRADED_AFTER,
+    fenced: fencedReason,
+    lastWriteAt: lastWriteAt || null,
+    pendingChanges: dirtyVersion > flushedVersion,
+  };
+}
 
 /** Number of changes enqueued so far (used to skip unchanged Discord uploads). */
 export const getDirtyVersion = () => dirtyVersion;
@@ -160,6 +191,7 @@ function flushNow({ force = false } = {}) {
   flushing = (async () => {
     let failed = false;
     try {
+      if (fencedReason) throw new Error(`writes fenced (${fencedReason})`);
       await writeJson(dataToWrite);
       lastWriteAt = Date.now();
       flushedVersion = startVersion;
@@ -175,7 +207,11 @@ function flushNow({ force = false } = {}) {
     } finally {
       flushing = null;
 
-      if (failed) {
+      if (failed && fencedReason) {
+        // Fenced: never retry.
+        resolveWaitersUpTo(Infinity, false);
+        latestData = null;
+      } else if (failed) {
         // Release callers (the change is still in memory and still dirty),
         // keep latestData, and retry with backoff until a write succeeds.
         resolveWaitersUpTo(startVersion, false);
@@ -308,6 +344,7 @@ export function __resetSaveQueueForTests() {
   flushing = null;
   consecutiveFailures = 0;
   retryNotBefore = 0;
+  fencedReason = null;
   resolveWaitersUpTo(Infinity, false);
 }
 

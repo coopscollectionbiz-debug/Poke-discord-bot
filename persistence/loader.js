@@ -45,17 +45,24 @@ export async function loadBestSnapshot({
     // Continue numbering above anything local, so the restored data becomes newest.
     const local = await readLocalCandidates().catch(() => []);
     const maxSeq = Math.max(0, cand.seq ?? 0, ...local.filter((c) => c.ok && c.seq != null).map((c) => c.seq));
-    return { ok: true, chosen: cand, maxSeq, rejected: [], restored: true };
+    const maxEpoch = Math.max(0, cand.epoch ?? 0, ...local.filter((c) => c.ok && c.epoch != null).map((c) => c.epoch));
+    return { ok: true, chosen: cand, maxSeq, maxEpoch, rejected: [], restored: true };
   }
 
   // ---- normal selection ----
   const local = await readLocalCandidates();
   let discord;
+  let discordReachable = true;
   try {
     discord = await fetchDiscordCandidates();
   } catch (e) {
+    discordReachable = false;
     const unreachable = { ok: false, source: "discord", id: "storage channel", reason: `unreachable (${e?.message || e})` };
-    if (env.ALLOW_LOCAL_ONLY !== "1") {
+    // A2: on a persistent, single-writer volume (LOCAL_IS_DURABLE=1) a local
+    // snapshot whose metadata verifies is this app's own latest write, so
+    // boot from it rather than stay down until Discord answers.
+    const durableLocal = env.LOCAL_IS_DURABLE === "1" && local.some((c) => c.ok && c.metaTrusted);
+    if (env.ALLOW_LOCAL_ONLY !== "1" && !durableLocal) {
       return {
         ok: false,
         rejected: [...local.filter((c) => !c.ok), unreachable],
@@ -71,7 +78,9 @@ export async function loadBestSnapshot({
 
   // Next seq must exceed every snapshot we saw, so ours always sort newest.
   const maxSeq = Math.max(0, ...candidates.filter((c) => c.ok && c.seq != null).map((c) => c.seq));
-  return { ok: true, chosen: sel.chosen, maxSeq, rejected: sel.rejected };
+  // Next epoch must exceed every epoch we saw (A2 fencing).
+  const maxEpoch = Math.max(0, ...candidates.filter((c) => c.ok && c.epoch != null).map((c) => c.epoch));
+  return { ok: true, chosen: sel.chosen, maxSeq, maxEpoch, rejected: sel.rejected, localOnly: !discordReachable };
 }
 
 /** One-line summary of a candidate for logs (no player data). */

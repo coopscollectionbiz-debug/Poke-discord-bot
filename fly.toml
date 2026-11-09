@@ -12,6 +12,18 @@ kill_timeout = 30
 [env]
   NODE_ENV = 'production'
   PORT = '8080'
+  # A2: player data lives on the persistent volume below. A Fly volume
+  # attaches to ONE machine, so the app has a single local writer;
+  # LOCAL_IS_DURABLE lets it boot from its own verified snapshot when
+  # Discord is unreachable (persistence/loader.js).
+  TRAINERDATA_DIR = '/data'
+  LOCAL_IS_DURABLE = '1'
+
+# A2: persistent volume for trainerData snapshots and the event log.
+# Create it BEFORE deploying this config (see RUNBOOK "A2 volume migration").
+[mounts]
+  source = 'trainerdata'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080

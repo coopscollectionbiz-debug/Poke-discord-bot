@@ -4,6 +4,7 @@
 // ==========================================================
 
 import fs from "fs/promises";
+import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import { atomicWrite, atomicWriteJson, isLocked } from "../utils/atomicWrite.js";
@@ -51,11 +52,14 @@ async function test(name, fn) {
 }
 
 // Test setup
-const testDir = path.join("/tmp", "atomicwrite-tests");
-const testFile = path.join(testDir, "test.json");
+// A private temp dir this test owns (never a fixed /tmp path, which on
+// Windows resolves to the drive root).
+let testDir;
+let testFile;
 
 async function setup() {
-  await fs.mkdir(testDir, { recursive: true });
+  testDir = await fs.mkdtemp(path.join(os.tmpdir(), "atomicwrite-tests-"));
+  testFile = path.join(testDir, "test.json");
 }
 
 async function cleanup() {

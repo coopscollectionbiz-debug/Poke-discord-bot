@@ -7,6 +7,7 @@ import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, MessageFlags } 
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
+import { offerMoveChoices } from "../utils/moveChoice.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { safeReply } from "../utils/safeReply.js";
@@ -61,10 +62,11 @@ export default {
 
       const pick = pool[Math.floor(Math.random() * pool.length)];
       let embed;
+      let lesson = null;
 
       if (rewardType === "pokemon") {
         const shiny = rollForShiny(user.tp || 0);
-        grantCatch(user, pick.id, shiny ? "shiny" : "normal");
+        ({ lesson } = grantCatch(user, pick.id, shiny ? "shiny" : "normal"));
         user.cc = (user.cc || 0) + QUEST_CC_REWARD;
         user.lastQuest = Date.now();
 
@@ -111,7 +113,9 @@ export default {
           .setFooter({ text: `+${QUEST_CC_REWARD} CC | Balance: ${user.cc} CC` });
       }
 
-      return safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
+      await safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
+      // A duplicate's EXP can teach a move: ask which one to forget.
+      return offerMoveChoices(interaction, { trainerData, userId: id, lessons: [lesson] });
     });
   }
 };

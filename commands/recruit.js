@@ -15,6 +15,7 @@ import {
 import { spritePaths } from "../spriteconfig.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
+import { offerMoveChoices } from "../utils/moveChoice.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import {
@@ -158,10 +159,10 @@ export const recruitPool = (allPokemon) => allPokemon.filter((p) => Number(p.id)
  */
 export function chargeAndGrant(user, grant, now = Date.now()) {
   if (!user || !Number.isFinite(user.cc) || user.cc < RECRUIT_COST_CC) return { ok: false, reason: NOT_ENOUGH_CC };
-  grant(user);
+  const granted = grant(user);
   user.cc -= RECRUIT_COST_CC;
   user.lastRecruit = now;
-  return { ok: true };
+  return { ok: true, granted };
 }
 
 // ==========================================================
@@ -203,7 +204,9 @@ async function recruitPokemon(i, trainerData) {
       .setThumbnail(spriteUrl)
       .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
 
-    return safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });
+    await safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });
+    // A duplicate's EXP can teach a move: ask which one to forget.
+    return offerMoveChoices(i, { trainerData, userId: i.user.id, lessons: [res.granted.lesson] });
   });
 }
 

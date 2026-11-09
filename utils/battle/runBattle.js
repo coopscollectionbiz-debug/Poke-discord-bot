@@ -6,9 +6,8 @@
 // ==========================================================
 
 import { normalizeTeam } from "../teamNormalize.js";
-import { getTraining, addExp, trainingKey, speciesName } from "../training.js";
+import { getTraining, getMoveset, addExp, moveLesson, trainingKey, speciesName } from "../training.js";
 import { getMove } from "./data.js";
-import { movesLearned } from "./moveset.js";
 import { simulateBattle } from "./sim.js";
 import { teamPower, rollSurge } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, capBlock, recordStart } from "./rewards.js";
@@ -29,6 +28,7 @@ export function buildTeam(user) {
       variant: slot.variant,
       name: speciesName(slot.id),
       level: getTraining(user, slot.id, slot.variant).level,
+      moves: getMoveset(user, slot.id, slot.variant),
     }));
 }
 
@@ -39,13 +39,16 @@ function applyExp(user, side, result, sideIndex) {
   const gains = teamExp({ members: side.members, knockedOut, won: result.winner === sideIndex });
   return side.members.map((m, i) => {
     const { fromLevel, toLevel } = addExp(user, m.speciesId, m.variant, gains[i]);
+    const after = getMoveset(user, m.speciesId, m.variant);
     return {
       key: trainingKey(m.speciesId, m.variant),
       name: m.name,
       fromLevel,
       toLevel,
       gained: gains[i],
-      learned: movesLearned(m.speciesId, fromLevel, toLevel).map((id) => getMove(id).name),
+      learned: after.filter((id) => !m.moves.includes(id)).map((id) => getMove(id).name),
+      // For the move prompt /battle sends afterward (utils/moveChoice.js).
+      lesson: moveLesson(user, m.speciesId, m.variant, fromLevel, toLevel),
     };
   });
 }

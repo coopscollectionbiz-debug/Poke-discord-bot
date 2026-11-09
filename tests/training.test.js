@@ -1,13 +1,16 @@
 // ==========================================================
 // tests/training.test.js
-// Levels, EXP, Catch level rolls, duplicates, and evolve carry-over.
+// Levels, EXP, Catch level rolls, duplicates, evolve carry-over, and
+// chosen Movesets.
 // ==========================================================
 
 import { assertEqual, assertTrue, assertBetween, section, finish } from "./harness.js";
 import {
   trainingKey, expForLevel, levelForExp, catchBand, floorLevel, rollCatchLevel,
   getTraining, addExp, grantCatch, carryLevel, levelsForUser, resetLevelIfGone,
+  getMoveset, chooseMoves, moveLesson,
 } from "../utils/training.js";
+import { autoMoveset } from "../utils/battle/moveset.js";
 import { validateUserSchema } from "../utils/userSchema.js";
 
 const atLevel = (user, id, variant, level) => {
@@ -89,14 +92,92 @@ atLevel(regained, 4, "normal", 10);
 carryLevel(regained, { id: 4, variant: "normal" }, { id: 5, variant: "normal" });
 assertEqual(getTraining(regained, 5, "normal").level, floorLevel(5), "evolving into a Pokémon given away earlier ignores its old Level");
 
+section("Movesets: default and chosen");
+{
+  const u = { pokemon: { 4: { normal: 1, shiny: 0 } } };
+  assertEqual(getMoveset(u, 4, "normal"), autoMoveset(4, floorLevel(4)), "no record: the default at the floor Level");
+  atLevel(u, 4, "normal", 34);
+  assertEqual(getMoveset(u, 4, "normal"), ["ember", "firefang", "flameburst", "slash"], "no choice: the last 4 taught");
+  chooseMoves(u, 4, "normal", ["scratch", "ember", "firefang", "slash"]);
+  assertEqual(u.training["4:normal"], { exp: expForLevel(34), moves: ["scratch", "ember", "firefang", "slash"], movesLevel: 34 }, "a choice is stored with its Level");
+  assertEqual(getMoveset(u, 4, "normal"), ["scratch", "ember", "firefang", "slash"], "the choice is the Moveset");
+  addExp(u, 4, "normal", expForLevel(37) - expForLevel(34));
+  assertEqual(u.training["4:normal"].moves, ["scratch", "ember", "firefang", "slash"], "EXP changes keep the stored choice");
+  assertEqual(getMoveset(u, 4, "normal"), ["ember", "firefang", "slash", "flamethrower"], "a later Level-up learns on top of the choice the default way");
+  grantCatch(u, 4, "normal");
+  assertEqual(u.training["4:normal"].movesLevel, 34, "a duplicate's EXP keeps the stored choice too");
+  u.pokemon[4].normal = 0;
+  resetLevelIfGone(u, 4, "normal");
+  assertEqual(u.training["4:normal"], undefined, "losing the last copy clears the choice with the Level");
+}
+
+section("moveLesson (what a Level-up taught)");
+{
+  const u = {};
+  atLevel(u, 4, "normal", 33);
+  assertEqual(moveLesson(u, 4, "normal", 33, 34), {
+    speciesId: 4, variant: "normal", toLevel: 34, before: ["scratch", "ember", "firefang", "flameburst"], taught: ["slash"],
+  }, "the Moveset before and the move taught");
+  assertEqual(moveLesson(u, 4, "normal", 34, 36), null, "nothing taught: no lesson");
+  atLevel(u, 107, "normal", 15);
+  assertEqual(moveLesson(u, 107, "normal", 15, 16).taught, ["bulletpunch", "machpunch"], "two moves at one Level are both taught");
+  atLevel(u, 129, "normal", 14);
+  assertEqual(moveLesson(u, 129, "normal", 14, 15).before, [], "Magikarp's stand-in move isn't part of the Moveset before");
+  const dup = { pokemon: { 4: { normal: 1, shiny: 0 } }, training: { "4:normal": { exp: expForLevel(34) - 1 } } };
+  assertEqual(grantCatch(dup, 4, "normal").lesson?.taught, ["slash"], "a duplicate that reaches a new move reports the lesson");
+  assertEqual(grantCatch({}, 4, "normal").lesson, null, "a first catch never has a lesson");
+}
+
+section("carryLevel passes a chosen Moveset on");
+{
+  const kept = ["scratch", "ember", "firefang", "slash"];
+  const chosen = () => {
+    const u = { pokemon: { 4: { normal: 1, shiny: 0 }, 5: { normal: 1, shiny: 0 } } };
+    atLevel(u, 4, "normal", 34);
+    chooseMoves(u, 4, "normal", kept);
+    return u;
+  };
+  const fresh = chosen();
+  delete fresh.pokemon[5];
+  carryLevel(fresh, { id: 4, variant: "normal" }, { id: 5, variant: "normal" });
+  assertEqual([getTraining(fresh, 5, "normal").level, getMoveset(fresh, 5, "normal")], [34, kept], "a new Charmeleon starts with Charmander's choice");
+
+  const higher = chosen();
+  atLevel(higher, 5, "normal", 45);
+  carryLevel(higher, { id: 4, variant: "normal" }, { id: 5, variant: "normal" });
+  assertEqual(getMoveset(higher, 5, "normal"), ["ember", "firefang", "slash", "flamethrower"],
+    "an owned Lv 45 Charmeleon with no choice takes it, then learns its own moves above Lv 34");
+
+  const ownChoice = chosen();
+  atLevel(ownChoice, 5, "normal", 40);
+  chooseMoves(ownChoice, 5, "normal", ["ember", "scratch", "firefang", "flameburst"]);
+  carryLevel(ownChoice, { id: 4, variant: "normal" }, { id: 5, variant: "normal" });
+  assertEqual(getMoveset(ownChoice, 5, "normal"), ["ember", "scratch", "firefang", "flameburst"], "a Charmeleon with its own choice keeps it");
+
+  const noChoice = { pokemon: { 4: { normal: 1, shiny: 0 } } };
+  atLevel(noChoice, 4, "normal", 34);
+  carryLevel(noChoice, { id: 4, variant: "normal" }, { id: 5, variant: "normal" });
+  assertEqual([noChoice.training["5:normal"].moves, getMoveset(noChoice, 5, "normal")], [undefined, autoMoveset(5, 34)], "no choice to pass on: the default");
+
+  const craft = chosen();
+  craft.pokemon[4] = { normal: 0, shiny: 1 };
+  carryLevel(craft, { id: 4, variant: "normal" }, { id: 4, variant: "shiny" });
+  resetLevelIfGone(craft, 4, "normal");
+  assertEqual(getMoveset(craft, 4, "shiny"), kept, "shiny craft: the shiny keeps the normal's choice after the normal's record is gone");
+}
+
 section("levelsForUser");
 const owner = { pokemon: { 1: { normal: 1, shiny: 0 }, 6: { normal: 0, shiny: 1 } } };
 atLevel(owner, 1, "normal", 12);
 assertEqual(levelsForUser(owner), { "1:normal": 12, "6:shiny": 32 }, "Levels for owned variants only");
 
 section("Persistence");
-const saved = { id: "1", name: "Ash", training: { "6:normal": { exp: 27000 } }, battle: { rating: 1016 }, pendingWager: { stake: 5 } };
+const saved = {
+  id: "1", name: "Ash",
+  training: { "6:normal": { exp: 27000 }, "4:normal": { exp: 39304, moves: ["scratch", "ember", "firefang", "slash"], movesLevel: 34 } },
+  battle: { rating: 1016 }, pendingWager: { stake: 5 },
+};
 const reloaded = validateUserSchema(JSON.parse(JSON.stringify(saved)), "1", "Ash");
-assertEqual([reloaded.training, reloaded.battle, reloaded.pendingWager], [saved.training, saved.battle, saved.pendingWager], "save/load keeps training, battle, pendingWager");
+assertEqual([reloaded.training, reloaded.battle, reloaded.pendingWager], [saved.training, saved.battle, saved.pendingWager], "save/load keeps training (with chosen Movesets), battle, pendingWager");
 
 finish();

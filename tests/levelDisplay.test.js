@@ -14,7 +14,10 @@ const text = battleInfo(owner, 1);
 assertTrue(text.includes("**Your Lv 23**"), "shows your Level for the normal variant");
 assertTrue(text.includes("**Your ✨ shiny Lv 2**"), "shows the shiny variant's own Level (floor when untrained)");
 assertTrue(/HP \d+ · Atk \d+ · Def \d+ · SpA \d+ · SpD \d+ · Spe \d+/.test(text), "shows stats at that Level");
-assertTrue(text.includes("Moves: ") && text.includes("Vine Whip"), "shows the auto-picked moves by name");
+assertTrue(text.includes("Moves: ") && text.includes("Vine Whip"), "shows the default moves by name");
+// At Lv 27 Bulbasaur learned Double-Edge, and this player had it forget Razor Leaf instead of Tackle.
+const chooser = { pokemon: { 1: { normal: 1, shiny: 0 } }, training: { "1:normal": { exp: expForLevel(27), moves: ["tackle", "vinewhip", "takedown", "doubleedge"], movesLevel: 27 } } };
+assertTrue(battleInfo(chooser, 1).includes("Moves: Tackle, Vine Whip, Take Down, Double-Edge"), "shows the player's chosen moves");
 assertEqual(battleInfo({}, 1), "Base stats: HP 45 · Atk 49 · Def 49 · SpA 65 · SpD 65 · Spe 45", "not owned → base stats only");
 
 section("/inspectpokemon header");

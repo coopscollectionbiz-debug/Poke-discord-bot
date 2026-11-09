@@ -11,7 +11,7 @@ import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { execute } from "../commands/battle.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
-import { grantCatch } from "../utils/training.js";
+import { grantCatch, getMoveset, expForLevel } from "../utils/training.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { refundAllPending } from "../utils/battle/wager.js";
 import { PLAYBACK } from "../utils/battle/tuning.js";
@@ -31,12 +31,20 @@ const trainer = (id) => {
 // One fake guild channel; every message gets a controllable collector.
 function harness({ sendFails = false, perms = true, offeredReplyFails = false, followUpFails = null } = {}) {
   const trainerData = { A: trainer("A"), B: trainer("B") };
-  const log = { replies: [], edits: [], messages: [], followUps: [] };
+  const log = { replies: [], edits: [], messages: [], followUps: [], saves: [] };
   const collectors = [];
+  const newCollector = () => {
+    const c = { h: {}, ended: null, on(e, f) { this.h[e] = f; }, stop(reason) { this.ended ??= this.h.end?.([], reason); } };
+    collectors.push(c);
+    return c;
+  };
   // Records who got each follow-up, and whether the battle's result embed was already showing.
+  // A follow-up with buttons (the move prompt) gets a collector like any message.
   const followUp = (userId) => async (o) => {
     if (followUpFails === userId) throw new Error("Invalid Webhook Token");
-    log.followUps.push({ userId, ...o, afterResult: !!log.messages.at(-1)?.edits.at(-1)?.embeds });
+    const entry = { userId, ...o, afterResult: !!log.messages.at(-1)?.edits.at(-1)?.embeds };
+    log.followUps.push(entry);
+    return { id: `f${log.followUps.length}`, createMessageComponentCollector: () => (entry.collector = newCollector()) };
   };
   const channel = {
     send: async (opts) => {
@@ -46,11 +54,7 @@ function harness({ sendFails = false, perms = true, offeredReplyFails = false, f
         opts,
         edits: [],
         edit: async (o) => { message.edits.push(o); },
-        createMessageComponentCollector: () => {
-          const c = { h: {}, ended: null, on(e, f) { this.h[e] = f; }, stop(reason) { this.ended ??= this.h.end?.([], reason); } };
-          collectors.push(c);
-          return c;
-        },
+        createMessageComponentCollector: newCollector,
       };
       log.messages.push(message);
       return message;
@@ -85,8 +89,9 @@ function harness({ sendFails = false, perms = true, offeredReplyFails = false, f
     reply: async function (o) { this.replies.push(o.content); },
     followUp: async function (o) { this.replies.push(o.content); return followUp(userId)(o); },
   });
+  const save = async (_data, opts) => { log.saves.push(opts); return true; };
   const run = (userId, opponentId, wager) =>
-    execute(interaction(userId, opponentId, wager), trainerData, null, null, lockUser, async () => {}, null);
+    execute(interaction(userId, opponentId, wager), trainerData, null, null, lockUser, save, null);
   return { trainerData, log, collectors, run, button, totalCc: () => trainerData.A.cc + trainerData.B.cc };
 }
 
@@ -220,6 +225,45 @@ section("Private EXP messages");
     .catch(() => { threw = true; });
   assertTrue(!threw, "a refused Challenger follow-up doesn't throw");
   assertEqual(late.log.followUps.map((f) => f.userId), ["B"], "the Defender still gets theirs");
+}
+
+section("Move prompt after the EXP message");
+{
+  // A Lv 33 Charmander one EXP short of Slash, with 4 moves already, against a
+  // Shedinja its Fire moves knock out in one super-effective hit.
+  const onTeam = (user, id, exp) => {
+    grantCatch(user, id, "normal", () => 0.5);
+    if (exp != null) user.training[`${id}:normal`].exp = exp;
+    user.displayedPokemon = [{ id, variant: "normal" }];
+  };
+  const almost34 = expForLevel(34) - 1;
+  const t = harness();
+  onTeam(t.trainerData.A, 4, almost34);
+  onTeam(t.trainerData.B, 292);
+  await t.run("A", "B");
+  const learned = getMoveset(t.trainerData.A, 4, "normal").includes("slash");
+  assertTrue(learned, "fixture: Charmander knocked out Shedinja and learned Slash");
+  const [exp, prompt] = t.log.followUps;
+  assertTrue(exp.content.startsWith("EXP from your battle") && prompt?.userId === "A", "Open battle: the Challenger's prompt follows their EXP message");
+  assertEqual(prompt?.flags, MessageFlags.Ephemeral, "only they can see it");
+  assertTrue(prompt?.content.startsWith("Charmander learned **Slash** and forgot **Scratch**."), "it asks about Slash");
+  const flameBurst = prompt.components[0].components.find((b) => b.data.label === "Flame Burst").data.custom_id;
+  t.log.saves.length = 0;
+  await prompt.collector.h.collect({
+    user: { id: "A" }, customId: flameBurst, deferUpdate: async () => {}, editReply: async () => {},
+  });
+  assertEqual(getMoveset(t.trainerData.A, 4, "normal"), ["scratch", "ember", "firefang", "slash"], "a click changes the Challenger's Moveset");
+  assertEqual(t.log.saves, [{ force: true }], "and saves at once, like the battle's results");
+
+  const w = harness();
+  onTeam(w.trainerData.A, 292);
+  onTeam(w.trainerData.B, 4, almost34);
+  await w.run("A", "B", 10);
+  await w.collectors[0].h.collect(w.button("B", `wager_accept:${w.trainerData.A.pendingWager.nonce}`));
+  const bMessages = w.log.followUps.filter((f) => f.userId === "B");
+  assertTrue(bMessages[0]?.content.startsWith("EXP from your battle") && bMessages[1]?.content.includes("learned **Slash**"),
+    "Wager battle: the Defender's prompt follows their EXP message, on their Accept click");
+  assertTrue(!w.log.followUps.some((f) => f.userId === "A" && f.components), "no prompt for a player with nothing to ask");
 }
 
 section("Missing channel permissions");

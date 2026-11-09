@@ -31,7 +31,8 @@ export function buildMon(member, levelMult = 1) {
     atk: s.atk, def: s.def, spa: s.spa, spd: s.spd, spe: s.spe,
     maxHp,
     hp: maxHp,
-    moves: autoMoveset(member.speciesId, member.level).map(getMove),
+    // buildTeam passes each player's Moveset; test Teams without one get the default.
+    moves: (member.moves ?? autoMoveset(member.speciesId, member.level)).map(getMove),
   };
 }
 

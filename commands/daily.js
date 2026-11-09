@@ -15,6 +15,7 @@ import { getAllPokemon } from "../utils/dataLoader.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
+import { offerMoveChoices } from "../utils/moveChoice.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { spritePaths, rarityEmojis, rarityColors } from "../spriteconfig.js";
@@ -126,8 +127,10 @@ export async function execute(
       // ======================================================
       // Apply Pokémon to inventory
       // ======================================================
-      grantCatch(user, pick1.id, shiny1 ? "shiny" : "normal");
-      grantCatch(user, pick2.id, shiny2 ? "shiny" : "normal");
+      const caught = [
+        grantCatch(user, pick1.id, shiny1 ? "shiny" : "normal"),
+        grantCatch(user, pick2.id, shiny2 ? "shiny" : "normal"),
+      ];
 
       // ======================================================
       // Apply CC + TP
@@ -243,10 +246,12 @@ export async function execute(
       }
       if (saveAck.note) summary.setDescription(saveAck.note);
 
-      return safeReply(interaction, {
+      await safeReply(interaction, {
         embeds: [embed1, embed2, summary],
         flags: MessageFlags.Ephemeral
       });
+      // A duplicate's EXP can teach a move: ask which one to forget.
+      return offerMoveChoices(interaction, { trainerData, userId, lockUser, lessons: caught.map((c) => c.lesson) });
     });
 
   } catch (err) {

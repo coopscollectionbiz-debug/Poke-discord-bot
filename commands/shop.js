@@ -33,6 +33,7 @@ import {
 } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
+import { offerMoveChoices } from "../utils/moveChoice.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
 import { spritePaths } from "../spriteconfig.js";
 import {
@@ -252,9 +253,10 @@ export default {
               const shinyPulled = [];
               const rewardEmbeds = [];
               const broadcastQueue = [];
+              const lessons = [];
               for (const reward of rewards) {
                 const shiny = rollForShiny(live.tp || 0);
-                grantCatch(live, reward.id, shiny ? "shiny" : "normal");
+                lessons.push(grantCatch(live, reward.id, shiny ? "shiny" : "normal").lesson);
                 const spriteURL = shiny ? `${spritePaths.shiny}${reward.id}.gif` : `${spritePaths.pokemon}${reward.id}.gif`;
                 rewardEmbeds.push(createPokemonRewardEmbed(reward, shiny, spriteURL));
                 broadcastQueue.push({ type: "pokemon", item: { id: reward.id, name: reward.name, rarity: reward.tier }, shiny });
@@ -286,6 +288,9 @@ ${
                 console.error("❌ Starter Pack reply error:", err);
               }
               await closeShopMessage(btn, confirmCollector, collector);
+              // A duplicate's EXP can teach a move: ask which one to forget.
+              // (bot_final.js acknowledges confirm_ buttons, so this can follow up.)
+              await offerMoveChoices(btn, { trainerData, userId, lessons });
             });
             return;
           }

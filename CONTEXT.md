@@ -112,6 +112,14 @@ _Avoid_: weaker player, loser
 A rare, announced boost to the **Underdog's** whole **Team** for one **Battle**, likelier the wider the **Power rating** gap.
 _Avoid_: comeback mechanic, rubber-banding, luck boost
 
+**Learnset**:
+The moves a species learns as its **Level** rises, each at a fixed **Level**.
+_Avoid_: move list, moveset (for the species' full list)
+
+**Moveset**:
+The up to 4 moves a player's species + **Variant** uses in **Battles**, shared by every copy of it they own. Unless the player has chosen otherwise, it's the last 4 moves its **Learnset** taught by its **Level**.
+_Avoid_: moves (for the set), attacks, learnset
+
 ## Flagged ambiguities
 
 - "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.
@@ -130,3 +138,8 @@ _Avoid_: comeback mechanic, rubber-banding, luck boost
 > **Domain expert:** Then it's a **Wager battle** — they have to accept first, it uses one of each player's **Battle cap**, and both of you earn EXP.
 > **Dev:** I caught a second Charmander — does it get its own **Level**?
 > **Domain expert:** No. Your Charmanders share one **Level**; the new one adds EXP to it instead.
+
+> **Dev:** My Charmeleon's **Moveset** is full and it just hit the Level for a new move. Does it skip it?
+> **Domain expert:** No. It learns it and forgets its oldest move, same as before. If the Level-up came from a **Battle** or a reward like /daily, you get a private prompt to forget a different move or not learn it at all.
+> **Dev:** And when it evolves?
+> **Domain expert:** Charizard keeps the **Moveset** you picked for Charmeleon, unless you'd already picked moves for your Charizard.

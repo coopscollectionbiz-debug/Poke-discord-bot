@@ -15,6 +15,7 @@ import { playBattle, expSummary } from "../utils/battle/playback.js";
 import { teamPower } from "../utils/battle/power.js";
 import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/battle/wager.js";
 import { WAGER } from "../utils/battle/tuning.js";
+import { offerMoveChoices } from "../utils/moveChoice.js";
 
 export const data = new SlashCommandBuilder()
   .setName("battle")
@@ -61,6 +62,18 @@ function sendExp(reply, outcome, userId, names) {
     .catch((err) => console.warn("⚠️ EXP message failed:", err?.message || err));
 }
 
+// Then, on the same interaction, the move prompt for any Pokémon with 4
+// moves that a Level-up taught a new one. It can miss the same way.
+function offerMoves(reply, outcome, userId, { trainerData, lockUser, enqueueSave }) {
+  return offerMoveChoices(reply, {
+    trainerData,
+    userId,
+    lockUser,
+    lessons: outcome.exp[userId].map((e) => e.lesson),
+    save: (data) => enqueueSave(data, { force: true }),
+  });
+}
+
 export async function execute(interaction, trainerData, _saveLocal, _saveDiscord, lockUser, enqueueSave) {
   const opponent = interaction.options.getUser("opponent", true);
   const wager = interaction.options.getInteger("wager");
@@ -99,6 +112,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
     await interaction.editReply("Your battle counted, but I couldn't post it in this channel.").catch(() => {});
   }
   await sendExp(interaction, outcome, challengerId, names); // only the Challenger earns EXP in an Open battle
+  await offerMoves(interaction, outcome, challengerId, { trainerData, lockUser, enqueueSave });
 }
 
 // ----------------------------------------------------------
@@ -215,7 +229,11 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     await playBattle(interaction.channel, outcome, names).catch((err) =>
       console.warn("⚠️ wager battle post failed:", err?.message || err));
     // The Challenger's /battle and the Defender's Accept click are the two interactions to reply on.
-    await Promise.all([sendExp(interaction, outcome, challengerId, names), sendExp(i, outcome, defenderId, names)]);
+    const services = { trainerData, lockUser, enqueueSave };
+    await Promise.all([
+      sendExp(interaction, outcome, challengerId, names).then(() => offerMoves(interaction, outcome, challengerId, services)),
+      sendExp(i, outcome, defenderId, names).then(() => offerMoves(i, outcome, defenderId, services)),
+    ]);
   });
 
   // Any end other than an answer (timeout, deleted message or channel)

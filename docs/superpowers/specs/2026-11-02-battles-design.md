@@ -42,7 +42,7 @@ Glossary: `CONTEXT.md`.
 
 ## Sim
 - Real Gen 5 data: base stats, types, 17-type chart (no Fairy), level-up learnsets (`5L`), move power/type/category/accuracy — from Pokémon Showdown (MIT) via `@pkmn/dex` + `@pkmn/data` **devDependencies** in a one-shot generator → committed `battleData.json`. No runtime dep.
-- Moveset = last 4 damaging moves learned by Level (wild-Pokémon rule). Optional stored moveset override reserved for future move management.
+- Moveset = last 4 damaging moves learned by Level (wild-Pokémon rule). A later change lets players override it. After a Level-up, a private prompt lets them forget a different move or not learn the new one, and the training record stores the choice. Unanswered, the default above stands. See the README's Moves section and `utils/moveChoice.js`.
 - No abilities (except Shedinja's Wonder Guard)/items/status. Fixed stats (no IV/EV/nature). Shiny = no stat bonus. Full HP each battle.
 - Move choice: highest expected damage vs current foe, small random chance otherwise.
 - Fallback typed attack for mons with no damaging moves (Abra, Ditto, Wobbuffet, Unown, Magikarp <15).
@@ -57,7 +57,7 @@ Glossary: `CONTEXT.md`.
 ## Display
 - "Watch it happen" (revised after the first live test): an animated image of both Teams, edited once per turn about 2 s apart, up to 12 updates (longer battles spread evenly). The fighting pair is spotlit, HP drains, and a game-style text box narrates each hit ("Luxray used Spark! It's super effective!"), from a per-turn log the sim records without changing any random draw. Then a final image (its text box cycles: the win and the MVP, the winner's Pokémon with the most knockouts, then level-ups and new moves) and a result embed with each player's rating change. Once the replay ends, each player who earned EXP gets an ephemeral message with each Pokémon's EXP gain. (Revised: the embed used to repeat the winner, MVP, surge, pot, level-ups, and new moves, which the image and the message header already show.)
 - At most 2 replays render at once (`PLAYBACK.maxAtOnce`). A battle that has to wait posts its message right away (so the mentions notify), shows its place in line, and starts in order as replays finish. Results are already saved, so only the replay waits. (Added after measuring memory and lag with several battles at once.)
-- Levels visible on: dashboard (collection cards, team picker — "Lv N", no EXP bar), /inspectpokemon (Level, stats, auto-moves), trainer card / /showteam canvas, /trainercard embed, battle frames.
+- Levels visible on: dashboard (collection cards, team picker — "Lv N", no EXP bar), /inspectpokemon (Level, stats, Moveset), trainer card / /showteam canvas, /trainercard embed, battle frames.
 
 ## Open checks (no figure until measured)
 - Average / p99 turns per battle — Task 7 Monte Carlo; sets the turn cap.

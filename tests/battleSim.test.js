@@ -1,12 +1,12 @@
 // ==========================================================
 // tests/battleSim.test.js
-// Gen 5 stat formula, auto movesets, and the seeded battle sim.
+// Gen 5 stat formula, Movesets, and the seeded battle sim.
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { getSpecies, getMove, effectiveness, fallbackMoveFor } from "../utils/battle/data.js";
 import { computeStats } from "../utils/battle/stats.js";
-import { autoMoveset, movesLearned } from "../utils/battle/moveset.js";
+import { autoMoveset, learnMove, movesTaught, knownMoves, withFallback } from "../utils/battle/moveset.js";
 import { simulateBattle, buildMon, firstToMove, useMove } from "../utils/battle/sim.js";
 import { TURN_CAP } from "../utils/battle/tuning.js";
 
@@ -16,7 +16,8 @@ const battle = (a, b, seed) => simulateBattle({ sides: [side(...a), side(...b)],
 section("Stats");
 assertEqual(computeStats(getSpecies(25).baseStats, 50), { hp: 102, atk: 67, def: 42, spa: 62, spd: 52, spe: 102 }, "Pikachu Lv 50 stats (IV 15, EV 0)");
 
-section("Auto movesets");
+section("Default Movesets");
+// The rule battles used before players could choose moves, kept here as the reference.
 const lastFour = (id, level) => {
   const out = [];
   for (const [l, m] of getSpecies(id).levelMoves) {
@@ -28,13 +29,37 @@ const lastFour = (id, level) => {
   return out.slice(-4);
 };
 assertEqual(autoMoveset(1, 30), lastFour(1, 30), "Bulbasaur Lv 30 knows its last 4 learned moves");
+const speciesIds = Array.from({ length: 649 }, (_, i) => i + 1);
+const levels = [1, 5, 10, 16, 25, 32, 40, 50, 64, 80, 100];
+assertTrue(
+  speciesIds.every((id) => levels.every((l) => JSON.stringify(knownMoves(id, l)) === JSON.stringify(lastFour(id, l)))),
+  "with no choice, every species' Moveset is the old last-4 rule at every sampled Level",
+);
 assertEqual(autoMoveset(63, 50), [fallbackMoveFor(["Psychic"])], "Abra falls back to a Psychic move");
 assertEqual(autoMoveset(129, 14), [fallbackMoveFor(["Water"])], "Magikarp under 15 falls back to a Water move");
 assertTrue(autoMoveset(129, 15).includes("tackle"), "Magikarp knows Tackle at 15");
 const flame = getSpecies(4).levelMoves.find(([, m]) => m === "flamethrower");
 assertTrue(!!flame, "Charmander learns Flamethrower by level");
-assertTrue(movesLearned(4, flame[0] - 1, flame[0]).includes("flamethrower"), "movesLearned reports Flamethrower on the level it's learned");
-assertEqual(movesLearned(4, flame[0], flame[0]), [], "no moves learned without a level change");
+assertEqual(movesTaught(4, flame[0] - 1, flame[0]), ["flamethrower"], "movesTaught reports Flamethrower on the level it's learned");
+assertEqual(movesTaught(4, flame[0], flame[0]), [], "no moves taught without a level change");
+const hitmonchan16 = getSpecies(107).levelMoves.filter(([l]) => l === 16).map(([, m]) => m);
+assertEqual(hitmonchan16.length, 2, "fixture: Hitmonchan's Learnset teaches two moves at Lv 16");
+assertEqual(movesTaught(107, 15, 16), hitmonchan16, "both moves taught at one Level are reported, in order");
+
+section("Learning a move (the default)");
+assertEqual(learnMove(["a", "b"], "c"), ["a", "b", "c"], "room left: the move is added as the newest");
+assertEqual(learnMove(["a", "b", "c", "d"], "e"), ["b", "c", "d", "e"], "full: the oldest is forgotten");
+assertEqual(learnMove(["a", "b", "c", "d"], "b"), ["a", "c", "d", "b"], "a known move becomes the newest again, nothing forgotten");
+assertEqual(withFallback(63, []), [fallbackMoveFor(["Psychic"])], "no damaging move: the stand-in");
+assertEqual(withFallback(63, ["tackle"]), ["tackle"], "any real move replaces the stand-in");
+
+section("Known moves with a choice");
+// Charmander Lv 33 knows scratch, ember, firefang, flameburst. At 34 it learned slash, and the
+// player had it forget flameburst instead of scratch.
+const choice = { moves: ["scratch", "ember", "firefang", "slash"], movesLevel: 34 };
+assertEqual(knownMoves(4, 34, choice), choice.moves, "at the Level it was chosen: exactly the choice");
+assertEqual(knownMoves(4, 37, choice), ["ember", "firefang", "slash", "flamethrower"], "later moves are learned on top, forgetting the oldest");
+assertEqual(knownMoves(4, 33, null), ["scratch", "ember", "firefang", "flameburst"], "no choice: the last 4 taught");
 
 section("Determinism and variety");
 assertEqual(battle([[25, 30]], [[25, 30]], 7), battle([[25, 30]], [[25, 30]], 7), "same seed → same battle");

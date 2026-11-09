@@ -8,23 +8,22 @@ import { spritePaths } from "../spriteconfig.js";
 import { findPokemonByName } from "../utils/dataLoader.js";
 import { validateNameQuery } from "../utils/validators.js";
 import { safeReply } from "../utils/safeReply.js";
-import { getTraining } from "../utils/training.js";
+import { getTraining, getMoveset } from "../utils/training.js";
 import { getSpecies, getMove } from "../utils/battle/data.js";
 import { computeStats } from "../utils/battle/stats.js";
-import { autoMoveset } from "../utils/battle/moveset.js";
 import { formatTypesLine } from "./pokedex.js";
 
 const statLine = (s) => `HP ${s.hp} · Atk ${s.atk} · Def ${s.def} · SpA ${s.spa} · SpD ${s.spd} · Spe ${s.spe}`;
 
-// Level, stats at that Level, and auto-picked moves for each variant the
-// player owns; base stats when they own none.
+// Level, stats at that Level, and Moveset for each variant the player owns;
+// base stats when they own none.
 export function battleInfo(user, speciesId) {
   const species = getSpecies(speciesId);
   const owned = ["normal", "shiny"].filter((v) => (user?.pokemon?.[speciesId]?.[v] ?? 0) > 0);
   if (!owned.length) return `Base stats: ${statLine(species.baseStats)}`;
   return owned.map((variant) => {
     const { level } = getTraining(user, speciesId, variant);
-    const moves = autoMoveset(speciesId, level).map((m) => getMove(m).name).join(", ");
+    const moves = getMoveset(user, speciesId, variant).map((m) => getMove(m).name).join(", ");
     const label = variant === "shiny" ? `✨ shiny Lv ${level}` : `Lv ${level}`;
     return `**Your ${label}** · ${statLine(computeStats(species.baseStats, level))}\nMoves: ${moves}`;
   }).join("\n\n");

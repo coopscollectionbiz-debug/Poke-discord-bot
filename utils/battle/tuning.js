@@ -46,3 +46,7 @@ export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000 };
 // tests turns kept the 2 s pace with up to 5 at once and slipped at 6; a Fly
 // shared CPU is about half as fast, so 2 keeps a margin.
 export const PLAYBACK = { maxUpdates: 12, delayMs: 2000, maxAtOnce: 2 };
+// Move prompt (utils/moveChoice.js): how long its buttons stay live. Discord
+// lets the bot edit the prompt for only 15 minutes after the command or the
+// last click, and removing the buttons at the end is such an edit.
+export const MOVE_CHOICE = { windowMs: 10 * 60 * 1000 };

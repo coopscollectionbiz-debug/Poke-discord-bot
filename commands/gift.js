@@ -16,9 +16,11 @@ import {
 } from "../utils/embedBuilders.js";
 import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
-import { atomicSave } from "../utils/saveManager.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { resetLevelIfGone } from "../utils/training.js";
+import { lockUsers } from "../utils/userLocks.js";
+import { ownsTrainer, grantTrainer, revokeTrainer, trainerCount } from "../services/assets.js";
 
 // Moves `amount` normal copies of one Pokémon. Returns why it can't, or null once moved.
 // Separate from execute() so tests can run it without the save writing trainerData.json.
@@ -36,6 +38,25 @@ export function giftPokemon(sender, recipient, key, name, amount) {
   sender.pokemon[key].normal = normal - amount;
   resetLevelIfGone(sender, key, "normal");
   recipient.pokemon[key].normal = (recipient.pokemon[key].normal || 0) + amount;
+  return null;
+}
+
+// Moves one trainer sprite. Returns why it can't, or null once moved.
+export function giftTrainer(sender, recipient, key, name) {
+  if (!ownsTrainer(sender, key)) return `❌ You don't own ${name}.`;
+  if (trainerCount(sender) <= 1) return `⚠️ You can't gift your only trainer sprite.`;
+  if (ownsTrainer(recipient, key)) return `⚠️ They already own ${name}.`;
+  revokeTrainer(sender, key);
+  grantTrainer(recipient, key);
+  return null;
+}
+
+// Moves CC. Returns why it can't, or null once moved.
+export function giftCoins(sender, recipient, amount) {
+  const check = validateUserResources(sender, "cc", amount);
+  if (!check.valid) return `❌ ${check.error}`;
+  sender.cc -= amount;
+  recipient.cc = (recipient.cc || 0) + amount;
   return null;
 }
 
@@ -81,7 +102,7 @@ export default {
   // ==========================================================
   // ⚙️ Command Execution (SafeReply Refactor)
   // ==========================================================
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
+  async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const senderId = interaction.user.id;
@@ -110,144 +131,68 @@ export default {
         });
     }
 
-    // Ensure both users exist in trainerData
-    const sender = await ensureUserInitialized(senderId, interaction.user.username, trainerData, client);
-    const recipient = await ensureUserInitialized(receiver.id, receiver.username, trainerData, client);
+    const reply = (content) => safeReply(interaction, { content, flags: MessageFlags.Ephemeral });
 
-    let description = "";
-
+    // ---- Look-ups that need awaits happen BEFORE any lock or mutation ----
+    let pokemonTarget = null;
+    let trainerTarget = null;
     try {
-      // ==========================================================
-      // 💰 TYPE: COINS (CC)
-      // ==========================================================
-      if (type === "cc") {
-        const resourceCheck = validateUserResources(sender, "cc", amount);
-        if (!resourceCheck.valid)
-          return safeReply(interaction, {
-            content: `❌ ${resourceCheck.error}`,
-            flags: MessageFlags.Ephemeral,
-          });
-
-        sender.cc -= amount;
-        recipient.cc += amount;
-        description = `💰 ${interaction.user.username} sent **${amount.toLocaleString()} CC** to ${receiver.username}!`;
-      }
-
-      // ==========================================================
-      // 🧬 TYPE: POKÉMON
-      // ==========================================================
-      else if (type === "pokemon") {
-        if (!itemName)
-          return safeReply(interaction, {
-            content: "❌ You must specify which Pokémon to gift.",
-            flags: MessageFlags.Ephemeral,
-          });
-
+      if (type === "pokemon" || type === "trainer") {
+        if (!itemName) return reply(`❌ You must specify which ${type === "pokemon" ? "Pokémon" : "Trainer"} to gift.`);
         const nameValidation = validateNameQuery(itemName);
-        if (!nameValidation.valid)
-          return safeReply(interaction, {
-            content: `❌ ${nameValidation.error}`,
-            flags: MessageFlags.Ephemeral,
-          });
+        if (!nameValidation.valid) return reply(`❌ ${nameValidation.error}`);
 
-        // ✅ Error handling on findPokemonByName
-        let targetPokemon;
-        try {
-          targetPokemon = await findPokemonByName(nameValidation.sanitized);
-        } catch (err) {
-          console.error("❌ Error finding Pokémon:", err);
-          return safeReply(interaction, {
-            content: "❌ Error searching for Pokémon. Please try again.",
-            flags: MessageFlags.Ephemeral,
-          });
+        if (type === "pokemon") {
+          try {
+            pokemonTarget = await findPokemonByName(nameValidation.sanitized);
+          } catch (err) {
+            console.error("❌ Error finding Pokémon:", err);
+            return reply("❌ Error searching for Pokémon. Please try again.");
+          }
+          if (!pokemonTarget) return reply(`⚠️ Pokémon \"${itemName}\" not found.`);
+        } else {
+          if (amount && amount !== 1) return reply("⚠️ Trainer gifts are always 1. Ignore the amount parameter.");
+          const flatTrainers = await getFlattenedTrainers();
+          trainerTarget = findTrainerByQuery(flatTrainers, nameValidation.sanitized);
+          if (!trainerTarget) return reply(`⚠️ Trainer \"${itemName}\" not found.`);
         }
-
-        if (!targetPokemon)
-          return safeReply(interaction, {
-            content: `⚠️ Pokémon \"${itemName}\" not found.`,
-            flags: MessageFlags.Ephemeral,
-          });
-
-        const refusal = giftPokemon(sender, recipient, targetPokemon.id.toString(), targetPokemon.name, amount);
-        if (refusal)
-          return safeReply(interaction, { content: refusal, flags: MessageFlags.Ephemeral });
-
-        description = `🧬 ${interaction.user.username} sent **${amount}× ${targetPokemon.name}** to ${receiver.username}!`;
-      }
-
-      // ==========================================================
-      // 🧑‍🏫 TYPE: TRAINER
-      // ==========================================================
-      else if (type === "trainer") {
-        // ✅ Warn if amount specified for trainer
-        if (amount && amount !== 1) {
-          return safeReply(interaction, {
-            content: "⚠️ Trainer gifts are always 1. Ignore the amount parameter.",
-            flags: MessageFlags.Ephemeral,
-          });
-        }
-
-        if (!itemName)
-          return safeReply(interaction, {
-            content: "❌ You must specify which Trainer to gift.",
-            flags: MessageFlags.Ephemeral,
-          });
-
-        const nameValidation = validateNameQuery(itemName);
-        if (!nameValidation.valid)
-          return safeReply(interaction, {
-            content: `❌ ${nameValidation.error}`,
-            flags: MessageFlags.Ephemeral,
-          });
-
-        const flatTrainers = await getFlattenedTrainers();
-        const targetTrainer = findTrainerByQuery(flatTrainers, nameValidation.sanitized);
-
-        if (!targetTrainer)
-          return safeReply(interaction, {
-            content: `⚠️ Trainer \"${itemName}\" not found.`,
-            flags: MessageFlags.Ephemeral,
-          });
-
-        // ✅ Use standardized trainer key handler
-        const spriteKey = getTrainerKey(targetTrainer);
-        if (!sender.trainers[spriteKey])
-          return safeReply(interaction, {
-            content: `❌ You don't own ${targetTrainer.name}.`,
-            flags: MessageFlags.Ephemeral,
-          });
-
-        const senderTrainerCount = Object.keys(sender.trainers).length;
-        if (senderTrainerCount <= 1)
-          return safeReply(interaction, {
-            content: `⚠️ You can't gift your only trainer sprite.`,
-            flags: MessageFlags.Ephemeral,
-          });
-
-        delete sender.trainers[spriteKey];
-        recipient.trainers[spriteKey] = true;
-
-        description = `🧑‍🏫 ${interaction.user.username} sent the **${targetTrainer.name}** trainer sprite to ${receiver.username}!`;
-      }
-
-      // ==========================================================
-      // ✅ Confirmation + Atomic Save
-      // ==========================================================
-      const embed = createSuccessEmbed("🎁 Gift Sent!", description, { color: 0x57f287 });
-      await safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
-
-      try {
-        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-        console.log(`✅ Gift: ${interaction.user.username} → ${receiver.username} (${type}${itemName ? " - " + itemName : ""})`);
-      } catch (err) {
-        console.error("❌ Error saving gift transaction:", err);
       }
     } catch (err) {
       console.error("❌ Gift command error:", err);
-      return safeReply(interaction, {
-        content: `❌ An error occurred: ${err.message}`,
-        flags: MessageFlags.Ephemeral,
+      return reply(`❌ An error occurred: ${err.message}`);
+    }
+
+    // ---- Both players locked: validate + move in one synchronous block, then save ----
+    try {
+      await lockUsers(senderId, receiver.id, async () => {
+        const sender = await ensureUserInitialized(senderId, interaction.user.username, trainerData, client);
+        const recipient = await ensureUserInitialized(receiver.id, receiver.username, trainerData, client);
+
+        let refusal = null;
+        let description = "";
+        if (type === "cc") {
+          refusal = giftCoins(sender, recipient, amount);
+          description = `💰 ${interaction.user.username} sent **${amount.toLocaleString()} CC** to ${receiver.username}!`;
+        } else if (type === "pokemon") {
+          refusal = giftPokemon(sender, recipient, pokemonTarget.id.toString(), pokemonTarget.name, amount);
+          description = `🧬 ${interaction.user.username} sent **${amount}× ${pokemonTarget.name}** to ${receiver.username}!`;
+        } else if (type === "trainer") {
+          refusal = giftTrainer(sender, recipient, getTrainerKey(trainerTarget), trainerTarget.name);
+          description = `🧑‍🏫 ${interaction.user.username} sent the **${trainerTarget.name}** trainer sprite to ${receiver.username}!`;
+        } else {
+          refusal = "❌ Unknown gift type.";
+        }
+        if (refusal) return reply(refusal);
+
+        // Save BEFORE confirming (D7); never claim success the disk didn't confirm (D14).
+        const ack = await saveAndAck(trainerData);
+        console.log(`✅ Gift: ${interaction.user.username} → ${receiver.username} (${type}${itemName ? " - " + itemName : ""})${ack.saved ? "" : " [save delayed]"}`);
+        const embed = createSuccessEmbed("🎁 Gift Sent!", withSaveNote(description, ack), { color: 0x57f287 });
+        return safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
       });
+    } catch (err) {
+      console.error("❌ Gift command error:", err);
+      return reply(`❌ An error occurred: ${err.message}`);
     }
   },
 };

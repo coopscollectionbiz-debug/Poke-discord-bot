@@ -49,3 +49,13 @@ export async function lockUser(userId, callback) {
 export function isUserLocked(userId) {
   return activeLocks.has(userId);
 }
+
+/**
+ * Lock two users at once (gift, trade). Locks are taken in sorted ID order
+ * so two opposite requests (A→B and B→A) can never deadlock. lockUser is
+ * not re-entrant: never call lockUser for either user inside `callback`.
+ */
+export function lockUsers(idA, idB, callback) {
+  const [first, second] = [String(idA), String(idB)].sort();
+  return lockUser(first, () => (first === second ? callback() : lockUser(second, callback)));
+}

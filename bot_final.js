@@ -49,6 +49,8 @@ import {
 import { readLocalCandidates, readFileCandidate, setSeqAtLeast, nextSeq, dataDir } from "./persistence/localStore.js";
 import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup } from "./persistence/discordBackups.js";
 import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/loader.js";
+import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
+import { saveAndAck, SAVE_DELAYED_NOTE } from "./utils/saveManager.js";
 
 // Nothing may be written to disk until player data has been loaded.
 requireLoadBeforeWrite();
@@ -371,20 +373,9 @@ function normalizeUserSchema(id, user) {
   // 3️⃣ TRAINERS (array of filenames)
   // backwards compatible with old object maps
   // ==========================================================
-  if (Array.isArray(user.trainers)) {
-    // Ensure all entries are strings
-    user.trainers = user.trainers
-      .filter(t => typeof t === "string")
-      .map(t => t.trim());
-  } else if (user.trainers && typeof user.trainers === "object") {
-    // legacy: { "file.png": 1, "other.png": 1 }
-    user.trainers = Object.keys(user.trainers);
-  } else {
-    user.trainers = [];
-  }
-
-  // Remove duplicates
-  user.trainers = [...new Set(user.trainers)];
+  // Shared with utils/userSchema.js so every path produces the same shape:
+  // strings only, trimmed, de-duplicated; legacy object maps become arrays.
+  normalizeTrainers(user);
 
   // ==========================================================
 // 4️⃣ DISPLAYED TEAM (canonical)

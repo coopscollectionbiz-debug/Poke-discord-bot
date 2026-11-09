@@ -32,6 +32,9 @@ import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { enqueueSave } from "../utils/saveQueue.js";
+import { lockUser } from "../utils/userLocks.js";
+import { saveAndAck, SAVE_DELAYED_NOTE } from "../utils/saveManager.js";
+import { grantTrainer } from "../services/assets.js";
 
 // Load trainer sprite data
 const __filename = fileURLToPath(import.meta.url);
@@ -167,7 +170,7 @@ export default {
     .setName("trainercard")
     .setDescription("View or create your Trainer Card!"),
 
-  async execute(interaction, trainerData, _saveTrainerDataLocal, saveDataToDiscord, client) {
+  async execute(interaction, trainerData, _saveTrainerDataLocal, saveDataToDiscord, _lockUser, _enqueueSave, client) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const user = await ensureUserInitialized(
@@ -257,22 +260,32 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     collector.on("collect", async (i) => {
       if (i.customId === "select_starter") {
         await i.deferUpdate();
-        const p = allStarters[index];
-
-        const shiny = rollForShiny(user.tp || 0);
-
-        grantCatch(user, p.id, shiny ? "shiny" : "normal");
-
-        // ✅ Write CANONICAL variant-safe team immediately
-        user.displayedPokemon = [{ id: p.id, variant: shiny ? "shiny" : "normal" }];
-
-        user.onboardingStage = "trainer_selection";
-
-        trainerData[interaction.user.id] = user;
-        await enqueueSave(trainerData);
-
         collector.stop("chosen");
-        return trainerSelection(interaction, user, trainerData, saveDataToDiscord);
+        const p = allStarters[index];
+        const uid = interaction.user.id;
+
+        // Locked + guarded: a double click (or a second /trainercard window)
+        // can never grant a second starter (D3). Always the live record (D2).
+        const result = await lockUser(uid, async () => {
+          const live = trainerData[uid];
+          if (!live || live.onboardingComplete || (live.onboardingStage && live.onboardingStage !== "starter_selection")) {
+            return { live, granted: false };
+          }
+          const shiny = rollForShiny(live.tp || 0);
+          grantCatch(live, p.id, shiny ? "shiny" : "normal");
+          // ✅ Write CANONICAL variant-safe team immediately
+          live.displayedPokemon = [{ id: p.id, variant: shiny ? "shiny" : "normal" }];
+          live.onboardingStage = "trainer_selection";
+          const ack = await saveAndAck(trainerData);
+          return { live, granted: true, ack };
+        });
+
+        if (result.ack && !result.ack.saved) {
+          await i.followUp({ content: SAVE_DELAYED_NOTE, flags: MessageFlags.Ephemeral }).catch(() => {});
+        }
+        if (!result.live) return;
+        if (result.live.onboardingComplete) return showTrainerCard(interaction, result.live, trainerData, saveDataToDiscord);
+        return trainerSelection(interaction, result.live, trainerData, saveDataToDiscord);
       }
 
       index += i.customId === "next_starter" ? 1 : -1;
@@ -349,22 +362,27 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
   collector.on("collect", async (i) => {
     if (i.customId === "confirm_trainer") {
       await i.deferUpdate();
-      const t = trainers[index];
-
-      // ✅ trainers is canonical array in your bot normalizeUserSchema()
-      user.trainers = Array.isArray(user.trainers) ? user.trainers : [];
-      if (!user.trainers.includes(t.id)) user.trainers.push(t.id);
-
-      user.displayedTrainer = t.id;
-
-      user.onboardingComplete = true;
-      delete user.onboardingStage;
-
-      trainerData[interaction.user.id] = user;
-      await enqueueSave(trainerData);
-
       collector.stop("chosen");
-      return showTrainerCard(interaction, user, trainerData, saveDataToDiscord);
+      const t = trainers[index];
+      const uid = interaction.user.id;
+
+      const result = await lockUser(uid, async () => {
+        const live = trainerData[uid];
+        if (!live || live.onboardingComplete) return { live };
+        grantTrainer(live, t.id);
+        live.displayedTrainer = t.id;
+        live.onboardingComplete = true;
+        delete live.onboardingStage;
+        const ack = await saveAndAck(trainerData);
+        return { live, ack };
+      });
+
+      if (result.ack && !result.ack.saved) {
+        await i.followUp({ content: SAVE_DELAYED_NOTE, flags: MessageFlags.Ephemeral }).catch(() => {});
+      }
+      if (!result.live) return;
+      // Shown after the lock is released (showTrainerCard may save too).
+      return showTrainerCard(interaction, result.live, trainerData, saveDataToDiscord);
     }
 
     index += i.customId === "next_trainer" ? 1 : -1;
@@ -397,10 +415,8 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
     // (safe because this does NOT invent Pokémon — it only uses owned)
     if (!Array.isArray(user.displayedPokemon) || user.displayedPokemon.length === 0) {
       user.displayedPokemon = team;
-      if (trainerData) {
-        trainerData[interaction.user.id] = user;
-        await enqueueSave(trainerData);
-      }
+      // `user` is the live record (never replace trainerData[id], D2).
+      if (trainerData) await enqueueSave(trainerData);
     }
 
     const leadSlot = team[0] || null;

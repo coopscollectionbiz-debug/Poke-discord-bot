@@ -46,6 +46,14 @@ export function paths(dir = dataDir()) {
 let seq = 0;
 export const getSeq = () => seq;
 export const nextSeq = () => ++seq;
+// Epoch of THIS process (A2 fencing). Set once at startup, above every
+// epoch seen in any snapshot, so this process's writes sort newest.
+let epoch = null;
+export const getEpoch = () => epoch;
+export function setEpoch(n) {
+  if (Number.isInteger(n) && n >= 1) epoch = n;
+}
+
 /** After loading a snapshot, continue numbering above it. */
 export function setSeqAtLeast(n) {
   if (Number.isInteger(n) && n > seq) seq = n;
@@ -94,8 +102,9 @@ export async function writeSnapshot(data, { now = Date.now() } = {}) {
   const p = paths();
   await fs.mkdir(p.dir, { recursive: true });
 
-  const text = JSON.stringify(data, null, 2);
-  const meta = buildMeta(text, { seq: nextSeq(), savedAt: now, userCount: Object.keys(data).length });
+  // Compact JSON (D-27): ~1/3 smaller and faster than pretty-printing.
+  const text = JSON.stringify(data);
+  const meta = buildMeta(text, { seq: nextSeq(), epoch, savedAt: now, userCount: Object.keys(data).length });
 
   try {
     await writeFileDurable(p.tmp, text);
@@ -188,5 +197,6 @@ export async function readLocalCandidates() {
 
 export function __resetLocalStoreForTests() {
   seq = 0;
+  epoch = null;
   lastDailyDay = null;
 }

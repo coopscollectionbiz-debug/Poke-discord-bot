@@ -5,12 +5,12 @@
 // The attachment is unchanged (trainerData.json, compact JSON of the user
 // map), so older bot releases can still load it — that keeps code rollback
 // safe. Metadata travels in the message text:
-//   trainerData seq=<n> users=<n> sha256=<hex> savedAt=<ms>
+//   trainerData seq=<n> epoch=<n> users=<n> sha256=<hex> savedAt=<ms>
 // Only backups posted by the bot itself are considered at startup.
 // ==========================================================
 
 import { AttachmentBuilder } from "discord.js";
-import { buildMeta, formatBackupMessage, parseBackupMessage, validateSnapshot } from "./snapshot.js";
+import { buildMeta, formatBackupMessage, parseBackupMessage, validateSnapshot, sha256 } from "./snapshot.js";
 
 const isBackupAttachment = (att) => {
   const name = String(att?.name || "").toLowerCase();
@@ -84,12 +84,48 @@ export async function fetchDiscordMessageCandidate(client, channelId, messageId,
 
 /**
  * Upload a backup with metadata.
- * @returns {Promise<{meta: object, bytes: number}>}
+ * @returns {Promise<{meta: object, bytes: number, message: object}>}
  */
-export async function uploadBackup(channel, data, { seq, now = Date.now(), timeoutMs = 25_000 } = {}) {
+export async function uploadBackup(channel, data, { seq, epoch = null, now = Date.now(), timeoutMs = 25_000 } = {}) {
   const text = JSON.stringify(data); // compact, same as before
-  const meta = buildMeta(text, { seq, savedAt: now, userCount: Object.keys(data).length });
+  const meta = buildMeta(text, { seq, epoch, savedAt: now, userCount: Object.keys(data).length });
   const file = new AttachmentBuilder(Buffer.from(text, "utf8"), { name: "trainerData.json" });
-  await withTimeout(channel.send({ content: formatBackupMessage(meta), files: [file] }), timeoutMs, "upload backup");
-  return { meta, bytes: meta.bytes };
+  const message = await withTimeout(channel.send({ content: formatBackupMessage(meta), files: [file] }), timeoutMs, "upload backup");
+  return { meta, bytes: meta.bytes, message };
+}
+
+/**
+ * A2: download what Discord stored and compare its sha256 with what we sent.
+ * Never throws. @returns {Promise<{ok:boolean, reason?:string}>}
+ */
+export async function verifyUpload(message, meta, { fetchImpl = fetch, timeoutMs = 25_000 } = {}) {
+  try {
+    const att = message?.attachments?.first?.();
+    if (!att?.url) return { ok: false, reason: "no attachment on the sent message" };
+    const res = await withTimeout(fetchImpl(att.url), timeoutMs, "verify download");
+    if (!res.ok) return { ok: false, reason: `download HTTP ${res.status}` };
+    const text = await withTimeout(res.text(), timeoutMs, "verify read");
+    const got = sha256(text);
+    return got === meta.sha256 ? { ok: true } : { ok: false, reason: "sha256 mismatch" };
+  } catch (e) {
+    return { ok: false, reason: e?.message || String(e) };
+  }
+}
+
+/**
+ * A2 fencing: the highest epoch announced by any bot-authored backup among
+ * the newest messages (read from message text only; nothing is downloaded).
+ * Throws if the channel can't be read, so callers can tell "unknown" from 0.
+ */
+export async function newestChannelEpoch(client, channelId, { limit = 50 } = {}) {
+  const channel = await getChannel(client, channelId, 10_000);
+  const messages = await withTimeout(channel.messages.fetch({ limit }), 10_000, "fetch storage messages");
+  const botId = client.user?.id;
+  let max = 0;
+  for (const m of messages.values()) {
+    if (m.author?.id !== botId || !isBackupAttachment(m.attachments.first())) continue;
+    const e = parseBackupMessage(m.content)?.epoch;
+    if (Number.isInteger(e) && e > max) max = e;
+  }
+  return max;
 }

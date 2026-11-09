@@ -45,9 +45,11 @@ import {
   markLoaded,
   getDirtyVersion,
   isWriteBlocked,
+  fenceWrites,
+  getSaveHealth,
 } from "./utils/saveQueue.js";
-import { readLocalCandidates, readFileCandidate, setSeqAtLeast, nextSeq, dataDir } from "./persistence/localStore.js";
-import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup } from "./persistence/discordBackups.js";
+import { readLocalCandidates, readFileCandidate, setSeqAtLeast, nextSeq, dataDir, getEpoch, setEpoch, getSeq } from "./persistence/localStore.js";
+import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup, verifyUpload, newestChannelEpoch } from "./persistence/discordBackups.js";
 import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/loader.js";
 import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
 import { saveAndAck, SAVE_DELAYED_NOTE } from "./utils/saveManager.js";
@@ -939,8 +941,34 @@ client.ws.on("debug", (m) => {
 // that risks Discord login loops.)
 let loadBlockedReason = null;
 let loadedFrom = null;
+let supersededReason = null;
+const backupStatus = { lastAttemptAt: null, lastVerified: null, lastVerifiedAt: null, lastSeq: null };
+
+// A2: another process took over the data (higher epoch). Fence all writes
+// and stay NOT READY; do not exit (a restart would take a new epoch and
+// fence the other process in turn).
+function supersede(reason) {
+  if (supersededReason) return;
+  supersededReason = reason;
+  isReady = false;
+  fenceWrites(reason);
+  console.error(`⛔ SUPERSEDED: ${reason}. Not ready; no further writes from this process.`);
+}
+
 app.get("/readyz", (_, res) => {
-  const body = { ready: isReady, loadedFrom, loadBlockedReason };
+  const save = getSaveHealth();
+  const body = {
+    ready: isReady,
+    loadedFrom,
+    loadBlockedReason,
+    superseded: supersededReason,
+    epoch: getEpoch(),
+    seq: getSeq(),
+    dataDir: dataDir(),
+    durableVolume: process.env.LOCAL_IS_DURABLE === "1",
+    localSave: { degraded: save.degraded, consecutiveFailures: save.consecutiveFailures, lastWriteAt: save.lastWriteAt, pendingChanges: save.pendingChanges },
+    discordBackup: backupStatus,
+  };
   res.status(isReady ? 200 : 503).json(body);
 });
 
@@ -1001,6 +1029,10 @@ async function loadTrainerData() {
   const { chosen } = result;
   console.log(`✅ Loaded ${chosen.userCount} users from ${describeSnapshot(chosen)}${result.restored ? " (OPERATOR RESTORE)" : ""}`);
   setSeqAtLeast(result.maxSeq);
+  // A2 fencing: take an epoch above every epoch seen, so this process's
+  // snapshots sort newest and any older process still running gets fenced.
+  setEpoch((result.maxEpoch || 0) + 1);
+  console.log(`🔑 Writer epoch ${getEpoch()}${result.localOnly ? " (booted from the local volume; Discord unreachable)" : ""}`);
   const data = chosen.data;
   for (const [id, user] of Object.entries(data)) normalizeUserSchema(id, user);
   return { ok: true, data, chosen };
@@ -1063,13 +1095,33 @@ async function saveDataToDiscord(data, { force = false } = {}) {
 
     // Compact JSON attachment (unchanged format) + metadata in the message
     // text (seq/users/sha256/savedAt) — see persistence/discordBackups.js.
+    // A2 fencing: if a backup with a HIGHER epoch exists, another process
+    // has taken over the data. Stop writing for good (and stay not ready)
+    // instead of overwriting its newer state.
+    const channelEpoch = await newestChannelEpoch(client, process.env.STORAGE_CHANNEL_ID);
+    if (getEpoch() != null && channelEpoch > getEpoch()) {
+      supersede(`backup with epoch ${channelEpoch} found; this process has epoch ${getEpoch()}`);
+      return;
+    }
+
     const version = getDirtyVersion();
-    const { meta } = await uploadBackup(channel, data, { seq: nextSeq(), timeoutMs: SAVE_TIMEOUT_MS });
+    const { meta, message } = await uploadBackup(channel, data, { seq: nextSeq(), epoch: getEpoch(), timeoutMs: SAVE_TIMEOUT_MS });
+
+    // A2: confirm Discord stored exactly what we sent before counting it.
+    const check = await verifyUpload(message, meta);
+    backupStatus.lastAttemptAt = Date.now();
+    backupStatus.lastVerified = check.ok;
+    if (!check.ok) {
+      console.error(`❌ Discord backup NOT verified (${check.reason}); will upload again next interval`);
+      return;
+    }
     lastUploadedDirtyVersion = version;
+    backupStatus.lastVerifiedAt = Date.now();
+    backupStatus.lastSeq = meta.seq;
 
     lastDiscordOk = Date.now();
     discordSaveCount++;
-    console.log(`✅ Discord backup #${discordSaveCount} (${Math.round(meta.bytes / 1024)} KB, ${meta.userCount} users, seq ${meta.seq})`);
+    console.log(`✅ Discord backup #${discordSaveCount} verified (${Math.round(meta.bytes / 1024)} KB, ${meta.userCount} users, seq ${meta.seq}, epoch ${meta.epoch})`);
   } catch (err) {
     console.error("❌ Discord save failed:", err?.message || err);
     throw err;  // let callers know it failed
@@ -1366,6 +1418,11 @@ app.use("/api", (req, res, next) => {
   if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") return next();
   if (!isReady) {
     return res.status(503).json({ success: false, error: "The bot is starting up or restarting. Please try again in a moment." });
+  }
+  // A2 circuit breaker: while local saves keep failing, refuse new dashboard
+  // changes instead of piling up unsaved state.
+  if (getSaveHealth().degraded) {
+    return res.status(503).json({ success: false, error: "Saving is temporarily unavailable. Your progress is safe; please try again shortly." });
   }
   return next();
 });

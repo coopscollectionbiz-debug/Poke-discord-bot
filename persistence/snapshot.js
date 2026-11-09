@@ -19,9 +19,12 @@ export function sha256(text) {
   return crypto.createHash("sha256").update(text, "utf8").digest("hex");
 }
 
-export function buildMeta(text, { seq, savedAt = Date.now(), userCount }) {
+export function buildMeta(text, { seq, savedAt = Date.now(), userCount, epoch = null }) {
   return {
     seq,
+    // A2 fencing: every process that loads the data takes a new, higher
+    // epoch. A process that sees a higher epoch than its own stops writing.
+    epoch: Number.isInteger(epoch) ? epoch : null,
     savedAt,
     userCount,
     sha256: sha256(text),
@@ -33,7 +36,8 @@ export function buildMeta(text, { seq, savedAt = Date.now(), userCount }) {
 // Discord backup message text <-> metadata
 // ----------------------------------------------------------
 export function formatBackupMessage(meta) {
-  return `trainerData seq=${meta.seq} users=${meta.userCount} sha256=${meta.sha256} savedAt=${meta.savedAt}`;
+  const epoch = Number.isInteger(meta.epoch) ? ` epoch=${meta.epoch}` : "";
+  return `trainerData seq=${meta.seq}${epoch} users=${meta.userCount} sha256=${meta.sha256} savedAt=${meta.savedAt}`;
 }
 
 export function parseBackupMessage(content) {
@@ -43,7 +47,7 @@ export function parseBackupMessage(content) {
     return m ? Number(m[1]) : null;
   };
   const hash = /\bsha256=([0-9a-f]{64})\b/.exec(s);
-  const meta = { seq: num("seq"), userCount: num("users"), savedAt: num("savedAt"), sha256: hash ? hash[1] : null };
+  const meta = { seq: num("seq"), epoch: num("epoch"), userCount: num("users"), savedAt: num("savedAt"), sha256: hash ? hash[1] : null };
   return meta.seq == null && meta.sha256 == null ? null : meta;
 }
 
@@ -81,10 +85,11 @@ export function validateSnapshot({ source, text, meta = null, fallbackTime = nul
   // Metadata is trusted only if it describes exactly this text.
   const metaTrusted = !!(meta && meta.sha256 && meta.sha256 === sha256(text));
   const seq = metaTrusted && Number.isInteger(meta.seq) ? meta.seq : null;
+  const epoch = metaTrusted && Number.isInteger(meta.epoch) ? meta.epoch : null;
   const savedAt =
     metaTrusted && Number.isFinite(meta.savedAt) ? meta.savedAt : Number.isFinite(fallbackTime) ? fallbackTime : 0;
 
-  return { ok: true, source, id, data, userCount: ids.length, seq, savedAt, metaTrusted };
+  return { ok: true, source, id, data, userCount: ids.length, seq, epoch, savedAt, metaTrusted };
 }
 
 // ----------------------------------------------------------
@@ -92,6 +97,12 @@ export function validateSnapshot({ source, text, meta = null, fallbackTime = nul
 // ----------------------------------------------------------
 /** true if a is newer than b. */
 export function isNewer(a, b) {
+  // A2: when BOTH carry an epoch, the higher epoch wins outright, so a stale
+  // process that kept writing (higher seq, lower epoch) can never be chosen
+  // over the process that took over. Snapshots without an epoch (older
+  // releases, or a rollback) fall through to the seq/time rules below, so a
+  // rollback period's newer legacy backups still win by time.
+  if (a.epoch != null && b.epoch != null && a.epoch !== b.epoch) return a.epoch > b.epoch;
   if (a.seq != null && b.seq != null && a.seq !== b.seq) return a.seq > b.seq;
   if (a.seq != null && b.seq != null) {
     // same seq: same snapshot content generation — prefer local

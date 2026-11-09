@@ -8,6 +8,9 @@ import {
   PermissionFlagsBits,
   MessageFlags,
 } from "discord.js";
+import { lockUser } from "../utils/userLocks.js";
+import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -21,7 +24,7 @@ export default {
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveLocal, saveDiscord) {
+  async execute(interaction, trainerData, _saveLocal, saveDiscord) {
     try {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -31,40 +34,19 @@ export default {
 
       const id = target.id;
 
-      // Ensure user exists
-      if (!trainerData[id]) {
-        trainerData[id] = {
-          id,
-          cc: 0,
-          tp: 0,
-          pokemon: {},
-          trainers: {},
-          displayedTrainer: null,
-          displayedPokemon: [],
-          onboardingComplete: false,
-          onboardingDate: null,
-          starterPokemon: null,
-          lastDaily: 0,
-          lastRecruit: 0,
-          lastQuest: 0,
-          lastWeeklyPack: null,
-          weeklyPackClaimed: false,
-          items: { evolution_stone: 0 },
-          purchases: [],
-          luck: 0,
-          luckTimestamp: 0,
-        };
-      }
+      await lockUser(id, async () => {
+        // Same record shape as every other path (never a hand-built object).
+        const user = await ensureUserInitialized(id, target.username, trainerData, null);
 
-      // Reset weekly pack
-      trainerData[id].weeklyPackClaimed = false;
+        // Reset weekly pack
+        user.weeklyPackClaimed = false;
 
-      // Save
-      await saveLocal(trainerData);
-      await saveDiscord(trainerData);
+        const ack = await saveAndAck(trainerData);
+        await saveDiscord(trainerData);
 
-      await interaction.editReply({
-        content: `✅ Weekly pack reset for **${target.username}**`,
+        await interaction.editReply({
+          content: withSaveNote(`✅ Weekly pack reset for **${target.username}**`, ack),
+        });
       });
     } catch (err) {
       console.error("❌ /resetweekly error:", err);

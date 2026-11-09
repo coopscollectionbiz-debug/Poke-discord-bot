@@ -20,7 +20,12 @@ import {
   MessageFlags,
 } from "discord.js";
 
-import { getAllPokemon, getAllTrainers } from "../utils/dataLoader.js";
+import { getAllPokemon, getFlattenedTrainers } from "../utils/dataLoader.js";
+import { lockUser } from "../utils/userLocks.js";
+import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
+import { grantTrainer } from "../services/assets.js";
+import { getTrainerKey } from "../utils/trainerFileHandler.js";
 import {
   selectRandomPokemonForUser,
   selectRandomTrainerForUser,
@@ -64,23 +69,6 @@ async function terminateShop(i, confirmCollector, mainCollector) {
   await closeShopMessage(i, confirmCollector, mainCollector);
 }
 
-// Handles cost deduction and insufficient funds
-async function handlePurchaseCost(i, user, item, saveLocal, confirmCollector, mainCollector) {
-  if (item.cost > 0 && user.cc < item.cost) {
-    await safeInteractionReply(i, {
-      content: `❌ Not enough CC. Need **${item.cost}**, have **${user.cc}**.`,
-      flags: MessageFlags.Ephemeral,
-    });
-    await closeShopMessage(i, confirmCollector, mainCollector);
-    return false;
-  }
-
-  if (item.cost > 0) {
-    user.cc -= item.cost;
-    await saveLocal();
-  }
-  return true;
-}
 
 // ==========================================================
 // 🪙 Assets
@@ -124,20 +112,15 @@ export default {
     .setDescription("Admin: grant or test item rewards via the PokéMart.")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
+  async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
     try {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const userId = interaction.user.id;
-      const user = (trainerData[userId] ??= {
-        id: userId,
-        tp: 0,
-        cc: 0,
-        pokemon: {},
-        trainers: {},
-        items: { evolution_stone: 0 },
-        purchases: [],
-      });
+      // Same record shape as every other path (never a hand-built object).
+      const user = await lockUser(userId, () =>
+        ensureUserInitialized(userId, interaction.user.username, trainerData, client)
+      );
 
       const embed = createSuccessEmbed(
         "🏪 Coop’s Collection PokéMart (Admin)",
@@ -241,130 +224,103 @@ export default {
           // 🎁 Starter Pack
           // ====================================================
           if (confirmedItem.id === "starter_pack") {
-            user.purchases ??= [];
-            if (user.purchases.includes("starter_pack")) {
-              await safeInteractionReply(btn, { content: "⚠️ Already claimed.", flags: MessageFlags.Ephemeral });
-              await closeShopMessage(btn, confirmCollector, collector);
-              return;
-            }
-
+            // Catalog look-ups (awaits) first; everything else inside the lock.
             const allPokemon = await getAllPokemon();
-            const allTrainers = await getAllTrainers();
+            const allTrainers = await getFlattenedTrainers();
 
-            const pokemonByTier = (tier) => allPokemon.filter((p) => p.tier === tier);
-            const pickPokemon = (tier) => {
-              const pool = pokemonByTier(tier);
-              return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
-            };
-
-            const rewards = [
-              pickPokemon("common"),
-              pickPokemon("uncommon"),
-              pickPokemon("rare"),
-            ].filter(Boolean);
-
-            const rareTrainers = allTrainers.filter(
-              (t) => (t.tier || "").toLowerCase() === "rare"
-            );
-            const rareTrainer = selectRandomTrainerForUser(
-              rareTrainers.length > 0 ? rareTrainers : allTrainers,
-              user
-            );
-
-            const shinyPulled = [];
-            const rewardEmbeds = [];
-            const broadcastQueue = [];
-
-            for (const reward of rewards) {
-              const shiny = rollForShiny(user.tp || 0);
-              grantCatch(user, reward.id, shiny ? "shiny" : "normal");
-
-              const spriteURL = shiny
-                ? `${spritePaths.shiny}${reward.id}.gif`
-                : `${spritePaths.pokemon}${reward.id}.gif`;
-              rewardEmbeds.push(createPokemonRewardEmbed(reward, shiny, spriteURL));
-
-              broadcastQueue.push({
-                type: "pokemon",
-                item: { id: reward.id, name: reward.name, rarity: reward.tier },
-                shiny,
-              });
-              if (shiny) shinyPulled.push(reward);
-            }
-
-            user.trainers[rareTrainer.id] = true;
-            const trainerSprite = `${spritePaths.trainers}${rareTrainer.filename || rareTrainer.id}.png`;
-            rewardEmbeds.push(createTrainerRewardEmbed(rareTrainer, trainerSprite));
-            broadcastQueue.push({
-              type: "trainer",
-              item: { id: rareTrainer.id, name: rareTrainer.name, rarity: rareTrainer.tier || "rare" },
-              shiny: false,
-            });
-
-            try {
-              user.purchases.push("starter_pack");
-              await saveTrainerDataLocal(trainerData);
-
-              for (const b of broadcastQueue) {
-                broadcastReward(client, {
-                  user: btn.user,
-                  type: b.type,
-                  item: b.item,
-                  shiny: b.shiny,
-                  source: "Starter Pack",
-                }).catch(() => {});
+            await lockUser(userId, async () => {
+              const live = trainerData[userId];
+              live.purchases ??= [];
+              if (live.purchases.includes("starter_pack")) {
+                await safeInteractionReply(btn, { content: "⚠️ Already claimed.", flags: MessageFlags.Ephemeral });
+                await closeShopMessage(btn, confirmCollector, collector);
+                return;
               }
 
-              const summary = `You received 3 Pokémon and 1 Rare Trainer!\n${
-                shinyPulled.length
-                  ? `✨ ${shinyPulled.length} shiny Pokémon pulled!`
-                  : "No shinies this time!"
-              }`;
+              const pickPokemon = (tier) => {
+                const pool = allPokemon.filter((p) => p.tier === tier);
+                return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+              };
+              const rewards = [pickPokemon("common"), pickPokemon("uncommon"), pickPokemon("rare")].filter(Boolean);
 
-              const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summary);
-              await btn.message.edit({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
+              const rareTrainers = allTrainers.filter((t) => (t.tier || "").toLowerCase() === "rare");
+              const rareTrainer = selectRandomTrainerForUser(rareTrainers.length > 0 ? rareTrainers : allTrainers, live);
+              const trainerKey = getTrainerKey(rareTrainer);
+
+              // ---- one synchronous block: grant everything + mark claimed ----
+              const shinyPulled = [];
+              const rewardEmbeds = [];
+              const broadcastQueue = [];
+              for (const reward of rewards) {
+                const shiny = rollForShiny(live.tp || 0);
+                grantCatch(live, reward.id, shiny ? "shiny" : "normal");
+                const spriteURL = shiny ? `${spritePaths.shiny}${reward.id}.gif` : `${spritePaths.pokemon}${reward.id}.gif`;
+                rewardEmbeds.push(createPokemonRewardEmbed(reward, shiny, spriteURL));
+                broadcastQueue.push({ type: "pokemon", item: { id: reward.id, name: reward.name, rarity: reward.tier }, shiny });
+                if (shiny) shinyPulled.push(reward);
+              }
+              if (trainerKey) {
+                grantTrainer(live, trainerKey);
+                rewardEmbeds.push(createTrainerRewardEmbed(rareTrainer, `${spritePaths.trainers}${trainerKey}`));
+                broadcastQueue.push({ type: "trainer", item: { id: rareTrainer.id, name: rareTrainer.name, rarity: rareTrainer.tier || "rare" }, shiny: false });
+              }
+              live.purchases.push("starter_pack");
+
+              const ack = await saveAndAck(trainerData);
+
+              try {
+                for (const b of broadcastQueue) {
+                  broadcastReward(client, { user: btn.user, type: b.type, item: b.item, shiny: b.shiny, source: "Starter Pack" }).catch(() => {});
+                }
+                const summary = withSaveNote(
+                  `You received ${rewards.length} Pokémon and ${trainerKey ? "1 Rare Trainer" : "no trainer"}!
+${
+                    shinyPulled.length ? `✨ ${shinyPulled.length} shiny Pokémon pulled!` : "No shinies this time!"
+                  }`,
+                  ack
+                );
+                const successEmbed = createSuccessEmbed(`${STARTER_PACK} Starter Pack Claimed!`, summary);
+                await btn.message.edit({ embeds: [successEmbed, ...rewardEmbeds], components: [] });
+              } catch (err) {
+                console.error("❌ Starter Pack reply error:", err);
+              }
               await closeShopMessage(btn, confirmCollector, collector);
-              return;
-            } catch (err) {
-              console.error("❌ Starter Pack Error:", err);
-              await btn.message.edit({
-                content: "⚠️ Error granting Starter Pack.",
-                components: [],
-                embeds: [],
-              });
-              await closeShopMessage(btn, confirmCollector, collector);
-            }
+            });
             return;
           }
 
           // ====================================================
-          // 🪨 Evolution Stone
+          // 🪨 Evolution Stone: charge + grant in one block, then save
           // ====================================================
           if (confirmedItem.id === "evolution_stone") {
-            const ok = await handlePurchaseCost(
-              btn,
-              user,
-              confirmedItem,
-              () => saveTrainerDataLocal(trainerData),
-              confirmCollector,
-              collector
-            );
-            if (!ok) return;
+            await lockUser(userId, async () => {
+              const live = trainerData[userId];
+              if (confirmedItem.cost > 0 && !(live.cc >= confirmedItem.cost)) {
+                await safeInteractionReply(btn, {
+                  content: `❌ Not enough CC. Need **${confirmedItem.cost}**, have **${live.cc}**.`,
+                  flags: MessageFlags.Ephemeral,
+                });
+                await closeShopMessage(btn, confirmCollector, collector);
+                return;
+              }
+              live.cc -= confirmedItem.cost;
+              live.items ??= { evolution_stone: 0 };
+              live.items.evolution_stone = (live.items.evolution_stone || 0) + 1;
 
-            user.items ??= { evolution_stone: 0 };
-            user.items.evolution_stone++;
-            await saveTrainerDataLocal(trainerData);
+              const ack = await saveAndAck(trainerData);
 
-            const successEmbed = createSuccessEmbed(
-              `${EVO_STONE} Evolution Stone Purchased!`,
-              `Spent **${confirmedItem.cost} CC**.\nNow have **${user.items.evolution_stone}** total.`
-            ).setFooter({
-              text: `Remaining balance: ${user.cc.toLocaleString()} CC`,
-              iconURL: COOPCOIN_IMG,
+              const successEmbed = createSuccessEmbed(
+                `${EVO_STONE} Evolution Stone Purchased!`,
+                withSaveNote(`Spent **${confirmedItem.cost} CC**.
+Now have **${live.items.evolution_stone}** total.`, ack)
+              ).setFooter({
+                text: `Remaining balance: ${live.cc.toLocaleString()} CC`,
+                iconURL: COOPCOIN_IMG,
+              });
+
+              await btn.message.edit({ embeds: [successEmbed], components: [] });
+              await closeShopMessage(btn, confirmCollector, collector);
             });
-
-            await btn.message.edit({ embeds: [successEmbed], components: [] });
-            await closeShopMessage(btn, confirmCollector, collector);
           }
         });
 

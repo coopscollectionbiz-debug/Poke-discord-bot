@@ -16,7 +16,7 @@ export default {
     .setName("showcard")
     .setDescription("Display your Trainer Card publicly."),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
+  async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
     try {
       // Always public
       await interaction.deferReply();

@@ -4,11 +4,8 @@
 // ==========================================================
 
 import fs from "fs/promises";
+import os from "os";
 import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Simple test harness
 let testsRun = 0;
@@ -49,20 +46,19 @@ async function test(name, fn) {
   }
 }
 
-// Test setup
-const testDir = path.join("/tmp", "savequeue-tests");
-const testFile = path.join(testDir, "trainerData.json");
+// Test setup: a private temp dir that this test owns (and deletes).
+// The save queue writes to TRAINERDATA_DIR, so point it there.
+let testDir;
+let testFile;
 
 async function setup() {
-  await fs.mkdir(testDir, { recursive: true });
-  // Change to test directory so save queue uses it
-  process.chdir(testDir);
+  testDir = await fs.mkdtemp(path.join(os.tmpdir(), "savequeue-tests-"));
+  testFile = path.join(testDir, "trainerData.json");
+  process.env.TRAINERDATA_DIR = testDir;
 }
 
 async function cleanup() {
   try {
-    // Change back to project root
-    process.chdir(path.join(__dirname, ".."));
     await fs.rm(testDir, { recursive: true, force: true });
   } catch {
     // Ignore cleanup errors
@@ -76,8 +72,7 @@ async function runTests() {
 
   await setup();
 
-  // Import after setup() changes directory. saveQueue.js resolves ./trainerData.json once,
-  // when it loads, so a top-level import would aim every write at the project root instead.
+  // Import after setup() sets TRAINERDATA_DIR, so every write lands in testDir.
   const { enqueueSave, shutdownFlush } = await import("../utils/saveQueue.js");
 
   try {

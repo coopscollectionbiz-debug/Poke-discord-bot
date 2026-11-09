@@ -108,7 +108,9 @@ assertTrue(validateUserSchema(held, "1", "Ash") === held, "validateUserSchema re
 
 section("Historical record format");
 assertTrue(legacyOut === legacy && legacyData[10] === legacy, "identity kept for a legacy record");
-assertEqual(legacy.trainers, legacyBefore.trainers, "legacy trainer object map is left as-is (normalizeUserSchema converts it)");
+// D5: every entry point now produces the same trainer shape (an array of
+// sprite keys), so a legacy object map is converted here too, losing nothing.
+assertEqual(legacy.trainers, Object.keys(legacyBefore.trainers), "legacy trainer object map becomes an array of the same keys");
 assertEqual(legacy.displayedPokemon, legacyBefore.displayedPokemon, "legacy number team is left as-is");
 assertEqual([legacy.lastDaily, legacy.lastRecruit, legacy.lastQuest], [legacyBefore.lastDaily, legacyBefore.lastRecruit, legacyBefore.lastQuest], "cooldowns preserved (string and number formats)");
 assertEqual([legacy.cc, legacy.tp, legacy.rank], [4200, 15000, "Ace Trainer"], "CC, TP and rank preserved");

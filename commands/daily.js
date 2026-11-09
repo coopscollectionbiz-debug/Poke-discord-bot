@@ -9,7 +9,7 @@ import {
 } from "discord.js";
 
 import { safeReply } from "../utils/safeReply.js";
-import { atomicSave } from "../utils/saveManager.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
@@ -174,7 +174,7 @@ export async function execute(
       // ======================================================
       // Atomic save
       // ======================================================
-      await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+      const saveAck = await saveAndAck(trainerData);
 
       // 📜 Event log — daily claim is a major faucet: fixed CC/TP plus
       // two Pokemon and a stone roll. Track what hit so admins can see
@@ -241,6 +241,7 @@ export async function execute(
         });
         summary.setThumbnail(`${spritePaths.items}evolution_stone.png`);
       }
+      if (saveAck.note) summary.setDescription(saveAck.note);
 
       return safeReply(interaction, {
         embeds: [embed1, embed2, summary],

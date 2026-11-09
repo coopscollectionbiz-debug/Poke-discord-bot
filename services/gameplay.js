@@ -171,6 +171,14 @@ export function createGameplayHandlers(deps) {
     const target = pokemonData[tId];
     if (!base || !target) return reply(400, { error: "Invalid Pokémon IDs" });
 
+    // The target must be one of the base's direct evolutions (the same list
+    // the dashboard offers). Before this check any species of a supported
+    // rarity step was accepted, e.g. a common "evolving" into any legendary.
+    const evolvesTo = (base.evolvesTo || base.evolves_to || []).map(Number);
+    if (!evolvesTo.includes(tId)) {
+      return reply(400, { error: `${target.name} isn't an evolution of ${base.name}.` });
+    }
+
     const currentTier = String(base.tier || "common").toLowerCase();
     const nextTier = String(target.tier || "common").toLowerCase();
     const cost = EVOLVE_STONE_COST[`${currentTier}-${nextTier}`] ?? 0;

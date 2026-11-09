@@ -181,6 +181,48 @@ section("Evolve: stones and shiny dust");
   assertTrue(r3.body.replayed && r3.body.saved === true, "once a save succeeds, the replay reports saved");
 }
 
+// ======================= Evolve: only real evolutions =======================
+section("Evolve: the target must be a real evolution of the base");
+{
+  const data = JSON.parse(await fs.readFile(new URL("../public/pokemonData.json", import.meta.url), "utf8"));
+  const U = "100000000000000009";
+  const { state, h } = setup({});
+  const fresh = (pokemon) => { state.td[U] = player({ pokemon, items: { evolution_stone: 50, shiny_dust: 500 } }); return state.td[U]; };
+  const ev = (o) => h.evolve({ body: { id: U, ...o }, isAuthorized: auth(U) });
+
+  // The exploit: Caterpie (common) → Venusaur (legendary) is a supported
+  // rarity step (12 stones) but not an evolution of Caterpie.
+  fresh({ 10: { normal: 1, shiny: 1 } });
+  let snap = clone(state.td);
+  const exploit = await ev({ baseId: 10, targetId: 3 });
+  assertTrue(exploit.status === 400 && /isn't an evolution of/.test(exploit.body.error), "common → unrelated legendary is refused");
+  assertEqual(state.td, snap, "…and nothing changed (no stones spent, no Pokémon moved)");
+  const shinyExploit = await ev({ baseId: 10, targetId: 3, variant: "shiny" });
+  assertTrue(shinyExploit.status === 400 && JSON.stringify(state.td) === JSON.stringify(snap), "same for a shiny attempt (no dust spent)");
+  assertEqual((await ev({ baseId: 10, targetId: 10 })).status, 400, "a species can't 'evolve' into itself");
+  assertEqual((await ev({ baseId: 11, targetId: 10 })).status, 400, "no reverse evolution (Metapod → Caterpie)");
+
+  // Branching evolutions still work (Eevee → any of its listed forms).
+  for (const t of [134, 196]) {
+    fresh({ 133: { normal: 1, shiny: 0 } });
+    const r = await ev({ baseId: 133, targetId: t });
+    assertTrue(r.status === 200 && r.body.success && state.td[U].pokemon[t]?.normal === 1, `Eevee → ${data[t].name} still works`);
+  }
+  fresh({ 133: { normal: 1, shiny: 0 } });
+  assertEqual((await ev({ baseId: 133, targetId: 150 })).status, 400, "Eevee → an unlisted species is refused");
+
+  // Every real evolution in the data passes the target check (sampled across the dex).
+  const real = Object.values(data).flatMap((p) => (p.evolvesTo || []).map((t) => [Number(p.id), Number(t)]));
+  const sample = real.filter((_, i) => i % 16 === 0);
+  let passed = 0;
+  for (const [b, t] of sample) {
+    fresh({ [b]: { normal: 1, shiny: 0 } });
+    const r = await ev({ baseId: b, targetId: t });
+    if (r.status === 200 && r.body.success) passed++;
+  }
+  assertEqual(passed, sample.length, `${sample.length} sampled real evolutions all succeed`);
+}
+
 // ======================= Shiny conversion =======================
 section("Shiny conversion");
 {

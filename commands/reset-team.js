@@ -4,7 +4,7 @@
 
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
-import { atomicSave } from "../utils/saveManager.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 
 
 export default {
@@ -63,13 +63,11 @@ export default {
         // Your bot uses displayedPokemon for the 6-Pokémon team.
         user.displayedPokemon = [];
 
-        trainerData[userId] = user;
-
-        // Save changes
-        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+        // Save changes (user is the live record; no reassignment needed)
+        const saveAck = await saveAndAck(trainerData);
 
         return safeReply(interaction, {
-          content: `✅ Reset **${target.username}'s** displayed Pokémon team.\nThey can now pick a new team in the dashboard.`,
+          content: withSaveNote(`✅ Reset **${target.username}'s** displayed Pokémon team.\nThey can now pick a new team in the dashboard.`, saveAck),
           flags: MessageFlags.Ephemeral
         });
 

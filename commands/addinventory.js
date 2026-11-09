@@ -8,7 +8,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.
 import { safeReply } from "../utils/safeReply.js";
 import { findPokemonByName, getFlattenedTrainers } from "../utils/dataLoader.js";
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
-import { atomicSave } from "../utils/saveManager.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 
 // Shiny Dust lives with the other items, where the dashboard and shiny
@@ -202,13 +202,13 @@ export default {
         // ======================================================
         // 💾 SAVE — atomicSave handles both local & backup sync
         // ======================================================
-        await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+        const saveAck = await saveAndAck(trainerData);
 
         // ======================================================
         // ✅ Confirmation reply
         // ======================================================
         return safeReply(interaction, {
-          content: `✅ Added ${confirmationText} to **${targetUser.username}**.`,
+          content: withSaveNote(`✅ Added ${confirmationText} to **${targetUser.username}**.`, saveAck),
           flags: MessageFlags.Ephemeral,
         });
       } catch (err) {

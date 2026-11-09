@@ -306,37 +306,19 @@ function queueRoleUpdate({ guild, userId, tp, channel }) {
   });
 }
 
-// Flush loop
-setInterval(async () => {
-  if (!pendingRoleUpdates.size) return;
-  // Never sync roles from unloaded/partial data; jobs stay queued until ready.
-  if (!isReady) return;
-
-  // Snapshot & clear quickly so we don't block incoming events
-  const batch = [...pendingRoleUpdates.values()];
-  pendingRoleUpdates.clear();
-
-  for (const job of batch) {
-    try {
-      const userObj = trainerData[job.userId];
-      if (!userObj) continue;
-
-      const oldRank = userObj.rank || null;
-      const newRank = getRank(job.tp || 0);
-      if (!newRank) continue;
-
-      userObj.rank = newRank;
-      const member = await getMemberCached(job.guild, job.userId);
-
-      // Only announce (via channel) on genuine rank-ups.
-      // Silent fix when rank name is unchanged but Discord role is stale.
-      const channel = oldRank !== newRank ? job.channel : null;
-      await updateUserRole(member, job.tp, channel);
-    } catch (err) {
-      console.warn("⚠️ role queue flush failed:", err?.message || err);
-    }
-  }
-}, ROLE_FLUSH_INTERVAL_MS);
+// Flush loop (logic + readiness guard live in utils/passiveChat.js).
+// Closures read isReady/trainerData lazily, so their later declaration is fine.
+setInterval(
+  createRoleFlush({
+    isReady: () => isReady,
+    pending: pendingRoleUpdates,
+    getTrainerData: () => trainerData,
+    getRank,
+    getMember: getMemberCached,
+    updateUserRole,
+  }),
+  ROLE_FLUSH_INTERVAL_MS
+);
 
 // ==========================================================
 // 🔧 SCHEMA NORMALIZATION
@@ -524,6 +506,7 @@ ensureWeeklyReset(user);
 // ==========================================================
 
 import { lockUser } from "./utils/userLocks.js";
+import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
 import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
 
@@ -1320,10 +1303,11 @@ async function gracefulShutdown(signal) {
 
   try {
     console.log("💾 Flushing pending local saves...");
-    await Promise.race([
+    const localSaved = await Promise.race([
       shutdownFlush(10_000),
-      new Promise(res => setTimeout(res, 8000)),
+      new Promise(res => setTimeout(() => res(false), 8000)),
     ]);
+    console.log(localSaved ? "✅ Local save flushed" : "⚠️ Local save NOT confirmed before shutdown");
 
     // Event log is append-only with no in-memory buffer, but we
     // call shutdown() as a hook in case buffering is added later.
@@ -1355,77 +1339,24 @@ process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 // ==========================================================
 // 💬 Passive TP Gain from Messages
 // ==========================================================
-client.on("messageCreate", async (message) => {
-  if (message.author.bot || !message.guild) return;
-
-  // Until trainerData is loaded, trainerData is {} — rewarding now would build
-  // a throwaway record and the role flush would demote the player to the
-  // lowest rank (with a public "Rank Up!"). Ignore chat until ready.
-  if (!isReady) return;
-
-  const userId = message.author.id;
-  const username = message.author.username;
-  trainerData[userId] = normalizeUserSchema(userId, trainerData[userId]);
-
-  // Prevent spam with cooldown
-  const now = Date.now();
-  if (userCooldowns.has(userId) && now - userCooldowns.get(userId) < MESSAGE_COOLDOWN) return;
-  userCooldowns.set(userId, now);
-
-  // Ensure user data exists
-  trainerData[userId] ??= {
-    id: userId,
-    tp: 0,
-    cc: 0,
-    pokemon: {},
-    trainers: [],
-    displayedTrainer: null,
-    displayedPokemon: [],
-    onboardingComplete: false,
-    onboardingDate: null,
-    starterPokemon: null,
-    lastDaily: 0,
-    lastRecruit: 0,
-    lastQuest: 0,
-    lastWeeklyPack: null,
-    weeklyPackClaimed: false,
-    items: {},
-    purchases: [],
-    luck: 0,
-    luckTimestamp: 0,
-  };
-
-  const userObj = trainerData[userId];
-
-  // 🪙 Give base TP for chatting
-  userObj.tp += MESSAGE_TP_GAIN;
-
-  // 💰 Chance to earn CC
-  if (Math.random() < MESSAGE_CC_CHANCE) {
-    userObj.cc ??= 0;
-    userObj.cc += MESSAGE_CC_GAIN;
-
-    try {
-      await message.react("💰").catch(() => {});
-    } catch {}
-  }
-
-  // 🔥 fire-and-forget save (safe, debounced) — SAVE AFTER MUTATIONS
-  enqueueSave(trainerData);
-
-  queueRoleUpdate({
-    guild: message.guild,
-    userId,
-    tp: userObj.tp,
-    channel: message.channel,
-  });
-
-  setImmediate(() => {
-    tryGiveRandomReward(userObj, message.author, message).catch((e) =>
-      console.warn("⚠️ tryGiveRandomReward failed:", e?.message || e)
-    );
-  });
-});
+client.on(
+  "messageCreate",
+  createMessageHandler({
+    isReady: () => isReady,
+    getTrainerData: () => trainerData,
+    normalizeUserSchema,
+    cooldowns: userCooldowns,
+    config: {
+      cooldownMs: MESSAGE_COOLDOWN,
+      tpGain: MESSAGE_TP_GAIN,
+      ccChance: MESSAGE_CC_CHANCE,
+      ccGain: MESSAGE_CC_GAIN,
+    },
+    enqueueSave,
+    queueRoleUpdate,
+    giveRandomReward: tryGiveRandomReward,
+  })
+);
 
 
 // ==========================================================

@@ -19,6 +19,13 @@ Thumbs.db
 trainerData.json
 trainerData_backup*.json
 trainerData.backup.*.json
+# Durable local snapshots (persistence/localStore.js)
+trainerData.json.tmp
+trainerData.meta.json
+trainerData.meta.json.tmp
+trainerData.prev.json
+trainerData.prev.meta.json
+snapshots/
 *.zip
 
 # Append-only event log (per-instance local state)

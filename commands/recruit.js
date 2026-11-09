@@ -23,9 +23,11 @@ import {
 } from "../utils/weightedRandom.js";
 import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey } from "../utils/trainerFileHandler.js";
-import { atomicSave } from "../utils/saveManager.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { logEvent } from "../utils/eventLog.js";
+import { lockUser } from "../utils/userLocks.js";
+import { grantTrainer } from "../services/assets.js";
 
 
 // ==========================================================
@@ -43,7 +45,7 @@ export default {
     .setDescription("Recruit a Pokémon or Trainer! (Costs 100 CC)")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-  async execute(interaction, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
+  async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const id = interaction.user.id;
@@ -120,9 +122,9 @@ export default {
         }
 
         if (choice === "pokemon") {
-          await recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord, client);
+          await recruitPokemon(i, trainerData);
         } else {
-          await recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord, client);
+          await recruitTrainer(i, trainerData);
         }
       }
     });
@@ -139,114 +141,103 @@ export default {
 };
 
 // ==========================================================
+// Shared: charge 100 CC and grant, all inside the user's lock.
+// Awaits (catalog look-ups) happen before the lock; inside it the live
+// record is re-checked, mutated in one synchronous block, then saved.
+// ==========================================================
+const NOT_ENOUGH_CC = "❌ You need **100 CC** to recruit! Earn more using `/daily`.";
+
+// Gens 1–5 = national dex 1–649. (pokemonData has no `generation` field;
+// filtering on it emptied the pool and broke every recruit.)
+export const RECRUIT_MAX_DEX = 649;
+export const recruitPool = (allPokemon) => allPokemon.filter((p) => Number(p.id) >= 1 && Number(p.id) <= RECRUIT_MAX_DEX);
+
+/**
+ * Charge the recruit cost and apply `grant(user)` atomically.
+ * @returns {{ok:true}|{ok:false, reason:string}}
+ */
+export function chargeAndGrant(user, grant, now = Date.now()) {
+  if (!user || !Number.isFinite(user.cc) || user.cc < RECRUIT_COST_CC) return { ok: false, reason: NOT_ENOUGH_CC };
+  grant(user);
+  user.cc -= RECRUIT_COST_CC;
+  user.lastRecruit = now;
+  return { ok: true };
+}
+
+// ==========================================================
 // 🐾 Pokémon Recruitment
 // ==========================================================
-async function recruitPokemon(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-  if (user.cc < RECRUIT_COST_CC) {
-    return safeReply(i, {
-      content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
-      flags: MessageFlags.Ephemeral
-    });
+async function recruitPokemon(i, trainerData) {
+  const pool = recruitPool(await getPokemonCached());
+  if (!pool.length) {
+    return safeReply(i, { content: "❌ Recruitment is unavailable right now. Please try again later.", flags: MessageFlags.Ephemeral });
   }
 
-  const allPokemon = await getPokemonCached();
-  const pool = allPokemon.filter((p) => p.generation <= 5);
-  const pick = selectRandomPokemonForUser(pool, user);
-  const shiny = rollForShiny(user.tp || 0);
+  await lockUser(i.user.id, async () => {
+    const user = trainerData[i.user.id];
+    const pick = selectRandomPokemonForUser(pool, user);
+    const shiny = rollForShiny(user?.tp || 0);
+    const res = chargeAndGrant(user, (u) => grantCatch(u, pick.id, shiny ? "shiny" : "normal"));
+    if (!res.ok) return safeReply(i, { content: res.reason, flags: MessageFlags.Ephemeral });
 
-  grantCatch(user, pick.id, shiny ? "shiny" : "normal");
+    const ack = await saveAndAck(trainerData);
 
-  user.cc -= RECRUIT_COST_CC;
-  user.lastRecruit = Date.now();
-
-  try {
-    await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-  } catch (err) {
-    user.cc += RECRUIT_COST_CC;
-    console.error("❌ Recruitment save failed:", err);
-    return safeReply(i, {
-      content: "❌ Failed to complete recruitment. Please try again.",
-      flags: MessageFlags.Ephemeral
+    // 📜 Event log — recruit is a CC sink + Pokemon faucet
+    logEvent("recruit", i.user.id, {
+      rewardType: "pokemon",
+      pokemonId: pick.id,
+      pokemonName: pick.name,
+      tier: (pick.tier || "common").toLowerCase(),
+      shiny,
+      ccSpent: RECRUIT_COST_CC,
     });
-  }
 
-  // 📜 Event log — recruit is a CC sink + Pokemon faucet
-  logEvent("recruit", i.user.id, {
-    rewardType: "pokemon",
-    pokemonId: pick.id,
-    pokemonName: pick.name,
-    tier: (pick.tier || "common").toLowerCase(),
-    shiny,
-    ccSpent: RECRUIT_COST_CC,
+    const spriteUrl = shiny
+      ? `${spritePaths.shiny}${pick.id}.gif`
+      : `${spritePaths.pokemon}${pick.id}.gif`;
+
+    const embed = new EmbedBuilder()
+      .setColor(shiny ? 0xffd700 : 0x00ae86)
+      .setTitle("🎯 Pokémon Recruited!")
+      .setDescription(withSaveNote(shiny ? `✨ You recruited a **Shiny ${pick.name}!**` : `You recruited a **${pick.name}!**`, ack))
+      .setThumbnail(spriteUrl)
+      .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
+
+    return safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });
   });
-
-  const spriteUrl = shiny
-    ? `${spritePaths.shiny}${pick.id}.gif`
-    : `${spritePaths.pokemon}${pick.id}.gif`;
-
-  const embed = new EmbedBuilder()
-    .setColor(shiny ? 0xffd700 : 0x00ae86)
-    .setTitle("🎯 Pokémon Recruited!")
-    .setDescription(shiny ? `✨ You recruited a **Shiny ${pick.name}!**` : `You recruited a **${pick.name}!**`)
-    .setThumbnail(spriteUrl)
-    .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
-
-  await safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });
-
-  // 🌟 Rare Sightings Broadcast (Epic+ and all Shiny)
-  await postRareSightings(client, pick, i.user, true, shiny);
 }
 
 // ==========================================================
 // 🎭 Trainer Recruitment
 // ==========================================================
-async function recruitTrainer(i, user, trainerData, saveTrainerDataLocal, saveDataToDiscord, client) {
-  if (user.cc < RECRUIT_COST_CC) {
-    return safeReply(i, {
-      content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
-      flags: MessageFlags.Ephemeral
-    });
-  }
-
+async function recruitTrainer(i, trainerData) {
   const flatTrainers = await getFlattenedTrainers();
-  const pick = selectRandomTrainerForUser(flatTrainers, user);
-  const file = getTrainerKey(pick);
 
-  user.trainers ??= {};
-  user.trainers[file] = (user.trainers[file] || 0) + 1;
+  await lockUser(i.user.id, async () => {
+    const user = trainerData[i.user.id];
+    const pick = selectRandomTrainerForUser(flatTrainers, user);
+    const file = getTrainerKey(pick);
+    const res = chargeAndGrant(user, (u) => grantTrainer(u, file));
+    if (!res.ok) return safeReply(i, { content: res.reason, flags: MessageFlags.Ephemeral });
 
-  user.cc -= RECRUIT_COST_CC;
-  user.lastRecruit = Date.now();
+    const ack = await saveAndAck(trainerData);
 
-  try {
-    await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
-  } catch (err) {
-    user.cc += RECRUIT_COST_CC;
-    console.error("❌ Recruitment save failed:", err);
-    return safeReply(i, {
-      content: "❌ Failed to complete recruitment. Please try again.",
-      flags: MessageFlags.Ephemeral
+    // 📜 Event log — recruit (trainer variant)
+    logEvent("recruit", i.user.id, {
+      rewardType: "trainer",
+      trainerFile: file,
+      trainerName: pick.name,
+      tier: (pick.tier || "common").toLowerCase(),
+      ccSpent: RECRUIT_COST_CC,
     });
-  }
 
-  // 📜 Event log — recruit (trainer variant)
-  logEvent("recruit", i.user.id, {
-    rewardType: "trainer",
-    trainerFile: file,
-    trainerName: pick.name,
-    tier: (pick.tier || "common").toLowerCase(),
-    ccSpent: RECRUIT_COST_CC,
+    const embed = new EmbedBuilder()
+      .setColor(0x5865f2)
+      .setTitle("🎭 Trainer Recruited!")
+      .setDescription(withSaveNote(`You recruited **${pick.name}**!`, ack))
+      .setThumbnail(`${spritePaths.trainers}${file}`)
+      .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
+
+    return safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });
   });
-
-  const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
-    .setTitle("🎭 Trainer Recruited!")
-    .setDescription(`You recruited **${pick.name}**!`)
-    .setThumbnail(`${spritePaths.trainers}${file}`)
-    .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
-
-  await safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });
-
-  // 🌟 Rare Sightings Broadcast (Epic+)
-  await postRareSightings(client, pick, i.user, false, false);
 }

@@ -56,9 +56,11 @@ import path from "path";
 // ----------------------------------------------------------
 // Honor TRAINERDATA_DIR so the event log lives on the same
 // persistent volume as trainerData.json (relevant on Fly).
-const EVENTS_DIR = process.env.TRAINERDATA_DIR || ".";
-const EVENTS_PATH = path.join(EVENTS_DIR, "events.ndjson");
-const EVENTS_TMP_PATH = path.join(EVENTS_DIR, "events.ndjson.tmp");
+// Resolved on every call (not at import), so tests and tools that set
+// TRAINERDATA_DIR after importing still write to the right place.
+const eventsDir = () => process.env.TRAINERDATA_DIR || ".";
+const eventsPath = () => path.join(eventsDir(), "events.ndjson");
+const eventsTmpPath = () => path.join(eventsDir(), "events.ndjson.tmp");
 
 // 30 days in milliseconds — events older than this get pruned.
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
@@ -84,7 +86,7 @@ export async function logEvent(type, userId, data = {}) {
     };
     // One JSON object per line. Trailing newline is required so the
     // next append starts on a fresh line.
-    await fs.appendFile(EVENTS_PATH, JSON.stringify(entry) + "\n", "utf8");
+    await fs.appendFile(eventsPath(), JSON.stringify(entry) + "\n", "utf8");
   } catch (err) {
     console.warn(`⚠️ logEvent(${type}) failed:`, err?.message || err);
   }
@@ -123,7 +125,7 @@ export async function readEvents(filters = {}) {
 
   let raw;
   try {
-    raw = await fs.readFile(EVENTS_PATH, "utf8");
+    raw = await fs.readFile(eventsPath(), "utf8");
   } catch (err) {
     // ENOENT just means no events have been logged yet — not an error.
     if (err?.code === "ENOENT") return { total: 0, events: [] };
@@ -179,7 +181,7 @@ export async function pruneEvents() {
 
   let raw;
   try {
-    raw = await fs.readFile(EVENTS_PATH, "utf8");
+    raw = await fs.readFile(eventsPath(), "utf8");
   } catch (err) {
     if (err?.code === "ENOENT") return { kept: 0, dropped: 0 };
     console.warn("⚠️ pruneEvents read failed:", err?.message || err);
@@ -213,8 +215,8 @@ export async function pruneEvents() {
     // Survivors keep their original serialized form — faster and
     // preserves any fields we don't know about.
     const output = survivors.length ? survivors.join("\n") + "\n" : "";
-    await fs.writeFile(EVENTS_TMP_PATH, output, "utf8");
-    await fs.rename(EVENTS_TMP_PATH, EVENTS_PATH);
+    await fs.writeFile(eventsTmpPath(), output, "utf8");
+    await fs.rename(eventsTmpPath(), eventsPath());
     console.log(`🧹 Event log pruned: kept ${survivors.length}, dropped ${dropped}`);
   } catch (err) {
     console.warn("⚠️ pruneEvents write failed:", err?.message || err);

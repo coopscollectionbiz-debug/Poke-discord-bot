@@ -1,3 +1,4 @@
+import { normalizeTrainers } from "../services/assets.js";
 // ==========================================================
 // utils/userSchema.js
 // Unified user data schema and initialization
@@ -23,7 +24,7 @@ export const USER_SCHEMA_TEMPLATE = {
 
   // Collections
   pokemon: "object { [id]: { normal, shiny } }",
-  trainers: "object { [trainerKey]: boolean }",
+  trainers: "array of trainer sprite keys",
 
   // Display
   displayedPokemon: "array",
@@ -70,7 +71,7 @@ export function createNewUser(userId, username) {
 
     // Collections
     pokemon: {},
-    trainers: {},
+    trainers: [], // array of trainer sprite keys (see services/assets.js)
 
     // Display
     displayedPokemon: [],
@@ -129,7 +130,7 @@ export function validateUserSchema(user, userId, username) {
 
   // Collections
   if (!out.pokemon || typeof out.pokemon !== "object") out.pokemon = {};
-  if (!out.trainers || typeof out.trainers !== "object") out.trainers = {};
+  normalizeTrainers(out); // always an array of sprite keys
 
   // Display
   if (!Array.isArray(out.displayedPokemon)) out.displayedPokemon = [];

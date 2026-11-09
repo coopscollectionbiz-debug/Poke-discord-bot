@@ -5,13 +5,17 @@
 // ==========================================================
 
 import fs from "fs/promises";
+import fsSync from "fs";
 import os from "os";
 import path from "path";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
 
-// saveQueue writes ./trainerData.json relative to cwd, so run in a temp dir.
+// saveQueue writes to TRAINERDATA_DIR; give it a private temp dir.
 const dir = await fs.mkdtemp(path.join(os.tmpdir(), "savequeue-fail-"));
-process.chdir(dir);
+process.env.TRAINERDATA_DIR = dir;
+process.on("exit", () => {
+  try { fsSync.rmSync(dir, { recursive: true, force: true }); } catch {}
+});
 
 // A DIRECTORY where the temp file goes makes writeFile fail (like ENOSPC/EIO).
 const tmpPath = path.join(dir, "trainerData.json.tmp");

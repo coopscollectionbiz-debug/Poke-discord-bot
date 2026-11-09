@@ -4,7 +4,7 @@
 
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
-import { atomicSave } from "../utils/saveManager.js";
+import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 
 
 export default {
@@ -58,15 +58,16 @@ export default {
           }
 
           // Save
-          await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+          const saveAck = await saveAndAck(trainerData);
 
           console.log(
             `🔁 Starter Pack reset for ${targetUser.username} (${userId}) by ${interaction.user.username}`
           );
 
-          return interaction.editReply(
-            `✅ Starter Pack reset for **${targetUser.username}**.\nThey can now claim it again.`
-          );
+          return interaction.editReply(withSaveNote(
+            `✅ Starter Pack reset for **${targetUser.username}**.\nThey can now claim it again.`,
+            saveAck
+          ));
         });
       }
 
@@ -85,13 +86,13 @@ export default {
         if (user.purchases.length !== before) count++;
       }
 
-      await atomicSave(trainerData, saveTrainerDataLocal, saveDataToDiscord);
+      const globalAck = await saveAndAck(trainerData);
 
       console.log(
         `🔁 GLOBAL Starter Pack reset by ${interaction.user.username}. Users affected: ${count}`
       );
 
-      return interaction.editReply(`✅ Starter Pack reset for **${count}** users.`);
+      return interaction.editReply(withSaveNote(`✅ Starter Pack reset for **${count}** users.`, globalAck));
 
     } catch (err) {
       console.error("❌ /resetstarterpack error:", err);

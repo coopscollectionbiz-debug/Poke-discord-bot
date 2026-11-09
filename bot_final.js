@@ -36,12 +36,24 @@ import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate } from "./utils/bulkDonate.js";
 
-// Local saver — writes trainerData.json to disk & marks dirty
+// Local saver — writes trainerData.json (in TRAINERDATA_DIR) & marks dirty
 import {
   enqueueSave,
   shutdownFlush,
-  saveTrainerDataLocal
+  saveTrainerDataLocal,
+  requireLoadBeforeWrite,
+  markLoaded,
+  getDirtyVersion,
+  isWriteBlocked,
 } from "./utils/saveQueue.js";
+import { readLocalCandidates, readFileCandidate, setSeqAtLeast, nextSeq, dataDir } from "./persistence/localStore.js";
+import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup } from "./persistence/discordBackups.js";
+import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/loader.js";
+import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
+import { saveAndAck, SAVE_DELAYED_NOTE } from "./utils/saveManager.js";
+
+// Nothing may be written to disk until player data has been loaded.
+requireLoadBeforeWrite();
 
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Rejection:", err);
@@ -361,20 +373,9 @@ function normalizeUserSchema(id, user) {
   // 3️⃣ TRAINERS (array of filenames)
   // backwards compatible with old object maps
   // ==========================================================
-  if (Array.isArray(user.trainers)) {
-    // Ensure all entries are strings
-    user.trainers = user.trainers
-      .filter(t => typeof t === "string")
-      .map(t => t.trim());
-  } else if (user.trainers && typeof user.trainers === "object") {
-    // legacy: { "file.png": 1, "other.png": 1 }
-    user.trainers = Object.keys(user.trainers);
-  } else {
-    user.trainers = [];
-  }
-
-  // Remove duplicates
-  user.trainers = [...new Set(user.trainers)];
+  // Shared with utils/userSchema.js so every path produces the same shape:
+  // strings only, trimmed, de-duplicated; legacy object maps become arrays.
+  normalizeTrainers(user);
 
   // ==========================================================
 // 4️⃣ DISPLAYED TEAM (canonical)
@@ -933,6 +934,16 @@ client.ws.on("debug", (m) => {
   }
 });
 
+// ✅ Readiness: 200 only once player data is loaded and commands are served.
+// (Use /healthz for liveness; never restart the bot on a failing /readyz —
+// that risks Discord login loops.)
+let loadBlockedReason = null;
+let loadedFrom = null;
+app.get("/readyz", (_, res) => {
+  const body = { ready: isReady, loadedFrom, loadBlockedReason };
+  res.status(isReady ? 200 : 503).json(body);
+});
+
 // ✅ Health endpoint (uses unified vars)
 app.get("/healthz", (_, res) => {
   res.json({
@@ -967,73 +978,33 @@ setInterval(() => {
 // ==========================================================
 // 💾 Trainer Data Load & Save
 // ==========================================================
+// Picks the newest valid snapshot (local current/previous, or the newest
+// bot-posted Discord backups) — see persistence/loader.js. Returns
+// { ok, data, chosen } or { ok:false, blocked }.
 async function loadTrainerData() {
-  const LOAD_TIMEOUT_MS = 25_000;
+  const channelId = process.env.STORAGE_CHANNEL_ID;
+  console.log(`📦 Loading trainer data (local dir: ${dataDir()}, plus Discord backups)...`);
 
-  const withTimeout = (p, ms, label) =>
-    Promise.race([
-      p,
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout: ${label} after ${ms}ms`)), ms)
-      ),
-    ]);
+  const result = await loadBestSnapshot({
+    readLocalCandidates,
+    fetchDiscordCandidates: () => fetchDiscordCandidates(client, channelId),
+    readFileCandidate: (file) => readFileCandidate(file, null, "restore-file"),
+    fetchDiscordMessageCandidate: (id) => fetchDiscordMessageCandidate(client, channelId, id),
+  });
 
-  console.log("📦 Loading trainer data from Discord...");
-
-  let loaded = {};
-
-  try {
-    const storageChannel = await withTimeout(
-      client.channels.fetch(process.env.STORAGE_CHANNEL_ID),
-      10_000,
-      "channels.fetch(STORAGE_CHANNEL_ID)"
-    );
-
-    const messages = await withTimeout(
-      storageChannel.messages.fetch({ limit: 50 }),
-      10_000,
-      "messages.fetch(limit=50)"
-    );
-
-    const backups = messages
-      .filter((m) => {
-        const att = m.attachments.first();
-        if (!att) return false;
-        const name = String(att.name || "");
-        // Accept both trainerData.json and trainerData*.json
-        return name.toLowerCase().startsWith("trainerdata") && name.toLowerCase().endsWith(".json");
-      })
-      .sort((a, b) => b.createdTimestamp - a.createdTimestamp);
-
-    if (backups.size > 0) {
-      const att = backups.first().attachments.first();
-
-      const res = await withTimeout(
-        fetch(att.url),
-        LOAD_TIMEOUT_MS,
-        "fetch(backup attachment)"
-      );
-
-      const text = await withTimeout(res.text(), LOAD_TIMEOUT_MS, "res.text()");
-      loaded = JSON.parse(text);
-
-      console.log(`✅ Loaded ${Object.keys(loaded).length} users`);
-    } else {
-      console.log("⚠️ No backups found in storage channel.");
-    }
-  } catch (err) {
-    console.error("❌ Discord load failed:", err?.message || err);
+  for (const r of result.rejected || []) console.warn(`  ↳ ${describeSnapshot({ ok: false, ...r })}`);
+  if (!result.ok) {
+    console.error(`⛔ Player data NOT loaded: ${result.blocked}`);
+    return { ok: false, blocked: result.blocked };
   }
 
-  if (loaded && typeof loaded === "object" && !Array.isArray(loaded)) {
-    for (const [id, user] of Object.entries(loaded)) normalizeUserSchema(id, user);
-    return loaded;
-  }
-
-  return {};
+  const { chosen } = result;
+  console.log(`✅ Loaded ${chosen.userCount} users from ${describeSnapshot(chosen)}${result.restored ? " (OPERATOR RESTORE)" : ""}`);
+  setSeqAtLeast(result.maxSeq);
+  const data = chosen.data;
+  for (const [id, user] of Object.entries(data)) normalizeUserSchema(id, user);
+  return { ok: true, data, chosen };
 }
-
-
 
 async function saveDataToDiscord(data, { force = false } = {}) {
   if (shuttingDown && !force) {
@@ -1064,6 +1035,13 @@ async function saveDataToDiscord(data, { force = false } = {}) {
       return;
     }
 
+    // Never upload before player data is loaded (or empty data): a shutdown
+    // during startup used to post {} as the newest backup.
+    if (isWriteBlocked() || !data || typeof data !== "object" || !Object.keys(data).length) {
+      console.log("⚠️ Player data not loaded — skipping Discord backup");
+      return;
+    }
+
     let channel;
     try {
       channel =
@@ -1083,20 +1061,15 @@ async function saveDataToDiscord(data, { force = false } = {}) {
       return;
     }
 
-    // ✅ IMPORTANT: compact JSON (much faster + smaller)
-    const jsonString = JSON.stringify(data);
-    const payload = Buffer.from(jsonString, "utf8");
-    const file = new AttachmentBuilder(payload, { name: "trainerData.json" });
-
-    await withTimeout(
-      channel.send({ files: [file] }),
-      SAVE_TIMEOUT_MS,
-      "channel.send(trainerData.json)"
-    );
+    // Compact JSON attachment (unchanged format) + metadata in the message
+    // text (seq/users/sha256/savedAt) — see persistence/discordBackups.js.
+    const version = getDirtyVersion();
+    const { meta } = await uploadBackup(channel, data, { seq: nextSeq(), timeoutMs: SAVE_TIMEOUT_MS });
+    lastUploadedDirtyVersion = version;
 
     lastDiscordOk = Date.now();
     discordSaveCount++;
-    console.log(`✅ Discord backup #${discordSaveCount} (${Math.round(payload.length / 1024)} KB)`);
+    console.log(`✅ Discord backup #${discordSaveCount} (${Math.round(meta.bytes / 1024)} KB, ${meta.userCount} users, seq ${meta.seq})`);
   } catch (err) {
     console.error("❌ Discord save failed:", err?.message || err);
     throw err;  // let callers know it failed
@@ -1267,21 +1240,25 @@ function debouncedDiscordSave() {
 }
 
 // ==========================================================
-// 🕒 15-MINUTE DISCORD BACKUP (FIRST RUN AFTER 15 MINUTES)
+// 🕒 OFF-MACHINE DISCORD BACKUP — every 5 minutes, only when data changed
+// (the local volume snapshot is the primary copy; this is for recovery)
 // ==========================================================
+const DISCORD_BACKUP_INTERVAL_MS = 5 * 60 * 1000;
+let lastUploadedDirtyVersion = -1; // -1: upload at the first interval after start
+
 const discordBackupInterval = setInterval(async () => {
   if (shuttingDown) return;
   if (!client.isReady() || !isReady) return;
   if (isSaving) return;
+  if (getDirtyVersion() === lastUploadedDirtyVersion) return; // nothing changed
 
-  console.log("💾 15-minute interval — saving trainerData to Discord...");
+  console.log("💾 Backup interval — saving trainerData to Discord...");
   try {
     await saveDataToDiscord(trainerData);
-    console.log("✅ Discord backup complete (15-minute interval)");
   } catch (err) {
     console.error("❌ Interval Discord save failed:", err?.message || err);
   }
-}, 15 * 60 * 1000);
+}, DISCORD_BACKUP_INTERVAL_MS);
 
 // ==========================================================
 // 🛑 GRACEFUL SHUTDOWN (Fixed — Final Backup Guaranteed)
@@ -1382,6 +1359,22 @@ app.get("/api/user", (req, res) => {
 // ==========================================================
 // 🛍️ SHOP API — UPDATE USER (HARDENED / WHITELISTED)
 // ==========================================================
+// D8: dashboard writes only while the bot is READY. Before player data has
+// loaded, during a load retry, and once shutdown has begun (after the final
+// flush), a write could act on incomplete data or be lost, so refuse it.
+app.use("/api", (req, res, next) => {
+  if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") return next();
+  if (!isReady) {
+    return res.status(503).json({ success: false, error: "The bot is starting up or restarting. Please try again in a moment." });
+  }
+  return next();
+});
+
+// D14: dashboard replies say whether the change reached disk. On a failed
+// write the change stays in memory and is retried; the reply carries a
+// "saved with a delay" notice instead of an unqualified success.
+const saveAckFields = (ack) => (ack.saved ? { saved: true } : { saved: false, saveNotice: SAVE_DELAYED_NOTE });
+
 app.post("/api/updateUser", express.json({ limit: "32kb" }), async (req, res) => {
   try {
     const { id, user } = req.body;
@@ -1424,19 +1417,21 @@ app.post("/api/updateUser", express.json({ limit: "32kb" }), async (req, res) =>
     }
 
     await lockUser(id, async () => {
-      // Normalize the existing record first (ensures schema is sane)
-      const base = normalizeUserSchema(id, trainerData[id]);
+      // D2: update the LIVE record in place. Replacing trainerData[id] with a
+      // copy detached any reference still held elsewhere (open collectors,
+      // wagers, battles), and their later CC/TP writes were lost.
+      const user = normalizeUserSchema(id, trainerData[id]);
 
       // Apply patch only (NO blind merge of arbitrary user fields)
-      const next = normalizeUserSchema(id, { ...base, ...patch });
+      Object.assign(user, patch);
+      normalizeUserSchema(id, user);
 
       // Server-authoritative fields
-      next.rank = getRank(next.tp);
+      user.rank = getRank(user.tp);
 
-      trainerData[id] = next;
-      await enqueueSave(trainerData);
+      const saveAck = await saveAndAck(trainerData);
 
-      return res.json({ success: true });
+      return res.json({ ...saveAckFields(saveAck), success: true });
     });
   } catch (err) {
     console.error("updateUser error:", err);
@@ -1582,7 +1577,7 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
       // ----------------------------------------
       // 6️⃣ SAVE TRAINER DATA
       // ----------------------------------------
-      await enqueueSave(trainerData);
+      const saveAck = await saveAndAck(trainerData);
 
       // 📜 Event log — captures every ball roll for the admin analytics
       // panel. logEvent never throws, so this can't interrupt the roll.
@@ -1623,7 +1618,7 @@ if (
       // ----------------------------------------
       // 8️⃣ RESPOND TO FRONTEND WITH NEW CC & SPRITE
       // ----------------------------------------
-      return res.json({
+      return res.json({ ...saveAckFields(saveAck),
         success: true,
         pokemon: {
           id: reward.id,
@@ -1861,6 +1856,17 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
 
   if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
 
+  // D6: every await happens BEFORE the claim flag is set. The flag and all
+  // six grants are applied in one synchronous block, then saved, so a
+  // failure can never leave the pack "claimed" with nothing granted.
+  let allPokemon;
+  try {
+    allPokemon = await getPokemonCached();
+  } catch (err) {
+    console.error("❌ weekly-pack: Pokémon data unavailable:", err?.message || err);
+    return res.status(503).json({ error: "Rewards are unavailable right now. Please try again." });
+  }
+
   await lockUser(id, async () => {
     const user = trainerData[id];
 
@@ -1870,25 +1876,17 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
       return res.status(400).json({ error: "Weekly pack already claimed." });
     }
 
-    user.weeklyPackClaimed = true;
-
-    const results = [];
-    const allPokemon = await getPokemonCached();
-
-    const poolFor = (tier) => allPokemon.filter((p) => p.tier === tier);
     const pick = (tier) => {
-      const pool = poolFor(tier);
+      const pool = allPokemon.filter((p) => p.tier === tier);
       return pool[Math.floor(Math.random() * pool.length)];
     };
 
-    async function givePokemon(tier) {
+    const results = [];
+    for (const tier of ["common", "common", "common", "uncommon", "uncommon", "rare"]) {
       const reward = pick(tier);
-      if (!reward) return;
-
+      if (!reward) continue;
       const shiny = rollForShiny(user.tp || 0);
-
       grantCatch(user, reward.id, shiny ? "shiny" : "normal");
-
       results.push({
         type: "pokemon",
         id: reward.id,
@@ -1900,15 +1898,9 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
           : `/public/sprites/pokemon/normal/${reward.id}.gif`,
       });
     }
+    user.weeklyPackClaimed = true;
 
-    await givePokemon("common");
-    await givePokemon("common");
-    await givePokemon("common");
-    await givePokemon("uncommon");
-    await givePokemon("uncommon");
-    await givePokemon("rare");
-
-    await enqueueSave(trainerData);
+    const saveAck = await saveAndAck(trainerData);
 
     // 📜 Event log — weekly pack is a scheduled CC/Pokemon faucet;
     // track the exact rewards so admins can see what showed up.
@@ -1921,7 +1913,7 @@ app.post("/api/weekly-pack", express.json(), async (req, res) => {
       })),
     });
 
-    res.json({ success: true, rewards: results });
+    res.json({ ...saveAckFields(saveAck), success: true, rewards: results });
   });
 });
 
@@ -2005,10 +1997,10 @@ app.post("/api/set-trainer", express.json({ limit: "8kb" }), async (req, res) =>
       user.displayedTrainer = canonicalFile;
       trainerData[id] = user;
 
-      await enqueueSave(trainerData);
+      const saveAck = await saveAndAck(trainerData);
 
       console.log(`✅ ${id} equipped trainer ${canonicalFile}`);
-      return res.json({ success: true, equipped: canonicalFile });
+      return res.json({ ...saveAckFields(saveAck), success: true, equipped: canonicalFile });
     });
   } catch (err) {
     console.error("❌ /api/set-trainer failed:", err?.message || err);
@@ -2071,9 +2063,9 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
     user.cc -= cost;
     user.trainers.push(canonicalFile);
 
-    await enqueueSave(trainerData);
+    const saveAck = await saveAndAck(trainerData);
 
-    return res.json({
+    return res.json({ ...saveAckFields(saveAck),
       success: true,
       file: canonicalFile,
       cost,
@@ -2149,7 +2141,7 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
       user.cc -= COST;
       user.items.evolution_stone += 1;
 
-      await enqueueSave(trainerData);
+      const saveAck = await saveAndAck(trainerData);
 
       // 📜 Event log — tracks CC sink into the shop for analytics
       // on what players are spending on.
@@ -2158,7 +2150,7 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
         stonesAfter: user.items.evolution_stone,
       });
 
-      return res.json({
+      return res.json({ ...saveAckFields(saveAck),
         success: true,
         cc: user.cc,
         stones: user.items.evolution_stone,
@@ -2298,9 +2290,9 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       u.displayedPokemon = normalized;
       trainerData[id] = u;
 
-      await enqueueSave(trainerData);
+      const saveAck = await saveAndAck(trainerData);
 
-      return res.json({ success: true, currentTeam: u.displayedPokemon });
+      return res.json({ ...saveAckFields(saveAck), success: true, currentTeam: u.displayedPokemon });
     });
   } catch (err) {
     console.error("❌ /api/set-pokemon-team:", err?.message || err);
@@ -2439,7 +2431,7 @@ if (dustCost > 0) {
     carryLevel(user, { id: bId, variant: chosenVariant }, { id: tId, variant: chosenVariant });
     resetLevelIfGone(user, bId, chosenVariant);
 
-    await enqueueSave(trainerData);
+    const saveAck = await saveAndAck(trainerData);
 
     // 📜 Event log — evolution consumes stones (and sometimes dust)
     // so admins can track stone/dust sink pressure.
@@ -2455,7 +2447,7 @@ if (dustCost > 0) {
       dustCost,
     });
 
-    return res.json({
+    return res.json({ ...saveAckFields(saveAck),
   success: true,
   evolved: {
     from: base.name,
@@ -2573,7 +2565,7 @@ if (chosenVariant === "shiny") {
       addItem(u, "shiny_dust", dustReward);
     }
 
-    await enqueueSave(trainerData);
+    const saveAck = await saveAndAck(trainerData);
 
     // 📜 Event log — donations are half of the CC-flow picture (rolls
     // being the other half). Tracks the Pokemon given up, its tier,
@@ -2592,7 +2584,7 @@ if (chosenVariant === "shiny") {
     ? null
     : Math.max(0, NON_SHINY_DUST_WEEKLY_CAP - (u.nonShinyDustEarnedThisWeek ?? 0));
 
-return res.json({
+return res.json({ ...saveAckFields(saveAck),
   success: true,
   donated: { id: pid, name: p.name, variant: chosenVariant },
   gainedCC: finalValue,
@@ -2646,13 +2638,13 @@ app.post("/api/pokemon/donate-bulk", express.json({ limit: "100kb" }), async (re
 
     if (result.error) return res.status(400).json({ error: result.error });
 
-    await enqueueSave(trainerData);
+    const saveAck = await saveAndAck(trainerData);
 
     // One event per copy, same shape as single donate, so admin analytics
     // count bulk donations without special-casing. logEvent never throws.
     for (const ev of result.events) logEvent("donate", id, { ...ev, source: mode });
 
-    return res.json({
+    return res.json({ ...saveAckFields(saveAck),
       success: true,
       donatedCopies: result.donatedCopies,
       gainedCC: result.gainedCC,
@@ -2725,7 +2717,7 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
       delete user.pokemon[pid];
     }
 
-    await enqueueSave(trainerData);
+    const saveAck = await saveAndAck(trainerData);
 
     // 📜 Event log — shiny conversion is a dust sink worth tracking
     // for analytics on how players are spending their non-shiny dust.
@@ -2736,7 +2728,7 @@ app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
       dustCost,
     });
 
-    return res.json({
+    return res.json({ ...saveAckFields(saveAck),
       success: true,
       converted: { id: pid, name: p.name },
       tier,
@@ -2805,18 +2797,43 @@ client.once("ready", async () => {
 
   // Attempt load once
   async function attemptLoad() {
-    const loaded = await loadTrainerData();
-    const ok =
-      loaded &&
-      typeof loaded === "object" &&
-      !Array.isArray(loaded) &&
-      Object.keys(loaded).length > 0;
-
-    if (ok) {
-      trainerData = loaded;
-      return true;
+    let result;
+    try {
+      result = await loadTrainerData();
+    } catch (e) {
+      result = { ok: false, blocked: `load error: ${e?.message || e}` };
     }
-    return false;
+
+    if (!result.ok) {
+      loadBlockedReason = result.blocked || "unknown";
+      return false;
+    }
+
+    trainerData = result.data;
+    loadBlockedReason = null;
+    loadedFrom = result.chosen.source;
+    markLoaded(); // writes allowed from here on
+
+    // Report-only integrity audit (counts by problem type; never IDs or values).
+    try {
+      const audit = auditTrainerData(trainerData);
+      if (audit.usersWithProblems) {
+        console.warn(`🩺 Data audit: ${audit.usersWithProblems}/${audit.users} records need attention`, audit.counts);
+      } else {
+        console.log(`🩺 Data audit: ${audit.users} records OK`);
+      }
+    } catch (e) {
+      console.warn("⚠️ Data audit failed (ignored):", e?.message || e);
+    }
+
+    // Put the loaded snapshot on local disk right away if it didn't come
+    // from there (first boot on a new volume, or Discord was newer).
+    if (result.chosen.source !== "local") {
+      enqueueSave(trainerData, { force: true }).then((saved) =>
+        console.log(saved ? "💾 Loaded snapshot written to local storage" : "⚠️ Could not write loaded snapshot locally (will retry)")
+      );
+    }
+    return true;
   }
 
   const ok = await attemptLoad();

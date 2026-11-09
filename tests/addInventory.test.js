@@ -9,9 +9,14 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
-// The save queue writes ./trainerData.json; run in a scratch folder so the
-// test never touches a real data file.
-process.chdir(fs.mkdtempSync(path.join(os.tmpdir(), "addinventory-test-")));
+// The save queue writes to TRAINERDATA_DIR; use a private scratch folder so
+// the test never touches a real data file, and remove it afterwards.
+const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "addinventory-test-"));
+process.chdir(scratch);
+process.env.TRAINERDATA_DIR = scratch;
+process.on("exit", () => {
+  try { process.chdir(os.tmpdir()); fs.rmSync(scratch, { recursive: true, force: true }); } catch {}
+});
 const { default: addinventory } = await import("../commands/addinventory.js");
 const { lockUser } = await import("../utils/userLocks.js");
 

@@ -54,7 +54,7 @@ export default {
     .setName("showteam")
     .setDescription("Show your trainer + full team as a canvas card."),
 
-  async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, client) {
+  async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
     await interaction.deferReply(); // public
 
     const user = await ensureUserInitialized(

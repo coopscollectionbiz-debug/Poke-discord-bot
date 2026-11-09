@@ -19,6 +19,13 @@ Thumbs.db
 trainerData.json
 trainerData_backup*.json
 trainerData.backup.*.json
+# Durable local snapshots (persistence/localStore.js)
+trainerData.json.tmp
+trainerData.meta.json
+trainerData.meta.json.tmp
+trainerData.prev.json
+trainerData.prev.meta.json
+snapshots/
 *.zip
 
 # Append-only event log (per-instance local state)
@@ -32,3 +39,10 @@ trainerData.backup.*.json
 
 # Optional: ignore large raw assets not used at runtime
 raw_assets/
+
+# Player-data backups (D-24). Never commit these; keep recovery copies outside the repo.
+oldTrainerBackup.json
+*Backup*.json
+backup_*.json
+*.backup.json
+*.bundle

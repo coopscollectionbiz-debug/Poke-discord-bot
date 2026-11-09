@@ -89,7 +89,9 @@ export function validateSnapshot({ source, text, meta = null, fallbackTime = nul
   const savedAt =
     metaTrusted && Number.isFinite(meta.savedAt) ? meta.savedAt : Number.isFinite(fallbackTime) ? fallbackTime : 0;
 
-  return { ok: true, source, id, data, userCount: ids.length, seq, epoch, savedAt, metaTrusted };
+  // Content hash of exactly this text (used to spot identical copies).
+  const contentSha = metaTrusted ? meta.sha256 : sha256(text);
+  return { ok: true, source, id, data, userCount: ids.length, seq, epoch, savedAt, metaTrusted, sha256: contentSha };
 }
 
 // ----------------------------------------------------------
@@ -97,6 +99,10 @@ export function validateSnapshot({ source, text, meta = null, fallbackTime = nul
 // ----------------------------------------------------------
 /** true if a is newer than b. */
 export function isNewer(a, b) {
+  // Identical content (e.g. the shutdown flush and the final Discord backup
+  // of the same data, numbered seq n and n+1): prefer the local copy, so a
+  // restart reads the volume instead of downloading the same data again.
+  if (a.sha256 && a.sha256 === b.sha256) return (SOURCE_PRIORITY[a.source] ?? 0) > (SOURCE_PRIORITY[b.source] ?? 0);
   // A2: when BOTH carry an epoch, the higher epoch wins outright, so a stale
   // process that kept writing (higher seq, lower epoch) can never be chosen
   // over the process that took over. Snapshots without an epoch (older

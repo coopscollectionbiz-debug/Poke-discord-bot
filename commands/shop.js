@@ -26,6 +26,7 @@ import { lockUser } from "../utils/userLocks.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 import { grantTrainer } from "../services/assets.js";
+import { trackProgress } from "../progression/achievements.js";
 import { getTrainerKey } from "../utils/trainerFileHandler.js";
 import {
   selectRandomPokemonForUser,
@@ -266,6 +267,7 @@ export default {
                 broadcastQueue.push({ type: "trainer", item: { id: rareTrainer.id, name: rareTrainer.name, rarity: rareTrainer.tier || "rare" }, shiny: false });
               }
               live.purchases.push("starter_pack");
+              trackProgress(live, [{ type: "pokemon" }, { type: "shiny", n: shinyPulled.length }, { type: "trainers" }]); // achievements
 
               const ack = await saveAndAck(trainerData);
 

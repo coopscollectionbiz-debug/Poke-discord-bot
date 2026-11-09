@@ -52,6 +52,7 @@ header p {
   justify-content: center;
   gap: 10px;
   margin: 1rem auto 1.5rem;
+  flex-wrap: wrap; /* 5 tabs since Release C: wrap on phones instead of clipping */
 }
 
 .nav-tab {

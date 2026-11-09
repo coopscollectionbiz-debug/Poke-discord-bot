@@ -16,6 +16,7 @@ import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { logEvent } from "../utils/eventLog.js";
 import { lockUser } from "../utils/userLocks.js";
 import { grantTrainer } from "../services/assets.js";
+import { trackProgress } from "../progression/achievements.js";
 import { recruitPool } from "./recruit.js";
 
 // ==========================================================
@@ -89,6 +90,7 @@ export default {
       } else {
         const file = getTrainerKey(pick);
         grantTrainer(user, file);
+        trackProgress(user, [{ type: "trainers" }]); // achievements (same lock, same save)
         user.cc = (user.cc || 0) + QUEST_CC_REWARD;
         user.lastQuest = Date.now();
 

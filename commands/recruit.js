@@ -28,6 +28,7 @@ import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { logEvent } from "../utils/eventLog.js";
 import { lockUser } from "../utils/userLocks.js";
 import { grantTrainer } from "../services/assets.js";
+import { trackProgress } from "../progression/achievements.js";
 
 
 // ==========================================================
@@ -179,6 +180,7 @@ async function recruitPokemon(i, trainerData) {
     const shiny = rollForShiny(user?.tp || 0);
     const res = chargeAndGrant(user, (u) => grantCatch(u, pick.id, shiny ? "shiny" : "normal"));
     if (!res.ok) return safeReply(i, { content: res.reason, flags: MessageFlags.Ephemeral });
+    trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: shiny ? 1 : 0 }]); // achievements: after a successful grant, before the save
 
     const ack = await saveAndAck(trainerData);
 
@@ -219,6 +221,7 @@ async function recruitTrainer(i, trainerData) {
     const file = getTrainerKey(pick);
     const res = chargeAndGrant(user, (u) => grantTrainer(u, file));
     if (!res.ok) return safeReply(i, { content: res.reason, flags: MessageFlags.Ephemeral });
+    trackProgress(user, [{ type: "trainers" }]); // achievements: after a successful grant, before the save
 
     const ack = await saveAndAck(trainerData);
 

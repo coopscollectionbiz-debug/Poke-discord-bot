@@ -27,6 +27,7 @@ import { spritePaths } from "../spriteconfig.js";
 import { normVariant, isDisplayedVariant, tierKey, shinyEvolveDustCost, SHINY_CRAFT_COST_BY_TIER, ensureWeeklyReset } from "../utils/economyRules.js";
 import { getQuantity, grantItem, consumeItems, runInventoryTransaction, REQUEST_ID_PATTERN } from "./inventory.js";
 import { saveAckFields } from "../utils/saveManager.js";
+import { trackProgress } from "../progression/achievements.js";
 
 /** Poké Ball prices (CC). Unchanged. */
 export const BALL_COST = Object.freeze({ pokeball: 1000, greatball: 2000, ultraball: 4000 });
@@ -131,6 +132,8 @@ export function createGameplayHandlers(deps) {
         const shiny = rollForShiny(user.tp || 0);
         user.cc -= cost;
         grantCatch(user, reward.id, shiny ? "shiny" : "normal");
+        // Release C: achievement progress (same block, same save).
+        trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: shiny ? 1 : 0 }, { type: "purchase" }]);
         const rarity = reward.tier || reward.rarity || "common";
         return { ok: true, pokemon: { id: reward.id, name: reward.name, rarity, shiny }, cc: user.cc };
       },
@@ -217,6 +220,7 @@ export function createGameplayHandlers(deps) {
         user.pokemon[tId][chosenVariant] = (user.pokemon[tId][chosenVariant] ?? 0) + 1;
         carryLevel(user, { id: bId, variant: chosenVariant }, { id: tId, variant: chosenVariant });
         resetLevelIfGone(user, bId, chosenVariant);
+        trackProgress(user, [{ type: "evolved", species: tId, shiny: chosenVariant === "shiny" }]);
 
         return {
           ok: true,
@@ -279,6 +283,8 @@ export function createGameplayHandlers(deps) {
         user.pokemon[pid].shiny = (user.pokemon[pid].shiny ?? 0) + 1;
         carryLevel(user, { id: pid, variant: "normal" }, { id: pid, variant: "shiny" });
         resetLevelIfGone(user, pid, "normal");
+        // Shiny crafting counts toward the shiny counter (design §3.2).
+        trackProgress(user, [{ type: "shiny" }, { type: "pokemon" }]);
         if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) delete user.pokemon[pid];
 
         return {
@@ -351,6 +357,7 @@ export function createGameplayHandlers(deps) {
           };
         });
         user.weeklyPackClaimed = true;
+        trackProgress(user, [{ type: "weekly" }, { type: "pokemon" }, { type: "shiny", n: rewards.filter((r) => r.shiny).length }]);
         return { ok: true, rewards: results };
       },
     });

@@ -55,6 +55,8 @@ import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
 import { handleInventoryRequest } from "./services/inventoryApi.js";
 import { createGameplayHandlers } from "./services/gameplay.js";
+import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
+import { createAchievementHandlers } from "./services/achievementsApi.js";
 import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
@@ -379,6 +381,8 @@ user.displayedPokemon = user.displayedPokemon
 // that can't be kept are recorded in user.itemsLegacy instead of being
 // silently deleted.
 normalizeInventory(user);
+// Release C: achievement fields (idempotent; invalid values set aside).
+normalizeProgression(user);
 
 // ==========================================================
 // 🧾 NON-SHINY DUST WEEKLY CAP TRACKING (normalize + roll week)
@@ -509,6 +513,9 @@ app.get("/public/dashboardshop", (_, res) =>
 );
 app.get("/public/bag", (_, res) =>
   res.sendFile(path.join(staticPath, "bag", "index.html"))
+);
+app.get("/public/achievements", (_, res) =>
+  res.sendFile(path.join(staticPath, "achievements", "index.html"))
 );
 
 // ✅ Backward compat alias
@@ -843,6 +850,17 @@ async function loadTrainerData() {
   console.log(`🔑 Writer epoch ${getEpoch()}${result.localOnly ? " (booted from the local volume; Discord unreachable)" : ""}`);
   const data = chosen.data;
   for (const [id, user] of Object.entries(data)) normalizeUserSchema(id, user);
+  // Release C: retroactive achievement recognition (idempotent, once per
+  // catalog revision per player; recognition only, no rewards).
+  {
+    const t0 = Date.now();
+    let players = 0, unlocks = 0;
+    for (const user of Object.values(data)) {
+      const n = retroEvaluate(user).length;
+      if (n) { players++; unlocks += n; }
+    }
+    console.log(`🏅 Achievements: ${unlocks} retroactive unlock(s) for ${players} player(s) in ${Date.now() - t0} ms`);
+  }
   return { ok: true, data, chosen };
 }
 
@@ -1248,6 +1266,23 @@ app.use("/api", (req, res, next) => {
   }
   return next();
 });
+
+// 🏅 ACHIEVEMENTS (Release C): read-only view + the one claim path.
+const achievements = createAchievementHandlers({ getTrainerData: () => trainerData, lockUser, save: saveAndAck });
+app.get("/api/achievements", (req, res) => {
+  const { status, body } = achievements.view({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
+  return res.status(status).json(body);
+});
+app.post("/api/achievements/claim", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { status, body } = await achievements.claim({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(status).json(body);
+  } catch (err) {
+    console.error("❌ /api/achievements/claim:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 
 // D14: dashboard replies say whether the change reached disk. On a failed
 // write the change stays in memory and is retried; the reply carries a
@@ -1844,6 +1879,7 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
         const granted = grantItem(user, "evolution_stone", 1);
         if (!granted.ok) return { ok: false, error: granted.error, status: 400 };
         user.cc -= COST;
+        trackProgress(user, [{ type: "purchase" }]); // Release C
         return { ok: true, cc: user.cc, stones: granted.quantity };
       },
     });
@@ -2126,6 +2162,7 @@ if (chosenVariant === "shiny") {
     if (dustReward > 0) {
       addItem(u, "shiny_dust", dustReward);
     }
+    trackProgress(u, [{ type: "donated" }]); // Release C
 
     const saveAck = await saveAndAck(trainerData);
 
@@ -2199,6 +2236,7 @@ app.post("/api/pokemon/donate-bulk", express.json({ limit: "100kb" }), async (re
     });
 
     if (result.error) return res.status(400).json({ error: result.error });
+    trackProgress(u, [{ type: "donated", n: result.donatedCopies }]); // Release C
 
     const saveAck = await saveAndAck(trainerData);
 

@@ -309,6 +309,8 @@ function queueRoleUpdate({ guild, userId, tp, channel }) {
 // Flush loop
 setInterval(async () => {
   if (!pendingRoleUpdates.size) return;
+  // Never sync roles from unloaded/partial data; jobs stay queued until ready.
+  if (!isReady) return;
 
   // Snapshot & clear quickly so we don't block incoming events
   const batch = [...pendingRoleUpdates.values()];
@@ -1355,6 +1357,11 @@ process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 // ==========================================================
 client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.guild) return;
+
+  // Until trainerData is loaded, trainerData is {} — rewarding now would build
+  // a throwaway record and the role flush would demote the player to the
+  // lowest rank (with a public "Rank Up!"). Ignore chat until ready.
+  if (!isReady) return;
 
   const userId = message.author.id;
   const username = message.author.username;

@@ -54,16 +54,25 @@ async function atomicWriteJson(json) {
   await fs.rename(TEMP_PATH, TRAINERDATA_PATH);
 }
 
-function resolveWaitersUpTo(version) {
+// Waiters resolve with true when their version reached disk, false when the
+// write failed or was refused. They never reject and never hang: callers
+// await enqueueSave() inside lockUser, so a pending promise would keep that
+// user locked until restart.
+function resolveWaitersUpTo(version, saved = true) {
   for (const [v, resolvers] of waiters) {
     if (v <= version) {
       for (const r of resolvers) {
-        try { r(); } catch {}
+        try { r(saved); } catch {}
       }
       waiters.delete(v);
     }
   }
 }
+
+// Retry backoff after a failed write: 1s, 2s, 4s ... capped at 30s.
+const RETRY_BASE_MS = 1000;
+const RETRY_MAX_MS = 30_000;
+let consecutiveFailures = 0;
 
 // ----------------------------------------------------------
 // 🚀 Core flush
@@ -91,10 +100,12 @@ async function flushNow({ force = false } = {}) {
     console.warn("⚠️ Refusing save: trainerData appears EMPTY/INVALID");
     // Do NOT clear dirtyVersion; keep dirty so next enqueue can retry
     latestData = null;
+    resolveWaitersUpTo(startVersion, false);
     return;
   }
 
   flushing = true;
+  let failed = false;
 
   // Clear timers while we flush
   try { clearTimeout(flushTimer); } catch {}
@@ -108,18 +119,26 @@ async function flushNow({ force = false } = {}) {
     flushedVersion = startVersion;
     console.log("💾 Saved trainerData.json");
 
+    consecutiveFailures = 0;
+
     // Resolve anyone waiting for <= flushedVersion
     resolveWaitersUpTo(flushedVersion);
   } catch (err) {
+    failed = true;
     console.error("❌ Save error:", err?.message || err);
     try { await fs.unlink(TEMP_PATH); } catch {}
   } finally {
     flushing = false;
 
-    // ✅ Only clear latestData if NOTHING changed during flush
-    // If dirtyVersion advanced while we flushed, keep latestData
-    // and schedule another flush soon.
-    if (dirtyVersion === startVersion) {
+    if (failed) {
+      // Release callers (the change is still in memory and still dirty),
+      // keep latestData, and retry with backoff until a write succeeds.
+      resolveWaitersUpTo(startVersion, false);
+      consecutiveFailures++;
+      const delay = Math.min(RETRY_MAX_MS, RETRY_BASE_MS * 2 ** (consecutiveFailures - 1));
+      console.warn(`⏳ Save retry #${consecutiveFailures} in ${delay}ms`);
+      scheduleFlush(delay);
+    } else if (dirtyVersion === startVersion) {
       latestData = null;
     } else {
       scheduleFlush(250);

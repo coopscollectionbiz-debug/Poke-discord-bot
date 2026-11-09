@@ -9,7 +9,7 @@ import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import {
   challengeLoss, getChallengeRecord, isUnlocked, challengeBlock, prizeSprite,
   previewChallenge, simulateChallenge, runChallenge,
-  startRun, continueRun, finishOpenRun, isRunStale, finishAllOpenRuns, attachRunMessage, challengeLogEntry,
+  startRun, continueRun, finishOpenRun, isRunStale, finishAllOpenRuns, attachRunMessage, challengeLogEntry, hideOpenRun,
 } from "../utils/challenge/runChallenge.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
@@ -457,6 +457,20 @@ section("Interactive Elite Four run");
       "finishAllOpenRuns finishes every open run and says where its message is");
     assertEqual([td.A.challenge.run, td.B.challenge.run, td.C.challenge.attempts], [undefined, undefined, 0], "both runs are gone; C is untouched");
   }
+}
+
+section("The dashboard never sees an open run");
+{
+  // The run's seed decides its remaining fights; with it, a player could test each Revive offline.
+  const td = { A: world().A };
+  td.A.challenge = { won: winAll(GYMS), day: null, attempts: 0 };
+  startRun({ trainerData: td, userId: "A", seed: 1, maxLoss: 1234, channelId: "C", now: D });
+  const shown = hideOpenRun(td.A);
+  assertEqual([shown.challenge.run, Object.keys(shown.challenge).sort(), JSON.stringify(shown).includes('"seed"')],
+    [undefined, ["attempts", "day", "won"], false], "the dashboard's copy has no run and no seed");
+  assertTrue(td.A.challenge.run?.seed === 1, "the record keeps its run");
+  const plain = world().A;
+  assertEqual(hideOpenRun(plain), plain, "a record with no open run is sent as is");
 }
 
 section("Event log entry");

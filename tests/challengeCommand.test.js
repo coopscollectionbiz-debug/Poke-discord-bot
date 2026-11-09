@@ -134,9 +134,10 @@ function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail
   const publicText = () => log.channel.map((m) => [textOf(m.opts), ...m.edits.map(textOf)].join("\n")).join("\n");
   const menuButtons = (menu) => menu.opts.components.flatMap((r) => embedJson(r).components);
   // Clicks a Revive menu's button (the first by default) and returns the click.
+  // Like Discord: once a collector has stopped, a click reaches nothing and gets no answer.
   const pick = async (menu, customId = menuButtons(menu)[0].custom_id) => {
     const b = button(customId);
-    await menu.collector.h.collect(b);
+    if (!menu.collector.stopped) await menu.collector.h.collect(b);
     return b;
   };
   // Clicks Fight! on the newest preview and answers each Revive menu with
@@ -382,12 +383,18 @@ section("Elite Four fixture");
 {
   const team = buildTeam(runner());
   assertEqual(team.map((m) => [m.speciesId, m.level]), [[129, 5], [150, 100], [249, 100]], "Lv 5 Magikarp leads Lv 100 Mewtwo and Lugia");
-  const holds = Array.from({ length: 200 }, (_, seed) => [({ hp }) => hp.indexOf(0), () => null].every((pick) => {
-    const s = simulateChallenge({ team, opponents: CHALLENGES.elite4.opponents, seed, pick });
-    const hp = s.fights[0].result.snapshots.at(-1)[0];
-    return s.cleared && hp[0] === 0 && hp[1] > 0 && hp[2] > 0;
-  }));
-  assertTrue(holds.every(Boolean), "for 200 seeds, only Magikarp faints to Lorelei, and the run clears with or without Revives");
+  const onlyMagikarp = (f) => {
+    const hp = f.result.snapshots.at(-1)[0];
+    return hp[0] === 0 && hp[1] > 0 && hp[2] > 0;
+  };
+  const holds = Array.from({ length: 200 }, (_, seed) => {
+    const run = (pick) => simulateChallenge({ team, opponents: CHALLENGES.elite4.opponents, seed, pick });
+    const revived = run(({ hp }) => hp.indexOf(0));
+    const never = run(() => null);
+    return revived.cleared && revived.fights.slice(0, -1).every(onlyMagikarp) && never.cleared && onlyMagikarp(never.fights[0]);
+  });
+  assertTrue(holds.every(Boolean),
+    "for 200 seeds, only Magikarp faints, after every fight even when revived, and the run clears with or without Revives");
 }
 
 section("Elite Four run: picking a Revive");
@@ -414,10 +421,9 @@ section("Elite Four run: picking a Revive");
   assertEqual(clicks[0].updates, [{ content: "Magikarp revived.", components: [] }], "a click revives it");
   assertEqual([clicks[1].updates, clicks[1].replies, clicks[1].deferred], [[], [], 1], "a second click is acknowledged and changes nothing");
   assertTrue(t.publicText().includes("Bruno (2 of 4)\n💊 <@A> revived Magikarp!"), "the next header says who was revived");
-  if (menu1) {
-    assertEqual(menu1.from, clicks[0], "the next menu uses the newest click's reply window");
-    assertEqual([earlier.updates, earlier.replies, earlier.deferred], [[], [], 1], "an earlier break's button changes nothing");
-  }
+  assertEqual(t.log.menus.length, 3, "a menu at every break");
+  assertEqual(menu1.from, clicks[0], "the next menu uses the newest click's reply window");
+  assertEqual([earlier.updates, earlier.replies, earlier.deferred], [[], [], 1], "an earlier break's button is answered and changes nothing");
   assertEqual([t.trainerData.A.challenge.run, t.trainerData.A.challenge.won.elite4 !== undefined, t.trainerData.A.challenge.attempts],
     [undefined, true, 1], "the run is cleared and closed, for one attempt");
   const privateAt = t.log.seq.findIndex(([k, o]) => k === "private" && textOf(o).startsWith("You won! 🎁 Lorelei sprite"));
@@ -504,6 +510,24 @@ section("While a run is open");
   await playing;
   CHALLENGE.pickMs = 60000;
   assertEqual(t.trainerData.A.challenge.attempts, 1, "only the run used an attempt");
+}
+
+section("A live run is never stale");
+{
+  // A long replay queue can keep a run's step from moving for 15 minutes while
+  // its command is still playing it; only a run whose command died is stale.
+  CHALLENGE.pickMs = 300;
+  const t = harness(runner());
+  await t.run("elite4");
+  const playing = t.fightRun(async () => {});
+  await until(() => t.log.menus.length === 1);
+  t.trainerData.A.challenge.run.updatedAt -= 16 * 60 * 1000;
+  await t.run("brock");
+  assertEqual(t.log.replies.at(-1).content, "Finish your Elite Four run first.", "/challenge leaves a run that's still playing alone");
+  const fight = await playing;
+  CHALLENGE.pickMs = 60000;
+  assertTrue(textOf(fight.edits.at(-1)).startsWith("You won!"), "and the run finishes with its private result");
+  assertTrue(!t.publicText().includes("stopped unexpectedly"), "with no stopped note");
 }
 
 section("A run that stopped unexpectedly");

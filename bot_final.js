@@ -420,7 +420,7 @@ import { lockUser } from "./utils/userLocks.js";
 import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
 import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
-import { finishAllOpenRuns, challengeLogEntry } from "./utils/challenge/runChallenge.js";
+import { finishAllOpenRuns, challengeLogEntry, hideOpenRun } from "./utils/challenge/runChallenge.js";
 import { showRunResult, challengeNames } from "./utils/battle/playback.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -1249,7 +1249,7 @@ app.get("/api/user", (req, res) => {
   trainerData[id] = normalizeUserSchema(id, user);
   trainerData[id].rank = getRank(trainerData[id].tp);
 
-  return res.json(trainerData[id]);
+  return res.json(hideOpenRun(trainerData[id]));
 });
 
 // ==========================================================

@@ -99,13 +99,21 @@ const privateResult = (outcome) => {
 
 const logChallenge = (userId, outcome, extra = {}) => logEvent("challenge", userId, { ...challengeLogEntry(outcome), ...extra });
 
-// A run with no step for CHALLENGE.staleRunMs stopped unexpectedly (its
-// command hit an error). Finishes it with no Revives and saves; the run's
+// How long a Revive menu still answers clicks after its pick or deadline.
+const LATE_CLICKS_MS = 15 * 60 * 1000;
+
+// Nonces of the runs this process is playing. A run's step can stay put for
+// over CHALLENGE.staleRunMs while its replay waits in a long queue; only a run
+// whose command died (a restart finishes all of those) may be finished as stale.
+const playing = new Set();
+
+// A run with no step for CHALLENGE.staleRunMs, and no command playing it,
+// stopped unexpectedly. Finishes it with no Revives and saves; the run's
 // message gets the result after the caller's reply, which has 3 seconds.
 async function finishStaleRun({ trainerData, userId, lockUser, enqueueSave, client, playerName }) {
   const done = await lockUser(userId, async () => {
     const run = trainerData[userId]?.challenge?.run;
-    if (!isRunStale(trainerData[userId])) return null;
+    if (!isRunStale(trainerData[userId]) || playing.has(run.nonce)) return null;
     const outcome = finishOpenRun({ trainerData, userId });
     await enqueueSave(trainerData, { force: true });
     return { outcome, channelId: run.channelId, messageId: run.messageId };
@@ -139,8 +147,10 @@ export const reviveMenu = (step) => {
 
 // Sends the private Revive menu from `latest` (the newest click: each click
 // has its own 15-minute reply window) and resolves to { slot, click } once
-// the player picks or CHALLENGE.pickMs passes. The collector stays open until
-// the buttons are gone, so every click on them gets an answer.
+// the player picks or CHALLENGE.pickMs passes. The collector outlives the
+// pick so every later click gets an answer: Discord shows "This interaction
+// failed" for a click no collector hears, and the buttons stay up if the
+// deadline edit fails (latest's reply window expired).
 async function askRevive(latest, step) {
   // bot_final's wrapper resolves to nothing when the reply window has expired.
   const menu = await latest.followUp(reviveMenu(step)).catch((err) => console.warn("⚠️ revive menu failed:", err?.message || err));
@@ -150,12 +160,12 @@ async function askRevive(latest, step) {
     const collector = menu.createMessageComponentCollector({
       componentType: ComponentType.Button,
       filter: (i) => i.customId.startsWith(`challenge_revive:${step.nonce}:`),
+      time: LATE_CLICKS_MS,
     });
     const timer = setTimeout(async () => {
       closed = "time";
-      await latest.editReply({ message: menu, content: "No Pokémon was revived.", components: [] }).catch(() => {});
-      collector.stop("time");
       resolve({ slot: null, click: latest });
+      await latest.editReply({ message: menu, content: "No Pokémon was revived.", components: [] }).catch(() => {});
     }, CHALLENGE.pickMs);
     collector.on("collect", async (i) => {
       // The menu already says what happened after a pick, so a second click just closes quietly.
@@ -166,7 +176,6 @@ async function askRevive(latest, step) {
       const slot = Number(i.customId.split(":").at(-1));
       const name = step.fainted.find((f) => f.slot === slot)?.name;
       await i.update({ content: `${name} revived.`, components: [] }).catch(() => {});
-      collector.stop("picked");
       resolve({ slot, click: i });
     });
   });
@@ -295,9 +304,10 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
     }
     if (isRun) {
       // Played even when the intro card failed: the run is open and resolves through its Revives.
+      playing.add(first.nonce);
       const played = await playRun({
         channel: interaction.channel, fightClick: i, step: first, trainerData, userId, lockUser, enqueueSave, playerName,
-      });
+      }).finally(() => playing.delete(first.nonce));
       if (!played) return; // a stale finish closed it and shows the result
       outcome = played.outcome;
       posted &&= played.posted;

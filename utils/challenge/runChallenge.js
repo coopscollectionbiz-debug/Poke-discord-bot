@@ -285,6 +285,14 @@ export function finishAllOpenRuns(trainerData, now = new Date()) {
   });
 }
 
+// The player's record as the dashboard gets it. An open run's seed decides
+// its remaining fights, so with it a player could test each Revive offline.
+export function hideOpenRun(user) {
+  if (!user.challenge?.run) return user;
+  const { run, ...challenge } = user.challenge;
+  return { ...user, challenge };
+}
+
 // The event log's record of a finished challenge. A run lists each break's
 // Revive: the slot, "none" when nothing had fainted, or null for no pick.
 export const challengeLogEntry = (outcome) => ({

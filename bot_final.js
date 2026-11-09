@@ -476,16 +476,10 @@ app.get("/auth/admin", (req, res) => {
 });
 
 // ==========================================================
-// 🎯 Trainer Tier Costs
+// 🎯 Trainer Tier Costs (in utils/trainerCosts.js, which /challenge shares)
 // ==========================================================
-export const TRAINER_COSTS = {
-  common: 2500,
-  uncommon: 7500,
-  rare: 15000,
-  epic: 35000,
-  legendary: 75000,
-  mythic: 150000,
-};
+import { TRAINER_COSTS } from "./utils/trainerCosts.js";
+export { TRAINER_COSTS };
 
 
 // ✅ Serve all /public assets with correct MIME headers

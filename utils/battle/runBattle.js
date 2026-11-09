@@ -38,7 +38,12 @@ function applyExp(user, side, result, sideIndex) {
     .filter((k) => k.bySide === sideIndex)
     .map((k) => side.opponent[k.slot]);
   const gains = teamExp({ members: side.members, knockedOut, won: result.winner === sideIndex });
-  return side.members.map((m, i) => {
+  return applyGains(user, side.members, gains);
+}
+
+// Adds gains[i] EXP to members[i] and reports each one's Level change and new moves.
+export function applyGains(user, members, gains) {
+  return members.map((m, i) => {
     const { fromLevel, toLevel } = addExp(user, m.speciesId, m.variant, gains[i]);
     return {
       key: trainingKey(m.speciesId, m.variant),

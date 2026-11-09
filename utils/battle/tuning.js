@@ -41,6 +41,9 @@ export const WIN_EXP_MULT = 1.5;
 export const ELO = { start: 1000, k: 32 };
 export const CAPS = { perDay: 10, perOpponent: 3 };
 export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000 };
+// Challenges (/challenge): attempts per UTC day, share of CC lost on a loss,
+// and how long the private preview's buttons work.
+export const CHALLENGE = { perDay: 5, lossShare: 0.1, previewMs: 2 * 60 * 1000 };
 // Playback: one image per turn, 2 s apart; longer battles are spread over 12.
 // At most maxAtOnce replays render at once; the rest wait in line. In local
 // tests turns kept the 2 s pace with up to 5 at once and slipped at 6; a Fly

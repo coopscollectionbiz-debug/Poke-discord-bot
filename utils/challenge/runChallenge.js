@@ -10,7 +10,7 @@ import { CHALLENGES, enabledSprites } from "./roster.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.js";
 import { buildTeam, applyGains } from "../battle/runBattle.js";
 import { simulateBattle } from "../battle/sim.js";
-import { teamPower, rollSurge } from "../battle/power.js";
+import { teamPower } from "../battle/power.js";
 import { teamExp, utcDay } from "../battle/rewards.js";
 import { CHALLENGE } from "../battle/tuning.js";
 import { speciesName } from "../training.js";
@@ -72,29 +72,49 @@ export function previewChallenge(user, key) {
 const opponentMembers = (o) =>
   o.team.map((m) => ({ speciesId: m.speciesId, variant: "normal", name: speciesName(m.speciesId), level: m.level }));
 
-// Pure. Fights each opponent in order, carrying the player's HP (as a fraction
-// of max HP) from one fight to the next, and stops at the first loss. Levels
-// stay fixed for the whole run.
-export function simulateChallenge({ team, opponents, seed }) {
+// One fight: opponent `i` against the player's `members`, who carry their HP
+// from earlier fights. EXP is per `team` slot. Challenges have no Underdog
+// surge (spec: Difficulty): a surge lifted a lone Pokémon to Lv 100 and beat Gyms.
+function simulateFight({ team, members, opponent, i, seed }) {
+  const foes = opponentMembers(opponent);
+  const alive = members.filter((m) => m.hpFraction === undefined || m.hpFraction > 0);
+  const powers = [teamPower(alive), teamPower(foes)];
+  const surge = null; // kept in the fight so playback reads the same shape as /battle
+  const result = simulateBattle({ sides: [{ members }, { members: foes }], seed: seed + 2 * i + 1, surge });
+  const won = result.winner === 0;
+  const knockedOut = result.knockouts.filter((k) => k.bySide === 0).map((k) => foes[k.slot]);
+  const gains = teamExp({ members: team, knockedOut, won });
+  return { opponentKey: opponent.key, members, foes, powers, surge, result, won, gains };
+}
+
+// The Team for the next fight: each member keeps its HP fraction from `hp`,
+// and a Revive brings `slot` back at full HP if it fainted. Any other slot
+// (null, out of range, still standing) revives nothing, so `slot` comes back null.
+function carryHp(team, hp, slot) {
+  const revived = Number.isInteger(slot) && hp[slot] === 0 ? slot : null;
+  return { slot: revived, members: team.map((m, s) => ({ ...m, hpFraction: s === revived ? 1 : hp[s] })) };
+}
+
+// Pure. Fights each opponent in order, carrying the player's HP from one
+// fight to the next, and stops at the first loss. Levels stay fixed for the
+// whole run. After each win but the last, if anyone fainted, pick({ team, hp,
+// next }) chooses a Revive; breaks[k] records the break after fight k.
+export function simulateChallenge({ team, opponents, seed, pick = () => null }) {
   const fights = [];
+  const breaks = [];
   let members = team;
   for (const [i, opponent] of opponents.entries()) {
-    const foes = opponentMembers(opponent);
-    const alive = members.filter((m) => m.hpFraction === undefined || m.hpFraction > 0);
-    const powers = [teamPower(alive), teamPower(foes)];
-    const rolled = rollSurge(powers, seed + 2 * i);
-    // Only the player's Team can surge (spec: Difficulty).
-    const surge = rolled?.side === 0 ? rolled : null;
-    const result = simulateBattle({ sides: [{ members }, { members: foes }], seed: seed + 2 * i + 1, surge });
-    const won = result.winner === 0;
-    const knockedOut = result.knockouts.filter((k) => k.bySide === 0).map((k) => foes[k.slot]);
-    const gains = teamExp({ members: team, knockedOut, won });
-    fights.push({ opponentKey: opponent.key, members, foes, powers, surge, result, won, gains });
-    if (!won) return { fights, cleared: false };
-    const hp = result.snapshots.at(-1)[0];
-    members = team.map((m, slot) => ({ ...m, hpFraction: hp[slot] }));
+    const fight = simulateFight({ team, members, opponent, i, seed });
+    fights.push(fight);
+    if (!fight.won) return { fights, cleared: false, breaks };
+    if (i === opponents.length - 1) break;
+    const hp = fight.result.snapshots.at(-1)[0];
+    const offered = hp.includes(0);
+    const carried = carryHp(team, hp, offered ? pick({ team, hp, next: opponents[i + 1] }) : null);
+    breaks.push({ offered, slot: carried.slot });
+    members = carried.members;
   }
-  return { fights, cleared: true };
+  return { fights, cleared: true, breaks };
 }
 
 function grantPrize(user, prize) {

@@ -224,10 +224,9 @@ export function challengeHeader(outcome, i) {
   const player = `<@${outcome.userId}>`;
   const fight = outcome.fights[i];
   const opponent = opponentOf(outcome, fight.opponentKey);
-  const intro = isRun(outcome)
+  return isRun(outcome)
     ? `⚔️ ${player} · Elite Four · ${opponent.name} (${i + 1} of ${CHALLENGES[outcome.key].opponents.length})`
     : `⚔️ ${player} challenges ${opponentName(opponent)}!`;
-  return fight.surge ? `${intro}\n🔥 The crowd is behind ${player}! Underdog surge!` : intro;
 }
 
 // "Brock sprite, 2,500 CC, 1 stone, and 5 Dust". prize.sprites are in the
@@ -254,7 +253,6 @@ export function buildChallengeEmbed(outcome, names) {
   const lines = [
     endedBy === "turnCap" && `Time ran out after **${turns}** turns, and ${names[last.winnerId]}'s Team had more HP left.`,
     mvp && `⭐ MVP: **${mvp.name}** with ${plural(mvp.kos, "knockout")}`,
-    outcome.fights.some((f) => f.surge) && "🔥 Underdog surge!",
     isRun(outcome) && outcome.fights.map((f) => `${opponentOf(outcome, f.opponentKey).name} ${f.winnerId === outcome.userId ? "✓" : "✗"}`).join(" · "),
     badge && `🏅 ${badgeEmoji(outcome.badge)} Earned the ${badge.badge}!`,
     outcome.prize && `🎁 ${prizeText(outcome.key, outcome.prize)}`,

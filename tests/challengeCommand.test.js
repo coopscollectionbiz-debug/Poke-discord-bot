@@ -28,9 +28,8 @@ function player(speciesIds, level) {
   return u;
 }
 const WEAK = () => player([10], 5);
-// Fight! picks a random seed, and a surge can lift a lone Caterpie to Lv 100,
-// which sometimes beats Brock. It never beat Giovanni in 2,000 runs, so tests
-// that need a loss fight him.
+// Fight! picks a random seed, so tests that need a loss fight Giovanni, whom a
+// lone Lv 5 Caterpie can't beat.
 const LOSES = "giovanni";
 const STRONG = () => player([150, 249, 250, 384, 483, 484], 100);
 

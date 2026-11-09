@@ -54,8 +54,6 @@ assertEqual(runNames, { A: "A", lorelei: "Elite Four Lorelei", bruno: "Elite Fou
 assertEqual(challengeHeader(runOut, 1).split("\n")[0], "⚔️ <@A> · Elite Four · Bruno (2 of 4)", "Elite Four header");
 const brockWin = outcomeOf(player(STRONG, 100), "brock");
 assertEqual(challengeHeader(brockWin, 0), "⚔️ <@A> challenges Gym Leader Brock!", "single-fight header");
-const surged = { ...brockWin, fights: [{ ...brockWin.fights[0], surge: { side: 0, levelMult: 1.2 } }] };
-assertEqual(challengeHeader(surged, 0), "⚔️ <@A> challenges Gym Leader Brock!\n🔥 The crowd is behind <@A>! Underdog surge!", "a surge adds the crowd line");
 
 section("Result embed");
 {

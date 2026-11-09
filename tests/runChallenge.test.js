@@ -15,7 +15,6 @@ import { buildTeam } from "../utils/battle/runBattle.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { CHALLENGE } from "../utils/battle/tuning.js";
 import { simulateBattle } from "../utils/battle/sim.js";
-import { teamPower, rollSurge } from "../utils/battle/power.js";
 import { createRng } from "../utils/battle/rng.js";
 import { readFileSync } from "fs";
 
@@ -223,25 +222,71 @@ section("A win with every Pokémon fainted");
     const rng = createRng(seed);
     const team = Array.from({ length: 6 }, () => ({ speciesId: ids[rng.int(ids.length)], variant: "normal", level: 50 }));
     const first = simulateBattle({ sides: [{ members: team }, { members: CHALLENGES.elite4.opponents[0].team }], seed: seed + 1, surge: null });
-    if (first.winner === 0 && first.snapshots.at(-1)[0].every((hp) => hp === 0)
-      && rollSurge([teamPower(team), teamPower(CHALLENGES.elite4.opponents[0].team)], seed)?.side !== 0) found = { team, seed };
+    if (first.winner === 0 && first.snapshots.at(-1)[0].every((hp) => hp === 0)) found = { team, seed };
   }
   assertTrue(found !== null, "fixture: a team that beats Lorelei with every Pokémon fainted");
   const s = simulateChallenge({ team: found.team, opponents: CHALLENGES.elite4.opponents, seed: found.seed });
   assertEqual([s.fights.length, s.fights[0].won, s.fights[1].won, s.cleared], [2, true, false, false], "the run ends at the next fight");
   assertEqual(s.fights[1].result.turns, 0, "which is lost before a move is made");
+  const saved = simulateChallenge({ team: found.team, opponents: CHALLENGES.elite4.opponents, seed: found.seed, pick: () => 0 });
+  assertTrue(saved.breaks[0].slot === 0 && saved.fights[1].result.turns >= 1, "a Revive lets that run fight on");
 }
 
-section("Surge side");
+section("Revive in the sim");
 {
-  const strong = buildTeam(player("A", STRONG, 100));
-  const brock = Array.from({ length: 200 }, (_, i) => simulateChallenge({ team: strong, opponents: CHALLENGES.brock.opponents, seed: i + 1 }));
-  assertTrue(brock.every((s) => s.fights.every((f) => f.surge === null)), "a leader never surges, even as the Underdog");
+  const opponents = CHALLENGES.elite4.opponents;
+  const sims = (team, pick, n = 60) => Array.from({ length: n }, (_, i) => {
+    const calls = [];
+    const s = simulateChallenge({ team, opponents, seed: i + 1, pick: pick ? (arg) => { calls.push(arg); return pick(arg); } : undefined });
+    return { s, calls };
+  });
+  const offeredBreaks = (runs) => runs.flatMap(({ s }) => s.breaks.flatMap((b, k) => (b.offered ? [{ s, b, k }] : [])));
+  const startOf = (s, k) => s.fights[k + 1].result.snapshots[0][0];
+  const endOf = (s, k) => s.fights[k].result.snapshots.at(-1)[0];
+
+  const mid = buildTeam(player("A", [6, 9, 3, 65, 68, 94], 60));
+  const firstFainted = ({ hp }) => hp.findIndex((h) => h === 0);
+  const picked = sims(mid, firstFainted);
+  assertTrue(picked.every(({ s }) => s.breaks.length === s.fights.length - 1), "one break after each fight but the last");
+  const revived = offeredBreaks(picked);
+  assertTrue(revived.length > 0, `fixture: some breaks have a fainted Pokémon (${revived.length})`);
+  assertTrue(revived.every(({ s, b, k }) => b.slot === endOf(s, k).indexOf(0) && startOf(s, k)[b.slot] === 1),
+    "the picked Pokémon starts the next fight at full HP");
+  assertTrue(revived.every(({ s, b, k }) => startOf(s, k).every((hp, slot) => slot === b.slot
+    || (Math.abs(hp - endOf(s, k)[slot]) <= 0.02 && (endOf(s, k)[slot] > 0) === (hp > 0)))),
+    "the others carry their HP, and the other fainted stay fainted");
+  assertTrue(picked.every(({ s, calls }) => {
+    const ks = s.breaks.flatMap((b, k) => (b.offered ? [k] : []));
+    return calls.length === ks.length && calls.every((c, j) => c.team === mid && c.hp.includes(0) && c.next === opponents[ks[j] + 1]);
+  }), "pick hears the Team, the HP, and the next opponent, only when something has fainted");
+
+  const strong = sims(buildTeam(player("A", STRONG, 100)), firstFainted);
+  const clean = strong.flatMap(({ s }) => s.breaks.filter((b) => !b.offered));
+  assertTrue(clean.length > 0, `fixture: some breaks have nothing fainted (${clean.length})`);
+  assertTrue(clean.every((b) => b.slot === null), "a break with nothing fainted is { offered: false, slot: null }");
+  assertTrue(strong.every(({ s, calls }) => calls.length === s.breaks.filter((b) => b.offered).length), "and pick isn't called for it");
+
+  const bad = [["a standing slot", ({ hp }) => hp.findIndex((h) => h > 0)], ["slot 7", () => 7], ["null", () => null], ["no pick", null]];
+  for (const [label, pick] of bad) {
+    const offered = offeredBreaks(sims(mid, pick));
+    assertTrue(offered.length > 0 && offered.every(({ s, b, k }) => b.slot === null
+      && startOf(s, k).every((hp, slot) => (endOf(s, k)[slot] === 0) === (hp === 0))), `a pick of ${label} revives nothing`);
+  }
+}
+
+section("No Underdog surge");
+{
+  // Challenges have no surge (decided): even a far weaker Team, the case
+  // where /battle surges most, fights at its own Levels.
+  const lone = buildTeam(player("A", [6], 30));
   const lv40 = buildTeam(player("A", [18, 59, 130, 68, 94, 34], 40));
-  const red = Array.from({ length: 300 }, (_, i) => simulateChallenge({ team: lv40, opponents: CHALLENGES.red.opponents, seed: i + 1 }));
-  const surged = red.filter((s) => s.fights[0].surge);
-  assertTrue(surged.length > 0, `the player's Team surges sometimes (${surged.length}/300)`);
-  assertTrue(surged.every((s) => s.fights[0].surge.side === 0), "always on the player's side");
+  const runs = [
+    ...Array.from({ length: 300 }, (_, i) => simulateChallenge({ team: lone, opponents: CHALLENGES.brock.opponents, seed: i + 1 })),
+    ...Array.from({ length: 300 }, (_, i) => simulateChallenge({ team: lv40, opponents: CHALLENGES.red.opponents, seed: i + 1 })),
+  ];
+  assertTrue(runs.every((r) => r.fights.every((f) => f.surge === null)), "no challenge fight ever surges");
+  const td = world();
+  assertTrue(run(td, "brock").fights.every((f) => f.surge === null), "and runChallenge reports none");
 }
 
 section("Battle record untouched");

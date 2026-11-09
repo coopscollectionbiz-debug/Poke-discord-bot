@@ -109,7 +109,7 @@ The player whose **Team** has the lower **Power rating** going into a **Battle**
 _Avoid_: weaker player, loser
 
 **Underdog surge**:
-A rare, announced boost to the **Underdog's** whole **Team** for one **Battle** or **Challenge** fight, likelier the wider the **Power rating** gap.
+A rare, announced boost to the **Underdog's** whole **Team** for one **Battle**, likelier the wider the **Power rating** gap. **Challenges** have none.
 _Avoid_: comeback mechanic, rubber-banding, luck boost
 
 ### Challenges
@@ -125,6 +125,10 @@ _Avoid_: medal, gym token
 **Elite Four run**:
 One **Challenge** against Lorelei, Bruno, Agatha, and Lance back to back, in which the player's Pokémon keep their damage from fight to fight. All 8 **Badges** unlock it, and losing any fight ends the run.
 _Avoid_: gauntlet, E4 challenge, league
+
+**Revive**:
+The player's pick, after each fight won in an **Elite Four run**, of one fainted Pokémon to bring back at full HP for the next fight. A pick not made in time is lost.
+_Avoid_: heal, Max Revive (as a term), second wind
 
 ## Flagged ambiguities
 

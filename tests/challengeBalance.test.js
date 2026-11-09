@@ -2,9 +2,10 @@
 // tests/challengeBalance.test.js
 // Measures how hard each Challenge is (docs/superpowers/specs/
 // 2026-11-08-challenges-design.md, Difficulty) and enforces the order
-// Giovanni < Elite Four run < Blue < Red. Prints the numbers the spec's
-// Open checks quote: gate Levels, win-rate curves, how often a surge
-// turns a loss into a win, and leveling pace with 5 challenges a day.
+// Giovanni < Elite Four run < Blue < Red, with the stand-in player picking
+// a Revive between Elite Four fights. Prints the numbers the spec's
+// Measured section quotes: gate Levels, win-rate curves, a one-Pokémon
+// Team, and leveling pace with 5 challenges a day.
 //
 // A gate Level is the lowest uniform Team Level at which stand-in Teams
 // win at least half the time. A stand-in Team is 6 random distinct fully
@@ -14,13 +15,11 @@
 import { readFileSync } from "fs";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { simulateChallenge } from "../utils/challenge/runChallenge.js";
+import { teamPower } from "../utils/battle/power.js";
 import { CHALLENGES, CHALLENGE_KEYS } from "../utils/challenge/roster.js";
 import { catchBand, expForLevel, levelForExp } from "../utils/training.js";
-import { simulateBattle } from "../utils/battle/sim.js";
-import { teamPower, rollSurge } from "../utils/battle/power.js";
 import { teamExp } from "../utils/battle/rewards.js";
 import { createRng } from "../utils/battle/rng.js";
-import { SURGE } from "../utils/battle/tuning.js";
 
 const started = Date.now();
 const battleData = JSON.parse(readFileSync(new URL("../battleData.json", import.meta.url)));
@@ -41,20 +40,26 @@ function standIn(level, i) {
 }
 const simSeed = (i) => SEED + 8 * i; // a run uses seed .. seed + 7
 
-const winRate = (key, level, n = N) => {
+// Between Elite Four fights the stand-in player Revives its strongest
+// fainted Pokémon (the earlier slot on a tie).
+const pickStrongest = ({ team, hp }) => hp.reduce((best, h, slot) =>
+  (h === 0 && (best === null || teamPower([team[slot]]) > teamPower([team[best]])) ? slot : best), null);
+const neverPicks = () => null;
+
+const winRate = (key, level, n = N, pick = pickStrongest) => {
   let wins = 0;
   for (let i = 0; i < n; i++) {
-    if (simulateChallenge({ team: standIn(level, i), opponents: CHALLENGES[key].opponents, seed: simSeed(i) }).cleared) wins++;
+    if (simulateChallenge({ team: standIn(level, i), opponents: CHALLENGES[key].opponents, seed: simSeed(i), pick }).cleared) wins++;
   }
   return wins / n;
 };
 
-function gate(key) {
-  if (winRate(key, 100) < 0.5) return 101;
+function gate(key, pick = pickStrongest) {
+  if (winRate(key, 100, N, pick) < 0.5) return 101;
   let lo = 1, hi = 100; // winRate(hi) >= 0.5
   while (lo < hi) {
     const mid = Math.floor((lo + hi) / 2);
-    if (winRate(key, mid) >= 0.5) hi = mid;
+    if (winRate(key, mid, N, pick) >= 0.5) hi = mid;
     else lo = mid + 1;
   }
   return lo;
@@ -71,6 +76,7 @@ for (const key of CHALLENGE_KEYS) {
   const ace = Math.max(...CHALLENGES[key].opponents.flatMap((o) => o.team.map((m) => m.level)));
   console.log(`  ${CHALLENGES[key].label.padEnd(10)} gate Lv ${gates[key]} (ace Lv ${ace})`);
 }
+console.log(`  Elite Four gate Lv ${gate("elite4", neverPicks)} for a player who never picks a Revive`);
 assertTrue(gates.giovanni < gates.elite4 && gates.elite4 < gates.blue && gates.blue < gates.red,
   `Giovanni ${gates.giovanni} < Elite Four ${gates.elite4} < Blue ${gates.blue} < Red ${gates.red}`);
 
@@ -94,65 +100,21 @@ section("Win rate by Level");
   }
 }
 
-section("Underdog surge at gate - 5");
+section("A one-Pokémon Team");
 {
-  // The same fight loop as simulateChallenge, with the surge chosen by `surgeOf`.
-  function fightAll(team, opponents, seed, surgeOf) {
-    let members = team;
-    for (const [i, o] of opponents.entries()) {
-      const foes = o.team.map((m) => ({ ...m, variant: "normal" }));
-      const alive = members.filter((m) => m.hpFraction === undefined || m.hpFraction > 0);
-      const surge = surgeOf([teamPower(alive), teamPower(foes)], seed + 2 * i);
-      const r = simulateBattle({ sides: [{ members }, { members: foes }], seed: seed + 2 * i + 1, surge });
-      if (r.winner !== 0) return false;
-      members = team.map((m, s) => ({ ...m, hpFraction: r.snapshots.at(-1)[0][s] }));
-    }
-    return true;
-  }
-  const natural = (powers, seed) => { const s = rollSurge(powers, seed); return s?.side === 0 ? s : null; };
-  const never = () => null;
-  // The boost a surge gives when it fires (rollSurge's levelMult), forced on.
-  const always = ([p, q]) => (p < q ? { side: 0, levelMult: Math.max(1, q / p / SURGE.residual) } : null);
-
-  const same = CHALLENGE_KEYS.every((key) => [0, 1, 2].every((i) =>
-    fightAll(standIn(45, i), CHALLENGES[key].opponents, simSeed(i), natural)
-      === simulateChallenge({ team: standIn(45, i), opponents: CHALLENGES[key].opponents, seed: simSeed(i) }).cleared));
-  assertTrue(same, "the local loop matches simulateChallenge");
-
-  // Of the runs lost without a surge: how many the natural roll turns into
-  // wins, and how many a surge would win if it always fired.
-  for (const key of CHALLENGE_KEYS) {
-    const level = Math.max(1, gates[key] - 5);
-    let losses = 0, naturalWins = 0, forcedWins = 0, fired = 0;
-    for (let i = 0; i < N; i++) {
-      const team = standIn(level, i);
-      const opponents = CHALLENGES[key].opponents;
-      if (simulateChallenge({ team, opponents, seed: simSeed(i) }).fights.some((f) => f.surge)) fired++;
-      if (fightAll(team, opponents, simSeed(i), never)) continue;
-      losses++;
-      if (fightAll(team, opponents, simSeed(i), natural)) naturalWins++;
-      if (fightAll(team, opponents, simSeed(i), always)) forcedWins++;
-    }
-    const pct = (x, of) => `${of ? Math.round((100 * x) / of) : 0}%`;
-    console.log(`  ${CHALLENGES[key].label.padEnd(10)} Lv ${level}: surges in ${pct(fired, N)} of runs; ` +
-      `turns ${pct(naturalWins, losses)} of losses into wins (${pct(forcedWins, losses)} if it always fired)`);
-  }
-}
-
-section("A one-Pokémon Team and the surge");
-{
-  // A Team of one is always the Underdog by a wide margin, so the surge fires
-  // at its maximum chance and lifts it to Lv 100 (buildMon's cap).
+  // Challenges have no Underdog surge. With /battle's surge, a Team of one
+  // surged to Lv 100 and beat every Gym through Blaine (the spec's Measured
+  // section has the numbers); now it fights at its own Level.
   const lone = [{ speciesId: 6, variant: "normal", level: 30 }];
-  for (const key of CHALLENGE_KEYS) {
-    let wins = 0, surged = 0;
+  const rates = CHALLENGE_KEYS.map((key) => {
+    let wins = 0;
     for (let i = 0; i < N; i++) {
-      const run = simulateChallenge({ team: lone, opponents: CHALLENGES[key].opponents, seed: simSeed(i) });
-      if (run.cleared) wins++;
-      if (run.fights.some((f) => f.surge)) surged++;
+      if (simulateChallenge({ team: lone, opponents: CHALLENGES[key].opponents, seed: simSeed(i) }).cleared) wins++;
     }
-    console.log(`  ${CHALLENGES[key].label.padEnd(10)} lone Lv 30 Charizard wins ${Math.round((100 * wins) / N)}% (surges in ${Math.round((100 * surged) / N)}%)`);
-  }
+    console.log(`  ${CHALLENGES[key].label.padEnd(10)} lone Lv 30 Charizard wins ${Math.round((100 * wins) / N)}%`);
+    return wins / N;
+  });
+  assertTrue(rates.every((r) => r === 0), "a lone Lv 30 Charizard never clears a challenge");
 }
 
 section("Leveling pace");

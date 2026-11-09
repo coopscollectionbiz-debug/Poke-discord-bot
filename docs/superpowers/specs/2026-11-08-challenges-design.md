@@ -35,32 +35,48 @@ Sources: [pokemondb FRLG](https://pokemondb.net/firered-leafgreen/gymleaders-eli
 | Sabrina | Psychic | Marsh | 48 | Kadabra 43, Mr. Mime 42, Venomoth 43, Alakazam 48, Hypno 44, Slowbro 44 |
 | Blaine | Fire | Volcano | 53 | Growlithe 48, Ponyta 46, Rapidash 48, Arcanine 53, Magmar 49, Ninetales 49 |
 | Giovanni | Ground | Earth | 58 | Rhyhorn 53, Dugtrio 50, Nidoqueen 52, Nidoking 53, Rhydon 58, Persian 53 |
-| Lorelei | Ice | | 55 | Dewgong 53, Cloyster 52, Slowbro 53, Jynx 55, Lapras 55, Piloswine 54 |
-| Bruno | Fighting | | 56 | Onix 51, Hitmonchan 53, Hitmonlee 53, Onix 54, Machamp 56, Poliwrath 53 |
-| Agatha | Ghost | | 57 | Gengar 53, Golbat 53, Haunter 52, Arbok 55, Gengar 57, Weezing 54 |
-| Lance | Dragon | | 59 | Gyarados 55, Dragonair 53, Dragonair 53, Aerodactyl 57, Dragonite 59, Charizard 55 |
+| Lorelei | Ice | | 56 | Dewgong 54, Cloyster 53, Slowbro 54, Jynx 56, Lapras 56, Piloswine 55 |
+| Bruno | Fighting | | 57 | Onix 52, Hitmonchan 54, Hitmonlee 54, Onix 55, Machamp 57, Poliwrath 54 |
+| Agatha | Ghost | | 58 | Gengar 54, Golbat 54, Haunter 53, Arbok 56, Gengar 58, Weezing 55 |
+| Lance | Dragon | | 60 | Gyarados 56, Dragonair 54, Dragonair 54, Aerodactyl 58, Dragonite 60, Charizard 56 |
 | Blue | | | 75 | Pidgeot 71, Alakazam 69, Rhydon 71, Arcanine 71, Exeggutor 73, Blastoise 75 |
 | Red | | | 88 (canon) | Pikachu 88, Lapras 80, Snorlax 82, Venusaur 84, Charizard 84, Blastoise 84 |
 
 - Giovanni's sixth Pokémon is Persian (decided). His FRLG team has 5, and neither his Let's Go team nor HGSS has another Ground type for him. Persian is his signature outside the Gym.
 - The ace targets come from the interview (Gyms "a touch lower" than 30 → 65, so Giovanni tops out around 55 to 60, and the Elite Four sit around 55 to 60). The balance test tunes them.
-- Tuning: at the draft Levels (Elite Four aces 56, 57, 58, 60), the Elite Four run's gate tied Blue's at Lv 74. Every Elite Four Pokémon moved down 1 Level, which keeps the aces between 55 and 60 and puts the run's gate at Lv 73, under Blue's Lv 74 (`node tests/challengeBalance.test.js`, before and after the change).
+- Tuning: before the Revive, the Elite Four run's gate at these Levels tied Blue's at Lv 74, and every Elite Four Pokémon briefly moved down 1 Level to break the tie (`node tests/challengeBalance.test.js` at commit fbaa9e52). The Revive breaks it instead, so the Levels are back at the draft: the run's gate is Lv 68, under Blue's Lv 74 (`node tests/challengeBalance.test.js`).
 
 ## Difficulty
 
 - Leader Levels are fixed. They don't scale to the player, and player Levels are never capped in a challenge.
 - A gate Level is the lowest uniform Team Level at which stand-in Teams win at least half the time against an opponent. A stand-in Team is 6 random distinct species, all at the same Level, with one seed per sample. The species come from those with no further evolution (`evolvesTo` empty in `pokemonData.json`), minus the legendary catch band (`catchBand(id) === "legendary"` in `utils/training.js`, meaning Tier legendary or mythic at Stage 1). Tier alone can't do this job, because Tier is rarity: Venusaur is Tier legendary. Its Level is measured in steps of 1.
 - The balance test enforces Giovanni's gate < the Elite Four run's gate < Blue's gate < Red's gate. It prints each Gym's gate but doesn't require them to rise one by one, because type matchups could put a later Gym's gate below an earlier one's even with higher Levels. If the printed Gym gates come out badly out of order, tune the ace targets by hand.
-- Challenges use `/battle`'s Underdog surge unchanged (`SURGE` in `utils/battle/tuning.js`). Only the player's Team can surge. A leader never surges, because losing a Gym you clearly outclass to bad luck would feel unfair.
-- Each fight in an Elite Four run rolls its own surge.
+- Challenges have no Underdog surge, on either side (decided 2026-11-10). With `/battle`'s surge, a one-Pokémon Team surged to Lv 100 and beat Gyms it had no business beating (see Measured).
 - The sim's existing turn-cap rule applies. More HP left wins, and an exact tie goes to the leader (side 1).
 
 ## Elite Four run
 
-- One `/challenge` runs Lorelei, then Bruno, then Agatha, then Lance. The player's Pokémon keep their HP, as a fraction of max HP, from fight to fight, and fainted Pokémon stay fainted. Each leader starts at full HP.
-- The bot simulates the whole run at once and stops at the first loss. It saves the result before the replay, so no run is ever stored half-finished.
-- Levels stay fixed during the run. EXP from every fight is added up and applied once at the end.
-- The run uses 1 daily attempt.
+- One `/challenge` runs Lorelei, then Bruno, then Agatha, then Lance. The player's Pokémon keep their HP, as a fraction of max HP, from fight to fight, and fainted Pokémon stay fainted unless revived. Each leader starts at full HP.
+- The run uses the player's Team as it was when they clicked Fight!. Levels stay fixed during the run. EXP from every fight is added up and applied once at the end, only to Pokémon the player still owns then (giving away a Pokémon's last copy resets its Level, so EXP must not recreate it).
+- The run uses 1 daily attempt, counted at Fight!.
+- There's no forfeit. A run ends when the player loses a fight or beats Lance.
+
+### Revive (decided 2026-11-10)
+
+- After each fight the player wins (up to 3 times a run), they pick one fainted Pokémon to Revive. It comes back at full HP for the next fight. If nothing fainted, there's nothing to pick and the next fight starts right away.
+- The pick is a private message with one button per fainted Pokémon (name and Level), naming the next opponent and type, such as "Next: Agatha · Ghost". All 6 can be fainted after a win on a double knockout, so the buttons may take two rows.
+- The player has 60 seconds from when that fight's result frame appears. Without a pick, no Pokémon is revived for that break. The buttons disappear at the deadline; a click that arrives later gets "Too late. No Pokémon was revived." Only the first click counts.
+- Spectators: during the pause, the public replay message keeps the last result frame and its text adds "⏳ <name> is choosing a Pokémon to revive…". The next fight's header adds "💊 <name> revived <Pokémon>!" or "💊 No Pokémon was revived."
+- The run is simulated one fight at a time. After each fight the bot saves the run's progress on the player's record, then replays that fight. The replay slot is released during the pause, so the next fight may show its place in line.
+- Each private message uses the newest click's reply window (Discord interaction tokens are valid for 15 minutes, [Discord docs](https://docs.discord.com/developers/interactions/receiving-and-responding)). If a long replay queue pushes a pick message past that window, that break gets no Revive and the run continues.
+- If the public replay message is deleted mid-run, the run keeps going and still resolves; only the replay stops.
+- A restart mid-run finishes every open run at startup with no Revives, applies EXP and the prize or loss, and edits the run's public message to the result with a note that the bot restarted. Unanswered wager offers are closed the same way today (`bot_final.js:2817`).
+- While a run is open, `/challenge` with an opponent refuses privately: "Finish your Elite Four run first." Fight! on any older preview re-checks under the lock and refuses the same way. `/battle` still works.
+- Every way out of a break leads to the next fight or the end of the run: a pick, the 60-second deadline, a pick message that couldn't be sent, or a replay edit that failed.
+- A run can't stay stuck. If its last saved step is more than 15 minutes old (an unexpected error stopped it), the player's next `/challenge` first finishes it with no Revives, applies the results, and clears it, then carries on with their request.
+- The 10% loss is charged when the run ends, as for single fights: the smaller of the previewed amount and 10% of the balance then. Moving CC away mid-run can shrink it, the same gap as `/gift` before a challenge (decided: not closed).
+- The event log entry records each break's pick, or that none was made.
+- The Elite Four Levels go back to the draft (aces 56, 57, 58, 60). The −1 shift only broke a tie with Blue, which the Revive now breaks.
 
 ## Attempts and EXP
 
@@ -112,6 +128,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - The result embed shows the winner, MVP, EXP and level-ups, the Badge or prize earned, and what unlocked. It has no rating lines.
 - Refusals are private. They cover a missing Team, a locked opponent (with what's missing), no attempts left, a pending wager, and the bot lacking permissions in the channel.
 - After a loss, the player's private reply shows the exact CC lost.
+- The private result arrives after the replay, for single fights and the Elite Four run alike (decided 2026-11-10). Until then the private message reads "⚔️ Your challenge is starting below." If the replay outlasts the 15-minute reply window, the public result still shows and only the private amount is missing. A crash during a single fight's replay leaves the player with neither result message, though the result itself was saved first, the same as `/battle`.
 
 ## Badges in other places
 
@@ -127,6 +144,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - The server owns `challenge`. It must never join the `/api/updateUser` allowlist, the same rule as `training` and `battle`.
 - Like `training` and `battle`, `challenge` isn't registered in a schema file. The unused `sanitizeBeforeSave` → `stripDeprecatedFields` whitelist would wipe it if anyone ever wired that up (the battles spec gives the same warning).
 - Each attempt runs under the player's lock (`lockUser`). The command checks the cap and unlocks, simulates, applies EXP and prizes, records the attempt, and saves before the replay starts, the same order `/battle` uses.
+- An open Elite Four run lives at `challenge.run`: the Team as of Fight!, each member's HP, the next fight, the EXP so far, the seed, the previewed loss, the picks so far, and the public message's channel and ID. Every step re-reads the live record under the lock and checks the run's nonce and step, so a stale or repeated click does nothing. The run is removed when it ends.
 
 ## Code changes
 
@@ -145,19 +163,19 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 
 - `tests/challengeRoster.test.js` checks that every team has 6 Pokémon, every species exists in `battleData.json`, every ace is the team's highest Level, and the prize table matches this spec. It also fails while any Badge emoji ID is missing (decided), so `npm test` fails on this branch until the art is uploaded and the IDs are pasted in.
 - `tests/battleSim.test.js` adds carried HP and checks that fainted members are skipped.
-- `tests/runChallenge.test.js` covers gating (8 Badges for the run, a cleared run for Blue, Red always open), the 5-per-day cap and its reset, the run stopping at the first loss, EXP summed with Levels fixed during the run, prizes paid once, the owned-sprite CC fallback, sprites written to the `trainers` array, the surge only reaching the player's side, and Battle rating left untouched. It also covers the loss: 10% rounded down, never more than the previewed amount, once per failed Elite Four run, nothing below 10 CC, EXP still paid, and a refusal while a wager is pending.
+- `tests/runChallenge.test.js` covers gating (8 Badges for the run, a cleared run for Blue, Red always open), the 5-per-day cap and its reset, the run stopping at the first loss, EXP summed with Levels fixed during the run, prizes paid once, the owned-sprite CC fallback, sprites written to the `trainers` array, no Underdog surge, and Battle rating left untouched. It covers the Revive in the sim: a break after each won fight but the last, the picked Pokémon back at full HP, no pick when nothing fainted, and a pick of a standing or missing slot reviving nothing. It also covers the loss: 10% rounded down, never more than the previewed amount, once per failed Elite Four run, nothing below 10 CC, EXP still paid, and a refusal while a wager is pending.
 - `tests/challengeCommand.test.js` uses stub Discord objects to cover the board, the refusals, the private preview and its amount, Fight!, Not now, expiry, a double click, the public intro card saying "10%" with no amount, and the replay message.
-- `tests/challengeBalance.test.js` measures gate Levels against stand-in Teams and enforces the order in Difficulty. It also prints win rate by Level for each opponent and a leveling pace that includes 5 challenges a day.
+- `tests/challengeBalance.test.js` measures gate Levels against stand-in Teams and enforces the order in Difficulty. Its stand-in player revives the strongest fainted Pokémon (by Power rating) at each Elite Four break; it also prints the run's gate for a player who never picks. It also prints win rate by Level for each opponent and a leveling pace that includes 5 challenges a day.
 
 ## Measured (stand-in Teams, 200 per Level)
 
 Every figure in this section comes from `node tests/challengeBalance.test.js`.
 
-- Gate Levels: Brock 23, Misty 30, Lt. Surge 31, Erika 34, Koga 37, Sabrina 43, Blaine 48, Giovanni 50, Elite Four run 73, Blue 74, Red 86. The Gyms rise one by one, and the enforced order holds.
-- Win rate climbs steeply, so every challenge is a Level gate and retries barely matter. A 10% win rate becomes 90% over 6 Levels for Brock (Lv 20 → 26), 10 for Giovanni (45 → 55), 15 for Blue (67 → 82), and 18 for the Elite Four run (63 → 81) and Red (78 → 96).
-- For a full Team near the gate, the Underdog surge almost never matters. At 5 Levels under each gate, it fires in 0% of runs against every opponent except Erika (2%) and the Elite Four run (10%), because a Team that close to the gate is rarely 1.25× weaker. It turns a loss into a win only in the Elite Four run, for 4% of the runs lost without it, where carried damage weakens the Team in later fights.
-- A one-Pokémon Team. A Team of one is always the Underdog by a wide margin, so the surge fires at its top chance (`SURGE.maxChance`) and lifts it to Lv 100, the Level cap. At the old 20% cap, a lone Lv 30 Charizard won 27% of 200 runs against every Gym from Brock through Blaine, a cheap way to collect Gym prizes. The cap is now 8% (decided: a lone upset should stay possible at 5 to 10%, in `/battle` too). The same Charizard now wins 11% of 200 runs against every Gym from Brock through Blaine, 2% against Giovanni, and 0% against the Elite Four run, Blue, and Red. Every one of those wins came with a surge. This test's seeds surge more often than the cap: 27% at 20%, and 11% at 8%.
-- Leveling pace: from Lv 73 (the Elite Four run's gate) to Lv 100 takes 27 days at 10 Battles a day, and 13 days with 5 cleared Elite Four runs a day too.
+- Gate Levels: Brock 23, Misty 30, Lt. Surge 31, Erika 34, Koga 37, Sabrina 43, Blaine 48, Giovanni 50, Elite Four run 68, Blue 74, Red 86. The Gyms rise one by one, and the enforced order holds.
+- The Elite Four run's gate is Lv 68 for a player who revives their strongest fainted Pokémon at every break, and Lv 75 for one who never picks.
+- Win rate climbs steeply, so every challenge is a Level gate and retries barely matter. A 10% win rate becomes 90% over 6 Levels for Brock (Lv 20 → 26), 10 for Giovanni (45 → 55), 15 for Blue (67 → 82) and the Elite Four run (61 → 76), and 18 for Red (78 → 96).
+- A one-Pokémon Team. Challenges have no Underdog surge, so a lone Lv 30 Charizard wins 0% of 200 runs against every challenge. With `/battle`'s surge, a Team of one was always the Underdog by a wide margin and surged to Lv 100: the same Charizard won 27% of 200 runs against every Gym from Brock through Blaine at the old 20% cap, and 11% at the 8% cap (`node tests/challengeBalance.test.js` at commits 6e50566a and a3f0cedf). That is why challenges have none.
+- Leveling pace: from Lv 68 (the Elite Four run's gate) to Lv 100 takes 31 days at 10 Battles a day, and 14 days with 5 cleared Elite Four runs a day too.
 
 ## Open checks
 

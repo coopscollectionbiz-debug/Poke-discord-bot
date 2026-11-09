@@ -1,16 +1,18 @@
 // ==========================================================
 // tests/challengePlayback.test.js
-// Replaying a Challenge: one message for a whole Elite Four run, leaders
-// shown by name (never as a mention), no exact CC loss in public, and one
-// replay slot per challenge.
+// Replaying a Challenge: one message for a whole Elite Four run, played one
+// fight at a time with the Revive in each header, leaders shown by name
+// (never as a mention), no exact CC loss in public, and a replay slot held
+// only while a fight plays.
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import {
   challengeNames, challengeHeader, buildChallengeEmbed, playChallenge, prizeText, createQueue,
+  playChallengeFight, showChoosing, showRunResult,
 } from "../utils/battle/playback.js";
 import { pickFrameTurns } from "../utils/battle/render.js";
-import { runChallenge } from "../utils/challenge/runChallenge.js";
+import { runChallenge, startRun, continueRun } from "../utils/challenge/runChallenge.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
 import { badgeEmoji } from "../utils/challenge/badgeEmojis.js";
 import { createNewUser } from "../utils/userSchema.js";
@@ -36,6 +38,19 @@ function player(speciesIds, level, won = {}) {
 }
 const allGyms = Object.fromEntries(GYMS.map((k) => [k, "2026-11-01"]));
 const outcomeOf = (td, key, seed = 1) => runChallenge({ trainerData: td, userId: "A", key, seed, now: NOW });
+// Every Step of an interactive Elite Four run, reviving the first fainted Pokémon.
+function runSteps(ids, level, seed = 1) {
+  const td = player(ids, level, { ...allGyms });
+  const steps = [startRun({ trainerData: td, userId: "A", seed, maxLoss: 1234, channelId: "C", now: NOW })];
+  while (!steps.at(-1).ended) {
+    const s = steps.at(-1);
+    steps.push(continueRun({ trainerData: td, userId: "A", nonce: s.nonce, step: s.step + 1, slot: s.fainted[0]?.slot, now: NOW }));
+  }
+  return steps;
+}
+// What the command replays for a Step: the view, or the Outcome once the run ended.
+const shown = (s) => (s.ended ? s.outcome : s.view);
+const slotFree = (q) => Promise.race([q.acquire().then((release) => { release(); return true; }), new Promise((r) => setTimeout(() => r(false), 50))]);
 
 function recorder() {
   const sent = [];
@@ -105,34 +120,85 @@ section("Run loss");
   assertTrue(e.description.includes("💸 Lost 10% of their CC."), "a failed run's loss line");
 }
 
-section("Elite Four replay");
+section("Revive in the header");
 {
+  const v = runSteps(STRONG, 100)[1].view;
+  const name = v.fights[1].sides[0].members[2].name;
+  const line2 = (breaks) => challengeHeader({ ...v, breaks }, 1).split("\n")[1];
+  assertEqual(line2([{ offered: true, slot: 2 }]), `💊 <@A> revived ${name}!`, "a Revive shows under the next fight's header");
+  assertEqual(line2([{ offered: true, slot: null }]), "💊 No Pokémon was revived.", "an offered break with no pick says so");
+  assertEqual(line2([{ offered: false, slot: null }]), undefined, "a break with nothing fainted adds no line");
+  assertEqual(challengeHeader(v, 0), "⚔️ <@A> · Elite Four · Lorelei (1 of 4)", "the first fight has no Revive line");
+}
+
+section("Elite Four replay, one fight at a time");
+{
+  const steps = runSteps(STRONG, 100);
+  const names = challengeNames(steps.at(-1).outcome, "A");
   const rec = recorder();
-  await playChallenge(rec.channel, runOut, runNames);
-  assertEqual(rec.sent.length, 1, "one message for the whole run");
+  const q = createQueue(1);
+  let message = null;
+  const free = [];
+  for (const s of steps) {
+    message = await playChallengeFight(rec.channel, message, shown(s), s.step, names, { last: s.ended, maxUpdates: PLAYBACK.maxUpdates, delayMs: 0, queue: q });
+    free.push(await slotFree(q));
+  }
+  assertEqual([steps.length, rec.sent.length], [4, 1], "one message for the whole run");
+  assertTrue(rec.sent[0].content.includes("(1 of 4)"), "the first fight posts the message");
   const contents = rec.edits.map((e) => e.content).filter(Boolean);
   assertTrue(contents.some((c) => c.includes("(2 of 4)")) && contents.some((c) => c.includes("(4 of 4)")), "headers for each fight");
-  assertTrue(rec.sent[0].content.includes("(1 of 4)"), "the first fight posts the message");
-  const expected = runOut.fights.reduce((t, f) => t + pickFrameTurns(f.result.turns, PLAYBACK.maxUpdates).length + 1, 0) + runOut.fights.length - 1;
+  const fights = steps.map((s) => shown(s).fights[s.step]);
+  const expected = fights.reduce((t, f) => t + pickFrameTurns(f.result.turns, PLAYBACK.maxUpdates).length + 1, 0) + fights.length - 1;
   assertEqual(rec.edits.length, expected, "each fight: start frame, turns, final frame on the same message");
   assertEqual(rec.edits.at(-1).embeds?.[0]?.toJSON().title, "🏆 A cleared the Elite Four!", "the result embed comes with the last frame");
   assertTrue(rec.edits.slice(0, -1).every((e) => !e.embeds?.length), "no embed before the end");
+  assertEqual(free, [true, true, true, true], "the replay slot is free after each fight");
   assertTrue(!OPPONENT_KEYS.some((k) => texts(rec).includes(`<@${k}`)), "no leader is ever a mention");
+
+  const waiting = recorder();
+  const first = await playChallengeFight(waiting.channel, null, shown(steps[0]), 0, names, { last: false, maxUpdates: 2, delayMs: 0, queue: q });
+  const release = await q.acquire();
+  const second = playChallengeFight(waiting.channel, first, shown(steps[1]), 1, names, { last: false, maxUpdates: 2, delayMs: 0, queue: q });
+  await new Promise((r) => setTimeout(r, 0));
+  assertTrue(waiting.edits.at(-1).content.includes("#1 in line") && waiting.sent.length === 1, "a later fight waiting for a slot shows its place on the run's message");
+  release();
+  assertEqual(await second, first, "then plays on that message");
 }
 
 section("Each fight's result stays up");
 {
   // Fights 1-3's result frames must stay up a full delay before the next fight's start frame replaces them.
   const delayMs = 600; // well above the ~0.2 s a frame takes to render
+  const steps = runSteps(STRONG, 100);
+  const names = challengeNames(steps.at(-1).outcome, "A");
   const stamps = [];
   const channel = { send: async () => ({ edit: async () => { stamps.push(Date.now()); } }) };
-  await playChallenge(channel, runOut, runNames, { maxUpdates: 2, delayMs, queue: createQueue(1) });
-  let i = -1;
-  const gaps = runOut.fights.slice(0, -1).map((f) => {
-    i += pickFrameTurns(f.result.turns, 2).length + (i === -1 ? 1 : 2); // fight 0 starts with send(), later fights with an edit
-    return stamps[i + 1] - stamps[i];
-  });
+  let message = null;
+  const ends = [];
+  for (const s of steps) {
+    message = await playChallengeFight(channel, message, shown(s), s.step, names, { last: s.ended, maxUpdates: 2, delayMs, queue: createQueue(1) });
+    ends.push(stamps.length - 1);
+  }
+  const gaps = ends.slice(0, -1).map((e) => stamps[e + 1] - stamps[e]);
   assertTrue(gaps.every((g) => g >= delayMs * 0.9), `each fight's result shows for a full delay (${gaps.join(", ")} ms)`);
+}
+
+section("Choosing a Revive, and the run's result");
+{
+  const steps = runSteps(STRONG, 100);
+  const edits = [];
+  const message = { edit: async (e) => { edits.push(e); } };
+  const failing = { edit: async () => { throw new Error("Unknown Message"); } };
+  assertEqual(await showChoosing(message, steps[0].view, 0), true, "showChoosing edits the run's message");
+  assertEqual(edits[0], { content: `${challengeHeader(steps[0].view, 0)}\n⏳ <@A> is choosing a Pokémon to revive…` }, "the header, then the wait, and the image stays");
+  assertEqual(await showChoosing(failing, steps[0].view, 0), false, "a failed edit returns false without throwing");
+
+  const out = steps.at(-1).outcome;
+  const names = challengeNames(out, "A");
+  assertEqual(await showRunResult(message, out, names, "A note."), true, "showRunResult edits the run's message");
+  const r = edits.at(-1);
+  assertEqual([r.content, r.embeds[0].toJSON().title, r.files], ["A note.", "🏆 A cleared the Elite Four!", undefined], "the note and the result embed, no new image");
+  assertEqual(await showRunResult(failing, out, names, "A note."), false, "a failed edit returns false without throwing");
 }
 
 section("Single fights in public");
@@ -170,17 +236,17 @@ section("Replay slots");
   const q = createQueue(1);
   const first = recorder();
   const second = recorder();
-  const p1 = playChallenge(first.channel, runOut, runNames, { maxUpdates: 12, delayMs: 0, queue: q });
+  const p1 = playChallenge(first.channel, brockWin, challengeNames(brockWin, "A"), { maxUpdates: 12, delayMs: 0, queue: q });
   const p2 = playChallenge(second.channel, brockWin, challengeNames(brockWin, "A"), { maxUpdates: 12, delayMs: 0, queue: q });
   await new Promise((r) => setTimeout(r, 0));
   assertTrue(second.sent[0]?.content.includes("#1 in line"), "a challenge waiting for a slot shows its place");
   assertTrue(second.sent[0]?.content.startsWith(challengeHeader(brockWin, 0)), "with its header");
   await Promise.all([p1, p2]);
-  assertTrue(first.sent.length === 1 && first.edits.length > 4, "the run kept its slot through all 4 fights");
+  assertTrue(first.sent.length === 1 && second.sent.length === 1, "then plays on that message");
 
   const failing = { send: async () => ({ edit: async () => { throw new Error("Unknown Message"); } }) };
   const q2 = createQueue(1);
-  await playChallenge(failing, runOut, runNames, { maxUpdates: 12, delayMs: 0, queue: q2 });
+  await playChallenge(failing, brockWin, challengeNames(brockWin, "A"), { maxUpdates: 12, delayMs: 0, queue: q2 });
   assertTrue(true, "a failed edit stops the replay without throwing");
   let free = false;
   await q2.acquire().then((release) => { free = true; release(); });
@@ -188,6 +254,12 @@ section("Replay slots");
   const broken = { send: async () => { throw new Error("Missing Access"); } };
   const threw = await playChallenge(broken, brockWin, challengeNames(brockWin, "A"), { maxUpdates: 12, delayMs: 0, queue: q2 }).catch(() => "threw");
   assertEqual(threw, "threw", "a challenge that can't be posted tells the caller");
+  const steps = runSteps(STRONG, 100);
+  const names = challengeNames(steps.at(-1).outcome, "A");
+  const gone = { edit: async () => { throw new Error("Unknown Message"); } };
+  assertEqual(await playChallengeFight(failing, gone, steps[1].view, 1, names, { last: false, maxUpdates: 12, delayMs: 0, queue: q2 }), null,
+    "a later fight on a deleted message returns null without throwing");
+  assertEqual(await slotFree(q2), true, "and frees its slot");
 }
 
 finish();

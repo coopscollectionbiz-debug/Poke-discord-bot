@@ -7,7 +7,8 @@
 // this runs; a failed edit just stops the replay. At most
 // PLAYBACK.maxAtOnce replays run at once; the rest wait in line.
 // Challenges replay here too: every fight of an Elite Four run plays on
-// one message, holding one slot. Leaders are names, never <@mentions>.
+// one message, holding a slot only while a fight plays (the Revive pick
+// between fights can take a minute). Leaders are names, never <@mentions>.
 // ==========================================================
 
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -173,11 +174,10 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
   }
 }
 
-// Waits for a replay slot. A replay that has to wait posts `heading` now,
-// so the players are notified, and shows its place in line until a slot
-// frees up. Resolves to { message, release }.
-async function waitForSlot(channel, queue, heading) {
-  let message = null;
+// Waits for a replay slot. A replay that has to wait posts `heading` now
+// (or edits it onto `message`), so the players are notified, and shows its
+// place in line until a slot frees up. Resolves to { message, release }.
+async function waitForSlot(channel, queue, heading, message = null) {
   let placeShown = Promise.resolve();
   const showPlace = (n) => {
     const content = `${heading}\n⏳ Wow, lots of battles right now! You're #${n} in line.`;
@@ -220,13 +220,18 @@ export function challengeNames(outcome, playerName) {
   return names;
 }
 
+// In a run, fight i > 0 also says what the break before it revived.
 export function challengeHeader(outcome, i) {
   const player = `<@${outcome.userId}>`;
   const fight = outcome.fights[i];
   const opponent = opponentOf(outcome, fight.opponentKey);
-  return isRun(outcome)
-    ? `⚔️ ${player} · Elite Four · ${opponent.name} (${i + 1} of ${CHALLENGES[outcome.key].opponents.length})`
-    : `⚔️ ${player} challenges ${opponentName(opponent)}!`;
+  if (!isRun(outcome)) return `⚔️ ${player} challenges ${opponentName(opponent)}!`;
+  const heading = `⚔️ ${player} · Elite Four · ${opponent.name} (${i + 1} of ${CHALLENGES[outcome.key].opponents.length})`;
+  const pause = i > 0 && outcome.breaks?.[i - 1];
+  if (!pause?.offered) return heading;
+  return pause.slot === null
+    ? `${heading}\n💊 No Pokémon was revived.`
+    : `${heading}\n💊 ${player} revived ${fight.sides[0].members[pause.slot].name}!`;
 }
 
 // "Brock sprite, 2,500 CC, 1 stone, and 5 Dust". prize.sprites are in the
@@ -268,28 +273,55 @@ export function buildChallengeEmbed(outcome, names) {
     .addFields({ name: `EXP · ${player}`, value: expLines(outcome.exp[outcome.userId]) });
 }
 
-// Replays every fight of a challenge on one message, holding one replay
-// slot throughout. Only the last fight's result frame shows the EXP, so
-// level-ups show once, at the end.
-export async function playChallenge(channel, outcome, names, { maxUpdates, delayMs, queue = replays } = PLAYBACK) {
-  let { message, release } = await waitForSlot(channel, queue, challengeHeader(outcome, 0));
+// Replays fight i of a challenge on `message`, or on a new channel message
+// when it's null, holding a replay slot for this fight only. `outcome` is a
+// run's view so far, or the full Outcome for the last fight (`last`), whose
+// result frame gets the EXP and the result embed. A first post that fails
+// throws; a later failed edit stops the replay and returns null.
+export async function playChallengeFight(channel, message, outcome, i, names, { last, maxUpdates, delayMs, queue = replays } = PLAYBACK) {
+  const heading = challengeHeader(outcome, i);
+  const posted = message;
+  const slot = await waitForSlot(channel, queue, heading, message);
   try {
-    const sprites = new Map();
-    for (const [i, fight] of outcome.fights.entries()) {
-      const last = i === outcome.fights.length - 1;
-      const opts = {
-        channel, message, heading: challengeHeader(outcome, i), names, sprites, maxUpdates, delayMs, paceStart: i > 0,
-        fight: { ...fight, exp: last ? outcome.exp : {} },
-        finalEmbed: last ? buildChallengeEmbed(outcome, names) : null,
-      };
-      // Only the first post can fail to appear; later fights edit a message that's already up.
-      message = i === 0 ? await replayFight(opts) : await replayFight(opts).catch((err) => {
-        console.warn("⚠️ challenge playback stopped:", err?.message || err);
-        return null;
-      });
-      if (!message) break;
-    }
+    const replay = replayFight({
+      channel, message: slot.message, heading, names, sprites: new Map(), maxUpdates, delayMs,
+      // The previous fight's result frame stays up a full delay before this start frame replaces it.
+      paceStart: posted !== null,
+      fight: { ...outcome.fights[i], exp: last ? outcome.exp : {} },
+      finalEmbed: last ? buildChallengeEmbed(outcome, names) : null,
+    });
+    // Only the first post can fail to appear; later fights edit a message that's already up.
+    return posted ? await replay.catch((err) => {
+      console.warn("⚠️ challenge playback stopped:", err?.message || err);
+      return null;
+    }) : await replay;
   } finally {
-    release(); // even a failed replay frees its slot
+    slot.release(); // even a failed replay frees its slot
+  }
+}
+
+// A single-fight challenge's replay.
+export const playChallenge = (channel, outcome, names, opts = PLAYBACK) =>
+  playChallengeFight(channel, null, outcome, 0, names, { ...opts, last: true });
+
+// While the player picks a Revive, the run's message says so under the header
+// of the fight just played. Never throws.
+export async function showChoosing(message, outcome, i) {
+  try {
+    await message.edit({ content: `${challengeHeader(outcome, i)}\n⏳ <@${outcome.userId}> is choosing a Pokémon to revive…` });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Puts a run's result on its message without replaying it: after a restart,
+// or when the run stopped unexpectedly. Never throws.
+export async function showRunResult(message, outcome, names, note) {
+  try {
+    await message.edit({ content: note, embeds: [buildChallengeEmbed(outcome, names)] });
+    return true;
+  } catch {
+    return false;
   }
 }

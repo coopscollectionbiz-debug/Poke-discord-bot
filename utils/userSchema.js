@@ -105,7 +105,10 @@ luckTimestamp: 0,
 export function validateUserSchema(user, userId, username) {
   if (!user) return createNewUser(userId, username);
 
-  const out = { ...user };
+  // Repair IN PLACE and return the same object. A copy here used to replace
+  // trainerData[userId], so any code still holding the old object (open
+  // collectors, queued rewards) wrote CC/TP/cooldowns to a detached record.
+  const out = user;
 
   // Basic identity
   if (out.id == null) out.id = userId;

@@ -1,6 +1,12 @@
 app = 'poke-discord-bot-49shta'
 primary_region = 'iad'
 
+# Graceful shutdown (bot_final.js gracefulShutdown) flushes the local save
+# (≤8s), uploads the final Discord backup (≤8s), then destroys the client
+# (≤2s), with a 25s hard exit. Fly's default kill timeout (5s) can SIGKILL
+# the process before the final backup finishes, so allow 30s.
+kill_timeout = 30
+
 [build]
 
 [env]

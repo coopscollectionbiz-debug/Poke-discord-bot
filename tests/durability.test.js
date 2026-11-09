@@ -67,6 +67,17 @@ section("Ordering: epoch first, but only when both have one");
   assertTrue(snap.isNewer(cand({ epoch: 3, seq: 10 }), cand({ epoch: null, seq: 9 })), "epoch vs pre-A2 seq snapshot: seq decides");
 }
 
+section("Identical content prefers the local copy");
+{
+  const same = "f".repeat(64);
+  assertTrue(snap.isNewer(cand({ source: "local", seq: 84, epoch: 1, sha256: same }), cand({ source: "discord", seq: 85, epoch: 1, sha256: same })),
+    "shutdown flush (seq 84) and final backup (seq 85) of the same data: local wins");
+  assertTrue(snap.isNewer(cand({ source: "discord", seq: 85, epoch: 1, sha256: "a".repeat(64) }), cand({ source: "local", seq: 84, epoch: 1, sha256: "b".repeat(64) })),
+    "different content: the newer seq still wins");
+  const v = snap.validateSnapshot({ source: "local", text: '{"1":{}}', meta: null });
+  assertTrue(/^[0-9a-f]{64}$/.test(v.sha256), "candidates carry a content hash even without metadata");
+}
+
 section("Compact local snapshots carry the epoch");
 {
   store.__resetLocalStoreForTests();

@@ -6,7 +6,7 @@
 //   • toasts (role="status") and in-page dialogs replacing alert()
 //   • keyboard/screen-reader support for the pages' JS-built modals
 // Import it first: <script type="module" src="/public/shared/shell.js">.
-// The page is chosen by <body data-page="pokemon|trainers|bag|achievements|shop">.
+// The page is chosen by <body data-page="pokemon|teams|trainers|bag|achievements|shop">.
 // No API calls and no game logic live here.
 // ==========================================================
 
@@ -15,15 +15,17 @@ export const MISSING_ID_MESSAGE = "This page needs your dashboard link — run /
 
 export const NAV_ITEMS = Object.freeze([
   { key: "pokemon", label: "Pokémon", href: "/public/picker-pokemon/", icon: "box" },
+  { key: "teams", label: "Teams", href: "/public/teams/", icon: "teams" },
   { key: "trainers", label: "Trainers", href: "/public/picker/", icon: "person" },
   { key: "bag", label: "Bag", href: "/public/bag/", icon: "bag" },
-  { key: "achievements", label: "Achievements", href: "/public/achievements/", icon: "star" },
+  { key: "achievements", label: "Achievements", short: "Awards", href: "/public/achievements/", icon: "star" },
   { key: "shop", label: "Shop", href: "/public/dashboardshop/", icon: "shop" },
 ]);
 
 const ICONS = `
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="cc-i-box" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="cc-i-teams" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" d="M3 12h6m6 0h6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
   <symbol id="cc-i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2"/></symbol>
   <symbol id="cc-i-star" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
   <symbol id="cc-i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" d="M4 21c1-4 4-6 8-6s7 2 8 6"/></symbol>
@@ -37,7 +39,8 @@ export function pageHref(href, id = playerId()) {
   return id ? `${href}?id=${encodeURIComponent(id)}` : href;
 }
 
-function navList(active, id) {
+// short: the phone tab bar's label when the full one doesn't fit six tabs.
+function navList(active, id, { short = false } = {}) {
   const ul = document.createElement("ul");
   ul.className = "cc-nav-list";
   for (const item of NAV_ITEMS) {
@@ -48,7 +51,8 @@ function navList(active, id) {
     if (item.key === active) a.setAttribute("aria-current", "page");
     a.innerHTML = `<svg aria-hidden="true" focusable="false"><use href="#cc-i-${item.icon}"/></svg>`;
     const label = document.createElement("span");
-    label.textContent = item.label;
+    label.textContent = short && item.short ? item.short : item.label;
+    if (short && item.short) a.setAttribute("aria-label", item.label);
     a.append(label);
     li.append(a);
     ul.append(li);
@@ -85,7 +89,7 @@ function mountShell() {
   const tabs = document.createElement("nav");
   tabs.className = "cc-tabbar";
   tabs.setAttribute("aria-label", "Dashboard");
-  tabs.append(navList(active, id));
+  tabs.append(navList(active, id, { short: true }));
 
   body.prepend(skip, side);
   body.append(tabs);
@@ -162,6 +166,41 @@ export function toast(message, { tone = "info", timeout = 4000 } = {}) {
 }
 
 /** In-page replacement for alert(): resolves when dismissed. */
+/**
+ * In-page yes/no dialog (replaces confirm()). Resolves true for OK.
+ */
+export function confirmDialog({ title, message = "", okText = "OK", cancelText = "Cancel", tone = "info" }) {
+  return new Promise((resolve) => {
+    const d = document.createElement("dialog");
+    d.className = `cc-dialog${tone === "error" ? " is-error" : ""}`;
+    const h = document.createElement("h2");
+    h.textContent = title;
+    h.id = `ccDialog${Date.now()}`;
+    d.setAttribute("aria-labelledby", h.id);
+    const p = document.createElement("p");
+    p.textContent = message;
+    const row = document.createElement("div");
+    row.className = "cc-dialog-actions";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "cc-btn";
+    cancel.textContent = cancelText;
+    const ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = `cc-btn ${tone === "error" ? "cc-btn--danger" : "cc-btn--primary"}`;
+    ok.textContent = okText;
+    let result = false;
+    cancel.addEventListener("click", () => d.close());
+    ok.addEventListener("click", () => { result = true; d.close(); });
+    row.append(cancel, ok);
+    d.append(h, ...(message ? [p] : []), row);
+    d.addEventListener("close", () => { d.remove(); resolve(result); });
+    document.body.append(d);
+    d.showModal();
+    cancel.focus();
+  });
+}
+
 export function showMessage({ title, message = "", tone = "info", okText = "OK" }) {
   return new Promise((resolve) => {
     const d = document.createElement("dialog");

@@ -63,6 +63,7 @@ import { createAchievementHandlers } from "./services/achievementsApi.js";
 import { createMegaHandlers } from "./services/megaApi.js";
 import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
 import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
+import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
 import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
@@ -311,6 +312,8 @@ function normalizeUserSchema(id, user) {
 // team code that used to be inline here, plus keeping a valid Mega slot.
 normalizeMegaUnlocks(user);
 normalizeDisplayedTeam(user);
+// Battle team (ranked/wager): same cleaning; never created here (missing = not set).
+normalizeBattleTeam(user);
 
 
   // ==========================================================
@@ -499,6 +502,9 @@ app.get("/public/picker", (_, res) =>
 );
 app.get("/public/picker-pokemon", (_, res) =>
   res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
+);
+app.get("/public/teams", (_, res) =>
+  res.sendFile(path.join(staticPath, "teams", "index.html"))
 );
 
 // ✅ Shop page (new canonical)
@@ -1975,6 +1981,8 @@ app.get("/api/user-pokemon", (req, res) => {
   const rank = getRank(tp);
   const pokemon = u.pokemon ?? {};
   const currentTeam = Array.isArray(u.displayedPokemon) ? u.displayedPokemon : [];
+  // Battle team: null when the player has never set one.
+  const battleTeam = hasBattleTeam(u) ? u.battleTeam : null;
 
   ensureWeeklyReset(u);
   const levels = levelsForUser(u); // { "6:normal": 23 } for every owned variant
@@ -1988,6 +1996,8 @@ app.get("/api/user-pokemon", (req, res) => {
     items,
     pokemon,
     currentTeam, // NEW FORMAT: [{ id: Number, variant: "normal" | "shiny" }]
+    battleTeam, // Battle team (ranked/wager), same shape; null = not set
+    battleTeamMigration: u.battleTeamMigration ?? null, // { at, dropped:[{id,variant}] } from the one-time move-over
     // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
     levels,
     powers: powersFromLevels(levels), // { "6:normal": 410 }
@@ -1997,6 +2007,9 @@ app.get("/api/user-pokemon", (req, res) => {
 
 
 // ✅ POST — set full Pokémon team (up to 6) — Variant-safe + Ghost Auto-Clean
+// teamType: "display" (default; user.displayedPokemon, as before) or
+// "battle" (user.battleTeam; also at most one mythic-tier Pokémon,
+// services/battleTeam.js). Old clients send no teamType and are unchanged.
 // NEW TEAM FORMAT (frontend -> backend):
 // team = [{ id: 243, variant: "normal" }, { id: 245, variant: "shiny" }, ...]
 // Back-compat accepted:
@@ -2005,9 +2018,13 @@ app.get("/api/user-pokemon", (req, res) => {
 app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   try {
     const { id, team } = req.body;
+    const teamType = req.body?.teamType ?? "display";
 
     if (!id || !Array.isArray(team)) {
       return res.status(400).json({ success: false, error: "Missing id/team" });
+    }
+    if (teamType !== "display" && teamType !== "battle") {
+      return res.status(400).json({ success: false, error: "Unknown team type" });
     }
 
     if (!requireDashboardSession(req, id)) {
@@ -2036,19 +2053,27 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       // 2–4) Parse, 1–6 unique (id + variant) slots, ownership per variant,
       //      and the Mega rules (one Mega, not with its own base, unlocked,
       //      MEGA_TEAMS capability) — services/megaTeam.js prepareTeamSelection.
-      const prepared = prepareTeamSelection(u, team);
+      //      Battle team: the same rules plus at most one mythic-tier Pokémon.
+      const prepared = teamType === "battle" ? prepareBattleTeamSelection(u, team) : prepareTeamSelection(u, team);
       if (!prepared.ok) {
-        return res.status(prepared.status).json({ success: false, error: prepared.error });
+        return res.status(prepared.status).json({ success: false, error: prepared.error, code: prepared.code });
       }
       const normalized = prepared.team;
 
       // 5) Save
-      u.displayedPokemon = normalized;
+      if (teamType === "battle") u.battleTeam = normalized;
+      else u.displayedPokemon = normalized;
       trainerData[id] = u;
 
       const saveAck = await saveAndAck(trainerData);
 
-      return res.json({ ...saveAckFields(saveAck), success: true, currentTeam: u.displayedPokemon });
+      return res.json({
+        ...saveAckFields(saveAck),
+        success: true,
+        teamType,
+        currentTeam: u.displayedPokemon,
+        battleTeam: hasBattleTeam(u) ? u.battleTeam : null,
+      });
     });
   } catch (err) {
     console.error("❌ /api/set-pokemon-team:", err?.message || err);
@@ -2111,7 +2136,7 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
 
     if (isDisplayedVariant(u, pid, chosenVariant)) {
       return res.status(400).json({
-        error: `You can’t donate your ${chosenVariant} ${p.name} because it’s currently displayed on your team. Remove it from your team first.`,
+        error: `You can’t donate your ${chosenVariant} ${p.name} because it’s on one of your teams (Display or Battle). Remove it from that team first.`,
       });
     }
 

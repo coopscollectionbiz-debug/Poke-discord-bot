@@ -149,7 +149,7 @@ section("Evolve: stones and shiny dust");
   u.displayedPokemon = [{ id: 10, variant: "normal" }];
   snap = clone(state.td);
   const shown = await ev({ baseId: 10, targetId: 11 });
-  assertTrue(shown.status === 400 && /displayed on your team/.test(shown.body.error) && JSON.stringify(state.td) === JSON.stringify(snap), "a Pokémon on the Team can't evolve; nothing changed");
+  assertTrue(shown.status === 400 && /on one of your teams/.test(shown.body.error) && JSON.stringify(state.td) === JSON.stringify(snap), "a Pokémon on the Team can't evolve; nothing changed");
   u.displayedPokemon = [];
   const notOwned = await ev({ baseId: 11, targetId: 12 });
   assertTrue(notOwned.status === 400 && /do not own/.test(notOwned.body.error) && u.items.evolution_stone === 1, "not owned: refused, stone kept");

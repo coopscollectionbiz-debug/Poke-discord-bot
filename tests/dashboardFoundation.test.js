@@ -48,6 +48,7 @@ const pokemonData = JSON.parse(read("public/pokemonData.json"));
 
 const PAGES = {
   pokemon: "public/picker-pokemon",
+  teams: "public/teams",
   trainers: "public/picker",
   shop: "public/dashboardshop",
   bag: "public/bag",

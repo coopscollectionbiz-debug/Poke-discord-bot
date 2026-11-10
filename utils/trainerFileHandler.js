@@ -4,6 +4,7 @@
 // ==========================================================
 
 import { spritePaths } from "../spriteconfig.js";
+import { trainerImageUrl } from "./trainerAssets.js";
 import { grantTrainer, revokeTrainer, trainerCount } from "../services/assets.js";
 
 /**
@@ -43,12 +44,8 @@ export function getTrainerSpriteUrl(trainer) {
     return trainer.url;
   }
   
-  // Check if grayscale version should be used
-  if (trainer.grayscale) {
-    return `${spritePaths.trainersGray}${key}`;
-  }
-  
-  return `${spritePaths.trainers}${key}`;
+  // Breathing idle GIF when available; static PNG (or grayscale) otherwise.
+  return trainerImageUrl(key, { grayscale: !!trainer.grayscale });
 }
 
 /**

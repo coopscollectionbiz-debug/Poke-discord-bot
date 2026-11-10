@@ -6,17 +6,18 @@
 // each player's EXP privately afterward.) Results are already saved before
 // this runs; a failed edit just stops the replay. At most
 // PLAYBACK.maxAtOnce replays run at once; the rest wait in line.
-// Challenges replay here too: every fight of an Elite Four run plays on
-// one message, holding a slot only while a fight plays (the Revive pick
-// between fights can take a minute). Leaders are names, never <@mentions>.
+// Challenges replay here too, themed (the trainers, the opponent's type, the
+// Badge) with an award screen on a first win: every fight of an Elite Four
+// run plays on one message, holding a slot only while a fight plays (the
+// Revive pick between fights can take a minute). Leaders are names, never
+// <@mentions>.
 // ==========================================================
 
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { renderBattleFrame, pickFrameTurns } from "./render.js";
 import { PLAYBACK } from "./tuning.js";
 import { trainingKey } from "../training.js";
-import { CHALLENGES, opponentName } from "../challenge/roster.js";
-import { badgeUrl } from "../challenge/badgeImages.js";
+import { CHALLENGES, opponentName, displaySprite } from "../challenge/roster.js";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const list = (items) => new Intl.ListFormat("en", { type: "conjunction" }).format(items);
@@ -124,11 +125,13 @@ const replays = createQueue(PLAYBACK.maxAtOnce);
 // edit stops the replay and returns null. `fight` is { sides, surge,
 // result, winnerId, exp }; `exp` sets the Levels on the result frame.
 // `paceStart` holds the previous fight's result frame up for a full delay.
-async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false }) {
+// `theme` (challenges) styles every frame; `award` (challengeAward) adds its
+// screen to the result frame, right after who won.
+async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, theme = null, award = null }) {
   const sides = fight.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = fight.result;
   const image = async (opts) => new AttachmentBuilder(
-    await renderBattleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, ...opts }),
+    await renderBattleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, theme, ...opts }),
     { name: "battle.gif" },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.
@@ -163,8 +166,11 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
         return level > m.level ? { ...m, level, levelUp: true } : m;
       }),
     }));
+    const screens = resultScreens(fight, names);
+    if (award) screens.splice(1, 0, award.lines);
     const file = await paced(() => image({
-      sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(fight), screens: resultScreens(fight, names),
+      sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(fight), screens,
+      ...(award && { theme: { ...theme, award: { screen: 1, badgeFile: award.badgeFile, title: award.title } } }),
     }));
     await message.edit({ files: [file], ...(finalEmbed && { embeds: [finalEmbed] }) });
     return message;
@@ -276,20 +282,47 @@ export function buildChallengeEmbed(outcome, names) {
     // Never the amount: 10× a public loss would reveal the player's balance.
     !outcome.cleared && "💸 Lost 10% of their CC.",
   ].filter(Boolean);
-  const embed = new EmbedBuilder()
+  // No Badge thumbnail: the result frame's award screen presents it.
+  return new EmbedBuilder()
     .setColor(0xf1c40f)
     .setTitle(title)
     .setDescription(lines.join("\n"))
     .addFields({ name: `EXP · ${player}`, value: expLines(outcome.exp[outcome.userId]) });
-  return badge ? embed.setThumbnail(badgeUrl(outcome.badge)) : embed;
+}
+
+const badgeFile = (b) => b.image.split("/").pop();
+
+// Fight i's frames: the challenger's trainer (`trainer`, their displayed
+// trainer file or null) and the opponent's, the opponent's type, and the
+// Gym's Badge in the center pill.
+export function challengeTheme(outcome, i, trainer) {
+  const challenge = CHALLENGES[outcome.key];
+  const opponent = opponentOf(outcome, outcome.fights[i].opponentKey);
+  return { trainers: [trainer ?? null, displaySprite(opponent)], type: opponent.type, badgeFile: challenge.badge ? badgeFile(challenge.badge) : null };
+}
+
+// What a first win presents on the result frame: the Badge for a Gym, a
+// title for the Elite Four, Blue and Red. Null for a rematch or a loss.
+const TITLES = {
+  elite4: ["ELITE FOUR CLEARED", (p) => `${p} cleared the Elite Four!`],
+  blue: ["NEW CHAMPION", (p) => `${p} is the new Champion!`],
+  red: ["RED DEFEATED", (p) => `${p} beat Red for the first time!`],
+};
+export function challengeAward(outcome, playerName) {
+  if (!outcome.cleared || !outcome.prize) return null;
+  const badge = outcome.badge && CHALLENGES[outcome.badge].badge;
+  if (badge) return { badgeFile: badgeFile(badge), title: badge.badge.toUpperCase(), lines: [`${playerName} received the ${badge.badge}!`, ""] };
+  const [title, line] = TITLES[outcome.key];
+  return { badgeFile: null, title, lines: [line(playerName), ""] };
 }
 
 // Replays fight i of a challenge on `message`, or on a new channel message
 // when it's null, holding a replay slot for this fight only. `outcome` is a
 // run's view so far, or the full Outcome for the last fight (`last`), whose
-// result frame gets the EXP and the result embed. A first post that fails
-// throws; a later failed edit stops the replay and returns null.
-export async function playChallengeFight(channel, message, outcome, i, names, { last, maxUpdates, delayMs, queue = replays } = PLAYBACK) {
+// result frame gets the EXP, any award, and the result embed. `trainer` is
+// the challenger's displayed trainer file (null: an empty portrait). A first
+// post that fails throws; a later failed edit stops the replay and returns null.
+export async function playChallengeFight(channel, message, outcome, i, names, { last, maxUpdates, delayMs, queue = replays, trainer = null } = PLAYBACK) {
   const heading = challengeHeader(outcome, i);
   const posted = message;
   const slot = await waitForSlot(channel, queue, heading, message);
@@ -300,6 +333,8 @@ export async function playChallengeFight(channel, message, outcome, i, names, { 
       paceStart: posted !== null,
       fight: { ...outcome.fights[i], exp: last ? outcome.exp : {} },
       finalEmbed: last ? buildChallengeEmbed(outcome, names) : null,
+      theme: challengeTheme(outcome, i, trainer),
+      award: last ? challengeAward(outcome, names[outcome.userId]) : null,
     });
     // Only the first post can fail to appear; later fights edit a message that's already up.
     return posted ? await replay.catch((err) => {

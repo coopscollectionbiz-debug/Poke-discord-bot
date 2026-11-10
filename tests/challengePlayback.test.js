@@ -9,12 +9,12 @@
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import {
   challengeNames, challengeHeader, buildChallengeEmbed, playChallenge, prizeText, createQueue,
-  playChallengeFight, showChoosing, showRunResult,
+  playChallengeFight, showChoosing, showRunResult, challengeTheme, challengeAward,
 } from "../utils/battle/playback.js";
-import { pickFrameTurns } from "../utils/battle/render.js";
+import { pickFrameTurns, portraitBox, AWARD, ANIMATION, FRAME_WIDTH, CHALLENGE_LAYOUT } from "../utils/battle/render.js";
+import { GifReader } from "omggif";
 import { runChallenge, startRun, continueRun } from "../utils/challenge/runChallenge.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
-import { badgeUrl } from "../utils/challenge/badgeImages.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { PLAYBACK } from "../utils/battle/tuning.js";
 import { simulateBattle } from "../utils/battle/sim.js";
@@ -75,7 +75,7 @@ section("Result embed");
   const e = buildChallengeEmbed(brockWin, challengeNames(brockWin, "A")).toJSON();
   assertEqual(e.title, "🏆 A defeated Gym Leader Brock!", "single win title");
   assertTrue(e.description.includes("🏅 Earned the Boulder Badge!"), "Badge line");
-  assertEqual(e.thumbnail?.url, badgeUrl("brock"), "the earned Badge is the thumbnail");
+  assertTrue(!e.thumbnail, "no Badge thumbnail: the final frame presents the Badge");
   assertTrue(e.description.includes("🎁 Brock sprite, 2,500 CC, 1 stone, and 5 Dust"), "prize line");
   assertTrue(!e.description.includes("💸"), "no loss line on a win");
   assertEqual(e.fields.map((f) => f.name), ["EXP · A"], "one EXP field, no rating");
@@ -103,6 +103,66 @@ section("Result embed");
     "7,500 CC for owning every Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "sprite fallback text");
   assertEqual(prizeText("surge", { cc: 4000, stones: 1, dust: 10, sprites: [{ trainerKey: "ltsurge", file: "x.png" }] }),
     "Lt. Surge sprite, 4,000 CC, 1 stone, and 10 Dust", "Lt. Surge's sprite is named for him");
+}
+
+section("Theme and award");
+{
+  assertEqual(challengeTheme(brockWin, 0, "acerola-masters.png"),
+    { trainers: ["acerola-masters.png", "brock-gen3.png"], type: "Rock", badgeFile: "boulder.png" }, "a Gym: both trainers, the type, the Badge");
+  assertEqual(challengeTheme(runOut, 1, null), { trainers: [null, "bruno-gen3.png"], type: "Fighting", badgeFile: null },
+    "an Elite Four fight: that member, no Badge, and an empty portrait for a player with no trainer");
+
+  assertEqual(challengeAward(brockWin, "A"), { badgeFile: "boulder.png", title: "BOULDER BADGE", lines: ["A received the Boulder Badge!", ""] },
+    "a first Gym win presents the Badge");
+  assertEqual(challengeAward(outcomeOf(player(STRONG, 100, { brock: "d" }), "brock"), "A"), null, "a rematch presents nothing");
+  assertEqual(challengeAward(outcomeOf(player([10], 5), "brock"), "A"), null, "nor does a loss");
+  assertEqual(challengeAward(runOut, "A"), { badgeFile: null, title: "ELITE FOUR CLEARED", lines: ["A cleared the Elite Four!", ""] }, "the Elite Four");
+  const firstWin = (key, won) => {
+    for (let seed = 1; seed < 50; seed++) {
+      const o = outcomeOf(player(STRONG, 100, won), key, seed);
+      if (o.cleared) return o;
+    }
+    return null;
+  };
+  const blue = firstWin("blue", { ...allGyms, elite4: "d" });
+  const red = firstWin("red", {});
+  assertTrue(blue && red, "fixture: first wins over Blue and Red");
+  assertEqual(challengeAward(blue, "A"), { badgeFile: null, title: "NEW CHAMPION", lines: ["A is the new Champion!", ""] }, "Blue");
+  assertEqual(challengeAward(red, "A"), { badgeFile: null, title: "RED DEFEATED", lines: ["A beat Red for the first time!", ""] }, "Red");
+}
+
+section("Themed replay frames");
+{
+  const composite = (gif, k) => {
+    const r = new GifReader(gif);
+    const px = new Uint8Array(r.width * r.height * 4);
+    for (let i = 0; i <= k; i++) r.decodeAndBlitFrameRGBA(i, px);
+    return { r, px };
+  };
+  const bright = (px, x, y) => { const i = (Math.round(y) * FRAME_WIDTH + Math.round(x)) * 4; return px[i] + px[i + 1] + px[i + 2]; };
+  const gifOf = (o) => o.files[0].attachment;
+  const win = recorder();
+  await playChallenge(win.channel, brockWin, challengeNames(brockWin, "A"), { ...PLAYBACK, trainer: "acerola-masters.png" });
+  const start = composite(gifOf(win.sent[0]), 0).px;
+  let white = 0;
+  for (let y = CHALLENGE_LAYOUT.pillY; y < CHALLENGE_LAYOUT.pillY + 34; y++) for (let x = FRAME_WIDTH / 2 - 120; x < FRAME_WIDTH / 2 + 120; x++) if (bright(start, x, y) > 700) white++;
+  assertTrue(white > 60, "the replay's frames carry the challenge theme (the Boulder Badge in the center pill)");
+  const bare = recorder();
+  await playChallenge(bare.channel, brockWin, challengeNames(brockWin, "A"));
+  const bareStart = composite(gifOf(bare.sent[0]), 0).px;
+  const box = portraitBox(0);
+  let differ = 0;
+  for (let y = box.y; y < box.y + box.h; y++) for (let x = box.x; x < box.x + box.w; x++) if (Math.abs(bright(start, x, y) - bright(bareStart, x, y)) > 60) differ++;
+  assertTrue(differ > 600, "with the challenger's own trainer in their portrait");
+
+  const result = gifOf(win.edits.at(-1));
+  const { r } = composite(result, 0);
+  assertEqual(r.numFrames(), 2 * ANIMATION.idleFrames, "a first win's result frame has the award screen after the result");
+  assertTrue(bright(composite(result, ANIMATION.idleFrames + 5).px, AWARD.cx, AWARD.cy) > 600, "presenting the Badge");
+  const again = recorder();
+  const rematch = outcomeOf(player(STRONG, 100, { brock: "d" }), "brock");
+  await playChallenge(again.channel, rematch, challengeNames(rematch, "A"));
+  assertEqual(new GifReader(gifOf(again.edits.at(-1))).numFrames(), ANIMATION.idleFrames, "a rematch's result has no award screen");
 }
 
 section("Run loss");

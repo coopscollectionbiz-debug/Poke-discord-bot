@@ -12,6 +12,8 @@ import { execute, data, refusal, boardEmbed, reviveMenu, previewMessage } from "
 import { challengeCardView, cardAltText, cardSlots, CHALLENGE_CARD_SIZE } from "../utils/render/challengeCard.js";
 import { previewChallenge } from "../utils/challenge/runChallenge.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { GifReader } from "omggif";
+import { portraitBox, FRAME_WIDTH } from "../utils/battle/render.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { PLAYBACK, CHALLENGE } from "../utils/battle/tuning.js";
@@ -392,6 +394,28 @@ section("Fight! and a first win");
   assertTrue(await brightnessAt(intro.attachment, boulder.x + boulder.size / 2, boulder.y + boulder.size / 2) < 400,
     "the challenger's Boulder Badge is still dim on it");
   assertTrue(t.publicText().includes("Earned the Boulder Badge"), "the result shows the Badge");
+}
+
+section("The replay shows the challenger's trainer");
+{
+  const startFrame = async (trainer) => {
+    const t = harness(STRONG());
+    t.trainerData.A.displayedTrainer = trainer;
+    await t.run("brock");
+    await t.click("fight");
+    const r = new GifReader(t.log.channel[1].opts.files[0].attachment);
+    const px = new Uint8Array(r.width * r.height * 4);
+    r.decodeAndBlitFrameRGBA(0, px);
+    return px;
+  };
+  const [withTrainer, without] = [await startFrame("acerola-masters.png"), await startFrame(null)];
+  const box = portraitBox(0);
+  let differ = 0;
+  for (let y = box.y; y < box.y + box.h; y++) for (let x = box.x; x < box.x + box.w; x++) {
+    const i = (y * FRAME_WIDTH + x) * 4;
+    if (Math.abs(withTrainer[i] - without[i]) + Math.abs(withTrainer[i + 1] - without[i + 1]) + Math.abs(withTrainer[i + 2] - without[i + 2]) > 60) differ++;
+  }
+  assertTrue(differ > 600, "their displayed trainer stands in the replay's portrait");
 }
 
 section("Review Focus: changes between preview and Fight!");

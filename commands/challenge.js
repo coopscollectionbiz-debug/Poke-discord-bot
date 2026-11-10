@@ -209,7 +209,7 @@ async function askRevive(latest, step) {
 // replay the fight, offer a Revive if anything fainted, play the next fight.
 // A replay that fails (a deleted message) stops only the replay. Resolves to
 // { outcome, posted }, or null if the run was finished elsewhere meanwhile.
-async function playRun({ channel, fightClick, step, trainerData, userId, lockUser, enqueueSave, playerName }) {
+async function playRun({ channel, fightClick, step, trainerData, userId, lockUser, enqueueSave, playerName, trainer }) {
   let message = null;
   let replaying = true;
   let posted = true;
@@ -218,7 +218,7 @@ async function playRun({ channel, fightClick, step, trainerData, userId, lockUse
     const shown = step.ended ? step.outcome : step.view;
     if (replaying) {
       const names = challengeNames(shown, playerName);
-      const played = await playChallengeFight(channel, message, shown, step.step, names, { ...PLAYBACK, last: step.ended })
+      const played = await playChallengeFight(channel, message, shown, step.step, names, { ...PLAYBACK, last: step.ended, trainer })
         .catch((err) => {
           console.warn("⚠️ challenge post failed:", err?.message || err);
           posted = false;
@@ -325,6 +325,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
 
     let posted = true;
     let outcome = first;
+    const trainer = first.card.player.trainerFile; // the replay's portrait, as on the intro card
     try {
       await interaction.channel.send(await previewMessage(key, first.atStake, first.card));
     } catch (err) {
@@ -335,14 +336,14 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
       // Played even when the intro card failed: the run is open and resolves through its Revives.
       playing.add(first.nonce);
       const played = await playRun({
-        channel: interaction.channel, fightClick: i, step: first, trainerData, userId, lockUser, enqueueSave, playerName,
+        channel: interaction.channel, fightClick: i, step: first, trainerData, userId, lockUser, enqueueSave, playerName, trainer,
       }).finally(() => playing.delete(first.nonce));
       if (!played) return; // a stale finish closed it and shows the result
       outcome = played.outcome;
       posted &&= played.posted;
       logChallenge(userId, outcome);
     } else if (posted) {
-      await playChallenge(interaction.channel, outcome, challengeNames(outcome, playerName)).catch((err) => {
+      await playChallenge(interaction.channel, outcome, challengeNames(outcome, playerName), { ...PLAYBACK, trainer }).catch((err) => {
         console.warn("⚠️ challenge post failed:", err?.message || err);
         posted = false;
       });

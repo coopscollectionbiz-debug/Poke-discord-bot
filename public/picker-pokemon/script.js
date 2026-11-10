@@ -879,11 +879,6 @@ async function initMegaUI() {
         await fetchUserData();
         updateHUD();
       },
-      notify: (msg) => {
-        const el = document.getElementById("teamStatus");
-        if (el) el.textContent = msg;
-        else alert(msg);
-      },
     });
     megaUI = ui?.enabled ? ui : null;
   } catch (err) {

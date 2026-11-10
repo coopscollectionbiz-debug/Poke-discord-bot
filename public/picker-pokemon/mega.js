@@ -20,6 +20,14 @@ const reqId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toS
 let ctx = null;
 let state = { enabled: false, cards: [], stones: [], capabilities: {} };
 let section = null;
+let statusText = "";
+
+/** Messages for the player, shown in the Mega section and announced politely. */
+function notify(msg) {
+  statusText = msg;
+  const el = section?.querySelector(".mega-status");
+  if (el) el.textContent = msg;
+}
 
 export async function initMega(context) {
   ctx = context;
@@ -87,6 +95,7 @@ function render() {
       <h2>🧬 Mega Evolutions</h2>
       <p class="mega-sub">Battle forms of Pokémon you own. They share their Pokémon's Level, and one Mega can join your team.
         ${state.capabilities?.battle ? "" : `<span class="mega-note">Mega battles arrive in a later update; for now a Mega on your team battles as its base form.</span>`}</p>
+      <p class="mega-status" role="status" aria-live="polite">${esc(statusText)}</p>
       ${state.stones.length ? `<p class="mega-stones">💎 ${state.stones.map((s) => `${esc(s.name)} ×${s.quantity}`).join(" · ")}</p>` : ""}
     </div>
     ${unlocked.length ? `<h3 class="mega-h3">Unlocked</h3><div class="mega-grid">${unlocked.map(cardHTML).join("")}</div>` : `<p class="mega-empty">No Mega forms unlocked yet.</p>`}
@@ -182,10 +191,10 @@ function confirmUnlock(c) {
           overlay?.remove?.();
           await ctx.refreshUser();
           await refresh();
-          ctx.notify(`✅ ${res.name} unlocked!${res.note ? ` ${res.note}` : ""}`);
+          notify(`✅ ${res.name} unlocked!${res.note ? ` ${res.note}` : ""}`);
         } catch (err) {
           overlay?.remove?.();
-          ctx.notify(`❌ ${err.message}`);
+          notify(`❌ ${err.message}`);
           await refresh();
         }
       });
@@ -202,7 +211,7 @@ async function setPreferred(c, formId) {
         body: JSON.stringify({ id: ctx.userId, line: c.line, formId, requestId: reqId() }),
       });
     } catch (err) {
-      ctx.notify(`❌ ${err.message}`);
+      notify(`❌ ${err.message}`);
     }
     await refresh();
   });
@@ -211,22 +220,32 @@ async function setPreferred(c, formId) {
 function addToTeam(c) {
   const [sid, variant] = c.line.split(":");
   const id = Number(sid);
-  let team = ctx.getTeam().map((s) => ({ ...s }));
+  const team = ctx.getTeam().map((s) => ({ ...s }));
   const otherMega = team.find((s) => s.mega && !(s.id === id));
-  if (otherMega) {
-    if (!confirm("Only one Mega can be on your team. Replace the current Mega with its base form?")) return;
-    team = team.map((s) => (s === otherMega ? { id: s.id, variant: s.variant } : s));
-  }
-  // A Pokémon and its own Mega share one slot (dashboard rule: one slot per Pokémon).
-  const idx = team.findIndex((s) => Number(s.id) === id);
-  const slot = { id, variant, mega: c.formId };
-  if (idx >= 0) team[idx] = slot;
-  else {
-    if (team.length >= 6) { alert("⚠️ Team is full! Maximum 6 Pokémon."); return; }
-    team.push(slot);
-  }
-  ctx.setTeam(team);
-  render();
+  const place = (t) => {
+    // A Pokémon and its own Mega share one slot (dashboard rule: one slot per Pokémon).
+    const idx = t.findIndex((s) => Number(s.id) === id);
+    const slot = { id, variant, mega: c.formId };
+    if (idx >= 0) t[idx] = slot;
+    else {
+      if (t.length >= 6) { notify("⚠️ Your team is full (6 Pokémon). Remove one first."); return; }
+      t.push(slot);
+    }
+    ctx.setTeam(t);
+    notify(`${c.name} is on your team. Save the team to keep it.`);
+    render();
+  };
+  if (!otherMega) return place(team);
+  // Only one Mega per team: ask in the page's own dialog, not a browser dialog.
+  ctx.createConfirmModal({
+    title: "Only one Mega per team",
+    confirmLabel: "Replace",
+    message: `Replace the Mega currently on your team with its base form and add ${esc(c.name)}?`,
+    onConfirm: (overlay) => {
+      overlay?.remove?.();
+      place(team.map((s) => (s === otherMega ? { id: s.id, variant: s.variant } : s)));
+    },
+  });
 }
 
 function removeFromTeam(c) {

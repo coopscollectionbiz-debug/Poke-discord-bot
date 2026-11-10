@@ -9,6 +9,7 @@ import { GifReader } from "omggif";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import {
   pickFrameTurns, renderBattleFrame, tileCenter, turnText, wrapLines, loadSprite, spritePlayer, ANIMATION, FRAME_WIDTH,
+  CHALLENGE_LAYOUT, portraitBox, AWARD,
 } from "../utils/battle/render.js";
 
 section("Frame turns");
@@ -91,6 +92,86 @@ assertTrue(!Buffer.from(decodeFrame(idle, 0)).equals(Buffer.from(decodeFrame(idl
 }
 // A missing sprite (#9999) still renders the frame.
 if (process.env.BATTLE_FRAME_OUT) fs.writeFileSync(process.env.BATTLE_FRAME_OUT, attack);
+
+section("Challenge theme");
+{
+  // /challenge frames: each trainer stands at the left of their row, the
+  // opponent's row is tinted with their type, the Badge sits in the center
+  // pill, and a first win presents the Badge on its own text screen.
+  // /battle passes no theme and keeps its layout.
+  const brock = { trainers: ["acerola-masters.png", "brock-gen3.png"], type: "Rock", badgeFile: "boulder.png" };
+  const six = [[6, 25, 3, 150, 94, 130], [74, 95, 141, 139, 142, 76]].map((ids, i) => ({ name: i ? "Gym Leader Brock" : "Ash", members: ids.map((id) => mon(id, 50, `#${id}`)) }));
+  const full = [[1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]];
+  const composite = (r, k) => { const px = new Uint8Array(r.width * r.height * 4); for (let i = 0; i <= k; i++) r.decodeAndBlitFrameRGBA(i, px); return px; };
+  const at = (px, x, y) => { const i = (Math.round(y) * FRAME_WIDTH + Math.round(x)) * 4; return [px[i], px[i + 1], px[i + 2]]; };
+  const bright = (px, x, y) => at(px, x, y).reduce((a, b) => a + b, 0);
+  const changed = (a, b, { x, y, w, h }) => {
+    let n = 0;
+    for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
+      const k = (j * FRAME_WIDTH + i) * 4;
+      if (Math.abs(a[k] - b[k]) + Math.abs(a[k + 1] - b[k + 1]) + Math.abs(a[k + 2] - b[k + 2]) > 40) n++;
+    }
+    return n;
+  };
+
+  const centers = [0, 1, 2, 3, 4, 5].map((i) => tileCenter(6, i, CHALLENGE_LAYOUT));
+  assertTrue(centers.every((c, i) => i === 0 || c - centers[i - 1] === CHALLENGE_LAYOUT.tileW), "challenge tiles are evenly spaced");
+  assertTrue(centers[0] - 116 / 2 >= portraitBox(0).x + portraitBox(0).w && centers[5] + 116 / 2 <= FRAME_WIDTH - 12,
+    "and every HP bar sits between the portrait and the row's edge");
+
+  const plain = new GifReader(await renderBattleFrame({ sides: six, hpBefore: full, screens: [["The battle begins!", ""]] }));
+  const themed = new GifReader(await renderBattleFrame({ sides: six, hpBefore: full, screens: [["The battle begins!", ""]], theme: brock }));
+  assertEqual([themed.width, themed.height], [plain.width, plain.height], "the same frame size as /battle");
+  const p0 = composite(plain, 0), t0 = composite(themed, 0);
+  assertTrue([0, 1].every((s) => changed(p0, t0, portraitBox(s)) > 600), "both trainers stand in their portraits");
+  const noTrainers = composite(new GifReader(await renderBattleFrame({ sides: six, hpBefore: full, screens: [["", ""]], theme: { ...brock, trainers: [null, null] } })), 0);
+  assertTrue(changed(noTrainers, t0, portraitBox(1)) > 600, "a missing trainer sprite leaves the portrait empty, not broken");
+  // A spot of the opponent's row with nothing drawn on it: the row's tint.
+  const [, gPlain] = at(p0, FRAME_WIDTH - 20, portraitBox(1).y + portraitBox(1).h - 4);
+  const [, gThemed] = at(t0, FRAME_WIDTH - 20, portraitBox(1).y + portraitBox(1).h - 4);
+  assertTrue(gThemed > gPlain, `the opponent's row is tinted with Rock, not the opponent red (green ${gThemed} vs ${gPlain})`);
+  const whiteInPill = (px) => {
+    let n = 0;
+    for (let y = CHALLENGE_LAYOUT.pillY; y < CHALLENGE_LAYOUT.pillY + 34; y++) for (let x = FRAME_WIDTH / 2 - 120; x < FRAME_WIDTH / 2 + 120; x++) if (bright(px, x, y) > 700) n++;
+    return n;
+  };
+  assertTrue(whiteInPill(t0) > 60 && whiteInPill(p0) === 0, "the Boulder Badge sits in the center pill");
+
+  // The result image: the result screen, then the award screen.
+  const screens = [["Ash defeated Gym Leader Brock!", ""], ["Ash received the Boulder Badge!", ""]];
+  const award = new GifReader(await renderBattleFrame({
+    sides: six, hpBefore: [full[0], [0, 0, 0, 0, 0, 0]], badge: "FINAL", winnerSide: 0, screens, theme: { ...brock, award: { screen: 1, badgeFile: "boulder.png", title: "BOULDER BADGE" } },
+  }));
+  assertEqual(award.numFrames(), 2 * ANIMATION.idleFrames, "the award is its own text screen");
+  const before = composite(award, 5), during = composite(award, ANIMATION.idleFrames + 5);
+  assertTrue(bright(during, AWARD.cx, AWARD.cy) > 600 && bright(before, AWARD.cx, AWARD.cy) < 600, "the Badge appears, large, only on its screen");
+  assertTrue(bright(during, tileCenter(6, 0, CHALLENGE_LAYOUT), 120) < bright(before, tileCenter(6, 0, CHALLENGE_LAYOUT), 120),
+    "the field dims behind it");
+  const later = composite(award, ANIMATION.idleFrames + 10);
+  assertTrue(changed(during, later, { x: AWARD.cx - AWARD.r - 30, y: AWARD.cy - AWARD.r - 30, w: 2 * AWARD.r + 60, h: 2 * AWARD.r + 60 }) > 20,
+    "its sparkles twinkle");
+
+  // Elite Four, Blue and Red have no Badge: a title instead.
+  const titled = new GifReader(await renderBattleFrame({
+    sides: six, hpBefore: [full[0], [0, 0, 0, 0, 0, 0]], badge: "FINAL", winnerSide: 0, screens, theme: { ...brock, badgeFile: null, award: { screen: 1, badgeFile: null, title: "ELITE FOUR CLEARED" } },
+  }));
+  const gold = (px) => {
+    let n = 0;
+    for (let y = AWARD.cy - 40; y < AWARD.cy + 40; y++) for (let x = 200; x < 700; x++) {
+      const [r, g, b] = at(px, x, y);
+      if (r > 220 && g > 170 && g < 230 && b < 120) n++;
+    }
+    return n;
+  };
+  const [goldDuring, goldBefore] = [gold(composite(titled, ANIMATION.idleFrames + 5)), gold(composite(titled, 5))];
+  assertTrue(goldDuring > goldBefore + 1500, `a gold title on the award screen (${goldDuring} gold pixels vs ${goldBefore})`);
+  if (process.env.BATTLE_FRAME_OUT) {
+    fs.writeFileSync(process.env.BATTLE_FRAME_OUT.replace(/\.gif$/, "-challenge-start.gif"), await renderBattleFrame({ sides: six, hpBefore: full, screens: [["The battle begins!", "#6 and #74 lead off."]], theme: brock }));
+    fs.writeFileSync(process.env.BATTLE_FRAME_OUT.replace(/\.gif$/, "-challenge-award.gif"), await renderBattleFrame({
+      sides: six, hpBefore: [full[0], [0, 0, 0, 0, 0, 0]], badge: "FINAL", winnerSide: 0, screens, theme: { ...brock, award: { screen: 1, badgeFile: "boulder.png", title: "BOULDER BADGE" } },
+    }));
+  }
+}
 
 section("Sprite cache");
 {

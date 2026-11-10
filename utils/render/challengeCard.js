@@ -9,8 +9,8 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, typeStyle } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBackground, drawCard, drawTypeChip, drawBall, drawPlatform, drawShinyMark, drawSparkle } from "./primitives.js";
-import { loadStaticSprite, loadTrainerSprite, loadBadgeSprite, loadPlaceholder, drawSprite, opaqueBounds } from "./sprites.js";
+import { rr, font, fitText, fitFont, drawBackground, drawCard, drawTypeChip, typeChipsWidth, drawBall, drawPlatform, drawShinyMark, drawSparkle } from "./primitives.js";
+import { loadStaticSprite, loadTrainerSprite, loadTrimmedTrainerSprite, loadBadgeSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { buildTeamView } from "./teamView.js";
 import { CHALLENGES, displaySprite } from "../challenge/roster.js";
 import { prizeText } from "../battle/playback.js";
@@ -92,21 +92,6 @@ export function cardSlots(v) {
 
 const splitX = (y) => SPLIT.top + ((SPLIT.bottom - SPLIT.top) * y) / MAIN_H;
 
-// Trainer sprites carry transparent margins; trimming lets four of them
-// stand side by side at 2×.
-async function loadTrimmedTrainer(file) {
-  const t = await loadTrainerSprite(file);
-  if (!t) return null;
-  const c = createCanvas(t.width, t.height);
-  const ctx = c.getContext("2d");
-  ctx.drawImage(t.image, 0, 0);
-  const box = opaqueBounds(ctx.getImageData(0, 0, t.width, t.height).data, t.width, t.height);
-  if (!box) return null;
-  const out = createCanvas(box.w, box.h);
-  out.getContext("2d").drawImage(c, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
-  return { image: out, width: box.w, height: box.h };
-}
-
 function drawHalves(ctx, accent) {
   const half = (points, color, fromX, toX, alphas) => {
     const g = ctx.createLinearGradient(fromX, 0, toX, 0);
@@ -161,7 +146,7 @@ function eyebrowAndTitle(ctx, eyebrow, title, x, align, maxW) {
 
 async function drawTrainer(ctx, file, cx, floor, accent, { scale = 4, box = TRAINER_BOX, trimmed = false } = {}) {
   drawPlatform(ctx, cx, floor, scale === 4 ? 118 : 52, scale === 4 ? 20 : 10, accent);
-  const t = trimmed ? await loadTrimmedTrainer(file) : await loadTrainerSprite(file);
+  const t = trimmed ? await loadTrimmedTrainerSprite(file) : await loadTrainerSprite(file);
   if (t) {
     drawSprite(ctx, t, cx, floor + 6, typeof box === "number" ? box : box.w, typeof box === "number" ? box : box.h, { scale });
   } else {
@@ -212,8 +197,7 @@ function drawPartyLine(ctx, v, right, y) {
   let x = right - r;
   for (let i = 0; i < v.partySize; i++, x -= step) drawBall(ctx, x, y + 15, r, true);
   if (v.type) {
-    ctx.font = font(17, 800);
-    const w = ctx.measureText(v.type.toUpperCase()).width + 28;
+    const w = typeChipsWidth(ctx, [v.type], { h: 30, size: 17 });
     drawTypeChip(ctx, v.type, x + r - 6 - w, y, { h: 30, size: 17 });
   }
 }
@@ -274,8 +258,7 @@ async function drawOpponents(ctx, v, slots) {
     ctx.font = font(22, 800);
     ctx.fillStyle = COLOR.text;
     ctx.fillText(fitText(ctx, o.name, s.box.w - 6), s.cx, s.floor + 40);
-    ctx.font = font(14, 800);
-    const w = ctx.measureText(o.type.toUpperCase()).width + 24;
+    const w = typeChipsWidth(ctx, [o.type], { h: 26, size: 14 });
     drawTypeChip(ctx, o.type, s.cx - w / 2, s.floor + 52, { h: 26, size: 14 });
   }
 }

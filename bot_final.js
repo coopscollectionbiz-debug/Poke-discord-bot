@@ -65,6 +65,8 @@ import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
 import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
 import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
 import { pokemonDetail } from "./services/pokemonDetail.js";
+import { rankBattleRatings } from "./commands/leaderboard.js";
+import { rankedRecord } from "./utils/battle/rewards.js";
 import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
 import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
@@ -439,7 +441,7 @@ app.get("/auth/dashboard", (req, res) => {
     maxAge: 10 * 60 * 1000,
   });
 
-  res.redirect(`/public/picker-pokemon?id=${encodeURIComponent(id)}`);
+  res.redirect(`/public/overview?id=${encodeURIComponent(id)}`); // the dashboard home
 });
 
 // ==========================================================
@@ -504,6 +506,9 @@ app.get("/public/picker", (_, res) =>
 );
 app.get("/public/picker-pokemon", (_, res) =>
   res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
+);
+app.get("/public/overview", (_, res) =>
+  res.sendFile(path.join(staticPath, "overview", "index.html"))
 );
 app.get("/public/teams", (_, res) =>
   res.sendFile(path.join(staticPath, "teams", "index.html"))
@@ -1999,6 +2004,14 @@ app.get("/api/user-pokemon", (req, res) => {
     pokemon,
     currentTeam, // NEW FORMAT: [{ id: Number, variant: "normal" | "shiny" }]
     battleTeam, // Battle team (ranked/wager), same shape; null = not set
+    // Read-only records (B10): this season's ranked record with the same
+    // leaderboard position as /leaderboard, and the casual (open battle) one.
+    ranked: (() => {
+      const r = rankedRecord(u);
+      const board = rankBattleRatings(trainerData, id);
+      return { ...r, position: board.you?.position ?? null, players: board.total, streak: r.wins + r.losses > 0 ? Number(u.stats?.winStreak) || 0 : 0 };
+    })(),
+    casual: { wins: u.casual?.wins ?? 0, losses: u.casual?.losses ?? 0, streak: u.casual?.streak ?? 0, bestStreak: u.casual?.bestStreak ?? 0 },
     // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
     levels,
     powers: powersFromLevels(levels), // { "6:normal": 410 }

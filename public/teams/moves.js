@@ -63,6 +63,7 @@ export async function openMovesEditor({ userId, team, s, name, onSaved }) {
   }
   const copy = d.copies?.[s.variant];
   if (!copy) { dialog.close(); return toast("You don’t own that copy any more."); }
+  copy.learnable ??= [];
   const chosen = copy.movesets?.[team];
   const other = copy.movesets?.[OTHER[team]];
   // Start from this team's moveset, else the automatic one it battles with now.

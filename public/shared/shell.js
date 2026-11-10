@@ -6,7 +6,7 @@
 //   • toasts (role="status") and in-page dialogs replacing alert()
 //   • keyboard/screen-reader support for the pages' JS-built modals
 // Import it first: <script type="module" src="/public/shared/shell.js">.
-// The page is chosen by <body data-page="pokemon|teams|trainers|bag|achievements|shop">.
+// The page is chosen by <body data-page="overview|pokemon|teams|trainers|bag|achievements|shop">.
 // No API calls and no game logic live here.
 // ==========================================================
 
@@ -14,6 +14,7 @@ export const EXPIRED_MESSAGE = "Your dashboard link expired — run /dashboard i
 export const MISSING_ID_MESSAGE = "This page needs your dashboard link — run /dashboard in Discord.";
 
 export const NAV_ITEMS = Object.freeze([
+  { key: "overview", label: "Overview", short: "Home", href: "/public/overview/", icon: "home" },
   { key: "pokemon", label: "Collection", short: "Pokédex", href: "/public/picker-pokemon/", icon: "box" },
   { key: "teams", label: "Teams", href: "/public/teams/", icon: "teams" },
   { key: "trainers", label: "Trainers", href: "/public/picker/", icon: "person" },
@@ -25,6 +26,7 @@ export const NAV_ITEMS = Object.freeze([
 const ICONS = `
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="cc-i-box" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="cc-i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></symbol>
   <symbol id="cc-i-teams" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" d="M3 12h6m6 0h6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
   <symbol id="cc-i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2"/></symbol>
   <symbol id="cc-i-star" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>

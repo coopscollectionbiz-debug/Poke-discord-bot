@@ -202,6 +202,8 @@ main:focus { outline: none; }
   white-space: nowrap;
 }
 .poke-level.shiny { border-color: #f5c84c88; color: var(--cc-gold); }
+.poke-power { font-size: 0.75rem; font-weight: 700; color: var(--cc-text-muted); }
+.poke-power b { color: var(--cc-text); font-weight: 800; }
 
 .type-icons { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin: 2px 0; }
 .pokemon-tier { display: flex; justify-content: center; margin-top: auto; }

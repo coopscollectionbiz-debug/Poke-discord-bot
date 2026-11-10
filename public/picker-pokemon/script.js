@@ -576,15 +576,21 @@ function clampTeamTo6Unique() {
 // ===========================================================
 // 🎴 Pokémon Grid Renderer (HARDENED)
 // ===========================================================
-// Highest Level among the owned variants of a species (null if none owned).
-function bestLevel(id) {
+// Highest value among the owned variants of a species (null if none owned).
+// `map` is userData.levels or userData.powers ({ "25:normal": 16 }).
+function bestOwned(map, id) {
   const owned = ownedCounts(id);
-  const lv = [];
-  if (owned.normal > 0) lv.push(Number(userData.levels?.[`${id}:normal`]));
-  if (owned.shiny > 0) lv.push(Number(userData.levels?.[`${id}:shiny`]));
-  const known = lv.filter(Number.isFinite);
+  const vals = [];
+  if (owned.normal > 0) vals.push(Number(map?.[`${id}:normal`]));
+  if (owned.shiny > 0) vals.push(Number(map?.[`${id}:shiny`]));
+  const known = vals.filter(Number.isFinite);
   return known.length ? Math.max(...known) : null;
 }
+const bestLevel = (id) => bestOwned(userData.levels, id);
+// Power = six-stat total at Level, computed by the server with the same
+// functions as /showteam's Team Power (GET /api/user-pokemon `powers`).
+const bestPower = (id) => bestOwned(userData.powers, id);
+const SORT_KEYS = { level: bestLevel, power: bestPower };
 
 function renderPokemonGrid() {
   const container = document.getElementById("pokemonGrid");
@@ -740,6 +746,9 @@ function renderPokemonGrid() {
       if (owned.normal > 0) tags.push(`<span class="poke-level">Lv ${lv("normal")}</span>`);
       if (owned.shiny > 0) tags.push(`<span class="poke-level shiny">✨ Lv ${lv("shiny")}</span>`);
       levelHTML = `<div class="poke-levels">${tags.join("")}</div>`;
+      // While sorting by Power, show the number being sorted on.
+      const power = sortOrder.startsWith("power") ? bestPower(id) : null;
+      if (power != null) levelHTML += `<div class="poke-power" title="Power: total of all six stats at its Level (highest owned copy)">Power <b>${power.toLocaleString("en-US")}</b></div>`;
     }
 
     // Team badge number
@@ -788,10 +797,12 @@ function renderPokemonGrid() {
   // Level / name sorts: one flat list (region headers only make sense in Dex order).
   if (sortOrder !== "dex") {
     const byName = (a, b) => String(pokemonData[a.id].name).localeCompare(String(pokemonData[b.id].name));
-    if (sortOrder === "level-desc" || sortOrder === "level-asc") {
-      const dir = sortOrder === "level-desc" ? -1 : 1;
+    const [field, way] = sortOrder.split("-");
+    if (SORT_KEYS[field]) {
+      const key = SORT_KEYS[field];
+      const dir = way === "desc" ? -1 : 1;
       sortable.sort((a, b) => {
-        const la = bestLevel(a.id), lb = bestLevel(b.id);
+        const la = key(a.id), lb = key(b.id);
         // Unowned (no Level) always last; ties fall back to Dex #.
         if (la == null || lb == null) return (la == null) - (lb == null) || a.id - b.id;
         return dir * (la - lb) || a.id - b.id;

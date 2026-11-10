@@ -420,6 +420,7 @@ import { lockUser } from "./utils/userLocks.js";
 import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
 import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
+import { powersFromLevels } from "./utils/battle/power.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1964,6 +1965,7 @@ app.get("/api/user-pokemon", (req, res) => {
   const currentTeam = Array.isArray(u.displayedPokemon) ? u.displayedPokemon : [];
 
   ensureWeeklyReset(u);
+  const levels = levelsForUser(u); // { "6:normal": 23 } for every owned variant
 
   // flatten response for front-end
   return res.json({
@@ -1974,7 +1976,9 @@ app.get("/api/user-pokemon", (req, res) => {
     items,
     pokemon,
     currentTeam, // NEW FORMAT: [{ id: Number, variant: "normal" | "shiny" }]
-    levels: levelsForUser(u), // { "6:normal": 23 } for every owned variant
+    // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
+    levels,
+    powers: powersFromLevels(levels), // { "6:normal": 410 }
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
   });
 });

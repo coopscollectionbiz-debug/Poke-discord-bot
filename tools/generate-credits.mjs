@@ -20,6 +20,19 @@ const PROJECTS = [
   ["PokéAPI sprites", "https://github.com/PokeAPI/sprites", "Official Black/White sprites for #1–649, and a mirror of the Smogon project sprites."],
 ];
 
+// Trainer sprites: artists of the community-drawn ones (data/sprites/trainer-credits.json,
+// built by tools/import-trainer-credits.mjs from Pokémon Showdown's credits).
+const trainerCredits = JSON.parse(fs.readFileSync(new URL("data/sprites/trainer-credits.json", ROOT), "utf8"));
+const byArtist = new Map();
+for (const [file, artist] of Object.entries(trainerCredits.credited)) {
+  if (!byArtist.has(artist)) byArtist.set(artist, []);
+  byArtist.get(artist).push(file.replace(/\.png$/, ""));
+}
+const trainerRows = [...byArtist.entries()]
+  .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
+  .map(([artist, files]) => `<tr><td>${esc(artist)}</td><td>${files.length}</td><td><details><summary>Show sprites</summary><span class="muted">${files.map(esc).join(", ")}</span></details></td></tr>`);
+const trainerCount = Object.keys(trainerCredits.credited).length;
+
 const rows = [];
 for (const [id, rec] of Object.entries(manifest)) {
   if (Number(id) < 650) continue;
@@ -70,10 +83,21 @@ ${rows.join("\n")}
       </tbody>
     </table></div>
   </section>
+  <section>
+    <h2>Trainer sprites</h2>
+    <p class="muted">Trainer sprites come from <a href="${esc(trainerCredits.hostedAt)}" rel="noopener">Pokémon Showdown</a>. Most older sprites are taken from the games. The ${trainerCount} sprites below are fan-made pixel art by community artists, credited here as Showdown asks (<a href="${esc(trainerCredits.source)}" rel="noopener">source</a>).</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Artist</th><th>Sprites</th><th></th></tr></thead>
+      <tbody>
+${trainerRows.join("\n")}
+      </tbody>
+    </table></div>
+    <p class="muted">Community sprites with no artist listed by Showdown: ${trainerCredits.uncreditedCommunity.map((f) => esc(f.replace(/\.png$/, ""))).join(", ")}.</p>
+  </section>
 </main>
 </body>
 </html>
 `;
 fs.mkdirSync(new URL("public/credits/", ROOT), { recursive: true });
 fs.writeFileSync(new URL("public/credits/index.html", ROOT), html);
-console.log(`credits page: ${rows.length} Gen 6–9 species`);
+console.log(`credits page: ${rows.length} Gen 6–9 species; ${trainerCount} credited trainer sprites by ${byArtist.size} artists`);

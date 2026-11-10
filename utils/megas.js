@@ -13,7 +13,7 @@
 // ==========================================================
 
 import fs from "fs";
-import { isMegaFormAllowedByFlags, isMegaEvolutionEnabled } from "../config/features.js";
+import { isMegaFormAllowedByFlags, isMegaEvolutionEnabled, isMegaCapabilityEnabled, megaFormAllowlist } from "../config/features.js";
 import { generationOfDex } from "../config/generations.js";
 import { isGenerationLive } from "./speciesCatalog.js";
 import { PLACEHOLDER_PATH } from "./sprites.js";
@@ -76,4 +76,40 @@ export function megaSpritePath(id, variant = "normal") {
   const v = variant === true ? "shiny" : variant === false ? "normal" : variant;
   const rec = megaSpriteRecord(id)?.[v];
   return rec?.file ? `${SPRITES.basePath}${rec.file}` : PLACEHOLDER_PATH;
+}
+
+/**
+ * Phase M1 gate for one form and one capability ("dashboard" | "unlock" |
+ * "team"). Unlike megaAvailability (battle use), this doesn't require
+ * launchReady: unlocking and team selection are built in M1, battles aren't.
+ * Blocked forms (Rayquaza, Floette, Zygarde, Magearna Original) never pass.
+ */
+export function megaFormGate(id, capability, { env = process.env, generationLive = isGenerationLive } = {}) {
+  const f = getMega(id);
+  if (!f) return { allowed: false, reasons: ["unknown Mega form"] };
+  const reasons = [];
+  if (!isMegaCapabilityEnabled(capability, env)) reasons.push(`Mega ${capability} is switched off`);
+  const allow = megaFormAllowlist(env);
+  if (allow !== null && !allow.has(id)) reasons.push("not in MEGA_FORMS");
+  if (f.status !== "eligible") reasons.push(...f.blockReasons);
+  if (!generationLive(generationOfDex(f.species))) reasons.push(`generation ${generationOfDex(f.species)} is not live`);
+  return { allowed: reasons.length === 0, reasons };
+}
+
+/**
+ * Battle-eligibility metadata shown on cards. Phase M1: never battle-ready.
+ * Lists every reason (battle capability not built, launch blockers, ability
+ * not implemented, ability unverified) so nothing claims to work.
+ */
+export function megaBattleEligibility(id, { env = process.env } = {}) {
+  const f = getMega(id);
+  if (!f) return { battleReady: false, reasons: ["unknown Mega form"] };
+  const reasons = [];
+  if (!isMegaCapabilityEnabled("battle", env)) reasons.push("Mega battles are not built yet (Phase M2)");
+  if (f.status !== "eligible") reasons.push(...f.blockReasons);
+  if (!f.launchReady) reasons.push(...f.launchBlockers);
+  const a = megaAbility(f.ability);
+  if (!a?.implemented) reasons.push(`ability ${f.ability} is not implemented (${a?.category ?? "unknown"})`);
+  if (f.abilityVerification.startsWith("unverified")) reasons.push(`ability ${f.ability} is unverified official data`);
+  return { battleReady: reasons.length === 0, reasons, abilityCategory: a?.category ?? null, abilityVerified: !f.abilityVerification.startsWith("unverified") };
 }

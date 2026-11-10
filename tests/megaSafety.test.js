@@ -72,18 +72,46 @@ user.megaUnlocks = Object.fromEntries(MEGAS.filter((f) => f.species <= 649).map(
 assertEqual(computeMetrics(user, ["state:uniqueSpecies", "state:classicSpecies", "state:regions"]), base, "unique species, classic Pokédex and regions unchanged by Mega unlocks");
 assertEqual(base["state:classicSpecies"], 649, "a full classic Pokédex is still exactly 649");
 
-section("M0 is not wired into any live code path");
+section("Mega code is wired only where Phase M1 needs it");
 const ROOT = path.resolve(new URL("..", import.meta.url).pathname.replace(/^\/(\w:)/, "$1"));
-const live = ["bot_final.js", ...["commands", "services", "routes", "utils", "progression", "persistence", "public"].flatMap((d) => walk(path.join(ROOT, d)).map((f) => path.relative(ROOT, f)))];
+const live = ["bot_final.js", ...["commands", "services", "routes", "utils", "progression", "persistence", "public"].flatMap((d) => walk(path.join(ROOT, d)).map((f) => path.relative(ROOT, f).split(path.sep).join("/")))];
 function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : /\.(m?js|html)$/.test(e.name) ? [path.join(dir, e.name)] : []));
 }
-assertTrue(live.length > 100 && live.includes("bot_final.js") && live.some((f) => /commands[\\/]battle\.js$/.test(f)), `the scan covers the live code (${live.length} files)`);
-const m0Modules =/megaUnlocks\.js|utils\/megas\.js|\.\/megas\.js|config\/features\.js|megaRewards\.js/;
-const wired = live.filter((f) => !/^services[\\/]megaUnlocks\.js$|^utils[\\/]megas\.js$/.test(f) && m0Modules.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
-assertEqual(wired, [], "no command, route, service, page or the bot imports the M0 Mega modules");
-const megaRefs = live.filter((f) => !/^services[\\/]megaUnlocks\.js$|^utils[\\/]megas\.js$/.test(f) && /megastone_|mega_shard|megaUnlocks/.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
-assertEqual(megaRefs, [], "no live code references Mega Stones, Shards or megaUnlocks");
+assertTrue(live.length > 100 && live.includes("bot_final.js") && live.includes("commands/battle.js"), `the scan covers the live code (${live.length} files)`);
+// Phase M1: the Mega modules may be used ONLY by these files (unlock API,
+// team validation, load-path normalization, bag usage text, dashboard UI).
+const MEGA_USERS = [
+  "bot_final.js", "services/inventory.js", "services/mega.js", "services/megaApi.js", "services/megaTeam.js",
+  "services/megaUnlocks.js", "utils/megas.js", "utils/userSchema.js", "public/picker-pokemon/script.js", "public/picker-pokemon/mega.js",
+];
+const megaModule = /megaUnlocks\.js|megas\.js|config\/features\.js|megaRewards\.js|megaApi\.js|megaTeam\.js|\/mega\.js|"\.\/mega\.js"/;
+const users = live.filter((f) => megaModule.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
+assertEqual(users.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1 files import Mega modules (no battle, reward, shop, catch, daily, quest or achievement code)");
+const megaRefs = live.filter((f) => /megastone_|mega_shard|megaUnlocks/.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
+assertEqual(megaRefs.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1 files reference Mega Stones, Shards or megaUnlocks");
+const NEVER = live.filter((f) => /^(utils\/battle\/|commands\/(battle|daily|quest|recruit|shop|addinventory|gift)\.js|progression\/|services\/gameplay\.js|utils\/weightedRandom\.js)/.test(f));
+assertEqual(NEVER.filter((f) => /mega/i.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), [], `battle, reward and acquisition code (${NEVER.length} files) never mentions Mega`);
+assertTrue(!live.some((f) => /megaRewards/.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), "nothing reads the (inactive) Mega reward config");
+section("Routes and dashboard: gated, session-checked, nothing rendered while off");
+const botSrc = fs.readFileSync(path.join(ROOT, "bot_final.js"), "utf8");
+for (const route of ['app.get("/api/mega"', 'app.post("/api/mega/unlock"', 'app.post("/api/mega/preferred"']) {
+  const block = botSrc.slice(botSrc.indexOf(route), botSrc.indexOf(route) + 400);
+  assertTrue(botSrc.includes(route) && /requireDashboardSession\(req, id\)/.test(block), `${route.split('"')[1]} is mounted behind the dashboard session check`);
+}
+assertTrue(/prepareTeamSelection\(u, team\)/.test(botSrc) && /normalizeMegaUnlocks\(user\);\s*normalizeDisplayedTeam\(user\);/.test(botSrc), "the team route and the load-path normalizer use the shared Mega-aware code");
+const updateUser = botSrc.slice(botSrc.indexOf('app.post("/api/updateUser"'), botSrc.indexOf('app.post("/api/updateUser"') + 2500);
+assertTrue(!/mega/i.test(updateUser), "/api/updateUser stays closed to Mega fields (strict whitelist unchanged)");
+const megaUi = await import("../public/picker-pokemon/mega.js");
+let touched = false;
+const realDoc = globalThis.document;
+globalThis.document = new Proxy({}, { get() { touched = true; return () => null; } });
+const ui = await megaUi.initMega({ userId: "1", apiJSON: async () => ({ success: true, enabled: false }), getMode: () => "team", getTeam: () => [] });
+globalThis.document = realDoc;
+assertEqual([ui, touched], [{ enabled: false }, false], "dashboard module: when the server says disabled it never touches the page");
+const failing = await megaUi.initMega({ userId: "1", apiJSON: async () => { throw new Error("403"); }, getMode: () => "team", getTeam: () => [] });
+assertEqual(failing, { enabled: false }, "…and a failed /api/mega request also renders nothing");
+
 assertTrue(!/trainerDataHelper/.test(fs.readFileSync(path.join(ROOT, "bot_final.js"), "utf8")), "bot_final.js doesn't import trainerDataHelper (whose sanitizeBeforeSave would strip unknown fields like megaUnlocks)");
 
 finish();

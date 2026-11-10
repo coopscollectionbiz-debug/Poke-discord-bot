@@ -40,6 +40,9 @@ const STRIPPED_ENV = [
   // ...and their own Mega Evolution flags (config/features.js).
   "MEGA_EVOLUTION_ENABLED",
   "MEGA_FORMS",
+  "MEGA_DASHBOARD_ENABLED",
+  "MEGA_UNLOCKS_ENABLED",
+  "MEGA_TEAMS_ENABLED",
   "PUBLIC_URL",
 ];
 

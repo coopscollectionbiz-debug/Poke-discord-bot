@@ -187,7 +187,7 @@ async function main() {
       status: blockReasons.length ? "blocked" : "eligible",
       blockReasons,
       launchReady: false,
-      launchBlockers: ["D-5: battle abilities not implemented (Phase M2)", "Phase M1 unlock flow not built"],
+      launchBlockers: ["D-5: battle abilities not implemented (Phase M2)", "Mega battle transformation not built (Phase M2)"],
       source: { showdown: `@pkmn/dex ${PKMN_VERSION}`, pokeapi: POKEAPI_SHA, pokeapiPokemonId: Number(pid), statsAndTypesCrossChecked: true },
     });
     if (stoneId) {

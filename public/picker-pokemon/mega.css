@@ -1,0 +1,86 @@
+/* ===========================================================
+   Mega Evolution cards (Phase M1). Loaded by mega.js only when
+   /api/mega reports Mega Evolution enabled. Uses the dashboard's
+   existing tokens (--card, --border, --brand, --gold, --muted).
+=========================================================== */
+#megaSection {
+  --mega: #c084fc;
+  margin: 12px auto 18px;
+  padding: 14px 14px 6px;
+  max-width: 1200px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(192, 132, 252, 0.08), transparent 60%), var(--card);
+  text-align: left;
+}
+#megaSection h2 { margin: 0 0 4px; font-size: 1.15rem; color: var(--mega); }
+.mega-sub { margin: 0 0 6px; color: var(--muted); font-size: 0.85rem; line-height: 1.35; }
+.mega-note { display: block; margin-top: 4px; color: var(--gold); }
+.mega-stones { margin: 0 0 8px; font-size: 0.85rem; }
+.mega-h3 { margin: 10px 0 6px; font-size: 0.95rem; color: var(--text); }
+.mega-empty { color: var(--muted); font-size: 0.85rem; }
+.mega-locked > summary { cursor: pointer; margin: 10px 0 6px; font-weight: 600; color: var(--muted); }
+.mega-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-bottom: 8px; }
+
+.mega-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 10px 12px;
+  border: 2px solid var(--mega);
+  border-radius: 12px;
+  background: #11161d;
+  text-align: center;
+  min-width: 0;
+}
+.mega-card.shiny { border-color: var(--gold); }
+.mega-card.locked { border-style: dashed; border-color: var(--border); }
+.mega-card.dormant { opacity: 0.75; border-color: var(--border); }
+.mega-card.blocked { opacity: 0.5; border-color: var(--danger); }
+.mega-card.on-team { box-shadow: 0 0 0 3px var(--brand) inset; }
+.mega-badge {
+  position: absolute; top: 6px; left: 6px;
+  font-size: 0.65rem; padding: 2px 6px; border-radius: 999px;
+  background: var(--mega); color: #111; font-weight: 700;
+}
+.mega-badge.locked, .mega-badge.dormant { background: var(--border); color: var(--text); }
+.mega-badge.blocked { background: var(--danger); color: #fff; }
+.mega-sprite { width: 96px; height: 96px; image-rendering: pixelated; object-fit: contain; }
+.mega-sprite.dim { filter: grayscale(0.85) brightness(0.8); }
+.mega-card h4 { margin: 0; font-size: 0.95rem; overflow-wrap: anywhere; }
+.mega-base, .mega-level, .mega-stone { margin: 0; font-size: 0.75rem; color: var(--muted); }
+.mega-level small { opacity: 0.7; }
+.mega-types { display: flex; gap: 4px; justify-content: center; }
+.mega-type { height: 14px; image-rendering: pixelated; }
+.mega-ability { margin: 2px 0; font-size: 0.75rem; }
+.mega-tag { display: inline-block; padding: 1px 5px; border-radius: 6px; background: #222b36; color: var(--muted); font-size: 0.65rem; }
+.mega-tag.warn { background: #3a2f12; color: var(--gold); }
+.mega-stats { width: 100%; font-size: 0.72rem; }
+.mega-stats > summary { cursor: pointer; color: var(--muted); }
+.mega-stat { display: grid; grid-template-columns: 30px 1fr 30px 30px; align-items: center; gap: 4px; margin-top: 2px; }
+.mega-bar { height: 6px; background: #222b36; border-radius: 3px; overflow: hidden; }
+.mega-bar i { display: block; height: 100%; background: var(--mega); }
+.mega-stat b { text-align: right; }
+.mega-stat em { font-style: normal; text-align: right; }
+.mega-stat em.up { color: var(--brand); }
+.mega-stat em.down { color: var(--danger); }
+.mega-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 4px; }
+.mega-btn {
+  border: 1px solid var(--mega); background: transparent; color: var(--text);
+  border-radius: 8px; padding: 6px 10px; font-size: 0.78rem; cursor: pointer; min-height: 32px;
+}
+.mega-btn:hover { background: rgba(192, 132, 252, 0.15); }
+.mega-btn.on { background: var(--brand); border-color: var(--brand); color: #111; font-weight: 700; }
+.mega-btn.unlock { background: var(--mega); color: #111; font-weight: 700; }
+.mega-btn.ghost { border-color: var(--border); color: var(--muted); }
+.mega-need { font-size: 0.72rem; color: var(--muted); }
+.mega-warn { color: var(--gold); font-size: 0.85rem; }
+
+@media (max-width: 480px) {
+  #megaSection { margin: 8px; padding: 10px 10px 4px; }
+  .mega-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .mega-sprite { width: 72px; height: 72px; }
+  .mega-stat { grid-template-columns: 26px 1fr 26px 26px; }
+}

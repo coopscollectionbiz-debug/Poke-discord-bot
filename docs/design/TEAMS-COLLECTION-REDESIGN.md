@@ -93,7 +93,13 @@ Both are drawn with the existing `utils/render` primitives: `drawCard`, `drawPla
 | **Weaknesses** | Taller; the rating is in a narrow column | Smaller trainer sprite |
 | **Effort** | S (a variant of `trainerCard.js`) | S (new layout, same primitives) |
 
-## Recommendation
+## Owner choice (2026-11-10)
+
+- **Teams: B** (team switcher, box pinned beside it on desktop, box sheet on phone).
+- **Collection: A** (dex grid + detail drawer/sheet).
+- Still open: the Discord card option, Overview / Achievements scope, backend approvals (B2, B6–B11) and the open questions below.
+
+## Recommendation (before the choice)
 
 - **Teams: C (PC box)**, keeping B's "Add" sheet as the second way in.
   - It is the only option that keeps both teams visible on desktop **and** phone.

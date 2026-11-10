@@ -44,7 +44,7 @@ const block = (td, key, now = D) => challengeBlock({ trainerData: td, userId: "A
 const sum = (xs) => xs.reduce((a, b) => a + b, 0);
 
 section("Loss amount");
-assertEqual(CHALLENGE, { perDay: 5, lossShare: 0.1, previewMs: 120000, pickMs: 60000, staleRunMs: 900000 }, "CHALLENGE tuning");
+assertEqual(CHALLENGE, { perDay: 5, lossShare: 0.1, previewMs: 120000, pickMs: 60000, staleRunMs: 900000, statBoost: 1.1 }, "CHALLENGE tuning");
 assertEqual([challengeLoss(12345), challengeLoss(9), challengeLoss(0), challengeLoss(undefined)], [1234, 0, 0, 0], "10% rounded down; nothing under 10 CC");
 
 section("Gating");
@@ -257,11 +257,13 @@ section("A win with every Pokémon fainted");
 {
   // Gen 5: when both last Pokémon faint on one recoil move, the recoil user's side wins.
   const ids = Object.keys(JSON.parse(readFileSync(new URL("../battleData.json", import.meta.url))).species).map(Number);
+  // Lorelei as challenges field her: boosted (CHALLENGE.statBoost).
+  const lorelei = CHALLENGES.elite4.opponents[0].team.map((m) => ({ ...m, statMult: CHALLENGE.statBoost }));
   let found = null;
   for (let seed = 0; seed < 50000 && !found; seed++) {
     const rng = createRng(seed);
     const team = Array.from({ length: 6 }, () => ({ speciesId: ids[rng.int(ids.length)], variant: "normal", level: 50 }));
-    const first = simulateBattle({ sides: [{ members: team }, { members: CHALLENGES.elite4.opponents[0].team }], seed: seed + 1, surge: null });
+    const first = simulateBattle({ sides: [{ members: team }, { members: lorelei }], seed: seed + 1, surge: null });
     if (first.winner === 0 && first.snapshots.at(-1)[0].every((hp) => hp === 0)) found = { team, seed };
   }
   assertTrue(found !== null, "fixture: a team that beats Lorelei with every Pokémon fainted");
@@ -327,6 +329,19 @@ section("No Underdog surge");
   assertTrue(runs.every((r) => r.fights.every((f) => f.surge === null)), "no challenge fight ever surges");
   const td = world();
   assertTrue(run(td, "brock").fights.every((f) => f.surge === null), "and runChallenge reports none");
+}
+
+section("Hidden stat boost");
+{
+  // Every challenge opponent fights with CHALLENGE.statBoost on its stats;
+  // players only ever see the roster's Levels.
+  const out = simulateChallenge({ team: buildTeam(player("A", STRONG, 100)), opponents: CHALLENGES.elite4.opponents, seed: 1 });
+  assertTrue(CHALLENGE.statBoost > 1 && out.fights.every((f) => f.foes.every((m) => m.statMult === CHALLENGE.statBoost)), "every opponent is boosted");
+  assertTrue(out.fights.every((f) => f.members.every((m) => m.statMult === undefined)), "the player's Team never is");
+  assertEqual(out.fights[0].foes.map((m) => m.level), CHALLENGES.elite4.opponents[0].team.map((m) => m.level), "Levels stay the roster's");
+  const td = world();
+  const shown = run(td, "brock").fights[0].sides[1].members;
+  assertEqual(shown.map((m) => m.level), CHALLENGES.brock.opponents[0].team.map((m) => m.level), "and the outcome shows those Levels");
 }
 
 section("Interactive Elite Four run");

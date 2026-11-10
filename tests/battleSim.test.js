@@ -16,6 +16,19 @@ const battle = (a, b, seed) => simulateBattle({ sides: [side(...a), side(...b)],
 section("Stats");
 assertEqual(computeStats(getSpecies(25).baseStats, 50), { hp: 102, atk: 67, def: 42, spa: 62, spd: 52, spe: 102 }, "Pikachu Lv 50 stats (IV 15, EV 0)");
 
+section("Stat boost");
+{
+  // Challenge opponents fight with every stat raised (statMult), shown at their own Level.
+  const plain = buildMon({ speciesId: 25, level: 50 });
+  const boosted = buildMon({ speciesId: 25, level: 50, statMult: 1.1 });
+  const stats = (m) => [m.maxHp, m.atk, m.def, m.spa, m.spd, m.spe];
+  assertEqual(stats(plain), [102, 67, 42, 62, 52, 102], "Pikachu Lv 50 without a boost");
+  assertEqual(stats(boosted), [112, 74, 46, 68, 57, 112], "every stat, HP included, ×1.1 and rounded");
+  assertEqual([boosted.level, boosted.hp], [50, 112], "the same Level, starting at its boosted full HP");
+  assertEqual(buildMon({ speciesId: 25, level: 50, statMult: 1.1, hpFraction: 0.5 }).hp, 56, "carried HP is a share of the boosted HP");
+  assertEqual(buildMon({ speciesId: 292, level: 50, statMult: 1.1 }).maxHp, 1, "Shedinja keeps its 1 HP");
+}
+
 section("Auto movesets");
 const lastFour = (id, level) => {
   const out = [];

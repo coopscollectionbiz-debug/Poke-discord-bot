@@ -72,8 +72,9 @@ export function previewChallenge(user, key) {
   return { firstWin, prize: firstWin ? prizeFor(user, key) : null, loss: challengeLoss(user.cc) };
 }
 
+// Opponents fight with CHALLENGE.statBoost on their stats, at the roster's Levels.
 const opponentMembers = (o) =>
-  o.team.map((m) => ({ speciesId: m.speciesId, variant: "normal", name: speciesName(m.speciesId), level: m.level }));
+  o.team.map((m) => ({ speciesId: m.speciesId, variant: "normal", name: speciesName(m.speciesId), level: m.level, statMult: CHALLENGE.statBoost }));
 
 // One fight: opponent `i` against the player's `members`, who carry their HP
 // from earlier fights. EXP is per `team` slot. Challenges have no Underdog

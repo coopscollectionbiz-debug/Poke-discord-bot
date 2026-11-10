@@ -49,7 +49,15 @@ export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000 };
 // and how long the private preview's buttons work.
 // pickMs: how long a Revive pick stays open. staleRunMs: an Elite Four run
 // with no step for this long stopped unexpectedly (a Discord reply window is 15 minutes).
-export const CHALLENGE = { perDay: 5, lossShare: 0.1, previewMs: 2 * 60 * 1000, pickMs: 60 * 1000, staleRunMs: 15 * 60 * 1000 };
+// statBoost: every challenge opponent's stats, HP included, are raised by
+// this much in battle; players only see the roster's Levels (decided
+// 2026-11-10, hidden on purpose). 1.1 raised the Level a Team needs by 2-4
+// for the Gyms and 5-7 for the Elite Four, Blue and Red
+// (tests/challengeBalance.test.js), and leaves EXP unchanged, since EXP
+// follows the opponent's Level.
+export const CHALLENGE = {
+  perDay: 5, lossShare: 0.1, previewMs: 2 * 60 * 1000, pickMs: 60 * 1000, staleRunMs: 15 * 60 * 1000, statBoost: 1.1,
+};
 // Playback: one image per turn, 2 s apart; longer battles are spread over 12.
 // At most maxAtOnce replays render at once; the rest wait in line. In local
 // tests turns kept the 2 s pace with up to 5 at once and slipped at 6; a Fly

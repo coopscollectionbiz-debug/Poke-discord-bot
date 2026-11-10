@@ -19,10 +19,13 @@ const SHEDINJA = 292;
 // Gen 5 odds for a 2-5 hit move: 2 or 3 hits 35% each, 4 or 5 hits 15% each.
 const MULTIHIT_ODDS = [2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5];
 
+// member.statMult raises every stat, HP included, without changing the
+// Level: challenge opponents fight with CHALLENGE.statBoost.
 export function buildMon(member, levelMult = 1) {
   const species = getSpecies(member.speciesId);
   const level = Math.min(100, Math.round(member.level * levelMult));
-  const s = computeStats(species.baseStats, level);
+  const k = member.statMult ?? 1;
+  const s = Object.fromEntries(Object.entries(computeStats(species.baseStats, level)).map(([stat, v]) => [stat, Math.round(v * k)]));
   const maxHp = member.speciesId === SHEDINJA ? 1 : s.hp;
   return {
     speciesId: member.speciesId,

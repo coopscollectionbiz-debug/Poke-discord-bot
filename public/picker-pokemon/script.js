@@ -781,10 +781,12 @@ function renderPokemonGrid() {
     let countHTML = "";
     let levelHTML = "";
     if (owned.any > 0) {
-      const parts = [];
-      if (owned.normal > 0) parts.push(`×${owned.normal}`);
-      if (owned.shiny > 0) parts.push(`<span class="shiny-count">✨×${owned.shiny}</span>`);
-      countHTML = `<div class="count-label bottom-left">${parts.join(" · ")}</div>`;
+      // Normal count bottom-left, shiny count bottom-right (lifted above a
+      // mode badge, which also sits bottom-right).
+      if (owned.normal > 0) countHTML += `<div class="count-label bottom-left" title="Normal copies">×${owned.normal}</div>`;
+      if (owned.shiny > 0) {
+        countHTML += `<div class="count-label shiny-count bottom-right${badgeHTML ? " lifted" : ""}" title="Shiny copies">✨×${owned.shiny}</div>`;
+      }
 
       // Level tag per owned variant, under the name (like the battle screen)
       const lv = (variant) => userData.levels?.[`${id}:${variant}`] ?? "?";

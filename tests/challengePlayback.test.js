@@ -14,7 +14,7 @@ import {
 import { pickFrameTurns } from "../utils/battle/render.js";
 import { runChallenge, startRun, continueRun } from "../utils/challenge/runChallenge.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
-import { badgeEmoji } from "../utils/challenge/badgeEmojis.js";
+import { badgeUrl } from "../utils/challenge/badgeImages.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { PLAYBACK } from "../utils/battle/tuning.js";
 import { simulateBattle } from "../utils/battle/sim.js";
@@ -74,7 +74,8 @@ section("Result embed");
 {
   const e = buildChallengeEmbed(brockWin, challengeNames(brockWin, "A")).toJSON();
   assertEqual(e.title, "🏆 A defeated Gym Leader Brock!", "single win title");
-  assertTrue(e.description.includes(`🏅 ${badgeEmoji("brock")} Earned the Boulder Badge!`), "Badge line");
+  assertTrue(e.description.includes("🏅 Earned the Boulder Badge!"), "Badge line");
+  assertEqual(e.thumbnail?.url, badgeUrl("brock"), "the earned Badge is the thumbnail");
   assertTrue(e.description.includes("🎁 Brock sprite, 2,500 CC, 1 stone, and 5 Dust"), "prize line");
   assertTrue(!e.description.includes("💸"), "no loss line on a win");
   assertEqual(e.fields.map((f) => f.name), ["EXP · A"], "one EXP field, no rating");
@@ -96,7 +97,7 @@ section("Result embed");
 
   const rematch = outcomeOf(player(STRONG, 100, { brock: "d" }), "brock");
   const m = buildChallengeEmbed(rematch, challengeNames(rematch, "A")).toJSON();
-  assertTrue(!m.description.includes("🎁") && !m.description.includes("🏅"), "a rematch shows no prize or Badge");
+  assertTrue(!m.description.includes("🎁") && !m.description.includes("🏅") && !m.thumbnail, "a rematch shows no prize or Badge");
 
   assertEqual(prizeText("brock", { cc: 2500, stones: 1, dust: 5, sprites: [{ trainerKey: "brock", cc: 7500 }] }),
     "7,500 CC for owning every Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "sprite fallback text");

@@ -38,7 +38,7 @@ import { enqueueSave } from "../utils/saveQueue.js";
 import { lockUser } from "../utils/userLocks.js";
 import { saveAndAck, SAVE_DELAYED_NOTE } from "../utils/saveManager.js";
 import { grantTrainer } from "../services/assets.js";
-import { badgeLine } from "../utils/challenge/badgeEmojis.js";
+import { badgeLine } from "../utils/challenge/badgeImages.js";
 
 // Load trainer sprite data
 const __filename = fileURLToPath(import.meta.url);

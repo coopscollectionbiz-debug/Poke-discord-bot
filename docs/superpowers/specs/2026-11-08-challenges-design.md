@@ -128,15 +128,16 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - Fight! re-checks unlocks, attempts left, the Team, and pending wagers under the player's lock, and uses the Team as of the click. Then it posts a public intro card (sprite, Badge, type, prize, "Lose: 10% of their CC"), and the replay posts below it, the same way `/battle` does. A second click finds the fight already settled.
 - An Elite Four run replays in one message, fight after fight, with a header such as "Elite Four · Bruno (2 of 4)". Carried-over HP shows at the start of each fight. Each fight holds a replay slot (`PLAYBACK.maxAtOnce`) only while it plays, and the run ends with one result showing how far the player got, the EXP, and the prize if they cleared it.
 - The result embed shows the winner, MVP, EXP and level-ups, the Badge or prize earned, and what unlocked. It has no rating lines.
+- `/challenge` works only in the channel `CHALLENGE_CHANNEL_ID` names (set in `fly.toml` in production; decided 2026-11-09). Anywhere else, the board and every challenge reply privately "Challenges happen in #channel." Unset, it works in any channel.
 - Refusals are private. They cover a missing Team, a locked opponent (with what's missing), no attempts left, a pending wager, and the bot lacking permissions in the channel.
 - After a loss, the player's private reply shows the exact CC lost.
 - The private result arrives after the replay, for single fights and the Elite Four run alike (decided 2026-11-10). Until then the private message reads "⚔️ Your challenge is starting below." If the replay outlasts the 15-minute reply window, the public result still shows and only the private amount is missing. A crash during a single fight's replay leaves the player with neither result message, though the result itself was saved first, the same as `/battle`.
 
 ## Badges in other places
 
-- Badge art comes from 8 Badge PNGs. The same files are uploaded as the bot application's own emojis and served from `public/sprites/badges/`.
-- Discord confirms application emojis: an app can own up to 2,000, uploads are 128×128 and at most 256 KiB, the portal can manage them, and `USE_EXTERNAL_EMOJIS` isn't needed ([Discord emoji docs](https://docs.discord.com/developers/resources/emoji)). The emoji IDs live in a constants file. IDs aren't secrets.
-- `/trainercard` and `/showcard` draw a Badge row on the rendered card (`utils/render/trainerCard.js`; decided 2026-11-09, after master made the card an image): the count out of 8 and all 8 Badges, earned ones in color and the rest dimmed. The text fallback, sent when the card can't render, keeps one description line with the count and the earned Badge emojis.
+- Badge art comes from 8 Badge PNGs in `public/sprites/badges/`: FireRed's trainer card badges (pret/pokefirered `graphics/trainer_card/badges.png`), which the game draws in silver, tinted with each badge's usual colors and scaled to 128×128 by `tools/tint-badges.mjs` (decided 2026-11-10).
+- In Discord, embeds load Badge images from the bot's public host, like trainer sprites (`spritePaths.badges`, `utils/challenge/badgeImages.js`): the preview shows the Badge as the embed's author icon, and a result that earns one shows it as the thumbnail. Nothing is uploaded to Discord, so every bot application shows them with no setup (decided 2026-11-09; this replaced application emojis, whose IDs differ for each bot). Text lines, like the board and `/trainercard`'s fallback, name the Badges instead.
+- `/trainercard` and `/showcard` draw a Badge row on the rendered card (`utils/render/trainerCard.js`; decided 2026-11-09, after master made the card an image): the count out of 8 and all 8 Badges, earned ones in color and the rest dimmed. The text fallback, sent when the card can't render, keeps one description line with the count and the earned Badges' names.
 - The dashboard adds a Badges row under the stats bar with all 8 images, unearned ones dimmed. The dashboard is `public/picker-pokemon/`, where `/auth/dashboard` lands (`bot_final.js:437`). `public/dashboard/` isn't served. `/api/user` returns the whole player record (`bot_final.js:1239-1253`) except an open run (`hideOpenRun`).
 - The 8 Gym Badges are defined once, in `public/picker-pokemon/badges.js`. It has no DOM access, so the bot can import it too, the same pattern `regions.js` uses.
 
@@ -159,12 +160,12 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - `bot_final.js`: `finishOpenRunsOnStartup` finishes every open run after a restart and edits its replay message, next to the wager refund.
 - `commands/trainercard.js`, `utils/render/trainerCard.js` and `public/picker-pokemon/*`: the Badge line and rows.
 - Event log entries `challenge` with the opponent, seed, how far the player got, the result, the prize, and the CC lost, plus each break's Revive for a run (`finished: "stale"` or `"restart"` when it was finished without Revives). The event log is admin-only, so it can hold the exact amount.
-- `README.md` gets a Challenges section (the ladder, the 5-a-day cap next to the 10-a-day Battle cap, prizes, the 10% loss, where Badges show), the new test files in Tests, the Badge emoji upload in Setup, and a gotcha for missing Badge emoji IDs.
+- `README.md` gets a Challenges section (the ladder, the 5-a-day cap next to the 10-a-day Battle cap, prizes, the 10% loss, where Badges show), the new test files in Tests, the challenge channel in Setup, and a gotcha for embed images that don't load.
 - `CONTEXT.md` already has Challenge, Badge, and Elite Four run.
 
 ## Tests
 
-- `tests/challengeRoster.test.js` checks that every team has 6 Pokémon, every species exists in `battleData.json`, every ace is the team's highest Level, and the prize table matches this spec. It also fails while any Badge emoji ID is missing (decided), so `npm test` fails on this branch until the art is uploaded and the IDs are pasted in.
+- `tests/challengeRoster.test.js` checks that every team has 6 Pokémon, every species exists in `battleData.json`, every ace is the team's highest Level, and the prize table matches this spec. It also checks each Badge's image URL.
 - `tests/battleSim.test.js` adds carried HP and checks that fainted members are skipped.
 - `tests/runChallenge.test.js` covers gating (8 Badges for the run, a cleared run for Blue, Red always open), the 5-per-day cap and its reset, the run stopping at the first loss, EXP summed with Levels fixed during the run, prizes paid once, the owned-sprite CC fallback, sprites written to the `trainers` array without losing trainers stored there as array properties, Dust stopping at the item stack limit, achievements for a prize sprite and a Level reached with Battle win streaks left alone, no Underdog surge, and Battle rating left untouched. It covers the Revive in the sim: a break after each won fight but the last, the picked Pokémon back at full HP, no pick when nothing fainted, and a pick of a standing or missing slot reviving nothing. It also covers the loss: 10% rounded down, never more than the previewed amount, once per failed Elite Four run, nothing below 10 CC, EXP still paid, and a refusal while a wager is pending.
 - `tests/runChallenge.test.js` also covers the interactive run: one fight per step matching `simulateChallenge` with the same picks, stale or repeated steps, every challenge refused while a run is open, a record replaced or a Team member given away mid-run, finishing open runs, the 15-minute stale limit, and the event log entry.
@@ -186,11 +187,10 @@ Every figure in this section comes from `node tests/challengeBalance.test.js`, r
 
 - Red's HGSS Levels. The pokemondb fetch cut off before Red's row, so those Levels came from a page summary. Check the HGSS page by hand.
 - Giovanni's FRLG ace. The fetch reported "Rhyhorn Lv 50", which looks like a transcription slip for Rhydon. Check the FRLG page by hand.
-- The message syntax for an application emoji (`<:name:id>`). Discord's emoji docs page doesn't state it. Confirm by posting one in a test server.
 
 ## Manual steps
 
-1. Upload the 8 PNGs in `public/sprites/badges/` in the Discord Developer Portal under the app's Emojis, and copy each emoji ID into the constants file. The art is FireRed's trainer card badges (pret/pokefirered `graphics/trainer_card/badges.png`), which the game draws in silver, tinted with each badge's usual colors and scaled to 128×128 by `tools/tint-badges.mjs` (decided 2026-11-10).
+1. Set `CHALLENGE_CHANNEL_ID` in `fly.toml` under `[env]` to the challenge channel's ID (the commented line is already there).
 2. Set `REGISTER_COMMANDS=true` for one run to register `/challenge`, then set it back to `false`.
 3. Check the two canon Levels listed under Open checks.
 
@@ -198,7 +198,7 @@ Every figure in this section comes from `node tests/challengeBalance.test.js`, r
 
 Run these in a test server against a local copy of `trainerData.json`, editing the `challenge` record by hand to reach later states.
 
-1. Run `/challenge`. The board is private, shows 8 Gym rows with Badge emojis and types, and marks the Elite Four and Blue as locked with what's missing. Red is open, no Levels appear, and the board shows 5 attempts left.
+1. Run `/challenge`. The board is private, shows 8 Gym rows with their types, and marks the Elite Four and Blue as locked with what's missing. Red is open, no Levels appear, and the board shows 5 attempts left.
 2. Give the player 12,345 CC and run `/challenge opponent:Brock`. A private preview shows Brock's sprite, the Boulder Badge, Rock type, the prize, "Lose: 1,234 CC", and Fight! and Not now. Click Not now. Nothing posts in the channel and the board still shows 5 attempts left.
 3. Run it again and let the preview sit for about 2 minutes. The buttons stop working and nothing changes.
 4. Run it again with a weak Team (all Pokémon below Lv 15) and click Fight!. The private message reads "⚔️ Your challenge is starting below." A public intro card posts with "Lose: 10% of their CC" and no amount. The replay posts below it and Brock wins. The public result shows EXP, no rating lines, and no CC amount. After the replay, the private reply says 1,234 CC was lost, the balance is 11,111, and the board shows 4 attempts left. Click Fight! again on the old preview. It says the fight is already settled.
@@ -232,6 +232,8 @@ The Revive (use a record with all 8 Badges and a Team around Lv 70):
 29. Set `CHALLENGE.staleRunMs` in `utils/battle/tuning.js` to 30 seconds, restart, start a run, and wait 30 seconds at a pick. (The bot keeps records in memory, so editing the data file without a restart changes nothing.) Run `/challenge opponent:Brock`: it still refuses, because the run is still being played, and the run carries on normally. Set `staleRunMs` back to 15 minutes. Finishing a run whose command died can't be set up by hand; `tests/challengeCommand.test.js` covers it.
 30. Give away a Team member's last copy mid-run. It gets no EXP at the end and keeps no Level.
 31. Challenge Brock. The private result arrives after the replay.
+32. Set `CHALLENGE_CHANNEL_ID` to one channel and restart. `/challenge` anywhere else replies privately "Challenges happen in #channel", with nothing posted; in that channel it works.
+33. With `PUBLIC_URL` serving this version, the Brock preview shows the Boulder Badge's image next to its name, and a first win's result shows it as the thumbnail.
 
 ## Not included
 

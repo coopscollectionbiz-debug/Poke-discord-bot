@@ -36,6 +36,9 @@ export const spritePaths = {
   trainers: `${BASE}/public/sprites/trainers_2/`,
   trainersGray: `${BASE}/public/sprites/trainers_2/grayscale/`,
 
+  // Badges from /challenge (utils/challenge/badgeImages.js)
+  badges: `${BASE}/public/sprites/badges/`,
+
   // Type icons (1–18; 18 = Fairy)
   types: `${BASE}/public/sprites/types/`,
 

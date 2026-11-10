@@ -14,6 +14,7 @@ import { createNewUser } from "../utils/userSchema.js";
 import { PLAYBACK, CHALLENGE } from "../utils/battle/tuning.js";
 import { simulateChallenge, startRun, attachRunMessage } from "../utils/challenge/runChallenge.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
+import { badgeUrl } from "../utils/challenge/badgeImages.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
 
 PLAYBACK.delayMs = 0;
@@ -229,6 +230,25 @@ section("Refusals");
   assertEqual(noPerms.log.replies[0].content, refusal("no_perms"), "missing channel permissions are refused");
 }
 
+section("The challenge channel");
+{
+  // CHALLENGE_CHANNEL_ID keeps /challenge in one channel; unset, it works anywhere (every other section).
+  process.env.CHALLENGE_CHANNEL_ID = "C2";
+  const elsewhere = harness();
+  await elsewhere.run("brock");
+  const r = elsewhere.log.replies[0];
+  assertTrue(r.content === "Challenges happen in <#C2>." && r.flags === 64 && !r.components, "a challenge elsewhere is refused privately");
+  assertEqual([elsewhere.log.channel.length, elsewhere.trainerData.A.challenge], [0, undefined], "nothing public, nothing counted");
+  const board = harness();
+  await board.run(null);
+  assertEqual(board.log.replies[0].content, "Challenges happen in <#C2>.", "the board too");
+  process.env.CHALLENGE_CHANNEL_ID = "C1";
+  const home = harness();
+  await home.run("brock");
+  assertEqual(embedJson(home.log.replies[0].components[0]).components.map((b) => b.label), ["Fight!", "Not now"], "in the challenge channel, the preview opens");
+  delete process.env.CHALLENGE_CHANNEL_ID;
+}
+
 section("Preview");
 {
   const t = harness();
@@ -238,7 +258,7 @@ section("Preview");
   const e = embedJson(r.embeds[0]);
   assertEqual(e.title, "Gym Leader Brock", "titled with the opponent");
   assertTrue(e.thumbnail.url.endsWith("/trainers_2/brock-gen3.png"), "Brock's sprite");
-  assertTrue(e.description.includes("Boulder Badge") && e.description.includes("Rock"), "Badge and type");
+  assertEqual([e.author?.name, e.author?.icon_url, e.description], ["Boulder Badge", badgeUrl("brock"), "Rock"], "the Badge with its image, and the type");
   const field = (name) => e.fields.find((f) => f.name === name)?.value;
   assertEqual(field("Win"), "Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "the prize");
   assertEqual(field("Lose"), "1,234 CC (10% of your CC)", "the exact loss");

@@ -16,7 +16,7 @@ import { renderBattleFrame, pickFrameTurns } from "./render.js";
 import { PLAYBACK } from "./tuning.js";
 import { trainingKey } from "../training.js";
 import { CHALLENGES, opponentName } from "../challenge/roster.js";
-import { badgeEmoji } from "../challenge/badgeEmojis.js";
+import { badgeUrl } from "../challenge/badgeImages.js";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const list = (items) => new Intl.ListFormat("en", { type: "conjunction" }).format(items);
@@ -269,18 +269,19 @@ export function buildChallengeEmbed(outcome, names) {
     endedBy === "turnCap" && `Time ran out after **${turns}** turns, and ${names[last.winnerId]}'s Team had more HP left.`,
     mvp && `⭐ MVP: **${mvp.name}** with ${plural(mvp.kos, "knockout")}`,
     isRun(outcome) && outcome.fights.map((f) => `${opponentOf(outcome, f.opponentKey).name} ${f.winnerId === outcome.userId ? "✓" : "✗"}`).join(" · "),
-    badge && `🏅 ${badgeEmoji(outcome.badge)} Earned the ${badge.badge}!`,
+    badge && `🏅 Earned the ${badge.badge}!`,
     outcome.prize && `🎁 ${prizeText(outcome.key, outcome.prize)}`,
     outcome.unlocked === "elite4" && "🔓 The Elite Four is open!",
     outcome.unlocked === "blue" && "🔓 Blue is waiting.",
     // Never the amount: 10× a public loss would reveal the player's balance.
     !outcome.cleared && "💸 Lost 10% of their CC.",
   ].filter(Boolean);
-  return new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setColor(0xf1c40f)
     .setTitle(title)
     .setDescription(lines.join("\n"))
     .addFields({ name: `EXP · ${player}`, value: expLines(outcome.exp[outcome.userId]) });
+  return badge ? embed.setThumbnail(badgeUrl(outcome.badge)) : embed;
 }
 
 // Replays fight i of a challenge on `message`, or on a new channel message

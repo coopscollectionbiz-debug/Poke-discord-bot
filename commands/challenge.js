@@ -19,7 +19,7 @@ import {
   challengeBlock, previewChallenge, runChallenge, isUnlocked,
   startRun, continueRun, finishOpenRun, isRunStale, attachRunMessage, challengeLogEntry,
 } from "../utils/challenge/runChallenge.js";
-import { badgeEmoji } from "../utils/challenge/badgeEmojis.js";
+import { badgeUrl } from "../utils/challenge/badgeImages.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../public/picker-pokemon/badges.js";
 import {
   playChallenge, playChallengeFight, showChoosing, showRunResult, challengeNames, prizeText,
@@ -43,6 +43,10 @@ const CHANNEL_PERMISSIONS = [
 
 const n = (x) => x.toLocaleString("en-US");
 
+// /challenge works only in this channel when it's set (fly.toml in production,
+// .env locally); unset, it works anywhere.
+const challengeChannelId = () => process.env.CHALLENGE_CHANNEL_ID || null;
+
 export function refusal(reason, user) {
   return {
     no_team: "Set a Team on your dashboard first.",
@@ -53,6 +57,7 @@ export function refusal(reason, user) {
     no_perms: "I can't post challenges in this channel. Try another one.",
     settled: "This challenge already happened.",
     run_open: "Finish your Elite Four run first.",
+    wrong_channel: `Challenges happen in <#${challengeChannelId()}>.`,
   }[reason] ?? "That challenge can't happen right now.";
 }
 
@@ -61,7 +66,7 @@ export function boardEmbed(user, now = new Date()) {
   const check = (key) => (key in won ? " ✅" : "");
   const missing = GYM_BADGES.length - earnedBadgeKeys(user).length;
   const lines = [
-    ...GYM_BADGES.map((b) => `${badgeEmoji(b.key)} **${b.leader}** · ${b.type}${check(b.key)}`),
+    ...GYM_BADGES.map((b) => `**${b.leader}** · ${b.type}${check(b.key)}`),
     isUnlocked(user, "elite4") ? `**Elite Four**${check("elite4")}`
       : `🔒 **Elite Four** · ${missing} more Badge${missing === 1 ? "" : "s"}`,
     isUnlocked(user, "blue") ? `**Blue**${check("blue")}` : "🔒 **Blue** · Clear the Elite Four",
@@ -84,7 +89,7 @@ export function previewEmbed(key, preview, { exactLoss = false } = {}) {
     .setColor(0xf1c40f)
     .setTitle(challenge.kind === "elite4" ? "Elite Four" : opponentName(first))
     .setThumbnail(spritePaths.trainers + displaySprite(first));
-  if (challenge.badge) embed.setDescription(`${badgeEmoji(key)} ${challenge.badge.badge}\n${challenge.badge.type}`);
+  if (challenge.badge) embed.setAuthor({ name: challenge.badge.badge, iconURL: badgeUrl(key) }).setDescription(challenge.badge.type);
   if (challenge.kind === "elite4") embed.setDescription(challenge.opponents.map((o) => o.name).join(" · "));
   return embed.addFields(
     { name: "Win", value: preview.prize ? prizeText(key, preview.prize) : "Rematch: EXP only" },
@@ -233,6 +238,8 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   const key = interaction.options.getString("opponent");
   const ephemeral = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
   const playerName = interaction.member?.displayName ?? interaction.user.username;
+  const home = challengeChannelId();
+  if (home && interaction.channelId !== home) return ephemeral(refusal("wrong_channel"));
 
   // Finished first, so the board and the checks below see the result.
   if (isRunStale(trainerData[userId])) await finishStaleRun({ trainerData, userId, lockUser, enqueueSave, client, playerName });

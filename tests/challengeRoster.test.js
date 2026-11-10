@@ -13,7 +13,8 @@ import {
   CHALLENGE_KEYS, CHALLENGES, opponentName, enabledSprites, displaySprite,
 } from "../utils/challenge/roster.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../public/picker-pokemon/badges.js";
-import { BADGE_EMOJIS, badgeEmoji, badgeLine } from "../utils/challenge/badgeEmojis.js";
+import { badgeUrl, badgeLine } from "../utils/challenge/badgeImages.js";
+import { spritePaths } from "../spriteconfig.js";
 
 const GYMS = ["brock", "misty", "surge", "erika", "koga", "sabrina", "blaine", "giovanni"];
 const ace = (o) => Math.max(...o.team.map((m) => m.level));
@@ -87,14 +88,11 @@ assertEqual(earnedBadgeKeys({}), [], "earnedBadgeKeys: none without a record");
   const bad = pngs.filter((p) => p.missing || !p.png || p.w !== 128 || p.h !== 128 || p.size >= 256 * 1024);
   assertEqual(bad.map((p) => p.file), [], "every Badge image is a 128×128 PNG under 256 KiB");
 }
-assertEqual(badgeEmoji("brock"), `<:boulder_badge:${BADGE_EMOJIS.brock.id}>`, "badgeEmoji renders <:name:id>");
+// Like trainer sprites: served from the bot's public host, nothing to upload to Discord.
+assertEqual(GYMS.map(badgeUrl), GYM_BADGES.map((b) => `${spritePaths.badges}${b.image.split("/").pop()}`), "Badge images come from the sprite host");
+assertTrue(badgeUrl("brock").endsWith("/public/sprites/badges/boulder.png"), "the Boulder Badge's image");
 assertEqual(badgeLine({}), "🏅 **Badges:** 0/8", "badgeLine with no Badges");
-const two = badgeLine({ challenge: { won: { brock: "d", misty: "d" } } });
-assertTrue(two.startsWith("🏅 **Badges:** 2/8 "), "badgeLine counts 2/8");
-assertTrue(two.includes(badgeEmoji("brock")) && two.includes(badgeEmoji("misty")), "badgeLine shows earned emojis");
-assertTrue(!two.includes(badgeEmoji("surge")), "badgeLine leaves out unearned emojis");
-
-section("Badge emoji IDs (fails until the manual upload)");
-assertTrue(GYMS.every((k) => /^\d{17,20}$/.test(BADGE_EMOJIS[k]?.id ?? "")), "every Badge emoji has an ID");
+assertEqual(badgeLine({ challenge: { won: { brock: "d", misty: "d", elite4: "d" } } }), "🏅 **Badges:** 2/8 · Boulder, Cascade",
+  "badgeLine names the earned Badges in Gym order");
 
 finish();

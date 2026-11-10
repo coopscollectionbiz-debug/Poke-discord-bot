@@ -376,7 +376,6 @@ function boxTile(s) {
       <img class="cc-sprite" src="/public/sprites/pokemon/${shiny ? "shiny" : "normal"}/${s.id}.gif" alt="" loading="lazy" onerror="this.onerror=null;this.src='/public/sprites/items/pokeball.png'">
       <span class="tm-tile-name">${esc(sp.name)}</span>
       <span class="tm-tile-lv">Lv ${levelOf(s)}${isMythic(s.id) && !blocked ? ` · <b class="tier-text mythic">Mythic</b>` : ""}</span>
-      ${why?.code === "on" ? `<span class="tm-tile-lv">On this team</span>` : ""}
     </button></li>`;
 }
 

@@ -188,7 +188,7 @@
 .tm-slot.is-dragging { opacity: .45; }
 .tm-slot.is-dropover { outline: 2px dashed var(--cc-blue); outline-offset: 2px; }
 .tm-tile-btn:disabled { cursor: not-allowed; opacity: 1; }
-.tm-tile.is-on .tm-tile-btn { border-style: dashed; }
+.tm-tile.is-on .tm-tile-btn { border-style: dashed; opacity: .6; } /* already on this team: its B/D badge says where */
 .tm-empty { padding: 24px 8px; text-align: center; }
 .tm-empty p { margin: 0 0 12px; }
 .tm-empty strong { color: var(--cc-text); }

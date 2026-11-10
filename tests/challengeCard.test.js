@@ -29,7 +29,7 @@ function player({ won = {}, trainer = "acerola-masters.png", team = [6, 94, 445]
   u.challenge = { won, day: null, attempts: 0 };
   return u;
 }
-const view = (key, user = player()) => challengeCardView(key, previewChallenge(user, key), user, { displayName: "coop13" });
+const view = (key, user = player()) => challengeCardView(key, previewChallenge(user, key), user, { displayName: "Ash" });
 const allGyms = Object.fromEntries(["brock", "misty", "surge", "erika", "koga", "sabrina", "blaine", "giovanni"].map((k) => [k, "2026-11-01"]));
 
 // Pixels: the sum of R+G+B at (x, y), and how many pixels differ inside a box.
@@ -60,7 +60,7 @@ section("A Gym");
   assertEqual(v.partySize, 6, "the leader's party size (Poké Balls, not the Team)");
   assertEqual(v.win, "Lt. Surge sprite, 4,000 CC, 1 stone, and 10 Dust", "the prize");
   assertEqual(v.rematch, false, "a first try");
-  assertEqual([v.player.name, v.player.trainerFile, v.player.team.map((s) => s.id)], ["coop13", "acerola-masters.png", [6, 94, 445]],
+  assertEqual([v.player.name, v.player.trainerFile, v.player.team.map((s) => s.id)], ["Ash", "acerola-masters.png", [6, 94, 445]],
     "the challenger, their trainer and their battle Team");
   assertEqual(v.player.badges.map((b) => (b.earned ? b.file : "-")), ["boulder.png", "cascade.png", "-", "-", "-", "-", "-", "-"],
     "the challenger's Badges in Gym order");
@@ -97,14 +97,14 @@ section("The Elite Four, Blue and Red");
 section("Alt text");
 // Discord reads an image's description to screen readers; it says what the card shows.
 assertEqual(cardAltText(view("brock")),
-  "coop13 vs Gym Leader Brock (Rock). The Boulder Badge is on the line. Win: Brock sprite, 2,500 CC, 1 stone, and 5 Dust. Lose: 10% of CC.",
+  "Ash vs Gym Leader Brock (Rock). The Boulder Badge is on the line. Win: Brock sprite, 2,500 CC, 1 stone, and 5 Dust. Lose: 10% of CC.",
   "a Gym");
 assertEqual(cardAltText(view("brock", player({ won: { brock: "d" } }))),
-  "coop13 vs Gym Leader Brock (Rock). Rematch. Win: EXP only. Lose: 10% of CC.", "a rematch");
+  "Ash vs Gym Leader Brock (Rock). Rematch. Win: EXP only. Lose: 10% of CC.", "a rematch");
 assertEqual(cardAltText(view("elite4", player({ won: allGyms }))),
-  "coop13 vs the Elite Four: Lorelei, Bruno, Agatha, and Lance. Win: Lorelei sprite, Bruno sprite, Agatha sprite, Lance sprite, 30,000 CC, 4 stones, and 40 Dust. Lose: 10% of CC.",
+  "Ash vs the Elite Four: Lorelei, Bruno, Agatha, and Lance. Win: Lorelei sprite, Bruno sprite, Agatha sprite, Lance sprite, 30,000 CC, 4 stones, and 40 Dust. Lose: 10% of CC.",
   "the Elite Four");
-assertEqual(cardAltText(view("red")).split(". ")[0], "coop13 vs Pokémon Trainer Red", "Red");
+assertEqual(cardAltText(view("red")).split(". ")[0], "Ash vs Pokémon Trainer Red", "Red");
 
 section("The prize line");
 {

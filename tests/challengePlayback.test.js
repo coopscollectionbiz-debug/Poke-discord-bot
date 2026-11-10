@@ -127,7 +127,7 @@ section("Theme and award");
   const blue = firstWin("blue", { ...allGyms, elite4: "d" });
   const red = firstWin("red", {});
   assertTrue(blue && red, "fixture: first wins over Blue and Red");
-  assertEqual(challengeAward(blue, "A"), { badgeFile: null, title: "NEW CHAMPION", lines: ["A is the new Champion!", ""] }, "Blue");
+  assertEqual(challengeAward(blue, "A"), { badgeFile: null, title: "CHAMPION DEFEATED", lines: ["A beat Champion Blue for the first time!", ""] }, "Blue (no Champion title: the spec has none)");
   assertEqual(challengeAward(red, "A"), { badgeFile: null, title: "RED DEFEATED", lines: ["A beat Red for the first time!", ""] }, "Red");
 }
 

@@ -305,7 +305,7 @@ export function challengeTheme(outcome, i, trainer) {
 // title for the Elite Four, Blue and Red. Null for a rematch or a loss.
 const TITLES = {
   elite4: ["ELITE FOUR CLEARED", (p) => `${p} cleared the Elite Four!`],
-  blue: ["NEW CHAMPION", (p) => `${p} is the new Champion!`],
+  blue: ["CHAMPION DEFEATED", (p) => `${p} beat Champion Blue for the first time!`],
   red: ["RED DEFEATED", (p) => `${p} beat Red for the first time!`],
 };
 export function challengeAward(outcome, playerName) {

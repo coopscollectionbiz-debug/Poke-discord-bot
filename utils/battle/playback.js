@@ -10,7 +10,8 @@
 // Badge) with an award screen on a first win: every fight of an Elite Four
 // run plays on one message, holding a slot only while a fight plays (the
 // Revive pick between fights can take a minute). Leaders are names, never
-// <@mentions>.
+// <@mentions>. Trainer encounters replay here too (playEncounter), with both
+// trainers' portraits and the Trainer's after-battle line.
 // ==========================================================
 
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -363,5 +364,42 @@ export async function showRunResult(message, outcome, names, note) {
     return true;
   } catch {
     return false;
+  }
+}
+
+// ==========================================================
+// Trainer encounters
+// ==========================================================
+
+/** The player by display name, and the Trainer (side "trainer") as "Youngster Joey". */
+export const encounterNames = (outcome, playerName) => ({
+  [outcome.userId]: playerName,
+  trainer: `${outcome.trainer.title} ${outcome.trainer.name}`,
+});
+
+// The embed under the final image: the Trainer's after-battle line, then
+// the Prize money on a win. Never the amount on a loss: a player who held
+// less than the Prize money paid all they had, which would reveal it.
+export function buildEncounterEmbed(outcome, names) {
+  const player = names[outcome.userId];
+  const said = outcome.won ? outcome.trainer.lines.lost : outcome.trainer.lines.won;
+  const result = outcome.won ? `💰 ${player} got ${outcome.prize.toLocaleString("en-US")} CC for winning!` : `${player} whited out!`;
+  return new EmbedBuilder().setColor(0xf1c40f).setDescription([`💬 ${names.trainer}: "${said}"`, result].join("\n"));
+}
+
+// Posts a new message below the encounter card (a new message is what
+// notifies the @mentioned player) and replays the fight on it. `trainers`
+// are the player's displayed trainer file (or null) and the Trainer's sprite.
+// A first post that fails throws; a later failed edit stops and returns null.
+export async function playEncounter(channel, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null] } = PLAYBACK) {
+  const heading = `⚔️ <@${outcome.userId}> vs ${names.trainer}!`;
+  const { message, release } = await waitForSlot(channel, queue, heading);
+  try {
+    return await replayFight({
+      channel, message, heading, fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers,
+      finalEmbed: buildEncounterEmbed(outcome, names),
+    });
+  } finally {
+    release(); // even a failed replay frees its slot
   }
 }

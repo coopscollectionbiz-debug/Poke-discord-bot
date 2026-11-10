@@ -43,6 +43,7 @@ const state = {
   levels: {},            // "6:normal" → Level
   powers: {},            // "6:normal" → Power
   megaOn: false,
+  megaCards: [], // GET /api/mega cards (only while Mega Evolution is on)
   saved: { display: [], battle: null },
   draft: { display: [], battle: null },
   active: "display",
@@ -58,7 +59,10 @@ const isMythic = (id) => String(species(id).tier).toLowerCase() === "mythic";
 const typeChips = (id) => `<span class="tm-types">${(species(id).types ?? []).map((t) => TYPE_NAMES[t]).filter(Boolean).map((t) => `<span class="cc-type" data-type="${t}">${t}</span>`).join("")}</span>`;
 const levelOf = (s) => state.levels[keyOf(s)] ?? "?";
 const powerOf = (s) => state.powers[keyOf(s)] ?? 0;
-const slotName = (s) => (s.mega && state.megaOn ? megaName(s) : species(s.id).name);
+const megaCard = (formId) => state.megaCards.find((c) => c.formId === formId);
+const slotName = (s) => (s.mega && state.megaOn ? megaCard(s.mega)?.name ?? megaName(s) : species(s.id).name);
+/** Mega forms this exact copy can use on a team (unlocked on its line, allowed for teams). */
+const megaFormsFor = (s) => state.megaCards.filter((c) => c.line === `${s.id}:${s.variant}` && c.teamSelectable);
 const megaName = (s) => `Mega ${species(s.id).name}${/-([xy])$/.test(s.mega) ? ` ${s.mega.slice(-1).toUpperCase()}` : ""}`;
 function spriteOf(s) {
   if (s.mega && state.megaOn) return `/public/sprites/pokemon/mega/${s.variant}/${s.mega}.gif`;
@@ -168,6 +172,31 @@ function remove(t, i) {
   render();
 }
 
+/**
+ * Mega picker: cycles this slot through Off → each unlocked form. One Mega
+ * per team, so choosing one turns off the other slot's Mega (the server
+ * checks the same rule on save).
+ */
+function cycleMega(t, i) {
+  const list = team(t).map((s) => ({ ...s }));
+  const s = list[i];
+  if (!s) return;
+  const options = [null, ...megaFormsFor(s).map((c) => c.formId)];
+  const next = options[(options.indexOf(s.mega ?? null) + 1) % options.length];
+  if (next) {
+    const other = list.findIndex((m, k) => k !== i && m.mega);
+    if (other >= 0) {
+      toast(`One Mega per team: ${species(list[other].id).name} goes back to its base form.`);
+      delete list[other].mega;
+    }
+    s.mega = next;
+  } else delete s.mega;
+  state.draft[t] = list;
+  announce(next ? `${species(s.id).name} will battle as ${megaCard(next)?.name ?? next}.` : `${species(s.id).name} will battle in its base form.`);
+  focusAfter = `[data-act="mega"][data-team="${t}"][data-i="${i}"]`;
+  render();
+}
+
 function copyDisplay() {
   const kept = [];
   const dropped = [];
@@ -274,6 +303,7 @@ function slotCard(t, s, i) {
       <div class="tm-slot-meta">${lvl}</div>
       ${typeChips(s.id)}
       <div class="tm-slot-tags">${tags}</div>
+      ${state.megaOn && megaFormsFor(s).length ? `<button type="button" class="tm-megabtn${s.mega ? " is-on" : ""}" data-act="mega" data-team="${t}" data-i="${i}" aria-label="Mega form for ${esc(species(s.id).name)}: ${s.mega ? esc(megaCard(s.mega)?.name ?? s.mega) : "off"}. Change">${s.mega ? `Mega: ${esc((megaCard(s.mega)?.name ?? s.mega).replace(/^Mega /, ""))}` : "Mega: off"}</button>` : ""}
     </div>
     <div class="tm-slot-ctl">
       <span class="tm-grip" title="Drag to reorder"><svg class="tm-ic" aria-hidden="true"><use href="#tm-grip"/></svg></span>
@@ -464,6 +494,7 @@ function onClick(e) {
   else if (act === "remove") remove(t, i);
   else if (act === "add") add(state.active, { id: Number(el.dataset.id), variant: el.dataset.variant });
   else if (act === "copy") copyDisplay();
+  else if (act === "mega") cycleMega(t, i);
   else if (act === "discard") discard();
   else if (act === "save") save();
   else if (act === "show") { state.filter.show = el.dataset.show; render(); }
@@ -640,7 +671,9 @@ async function load() {
   // Mega sprites only while Mega Evolution is switched on server-side.
   try {
     const m = await fetch(`/api/mega?id=${encodeURIComponent(userId)}`, { credentials: "same-origin" });
-    state.megaOn = m.ok && !!(await m.json())?.enabled;
+    const md = m.ok ? await m.json() : null;
+    state.megaOn = !!md?.enabled;
+    state.megaCards = state.megaOn && Array.isArray(md.cards) ? md.cards : [];
   } catch { state.megaOn = false; }
   render();
 }

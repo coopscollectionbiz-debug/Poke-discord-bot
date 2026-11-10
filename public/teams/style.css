@@ -254,3 +254,7 @@ body.tm-dragging-slot .tm-boxpanel::after {
 /* Box tile sprite area (the shiny backdrop's box). */
 .tm-tile-art { position: relative; display: flex; align-items: flex-end; justify-content: center; width: calc(100% + 8px); margin: -18px -4px 0; padding-top: 18px; height: 78px; overflow: hidden; border-radius: 10px 10px 0 0; }
 .tm-tile-art img { height: 60px; max-width: 100%; object-fit: contain; image-rendering: pixelated; }
+
+/* Mega picker (only while Mega Evolution is on) */
+.tm-megabtn { display: inline-flex; align-items: center; min-height: 44px; margin-top: 6px; padding: 0 12px; border-radius: 10px; border: 1.5px dashed #c084fc88; background: transparent; color: var(--cc-text-muted); font-weight: 800; font-size: 12.5px; }
+.tm-megabtn.is-on { border-style: solid; border-color: var(--cc-mega); background: #c084fc26; color: var(--cc-text); }

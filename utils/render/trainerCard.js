@@ -141,7 +141,7 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
     const idle = await loadTrainerPoses(v.trainerFile);
     const box = { w: LEFT_W - 40, h: 330, floor: floor + 6, scale: 4 };
     if (fancy) trainerBackdrop(ctx, stage, { tier, sprite: t, cx, box, panel: { x: M, y: M, w: LEFT_W }, floor });
-    stage.placePosed(ctx, idle?.poses ?? [t], poseAtFrame, cx, box.floor, box.w, box.h, { scale: box.scale });
+    stage.placePosed(ctx, idle?.poses ?? [t], idle?.poseAt ?? poseAtFrame, cx, box.floor, box.w, box.h, { scale: box.scale });
   } else { ctx.globalAlpha = 0.35; drawBall(ctx, cx, floor - 70, 40, false); ctx.globalAlpha = 1; }
   ctx.textAlign = "center";
   ctx.font = font(15, 800);

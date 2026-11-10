@@ -27,6 +27,19 @@ function idles() {
   return manifest;
 }
 
+let partsData = null;
+/** Part-motion events for a sprite file (data/sprites/trainer-parts.json), or []. */
+export function trainerParts(file) {
+  if (!partsData) {
+    try {
+      partsData = JSON.parse(fs.readFileSync(new URL("../data/sprites/trainer-parts.json", import.meta.url), "utf8")).sprites ?? {};
+    } catch {
+      partsData = {};
+    }
+  }
+  return (file && partsData[file]?.events) || [];
+}
+
 const slash = (s) => (s.endsWith("/") ? s : `${s}/`);
 export const trainersAnimated = (env = process.env) => env.TRAINERS_ANIMATED !== "0";
 

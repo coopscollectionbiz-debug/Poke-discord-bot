@@ -97,7 +97,17 @@ Both are drawn with the existing `utils/render` primitives: `drawCard`, `drawPla
 
 - **Teams: B** (team switcher, box pinned beside it on desktop, box sheet on phone).
 - **Collection: A** (dex grid + detail drawer/sheet).
-- Still open: the Discord card option, Overview / Achievements scope, backend approvals (B2, B6–B11) and the open questions below.
+- **Backend approved:** B2, B6, B7, B8, B9, B10, B11 (B7 still runs as a dry run on a production-shaped copy before any production data change; deploys still need explicit approval).
+- **Answers:**
+  - Same Pokémon on both teams: **allowed**.
+  - Megas: **one per team**.
+  - Ranked/wager with no Battle team: will link to "set your Battle team" (battle side not built yet).
+  - Empty Battle team: offer **Copy my Display team** (mythic rule applied).
+  - Battle team members are **protected** like Display team members (no donate / evolve while on a team).
+  - Existing battle achievements: **TBD**.
+  - Rating: **plain number** for now.
+  - Unowned Pokédex entries: **show names**.
+- Still open: the Discord card option (1 or 2), whether Overview and the Achievements split are in this round, achievements mapping, and permission to push.
 
 ## Recommendation (before the choice)
 

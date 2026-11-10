@@ -8,7 +8,7 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBall, drawShinyMark } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag } from "./primitives.js";
 import { loadStaticSprite, loadTrainerSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 import { buildTeamView } from "./teamView.js";
@@ -172,17 +172,19 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
     rr(ctx, x, y, slotW, slotH, 12);
     ctx.fill();
     ctx.lineWidth = s?.shiny || i === 0 ? 2.5 : 1.5;
-    ctx.strokeStyle = !s ? "#2a3350" : s.shiny ? COLOR.gold : i === 0 ? COLOR.blue : "#323c5c";
+    ctx.strokeStyle = !s ? "#2a3350" : s.shiny ? COLOR.gold : i === 0 ? COLOR.blue : s.mega ? COLOR.mega : "#323c5c";
     ctx.stroke();
     if (!s) continue;
-    const sp = (await loadStaticSprite(s.id, s.variant)) ?? ph;
-    stage.place(ctx, sp, x + slotW / 2, y + slotH - 40, slotW - 12, slotH - 50, { scale: 2 }, { id: s.id, variant: s.variant });
+    const spriteId = s.spriteId ?? s.id; // a Mega slot (teamView) draws its Mega sprite
+    const sp = (await loadStaticSprite(spriteId, s.variant)) ?? ph;
+    stage.place(ctx, sp, x + slotW / 2, y + slotH - 40, slotW - 12, slotH - 50, { scale: 2 }, { id: spriteId, variant: s.variant });
     ctx.textAlign = "center";
     ctx.font = font(15, 800);
     ctx.fillStyle = COLOR.textMuted;
     ctx.fillText(fitText(ctx, `Lv ${s.level}`, slotW - 10), x + slotW / 2, y + slotH - 14);
     ctx.textAlign = "left";
     if (s.shiny) drawShinyMark(ctx, x + slotW - 18, y + 18, 8);
+    if (s.mega) drawMegaTag(ctx, x + 7, y + 7, { h: 20, size: 11 });
   }
   return stage.output(canvas);
 }

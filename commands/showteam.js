@@ -44,7 +44,7 @@ export function buildShowteamComponents(view, { nonce, disabled = false }) {
     .setDisabled(disabled)
     .addOptions(view.slots.map((s) => ({
       label: `${s.slot} · ${s.shiny ? "Shiny " : ""}${s.name} (Lv ${s.level})`.slice(0, 100),
-      description: `${s.types.join(" / ") || "Unknown type"} · ${TIER_NAME[s.tier] ?? "Common"}${s.slot === 1 ? " · Lead" : ""}`.slice(0, 100),
+      description: `${s.mega ? "Mega · " : ""}${s.types.join(" / ") || "Unknown type"} · ${TIER_NAME[s.tier] ?? "Common"}${s.slot === 1 ? " · Lead" : ""}`.slice(0, 100),
       value: String(s.slot),
     })));
   const manage = new ButtonBuilder()
@@ -106,6 +106,9 @@ export default {
     const nonce = crypto.randomBytes(6).toString("hex");
 
     await interaction.editReply({
+      // A selected Mega that can't battle right now is drawn as its base form;
+      // this one line says why (no text at all otherwise, as before).
+      ...(view.megaNotice ? { content: `🧬 ${view.megaNotice}` } : {}),
       files: [new AttachmentBuilder(image.buffer, { name: image.name })],
       components: buildShowteamComponents(view, { nonce }),
     });

@@ -24,7 +24,7 @@ export function leaderboardView(board, trainerData, viewerId) {
   const decorate = (p, position) => {
     const u = trainerData[p.userId] ?? {};
     const lead = buildTeam(u)[0] ?? null;
-    return { ...p, position, trainerFile: u.displayedTrainer ?? null, lead: lead && { id: lead.speciesId, variant: lead.variant }, isYou: p.userId === viewerId };
+    return { ...p, position, trainerFile: u.displayedTrainer ?? null, lead: lead && { id: lead.megaForm ?? lead.speciesId, variant: lead.variant } /* a Mega lead (validated by buildTeam) shows as the Mega */, isYou: p.userId === viewerId };
   };
   const top = board.top.map((p, i) => decorate(p, i + 1));
   let you = null;

@@ -16,6 +16,7 @@ import { fileURLToPath } from "url";
 import { createCanvas, ImageData, loadImage } from "@napi-rs/canvas";
 import { GifReader } from "omggif";
 import { spriteRecord } from "../sprites.js";
+import { isMegaId, megaSpriteRecord } from "../megas.js";
 
 const PUBLIC = new URL("../../public/", import.meta.url);
 const CACHE_LIMIT = 200; // trimmed sprites are ~15 KB of pixels each
@@ -51,16 +52,33 @@ async function decodeFirstFrame(file) {
 }
 
 /**
- * A static, trimmed sprite for one species + variant ("normal" | "shiny" |
- * "grayscale"), or null when the manifest has none or the file is unreadable
- * (callers draw the placeholder). The first animation frame is the idle pose.
+ * Where a sprite lives: a species number reads data/sprites/sprites.json, a
+ * Mega form id ("mega-charizard-x") reads the Mega manifest
+ * (data/sprites/megas.json). Null when the manifest has no file — a Mega
+ * with no sprite is NEVER drawn with its base form's art (callers draw the
+ * placeholder instead).
+ */
+export function spriteFileFor(id, variant = "normal") {
+  if (isMegaId(id)) {
+    const rec = megaSpriteRecord(id)?.[variant];
+    return rec?.file ? `sprites/pokemon/mega/${rec.file}` : null;
+  }
+  const rec = spriteRecord(id)?.[variant];
+  return rec?.file ? `sprites/pokemon/${rec.file}` : null;
+}
+
+/**
+ * A static, trimmed sprite for one species (or Mega form id) + variant
+ * ("normal" | "shiny" | "grayscale"), or null when the manifest has none or
+ * the file is unreadable (callers draw the placeholder). The first animation
+ * frame is the idle pose.
  */
 export function loadStaticSprite(id, variant = "normal") {
   const key = `${id}:${variant}`;
   if (cache.has(key)) return cache.get(key);
-  const rec = spriteRecord(id)?.[variant];
-  const p = rec?.file
-    ? decodeFirstFrame(fileURLToPath(new URL(`sprites/pokemon/${rec.file}`, PUBLIC))).catch(() => null)
+  const file = spriteFileFor(id, variant);
+  const p = file
+    ? decodeFirstFrame(fileURLToPath(new URL(file, PUBLIC))).catch(() => null)
     : Promise.resolve(null);
   cache.set(key, p);
   if (cache.size > CACHE_LIMIT) cache.delete(cache.keys().next().value);

@@ -13,6 +13,8 @@ import { movesLearned } from "./moveset.js";
 import { simulateBattle } from "./sim.js";
 import { teamPower, rollSurge } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, capBlock, recordStart } from "./rewards.js";
+import { resolveBattleMega } from "../../services/megaTeam.js";
+import { isMegaCapabilityEnabled } from "../../config/features.js";
 
 // Locks both players in a fixed (ascending id) order so two battles between
 // the same pair, started from either side, can't deadlock.
@@ -22,15 +24,25 @@ export function withBothLocks(lockUser, idA, idB, fn) {
 }
 
 // The Team in slot order, skipping slots whose variant is no longer owned.
-export function buildTeam(user) {
+// Mega Evolution (Phase M2): the one fully valid, battle-eligible Mega slot
+// (services/megaTeam.js resolveBattleMega, fail-closed) gets a battle-only
+// profile: Mega stats, types, ability and name. speciesId, variant and Level
+// stay the base line's, so EXP, Levels and ownership never see the Mega.
+export function buildTeam(user, { env = process.env } = {}) {
+  const mega = resolveBattleMega(user, { env });
+  if (mega && !mega.ok && isMegaCapabilityEnabled("battle", env)) console.warn(`⚠️ Mega slot battles as its base form (${mega.reason}).`);
   return normalizeTeam(user.displayedPokemon, 6)
     .filter((slot) => (user.pokemon?.[slot.id]?.[slot.variant] ?? 0) > 0)
-    .map((slot) => ({
-      speciesId: slot.id,
-      variant: slot.variant,
-      name: speciesName(slot.id),
-      level: getTraining(user, slot.id, slot.variant).level,
-    }));
+    .map((slot) => {
+      const member = {
+        speciesId: slot.id,
+        variant: slot.variant,
+        name: speciesName(slot.id),
+        level: getTraining(user, slot.id, slot.variant).level,
+      };
+      if (!mega?.ok || mega.key !== `${slot.id}:${slot.variant}`) return member;
+      return { ...member, name: mega.profile.name, baseName: member.name, megaForm: mega.formId, battleProfile: mega.profile };
+    });
 }
 
 function applyExp(user, side, result, sideIndex) {
@@ -47,16 +59,20 @@ function applyExp(user, side, result, sideIndex) {
       toLevel,
       gained: gains[i],
       learned: movesLearned(m.speciesId, fromLevel, toLevel).map((id) => getMove(id).name),
+      // Display only (the EXP card): which Mega this member battled as. The
+      // EXP itself always goes to the base line above. Absent for ordinary
+      // members, so their results are byte-for-byte unchanged.
+      ...(m.megaForm ? { megaForm: m.megaForm, baseName: m.baseName } : {}),
     };
   });
 }
 
 // Read-only: why this battle can't happen right now, or null. /battle runs it
 // before deferring (instant ephemeral refusals) and runBattle re-runs it under lock.
-export function battleBlock({ trainerData, challengerId, defenderId, mode, now = new Date() }) {
+export function battleBlock({ trainerData, challengerId, defenderId, mode, now = new Date(), env = process.env }) {
   if (challengerId === defenderId) return "self";
-  if (!buildTeam(trainerData[challengerId] ?? {}).length) return "no_team_challenger";
-  if (!buildTeam(trainerData[defenderId] ?? {}).length) return "no_team_defender";
+  if (!buildTeam(trainerData[challengerId] ?? {}, { env }).length) return "no_team_challenger";
+  if (!buildTeam(trainerData[defenderId] ?? {}, { env }).length) return "no_team_defender";
   const day = utcDay(now);
   const blockFor = (user, opponentId) => (user?.battle?.day === day ? capBlock(user.battle, opponentId) : null);
   const block = blockFor(trainerData[challengerId], defenderId);
@@ -66,12 +82,12 @@ export function battleBlock({ trainerData, challengerId, defenderId, mode, now =
   return null;
 }
 
-export function runBattle({ trainerData, challengerId, defenderId, mode, stake = 0, seed, now = new Date() }) {
-  const reason = battleBlock({ trainerData, challengerId, defenderId, mode, now });
+export function runBattle({ trainerData, challengerId, defenderId, mode, stake = 0, seed, now = new Date(), env = process.env }) {
+  const reason = battleBlock({ trainerData, challengerId, defenderId, mode, now, env });
   if (reason) return { ok: false, reason };
   const challenger = trainerData[challengerId];
   const defender = trainerData[defenderId];
-  const teams = [buildTeam(challenger), buildTeam(defender)];
+  const teams = [buildTeam(challenger, { env }), buildTeam(defender, { env })];
   const day = utcDay(now);
   const records = [getBattleRecord(challenger, day), getBattleRecord(defender, day)];
 

@@ -258,9 +258,19 @@ function toTeamObj(entry) {
     const legacyIsShiny =
       entry.variant == null && (entry.shiny === true || entry.isShiny === true);
 
-    return { id: pid, variant: legacyIsShiny ? "shiny" : normVariant(entry.variant) };
+    const slot = { id: pid, variant: legacyIsShiny ? "shiny" : normVariant(entry.variant) };
+    // Mega Evolution: a slot may carry its Mega form (validated server-side).
+    if (typeof entry.mega === "string" && /^mega-[a-z0-9]+(-[a-z0-9]+)*$/.test(entry.mega)) slot.mega = entry.mega;
+    return slot;
   }
   return null;
+}
+
+// Keep { id, variant } and at most ONE Mega slot (the first) — team rule.
+function withMega(slot, megaTaken) {
+  const out = { id: Number(slot.id), variant: normVariant(slot.variant) };
+  if (slot.mega && !megaTaken.value) { out.mega = slot.mega; megaTaken.value = true; }
+  return out;
 }
 
 // TEAM RULE: 1 per Pokémon ID (ignore variant for uniqueness)
@@ -289,11 +299,12 @@ function normalizeTeam(rawTeam) {
   // dedupe by Pokémon ID, keep order, clamp to 6
   const seen = new Set();
   const deduped = [];
+  const megaTaken = { value: false };
   for (const slot of mapped) {
     const k = teamKey(slot);
     if (seen.has(k)) continue;
     seen.add(k);
-    deduped.push({ id: Number(slot.id), variant: normVariant(slot.variant) });
+    deduped.push(withMega(slot, megaTaken));
     if (deduped.length >= 6) break;
   }
   return deduped;
@@ -505,6 +516,7 @@ function setMode(mode) {
 
   renderPokemonGrid();
   updateTeamCounter();
+  megaUI?.onModeChange?.(mode);
 }
 
 // ===========================================================
@@ -564,11 +576,12 @@ function findTeamIndex(pid) {
 function clampTeamTo6Unique() {
   const seen = new Set();
   const next = [];
+  const megaTaken = { value: false };
   for (const slot of selectedTeam) {
     const k = teamKey(slot);
     if (seen.has(k)) continue;
     seen.add(k);
-    next.push({ id: Number(slot.id), variant: normVariant(slot.variant) });
+    next.push(withMega(slot, megaTaken));
     if (next.length >= 6) break;
   }
   selectedTeam = next;
@@ -610,9 +623,17 @@ function toggleCardVariant(id) {
   if (!ownsVariant(pid, next)) return;
   viewVariant.set(pid, next);
   const idx = findTeamIndex(pid);
-  if (currentMode === "team" && idx >= 0) selectedTeam[idx] = { id: pid, variant: next };
+  if (currentMode === "team" && idx >= 0) {
+    // A Mega is unlocked per line (normal/shiny): it stays on the slot only
+    // if the same form is unlocked on the copy switched to.
+    const prev = selectedTeam[idx];
+    const slot = { id: pid, variant: next };
+    if (prev?.mega && megaUI?.isMegaUnlockedOn?.(pid, next, prev.mega)) slot.mega = prev.mega;
+    selectedTeam[idx] = slot;
+  }
   renderPokemonGrid();
   updateTeamCounter();
+  megaUI?.render?.(); // the Mega section's Team line follows the edit
   // Keep keyboard focus on the toggle after the re-render.
   document.querySelector(`.pokemon-card[data-id="${pid}"] .variant-toggle`)?.focus({ preventScroll: true });
 }
@@ -964,6 +985,47 @@ function toggleTeamSelection(id) {
   updateTeamCounter();
 }
 
+// Team preview sprite: the Mega's sprite for a Mega slot, else the base one.
+function teamSlotSprite(slot) {
+  const id = Number(slot.id);
+  const v = normVariant(slot.variant);
+  const mega = slot.mega ? megaUI?.megaSprite?.(slot) : null;
+  return mega || (v === "shiny" ? `/public/sprites/pokemon/shiny/${id}.gif` : `/public/sprites/pokemon/normal/${id}.gif`);
+}
+
+// ===========================================================
+// 🧬 Mega Evolution (Phase M1) — mega.js renders nothing unless the
+// server reports Mega Evolution enabled (GET /api/mega).
+// ===========================================================
+let megaUI = null;
+async function initMegaUI() {
+  try {
+    const mod = await import("/public/picker-pokemon/mega.js");
+    const ui = await mod.initMega({
+      userId,
+      apiJSON,
+      withActionLock,
+      createConfirmModal,
+      getMode: () => currentMode,
+      getTeam: () => selectedTeam,
+      setTeam: (team) => {
+        selectedTeam = team;
+        clampTeamTo6Unique();
+        renderPokemonGrid();
+        updateTeamCounter();
+      },
+      refreshUser: async () => {
+        await fetchUserData();
+        updateHUD();
+      },
+    });
+    megaUI = ui?.enabled ? ui : null;
+  } catch (err) {
+    console.warn("Mega Evolution UI unavailable:", err?.message || err);
+    megaUI = null;
+  }
+}
+
 function updateTeamCounter() {
   const counter = document.getElementById("teamCounter");
   if (counter) counter.textContent = `${selectedTeam.length}/6 selected`;
@@ -1068,6 +1130,7 @@ async function init() {
     initToggles();
     renderPokemonGrid();
     startWeeklyPackCountdown();
+    initMegaUI(); // no-op unless Mega Evolution is enabled server-side
 
     // Filters
     document.getElementById("search")?.addEventListener("input", renderPokemonGrid);
@@ -1104,12 +1167,7 @@ async function init() {
 
         const previewHTML = selectedTeam
           .map((slot) => {
-            const id = Number(slot.id);
-            const v = normVariant(slot.variant);
-            const sprite =
-              v === "shiny"
-                ? `/public/sprites/pokemon/shiny/${id}.gif`
-                : `/public/sprites/pokemon/normal/${id}.gif`;
+            const sprite = teamSlotSprite(slot);
             return `<img src="${sprite}" style="width:64px;height:64px;image-rendering:pixelated;">`;
           })
           .join("");
@@ -1134,6 +1192,7 @@ async function init() {
                 await fetchUserData();
                 selectedTeam = normalizeTeam(userData.currentTeam);
                 clampTeamTo6Unique();
+                megaUI?.render?.();
 
                 refreshStats(userData, prev);
                 renderPokemonGrid();
@@ -1153,12 +1212,7 @@ async function init() {
 
                 const teamPreview = selectedTeam
                   .map((slot) => {
-                    const id = Number(slot.id);
-                    const v = normVariant(slot.variant);
-                    const sprite =
-                      v === "shiny"
-                        ? `/public/sprites/pokemon/shiny/${id}.gif`
-                        : `/public/sprites/pokemon/normal/${id}.gif`;
+                    const sprite = teamSlotSprite(slot);
                     return `<img src="${sprite}" style="width:64px;height:64px;image-rendering:pixelated;">`;
                   })
                   .join("");
@@ -1242,7 +1296,7 @@ function closeOverlay(overlay) {
 // ===========================================================
 // 💾 Confirmation Modal (used for Save Team)
 // ===========================================================
-function createConfirmModal({ title, message, onConfirm, onCancel }) {
+function createConfirmModal({ title, message, onConfirm, onCancel, confirmLabel = "Confirm Save" }) {
   const overlay = createOverlay();
   const modal = document.createElement("div");
   modal.style.cssText = `
@@ -1268,7 +1322,7 @@ function createConfirmModal({ title, message, onConfirm, onCancel }) {
         style="background: var(--brand); color: var(--bg); border: none;
                padding: 10px 20px; border-radius: 8px; cursor: pointer;
                font-weight: 700;">
-        Confirm Save
+        ${confirmLabel}
       </button>
     </div>
   `;

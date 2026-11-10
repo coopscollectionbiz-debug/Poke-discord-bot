@@ -1,6 +1,7 @@
 import { normalizeTrainers } from "../services/assets.js";
 import { normalizeInventory } from "../services/inventory.js";
 import { normalizeProgression } from "../progression/achievements.js";
+import { normalizeMegaUnlocks } from "../services/megaUnlocks.js";
 // ==========================================================
 // utils/userSchema.js
 // Unified user data schema and initialization
@@ -150,6 +151,7 @@ export function validateUserSchema(user, userId, username) {
   // evolution_stone always present, nothing dropped silently.
   normalizeInventory(out);
   normalizeProgression(out); // Release C achievement fields
+  normalizeMegaUnlocks(out); // Mega Evolution: repairs megaUnlocks if present; never creates it
 
   // Permanent shop purchases
   if (!Array.isArray(out.purchases)) out.purchases = [];

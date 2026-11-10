@@ -20,6 +20,7 @@ import { LEVEL_CAP } from "../battle/tuning.js";
 import { getRank } from "../rankSystem.js";
 import { TYPE_ID_TO_NAME } from "../battle/data.js";
 import { displaySpeciesName } from "./names.js";
+import { megaShortName, teamMegaStatus } from "../megaDisplay.js";
 
 const POKEMON = JSON.parse(fs.readFileSync(new URL("../../pokemonData.json", import.meta.url), "utf8"));
 
@@ -30,18 +31,28 @@ export function expProgress(exp, level) {
   return hi > lo ? Math.max(0, Math.min(1, (exp - lo) / (hi - lo))) : 0;
 }
 
-/** One slot's display facts, from species data and the player's training. */
+/**
+ * One slot's display facts, from species data and the player's training.
+ * A member that battles as a Mega (buildTeam: validated, fail-closed) shows
+ * the Mega's name, sprite, types and stats; its Level, EXP, rarity, Pokédex
+ * number and moves stay the base line's, exactly as in battle.
+ */
 export function slotView(user, member, index) {
   const { speciesId: id, variant, level } = member;
   const entry = POKEMON[id] ?? {};
   const species = getSpecies(id);
-  const types = species?.types ?? (entry.types ?? []).map((t) => TYPE_ID_TO_NAME[t]).filter(Boolean);
+  const profile = member.megaForm ? member.battleProfile : null;
+  const types = profile ? [...profile.types] : species?.types ?? (entry.types ?? []).map((t) => TYPE_ID_TO_NAME[t]).filter(Boolean);
   const { exp } = getTraining(user, id, variant);
-  const stats = species ? computeStats(species.baseStats, level) : null;
+  const statBase = profile?.baseStats ?? species?.baseStats;
+  const stats = statBase ? computeStats(statBase, level) : null;
+  const baseName = displaySpeciesName(id, entry.name ?? member.baseName ?? member.name);
   return {
     slot: index + 1,
     id,
-    name: displaySpeciesName(id, entry.name ?? member.name),
+    spriteId: profile ? member.megaForm : id,
+    mega: profile ? { formId: member.megaForm, name: profile.name, shortName: megaShortName(member.megaForm), baseName } : null,
+    name: profile ? profile.name : baseName,
     variant,
     shiny: variant === "shiny",
     level,
@@ -56,14 +67,19 @@ export function slotView(user, member, index) {
   };
 }
 
+function inactiveMegaMessage(user, env) {
+  const mega = teamMegaStatus(user, { env });
+  return mega && !mega.active ? mega.message : null;
+}
+
 /**
  * The whole team image's data.
  * - members: the battle Team (owned slots, in order)
  * - fallback: true when the player has no Team and the image shows the
  *   first owned Pokémon instead (the current /showteam behavior, kept)
  */
-export function buildTeamView(user, { displayName = "Trainer", trainerFile = null } = {}) {
-  let members = buildTeam(user ?? {});
+export function buildTeamView(user, { displayName = "Trainer", trainerFile = null, env = process.env } = {}) {
+  let members = buildTeam(user ?? {}, { env });
   let fallback = false;
   if (!members.length) {
     // Same rule as today's /showteam: first six owned species, normal variant.
@@ -84,5 +100,8 @@ export function buildTeamView(user, { displayName = "Trainer", trainerFile = nul
     power: known.length ? teamPower(known) : 0,
     slots,
     fallback,
+    // A selected Mega that can't battle right now: shown as its base form,
+    // with this one-line reason (null when there's nothing to explain).
+    megaNotice: fallback ? null : inactiveMegaMessage(user, env),
   };
 }

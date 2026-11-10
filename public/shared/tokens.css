@@ -31,6 +31,7 @@
   --cc-red-soft: #ff5a6a26;
   --cc-green: #3fd46c;
   --cc-exp: #5ab4ff;
+  --cc-mega: #c084fc; /* Mega Evolution accents (utils/render/tokens.js COLOR.mega) */
   --cc-textbox: #f8f8f0;
   --cc-textbox-border: #3a4256;
   --cc-textbox-ink: #1d2233;

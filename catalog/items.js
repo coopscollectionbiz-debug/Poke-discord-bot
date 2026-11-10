@@ -20,6 +20,8 @@
 // display only; nothing reads it to charge players.
 // ==========================================================
 
+import fs from "fs";
+
 export const CATEGORIES = Object.freeze({
   capture: { label: "Capture", emoji: "🎯", order: 1 },
   evolution: { label: "Evolution", emoji: "💎", order: 2 },
@@ -218,6 +220,71 @@ const ITEMS = [
     sinceRelease: "D",
   }),
 ];
+
+// ---------------- DEFINED: Mega Evolution (Phase M0, NOT obtainable) ----------------
+// 92 Mega Stones from data/pokedex/megas.json, plus Mega Shards and vouchers.
+// All "defined": grantItem refuses them, no shop lists them, nothing drops them.
+// A stone is consumed once to unlock a Mega form on one species+variant line
+// (D-1); battle use never consumes anything. Category "evolution" for now, so
+// the /inventory and bag category menus stay unchanged until activation.
+const MEGA_DATA = JSON.parse(fs.readFileSync(new URL("../data/pokedex/megas.json", import.meta.url), "utf8"));
+const MEGA_FORM_NAMES = Object.fromEntries(MEGA_DATA.forms.map((f) => [f.id, f.name]));
+export const MEGA_STONE_IDS = Object.freeze(MEGA_DATA.stones.map((s) => s.id));
+for (const s of MEGA_DATA.stones) {
+  const special = s.acquisition !== "random-pool";
+  ITEMS.push(item({
+    id: s.id,
+    name: s.name,
+    description: `Use on one of your ${s.baseSpecies} to permanently unlock ${s.forms.map((f) => MEGA_FORM_NAMES[f]).join(" / ")} for that Pokémon.`,
+    category: "evolution",
+    rarity: special ? "legendary" : "epic",
+    maxStack: 99,
+    consumable: true,
+    status: "defined",
+    storage: "inventory",
+    sources: special ? ["milestone_voucher", "event"] : ["quest_rare", "daily_rare", "achievement", "event", "shard_exchange"],
+    mega: Object.freeze({ species: s.species, forms: Object.freeze([...s.forms]), officialStatus: s.officialStatus, acquisition: s.acquisition }),
+    sinceRelease: "M",
+  }));
+}
+ITEMS.push(
+  item({
+    id: "mega_shard",
+    name: "Mega Shard",
+    description: "Fragments of Mega energy. Exchange 25 for any regular Mega Stone.",
+    category: "evolution",
+    rarity: "rare",
+    consumable: true,
+    status: "defined",
+    storage: "inventory",
+    sources: ["mega_drop", "mega_duplicate", "achievement"],
+    sinceRelease: "M",
+  }),
+  item({
+    id: "mega_stone_voucher",
+    name: "Mega Stone Voucher",
+    description: "Exchange for any regular Mega Stone of your choice.",
+    category: "evolution",
+    rarity: "epic",
+    consumable: true,
+    status: "defined",
+    storage: "inventory",
+    sources: ["achievement", "event"],
+    sinceRelease: "M",
+  }),
+  item({
+    id: "mega_stone_voucher_legendary",
+    name: "Legendary Mega Stone Voucher",
+    description: "Exchange for any Mega Stone, including Legendary and Mythical ones.",
+    category: "evolution",
+    rarity: "legendary",
+    consumable: true,
+    status: "defined",
+    storage: "inventory",
+    sources: ["milestone", "event"],
+    sinceRelease: "M",
+  }),
+);
 
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));
 

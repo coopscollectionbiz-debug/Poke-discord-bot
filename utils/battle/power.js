@@ -6,7 +6,8 @@ import { createRng } from "./rng.js";
 // Power rating: the sum of every Team member's stats at its Level.
 export function teamPower(members) {
   return members.reduce((total, m) => {
-    const s = computeStats(getSpecies(m.speciesId).baseStats, m.level);
+    // A Mega battles with its Mega stats, so the underdog surge sees them (EXP doesn't: rewards.js uses the base species).
+    const s = computeStats((m.battleProfile ?? getSpecies(m.speciesId)).baseStats, m.level);
     return total + s.hp + s.atk + s.def + s.spa + s.spd + s.spe;
   }, 0);
 }

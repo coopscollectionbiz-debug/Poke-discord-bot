@@ -9,7 +9,9 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawShinyMark, drawTag, dexNo } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawShinyMark, drawTag, dexNo, drawMegaTag } from "./primitives.js";
+import { getMega } from "../megas.js";
+import { megaShortName } from "../megaDisplay.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 import { getTraining } from "../training.js";
@@ -32,11 +34,16 @@ export function expView(outcome, userId, names, user) {
     members: (outcome.exp[userId] ?? []).map((e) => {
       const [id, variant] = String(e.key).split(":");
       const t = user ? getTraining(user, Number(id), variant) : null;
+      // A member that battled as a Mega (runBattle's validated participant)
+      // shows the Mega; the EXP and Level are its base line's.
+      const mega = e.megaForm && getMega(e.megaForm)?.species === Number(id) ? e.megaForm : null;
       return {
         id: Number(id),
+        spriteId: mega ?? Number(id),
+        mega: mega ? { formId: mega, name: e.name, shortName: megaShortName(mega) } : null,
         variant,
         shiny: variant === "shiny",
-        name: displaySpeciesName(id, e.name),
+        name: mega ? megaShortName(mega) : displaySpeciesName(id, e.name),
         fromLevel: e.fromLevel,
         toLevel: e.toLevel,
         gained: e.gained,
@@ -95,11 +102,12 @@ function drawTile(ctx, m, x, y, w, sprite, stage) {
   ctx.beginPath();
   ctx.ellipse(sx, floor, 58, 12, 0, 0, Math.PI * 2);
   ctx.fill();
-  stage.place(ctx, sprite, sx, floor + 6, 150, TILE_H - 36, { scale: 2 }, { id: m.id, variant: m.variant });
+  stage.place(ctx, sprite, sx, floor + 6, 150, TILE_H - 36, { scale: 2 }, { id: m.spriteId ?? m.id, variant: m.variant });
 
   const tx = x + 168, tw = w - 168 - 18;
   // Name.
-  const nm = fitFont(ctx, m.name, tw - (m.shiny ? 30 : 0) - (up ? 120 : 0), 28, 20, 800);
+  const megaW = m.mega ? 66 : 0; // the MEGA tag after the name
+  const nm = fitFont(ctx, m.name, tw - (m.shiny ? 30 : 0) - (up ? 120 : 0) - megaW, 28, 20, 800);
   ctx.font = font(nm.size, 800);
   ctx.fillStyle = COLOR.text;
   ctx.textAlign = "left";
@@ -107,6 +115,7 @@ function drawTile(ctx, m, x, y, w, sprite, stage) {
   ctx.fillText(nm.text, tx, y + 42);
   let after = tx + ctx.measureText(nm.text).width;
   if (m.shiny) { drawShinyMark(ctx, after + 16, y + 42 - nm.size * 0.4, 10); after += 30; }
+  if (m.mega) drawMegaTag(ctx, after + 10, y + 42 - 19, { h: 24, size: 13 });
   if (up) drawTag(ctx, "LEVEL UP!", x + w - 18 - 112, y + 20, { fill: "#3fd46c", color: COLOR.ink, h: 28, size: 15 });
 
   // Level line: "Lv 41 → 42" or "Lv 41", then the EXP gained.
@@ -177,7 +186,7 @@ export async function renderExpCard(v, { animate = false } = {}) {
   const ph = await loadPlaceholder();
   const tileW = (W - 2 * M - GAP) / 2;
   for (const [i, m] of v.members.entries()) {
-    const sprite = (await loadStaticSprite(m.id, m.variant)) ?? ph;
+    const sprite = (await loadStaticSprite(m.spriteId ?? m.id, m.variant)) ?? ph;
     drawTile(ctx, m, M + (i % 2) * (tileW + GAP), M + HEADER + Math.floor(i / 2) * (TILE_H + GAP), tileW, sprite, stage);
   }
   return stage.output(canvas);

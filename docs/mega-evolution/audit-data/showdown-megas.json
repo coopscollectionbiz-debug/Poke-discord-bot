@@ -1,0 +1,5656 @@
+[
+ {
+  "num": 3,
+  "name": "Venusaur-Mega",
+  "baseSpecies": "Venusaur",
+  "forme": "Mega",
+  "id": "venusaurmega",
+  "types": [
+   "Grass",
+   "Poison"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 100,
+   "def": 123,
+   "spa": 122,
+   "spd": 120,
+   "spe": 80
+  },
+  "abilities": {
+   "0": "Thick Fat"
+  },
+  "requiredItem": "Venusaurite",
+  "requiredItems": [
+   "Venusaurite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Venusaur",
+  "changesFrom": "Venusaur",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Grass",
+   "Poison"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 82,
+   "def": 83,
+   "spa": 100,
+   "spd": 100,
+   "spe": 80
+  },
+  "baseAbilities": {
+   "0": "Overgrow",
+   "H": "Chlorophyll"
+  },
+  "tags": [],
+  "item": {
+   "id": "venusaurite",
+   "num": 659,
+   "megaStone": {
+    "Venusaur": "Venusaur-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 6,
+  "name": "Charizard-Mega-X",
+  "baseSpecies": "Charizard",
+  "forme": "Mega-X",
+  "id": "charizardmegax",
+  "types": [
+   "Fire",
+   "Dragon"
+  ],
+  "baseStats": {
+   "hp": 78,
+   "atk": 130,
+   "def": 111,
+   "spa": 130,
+   "spd": 85,
+   "spe": 100
+  },
+  "abilities": {
+   "0": "Tough Claws"
+  },
+  "requiredItem": "Charizardite X",
+  "requiredItems": [
+   "Charizardite X"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Charizard",
+  "changesFrom": "Charizard",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Fire",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 78,
+   "atk": 84,
+   "def": 78,
+   "spa": 109,
+   "spd": 85,
+   "spe": 100
+  },
+  "baseAbilities": {
+   "0": "Blaze",
+   "H": "Solar Power"
+  },
+  "tags": [],
+  "item": {
+   "id": "charizarditex",
+   "num": 660,
+   "megaStone": {
+    "Charizard": "Charizard-Mega-X"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 6,
+  "name": "Charizard-Mega-Y",
+  "baseSpecies": "Charizard",
+  "forme": "Mega-Y",
+  "id": "charizardmegay",
+  "types": [
+   "Fire",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 78,
+   "atk": 104,
+   "def": 78,
+   "spa": 159,
+   "spd": 115,
+   "spe": 100
+  },
+  "abilities": {
+   "0": "Drought"
+  },
+  "requiredItem": "Charizardite Y",
+  "requiredItems": [
+   "Charizardite Y"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Charizard",
+  "changesFrom": "Charizard",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Fire",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 78,
+   "atk": 84,
+   "def": 78,
+   "spa": 109,
+   "spd": 85,
+   "spe": 100
+  },
+  "baseAbilities": {
+   "0": "Blaze",
+   "H": "Solar Power"
+  },
+  "tags": [],
+  "item": {
+   "id": "charizarditey",
+   "num": 678,
+   "megaStone": {
+    "Charizard": "Charizard-Mega-Y"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 9,
+  "name": "Blastoise-Mega",
+  "baseSpecies": "Blastoise",
+  "forme": "Mega",
+  "id": "blastoisemega",
+  "types": [
+   "Water"
+  ],
+  "baseStats": {
+   "hp": 79,
+   "atk": 103,
+   "def": 120,
+   "spa": 135,
+   "spd": 115,
+   "spe": 78
+  },
+  "abilities": {
+   "0": "Mega Launcher"
+  },
+  "requiredItem": "Blastoisinite",
+  "requiredItems": [
+   "Blastoisinite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Blastoise",
+  "changesFrom": "Blastoise",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Water"
+  ],
+  "baseStatsBase": {
+   "hp": 79,
+   "atk": 83,
+   "def": 100,
+   "spa": 85,
+   "spd": 105,
+   "spe": 78
+  },
+  "baseAbilities": {
+   "0": "Torrent",
+   "H": "Rain Dish"
+  },
+  "tags": [],
+  "item": {
+   "id": "blastoisinite",
+   "num": 661,
+   "megaStone": {
+    "Blastoise": "Blastoise-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 15,
+  "name": "Beedrill-Mega",
+  "baseSpecies": "Beedrill",
+  "forme": "Mega",
+  "id": "beedrillmega",
+  "types": [
+   "Bug",
+   "Poison"
+  ],
+  "baseStats": {
+   "hp": 65,
+   "atk": 150,
+   "def": 40,
+   "spa": 15,
+   "spd": 80,
+   "spe": 145
+  },
+  "abilities": {
+   "0": "Adaptability"
+  },
+  "requiredItem": "Beedrillite",
+  "requiredItems": [
+   "Beedrillite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Beedrill",
+  "changesFrom": "Beedrill",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Bug",
+   "Poison"
+  ],
+  "baseStatsBase": {
+   "hp": 65,
+   "atk": 90,
+   "def": 40,
+   "spa": 45,
+   "spd": 80,
+   "spe": 75
+  },
+  "baseAbilities": {
+   "0": "Swarm",
+   "H": "Sniper"
+  },
+  "tags": [],
+  "item": {
+   "id": "beedrillite",
+   "num": 770,
+   "megaStone": {
+    "Beedrill": "Beedrill-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 18,
+  "name": "Pidgeot-Mega",
+  "baseSpecies": "Pidgeot",
+  "forme": "Mega",
+  "id": "pidgeotmega",
+  "types": [
+   "Normal",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 83,
+   "atk": 80,
+   "def": 80,
+   "spa": 135,
+   "spd": 80,
+   "spe": 121
+  },
+  "abilities": {
+   "0": "No Guard"
+  },
+  "requiredItem": "Pidgeotite",
+  "requiredItems": [
+   "Pidgeotite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Pidgeot",
+  "changesFrom": "Pidgeot",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Normal",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 83,
+   "atk": 80,
+   "def": 75,
+   "spa": 70,
+   "spd": 70,
+   "spe": 101
+  },
+  "baseAbilities": {
+   "0": "Keen Eye",
+   "1": "Tangled Feet",
+   "H": "Big Pecks"
+  },
+  "tags": [],
+  "item": {
+   "id": "pidgeotite",
+   "num": 762,
+   "megaStone": {
+    "Pidgeot": "Pidgeot-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 26,
+  "name": "Raichu-Mega-X",
+  "baseSpecies": "Raichu",
+  "forme": "Mega-X",
+  "id": "raichumegax",
+  "types": [
+   "Electric"
+  ],
+  "baseStats": {
+   "hp": 60,
+   "atk": 135,
+   "def": 95,
+   "spa": 90,
+   "spd": 95,
+   "spe": 110
+  },
+  "abilities": {
+   "0": "Electric Surge"
+  },
+  "requiredItem": "Raichunite X",
+  "requiredItems": [
+   "Raichunite X"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Raichu",
+  "changesFrom": "Raichu",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Electric"
+  ],
+  "baseStatsBase": {
+   "hp": 60,
+   "atk": 90,
+   "def": 55,
+   "spa": 90,
+   "spd": 80,
+   "spe": 110
+  },
+  "baseAbilities": {
+   "0": "Static",
+   "H": "Lightning Rod"
+  },
+  "tags": [],
+  "item": {
+   "id": "raichunitex",
+   "num": 2635,
+   "megaStone": {
+    "Raichu": "Raichu-Mega-X"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 26,
+  "name": "Raichu-Mega-Y",
+  "baseSpecies": "Raichu",
+  "forme": "Mega-Y",
+  "id": "raichumegay",
+  "types": [
+   "Electric"
+  ],
+  "baseStats": {
+   "hp": 60,
+   "atk": 100,
+   "def": 55,
+   "spa": 160,
+   "spd": 80,
+   "spe": 130
+  },
+  "abilities": {
+   "0": "No Guard"
+  },
+  "requiredItem": "Raichunite Y",
+  "requiredItems": [
+   "Raichunite Y"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Raichu",
+  "changesFrom": "Raichu",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Electric"
+  ],
+  "baseStatsBase": {
+   "hp": 60,
+   "atk": 90,
+   "def": 55,
+   "spa": 90,
+   "spd": 80,
+   "spe": 110
+  },
+  "baseAbilities": {
+   "0": "Static",
+   "H": "Lightning Rod"
+  },
+  "tags": [],
+  "item": {
+   "id": "raichunitey",
+   "num": 2636,
+   "megaStone": {
+    "Raichu": "Raichu-Mega-Y"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 36,
+  "name": "Clefable-Mega",
+  "baseSpecies": "Clefable",
+  "forme": "Mega",
+  "id": "clefablemega",
+  "types": [
+   "Fairy",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 95,
+   "atk": 80,
+   "def": 93,
+   "spa": 135,
+   "spd": 110,
+   "spe": 70
+  },
+  "abilities": {
+   "0": "Magic Bounce"
+  },
+  "requiredItem": "Clefablite",
+  "requiredItems": [
+   "Clefablite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Clefable",
+  "changesFrom": "Clefable",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Fairy"
+  ],
+  "baseStatsBase": {
+   "hp": 95,
+   "atk": 70,
+   "def": 73,
+   "spa": 95,
+   "spd": 90,
+   "spe": 60
+  },
+  "baseAbilities": {
+   "0": "Cute Charm",
+   "1": "Magic Guard",
+   "H": "Unaware"
+  },
+  "tags": [],
+  "item": {
+   "id": "clefablite",
+   "num": 2559,
+   "megaStone": {
+    "Clefable": "Clefable-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 65,
+  "name": "Alakazam-Mega",
+  "baseSpecies": "Alakazam",
+  "forme": "Mega",
+  "id": "alakazammega",
+  "types": [
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 55,
+   "atk": 50,
+   "def": 65,
+   "spa": 175,
+   "spd": 105,
+   "spe": 150
+  },
+  "abilities": {
+   "0": "Trace"
+  },
+  "requiredItem": "Alakazite",
+  "requiredItems": [
+   "Alakazite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Alakazam",
+  "changesFrom": "Alakazam",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 55,
+   "atk": 50,
+   "def": 45,
+   "spa": 135,
+   "spd": 95,
+   "spe": 120
+  },
+  "baseAbilities": {
+   "0": "Synchronize",
+   "1": "Inner Focus",
+   "H": "Magic Guard"
+  },
+  "tags": [],
+  "item": {
+   "id": "alakazite",
+   "num": 679,
+   "megaStone": {
+    "Alakazam": "Alakazam-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 71,
+  "name": "Victreebel-Mega",
+  "baseSpecies": "Victreebel",
+  "forme": "Mega",
+  "id": "victreebelmega",
+  "types": [
+   "Grass",
+   "Poison"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 125,
+   "def": 85,
+   "spa": 135,
+   "spd": 95,
+   "spe": 70
+  },
+  "abilities": {
+   "0": "Innards Out"
+  },
+  "requiredItem": "Victreebelite",
+  "requiredItems": [
+   "Victreebelite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Victreebel",
+  "changesFrom": "Victreebel",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Grass",
+   "Poison"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 105,
+   "def": 65,
+   "spa": 100,
+   "spd": 70,
+   "spe": 70
+  },
+  "baseAbilities": {
+   "0": "Chlorophyll",
+   "H": "Gluttony"
+  },
+  "tags": [],
+  "item": {
+   "id": "victreebelite",
+   "num": 2560,
+   "megaStone": {
+    "Victreebel": "Victreebel-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 80,
+  "name": "Slowbro-Mega",
+  "baseSpecies": "Slowbro",
+  "forme": "Mega",
+  "id": "slowbromega",
+  "types": [
+   "Water",
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 95,
+   "atk": 75,
+   "def": 180,
+   "spa": 130,
+   "spd": 80,
+   "spe": 30
+  },
+  "abilities": {
+   "0": "Shell Armor"
+  },
+  "requiredItem": "Slowbronite",
+  "requiredItems": [
+   "Slowbronite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Slowbro",
+  "changesFrom": "Slowbro",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Water",
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 95,
+   "atk": 75,
+   "def": 110,
+   "spa": 100,
+   "spd": 80,
+   "spe": 30
+  },
+  "baseAbilities": {
+   "0": "Oblivious",
+   "1": "Own Tempo",
+   "H": "Regenerator"
+  },
+  "tags": [],
+  "item": {
+   "id": "slowbronite",
+   "num": 760,
+   "megaStone": {
+    "Slowbro": "Slowbro-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 94,
+  "name": "Gengar-Mega",
+  "baseSpecies": "Gengar",
+  "forme": "Mega",
+  "id": "gengarmega",
+  "types": [
+   "Ghost",
+   "Poison"
+  ],
+  "baseStats": {
+   "hp": 60,
+   "atk": 65,
+   "def": 80,
+   "spa": 170,
+   "spd": 95,
+   "spe": 130
+  },
+  "abilities": {
+   "0": "Shadow Tag"
+  },
+  "requiredItem": "Gengarite",
+  "requiredItems": [
+   "Gengarite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Gengar",
+  "changesFrom": "Gengar",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Ghost",
+   "Poison"
+  ],
+  "baseStatsBase": {
+   "hp": 60,
+   "atk": 65,
+   "def": 60,
+   "spa": 130,
+   "spd": 75,
+   "spe": 110
+  },
+  "baseAbilities": {
+   "0": "Cursed Body"
+  },
+  "tags": [],
+  "item": {
+   "id": "gengarite",
+   "num": 656,
+   "megaStone": {
+    "Gengar": "Gengar-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 115,
+  "name": "Kangaskhan-Mega",
+  "baseSpecies": "Kangaskhan",
+  "forme": "Mega",
+  "id": "kangaskhanmega",
+  "types": [
+   "Normal"
+  ],
+  "baseStats": {
+   "hp": 105,
+   "atk": 125,
+   "def": 100,
+   "spa": 60,
+   "spd": 100,
+   "spe": 100
+  },
+  "abilities": {
+   "0": "Parental Bond"
+  },
+  "requiredItem": "Kangaskhanite",
+  "requiredItems": [
+   "Kangaskhanite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Kangaskhan",
+  "changesFrom": "Kangaskhan",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Normal"
+  ],
+  "baseStatsBase": {
+   "hp": 105,
+   "atk": 95,
+   "def": 80,
+   "spa": 40,
+   "spd": 80,
+   "spe": 90
+  },
+  "baseAbilities": {
+   "0": "Early Bird",
+   "1": "Scrappy",
+   "H": "Inner Focus"
+  },
+  "tags": [],
+  "item": {
+   "id": "kangaskhanite",
+   "num": 675,
+   "megaStone": {
+    "Kangaskhan": "Kangaskhan-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 121,
+  "name": "Starmie-Mega",
+  "baseSpecies": "Starmie",
+  "forme": "Mega",
+  "id": "starmiemega",
+  "types": [
+   "Water",
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 60,
+   "atk": 100,
+   "def": 105,
+   "spa": 130,
+   "spd": 105,
+   "spe": 120
+  },
+  "abilities": {
+   "0": "Huge Power"
+  },
+  "requiredItem": "Starminite",
+  "requiredItems": [
+   "Starminite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Starmie",
+  "changesFrom": "Starmie",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Water",
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 60,
+   "atk": 75,
+   "def": 85,
+   "spa": 100,
+   "spd": 85,
+   "spe": 115
+  },
+  "baseAbilities": {
+   "0": "Illuminate",
+   "1": "Natural Cure",
+   "H": "Analytic"
+  },
+  "tags": [],
+  "item": {
+   "id": "starminite",
+   "num": 2561,
+   "megaStone": {
+    "Starmie": "Starmie-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 127,
+  "name": "Pinsir-Mega",
+  "baseSpecies": "Pinsir",
+  "forme": "Mega",
+  "id": "pinsirmega",
+  "types": [
+   "Bug",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 65,
+   "atk": 155,
+   "def": 120,
+   "spa": 65,
+   "spd": 90,
+   "spe": 105
+  },
+  "abilities": {
+   "0": "Aerilate"
+  },
+  "requiredItem": "Pinsirite",
+  "requiredItems": [
+   "Pinsirite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Pinsir",
+  "changesFrom": "Pinsir",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Bug"
+  ],
+  "baseStatsBase": {
+   "hp": 65,
+   "atk": 125,
+   "def": 100,
+   "spa": 55,
+   "spd": 70,
+   "spe": 85
+  },
+  "baseAbilities": {
+   "0": "Hyper Cutter",
+   "1": "Mold Breaker",
+   "H": "Moxie"
+  },
+  "tags": [],
+  "item": {
+   "id": "pinsirite",
+   "num": 671,
+   "megaStone": {
+    "Pinsir": "Pinsir-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 130,
+  "name": "Gyarados-Mega",
+  "baseSpecies": "Gyarados",
+  "forme": "Mega",
+  "id": "gyaradosmega",
+  "types": [
+   "Water",
+   "Dark"
+  ],
+  "baseStats": {
+   "hp": 95,
+   "atk": 155,
+   "def": 109,
+   "spa": 70,
+   "spd": 130,
+   "spe": 81
+  },
+  "abilities": {
+   "0": "Mold Breaker"
+  },
+  "requiredItem": "Gyaradosite",
+  "requiredItems": [
+   "Gyaradosite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Gyarados",
+  "changesFrom": "Gyarados",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Water",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 95,
+   "atk": 125,
+   "def": 79,
+   "spa": 60,
+   "spd": 100,
+   "spe": 81
+  },
+  "baseAbilities": {
+   "0": "Intimidate",
+   "H": "Moxie"
+  },
+  "tags": [],
+  "item": {
+   "id": "gyaradosite",
+   "num": 676,
+   "megaStone": {
+    "Gyarados": "Gyarados-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 142,
+  "name": "Aerodactyl-Mega",
+  "baseSpecies": "Aerodactyl",
+  "forme": "Mega",
+  "id": "aerodactylmega",
+  "types": [
+   "Rock",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 135,
+   "def": 85,
+   "spa": 70,
+   "spd": 95,
+   "spe": 150
+  },
+  "abilities": {
+   "0": "Tough Claws"
+  },
+  "requiredItem": "Aerodactylite",
+  "requiredItems": [
+   "Aerodactylite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Aerodactyl",
+  "changesFrom": "Aerodactyl",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Rock",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 105,
+   "def": 65,
+   "spa": 60,
+   "spd": 75,
+   "spe": 130
+  },
+  "baseAbilities": {
+   "0": "Rock Head",
+   "1": "Pressure",
+   "H": "Unnerve"
+  },
+  "tags": [],
+  "item": {
+   "id": "aerodactylite",
+   "num": 672,
+   "megaStone": {
+    "Aerodactyl": "Aerodactyl-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 149,
+  "name": "Dragonite-Mega",
+  "baseSpecies": "Dragonite",
+  "forme": "Mega",
+  "id": "dragonitemega",
+  "types": [
+   "Dragon",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 91,
+   "atk": 124,
+   "def": 115,
+   "spa": 145,
+   "spd": 125,
+   "spe": 100
+  },
+  "abilities": {
+   "0": "Multiscale"
+  },
+  "requiredItem": "Dragoninite",
+  "requiredItems": [
+   "Dragoninite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Dragonite",
+  "changesFrom": "Dragonite",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dragon",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 91,
+   "atk": 134,
+   "def": 95,
+   "spa": 100,
+   "spd": 100,
+   "spe": 80
+  },
+  "baseAbilities": {
+   "0": "Inner Focus",
+   "H": "Multiscale"
+  },
+  "tags": [],
+  "item": {
+   "id": "dragoninite",
+   "num": 2562,
+   "megaStone": {
+    "Dragonite": "Dragonite-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 150,
+  "name": "Mewtwo-Mega-X",
+  "baseSpecies": "Mewtwo",
+  "forme": "Mega-X",
+  "id": "mewtwomegax",
+  "types": [
+   "Psychic",
+   "Fighting"
+  ],
+  "baseStats": {
+   "hp": 106,
+   "atk": 190,
+   "def": 100,
+   "spa": 154,
+   "spd": 100,
+   "spe": 130
+  },
+  "abilities": {
+   "0": "Steadfast"
+  },
+  "requiredItem": "Mewtwonite X",
+  "requiredItems": [
+   "Mewtwonite X"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Mewtwo",
+  "changesFrom": "Mewtwo",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 106,
+   "atk": 110,
+   "def": 90,
+   "spa": 154,
+   "spd": 90,
+   "spe": 130
+  },
+  "baseAbilities": {
+   "0": "Pressure",
+   "H": "Unnerve"
+  },
+  "tags": [
+   "Restricted Legendary"
+  ],
+  "item": {
+   "id": "mewtwonitex",
+   "num": 662,
+   "megaStone": {
+    "Mewtwo": "Mewtwo-Mega-X"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 150,
+  "name": "Mewtwo-Mega-Y",
+  "baseSpecies": "Mewtwo",
+  "forme": "Mega-Y",
+  "id": "mewtwomegay",
+  "types": [
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 106,
+   "atk": 150,
+   "def": 70,
+   "spa": 194,
+   "spd": 120,
+   "spe": 140
+  },
+  "abilities": {
+   "0": "Insomnia"
+  },
+  "requiredItem": "Mewtwonite Y",
+  "requiredItems": [
+   "Mewtwonite Y"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Mewtwo",
+  "changesFrom": "Mewtwo",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 106,
+   "atk": 110,
+   "def": 90,
+   "spa": 154,
+   "spd": 90,
+   "spe": 130
+  },
+  "baseAbilities": {
+   "0": "Pressure",
+   "H": "Unnerve"
+  },
+  "tags": [
+   "Restricted Legendary"
+  ],
+  "item": {
+   "id": "mewtwonitey",
+   "num": 663,
+   "megaStone": {
+    "Mewtwo": "Mewtwo-Mega-Y"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 154,
+  "name": "Meganium-Mega",
+  "baseSpecies": "Meganium",
+  "forme": "Mega",
+  "id": "meganiummega",
+  "types": [
+   "Grass",
+   "Fairy"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 92,
+   "def": 115,
+   "spa": 143,
+   "spd": 115,
+   "spe": 80
+  },
+  "abilities": {
+   "0": "Mega Sol"
+  },
+  "requiredItem": "Meganiumite",
+  "requiredItems": [
+   "Meganiumite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Meganium",
+  "changesFrom": "Meganium",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Grass"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 82,
+   "def": 100,
+   "spa": 83,
+   "spd": 100,
+   "spe": 80
+  },
+  "baseAbilities": {
+   "0": "Overgrow",
+   "H": "Leaf Guard"
+  },
+  "tags": [],
+  "item": {
+   "id": "meganiumite",
+   "num": 2563,
+   "megaStone": {
+    "Meganium": "Meganium-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 160,
+  "name": "Feraligatr-Mega",
+  "baseSpecies": "Feraligatr",
+  "forme": "Mega",
+  "id": "feraligatrmega",
+  "types": [
+   "Water",
+   "Dragon"
+  ],
+  "baseStats": {
+   "hp": 85,
+   "atk": 160,
+   "def": 125,
+   "spa": 89,
+   "spd": 93,
+   "spe": 78
+  },
+  "abilities": {
+   "0": "Dragonize"
+  },
+  "requiredItem": "Feraligite",
+  "requiredItems": [
+   "Feraligite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Feraligatr",
+  "changesFrom": "Feraligatr",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Water"
+  ],
+  "baseStatsBase": {
+   "hp": 85,
+   "atk": 105,
+   "def": 100,
+   "spa": 79,
+   "spd": 83,
+   "spe": 78
+  },
+  "baseAbilities": {
+   "0": "Torrent",
+   "H": "Sheer Force"
+  },
+  "tags": [],
+  "item": {
+   "id": "feraligite",
+   "num": 2564,
+   "megaStone": {
+    "Feraligatr": "Feraligatr-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 181,
+  "name": "Ampharos-Mega",
+  "baseSpecies": "Ampharos",
+  "forme": "Mega",
+  "id": "ampharosmega",
+  "types": [
+   "Electric",
+   "Dragon"
+  ],
+  "baseStats": {
+   "hp": 90,
+   "atk": 95,
+   "def": 105,
+   "spa": 165,
+   "spd": 110,
+   "spe": 45
+  },
+  "abilities": {
+   "0": "Mold Breaker"
+  },
+  "requiredItem": "Ampharosite",
+  "requiredItems": [
+   "Ampharosite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Ampharos",
+  "changesFrom": "Ampharos",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Electric"
+  ],
+  "baseStatsBase": {
+   "hp": 90,
+   "atk": 75,
+   "def": 85,
+   "spa": 115,
+   "spd": 90,
+   "spe": 55
+  },
+  "baseAbilities": {
+   "0": "Static",
+   "H": "Plus"
+  },
+  "tags": [],
+  "item": {
+   "id": "ampharosite",
+   "num": 658,
+   "megaStone": {
+    "Ampharos": "Ampharos-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 208,
+  "name": "Steelix-Mega",
+  "baseSpecies": "Steelix",
+  "forme": "Mega",
+  "id": "steelixmega",
+  "types": [
+   "Steel",
+   "Ground"
+  ],
+  "baseStats": {
+   "hp": 75,
+   "atk": 125,
+   "def": 230,
+   "spa": 55,
+   "spd": 95,
+   "spe": 30
+  },
+  "abilities": {
+   "0": "Sand Force"
+  },
+  "requiredItem": "Steelixite",
+  "requiredItems": [
+   "Steelixite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Steelix",
+  "changesFrom": "Steelix",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Steel",
+   "Ground"
+  ],
+  "baseStatsBase": {
+   "hp": 75,
+   "atk": 85,
+   "def": 200,
+   "spa": 55,
+   "spd": 65,
+   "spe": 30
+  },
+  "baseAbilities": {
+   "0": "Rock Head",
+   "1": "Sturdy",
+   "H": "Sheer Force"
+  },
+  "tags": [],
+  "item": {
+   "id": "steelixite",
+   "num": 761,
+   "megaStone": {
+    "Steelix": "Steelix-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 212,
+  "name": "Scizor-Mega",
+  "baseSpecies": "Scizor",
+  "forme": "Mega",
+  "id": "scizormega",
+  "types": [
+   "Bug",
+   "Steel"
+  ],
+  "baseStats": {
+   "hp": 70,
+   "atk": 150,
+   "def": 140,
+   "spa": 65,
+   "spd": 100,
+   "spe": 75
+  },
+  "abilities": {
+   "0": "Technician"
+  },
+  "requiredItem": "Scizorite",
+  "requiredItems": [
+   "Scizorite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Scizor",
+  "changesFrom": "Scizor",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Bug",
+   "Steel"
+  ],
+  "baseStatsBase": {
+   "hp": 70,
+   "atk": 130,
+   "def": 100,
+   "spa": 55,
+   "spd": 80,
+   "spe": 65
+  },
+  "baseAbilities": {
+   "0": "Swarm",
+   "1": "Technician",
+   "H": "Light Metal"
+  },
+  "tags": [],
+  "item": {
+   "id": "scizorite",
+   "num": 670,
+   "megaStone": {
+    "Scizor": "Scizor-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 214,
+  "name": "Heracross-Mega",
+  "baseSpecies": "Heracross",
+  "forme": "Mega",
+  "id": "heracrossmega",
+  "types": [
+   "Bug",
+   "Fighting"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 185,
+   "def": 115,
+   "spa": 40,
+   "spd": 105,
+   "spe": 75
+  },
+  "abilities": {
+   "0": "Skill Link"
+  },
+  "requiredItem": "Heracronite",
+  "requiredItems": [
+   "Heracronite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Heracross",
+  "changesFrom": "Heracross",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Bug",
+   "Fighting"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 125,
+   "def": 75,
+   "spa": 40,
+   "spd": 95,
+   "spe": 85
+  },
+  "baseAbilities": {
+   "0": "Swarm",
+   "1": "Guts",
+   "H": "Moxie"
+  },
+  "tags": [],
+  "item": {
+   "id": "heracronite",
+   "num": 680,
+   "megaStone": {
+    "Heracross": "Heracross-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 227,
+  "name": "Skarmory-Mega",
+  "baseSpecies": "Skarmory",
+  "forme": "Mega",
+  "id": "skarmorymega",
+  "types": [
+   "Steel",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 65,
+   "atk": 140,
+   "def": 110,
+   "spa": 40,
+   "spd": 100,
+   "spe": 110
+  },
+  "abilities": {
+   "0": "Stalwart"
+  },
+  "requiredItem": "Skarmorite",
+  "requiredItems": [
+   "Skarmorite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Skarmory",
+  "changesFrom": "Skarmory",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Steel",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 65,
+   "atk": 80,
+   "def": 140,
+   "spa": 40,
+   "spd": 70,
+   "spe": 70
+  },
+  "baseAbilities": {
+   "0": "Keen Eye",
+   "1": "Sturdy",
+   "H": "Weak Armor"
+  },
+  "tags": [],
+  "item": {
+   "id": "skarmorite",
+   "num": 2565,
+   "megaStone": {
+    "Skarmory": "Skarmory-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 229,
+  "name": "Houndoom-Mega",
+  "baseSpecies": "Houndoom",
+  "forme": "Mega",
+  "id": "houndoommega",
+  "types": [
+   "Dark",
+   "Fire"
+  ],
+  "baseStats": {
+   "hp": 75,
+   "atk": 90,
+   "def": 90,
+   "spa": 140,
+   "spd": 90,
+   "spe": 115
+  },
+  "abilities": {
+   "0": "Solar Power"
+  },
+  "requiredItem": "Houndoominite",
+  "requiredItems": [
+   "Houndoominite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Houndoom",
+  "changesFrom": "Houndoom",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Dark",
+   "Fire"
+  ],
+  "baseStatsBase": {
+   "hp": 75,
+   "atk": 90,
+   "def": 50,
+   "spa": 110,
+   "spd": 80,
+   "spe": 95
+  },
+  "baseAbilities": {
+   "0": "Early Bird",
+   "1": "Flash Fire",
+   "H": "Unnerve"
+  },
+  "tags": [],
+  "item": {
+   "id": "houndoominite",
+   "num": 666,
+   "megaStone": {
+    "Houndoom": "Houndoom-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 248,
+  "name": "Tyranitar-Mega",
+  "baseSpecies": "Tyranitar",
+  "forme": "Mega",
+  "id": "tyranitarmega",
+  "types": [
+   "Rock",
+   "Dark"
+  ],
+  "baseStats": {
+   "hp": 100,
+   "atk": 164,
+   "def": 150,
+   "spa": 95,
+   "spd": 120,
+   "spe": 71
+  },
+  "abilities": {
+   "0": "Sand Stream"
+  },
+  "requiredItem": "Tyranitarite",
+  "requiredItems": [
+   "Tyranitarite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Tyranitar",
+  "changesFrom": "Tyranitar",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Rock",
+   "Dark"
+  ],
+  "baseStatsBase": {
+   "hp": 100,
+   "atk": 134,
+   "def": 110,
+   "spa": 95,
+   "spd": 100,
+   "spe": 61
+  },
+  "baseAbilities": {
+   "0": "Sand Stream",
+   "H": "Unnerve"
+  },
+  "tags": [],
+  "item": {
+   "id": "tyranitarite",
+   "num": 669,
+   "megaStone": {
+    "Tyranitar": "Tyranitar-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 254,
+  "name": "Sceptile-Mega",
+  "baseSpecies": "Sceptile",
+  "forme": "Mega",
+  "id": "sceptilemega",
+  "types": [
+   "Grass",
+   "Dragon"
+  ],
+  "baseStats": {
+   "hp": 70,
+   "atk": 110,
+   "def": 75,
+   "spa": 145,
+   "spd": 85,
+   "spe": 145
+  },
+  "abilities": {
+   "0": "Lightning Rod"
+  },
+  "requiredItem": "Sceptilite",
+  "requiredItems": [
+   "Sceptilite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Sceptile",
+  "changesFrom": "Sceptile",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Grass"
+  ],
+  "baseStatsBase": {
+   "hp": 70,
+   "atk": 85,
+   "def": 65,
+   "spa": 105,
+   "spd": 85,
+   "spe": 120
+  },
+  "baseAbilities": {
+   "0": "Overgrow",
+   "H": "Unburden"
+  },
+  "tags": [],
+  "item": {
+   "id": "sceptilite",
+   "num": 753,
+   "megaStone": {
+    "Sceptile": "Sceptile-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 257,
+  "name": "Blaziken-Mega",
+  "baseSpecies": "Blaziken",
+  "forme": "Mega",
+  "id": "blazikenmega",
+  "types": [
+   "Fire",
+   "Fighting"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 160,
+   "def": 80,
+   "spa": 130,
+   "spd": 80,
+   "spe": 100
+  },
+  "abilities": {
+   "0": "Speed Boost"
+  },
+  "requiredItem": "Blazikenite",
+  "requiredItems": [
+   "Blazikenite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Blaziken",
+  "changesFrom": "Blaziken",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Fire",
+   "Fighting"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 120,
+   "def": 70,
+   "spa": 110,
+   "spd": 70,
+   "spe": 80
+  },
+  "baseAbilities": {
+   "0": "Blaze",
+   "H": "Speed Boost"
+  },
+  "tags": [],
+  "item": {
+   "id": "blazikenite",
+   "num": 664,
+   "megaStone": {
+    "Blaziken": "Blaziken-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 260,
+  "name": "Swampert-Mega",
+  "baseSpecies": "Swampert",
+  "forme": "Mega",
+  "id": "swampertmega",
+  "types": [
+   "Water",
+   "Ground"
+  ],
+  "baseStats": {
+   "hp": 100,
+   "atk": 150,
+   "def": 110,
+   "spa": 95,
+   "spd": 110,
+   "spe": 70
+  },
+  "abilities": {
+   "0": "Swift Swim"
+  },
+  "requiredItem": "Swampertite",
+  "requiredItems": [
+   "Swampertite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Swampert",
+  "changesFrom": "Swampert",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Water",
+   "Ground"
+  ],
+  "baseStatsBase": {
+   "hp": 100,
+   "atk": 110,
+   "def": 90,
+   "spa": 85,
+   "spd": 90,
+   "spe": 60
+  },
+  "baseAbilities": {
+   "0": "Torrent",
+   "H": "Damp"
+  },
+  "tags": [],
+  "item": {
+   "id": "swampertite",
+   "num": 752,
+   "megaStone": {
+    "Swampert": "Swampert-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 282,
+  "name": "Gardevoir-Mega",
+  "baseSpecies": "Gardevoir",
+  "forme": "Mega",
+  "id": "gardevoirmega",
+  "types": [
+   "Psychic",
+   "Fairy"
+  ],
+  "baseStats": {
+   "hp": 68,
+   "atk": 85,
+   "def": 65,
+   "spa": 165,
+   "spd": 135,
+   "spe": 100
+  },
+  "abilities": {
+   "0": "Pixilate"
+  },
+  "requiredItem": "Gardevoirite",
+  "requiredItems": [
+   "Gardevoirite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Gardevoir",
+  "changesFrom": "Gardevoir",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Psychic",
+   "Fairy"
+  ],
+  "baseStatsBase": {
+   "hp": 68,
+   "atk": 65,
+   "def": 65,
+   "spa": 125,
+   "spd": 115,
+   "spe": 80
+  },
+  "baseAbilities": {
+   "0": "Synchronize",
+   "1": "Trace",
+   "H": "Telepathy"
+  },
+  "tags": [],
+  "item": {
+   "id": "gardevoirite",
+   "num": 657,
+   "megaStone": {
+    "Gardevoir": "Gardevoir-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 302,
+  "name": "Sableye-Mega",
+  "baseSpecies": "Sableye",
+  "forme": "Mega",
+  "id": "sableyemega",
+  "types": [
+   "Dark",
+   "Ghost"
+  ],
+  "baseStats": {
+   "hp": 50,
+   "atk": 85,
+   "def": 125,
+   "spa": 85,
+   "spd": 115,
+   "spe": 20
+  },
+  "abilities": {
+   "0": "Magic Bounce"
+  },
+  "requiredItem": "Sablenite",
+  "requiredItems": [
+   "Sablenite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Sableye",
+  "changesFrom": "Sableye",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Dark",
+   "Ghost"
+  ],
+  "baseStatsBase": {
+   "hp": 50,
+   "atk": 75,
+   "def": 75,
+   "spa": 65,
+   "spd": 65,
+   "spe": 50
+  },
+  "baseAbilities": {
+   "0": "Keen Eye",
+   "1": "Stall",
+   "H": "Prankster"
+  },
+  "tags": [],
+  "item": {
+   "id": "sablenite",
+   "num": 754,
+   "megaStone": {
+    "Sableye": "Sableye-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 303,
+  "name": "Mawile-Mega",
+  "baseSpecies": "Mawile",
+  "forme": "Mega",
+  "id": "mawilemega",
+  "types": [
+   "Steel",
+   "Fairy"
+  ],
+  "baseStats": {
+   "hp": 50,
+   "atk": 105,
+   "def": 125,
+   "spa": 55,
+   "spd": 95,
+   "spe": 50
+  },
+  "abilities": {
+   "0": "Huge Power"
+  },
+  "requiredItem": "Mawilite",
+  "requiredItems": [
+   "Mawilite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Mawile",
+  "changesFrom": "Mawile",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Steel",
+   "Fairy"
+  ],
+  "baseStatsBase": {
+   "hp": 50,
+   "atk": 85,
+   "def": 85,
+   "spa": 55,
+   "spd": 55,
+   "spe": 50
+  },
+  "baseAbilities": {
+   "0": "Hyper Cutter",
+   "1": "Intimidate",
+   "H": "Sheer Force"
+  },
+  "tags": [],
+  "item": {
+   "id": "mawilite",
+   "num": 681,
+   "megaStone": {
+    "Mawile": "Mawile-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 306,
+  "name": "Aggron-Mega",
+  "baseSpecies": "Aggron",
+  "forme": "Mega",
+  "id": "aggronmega",
+  "types": [
+   "Steel"
+  ],
+  "baseStats": {
+   "hp": 70,
+   "atk": 140,
+   "def": 230,
+   "spa": 60,
+   "spd": 80,
+   "spe": 50
+  },
+  "abilities": {
+   "0": "Filter"
+  },
+  "requiredItem": "Aggronite",
+  "requiredItems": [
+   "Aggronite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Aggron",
+  "changesFrom": "Aggron",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Steel",
+   "Rock"
+  ],
+  "baseStatsBase": {
+   "hp": 70,
+   "atk": 110,
+   "def": 180,
+   "spa": 60,
+   "spd": 60,
+   "spe": 50
+  },
+  "baseAbilities": {
+   "0": "Sturdy",
+   "1": "Rock Head",
+   "H": "Heavy Metal"
+  },
+  "tags": [],
+  "item": {
+   "id": "aggronite",
+   "num": 667,
+   "megaStone": {
+    "Aggron": "Aggron-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 308,
+  "name": "Medicham-Mega",
+  "baseSpecies": "Medicham",
+  "forme": "Mega",
+  "id": "medichammega",
+  "types": [
+   "Fighting",
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 60,
+   "atk": 100,
+   "def": 85,
+   "spa": 80,
+   "spd": 85,
+   "spe": 100
+  },
+  "abilities": {
+   "0": "Pure Power"
+  },
+  "requiredItem": "Medichamite",
+  "requiredItems": [
+   "Medichamite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Medicham",
+  "changesFrom": "Medicham",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Fighting",
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 60,
+   "atk": 60,
+   "def": 75,
+   "spa": 60,
+   "spd": 75,
+   "spe": 80
+  },
+  "baseAbilities": {
+   "0": "Pure Power",
+   "H": "Telepathy"
+  },
+  "tags": [],
+  "item": {
+   "id": "medichamite",
+   "num": 665,
+   "megaStone": {
+    "Medicham": "Medicham-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 310,
+  "name": "Manectric-Mega",
+  "baseSpecies": "Manectric",
+  "forme": "Mega",
+  "id": "manectricmega",
+  "types": [
+   "Electric"
+  ],
+  "baseStats": {
+   "hp": 70,
+   "atk": 75,
+   "def": 80,
+   "spa": 135,
+   "spd": 80,
+   "spe": 135
+  },
+  "abilities": {
+   "0": "Intimidate"
+  },
+  "requiredItem": "Manectite",
+  "requiredItems": [
+   "Manectite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Manectric",
+  "changesFrom": "Manectric",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Electric"
+  ],
+  "baseStatsBase": {
+   "hp": 70,
+   "atk": 75,
+   "def": 60,
+   "spa": 105,
+   "spd": 60,
+   "spe": 105
+  },
+  "baseAbilities": {
+   "0": "Static",
+   "1": "Lightning Rod",
+   "H": "Minus"
+  },
+  "tags": [],
+  "item": {
+   "id": "manectite",
+   "num": 682,
+   "megaStone": {
+    "Manectric": "Manectric-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 319,
+  "name": "Sharpedo-Mega",
+  "baseSpecies": "Sharpedo",
+  "forme": "Mega",
+  "id": "sharpedomega",
+  "types": [
+   "Water",
+   "Dark"
+  ],
+  "baseStats": {
+   "hp": 70,
+   "atk": 140,
+   "def": 70,
+   "spa": 110,
+   "spd": 65,
+   "spe": 105
+  },
+  "abilities": {
+   "0": "Strong Jaw"
+  },
+  "requiredItem": "Sharpedonite",
+  "requiredItems": [
+   "Sharpedonite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Sharpedo",
+  "changesFrom": "Sharpedo",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Water",
+   "Dark"
+  ],
+  "baseStatsBase": {
+   "hp": 70,
+   "atk": 120,
+   "def": 40,
+   "spa": 95,
+   "spd": 40,
+   "spe": 95
+  },
+  "baseAbilities": {
+   "0": "Rough Skin",
+   "H": "Speed Boost"
+  },
+  "tags": [],
+  "item": {
+   "id": "sharpedonite",
+   "num": 759,
+   "megaStone": {
+    "Sharpedo": "Sharpedo-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 323,
+  "name": "Camerupt-Mega",
+  "baseSpecies": "Camerupt",
+  "forme": "Mega",
+  "id": "cameruptmega",
+  "types": [
+   "Fire",
+   "Ground"
+  ],
+  "baseStats": {
+   "hp": 70,
+   "atk": 120,
+   "def": 100,
+   "spa": 145,
+   "spd": 105,
+   "spe": 20
+  },
+  "abilities": {
+   "0": "Sheer Force"
+  },
+  "requiredItem": "Cameruptite",
+  "requiredItems": [
+   "Cameruptite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Camerupt",
+  "changesFrom": "Camerupt",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Fire",
+   "Ground"
+  ],
+  "baseStatsBase": {
+   "hp": 70,
+   "atk": 100,
+   "def": 70,
+   "spa": 105,
+   "spd": 75,
+   "spe": 40
+  },
+  "baseAbilities": {
+   "0": "Magma Armor",
+   "1": "Solid Rock",
+   "H": "Anger Point"
+  },
+  "tags": [],
+  "item": {
+   "id": "cameruptite",
+   "num": 767,
+   "megaStone": {
+    "Camerupt": "Camerupt-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 334,
+  "name": "Altaria-Mega",
+  "baseSpecies": "Altaria",
+  "forme": "Mega",
+  "id": "altariamega",
+  "types": [
+   "Dragon",
+   "Fairy"
+  ],
+  "baseStats": {
+   "hp": 75,
+   "atk": 110,
+   "def": 110,
+   "spa": 110,
+   "spd": 105,
+   "spe": 80
+  },
+  "abilities": {
+   "0": "Pixilate"
+  },
+  "requiredItem": "Altarianite",
+  "requiredItems": [
+   "Altarianite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Altaria",
+  "changesFrom": "Altaria",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Dragon",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 75,
+   "atk": 70,
+   "def": 90,
+   "spa": 70,
+   "spd": 105,
+   "spe": 80
+  },
+  "baseAbilities": {
+   "0": "Natural Cure",
+   "H": "Cloud Nine"
+  },
+  "tags": [],
+  "item": {
+   "id": "altarianite",
+   "num": 755,
+   "megaStone": {
+    "Altaria": "Altaria-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 354,
+  "name": "Banette-Mega",
+  "baseSpecies": "Banette",
+  "forme": "Mega",
+  "id": "banettemega",
+  "types": [
+   "Ghost"
+  ],
+  "baseStats": {
+   "hp": 64,
+   "atk": 165,
+   "def": 75,
+   "spa": 93,
+   "spd": 83,
+   "spe": 75
+  },
+  "abilities": {
+   "0": "Prankster"
+  },
+  "requiredItem": "Banettite",
+  "requiredItems": [
+   "Banettite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Banette",
+  "changesFrom": "Banette",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Ghost"
+  ],
+  "baseStatsBase": {
+   "hp": 64,
+   "atk": 115,
+   "def": 65,
+   "spa": 83,
+   "spd": 63,
+   "spe": 65
+  },
+  "baseAbilities": {
+   "0": "Insomnia",
+   "1": "Frisk",
+   "H": "Cursed Body"
+  },
+  "tags": [],
+  "item": {
+   "id": "banettite",
+   "num": 668,
+   "megaStone": {
+    "Banette": "Banette-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 358,
+  "name": "Chimecho-Mega",
+  "baseSpecies": "Chimecho",
+  "forme": "Mega",
+  "id": "chimechomega",
+  "types": [
+   "Psychic",
+   "Steel"
+  ],
+  "baseStats": {
+   "hp": 75,
+   "atk": 50,
+   "def": 110,
+   "spa": 135,
+   "spd": 120,
+   "spe": 65
+  },
+  "abilities": {
+   "0": "Levitate"
+  },
+  "requiredItem": "Chimechite",
+  "requiredItems": [
+   "Chimechite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Chimecho",
+  "changesFrom": "Chimecho",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 75,
+   "atk": 50,
+   "def": 80,
+   "spa": 95,
+   "spd": 90,
+   "spe": 65
+  },
+  "baseAbilities": {
+   "0": "Levitate"
+  },
+  "tags": [],
+  "item": {
+   "id": "chimechite",
+   "num": 2637,
+   "megaStone": {
+    "Chimecho": "Chimecho-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 359,
+  "name": "Absol-Mega",
+  "baseSpecies": "Absol",
+  "forme": "Mega",
+  "id": "absolmega",
+  "types": [
+   "Dark"
+  ],
+  "baseStats": {
+   "hp": 65,
+   "atk": 150,
+   "def": 60,
+   "spa": 115,
+   "spd": 60,
+   "spe": 115
+  },
+  "abilities": {
+   "0": "Magic Bounce"
+  },
+  "requiredItem": "Absolite",
+  "requiredItems": [
+   "Absolite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Absol",
+  "changesFrom": "Absol",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Dark"
+  ],
+  "baseStatsBase": {
+   "hp": 65,
+   "atk": 130,
+   "def": 60,
+   "spa": 75,
+   "spd": 60,
+   "spe": 75
+  },
+  "baseAbilities": {
+   "0": "Pressure",
+   "1": "Super Luck",
+   "H": "Justified"
+  },
+  "tags": [],
+  "item": {
+   "id": "absolite",
+   "num": 677,
+   "megaStone": {
+    "Absol": "Absol-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 359,
+  "name": "Absol-Mega-Z",
+  "baseSpecies": "Absol",
+  "forme": "Mega-Z",
+  "id": "absolmegaz",
+  "types": [
+   "Dark",
+   "Ghost"
+  ],
+  "baseStats": {
+   "hp": 65,
+   "atk": 154,
+   "def": 60,
+   "spa": 75,
+   "spd": 60,
+   "spe": 151
+  },
+  "abilities": {
+   "0": "Sharpness"
+  },
+  "requiredItem": "Absolite Z",
+  "requiredItems": [
+   "Absolite Z"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Absol",
+  "changesFrom": "Absol",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dark"
+  ],
+  "baseStatsBase": {
+   "hp": 65,
+   "atk": 130,
+   "def": 60,
+   "spa": 75,
+   "spd": 60,
+   "spe": 75
+  },
+  "baseAbilities": {
+   "0": "Pressure",
+   "1": "Super Luck",
+   "H": "Justified"
+  },
+  "tags": [],
+  "item": {
+   "id": "absolitez",
+   "num": 2638,
+   "megaStone": {
+    "Absol": "Absol-Mega-Z"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 362,
+  "name": "Glalie-Mega",
+  "baseSpecies": "Glalie",
+  "forme": "Mega",
+  "id": "glaliemega",
+  "types": [
+   "Ice"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 120,
+   "def": 80,
+   "spa": 120,
+   "spd": 80,
+   "spe": 100
+  },
+  "abilities": {
+   "0": "Refrigerate"
+  },
+  "requiredItem": "Glalitite",
+  "requiredItems": [
+   "Glalitite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Glalie",
+  "changesFrom": "Glalie",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Ice"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 80,
+   "def": 80,
+   "spa": 80,
+   "spd": 80,
+   "spe": 80
+  },
+  "baseAbilities": {
+   "0": "Inner Focus",
+   "1": "Ice Body",
+   "H": "Moody"
+  },
+  "tags": [],
+  "item": {
+   "id": "glalitite",
+   "num": 763,
+   "megaStone": {
+    "Glalie": "Glalie-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 373,
+  "name": "Salamence-Mega",
+  "baseSpecies": "Salamence",
+  "forme": "Mega",
+  "id": "salamencemega",
+  "types": [
+   "Dragon",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 95,
+   "atk": 145,
+   "def": 130,
+   "spa": 120,
+   "spd": 90,
+   "spe": 120
+  },
+  "abilities": {
+   "0": "Aerilate"
+  },
+  "requiredItem": "Salamencite",
+  "requiredItems": [
+   "Salamencite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Salamence",
+  "changesFrom": "Salamence",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Dragon",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 95,
+   "atk": 135,
+   "def": 80,
+   "spa": 110,
+   "spd": 80,
+   "spe": 100
+  },
+  "baseAbilities": {
+   "0": "Intimidate",
+   "H": "Moxie"
+  },
+  "tags": [],
+  "item": {
+   "id": "salamencite",
+   "num": 769,
+   "megaStone": {
+    "Salamence": "Salamence-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 376,
+  "name": "Metagross-Mega",
+  "baseSpecies": "Metagross",
+  "forme": "Mega",
+  "id": "metagrossmega",
+  "types": [
+   "Steel",
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 145,
+   "def": 150,
+   "spa": 105,
+   "spd": 110,
+   "spe": 110
+  },
+  "abilities": {
+   "0": "Tough Claws"
+  },
+  "requiredItem": "Metagrossite",
+  "requiredItems": [
+   "Metagrossite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Metagross",
+  "changesFrom": "Metagross",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Steel",
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 135,
+   "def": 130,
+   "spa": 95,
+   "spd": 90,
+   "spe": 70
+  },
+  "baseAbilities": {
+   "0": "Clear Body",
+   "H": "Light Metal"
+  },
+  "tags": [],
+  "item": {
+   "id": "metagrossite",
+   "num": 758,
+   "megaStone": {
+    "Metagross": "Metagross-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 380,
+  "name": "Latias-Mega",
+  "baseSpecies": "Latias",
+  "forme": "Mega",
+  "id": "latiasmega",
+  "types": [
+   "Dragon",
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 100,
+   "def": 120,
+   "spa": 140,
+   "spd": 150,
+   "spe": 110
+  },
+  "abilities": {
+   "0": "Levitate"
+  },
+  "requiredItem": "Latiasite",
+  "requiredItems": [
+   "Latiasite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Latias",
+  "changesFrom": "Latias",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Dragon",
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 80,
+   "def": 90,
+   "spa": 110,
+   "spd": 130,
+   "spe": 110
+  },
+  "baseAbilities": {
+   "0": "Levitate"
+  },
+  "tags": [
+   "Sub-Legendary"
+  ],
+  "item": {
+   "id": "latiasite",
+   "num": 684,
+   "megaStone": {
+    "Latias": "Latias-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 381,
+  "name": "Latios-Mega",
+  "baseSpecies": "Latios",
+  "forme": "Mega",
+  "id": "latiosmega",
+  "types": [
+   "Dragon",
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 130,
+   "def": 100,
+   "spa": 160,
+   "spd": 120,
+   "spe": 110
+  },
+  "abilities": {
+   "0": "Levitate"
+  },
+  "requiredItem": "Latiosite",
+  "requiredItems": [
+   "Latiosite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Latios",
+  "changesFrom": "Latios",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Dragon",
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 90,
+   "def": 80,
+   "spa": 130,
+   "spd": 110,
+   "spe": 110
+  },
+  "baseAbilities": {
+   "0": "Levitate"
+  },
+  "tags": [
+   "Sub-Legendary"
+  ],
+  "item": {
+   "id": "latiosite",
+   "num": 685,
+   "megaStone": {
+    "Latios": "Latios-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 382,
+  "name": "Kyogre-Primal",
+  "baseSpecies": "Kyogre",
+  "forme": "Primal",
+  "id": "kyogreprimal",
+  "types": [
+   "Water"
+  ],
+  "baseStats": {
+   "hp": 100,
+   "atk": 150,
+   "def": 90,
+   "spa": 180,
+   "spd": 160,
+   "spe": 90
+  },
+  "abilities": {
+   "0": "Primordial Sea"
+  },
+  "requiredItem": "Blue Orb",
+  "requiredItems": [
+   "Blue Orb"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Kyogre",
+  "changesFrom": "Kyogre",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Water"
+  ],
+  "baseStatsBase": {
+   "hp": 100,
+   "atk": 100,
+   "def": 90,
+   "spa": 150,
+   "spd": 140,
+   "spe": 90
+  },
+  "baseAbilities": {
+   "0": "Drizzle"
+  },
+  "tags": [
+   "Restricted Legendary"
+  ],
+  "item": {
+   "id": "blueorb",
+   "num": 535,
+   "megaStone": null,
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 383,
+  "name": "Groudon-Primal",
+  "baseSpecies": "Groudon",
+  "forme": "Primal",
+  "id": "groudonprimal",
+  "types": [
+   "Ground",
+   "Fire"
+  ],
+  "baseStats": {
+   "hp": 100,
+   "atk": 180,
+   "def": 160,
+   "spa": 150,
+   "spd": 90,
+   "spe": 90
+  },
+  "abilities": {
+   "0": "Desolate Land"
+  },
+  "requiredItem": "Red Orb",
+  "requiredItems": [
+   "Red Orb"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Groudon",
+  "changesFrom": "Groudon",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Ground"
+  ],
+  "baseStatsBase": {
+   "hp": 100,
+   "atk": 150,
+   "def": 140,
+   "spa": 100,
+   "spd": 90,
+   "spe": 90
+  },
+  "baseAbilities": {
+   "0": "Drought"
+  },
+  "tags": [
+   "Restricted Legendary"
+  ],
+  "item": {
+   "id": "redorb",
+   "num": 534,
+   "megaStone": null,
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 384,
+  "name": "Rayquaza-Mega",
+  "baseSpecies": "Rayquaza",
+  "forme": "Mega",
+  "id": "rayquazamega",
+  "types": [
+   "Dragon",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 105,
+   "atk": 180,
+   "def": 100,
+   "spa": 180,
+   "spd": 100,
+   "spe": 115
+  },
+  "abilities": {
+   "0": "Delta Stream"
+  },
+  "requiredItem": null,
+  "requiredItems": null,
+  "requiredMove": "Dragon Ascent",
+  "battleOnly": "Rayquaza",
+  "changesFrom": "Rayquaza",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Dragon",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 105,
+   "atk": 150,
+   "def": 90,
+   "spa": 150,
+   "spd": 90,
+   "spe": 95
+  },
+  "baseAbilities": {
+   "0": "Air Lock"
+  },
+  "tags": [
+   "Restricted Legendary"
+  ],
+  "item": null
+ },
+ {
+  "num": 398,
+  "name": "Staraptor-Mega",
+  "baseSpecies": "Staraptor",
+  "forme": "Mega",
+  "id": "staraptormega",
+  "types": [
+   "Fighting",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 85,
+   "atk": 140,
+   "def": 100,
+   "spa": 60,
+   "spd": 90,
+   "spe": 110
+  },
+  "abilities": {
+   "0": "Contrary"
+  },
+  "requiredItem": "Staraptite",
+  "requiredItems": [
+   "Staraptite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Staraptor",
+  "changesFrom": "Staraptor",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Normal",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 85,
+   "atk": 120,
+   "def": 70,
+   "spa": 50,
+   "spd": 60,
+   "spe": 100
+  },
+  "baseAbilities": {
+   "0": "Intimidate",
+   "H": "Reckless"
+  },
+  "tags": [],
+  "item": {
+   "id": "staraptite",
+   "num": 2639,
+   "megaStone": {
+    "Staraptor": "Staraptor-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 428,
+  "name": "Lopunny-Mega",
+  "baseSpecies": "Lopunny",
+  "forme": "Mega",
+  "id": "lopunnymega",
+  "types": [
+   "Normal",
+   "Fighting"
+  ],
+  "baseStats": {
+   "hp": 65,
+   "atk": 136,
+   "def": 94,
+   "spa": 54,
+   "spd": 96,
+   "spe": 135
+  },
+  "abilities": {
+   "0": "Scrappy"
+  },
+  "requiredItem": "Lopunnite",
+  "requiredItems": [
+   "Lopunnite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Lopunny",
+  "changesFrom": "Lopunny",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Normal"
+  ],
+  "baseStatsBase": {
+   "hp": 65,
+   "atk": 76,
+   "def": 84,
+   "spa": 54,
+   "spd": 96,
+   "spe": 105
+  },
+  "baseAbilities": {
+   "0": "Cute Charm",
+   "1": "Klutz",
+   "H": "Limber"
+  },
+  "tags": [],
+  "item": {
+   "id": "lopunnite",
+   "num": 768,
+   "megaStone": {
+    "Lopunny": "Lopunny-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 445,
+  "name": "Garchomp-Mega",
+  "baseSpecies": "Garchomp",
+  "forme": "Mega",
+  "id": "garchompmega",
+  "types": [
+   "Dragon",
+   "Ground"
+  ],
+  "baseStats": {
+   "hp": 108,
+   "atk": 170,
+   "def": 115,
+   "spa": 120,
+   "spd": 95,
+   "spe": 92
+  },
+  "abilities": {
+   "0": "Sand Force"
+  },
+  "requiredItem": "Garchompite",
+  "requiredItems": [
+   "Garchompite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Garchomp",
+  "changesFrom": "Garchomp",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Dragon",
+   "Ground"
+  ],
+  "baseStatsBase": {
+   "hp": 108,
+   "atk": 130,
+   "def": 95,
+   "spa": 80,
+   "spd": 85,
+   "spe": 102
+  },
+  "baseAbilities": {
+   "0": "Sand Veil",
+   "H": "Rough Skin"
+  },
+  "tags": [],
+  "item": {
+   "id": "garchompite",
+   "num": 683,
+   "megaStone": {
+    "Garchomp": "Garchomp-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 445,
+  "name": "Garchomp-Mega-Z",
+  "baseSpecies": "Garchomp",
+  "forme": "Mega-Z",
+  "id": "garchompmegaz",
+  "types": [
+   "Dragon"
+  ],
+  "baseStats": {
+   "hp": 108,
+   "atk": 130,
+   "def": 85,
+   "spa": 141,
+   "spd": 85,
+   "spe": 151
+  },
+  "abilities": {
+   "0": "Levitate"
+  },
+  "requiredItem": "Garchompite Z",
+  "requiredItems": [
+   "Garchompite Z"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Garchomp",
+  "changesFrom": "Garchomp",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dragon",
+   "Ground"
+  ],
+  "baseStatsBase": {
+   "hp": 108,
+   "atk": 130,
+   "def": 95,
+   "spa": 80,
+   "spd": 85,
+   "spe": 102
+  },
+  "baseAbilities": {
+   "0": "Sand Veil",
+   "H": "Rough Skin"
+  },
+  "tags": [],
+  "item": {
+   "id": "garchompitez",
+   "num": 2640,
+   "megaStone": {
+    "Garchomp": "Garchomp-Mega-Z"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 448,
+  "name": "Lucario-Mega",
+  "baseSpecies": "Lucario",
+  "forme": "Mega",
+  "id": "lucariomega",
+  "types": [
+   "Fighting",
+   "Steel"
+  ],
+  "baseStats": {
+   "hp": 70,
+   "atk": 145,
+   "def": 88,
+   "spa": 140,
+   "spd": 70,
+   "spe": 112
+  },
+  "abilities": {
+   "0": "Adaptability"
+  },
+  "requiredItem": "Lucarionite",
+  "requiredItems": [
+   "Lucarionite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Lucario",
+  "changesFrom": "Lucario",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Fighting",
+   "Steel"
+  ],
+  "baseStatsBase": {
+   "hp": 70,
+   "atk": 110,
+   "def": 70,
+   "spa": 115,
+   "spd": 70,
+   "spe": 90
+  },
+  "baseAbilities": {
+   "0": "Steadfast",
+   "1": "Inner Focus",
+   "H": "Justified"
+  },
+  "tags": [],
+  "item": {
+   "id": "lucarionite",
+   "num": 673,
+   "megaStone": {
+    "Lucario": "Lucario-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 448,
+  "name": "Lucario-Mega-Z",
+  "baseSpecies": "Lucario",
+  "forme": "Mega-Z",
+  "id": "lucariomegaz",
+  "types": [
+   "Fighting",
+   "Steel"
+  ],
+  "baseStats": {
+   "hp": 70,
+   "atk": 100,
+   "def": 70,
+   "spa": 164,
+   "spd": 70,
+   "spe": 151
+  },
+  "abilities": {
+   "0": "Aura Guard"
+  },
+  "requiredItem": "Lucarionite Z",
+  "requiredItems": [
+   "Lucarionite Z"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Lucario",
+  "changesFrom": "Lucario",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Fighting",
+   "Steel"
+  ],
+  "baseStatsBase": {
+   "hp": 70,
+   "atk": 110,
+   "def": 70,
+   "spa": 115,
+   "spd": 70,
+   "spe": 90
+  },
+  "baseAbilities": {
+   "0": "Steadfast",
+   "1": "Inner Focus",
+   "H": "Justified"
+  },
+  "tags": [],
+  "item": {
+   "id": "lucarionitez",
+   "num": 2641,
+   "megaStone": {
+    "Lucario": "Lucario-Mega-Z"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 460,
+  "name": "Abomasnow-Mega",
+  "baseSpecies": "Abomasnow",
+  "forme": "Mega",
+  "id": "abomasnowmega",
+  "types": [
+   "Grass",
+   "Ice"
+  ],
+  "baseStats": {
+   "hp": 90,
+   "atk": 132,
+   "def": 105,
+   "spa": 132,
+   "spd": 105,
+   "spe": 30
+  },
+  "abilities": {
+   "0": "Snow Warning"
+  },
+  "requiredItem": "Abomasite",
+  "requiredItems": [
+   "Abomasite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Abomasnow",
+  "changesFrom": "Abomasnow",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Grass",
+   "Ice"
+  ],
+  "baseStatsBase": {
+   "hp": 90,
+   "atk": 92,
+   "def": 75,
+   "spa": 92,
+   "spd": 85,
+   "spe": 60
+  },
+  "baseAbilities": {
+   "0": "Snow Warning",
+   "H": "Soundproof"
+  },
+  "tags": [],
+  "item": {
+   "id": "abomasite",
+   "num": 674,
+   "megaStone": {
+    "Abomasnow": "Abomasnow-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 475,
+  "name": "Gallade-Mega",
+  "baseSpecies": "Gallade",
+  "forme": "Mega",
+  "id": "gallademega",
+  "types": [
+   "Psychic",
+   "Fighting"
+  ],
+  "baseStats": {
+   "hp": 68,
+   "atk": 165,
+   "def": 95,
+   "spa": 65,
+   "spd": 115,
+   "spe": 110
+  },
+  "abilities": {
+   "0": "Inner Focus"
+  },
+  "requiredItem": "Galladite",
+  "requiredItems": [
+   "Galladite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Gallade",
+  "changesFrom": "Gallade",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Psychic",
+   "Fighting"
+  ],
+  "baseStatsBase": {
+   "hp": 68,
+   "atk": 125,
+   "def": 65,
+   "spa": 65,
+   "spd": 115,
+   "spe": 80
+  },
+  "baseAbilities": {
+   "0": "Steadfast",
+   "1": "Sharpness",
+   "H": "Justified"
+  },
+  "tags": [],
+  "item": {
+   "id": "galladite",
+   "num": 756,
+   "megaStone": {
+    "Gallade": "Gallade-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 478,
+  "name": "Froslass-Mega",
+  "baseSpecies": "Froslass",
+  "forme": "Mega",
+  "id": "froslassmega",
+  "types": [
+   "Ice",
+   "Ghost"
+  ],
+  "baseStats": {
+   "hp": 70,
+   "atk": 80,
+   "def": 70,
+   "spa": 140,
+   "spd": 100,
+   "spe": 120
+  },
+  "abilities": {
+   "0": "Snow Warning"
+  },
+  "requiredItem": "Froslassite",
+  "requiredItems": [
+   "Froslassite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Froslass",
+  "changesFrom": "Froslass",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Ice",
+   "Ghost"
+  ],
+  "baseStatsBase": {
+   "hp": 70,
+   "atk": 80,
+   "def": 70,
+   "spa": 80,
+   "spd": 70,
+   "spe": 110
+  },
+  "baseAbilities": {
+   "0": "Snow Cloak",
+   "H": "Cursed Body"
+  },
+  "tags": [],
+  "item": {
+   "id": "froslassite",
+   "num": 2566,
+   "megaStone": {
+    "Froslass": "Froslass-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 485,
+  "name": "Heatran-Mega",
+  "baseSpecies": "Heatran",
+  "forme": "Mega",
+  "id": "heatranmega",
+  "types": [
+   "Fire",
+   "Steel"
+  ],
+  "baseStats": {
+   "hp": 91,
+   "atk": 120,
+   "def": 106,
+   "spa": 175,
+   "spd": 141,
+   "spe": 67
+  },
+  "abilities": {
+   "0": "Flash Fire",
+   "H": "Flame Body"
+  },
+  "requiredItem": "Heatranite",
+  "requiredItems": [
+   "Heatranite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Heatran",
+  "changesFrom": "Heatran",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Fire",
+   "Steel"
+  ],
+  "baseStatsBase": {
+   "hp": 91,
+   "atk": 90,
+   "def": 106,
+   "spa": 130,
+   "spd": 106,
+   "spe": 77
+  },
+  "baseAbilities": {
+   "0": "Flash Fire",
+   "H": "Flame Body"
+  },
+  "tags": [
+   "Sub-Legendary"
+  ],
+  "item": {
+   "id": "heatranite",
+   "num": 2567,
+   "megaStone": {
+    "Heatran": "Heatran-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 491,
+  "name": "Darkrai-Mega",
+  "baseSpecies": "Darkrai",
+  "forme": "Mega",
+  "id": "darkraimega",
+  "types": [
+   "Dark"
+  ],
+  "baseStats": {
+   "hp": 70,
+   "atk": 120,
+   "def": 130,
+   "spa": 165,
+   "spd": 130,
+   "spe": 85
+  },
+  "abilities": {
+   "0": "Bad Dreams"
+  },
+  "requiredItem": "Darkranite",
+  "requiredItems": [
+   "Darkranite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Darkrai",
+  "changesFrom": "Darkrai",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dark"
+  ],
+  "baseStatsBase": {
+   "hp": 70,
+   "atk": 90,
+   "def": 90,
+   "spa": 135,
+   "spd": 90,
+   "spe": 125
+  },
+  "baseAbilities": {
+   "0": "Bad Dreams"
+  },
+  "tags": [
+   "Mythical"
+  ],
+  "item": {
+   "id": "darkranite",
+   "num": 2568,
+   "megaStone": {
+    "Darkrai": "Darkrai-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 500,
+  "name": "Emboar-Mega",
+  "baseSpecies": "Emboar",
+  "forme": "Mega",
+  "id": "emboarmega",
+  "types": [
+   "Fire",
+   "Fighting"
+  ],
+  "baseStats": {
+   "hp": 110,
+   "atk": 148,
+   "def": 75,
+   "spa": 110,
+   "spd": 110,
+   "spe": 75
+  },
+  "abilities": {
+   "0": "Mold Breaker"
+  },
+  "requiredItem": "Emboarite",
+  "requiredItems": [
+   "Emboarite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Emboar",
+  "changesFrom": "Emboar",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Fire",
+   "Fighting"
+  ],
+  "baseStatsBase": {
+   "hp": 110,
+   "atk": 123,
+   "def": 65,
+   "spa": 100,
+   "spd": 65,
+   "spe": 65
+  },
+  "baseAbilities": {
+   "0": "Blaze",
+   "H": "Reckless"
+  },
+  "tags": [],
+  "item": {
+   "id": "emboarite",
+   "num": 2569,
+   "megaStone": {
+    "Emboar": "Emboar-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 530,
+  "name": "Excadrill-Mega",
+  "baseSpecies": "Excadrill",
+  "forme": "Mega",
+  "id": "excadrillmega",
+  "types": [
+   "Ground",
+   "Steel"
+  ],
+  "baseStats": {
+   "hp": 110,
+   "atk": 165,
+   "def": 100,
+   "spa": 65,
+   "spd": 65,
+   "spe": 103
+  },
+  "abilities": {
+   "0": "Piercing Drill"
+  },
+  "requiredItem": "Excadrite",
+  "requiredItems": [
+   "Excadrite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Excadrill",
+  "changesFrom": "Excadrill",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Ground",
+   "Steel"
+  ],
+  "baseStatsBase": {
+   "hp": 110,
+   "atk": 135,
+   "def": 60,
+   "spa": 50,
+   "spd": 65,
+   "spe": 88
+  },
+  "baseAbilities": {
+   "0": "Sand Rush",
+   "1": "Sand Force",
+   "H": "Mold Breaker"
+  },
+  "tags": [],
+  "item": {
+   "id": "excadrite",
+   "num": 2570,
+   "megaStone": {
+    "Excadrill": "Excadrill-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 531,
+  "name": "Audino-Mega",
+  "baseSpecies": "Audino",
+  "forme": "Mega",
+  "id": "audinomega",
+  "types": [
+   "Normal",
+   "Fairy"
+  ],
+  "baseStats": {
+   "hp": 103,
+   "atk": 60,
+   "def": 126,
+   "spa": 80,
+   "spd": 126,
+   "spe": 50
+  },
+  "abilities": {
+   "0": "Healer"
+  },
+  "requiredItem": "Audinite",
+  "requiredItems": [
+   "Audinite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Audino",
+  "changesFrom": "Audino",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Normal"
+  ],
+  "baseStatsBase": {
+   "hp": 103,
+   "atk": 60,
+   "def": 86,
+   "spa": 60,
+   "spd": 86,
+   "spe": 50
+  },
+  "baseAbilities": {
+   "0": "Healer",
+   "1": "Regenerator",
+   "H": "Klutz"
+  },
+  "tags": [],
+  "item": {
+   "id": "audinite",
+   "num": 757,
+   "megaStone": {
+    "Audino": "Audino-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 545,
+  "name": "Scolipede-Mega",
+  "baseSpecies": "Scolipede",
+  "forme": "Mega",
+  "id": "scolipedemega",
+  "types": [
+   "Bug",
+   "Poison"
+  ],
+  "baseStats": {
+   "hp": 60,
+   "atk": 140,
+   "def": 149,
+   "spa": 75,
+   "spd": 99,
+   "spe": 62
+  },
+  "abilities": {
+   "0": "Shell Armor"
+  },
+  "requiredItem": "Scolipite",
+  "requiredItems": [
+   "Scolipite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Scolipede",
+  "changesFrom": "Scolipede",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Bug",
+   "Poison"
+  ],
+  "baseStatsBase": {
+   "hp": 60,
+   "atk": 100,
+   "def": 89,
+   "spa": 55,
+   "spd": 69,
+   "spe": 112
+  },
+  "baseAbilities": {
+   "0": "Poison Point",
+   "1": "Swarm",
+   "H": "Speed Boost"
+  },
+  "tags": [],
+  "item": {
+   "id": "scolipite",
+   "num": 2571,
+   "megaStone": {
+    "Scolipede": "Scolipede-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 560,
+  "name": "Scrafty-Mega",
+  "baseSpecies": "Scrafty",
+  "forme": "Mega",
+  "id": "scraftymega",
+  "types": [
+   "Dark",
+   "Fighting"
+  ],
+  "baseStats": {
+   "hp": 65,
+   "atk": 130,
+   "def": 135,
+   "spa": 55,
+   "spd": 135,
+   "spe": 68
+  },
+  "abilities": {
+   "0": "Intimidate"
+  },
+  "requiredItem": "Scraftinite",
+  "requiredItems": [
+   "Scraftinite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Scrafty",
+  "changesFrom": "Scrafty",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dark",
+   "Fighting"
+  ],
+  "baseStatsBase": {
+   "hp": 65,
+   "atk": 90,
+   "def": 115,
+   "spa": 45,
+   "spd": 115,
+   "spe": 58
+  },
+  "baseAbilities": {
+   "0": "Shed Skin",
+   "1": "Moxie",
+   "H": "Intimidate"
+  },
+  "tags": [],
+  "item": {
+   "id": "scraftinite",
+   "num": 2572,
+   "megaStone": {
+    "Scrafty": "Scrafty-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 604,
+  "name": "Eelektross-Mega",
+  "baseSpecies": "Eelektross",
+  "forme": "Mega",
+  "id": "eelektrossmega",
+  "types": [
+   "Electric"
+  ],
+  "baseStats": {
+   "hp": 85,
+   "atk": 145,
+   "def": 80,
+   "spa": 135,
+   "spd": 90,
+   "spe": 80
+  },
+  "abilities": {
+   "0": "Eelevate"
+  },
+  "requiredItem": "Eelektrossite",
+  "requiredItems": [
+   "Eelektrossite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Eelektross",
+  "changesFrom": "Eelektross",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Electric"
+  ],
+  "baseStatsBase": {
+   "hp": 85,
+   "atk": 115,
+   "def": 80,
+   "spa": 105,
+   "spd": 80,
+   "spe": 50
+  },
+  "baseAbilities": {
+   "0": "Levitate"
+  },
+  "tags": [],
+  "item": {
+   "id": "eelektrossite",
+   "num": 2573,
+   "megaStone": {
+    "Eelektross": "Eelektross-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 609,
+  "name": "Chandelure-Mega",
+  "baseSpecies": "Chandelure",
+  "forme": "Mega",
+  "id": "chandeluremega",
+  "types": [
+   "Ghost",
+   "Fire"
+  ],
+  "baseStats": {
+   "hp": 60,
+   "atk": 75,
+   "def": 110,
+   "spa": 175,
+   "spd": 110,
+   "spe": 90
+  },
+  "abilities": {
+   "0": "Infiltrator"
+  },
+  "requiredItem": "Chandelurite",
+  "requiredItems": [
+   "Chandelurite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Chandelure",
+  "changesFrom": "Chandelure",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Ghost",
+   "Fire"
+  ],
+  "baseStatsBase": {
+   "hp": 60,
+   "atk": 55,
+   "def": 90,
+   "spa": 145,
+   "spd": 90,
+   "spe": 80
+  },
+  "baseAbilities": {
+   "0": "Flash Fire",
+   "1": "Flame Body",
+   "H": "Infiltrator"
+  },
+  "tags": [],
+  "item": {
+   "id": "chandelurite",
+   "num": 2574,
+   "megaStone": {
+    "Chandelure": "Chandelure-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 623,
+  "name": "Golurk-Mega",
+  "baseSpecies": "Golurk",
+  "forme": "Mega",
+  "id": "golurkmega",
+  "types": [
+   "Ground",
+   "Ghost"
+  ],
+  "baseStats": {
+   "hp": 89,
+   "atk": 159,
+   "def": 105,
+   "spa": 70,
+   "spd": 105,
+   "spe": 55
+  },
+  "abilities": {
+   "0": "Unseen Fist"
+  },
+  "requiredItem": "Golurkite",
+  "requiredItems": [
+   "Golurkite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Golurk",
+  "changesFrom": "Golurk",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Ground",
+   "Ghost"
+  ],
+  "baseStatsBase": {
+   "hp": 89,
+   "atk": 124,
+   "def": 80,
+   "spa": 55,
+   "spd": 80,
+   "spe": 55
+  },
+  "baseAbilities": {
+   "0": "Iron Fist",
+   "1": "Klutz",
+   "H": "No Guard"
+  },
+  "tags": [],
+  "item": {
+   "id": "golurkite",
+   "num": 2642,
+   "megaStone": {
+    "Golurk": "Golurk-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 652,
+  "name": "Chesnaught-Mega",
+  "baseSpecies": "Chesnaught",
+  "forme": "Mega",
+  "id": "chesnaughtmega",
+  "types": [
+   "Grass",
+   "Fighting"
+  ],
+  "baseStats": {
+   "hp": 88,
+   "atk": 137,
+   "def": 172,
+   "spa": 74,
+   "spd": 115,
+   "spe": 44
+  },
+  "abilities": {
+   "0": "Bulletproof"
+  },
+  "requiredItem": "Chesnaughtite",
+  "requiredItems": [
+   "Chesnaughtite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Chesnaught",
+  "changesFrom": "Chesnaught",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Grass",
+   "Fighting"
+  ],
+  "baseStatsBase": {
+   "hp": 88,
+   "atk": 107,
+   "def": 122,
+   "spa": 74,
+   "spd": 75,
+   "spe": 64
+  },
+  "baseAbilities": {
+   "0": "Overgrow",
+   "H": "Bulletproof"
+  },
+  "tags": [],
+  "item": {
+   "id": "chesnaughtite",
+   "num": 2575,
+   "megaStone": {
+    "Chesnaught": "Chesnaught-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 655,
+  "name": "Delphox-Mega",
+  "baseSpecies": "Delphox",
+  "forme": "Mega",
+  "id": "delphoxmega",
+  "types": [
+   "Fire",
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 75,
+   "atk": 69,
+   "def": 72,
+   "spa": 159,
+   "spd": 125,
+   "spe": 134
+  },
+  "abilities": {
+   "0": "Levitate"
+  },
+  "requiredItem": "Delphoxite",
+  "requiredItems": [
+   "Delphoxite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Delphox",
+  "changesFrom": "Delphox",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Fire",
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 75,
+   "atk": 69,
+   "def": 72,
+   "spa": 114,
+   "spd": 100,
+   "spe": 104
+  },
+  "baseAbilities": {
+   "0": "Blaze",
+   "H": "Magician"
+  },
+  "tags": [],
+  "item": {
+   "id": "delphoxite",
+   "num": 2576,
+   "megaStone": {
+    "Delphox": "Delphox-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 658,
+  "name": "Greninja-Mega",
+  "baseSpecies": "Greninja",
+  "forme": "Mega",
+  "id": "greninjamega",
+  "types": [
+   "Water",
+   "Dark"
+  ],
+  "baseStats": {
+   "hp": 72,
+   "atk": 125,
+   "def": 77,
+   "spa": 133,
+   "spd": 81,
+   "spe": 142
+  },
+  "abilities": {
+   "0": "Protean"
+  },
+  "requiredItem": "Greninjite",
+  "requiredItems": [
+   "Greninjite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Greninja",
+  "changesFrom": "Greninja",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Water",
+   "Dark"
+  ],
+  "baseStatsBase": {
+   "hp": 72,
+   "atk": 95,
+   "def": 67,
+   "spa": 103,
+   "spd": 71,
+   "spe": 122
+  },
+  "baseAbilities": {
+   "0": "Torrent",
+   "H": "Protean",
+   "S": "Battle Bond"
+  },
+  "tags": [],
+  "item": {
+   "id": "greninjite",
+   "num": 2577,
+   "megaStone": {
+    "Greninja": "Greninja-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 668,
+  "name": "Pyroar-Mega",
+  "baseSpecies": "Pyroar",
+  "forme": "Mega",
+  "id": "pyroarmega",
+  "types": [
+   "Fire",
+   "Normal"
+  ],
+  "baseStats": {
+   "hp": 86,
+   "atk": 88,
+   "def": 92,
+   "spa": 129,
+   "spd": 86,
+   "spe": 126
+  },
+  "abilities": {
+   "0": "Fire Mane"
+  },
+  "requiredItem": "Pyroarite",
+  "requiredItems": [
+   "Pyroarite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Pyroar",
+  "changesFrom": "Pyroar",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Fire",
+   "Normal"
+  ],
+  "baseStatsBase": {
+   "hp": 86,
+   "atk": 68,
+   "def": 72,
+   "spa": 109,
+   "spd": 66,
+   "spe": 106
+  },
+  "baseAbilities": {
+   "0": "Rivalry",
+   "1": "Unnerve",
+   "H": "Moxie"
+  },
+  "tags": [],
+  "item": {
+   "id": "pyroarite",
+   "num": 2578,
+   "megaStone": {
+    "Pyroar": "Pyroar-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 670,
+  "name": "Floette-Mega",
+  "baseSpecies": "Floette",
+  "forme": "Mega",
+  "id": "floettemega",
+  "types": [
+   "Fairy"
+  ],
+  "baseStats": {
+   "hp": 74,
+   "atk": 85,
+   "def": 87,
+   "spa": 155,
+   "spd": 148,
+   "spe": 102
+  },
+  "abilities": {
+   "0": "Fairy Aura"
+  },
+  "requiredItem": "Floettite",
+  "requiredItems": [
+   "Floettite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Floette-Eternal",
+  "changesFrom": "Floette-Eternal",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Fairy"
+  ],
+  "baseStatsBase": {
+   "hp": 54,
+   "atk": 45,
+   "def": 47,
+   "spa": 75,
+   "spd": 98,
+   "spe": 52
+  },
+  "baseAbilities": {
+   "0": "Flower Veil",
+   "H": "Symbiosis"
+  },
+  "tags": [],
+  "item": {
+   "id": "floettite",
+   "num": 2579,
+   "megaStone": {
+    "Floette-Eternal": "Floette-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 678,
+  "name": "Meowstic-M-Mega",
+  "baseSpecies": "Meowstic",
+  "forme": "M-Mega",
+  "id": "meowsticmmega",
+  "types": [
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 74,
+   "atk": 48,
+   "def": 76,
+   "spa": 143,
+   "spd": 101,
+   "spe": 124
+  },
+  "abilities": {
+   "0": "Trace"
+  },
+  "requiredItem": "Meowsticite",
+  "requiredItems": [
+   "Meowsticite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Meowstic",
+  "changesFrom": "Meowstic",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 74,
+   "atk": 48,
+   "def": 76,
+   "spa": 83,
+   "spd": 81,
+   "spe": 104
+  },
+  "baseAbilities": {
+   "0": "Keen Eye",
+   "1": "Infiltrator",
+   "H": "Prankster"
+  },
+  "tags": [],
+  "item": {
+   "id": "meowsticite",
+   "num": 2643,
+   "megaStone": {
+    "Meowstic": "Meowstic-M-Mega",
+    "Meowstic-F": "Meowstic-F-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 678,
+  "name": "Meowstic-F-Mega",
+  "baseSpecies": "Meowstic",
+  "forme": "F-Mega",
+  "id": "meowsticfmega",
+  "types": [
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 74,
+   "atk": 48,
+   "def": 76,
+   "spa": 143,
+   "spd": 101,
+   "spe": 124
+  },
+  "abilities": {
+   "0": "Trace"
+  },
+  "requiredItem": "Meowsticite",
+  "requiredItems": [
+   "Meowsticite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Meowstic-F",
+  "changesFrom": "Meowstic-F",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 74,
+   "atk": 48,
+   "def": 76,
+   "spa": 83,
+   "spd": 81,
+   "spe": 104
+  },
+  "baseAbilities": {
+   "0": "Keen Eye",
+   "1": "Infiltrator",
+   "H": "Prankster"
+  },
+  "tags": [],
+  "item": {
+   "id": "meowsticite",
+   "num": 2643,
+   "megaStone": {
+    "Meowstic": "Meowstic-M-Mega",
+    "Meowstic-F": "Meowstic-F-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 687,
+  "name": "Malamar-Mega",
+  "baseSpecies": "Malamar",
+  "forme": "Mega",
+  "id": "malamarmega",
+  "types": [
+   "Dark",
+   "Psychic"
+  ],
+  "baseStats": {
+   "hp": 86,
+   "atk": 102,
+   "def": 88,
+   "spa": 98,
+   "spd": 120,
+   "spe": 88
+  },
+  "abilities": {
+   "0": "Contrary"
+  },
+  "requiredItem": "Malamarite",
+  "requiredItems": [
+   "Malamarite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Malamar",
+  "changesFrom": "Malamar",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dark",
+   "Psychic"
+  ],
+  "baseStatsBase": {
+   "hp": 86,
+   "atk": 92,
+   "def": 88,
+   "spa": 68,
+   "spd": 75,
+   "spe": 73
+  },
+  "baseAbilities": {
+   "0": "Contrary",
+   "1": "Suction Cups",
+   "H": "Infiltrator"
+  },
+  "tags": [],
+  "item": {
+   "id": "malamarite",
+   "num": 2580,
+   "megaStone": {
+    "Malamar": "Malamar-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 689,
+  "name": "Barbaracle-Mega",
+  "baseSpecies": "Barbaracle",
+  "forme": "Mega",
+  "id": "barbaraclemega",
+  "types": [
+   "Rock",
+   "Fighting"
+  ],
+  "baseStats": {
+   "hp": 72,
+   "atk": 140,
+   "def": 130,
+   "spa": 64,
+   "spd": 106,
+   "spe": 88
+  },
+  "abilities": {
+   "0": "Tough Claws"
+  },
+  "requiredItem": "Barbaracite",
+  "requiredItems": [
+   "Barbaracite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Barbaracle",
+  "changesFrom": "Barbaracle",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Rock",
+   "Water"
+  ],
+  "baseStatsBase": {
+   "hp": 72,
+   "atk": 105,
+   "def": 115,
+   "spa": 54,
+   "spd": 86,
+   "spe": 68
+  },
+  "baseAbilities": {
+   "0": "Tough Claws",
+   "1": "Sniper",
+   "H": "Pickpocket"
+  },
+  "tags": [],
+  "item": {
+   "id": "barbaracite",
+   "num": 2581,
+   "megaStone": {
+    "Barbaracle": "Barbaracle-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 691,
+  "name": "Dragalge-Mega",
+  "baseSpecies": "Dragalge",
+  "forme": "Mega",
+  "id": "dragalgemega",
+  "types": [
+   "Poison",
+   "Dragon"
+  ],
+  "baseStats": {
+   "hp": 65,
+   "atk": 85,
+   "def": 105,
+   "spa": 132,
+   "spd": 163,
+   "spe": 44
+  },
+  "abilities": {
+   "0": "Regenerator"
+  },
+  "requiredItem": "Dragalgite",
+  "requiredItems": [
+   "Dragalgite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Dragalge",
+  "changesFrom": "Dragalge",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Poison",
+   "Dragon"
+  ],
+  "baseStatsBase": {
+   "hp": 65,
+   "atk": 75,
+   "def": 90,
+   "spa": 97,
+   "spd": 123,
+   "spe": 44
+  },
+  "baseAbilities": {
+   "0": "Poison Point",
+   "1": "Poison Touch",
+   "H": "Adaptability"
+  },
+  "tags": [],
+  "item": {
+   "id": "dragalgite",
+   "num": 2582,
+   "megaStone": {
+    "Dragalge": "Dragalge-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 701,
+  "name": "Hawlucha-Mega",
+  "baseSpecies": "Hawlucha",
+  "forme": "Mega",
+  "id": "hawluchamega",
+  "types": [
+   "Fighting",
+   "Flying"
+  ],
+  "baseStats": {
+   "hp": 78,
+   "atk": 137,
+   "def": 100,
+   "spa": 74,
+   "spd": 93,
+   "spe": 118
+  },
+  "abilities": {
+   "0": "No Guard"
+  },
+  "requiredItem": "Hawluchanite",
+  "requiredItems": [
+   "Hawluchanite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Hawlucha",
+  "changesFrom": "Hawlucha",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Fighting",
+   "Flying"
+  ],
+  "baseStatsBase": {
+   "hp": 78,
+   "atk": 92,
+   "def": 75,
+   "spa": 74,
+   "spd": 63,
+   "spe": 118
+  },
+  "baseAbilities": {
+   "0": "Limber",
+   "1": "Unburden",
+   "H": "Mold Breaker"
+  },
+  "tags": [],
+  "item": {
+   "id": "hawluchanite",
+   "num": 2583,
+   "megaStone": {
+    "Hawlucha": "Hawlucha-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 718,
+  "name": "Zygarde-Mega",
+  "baseSpecies": "Zygarde",
+  "forme": "Mega",
+  "id": "zygardemega",
+  "types": [
+   "Dragon",
+   "Ground"
+  ],
+  "baseStats": {
+   "hp": 216,
+   "atk": 70,
+   "def": 91,
+   "spa": 216,
+   "spd": 85,
+   "spe": 100
+  },
+  "abilities": {
+   "0": "Aura Break"
+  },
+  "requiredItem": "Zygardite",
+  "requiredItems": [
+   "Zygardite"
+  ],
+  "requiredMove": null,
+  "battleOnly": [
+   "Zygarde",
+   "Zygarde-10%"
+  ],
+  "changesFrom": "Zygarde",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dragon",
+   "Ground"
+  ],
+  "baseStatsBase": {
+   "hp": 108,
+   "atk": 100,
+   "def": 121,
+   "spa": 81,
+   "spd": 95,
+   "spe": 95
+  },
+  "baseAbilities": {
+   "0": "Aura Break",
+   "S": "Power Construct"
+  },
+  "tags": [
+   "Restricted Legendary"
+  ],
+  "item": {
+   "id": "zygardite",
+   "num": 2584,
+   "megaStone": {
+    "Zygarde-Complete": "Zygarde-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 719,
+  "name": "Diancie-Mega",
+  "baseSpecies": "Diancie",
+  "forme": "Mega",
+  "id": "dianciemega",
+  "types": [
+   "Rock",
+   "Fairy"
+  ],
+  "baseStats": {
+   "hp": 50,
+   "atk": 160,
+   "def": 110,
+   "spa": 160,
+   "spd": 110,
+   "spe": 110
+  },
+  "abilities": {
+   "0": "Magic Bounce"
+  },
+  "requiredItem": "Diancite",
+  "requiredItems": [
+   "Diancite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Diancie",
+  "changesFrom": "Diancie",
+  "isNonstandard": "Past",
+  "gen": 6,
+  "baseTypes": [
+   "Rock",
+   "Fairy"
+  ],
+  "baseStatsBase": {
+   "hp": 50,
+   "atk": 100,
+   "def": 150,
+   "spa": 100,
+   "spd": 150,
+   "spe": 50
+  },
+  "baseAbilities": {
+   "0": "Clear Body"
+  },
+  "tags": [
+   "Mythical"
+  ],
+  "item": {
+   "id": "diancite",
+   "num": 764,
+   "megaStone": {
+    "Diancie": "Diancie-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Past"
+  }
+ },
+ {
+  "num": 740,
+  "name": "Crabominable-Mega",
+  "baseSpecies": "Crabominable",
+  "forme": "Mega",
+  "id": "crabominablemega",
+  "types": [
+   "Fighting",
+   "Ice"
+  ],
+  "baseStats": {
+   "hp": 97,
+   "atk": 157,
+   "def": 122,
+   "spa": 62,
+   "spd": 107,
+   "spe": 33
+  },
+  "abilities": {
+   "0": "Iron Fist"
+  },
+  "requiredItem": "Crabominite",
+  "requiredItems": [
+   "Crabominite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Crabominable",
+  "changesFrom": "Crabominable",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Fighting",
+   "Ice"
+  ],
+  "baseStatsBase": {
+   "hp": 97,
+   "atk": 132,
+   "def": 77,
+   "spa": 62,
+   "spd": 67,
+   "spe": 43
+  },
+  "baseAbilities": {
+   "0": "Hyper Cutter",
+   "1": "Iron Fist",
+   "H": "Anger Point"
+  },
+  "tags": [],
+  "item": {
+   "id": "crabominite",
+   "num": 2644,
+   "megaStone": {
+    "Crabominable": "Crabominable-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 768,
+  "name": "Golisopod-Mega",
+  "baseSpecies": "Golisopod",
+  "forme": "Mega",
+  "id": "golisopodmega",
+  "types": [
+   "Bug",
+   "Steel"
+  ],
+  "baseStats": {
+   "hp": 75,
+   "atk": 150,
+   "def": 175,
+   "spa": 70,
+   "spd": 120,
+   "spe": 40
+  },
+  "abilities": {
+   "0": "Tough Claws"
+  },
+  "requiredItem": "Golisopite",
+  "requiredItems": [
+   "Golisopite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Golisopod",
+  "changesFrom": "Golisopod",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Bug",
+   "Water"
+  ],
+  "baseStatsBase": {
+   "hp": 75,
+   "atk": 125,
+   "def": 140,
+   "spa": 60,
+   "spd": 90,
+   "spe": 40
+  },
+  "baseAbilities": {
+   "0": "Emergency Exit"
+  },
+  "tags": [],
+  "item": {
+   "id": "golisopite",
+   "num": 2645,
+   "megaStone": {
+    "Golisopod": "Golisopod-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 780,
+  "name": "Drampa-Mega",
+  "baseSpecies": "Drampa",
+  "forme": "Mega",
+  "id": "drampamega",
+  "types": [
+   "Normal",
+   "Dragon"
+  ],
+  "baseStats": {
+   "hp": 78,
+   "atk": 85,
+   "def": 110,
+   "spa": 160,
+   "spd": 116,
+   "spe": 36
+  },
+  "abilities": {
+   "0": "Berserk"
+  },
+  "requiredItem": "Drampanite",
+  "requiredItems": [
+   "Drampanite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Drampa",
+  "changesFrom": "Drampa",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Normal",
+   "Dragon"
+  ],
+  "baseStatsBase": {
+   "hp": 78,
+   "atk": 60,
+   "def": 85,
+   "spa": 135,
+   "spd": 91,
+   "spe": 36
+  },
+  "baseAbilities": {
+   "0": "Berserk",
+   "1": "Sap Sipper",
+   "H": "Cloud Nine"
+  },
+  "tags": [],
+  "item": {
+   "id": "drampanite",
+   "num": 2585,
+   "megaStone": {
+    "Drampa": "Drampa-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 801,
+  "name": "Magearna-Mega",
+  "baseSpecies": "Magearna",
+  "forme": "Mega",
+  "id": "magearnamega",
+  "types": [
+   "Steel",
+   "Fairy"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 125,
+   "def": 115,
+   "spa": 170,
+   "spd": 115,
+   "spe": 95
+  },
+  "abilities": {
+   "0": "Soul-Heart"
+  },
+  "requiredItem": "Magearnite",
+  "requiredItems": [
+   "Magearnite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Magearna",
+  "changesFrom": "Magearna",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Steel",
+   "Fairy"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 95,
+   "def": 115,
+   "spa": 130,
+   "spd": 115,
+   "spe": 65
+  },
+  "baseAbilities": {
+   "0": "Soul-Heart"
+  },
+  "tags": [
+   "Mythical"
+  ],
+  "item": {
+   "id": "magearnite",
+   "num": 2646,
+   "megaStone": {
+    "Magearna": "Magearna-Mega",
+    "Magearna-Original": "Magearna-Original-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 801,
+  "name": "Magearna-Original-Mega",
+  "baseSpecies": "Magearna",
+  "forme": "Original-Mega",
+  "id": "magearnaoriginalmega",
+  "types": [
+   "Steel",
+   "Fairy"
+  ],
+  "baseStats": {
+   "hp": 80,
+   "atk": 125,
+   "def": 115,
+   "spa": 170,
+   "spd": 115,
+   "spe": 95
+  },
+  "abilities": {
+   "0": "Soul-Heart"
+  },
+  "requiredItem": "Magearnite",
+  "requiredItems": [
+   "Magearnite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Magearna-Original",
+  "changesFrom": "Magearna-Original",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Steel",
+   "Fairy"
+  ],
+  "baseStatsBase": {
+   "hp": 80,
+   "atk": 95,
+   "def": 115,
+   "spa": 130,
+   "spd": 115,
+   "spe": 65
+  },
+  "baseAbilities": {
+   "0": "Soul-Heart"
+  },
+  "tags": [
+   "Mythical"
+  ],
+  "item": {
+   "id": "magearnite",
+   "num": 2646,
+   "megaStone": {
+    "Magearna": "Magearna-Mega",
+    "Magearna-Original": "Magearna-Original-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 807,
+  "name": "Zeraora-Mega",
+  "baseSpecies": "Zeraora",
+  "forme": "Mega",
+  "id": "zeraoramega",
+  "types": [
+   "Electric"
+  ],
+  "baseStats": {
+   "hp": 88,
+   "atk": 157,
+   "def": 75,
+   "spa": 147,
+   "spd": 80,
+   "spe": 153
+  },
+  "abilities": {
+   "0": "Volt Absorb"
+  },
+  "requiredItem": "Zeraorite",
+  "requiredItems": [
+   "Zeraorite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Zeraora",
+  "changesFrom": "Zeraora",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Electric"
+  ],
+  "baseStatsBase": {
+   "hp": 88,
+   "atk": 112,
+   "def": 75,
+   "spa": 102,
+   "spd": 80,
+   "spe": 143
+  },
+  "baseAbilities": {
+   "0": "Volt Absorb"
+  },
+  "tags": [
+   "Mythical"
+  ],
+  "item": {
+   "id": "zeraorite",
+   "num": 2586,
+   "megaStone": {
+    "Zeraora": "Zeraora-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 870,
+  "name": "Falinks-Mega",
+  "baseSpecies": "Falinks",
+  "forme": "Mega",
+  "id": "falinksmega",
+  "types": [
+   "Fighting"
+  ],
+  "baseStats": {
+   "hp": 65,
+   "atk": 135,
+   "def": 135,
+   "spa": 70,
+   "spd": 65,
+   "spe": 100
+  },
+  "abilities": {
+   "0": "Defiant"
+  },
+  "requiredItem": "Falinksite",
+  "requiredItems": [
+   "Falinksite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Falinks",
+  "changesFrom": "Falinks",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Fighting"
+  ],
+  "baseStatsBase": {
+   "hp": 65,
+   "atk": 100,
+   "def": 100,
+   "spa": 70,
+   "spd": 60,
+   "spe": 75
+  },
+  "baseAbilities": {
+   "0": "Battle Armor",
+   "H": "Defiant"
+  },
+  "tags": [],
+  "item": {
+   "id": "falinksite",
+   "num": 2587,
+   "megaStone": {
+    "Falinks": "Falinks-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 952,
+  "name": "Scovillain-Mega",
+  "baseSpecies": "Scovillain",
+  "forme": "Mega",
+  "id": "scovillainmega",
+  "types": [
+   "Grass",
+   "Fire"
+  ],
+  "baseStats": {
+   "hp": 65,
+   "atk": 138,
+   "def": 85,
+   "spa": 138,
+   "spd": 85,
+   "spe": 75
+  },
+  "abilities": {
+   "0": "Spicy Spray"
+  },
+  "requiredItem": "Scovillainite",
+  "requiredItems": [
+   "Scovillainite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Scovillain",
+  "changesFrom": "Scovillain",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Grass",
+   "Fire"
+  ],
+  "baseStatsBase": {
+   "hp": 65,
+   "atk": 108,
+   "def": 65,
+   "spa": 108,
+   "spd": 65,
+   "spe": 75
+  },
+  "baseAbilities": {
+   "0": "Chlorophyll",
+   "1": "Insomnia",
+   "H": "Moody"
+  },
+  "tags": [],
+  "item": {
+   "id": "scovillainite",
+   "num": 2647,
+   "megaStone": {
+    "Scovillain": "Scovillain-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 970,
+  "name": "Glimmora-Mega",
+  "baseSpecies": "Glimmora",
+  "forme": "Mega",
+  "id": "glimmoramega",
+  "types": [
+   "Rock",
+   "Poison"
+  ],
+  "baseStats": {
+   "hp": 83,
+   "atk": 90,
+   "def": 105,
+   "spa": 150,
+   "spd": 96,
+   "spe": 101
+  },
+  "abilities": {
+   "0": "Adaptability"
+  },
+  "requiredItem": "Glimmoranite",
+  "requiredItems": [
+   "Glimmoranite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Glimmora",
+  "changesFrom": "Glimmora",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Rock",
+   "Poison"
+  ],
+  "baseStatsBase": {
+   "hp": 83,
+   "atk": 55,
+   "def": 90,
+   "spa": 130,
+   "spd": 81,
+   "spe": 86
+  },
+  "baseAbilities": {
+   "0": "Toxic Debris",
+   "H": "Corrosion"
+  },
+  "tags": [],
+  "item": {
+   "id": "glimmoranite",
+   "num": 2650,
+   "megaStone": {
+    "Glimmora": "Glimmora-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 978,
+  "name": "Tatsugiri-Curly-Mega",
+  "baseSpecies": "Tatsugiri",
+  "forme": "Curly-Mega",
+  "id": "tatsugiricurlymega",
+  "types": [
+   "Dragon",
+   "Water"
+  ],
+  "baseStats": {
+   "hp": 68,
+   "atk": 65,
+   "def": 90,
+   "spa": 135,
+   "spd": 125,
+   "spe": 92
+  },
+  "abilities": {
+   "0": "Commander",
+   "H": "Storm Drain"
+  },
+  "requiredItem": "Tatsugirinite",
+  "requiredItems": [
+   "Tatsugirinite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Tatsugiri",
+  "changesFrom": "Tatsugiri",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dragon",
+   "Water"
+  ],
+  "baseStatsBase": {
+   "hp": 68,
+   "atk": 50,
+   "def": 60,
+   "spa": 120,
+   "spd": 95,
+   "spe": 82
+  },
+  "baseAbilities": {
+   "0": "Commander",
+   "H": "Storm Drain"
+  },
+  "tags": [],
+  "item": {
+   "id": "tatsugirinite",
+   "num": 2649,
+   "megaStone": {
+    "Tatsugiri": "Tatsugiri-Curly-Mega",
+    "Tatsugiri-Droopy": "Tatsugiri-Droopy-Mega",
+    "Tatsugiri-Stretchy": "Tatsugiri-Stretchy-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 978,
+  "name": "Tatsugiri-Droopy-Mega",
+  "baseSpecies": "Tatsugiri",
+  "forme": "Droopy-Mega",
+  "id": "tatsugiridroopymega",
+  "types": [
+   "Dragon",
+   "Water"
+  ],
+  "baseStats": {
+   "hp": 68,
+   "atk": 65,
+   "def": 90,
+   "spa": 135,
+   "spd": 125,
+   "spe": 92
+  },
+  "abilities": {
+   "0": "Commander",
+   "H": "Storm Drain"
+  },
+  "requiredItem": "Tatsugirinite",
+  "requiredItems": [
+   "Tatsugirinite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Tatsugiri-Droopy",
+  "changesFrom": "Tatsugiri-Droopy",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dragon",
+   "Water"
+  ],
+  "baseStatsBase": {
+   "hp": 68,
+   "atk": 50,
+   "def": 60,
+   "spa": 120,
+   "spd": 95,
+   "spe": 82
+  },
+  "baseAbilities": {
+   "0": "Commander",
+   "H": "Storm Drain"
+  },
+  "tags": [],
+  "item": {
+   "id": "tatsugirinite",
+   "num": 2649,
+   "megaStone": {
+    "Tatsugiri": "Tatsugiri-Curly-Mega",
+    "Tatsugiri-Droopy": "Tatsugiri-Droopy-Mega",
+    "Tatsugiri-Stretchy": "Tatsugiri-Stretchy-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 978,
+  "name": "Tatsugiri-Stretchy-Mega",
+  "baseSpecies": "Tatsugiri",
+  "forme": "Stretchy-Mega",
+  "id": "tatsugiristretchymega",
+  "types": [
+   "Dragon",
+   "Water"
+  ],
+  "baseStats": {
+   "hp": 68,
+   "atk": 65,
+   "def": 90,
+   "spa": 135,
+   "spd": 125,
+   "spe": 92
+  },
+  "abilities": {
+   "0": "Commander",
+   "H": "Storm Drain"
+  },
+  "requiredItem": "Tatsugirinite",
+  "requiredItems": [
+   "Tatsugirinite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Tatsugiri-Stretchy",
+  "changesFrom": "Tatsugiri-Stretchy",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dragon",
+   "Water"
+  ],
+  "baseStatsBase": {
+   "hp": 68,
+   "atk": 50,
+   "def": 60,
+   "spa": 120,
+   "spd": 95,
+   "spe": 82
+  },
+  "baseAbilities": {
+   "0": "Commander",
+   "H": "Storm Drain"
+  },
+  "tags": [],
+  "item": {
+   "id": "tatsugirinite",
+   "num": 2649,
+   "megaStone": {
+    "Tatsugiri": "Tatsugiri-Curly-Mega",
+    "Tatsugiri-Droopy": "Tatsugiri-Droopy-Mega",
+    "Tatsugiri-Stretchy": "Tatsugiri-Stretchy-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ },
+ {
+  "num": 998,
+  "name": "Baxcalibur-Mega",
+  "baseSpecies": "Baxcalibur",
+  "forme": "Mega",
+  "id": "baxcaliburmega",
+  "types": [
+   "Dragon",
+   "Ice"
+  ],
+  "baseStats": {
+   "hp": 115,
+   "atk": 175,
+   "def": 117,
+   "spa": 105,
+   "spd": 101,
+   "spe": 87
+  },
+  "abilities": {
+   "0": "Thermal Exchange"
+  },
+  "requiredItem": "Baxcalibrite",
+  "requiredItems": [
+   "Baxcalibrite"
+  ],
+  "requiredMove": null,
+  "battleOnly": "Baxcalibur",
+  "changesFrom": "Baxcalibur",
+  "isNonstandard": "Future",
+  "gen": 9,
+  "baseTypes": [
+   "Dragon",
+   "Ice"
+  ],
+  "baseStatsBase": {
+   "hp": 115,
+   "atk": 145,
+   "def": 92,
+   "spa": 75,
+   "spd": 86,
+   "spe": 87
+  },
+  "baseAbilities": {
+   "0": "Thermal Exchange",
+   "H": "Ice Body"
+  },
+  "tags": [],
+  "item": {
+   "id": "baxcalibrite",
+   "num": 2648,
+   "megaStone": {
+    "Baxcalibur": "Baxcalibur-Mega"
+   },
+   "megaEvolves": null,
+   "isNonstandard": "Future"
+  }
+ }
+]

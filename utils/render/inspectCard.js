@@ -7,7 +7,7 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, drawLevel, dexNo } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, drawLevel, dexNo, drawMegaTag } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 
@@ -21,7 +21,8 @@ export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = nu
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
   const stage = spriteStage({ animate });
-  const accent = slot.shiny ? COLOR.gold : slot.slot === 1 ? COLOR.blue : tierColor(slot.tier);
+  const accent = slot.shiny ? COLOR.gold : slot.slot === 1 ? COLOR.blue : slot.mega ? COLOR.mega : tierColor(slot.tier);
+  const spriteId = slot.spriteId ?? slot.id; // a Mega slot (teamView) draws its Mega sprite
 
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, "#131a2d");
@@ -43,8 +44,8 @@ export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = nu
   ctx.lineWidth = 2;
   ctx.strokeStyle = `${accent}aa`;
   ctx.stroke();
-  const sprite = (await loadStaticSprite(slot.id, slot.variant)) ?? (await loadPlaceholder());
-  stage.place(ctx, sprite, cx, floor + 8, sw - 30, floor - 20, { scale: 3 }, { id: slot.id, variant: slot.variant });
+  const sprite = (await loadStaticSprite(spriteId, slot.variant)) ?? (await loadPlaceholder());
+  stage.place(ctx, sprite, cx, floor + 8, sw - 30, floor - 20, { scale: 3 }, { id: spriteId, variant: slot.variant });
 
   const x = 368, right = W - 32;
   ctx.textAlign = "left";
@@ -55,7 +56,7 @@ export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = nu
   ctx.font = font(20, 800);
   ctx.fillStyle = !eyebrowText && slot.slot === 1 ? COLOR.blue : COLOR.textMuted;
   const eyebrow = eyebrowText ?? `SLOT ${slot.slot}${slot.slot === 1 ? " · LEAD" : ""}${owner ? `  ·  ${owner.toUpperCase()}'S TEAM` : ""}`;
-  ctx.fillText(fitText(ctx, eyebrow, right - x - 180), x, 50);
+  ctx.fillText(fitText(ctx, eyebrow, right - x - 180 - (slot.mega ? 104 : 0)), x, 50); // room for the MEGA tag beside the rarity pill
   const owned = slot.level != null; // null: a species the viewer doesn't own (base stats only)
 
   // Rarity pill.
@@ -72,9 +73,11 @@ export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = nu
   ctx.textBaseline = "middle";
   ctx.fillText(label, right - pw + 17, 44);
   ctx.textBaseline = "alphabetic";
+  if (slot.mega) drawMegaTag(ctx, right - pw - 10, 26, { h: 34, size: 18, align: "right" });
 
   // Name, Level, types.
-  const nm = fitFont(ctx, slot.name, right - x - (slot.shiny ? 50 : 0), 56, 32, 800);
+  // Mega names ("Mega Charizard X") are the longest drawn here: a smaller cap keeps descenders clear of the type chips.
+  const nm = fitFont(ctx, slot.name, right - x - (slot.shiny ? 50 : 0), slot.mega ? 46 : 56, 32, 800);
   ctx.font = font(nm.size, 800);
   ctx.fillStyle = COLOR.text;
   ctx.fillText(nm.text, x, 112);

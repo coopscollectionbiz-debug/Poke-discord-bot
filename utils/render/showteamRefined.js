@@ -10,7 +10,7 @@
 
 import { COLOR, TIER, tierColor } from "./tokens.js";
 import {
-  rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth, drawBall, dexNo,
+  rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth, drawBall, dexNo, drawMegaTag,
 } from "./primitives.js";
 import { drawSprite } from "./sprites.js";
 
@@ -33,7 +33,8 @@ function cardRect(view, i) {
     h: CARD_H,
   };
 }
-const accentOf = (slot) => (slot.shiny ? COLOR.gold : slot.slot === 1 ? COLOR.blue : null);
+// Shiny gold, then lead blue, then a Mega's own colour (only a slot that battles as a Mega).
+const accentOf = (slot) => (slot.shiny ? COLOR.gold : slot.slot === 1 ? COLOR.blue : slot.mega ? COLOR.mega : null);
 
 // ---------- base layer ----------
 
@@ -305,6 +306,8 @@ function drawTop(ctx, view) {
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
     drawTierPill(ctx, slot.tier, r.x + r.w - 14, r.y + 15);
+    // MEGA under the rarity pill, right-aligned with it.
+    if (slot.mega) drawMegaTag(ctx, r.x + r.w - 14, r.y + 53, { h: 28, size: 16, align: "right" });
   });
 }
 

@@ -60,6 +60,9 @@ import { handleInventoryRequest } from "./services/inventoryApi.js";
 import { createGameplayHandlers } from "./services/gameplay.js";
 import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
 import { createAchievementHandlers } from "./services/achievementsApi.js";
+import { createMegaHandlers } from "./services/megaApi.js";
+import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
+import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
 import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
@@ -303,29 +306,11 @@ function normalizeUserSchema(id, user) {
 // NEW FORMAT: [{ id: Number, variant: "normal"|"shiny" }]
 // Backwards compatible with legacy [Number, Number, ...]
 // ==========================================================
-if (!Array.isArray(user.displayedPokemon)) {
-  user.displayedPokemon = [];
-}
-
-// Convert legacy [243,245] => [{id:243, variant:"normal"}, ...]
-if (user.displayedPokemon.length && typeof user.displayedPokemon[0] !== "object") {
-  user.displayedPokemon = user.displayedPokemon
-    .map((pid) => ({ id: Number(pid), variant: "normal" }))
-    .filter((t) => Number.isInteger(t.id));
-}
-
-// Normalize + remove ghosts (must own that specific variant)
-user.displayedPokemon = user.displayedPokemon
-  .map((t) => ({
-    id: Number(t?.id),
-    variant: t?.variant === "shiny" ? "shiny" : "normal",
-  }))
-  .filter((t) => Number.isInteger(t.id))
-  .filter((t) => {
-    const owned = user.pokemon?.[t.id];
-    if (!owned) return false;
-    return Number(owned?.[t.variant] || 0) > 0;
-  });
+// Mega Evolution (Phase M1): repair megaUnlocks first (no-op for players
+// without it), then normalize the team. services/megaTeam.js holds the same
+// team code that used to be inline here, plus keeping a valid Mega slot.
+normalizeMegaUnlocks(user);
+normalizeDisplayedTeam(user);
 
 
   // ==========================================================
@@ -1308,6 +1293,33 @@ app.post("/api/achievements/claim", express.json({ limit: "4kb" }), async (req, 
 });
 
 
+// 🧬 MEGA EVOLUTION (Phase M1): every endpoint is behind its own capability
+// (config/features.js). With MEGA_EVOLUTION_ENABLED unset (production), the
+// view answers { enabled: false } and the writes refuse with 403.
+const mega = createMegaHandlers({ getTrainerData: () => trainerData, lockUser, save: saveAndAck });
+app.get("/api/mega", (req, res) => {
+  const { status, body } = mega.view({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
+  return res.status(status).json(body);
+});
+app.post("/api/mega/unlock", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { status, body } = await mega.unlock({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(status).json(body);
+  } catch (err) {
+    console.error("❌ /api/mega/unlock:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+app.post("/api/mega/preferred", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { status, body } = await mega.preferred({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(status).json(body);
+  } catch (err) {
+    console.error("❌ /api/mega/preferred:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 // D14: dashboard replies say whether the change reached disk. On a failed
 // write the change stays in memory and is retried; the reply carries a
 // "saved with a delay" notice instead of an unqualified success.
@@ -2017,47 +2029,18 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       const u = trainerData[id];
 
 
-      const ownsVariant = (pid, variant) => {
-        const p = u.pokemon?.[pid];
-        if (!p) return false;
-        return (p[variant] ?? 0) > 0;
-      };
+      // 1) Auto-clean existing displayedPokemon (remove ghost variant slots;
+      //    keeps a valid Mega selection — services/megaTeam.js)
+      normalizeDisplayedTeam(u);
 
-      // 1) Auto-clean existing displayedPokemon (remove ghost variant slots)
-      u.displayedPokemon = Array.isArray(u.displayedPokemon) ? u.displayedPokemon : [];
-      u.displayedPokemon = u.displayedPokemon
-        .map(toTeamObj)
-        .filter(Boolean)
-        .filter((slot) => ownsVariant(slot.id, slot.variant));
-
-      // 2) Parse incoming team
-      const parsed = team.map(toTeamObj).filter(Boolean);
-
-      // 3) Enforce constraints: 1–6 unique slots
-      // Unique = (id + variant) pair. Allow same Pokémon in both variants if they own both.
-      const dedupMap = new Map(); // key "id:variant" -> slot
-      for (const slot of parsed) {
-        const key = `${slot.id}:${slot.variant}`;
-        if (!dedupMap.has(key)) dedupMap.set(key, slot);
+      // 2–4) Parse, 1–6 unique (id + variant) slots, ownership per variant,
+      //      and the Mega rules (one Mega, not with its own base, unlocked,
+      //      MEGA_TEAMS capability) — services/megaTeam.js prepareTeamSelection.
+      const prepared = prepareTeamSelection(u, team);
+      if (!prepared.ok) {
+        return res.status(prepared.status).json({ success: false, error: prepared.error });
       }
-      const normalized = [...dedupMap.values()];
-
-      if (normalized.length === 0 || normalized.length > 6) {
-        return res.status(400).json({
-          success: false,
-          error: "Team must be 1–6 unique slots (unique = Pokémon + variant).",
-        });
-      }
-
-      // 4) Validate ownership per variant (IMPORTANT for your new UI rules)
-      const unowned = normalized.filter((slot) => !ownsVariant(slot.id, slot.variant));
-      if (unowned.length) {
-        const list = unowned.map((s) => `#${s.id} (${s.variant})`).join(", ");
-        return res.status(400).json({
-          success: false,
-          error: `Unowned Pokémon slots: ${list}`,
-        });
-      }
+      const normalized = prepared.team;
 
       // 5) Save
       u.displayedPokemon = normalized;

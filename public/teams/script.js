@@ -18,6 +18,7 @@
 
 import { playerId, showBanner, showExpired, toast, showActionError, confirmDialog } from "/public/shared/shell.js";
 import { displaySpeciesName } from "/public/shared/names.js";
+import { scanFx } from "/public/shared/spriteFx.js";
 
 const TEAMS = ["display", "battle"];
 const LABEL = { display: "Display team", battle: "Battle team" };
@@ -266,7 +267,7 @@ function slotCard(t, s, i) {
   ].join("");
   const shiny = s.variant === "shiny";
   return `<li class="tm-slot tm-slot--lg${i === 0 ? " is-lead" : ""}${shiny ? " is-shiny" : ""}${s.mega && state.megaOn ? " is-mega" : ""}${change ? " is-changed" : ""}" draggable="true" data-team="${t}" data-i="${i}">
-    <div class="tm-stage">
+    <div class="tm-stage"${shiny ? ` data-fx="shiny" data-fx-seed="${s.id}"` : ""}>
       <span class="tm-no">${i + 1}<span class="sr-only">: </span></span>
       ${shiny ? `<span class="tm-shiny" title="Shiny"><svg class="tm-ic" aria-hidden="true"><use href="#tm-sparkle"/></svg><span class="sr-only">Shiny</span></span>` : ""}
       <img class="cc-sprite" src="${spriteOf(s)}" alt="" onerror="this.onerror=null;this.src='/public/sprites/items/pokeball.png'">
@@ -378,7 +379,7 @@ function boxTile(s) {
       <span class="tm-tile-badges">${badges}</span>
       ${blocked ? `<span class="tm-tile-block" title="${esc(why.text)}"><svg class="tm-ic" aria-hidden="true"><use href="#tm-lock"/></svg>Mythic</span>` : ""}
       ${shiny ? `<span class="tm-shiny tm-shiny--sm"><svg class="tm-ic" aria-hidden="true"><use href="#tm-sparkle"/></svg></span>` : ""}
-      <img class="cc-sprite" src="/public/sprites/pokemon/${shiny ? "shiny" : "normal"}/${s.id}.gif" alt="" loading="lazy" onerror="this.onerror=null;this.src='/public/sprites/items/pokeball.png'">
+      <span class="tm-tile-art"${shiny ? ` data-fx="shiny" data-fx-seed="${s.id}"` : ""}><img class="cc-sprite" src="/public/sprites/pokemon/${shiny ? "shiny" : "normal"}/${s.id}.gif" alt="" loading="lazy" onerror="this.onerror=null;this.src='/public/sprites/items/pokeball.png'"></span>
       <span class="tm-tile-name">${esc(sp.name)}</span>
       ${typeChips(s.id)}
       <span class="tm-tile-lv">Lv ${levelOf(s)}${isMythic(s.id) && !blocked ? ` · <b class="tier-text mythic">Mythic</b>` : ""}</span>
@@ -449,7 +450,8 @@ document.body.insertAdjacentHTML("afterbegin", ICONS);
 function render() {
   const searchFocus = document.activeElement?.dataset?.act === "search" ? { where: document.activeElement.id, pos: document.activeElement.selectionStart } : null;
   app.innerHTML = `${notice()}${switcher()}<div class="tm-layout">${teamPanel()}<aside class="tm-panel tm-boxpanel" aria-labelledby="boxHeading">${boxPanel("side")}</aside></div>${saveBar()}`;
-  if (sheet.open) sheetBody.innerHTML = boxPanel("sheet");
+  if (sheet.open) { sheetBody.innerHTML = boxPanel("sheet"); scanFx(sheetBody); }
+  scanFx(app); // shiny backdrops (same as the Discord cards)
   document.getElementById("boxSheetTitle").textContent = `Add to your ${LABEL[state.active]}`;
   if (focusAfter) {
     const el = [focusAfter].flat().map((s) => document.querySelector(s)).find((x) => x && !x.disabled);
@@ -512,6 +514,7 @@ function openSheet() {
   }
   sheetBody.innerHTML = boxPanel("sheet");
   sheet.showModal();
+  scanFx(sheetBody);
 }
 document.getElementById("boxSheetClose").addEventListener("click", () => sheet.close());
 sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.close(); });

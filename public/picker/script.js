@@ -4,6 +4,7 @@
 // ===========================================================
 
 import { showExpired } from "/public/shared/shell.js";
+import { scanFx, hasTrainerBackdrop } from "/public/shared/spriteFx.js";
 
 const LOCK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>`;
 
@@ -232,6 +233,8 @@ function render(filter = "") {
       // Sprite wrapper
       const wrapper = document.createElement("div");
       wrapper.className = "sprite-wrapper";
+      // Owned Epic+ trainers: the Discord trainer card's tier backdrop.
+      if (owns && hasTrainerBackdrop(rarity)) { wrapper.dataset.fx = "trainer"; wrapper.dataset.fxTier = rarity; }
 
       const img = document.createElement("img");
       img.src = imgPath;
@@ -304,6 +307,7 @@ function render(filter = "") {
   if (!grid.children.length) {
     grid.innerHTML = "<p class='notice'>No trainers match your filters.</p>";
   }
+  scanFx(grid);
 }
 
 // ===========================================================

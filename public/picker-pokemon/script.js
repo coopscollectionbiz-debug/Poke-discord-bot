@@ -36,6 +36,7 @@ import { getRegions, countOwned } from "/public/picker-pokemon/regions.js";
 import * as bulkRules from "/public/picker-pokemon/bulkRules.js";
 import { showMessage, showActionError, showExpired, showBanner, toast, EXPIRED_MESSAGE } from "/public/shared/shell.js";
 import { displaySpeciesName, nameMatches } from "/public/shared/names.js";
+import { scanFx } from "/public/shared/spriteFx.js";
 
 const LOCK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>`;
 const SPARKLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>`;
@@ -654,7 +655,14 @@ const bestLevel = (id) => bestOwned(userData.levels, id);
 const bestPower = (id) => bestOwned(userData.powers, id);
 const SORT_KEYS = { level: bestLevel, power: bestPower };
 
+// Renders the grid, then the shiny backdrops (the Discord cards' motes + stars).
 function renderPokemonGrid() {
+  renderPokemonGridCards();
+  const grid = document.getElementById("pokemonGrid");
+  if (grid) scanFx(grid);
+}
+
+function renderPokemonGridCards() {
   const container = document.getElementById("pokemonGrid");
   if (!container) return;
   container.innerHTML = "";
@@ -825,7 +833,7 @@ function renderPokemonGrid() {
     const teamBadgeHTML = teamIdx >= 0 ? `<div class="team-badge" title="Team slot ${teamIdx + 1}">${teamIdx + 1}</div>` : "";
 
     card.innerHTML = `
-      <div class="sprite-wrapper">
+      <div class="sprite-wrapper"${shownVariant === "shiny" ? ` data-fx="shiny" data-fx-seed="${id}"` : ""}>
         <img src="${spritePath}" class="poke-sprite" alt="" loading="lazy">
         ${teamBadgeHTML}
         ${

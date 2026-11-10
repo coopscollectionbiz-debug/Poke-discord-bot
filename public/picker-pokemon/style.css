@@ -226,9 +226,10 @@ main:focus { outline: none; }
   box-shadow: var(--cc-ring-gold), var(--cc-shadow);
 }
 
-/* Shiny shown: faint gold wash + gold platform (DESIGN-SYSTEM.md §5) */
+/* Shiny shown: gold platform + the motes/stars backdrop (DESIGN-SYSTEM.md §5) */
 .pokemon-card.shiny-view .sprite-wrapper {
-  background: radial-gradient(circle at 50% 65%, #f5c84c2e, transparent 62%), var(--cc-surface-sunken);
+  /* Shiny: the Discord cards' motes + stars backdrop (public/shared/spriteFx.js), no glow. */
+  background: var(--cc-surface-sunken);
 }
 .pokemon-card.shiny-view .sprite-wrapper::after { background: #f5c84c33; border-color: #f5c84c88; }
 .pokemon-card.shiny-view:not(.selected):not(.multi-selected) { border-color: #f5c84c80; }

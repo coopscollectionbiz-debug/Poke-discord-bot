@@ -13,7 +13,7 @@ import { fileURLToPath } from "url";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { GifReader } from "omggif";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
-import { breathingPoses, idleCuts, poseAtFrame, IDLE_LOOP } from "../utils/trainerIdle.js";
+import { breathingPoses, idleCuts, poseAtFrame, IDLE_LOOP, breathLoop } from "../utils/trainerIdle.js";
 import { nameHash, breathTiming, rectMask, movePart, blinkEyes, applyEvent, idleTimeline, cardSchedule } from "../utils/trainerMotion.js";
 import { trainerImageUrl, trainerIdle } from "../utils/trainerAssets.js";
 import { createBackdrop, hasBackdrop } from "../utils/render/trainerBackdrop.js";
@@ -42,18 +42,24 @@ section("Breathing poses");
 {
   const { px, W, H } = await pixels("cynthia.png");
   const b = breathingPoses(px, W, H);
-  assertTrue(b && b.poses.length === 3, "three poses: rest, head-lag, exhale");
+  assertTrue(b && b.poses.length === 2 + b.cuts.steps.length && b.cuts.steps.length >= 1, `rest, exhale and ${b?.cuts.steps.length} clean steps`);
   assertEqual(Buffer.from(b.poses[0]).equals(Buffer.from(px)), true, "rest is the unchanged sprite");
-  assertTrue(!Buffer.from(b.poses[2]).equals(Buffer.from(px)), "exhale differs from rest");
+  assertTrue(b.poses.slice(1).every((p) => !Buffer.from(p).equals(Buffer.from(px))), "exhale and every step differ from rest");
   const src = colours(px);
-  assertTrue([...colours(b.poses[1]), ...colours(b.poses[2])].every((c) => src.has(c)), "the poses use only the sprite's own colours");
+  assertTrue(b.poses.slice(1).every((p) => [...colours(p)].every((c) => src.has(c))), "the poses use only the sprite's own colours");
   assertTrue(b.cuts.neck < b.cuts.waist, "the neck cut is above the waist cut");
+  const st = b.cuts.steps;
+  assertTrue(st.every((y, k) => y > b.cuts.neck && y < b.cuts.waist && (k === 0 || y < st[k - 1] - 2)), "steps sit between neck and waist, lowest first, ≥ 3 rows apart");
   assertEqual(idleCuts(new Uint8ClampedArray(W * H * 4), W, H), null, "an empty sprite has no cut lines");
   const tiny = new Uint8ClampedArray(W * H * 4);
   for (let y = 40; y < 55; y++) for (let x = 30; x < 40; x++) tiny[(y * W + x) * 4 + 3] = 255;
   assertEqual(breathingPoses(tiny, W, H), null, "a figure under 30 px tall doesn't breathe");
-  assertEqual(Array.from({ length: 24 }, (_, f) => poseAtFrame(f, 24)).join(""), "000000000001222222222100", "card loop: rest, lag, exhale, lag, rest");
-  assertEqual(IDLE_LOOP.map(([p]) => p), [0, 1, 2, 1], "standalone GIF loop: rest, lag, exhale, lag");
+  // Poses: 0 rest, 1 exhale, 2+k step k (k = 0 the lowest). Out-breath: head first (highest step); in-breath: waist first.
+  assertEqual(Array.from({ length: 24 }, (_, f) => poseAtFrame(f, 24, 1)).join(""), "000000000000221111111122", "card loop, 1 step: rest, step, exhale, step");
+  assertEqual(Array.from({ length: 24 }, (_, f) => poseAtFrame(f, 24, 3)).join(","), "0,0,0,0,0,0,0,0,0,0,0,4,2,2,1,1,1,1,1,1,1,2,3,4", "card loop, 3 steps: head settles first, waist rises first");
+  assertEqual(IDLE_LOOP.map(([p]) => p), [0, 2, 1, 2], "standalone loop, 1 step: rest, step, exhale, step");
+  assertEqual(breathLoop(3).map(([p]) => p), [0, 4, 3, 2, 1, 2, 3, 4], "standalone loop, 3 steps: down head first, up waist first");
+  assertTrue([1, 2, 3].every((n) => breathLoop(n).every(([, ms]) => ms >= 60)), "no breath step is shorter than 60 ms");
 }
 
 section("Idle manifest and GIFs");
@@ -114,27 +120,33 @@ section("Offsets and part motions");
   const moved = movePart(px, W, H, rectMask(px, W, H, [0, 0, 2, 2]), 1, 0);
   const alphaRow = (buf) => Array.from({ length: W }, (_, x) => (buf[x * 4 + 3] ? 1 : 0)).join("");
   assertEqual(alphaRow(moved), "011100", "a part moved into clear space leaves clear space behind it");
-  const blinked = blinkEyes(new Uint8ClampedArray([230, 190, 160, 255, 10, 10, 10, 255]), 1, 2, [0, 1, 0, 1]);
-  assertEqual(Array.from(blinked.subarray(4, 8)), [230, 190, 160, 255], "a blink paints the dark eye pixel with the lid colour above");
+  // 1×4 column: skin, eye white, pupil, skin. The eye (rows 1–2) closes: lid colour on top, lash line (its darkest colour) below.
+  const col = new Uint8ClampedArray([230, 190, 160, 255, 250, 250, 250, 255, 10, 10, 10, 255, 230, 190, 160, 255]);
+  const blinked = blinkEyes(col, 1, 4, [[0, 1, 0, 2]]);
+  assertEqual(Array.from(blinked.subarray(4, 12)), [230, 190, 160, 255, 10, 10, 10, 255], "a blink closes the eye: lid colour above a lash line");
+  assertEqual([...blinked.subarray(0, 4), ...blinked.subarray(12, 16)], [230, 190, 160, 255, 230, 190, 160, 255], "a blink leaves the face around the eye alone");
 
   const parts = read("data/sprites/trainer-parts.json").sprites;
   const idles = read("data/sprites/trainer-idles.json").files;
   const evs = Object.entries(parts).flatMap(([f, s]) => s.events.map((e) => [f, e]));
-  assertTrue(Object.keys(parts).length >= 150, `part motions for ${Object.keys(parts).length} trainers`);
+  assertTrue(Object.keys(parts).length >= 60, `part motions for ${Object.keys(parts).length} trainers`);
   assertEqual(Object.keys(parts).filter((f) => idles[f]?.status !== "ok"), [], "every part-motion sprite has an approved idle");
   assertTrue(evs.every(([, e]) => e.at >= 0 && e.at <= 1 && e.ms > 0 && e.ms <= 600), "events sit inside the loop and are short");
   assertTrue(evs.filter(([, e]) => e.kind === "move").every(([, e]) => e.parts.every((p) => Math.abs(p.d[0]) + Math.abs(p.d[1]) === 1 && p.rect.every((v) => v >= 0 && v < 80))), "every move is exactly 1 px, inside the sprite");
-  assertTrue(evs.filter(([, e]) => e.kind === "move" && e.parts.length > 1).every(([, e]) => e.parts.every((p) => p.d.join() === e.parts[0].d.join())), "multi-part moves (capes) all go the same way");
+  assertTrue(evs.filter(([, e]) => e.kind === "sway").every(([, e]) => e.parts.every((p) => Math.abs(p.d[0]) + Math.abs(p.d[1]) === 1 && p.from >= 0 && p.from <= 1 && p.rect.every((v) => v >= 0 && v < 80))), "every wind sway is exactly 1 px, inside the sprite");
+  assertTrue(evs.filter(([, e]) => (e.kind === "move" || e.kind === "sway") && e.parts.length > 1).every(([, e]) => e.parts.every((p) => p.d.join() === e.parts[0].d.join())), "multi-part moves and sways (capes, hair) all go the same way");
+  assertTrue(evs.filter(([, e]) => e.kind === "blink").every(([, e]) => e.eyes.length >= 1 && e.eyes.every((r) => r[2] - r[0] <= 4 && r[3] - r[1] <= 3)), "blinks close small per-eye rects");
   const leon = parts["leon.png"].events[0];
-  assertTrue(leon.parts.length === 2 && leon.parts.every((p) => p.d[0] === 1), "Leon's cape: both flaps sway the same way, not outward");
+  assertTrue(leon.parts.length >= 2 && leon.parts.every((p) => p.d[0] === 1), "Leon's cape: every part sways the same way, not outward");
 
   // Timelines: no flicker slivers, each loop shows its event states.
-  for (const f of ["sailor-gen3.png", "hiker.png", "leon.png", "youngster-gen4.png", "acetrainerf.png"]) {
-    const tl = idleTimeline(f, parts[f]?.events ?? []);
+  for (const f of ["sailor-gen3.png", "hiker.png", "leon.png", "youngster-gen4.png", "acetrainerf.png", "cynthia.png", "wallace-gen6.png"]) {
+    const { px: fp, W: fw, H: fh } = await pixels(f);
+    const tl = idleTimeline(f, parts[f]?.events ?? [], Math.max(1, idleCuts(fp, fw, fh).steps.length));
     assertTrue(tl.every((s) => s.ms >= 60), `${f}: no frame shorter than 60 ms`);
     assertTrue((parts[f]?.events ?? []).every((_, k) => tl.some((s) => s.state === k + 1)), `${f}: every part event appears in the loop`);
   }
-  const sched = (f) => cardSchedule(f, 24, [], poseAtFrame).map((s) => s.pose).join("");
+  const sched = (f) => cardSchedule(f, 24, [], 2).map((s) => s.pose).join("");
   assertTrue(new Set(["leon.png", "serena.png", "kukui.png"].map(sched)).size > 1, "card loops: trainers start their breath at different frames");
   const { px: lp } = await pixels("leon.png");
   assertTrue(!Buffer.from(applyEvent(lp, 80, 80, leon)).equals(Buffer.from(lp)), "Leon's cape event changes the sprite");

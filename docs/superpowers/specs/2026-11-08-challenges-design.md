@@ -136,7 +136,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 
 - Badge art comes from 8 Badge PNGs. The same files are uploaded as the bot application's own emojis and served from `public/sprites/badges/`.
 - Discord confirms application emojis: an app can own up to 2,000, uploads are 128×128 and at most 256 KiB, the portal can manage them, and `USE_EXTERNAL_EMOJIS` isn't needed ([Discord emoji docs](https://docs.discord.com/developers/resources/emoji)). The emoji IDs live in a constants file. IDs aren't secrets.
-- `/trainercard` adds one description line with the Badge count out of 8 and the earned Badge emojis.
+- `/trainercard` and `/showcard` draw a Badge row on the rendered card (`utils/render/trainerCard.js`; decided 2026-11-09, after master made the card an image): the count out of 8 and all 8 Badges, earned ones in color and the rest dimmed. The text fallback, sent when the card can't render, keeps one description line with the count and the earned Badge emojis.
 - The dashboard adds a Badges row under the stats bar with all 8 images, unearned ones dimmed. The dashboard is `public/picker-pokemon/`, where `/auth/dashboard` lands (`bot_final.js:539-555`). `public/dashboard/` isn't served. `/api/user` returns the whole player record (`bot_final.js:1421-1435`) except an open run (`hideOpenRun`).
 - The 8 Gym Badges are defined once, in `public/picker-pokemon/badges.js`. It has no DOM access, so the bot can import it too, the same pattern `regions.js` uses.
 
@@ -157,7 +157,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - `utils/battle/playback.js`: a leader is a name, not a `<@mention>`. Add the challenge result embed, `playChallengeFight` (one fight of a run on its message, holding a replay slot only while it plays), the Revive line in the header, `showChoosing`, and `showRunResult`.
 - `commands/challenge.js`: the slash command, the Revive menu and its 60-second deadline, the run loop, and finishing a stale run on the next `/challenge`.
 - `bot_final.js`: `finishOpenRunsOnStartup` finishes every open run after a restart and edits its replay message, next to the wager refund.
-- `commands/trainercard.js` and `public/picker-pokemon/*`: the Badges line and row.
+- `commands/trainercard.js`, `utils/render/trainerCard.js` and `public/picker-pokemon/*`: the Badge line and rows.
 - Event log entries `challenge` with the opponent, seed, how far the player got, the result, the prize, and the CC lost, plus each break's Revive for a run (`finished: "stale"` or `"restart"` when it was finished without Revives). The event log is admin-only, so it can hold the exact amount.
 - `README.md` gets a Challenges section (the ladder, the 5-a-day cap next to the 10-a-day Battle cap, prizes, the 10% loss, where Badges show), the new test files in Tests, the Badge emoji upload in Setup, and a gotcha for missing Badge emoji IDs.
 - `CONTEXT.md` already has Challenge, Badge, and Elite Four run.
@@ -213,7 +213,7 @@ Run these in a test server against a local copy of `trainerData.json`, editing t
 13. While two `/battle` replays are running, start an Elite Four run. Its message shows its place in line, then its first fight plays.
 14. Challenge Blue, then Red, from a fresh account. Blue refuses and Red runs.
 15. Restart the bot during a replay. After restart, the result (EXP, attempt, prize or CC lost) is still on the player's record. Restart while a preview is open. Its buttons stop working and nothing was charged.
-16. Run `/trainercard`. It shows the Badges line with the count and earned emojis.
+16. Run `/trainercard` and `/showcard`. The card shows a Badge row with the count, earned Badges in color, and the rest dimmed.
 17. Open the dashboard. The Badges row shows all 8, with unearned ones dimmed.
 18. Try to set `challenge` through the dashboard's `/api/updateUser`. The server ignores it.
 
@@ -235,7 +235,7 @@ The Revive (use a record with all 8 Badges and a Team around Lv 70):
 
 ## Not included
 
-There is no Hall of Fame or leaderboard for clears, no Champion title, no admin tool to grant or reset Badges, and no Badges on `/showteam` or the trainer card image.
+There is no Hall of Fame or leaderboard for clears, no Champion title, no admin tool to grant or reset Badges, and no Badges on `/showteam`.
 
 ## Unrelated finding
 

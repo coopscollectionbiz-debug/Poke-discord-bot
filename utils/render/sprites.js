@@ -87,6 +87,17 @@ export async function loadTrainerSprite(fileName) {
   }
 }
 
+/** A Badge PNG (public/sprites/badges, from tools/tint-badges.mjs) by file name, or null. */
+export async function loadBadgeSprite(fileName) {
+  if (!fileName || !/^[a-z0-9._-]+\.png$/i.test(fileName)) return null;
+  try {
+    const image = await loadImage(fileURLToPath(new URL(`sprites/badges/${fileName}`, PUBLIC)));
+    return { image, width: image.width, height: image.height };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * The scale for one sprite: the image's shared `scale` (every Pokémon in an
  * image at the same pixel size, as in the games, so Pikachu stays smaller

@@ -14,6 +14,7 @@ import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { GifReader } from "omggif";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
 import { breathingPoses, idleCuts, poseAtFrame, IDLE_LOOP } from "../utils/trainerIdle.js";
+import { nameHash, breathTiming, rectMask, movePart, blinkEyes, applyEvent, idleTimeline, cardSchedule } from "../utils/trainerMotion.js";
 import { trainerImageUrl, trainerIdle } from "../utils/trainerAssets.js";
 import { createBackdrop, hasBackdrop } from "../utils/render/trainerBackdrop.js";
 import { renderTrainerCard } from "../utils/render/trainerCard.js";
@@ -78,19 +79,65 @@ section("Idle manifest and GIFs");
   }
   assertTrue(check.includes("up to date"), `generated idles are up to date (${check.trim().split("\n")[0]})`);
 
-  for (const file of ["cynthia.png", "youngster-gen4.png", "iris-gen5bw2.png"]) {
+  // Each loop starts at the trainer's own phase, so the unchanged PNG (the
+  // rest pose) is somewhere in the loop rather than always frame 0.
+  for (const file of ["cynthia.png", "youngster-gen4.png", "iris-gen5bw2.png", "sailor-gen3.png"]) {
     const g = new GifReader(fs.readFileSync(new URL(`public/sprites/trainers_idle/${manifest[file].gif}`, ROOT)));
     const { px, W, H } = await pixels(file);
-    const f0 = new Uint8ClampedArray(W * H * 4);
-    g.decodeAndBlitFrameRGBA(0, f0);
-    let same = true;
-    for (let i = 0; i < f0.length; i += 4) {
-      const a = px[i + 3] >= 128, b = f0[i + 3] >= 128;
-      if (a !== b || (a && (px[i] !== f0[i] || px[i + 1] !== f0[i + 1] || px[i + 2] !== f0[i + 2]))) { same = false; break; }
+    let rest = false;
+    for (let k = 0; k < g.numFrames() && !rest; k++) {
+      const fr = new Uint8ClampedArray(W * H * 4);
+      g.decodeAndBlitFrameRGBA(k, fr);
+      let same = true;
+      for (let i = 0; i < fr.length; i += 4) {
+        const a = px[i + 3] >= 128, b = fr[i + 3] >= 128;
+        if (a !== b || (a && (px[i] !== fr[i] || px[i + 1] !== fr[i + 1] || px[i + 2] !== fr[i + 2]))) { same = false; break; }
+      }
+      rest = same;
     }
-    assertTrue(g.numFrames() === 4 && g.loopCount() === 0, `${file}: 4-frame infinite loop`);
-    assertTrue(same, `${file}: frame 0 is pixel-identical to the PNG`);
+    assertTrue(g.numFrames() >= 4 && g.loopCount() === 0, `${file}: infinite loop of ≥ 4 frames (${g.numFrames()})`);
+    assertTrue(rest, `${file}: the unchanged PNG is one of the frames`);
   }
+}
+
+section("Offsets and part motions");
+{
+  assertEqual(nameHash("leon.png"), nameHash("leon.png"), "the per-trainer hash is stable");
+  const tim = [...new Set(["leon.png", "serena.png", "kukui.png", "hilbert.png", "rosa.png", "hau.png"].map((f) => JSON.stringify(breathTiming(f))))];
+  assertTrue(tim.length === 6, "different trainers get different breath timings");
+  const all = Object.keys(read("data/sprites/trainer-idles.json").files).map(breathTiming);
+  assertTrue(all.every((t) => t.rest >= 760 && t.rest <= 1090 && t.exhale >= 590 && t.exhale <= 850 && t.phase >= 0 && t.phase < 1), "tempo stays within 0.85×–1.2×, phase within the loop");
+
+  // movePart: a 3×3 block moved right by 1 on a 6×3 canvas with clear background.
+  const W = 6, H = 3, px = new Uint8ClampedArray(W * H * 4);
+  for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) px.set([200, 50, 50, 255], (y * W + x) * 4);
+  const moved = movePart(px, W, H, rectMask(px, W, H, [0, 0, 2, 2]), 1, 0);
+  const alphaRow = (buf) => Array.from({ length: W }, (_, x) => (buf[x * 4 + 3] ? 1 : 0)).join("");
+  assertEqual(alphaRow(moved), "011100", "a part moved into clear space leaves clear space behind it");
+  const blinked = blinkEyes(new Uint8ClampedArray([230, 190, 160, 255, 10, 10, 10, 255]), 1, 2, [0, 1, 0, 1]);
+  assertEqual(Array.from(blinked.subarray(4, 8)), [230, 190, 160, 255], "a blink paints the dark eye pixel with the lid colour above");
+
+  const parts = read("data/sprites/trainer-parts.json").sprites;
+  const idles = read("data/sprites/trainer-idles.json").files;
+  const evs = Object.entries(parts).flatMap(([f, s]) => s.events.map((e) => [f, e]));
+  assertTrue(Object.keys(parts).length >= 150, `part motions for ${Object.keys(parts).length} trainers`);
+  assertEqual(Object.keys(parts).filter((f) => idles[f]?.status !== "ok"), [], "every part-motion sprite has an approved idle");
+  assertTrue(evs.every(([, e]) => e.at >= 0 && e.at <= 1 && e.ms > 0 && e.ms <= 600), "events sit inside the loop and are short");
+  assertTrue(evs.filter(([, e]) => e.kind === "move").every(([, e]) => e.parts.every((p) => Math.abs(p.d[0]) + Math.abs(p.d[1]) === 1 && p.rect.every((v) => v >= 0 && v < 80))), "every move is exactly 1 px, inside the sprite");
+  assertTrue(evs.filter(([, e]) => e.kind === "move" && e.parts.length > 1).every(([, e]) => e.parts.every((p) => p.d.join() === e.parts[0].d.join())), "multi-part moves (capes) all go the same way");
+  const leon = parts["leon.png"].events[0];
+  assertTrue(leon.parts.length === 2 && leon.parts.every((p) => p.d[0] === 1), "Leon's cape: both flaps sway the same way, not outward");
+
+  // Timelines: no flicker slivers, each loop shows its event states.
+  for (const f of ["sailor-gen3.png", "hiker.png", "leon.png", "youngster-gen4.png", "acetrainerf.png"]) {
+    const tl = idleTimeline(f, parts[f]?.events ?? []);
+    assertTrue(tl.every((s) => s.ms >= 60), `${f}: no frame shorter than 60 ms`);
+    assertTrue((parts[f]?.events ?? []).every((_, k) => tl.some((s) => s.state === k + 1)), `${f}: every part event appears in the loop`);
+  }
+  const sched = (f) => cardSchedule(f, 24, [], poseAtFrame).map((s) => s.pose).join("");
+  assertTrue(new Set(["leon.png", "serena.png", "kukui.png"].map(sched)).size > 1, "card loops: trainers start their breath at different frames");
+  const { px: lp } = await pixels("leon.png");
+  assertTrue(!Buffer.from(applyEvent(lp, 80, 80, leon)).equals(Buffer.from(lp)), "Leon's cape event changes the sprite");
 }
 
 section("Trainer image URLs");

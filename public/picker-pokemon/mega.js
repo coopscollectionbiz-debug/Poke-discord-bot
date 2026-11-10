@@ -61,7 +61,8 @@ export function megaSprite(slot) {
 }
 
 function onModeChange(mode) {
-  if (section) section.style.display = mode === "team" ? "block" : "none";
+  // Shown in the Collection's Browse mode (and the old Change Team mode).
+  if (section) section.style.display = mode === "team" || mode === "browse" ? "block" : "none";
 }
 
 async function refresh() {
@@ -178,7 +179,12 @@ function cardHTML(c) {
   const onTeam = !!slot && slot.mega === c.formId && `${slot.id}:${slot.variant}` === c.line;
   const buttons = [];
   if (c.state === "active") {
-    if (c.teamSelectable) buttons.push(onTeam
+    // Teams are edited on the Teams page; without a team editor here
+    // (ctx.setTeam) the card links there instead of editing a Team.
+    if (c.teamSelectable && !ctx.setTeam) buttons.push(onTeam
+      ? `<span class="mega-btn on" aria-label="On your Display team">✓ On Team</span>`
+      : `<a class="mega-btn" href="/public/teams/?id=${encodeURIComponent(ctx.userId)}">Use on a team</a>`);
+    else if (c.teamSelectable) buttons.push(onTeam
       ? `<button type="button" class="mega-btn on" data-action="team-remove" data-card="${esc(c.cardId)}" aria-pressed="true">✓ On Team</button>`
       : `<button type="button" class="mega-btn" data-action="team-add" data-card="${esc(c.cardId)}">Add to Team</button>`);
     buttons.push(c.preferred

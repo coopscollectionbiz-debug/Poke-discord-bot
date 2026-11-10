@@ -92,6 +92,8 @@ const MEGA_USERS = [
   "utils/megaDisplay.js", "utils/render/sprites.js", "utils/render/expCard.js",
   // Teams: the Battle team reuses team validation and cleaning (one Mega per team).
   "services/battleTeam.js",
+  // Collection detail (B2): lists a species' Mega forms and whether each is unlocked (read-only).
+  "services/pokemonDetail.js",
 ];
 const megaModule = /megaUnlocks\.js|megas\.js|config\/features\.js|megaRewards\.js|megaApi\.js|megaTeam\.js|\/mega\.js|"\.\/mega\.js"/;
 const users = live.filter((f) => megaModule.test(fs.readFileSync(path.join(ROOT, f), "utf8")));

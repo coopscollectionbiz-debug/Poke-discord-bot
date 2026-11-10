@@ -14,7 +14,7 @@ export const EXPIRED_MESSAGE = "Your dashboard link expired — run /dashboard i
 export const MISSING_ID_MESSAGE = "This page needs your dashboard link — run /dashboard in Discord.";
 
 export const NAV_ITEMS = Object.freeze([
-  { key: "pokemon", label: "Pokémon", href: "/public/picker-pokemon/", icon: "box" },
+  { key: "pokemon", label: "Collection", short: "Pokédex", href: "/public/picker-pokemon/", icon: "box" },
   { key: "teams", label: "Teams", href: "/public/teams/", icon: "teams" },
   { key: "trainers", label: "Trainers", href: "/public/picker/", icon: "person" },
   { key: "bag", label: "Bag", href: "/public/bag/", icon: "bag" },

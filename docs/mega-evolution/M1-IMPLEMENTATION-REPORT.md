@@ -137,7 +137,7 @@ Client-reported unlock state is never trusted: cards, eligibility and quantities
 - PR #55 (`42f6ec83`): achievements test injectable clock.
 - PR #52 (`9496d296`): battle result embed shows rating changes, and EXP is sent privately. It touches `commands/battle.js`, `utils/battle/playback.js`, `services/achievementsApi.js` and tests.
 
-M1 changes none of those files. A trial merge was run in a throwaway worktree (results recorded at commit time in the final report message). The M1 branch itself was **not** merged or rebased, per instructions.
+M1 changes none of those files. **Trial merge** (throwaway worktree, M1 `9c0bc299` + `origin/master` `15caf105`, then discarded): no conflicts, and **all 51 test files pass**, including the achievements test that master fixed. The M1 branch itself was **not** merged or rebased, per instructions.
 
 ## 9. Known limitations
 

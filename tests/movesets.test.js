@@ -11,6 +11,8 @@ import { buildMon, memberMoves } from "../utils/battle/sim.js";
 import { autoMoveset } from "../utils/battle/moveset.js";
 import { getSpecies } from "../utils/battle/data.js";
 import { pokemonDetail } from "../services/pokemonDetail.js";
+import { battleInfo, inspectSlots } from "../commands/inspectpokemon.js";
+import { getMove } from "../utils/battle/data.js";
 
 const exp = (lv) => ({ exp: lv ** 3 });
 const player = () => ({
@@ -83,6 +85,19 @@ section("detail payload for the editor");
   assertEqual([c.movesets.display, c.movesets.battle.map((m) => m.id)], [null, [ids[0]]], "both teams' movesets");
   assertEqual(c.learnable.length, ids.length, "every learnable move, with names and types");
   assertTrue(c.moves.every((m) => m.id), "automatic moves carry ids");
+}
+
+section("/inspectpokemon shows the chosen moves");
+{
+  const u = player();
+  const ids = learnableMoves(u, 6, "normal").map((m) => m.id);
+  const name = (m) => getMove(m).name;
+  assertTrue(battleInfo(u, 6).includes(`Moves: ${autoMoveset(6, 58).map(name).join(", ")}`), "no moveset: automatic moves");
+  setMoveset(u, "display", 6, "normal", [ids[0], ids[1]]);
+  setMoveset(u, "battle", 6, "normal", [ids[2]]);
+  const text = battleInfo(u, 6);
+  assertTrue(text.includes(`Moves: ${name(ids[0])}, ${name(ids[1])}`) && text.includes(`Battle team moves: ${name(ids[2])}`), "text: Display moves, plus the Battle team's");
+  assertEqual(inspectSlots(u, { id: 6 })[0].moves, [name(ids[0]), name(ids[1])], "card: the Display team's moves");
 }
 
 finish();

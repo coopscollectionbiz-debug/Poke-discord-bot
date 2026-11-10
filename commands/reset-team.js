@@ -1,5 +1,5 @@
 // ==========================================================
-// /resetteam – Admin Reset of Displayed Pokémon Team (v7.0)
+// /resetteam – Admin reset of both Pokémon teams (Display + Battle) and movesets
 // ==========================================================
 
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
@@ -10,7 +10,7 @@ import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("resetteam")
-    .setDescription("Admin: Reset a user's displayed Pokémon team.")
+    .setDescription("Admin: Reset a user's Display and Battle teams.")
     .addUserOption(option =>
       option
         .setName("user")
@@ -58,16 +58,19 @@ export default {
         }
 
         // ======================================================
-        // ⭐ CORRECT FIELD: displayedPokemon
+        // Both teams: the Display team (displayedPokemon) and the
+        // Battle team (battleTeam, ranked/wager), plus their chosen
+        // movesets (user.movesets). Missing battleTeam = "not set".
         // ======================================================
-        // Your bot uses displayedPokemon for the 6-Pokémon team.
         user.displayedPokemon = [];
+        delete user.battleTeam;
+        delete user.movesets;
 
         // Save changes (user is the live record; no reassignment needed)
         const saveAck = await saveAndAck(trainerData);
 
         return safeReply(interaction, {
-          content: withSaveNote(`✅ Reset **${target.username}'s** displayed Pokémon team.\nThey can now pick a new team in the dashboard.`, saveAck),
+          content: withSaveNote(`✅ Reset **${target.username}'s** Display and Battle teams (and their chosen moves).\nThey can now pick new teams on the dashboard's Teams page.`, saveAck),
           flags: MessageFlags.Ephemeral
         });
 

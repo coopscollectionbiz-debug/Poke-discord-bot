@@ -8,7 +8,8 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { execute, data, refusal, boardEmbed, boardMessage, reviveMenu, previewMessage, cardView, challengeExpMessage } from "../commands/challenge.js";
+import { execute, data, refusal, boardEmbed, boardMessage, boardMenu, reviveMenu, previewMessage, cardView, challengeExpMessage } from "../commands/challenge.js";
+import { ComponentType } from "discord.js";
 import { boardView, boardAltText, BOARD_SIZE } from "../utils/render/challengeBoard.js";
 import { challengeCardView, cardAltText, cardSlots, CHALLENGE_CARD_SIZE } from "../utils/render/challengeCard.js";
 import { previewChallenge } from "../utils/challenge/runChallenge.js";
@@ -174,7 +175,15 @@ function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail
     await playing;
     return fight;
   };
-  return { trainerData, log, collectors, run, click, publicText, button, nonce, nonceOf, channel, menuButtons, pick, fightRun };
+  // Picks `value` from the newest board's dropdown, like Discord: a new
+  // interaction from the same player in the same channel.
+  const choose = async (value) => {
+    const board = collectors.findLast((c) => c.opts.componentType === ComponentType.StringSelect);
+    const customId = embedJson(log.replies.findLast((r) => r.files?.[0]?.name === "board.png").components[0]).components[0].custom_id;
+    await board.h.collect({ ...interaction(null), customId, values: [value] });
+    return board;
+  };
+  return { trainerData, log, collectors, run, click, publicText, button, nonce, nonceOf, channel, menuButtons, pick, fightRun, choose };
 }
 
 section("Command shape");
@@ -277,6 +286,46 @@ section("The challenge channel");
   await home.run("brock");
   assertEqual(embedJson(home.log.replies[0].components[0]).components.map((b) => b.label), ["Fight!", "Not now"], "in the challenge channel, the preview opens");
   delete process.env.CHALLENGE_CHANNEL_ID;
+}
+
+section("The board's dropdown");
+{
+  const options = (user) => embedJson(boardMenu(user, "n")).components[0].options.map((o) => o.value);
+  const fresh = WEAK();
+  assertEqual(options(fresh), [...GYMS, "red"], "every Gym and Red; the Elite Four and Blue stay out until they open");
+  const eight = WEAK();
+  eight.challenge = { won: allGyms(), day: null, attempts: 0 };
+  assertEqual(options(eight), [...GYMS, "elite4", "red"], "8 Badges add the Elite Four");
+  eight.challenge.won.elite4 = "d";
+  assertEqual(options(eight), [...GYMS, "elite4", "blue", "red"], "a cleared run adds Blue");
+  assertEqual(embedJson(boardMenu(fresh, "n")).components[0].options.slice(0, 2).map((o) => o.label), ["Brock", "Misty"], "labeled by name");
+
+  const t = harness();
+  await t.run(null);
+  const menu = embedJson(t.log.replies[0].components[0]).components[0];
+  assertEqual([menu.type, menu.custom_id.startsWith("challenge_pick:"), menu.placeholder], [ComponentType.StringSelect, true, "Choose who to challenge"],
+    "the board carries the dropdown");
+
+  await t.choose("brock");
+  const preview = t.log.replies.at(-1);
+  assertEqual([preview.flags, preview.content], [64, "A loss costs you **1,234 CC**."], "picking Brock opens the private preview");
+  assertTrue(preview.files[0].description.startsWith("Ash vs Gym Leader Brock"), "with Brock's VS card");
+  const fight = await t.click("fight");
+  assertEqual([t.trainerData.A.challenge.attempts, t.log.channel.length], [1, 2], "and Fight! from it plays the challenge");
+  assertTrue(!!fight.updates.length, "answering the click");
+
+  const capped = harness();
+  capped.trainerData.A.challenge = { won: {}, day: new Date().toISOString().slice(0, 10), attempts: CHALLENGE.perDay };
+  await capped.run(null);
+  await capped.choose("misty");
+  assertEqual(capped.log.replies.at(-1), { content: refusal("cap"), flags: 64 }, "a pick is checked like the command: out of challenges is refused privately");
+
+  const idle = harness();
+  await idle.run(null);
+  const board = idle.collectors.find((c) => c.opts.componentType === ComponentType.StringSelect);
+  assertEqual(board.opts.time, 10 * 60 * 1000, "the dropdown works for 10 minutes");
+  board.stop("time");
+  assertEqual(idle.log.replyEdits.at(-1), { components: [] }, "then it leaves the board, which stays");
 }
 
 section("Preview");

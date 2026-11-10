@@ -1,6 +1,7 @@
 // ==========================================================
 // /challenge — fight Kanto's Gym Leaders, the Elite Four, Blue, and Red.
-// With no opponent: a private progress board. With one: a private preview
+// With no opponent: a private progress board, whose dropdown opens the
+// preview for whoever is picked. With one: a private preview
 // (prize, exact CC a loss costs) with Fight! and Not now. Nothing is held
 // while the preview is open; Fight! re-checks everything under the lock,
 // saves the result, then posts a public intro card and the replay. An Elite
@@ -10,7 +11,7 @@
 
 import {
   SlashCommandBuilder, MessageFlags, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType,
-  PermissionFlagsBits, AttachmentBuilder,
+  PermissionFlagsBits, AttachmentBuilder, StringSelectMenuBuilder,
 } from "discord.js";
 import { randomInt, randomUUID } from "crypto";
 import { logEvent } from "../utils/eventLog.js";
@@ -94,6 +95,21 @@ export async function boardMessage(user, displayName, now = new Date(), { render
     console.warn("⚠️ challenge board render failed; sending the embed:", err?.message || err);
     return { embeds: [boardEmbed(user ?? {}, now)] };
   }
+}
+
+// How long the board's dropdown answers picks: under the 15 minutes its
+// reply can still be edited, so it can be taken off the board at the end.
+const BOARD_MS = 10 * 60 * 1000;
+
+// The board's dropdown: everyone the player can challenge now, in board
+// order (the Elite Four and Blue join once they open). A pick opens the
+// same private preview as /challenge opponent:<pick>.
+export function boardMenu(user, nonce) {
+  const open = CHALLENGE_KEYS.filter((key) => isUnlocked(user ?? {}, key));
+  return new ActionRowBuilder().addComponents(new StringSelectMenuBuilder()
+    .setCustomId(`challenge_pick:${nonce}`)
+    .setPlaceholder("Choose who to challenge")
+    .addOptions(open.map((key) => ({ label: CHALLENGES[key].label, value: key }))));
 }
 
 // `preview` is previewChallenge(user, key). The private preview shows the
@@ -312,7 +328,37 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   // Finished first, so the board and the checks below see the result.
   if (isRunStale(trainerData[userId])) await finishStaleRun({ trainerData, userId, lockUser, enqueueSave, client, playerName });
 
-  if (!key) return interaction.reply({ ...(await boardMessage(trainerData[userId] ?? null, playerName)), flags: MessageFlags.Ephemeral });
+  if (key) return openPreview(interaction, key, { trainerData, lockUser, enqueueSave });
+
+  const nonce = randomUUID();
+  const board = await interaction.reply({
+    ...(await boardMessage(trainerData[userId] ?? null, playerName)),
+    components: [boardMenu(trainerData[userId], nonce)],
+    flags: MessageFlags.Ephemeral,
+  });
+  const picks = board.createMessageComponentCollector({
+    componentType: ComponentType.StringSelect,
+    time: BOARD_MS,
+    filter: (i) => i.customId === `challenge_pick:${nonce}` && i.user.id === userId,
+  });
+  // Each pick is its own interaction, answered with its own preview; the board stays.
+  picks.on("collect", async (pick) => {
+    try {
+      if (isRunStale(trainerData[userId])) await finishStaleRun({ trainerData, userId, lockUser, enqueueSave, client, playerName });
+      await openPreview(pick, pick.values[0], { trainerData, lockUser, enqueueSave });
+    } catch (err) {
+      console.warn("⚠️ challenge pick failed:", err?.message || err);
+    }
+  });
+  picks.on("end", () => interaction.editReply({ components: [] }).catch(() => {}));
+}
+
+// The private preview with Fight! and Not now, for /challenge opponent:<key>
+// or a pick from the board's dropdown (`interaction` is then the pick).
+async function openPreview(interaction, key, { trainerData, lockUser, enqueueSave }) {
+  const userId = interaction.user.id;
+  const ephemeral = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
+  const playerName = interaction.member?.displayName ?? interaction.user.username;
   if (interaction.appPermissions && !interaction.appPermissions.has(CHANNEL_PERMISSIONS)) return ephemeral(refusal("no_perms"));
   const early = challengeBlock({ trainerData, userId, key });
   if (early) return ephemeral(refusal(early, trainerData[userId]));

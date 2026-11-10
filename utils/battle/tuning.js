@@ -63,3 +63,27 @@ export const CHALLENGE = {
 // tests turns kept the 2 s pace with up to 5 at once and slipped at 6; a Fly
 // shared CPU is about half as fast, so 2 keeps a margin.
 export const PLAYBACK = { maxUpdates: 12, delayMs: 2000, maxAtOnce: 2 };
+// Trainer encounters (docs/superpowers/specs/2026-11-10-trainer-encounters-design.md;
+// every value decided 2026-11-10). chance: per message that earns TP, after
+// a miss on the catch roll. gapMs and perDay count every posted card, run
+// from or not. answerMs: how long Battle! and Run work. Each tier's band is
+// added to the player's average Team Level, clamped to minLevel..maxLevel.
+// aceShare: the part of Over-tier encounters that use the Ace Trainer class.
+// surprise: the part of Under-tier encounters whose last Pokémon is swapped
+// for any species at avg + band.
+export const ENCOUNTER = {
+  chance: 0.01,
+  gapMs: 30 * 60 * 1000,
+  perDay: 8,
+  answerMs: 2 * 60 * 1000,
+  tiers: [
+    { key: "under", share: 0.7, band: [-15, -2] },
+    { key: "even", share: 0.2, band: [-2, 2] },
+    { key: "over", share: 0.1, band: [5, 15] },
+  ],
+  minLevel: 5,
+  maxLevel: 100,
+  partySize: [3, 6],
+  aceShare: 0.5,
+  surprise: { share: 0.03, band: [10, 25] },
+};

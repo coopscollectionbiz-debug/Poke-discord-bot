@@ -199,4 +199,4 @@
   - Grep the spec, README, and CONTEXT for stale mentions of `surge`, `simulates the whole run at once`, and `Fighting…`.
 - [ ] **Step 4:** Run `npm test`. Only the two expected failures remain.
 - [ ] **Step 5: Commit** `Finish open Elite Four runs at startup; document the Revive`.
-- [ ] **Step 6:** End-of-branch review with one fresh reviewer, on the diff from `a3f0ced` (the 8% surge commit) to HEAD, with this plan's Review Focus.
+- [ ] **Step 6:** End-of-branch review with one fresh reviewer, on the diff from `6c1fb5b` (the 8% surge commit) to HEAD, with this plan's Review Focus.

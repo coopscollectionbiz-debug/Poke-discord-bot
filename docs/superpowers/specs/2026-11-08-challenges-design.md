@@ -44,7 +44,7 @@ Sources: [pokemondb FRLG](https://pokemondb.net/firered-leafgreen/gymleaders-eli
 
 - Giovanni's sixth Pokémon is Persian (decided). His FRLG team has 5, and neither his Let's Go team nor HGSS has another Ground type for him. Persian is his signature outside the Gym.
 - The ace targets come from the interview (Gyms "a touch lower" than 30 → 65, so Giovanni tops out around 55 to 60, and the Elite Four sit around 55 to 60). The balance test tunes them.
-- Tuning: before the Revive, the Elite Four run's gate at these Levels tied Blue's at Lv 74, and every Elite Four Pokémon briefly moved down 1 Level to break the tie (`node tests/challengeBalance.test.js` at commit fbaa9e52). The Revive breaks it instead, so the Levels are back at the draft: the run's gate is Lv 68, under Blue's Lv 74 (`node tests/challengeBalance.test.js`).
+- Tuning: before the Revive, the Elite Four run's gate at these Levels tied Blue's at Lv 74, and every Elite Four Pokémon briefly moved down 1 Level to break the tie (`node tests/challengeBalance.test.js` at pre-rebase commit fbaa9e52, on Gen 1–5 data). The Revive breaks it instead, so the Levels are back at the draft: the run's gate is Lv 67, under Blue's Lv 72 (Measured).
 
 ## Difficulty
 
@@ -174,13 +174,13 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 
 ## Measured (stand-in Teams, 200 per Level)
 
-Every figure in this section comes from `node tests/challengeBalance.test.js`.
+Every figure in this section comes from `node tests/challengeBalance.test.js`, run on master's Gen 6–9 data (2026-11-09). The stand-in pool has 492 species from all 9 generations, including Gens 6–9 that players can't obtain until `POKEMON_GENERATIONS` releases them. On the earlier Gen 1–5 data the gates were 1–3 Levels higher (Giovanni 50, Elite Four run 68, Blue 74, Red 86).
 
-- Gate Levels: Brock 23, Misty 30, Lt. Surge 31, Erika 34, Koga 37, Sabrina 43, Blaine 48, Giovanni 50, Elite Four run 68, Blue 74, Red 86. The Gyms rise one by one, and the enforced order holds.
-- The Elite Four run's gate is Lv 68 for a player who revives their strongest fainted Pokémon at every break, and Lv 75 for one who never picks.
-- Win rate climbs steeply, so every challenge is a Level gate and retries barely matter. A 10% win rate becomes 90% over 6 Levels for Brock (Lv 20 → 26), 10 for Giovanni (45 → 55), 15 for Blue (67 → 82) and the Elite Four run (61 → 76), and 18 for Red (78 → 96).
-- A one-Pokémon Team. Challenges have no Underdog surge, so a lone Lv 30 Charizard wins 0% of 200 runs against every challenge. With `/battle`'s surge, a Team of one was always the Underdog by a wide margin and surged to Lv 100: the same Charizard won 27% of 200 runs against every Gym from Brock through Blaine at the old 20% cap, and 11% at the 8% cap (`node tests/challengeBalance.test.js` at commits 6e50566a and a3f0cedf). That is why challenges have none.
-- Leveling pace: from Lv 68 (the Elite Four run's gate) to Lv 100 takes 31 days at 10 Battles a day, and 14 days with 5 cleared Elite Four runs a day too.
+- Gate Levels: Brock 22, Misty 29, Lt. Surge 30, Erika 33, Koga 37, Sabrina 43, Blaine 47, Giovanni 49, Elite Four run 67, Blue 72, Red 83. The Gyms rise one by one, and the enforced order holds.
+- The Elite Four run's gate is Lv 67 for a player who revives their strongest fainted Pokémon at every break, and Lv 73 for one who never picks.
+- Win rate climbs steeply, so every challenge is a Level gate and retries barely matter. A 10% win rate becomes 90% over 6 Levels for Brock (Lv 19 → 25), 10 for Giovanni (45 → 55), 12 for the Elite Four run (60 → 72), 15 for Blue (65 → 80), and 19 for Red (74 → 93).
+- A one-Pokémon Team. Challenges have no Underdog surge, so a lone Lv 30 Charizard wins 0% of 200 runs against every challenge. With `/battle`'s surge, a Team of one was always the Underdog by a wide margin and surged to Lv 100: the same Charizard won 27% of 200 runs against every Gym from Brock through Blaine at the old 20% cap, and 11% at the 8% cap (`node tests/challengeBalance.test.js` at pre-rebase commits 6e50566a and a3f0cedf, on Gen 1–5 data). That is why challenges have none.
+- Leveling pace: from Lv 67 (the Elite Four run's gate) to Lv 100 takes 31 days at 10 Battles a day, and 14 days with 5 cleared Elite Four runs a day too.
 
 ## Open checks
 

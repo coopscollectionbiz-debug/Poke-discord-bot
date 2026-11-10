@@ -418,6 +418,7 @@ ensureWeeklyReset(user);
 
 import { lockUser } from "./utils/userLocks.js";
 import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
+import { createEncounterService, isEncounterButton } from "./utils/encounter/service.js";
 import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
 import { finishAllOpenRuns, challengeLogEntry, hideOpenRun } from "./utils/challenge/runChallenge.js";
@@ -964,10 +965,12 @@ async function saveDataToDiscord(data, { force = false } = {}) {
 // ==========================================================
 // 🎁 DETERMINISTIC RANDOM REWARD SYSTEM (ATOMIC PER-USER LOCK)
 // ==========================================================
+// Resolves to "cooldown", "missed" (a Trainer encounter may roll next), or
+// "caught"; undefined when the reward couldn't be picked.
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   const userId = interactionUser.id;
 
-  await lockUser(userId, async () => {
+  return lockUser(userId, async () => {
     console.log("⚙️ tryGiveRandomReward executed for", interactionUser.username);
 
     // =============================
@@ -975,7 +978,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // =============================
     const now = Date.now();
     const last = rewardCooldowns.get(userId) || 0;
-    if (now - last < REWARD_COOLDOWN) return;
+    if (now - last < REWARD_COOLDOWN) return "cooldown";
     rewardCooldowns.set(userId, now);
 
     // =============================
@@ -995,7 +998,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
     // Reward fails → keep pity meter, exit
     if (Math.random() >= finalChance) {
-      return;
+      return "missed";
     }
 
     // Reward occurred → reset pity meter
@@ -1075,8 +1078,13 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     }).catch(err => console.error("❌ broadcastReward failed:", err.message));
 
     console.log(`✅ Reward granted to ${interactionUser.username}`);
+    return "caught";
   });
 }
+
+// Trainer encounters (utils/encounter/service.js): open encounters live in
+// memory; their buttons come through interactionCreate below.
+const encounters = createEncounterService({ getTrainerData: () => trainerData, lockUser, enqueueSave });
 
 
 // ==========================================================
@@ -1221,6 +1229,7 @@ client.on(
     enqueueSave,
     queueRoleUpdate,
     giveRandomReward: tryGiveRandomReward,
+    spot: (message) => encounters.maybeSpot(message),
   })
 );
 
@@ -1649,6 +1658,19 @@ if (interaction.isChatInputCommand()) {
   // ----------------------------------------------------------
   if (interaction.isButton()) {
     const id = interaction.customId ?? "";
+
+    // Trainer encounter cards are plain channel messages with no collector, so
+    // their clicks (even on a card from before a restart) are answered here.
+    if (isEncounterButton(id)) {
+      if (!isReady) {
+        await interaction
+          .reply({ content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.", flags: 64 })
+          .catch(() => {});
+        return;
+      }
+      await encounters.handleButton(interaction);
+      return;
+    }
 
     const noopButton =
       id.startsWith("confirm_") ||

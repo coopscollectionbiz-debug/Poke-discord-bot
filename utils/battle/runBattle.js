@@ -162,7 +162,8 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
       trackProgress(u, [{ type: "battle", won, upset: won && from[1 - i] - from[i] >= 200 }], now.getTime());
     });
   } else {
-    // Casual: unrated W/L and streaks for both players.
+    // Casual: unrated W/L and streaks for both players, then the casual
+    // achievements (same block, inside the caller's locks).
     users.forEach((u, i) => {
       const c = getCasualRecord(u);
       if (i === result.winner) {
@@ -173,6 +174,7 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
         c.losses++;
         c.streak = 0;
       }
+      trackProgress(u, [{ type: "casual" }], now.getTime());
     });
   }
 

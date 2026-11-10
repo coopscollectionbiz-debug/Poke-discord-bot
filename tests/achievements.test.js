@@ -43,7 +43,7 @@ section("Catalog");
   assertEqual(new Set(ids).size, ids.length, "ids are unique");
   assertTrue(ids.every((id) => cat.ACHIEVEMENT_ID_PATTERN.test(id)), "ids are stable snake_case");
   assertTrue(all.length >= 80, `${all.length} achievements`);
-  assertEqual(Object.keys(cat.CATEGORIES).length, 8, "8 categories (activity added in revision 2)");
+  assertEqual(Object.keys(cat.CATEGORIES).length, 9, "9 categories (activity added in revision 2, casual with the ranked/casual split)");
   assertTrue(all.every((a) => cat.CATEGORIES[a.category] && a.name && a.description && Number.isSafeInteger(a.target) && a.target > 0 && Number.isSafeInteger(a.ap) && a.ap >= 0), "required metadata present");
   assertTrue(all.every((a) => ["state", "counter"].includes(a.metric.kind) && ["full", "baseline", "none"].includes(a.retro)), "metric kind and retroactivity declared");
   assertTrue(all.every((a) => Object.isFrozen(a)), "entries are frozen");

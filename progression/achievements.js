@@ -246,6 +246,9 @@ export function computeMetrics(user, wanted) {
       // the rating reset never takes back progress (utils/battle/rewards.js).
       case "battleWins": out[full] = lifetimeRanked(user).wins; break;
       case "battleRating": out[full] = lifetimeRanked(user).bestRating; break;
+      // Casual (open) battles: user.casual, written by runBattle.
+      case "casualWins": out[full] = Number(user.casual?.wins) || 0; break;
+      case "casualBestStreak": out[full] = Number(user.casual?.bestStreak) || 0; break;
       case "tp": out[full] = Number(user.tp) || 0; break;
       case "trainers": out[full] = Array.isArray(user.trainers) ? user.trainers.length : Object.keys(user.trainers || {}).length; break;
       case "maxLevel": { let m = 0; for (const lv of Object.values(levelsForUser(user))) if (lv > m) m = lv; out[full] = m; break; }
@@ -270,6 +273,7 @@ const EVENT_METRICS = {
   trainers: TRAINER_METRICS,
   daily: ["counter:dailyClaims", "counter:bestDailyStreak"],
   weekly: ["counter:weeklyClaims"],
+  casual: ["state:casualWins", "state:casualBestStreak", "state:maxLevel"],
 };
 
 const bump = (user, key, n = 1) => {

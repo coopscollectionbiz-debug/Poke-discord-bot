@@ -29,3 +29,9 @@
 .ach-card .reward { margin: 8px 0 0; font-size: 0.85rem; color: var(--cc-text-muted); }
 .ach-card .claim-btn { margin-top: 12px; background: var(--cc-gold); color: var(--cc-ink); }
 .ach-card .claim-btn:hover:not(:disabled) { background: #f7d36e; }
+
+/* Ranked / Casual / Collection & more tabs */
+.ach-groups { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 12px 0; }
+.ach-groups button { position: relative; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text-muted); font-weight: 800; font-size: 13.5px; }
+.ach-groups button[aria-pressed="true"] { border-color: var(--cc-blue); background: var(--cc-blue-soft); color: var(--cc-text); }
+.ach-groups button[data-ready]:not([data-ready=""])::after { content: attr(data-ready); position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--cc-gold); color: var(--cc-ink); font-size: 11px; line-height: 20px; }

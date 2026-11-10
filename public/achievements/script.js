@@ -36,6 +36,21 @@ function rewardLine(r) {
   return `🎁 ${parts.join(", ")} · ${state}`;
 }
 
+// Ranked and casual battles are shown separately (owner decision); everything
+// else is "Collection & more". Client-side over the loaded list.
+let group = "all";
+const GROUP_OF = (cat) => (cat === "battle" ? "ranked" : cat === "casual" ? "casual" : "other");
+
+function renderGroups() {
+  for (const b of document.querySelectorAll("#achGroups [data-group]")) {
+    const g = b.dataset.group;
+    const ready = data ? data.achievements.filter((r) => r.claimable && (g === "all" || GROUP_OF(r.category) === g)).length : 0;
+    b.setAttribute("aria-pressed", String(g === group));
+    b.dataset.ready = ready ? String(ready) : "";
+    b.title = ready ? `${ready} reward${ready > 1 ? "s" : ""} ready` : "";
+  }
+}
+
 function render() {
   const grid = $("achGrid");
   grid.replaceChildren();
@@ -49,9 +64,11 @@ function render() {
     summary.append(chip);
   }
 
+  renderGroups();
   const f = $("achFilter").value;
   const list = data.achievements.filter(
-    (r) => f === "all" || (f === "unlocked" && r.unlocked) || (f === "locked" && !r.unlocked) || (f === "claimable" && r.claimable)
+    (r) => (group === "all" || GROUP_OF(r.category) === group)
+      && (f === "all" || (f === "unlocked" && r.unlocked) || (f === "locked" && !r.unlocked) || (f === "claimable" && r.claimable))
   );
   $("achStatus").textContent = list.length ? `${list.length} achievement${list.length === 1 ? "" : "s"}` : "Nothing to show here.";
 
@@ -145,5 +162,11 @@ if (!userId) {
 } else {
   $("achCategory").onchange = () => load();
   $("achFilter").onchange = render;
+  document.getElementById("achGroups").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-group]");
+    if (!b) return;
+    group = b.dataset.group;
+    render();
+  });
   load();
 }

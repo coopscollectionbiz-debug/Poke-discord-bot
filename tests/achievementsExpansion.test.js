@@ -53,7 +53,7 @@ section("Catalog integrity (revision 2)");
   const all = cat.listAchievements();
   const ids = all.map((a) => a.id);
   assertEqual(cat.CATALOG_REVISION, 3, "catalog revision is 3 (Generations 6–9)");
-  assertEqual(all.length, 157, "157 achievements (141 + 16 for Generations 6–9)");
+  assertEqual(all.length, 165, "165 achievements (141 + 16 for Generations 6–9 + 8 casual battle)");
   assertEqual(new Set(ids).size, ids.length, "ids unique");
   // Every revision-1 entry is unchanged (ids, targets, metrics, AP, tiers).
   const REV1 = { col_first: [1, 5], col_species_500: [500, 100], col_region_unova_full: [156, 75], col_mythic: [1, 40], shiny_100: [100, 150], shiny_species_50: [50, 80], evo_100: [100, 50], bat_wins_500: [500, 100], bat_rating_1600: [1600, 60], trainer_250: [250, 80], don_5000: [5000, 80], econ_buy_100: [100, 30], meta_ap_1500: [1500, 0], lvl_100: [100, 60] };
@@ -433,7 +433,7 @@ section("Hidden privacy, dashboard and Discord with the larger catalog");
   assertTrue(after && after.unlocked && after.name === "Eeveelution Gallery" && after.ap === 40, "once unlocked, the details become visible");
   assertEqual(H.view({ query: { id: B }, isAuthorized: (id) => id === A }).status, 403, "cross-user view denied");
   assertEqual(H.view({ query: { id: A, category: "activity" }, isAuthorized: () => true }).body.achievements.length, 10, "activity category filter");
-  assertTrue(body.categories.length === 8 && body.total === cat.listAchievements().filter(cat.isAchievementActive).length, "category counts cover all 8 categories (released generations only)");
+  assertTrue(body.categories.length === 9 && body.total === cat.listAchievements().filter(cat.isAchievementActive).length, "category counts cover all 9 categories (released generations only)");
   // Discord: every page of every category within embed limits; no claim button (nothing approved).
   const nonce = "a1b2c3d4e5f6";
   let pages = 0;
@@ -451,7 +451,7 @@ section("Hidden privacy, dashboard and Discord with the larger catalog");
   const ov = D.buildAchievementsView(td[B], { nonce });
   assertTrue(/Daily & Weekly: \*\*\d+\/10\*\* \(\d+%\)/.test(ov.embeds[0].data.description) && /\(\d+%\)/.test(ov.embeds[0].data.title), "overview shows completion percentages");
   const sel = ov.components[0].components[0].options.map((o) => o.data.value);
-  assertEqual(sel, ["all", "collection", "shiny", "evolution", "battle", "training", "economy", "activity", "special"], "category select includes Daily & Weekly");
+  assertEqual(sel, ["all", "collection", "shiny", "evolution", "battle", "casual", "training", "economy", "activity", "special"], "category select includes Daily & Weekly and Casual Battles");
   const st = { category: "all", page: 0 };
   assertTrue(D.reduceAchievementsInteraction(st, { userId: B, customId: `ach:${nonce}:cat`, values: ["activity"] }, { ownerId: B, nonce }).allowed, "owner can pick the new category");
   assertTrue(!D.reduceAchievementsInteraction(st, { userId: A, customId: `ach:${nonce}:next` }, { ownerId: B, nonce }).allowed, "another player can't press the buttons");

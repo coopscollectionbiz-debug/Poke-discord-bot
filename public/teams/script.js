@@ -73,8 +73,8 @@ function membership(s) {
 }
 
 /** Why `s` can't join team `t` right now (null = it can). Mirrors the server. */
-function blockReason(t, s) {
-  const list = team(t);
+function blockReason(t, s, { replaceAt = -1 } = {}) {
+  const list = replaceAt >= 0 ? team(t).filter((_, k) => k !== replaceAt) : team(t);
   if (list.some((m) => m.id === s.id && m.variant === s.variant)) return { code: "on", short: "On this team", text: `${species(s.id).name} is already on your ${LABEL[t]}.` };
   if (list.length >= MAX) return { code: "full", short: "Team full", text: `Your ${LABEL[t]} is full (6/6). Remove a Pokémon first.` };
   if (t === "battle" && isMythic(s.id)) {
@@ -101,8 +101,17 @@ const announce = (msg) => { live.textContent = ""; requestAnimationFrame(() => {
 // ---------- actions ----------
 let focusAfter = null;
 
-function add(t, s) {
-  const why = blockReason(t, s);
+/**
+ * Add a box copy to team t. at: slot index to insert at (default: the end).
+ * replace: swap out the Pokémon at that slot (drag onto a filled slot of a
+ * full team). Same rules as the server.
+ */
+function add(t, s, { at = null, replace = false } = {}) {
+  const list = [...team(t)];
+  const existing = list.findIndex((m) => m.id === s.id && m.variant === s.variant);
+  if (existing >= 0 && at != null) return moveTo(t, existing, Math.min(at, list.length - 1)); // already on it: just move
+  const replaceAt = replace && at != null && at < list.length ? at : -1;
+  const why = blockReason(t, s, { replaceAt });
   if (why) {
     if (why.code === "mythic") state.error[t] = why;
     else toast(why.text);
@@ -110,8 +119,18 @@ function add(t, s) {
     return;
   }
   state.error[t] = null;
-  state.draft[t] = [...team(t), { id: s.id, variant: s.variant }];
-  announce(`${species(s.id).name} added to your ${LABEL[t]}, slot ${team(t).length}.`);
+  const slot = { id: s.id, variant: s.variant };
+  let pos;
+  if (replaceAt >= 0) {
+    const [out] = list.splice(replaceAt, 1, slot);
+    pos = replaceAt;
+    announce(`${species(s.id).name} replaced ${slotName(out)} in slot ${pos + 1}.`);
+  } else {
+    pos = at == null ? list.length : Math.min(at, list.length);
+    list.splice(pos, 0, slot);
+    announce(`${species(s.id).name} added to your ${LABEL[t]}, slot ${pos + 1}.`);
+  }
+  state.draft[t] = list;
   render();
 }
 
@@ -223,7 +242,7 @@ async function save() {
 // ---------- rendering ----------
 function slotCard(t, s, i) {
   if (!s) {
-    return `<li class="tm-slot is-empty"><button type="button" class="tm-slot-add" data-act="openbox" aria-label="Add a Pokémon to ${LABEL[t]} slot ${i + 1}">
+    return `<li class="tm-slot is-empty" data-team="${t}" data-i="${i}"><button type="button" class="tm-slot-add" data-act="openbox" aria-label="Add a Pokémon to ${LABEL[t]} slot ${i + 1}">
       <svg class="tm-ic" aria-hidden="true"><use href="#tm-plus"/></svg><span>Add</span></button></li>`;
   }
   const sp = species(s.id);
@@ -350,7 +369,7 @@ function boxTile(s) {
   const blocked = why && why.code === "mythic";
   const label = `${sp.name}${shiny ? " (shiny)" : ""}, Lv ${levelOf(s)}${why ? `. ${why.short}` : `. Add to your ${LABEL[t]}`}`;
   return `<li class="tm-tile${shiny ? " is-shiny" : ""}${blocked ? " is-blocked" : ""}${why?.code === "on" ? " is-on" : ""}">
-    <button type="button" class="tm-tile-btn" data-act="add" data-id="${s.id}" data-variant="${s.variant}" aria-label="${esc(label)}">
+    <button type="button" class="tm-tile-btn" data-act="add" data-id="${s.id}" data-variant="${s.variant}" aria-label="${esc(label)}" draggable="true">
       <span class="tm-tile-badges">${badges}</span>
       ${shiny ? `<span class="tm-shiny tm-shiny--sm"><svg class="tm-ic" aria-hidden="true"><use href="#tm-sparkle"/></svg></span>` : ""}
       <img class="cc-sprite" src="/public/sprites/pokemon/${shiny ? "shiny" : "normal"}/${s.id}.gif" alt="" loading="lazy" onerror="this.onerror=null;this.src='/public/sprites/items/pokeball.png'">
@@ -491,34 +510,83 @@ function openSheet() {
 document.getElementById("boxSheetClose").addEventListener("click", () => sheet.close());
 sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.close(); });
 
-// Drag to reorder (desktop; the ▲▼ buttons do the same for everyone).
-let dragFrom = null;
+// Drag and drop (mouse; on every device the ▲▼ / ✕ buttons and tapping a
+// box Pokémon do the same):
+//   • a team slot onto another slot → move it there
+//   • a team slot onto the box      → take it off the team
+//   • a box Pokémon onto a slot     → add it there (onto a filled slot of a
+//     full team: replace that Pokémon); onto the team panel → add at the end
+let drag = null; // { kind: "slot", t, i } | { kind: "box", s }
+const clearDrop = () => document.querySelectorAll(".is-dropover, .is-dropbad, .is-dropremove").forEach((x) => x.classList.remove("is-dropover", "is-dropbad", "is-dropremove"));
+
 app.addEventListener("dragstart", (e) => {
   const li = e.target.closest?.(".tm-slot[draggable]");
-  if (!li) return;
-  dragFrom = { t: li.dataset.team, i: Number(li.dataset.i) };
-  li.classList.add("is-dragging");
-  e.dataTransfer.effectAllowed = "move";
-  e.dataTransfer.setData("text/plain", String(dragFrom.i));
+  const tile = e.target.closest?.(".tm-tile-btn[draggable]");
+  if (li) {
+    drag = { kind: "slot", t: li.dataset.team, i: Number(li.dataset.i) };
+    li.classList.add("is-dragging");
+    e.dataTransfer.effectAllowed = "move";
+  } else if (tile) {
+    drag = { kind: "box", s: { id: Number(tile.dataset.id), variant: tile.dataset.variant } };
+    tile.closest(".tm-tile")?.classList.add("is-dragging");
+    e.dataTransfer.effectAllowed = "copyMove";
+  } else return;
+  e.dataTransfer.setData("text/plain", drag.kind);
+  document.body.classList.add(`tm-dragging-${drag.kind}`);
 });
-app.addEventListener("dragover", (e) => {
-  const li = e.target.closest?.(".tm-slot[data-team]");
-  if (!dragFrom || !li || li.dataset.team !== dragFrom.t) return;
+
+/** Where a drop at this element would go, or null. */
+function dropTarget(el) {
+  if (!drag || !el?.closest) return null;
+  const slot = el.closest(".tm-slot[data-team]");
+  const panel = el.closest("#teamPanel");
+  const box = el.closest(".tm-boxpanel");
+  const t = state.active;
+  if (drag.kind === "slot") {
+    if (slot && slot.dataset.team === drag.t) return { type: "move", el: slot, to: Math.min(Number(slot.dataset.i), team(t).length - 1) };
+    if (box) return { type: "remove", el: box };
+    return null;
+  }
+  // From the box.
+  if (slot) {
+    const i = Number(slot.dataset.i);
+    const full = team(t).length >= MAX;
+    const replace = full && i < team(t).length;
+    const onTeam = team(t).some((m) => m.id === drag.s.id && m.variant === drag.s.variant);
+    const ok = onTeam || !blockReason(t, drag.s, { replaceAt: replace ? i : -1 });
+    return { type: "add", el: slot, at: i, replace, ok };
+  }
+  if (panel) {
+    const ok = !blockReason(t, drag.s);
+    return { type: "add", el: panel.querySelector(".tm-slots") ?? panel, at: null, replace: false, ok };
+  }
+  return null;
+}
+
+document.addEventListener("dragover", (e) => {
+  const d = dropTarget(e.target);
+  clearDrop();
+  if (!d) return;
   e.preventDefault();
-  document.querySelectorAll(".tm-slot.is-dropover").forEach((x) => x !== li && x.classList.remove("is-dropover"));
-  li.classList.add("is-dropover");
+  e.dataTransfer.dropEffect = d.type === "add" ? (d.ok ? "copy" : "none") : "move";
+  d.el.classList.add(d.type === "remove" ? "is-dropremove" : d.ok === false ? "is-dropbad" : "is-dropover");
 });
-app.addEventListener("drop", (e) => {
-  const li = e.target.closest?.(".tm-slot[data-team]");
-  if (!dragFrom || !li || li.dataset.team !== dragFrom.t) return;
+document.addEventListener("drop", (e) => {
+  const d = dropTarget(e.target);
+  const from = drag;
+  clearDrop();
+  if (!d || !from) return;
   e.preventDefault();
-  const from = dragFrom;
-  dragFrom = null;
-  moveTo(from.t, from.i, Number(li.dataset.i));
+  drag = null;
+  if (d.type === "move") moveTo(from.t, from.i, d.to);
+  else if (d.type === "remove") remove(from.t, from.i);
+  else if (d.type === "add") add(state.active, from.s, { at: d.at, replace: d.replace });
 });
-app.addEventListener("dragend", () => {
-  dragFrom = null;
-  document.querySelectorAll(".is-dragging, .is-dropover").forEach((x) => x.classList.remove("is-dragging", "is-dropover"));
+document.addEventListener("dragend", () => {
+  drag = null;
+  clearDrop();
+  document.body.classList.remove("tm-dragging-slot", "tm-dragging-box");
+  document.querySelectorAll(".is-dragging").forEach((x) => x.classList.remove("is-dragging"));
 });
 
 // Unsaved changes: the browser's own prompt on close/reload, and an in-page

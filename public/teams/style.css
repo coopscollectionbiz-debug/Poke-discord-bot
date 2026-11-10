@@ -218,3 +218,21 @@ dialog.tm-sheet .tm-box { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tm-boxpanel { display: none; }
   .tm-addbtn { display: flex; width: 100%; margin-top: 12px; }
 }
+
+/* ---------- Drag and drop (mouse) ---------- */
+.tm-tile-btn[draggable="true"] { cursor: grab; }
+.tm-tile.is-dragging { opacity: .45; }
+.tm-slot.is-dropbad { outline: 2px dashed var(--cc-red); outline-offset: 2px; }
+.tm-slots.is-dropover, #teamPanel.is-dropover { outline: 2px dashed var(--cc-blue); outline-offset: 4px; border-radius: 12px; }
+.tm-slots.is-dropbad, #teamPanel.is-dropbad { outline: 2px dashed var(--cc-red); outline-offset: 4px; border-radius: 12px; }
+body.tm-dragging-box #teamPanel .tm-slot.is-empty { border-color: var(--cc-blue); background: #4f8cff14; }
+body.tm-dragging-slot .tm-boxpanel { position: sticky; }
+body.tm-dragging-slot .tm-boxpanel::after {
+  content: "Drop here to take it off the team";
+  position: absolute; inset: 0; z-index: 5;
+  display: grid; place-items: center; padding: 16px; text-align: center;
+  border-radius: inherit; border: 2px dashed var(--cc-line);
+  background: #121729e6; color: var(--cc-text-muted); font-weight: 800;
+  pointer-events: none;
+}
+.tm-boxpanel.is-dropremove::after { border-color: var(--cc-red) !important; color: var(--cc-red) !important; background: #2a1520ee !important; }

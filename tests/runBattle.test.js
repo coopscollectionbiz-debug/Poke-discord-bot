@@ -48,6 +48,8 @@ section("Casual (open) battle: Display teams, real Levels, unrated");
   assertEqual(rankedRecord(td.A).wins + rankedRecord(td.A).losses, 0, "no ranked W/L");
   assertEqual(td[out.winnerId].casual.wins + td[out.loserId].casual.losses, 2, "casual W/L recorded for both");
   assertEqual([td[out.winnerId].casual.streak, td[out.loserId].casual.streak], [1, 0], "casual streaks");
+  assertTrue(!!td[out.winnerId].ach?.cas_first_win && !td[out.loserId].ach?.cas_first_win, "the winner unlocks the casual Friendly Match achievement");
+  assertTrue(!td[out.winnerId].ach?.bat_first_win, "casual wins don't count toward ranked battle achievements");
   assertEqual(out.rated, false, "outcome says unrated");
   assertEqual(out.rating, {}, "no rating changes");
   assertTrue(out.sides[0].members.every((m) => m.realLevel == null), "real Levels (no Lv 50)");

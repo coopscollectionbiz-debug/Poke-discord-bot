@@ -15,7 +15,7 @@
 // bulges both ways). Nothing new is drawn; only the sprite's own pixels move.
 // ==========================================================
 
-import { idleCuts } from "./trainerIdle.js";
+import { idleCuts, breathPose, breathLoop, poseAtFrame } from "./trainerIdle.js";
 
 const ALPHA_MIN = 8;
 
@@ -31,9 +31,8 @@ export function breathTiming(file) {
   const h = nameHash(file);
   const tempo = 0.85 + ((h % 1000) / 1000) * 0.35;
   return {
-    rest: Math.round((900 * tempo) / 10) * 10,
+    rest: Math.round((900 * tempo) / 10) * 10, // the holds scale with tempo; the 360 ms steps between them don't
     exhale: Math.round((700 * tempo) / 10) * 10,
-    lag: 110,
     phase: ((h >>> 10) % 1000) / 1000, // fraction of the loop to start at
   };
 }
@@ -74,41 +73,62 @@ export function movePart(px, W, H, mask, dx, dy) {
   return out;
 }
 
-/** Blink: dark pixels in the eye rect take the nearest lighter colour above them. */
-export function blinkEyes(px, W, H, [x0, y0, x1, y1], { dark = 90 } = {}) {
+/**
+ * Blink: each eye rect (one per eye, covering its white and pupil) closes.
+ * Every pixel takes the lid colour (the nearest light pixel above the eye in
+ * its column, or below if there is none), and the bottom row becomes the
+ * eye's own darkest colour: a closed lid with its lash line.
+ */
+export function blinkEyes(px, W, H, rects, { dark = 90 } = {}) {
   const out = new Uint8ClampedArray(px);
   const lum = (i) => 0.3 * px[i] + 0.59 * px[i + 1] + 0.11 * px[i + 2];
-  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
-    const i = (y * W + x) * 4;
-    if (px[i + 3] <= ALPHA_MIN || lum(i) > dark) continue;
-    for (let yy = y - 1; yy >= Math.max(0, y0 - 3); yy--) {
-      const j = (yy * W + x) * 4;
-      if (px[j + 3] > ALPHA_MIN && lum(j) > dark) { out.set(px.subarray(j, j + 4), i); break; }
+  const ok = (x, y) => x >= 0 && y >= 0 && x < W && y < H && px[(y * W + x) * 4 + 3] > ALPHA_MIN;
+  for (const [x0, y0, x1, y1] of rects) {
+    let line = -1;
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const i = (y * W + x) * 4;
+      if (ok(x, y) && (line < 0 || lum(i) < lum(line))) line = i;
+    }
+    if (line < 0) continue;
+    for (let x = x0; x <= x1; x++) {
+      let lid = -1;
+      for (let y = y0 - 1; y >= Math.max(0, y0 - 3) && lid < 0; y--) if (ok(x, y) && lum((y * W + x) * 4) > dark) lid = (y * W + x) * 4;
+      for (let y = y1 + 1; y <= Math.min(H - 1, y1 + 3) && lid < 0; y++) if (ok(x, y) && lum((y * W + x) * 4) > dark) lid = (y * W + x) * 4;
+      for (let y = y0; y <= y1; y++) {
+        if (!ok(x, y)) continue;
+        const src = y === y1 ? line : lid;
+        if (src >= 0) out.set(px.subarray(src, src + 4), (y * W + x) * 4);
+      }
     }
   }
   return out;
 }
 
+/**
+ * Wind sway: inside `rect`, only the rows from `from` (0 = top of the rect,
+ * 1 = bottom) down move by d. The part above the cut stays where it hangs from,
+ * so hair or cloth bends at the cut instead of sliding as a block.
+ */
+export function swayMask(px, W, H, [x0, y0, x1, y1], from = 0.5) {
+  const cut = Math.round(y0 + (y1 - y0) * from);
+  return rectMask(px, W, H, [x0, Math.max(y0, cut), x1, y1]);
+}
+
 /** The sprite with one part event applied (a "state"). */
 export function applyEvent(px, W, H, ev) {
-  if (ev.kind === "blink") return blinkEyes(px, W, H, ev.rect);
+  if (ev.kind === "blink") return blinkEyes(px, W, H, ev.eyes, { dark: ev.dark ?? 90 });
   let out = px;
-  for (const part of ev.parts ?? []) out = movePart(out, W, H, rectMask(px, W, H, part.rect), part.d[0], part.d[1]);
+  for (const part of ev.parts ?? []) {
+    const mask = ev.kind === "sway" ? swayMask(px, W, H, part.rect, part.from ?? 0.5) : rectMask(px, W, H, part.rect);
+    out = movePart(out, W, H, mask, part.d[0], part.d[1]);
+  }
   return out;
 }
 
 // ---- Breathing poses from fixed cuts -----------------------------------
-function shiftDown(src, W, top, split, clearTop) {
-  const out = new Uint8ClampedArray(src);
-  for (let y = split; y > top; y--) out.copyWithin(y * W * 4, (y - 1) * W * 4, y * W * 4);
-  if (clearTop) out.fill(0, top * W * 4, (top + 1) * W * 4);
-  return out;
-}
-/** Pose 0 rest, 1 head-lag, 2 exhale of any state, using the rest sprite's cut lines. */
+/** Breath pose of any state, using the rest sprite's cut lines (see breathPose in trainerIdle.js). */
 export function poseOf(px, W, cuts, pose) {
-  if (pose === 0) return px;
-  const top = Math.max(0, cuts.bounds.y0 - 1);
-  return pose === 2 ? shiftDown(px, W, top, cuts.waist, true) : shiftDown(px, W, cuts.neck, cuts.waist, false);
+  return breathPose(px, W, cuts, pose);
 }
 
 // ---- Timelines -----------------------------------------------------------
@@ -117,9 +137,9 @@ export function poseOf(px, W, cuts, pose) {
  * an index into [rest, ...events] (0 = no event). Events sit at `at` (fraction
  * of the loop) for `ms`; the loop is rotated by the trainer's phase.
  */
-export function idleTimeline(file, events = []) {
+export function idleTimeline(file, events = [], steps = 1) {
   const t = breathTiming(file);
-  const breath = [[0, t.rest], [1, t.lag], [2, t.exhale], [1, t.lag]];
+  const breath = breathLoop(steps, t);
   const total = breath.reduce((s, [, ms]) => s + ms, 0);
   const evs = events.map((e, k) => {
     const a = Math.round(e.at * total);
@@ -170,7 +190,7 @@ export function idleTimeline(file, events = []) {
  * Card loop (n frames of 100 ms): [{ state, pose }] per frame. One breath per
  * loop, shifted by the trainer's phase; events at `at` × n for ms / 100 frames.
  */
-export function cardSchedule(file, n, events = [], breathPose) {
+export function cardSchedule(file, n, events = [], steps = 1) {
   const shift = Math.round(breathTiming(file).phase * n);
   return Array.from({ length: n }, (_, f) => {
     let state = 0;
@@ -178,7 +198,7 @@ export function cardSchedule(file, n, events = [], breathPose) {
       const a = Math.round(e.at * n), len = Math.max(1, Math.round(e.ms / 100));
       if (f >= a && f < a + len) state = k + 1;
     });
-    return { state, pose: breathPose((f + shift) % n, n) };
+    return { state, pose: poseAtFrame((f + shift) % n, n, steps) };
   });
 }
 

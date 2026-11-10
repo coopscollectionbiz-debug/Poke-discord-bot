@@ -17,7 +17,7 @@ import { createCanvas, ImageData, loadImage } from "@napi-rs/canvas";
 import { GifReader } from "omggif";
 import { spriteRecord } from "../sprites.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
-import { poseAtFrame } from "../trainerIdle.js";
+import { stepCount } from "../trainerIdle.js";
 import { motionStates, poseOf, cardSchedule } from "../trainerMotion.js";
 import { trainerIdle, trainersAnimated, trainerParts } from "../trainerAssets.js";
 
@@ -152,7 +152,7 @@ export function loadTrainerPoses(fileName, { env = process.env } = {}) {
     spriteFor(0, 0);
     const schedules = new Map();
     const scheduleFor = (n) => {
-      if (!schedules.has(n)) schedules.set(n, cardSchedule(fileName, n, events, poseAtFrame).map(({ state, pose }) => spriteFor(state, pose)));
+      if (!schedules.has(n)) schedules.set(n, cardSchedule(fileName, n, events, stepCount(m.cuts)).map(({ state, pose }) => spriteFor(state, pose)));
       return schedules.get(n);
     };
     scheduleFor(CARD_FRAMES); // so `poses` is complete before the stage sees it

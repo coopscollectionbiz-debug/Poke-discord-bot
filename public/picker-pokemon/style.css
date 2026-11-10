@@ -297,8 +297,11 @@ main:focus { outline: none; }
   background: #0e1120d9;
   border: 1px solid var(--cc-line);
 }
-.count-label { left: 6px; color: var(--cc-text); }
-.count-label .shiny-count { color: var(--cc-gold); }
+.count-label { color: var(--cc-text); max-width: calc(50% - 9px); }
+.count-label.bottom-left { left: 6px; }
+.count-label.bottom-right { right: 6px; }
+.count-label.bottom-right.lifted { bottom: 30px; }
+.count-label.shiny-count { color: var(--cc-gold); border-color: #f5c84c66; }
 .evolve-cost { right: 6px; color: var(--cc-text); }
 .donate-value { right: 6px; color: var(--cc-gold); border-color: #f5c84c66; }
 .convert-cost { color: var(--cc-gold); border-color: #f5c84c66; }

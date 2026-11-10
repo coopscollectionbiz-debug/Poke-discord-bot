@@ -1,5 +1,7 @@
 # Mega Evolution: ability implementation manifest (Phase M0)
 
+> **Superseded in Phase M2.** Abilities are now implemented in `utils/battle/abilities.js` (57 implemented, 13 no-effect). The current per-ability coverage table is in `M2-IMPLEMENTATION-REPORT.md` §6; the classification changed for Trace (now has an effect) and Inner Focus (blocks Intimidate). The text below is the M0 plan.
+
 Generated from `data/pokedex/mega-abilities.json` (authoritative; built by `tools/generate-megas.mjs` from `tools/lib/megaRules.mjs`). **No ability is implemented in M0.** Per D-5, Mega gameplay cannot launch until every battle-relevant ability (categories 2 and 3) is implemented and tested.
 
 ## Reconciliation with the code

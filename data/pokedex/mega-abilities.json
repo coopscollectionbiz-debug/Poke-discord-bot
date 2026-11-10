@@ -476,9 +476,12 @@
   {
    "name": "Inner Focus",
    "id": "innerfocus",
-   "category": "no-effect",
-   "rule": "Prevents flinching and Intimidate; neither is simulated (becomes relevant if Intimidate is built).",
-   "requires": [],
+   "category": "new-system",
+   "rule": "Blocks Intimidate (Gen 8+), implemented with Intimidate in Phase M2. Flinching isn't simulated.",
+   "requires": [
+    "stat stages",
+    "switch-in effects"
+   ],
    "moveFlags": [],
    "showdownDescription": "This Pokemon cannot be made to flinch. Immune to Intimidate.",
    "showdownNonstandard": null,
@@ -1300,8 +1303,8 @@
   {
    "name": "Trace",
    "id": "trace",
-   "category": "no-effect",
-   "rule": "Copies the opponent's ability; base battlers have no abilities (relevant only against another Mega).",
+   "category": "current-engine",
+   "rule": "Copies the opposing battler's ability on entry (Phase M2); ordinary battlers have none, so it only matters against another Mega.",
    "requires": [],
    "moveFlags": [],
    "showdownDescription": "On switch-in, or when it can, this Pokemon copies a random adjacent foe's Ability.",

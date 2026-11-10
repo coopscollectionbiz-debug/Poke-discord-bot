@@ -17,7 +17,7 @@ export const EXPECTED = Object.freeze({
   records: 97, officialForms: 93, species: 87, stones: 92, eligibleRecords: 93, blockedRecords: 4,
   blocked: ["mega-floette", "mega-magearna-original", "mega-rayquaza", "mega-zygarde"],
   spriteForms: 95, animated: 24, abilities: 69,
-  abilityCategories: { "current-engine": 34, "new-system": 20, "no-effect": 15, supported: 0 },
+  abilityCategories: { "current-engine": 35, "new-system": 21, "no-effect": 13, supported: 0 }, // Phase M2: Trace → current-engine, Inner Focus → new-system
 });
 
 export async function megaProblems() {

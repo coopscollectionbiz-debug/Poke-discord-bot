@@ -148,9 +148,9 @@ export const ABILITY_REGISTRY = Object.freeze({
       c.fx.boost(c.foe, { atk: -1 }, c.self, "Intimidate");
     },
   },
-  "Inner Focus": { status: "implemented", source: SHOWDOWN, breakable: true, blocksIntimidate: true, note: "Gen 8+: blocks Intimidate. Flinching isn't simulated." },
+  "Inner Focus": { status: "implemented", source: SHOWDOWN, breakable: true, blocksIntimidate: true },
   "Trace": {
-    status: "implemented", source: SHOWDOWN, note: "Copies the foe's ability on entry; ordinary battlers have none, so it only matters against another Mega.",
+    status: "implemented", source: SHOWDOWN,
     onEntry: (c) => {
       const theirs = c.foe?.ability;
       const entry = theirs && ABILITY_REGISTRY[theirs];
@@ -208,6 +208,8 @@ export const ABILITY_REGISTRY = Object.freeze({
 // Showdown's notrace / breakable lists for the abilities above (Trace can't
 // copy Trace, Commander, Wonder Guard is copyable).
 for (const name of ["Trace", "Commander"]) ABILITY_REGISTRY[name].noTrace = true;
+// No-effect entries document their rule source too (Showdown; nothing in Coop triggers it).
+for (const a of Object.values(ABILITY_REGISTRY)) a.source ??= SHOWDOWN;
 
 export const getAbility = (name) => (typeof name === "string" && Object.prototype.hasOwnProperty.call(ABILITY_REGISTRY, name) ? ABILITY_REGISTRY[name] : null);
 export const isAbilityImplemented = (name) => getAbility(name)?.status === "implemented";

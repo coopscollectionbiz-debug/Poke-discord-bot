@@ -69,7 +69,7 @@ assertTrue(F.filter((f) => !f.introducedIn.startsWith("Legends")).every((f) => f
 section("Ability implementation manifest (D-5)");
 assertEqual(ABILITIES.length, 69, "69 distinct abilities across all slots");
 const cats = ABILITIES.reduce((a, x) => ((a[x.category] = (a[x.category] || 0) + 1), a), {});
-assertEqual([cats.supported ?? 0, cats["current-engine"], cats["new-system"], cats["no-effect"]], [0, 34, 20, 15], "0 already supported / 34 current engine / 20 new system / 15 no effect");
+assertEqual([cats.supported ?? 0, cats["current-engine"], cats["new-system"], cats["no-effect"]], [0, 35, 21, 13], "M2 classification: 35 current engine / 21 new system / 13 no effect (Trace and Inner Focus now have effects)");
 const { ABILITY_REGISTRY } = await import("../utils/battle/abilities.js");
 assertTrue(ABILITIES.every((a) => a.implemented === (ABILITY_REGISTRY[a.name]?.status === "implemented") && a.registryStatus === ABILITY_REGISTRY[a.name]?.status), "M2: implemented in the manifest equals the battle ability registry (nothing claimed without code)");
 assertTrue(ABILITIES.filter((a) => a.category === "new-system").every((a) => a.requires.length > 0), "every new-system ability names the systems it needs");

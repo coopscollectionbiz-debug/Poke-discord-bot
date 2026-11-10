@@ -48,3 +48,5 @@ Read-only audit of production `master` 5157cfe6 (Fly v21, `POKEMON_GENERATIONS` 
 | D-15 | Legendary/Mythical stones | Only via the `mega_forms_50` voucher and events |
 | D-16 | Mega Floette / Mega Zygarde (prerequisite formes not in the bot; Zygarde has no sprite) | Keep blocked |
 | D-17 | Achievement rewards (each entry) | Per `MEGA-ACHIEVEMENTS.md`, through the existing approval policy |
+
+| `M2-IMPLEMENTATION-REPORT.md` | Phase M2: battle engine, abilities, regression corpus, benchmark, ability coverage table |

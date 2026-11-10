@@ -22,6 +22,7 @@
     "validate:megas": "node tools/validate-megas.mjs",
     "import:sprites": "node tools/import-sprites.mjs",
     "generate:credits": "node tools/generate-credits.mjs",
+    "generate:trainer-idles": "node tools/generate-trainer-idles.mjs",
     "validate:catalog": "node tools/validate-catalog.mjs",
     "check:tier-rule": "node tools/check-tier-rule.mjs",
     "report:balance": "node tools/balance-report.mjs"

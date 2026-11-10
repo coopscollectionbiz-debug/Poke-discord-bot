@@ -32,6 +32,7 @@ import { fileURLToPath } from "url";
 import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch, getTraining } from "../utils/training.js";
 import { spritePaths, rarityEmojis } from "../spriteconfig.js";
+import { trainerImageUrl } from "../utils/trainerAssets.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
@@ -326,7 +327,7 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
     new EmbedBuilder()
       .setTitle("🧍 Choose Your Trainer")
       .setDescription(`Confirm **${t.label}** as your Trainer.`)
-      .setImage(`${ensureTrailingSlash(spritePaths.trainers)}${t.id}`)
+      .setImage(trainerImageUrl(t.id))
       .setColor(0x5865f2)
       .setFooter({ text: `Page ${index + 1} / ${trainers.length}` });
 
@@ -471,7 +472,7 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
 
     // Trainer thumbnail
     const trainerPath = user.displayedTrainer
-      ? `${ensureTrailingSlash(spritePaths.trainers)}${user.displayedTrainer}`
+      ? trainerImageUrl(user.displayedTrainer)
       : null;
 
     // Trainer info (name, rarity, emoji)

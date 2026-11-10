@@ -367,14 +367,21 @@ async function openPreview(interaction, key, { trainerData, lockUser, enqueueSav
   const shown = previewChallenge(trainerData[userId], key);
   const nonce = randomUUID();
   const view = cardView(key, shown, trainerData[userId], playerName);
-  const response = await interaction.reply({
+  // The collector goes on the preview message itself. One made from the
+  // reply's InteractionResponse listens on the message a dropdown pick came
+  // from (the board), so Fight! would go unanswered (discord.js 14.28,
+  // InteractionCollector).
+  const reply = await interaction.reply({
     ...(await previewMessage(key, shown, view, { exactLoss: true })),
     components: [new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId(`challenge_fight:${nonce}`).setLabel("Fight!").setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId(`challenge_cancel:${nonce}`).setLabel("Not now").setStyle(ButtonStyle.Secondary),
     )],
     flags: MessageFlags.Ephemeral,
+    withResponse: true,
   });
+  const response = reply?.resource?.message;
+  if (!response) return; // bot_final's wrapper swallowed an expired interaction
 
   // Fight! runs here, after execute() has returned, so the bot's 25-second
   // command timeout can't overwrite the private result.

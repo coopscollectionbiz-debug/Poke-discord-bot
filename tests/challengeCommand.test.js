@@ -80,7 +80,7 @@ const brightnessAt = async (png, x, y) => {
 // controllable collector. log.seq records public and private writes in order.
 function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail = false } = {}) {
   const trainerData = { A: user };
-  const log = { replies: [], replyEdits: [], channel: [], menus: [], seq: [], results: [] };
+  const log = { replies: [], replyIds: [], replyEdits: [], channel: [], menus: [], seq: [], results: [] };
   const collectors = [];
   let ids = 0;
   const collectorStub = (opts) => ({ opts, h: {}, stopped: null, on(e, f) { this.h[e] = f; }, stop(reason) { this.stopped ??= reason; } });
@@ -96,7 +96,12 @@ function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail
     messages: { fetch: async (id) => log.channel.find((m) => m.id === id) ?? Promise.reject(new Error("Unknown Message")) },
   };
   const client = { channels: { fetch: async (id) => (id === "C1" ? channel : Promise.reject(new Error("Unknown Channel"))) } };
-  const interaction = (opponent) => ({
+  // Each reply is a message with an ID, and each collector hears clicks on one
+  // message, as in discord.js: a collector on the reply message itself
+  // (withResponse), or on an InteractionResponse, which for a slash command
+  // means its reply but for a component interaction (a dropdown pick) means
+  // the message the component sits on (InteractionCollector, discord.js 14.28).
+  const interaction = (opponent, { onMessage = null } = {}) => ({
     user: { id: "A", username: "A" },
     member: { displayName: "Ash" },
     channel,
@@ -104,14 +109,16 @@ function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail
     appPermissions: { has: () => perms },
     options: { getString: () => opponent ?? null },
     reply: async (o) => {
+      const id = `R${++ids}`;
       log.replies.push(o);
-      return {
-        createMessageComponentCollector: (opts) => {
-          const c = { opts, h: {}, ended: null, on(e, f) { this.h[e] = f; }, stop(reason) { this.ended ??= this.h.end?.([], reason); } };
-          collectors.push(c);
-          return c;
-        },
+      log.replyIds.push(id);
+      const collectOn = (target) => (opts) => {
+        const c = { opts, target, h: {}, ended: null, on(e, f) { this.h[e] = f; }, stop(reason) { this.ended ??= this.h.end?.([], reason); } };
+        collectors.push(c);
+        return c;
       };
+      if (o.withResponse) return { resource: { message: { id, createMessageComponentCollector: collectOn(id) } } };
+      return { createMessageComponentCollector: collectOn(onMessage ?? id) };
     },
     editReply: async (o) => { log.replyEdits.push(o); },
   });
@@ -148,9 +155,11 @@ function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail
   const run = (opponent) => execute(interaction(opponent), trainerData, null, null, lockUser, save, client);
   const nonceOf = (reply) => embedJson(reply.components[0]).components[0].custom_id.split(":")[1];
   const nonce = () => nonceOf(log.replies.at(-1));
-  const click = async (kind, c = collectors.at(-1)) => {
+  // Clicks a button on the newest reply. Only a collector on that message
+  // hears it; with none, the click gets no answer ("didn't respond in time").
+  const click = async (kind, c = collectors.findLast((x) => x.target === log.replyIds.at(-1))) => {
     const b = button(`challenge_${kind}:${nonce()}`);
-    await c.h.collect(b);
+    if (c) await c.h.collect(b);
     return b;
   };
   const publicText = () => log.channel.map((m) => [textOf(m.opts), ...m.edits.map(textOf)].join("\n")).join("\n");
@@ -179,8 +188,9 @@ function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail
   // interaction from the same player in the same channel.
   const choose = async (value) => {
     const board = collectors.findLast((c) => c.opts.componentType === ComponentType.StringSelect);
-    const customId = embedJson(log.replies.findLast((r) => r.files?.[0]?.name === "board.png").components[0]).components[0].custom_id;
-    await board.h.collect({ ...interaction(null), customId, values: [value] });
+    const at = log.replies.findLastIndex((r) => r.files?.[0]?.name === "board.png");
+    const customId = embedJson(log.replies[at].components[0]).components[0].custom_id;
+    await board.h.collect({ ...interaction(null, { onMessage: log.replyIds[at] }), customId, values: [value] });
     return board;
   };
   return { trainerData, log, collectors, run, click, publicText, button, nonce, nonceOf, channel, menuButtons, pick, fightRun, choose };
@@ -311,7 +321,7 @@ section("The board's dropdown");
   assertEqual([preview.flags, preview.content], [64, "A loss costs you **1,234 CC**."], "picking Brock opens the private preview");
   assertTrue(preview.files[0].description.startsWith("Ash vs Gym Leader Brock"), "with Brock's VS card");
   const fight = await t.click("fight");
-  assertEqual([t.trainerData.A.challenge.attempts, t.log.channel.length], [1, 2], "and Fight! from it plays the challenge");
+  assertEqual([t.trainerData.A.challenge?.attempts, t.log.channel.length], [1, 2], "and Fight! from it plays the challenge");
   assertTrue(!!fight.updates.length, "answering the click");
 
   const capped = harness();

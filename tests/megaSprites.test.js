@@ -73,8 +73,9 @@ assertTrue(MEGAS.every((f) => megaSpritePath(f.id) !== pokemonSpritePath(f.speci
 assertEqual([megaSpritePath("mega-zygarde"), megaSpritePath("mega-magearna-original", true), megaSpritePath("mega-unknown")], [PLACEHOLDER_PATH, PLACEHOLDER_PATH, PLACEHOLDER_PATH], "missing Mega sprites resolve to the Poké Ball placeholder");
 assertEqual(megaSpritePath("mega-charizard-x", true), "/public/sprites/pokemon/mega/shiny/mega-charizard-x.gif", "path is under /public/sprites/pokemon/mega/ (served by the existing /public static route)");
 
-section("Live species sprites untouched");
+section("Species sprite manifest pinned");
 const norm = (rel) => sha("sha256", fs.readFileSync(new URL(rel, import.meta.url), "utf8").replace(/\r\n/g, "\n"));
-assertEqual(norm("../data/sprites/sprites.json"), "e7c7726153fef05980a60cde608205072465cd9bb14b36af58f67b60b3ff1d76", "data/sprites/sprites.json identical to production (5157cfe6)");
+// Pinned after the breathing idle for static sprites (tools/generate-pokemon-idles.mjs); only that tool changes it.
+assertEqual(norm("../data/sprites/sprites.json"), "de22fb9b1e91b667faaf6e3e1842e76e68a8f9514d8a76f11c59f6f235a2ca82", "data/sprites/sprites.json unchanged since the breathing-idle build");
 
 finish();

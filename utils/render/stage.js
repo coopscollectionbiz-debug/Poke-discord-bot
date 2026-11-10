@@ -7,6 +7,9 @@
 //     finished card once and redraws only the sprites per frame, played by
 //     the battle's GIF sprite player → GIF. A card whose sprites are all
 //     static (no animated GIF for them) still comes out as a PNG.
+//   • shiny Pokémon get the Legendary-tier backdrop (rising gold motes and
+//     twinkling stars, utils/render/shinyBackdrop.js) behind them; on an
+//     animated card it moves, so a shiny alone makes the card a GIF.
 // ==========================================================
 
 import { createCanvas } from "@napi-rs/canvas";
@@ -14,17 +17,25 @@ import { drawSprite } from "./sprites.js";
 import { loadAnimatedSprite, spritePlayer } from "../battle/render.js";
 import { encodeGif } from "./gif.js";
 import { createRenderGate } from "./renderGate.js";
+import { shinyBackdrop, shinyFxEnabled } from "./shinyBackdrop.js";
 
 export const FRAMES = 24, DELAY_MS = 100;
 
-export function spriteStage({ animate = false } = {}) {
+/** Stable layout seed per Pokémon, so a shiny's stars sit in the same places every time. */
+export const backdropSeed = (id) => [...String(id)].reduce((s, c) => (s * 31 + c.charCodeAt(0)) % 9973, 7);
+const wantsBackdrop = (who, sprite, env) => who?.variant === "shiny" && sprite && !sprite.placeholder && shinyFxEnabled(env);
+
+export function spriteStage({ animate = false, env = process.env } = {}) {
   const placed = [];
   const layers = []; // (ctx, frame) => void, drawn under every sprite each frame
   const posed = []; // sprites with procedural pose frames (trainer breathing)
   return {
-    /** Like drawSprite; `who` = { id, variant } lets the sprite animate. */
+    /** Like drawSprite; `who` = { id, variant } lets the sprite animate (and a shiny get its backdrop). */
     place(ctx, sprite, cx, floorY, boxW, boxH, opts = {}, who = null) {
-      if (!animate || !who || !sprite || sprite.placeholder) return drawSprite(ctx, sprite, cx, floorY, boxW, boxH, opts);
+      if (!animate || !who || !sprite || sprite.placeholder) {
+        if (wantsBackdrop(who, sprite, env)) shinyBackdrop({ sprite, cx, floorY, boxW, boxH, scale: opts.scale, seed: backdropSeed(who.id) })?.draw(ctx, 0, FRAMES);
+        return drawSprite(ctx, sprite, cx, floorY, boxW, boxH, opts);
+      }
       placed.push({ sprite, cx, floorY, boxW, boxH, opts, who });
       return null;
     },
@@ -47,7 +58,10 @@ export function spriteStage({ animate = false } = {}) {
       posed.push({ poses, poseAt, cx, floorY, boxW, boxH, opts });
       return null;
     },
-    /** The finished card: PNG, or GIF when anything placed animates. */
+    /**
+     * The finished card: PNG, or GIF when anything placed animates (a Pokémon
+     * sprite, a shiny backdrop, a layer, or a breathing trainer).
+     */
     async output(canvas) {
       const ctx = canvas.getContext("2d");
       const drawAll = (frameOf) => placed.forEach((p, i) => drawSprite(ctx, p.sprite, p.cx, p.floorY, p.boxW, p.boxH, { ...p.opts, frame: frameOf(i) }));
@@ -55,7 +69,11 @@ export function spriteStage({ animate = false } = {}) {
       if (!placed.length && !layers.length && !posed.length) return canvas.toBuffer("image/png");
       const anims = await Promise.all(placed.map((p) => loadAnimatedSprite(p.who.id, p.who.variant)));
       const players = anims.map((a) => (a && a.gif.numFrames() > 1 ? spritePlayer(a) : null));
-      if (!players.some(Boolean) && !layers.length && !posed.length) {
+      // Every backdrop first, then every sprite, so no backdrop covers a neighbour.
+      const backdrops = placed.map((p, i) => (wantsBackdrop(p.who, p.sprite, env)
+        ? shinyBackdrop({ sprite: p.sprite, anim: anims[i], cx: p.cx, floorY: p.floorY, boxW: p.boxW, boxH: p.boxH, scale: p.opts.scale, seed: backdropSeed(p.who.id) })
+        : null));
+      if (!players.some(Boolean) && !backdrops.some(Boolean) && !layers.length && !posed.length) {
         drawAll(() => null);
         return canvas.toBuffer("image/png");
       }
@@ -64,6 +82,7 @@ export function spriteStage({ animate = false } = {}) {
       return encodeGif(canvas, (f) => {
         ctx.drawImage(base, 0, 0);
         layers.forEach((draw) => draw(ctx, f));
+        backdrops.forEach((b) => b?.draw(ctx, f, FRAMES));
         drawPosed(f);
         drawAll((i) => (players[i] ? players[i](f * DELAY_MS) : null));
       }, FRAMES, DELAY_MS);

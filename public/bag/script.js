@@ -4,20 +4,12 @@
 // catalog). All text is inserted with textContent, never as HTML.
 // ==========================================================
 
+import { showExpired } from "/public/shared/shell.js";
+
 const params = new URLSearchParams(window.location.search);
 const userId = params.get("id");
 const $ = (id) => document.getElementById(id);
 let rows = [];
-
-function nav() {
-  if (!userId) return;
-  const go = (path) => () => (window.location.href = `${path}?id=${encodeURIComponent(userId)}`);
-  $("goPokemon").onclick = go("/public/picker-pokemon/");
-  $("goTrainers").onclick = go("/public/picker/");
-  $("goShop").onclick = go("/public/dashboardshop/");
-  $("goBag").onclick = go("/public/bag/");
-  $("goAchievements").onclick = go("/public/achievements/");
-}
 
 function el(tag, cls, text) {
   const e = document.createElement(tag);
@@ -78,7 +70,8 @@ async function load() {
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.success) {
     $("bagStatus").textContent =
-      res.status === 403 ? "Your session expired. Open a new link with /dashboard in Discord." : data.error || "Could not load your bag.";
+      res.status === 403 ? "" : data.error || "Could not load your bag.";
+    if (res.status === 403) showExpired();
     return;
   }
   const select = $("bagCategory");
@@ -93,9 +86,8 @@ async function load() {
   render();
 }
 
-nav();
 if (!userId) {
-  $("bagStatus").textContent = "Missing player id. Open the dashboard from Discord with /dashboard.";
+  $("bagStatus").textContent = ""; // the shared shell shows the missing-link banner
 } else {
   $("bagCategory").onchange = load;
   $("bagSort").onchange = render;

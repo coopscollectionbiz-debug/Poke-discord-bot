@@ -21,7 +21,10 @@ import {
   ActionRowBuilder,
   ComponentType,
   MessageFlags,
+  AttachmentBuilder,
 } from "discord.js";
+import { cardImage } from "../utils/render/stage.js";
+import { trainerCardView, renderTrainerCard } from "../utils/render/trainerCard.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -550,6 +553,18 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
 
     if (trainerPath) embed.setThumbnail(trainerPath);
     if (leadSprite) embed.setImage(leadSprite);
+
+    // The rendered card (utils/render/trainerCard.js); the embed above is the fallback.
+    try {
+      const tcView = trainerCardView(user, {
+        displayName: username,
+        trainer: user.displayedTrainer ? { name: trainerInfo.name, tier: trainerInfo.rarityKey } : null,
+      });
+      const card = await cardImage((animate) => renderTrainerCard(tcView, { animate }), "trainercard");
+      return await interaction.editReply({ embeds: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })], components: [] });
+    } catch (err) {
+      console.warn("⚠️ trainer card render failed; sending embed:", err?.message || err);
+    }
 
     await interaction.editReply({
       embeds: [embed],

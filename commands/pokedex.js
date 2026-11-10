@@ -19,7 +19,10 @@ import {
   ButtonBuilder,
   ButtonStyle,
   MessageFlags,
+  AttachmentBuilder,
 } from "discord.js";
+import { cardImage } from "../utils/render/stage.js";
+import { pokedexView, renderPokedexCard } from "../utils/render/pokedexCard.js";
 
 import { safeReply } from "../utils/safeReply.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
@@ -212,8 +215,20 @@ export default {
         return new ActionRowBuilder().addComponents(toggleButton, closeButton);
       };
 
+      // The entry card (utils/render/pokedexCard.js); the embed is the fallback.
+      const entry = async () => {
+        try {
+          const view = pokedexView(poke.id, user);
+          const card = await cardImage((animate) => renderPokedexCard(view, { shiny: viewingShiny, animate }), "pokedex");
+          return { embeds: [], attachments: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })] };
+        } catch (err) {
+          console.warn("⚠️ pokedex card render failed; sending embed:", err?.message || err);
+          return { embeds: [buildEmbed()], attachments: [], files: [] };
+        }
+      };
+
       const msg = await interaction.editReply({
-        embeds: [buildEmbed()],
+        ...(await entry()),
         components: [buildRow()],
       });
 
@@ -227,7 +242,7 @@ export default {
           viewingShiny = !viewingShiny;
 
           return i.update({
-            embeds: [buildEmbed()],
+            ...(await entry()),
             components: [buildRow()],
           });
         }
@@ -237,6 +252,7 @@ export default {
           return i.update({
             content: "❌ Closed.",
             embeds: [],
+            attachments: [],
             components: [],
           });
         }

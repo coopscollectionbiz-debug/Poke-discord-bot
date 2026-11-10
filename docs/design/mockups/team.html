@@ -1,0 +1,145 @@
+<!doctype html>
+<!-- Design mockup (static, synthetic data). Not served by the bot. -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My Team · Coop's Collection (mockup)</title>
+<style>
+:root{
+  --cc-ink:#0e1120;--cc-bg-top:#141a2c;--cc-bg-bottom:#1d1530;
+  --cc-surface:#1b2236;--cc-surface-raised:#232b44;--cc-surface-sunken:#121729;
+  --cc-line:#2e3756;--cc-text:#f4f6fb;--cc-text-muted:#aab2c8;--cc-text-faint:#6f7891;
+  --cc-gold:#f5c84c;--cc-blue:#4f8cff;--cc-exp:#5ab4ff;--cc-shadow:0 6px 18px #00000066;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI","Inter",system-ui,sans-serif;color:var(--cc-text);
+  background:linear-gradient(180deg,var(--cc-bg-top),var(--cc-bg-bottom)) fixed;min-height:100vh}
+a{color:inherit;text-decoration:none}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+.side{border-right:1px solid var(--cc-line);padding:20px 14px;background:#0f1424cc}
+.brand{font-weight:800;font-size:18px;padding:4px 10px 18px;display:flex;gap:10px;align-items:center}
+.brand i{width:22px;height:22px;border-radius:50%;background:linear-gradient(#e5483d 50%,#f4f4f4 50%);border:3px solid var(--cc-ink);box-shadow:0 0 0 1px #ffffff33}
+.nav a{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:10px;color:var(--cc-text-muted);font-weight:600;font-size:15px;min-height:44px}
+.nav a[aria-current=page]{background:var(--cc-surface-raised);color:var(--cc-text);box-shadow:inset 3px 0 0 var(--cc-blue)}
+.nav svg{width:20px;height:20px;flex:none}
+.wallet{margin-top:24px;padding:12px;border:1px solid var(--cc-line);border-radius:12px;font-size:13px;color:var(--cc-text-muted)}
+.wallet b{display:block;color:var(--cc-text);font-size:18px}
+main{padding:28px 32px 96px;max-width:1180px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--cc-text-faint);text-transform:uppercase}
+h1{margin:4px 0 4px;font-size:30px}
+.sub{color:var(--cc-text-muted);margin:0 0 22px}
+.head{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.power{text-align:right}.power b{font-size:28px;color:var(--cc-gold)}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--cc-surface);border:1.5px solid var(--cc-line);border-radius:14px;box-shadow:var(--cc-shadow);padding:10px;position:relative}
+.card.lead{border-color:#4f8cff99;box-shadow:0 0 0 2px #4f8cff55,var(--cc-shadow)}
+.card.shiny{border-color:var(--cc-gold)}
+.stage{background:var(--cc-surface-sunken);border-radius:10px;height:206px;display:flex;align-items:flex-end;justify-content:center;position:relative;overflow:hidden}
+.stage::after{content:"";position:absolute;bottom:12px;width:130px;height:22px;border-radius:50%;background:#ffffff14;border:2px solid #ffffff22}
+.lead .stage::after{background:#4f8cff66;border-color:#4f8cffcc}
+.shiny .stage{background:radial-gradient(circle at 50% 60%,#f5c84c30,transparent 60%),var(--cc-surface-sunken)}
+.sprite{image-rendering:pixelated;transform:scale(2);transform-origin:bottom center;margin-bottom:22px;position:relative;z-index:1}
+.slotno{position:absolute;top:18px;left:18px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;background:var(--cc-surface-sunken);border:2px solid var(--cc-line);color:var(--cc-text-muted);z-index:2}
+.lead .slotno{background:var(--cc-blue);border-color:var(--cc-blue);color:#fff}
+.tag{position:absolute;top:21px;left:54px;font-size:11px;font-weight:800;background:var(--cc-blue);color:#fff;padding:4px 9px;border-radius:99px;z-index:2}
+.name{font-weight:800;font-size:19px;text-align:center;margin:12px 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spark{color:var(--cc-gold)}
+.meta{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
+.lv{font-weight:800}.lv small{color:var(--cc-text-muted);font-size:11px;margin-right:2px}
+.type{font-size:11px;font-weight:800;letter-spacing:.03em;padding:4px 10px;border-radius:99px;text-transform:uppercase}
+.t-fire{background:#f08030;color:var(--cc-ink)}.t-flying{background:#98a8f0;color:var(--cc-ink)}.t-ghost{background:#705898;color:#fff}
+.t-poison{background:#a04aa0;color:#fff}.t-dragon{background:#7038f8;color:#fff}.t-ground{background:#dcbc68;color:var(--cc-ink)}
+.t-water{background:#6890f0;color:#fff}.t-electric{background:#f8d030;color:var(--cc-ink)}.t-bug{background:#a8b820;color:var(--cc-ink)}
+progress{appearance:none;width:100%;height:6px;margin-top:10px;border:0;border-radius:99px;background:var(--cc-surface-sunken);overflow:hidden}
+progress::-webkit-progress-bar{background:var(--cc-surface-sunken)}progress::-webkit-progress-value{background:var(--cc-exp);border-radius:99px}
+.actions{display:flex;gap:6px;margin-top:10px}
+.btn{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--cc-line);background:var(--cc-surface-raised);color:var(--cc-text);font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.btn:focus-visible{outline:2px solid var(--cc-blue);outline-offset:2px}
+.btn.icon{flex:0 0 44px}
+.empty{border:2px dashed var(--cc-line);border-radius:14px;display:grid;place-items:center;text-align:center;color:var(--cc-text-faint);min-height:300px;font-weight:700;background:#ffffff06}
+.empty .btn{margin-top:10px;padding:0 16px;flex:none;background:var(--cc-blue);border-color:var(--cc-blue)}
+.save{position:sticky;bottom:16px;margin-top:20px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:#f8f8f0;color:#1d2233;border:3px solid #3a4256;font-weight:700}
+.save .btn{flex:none;padding:0 20px;background:var(--cc-blue);color:#fff;border:0}
+.tabbar{display:none}
+@media (max-width:820px){
+  .app{grid-template-columns:1fr}.side{display:none}
+  main{padding:18px 16px 110px}
+  h1{font-size:24px}.power b{font-size:22px}
+  .slots{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stage{height:150px}.sprite{transform:scale(1.4)}
+  .name{font-size:16px}.actions .btn:not(.icon){display:none}.actions{justify-content:center}
+  .empty{min-height:230px}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;left:0;right:0;background:#0f1424f2;border-top:1px solid var(--cc-line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .tabbar a{display:grid;justify-items:center;gap:2px;font-size:11px;font-weight:700;color:var(--cc-text-faint);min-height:48px;padding-top:4px}
+  .tabbar a[aria-current=page]{color:var(--cc-text)}
+  .tabbar svg{width:22px;height:22px}
+  .save{bottom:76px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></symbol>
+  <symbol id="i-team" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" d="M3 12h18"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" d="M4 21c1-4 4-6 8-6s7 2 8 6"/></symbol>
+  <symbol id="i-shop" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M4 9h16l-1-5H5zM5 9v11h14V9M9 20v-6h6v6"/></symbol>
+</svg>
+<div class="app">
+  <nav class="side" aria-label="Main">
+    <div class="brand"><i aria-hidden="true"></i>Coop's Collection</div>
+    <div class="nav">
+      <a href="#"><svg><use href="#i-home"/></svg>Overview</a>
+      <a href="#" aria-current="page"><svg><use href="#i-team"/></svg>My Team</a>
+      <a href="#"><svg><use href="#i-box"/></svg>My Pokémon</a>
+      <a href="#"><svg><use href="#i-person"/></svg>Trainers</a>
+      <a href="#"><svg><use href="#i-bag"/></svg>Bag</a>
+      <a href="#"><svg><use href="#i-star"/></svg>Achievements</a>
+      <a href="#"><svg><use href="#i-shop"/></svg>Shop</a>
+    </div>
+    <div class="wallet">Coop · Veteran Trainer<b>12,480 TP</b>8,250 CC</div>
+  </nav>
+  <main>
+    <div class="head">
+      <div><div class="eyebrow">My Team</div><h1>Your battle Team</h1>
+        <p class="sub">Slot 1 leads. Your Team fights in this order.</p></div>
+      <div class="power"><div class="eyebrow">Team Power</div><b>3,840</b></div>
+    </div>
+    <ol class="slots" style="list-style:none;padding:0;margin:0">
+      <li class="card lead"><div class="stage"><span class="slotno">1</span><span class="tag">LEAD</span><img class="sprite" src="../../../public/sprites/pokemon/normal/6.gif" alt="Charizard"></div>
+        <div class="name">Charizard</div><div class="meta"><span class="lv"><small>Lv</small>62</span><span class="type t-fire">Fire</span><span class="type t-flying">Flying</span></div>
+        <progress value="70" max="100" aria-label="EXP to next Level: 70%"></progress>
+        <div class="actions"><button class="btn icon" aria-label="Move Charizard up" disabled>▲</button><button class="btn icon" aria-label="Move Charizard down">▼</button><button class="btn">Details</button><button class="btn icon" aria-label="Remove Charizard from Team">✕</button></div></li>
+      <li class="card shiny"><div class="stage"><span class="slotno">2</span><img class="sprite" src="../../../public/sprites/pokemon/shiny/94.gif" alt="Shiny Gengar"></div>
+        <div class="name">Gengar <span class="spark" aria-label="shiny">✦</span></div><div class="meta"><span class="lv"><small>Lv</small>48</span><span class="type t-ghost">Ghost</span><span class="type t-poison">Poison</span></div>
+        <progress value="20" max="100" aria-label="EXP to next Level: 20%"></progress>
+        <div class="actions"><button class="btn icon" aria-label="Move Gengar up">▲</button><button class="btn icon" aria-label="Move Gengar down">▼</button><button class="btn">Details</button><button class="btn icon" aria-label="Remove Gengar from Team">✕</button></div></li>
+      <li class="card"><div class="stage"><span class="slotno">3</span><img class="sprite" src="../../../public/sprites/pokemon/normal/445.gif" alt="Garchomp"></div>
+        <div class="name">Garchomp</div><div class="meta"><span class="lv"><small>Lv</small>55</span><span class="type t-dragon">Dragon</span><span class="type t-ground">Ground</span></div>
+        <progress value="90" max="100" aria-label="EXP to next Level: 90%"></progress>
+        <div class="actions"><button class="btn icon" aria-label="Move Garchomp up">▲</button><button class="btn icon" aria-label="Move Garchomp down">▼</button><button class="btn">Details</button><button class="btn icon" aria-label="Remove Garchomp from Team">✕</button></div></li>
+      <li class="card"><div class="stage"><span class="slotno">4</span><img class="sprite" src="../../../public/sprites/pokemon/normal/130.gif" alt="Gyarados"></div>
+        <div class="name">Gyarados</div><div class="meta"><span class="lv"><small>Lv</small>41</span><span class="type t-water">Water</span><span class="type t-flying">Flying</span></div>
+        <progress value="40" max="100" aria-label="EXP to next Level: 40%"></progress>
+        <div class="actions"><button class="btn icon" aria-label="Move Gyarados up">▲</button><button class="btn icon" aria-label="Move Gyarados down">▼</button><button class="btn">Details</button><button class="btn icon" aria-label="Remove Gyarados from Team">✕</button></div></li>
+      <li class="card shiny"><div class="stage"><span class="slotno">5</span><img class="sprite" src="../../../public/sprites/pokemon/shiny/25.gif" alt="Shiny Pikachu"></div>
+        <div class="name">Pikachu <span class="spark" aria-label="shiny">✦</span></div><div class="meta"><span class="lv"><small>Lv</small>33</span><span class="type t-electric">Electric</span></div>
+        <progress value="5" max="100" aria-label="EXP to next Level: 5%"></progress>
+        <div class="actions"><button class="btn icon" aria-label="Move Pikachu up">▲</button><button class="btn icon" aria-label="Move Pikachu down" disabled>▼</button><button class="btn">Details</button><button class="btn icon" aria-label="Remove Pikachu from Team">✕</button></div></li>
+      <li class="empty"><div><div style="font-size:34px;opacity:.4" aria-hidden="true">◓</div>Slot 6 · Empty<br><button class="btn">Add Pokémon</button></div></li>
+    </ol>
+    <div class="save" role="status"><span>Unsaved changes: Gengar moved to slot 2.</span><button class="btn">Save Team</button></div>
+  </main>
+</div>
+<nav class="tabbar" aria-label="Main">
+  <a href="#"><svg><use href="#i-home"/></svg>Home</a>
+  <a href="#" aria-current="page"><svg><use href="#i-team"/></svg>Team</a>
+  <a href="#"><svg><use href="#i-box"/></svg>Pokémon</a>
+  <a href="#"><svg><use href="#i-bag"/></svg>Bag</a>
+  <a href="#"><svg><use href="#i-star"/></svg>More</a>
+</nav>
+</body>
+</html>

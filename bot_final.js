@@ -405,6 +405,7 @@ import { lockUser } from "./utils/userLocks.js";
 import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
 import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
+import { powersFromLevels } from "./utils/battle/power.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -560,6 +561,7 @@ import { rarityEmojis, spritePaths } from "./spriteconfig.js";
 import { loadTrainerSprites } from "./utils/dataLoader.js";
 import { updateUserRole } from "./utils/updateUserRole.js";
 import { broadcastReward } from "./utils/broadcastReward.js";
+import { catchAnnouncement } from "./utils/render/catchMessage.js";
 import {
   createPokemonRewardEmbed,
 } from "./utils/embedBuilders.js";
@@ -996,12 +998,13 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
     let reward;
     let isShiny = false;
+    let caught = null;
 
     try {
       reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball");
       isShiny = rollForShiny(userObj.tp || 0);
 
-      grantCatch(userObj, reward.id, isShiny ? "shiny" : "normal");
+      caught = grantCatch(userObj, reward.id, isShiny ? "shiny" : "normal"); // { level, isNew, expGained } for the card
 
       console.log(
         `🎁 Pokemon reward → ${isShiny ? "✨ shiny " : ""}${reward.name} (${reward.tier})`
@@ -1024,16 +1027,21 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // =============================
     // 📣 PUBLIC ANNOUNCEMENT
     // =============================
-    const embed = createPokemonRewardEmbed(reward, isShiny, spriteUrl);
+    // The catch card (utils/render/catchMessage.js); the old embed if it can't render.
+    const { message: announcement, broadcast } = await catchAnnouncement({
+      user: userObj,
+      catcher: interactionUser,
+      pokemonId: reward.id,
+      shiny: isShiny,
+      catchResult: caught,
+      fallback: () => ({
+        content: `🎉 <@${userId}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`,
+        embeds: [createPokemonRewardEmbed(reward, isShiny, spriteUrl)],
+      }),
+    });
 
     try {
-      const announcement =
-        `🎉 <@${userId}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`;
-
-      await msgOrInteraction.channel.send({
-        content: announcement,
-        embeds: [embed]
-      });
+      await msgOrInteraction.channel.send(announcement);
     } catch (err) {
       console.warn("⚠️ Public announcement failed:", err.message);
     }
@@ -1052,6 +1060,8 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
       },
       shiny: isShiny,
       source: "random encounter",
+      image: broadcast?.image ?? null, // the same catch card, under a no-ping caption
+      caption: broadcast?.caption ?? null,
     }).catch(err => console.error("❌ broadcastReward failed:", err.message));
 
     console.log(`✅ Reward granted to ${interactionUser.username}`);
@@ -1967,6 +1977,7 @@ app.get("/api/user-pokemon", (req, res) => {
   const currentTeam = Array.isArray(u.displayedPokemon) ? u.displayedPokemon : [];
 
   ensureWeeklyReset(u);
+  const levels = levelsForUser(u); // { "6:normal": 23 } for every owned variant
 
   // flatten response for front-end
   return res.json({
@@ -1977,7 +1988,9 @@ app.get("/api/user-pokemon", (req, res) => {
     items,
     pokemon,
     currentTeam, // NEW FORMAT: [{ id: Number, variant: "normal" | "shiny" }]
-    levels: levelsForUser(u), // { "6:normal": 23 } for every owned variant
+    // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
+    levels,
+    powers: powersFromLevels(levels), // { "6:normal": 410 }
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
   });
 });

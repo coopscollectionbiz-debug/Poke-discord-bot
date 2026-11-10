@@ -2,29 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coop’s Collection — Achievements</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Achievements · Coop’s Collection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/public/shared/tokens.css" />
+  <link rel="stylesheet" href="/public/shared/components.css" />
   <link rel="stylesheet" href="/public/dashboardshop/style.css" />
   <link rel="stylesheet" href="/public/bag/style.css" />
   <link rel="stylesheet" href="/public/achievements/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
 </head>
-<body>
-  <header>
-    <h1>🏅 Achievements</h1>
-    <p>Milestones you've reached and what's next</p>
+<body data-page="achievements">
+  <header class="cc-page-head">
+    <p class="cc-eyebrow">Milestones</p>
+    <h1>Achievements</h1>
+    <p>Milestones you’ve reached and what’s next.</p>
   </header>
 
-  <div id="navTabs" class="nav-tabs">
-    <button id="goPokemon" class="nav-tab" type="button">⭐ Manage Pokémon</button>
-    <button id="goTrainers" class="nav-tab" type="button">🧑 Manage Trainers</button>
-    <button id="goShop" class="nav-tab" type="button">🛒 Shop</button>
-    <button id="goBag" class="nav-tab" type="button">🎒 Bag</button>
-    <button id="goAchievements" class="nav-tab active" type="button">🏅 Achievements</button>
-  </div>
-
-  <main>
-    <section class="shop-section">
+  <main id="ccMain" tabindex="-1">
+    <section class="shop-section" aria-label="Achievements">
       <div id="achSummary" class="ach-summary"></div>
       <div class="bag-controls">
         <label>Category <select id="achCategory"><option value="">All categories</option></select></label>
@@ -37,11 +33,12 @@
           </select>
         </label>
       </div>
-      <p id="achStatus" class="subtitle">Loading…</p>
+      <p id="achStatus" class="subtitle" aria-live="polite">Loading…</p>
       <div id="achGrid" class="shop-grid"></div>
     </section>
   </main>
 
+  <script type="module" src="/public/shared/shell.js"></script>
   <script type="module" src="/public/achievements/script.js"></script>
 </body>
 </html>

@@ -1,0 +1,26 @@
+{
+ "newCommon/png": {
+  "ms": 12,
+  "kb": 31
+ },
+ "newCommon/gif": {
+  "ms": 84,
+  "kb": 53
+ },
+ "shinyDuplicate/png": {
+  "ms": 9,
+  "kb": 39
+ },
+ "shinyDuplicate/gif": {
+  "ms": 67,
+  "kb": 86
+ },
+ "newLegendary/png": {
+  "ms": 8,
+  "kb": 37
+ },
+ "newLegendary/gif": {
+  "ms": 61,
+  "kb": 89
+ }
+}

@@ -2,156 +2,108 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coop’s Collection — Shop</title>
-
-  <link rel="stylesheet" href="style.css" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-    rel="stylesheet"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Shop · Coop’s Collection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/public/shared/tokens.css" />
+  <link rel="stylesheet" href="/public/shared/components.css" />
+  <link rel="stylesheet" href="/public/dashboardshop/style.css" />
 </head>
 
-<body>
-
-  <!-- ===========================================================
-       Header
-  ============================================================ -->
-  <header>
-    <h1>🛒 Shop</h1>
-    <p>Use your CC to buy items and grow your team</p>
+<body data-page="shop">
+  <header class="cc-page-head">
+    <p class="cc-eyebrow">Spend CC</p>
+    <h1>Shop</h1>
+    <p>Use your CC to buy items and grow your collection.</p>
   </header>
 
-  <!-- ===========================================================
-       Navigation Tabs
-  ============================================================ -->
-  <div id="navTabs" class="nav-tabs">
-    <button id="goPokemon" class="nav-tab">⭐ Manage Pokémon</button>
-    <button id="goTrainers" class="nav-tab">🧑 Manage Trainers</button>
-    <button id="goShop" class="nav-tab active">🛒 Shop</button>
-    <button id="goBag" class="nav-tab" type="button">🎒 Bag</button>
-    <button id="goAchievements" class="nav-tab" type="button">🏅 Achievements</button>
-  </div>
+  <main id="ccMain" tabindex="-1">
+    <!-- Wallet -->
+    <div id="statsBar" aria-label="Your resources">
+      <div class="stat-item">
+        <img src="/public/sprites/items/cc_coin.png" class="stat-icon" alt="" />
+        <span id="ccCount">0</span> <span class="stat-label">CC</span>
+      </div>
+      <div class="stat-item">
+        <img src="/public/sprites/items/evolution_stone.png" class="stat-icon" alt="" />
+        <span id="stoneCount">0</span> <span class="stat-label">Stones</span>
+      </div>
+    </div>
 
-  <!-- ===========================================================
-       Stats Bar
-  ============================================================ -->
-  <div id="statsBar">
-    <div class="stat-item">💰 CC: <span id="ccCount">0</span></div>
-    <div class="stat-item">💎 Stones: <span id="stoneCount">0</span></div>
-  </div>
-
-  <main>
-
-    <!-- ===========================================================
-         Poké Balls
-    ============================================================ -->
-    <section class="shop-section">
-      <h2>Poké Balls</h2>
+    <section class="shop-section" aria-labelledby="ballsHeading">
+      <h2 id="ballsHeading">Poké Balls</h2>
       <p class="subtitle">Gives 1 random Pokémon. Better balls increase rarity odds.</p>
 
       <div class="shop-grid">
-
-        <!-- Poké Ball -->
         <div class="shop-item">
-          <img src="/public/sprites/items/pokeball.png" class="item-icon" />
+          <img src="/public/sprites/items/pokeball.png" class="item-icon" alt="" />
           <h3>Poké Ball</h3>
           <p class="desc">Basic ball. Higher chance of Common.</p>
-          <p class="price">
-            <span class="price-value" data-price="pokeball">–</span> CC
-          </p>
-          <button class="buy-btn" data-item="pokeball">Buy</button>
+          <p class="price"><span class="price-value" data-price="pokeball">–</span> CC</p>
+          <button type="button" class="buy-btn" data-item="pokeball" aria-label="Buy a Poké Ball">Buy</button>
         </div>
 
-        <!-- Great Ball -->
         <div class="shop-item">
-          <img src="/public/sprites/items/greatball.png" class="item-icon" />
+          <img src="/public/sprites/items/greatball.png" class="item-icon" alt="" />
           <h3>Great Ball</h3>
           <p class="desc">Catches Uncommon and better.</p>
-          <p class="price">
-            <span class="price-value" data-price="greatball">–</span> CC
-          </p>
-          <button class="buy-btn" data-item="greatball">Buy</button>
+          <p class="price"><span class="price-value" data-price="greatball">–</span> CC</p>
+          <button type="button" class="buy-btn" data-item="greatball" aria-label="Buy a Great Ball">Buy</button>
         </div>
 
-        <!-- Ultra Ball -->
         <div class="shop-item">
-          <img src="/public/sprites/items/ultraball.png" class="item-icon" />
+          <img src="/public/sprites/items/ultraball.png" class="item-icon" alt="" />
           <h3>Ultra Ball</h3>
           <p class="desc">Only catches Rare and better.</p>
-          <p class="price">
-            <span class="price-value" data-price="ultraball">–</span> CC
-          </p>
-          <button class="buy-btn" data-item="ultraball">Buy</button>
+          <p class="price"><span class="price-value" data-price="ultraball">–</span> CC</p>
+          <button type="button" class="buy-btn" data-item="ultraball" aria-label="Buy an Ultra Ball">Buy</button>
         </div>
-
       </div>
     </section>
 
-    <!-- ===========================================================
-         Evolution Stones
-    ============================================================ -->
-    <section class="shop-section">
-      <h2>Evolution</h2>
-
+    <section class="shop-section" aria-labelledby="evoHeading">
+      <h2 id="evoHeading">Evolution</h2>
       <div class="shop-grid">
         <div class="shop-item">
-          <img src="/public/sprites/items/evolution_stone.png" class="item-icon" />
+          <img src="/public/sprites/items/evolution_stone.png" class="item-icon" alt="" />
           <h3>Evolution Stone</h3>
           <p class="desc">Evolves eligible Pokémon.</p>
-          <p class="price">
-            <span class="price-value" data-price="evo_stone">–</span> CC
-          </p>
-          <button class="buy-btn" data-item="evo_stone">Buy</button>
+          <p class="price"><span class="price-value" data-price="evo_stone">–</span> CC</p>
+          <button type="button" class="buy-btn" data-item="evo_stone" aria-label="Buy an Evolution Stone">Buy</button>
         </div>
       </div>
     </section>
 
-    <!-- ===========================================================
-         Weekly Pack
-    ============================================================ -->
-    <section class="shop-section">
-      <h2>Weekly Pack</h2>
-      <p class="subtitle">Claim a premium bundle once per week!</p>
-
+    <section class="shop-section" aria-labelledby="weeklyHeading">
+      <h2 id="weeklyHeading">Weekly Pack</h2>
+      <p class="subtitle">Claim a free bundle once per week.</p>
       <div class="shop-grid">
         <div class="shop-item special">
-          <img src="/public/sprites/items/starter_pack.png" class="item-icon" />
+          <img src="/public/sprites/items/starter_pack.png" class="item-icon" alt="" />
           <h3>Weekly Pack</h3>
           <p class="desc">3 Common • 2 Uncommon • 1 Rare • Includes Trainers</p>
           <p class="price">FREE</p>
-          <button class="buy-btn" data-item="weekly">Claim</button>
-          <p id="weeklyStatus"></p>
+          <button type="button" class="buy-btn" data-item="weekly" aria-label="Claim the Weekly Pack">Claim</button>
+          <p id="weeklyStatus" aria-live="polite"></p>
         </div>
       </div>
     </section>
-
   </main>
 
-  <!-- ===========================================================
-       Script
-  ============================================================ -->
-  <script type="module" src="script.js"></script>
+  <script type="module" src="/public/shared/shell.js"></script>
+  <script type="module" src="/public/dashboardshop/script.js"></script>
 
-
-  <!-- Inject dynamic prices -->
+  <!-- Inject prices (ITEM_COSTS is set by script.js) -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const mapping = {
-        pokeball: "pokeball",
-        greatball: "greatball",
-        ultraball: "ultraball",
-        evo_stone: "evo_stone"
-      };
-
-      for (const key in mapping) {
+      for (const key of ["pokeball", "greatball", "ultraball", "evo_stone"]) {
         const el = document.querySelector(`[data-price="${key}"]`);
         if (el && window.ITEM_COSTS && window.ITEM_COSTS[key]) {
-          el.textContent = window.ITEM_COSTS[key];
+          el.textContent = Number(window.ITEM_COSTS[key]).toLocaleString();
         }
       }
     });
   </script>
-
 </body>
 </html>

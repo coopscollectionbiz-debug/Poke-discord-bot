@@ -1,0 +1,86 @@
+<!doctype html>
+<!-- Design mockup (static, synthetic data). Not served by the bot.
+     Achievements split: Ranked and Casual shown separately (desktop: side by side; phone: tabs).
+     The existing collection achievements keep their own tab. Names and rewards are placeholders. -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Achievements (mockup)</title>
+<link rel="stylesheet" href="../../../../public/shared/tokens.css" />
+<link rel="stylesheet" href="../../../../public/shared/components.css" />
+<link rel="stylesheet" href="mock.css" />
+<style>
+  .ach-tabs { margin: 4px 0 14px; }
+  .ach-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .ach { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; padding: 12px; border-radius: 12px; background: var(--cc-surface-raised); border: 1.5px solid var(--cc-line); margin-top: 8px; }
+  .ach h3 { margin: 0; font-size: 15px; }
+  .ach p { margin: 0; font-size: 13px; }
+  .ach .bar { grid-column: 1 / -1; height: 8px; border-radius: 4px; background: var(--cc-surface-sunken); overflow: hidden; }
+  .ach .bar i { display: block; height: 100%; background: var(--cc-blue); }
+  .ach.ready { border-color: var(--cc-gold); background: linear-gradient(90deg, #f5c84c1a, transparent), var(--cc-surface-raised); }
+  .ach.ready .bar i { background: var(--cc-gold); }
+  .ach.done { opacity: .72; }
+  .ach.done .bar i { background: var(--cc-green); }
+  .ach .st { font-size: 12.5px; font-weight: 800; color: var(--cc-text-muted); text-align: right; }
+  .ach .st.ok { color: var(--cc-green); display: inline-flex; align-items: center; gap: 4px; }
+  .ach .st .mk-ic { width: 16px; height: 16px; }
+  .ach .reward { font-weight: 700; color: var(--cc-text-muted); }
+  .ach .reward b { color: var(--cc-gold); }
+  @media (max-width: 820px) {
+    .ach-cols { grid-template-columns: 1fr; }
+    .ach-cols > .casual { display: none; } /* phone: one list at a time via the tabs */
+    .ach-tabs .mk-seg { width: 100%; }
+    .ach-tabs .mk-seg button { flex: 1; justify-content: center; padding: 0 6px; }
+  }
+</style>
+</head>
+<body data-page="achievements">
+<header class="cc-page-head">
+  <p class="cc-eyebrow">Progress</p>
+  <h1>Achievements</h1>
+  <p>Ranked and casual battles earn their own achievements. Collection achievements stay as they are.</p>
+</header>
+<main id="ccMain" tabindex="-1"></main>
+<script src="mock-data.js"></script>
+<script src="mock-kit.js"></script>
+<script>
+const { icon } = MK;
+MK.shell("achievements");
+const a = (title, desc, cur, max, status, reward) => {
+  const cls = status === "ready" ? " ready" : status === "done" ? " done" : "";
+  const right = status === "ready" ? `<button type="button" class="cc-btn cc-btn--gold">Claim</button>`
+    : status === "done" ? `<span class="st ok">${icon("check")}Claimed</span>` : `<span class="st">${cur}/${max}</span>`;
+  return `<li class="ach${cls}" style="list-style:none"><div><h3>${title}</h3><p>${desc} · <span class="reward">Reward <b>${reward}</b></span></p></div>${right}
+    <span class="bar" role="progressbar" aria-label="${title}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${Math.min(cur, max)}"><i style="width:${Math.min(100, (cur / max) * 100)}%"></i></span></li>`;
+};
+document.getElementById("ccMain").innerHTML = `
+<div class="ach-tabs"><div class="mk-seg" role="tablist" aria-label="Achievements">
+  <button type="button" role="tab" aria-pressed="true" aria-selected="true">${icon("swords")}Ranked · 1</button>
+  <button type="button" role="tab" aria-pressed="false" aria-selected="false">${icon("smile")}Casual</button>
+  <button type="button" role="tab" aria-pressed="false" aria-selected="false">Collection · 1</button></div></div>
+<div class="ach-cols">
+  <section class="mk-panel mk-panel--battle" aria-label="Ranked achievements">
+    <h2 class="mk-h2">${icon("swords")}Ranked</h2><p class="mk-sub">Battle team · Lv 50 · rated</p>
+    <ul style="margin:0;padding:0">
+      ${a("Ranked win streak 3", "Win 3 ranked battles in a row", 3, 3, "ready", "1,000 CC")}
+      ${a("First ranked win", "Win a ranked battle", 1, 1, "done", "250 CC")}
+      ${a("Rating 1,300", "Reach a 1,300 ranked rating", 1284, 1300, "", "Ultra Ball")}
+      ${a("Top 10", "Reach the top 10 on the ranked leaderboard", 1, 1, "done", "2,500 CC")}
+      ${a("Ranked veteran", "Win 50 ranked battles", 23, 50, "", "Evolution Stone")}
+    </ul>
+  </section>
+  <section class="mk-panel mk-panel--display casual" aria-label="Casual achievements">
+    <h2 class="mk-h2">${icon("smile")}Casual</h2><p class="mk-sub">Display team · real Levels · unrated</p>
+    <ul style="margin:0;padding:0">
+      ${a("First open battle win", "Win an open battle", 1, 1, "done", "250 CC")}
+      ${a("Casual win streak 5", "Win 5 open battles in a row", 6, 5, "done", "500 CC")}
+      ${a("Casual win streak 10", "Win 10 open battles in a row", 2, 10, "", "1,000 CC")}
+      ${a("Open battler", "Win 100 open battles", 41, 100, "", "Evolution Stone")}
+    </ul>
+  </section>
+</div>
+<p class="mk-note">${icon("info")}Placeholder names and rewards. Existing battle achievements need a decision: count toward casual, ranked, or both (open question).</p>`;
+</script>
+</body>
+</html>

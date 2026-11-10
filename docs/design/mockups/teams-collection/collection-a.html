@@ -1,0 +1,185 @@
+<!doctype html>
+<!-- Design mockup (static, synthetic data). Not served by the bot.
+     Collection, option A: a dense Pokédex grid (owned + unowned silhouettes, dex numbers),
+     with a detail drawer (desktop) / sheet (phone). Mega forms live inside the drawer only.
+     States: ?state=browse (default; desktop shows the drawer open) | detail (phone sheet open) -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Collection · Option A (mockup)</title>
+<link rel="stylesheet" href="../../../../public/shared/tokens.css" />
+<link rel="stylesheet" href="../../../../public/shared/components.css" />
+<link rel="stylesheet" href="mock.css" />
+<style>
+  .ca-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+  .ca-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+  .ca-stat { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; background: var(--cc-surface); border: 1.5px solid var(--cc-line); font-weight: 700; font-size: 13.5px; color: var(--cc-text-muted); }
+  .ca-stat b { color: var(--cc-text); font-size: 16px; }
+  .ca-bar { width: 90px; height: 6px; border-radius: 3px; background: var(--cc-surface-sunken); overflow: hidden; }
+  .ca-bar i { display: block; height: 100%; background: var(--cc-green); }
+  .ca-modes { margin-bottom: 10px; }
+  .ca-filters { display: grid; gap: 8px; margin-bottom: 12px; }
+  .ca-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .ca-row input[type="search"] { flex: 1 1 220px; min-width: 0; }
+  .ca-chip { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 44px; padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text-muted); font-weight: 700; font-size: 13px; position: relative; }
+  .ca-chip small { color: var(--cc-text-faint); font-weight: 700; }
+  .ca-chip[aria-pressed="true"] { border-color: var(--cc-blue); background: var(--cc-blue-soft); color: var(--cc-text); }
+  .ca-region { display: flex; align-items: baseline; gap: 10px; margin: 6px 0 8px; }
+  .ca-region h2 { margin: 0; font-size: 18px; }
+  .ca-region span { color: var(--cc-text-faint); font-weight: 700; font-size: 13px; }
+  .ca-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+  .ca-tile { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; min-height: 112px; padding: 18px 2px 6px; border-radius: 10px; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text); text-align: center; }
+  .ca-tile img { height: 52px; max-width: 100%; object-fit: contain; image-rendering: pixelated; }
+  .ca-tile .no { position: absolute; top: 4px; left: 6px; font-size: 10.5px; font-weight: 800; color: var(--cc-text-faint); }
+  .ca-tile .nm { font-size: 12px; font-weight: 800; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .ca-tile .ct { font-size: 11px; font-weight: 700; color: var(--cc-text-muted); }
+  .ca-tile .ct .s { color: var(--cc-gold); }
+  .ca-tile .tm { position: absolute; top: 3px; right: 4px; display: flex; gap: 2px; }
+  .ca-tile .tm .mk-mem { min-width: 20px; height: 17px; font-size: 9.5px; padding: 0 3px; }
+  .ca-tile.unowned { background: var(--cc-surface-sunken); border-style: dashed; }
+  .ca-tile.unowned img { filter: brightness(0) invert(.22); opacity: .9; }
+  .ca-tile.unowned .nm { color: var(--cc-text-faint); }
+  .ca-tile.shiny { border-color: #f5c84c99; }
+  .ca-tile[aria-pressed="true"] { border-color: var(--cc-blue); box-shadow: var(--cc-ring-blue); }
+  .ca-more { display: flex; justify-content: center; margin: 14px 0; }
+  /* Drawer */
+  .ca-drawer { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; padding: 0; }
+  .ca-dhead { display: flex; align-items: flex-start; gap: 8px; padding: 14px 14px 0; }
+  .ca-dhead h2 { margin: 0; font-size: 22px; }
+  .ca-dhead p { margin: 0; font-size: 13px; color: var(--cc-text-faint); font-weight: 700; }
+  .ca-dhead .mk-ib { margin-left: auto; }
+  .ca-dstage { position: relative; margin: 10px 14px 0; height: 170px; border-radius: 12px; display: flex; align-items: flex-end; justify-content: center; background: radial-gradient(circle at 50% 75%, #f0803022, transparent 60%), var(--cc-surface-sunken); }
+  .ca-dstage img { max-height: 130px; transform: scale(1.4); transform-origin: bottom center; margin-bottom: 18px; image-rendering: pixelated; position: relative; z-index: 1; }
+  .ca-dstage::after { content: ""; position: absolute; bottom: 12px; width: 60%; height: 18px; border-radius: 50%; background: #ffffff10; border: 1.5px solid #ffffff1c; }
+  .ca-vt { position: absolute; top: 8px; right: 8px; z-index: 2; }
+
+  .ca-sec { padding: 12px 14px; border-top: 1px solid var(--cc-line); }
+  .ca-sec h3 { margin: 0 0 8px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--cc-text-faint); display: flex; align-items: center; gap: 8px; }
+  .ca-sec h3 .mk-note { margin: 0 0 0 auto; padding: 0 6px; font-size: 10.5px; text-transform: none; letter-spacing: 0; }
+  .ca-copies { display: grid; gap: 6px; }
+  .ca-copy { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; background: var(--cc-surface-raised); font-size: 13.5px; font-weight: 700; }
+  .ca-copy img { width: 40px; height: 36px; object-fit: contain; image-rendering: pixelated; }
+  .ca-copy > span:not(.mk-mem) { flex: 1; }
+  .ca-copy small { color: var(--cc-text-muted); font-weight: 600; }
+  .ca-statrow { display: grid; grid-template-columns: 40px 34px 1fr; gap: 8px; align-items: center; font-size: 12.5px; font-weight: 700; margin: 3px 0; }
+  .ca-statrow span:first-child { color: var(--cc-text-muted); }
+  .ca-statrow .b { height: 7px; border-radius: 4px; background: var(--cc-surface-sunken); overflow: hidden; }
+  .ca-statrow .b i { display: block; height: 100%; background: var(--cc-exp); }
+  .ca-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .ca-move { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 8px; border-radius: 9px; background: var(--cc-surface-raised); font-size: 12.5px; font-weight: 700; }
+  .ca-move .cc-type { font-size: 9px; padding: 2px 6px; }
+  .ca-forms { display: flex; gap: 6px; }
+  .ca-form { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 10px; border: 1.5px solid var(--cc-line); background: var(--cc-surface-raised); font-size: 12px; font-weight: 800; }
+  .ca-form img { height: 48px; image-rendering: pixelated; }
+  .ca-form small { display: inline-flex; align-items: center; gap: 3px; color: var(--cc-text-faint); font-weight: 700; }
+  .ca-form small .mk-ic { width: 12px; height: 12px; }
+  .ca-form.is-mega { border-color: #c084fc88; }
+  .ca-evo { display: flex; align-items: center; gap: 4px; }
+  .ca-evo div { flex: 1; text-align: center; font-size: 12px; font-weight: 700; color: var(--cc-text-muted); }
+  .ca-evo img { height: 40px; image-rendering: pixelated; display: block; margin: 0 auto; }
+  .ca-evo .cur { color: var(--cc-text); }
+  .ca-evo .mk-ic { width: 16px; height: 16px; color: var(--cc-text-faint); }
+  .ca-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ca-actions .cc-btn { padding: 0 10px; }
+  .ca-filterbtn { display: none; }
+  @media (max-width: 1100px) { .ca-wrap { grid-template-columns: 1fr; } .ca-drawer { display: none; } }
+  @media (max-width: 820px) {
+    .ca-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+    .ca-tile { min-height: 96px; padding-top: 16px; }
+    .ca-tile img { height: 42px; }
+    .ca-tile .nm { font-size: 11px; }
+    .ca-stat .ca-bar { width: 60px; }
+    .ca-hide-phone { display: none !important; }
+    .ca-filterbtn { display: inline-flex; }
+    .ca-modes .mk-seg { width: 100%; }
+    .ca-modes .mk-seg button { flex: 1; justify-content: center; padding: 0 6px; }
+    .mk-sheet .ca-drawer, .mk-sheet .ca-drawerbody { display: block; position: static; max-height: none; }
+  }
+</style>
+</head>
+<body data-page="collection">
+<header class="cc-page-head">
+  <p class="cc-eyebrow">Your Pokémon</p>
+  <h1>Collection</h1>
+  <p>Every Pokémon in the live regions. Evolve, donate and convert here; build teams on the Teams page.</p>
+</header>
+<main id="ccMain" tabindex="-1"></main>
+<script src="mock-data.js"></script>
+<script src="mock-kit.js"></script>
+<script>
+const { icon, sprite, typeChips, tierPill, esc, q, M } = MK;
+MK.shell("collection");
+const state = q.get("state") || "browse";
+const main = document.getElementById("ccMain");
+const kantoOwned = M.dex.filter((p) => p.normal + p.shiny > 0).length;
+const live = ["Kanto", "Johto", "Hoenn", "Sinnoh", "Unova"];
+const total = live.reduce((s, r) => s + M.regionTotals[r], 0);
+const ownedAll = kantoOwned + live.slice(1).reduce((s, r) => s + M.regionOwned[r], 0);
+const pct = (a, b) => Math.round((a / b) * 100);
+
+function tile(p) {
+  const own = p.normal + p.shiny > 0;
+  const mem = own ? MK.memberBadges(p.id, p.shiny && !p.normal ? "shiny" : "normal") + (p.shiny && p.normal ? MK.memberBadges(p.id, "shiny") : "") : "";
+  const v = p.shiny && !p.normal ? "shiny" : "normal";
+  const label = own ? `${p.name}, #${p.id}, owned ×${p.normal}${p.shiny ? `, shiny ×${p.shiny}` : ""}` : `${p.name}, #${p.id}, not owned`;
+  return `<li><button type="button" class="ca-tile${own ? "" : " unowned"}${p.shiny ? " shiny" : ""}" aria-label="${esc(label)}"${p.id === 6 ? ' aria-pressed="true"' : ""}>
+    <span class="no">#${String(p.id).padStart(4, "0")}</span><span class="tm">${mem}</span>
+    <img src="${sprite(p.id, v)}" alt="" loading="lazy"><span class="nm">${esc(p.name)}</span>
+    <span class="ct">${own ? `×${p.normal}${p.shiny ? ` <span class="s">✦${p.shiny}</span>` : ""}` : "&nbsp;"}</span></button></li>`;
+}
+
+function drawer(inSheet = false) {
+  const d = M.detail[6];
+  const max = 200;
+  const statRow = (k, label) => `<div class="ca-statrow"><span>${label}</span><b>${d.stats[k]}</b><span class="b"><i style="width:${Math.min(100, (d.stats[k] / max) * 100)}%"></i></span></div>`;
+  return `<aside class="mk-panel ca-drawer" aria-label="Charizard details">
+    <div class="ca-dhead"><div><p>#0006 · Kanto · Gen 1</p><h2>Charizard</h2>
+      <div style="display:flex;gap:6px;margin-top:6px">${typeChips(["Fire", "Flying"])}${tierPill("legendary")}</div></div>
+      <button type="button" class="mk-ib" aria-label="Close details">${icon("x")}</button></div>
+    <div class="ca-dstage"><div class="ca-vt mk-seg" role="group" aria-label="Variant"><button type="button" aria-pressed="true">Normal</button><button type="button" aria-pressed="false">${icon("sparkle")}Shiny</button></div>
+      <img src="${sprite(6)}" alt="Charizard"></div>
+    <div class="ca-sec"><h3>Your copies</h3><div class="ca-copies">
+      <div class="ca-copy"><img src="${sprite(6)}" alt=""><span>Normal ×1 · Lv 58<br><small>Display slot 1 · Battle slot 1 (as Mega Charizard X)</small></span><span class="mk-mem mk-mem--display">D1</span><span class="mk-mem mk-mem--battle">B1</span></div>
+      <div class="ca-copy"><img src="${sprite(6, "shiny")}" alt=""><span>Shiny ×1 · Lv 36<br><small>Not on a team</small></span></div></div></div>
+    <div class="ca-sec"><h3>Forms</h3><div class="ca-forms">
+      <div class="ca-form"><img src="${sprite(6)}" alt="">Charizard<small>Base</small></div>
+      <div class="ca-form is-mega"><img src="${sprite(6, "normal", "mega-charizard-x")}" alt="">Mega X<small>Unlocked</small></div>
+      <div class="ca-form is-mega"><img src="${sprite(6, "normal", "mega-charizard-y")}" alt="">Mega Y<small>${icon("lock")} Needs stone</small></div></div>
+      <p class="mk-sub" style="margin-top:6px;font-size:12px">Mega forms are forms of Charizard: they never count as Pokédex entries.</p></div>
+    <div class="ca-sec"><h3>Stats at Lv 58 <span class="mk-note">needs detail endpoint (B2)</span></h3>
+      ${statRow("hp", "HP")}${statRow("atk", "Atk")}${statRow("def", "Def")}${statRow("spa", "SpA")}${statRow("spd", "SpD")}${statRow("spe", "Spe")}
+      <p class="mk-sub" style="font-size:12px">Power ${Object.values(d.stats).reduce((a, b) => a + b, 0)} · at Lv 50 in ranked: ${Object.values(d.stats50).reduce((a, b) => a + b, 0)}</p></div>
+    <div class="ca-sec"><h3>Battle moves</h3><div class="ca-moves">${d.moves.map((m) => `<div class="ca-move"><span>${esc(m.name)}</span>${m.type ? `<span class="cc-type" data-type="${m.type.toLowerCase()}">${m.type}</span>` : ""}</div>`).join("")}</div></div>
+    <div class="ca-sec"><h3>Evolution</h3><div class="ca-evo">
+      <div><img src="${sprite(4)}" alt="">Charmander</div>${icon("right")}<div><img src="${sprite(5)}" alt="">Lv 16</div>${icon("right")}<div class="cur"><img src="${sprite(6)}" alt="">Lv 36</div></div></div>
+    <div class="ca-sec"><div class="ca-actions"><button type="button" class="cc-btn">Donate</button><button type="button" class="cc-btn cc-btn--gold">${icon("sparkle")}Convert</button>
+      <a class="cc-btn cc-btn--primary" style="grid-column:1/-1" href="teams-a.html">Add to a team</a></div></div>
+  </aside>`;
+}
+
+let html = `<div class="ca-stats">
+  <div class="ca-stat"><span>Pokédex</span><b>${ownedAll}/${total}</b><span class="ca-bar"><i style="width:${pct(ownedAll, total)}%"></i></span></div>
+  <div class="ca-stat ca-hide-phone"><span>Shiny</span><b style="color:var(--cc-gold)">5</b></div>
+  <div class="ca-stat ca-hide-phone"><span>Kanto</span><b>${kantoOwned}/151</b><span class="ca-bar"><i style="width:${pct(kantoOwned, 151)}%"></i></span></div>
+</div>
+<div class="ca-modes"><div class="mk-seg" role="group" aria-label="Mode"><button type="button" aria-pressed="true">Browse</button><button type="button" aria-pressed="false">Evolve</button><button type="button" aria-pressed="false">Donate</button><button type="button" aria-pressed="false">Convert</button></div></div>
+<div class="ca-filters">
+  <div class="ca-row"><label class="sr-only" for="dexSearch">Search the Pokédex</label><input id="dexSearch" type="search" placeholder="Search name or #…">
+    <select aria-label="Sort" class="ca-hide-phone"><option>Sort: Pokédex #</option><option>Power</option><option>Level</option><option>Name</option></select>
+    <button type="button" class="cc-btn ca-filterbtn">${icon("filter")}Filters · 1</button></div>
+  <div class="ca-row" role="group" aria-label="Region">${["All", ...live].map((r, i) => `<button type="button" class="ca-chip${i > 2 ? " ca-hide-phone" : ""}" aria-pressed="${r === "Kanto"}">${r}${r !== "All" ? ` <small>${r === "Kanto" ? kantoOwned : M.regionOwned[r]}/${M.regionTotals[r]}</small>` : ""}</button>`).join("")}</div>
+  <div class="ca-row ca-hide-phone"><select aria-label="Type"><option>All types</option></select><select aria-label="Rarity"><option>All rarities</option></select>
+    <div class="mk-seg" role="group" aria-label="Owned"><button type="button" aria-pressed="true">All</button><button type="button" aria-pressed="false">Owned</button><button type="button" aria-pressed="false">Missing</button></div>
+    <button type="button" class="ca-chip" aria-pressed="false">${icon("sparkle")}Shiny only</button></div>
+</div>
+<div class="ca-wrap"><section aria-label="Pokédex">
+  <div class="ca-region"><h2>Kanto</h2><span>${kantoOwned}/151 · Gen 1</span></div>
+  <ul class="ca-grid">${M.dex.slice(0, 60).map(tile).join("")}</ul>
+  <div class="ca-more"><button type="button" class="cc-btn">Show 60 more</button></div>
+</section>${drawer()}</div>`;
+if (state === "detail") html += `<div class="mk-sheet-scrim"></div><div class="mk-sheet" role="dialog" aria-label="Charizard details">${drawer(true)}</div>`;
+main.innerHTML = html;
+</script>
+</body>
+</html>

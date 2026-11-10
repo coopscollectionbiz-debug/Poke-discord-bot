@@ -12,6 +12,7 @@ import { EmbedBuilder, AttachmentBuilder } from "discord.js";
 import { sightingView } from "./render/catchCard.js";
 import { renderCatchImage, broadcastCaption } from "./render/catchMessage.js";
 import { spritePaths, rarityEmojis } from "../spriteconfig.js";
+import { trainerImageUrl } from "./trainerAssets.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -122,7 +123,7 @@ export async function broadcastReward(
 
       if (!spriteFile.match(/\.(png|jpg|jpeg|gif)$/i)) spriteFile += ".png";
       spriteFile = spriteFile.replace(/\.png\.png$/i, ".png");
-      spriteUrl = `${base}${spriteFile}`;
+      spriteUrl = trainerImageUrl(spriteFile) ?? `${base}${spriteFile}`;
 
       let nameSource =
         item.name ||

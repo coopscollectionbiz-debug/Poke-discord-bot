@@ -10,7 +10,8 @@
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR } from "./tokens.js";
 import { rr, font, fitText, fitFont, drawBall } from "./primitives.js";
-import { loadStaticSprite, loadTrainerSprite, drawSprite } from "./sprites.js";
+import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, drawSprite } from "./sprites.js";
+import { poseAtFrame } from "../trainerIdle.js";
 import { spriteStage } from "./stage.js";
 import { buildTeam } from "../battle/runBattle.js";
 
@@ -34,7 +35,7 @@ export function leaderboardView(board, trainerData, viewerId) {
 
 export const leaderboardSize = (v) => ({ w: W, h: M + HEADER + (v.top.length ? PODIUM : 120) + Math.max(0, v.top.length - 3) * ROW + YOU + M });
 
-async function podium(ctx, p, cx, floor, height, place) {
+async function podium(ctx, p, cx, floor, height, place, stage) {
   const medal = MEDAL[place];
   // Pedestal.
   ctx.fillStyle = `${medal}26`;
@@ -55,7 +56,10 @@ async function podium(ctx, p, cx, floor, height, place) {
   ctx.ellipse(cx, floor - 6, 92, 16, 0, 0, Math.PI * 2);
   ctx.fill();
   const t = await loadTrainerSprite(p.trainerFile);
-  if (t) drawSprite(ctx, t, cx, floor, 200, 150, { scale: 2 });
+  if (t) {
+    const idle = await loadTrainerPoses(p.trainerFile); // breathing idle, or null → static
+    stage.placePosed(ctx, idle?.poses ?? [t], poseAtFrame, cx, floor, 200, 150, { scale: 2 });
+  }
   else { ctx.globalAlpha = 0.35; drawBall(ctx, cx, floor - 40, 26, false); ctx.globalAlpha = 1; }
   // Name, rating, record above the sprite area's baseline.
   const top = floor - 196;
@@ -132,7 +136,7 @@ export async function renderLeaderboard(v, { animate = false } = {}) {
     // Podium: 2nd · 1st · 3rd, with 1st tallest.
     const floorBase = y + PODIUM - 10;
     const spots = [[1, W / 2 - 260, 70], [0, W / 2, 104], [2, W / 2 + 260, 50]];
-    for (const [i, cx, ht] of spots) if (v.top[i]) await podium(ctx, v.top[i], cx, floorBase - ht, ht, i);
+    for (const [i, cx, ht] of spots) if (v.top[i]) await podium(ctx, v.top[i], cx, floorBase - ht, ht, i, stage);
     y += PODIUM;
     for (const p of v.top.slice(3)) {
       const lead = p.lead ? await loadStaticSprite(p.lead.id, p.lead.variant) : null;

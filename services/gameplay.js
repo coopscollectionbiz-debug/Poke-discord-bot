@@ -17,6 +17,9 @@
 // the bot's record normalizer, event log, Discord broadcast).
 // ==========================================================
 
+import { pokemonSpriteUrl, pokemonSpritePath } from "../utils/sprites.js";
+import { acquirablePokemon } from "../utils/speciesCatalog.js";
+import { checkEvolutionRequirements } from "./evolutionRules.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getPokemonDataCached } from "../utils/pokemonDataCache.js";
@@ -27,6 +30,7 @@ import { spritePaths } from "../spriteconfig.js";
 import { normVariant, isDisplayedVariant, tierKey, shinyEvolveDustCost, SHINY_CRAFT_COST_BY_TIER, ensureWeeklyReset } from "../utils/economyRules.js";
 import { getQuantity, grantItem, consumeItems, runInventoryTransaction, REQUEST_ID_PATTERN } from "./inventory.js";
 import { saveAckFields } from "../utils/saveManager.js";
+import { trackProgress } from "../progression/achievements.js";
 
 /** Poké Ball prices (CC). Unchanged. */
 export const BALL_COST = Object.freeze({ pokeball: 1000, greatball: 2000, ultraball: 4000 });
@@ -112,7 +116,7 @@ export function createGameplayHandlers(deps) {
     const cost = Object.prototype.hasOwnProperty.call(BALL_COST, source) ? BALL_COST[source] : 0;
     if (!cost) return reply(200, { success: false, error: `Invalid Poké Ball type: ${source}` });
 
-    const allPokemon = await loadAllPokemon();
+    const allPokemon = acquirablePokemon(await loadAllPokemon()); // live generations only
     if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
       return reply(200, { success: false, error: "Pokémon pool unavailable." });
     }
@@ -131,6 +135,8 @@ export function createGameplayHandlers(deps) {
         const shiny = rollForShiny(user.tp || 0);
         user.cc -= cost;
         grantCatch(user, reward.id, shiny ? "shiny" : "normal");
+        // Release C: achievement progress (same block, same save).
+        trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: shiny ? 1 : 0 }, { type: "purchase" }]);
         const rarity = reward.tier || reward.rarity || "common";
         return { ok: true, pokemon: { id: reward.id, name: reward.name, rarity, shiny }, cc: user.cc };
       },
@@ -150,7 +156,7 @@ export function createGameplayHandlers(deps) {
       replayed: !!tx.replayed,
       pokemon: {
         ...pokemon,
-        sprite: pokemon.shiny ? `${spritePaths.shiny}${pokemon.id}.gif` : `${spritePaths.pokemon}${pokemon.id}.gif`,
+        sprite: pokemonSpriteUrl(pokemon.id, pokemon.shiny),
       },
       cc,
     });
@@ -204,6 +210,9 @@ export function createGameplayHandlers(deps) {
         if ((user.pokemon?.[bId]?.[chosenVariant] || 0) <= 0) {
           return { ok: false, error: `You do not own a ${chosenVariant === "shiny" ? "shiny " : ""}${base.name}.` };
         }
+        // Gen 6–9: generation must be live; official level requirement (services/evolutionRules.js).
+        const req = checkEvolutionRequirements(user, { ...base, id: bId }, { ...target, id: tId }, chosenVariant);
+        if (!req.ok) return { ok: false, error: req.error };
         if (dustCost > 0 && getQuantity(user, "shiny_dust") < dustCost) {
           return { ok: false, error: `Not enough Shiny Dust. Requires ${dustCost}.`, dustRequired: dustCost, dustAvailable: getQuantity(user, "shiny_dust") };
         }
@@ -217,6 +226,7 @@ export function createGameplayHandlers(deps) {
         user.pokemon[tId][chosenVariant] = (user.pokemon[tId][chosenVariant] ?? 0) + 1;
         carryLevel(user, { id: bId, variant: chosenVariant }, { id: tId, variant: chosenVariant });
         resetLevelIfGone(user, bId, chosenVariant);
+        trackProgress(user, [{ type: "evolved", species: tId, shiny: chosenVariant === "shiny" }]);
 
         return {
           ok: true,
@@ -279,6 +289,8 @@ export function createGameplayHandlers(deps) {
         user.pokemon[pid].shiny = (user.pokemon[pid].shiny ?? 0) + 1;
         carryLevel(user, { id: pid, variant: "normal" }, { id: pid, variant: "shiny" });
         resetLevelIfGone(user, pid, "normal");
+        // Shiny crafting counts toward the shiny counter (design §3.2).
+        trackProgress(user, [{ type: "shiny" }, { type: "pokemon" }]);
         if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) delete user.pokemon[pid];
 
         return {
@@ -309,7 +321,7 @@ export function createGameplayHandlers(deps) {
     // D6: every await happens BEFORE the claim flag is set.
     let allPokemon;
     try {
-      allPokemon = await loadPokemonCached();
+      allPokemon = acquirablePokemon(await loadPokemonCached()); // live generations only
     } catch (err) {
       return reply(503, { error: "Rewards are unavailable right now. Please try again." });
     }
@@ -347,10 +359,11 @@ export function createGameplayHandlers(deps) {
             name: reward.name,
             rarity: reward.tier,
             shiny,
-            sprite: shiny ? `/public/sprites/pokemon/shiny/${reward.id}.gif` : `/public/sprites/pokemon/normal/${reward.id}.gif`,
+            sprite: pokemonSpritePath(reward.id, shiny ? "shiny" : "normal"),
           };
         });
         user.weeklyPackClaimed = true;
+        trackProgress(user, [{ type: "weekly" }, { type: "pokemon" }, { type: "shiny", n: rewards.filter((r) => r.shiny).length }]);
         return { ok: true, rewards: results };
       },
     });

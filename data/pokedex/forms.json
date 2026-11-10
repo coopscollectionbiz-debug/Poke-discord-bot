@@ -1,0 +1,9511 @@
+{
+ "note": "Alternate forms. Keys are '<dex>:<forme>'. All disabled until each form's mechanics and eligibility are verified.",
+ "forms": [
+  {
+   "key": "3:gmax",
+   "species": 3,
+   "name": "Venusaur-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    12,
+    4
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 82,
+    "def": 83,
+    "spa": 100,
+    "spd": 100,
+    "spe": 80
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "venusaur-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "3:mega",
+   "species": 3,
+   "name": "Venusaur-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    12,
+    4
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 100,
+    "def": 123,
+    "spa": 122,
+    "spd": 120,
+    "spe": 80
+   },
+   "battleOnly": [
+    "Venusaur"
+   ],
+   "requiredItem": "Venusaurite",
+   "introducedGen": 6,
+   "showdownSpriteId": "venusaur-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "6:gmax",
+   "species": 6,
+   "name": "Charizard-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    10,
+    3
+   ],
+   "baseStats": {
+    "hp": 78,
+    "atk": 84,
+    "def": 78,
+    "spa": 109,
+    "spd": 85,
+    "spe": 100
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "charizard-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "6:megax",
+   "species": 6,
+   "name": "Charizard-Mega-X",
+   "forme": "Mega-X",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    10,
+    16
+   ],
+   "baseStats": {
+    "hp": 78,
+    "atk": 130,
+    "def": 111,
+    "spa": 130,
+    "spd": 85,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Charizard"
+   ],
+   "requiredItem": "Charizardite X",
+   "introducedGen": 6,
+   "showdownSpriteId": "charizard-megax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "6:megay",
+   "species": 6,
+   "name": "Charizard-Mega-Y",
+   "forme": "Mega-Y",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    10,
+    3
+   ],
+   "baseStats": {
+    "hp": 78,
+    "atk": 104,
+    "def": 78,
+    "spa": 159,
+    "spd": 115,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Charizard"
+   ],
+   "requiredItem": "Charizardite Y",
+   "introducedGen": 6,
+   "showdownSpriteId": "charizard-megay",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "9:gmax",
+   "species": 9,
+   "name": "Blastoise-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    11
+   ],
+   "baseStats": {
+    "hp": 79,
+    "atk": 83,
+    "def": 100,
+    "spa": 85,
+    "spd": 105,
+    "spe": 78
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "blastoise-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "9:mega",
+   "species": 9,
+   "name": "Blastoise-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    11
+   ],
+   "baseStats": {
+    "hp": 79,
+    "atk": 103,
+    "def": 120,
+    "spa": 135,
+    "spd": 115,
+    "spe": 78
+   },
+   "battleOnly": [
+    "Blastoise"
+   ],
+   "requiredItem": "Blastoisinite",
+   "introducedGen": 6,
+   "showdownSpriteId": "blastoise-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "12:gmax",
+   "species": 12,
+   "name": "Butterfree-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 45,
+    "def": 50,
+    "spa": 90,
+    "spd": 80,
+    "spe": 70
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "butterfree-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "15:mega",
+   "species": 15,
+   "name": "Beedrill-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    7,
+    4
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 150,
+    "def": 40,
+    "spa": 15,
+    "spd": 80,
+    "spe": 145
+   },
+   "battleOnly": [
+    "Beedrill"
+   ],
+   "requiredItem": "Beedrillite",
+   "introducedGen": 6,
+   "showdownSpriteId": "beedrill-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "18:mega",
+   "species": 18,
+   "name": "Pidgeot-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    1,
+    3
+   ],
+   "baseStats": {
+    "hp": 83,
+    "atk": 80,
+    "def": 80,
+    "spa": 135,
+    "spd": 80,
+    "spe": 121
+   },
+   "battleOnly": [
+    "Pidgeot"
+   ],
+   "requiredItem": "Pidgeotite",
+   "introducedGen": 6,
+   "showdownSpriteId": "pidgeot-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "19:alola",
+   "species": 19,
+   "name": "Rattata-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    17,
+    1
+   ],
+   "baseStats": {
+    "hp": 30,
+    "atk": 56,
+    "def": 35,
+    "spa": 25,
+    "spd": 35,
+    "spe": 72
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "rattata-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "20:alola",
+   "species": 20,
+   "name": "Raticate-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    17,
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 71,
+    "def": 70,
+    "spa": 40,
+    "spd": 80,
+    "spe": 77
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "raticate-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "20:alolatotem",
+   "species": 20,
+   "name": "Raticate-Alola-Totem",
+   "forme": "Alola-Totem",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    17,
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 71,
+    "def": 70,
+    "spa": 40,
+    "spd": 80,
+    "spe": 77
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "raticate-alolatotem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:alola",
+   "species": 25,
+   "name": "Pikachu-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "pikachu-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:belle",
+   "species": 25,
+   "name": "Pikachu-Belle",
+   "forme": "Belle",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "pikachu-belle",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:cosplay",
+   "species": 25,
+   "name": "Pikachu-Cosplay",
+   "forme": "Cosplay",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "pikachu-cosplay",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:gmax",
+   "species": 25,
+   "name": "Pikachu-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "pikachu-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:hoenn",
+   "species": 25,
+   "name": "Pikachu-Hoenn",
+   "forme": "Hoenn",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "pikachu-hoenn",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:kalos",
+   "species": 25,
+   "name": "Pikachu-Kalos",
+   "forme": "Kalos",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "pikachu-kalos",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:libre",
+   "species": 25,
+   "name": "Pikachu-Libre",
+   "forme": "Libre",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "pikachu-libre",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:original",
+   "species": 25,
+   "name": "Pikachu-Original",
+   "forme": "Original",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "pikachu-original",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:partner",
+   "species": 25,
+   "name": "Pikachu-Partner",
+   "forme": "Partner",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "pikachu-partner",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:phd",
+   "species": 25,
+   "name": "Pikachu-PhD",
+   "forme": "PhD",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "pikachu-phd",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:popstar",
+   "species": 25,
+   "name": "Pikachu-Pop-Star",
+   "forme": "Pop-Star",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "pikachu-popstar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:rockstar",
+   "species": 25,
+   "name": "Pikachu-Rock-Star",
+   "forme": "Rock-Star",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "pikachu-rockstar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:sinnoh",
+   "species": 25,
+   "name": "Pikachu-Sinnoh",
+   "forme": "Sinnoh",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "pikachu-sinnoh",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:starter",
+   "species": 25,
+   "name": "Pikachu-Starter",
+   "forme": "Starter",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 45,
+    "atk": 80,
+    "def": 50,
+    "spa": 75,
+    "spd": 60,
+    "spe": 120
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "pikachu-starter",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:unova",
+   "species": 25,
+   "name": "Pikachu-Unova",
+   "forme": "Unova",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "pikachu-unova",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "25:world",
+   "species": 25,
+   "name": "Pikachu-World",
+   "forme": "World",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 55,
+    "def": 40,
+    "spa": 50,
+    "spd": 50,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "pikachu-world",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "26:alola",
+   "species": 26,
+   "name": "Raichu-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    13,
+    14
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 85,
+    "def": 50,
+    "spa": 95,
+    "spd": 85,
+    "spe": 110
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "raichu-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "26:megax",
+   "species": 26,
+   "name": "Raichu-Mega-X",
+   "forme": "Mega-X",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 135,
+    "def": 95,
+    "spa": 90,
+    "spd": 95,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Raichu"
+   ],
+   "requiredItem": "Raichunite X",
+   "introducedGen": 9,
+   "showdownSpriteId": "raichu-megax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "26:megay",
+   "species": 26,
+   "name": "Raichu-Mega-Y",
+   "forme": "Mega-Y",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 100,
+    "def": 55,
+    "spa": 160,
+    "spd": 80,
+    "spe": 130
+   },
+   "battleOnly": [
+    "Raichu"
+   ],
+   "requiredItem": "Raichunite Y",
+   "introducedGen": 9,
+   "showdownSpriteId": "raichu-megay",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "27:alola",
+   "species": 27,
+   "name": "Sandshrew-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    15,
+    9
+   ],
+   "baseStats": {
+    "hp": 50,
+    "atk": 75,
+    "def": 90,
+    "spa": 10,
+    "spd": 35,
+    "spe": 40
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "sandshrew-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "28:alola",
+   "species": 28,
+   "name": "Sandslash-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    15,
+    9
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 100,
+    "def": 120,
+    "spa": 25,
+    "spd": 65,
+    "spe": 65
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "sandslash-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "36:mega",
+   "species": 36,
+   "name": "Clefable-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    18,
+    3
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 80,
+    "def": 93,
+    "spa": 135,
+    "spd": 110,
+    "spe": 70
+   },
+   "battleOnly": [
+    "Clefable"
+   ],
+   "requiredItem": "Clefablite",
+   "introducedGen": 9,
+   "showdownSpriteId": "clefable-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "37:alola",
+   "species": 37,
+   "name": "Vulpix-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    15
+   ],
+   "baseStats": {
+    "hp": 38,
+    "atk": 41,
+    "def": 40,
+    "spa": 50,
+    "spd": 65,
+    "spe": 65
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "vulpix-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "38:alola",
+   "species": 38,
+   "name": "Ninetales-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    15,
+    18
+   ],
+   "baseStats": {
+    "hp": 73,
+    "atk": 67,
+    "def": 75,
+    "spa": 81,
+    "spd": 100,
+    "spe": 109
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "ninetales-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "50:alola",
+   "species": 50,
+   "name": "Diglett-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    5,
+    9
+   ],
+   "baseStats": {
+    "hp": 10,
+    "atk": 55,
+    "def": 30,
+    "spa": 35,
+    "spd": 45,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "diglett-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "51:alola",
+   "species": 51,
+   "name": "Dugtrio-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    5,
+    9
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 100,
+    "def": 60,
+    "spa": 50,
+    "spd": 70,
+    "spe": 110
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "dugtrio-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "52:alola",
+   "species": 52,
+   "name": "Meowth-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    17
+   ],
+   "baseStats": {
+    "hp": 40,
+    "atk": 35,
+    "def": 35,
+    "spa": 50,
+    "spd": 40,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "meowth-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "52:galar",
+   "species": 52,
+   "name": "Meowth-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    9
+   ],
+   "baseStats": {
+    "hp": 50,
+    "atk": 65,
+    "def": 55,
+    "spa": 40,
+    "spd": 40,
+    "spe": 40
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "meowth-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "52:gmax",
+   "species": 52,
+   "name": "Meowth-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 40,
+    "atk": 45,
+    "def": 35,
+    "spa": 40,
+    "spd": 40,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "meowth-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "53:alola",
+   "species": 53,
+   "name": "Persian-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    17
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 60,
+    "def": 60,
+    "spa": 75,
+    "spd": 65,
+    "spe": 115
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "persian-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "58:hisui",
+   "species": 58,
+   "name": "Growlithe-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    10,
+    6
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 75,
+    "def": 45,
+    "spa": 65,
+    "spd": 50,
+    "spe": 55
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "growlithe-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "59:hisui",
+   "species": 59,
+   "name": "Arcanine-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    10,
+    6
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 115,
+    "def": 80,
+    "spa": 95,
+    "spd": 80,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "arcanine-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "65:mega",
+   "species": 65,
+   "name": "Alakazam-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    14
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 50,
+    "def": 65,
+    "spa": 175,
+    "spd": 105,
+    "spe": 150
+   },
+   "battleOnly": [
+    "Alakazam"
+   ],
+   "requiredItem": "Alakazite",
+   "introducedGen": 6,
+   "showdownSpriteId": "alakazam-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "68:gmax",
+   "species": 68,
+   "name": "Machamp-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    2
+   ],
+   "baseStats": {
+    "hp": 90,
+    "atk": 130,
+    "def": 80,
+    "spa": 65,
+    "spd": 85,
+    "spe": 55
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "machamp-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "71:mega",
+   "species": 71,
+   "name": "Victreebel-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    12,
+    4
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 125,
+    "def": 85,
+    "spa": 135,
+    "spd": 95,
+    "spe": 70
+   },
+   "battleOnly": [
+    "Victreebel"
+   ],
+   "requiredItem": "Victreebelite",
+   "introducedGen": 9,
+   "showdownSpriteId": "victreebel-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "74:alola",
+   "species": 74,
+   "name": "Geodude-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    6,
+    13
+   ],
+   "baseStats": {
+    "hp": 40,
+    "atk": 80,
+    "def": 100,
+    "spa": 30,
+    "spd": 30,
+    "spe": 20
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "geodude-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "75:alola",
+   "species": 75,
+   "name": "Graveler-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    6,
+    13
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 95,
+    "def": 115,
+    "spa": 45,
+    "spd": 45,
+    "spe": 35
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "graveler-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "76:alola",
+   "species": 76,
+   "name": "Golem-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    6,
+    13
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 120,
+    "def": 130,
+    "spa": 55,
+    "spd": 65,
+    "spe": 45
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "golem-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "77:galar",
+   "species": 77,
+   "name": "Ponyta-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    14
+   ],
+   "baseStats": {
+    "hp": 50,
+    "atk": 85,
+    "def": 55,
+    "spa": 65,
+    "spd": 65,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "ponyta-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "78:galar",
+   "species": 78,
+   "name": "Rapidash-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    14,
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 100,
+    "def": 70,
+    "spa": 80,
+    "spd": 80,
+    "spe": 105
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "rapidash-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "79:galar",
+   "species": 79,
+   "name": "Slowpoke-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    14
+   ],
+   "baseStats": {
+    "hp": 90,
+    "atk": 65,
+    "def": 65,
+    "spa": 40,
+    "spd": 40,
+    "spe": 15
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "slowpoke-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "80:galar",
+   "species": 80,
+   "name": "Slowbro-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    4,
+    14
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 100,
+    "def": 95,
+    "spa": 100,
+    "spd": 70,
+    "spe": 30
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "slowbro-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "80:mega",
+   "species": 80,
+   "name": "Slowbro-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    11,
+    14
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 75,
+    "def": 180,
+    "spa": 130,
+    "spd": 80,
+    "spe": 30
+   },
+   "battleOnly": [
+    "Slowbro"
+   ],
+   "requiredItem": "Slowbronite",
+   "introducedGen": 6,
+   "showdownSpriteId": "slowbro-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "83:galar",
+   "species": 83,
+   "name": "Farfetch’d-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    2
+   ],
+   "baseStats": {
+    "hp": 52,
+    "atk": 95,
+    "def": 55,
+    "spa": 58,
+    "spd": 62,
+    "spe": 55
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "farfetchd-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "88:alola",
+   "species": 88,
+   "name": "Grimer-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    4,
+    17
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 80,
+    "def": 50,
+    "spa": 40,
+    "spd": 50,
+    "spe": 25
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "grimer-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "89:alola",
+   "species": 89,
+   "name": "Muk-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    4,
+    17
+   ],
+   "baseStats": {
+    "hp": 105,
+    "atk": 105,
+    "def": 75,
+    "spa": 65,
+    "spd": 100,
+    "spe": 50
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "muk-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "94:gmax",
+   "species": 94,
+   "name": "Gengar-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    8,
+    4
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 65,
+    "def": 60,
+    "spa": 130,
+    "spd": 75,
+    "spe": 110
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "gengar-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "94:mega",
+   "species": 94,
+   "name": "Gengar-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    8,
+    4
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 65,
+    "def": 80,
+    "spa": 170,
+    "spd": 95,
+    "spe": 130
+   },
+   "battleOnly": [
+    "Gengar"
+   ],
+   "requiredItem": "Gengarite",
+   "introducedGen": 6,
+   "showdownSpriteId": "gengar-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "99:gmax",
+   "species": 99,
+   "name": "Kingler-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    11
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 130,
+    "def": 115,
+    "spa": 50,
+    "spd": 50,
+    "spe": 75
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "kingler-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "100:hisui",
+   "species": 100,
+   "name": "Voltorb-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    13,
+    12
+   ],
+   "baseStats": {
+    "hp": 40,
+    "atk": 30,
+    "def": 50,
+    "spa": 55,
+    "spd": 55,
+    "spe": 100
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "voltorb-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "101:hisui",
+   "species": 101,
+   "name": "Electrode-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    13,
+    12
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 50,
+    "def": 70,
+    "spa": 80,
+    "spd": 80,
+    "spe": 150
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "electrode-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "103:alola",
+   "species": 103,
+   "name": "Exeggutor-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    12,
+    16
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 105,
+    "def": 85,
+    "spa": 125,
+    "spd": 75,
+    "spe": 45
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "exeggutor-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "105:alola",
+   "species": 105,
+   "name": "Marowak-Alola",
+   "forme": "Alola",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    10,
+    8
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 80,
+    "def": 110,
+    "spa": 50,
+    "spd": 80,
+    "spe": 45
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "marowak-alola",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "105:alolatotem",
+   "species": 105,
+   "name": "Marowak-Alola-Totem",
+   "forme": "Alola-Totem",
+   "kind": "regional",
+   "region": "Alola",
+   "types": [
+    10,
+    8
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 80,
+    "def": 110,
+    "spa": 50,
+    "spd": 80,
+    "spe": 45
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "marowak-alolatotem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "110:galar",
+   "species": 110,
+   "name": "Weezing-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    4,
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 90,
+    "def": 120,
+    "spa": 85,
+    "spd": 70,
+    "spe": 60
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "weezing-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "115:mega",
+   "species": 115,
+   "name": "Kangaskhan-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 105,
+    "atk": 125,
+    "def": 100,
+    "spa": 60,
+    "spd": 100,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Kangaskhan"
+   ],
+   "requiredItem": "Kangaskhanite",
+   "introducedGen": 6,
+   "showdownSpriteId": "kangaskhan-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "121:mega",
+   "species": 121,
+   "name": "Starmie-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    11,
+    14
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 100,
+    "def": 105,
+    "spa": 130,
+    "spd": 105,
+    "spe": 120
+   },
+   "battleOnly": [
+    "Starmie"
+   ],
+   "requiredItem": "Starminite",
+   "introducedGen": 9,
+   "showdownSpriteId": "starmie-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "122:galar",
+   "species": 122,
+   "name": "Mr. Mime-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    15,
+    14
+   ],
+   "baseStats": {
+    "hp": 50,
+    "atk": 65,
+    "def": 65,
+    "spa": 90,
+    "spd": 90,
+    "spe": 100
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "mrmime-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "127:mega",
+   "species": 127,
+   "name": "Pinsir-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 155,
+    "def": 120,
+    "spa": 65,
+    "spd": 90,
+    "spe": 105
+   },
+   "battleOnly": [
+    "Pinsir"
+   ],
+   "requiredItem": "Pinsirite",
+   "introducedGen": 6,
+   "showdownSpriteId": "pinsir-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "128:paldeaaqua",
+   "species": 128,
+   "name": "Tauros-Paldea-Aqua",
+   "forme": "Paldea-Aqua",
+   "kind": "regional",
+   "region": "Paldea",
+   "types": [
+    2,
+    11
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 110,
+    "def": 105,
+    "spa": 30,
+    "spd": 70,
+    "spe": 100
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "tauros-paldeaaqua",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "128:paldeablaze",
+   "species": 128,
+   "name": "Tauros-Paldea-Blaze",
+   "forme": "Paldea-Blaze",
+   "kind": "regional",
+   "region": "Paldea",
+   "types": [
+    2,
+    10
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 110,
+    "def": 105,
+    "spa": 30,
+    "spd": 70,
+    "spe": 100
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "tauros-paldeablaze",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "128:paldeacombat",
+   "species": 128,
+   "name": "Tauros-Paldea-Combat",
+   "forme": "Paldea-Combat",
+   "kind": "regional",
+   "region": "Paldea",
+   "types": [
+    2
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 110,
+    "def": 105,
+    "spa": 30,
+    "spd": 70,
+    "spe": 100
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "tauros-paldeacombat",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "130:mega",
+   "species": 130,
+   "name": "Gyarados-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    11,
+    17
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 155,
+    "def": 109,
+    "spa": 70,
+    "spd": 130,
+    "spe": 81
+   },
+   "battleOnly": [
+    "Gyarados"
+   ],
+   "requiredItem": "Gyaradosite",
+   "introducedGen": 6,
+   "showdownSpriteId": "gyarados-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "131:gmax",
+   "species": 131,
+   "name": "Lapras-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    11,
+    15
+   ],
+   "baseStats": {
+    "hp": 130,
+    "atk": 85,
+    "def": 80,
+    "spa": 85,
+    "spd": 95,
+    "spe": 60
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "lapras-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "133:gmax",
+   "species": 133,
+   "name": "Eevee-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 55,
+    "def": 50,
+    "spa": 45,
+    "spd": 65,
+    "spe": 55
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "eevee-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "133:starter",
+   "species": 133,
+   "name": "Eevee-Starter",
+   "forme": "Starter",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 75,
+    "def": 70,
+    "spa": 65,
+    "spd": 85,
+    "spe": 75
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "eevee-starter",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "142:mega",
+   "species": 142,
+   "name": "Aerodactyl-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    6,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 135,
+    "def": 85,
+    "spa": 70,
+    "spd": 95,
+    "spe": 150
+   },
+   "battleOnly": [
+    "Aerodactyl"
+   ],
+   "requiredItem": "Aerodactylite",
+   "introducedGen": 6,
+   "showdownSpriteId": "aerodactyl-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "143:gmax",
+   "species": 143,
+   "name": "Snorlax-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 160,
+    "atk": 110,
+    "def": 65,
+    "spa": 65,
+    "spd": 110,
+    "spe": 30
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "snorlax-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "144:galar",
+   "species": 144,
+   "name": "Articuno-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    14,
+    3
+   ],
+   "baseStats": {
+    "hp": 90,
+    "atk": 85,
+    "def": 85,
+    "spa": 125,
+    "spd": 100,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "articuno-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "145:galar",
+   "species": 145,
+   "name": "Zapdos-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    2,
+    3
+   ],
+   "baseStats": {
+    "hp": 90,
+    "atk": 125,
+    "def": 90,
+    "spa": 85,
+    "spd": 90,
+    "spe": 100
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "zapdos-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "146:galar",
+   "species": 146,
+   "name": "Moltres-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    17,
+    3
+   ],
+   "baseStats": {
+    "hp": 90,
+    "atk": 85,
+    "def": 90,
+    "spa": 100,
+    "spd": 125,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "moltres-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "149:mega",
+   "species": 149,
+   "name": "Dragonite-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    16,
+    3
+   ],
+   "baseStats": {
+    "hp": 91,
+    "atk": 124,
+    "def": 115,
+    "spa": 145,
+    "spd": 125,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Dragonite"
+   ],
+   "requiredItem": "Dragoninite",
+   "introducedGen": 9,
+   "showdownSpriteId": "dragonite-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "150:megax",
+   "species": 150,
+   "name": "Mewtwo-Mega-X",
+   "forme": "Mega-X",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    14,
+    2
+   ],
+   "baseStats": {
+    "hp": 106,
+    "atk": 190,
+    "def": 100,
+    "spa": 154,
+    "spd": 100,
+    "spe": 130
+   },
+   "battleOnly": [
+    "Mewtwo"
+   ],
+   "requiredItem": "Mewtwonite X",
+   "introducedGen": 6,
+   "showdownSpriteId": "mewtwo-megax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "150:megay",
+   "species": 150,
+   "name": "Mewtwo-Mega-Y",
+   "forme": "Mega-Y",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    14
+   ],
+   "baseStats": {
+    "hp": 106,
+    "atk": 150,
+    "def": 70,
+    "spa": 194,
+    "spd": 120,
+    "spe": 140
+   },
+   "battleOnly": [
+    "Mewtwo"
+   ],
+   "requiredItem": "Mewtwonite Y",
+   "introducedGen": 6,
+   "showdownSpriteId": "mewtwo-megay",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "154:mega",
+   "species": 154,
+   "name": "Meganium-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    12,
+    18
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 92,
+    "def": 115,
+    "spa": 143,
+    "spd": 115,
+    "spe": 80
+   },
+   "battleOnly": [
+    "Meganium"
+   ],
+   "requiredItem": "Meganiumite",
+   "introducedGen": 9,
+   "showdownSpriteId": "meganium-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "157:hisui",
+   "species": 157,
+   "name": "Typhlosion-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    10,
+    8
+   ],
+   "baseStats": {
+    "hp": 73,
+    "atk": 84,
+    "def": 78,
+    "spa": 119,
+    "spd": 85,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "typhlosion-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "160:mega",
+   "species": 160,
+   "name": "Feraligatr-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    11,
+    16
+   ],
+   "baseStats": {
+    "hp": 85,
+    "atk": 160,
+    "def": 125,
+    "spa": 89,
+    "spd": 93,
+    "spe": 78
+   },
+   "battleOnly": [
+    "Feraligatr"
+   ],
+   "requiredItem": "Feraligite",
+   "introducedGen": 9,
+   "showdownSpriteId": "feraligatr-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "181:mega",
+   "species": 181,
+   "name": "Ampharos-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    13,
+    16
+   ],
+   "baseStats": {
+    "hp": 90,
+    "atk": 95,
+    "def": 105,
+    "spa": 165,
+    "spd": 110,
+    "spe": 45
+   },
+   "battleOnly": [
+    "Ampharos"
+   ],
+   "requiredItem": "Ampharosite",
+   "introducedGen": 6,
+   "showdownSpriteId": "ampharos-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "194:paldea",
+   "species": 194,
+   "name": "Wooper-Paldea",
+   "forme": "Paldea",
+   "kind": "regional",
+   "region": "Paldea",
+   "types": [
+    4,
+    5
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 45,
+    "def": 45,
+    "spa": 25,
+    "spd": 25,
+    "spe": 15
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "wooper-paldea",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "199:galar",
+   "species": 199,
+   "name": "Slowking-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    4,
+    14
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 65,
+    "def": 80,
+    "spa": 110,
+    "spd": 110,
+    "spe": 30
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "slowking-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "208:mega",
+   "species": 208,
+   "name": "Steelix-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    9,
+    5
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 125,
+    "def": 230,
+    "spa": 55,
+    "spd": 95,
+    "spe": 30
+   },
+   "battleOnly": [
+    "Steelix"
+   ],
+   "requiredItem": "Steelixite",
+   "introducedGen": 6,
+   "showdownSpriteId": "steelix-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "211:hisui",
+   "species": 211,
+   "name": "Qwilfish-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    17,
+    4
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 95,
+    "def": 85,
+    "spa": 55,
+    "spd": 55,
+    "spe": 85
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "qwilfish-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "212:mega",
+   "species": 212,
+   "name": "Scizor-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    7,
+    9
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 150,
+    "def": 140,
+    "spa": 65,
+    "spd": 100,
+    "spe": 75
+   },
+   "battleOnly": [
+    "Scizor"
+   ],
+   "requiredItem": "Scizorite",
+   "introducedGen": 6,
+   "showdownSpriteId": "scizor-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "214:mega",
+   "species": 214,
+   "name": "Heracross-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    7,
+    2
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 185,
+    "def": 115,
+    "spa": 40,
+    "spd": 105,
+    "spe": 75
+   },
+   "battleOnly": [
+    "Heracross"
+   ],
+   "requiredItem": "Heracronite",
+   "introducedGen": 6,
+   "showdownSpriteId": "heracross-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "215:hisui",
+   "species": 215,
+   "name": "Sneasel-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    2,
+    4
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 95,
+    "def": 55,
+    "spa": 35,
+    "spd": 75,
+    "spe": 115
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "sneasel-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "222:galar",
+   "species": 222,
+   "name": "Corsola-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    8
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 55,
+    "def": 100,
+    "spa": 65,
+    "spd": 100,
+    "spe": 30
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "corsola-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "227:mega",
+   "species": 227,
+   "name": "Skarmory-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    9,
+    3
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 140,
+    "def": 110,
+    "spa": 40,
+    "spd": 100,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Skarmory"
+   ],
+   "requiredItem": "Skarmorite",
+   "introducedGen": 9,
+   "showdownSpriteId": "skarmory-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "229:mega",
+   "species": 229,
+   "name": "Houndoom-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    17,
+    10
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 90,
+    "def": 90,
+    "spa": 140,
+    "spd": 90,
+    "spe": 115
+   },
+   "battleOnly": [
+    "Houndoom"
+   ],
+   "requiredItem": "Houndoominite",
+   "introducedGen": 6,
+   "showdownSpriteId": "houndoom-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "248:mega",
+   "species": 248,
+   "name": "Tyranitar-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    6,
+    17
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 164,
+    "def": 150,
+    "spa": 95,
+    "spd": 120,
+    "spe": 71
+   },
+   "battleOnly": [
+    "Tyranitar"
+   ],
+   "requiredItem": "Tyranitarite",
+   "introducedGen": 6,
+   "showdownSpriteId": "tyranitar-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "254:mega",
+   "species": 254,
+   "name": "Sceptile-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    12,
+    16
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 110,
+    "def": 75,
+    "spa": 145,
+    "spd": 85,
+    "spe": 145
+   },
+   "battleOnly": [
+    "Sceptile"
+   ],
+   "requiredItem": "Sceptilite",
+   "introducedGen": 6,
+   "showdownSpriteId": "sceptile-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "257:mega",
+   "species": 257,
+   "name": "Blaziken-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    10,
+    2
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 160,
+    "def": 80,
+    "spa": 130,
+    "spd": 80,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Blaziken"
+   ],
+   "requiredItem": "Blazikenite",
+   "introducedGen": 6,
+   "showdownSpriteId": "blaziken-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "260:mega",
+   "species": 260,
+   "name": "Swampert-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    11,
+    5
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 150,
+    "def": 110,
+    "spa": 95,
+    "spd": 110,
+    "spe": 70
+   },
+   "battleOnly": [
+    "Swampert"
+   ],
+   "requiredItem": "Swampertite",
+   "introducedGen": 6,
+   "showdownSpriteId": "swampert-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "263:galar",
+   "species": 263,
+   "name": "Zigzagoon-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    17,
+    1
+   ],
+   "baseStats": {
+    "hp": 38,
+    "atk": 30,
+    "def": 41,
+    "spa": 30,
+    "spd": 41,
+    "spe": 60
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "zigzagoon-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "264:galar",
+   "species": 264,
+   "name": "Linoone-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    17,
+    1
+   ],
+   "baseStats": {
+    "hp": 78,
+    "atk": 70,
+    "def": 61,
+    "spa": 50,
+    "spd": 61,
+    "spe": 100
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "linoone-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "282:mega",
+   "species": 282,
+   "name": "Gardevoir-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    14,
+    18
+   ],
+   "baseStats": {
+    "hp": 68,
+    "atk": 85,
+    "def": 65,
+    "spa": 165,
+    "spd": 135,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Gardevoir"
+   ],
+   "requiredItem": "Gardevoirite",
+   "introducedGen": 6,
+   "showdownSpriteId": "gardevoir-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "302:mega",
+   "species": 302,
+   "name": "Sableye-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    17,
+    8
+   ],
+   "baseStats": {
+    "hp": 50,
+    "atk": 85,
+    "def": 125,
+    "spa": 85,
+    "spd": 115,
+    "spe": 20
+   },
+   "battleOnly": [
+    "Sableye"
+   ],
+   "requiredItem": "Sablenite",
+   "introducedGen": 6,
+   "showdownSpriteId": "sableye-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "303:mega",
+   "species": 303,
+   "name": "Mawile-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    9,
+    18
+   ],
+   "baseStats": {
+    "hp": 50,
+    "atk": 105,
+    "def": 125,
+    "spa": 55,
+    "spd": 95,
+    "spe": 50
+   },
+   "battleOnly": [
+    "Mawile"
+   ],
+   "requiredItem": "Mawilite",
+   "introducedGen": 6,
+   "showdownSpriteId": "mawile-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "306:mega",
+   "species": 306,
+   "name": "Aggron-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    9
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 140,
+    "def": 230,
+    "spa": 60,
+    "spd": 80,
+    "spe": 50
+   },
+   "battleOnly": [
+    "Aggron"
+   ],
+   "requiredItem": "Aggronite",
+   "introducedGen": 6,
+   "showdownSpriteId": "aggron-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "308:mega",
+   "species": 308,
+   "name": "Medicham-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    2,
+    14
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 100,
+    "def": 85,
+    "spa": 80,
+    "spd": 85,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Medicham"
+   ],
+   "requiredItem": "Medichamite",
+   "introducedGen": 6,
+   "showdownSpriteId": "medicham-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "310:mega",
+   "species": 310,
+   "name": "Manectric-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 75,
+    "def": 80,
+    "spa": 135,
+    "spd": 80,
+    "spe": 135
+   },
+   "battleOnly": [
+    "Manectric"
+   ],
+   "requiredItem": "Manectite",
+   "introducedGen": 6,
+   "showdownSpriteId": "manectric-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "319:mega",
+   "species": 319,
+   "name": "Sharpedo-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    11,
+    17
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 140,
+    "def": 70,
+    "spa": 110,
+    "spd": 65,
+    "spe": 105
+   },
+   "battleOnly": [
+    "Sharpedo"
+   ],
+   "requiredItem": "Sharpedonite",
+   "introducedGen": 6,
+   "showdownSpriteId": "sharpedo-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "323:mega",
+   "species": 323,
+   "name": "Camerupt-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    10,
+    5
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 120,
+    "def": 100,
+    "spa": 145,
+    "spd": 105,
+    "spe": 20
+   },
+   "battleOnly": [
+    "Camerupt"
+   ],
+   "requiredItem": "Cameruptite",
+   "introducedGen": 6,
+   "showdownSpriteId": "camerupt-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "334:mega",
+   "species": 334,
+   "name": "Altaria-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    16,
+    18
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 110,
+    "def": 110,
+    "spa": 110,
+    "spd": 105,
+    "spe": 80
+   },
+   "battleOnly": [
+    "Altaria"
+   ],
+   "requiredItem": "Altarianite",
+   "introducedGen": 6,
+   "showdownSpriteId": "altaria-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "354:mega",
+   "species": 354,
+   "name": "Banette-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    8
+   ],
+   "baseStats": {
+    "hp": 64,
+    "atk": 165,
+    "def": 75,
+    "spa": 93,
+    "spd": 83,
+    "spe": 75
+   },
+   "battleOnly": [
+    "Banette"
+   ],
+   "requiredItem": "Banettite",
+   "introducedGen": 6,
+   "showdownSpriteId": "banette-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "358:mega",
+   "species": 358,
+   "name": "Chimecho-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    14,
+    9
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 50,
+    "def": 110,
+    "spa": 135,
+    "spd": 120,
+    "spe": 65
+   },
+   "battleOnly": [
+    "Chimecho"
+   ],
+   "requiredItem": "Chimechite",
+   "introducedGen": 9,
+   "showdownSpriteId": "chimecho-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "359:mega",
+   "species": 359,
+   "name": "Absol-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    17
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 150,
+    "def": 60,
+    "spa": 115,
+    "spd": 60,
+    "spe": 115
+   },
+   "battleOnly": [
+    "Absol"
+   ],
+   "requiredItem": "Absolite",
+   "introducedGen": 6,
+   "showdownSpriteId": "absol-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "359:megaz",
+   "species": 359,
+   "name": "Absol-Mega-Z",
+   "forme": "Mega-Z",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    17,
+    8
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 154,
+    "def": 60,
+    "spa": 75,
+    "spd": 60,
+    "spe": 151
+   },
+   "battleOnly": [
+    "Absol"
+   ],
+   "requiredItem": "Absolite Z",
+   "introducedGen": 9,
+   "showdownSpriteId": "absol-megaz",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "362:mega",
+   "species": 362,
+   "name": "Glalie-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    15
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 120,
+    "def": 80,
+    "spa": 120,
+    "spd": 80,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Glalie"
+   ],
+   "requiredItem": "Glalitite",
+   "introducedGen": 6,
+   "showdownSpriteId": "glalie-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "373:mega",
+   "species": 373,
+   "name": "Salamence-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    16,
+    3
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 145,
+    "def": 130,
+    "spa": 120,
+    "spd": 90,
+    "spe": 120
+   },
+   "battleOnly": [
+    "Salamence"
+   ],
+   "requiredItem": "Salamencite",
+   "introducedGen": 6,
+   "showdownSpriteId": "salamence-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "376:mega",
+   "species": 376,
+   "name": "Metagross-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    9,
+    14
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 145,
+    "def": 150,
+    "spa": 105,
+    "spd": 110,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Metagross"
+   ],
+   "requiredItem": "Metagrossite",
+   "introducedGen": 6,
+   "showdownSpriteId": "metagross-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "380:mega",
+   "species": 380,
+   "name": "Latias-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    16,
+    14
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 100,
+    "def": 120,
+    "spa": 140,
+    "spd": 150,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Latias"
+   ],
+   "requiredItem": "Latiasite",
+   "introducedGen": 6,
+   "showdownSpriteId": "latias-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "381:mega",
+   "species": 381,
+   "name": "Latios-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    16,
+    14
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 130,
+    "def": 100,
+    "spa": 160,
+    "spd": 120,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Latios"
+   ],
+   "requiredItem": "Latiosite",
+   "introducedGen": 6,
+   "showdownSpriteId": "latios-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "382:primal",
+   "species": 382,
+   "name": "Kyogre-Primal",
+   "forme": "Primal",
+   "kind": "primal",
+   "region": null,
+   "types": [
+    11
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 150,
+    "def": 90,
+    "spa": 180,
+    "spd": 160,
+    "spe": 90
+   },
+   "battleOnly": [
+    "Kyogre"
+   ],
+   "requiredItem": "Blue Orb",
+   "introducedGen": 6,
+   "showdownSpriteId": "kyogre-primal",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "383:primal",
+   "species": 383,
+   "name": "Groudon-Primal",
+   "forme": "Primal",
+   "kind": "primal",
+   "region": null,
+   "types": [
+    5,
+    10
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 180,
+    "def": 160,
+    "spa": 150,
+    "spd": 90,
+    "spe": 90
+   },
+   "battleOnly": [
+    "Groudon"
+   ],
+   "requiredItem": "Red Orb",
+   "introducedGen": 6,
+   "showdownSpriteId": "groudon-primal",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "384:mega",
+   "species": 384,
+   "name": "Rayquaza-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    16,
+    3
+   ],
+   "baseStats": {
+    "hp": 105,
+    "atk": 180,
+    "def": 100,
+    "spa": 180,
+    "spd": 100,
+    "spe": 115
+   },
+   "battleOnly": [
+    "Rayquaza"
+   ],
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "rayquaza-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "398:mega",
+   "species": 398,
+   "name": "Staraptor-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    2,
+    3
+   ],
+   "baseStats": {
+    "hp": 85,
+    "atk": 140,
+    "def": 100,
+    "spa": 60,
+    "spd": 90,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Staraptor"
+   ],
+   "requiredItem": "Staraptite",
+   "introducedGen": 9,
+   "showdownSpriteId": "staraptor-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "428:mega",
+   "species": 428,
+   "name": "Lopunny-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    1,
+    2
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 136,
+    "def": 94,
+    "spa": 54,
+    "spd": 96,
+    "spe": 135
+   },
+   "battleOnly": [
+    "Lopunny"
+   ],
+   "requiredItem": "Lopunnite",
+   "introducedGen": 6,
+   "showdownSpriteId": "lopunny-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "445:mega",
+   "species": 445,
+   "name": "Garchomp-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    16,
+    5
+   ],
+   "baseStats": {
+    "hp": 108,
+    "atk": 170,
+    "def": 115,
+    "spa": 120,
+    "spd": 95,
+    "spe": 92
+   },
+   "battleOnly": [
+    "Garchomp"
+   ],
+   "requiredItem": "Garchompite",
+   "introducedGen": 6,
+   "showdownSpriteId": "garchomp-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "445:megaz",
+   "species": 445,
+   "name": "Garchomp-Mega-Z",
+   "forme": "Mega-Z",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    16
+   ],
+   "baseStats": {
+    "hp": 108,
+    "atk": 130,
+    "def": 85,
+    "spa": 141,
+    "spd": 85,
+    "spe": 151
+   },
+   "battleOnly": [
+    "Garchomp"
+   ],
+   "requiredItem": "Garchompite Z",
+   "introducedGen": 9,
+   "showdownSpriteId": "garchomp-megaz",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "448:mega",
+   "species": 448,
+   "name": "Lucario-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    2,
+    9
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 145,
+    "def": 88,
+    "spa": 140,
+    "spd": 70,
+    "spe": 112
+   },
+   "battleOnly": [
+    "Lucario"
+   ],
+   "requiredItem": "Lucarionite",
+   "introducedGen": 6,
+   "showdownSpriteId": "lucario-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "448:megaz",
+   "species": 448,
+   "name": "Lucario-Mega-Z",
+   "forme": "Mega-Z",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    2,
+    9
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 100,
+    "def": 70,
+    "spa": 164,
+    "spd": 70,
+    "spe": 151
+   },
+   "battleOnly": [
+    "Lucario"
+   ],
+   "requiredItem": "Lucarionite Z",
+   "introducedGen": 9,
+   "showdownSpriteId": "lucario-megaz",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "460:mega",
+   "species": 460,
+   "name": "Abomasnow-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    12,
+    15
+   ],
+   "baseStats": {
+    "hp": 90,
+    "atk": 132,
+    "def": 105,
+    "spa": 132,
+    "spd": 105,
+    "spe": 30
+   },
+   "battleOnly": [
+    "Abomasnow"
+   ],
+   "requiredItem": "Abomasite",
+   "introducedGen": 6,
+   "showdownSpriteId": "abomasnow-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "475:mega",
+   "species": 475,
+   "name": "Gallade-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    14,
+    2
+   ],
+   "baseStats": {
+    "hp": 68,
+    "atk": 165,
+    "def": 95,
+    "spa": 65,
+    "spd": 115,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Gallade"
+   ],
+   "requiredItem": "Galladite",
+   "introducedGen": 6,
+   "showdownSpriteId": "gallade-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "478:mega",
+   "species": 478,
+   "name": "Froslass-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    15,
+    8
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 80,
+    "def": 70,
+    "spa": 140,
+    "spd": 100,
+    "spe": 120
+   },
+   "battleOnly": [
+    "Froslass"
+   ],
+   "requiredItem": "Froslassite",
+   "introducedGen": 9,
+   "showdownSpriteId": "froslass-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "483:origin",
+   "species": 483,
+   "name": "Dialga-Origin",
+   "forme": "Origin",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    9,
+    16
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 100,
+    "def": 120,
+    "spa": 150,
+    "spd": 120,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": "Adamant Crystal",
+   "introducedGen": 8,
+   "showdownSpriteId": "dialga-origin",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "484:origin",
+   "species": 484,
+   "name": "Palkia-Origin",
+   "forme": "Origin",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    11,
+    16
+   ],
+   "baseStats": {
+    "hp": 90,
+    "atk": 100,
+    "def": 100,
+    "spa": 150,
+    "spd": 120,
+    "spe": 120
+   },
+   "battleOnly": null,
+   "requiredItem": "Lustrous Globe",
+   "introducedGen": 8,
+   "showdownSpriteId": "palkia-origin",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "485:mega",
+   "species": 485,
+   "name": "Heatran-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    10,
+    9
+   ],
+   "baseStats": {
+    "hp": 91,
+    "atk": 120,
+    "def": 106,
+    "spa": 175,
+    "spd": 141,
+    "spe": 67
+   },
+   "battleOnly": [
+    "Heatran"
+   ],
+   "requiredItem": "Heatranite",
+   "introducedGen": 9,
+   "showdownSpriteId": "heatran-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "491:mega",
+   "species": 491,
+   "name": "Darkrai-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    17
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 120,
+    "def": 130,
+    "spa": 165,
+    "spd": 130,
+    "spe": 85
+   },
+   "battleOnly": [
+    "Darkrai"
+   ],
+   "requiredItem": "Darkranite",
+   "introducedGen": 9,
+   "showdownSpriteId": "darkrai-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "493:fairy",
+   "species": 493,
+   "name": "Arceus-Fairy",
+   "forme": "Fairy",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 120,
+    "atk": 120,
+    "def": 120,
+    "spa": 120,
+    "spd": 120,
+    "spe": 120
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "arceus-fairy",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "500:mega",
+   "species": 500,
+   "name": "Emboar-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    10,
+    2
+   ],
+   "baseStats": {
+    "hp": 110,
+    "atk": 148,
+    "def": 75,
+    "spa": 110,
+    "spd": 110,
+    "spe": 75
+   },
+   "battleOnly": [
+    "Emboar"
+   ],
+   "requiredItem": "Emboarite",
+   "introducedGen": 9,
+   "showdownSpriteId": "emboar-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "503:hisui",
+   "species": 503,
+   "name": "Samurott-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    11,
+    17
+   ],
+   "baseStats": {
+    "hp": 90,
+    "atk": 108,
+    "def": 80,
+    "spa": 100,
+    "spd": 65,
+    "spe": 85
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "samurott-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "530:mega",
+   "species": 530,
+   "name": "Excadrill-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    5,
+    9
+   ],
+   "baseStats": {
+    "hp": 110,
+    "atk": 165,
+    "def": 100,
+    "spa": 65,
+    "spd": 65,
+    "spe": 103
+   },
+   "battleOnly": [
+    "Excadrill"
+   ],
+   "requiredItem": "Excadrite",
+   "introducedGen": 9,
+   "showdownSpriteId": "excadrill-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "531:mega",
+   "species": 531,
+   "name": "Audino-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    1,
+    18
+   ],
+   "baseStats": {
+    "hp": 103,
+    "atk": 60,
+    "def": 126,
+    "spa": 80,
+    "spd": 126,
+    "spe": 50
+   },
+   "battleOnly": [
+    "Audino"
+   ],
+   "requiredItem": "Audinite",
+   "introducedGen": 6,
+   "showdownSpriteId": "audino-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "545:mega",
+   "species": 545,
+   "name": "Scolipede-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    7,
+    4
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 140,
+    "def": 149,
+    "spa": 75,
+    "spd": 99,
+    "spe": 62
+   },
+   "battleOnly": [
+    "Scolipede"
+   ],
+   "requiredItem": "Scolipite",
+   "introducedGen": 9,
+   "showdownSpriteId": "scolipede-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "549:hisui",
+   "species": 549,
+   "name": "Lilligant-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    12,
+    2
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 105,
+    "def": 75,
+    "spa": 50,
+    "spd": 75,
+    "spe": 105
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "lilligant-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "550:whitestriped",
+   "species": 550,
+   "name": "Basculin-White-Striped",
+   "forme": "White-Striped",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    11
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 92,
+    "def": 65,
+    "spa": 80,
+    "spd": 55,
+    "spe": 98
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "basculin-whitestriped",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "554:galar",
+   "species": 554,
+   "name": "Darumaka-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    15
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 90,
+    "def": 45,
+    "spa": 15,
+    "spd": 45,
+    "spe": 50
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "darumaka-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "555:galar",
+   "species": 555,
+   "name": "Darmanitan-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    15
+   ],
+   "baseStats": {
+    "hp": 105,
+    "atk": 140,
+    "def": 55,
+    "spa": 30,
+    "spd": 55,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "darmanitan-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "555:galarzen",
+   "species": 555,
+   "name": "Darmanitan-Galar-Zen",
+   "forme": "Galar-Zen",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    15,
+    10
+   ],
+   "baseStats": {
+    "hp": 105,
+    "atk": 160,
+    "def": 55,
+    "spa": 30,
+    "spd": 55,
+    "spe": 135
+   },
+   "battleOnly": [
+    "Darmanitan-Galar"
+   ],
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "darmanitan-galarzen",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "560:mega",
+   "species": 560,
+   "name": "Scrafty-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    17,
+    2
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 130,
+    "def": 135,
+    "spa": 55,
+    "spd": 135,
+    "spe": 68
+   },
+   "battleOnly": [
+    "Scrafty"
+   ],
+   "requiredItem": "Scraftinite",
+   "introducedGen": 9,
+   "showdownSpriteId": "scrafty-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "562:galar",
+   "species": 562,
+   "name": "Yamask-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    5,
+    8
+   ],
+   "baseStats": {
+    "hp": 38,
+    "atk": 55,
+    "def": 85,
+    "spa": 30,
+    "spd": 65,
+    "spe": 30
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "yamask-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "569:gmax",
+   "species": 569,
+   "name": "Garbodor-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    4
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 95,
+    "def": 82,
+    "spa": 60,
+    "spd": 82,
+    "spe": 75
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "garbodor-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "570:hisui",
+   "species": 570,
+   "name": "Zorua-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    1,
+    8
+   ],
+   "baseStats": {
+    "hp": 35,
+    "atk": 60,
+    "def": 40,
+    "spa": 85,
+    "spd": 40,
+    "spe": 70
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "zorua-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "571:hisui",
+   "species": 571,
+   "name": "Zoroark-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    1,
+    8
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 100,
+    "def": 60,
+    "spa": 125,
+    "spd": 60,
+    "spe": 110
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "zoroark-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "604:mega",
+   "species": 604,
+   "name": "Eelektross-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 85,
+    "atk": 145,
+    "def": 80,
+    "spa": 135,
+    "spd": 90,
+    "spe": 80
+   },
+   "battleOnly": [
+    "Eelektross"
+   ],
+   "requiredItem": "Eelektrossite",
+   "introducedGen": 9,
+   "showdownSpriteId": "eelektross-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "609:mega",
+   "species": 609,
+   "name": "Chandelure-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    8,
+    10
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 75,
+    "def": 110,
+    "spa": 175,
+    "spd": 110,
+    "spe": 90
+   },
+   "battleOnly": [
+    "Chandelure"
+   ],
+   "requiredItem": "Chandelurite",
+   "introducedGen": 9,
+   "showdownSpriteId": "chandelure-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "618:galar",
+   "species": 618,
+   "name": "Stunfisk-Galar",
+   "forme": "Galar",
+   "kind": "regional",
+   "region": "Galar",
+   "types": [
+    5,
+    9
+   ],
+   "baseStats": {
+    "hp": 109,
+    "atk": 81,
+    "def": 99,
+    "spa": 66,
+    "spd": 84,
+    "spe": 32
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "stunfisk-galar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "623:mega",
+   "species": 623,
+   "name": "Golurk-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    5,
+    8
+   ],
+   "baseStats": {
+    "hp": 89,
+    "atk": 159,
+    "def": 105,
+    "spa": 70,
+    "spd": 105,
+    "spe": 55
+   },
+   "battleOnly": [
+    "Golurk"
+   ],
+   "requiredItem": "Golurkite",
+   "introducedGen": 9,
+   "showdownSpriteId": "golurk-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "628:hisui",
+   "species": 628,
+   "name": "Braviary-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    14,
+    3
+   ],
+   "baseStats": {
+    "hp": 110,
+    "atk": 83,
+    "def": 70,
+    "spa": 112,
+    "spd": 70,
+    "spe": 65
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "braviary-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "652:mega",
+   "species": 652,
+   "name": "Chesnaught-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    12,
+    2
+   ],
+   "baseStats": {
+    "hp": 88,
+    "atk": 137,
+    "def": 172,
+    "spa": 74,
+    "spd": 115,
+    "spe": 44
+   },
+   "battleOnly": [
+    "Chesnaught"
+   ],
+   "requiredItem": "Chesnaughtite",
+   "introducedGen": 9,
+   "showdownSpriteId": "chesnaught-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "655:mega",
+   "species": 655,
+   "name": "Delphox-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    10,
+    14
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 69,
+    "def": 72,
+    "spa": 159,
+    "spd": 125,
+    "spe": 134
+   },
+   "battleOnly": [
+    "Delphox"
+   ],
+   "requiredItem": "Delphoxite",
+   "introducedGen": 9,
+   "showdownSpriteId": "delphox-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "658:ash",
+   "species": 658,
+   "name": "Greninja-Ash",
+   "forme": "Ash",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    11,
+    17
+   ],
+   "baseStats": {
+    "hp": 72,
+    "atk": 145,
+    "def": 67,
+    "spa": 153,
+    "spd": 71,
+    "spe": 132
+   },
+   "battleOnly": [
+    "Greninja-Bond"
+   ],
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "greninja-ash",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "658:bond",
+   "species": 658,
+   "name": "Greninja-Bond",
+   "forme": "Bond",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    11,
+    17
+   ],
+   "baseStats": {
+    "hp": 72,
+    "atk": 95,
+    "def": 67,
+    "spa": 103,
+    "spd": 71,
+    "spe": 122
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "greninja-bond",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "658:mega",
+   "species": 658,
+   "name": "Greninja-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    11,
+    17
+   ],
+   "baseStats": {
+    "hp": 72,
+    "atk": 125,
+    "def": 77,
+    "spa": 133,
+    "spd": 81,
+    "spe": 142
+   },
+   "battleOnly": [
+    "Greninja"
+   ],
+   "requiredItem": "Greninjite",
+   "introducedGen": 9,
+   "showdownSpriteId": "greninja-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:archipelago",
+   "species": 666,
+   "name": "Vivillon-Archipelago",
+   "forme": "Archipelago",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-archipelago",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:continental",
+   "species": 666,
+   "name": "Vivillon-Continental",
+   "forme": "Continental",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-continental",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:elegant",
+   "species": 666,
+   "name": "Vivillon-Elegant",
+   "forme": "Elegant",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-elegant",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:fancy",
+   "species": 666,
+   "name": "Vivillon-Fancy",
+   "forme": "Fancy",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-fancy",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:garden",
+   "species": 666,
+   "name": "Vivillon-Garden",
+   "forme": "Garden",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-garden",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:highplains",
+   "species": 666,
+   "name": "Vivillon-High Plains",
+   "forme": "High Plains",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-highplains",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:icysnow",
+   "species": 666,
+   "name": "Vivillon-Icy Snow",
+   "forme": "Icy Snow",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-icysnow",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:jungle",
+   "species": 666,
+   "name": "Vivillon-Jungle",
+   "forme": "Jungle",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-jungle",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:marine",
+   "species": 666,
+   "name": "Vivillon-Marine",
+   "forme": "Marine",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-marine",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:modern",
+   "species": 666,
+   "name": "Vivillon-Modern",
+   "forme": "Modern",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-modern",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:monsoon",
+   "species": 666,
+   "name": "Vivillon-Monsoon",
+   "forme": "Monsoon",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-monsoon",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:ocean",
+   "species": 666,
+   "name": "Vivillon-Ocean",
+   "forme": "Ocean",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-ocean",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:pokeball",
+   "species": 666,
+   "name": "Vivillon-Pokeball",
+   "forme": "Pokeball",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-pokeball",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:polar",
+   "species": 666,
+   "name": "Vivillon-Polar",
+   "forme": "Polar",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-polar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:river",
+   "species": 666,
+   "name": "Vivillon-River",
+   "forme": "River",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-river",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:sandstorm",
+   "species": 666,
+   "name": "Vivillon-Sandstorm",
+   "forme": "Sandstorm",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-sandstorm",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:savanna",
+   "species": 666,
+   "name": "Vivillon-Savanna",
+   "forme": "Savanna",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-savanna",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:sun",
+   "species": 666,
+   "name": "Vivillon-Sun",
+   "forme": "Sun",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-sun",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "666:tundra",
+   "species": 666,
+   "name": "Vivillon-Tundra",
+   "forme": "Tundra",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7,
+    3
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 52,
+    "def": 50,
+    "spa": 90,
+    "spd": 50,
+    "spe": 89
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "vivillon-tundra",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "668:mega",
+   "species": 668,
+   "name": "Pyroar-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    10,
+    1
+   ],
+   "baseStats": {
+    "hp": 86,
+    "atk": 88,
+    "def": 92,
+    "spa": 129,
+    "spd": 86,
+    "spe": 126
+   },
+   "battleOnly": [
+    "Pyroar"
+   ],
+   "requiredItem": "Pyroarite",
+   "introducedGen": 9,
+   "showdownSpriteId": "pyroar-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "670:eternal",
+   "species": 670,
+   "name": "Floette-Eternal",
+   "forme": "Eternal",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 74,
+    "atk": 65,
+    "def": 67,
+    "spa": 125,
+    "spd": 128,
+    "spe": 92
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "floette-eternal",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "670:mega",
+   "species": 670,
+   "name": "Floette-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 74,
+    "atk": 85,
+    "def": 87,
+    "spa": 155,
+    "spd": 148,
+    "spe": 102
+   },
+   "battleOnly": [
+    "Floette-Eternal"
+   ],
+   "requiredItem": "Floettite",
+   "introducedGen": 9,
+   "showdownSpriteId": "floette-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "678:f",
+   "species": 678,
+   "name": "Meowstic-F",
+   "forme": "F",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    14
+   ],
+   "baseStats": {
+    "hp": 74,
+    "atk": 48,
+    "def": 76,
+    "spa": 83,
+    "spd": 81,
+    "spe": 104
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "meowstic-f",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "678:fmega",
+   "species": 678,
+   "name": "Meowstic-F-Mega",
+   "forme": "F-Mega",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    14
+   ],
+   "baseStats": {
+    "hp": 74,
+    "atk": 48,
+    "def": 76,
+    "spa": 143,
+    "spd": 101,
+    "spe": 124
+   },
+   "battleOnly": [
+    "Meowstic-F"
+   ],
+   "requiredItem": "Meowsticite",
+   "introducedGen": 9,
+   "showdownSpriteId": "meowstic-fmega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "678:mmega",
+   "species": 678,
+   "name": "Meowstic-M-Mega",
+   "forme": "M-Mega",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    14
+   ],
+   "baseStats": {
+    "hp": 74,
+    "atk": 48,
+    "def": 76,
+    "spa": 143,
+    "spd": 101,
+    "spe": 124
+   },
+   "battleOnly": [
+    "Meowstic"
+   ],
+   "requiredItem": "Meowsticite",
+   "introducedGen": 9,
+   "showdownSpriteId": "meowstic-mmega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "681:blade",
+   "species": 681,
+   "name": "Aegislash-Blade",
+   "forme": "Blade",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    9,
+    8
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 140,
+    "def": 50,
+    "spa": 140,
+    "spd": 50,
+    "spe": 60
+   },
+   "battleOnly": [
+    "Aegislash"
+   ],
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "aegislash-blade",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "687:mega",
+   "species": 687,
+   "name": "Malamar-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    17,
+    14
+   ],
+   "baseStats": {
+    "hp": 86,
+    "atk": 102,
+    "def": 88,
+    "spa": 98,
+    "spd": 120,
+    "spe": 88
+   },
+   "battleOnly": [
+    "Malamar"
+   ],
+   "requiredItem": "Malamarite",
+   "introducedGen": 9,
+   "showdownSpriteId": "malamar-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "689:mega",
+   "species": 689,
+   "name": "Barbaracle-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    6,
+    2
+   ],
+   "baseStats": {
+    "hp": 72,
+    "atk": 140,
+    "def": 130,
+    "spa": 64,
+    "spd": 106,
+    "spe": 88
+   },
+   "battleOnly": [
+    "Barbaracle"
+   ],
+   "requiredItem": "Barbaracite",
+   "introducedGen": 9,
+   "showdownSpriteId": "barbaracle-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "691:mega",
+   "species": 691,
+   "name": "Dragalge-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    4,
+    16
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 85,
+    "def": 105,
+    "spa": 132,
+    "spd": 163,
+    "spe": 44
+   },
+   "battleOnly": [
+    "Dragalge"
+   ],
+   "requiredItem": "Dragalgite",
+   "introducedGen": 9,
+   "showdownSpriteId": "dragalge-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "701:mega",
+   "species": 701,
+   "name": "Hawlucha-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    2,
+    3
+   ],
+   "baseStats": {
+    "hp": 78,
+    "atk": 137,
+    "def": 100,
+    "spa": 74,
+    "spd": 93,
+    "spe": 118
+   },
+   "battleOnly": [
+    "Hawlucha"
+   ],
+   "requiredItem": "Hawluchanite",
+   "introducedGen": 9,
+   "showdownSpriteId": "hawlucha-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "705:hisui",
+   "species": 705,
+   "name": "Sliggoo-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    9,
+    16
+   ],
+   "baseStats": {
+    "hp": 58,
+    "atk": 75,
+    "def": 83,
+    "spa": 83,
+    "spd": 113,
+    "spe": 40
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "sliggoo-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "706:hisui",
+   "species": 706,
+   "name": "Goodra-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    9,
+    16
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 100,
+    "def": 100,
+    "spa": 110,
+    "spd": 150,
+    "spe": 60
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "goodra-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "710:large",
+   "species": 710,
+   "name": "Pumpkaboo-Large",
+   "forme": "Large",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8,
+    12
+   ],
+   "baseStats": {
+    "hp": 54,
+    "atk": 66,
+    "def": 70,
+    "spa": 44,
+    "spd": 55,
+    "spe": 46
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "pumpkaboo-large",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "710:small",
+   "species": 710,
+   "name": "Pumpkaboo-Small",
+   "forme": "Small",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8,
+    12
+   ],
+   "baseStats": {
+    "hp": 44,
+    "atk": 66,
+    "def": 70,
+    "spa": 44,
+    "spd": 55,
+    "spe": 56
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "pumpkaboo-small",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "710:super",
+   "species": 710,
+   "name": "Pumpkaboo-Super",
+   "forme": "Super",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8,
+    12
+   ],
+   "baseStats": {
+    "hp": 59,
+    "atk": 66,
+    "def": 70,
+    "spa": 44,
+    "spd": 55,
+    "spe": 41
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "pumpkaboo-super",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "711:large",
+   "species": 711,
+   "name": "Gourgeist-Large",
+   "forme": "Large",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8,
+    12
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 95,
+    "def": 122,
+    "spa": 58,
+    "spd": 75,
+    "spe": 69
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "gourgeist-large",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "711:small",
+   "species": 711,
+   "name": "Gourgeist-Small",
+   "forme": "Small",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8,
+    12
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 85,
+    "def": 122,
+    "spa": 58,
+    "spd": 75,
+    "spe": 99
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "gourgeist-small",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "711:super",
+   "species": 711,
+   "name": "Gourgeist-Super",
+   "forme": "Super",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8,
+    12
+   ],
+   "baseStats": {
+    "hp": 85,
+    "atk": 100,
+    "def": 122,
+    "spa": 58,
+    "spd": 75,
+    "spe": 54
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "gourgeist-super",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "713:hisui",
+   "species": 713,
+   "name": "Avalugg-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    15,
+    6
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 127,
+    "def": 184,
+    "spa": 34,
+    "spd": 36,
+    "spe": 38
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "avalugg-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "718:10",
+   "species": 718,
+   "name": "Zygarde-10%",
+   "forme": "10%",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    16,
+    5
+   ],
+   "baseStats": {
+    "hp": 54,
+    "atk": 100,
+    "def": 71,
+    "spa": 61,
+    "spd": 85,
+    "spe": 115
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "zygarde-10",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "718:complete",
+   "species": 718,
+   "name": "Zygarde-Complete",
+   "forme": "Complete",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    16,
+    5
+   ],
+   "baseStats": {
+    "hp": 216,
+    "atk": 100,
+    "def": 121,
+    "spa": 91,
+    "spd": 95,
+    "spe": 85
+   },
+   "battleOnly": [
+    "Zygarde",
+    "Zygarde-10%"
+   ],
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "zygarde-complete",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "718:mega",
+   "species": 718,
+   "name": "Zygarde-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    16,
+    5
+   ],
+   "baseStats": {
+    "hp": 216,
+    "atk": 70,
+    "def": 91,
+    "spa": 216,
+    "spd": 85,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Zygarde",
+    "Zygarde-10%"
+   ],
+   "requiredItem": "Zygardite",
+   "introducedGen": 9,
+   "showdownSpriteId": "zygarde-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "719:mega",
+   "species": 719,
+   "name": "Diancie-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    6,
+    18
+   ],
+   "baseStats": {
+    "hp": 50,
+    "atk": 160,
+    "def": 110,
+    "spa": 160,
+    "spd": 110,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Diancie"
+   ],
+   "requiredItem": "Diancite",
+   "introducedGen": 6,
+   "showdownSpriteId": "diancie-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "720:unbound",
+   "species": 720,
+   "name": "Hoopa-Unbound",
+   "forme": "Unbound",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    14,
+    17
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 160,
+    "def": 60,
+    "spa": 170,
+    "spd": 130,
+    "spe": 80
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "hoopa-unbound",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "724:hisui",
+   "species": 724,
+   "name": "Decidueye-Hisui",
+   "forme": "Hisui",
+   "kind": "regional",
+   "region": "Hisui",
+   "types": [
+    12,
+    2
+   ],
+   "baseStats": {
+    "hp": 88,
+    "atk": 112,
+    "def": 80,
+    "spa": 95,
+    "spd": 95,
+    "spe": 60
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "decidueye-hisui",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "735:totem",
+   "species": 735,
+   "name": "Gumshoos-Totem",
+   "forme": "Totem",
+   "kind": "totem",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 88,
+    "atk": 110,
+    "def": 60,
+    "spa": 55,
+    "spd": 60,
+    "spe": 45
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "gumshoos-totem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "738:totem",
+   "species": 738,
+   "name": "Vikavolt-Totem",
+   "forme": "Totem",
+   "kind": "totem",
+   "region": null,
+   "types": [
+    7,
+    13
+   ],
+   "baseStats": {
+    "hp": 77,
+    "atk": 70,
+    "def": 90,
+    "spa": 145,
+    "spd": 75,
+    "spe": 43
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "vikavolt-totem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "740:mega",
+   "species": 740,
+   "name": "Crabominable-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    2,
+    15
+   ],
+   "baseStats": {
+    "hp": 97,
+    "atk": 157,
+    "def": 122,
+    "spa": 62,
+    "spd": 107,
+    "spe": 33
+   },
+   "battleOnly": [
+    "Crabominable"
+   ],
+   "requiredItem": "Crabominite",
+   "introducedGen": 9,
+   "showdownSpriteId": "crabominable-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "741:pau",
+   "species": 741,
+   "name": "Oricorio-Pa'u",
+   "forme": "Pa'u",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    14,
+    3
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 70,
+    "def": 70,
+    "spa": 98,
+    "spd": 70,
+    "spe": 93
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "oricorio-pau",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "741:pompom",
+   "species": 741,
+   "name": "Oricorio-Pom-Pom",
+   "forme": "Pom-Pom",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13,
+    3
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 70,
+    "def": 70,
+    "spa": 98,
+    "spd": 70,
+    "spe": 93
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "oricorio-pompom",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "741:sensu",
+   "species": 741,
+   "name": "Oricorio-Sensu",
+   "forme": "Sensu",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8,
+    3
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 70,
+    "def": 70,
+    "spa": 98,
+    "spd": 70,
+    "spe": 93
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "oricorio-sensu",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "743:totem",
+   "species": 743,
+   "name": "Ribombee-Totem",
+   "forme": "Totem",
+   "kind": "totem",
+   "region": null,
+   "types": [
+    7,
+    18
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 55,
+    "def": 60,
+    "spa": 95,
+    "spd": 70,
+    "spe": 124
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "ribombee-totem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "744:dusk",
+   "species": 744,
+   "name": "Rockruff-Dusk",
+   "forme": "Dusk",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    6
+   ],
+   "baseStats": {
+    "hp": 45,
+    "atk": 65,
+    "def": 40,
+    "spa": 30,
+    "spd": 40,
+    "spe": 60
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "rockruff-dusk",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "745:dusk",
+   "species": 745,
+   "name": "Lycanroc-Dusk",
+   "forme": "Dusk",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    6
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 117,
+    "def": 65,
+    "spa": 55,
+    "spd": 65,
+    "spe": 110
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "lycanroc-dusk",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "745:midnight",
+   "species": 745,
+   "name": "Lycanroc-Midnight",
+   "forme": "Midnight",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    6
+   ],
+   "baseStats": {
+    "hp": 85,
+    "atk": 115,
+    "def": 75,
+    "spa": 55,
+    "spd": 75,
+    "spe": 82
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "lycanroc-midnight",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "746:school",
+   "species": 746,
+   "name": "Wishiwashi-School",
+   "forme": "School",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    11
+   ],
+   "baseStats": {
+    "hp": 45,
+    "atk": 140,
+    "def": 130,
+    "spa": 140,
+    "spd": 135,
+    "spe": 30
+   },
+   "battleOnly": [
+    "Wishiwashi"
+   ],
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "wishiwashi-school",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "752:totem",
+   "species": 752,
+   "name": "Araquanid-Totem",
+   "forme": "Totem",
+   "kind": "totem",
+   "region": null,
+   "types": [
+    11,
+    7
+   ],
+   "baseStats": {
+    "hp": 68,
+    "atk": 70,
+    "def": 92,
+    "spa": 50,
+    "spd": 132,
+    "spe": 42
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "araquanid-totem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "754:totem",
+   "species": 754,
+   "name": "Lurantis-Totem",
+   "forme": "Totem",
+   "kind": "totem",
+   "region": null,
+   "types": [
+    12
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 105,
+    "def": 90,
+    "spa": 80,
+    "spd": 90,
+    "spe": 45
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "lurantis-totem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "758:totem",
+   "species": 758,
+   "name": "Salazzle-Totem",
+   "forme": "Totem",
+   "kind": "totem",
+   "region": null,
+   "types": [
+    4,
+    10
+   ],
+   "baseStats": {
+    "hp": 68,
+    "atk": 64,
+    "def": 60,
+    "spa": 111,
+    "spd": 60,
+    "spe": 117
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "salazzle-totem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "768:mega",
+   "species": 768,
+   "name": "Golisopod-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    7,
+    9
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 150,
+    "def": 175,
+    "spa": 70,
+    "spd": 120,
+    "spe": 40
+   },
+   "battleOnly": [
+    "Golisopod"
+   ],
+   "requiredItem": "Golisopite",
+   "introducedGen": 9,
+   "showdownSpriteId": "golisopod-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:bug",
+   "species": 773,
+   "name": "Silvally-Bug",
+   "forme": "Bug",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    7
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Bug Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-bug",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:dark",
+   "species": 773,
+   "name": "Silvally-Dark",
+   "forme": "Dark",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    17
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Dark Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-dark",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:dragon",
+   "species": 773,
+   "name": "Silvally-Dragon",
+   "forme": "Dragon",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    16
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Dragon Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-dragon",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:electric",
+   "species": 773,
+   "name": "Silvally-Electric",
+   "forme": "Electric",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Electric Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-electric",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:fairy",
+   "species": 773,
+   "name": "Silvally-Fairy",
+   "forme": "Fairy",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Fairy Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-fairy",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:fighting",
+   "species": 773,
+   "name": "Silvally-Fighting",
+   "forme": "Fighting",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    2
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Fighting Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-fighting",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:fire",
+   "species": 773,
+   "name": "Silvally-Fire",
+   "forme": "Fire",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    10
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Fire Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-fire",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:flying",
+   "species": 773,
+   "name": "Silvally-Flying",
+   "forme": "Flying",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    3
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Flying Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-flying",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:ghost",
+   "species": 773,
+   "name": "Silvally-Ghost",
+   "forme": "Ghost",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Ghost Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-ghost",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:grass",
+   "species": 773,
+   "name": "Silvally-Grass",
+   "forme": "Grass",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    12
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Grass Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-grass",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:ground",
+   "species": 773,
+   "name": "Silvally-Ground",
+   "forme": "Ground",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    5
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Ground Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-ground",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:ice",
+   "species": 773,
+   "name": "Silvally-Ice",
+   "forme": "Ice",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    15
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Ice Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-ice",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:poison",
+   "species": 773,
+   "name": "Silvally-Poison",
+   "forme": "Poison",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    4
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Poison Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-poison",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:psychic",
+   "species": 773,
+   "name": "Silvally-Psychic",
+   "forme": "Psychic",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    14
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Psychic Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-psychic",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:rock",
+   "species": 773,
+   "name": "Silvally-Rock",
+   "forme": "Rock",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    6
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Rock Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-rock",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:steel",
+   "species": 773,
+   "name": "Silvally-Steel",
+   "forme": "Steel",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    9
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Steel Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-steel",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "773:water",
+   "species": 773,
+   "name": "Silvally-Water",
+   "forme": "Water",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    11
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 95,
+    "spa": 95,
+    "spd": 95,
+    "spe": 95
+   },
+   "battleOnly": null,
+   "requiredItem": "Water Memory",
+   "introducedGen": 7,
+   "showdownSpriteId": "silvally-water",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "774:blue",
+   "species": 774,
+   "name": "Minior-Blue",
+   "forme": "Blue",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    6,
+    3
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 100,
+    "def": 60,
+    "spa": 100,
+    "spd": 60,
+    "spe": 120
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "minior-blue",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "774:green",
+   "species": 774,
+   "name": "Minior-Green",
+   "forme": "Green",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    6,
+    3
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 100,
+    "def": 60,
+    "spa": 100,
+    "spd": 60,
+    "spe": 120
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "minior-green",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "774:indigo",
+   "species": 774,
+   "name": "Minior-Indigo",
+   "forme": "Indigo",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    6,
+    3
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 100,
+    "def": 60,
+    "spa": 100,
+    "spd": 60,
+    "spe": 120
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "minior-indigo",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "774:meteor",
+   "species": 774,
+   "name": "Minior-Meteor",
+   "forme": "Meteor",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    6,
+    3
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 60,
+    "def": 100,
+    "spa": 60,
+    "spd": 100,
+    "spe": 60
+   },
+   "battleOnly": [
+    "Minior"
+   ],
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "minior-meteor",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "774:orange",
+   "species": 774,
+   "name": "Minior-Orange",
+   "forme": "Orange",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    6,
+    3
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 100,
+    "def": 60,
+    "spa": 100,
+    "spd": 60,
+    "spe": 120
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "minior-orange",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "774:violet",
+   "species": 774,
+   "name": "Minior-Violet",
+   "forme": "Violet",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    6,
+    3
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 100,
+    "def": 60,
+    "spa": 100,
+    "spd": 60,
+    "spe": 120
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "minior-violet",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "774:yellow",
+   "species": 774,
+   "name": "Minior-Yellow",
+   "forme": "Yellow",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    6,
+    3
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 100,
+    "def": 60,
+    "spa": 100,
+    "spd": 60,
+    "spe": 120
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "minior-yellow",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "777:totem",
+   "species": 777,
+   "name": "Togedemaru-Totem",
+   "forme": "Totem",
+   "kind": "totem",
+   "region": null,
+   "types": [
+    13,
+    9
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 98,
+    "def": 63,
+    "spa": 40,
+    "spd": 73,
+    "spe": 96
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "togedemaru-totem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "778:busted",
+   "species": 778,
+   "name": "Mimikyu-Busted",
+   "forme": "Busted",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    8,
+    18
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 90,
+    "def": 80,
+    "spa": 50,
+    "spd": 105,
+    "spe": 96
+   },
+   "battleOnly": [
+    "Mimikyu"
+   ],
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "mimikyu-busted",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "778:bustedtotem",
+   "species": 778,
+   "name": "Mimikyu-Busted-Totem",
+   "forme": "Busted-Totem",
+   "kind": "totem",
+   "region": null,
+   "types": [
+    8,
+    18
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 90,
+    "def": 80,
+    "spa": 50,
+    "spd": 105,
+    "spe": 96
+   },
+   "battleOnly": [
+    "Mimikyu-Totem"
+   ],
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "mimikyu-bustedtotem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "778:totem",
+   "species": 778,
+   "name": "Mimikyu-Totem",
+   "forme": "Totem",
+   "kind": "totem",
+   "region": null,
+   "types": [
+    8,
+    18
+   ],
+   "baseStats": {
+    "hp": 55,
+    "atk": 90,
+    "def": 80,
+    "spa": 50,
+    "spd": 105,
+    "spe": 96
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "mimikyu-totem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "780:mega",
+   "species": 780,
+   "name": "Drampa-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    1,
+    16
+   ],
+   "baseStats": {
+    "hp": 78,
+    "atk": 85,
+    "def": 110,
+    "spa": 160,
+    "spd": 116,
+    "spe": 36
+   },
+   "battleOnly": [
+    "Drampa"
+   ],
+   "requiredItem": "Drampanite",
+   "introducedGen": 9,
+   "showdownSpriteId": "drampa-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "784:totem",
+   "species": 784,
+   "name": "Kommo-o-Totem",
+   "forme": "Totem",
+   "kind": "totem",
+   "region": null,
+   "types": [
+    16,
+    2
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 110,
+    "def": 125,
+    "spa": 100,
+    "spd": 105,
+    "spe": 85
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "kommoo-totem",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "800:dawnwings",
+   "species": 800,
+   "name": "Necrozma-Dawn-Wings",
+   "forme": "Dawn-Wings",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    14,
+    8
+   ],
+   "baseStats": {
+    "hp": 97,
+    "atk": 113,
+    "def": 109,
+    "spa": 157,
+    "spd": 127,
+    "spe": 77
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "necrozma-dawnwings",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "800:duskmane",
+   "species": 800,
+   "name": "Necrozma-Dusk-Mane",
+   "forme": "Dusk-Mane",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    14,
+    9
+   ],
+   "baseStats": {
+    "hp": 97,
+    "atk": 157,
+    "def": 127,
+    "spa": 113,
+    "spd": 109,
+    "spe": 77
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "necrozma-duskmane",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "800:ultra",
+   "species": 800,
+   "name": "Necrozma-Ultra",
+   "forme": "Ultra",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    14,
+    16
+   ],
+   "baseStats": {
+    "hp": 97,
+    "atk": 167,
+    "def": 97,
+    "spa": 167,
+    "spd": 97,
+    "spe": 129
+   },
+   "battleOnly": [
+    "Necrozma-Dawn-Wings",
+    "Necrozma-Dusk-Mane"
+   ],
+   "requiredItem": "Ultranecrozium Z",
+   "introducedGen": 7,
+   "showdownSpriteId": "necrozma-ultra",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "801:mega",
+   "species": 801,
+   "name": "Magearna-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    9,
+    18
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 125,
+    "def": 115,
+    "spa": 170,
+    "spd": 115,
+    "spe": 95
+   },
+   "battleOnly": [
+    "Magearna"
+   ],
+   "requiredItem": "Magearnite",
+   "introducedGen": 9,
+   "showdownSpriteId": "magearna-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "801:original",
+   "species": 801,
+   "name": "Magearna-Original",
+   "forme": "Original",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    9,
+    18
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 95,
+    "def": 115,
+    "spa": 130,
+    "spd": 115,
+    "spe": 65
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 7,
+   "showdownSpriteId": "magearna-original",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "801:originalmega",
+   "species": 801,
+   "name": "Magearna-Original-Mega",
+   "forme": "Original-Mega",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    9,
+    18
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 125,
+    "def": 115,
+    "spa": 170,
+    "spd": 115,
+    "spe": 95
+   },
+   "battleOnly": [
+    "Magearna-Original"
+   ],
+   "requiredItem": "Magearnite",
+   "introducedGen": 9,
+   "showdownSpriteId": "magearna-originalmega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "807:mega",
+   "species": 807,
+   "name": "Zeraora-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    13
+   ],
+   "baseStats": {
+    "hp": 88,
+    "atk": 157,
+    "def": 75,
+    "spa": 147,
+    "spd": 80,
+    "spe": 153
+   },
+   "battleOnly": [
+    "Zeraora"
+   ],
+   "requiredItem": "Zeraorite",
+   "introducedGen": 9,
+   "showdownSpriteId": "zeraora-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "809:gmax",
+   "species": 809,
+   "name": "Melmetal-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    9
+   ],
+   "baseStats": {
+    "hp": 135,
+    "atk": 143,
+    "def": 143,
+    "spa": 80,
+    "spd": 65,
+    "spe": 34
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "melmetal-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "812:gmax",
+   "species": 812,
+   "name": "Rillaboom-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    12
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 125,
+    "def": 90,
+    "spa": 60,
+    "spd": 70,
+    "spe": 85
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "rillaboom-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "815:gmax",
+   "species": 815,
+   "name": "Cinderace-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    10
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 116,
+    "def": 75,
+    "spa": 65,
+    "spd": 75,
+    "spe": 119
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "cinderace-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "818:gmax",
+   "species": 818,
+   "name": "Inteleon-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    11
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 85,
+    "def": 65,
+    "spa": 125,
+    "spd": 65,
+    "spe": 120
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "inteleon-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "823:gmax",
+   "species": 823,
+   "name": "Corviknight-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    3,
+    9
+   ],
+   "baseStats": {
+    "hp": 98,
+    "atk": 87,
+    "def": 105,
+    "spa": 53,
+    "spd": 85,
+    "spe": 67
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "corviknight-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "826:gmax",
+   "species": 826,
+   "name": "Orbeetle-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    7,
+    14
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 45,
+    "def": 110,
+    "spa": 80,
+    "spd": 120,
+    "spe": 90
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "orbeetle-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "834:gmax",
+   "species": 834,
+   "name": "Drednaw-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    11,
+    6
+   ],
+   "baseStats": {
+    "hp": 90,
+    "atk": 115,
+    "def": 90,
+    "spa": 48,
+    "spd": 68,
+    "spe": 74
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "drednaw-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "839:gmax",
+   "species": 839,
+   "name": "Coalossal-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    6,
+    10
+   ],
+   "baseStats": {
+    "hp": 110,
+    "atk": 80,
+    "def": 120,
+    "spa": 80,
+    "spd": 90,
+    "spe": 30
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "coalossal-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "841:gmax",
+   "species": 841,
+   "name": "Flapple-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    12,
+    16
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 110,
+    "def": 80,
+    "spa": 95,
+    "spd": 60,
+    "spe": 70
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "flapple-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "842:gmax",
+   "species": 842,
+   "name": "Appletun-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    12,
+    16
+   ],
+   "baseStats": {
+    "hp": 110,
+    "atk": 85,
+    "def": 80,
+    "spa": 100,
+    "spd": 80,
+    "spe": 30
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "appletun-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "844:gmax",
+   "species": 844,
+   "name": "Sandaconda-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    5
+   ],
+   "baseStats": {
+    "hp": 72,
+    "atk": 107,
+    "def": 125,
+    "spa": 65,
+    "spd": 70,
+    "spe": 71
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "sandaconda-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "845:gorging",
+   "species": 845,
+   "name": "Cramorant-Gorging",
+   "forme": "Gorging",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    3,
+    11
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 85,
+    "def": 55,
+    "spa": 85,
+    "spd": 95,
+    "spe": 85
+   },
+   "battleOnly": [
+    "Cramorant"
+   ],
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "cramorant-gorging",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "845:gulping",
+   "species": 845,
+   "name": "Cramorant-Gulping",
+   "forme": "Gulping",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    3,
+    11
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 85,
+    "def": 55,
+    "spa": 85,
+    "spd": 95,
+    "spe": 85
+   },
+   "battleOnly": [
+    "Cramorant"
+   ],
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "cramorant-gulping",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "849:gmax",
+   "species": 849,
+   "name": "Toxtricity-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    13,
+    4
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 98,
+    "def": 70,
+    "spa": 114,
+    "spd": 70,
+    "spe": 75
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "toxtricity-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "849:lowkey",
+   "species": 849,
+   "name": "Toxtricity-Low-Key",
+   "forme": "Low-Key",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    13,
+    4
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 98,
+    "def": 70,
+    "spa": 114,
+    "spd": 70,
+    "spe": 75
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "toxtricity-lowkey",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "849:lowkeygmax",
+   "species": 849,
+   "name": "Toxtricity-Low-Key-Gmax",
+   "forme": "Low-Key-Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    13,
+    4
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 98,
+    "def": 70,
+    "spa": 114,
+    "spd": 70,
+    "spe": 75
+   },
+   "battleOnly": [
+    "Toxtricity-Low-Key"
+   ],
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "toxtricity-lowkeygmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "851:gmax",
+   "species": 851,
+   "name": "Centiskorch-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    10,
+    7
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 115,
+    "def": 65,
+    "spa": 90,
+    "spd": 90,
+    "spe": 65
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "centiskorch-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "854:antique",
+   "species": 854,
+   "name": "Sinistea-Antique",
+   "forme": "Antique",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8
+   ],
+   "baseStats": {
+    "hp": 40,
+    "atk": 45,
+    "def": 45,
+    "spa": 74,
+    "spd": 54,
+    "spe": 50
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "sinistea-antique",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "855:antique",
+   "species": 855,
+   "name": "Polteageist-Antique",
+   "forme": "Antique",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8
+   ],
+   "baseStats": {
+    "hp": 60,
+    "atk": 65,
+    "def": 65,
+    "spa": 134,
+    "spd": 114,
+    "spe": 70
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "polteageist-antique",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "858:gmax",
+   "species": 858,
+   "name": "Hatterene-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    14,
+    18
+   ],
+   "baseStats": {
+    "hp": 57,
+    "atk": 90,
+    "def": 95,
+    "spa": 136,
+    "spd": 103,
+    "spe": 29
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "hatterene-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "861:gmax",
+   "species": 861,
+   "name": "Grimmsnarl-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    17,
+    18
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 120,
+    "def": 65,
+    "spa": 95,
+    "spd": 75,
+    "spe": 60
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "grimmsnarl-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "869:caramelswirl",
+   "species": 869,
+   "name": "Alcremie-Caramel-Swirl",
+   "forme": "Caramel-Swirl",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 60,
+    "def": 75,
+    "spa": 110,
+    "spd": 121,
+    "spe": 64
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "alcremie-caramelswirl",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "869:gmax",
+   "species": 869,
+   "name": "Alcremie-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 60,
+    "def": 75,
+    "spa": 110,
+    "spd": 121,
+    "spe": 64
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "alcremie-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "869:lemoncream",
+   "species": 869,
+   "name": "Alcremie-Lemon-Cream",
+   "forme": "Lemon-Cream",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 60,
+    "def": 75,
+    "spa": 110,
+    "spd": 121,
+    "spe": 64
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "alcremie-lemoncream",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "869:matchacream",
+   "species": 869,
+   "name": "Alcremie-Matcha-Cream",
+   "forme": "Matcha-Cream",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 60,
+    "def": 75,
+    "spa": 110,
+    "spd": 121,
+    "spe": 64
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "alcremie-matchacream",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "869:mintcream",
+   "species": 869,
+   "name": "Alcremie-Mint-Cream",
+   "forme": "Mint-Cream",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 60,
+    "def": 75,
+    "spa": 110,
+    "spd": 121,
+    "spe": 64
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "alcremie-mintcream",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "869:rainbowswirl",
+   "species": 869,
+   "name": "Alcremie-Rainbow-Swirl",
+   "forme": "Rainbow-Swirl",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 60,
+    "def": 75,
+    "spa": 110,
+    "spd": 121,
+    "spe": 64
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "alcremie-rainbowswirl",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "869:rubycream",
+   "species": 869,
+   "name": "Alcremie-Ruby-Cream",
+   "forme": "Ruby-Cream",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 60,
+    "def": 75,
+    "spa": 110,
+    "spd": 121,
+    "spe": 64
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "alcremie-rubycream",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "869:rubyswirl",
+   "species": 869,
+   "name": "Alcremie-Ruby-Swirl",
+   "forme": "Ruby-Swirl",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 60,
+    "def": 75,
+    "spa": 110,
+    "spd": 121,
+    "spe": 64
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "alcremie-rubyswirl",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "870:mega",
+   "species": 870,
+   "name": "Falinks-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    2
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 135,
+    "def": 135,
+    "spa": 70,
+    "spd": 65,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Falinks"
+   ],
+   "requiredItem": "Falinksite",
+   "introducedGen": 9,
+   "showdownSpriteId": "falinks-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "875:noice",
+   "species": 875,
+   "name": "Eiscue-Noice",
+   "forme": "Noice",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    15
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 80,
+    "def": 70,
+    "spa": 65,
+    "spd": 50,
+    "spe": 130
+   },
+   "battleOnly": [
+    "Eiscue"
+   ],
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "eiscue-noice",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "876:f",
+   "species": 876,
+   "name": "Indeedee-F",
+   "forme": "F",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    14,
+    1
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 55,
+    "def": 65,
+    "spa": 95,
+    "spd": 105,
+    "spe": 85
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "indeedee-f",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "877:hangry",
+   "species": 877,
+   "name": "Morpeko-Hangry",
+   "forme": "Hangry",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    13,
+    17
+   ],
+   "baseStats": {
+    "hp": 58,
+    "atk": 95,
+    "def": 58,
+    "spa": 70,
+    "spd": 58,
+    "spe": 97
+   },
+   "battleOnly": [
+    "Morpeko"
+   ],
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "morpeko-hangry",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "879:gmax",
+   "species": 879,
+   "name": "Copperajah-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    9
+   ],
+   "baseStats": {
+    "hp": 122,
+    "atk": 130,
+    "def": 69,
+    "spa": 80,
+    "spd": 69,
+    "spe": 30
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "copperajah-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "884:gmax",
+   "species": 884,
+   "name": "Duraludon-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    9,
+    16
+   ],
+   "baseStats": {
+    "hp": 70,
+    "atk": 95,
+    "def": 115,
+    "spa": 120,
+    "spd": 50,
+    "spe": 85
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "duraludon-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "888:crowned",
+   "species": 888,
+   "name": "Zacian-Crowned",
+   "forme": "Crowned",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    18,
+    9
+   ],
+   "baseStats": {
+    "hp": 92,
+    "atk": 150,
+    "def": 115,
+    "spa": 80,
+    "spd": 115,
+    "spe": 148
+   },
+   "battleOnly": [
+    "Zacian"
+   ],
+   "requiredItem": "Rusted Sword",
+   "introducedGen": 8,
+   "showdownSpriteId": "zacian-crowned",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "889:crowned",
+   "species": 889,
+   "name": "Zamazenta-Crowned",
+   "forme": "Crowned",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    2,
+    9
+   ],
+   "baseStats": {
+    "hp": 92,
+    "atk": 120,
+    "def": 140,
+    "spa": 80,
+    "spd": 140,
+    "spe": 128
+   },
+   "battleOnly": [
+    "Zamazenta"
+   ],
+   "requiredItem": "Rusted Shield",
+   "introducedGen": 8,
+   "showdownSpriteId": "zamazenta-crowned",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "890:eternamax",
+   "species": 890,
+   "name": "Eternatus-Eternamax",
+   "forme": "Eternamax",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    4,
+    16
+   ],
+   "baseStats": {
+    "hp": 255,
+    "atk": 115,
+    "def": 250,
+    "spa": 125,
+    "spd": 250,
+    "spe": 130
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "eternatus-eternamax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "892:gmax",
+   "species": 892,
+   "name": "Urshifu-Gmax",
+   "forme": "Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    2,
+    17
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 130,
+    "def": 100,
+    "spa": 63,
+    "spd": 60,
+    "spe": 97
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "urshifu-gmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "892:rapidstrike",
+   "species": 892,
+   "name": "Urshifu-Rapid-Strike",
+   "forme": "Rapid-Strike",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    2,
+    11
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 130,
+    "def": 100,
+    "spa": 63,
+    "spd": 60,
+    "spe": 97
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "urshifu-rapidstrike",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "892:rapidstrikegmax",
+   "species": 892,
+   "name": "Urshifu-Rapid-Strike-Gmax",
+   "forme": "Rapid-Strike-Gmax",
+   "kind": "gigantamax",
+   "region": null,
+   "types": [
+    2,
+    11
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 130,
+    "def": 100,
+    "spa": 63,
+    "spd": 60,
+    "spe": 97
+   },
+   "battleOnly": [
+    "Urshifu-Rapid-Strike"
+   ],
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "urshifu-rapidstrikegmax",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "893:dada",
+   "species": 893,
+   "name": "Zarude-Dada",
+   "forme": "Dada",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    17,
+    12
+   ],
+   "baseStats": {
+    "hp": 105,
+    "atk": 120,
+    "def": 105,
+    "spa": 70,
+    "spd": 95,
+    "spe": 105
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "zarude-dada",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "898:ice",
+   "species": 898,
+   "name": "Calyrex-Ice",
+   "forme": "Ice",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    14,
+    15
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 165,
+    "def": 150,
+    "spa": 85,
+    "spd": 130,
+    "spe": 50
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "calyrex-ice",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "898:shadow",
+   "species": 898,
+   "name": "Calyrex-Shadow",
+   "forme": "Shadow",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    14,
+    8
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 85,
+    "def": 80,
+    "spa": 165,
+    "spd": 100,
+    "spe": 150
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "calyrex-shadow",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "901:bloodmoon",
+   "species": 901,
+   "name": "Ursaluna-Bloodmoon",
+   "forme": "Bloodmoon",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    5,
+    1
+   ],
+   "baseStats": {
+    "hp": 113,
+    "atk": 70,
+    "def": 120,
+    "spa": 135,
+    "spd": 65,
+    "spe": 52
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "ursaluna-bloodmoon",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "902:f",
+   "species": 902,
+   "name": "Basculegion-F",
+   "forme": "F",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    11,
+    8
+   ],
+   "baseStats": {
+    "hp": 120,
+    "atk": 92,
+    "def": 65,
+    "spa": 100,
+    "spd": 75,
+    "spe": 78
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "basculegion-f",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "905:therian",
+   "species": 905,
+   "name": "Enamorus-Therian",
+   "forme": "Therian",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    18,
+    3
+   ],
+   "baseStats": {
+    "hp": 74,
+    "atk": 115,
+    "def": 110,
+    "spa": 135,
+    "spd": 100,
+    "spe": 46
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "enamorus-therian",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "916:f",
+   "species": 916,
+   "name": "Oinkologne-F",
+   "forme": "F",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 115,
+    "atk": 90,
+    "def": 70,
+    "spa": 59,
+    "spd": 90,
+    "spe": 65
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "oinkologne-f",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "925:four",
+   "species": 925,
+   "name": "Maushold-Four",
+   "forme": "Four",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 74,
+    "atk": 75,
+    "def": 70,
+    "spa": 65,
+    "spd": 75,
+    "spe": 111
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "maushold-four",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "931:blue",
+   "species": 931,
+   "name": "Squawkabilly-Blue",
+   "forme": "Blue",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    1,
+    3
+   ],
+   "baseStats": {
+    "hp": 82,
+    "atk": 96,
+    "def": 51,
+    "spa": 45,
+    "spd": 51,
+    "spe": 92
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "squawkabilly-blue",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "931:white",
+   "species": 931,
+   "name": "Squawkabilly-White",
+   "forme": "White",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    1,
+    3
+   ],
+   "baseStats": {
+    "hp": 82,
+    "atk": 96,
+    "def": 51,
+    "spa": 45,
+    "spd": 51,
+    "spe": 92
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "squawkabilly-white",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "931:yellow",
+   "species": 931,
+   "name": "Squawkabilly-Yellow",
+   "forme": "Yellow",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    1,
+    3
+   ],
+   "baseStats": {
+    "hp": 82,
+    "atk": 96,
+    "def": 51,
+    "spa": 45,
+    "spd": 51,
+    "spe": 92
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "squawkabilly-yellow",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "952:mega",
+   "species": 952,
+   "name": "Scovillain-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    12,
+    10
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 138,
+    "def": 85,
+    "spa": 138,
+    "spd": 85,
+    "spe": 75
+   },
+   "battleOnly": [
+    "Scovillain"
+   ],
+   "requiredItem": "Scovillainite",
+   "introducedGen": 9,
+   "showdownSpriteId": "scovillain-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "964:hero",
+   "species": 964,
+   "name": "Palafin-Hero",
+   "forme": "Hero",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    11
+   ],
+   "baseStats": {
+    "hp": 100,
+    "atk": 160,
+    "def": 97,
+    "spa": 106,
+    "spd": 87,
+    "spe": 100
+   },
+   "battleOnly": [
+    "Palafin"
+   ],
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "palafin-hero",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "970:mega",
+   "species": 970,
+   "name": "Glimmora-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    6,
+    4
+   ],
+   "baseStats": {
+    "hp": 83,
+    "atk": 90,
+    "def": 105,
+    "spa": 150,
+    "spd": 96,
+    "spe": 101
+   },
+   "battleOnly": [
+    "Glimmora"
+   ],
+   "requiredItem": "Glimmoranite",
+   "introducedGen": 9,
+   "showdownSpriteId": "glimmora-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "978:curlymega",
+   "species": 978,
+   "name": "Tatsugiri-Curly-Mega",
+   "forme": "Curly-Mega",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    16,
+    11
+   ],
+   "baseStats": {
+    "hp": 68,
+    "atk": 65,
+    "def": 90,
+    "spa": 135,
+    "spd": 125,
+    "spe": 92
+   },
+   "battleOnly": [
+    "Tatsugiri"
+   ],
+   "requiredItem": "Tatsugirinite",
+   "introducedGen": 9,
+   "showdownSpriteId": "tatsugiri-curlymega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "978:droopy",
+   "species": 978,
+   "name": "Tatsugiri-Droopy",
+   "forme": "Droopy",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    16,
+    11
+   ],
+   "baseStats": {
+    "hp": 68,
+    "atk": 50,
+    "def": 60,
+    "spa": 120,
+    "spd": 95,
+    "spe": 82
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "tatsugiri-droopy",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "978:droopymega",
+   "species": 978,
+   "name": "Tatsugiri-Droopy-Mega",
+   "forme": "Droopy-Mega",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    16,
+    11
+   ],
+   "baseStats": {
+    "hp": 68,
+    "atk": 65,
+    "def": 90,
+    "spa": 135,
+    "spd": 125,
+    "spe": 92
+   },
+   "battleOnly": [
+    "Tatsugiri-Droopy"
+   ],
+   "requiredItem": "Tatsugirinite",
+   "introducedGen": 9,
+   "showdownSpriteId": "tatsugiri-droopymega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "978:stretchy",
+   "species": 978,
+   "name": "Tatsugiri-Stretchy",
+   "forme": "Stretchy",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    16,
+    11
+   ],
+   "baseStats": {
+    "hp": 68,
+    "atk": 50,
+    "def": 60,
+    "spa": 120,
+    "spd": 95,
+    "spe": 82
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "tatsugiri-stretchy",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "978:stretchymega",
+   "species": 978,
+   "name": "Tatsugiri-Stretchy-Mega",
+   "forme": "Stretchy-Mega",
+   "kind": "battle-only",
+   "region": null,
+   "types": [
+    16,
+    11
+   ],
+   "baseStats": {
+    "hp": 68,
+    "atk": 65,
+    "def": 90,
+    "spa": 135,
+    "spd": 125,
+    "spe": 92
+   },
+   "battleOnly": [
+    "Tatsugiri-Stretchy"
+   ],
+   "requiredItem": "Tatsugirinite",
+   "introducedGen": 9,
+   "showdownSpriteId": "tatsugiri-stretchymega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "982:threesegment",
+   "species": 982,
+   "name": "Dudunsparce-Three-Segment",
+   "forme": "Three-Segment",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 125,
+    "atk": 100,
+    "def": 80,
+    "spa": 85,
+    "spd": 75,
+    "spe": 55
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "dudunsparce-threesegment",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "998:mega",
+   "species": 998,
+   "name": "Baxcalibur-Mega",
+   "forme": "Mega",
+   "kind": "mega",
+   "region": null,
+   "types": [
+    16,
+    15
+   ],
+   "baseStats": {
+    "hp": 115,
+    "atk": 175,
+    "def": 117,
+    "spa": 105,
+    "spd": 101,
+    "spe": 87
+   },
+   "battleOnly": [
+    "Baxcalibur"
+   ],
+   "requiredItem": "Baxcalibrite",
+   "introducedGen": 9,
+   "showdownSpriteId": "baxcalibur-mega",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "999:roaming",
+   "species": 999,
+   "name": "Gimmighoul-Roaming",
+   "forme": "Roaming",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    8
+   ],
+   "baseStats": {
+    "hp": 45,
+    "atk": 30,
+    "def": 25,
+    "spa": 75,
+    "spd": 45,
+    "spe": 80
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "gimmighoul-roaming",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1012:artisan",
+   "species": 1012,
+   "name": "Poltchageist-Artisan",
+   "forme": "Artisan",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    12,
+    8
+   ],
+   "baseStats": {
+    "hp": 40,
+    "atk": 45,
+    "def": 45,
+    "spa": 74,
+    "spd": 54,
+    "spe": 50
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "poltchageist-artisan",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1013:masterpiece",
+   "species": 1013,
+   "name": "Sinistcha-Masterpiece",
+   "forme": "Masterpiece",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    12,
+    8
+   ],
+   "baseStats": {
+    "hp": 71,
+    "atk": 60,
+    "def": 106,
+    "spa": 121,
+    "spd": 80,
+    "spe": 70
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "sinistcha-masterpiece",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1017:cornerstone",
+   "species": 1017,
+   "name": "Ogerpon-Cornerstone",
+   "forme": "Cornerstone",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    12,
+    6
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 120,
+    "def": 84,
+    "spa": 60,
+    "spd": 96,
+    "spe": 110
+   },
+   "battleOnly": null,
+   "requiredItem": "Cornerstone Mask",
+   "introducedGen": 9,
+   "showdownSpriteId": "ogerpon-cornerstone",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1017:cornerstonetera",
+   "species": 1017,
+   "name": "Ogerpon-Cornerstone-Tera",
+   "forme": "Cornerstone-Tera",
+   "kind": "terastal",
+   "region": null,
+   "types": [
+    12,
+    6
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 120,
+    "def": 84,
+    "spa": 60,
+    "spd": 96,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Ogerpon-Cornerstone"
+   ],
+   "requiredItem": "Cornerstone Mask",
+   "introducedGen": 9,
+   "showdownSpriteId": "ogerpon-cornerstonetera",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1017:hearthflame",
+   "species": 1017,
+   "name": "Ogerpon-Hearthflame",
+   "forme": "Hearthflame",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    12,
+    10
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 120,
+    "def": 84,
+    "spa": 60,
+    "spd": 96,
+    "spe": 110
+   },
+   "battleOnly": null,
+   "requiredItem": "Hearthflame Mask",
+   "introducedGen": 9,
+   "showdownSpriteId": "ogerpon-hearthflame",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1017:hearthflametera",
+   "species": 1017,
+   "name": "Ogerpon-Hearthflame-Tera",
+   "forme": "Hearthflame-Tera",
+   "kind": "terastal",
+   "region": null,
+   "types": [
+    12,
+    10
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 120,
+    "def": 84,
+    "spa": 60,
+    "spd": 96,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Ogerpon-Hearthflame"
+   ],
+   "requiredItem": "Hearthflame Mask",
+   "introducedGen": 9,
+   "showdownSpriteId": "ogerpon-hearthflametera",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1017:tealtera",
+   "species": 1017,
+   "name": "Ogerpon-Teal-Tera",
+   "forme": "Teal-Tera",
+   "kind": "terastal",
+   "region": null,
+   "types": [
+    12
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 120,
+    "def": 84,
+    "spa": 60,
+    "spd": 96,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Ogerpon"
+   ],
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "ogerpon-tealtera",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1017:wellspring",
+   "species": 1017,
+   "name": "Ogerpon-Wellspring",
+   "forme": "Wellspring",
+   "kind": "alternate",
+   "region": null,
+   "types": [
+    12,
+    11
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 120,
+    "def": 84,
+    "spa": 60,
+    "spd": 96,
+    "spe": 110
+   },
+   "battleOnly": null,
+   "requiredItem": "Wellspring Mask",
+   "introducedGen": 9,
+   "showdownSpriteId": "ogerpon-wellspring",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1017:wellspringtera",
+   "species": 1017,
+   "name": "Ogerpon-Wellspring-Tera",
+   "forme": "Wellspring-Tera",
+   "kind": "terastal",
+   "region": null,
+   "types": [
+    12,
+    11
+   ],
+   "baseStats": {
+    "hp": 80,
+    "atk": 120,
+    "def": 84,
+    "spa": 60,
+    "spd": 96,
+    "spe": 110
+   },
+   "battleOnly": [
+    "Ogerpon-Wellspring"
+   ],
+   "requiredItem": "Wellspring Mask",
+   "introducedGen": 9,
+   "showdownSpriteId": "ogerpon-wellspringtera",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1024:stellar",
+   "species": 1024,
+   "name": "Terapagos-Stellar",
+   "forme": "Stellar",
+   "kind": "terastal",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 160,
+    "atk": 105,
+    "def": 110,
+    "spa": 130,
+    "spd": 110,
+    "spe": 85
+   },
+   "battleOnly": [
+    "Terapagos"
+   ],
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "terapagos-stellar",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "1024:terastal",
+   "species": 1024,
+   "name": "Terapagos-Terastal",
+   "forme": "Terastal",
+   "kind": "terastal",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 95,
+    "atk": 95,
+    "def": 110,
+    "spa": 105,
+    "spd": 110,
+    "spe": 85
+   },
+   "battleOnly": [
+    "Terapagos"
+   ],
+   "requiredItem": null,
+   "introducedGen": 9,
+   "showdownSpriteId": "terapagos-terastal",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "669:blue",
+   "species": 669,
+   "name": "Flabébé-Blue",
+   "forme": "Blue",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 44,
+    "atk": 38,
+    "def": 39,
+    "spa": 61,
+    "spd": 79,
+    "spe": 42
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "flabebe-blue",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "669:orange",
+   "species": 669,
+   "name": "Flabébé-Orange",
+   "forme": "Orange",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 44,
+    "atk": 38,
+    "def": 39,
+    "spa": 61,
+    "spd": 79,
+    "spe": 42
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "flabebe-orange",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "669:white",
+   "species": 669,
+   "name": "Flabébé-White",
+   "forme": "White",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 44,
+    "atk": 38,
+    "def": 39,
+    "spa": 61,
+    "spd": 79,
+    "spe": 42
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "flabebe-white",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "669:yellow",
+   "species": 669,
+   "name": "Flabébé-Yellow",
+   "forme": "Yellow",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 44,
+    "atk": 38,
+    "def": 39,
+    "spa": 61,
+    "spd": 79,
+    "spe": 42
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "flabebe-yellow",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "670:blue",
+   "species": 670,
+   "name": "Floette-Blue",
+   "forme": "Blue",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 54,
+    "atk": 45,
+    "def": 47,
+    "spa": 75,
+    "spd": 98,
+    "spe": 52
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "floette-blue",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "670:orange",
+   "species": 670,
+   "name": "Floette-Orange",
+   "forme": "Orange",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 54,
+    "atk": 45,
+    "def": 47,
+    "spa": 75,
+    "spd": 98,
+    "spe": 52
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "floette-orange",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "670:white",
+   "species": 670,
+   "name": "Floette-White",
+   "forme": "White",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 54,
+    "atk": 45,
+    "def": 47,
+    "spa": 75,
+    "spd": 98,
+    "spe": 52
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "floette-white",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "670:yellow",
+   "species": 670,
+   "name": "Floette-Yellow",
+   "forme": "Yellow",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 54,
+    "atk": 45,
+    "def": 47,
+    "spa": 75,
+    "spd": 98,
+    "spe": 52
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "floette-yellow",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "671:blue",
+   "species": 671,
+   "name": "Florges-Blue",
+   "forme": "Blue",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 78,
+    "atk": 65,
+    "def": 68,
+    "spa": 112,
+    "spd": 154,
+    "spe": 75
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "florges-blue",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "671:orange",
+   "species": 671,
+   "name": "Florges-Orange",
+   "forme": "Orange",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 78,
+    "atk": 65,
+    "def": 68,
+    "spa": 112,
+    "spd": 154,
+    "spe": 75
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "florges-orange",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "671:white",
+   "species": 671,
+   "name": "Florges-White",
+   "forme": "White",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 78,
+    "atk": 65,
+    "def": 68,
+    "spa": 112,
+    "spd": 154,
+    "spe": 75
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "florges-white",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "671:yellow",
+   "species": 671,
+   "name": "Florges-Yellow",
+   "forme": "Yellow",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 78,
+    "atk": 65,
+    "def": 68,
+    "spa": 112,
+    "spd": 154,
+    "spe": 75
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "florges-yellow",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "676:dandy",
+   "species": 676,
+   "name": "Furfrou-Dandy",
+   "forme": "Dandy",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 80,
+    "def": 60,
+    "spa": 65,
+    "spd": 90,
+    "spe": 102
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "furfrou-dandy",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "676:debutante",
+   "species": 676,
+   "name": "Furfrou-Debutante",
+   "forme": "Debutante",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 80,
+    "def": 60,
+    "spa": 65,
+    "spd": 90,
+    "spe": 102
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "furfrou-debutante",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "676:diamond",
+   "species": 676,
+   "name": "Furfrou-Diamond",
+   "forme": "Diamond",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 80,
+    "def": 60,
+    "spa": 65,
+    "spd": 90,
+    "spe": 102
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "furfrou-diamond",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "676:heart",
+   "species": 676,
+   "name": "Furfrou-Heart",
+   "forme": "Heart",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 80,
+    "def": 60,
+    "spa": 65,
+    "spd": 90,
+    "spe": 102
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "furfrou-heart",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "676:kabuki",
+   "species": 676,
+   "name": "Furfrou-Kabuki",
+   "forme": "Kabuki",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 80,
+    "def": 60,
+    "spa": 65,
+    "spd": 90,
+    "spe": 102
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "furfrou-kabuki",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "676:lareine",
+   "species": 676,
+   "name": "Furfrou-La Reine",
+   "forme": "La Reine",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 80,
+    "def": 60,
+    "spa": 65,
+    "spd": 90,
+    "spe": 102
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "furfrou-lareine",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "676:matron",
+   "species": 676,
+   "name": "Furfrou-Matron",
+   "forme": "Matron",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 80,
+    "def": 60,
+    "spa": 65,
+    "spd": 90,
+    "spe": 102
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "furfrou-matron",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "676:pharaoh",
+   "species": 676,
+   "name": "Furfrou-Pharaoh",
+   "forme": "Pharaoh",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 80,
+    "def": 60,
+    "spa": 65,
+    "spd": 90,
+    "spe": 102
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "furfrou-pharaoh",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "676:star",
+   "species": 676,
+   "name": "Furfrou-Star",
+   "forme": "Star",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    1
+   ],
+   "baseStats": {
+    "hp": 75,
+    "atk": 80,
+    "def": 60,
+    "spa": 65,
+    "spd": 90,
+    "spe": 102
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "furfrou-star",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "869:saltedcream",
+   "species": 869,
+   "name": "Alcremie-Salted-Cream",
+   "forme": "Salted-Cream",
+   "kind": "cosmetic",
+   "region": null,
+   "types": [
+    18
+   ],
+   "baseStats": {
+    "hp": 65,
+    "atk": 60,
+    "def": 75,
+    "spa": 110,
+    "spd": 121,
+    "spe": 64
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 8,
+   "showdownSpriteId": "alcremie-saltedcream",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  },
+  {
+   "key": "668:f",
+   "species": 668,
+   "name": "Pyroar (female)",
+   "forme": "F",
+   "kind": "gender",
+   "region": null,
+   "types": [
+    10,
+    1
+   ],
+   "baseStats": {
+    "hp": 86,
+    "atk": 68,
+    "def": 72,
+    "spa": 109,
+    "spd": 66,
+    "spe": 106
+   },
+   "battleOnly": null,
+   "requiredItem": null,
+   "introducedGen": 6,
+   "showdownSpriteId": "pyroar-f",
+   "enabled": false,
+   "status": "architecture-only: mechanics and eligibility not yet verified"
+  }
+ ]
+}

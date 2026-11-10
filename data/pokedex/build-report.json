@@ -1,0 +1,60 @@
+{
+ "generatedBy": "tools/generate-pokedex.mjs",
+ "pokeapiCommit": "e2710d30d14b3f4dc6a02a4a71e8619cd835b7ff",
+ "pkmnDex": "@pkmn/dex@0.10.12",
+ "species": 1025,
+ "retyped": [
+  "#35 Clefairy: 1 → 18",
+  "#36 Clefable: 1 → 18",
+  "#39 Jigglypuff: 1 → 1,18",
+  "#40 Wigglytuff: 1 → 1,18",
+  "#122 Mr-mime: 14 → 14,18",
+  "#173 Cleffa: 1 → 18",
+  "#174 Igglybuff: 1 → 1,18",
+  "#175 Togepi: 1 → 18",
+  "#176 Togetic: 1,3 → 18,3",
+  "#183 Marill: 11 → 11,18",
+  "#184 Azumarill: 11 → 11,18",
+  "#209 Snubbull: 1 → 18",
+  "#210 Granbull: 1 → 18",
+  "#280 Ralts: 14 → 14,18",
+  "#281 Kirlia: 14 → 14,18",
+  "#282 Gardevoir: 14 → 14,18",
+  "#298 Azurill: 1 → 1,18",
+  "#303 Mawile: 9 → 9,18",
+  "#439 Mime-jr: 14 → 14,18",
+  "#468 Togekiss: 1,3 → 18,3",
+  "#546 Cottonee: 12 → 12,18",
+  "#547 Whimsicott: 12 → 12,18"
+ ],
+ "crossGenerationEvolutions": [
+  "#133 Eevee → #700 Sylveon",
+  "#234 Stantler → #899 Wyrdeer",
+  "#123 Scyther → #900 Kleavor",
+  "#217 Ursaring → #901 Ursaluna",
+  "#57 Primeape → #979 Annihilape",
+  "#203 Girafarig → #981 Farigiraf",
+  "#206 Dunsparce → #982 Dudunsparce",
+  "#625 Bisharp → #983 Kingambit"
+ ],
+ "formGatedEvolutions": [
+  "#264 Linoone (galar) → #862 Obstagoon",
+  "#52 Meowth (galar) → #863 Perrserker",
+  "#222 Corsola (galar) → #864 Cursola",
+  "#83 Farfetchd (galar) → #865 Sirfetch’d",
+  "#122 Mr-mime (galar) → #866 Mr. Rime",
+  "#562 Yamask (galar) → #867 Runerigus",
+  "#550 Basculin-red-striped (whitestriped) → #902 Basculegion",
+  "#215 Sneasel (hisui) → #903 Sneasler",
+  "#211 Qwilfish (hisui) → #904 Overqwil",
+  "#194 Wooper (paldea) → #980 Clodsire"
+ ],
+ "tiers": {
+  "common": 80,
+  "uncommon": 40,
+  "rare": 104,
+  "epic": 90,
+  "legendary": 45,
+  "mythic": 17
+ }
+}

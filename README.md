@@ -32,7 +32,7 @@ Every tunable number (catch ranges, EXP pace, Underdog surge, Battle caps) is in
 
 ### Battle data
 
-`battleData.json` holds Gen 5 base stats, level-up moves, each move's power and effects, and the type chart. The effects it stores are priority, hit counts, drain, recoil, and crash damage. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. Battle images are animated GIFs: `@napi-rs/canvas` draws each frame, the runtime dependency `omggif` reads each sprite's animation frames, and the runtime dependency `gifenc` encodes the result. `utils/battle/render.js` encodes each frame as soon as it's drawn and decodes sprite frames only as an image reaches them, which keeps a 6v6 battle to about 60 MB, and it pauses between frames so a battle never stalls the bot's other commands. To regenerate it:
+`battleData.json` holds base stats, level-up moves, each move's power and effects, and the type chart for all 1,025 species: Gen 5 values for #1–649 (plus Fairy moves for the 22 species retyped to Fairy), the latest generation's values for #650–1025, and the modern 18-type chart. The effects it stores are priority, hit counts, drain, recoil, and crash damage. `tools/generate-battle-data.mjs` builds it from Pokémon Showdown's data (MIT) through the dev dependencies `@pkmn/dex` and `@pkmn/data`. The bot never loads those packages at runtime. Battle images are animated GIFs: `@napi-rs/canvas` draws each frame, the runtime dependency `omggif` reads each sprite's animation frames, and the runtime dependency `gifenc` encodes the result. `utils/battle/render.js` encodes each frame as soon as it's drawn and decodes sprite frames only as an image reaches them, which keeps a 6v6 battle to about 60 MB, and it pauses between frames so a battle never stalls the bot's other commands. To regenerate it:
 
 ```bash
 npm run generate:battle-data
@@ -97,7 +97,8 @@ REGISTER_COMMANDS=true     # set true on first run; flip to false afterwards to 
 #### Optional — production-only
 
 ```bash
-RENDER_EXTERNAL_URL=https://your-app.onrender.com   # used by /dashboard in production
+PUBLIC_URL=https://your-app.fly.dev   # base for dashboard links and embed images (defaults to https://$FLY_APP_NAME.fly.dev)
+POKEMON_GENERATIONS=                 # Gens 6–9 to release, e.g. 7 or 6-9 (default: none; Gens 1–5 are always on)
 TRAINERDATA_DIR=/data                               # persistent volume path on Fly/Render
 ```
 
@@ -112,6 +113,19 @@ On first run with `REGISTER_COMMANDS=true`, slash commands register to your `GUI
 ### 7. Verify
 
 In your test server, run `/dashboard` — the bot should reply with an ephemeral link to the player dashboard.
+
+## Generations 6–9
+
+All 1,025 species are in the data, but only Gens 1–5 can be obtained unless `POKEMON_GENERATIONS` releases more (see `config/generations.js`). A configured generation that fails validation stays off. Owned Pokémon are never removed by switching a generation off. Sprites: Black/White-style animated GIFs where they exist, otherwise static Black/White-style pixel art, never 3D renders; credits at `/credits`. Data pipeline and release process: `docs/gen6-9/README.md`.
+
+```bash
+npm run generate:pokedex      # pokemonData.json (+ public copy), data/pokedex/forms.json
+npm run generate:battle-data  # battleData.json
+npm run import:sprites        # sprites + data/sprites/sprites.json (verifies audited SHA-1s)
+npm run generate:credits      # public/credits/index.html
+npm run validate:catalog      # release gate (add a generation number to check one)
+npm run report:balance        # docs/gen6-9/BALANCE-DATA.md
+```
 
 ## Tests
 

@@ -2,6 +2,8 @@
 // 🎯 /recruit – manual random Pokémon/trainer recruitment
 // Coop's Collection Discord Bot (Refactored for safeReply + atomic saves + Pokemon Cache)
 // ==========================================================
+import { pokemonSpriteUrl } from "../utils/sprites.js";
+import { acquirablePokemon } from "../utils/speciesCatalog.js";
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -28,6 +30,7 @@ import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { logEvent } from "../utils/eventLog.js";
 import { lockUser } from "../utils/userLocks.js";
 import { grantTrainer } from "../services/assets.js";
+import { trackProgress } from "../progression/achievements.js";
 
 
 // ==========================================================
@@ -147,10 +150,9 @@ export default {
 // ==========================================================
 const NOT_ENOUGH_CC = "❌ You need **100 CC** to recruit! Earn more using `/daily`.";
 
-// Gens 1–5 = national dex 1–649. (pokemonData has no `generation` field;
-// filtering on it emptied the pool and broke every recruit.)
-export const RECRUIT_MAX_DEX = 649;
-export const recruitPool = (allPokemon) => allPokemon.filter((p) => Number(p.id) >= 1 && Number(p.id) <= RECRUIT_MAX_DEX);
+// Species of live generations only (config/generations.js; Gens 1–5 by
+// default). Replaces the old hard-coded "national dex 1–649" cap.
+export const recruitPool = (allPokemon) => acquirablePokemon(allPokemon);
 
 /**
  * Charge the recruit cost and apply `grant(user)` atomically.
@@ -179,6 +181,7 @@ async function recruitPokemon(i, trainerData) {
     const shiny = rollForShiny(user?.tp || 0);
     const res = chargeAndGrant(user, (u) => grantCatch(u, pick.id, shiny ? "shiny" : "normal"));
     if (!res.ok) return safeReply(i, { content: res.reason, flags: MessageFlags.Ephemeral });
+    trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: shiny ? 1 : 0 }]); // achievements: after a successful grant, before the save
 
     const ack = await saveAndAck(trainerData);
 
@@ -192,9 +195,7 @@ async function recruitPokemon(i, trainerData) {
       ccSpent: RECRUIT_COST_CC,
     });
 
-    const spriteUrl = shiny
-      ? `${spritePaths.shiny}${pick.id}.gif`
-      : `${spritePaths.pokemon}${pick.id}.gif`;
+    const spriteUrl = pokemonSpriteUrl(pick.id, shiny);
 
     const embed = new EmbedBuilder()
       .setColor(shiny ? 0xffd700 : 0x00ae86)
@@ -219,6 +220,7 @@ async function recruitTrainer(i, trainerData) {
     const file = getTrainerKey(pick);
     const res = chargeAndGrant(user, (u) => grantTrainer(u, file));
     if (!res.ok) return safeReply(i, { content: res.reason, flags: MessageFlags.Ephemeral });
+    trackProgress(user, [{ type: "trainers" }]); // achievements: after a successful grant, before the save
 
     const ack = await saveAndAck(trainerData);
 

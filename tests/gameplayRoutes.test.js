@@ -212,7 +212,8 @@ section("Evolve: the target must be a real evolution of the base");
   assertEqual((await ev({ baseId: 133, targetId: 150 })).status, 400, "Eevee → an unlisted species is refused");
 
   // Every real evolution in the data passes the target check (sampled across the dex).
-  const real = Object.values(data).flatMap((p) => (p.evolvesTo || []).map((t) => [Number(p.id), Number(t)]));
+  // Released generations only (Gen 6+ targets such as Eevee → Sylveon are gated; covered in gen69Evolution.test.js).
+  const real = Object.values(data).flatMap((p) => (p.evolvesTo || []).map((t) => [Number(p.id), Number(t)])).filter(([, t]) => t <= 649);
   const sample = real.filter((_, i) => i % 16 === 0);
   let passed = 0;
   for (const [b, t] of sample) {

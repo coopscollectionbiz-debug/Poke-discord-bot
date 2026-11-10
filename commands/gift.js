@@ -21,6 +21,7 @@ import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { resetLevelIfGone } from "../utils/training.js";
 import { lockUsers } from "../utils/userLocks.js";
 import { ownsTrainer, grantTrainer, revokeTrainer, trainerCount } from "../services/assets.js";
+import { trackProgress } from "../progression/achievements.js";
 
 // Moves `amount` normal copies of one Pokémon. Returns why it can't, or null once moved.
 // Separate from execute() so tests can run it without the save writing trainerData.json.
@@ -48,6 +49,7 @@ export function giftTrainer(sender, recipient, key, name) {
   if (ownsTrainer(recipient, key)) return `⚠️ They already own ${name}.`;
   revokeTrainer(sender, key);
   grantTrainer(recipient, key);
+  trackProgress(recipient, [{ type: "trainers" }]); // achievements (inside lockUsers)
   return null;
 }
 

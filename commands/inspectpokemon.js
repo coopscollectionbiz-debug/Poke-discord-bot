@@ -3,6 +3,7 @@
 // Coop's Collection Discord Bot
 // ==========================================================
 
+import { pokemonSpriteUrl } from "../utils/sprites.js";
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { findPokemonByName } from "../utils/dataLoader.js";
@@ -81,7 +82,7 @@ export default {
     }
 
     // ✅ Use hosted sprite URL (supports shiny later if needed)
-    const spriteUrl = `${spritePaths.pokemon}${pokemon.id}.gif`;
+    const spriteUrl = pokemonSpriteUrl(pokemon.id, false);
 
     const embed = new EmbedBuilder()
       .setTitle(`${pokemon.name}  #${pokemon.id}`)

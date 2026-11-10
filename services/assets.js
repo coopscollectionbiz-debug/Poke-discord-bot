@@ -125,3 +125,20 @@ export function auditTrainerData(trainerData) {
   }
   return { users: ids.length, usersWithProblems, counts };
 }
+
+/** Largest single currency grant (guards against bad reward definitions). */
+export const MAX_CURRENCY_GRANT = 1_000_000;
+
+/**
+ * Add CC to a player (positive whole amount, bounded). Synchronous; call it
+ * inside the player's lock. Returns { ok, cc } or { ok:false, error }.
+ */
+export function grantCurrency(user, amount) {
+  if (!user || typeof user !== "object") return { ok: false, error: "No player record." };
+  if (!Number.isSafeInteger(amount) || amount <= 0 || amount > MAX_CURRENCY_GRANT) return { ok: false, error: "Invalid amount." };
+  const current = Number.isFinite(user.cc) ? user.cc : 0;
+  const next = current + amount;
+  if (!Number.isSafeInteger(next)) return { ok: false, error: "Balance would overflow." };
+  user.cc = next;
+  return { ok: true, cc: next };
+}

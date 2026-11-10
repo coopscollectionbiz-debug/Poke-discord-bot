@@ -22,7 +22,7 @@ section("/inspectpokemon header");
 const togekiss = await findPokemonByName("togekiss");
 const header = infoLines(togekiss);
 assertTrue(header.includes(`**Rarity:** ${togekiss.tier.toUpperCase()}`), "shows the rarity tier");
-assertTrue(header.includes("Normal") && header.includes("Flying"), "shows the types");
+assertTrue(header.includes("Fairy") && header.includes("Flying"), "shows the types (modern typing: Togekiss is Fairy/Flying)");
 assertTrue(header.includes(`**Region:** ${togekiss.region}`), "shows the region");
 assertTrue(!/unknown/i.test(header), "nothing reads Unknown");
 

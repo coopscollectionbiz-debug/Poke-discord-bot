@@ -2,6 +2,8 @@
 // /daily — Coop’s Collection (Race-Safe v18.0)
 // ==========================================================
 
+import { pokemonSpriteUrl } from "../utils/sprites.js";
+import { trackProgress } from "../progression/achievements.js";
 import { grantItem, normalizeInventory } from "../services/inventory.js";
 import {
   SlashCommandBuilder,
@@ -11,7 +13,7 @@ import {
 
 import { safeReply } from "../utils/safeReply.js";
 import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
-import { getAllPokemon } from "../utils/dataLoader.js";
+import { getAcquirablePokemon } from "../utils/dataLoader.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
@@ -93,7 +95,7 @@ export async function execute(
       // ======================================================
       // Load Pokémon pool
       // ======================================================
-      const allPokemon = await getAllPokemon();
+      const allPokemon = await getAcquirablePokemon(); // live generations only
       if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
         return safeReply(interaction, {
           content: "❌ Pokémon data unavailable.",
@@ -145,6 +147,8 @@ export async function execute(
       }
 
       user.lastDaily = today;
+      // Release C: achievement progress (Pokémon, shinies, TP/rank).
+      trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: (shiny1 ? 1 : 0) + (shiny2 ? 1 : 0) }, { type: "tp" }, { type: "daily", day: Math.floor(Date.parse(today) / 86_400_000) }]);
 
       // ======================================================
       // Rare & shiny broadcast system
@@ -202,13 +206,8 @@ export async function execute(
       // ======================================================
       // Build embeds
       // ======================================================
-      const sprite1 = shiny1
-        ? `${spritePaths.shiny}${pick1.id}.gif`
-        : `${spritePaths.pokemon}${pick1.id}.gif`;
-
-      const sprite2 = shiny2
-        ? `${spritePaths.shiny}${pick2.id}.gif`
-        : `${spritePaths.pokemon}${pick2.id}.gif`;
+      const sprite1 = pokemonSpriteUrl(pick1.id, shiny1);
+      const sprite2 = pokemonSpriteUrl(pick2.id, shiny2);
 
       const rarity1 = (pick1.tier || "common").toLowerCase();
       const rarity2 = (pick2.tier || "common").toLowerCase();

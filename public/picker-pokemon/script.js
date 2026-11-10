@@ -120,6 +120,34 @@ function tierOf(p) {
   return String(p?.tier || "common").toLowerCase().trim();
 }
 
+// Released generations (GET /api/pokedex-status). Defaults to Gens 1–5.
+let releasedGenerations = new Set([1, 2, 3, 4, 5]);
+async function limitToReleasedGenerations(data, owned) {
+  try {
+    const res = await fetch("/api/pokedex-status", { credentials: "same-origin" });
+    if (res.ok) {
+      const body = await res.json();
+      if (Array.isArray(body.liveGenerations)) releasedGenerations = new Set(body.liveGenerations.map(Number));
+    }
+  } catch { /* keep the safe default */ }
+  const isOwned = (id) => ((owned[id]?.normal || 0) + (owned[id]?.shiny || 0)) > 0;
+  const out = {};
+  for (const [id, p] of Object.entries(data)) {
+    if (releasedGenerations.has(Number(p.generation ?? 1)) || isOwned(id)) out[id] = p;
+  }
+  for (const p of Object.values(out)) {
+    if (Array.isArray(p.evolvesTo)) p.evolvesTo = p.evolvesTo.filter((t) => out[t] && releasedGenerations.has(Number(out[t].generation ?? 1)));
+  }
+  return out;
+}
+
+// Official level requirement for Gen 6–9 level-up evolutions (enforced by the server).
+function requiredEvolutionLevel(base, target) {
+  const e = target?.evolution;
+  if (!e || Number(target.generation) < 6 || Number(e.from) !== Number(base?.id)) return null;
+  return (e.trigger === "level-up" || e.trigger === "in-battle-level-up") && e.minLevel > 0 ? e.minLevel : null;
+}
+
 function getEvoList(p) {
   return p?.evolvesTo || p?.evolves_to || [];
 }
@@ -875,7 +903,6 @@ async function init() {
     const pokeRes = await fetch("/public/pokemonData.json", { credentials: "same-origin" });
     if (!pokeRes.ok) throw new Error("Pokemon data failed");
     pokemonData = await pokeRes.json();
-    regions = getRegions(pokemonData);
 
     // Load user data (cookie session; backend will 403 if invalid)
     try {
@@ -885,6 +912,11 @@ async function init() {
         "<p class='error'>❌ Session expired. Please re-open the dashboard link from Discord.</p>";
       return;
     }
+
+    // Generation controls: hide species of unreleased generations unless the
+    // player already owns them, and never offer an unreleased evolution.
+    pokemonData = await limitToReleasedGenerations(pokemonData, userData?.pokemon || {});
+    regions = getRegions(pokemonData);
 
     // Normalize team to 1-per-id
     selectedTeam = normalizeTeam(userData.currentTeam);
@@ -1529,6 +1561,7 @@ function openEvolutionModal(baseId) {
         </div>
 
         ${dustRow}
+        ${requiredEvolutionLevel(base, target) ? `<div style="margin-top:6px;color:#aaa;font-weight:800;">Requires Lv. ${requiredEvolutionLevel(base, target)}</div>` : ""}
       `;
 
       if (allowed) {
@@ -2055,4 +2088,8 @@ function showBulkErrorModal(title, message) {
   if (goBag)
     goBag.onclick = () =>
       (window.location.href = `/public/bag/?id=${encodeURIComponent(id)}`);
+  const goAchievements = document.getElementById("goAchievements");
+  if (goAchievements)
+    goAchievements.onclick = () =>
+      (window.location.href = `/public/achievements/?id=${encodeURIComponent(id)}`);
 })();

@@ -1,5 +1,6 @@
 import { normalizeTrainers } from "../services/assets.js";
 import { normalizeInventory } from "../services/inventory.js";
+import { normalizeProgression } from "../progression/achievements.js";
 // ==========================================================
 // utils/userSchema.js
 // Unified user data schema and initialization
@@ -148,6 +149,7 @@ export function validateUserSchema(user, userId, username) {
   // Shared, idempotent inventory normalizer (Release B): integers only,
   // evolution_stone always present, nothing dropped silently.
   normalizeInventory(out);
+  normalizeProgression(out); // Release C achievement fields
 
   // Permanent shop purchases
   if (!Array.isArray(out.purchases)) out.purchases = [];

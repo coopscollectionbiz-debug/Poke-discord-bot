@@ -21,6 +21,7 @@ import {
 import { loadStaticSprite, loadPlaceholder, loadTrainerSprite, drawSprite } from "./sprites.js";
 import { loadAnimatedSprite, spritePlayer } from "../battle/render.js";
 import { encodeGif } from "./gif.js";
+import { shinyFxEnabled } from "./shinyBackdrop.js";
 import { refinedLayout } from "./showteamRefined.js";
 
 export const LAYOUTS = Object.freeze({
@@ -419,7 +420,7 @@ const LAYERED = { refined: refinedLayout };
  *   animate: false → PNG Buffer; true → GIF Buffer (sprites play)
  *   frames, delayMs: animation length (default 24 × 100 ms)
  */
-export async function renderShowteam(view, { layout = "hybrid", animate = false, frames = 24, delayMs = 100 } = {}) {
+export async function renderShowteam(view, { layout = "hybrid", animate = false, frames = 24, delayMs = 100, env = process.env } = {}) {
   const size = LAYOUTS[layout] && sizeFor(layout, view);
   if (!size) throw new Error(`Unknown layout ${layout}`);
   const ph = await loadPlaceholder();
@@ -429,10 +430,12 @@ export async function renderShowteam(view, { layout = "hybrid", animate = false,
   const ctx = canvas.getContext("2d");
 
   const layered = LAYERED[layout];
+  // Shiny backdrop context for the layered (refined) layout.
+  const fx = { enabled: shinyFxEnabled(env), frame: 0, total: frames, anims: null, cache: new Map() };
   if (!animate) {
     if (layered) {
       layered.base(ctx, view, size.h);
-      layered.sprites(ctx, view, sprites, () => null);
+      layered.sprites(ctx, view, sprites, () => null, fx);
       layered.top(ctx, view);
     } else DRAW[layout](ctx, view, sprites, () => null, trainer);
     return canvas.toBuffer("image/png");
@@ -442,14 +445,16 @@ export async function renderShowteam(view, { layout = "hybrid", animate = false,
   const players = anim.map((a) => (a && a.gif.numFrames() > 1 ? spritePlayer(a) : null));
   let ms = 0;
   const frameFor = (i) => (players[i] ? players[i](ms) : null);
+  fx.anims = anim;
   if (layered) {
     // Everything except the sprites is drawn once and copied into each frame.
     const base = createCanvas(size.w, size.h);
     layered.base(base.getContext("2d"), view, size.h);
     return encodeGif(canvas, (f) => {
       ms = f * delayMs;
+      fx.frame = f;
       ctx.drawImage(base, 0, 0);
-      layered.sprites(ctx, view, sprites, frameFor);
+      layered.sprites(ctx, view, sprites, frameFor, fx);
       layered.top(ctx, view);
     }, frames, delayMs);
   }

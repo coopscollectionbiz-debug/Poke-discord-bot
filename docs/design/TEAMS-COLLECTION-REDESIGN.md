@@ -107,7 +107,10 @@ Both are drawn with the existing `utils/render` primitives: `drawCard`, `drawPla
   - Existing battle achievements: **TBD**.
   - Rating: **plain number** for now.
   - Unowned Pokédex entries: **show names**.
-- Still open: the Discord card option (1 or 2), whether Overview and the Achievements split are in this round, achievements mapping, and permission to push.
+- **Discord card:** option 2 (banner + team row).
+- **Existing battle achievements:** count as **ranked** for now.
+- **Push:** approved (branches pushed; no PR yet).
+- Still open: whether Overview and the Achievements split are in this round.
 
 ## Recommendation (before the choice)
 

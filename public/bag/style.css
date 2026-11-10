@@ -1,9 +1,40 @@
-/* Bag page: reuses the shop's styles; only the controls and badges are new. */
-.bag-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px; }
-.bag-controls label { display: flex; gap: 6px; align-items: center; font-weight: 600; }
-.bag-controls select, .bag-controls input { padding: 6px 10px; border-radius: 8px; border: 1px solid #444; background: #1f2430; color: inherit; }
-.bag-item .qty { font-size: 1.4rem; font-weight: 700; margin: 4px 0; }
-.bag-item .usage { font-style: italic; opacity: 0.85; font-size: 0.9rem; }
-.bag-badge { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; background: #3a3f4b; }
-.bag-badge.inactive { background: #5a4b1f; }
-.bag-empty { opacity: 0.85; padding: 24px 0; }
+/* Bag page: reuses the Shop's card grid (dashboardshop/style.css);
+   only the controls and badges are new. Shared by Achievements. */
+.bag-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  margin: 16px 0 12px;
+}
+.bag-controls label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 700;
+  color: var(--cc-text-muted);
+}
+.bag-controls .bag-search { flex: 1 1 220px; }
+.bag-controls .bag-search input { width: 100%; }
+
+.bag-item { align-items: center; }
+.bag-item h3 { margin-top: 2px; }
+.bag-item .qty { margin: 2px 0 4px; font-size: 1.4rem; font-weight: 800; color: var(--cc-text); }
+.bag-item .usage { font-size: 0.88rem; color: var(--cc-text-faint); margin: 0 0 8px; }
+.bag-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: var(--cc-r-chip);
+  background: var(--cc-surface-raised);
+  color: var(--cc-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.bag-badge.inactive { background: var(--cc-gold-soft); color: var(--cc-gold); }
+.bag-empty { grid-column: 1 / -1; padding: 24px 0; color: var(--cc-text-muted); }
+
+@media (max-width: 520px) {
+  .bag-controls label { flex: 1 1 100%; }
+  .bag-controls select { flex: 1; }
+}

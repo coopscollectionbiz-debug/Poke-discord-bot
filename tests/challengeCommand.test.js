@@ -8,7 +8,10 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { execute, data, refusal, boardEmbed, reviveMenu } from "../commands/challenge.js";
+import { execute, data, refusal, boardEmbed, reviveMenu, previewMessage } from "../commands/challenge.js";
+import { challengeCardView, cardAltText, cardSlots, CHALLENGE_CARD_SIZE } from "../utils/render/challengeCard.js";
+import { previewChallenge } from "../utils/challenge/runChallenge.js";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { PLAYBACK, CHALLENGE } from "../utils/battle/tuning.js";
@@ -57,8 +60,17 @@ async function until(cond, ms = 30000) {
 }
 
 const embedJson = (e) => (e?.toJSON ? e.toJSON() : e);
+// Everything a message says, including its images' alt text.
 const textOf = (o) => (typeof o === "string" ? o
-  : [o?.content ?? "", ...(o?.embeds ?? []).map((e) => JSON.stringify(embedJson(e)))].join("\n"));
+  : [o?.content ?? "", ...(o?.embeds ?? []).map((e) => JSON.stringify(embedJson(e))), ...(o?.files ?? []).map((f) => f.description ?? "")].join("\n"));
+const card = (o) => o?.files?.find((f) => f.name === "challenge.png");
+const dims = (png) => [png.readUInt32BE(16), png.readUInt32BE(20)];
+const brightnessAt = async (png, x, y) => {
+  const img = await loadImage(png);
+  const ctx = createCanvas(img.width, img.height).getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  return [...ctx.getImageData(x, y, 1, 1).data].slice(0, 3).reduce((a, b) => a + b, 0);
+};
 
 // One fake guild channel; the private reply and each Revive menu get a
 // controllable collector. log.seq records public and private writes in order.
@@ -255,14 +267,14 @@ section("Preview");
   await t.run("brock");
   const r = t.log.replies[0];
   assertEqual(r.flags, 64, "private");
-  const e = embedJson(r.embeds[0]);
-  assertEqual(e.title, "Gym Leader Brock", "titled with the opponent");
-  assertTrue(e.thumbnail.url.endsWith("/trainers_2/brock-gen3.png"), "Brock's sprite");
-  assertEqual([e.author?.name, e.author?.icon_url, e.description], ["Boulder Badge", badgeUrl("brock"), "Rock"], "the Badge with its image, and the type");
-  const field = (name) => e.fields.find((f) => f.name === name)?.value;
-  assertEqual(field("Win"), "Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "the prize");
-  assertEqual(field("Lose"), "1,234 CC (10% of your CC)", "the exact loss");
-  assertTrue(!JSON.stringify(e).includes("Lv"), "no Levels");
+  const png = card(r);
+  assertTrue(!!png && dims(png.attachment).join("x") === `${CHALLENGE_CARD_SIZE.w}x${CHALLENGE_CARD_SIZE.h}`, "the VS card");
+  assertEqual(png.description, cardAltText(challengeCardView("brock", previewChallenge(t.trainerData.A, "brock"), t.trainerData.A, { displayName: "Ash" })),
+    "described for screen readers, with the challenger's display name");
+  assertTrue(png.description.includes("Win: Brock sprite, 2,500 CC, 1 stone, and 5 Dust"), "the prize");
+  assertEqual(r.content, "A loss costs you **1,234 CC**.", "the exact loss, in text only");
+  assertTrue(!r.embeds?.length, "no embed");
+  assertTrue(!textOf(r).includes("Lv"), "no Levels");
   const buttons = embedJson(r.components[0]).components;
   assertEqual(buttons.map((b) => b.label), ["Fight!", "Not now"], "Fight! and Not now");
   assertEqual(t.collectors[0].opts.time, 120000, "buttons work for 2 minutes");
@@ -271,14 +283,33 @@ section("Preview");
   const run = harness(STRONG());
   run.trainerData.A.challenge = { won: Object.fromEntries(GYMS.map((k) => [k, "d"])), day: null, attempts: 0 };
   await run.run("elite4");
-  const re = embedJson(run.log.replies[0].embeds[0]);
-  assertEqual(re.title, "Elite Four", "the run is titled Elite Four");
-  assertTrue(re.description.includes("Lorelei · Bruno · Agatha · Lance"), "the run lists who's in it");
+  assertTrue(card(run.log.replies[0]).description.startsWith("Ash vs the Elite Four: Lorelei, Bruno, Agatha, and Lance."), "the run lists who's in it");
 
   const rematch = harness();
   rematch.trainerData.A.challenge = { won: { brock: "d" }, day: null, attempts: 0 };
   await rematch.run("brock");
-  assertEqual(embedJson(rematch.log.replies[0].embeds[0]).fields.find((f) => f.name === "Win").value, "Rematch: EXP only", "a rematch says so");
+  assertTrue(card(rematch.log.replies[0]).description.includes("Rematch. Win: EXP only."), "a rematch says so");
+}
+
+section("Preview: the embed when the card can't render");
+{
+  const user = WEAK();
+  const preview = previewChallenge(user, "brock");
+  const view = challengeCardView("brock", preview, user, { displayName: "Ash" });
+  const quietWarn = console.warn;
+  console.warn = () => {};
+  const fallback = await previewMessage("brock", preview, view, { exactLoss: true, render: async () => { throw new Error("boom"); } });
+  const pub = await previewMessage("brock", preview, view, { render: async () => { throw new Error("boom"); } });
+  console.warn = quietWarn;
+  const e = embedJson(fallback.embeds[0]);
+  assertTrue(!fallback.files?.length && !fallback.content, "no image, and no loss line above the embed (the embed has it)");
+  assertEqual(e.title, "Gym Leader Brock", "titled with the opponent");
+  assertTrue(e.thumbnail.url.endsWith("/trainers_2/brock-gen3.png"), "Brock's sprite");
+  assertEqual([e.author?.name, e.author?.icon_url, e.description], ["Boulder Badge", badgeUrl("brock"), "Rock"], "the Badge with its image, and the type");
+  const field = (name) => e.fields.find((f) => f.name === name)?.value;
+  assertEqual(field("Win"), "Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "the prize");
+  assertEqual(field("Lose"), "1,234 CC (10% of your CC)", "the exact loss, privately");
+  assertEqual(embedJson(pub.embeds[0]).fields.find((f) => f.name === "Lose").value, "10% of their CC", "and 10% in public");
 }
 
 section("Not now and expiry");
@@ -286,7 +317,7 @@ section("Not now and expiry");
   const t = harness();
   await t.run("brock");
   const b = await t.click("cancel");
-  assertEqual(b.updates[0], { content: "Not now.", embeds: [], components: [] }, "Not now closes the preview");
+  assertEqual(b.updates[0], { content: "Not now.", embeds: [], components: [], attachments: [] }, "Not now closes the preview and its card");
   assertEqual(t.log.channel.length, 0, "nothing public");
   assertEqual([t.trainerData.A.challenge, t.trainerData.A.cc], [undefined, 12345], "no attempt used, no CC lost");
 
@@ -294,7 +325,7 @@ section("Not now and expiry");
   await x.run("brock");
   x.collectors[0].stop("time");
   await x.collectors[0].ended;
-  assertEqual(x.log.replyEdits[0], { content: "Preview expired.", embeds: [], components: [] }, "expiry closes the preview");
+  assertEqual(x.log.replyEdits[0], { content: "Preview expired.", embeds: [], components: [], attachments: [] }, "expiry closes the preview and its card");
   assertEqual(x.trainerData.A.challenge, undefined, "and costs nothing");
 }
 
@@ -307,10 +338,10 @@ section("Fight! and a loss");
   assertEqual(b.edits[0].components, [], "and drops the buttons");
   assertEqual([t.trainerData.A.cc, t.trainerData.A.challenge.attempts], [11111, 1], "CC and the attempt are recorded");
   assertEqual(t.log.channel.length, 2, "the intro card and the replay post");
-  const intro = embedJson(t.log.channel[0].opts.embeds[0]);
-  assertEqual(intro.fields.find((f) => f.name === "Lose").value, "10% of their CC", "the intro card says 10%");
-  assertEqual(intro.fields.find((f) => f.name === "Win").value, "Giovanni sprite, 12,000 CC, 3 stones, and 25 Dust", "and the prize at stake");
-  assertTrue(!(t.log.channel[0].opts.content ?? "").includes("<@"), "the intro card mentions no one");
+  const intro = t.log.channel[0].opts;
+  assertTrue(card(intro).description.endsWith("Win: Giovanni sprite, 12,000 CC, 3 stones, and 25 Dust. Lose: 10% of CC."),
+    "the intro is the VS card, with the prize at stake and 10%");
+  assertTrue(!(intro.content ?? "").includes("<@") && !(intro.content ?? "").includes("CC"), "and no mention or amount above it");
   const pub = t.publicText();
   assertTrue(!pub.includes("1,234") && !pub.includes("1234") && !pub.includes("11,111") && !pub.includes("11111"), "no amount or balance in public");
   assertTrue(pub.includes("💸 Lost 10% of their CC."), "the replay ends with the loss line");
@@ -334,7 +365,7 @@ section("Clicks while a Fight! is saving");
     reply: async (o) => { fight.replies.push(o); }, followUp: async (o) => { fight.followUps.push(o); } };
   const fighting = t.collectors[0].h.collect(fight);
   await new Promise((r) => setTimeout(r, 0));
-  assertEqual(fight.updates[0], { content: "⚔️ Your challenge is starting below.", embeds: [], components: [] }, "Fight! drops the buttons at once");
+  assertEqual(fight.updates[0], { content: "⚔️ Your challenge is starting below.", embeds: [], components: [], attachments: [] }, "Fight! drops the buttons at once");
   const notNow = await t.click("cancel");
   assertEqual([notNow.replies[0], notNow.updates, notNow.followUps], [{ content: "This challenge already happened.", flags: 64 }, [], []],
     "Not now during the save is answered privately and changes nothing");
@@ -353,8 +384,13 @@ section("Fight! and a first win");
   await t.run("brock");
   const b = await t.click("fight");
   assertEqual(textOf(b.edits[0]), "You won! 🎁 Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "the private reply shows the prize");
-  const intro = embedJson(t.log.channel[0].opts.embeds[0]);
-  assertEqual(intro.fields.find((f) => f.name === "Win").value, "Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "the intro card shows the prize before it was won");
+  const intro = card(t.log.channel[0].opts);
+  assertTrue(intro.description.includes("The Boulder Badge is on the line. Win: Brock sprite, 2,500 CC, 1 stone, and 5 Dust."),
+    "the intro card shows the Badge and prize before they were won");
+  // The intro posts after the win is saved; it must still show the Badge as not yet earned.
+  const boulder = cardSlots({ kind: "gym", badge: {} }).badges[0];
+  assertTrue(await brightnessAt(intro.attachment, boulder.x + boulder.size / 2, boulder.y + boulder.size / 2) < 400,
+    "the challenger's Boulder Badge is still dim on it");
   assertTrue(t.publicText().includes("Earned the Boulder Badge"), "the result shows the Badge");
 }
 
@@ -393,7 +429,7 @@ section("Single fight: the private result comes after the replay");
   const t = harness();
   await t.run(LOSES);
   const b = await t.click("fight");
-  assertEqual(b.updates[0], { content: "⚔️ Your challenge is starting below.", embeds: [], components: [] }, "Fight! points to the channel first");
+  assertEqual(b.updates[0], { content: "⚔️ Your challenge is starting below.", embeds: [], components: [], attachments: [] }, "Fight! points to the channel first");
   const privateAt = t.log.seq.findIndex(([k, o]) => k === "private" && textOf(o).includes("You lost 1,234 CC."));
   const lastPublic = t.log.seq.findLastIndex(([k]) => k === "public");
   assertTrue(privateAt > lastPublic && lastPublic > 0, "the exact loss arrives after the replay's last frame");
@@ -432,7 +468,7 @@ section("Elite Four run: picking a Revive");
     if (k === 1) earlier = await t.pick(t.log.menus[0]); // an earlier break's button
   });
   const [menu0, menu1] = t.log.menus;
-  assertEqual(fight.updates[0], { content: "⚔️ Your challenge is starting below.", embeds: [], components: [] }, "Fight! points to the channel");
+  assertEqual(fight.updates[0], { content: "⚔️ Your challenge is starting below.", embeds: [], components: [], attachments: [] }, "Fight! points to the channel");
   assertTrue(atFirstBreak.startsWith("⚔️ <@A> · Elite Four · Lorelei (1 of 4)") && atFirstBreak.endsWith("\n⏳ <@A> is choosing a Pokémon to revive…"),
     "during the pick, the replay says the player is choosing");
   assertEqual([menu0.opts.content, menu0.opts.flags], ["Next: Bruno · Fighting\nPick a Pokémon to revive · 60 s", 64], "the menu is private and names who's next");
@@ -570,7 +606,7 @@ section("A run that stopped unexpectedly");
   startRun({ trainerData: preview.trainerData, userId: "A", seed: 1, maxLoss: 1234, channelId: "C1", now: new Date() });
   preview.trainerData.A.challenge.run.updatedAt -= 16 * 60 * 1000;
   await preview.run("brock");
-  assertEqual(embedJson(preview.log.replies.at(-1).embeds[0]).title, "Gym Leader Brock", "or the preview, after finishing it");
+  assertTrue(card(preview.log.replies.at(-1)).description.startsWith("Ash vs Gym Leader Brock"), "or the preview, after finishing it");
 
   const fresh = harness(runner());
   startRun({ trainerData: fresh.trainerData, userId: "A", seed: 1, maxLoss: 1234, channelId: "C1", now: new Date() });

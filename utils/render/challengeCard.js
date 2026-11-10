@@ -56,23 +56,37 @@ export function challengeCardView(key, preview, user, { displayName }) {
   };
 }
 
+const list = (items) => new Intl.ListFormat("en", { type: "conjunction" }).format(items);
+
+/** The image's description (Discord's alt text): what the card shows, in words. */
+export function cardAltText(v) {
+  const who = v.kind === "elite4"
+    ? `the Elite Four: ${list(v.opponents.map((o) => o.name))}`
+    : `${v.opponents[0].title} ${v.opponents[0].name}${v.type ? ` (${v.type})` : ""}`;
+  const stake = v.rematch ? "Rematch." : v.badge ? `The ${v.badge.name} is on the line.` : null;
+  return [`${v.player.name} vs ${who}.`, stake, `Win: ${v.win ?? "EXP only"}.`, "Lose: 10% of CC."].filter(Boolean).join(" ");
+}
+
 /** Where the card draws its trainers and the Badge medallion (also used by tests). */
 export function cardSlots(v) {
   const trainerBox = (cx) => ({ x: cx - TRAINER_BOX / 2, y: FLOOR + 6 - TRAINER_BOX, w: TRAINER_BOX, h: TRAINER_BOX });
   const player = { cx: 190, floor: FLOOR, box: trainerBox(190) };
+  // The challenger's Badges: 16 px art at 2×.
+  const badges = GYM_BADGES.map((_, i) => ({ x: M + 16 + i * 38, y: M + 94, size: 32 }));
   if (v.kind === "elite4") {
     const cellW = 124, x0 = W - M - 16 - 4 * cellW;
     const opponents = v.opponents.map((_, i) => {
       const x = x0 + i * cellW;
       return { cx: x + cellW / 2, floor: 400, box: { x, y: 190, w: cellW, h: 216 } };
     });
-    return { player, opponents, medallion: null };
+    return { player, opponents, medallion: null, badges };
   }
   const cx = v.badge ? 1000 : 920;
   return {
     player,
     opponents: [{ cx, floor: FLOOR, box: trainerBox(cx) }],
     medallion: v.badge ? { cx: 760, cy: 322, r: 66, size: 96 } : null, // 96 px = the 16 px Badge art at 6×
+    badges,
   };
 }
 
@@ -157,15 +171,14 @@ async function drawTrainer(ctx, file, cx, floor, accent, { scale = 4, box = TRAI
   }
 }
 
-async function drawPlayer(ctx, v, slot) {
+async function drawPlayer(ctx, v, { player: slot, badges }) {
   eyebrowAndTitle(ctx, "CHALLENGER", v.player.name, M + 16, "left", 520);
-  // The challenger's Badges: 16 px art at 2×.
   ctx.imageSmoothingEnabled = false;
   for (const [i, b] of v.player.badges.entries()) {
     const sprite = await loadBadgeSprite(b.file);
     if (!sprite) continue;
     ctx.globalAlpha = b.earned ? 1 : 0.2;
-    ctx.drawImage(sprite.image, M + 16 + i * 38, M + 94, 32, 32);
+    ctx.drawImage(sprite.image, badges[i].x, badges[i].y, badges[i].size, badges[i].size);
   }
   ctx.globalAlpha = 1;
   ctx.imageSmoothingEnabled = true;
@@ -314,7 +327,7 @@ export async function renderChallengeCard(v) {
   drawBackground(ctx, W, H);
   drawHalves(ctx, v.accent);
   const slots = cardSlots(v);
-  await drawPlayer(ctx, v, slots.player);
+  await drawPlayer(ctx, v, slots);
   await drawOpponents(ctx, v, slots);
   drawVs(ctx);
   drawPrizeBar(ctx, v);

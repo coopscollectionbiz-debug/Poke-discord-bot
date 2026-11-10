@@ -10,7 +10,7 @@
 
 import {
   SlashCommandBuilder, MessageFlags, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType,
-  PermissionFlagsBits,
+  PermissionFlagsBits, AttachmentBuilder,
 } from "discord.js";
 import { randomInt, randomUUID } from "crypto";
 import { logEvent } from "../utils/eventLog.js";
@@ -20,6 +20,7 @@ import {
   startRun, continueRun, finishOpenRun, isRunStale, attachRunMessage, challengeLogEntry,
 } from "../utils/challenge/runChallenge.js";
 import { badgeUrl } from "../utils/challenge/badgeImages.js";
+import { challengeCardView, renderChallengeCard, cardAltText } from "../utils/render/challengeCard.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../public/picker-pokemon/badges.js";
 import {
   playChallenge, playChallengeFight, showChoosing, showRunResult, challengeNames, prizeText,
@@ -82,6 +83,7 @@ export function boardEmbed(user, now = new Date()) {
 
 // `preview` is previewChallenge(user, key). The private preview shows the
 // exact loss; the public intro card never does (10× it is the balance).
+// The VS card's fallback when it can't render.
 export function previewEmbed(key, preview, { exactLoss = false } = {}) {
   const challenge = CHALLENGES[key];
   const first = challenge.opponents[0];
@@ -95,6 +97,23 @@ export function previewEmbed(key, preview, { exactLoss = false } = {}) {
     { name: "Win", value: preview.prize ? prizeText(key, preview.prize) : "Rematch: EXP only" },
     { name: "Lose", value: exactLoss ? `${n(preview.loss)} CC (10% of your CC)` : "10% of their CC" },
   );
+}
+
+// The preview and the public intro: the VS card, or previewEmbed when it
+// can't render. `view` is challengeCardView(), built before the fight is
+// saved so the intro shows the Badge still on the line. Only the private
+// preview (exactLoss) says the amount, in text: the card itself goes public.
+export async function previewMessage(key, preview, view, { exactLoss = false, render = renderChallengeCard } = {}) {
+  try {
+    const png = await render(view);
+    return {
+      ...(exactLoss && { content: `A loss costs you **${n(preview.loss)} CC**.` }),
+      files: [new AttachmentBuilder(png, { name: "challenge.png", description: cardAltText(view) })],
+    };
+  } catch (err) {
+    console.warn("⚠️ challenge card render failed; sending the embed:", err?.message || err);
+    return { embeds: [previewEmbed(key, preview, { exactLoss })] };
+  }
 }
 
 const privateResult = (outcome) => {
@@ -252,8 +271,9 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   // A loss never costs more than this preview shows, even if the balance grows before Fight!.
   const shown = previewChallenge(trainerData[userId], key);
   const nonce = randomUUID();
+  const view = challengeCardView(key, shown, trainerData[userId], { displayName: playerName });
   const response = await interaction.reply({
-    embeds: [previewEmbed(key, shown, { exactLoss: true })],
+    ...(await previewMessage(key, shown, view, { exactLoss: true })),
     components: [new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId(`challenge_fight:${nonce}`).setLabel("Fight!").setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId(`challenge_cancel:${nonce}`).setLabel("Not now").setStyle(ButtonStyle.Secondary),
@@ -277,22 +297,24 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
     settled = true;
     if (i.customId.startsWith("challenge_cancel")) {
       collector.stop("cancel");
-      return i.update({ content: "Not now.", embeds: [], components: [] });
+      return i.update({ content: "Not now.", embeds: [], components: [], attachments: [] });
     }
     // Drop the buttons right away: the save below can wait behind another one.
-    await i.update({ content: "⚔️ Your challenge is starting below.", embeds: [], components: [] });
+    await i.update({ content: "⚔️ Your challenge is starting below.", embeds: [], components: [], attachments: [] });
     const isRun = key === "elite4";
     const first = await lockUser(userId, async () => {
       // Read the live record now: the dashboard or another command may have replaced it since the preview.
       const live = trainerData[userId];
       const atStake = live && previewChallenge(live, key);
+      // Built before the fight changes the record, so the intro shows the Badge still on the line.
+      const card = live && challengeCardView(key, atStake, live, { displayName: playerName });
       const seed = randomInt(0, 2 ** 31 - 1);
       const out = isRun
         ? startRun({ trainerData, userId, seed, maxLoss: shown.loss, channelId: interaction.channelId })
         : runChallenge({ trainerData, userId, key, seed, maxLoss: shown.loss });
       // Saved before the replay, so a failed or slow replay never changes the result.
       if (out.ok) await enqueueSave(trainerData, { force: true });
-      return { ...out, atStake };
+      return { ...out, atStake, card };
     });
 
     collector.stop("fought");
@@ -304,7 +326,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
     let posted = true;
     let outcome = first;
     try {
-      await interaction.channel.send({ embeds: [previewEmbed(key, first.atStake)] });
+      await interaction.channel.send(await previewMessage(key, first.atStake, first.card));
     } catch (err) {
       console.warn("⚠️ challenge post failed:", err?.message || err);
       posted = false;
@@ -330,6 +352,6 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   });
 
   collector.on("end", (_, reason) => {
-    if (reason === "time" && !settled) interaction.editReply({ content: "Preview expired.", embeds: [], components: [] }).catch(() => {});
+    if (reason === "time" && !settled) interaction.editReply({ content: "Preview expired.", embeds: [], components: [], attachments: [] }).catch(() => {});
   });
 }

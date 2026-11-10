@@ -9,7 +9,7 @@
 import fs from "fs";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
-import { challengeCardView, renderChallengeCard, cardSlots, prizeLines, CHALLENGE_CARD_SIZE } from "../utils/render/challengeCard.js";
+import { challengeCardView, renderChallengeCard, cardSlots, cardAltText, prizeLines, CHALLENGE_CARD_SIZE } from "../utils/render/challengeCard.js";
 import { previewChallenge } from "../utils/challenge/runChallenge.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { COLOR } from "../utils/render/tokens.js";
@@ -94,6 +94,18 @@ section("The Elite Four, Blue and Red");
   assertEqual([red.eyebrow, red.title, red.badge], ["POKÉMON TRAINER", "Red", null], "Red");
 }
 
+section("Alt text");
+// Discord reads an image's description to screen readers; it says what the card shows.
+assertEqual(cardAltText(view("brock")),
+  "coop13 vs Gym Leader Brock (Rock). The Boulder Badge is on the line. Win: Brock sprite, 2,500 CC, 1 stone, and 5 Dust. Lose: 10% of CC.",
+  "a Gym");
+assertEqual(cardAltText(view("brock", player({ won: { brock: "d" } }))),
+  "coop13 vs Gym Leader Brock (Rock). Rematch. Win: EXP only. Lose: 10% of CC.", "a rematch");
+assertEqual(cardAltText(view("elite4", player({ won: allGyms }))),
+  "coop13 vs the Elite Four: Lorelei, Bruno, Agatha, and Lance. Win: Lorelei sprite, Bruno sprite, Agatha sprite, Lance sprite, 30,000 CC, 4 stones, and 40 Dust. Lose: 10% of CC.",
+  "the Elite Four");
+assertEqual(cardAltText(view("red")).split(". ")[0], "coop13 vs Pokémon Trainer Red", "Red");
+
 section("The prize line");
 {
   const ctx = createCanvas(10, 10).getContext("2d");
@@ -139,6 +151,13 @@ section("Render");
   assertTrue(differing(gymPx, noLeader, leader) > 1000, "the leader stands in their box");
   const noPlayer = await pixels(await renderChallengeCard({ ...gym, player: { ...gym.player, trainerFile: null } }));
   assertTrue(differing(gymPx, noPlayer, cardSlots(gym).player.box) > 1000, "the challenger stands in theirs");
+
+  const badges = cardSlots(gym).badges;
+  assertEqual(badges.length, 8, "eight Badge slots for the challenger");
+  const surge = await pixels(await renderChallengeCard(view("surge", player({ won: { brock: "d" } }))));
+  const boulder = badges[0];
+  assertTrue(brightness(surge, boulder.x + boulder.size / 2, boulder.y + boulder.size / 2) > 600, "an earned Badge is lit");
+  assertTrue(brightness(gymPx, boulder.x + boulder.size / 2, boulder.y + boulder.size / 2) < 400, "one not earned yet is dim");
 
   const e4Px = await pixels(out.elite4);
   const boxes = cardSlots(cases.elite4).opponents.map((o) => o.box);

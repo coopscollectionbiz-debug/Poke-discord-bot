@@ -5,7 +5,7 @@
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { buildTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
-import { buildResultEmbed, createQueue, playBattle, resultScreens } from "../utils/battle/playback.js";
+import { buildResultEmbed, createQueue, expSummary, playBattle, resultScreens } from "../utils/battle/playback.js";
 import { pickFrameTurns } from "../utils/battle/render.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
@@ -104,20 +104,40 @@ section("Both locks");
 
 section("Result embed");
 {
+  const names = { A: "Ash", B: "Gary" };
   const td = world();
   const out = open(td, 1);
-  out.exp.A[0] = { ...out.exp.A[0], fromLevel: 33, toLevel: 34, learned: ["Flamethrower"] };
-  const names = { A: "Ash", B: "Gary" };
-  const loser = out.winnerId === "A" ? "B" : "A";
-  const embed = buildResultEmbed(out, names).data;
-  assertEqual(embed.title, `🏆 ${names[out.winnerId]} defeated ${names[loser]}!`, "title names the winner and loser");
-  assertTrue(!embed.description.includes("Won in") && embed.description.includes("MVP"), "description leads with the MVP, no turn count");
-  const text = JSON.stringify(embed.fields);
-  assertTrue(text.includes(`⬆️ **${out.exp.A[0].name}** Lv 33 → **34** · learned **Flamethrower**`), "EXP lines show level-ups and learned moves");
-  assertTrue(text.includes(`Ash **${td.A.battle.rating}**`) && text.includes(`Gary **${td.B.battle.rating}**`), "both Battle ratings are shown");
-  assertTrue(!embed.description.includes("pot"), "Open battles have no pot");
   const wager = runBattle({ trainerData: world(), challengerId: "A", defenderId: "B", mode: "wager", stake: 30, seed: 3, now: NOW });
-  assertTrue(buildResultEmbed(wager, names).data.description.includes("**60 CC** pot"), "Wager battles show the pot");
+  for (const [label, outcome] of [["Open", out], ["Wager", wager]]) {
+    const embed = buildResultEmbed(outcome, names).data;
+    assertEqual(embed.fields.map((f) => f.name), ["Battle rating"], `${label}: the only field is Battle rating`);
+    assertTrue(!embed.title && !embed.description, `${label}: no title or description (the image shows the rest)`);
+  }
+  const value = buildResultEmbed(out, names).data.fields[0].value;
+  assertTrue(value.includes(`Ash **${td.A.battle.rating}**`) && value.includes(`Gary **${td.B.battle.rating}**`), "both new ratings are shown");
+  const moved = { ...out, rating: { A: { from: 1000, to: 1016 }, B: { from: 1000, to: 984 } } };
+  assertEqual(buildResultEmbed(moved, names).data.fields[0].value, "Ash **1016** ▲16\nGary **984** ▼16", "each change shows its direction and size");
+}
+
+section("Private EXP summary");
+{
+  const names = { A: "Ash", B: "Gary" };
+  const fake = {
+    sides: [{ userId: "A" }, { userId: "B" }],
+    exp: {
+      A: [
+        { name: "Luxio", fromLevel: 16, toLevel: 17, gained: 900, learned: ["Spark"] },
+        { name: "Trubbish", fromLevel: 4, toLevel: 4, gained: 80, learned: [] },
+      ],
+      B: [{ name: "Mudkip", fromLevel: 9, toLevel: 9, gained: 45, learned: [] }],
+    },
+  };
+  assertEqual(expSummary(fake, "A", names), [
+    "EXP from your battle with Gary:",
+    "Luxio Lv 16 → **17** · +900 EXP",
+    "Trubbish Lv 4 · +80 EXP",
+  ].join("\n"), "every Pokémon's gain, with the level-up shown");
+  assertEqual(expSummary(fake, "B", names), "EXP from your battle with Ash:\nMudkip Lv 9 · +45 EXP", "the Defender's summary names the Challenger");
 }
 
 section("Result text box");

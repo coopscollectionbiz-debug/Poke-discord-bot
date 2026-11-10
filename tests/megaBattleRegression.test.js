@@ -3,8 +3,10 @@
 // battles are unchanged. 3,000 deterministic battles without Megas
 // (tools/dev/battle-corpus.mjs) must reproduce the digests recorded with the
 // pre-M2 engine (M1 commit 880ba6c8) exactly: winner, turns, end reason,
-// full log, knockouts, HP snapshots, surge, power, EXP, Elo, and both
-// players' post-battle records — with Mega flags off AND fully on.
+// full log, knockouts, HP snapshots, surge, power, fighters, EXP and the
+// EXP applied — with Mega flags off AND fully on. (Corpus v2, re-recorded
+// from 880ba6c8 for ranked battles: open-battle engine output only; ratings
+// and wagers changed by design and are covered in tests/runBattle.test.js.)
 // ==========================================================
 
 import fs from "fs";
@@ -26,7 +28,7 @@ function compare(current) {
 }
 
 section("Golden corpus");
-assertEqual([golden.version, golden.count, golden.engine], [1, 3000, "Poke-discord-bot-mega-m1"], "3,000 digests recorded with the pre-M2 engine (M1 worktree, commit 880ba6c8)");
+assertEqual([golden.version, golden.count, golden.engine], [2, 3000, "Poke-discord-bot-mega-m1"], "3,000 digests recorded with the pre-M2 engine (M1 worktree, commit 880ba6c8)");
 assertTrue(golden.digests.some((d) => d.turns === 300) && new Set(golden.digests.map((d) => d.winner)).size === 2, "the corpus includes a turn-cap battle and wins for both sides");
 
 section("Mega Evolution switched off (production default)");

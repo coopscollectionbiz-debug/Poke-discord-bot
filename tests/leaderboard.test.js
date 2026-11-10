@@ -5,8 +5,9 @@
 
 import { assertEqual, section, finish } from "./harness.js";
 import { rankBattleRatings } from "../commands/leaderboard.js";
+import { RANKED } from "../utils/battle/tuning.js";
 
-const player = (id, rating, wins, losses) => ({ id, name: `P${id}`, battle: { rating, wins, losses } });
+const player = (id, rating, wins, losses) => ({ id, name: `P${id}`, battle: { rating, wins, losses, season: RANKED.season } });
 const td = {};
 for (let i = 1; i <= 12; i++) td[i] = player(String(i), 1000 + i * 10, i, 1);
 td.tieA = player("tieA", 1200, 3, 0);

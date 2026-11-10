@@ -229,6 +229,23 @@ Sidebar: Overview · Teams · Collection · Trainers · Bag · Achievements · S
 | B11 | Separate ranked and casual records; reset ranked ratings; streak counters | Game-logic change; owner approval |
 | B2 | Detail endpoint returning `slotView()` (unchanged) | Read-only |
 
+### Ranked battles (built on `feature/teams-battle-team`)
+
+- **Modes:**
+  - `/battle opponent` is **casual**: Display teams, real Levels, Underdog surge, unrated. It writes `user.casual` (W/L and streaks) and earns no battle achievements.
+  - `/battle opponent ranked:True` is **ranked**: Battle teams at Lv 50, no surge, rated in `user.battle`, with battle achievements. No consent is needed.
+  - `/battle opponent wager:N` is ranked plus the accepted pot.
+  - EXP uses real Levels in every mode. Only the Challenger earns EXP in casual and ranked battles; both earn it in wagers, as before.
+- **Season reset:** `RANKED.season` (utils/battle/tuning.js) resets every ranked record. Readers (`rankedRecord`) treat an older season as 1000, 0–0. The first ranked write archives the old record to `battle.past`. Daily caps are shared by every mode.
+- **Achievements:** battle achievements (wins, rating, streaks, upsets) count ranked and wager battles only, per the owner's decision. Their progress uses lifetime ranked wins and the best rating ever reached (`lifetimeRanked`), so the season reset never takes back achievement progress.
+- **Battle engine unchanged:** `tests/megaBattleRegression.test.js` (corpus v2, re-recorded from 880ba6c8) proves 3,000 open battles are identical to the pre-Mega engine.
+- **`/leaderboard`:** ranks this season's ranked rating, and shows each player's Battle team lead.
+- **`/showbattlecard`** (option 2): `utils/render/battleCard.js` and `commands/showbattlecard.js`.
+- **Release checklist (owner):**
+  1. Register commands (`/showbattlecard` is new; `/battle` gains `ranked`). Use `tools/commands-diff.mjs --expect-add showbattlecard`; the `/battle` change shows as a changed command.
+  2. Dry-run the B7 move-over on a copy of production data: `node tools/migrate-battle-teams.mjs <copy>`. Review the dropped-mythic counts before approving the real run. Until it runs, players have no Battle team and see "Copy my Display team" on the Teams page.
+  3. The rating reset happens by itself (season 1). Players' old ratings stay in `battle.past`.
+
 ### Acceptance criteria
 
 **E1 Teams:**

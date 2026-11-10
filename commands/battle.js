@@ -1,7 +1,9 @@
 // ==========================================================
-// /battle — challenge another trainer's Team to an automatic Battle.
-// Open battle: runs immediately, no CC. Wager battle: the Defender must
-// accept first (see the wager flow below).
+// /battle — challenge another trainer to an automatic Battle.
+// Casual (default): Display teams at real Levels, unrated, runs immediately.
+// Ranked (ranked:True): Battle teams at Lv 50, rated, runs immediately.
+// Wager: Battle teams at Lv 50, rated; the Defender must accept first
+// (see the wager flow below).
 // ==========================================================
 
 import {
@@ -10,7 +12,7 @@ import {
 } from "discord.js";
 import { randomInt, randomUUID } from "crypto";
 import { logEvent } from "../utils/eventLog.js";
-import { battleBlock, buildTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
+import { battleBlock, buildBattleTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
 import { playBattle, expSummary } from "../utils/battle/playback.js";
 import { teamPower } from "../utils/battle/power.js";
 import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/battle/wager.js";
@@ -22,8 +24,10 @@ export const data = new SlashCommandBuilder()
   .setName("battle")
   .setDescription("Battle another trainer's Team")
   .addUserOption((o) => o.setName("opponent").setDescription("Who to battle").setRequired(true))
+  .addBooleanOption((o) =>
+    o.setName("ranked").setDescription("Ranked: Battle teams at Lv 50, changes your rating"))
   .addIntegerOption((o) =>
-    o.setName("wager").setDescription("CC each of you puts in the pot (they must accept)").setMinValue(1));
+    o.setName("wager").setDescription("CC each of you puts in the pot (they must accept). Always ranked").setMinValue(1));
 
 // Battles and wager offers are posted as new channel messages.
 const CHANNEL_PERMISSIONS = [
@@ -37,6 +41,8 @@ export function refusal(reason, opponentId) {
     no_perms: "I can't post battles in this channel. Try another one.",
     no_team_challenger: "Set a Team on your dashboard before battling.",
     no_team_defender: `<@${opponentId}> hasn't set a team yet.`,
+    no_battle_team_challenger: "Ranked and wager battles use your Battle team. Set it on the Teams page: run /dashboard.",
+    no_battle_team_defender: `<@${opponentId}> hasn't set a Battle team yet, so you can't play a ranked or wager battle with them.`,
     cap_daily: "You've used all 10 battles for today. Battles reset at midnight UTC.",
     cap_opponent: `You've battled <@${opponentId}> 3 times today. Try someone else.`,
     defender_cap_daily: `<@${opponentId}> has no battles left today.`,
@@ -86,7 +92,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   if (opponent.bot) return refuse("bot");
   if (interaction.appPermissions && !interaction.appPermissions.has(CHANNEL_PERMISSIONS)) return refuse("no_perms");
 
-  const mode = wager != null ? "wager" : "open";
+  const mode = wager != null ? "wager" : interaction.options.getBoolean("ranked") ? "ranked" : "open";
   const early = battleBlock({ trainerData, challengerId, defenderId: opponent.id, mode });
   if (early) return refuse(early);
   if (mode === "wager") return offer(interaction, trainerData, lockUser, enqueueSave, opponent, wager);
@@ -114,7 +120,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
     console.warn("⚠️ battle post failed:", err?.message || err);
     await interaction.editReply("Your battle counted, but I couldn't post it in this channel.").catch(() => {});
   }
-  await sendExp(interaction, outcome, challengerId, names, trainerData[challengerId]); // only the Challenger earns EXP in an Open battle
+  await sendExp(interaction, outcome, challengerId, names, trainerData[challengerId]); // only the Challenger earns EXP in casual and ranked battles
 }
 
 // ----------------------------------------------------------
@@ -145,7 +151,7 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
   });
   if (!offered.ok) return interaction.editReply(refusal(offered.reason, defenderId));
 
-  const power = (id) => teamPower(buildTeam(trainerData[id]));
+  const power = (id) => teamPower(buildBattleTeam(trainerData[id])); // Battle teams, at Lv 50
   // Everything between holding the Stake and listening for the buttons is
   // either inside this try (a failure refunds) or can't throw, so a Stake is
   // never held with nobody listening.

@@ -51,7 +51,7 @@ export function trainerCardView(user, { displayName, trainer }) {
  * on-card pixels (so its pixel art lines up with the sprite). Animated through
  * the stage; one still frame when TRAINERS_ANIMATED=0 or for PNG cards.
  */
-function trainerBackdrop(ctx, stage, { tier, sprite, cx, box, panel, floor }) {
+export function trainerBackdrop(ctx, stage, { tier, sprite, cx, box, panel, floor }) {
   const s = spriteScale(sprite.width, sprite.height, box.w, box.h, box.scale);
   const w = Math.round(sprite.width * s), h = Math.round(sprite.height * s);
   const x = Math.round(cx - w / 2), y = Math.round(box.floor - h);

@@ -64,18 +64,26 @@ export function expSummary(outcome, userId, names) {
 export function buildResultEmbed(outcome, names) {
   const embed = new EmbedBuilder().setColor(0xf1c40f);
   if (outcome.mode === "wager") embed.setDescription(`💰 ${names[outcome.winnerId]} takes the **${2 * outcome.stake} CC** pot!`);
-  const rating = Object.entries(outcome.rating)
+  const entries = Object.entries(outcome.rating ?? {});
+  if (!entries.length) {
+    // Casual (open) battles are unrated.
+    embed.addFields({ name: "Casual battle", value: `${names[outcome.winnerId]} wins! Unrated. For a rated battle: /battle ranked:True` });
+    return embed;
+  }
+  const rating = entries
     .map(([userId, r]) => `${names[userId]} **${r.to}** ${r.to >= r.from ? "▲" : "▼"}${Math.abs(r.to - r.from)}`)
     .join("\n");
-  embed.addFields({ name: "Battle rating", value: rating });
+  embed.addFields({ name: "Ranked rating", value: rating });
   return embed;
 }
 
 function header(outcome) {
   const [c, d] = outcome.sides.map((s) => `<@${s.userId}>`);
   const intro = outcome.mode === "wager"
-    ? `⚔️ ${c} vs ${d} — Wager battle for ${outcome.stake} CC each!`
-    : `⚔️ ${c} challenged ${d}!`;
+    ? `⚔️ ${c} vs ${d} — Wager battle for ${outcome.stake} CC each! Battle teams at Lv 50.`
+    : outcome.mode === "ranked"
+      ? `⚔️ ${c} challenged ${d} to a ranked battle! Battle teams at Lv 50.`
+      : `⚔️ ${c} challenged ${d}!`;
   if (!outcome.surge) return intro;
   return `${intro}\n🔥 The crowd is behind <@${outcome.sides[outcome.surge.side].userId}>! Underdog surge!`;
 }

@@ -3,10 +3,11 @@
 // Synthetic players for /showteam previews and tests. Invented records only:
 // never copy production player data here.
 // ==========================================================
+import { RANKED } from "../../utils/battle/tuning.js";
 
 const exp = (level, frac = 0.5) => ({ exp: Math.floor(level ** 3 + ((level + 1) ** 3 - level ** 3) * frac) });
 
-function player({ team, owned = {}, levels = {}, tp = 12_480, battle = { rating: 1184, wins: 23, losses: 9 }, trainer = "cynthia.png" }) {
+function player({ team, owned = {}, levels = {}, tp = 12_480, battle = { rating: 1184, wins: 23, losses: 9, season: RANKED.season }, trainer = "cynthia.png" }) {
   const pokemon = {};
   const training = {};
   for (const [id, variant] of team) {
@@ -41,7 +42,7 @@ export const FIXTURES = {
       team: [[121, "normal"], [134, "shiny"], [55, "normal"]],
       levels: { "121:normal": [27, 0.3], "134:shiny": [22, 0.6], "55:normal": [19, 0.1] },
       tp: 2_150,
-      battle: { rating: 1000, wins: 2, losses: 3 },
+      battle: { rating: 1000, wins: 2, losses: 3, season: RANKED.season },
       trainer: "hilda-masters.png",
     }),
   },
@@ -54,7 +55,7 @@ export const FIXTURES = {
       team: [[249, "shiny"], [555, "normal"], [9999, "normal"], [1025, "normal"], [612, "shiny"], [534, "normal"]],
       levels: { "249:shiny": [100, 0], "555:normal": [44, 0.5], "1025:normal": [70, 0.99], "612:shiny": [64, 0.25], "534:normal": [5, 0] },
       tp: 251_337,
-      battle: { rating: 1999, wins: 1204, losses: 997 },
+      battle: { rating: 1999, wins: 1204, losses: 997, season: RANKED.season },
       trainer: "not-a-real-trainer.png",
     }),
   },
@@ -134,7 +135,7 @@ export function leaderboardWorld() {
   ];
   const td = {};
   for (const [id, name, rating, wins, losses, trainer, lead] of rows) {
-    td[id] = { name, displayedTrainer: trainer, battle: { rating, wins, losses }, pokemon: { [lead]: { normal: 1, shiny: 0 } }, displayedPokemon: [{ id: lead, variant: "normal" }] };
+    td[id] = { name, displayedTrainer: trainer, battle: { rating, wins, losses, season: RANKED.season }, pokemon: { [lead]: { normal: 1, shiny: 0 } }, displayedPokemon: [{ id: lead, variant: "normal" }] };
   }
   return td;
 }

@@ -13,6 +13,7 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
+import { RANKED } from "../utils/battle/tuning.js";
 
 const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ach-expansion-"));
 process.env.TRAINERDATA_DIR = dir;
@@ -239,14 +240,15 @@ section("Evolution families (real graph) and distinct evolved species");
 section("Battle streaks through the real runBattle");
 {
   const fixed = () => 0.5;
-  const mk = (id, team) => { const u = createNewUser(id, `T${id}`); for (const s of team) grantCatch(u, s, "normal", fixed); u.displayedPokemon = team.map((s) => ({ id: s, variant: "normal" })); return u; };
+  const mk = (id, team) => { const u = createNewUser(id, `T${id}`); for (const s of team) grantCatch(u, s, "normal", fixed); u.displayedPokemon = team.map((s) => ({ id: s, variant: "normal" })); u.battleTeam = u.displayedPokemon.map((s) => ({ ...s })); return u; };
   // Evenly matched teams so the real simulation produces both outcomes.
   const td = { A: mk("A", [7, 4]), B: mk("B", [4, 7]) };
   let day = 0;
   const results = [];
   const upsets = { A: 0, B: 0 };
   for (let seed = 1; seed <= 40; seed++) {
-    const out = runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "open", seed, now: new Date(NOW + 86_400_000 * day++) });
+    // Battle achievements count ranked (and wager) battles.
+    const out = runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "ranked", seed, now: new Date(NOW + 86_400_000 * day++) });
     if (!out.ok) continue;
     results.push(out.winnerId);
     if (out.rating[out.loserId].from - out.rating[out.winnerId].from >= 200) upsets[out.winnerId]++;
@@ -261,7 +263,7 @@ section("Battle streaks through the real runBattle");
   const winSeeds = [];
   for (let s = 1; s < 400 && winSeeds.length < 1; s++) {
     const t2 = { X: mk("X", [150, 249, 250]), Y: mk("Y", [10]) };
-    if (runBattle({ trainerData: t2, challengerId: "X", defenderId: "Y", mode: "open", seed: s, now: new Date(NOW) }).winnerId === "X") winSeeds.push(s);
+    if (runBattle({ trainerData: t2, challengerId: "X", defenderId: "Y", mode: "ranked", seed: s, now: new Date(NOW) }).winnerId === "X") winSeeds.push(s);
   }
   const opp = ["B"];
   // Engine-level contract with the exact runBattle event (won true/false).
@@ -282,9 +284,9 @@ section("Battle streaks through the real runBattle");
   assertTrue(!lost.ach?.bat_upset && !lost.stats?.upsetWins, "losing never counts as an upset (no reward for losing)");
   // Upset flag from real ratings.
   const ut = { X: mk("X", [150, 249, 250]), Y: mk("Y", [10]) };
-  ut.X.battle = { rating: 1000, wins: 0, losses: 0, day: "", started: 0, vs: {} };
-  ut.Y.battle = { rating: 1300, wins: 0, losses: 0, day: "", started: 0, vs: {} };
-  const o = runBattle({ trainerData: ut, challengerId: "X", defenderId: "Y", mode: "open", seed: winSeeds[0], now: new Date(NOW) });
+  ut.X.battle = { rating: 1000, wins: 0, losses: 0, day: "", started: 0, vs: {}, season: RANKED.season };
+  ut.Y.battle = { rating: 1300, wins: 0, losses: 0, day: "", started: 0, vs: {}, season: RANKED.season };
+  const o = runBattle({ trainerData: ut, challengerId: "X", defenderId: "Y", mode: "ranked", seed: winSeeds[0], now: new Date(NOW) });
   if (o.winnerId === "X") assertEqual(ut.X.stats.upsetWins, 1, "real battle: 300-point underdog win recorded as an upset");
   else assertTrue(!ut.X.stats?.upsetWins, "real battle: no upset without a win");
   assertEqual([td.A.stats?.upsetWins ?? 0, td.B.stats?.upsetWins ?? 0], [upsets.A, upsets.B], `upsets recorded exactly when the winner was rated 200+ lower before the battle (A ${upsets.A}, B ${upsets.B})`);

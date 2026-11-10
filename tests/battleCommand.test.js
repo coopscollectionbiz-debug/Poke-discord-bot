@@ -25,6 +25,7 @@ const trainer = (id) => {
   u.cc = 100;
   grantCatch(u, 25, "normal", () => 0.5);
   u.displayedPokemon = [{ id: 25, variant: "normal" }];
+  u.battleTeam = [{ id: 25, variant: "normal" }]; // wagers use the Battle team
   return u;
 };
 
@@ -65,6 +66,7 @@ function harness({ sendFails = false, perms = true, offeredReplyFails = false, f
     options: {
       getUser: () => ({ id: opponentId, username: opponentId, bot: false }),
       getInteger: () => wager ?? null,
+      getBoolean: () => null,
       getMember: () => ({ displayName: opponentId }),
     },
     reply: async (o) => { log.replies.push(o.content); },
@@ -110,9 +112,9 @@ section("Challenger's Team gets stronger after the offer");
   const t = harness();
   await t.run("A", "B", 50);
   const nonce = t.trainerData.A.pendingWager.nonce;
-  // B saw A's Pikachu in the offer; A swaps in a Mewtwo before B answers.
+  // B saw A's Pikachu in the offer; A swaps in a Mewtwo (Battle team) before B answers.
   grantCatch(t.trainerData.A, 150, "normal", () => 0.5);
-  t.trainerData.A.displayedPokemon = [{ id: 150, variant: "normal" }];
+  t.trainerData.A.battleTeam = [{ id: 150, variant: "normal" }];
   await t.collectors[0].h.collect(t.button("B", `wager_accept:${nonce}`));
   assertEqual([t.trainerData.A.cc, t.trainerData.B.cc, t.trainerData.A.pendingWager], [100, 100, null], "the Stake is refunded");
   assertEqual(t.log.messages.length, 1, "no battle runs");

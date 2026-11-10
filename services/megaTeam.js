@@ -158,8 +158,8 @@ export function megaBattleBoundary(user, { env = process.env } = {}) {
  * Pure: reads only.
  * @returns {null | {ok:true, key:string, formId:string, profile:object} | {ok:false, reason:string, formId?:string}}
  */
-export function resolveBattleMega(user, { env = process.env } = {}) {
-  const raw = Array.isArray(user?.displayedPokemon) ? user.displayedPokemon : [];
+export function resolveBattleMega(user, { env = process.env, team = user?.displayedPokemon } = {}) {
+  const raw = Array.isArray(team) ? team : []; // `team`: the Display team (default) or the Battle team
   const megaSlots = raw.filter((t) => megaFieldOf(t));
   if (!megaSlots.length) return null;
   if (!isMegaCapabilityEnabled("battle", env)) return { ok: false, reason: "Mega battles are switched off" };

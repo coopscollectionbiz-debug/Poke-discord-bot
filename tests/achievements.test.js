@@ -9,6 +9,7 @@
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
+import { RANKED } from "../utils/battle/tuning.js";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
 
 const dir = await fs.mkdtemp(path.join(os.tmpdir(), "achievements-"));
@@ -85,7 +86,7 @@ section("Normalization");
 // ======================= Progress =======================
 section("Targeted progress");
 {
-  const u = { tp: 0, pokemon: {}, battle: { wins: 0, rating: 1000 } };
+  const u = { tp: 0, pokemon: {}, battle: { wins: 0, rating: 1000, season: RANKED.season } };
   P.retroEvaluate(u, NOW);
   assertEqual(u.ach ?? {}, {}, "a brand-new player unlocks nothing");
   u.pokemon = species([25]);
@@ -126,7 +127,7 @@ section("Targeted progress");
 // ======================= Retroactive =======================
 section("Retroactive recognition");
 {
-  const longtime = { tp: 12000, pokemon: species(range(1, 300), range(1, 12)), battle: { wins: 55, rating: 1450 }, trainers: ["a.png"], customField: { keep: true } };
+  const longtime = { tp: 12000, pokemon: species(range(1, 300), range(1, 12)), battle: { wins: 55, rating: 1450, season: RANKED.season }, trainers: ["a.png"], customField: { keep: true } };
   const before = clone(longtime);
   const n1 = P.retroEvaluate(longtime, NOW);
   assertTrue(n1.length > 10, `a long-time player gets ${n1.length} provable unlocks`);

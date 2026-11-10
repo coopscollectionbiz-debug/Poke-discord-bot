@@ -10,7 +10,7 @@
 
 import { COLOR, TIER, tierColor } from "./tokens.js";
 import {
-  rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth, drawBall,
+  rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth, drawBall, dexNo,
 } from "./primitives.js";
 import { drawSprite } from "./sprites.js";
 
@@ -283,15 +283,25 @@ function drawTop(ctx, view) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(i + 1), bx, by + 1);
+    let nx = bx + 24;
     if (lead) {
       ctx.font = font(15, 800);
       const tw = ctx.measureText("LEAD").width + 22;
       ctx.fillStyle = COLOR.blue;
-      rr(ctx, bx + 24, by - 13, tw, 26, 13);
+      rr(ctx, nx, by - 13, tw, 26, 13);
       ctx.fill();
       ctx.fillStyle = "#ffffff";
-      ctx.fillText("LEAD", bx + 24 + tw / 2, by + 1);
+      ctx.fillText("LEAD", nx + tw / 2, by + 1);
+      nx += tw + 8;
     }
+    // National Pokédex number, on a dark backing so it reads over a sprite.
+    ctx.font = font(16, 800);
+    const dw = ctx.measureText(dexNo(slot.id)).width + 20;
+    ctx.fillStyle = "#101626e6";
+    rr(ctx, nx, by - 13, dw, 26, 13);
+    ctx.fill();
+    ctx.fillStyle = COLOR.textMuted;
+    ctx.fillText(dexNo(slot.id), nx + dw / 2, by + 1);
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
     drawTierPill(ctx, slot.tier, r.x + r.w - 14, r.y + 15);

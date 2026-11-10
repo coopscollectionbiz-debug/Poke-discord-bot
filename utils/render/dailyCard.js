@@ -10,17 +10,22 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { fileURLToPath } from "url";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, drawTag } from "./primitives.js";
+import { rr, font, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, drawTag, dexNo } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
+import { spriteStage } from "./stage.js";
+import { drawDexProgress } from "./dexProgress.js";
 
 export const DAILY_SIZE = Object.freeze({ w: 1000, h: 600 });
+const DEX_H = 68;
+/** Card size: the Pokédex strip (v.dex) adds a row. */
+export const dailySize = (v) => ({ w: DAILY_SIZE.w, h: DAILY_SIZE.h + (v?.dex?.length ? DEX_H + 12 : 0) });
 const M = 16, TILE_Y = 104, TILE_H = 330;
 const TIER_NAME = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", mythic: "Mythic" };
 const fmt = (n) => Number(n ?? 0).toLocaleString("en-US");
 const ITEMS = new URL("../../public/sprites/items/", import.meta.url);
 const icon = (file) => loadImage(fileURLToPath(new URL(file, ITEMS))).catch(() => null);
 
-async function tile(ctx, p, x, w) {
+async function tile(ctx, p, x, w, stage) {
   const y = TILE_Y, accent = p.shiny ? COLOR.gold : tierColor(p.tier);
   ctx.fillStyle = "#1a2135";
   rr(ctx, x, y, w, TILE_H, 16);
@@ -47,7 +52,7 @@ async function tile(ctx, p, x, w) {
   ctx.strokeStyle = `${accent}aa`;
   ctx.stroke();
   const sprite = (await loadStaticSprite(p.id, p.variant)) ?? (await loadPlaceholder());
-  drawSprite(ctx, sprite, cx, floor + 6, w - 40, 160, { scale: 3 });
+  stage.place(ctx, sprite, cx, floor + 6, w - 40, 150, { scale: 3 }, { id: p.id, variant: p.variant });
 
   // Rarity pill (top right) and NEW / +EXP (top left).
   const label = (TIER_NAME[p.tier] ?? "Common").toUpperCase();
@@ -65,8 +70,15 @@ async function tile(ctx, p, x, w) {
   ctx.textBaseline = "middle";
   ctx.fillText(label, x + w - 14 - pw + 14, y + 29);
   ctx.textBaseline = "alphabetic";
-  if (p.isNew) drawTag(ctx, "NEW", x + 14, y + 14, { fill: COLOR.blue, color: "#ffffff", h: 28, size: 15 });
-  else drawTag(ctx, `+${fmt(p.expGained)} EXP`, x + 14, y + 14, { fill: "#16314f", color: COLOR.exp, h: 28, size: 15 });
+  const tw = p.isNew
+    ? drawTag(ctx, "NEW", x + 14, y + 14, { fill: COLOR.blue, color: "#ffffff", h: 28, size: 15 })
+    : drawTag(ctx, `+${fmt(p.expGained)} EXP`, x + 14, y + 14, { fill: "#16314f", color: COLOR.exp, h: 28, size: 15 });
+  // National Pokédex number after the NEW / +EXP tag.
+  ctx.font = font(17, 800);
+  ctx.fillStyle = COLOR.textMuted;
+  ctx.textBaseline = "middle";
+  ctx.fillText(dexNo(p.id), x + 14 + tw + 12, y + 29);
+  ctx.textBaseline = "alphabetic";
 
   // Name, then Level + types.
   const nm = fitFont(ctx, p.name, w - 40 - (p.shiny ? 30 : 0), 36, 24, 800);
@@ -106,10 +118,11 @@ async function reward(ctx, img, value, label, x, y) {
 /**
  * @param v { pokemon: [catchView, catchView], cc, tp, stone, balance: { cc, tp }, rankUp: string|null, note }
  */
-export async function renderDailyCard(v) {
-  const { w: W, h: H } = DAILY_SIZE;
+export async function renderDailyCard(v, { animate = false } = {}) {
+  const { w: W, h: H } = dailySize(v);
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
+  const stage = spriteStage({ animate });
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, "#131a2d");
   bg.addColorStop(1, "#1c1530");
@@ -135,10 +148,26 @@ export async function renderDailyCard(v) {
   }
 
   const tw = (W - 2 * M - 14) / 2;
-  for (const [i, p] of v.pokemon.slice(0, 2).entries()) await tile(ctx, p, M + i * (tw + 14), tw);
+  for (const [i, p] of v.pokemon.slice(0, 2).entries()) await tile(ctx, p, M + i * (tw + 14), tw, stage);
+
+  // Pokédex progress (private card, so it's shown here and never on the
+  // public catch card): today's regions, then national.
+  let sy = TILE_Y + TILE_H + 16;
+  if (v.dex?.length) {
+    ctx.fillStyle = "#151b2d";
+    rr(ctx, M, sy, W - 2 * M, DEX_H, 16);
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "#323c5c";
+    ctx.stroke();
+    ctx.font = font(15, 800);
+    ctx.fillStyle = COLOR.textFaint;
+    ctx.fillText("POKÉDEX", M + 24, sy + 30);
+    drawDexProgress(ctx, v.dex, M + 130, sy + 16, W - 2 * M - 130 - 24);
+    sy += DEX_H + 12;
+  }
 
   // Rewards strip.
-  const sy = TILE_Y + TILE_H + 16;
   ctx.fillStyle = "#151b2d";
   rr(ctx, M, sy, W - 2 * M, H - sy - M, 16);
   ctx.fill();
@@ -163,5 +192,5 @@ export async function renderDailyCard(v) {
   ctx.fillStyle = COLOR.textMuted;
   ctx.fillText(`${fmt(v.balance.tp)} TP`, W - M - 24, y + 68);
   ctx.textAlign = "left";
-  return canvas.toBuffer("image/png");
+  return stage.output(canvas);
 }

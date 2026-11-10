@@ -15,36 +15,24 @@ import {
 } from "discord.js";
 
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { cardImage, cardGifGate } from "../utils/render/stage.js";
 import { buildTeamView } from "../utils/render/teamView.js";
 import { renderShowteam } from "../utils/render/showteam.js";
 import { renderInspectCard } from "../utils/render/inspectCard.js";
-import { createRenderGate } from "../utils/render/renderGate.js";
 import { generateToken } from "../utils/dashboardAuth.js";
 import { publicBaseUrl } from "../utils/publicUrl.js";
 
 export const LAYOUT = "refined";
 export const COLLECTOR_MS = 10 * 60 * 1000;
-// One animated render at a time; anyone else gets the PNG straight away.
-const gifGate = createRenderGate(1);
 const TIER_NAME = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", mythic: "Mythic" };
 
 /**
- * The Team image: an animated GIF when a render slot is free (and
- * SHOWTEAM_ANIMATED isn't "0"), otherwise a PNG. A failed GIF falls back to
- * the PNG. `render` is injectable for tests.
+ * The Team image: an animated GIF when a slot on the shared card gate is
+ * free (and neither SHOWTEAM_ANIMATED nor CARDS_ANIMATED is "0"), otherwise
+ * a PNG. A failed GIF falls back to the PNG. `render` is injectable for tests.
  */
-export async function renderTeamImage(view, { gate = gifGate, env = process.env, render = renderShowteam } = {}) {
-  const release = env.SHOWTEAM_ANIMATED === "0" ? null : gate.tryAcquire();
-  if (release) {
-    try {
-      return { buffer: await render(view, { layout: LAYOUT, animate: true }), name: "team.gif" };
-    } catch (err) {
-      console.warn("⚠️ /showteam GIF render failed; sending PNG:", err?.message || err);
-    } finally {
-      release();
-    }
-  }
-  return { buffer: await render(view, { layout: LAYOUT }), name: "team.png" };
+export function renderTeamImage(view, { gate = cardGifGate, env = process.env, render = renderShowteam } = {}) {
+  return cardImage((animate) => render(view, { layout: LAYOUT, animate }), "team", { gate, env, flag: "SHOWTEAM_ANIMATED" });
 }
 
 /** The select menu + button under the image (none for an empty Team). */
@@ -136,8 +124,9 @@ export default {
         if (r.action === "manage") return await i.reply(manageReply(ownerId, i.channelId));
         // Inspect: the slot exactly as shown in this image.
         await i.deferReply({ flags: MessageFlags.Ephemeral });
-        const png = await renderInspectCard(view.slots[r.slot - 1], { owner: displayName });
-        await i.editReply({ files: [new AttachmentBuilder(png, { name: "pokemon.png" })] });
+        const slot = view.slots[r.slot - 1];
+        const card = await cardImage((animate) => renderInspectCard(slot, { owner: displayName, animate }), "pokemon");
+        await i.editReply({ files: [new AttachmentBuilder(card.buffer, { name: card.name })] });
       } catch (err) {
         console.warn("⚠️ /showteam component failed:", err?.message || err);
         const msg = { content: "Something went wrong. Please try again.", flags: MessageFlags.Ephemeral };

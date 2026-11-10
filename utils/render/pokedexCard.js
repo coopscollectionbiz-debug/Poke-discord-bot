@@ -9,14 +9,16 @@
 import fs from "fs";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, dexNo } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
+import { spriteStage } from "./stage.js";
 import { displaySpeciesName } from "./names.js";
+import { dexProgress, drawDexProgress } from "./dexProgress.js";
 import { spriteRecord } from "../sprites.js";
 import { getSpecies, TYPE_ID_TO_NAME } from "../battle/data.js";
 
 const POKEMON = JSON.parse(fs.readFileSync(new URL("../../pokemonData.json", import.meta.url), "utf8"));
-export const POKEDEX_SIZE = Object.freeze({ w: 1000, h: 500 });
+export const POKEDEX_SIZE = Object.freeze({ w: 1000, h: 560 });
 const TIER_NAME = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", mythic: "Mythic" };
 
 /** The entry's facts for one species and the viewer's record. */
@@ -39,6 +41,7 @@ export function pokedexView(id, user) {
     to: names(p.evolvesTo),
     normal: Number(owned.normal ?? 0),
     shiny: Number(owned.shiny ?? 0),
+    dex: user ? dexProgress(user, [id]) : null, // the viewer's own progress: this region + national
     credit: credit ? `Sprite: ${credit.artist ? `${credit.artist}, ` : ""}${String(credit.project ?? "").replace(/ \(.*$/, "")} · /credits` : null,
   };
 }
@@ -59,10 +62,11 @@ function wrap(ctx, text, width, maxLines) {
   return lines;
 }
 
-export async function renderPokedexCard(v, { shiny = false } = {}) {
+export async function renderPokedexCard(v, { shiny = false, animate = false } = {}) {
   const { w: W, h: H } = POKEDEX_SIZE;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
+  const stage = spriteStage({ animate });
   const accent = shiny ? COLOR.gold : tierColor(v.tier);
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, "#131a2d");
@@ -81,7 +85,7 @@ export async function renderPokedexCard(v, { shiny = false } = {}) {
   ctx.fillRect(0, 0, sw, H);
   ctx.font = font(22, 800);
   ctx.fillStyle = COLOR.textFaint;
-  ctx.fillText(`#${String(v.id).padStart(4, "0")}`, 28, 44);
+  ctx.fillText(dexNo(v.id), 28, 44);
   ctx.fillStyle = `${accent}3a`;
   ctx.beginPath();
   ctx.ellipse(cx, floor, 124, 22, 0, 0, Math.PI * 2);
@@ -90,7 +94,7 @@ export async function renderPokedexCard(v, { shiny = false } = {}) {
   ctx.strokeStyle = `${accent}aa`;
   ctx.stroke();
   const sprite = (await loadStaticSprite(v.id, shiny ? "shiny" : "normal")) ?? (await loadPlaceholder());
-  drawSprite(ctx, sprite, cx, floor + 8, sw - 30, floor - 70, { scale: 3 });
+  stage.place(ctx, sprite, cx, floor + 8, sw - 30, floor - 70, { scale: 3 }, { id: v.id, variant: shiny ? "shiny" : "normal" });
   ctx.textAlign = "center";
   ctx.font = font(17, 800);
   ctx.fillStyle = shiny ? COLOR.gold : COLOR.textMuted;
@@ -185,5 +189,13 @@ export async function renderPokedexCard(v, { shiny = false } = {}) {
   };
   own("NORMAL", v.normal, x, "#3fd46c");
   own("SHINY", v.shiny, x + (right - x - 12) / 2 + 12, COLOR.gold);
-  return canvas.toBuffer("image/png");
+
+  // The viewer's Pokédex progress (this reply is only visible to them).
+  if (v.dex?.length) {
+    ctx.font = font(15, 800);
+    ctx.fillStyle = COLOR.textFaint;
+    ctx.fillText("YOUR POKÉDEX", x, 494);
+    drawDexProgress(ctx, v.dex, x, 504, right - x);
+  }
+  return stage.output(canvas);
 }

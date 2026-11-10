@@ -16,6 +16,7 @@ import { teamPower } from "../utils/battle/power.js";
 import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/battle/wager.js";
 import { WAGER } from "../utils/battle/tuning.js";
 import { expView, renderExpCard } from "../utils/render/expCard.js";
+import { cardImage } from "../utils/render/stage.js";
 
 export const data = new SlashCommandBuilder()
   .setName("battle")
@@ -62,8 +63,9 @@ export function displayNames(interaction, opponent) {
 export async function expMessage(outcome, userId, names, user, { render = renderExpCard } = {}) {
   const text = expSummary(outcome, userId, names);
   try {
-    const png = await render(expView(outcome, userId, names, user));
-    return { content: text.split("\n")[0], files: [new AttachmentBuilder(png, { name: "exp.png" })], flags: MessageFlags.Ephemeral };
+    const view = expView(outcome, userId, names, user);
+    const card = await cardImage((animate) => render(view, { animate }), "exp");
+    return { content: text.split("\n")[0], files: [new AttachmentBuilder(card.buffer, { name: card.name })], flags: MessageFlags.Ephemeral };
   } catch (err) {
     console.warn("⚠️ EXP card render failed; sending text:", err?.message || err);
     return { content: text, flags: MessageFlags.Ephemeral };

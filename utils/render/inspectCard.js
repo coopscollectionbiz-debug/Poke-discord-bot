@@ -7,18 +7,20 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, drawLevel } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, drawLevel, dexNo } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
+import { spriteStage } from "./stage.js";
 
 export const INSPECT_SIZE = Object.freeze({ w: 1000, h: 440 });
 const TIER_NAME = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", mythic: "Mythic" };
 const STATS = [["hp", "HP"], ["atk", "Atk"], ["def", "Def"], ["spa", "SpA"], ["spd", "SpD"], ["spe", "Spe"]];
 
 /** PNG of one slot. `owner` is the Team owner's display name. */
-export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = null } = {}) {
+export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = null, animate = false } = {}) {
   const { w: W, h: H } = INSPECT_SIZE;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
+  const stage = spriteStage({ animate });
   const accent = slot.shiny ? COLOR.gold : slot.slot === 1 ? COLOR.blue : tierColor(slot.tier);
 
   const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -42,7 +44,7 @@ export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = nu
   ctx.strokeStyle = `${accent}aa`;
   ctx.stroke();
   const sprite = (await loadStaticSprite(slot.id, slot.variant)) ?? (await loadPlaceholder());
-  drawSprite(ctx, sprite, cx, floor + 8, sw - 30, floor - 20, { scale: 3 });
+  stage.place(ctx, sprite, cx, floor + 8, sw - 30, floor - 20, { scale: 3 }, { id: slot.id, variant: slot.variant });
 
   const x = 368, right = W - 32;
   ctx.textAlign = "left";
@@ -82,7 +84,7 @@ export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = nu
   ctx.textAlign = "right";
   ctx.font = font(19, 700);
   ctx.fillStyle = COLOR.textMuted;
-  ctx.fillText([slot.region, `#${String(slot.id).padStart(4, "0")}`].filter(Boolean).join("  ·  "), right, 160);
+  ctx.fillText([slot.region, dexNo(slot.id)].filter(Boolean).join("  ·  "), right, 160);
   ctx.textAlign = "left";
 
   // EXP to next Level (owned only).
@@ -148,5 +150,5 @@ export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = nu
     ctx.textAlign = "left";
   });
 
-  return canvas.toBuffer("image/png");
+  return stage.output(canvas);
 }

@@ -129,8 +129,8 @@ section("Catch card");
     const ms = performance.now() - t0;
     assertTrue(png.readUInt32BE(16) === CATCH_SIZE.w && png.readUInt32BE(20) === CATCH_SIZE.h && ms < 1000, `catch/${name}: ${CATCH_SIZE.w}×${CATCH_SIZE.h} in ${Math.round(ms)} ms`);
   }
-  const gif = new GifReader(await renderCatchCard(v, { animate: true, frames: 4 }));
-  assertEqual(gif.numFrames(), 4, "catch card animates");
+  const gif = new GifReader(await renderCatchCard(v, { animate: true }));
+  assertTrue(gif.numFrames() > 1 && gif.width === 900, "catch card animates (900 px wide)");
 }
 
 finish();

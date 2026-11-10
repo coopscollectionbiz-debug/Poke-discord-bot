@@ -129,9 +129,9 @@ section("Every card animates when asked");
     const buf = await render();
     assertEqual(buf.subarray(0, 3).toString(), "GIF", `${name}: animated GIF`);
   }
-  // A species with only a static sprite (#1025) has nothing to animate: still a PNG.
-  const still = await renderPokedexCard(pokedexView(1025, {}), { animate: true });
-  assertEqual(still.subarray(1, 4).toString(), "PNG", "static-only sprite: stays a PNG");
+  // A species with only static art (#1025) breathes (tools/generate-pokemon-idles.mjs), so it animates too.
+  const breathing = await renderPokedexCard(pokedexView(1025, {}), { animate: true });
+  assertEqual(breathing.subarray(0, 3).toString(), "GIF", "static-art sprite with the breathing idle: animated GIF");
 }
 
 section("Pokédex progress (private cards only)");

@@ -13,6 +13,8 @@ import {
   rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth, drawBall, dexNo, drawMegaTag,
 } from "./primitives.js";
 import { drawSprite } from "./sprites.js";
+import { shinyBackdrop } from "./shinyBackdrop.js";
+import { backdropSeed } from "./stage.js";
 
 const W = 1200, M = 16, G = 12, HEADER = 92, CARD_H = 392, NOTE = 44;
 const CARD_W = (W - 2 * M - 2 * G) / 3;
@@ -224,12 +226,21 @@ function drawBase(ctx, view, H) {
 
 // ---------- sprite layer ----------
 
-function drawSprites(ctx, view, sprites, frameFor) {
+/**
+ * `fx` (optional): { enabled, frame, total, anims, cache } — the shiny
+ * backdrop (Legendary motes + stars, utils/render/shinyBackdrop.js) behind
+ * every shiny slot; `anims[i]` lets its clear-space mask cover every frame.
+ */
+function drawSprites(ctx, view, sprites, frameFor, fx = null) {
   view.slots.forEach((slot, i) => {
     const r = cardRect(view, i);
     const cx = r.x + r.w / 2, floor = r.y + r.h - INFO_H - 22;
-    // Grounding shadow under the feet, sized to the sprite.
     const sp = sprites[i];
+    if (fx?.enabled && slot?.variant === "shiny" && sp && !sp.placeholder) {
+      if (!fx.cache.has(i)) fx.cache.set(i, shinyBackdrop({ sprite: sp, anim: fx.anims?.[i] ?? null, cx, floorY: floor + 8, boxW: r.w - 36, boxH: floor + 8 - (r.y + 14), scale: SPRITE_SCALE, seed: backdropSeed(slot.spriteId ?? slot.id) }));
+      fx.cache.get(i)?.draw(ctx, fx.frame, fx.total);
+    }
+    // Grounding shadow under the feet, sized to the sprite.
     if (sp && !sp.placeholder) {
       const sw = Math.min(r.w - 60, sp.width * SPRITE_SCALE);
       const sh = ctx.createRadialGradient(cx, floor + 2, 2, cx, floor + 2, sw * 0.42);

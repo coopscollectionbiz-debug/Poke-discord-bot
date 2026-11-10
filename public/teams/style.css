@@ -133,8 +133,11 @@
 .tm-tile.is-held .tm-tile-btn { transform: translateY(-4px); }
 .tm-tile.is-blocked .tm-tile-btn { opacity: .78; border-color: #ff5a6a77; }
 .tm-tile.is-blocked img { filter: grayscale(.8) brightness(.7); }
-.tm-tile-block { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 11px; font-weight: 800; color: var(--cc-red); }
-.tm-tile-block .tm-ic { width: 13px; height: 13px; }
+/* Mythic-limit lock: a corner badge, so locked tiles keep the same size. */
+.tm-tile-block { position: absolute; top: 5px; right: 5px; z-index: 2; display: inline-flex; align-items: center; gap: 2px; height: 20px; padding: 0 4px; border-radius: 6px; background: var(--cc-red-soft); border: 1px solid var(--cc-red); font-size: 10.5px; font-weight: 800; line-height: 1; color: var(--cc-red); }
+.tm-tile-block .tm-ic { width: 11px; height: 11px; }
+/* A shiny that is also locked: the sparkle moves left of the badge. */
+.tm-tile.is-blocked .tm-shiny--sm { right: 72px; }
 
 /* ---------- Popover / sheet ---------- */
 .tm-pop { position: absolute; z-index: 20; width: 260px; padding: 12px; border-radius: 14px; background: var(--cc-surface); border: 1.5px solid var(--cc-line); box-shadow: 0 16px 40px #000a; }

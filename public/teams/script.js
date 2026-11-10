@@ -371,11 +371,12 @@ function boxTile(s) {
   return `<li class="tm-tile${shiny ? " is-shiny" : ""}${blocked ? " is-blocked" : ""}${why?.code === "on" ? " is-on" : ""}">
     <button type="button" class="tm-tile-btn" data-act="add" data-id="${s.id}" data-variant="${s.variant}" aria-label="${esc(label)}" draggable="true">
       <span class="tm-tile-badges">${badges}</span>
+      ${blocked ? `<span class="tm-tile-block" title="${esc(why.text)}"><svg class="tm-ic" aria-hidden="true"><use href="#tm-lock"/></svg>Mythic</span>` : ""}
       ${shiny ? `<span class="tm-shiny tm-shiny--sm"><svg class="tm-ic" aria-hidden="true"><use href="#tm-sparkle"/></svg></span>` : ""}
       <img class="cc-sprite" src="/public/sprites/pokemon/${shiny ? "shiny" : "normal"}/${s.id}.gif" alt="" loading="lazy" onerror="this.onerror=null;this.src='/public/sprites/items/pokeball.png'">
       <span class="tm-tile-name">${esc(sp.name)}</span>
-      <span class="tm-tile-lv">Lv ${levelOf(s)}${isMythic(s.id) ? ` · <b class="tier-text mythic">Mythic</b>` : ""}</span>
-      ${blocked ? `<span class="tm-tile-block"><svg class="tm-ic" aria-hidden="true"><use href="#tm-lock"/></svg>${esc(why.short)}</span>` : why?.code === "on" ? `<span class="tm-tile-lv">On this team</span>` : ""}
+      <span class="tm-tile-lv">Lv ${levelOf(s)}${isMythic(s.id) && !blocked ? ` · <b class="tier-text mythic">Mythic</b>` : ""}</span>
+      ${why?.code === "on" ? `<span class="tm-tile-lv">On this team</span>` : ""}
     </button></li>`;
 }
 

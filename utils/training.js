@@ -76,12 +76,15 @@ export function addExp(user, id, variant, amount) {
 export function grantCatch(user, speciesId, variant, rand = Math.random) {
   user.pokemon ??= {};
   user.pokemon[speciesId] ??= { normal: 0, shiny: 0 };
+  // isNew is about ownership, not the training record: copies owned before
+  // Levels existed have no record, but they are not new to the player.
+  const ownedBefore = (user.pokemon[speciesId][variant] ?? 0) > 0;
   user.pokemon[speciesId][variant] = (user.pokemon[speciesId][variant] ?? 0) + 1;
 
   if (!user.training?.[trainingKey(speciesId, variant)]) {
     const level = rollCatchLevel(speciesId, rand);
     setExp(user, speciesId, variant, expForLevel(level));
-    return { level, isNew: true, expGained: 0 };
+    return { level, isNew: !ownedBefore, expGained: 0 };
   }
 
   const { level } = getTraining(user, speciesId, variant);

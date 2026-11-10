@@ -183,7 +183,7 @@ section("Reward claims");
   let saveOk = true;
   let saves = 0;
   const td = { [U]: { cc: 100, pokemon: species(range(1, 120), [5]), items: { evolution_stone: 0 } } };
-  const H = createAchievementHandlers({ getTrainerData: () => td, lockUser, save: (d) => { saves++; return saveAndAck(d, { save: async () => saveOk }); }, policy: testPolicy });
+  const H = createAchievementHandlers({ getTrainerData: () => td, lockUser, save: (d) => { saves++; return saveAndAck(d, { save: async () => saveOk }); }, policy: testPolicy, now: () => NOW });
   const claim = (achievementId, extra = {}) => H.claim({ body: { id: U, achievementId, ...extra }, isAuthorized: (id) => id === U });
 
   // Production default: nothing is claimable.

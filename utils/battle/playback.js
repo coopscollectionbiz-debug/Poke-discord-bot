@@ -54,16 +54,18 @@ export function resultScreens(outcome, names) {
   return screens;
 }
 
+// One Team member's EXP line in the private text summaries.
+const expLine = (e) => `${e.name} ${e.toLevel > e.fromLevel ? `Lv ${e.fromLevel} → **${e.toLevel}**` : `Lv ${e.fromLevel}`} · +${e.gained} EXP`;
+
 // One player's EXP, sent only to them: the result image shows level-ups but
 // not how much EXP each Pokémon gained.
 export function expSummary(outcome, userId, names) {
   const opponentId = outcome.sides.find((s) => s.userId !== userId).userId;
-  const lines = outcome.exp[userId].map((e) => {
-    const level = e.toLevel > e.fromLevel ? `Lv ${e.fromLevel} → **${e.toLevel}**` : `Lv ${e.fromLevel}`;
-    return `${e.name} ${level} · +${e.gained} EXP`;
-  });
-  return [`EXP from your battle with ${names[opponentId]}:`, ...lines].join("\n");
+  return [`EXP from your battle with ${names[opponentId]}:`, ...outcome.exp[userId].map(expLine)].join("\n");
 }
+
+// A challenger's EXP lines, for the private message's text fallback.
+export const challengeExpText = (outcome) => outcome.exp[outcome.userId].map(expLine).join("\n");
 
 // The rating changes, plus (Wager battles) who took the pot, which neither
 // the result image nor the header says. Everything else is on the image.
@@ -253,29 +255,20 @@ export function prizeText(key, prize) {
   return list([...sprites, `${n(prize.cc)} CC`, plural(prize.stones, "stone"), `${n(prize.dust)} Dust`]);
 }
 
-// The challenger's EXP, shown in the challenge result embed (/battle sends
-// EXP privately instead; a challenge has only one player earning it).
-function expLines(entries) {
-  return entries.slice(0, 6).map((e) => {
-    if (e.toLevel === e.fromLevel) return `${e.name} Lv ${e.fromLevel} · +${e.gained} EXP`;
-    const learned = e.learned.length ? ` · learned **${list(e.learned)}**` : "";
-    return `⬆️ **${e.name}** Lv ${e.fromLevel} → **${e.toLevel}**${learned}`;
-  }).join("\n") || "—";
-}
-
-export function buildChallengeEmbed(outcome, names) {
+// Who won, for a result shown without its final image (showRunResult).
+function challengeTitle(outcome, names) {
   const player = names[outcome.userId];
   const last = outcome.fights.at(-1);
-  const lastOpponent = opponentOf(outcome, last.opponentKey);
-  const { turns, endedBy } = last.result;
-  const mvp = mvpOf(last);
-  const title = isRun(outcome)
-    ? (outcome.cleared ? `🏆 ${player} cleared the Elite Four!` : `The Elite Four run ends at ${lastOpponent.name}.`)
-    : (outcome.cleared ? `🏆 ${player} defeated ${names[last.opponentKey]}!` : `${names[last.opponentKey]} wins!`);
+  if (isRun(outcome)) return outcome.cleared ? `🏆 ${player} cleared the Elite Four!` : `The Elite Four run ends at ${opponentOf(outcome, last.opponentKey).name}.`;
+  return outcome.cleared ? `🏆 ${player} defeated ${names[last.opponentKey]}!` : `${names[last.opponentKey]} wins!`;
+}
+
+// The embed under the final image, like /battle's: only what the image
+// doesn't say (who won, the MVP and level-ups are on it; EXP goes to the
+// player privately). Null when there's nothing to add (a rematch win).
+export function buildChallengeEmbed(outcome, names) {
   const badge = outcome.badge && CHALLENGES[outcome.badge].badge;
   const lines = [
-    endedBy === "turnCap" && `Time ran out after **${turns}** turns, and ${names[last.winnerId]}'s Team had more HP left.`,
-    mvp && `⭐ MVP: **${mvp.name}** with ${plural(mvp.kos, "knockout")}`,
     isRun(outcome) && outcome.fights.map((f) => `${opponentOf(outcome, f.opponentKey).name} ${f.winnerId === outcome.userId ? "✓" : "✗"}`).join(" · "),
     badge && `🏅 Earned the ${badge.badge}!`,
     outcome.prize && `🎁 ${prizeText(outcome.key, outcome.prize)}`,
@@ -285,11 +278,7 @@ export function buildChallengeEmbed(outcome, names) {
     !outcome.cleared && "💸 Lost 10% of their CC.",
   ].filter(Boolean);
   // No Badge thumbnail: the result frame's award screen presents it.
-  return new EmbedBuilder()
-    .setColor(0xf1c40f)
-    .setTitle(title)
-    .setDescription(lines.join("\n"))
-    .addFields({ name: `EXP · ${player}`, value: expLines(outcome.exp[outcome.userId]) });
+  return lines.length ? new EmbedBuilder().setColor(0xf1c40f).setDescription(lines.join("\n")) : null;
 }
 
 const badgeFile = (b) => b.image.split("/").pop();
@@ -369,7 +358,8 @@ export async function showChoosing(message, outcome, i) {
 // or when the run stopped unexpectedly. Never throws.
 export async function showRunResult(message, outcome, names, note) {
   try {
-    await message.edit({ content: note, embeds: [buildChallengeEmbed(outcome, names)] });
+    // No final image here, so the embed also says who won.
+    await message.edit({ content: note, embeds: [buildChallengeEmbed(outcome, names).setTitle(challengeTitle(outcome, names))] });
     return true;
   } catch {
     return false;

@@ -72,32 +72,29 @@ assertEqual(challengeHeader(brockWin, 0), "⚔️ <@A> challenges Gym Leader Bro
 
 section("Result embed");
 {
+  // As with /battle, the embed under the final image says only what the image
+  // doesn't (who won, the MVP and level-ups are on it), and EXP is private.
   const e = buildChallengeEmbed(brockWin, challengeNames(brockWin, "A")).toJSON();
-  assertEqual(e.title, "🏆 A defeated Gym Leader Brock!", "single win title");
-  assertTrue(e.description.includes("🏅 Earned the Boulder Badge!"), "Badge line");
-  assertTrue(!e.thumbnail, "no Badge thumbnail: the final frame presents the Badge");
-  assertTrue(e.description.includes("🎁 Brock sprite, 2,500 CC, 1 stone, and 5 Dust"), "prize line");
-  assertTrue(!e.description.includes("💸"), "no loss line on a win");
-  assertEqual(e.fields.map((f) => f.name), ["EXP · A"], "one EXP field, no rating");
+  assertEqual([e.title, e.fields ?? [], e.thumbnail], [undefined, [], undefined], "no title, no EXP field, no Badge thumbnail");
+  assertEqual(e.description, "🏅 Earned the Boulder Badge!\n🎁 Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "the Badge and the prize, nothing else");
 
   const r = buildChallengeEmbed(runOut, runNames).toJSON();
-  assertEqual(r.title, "🏆 A cleared the Elite Four!", "run clear title");
-  assertTrue(r.description.includes("Lorelei ✓ · Bruno ✓ · Agatha ✓ · Lance ✓"), "run progress");
-  assertTrue(r.description.includes("🔓 Blue is waiting."), "Blue unlock line");
-  assertTrue(r.description.includes("Lorelei sprite, Bruno sprite, Agatha sprite, Lance sprite, 30,000 CC, 4 stones, and 40 Dust"), "run prize");
+  assertEqual(r.description.split("\n"), [
+    "Lorelei ✓ · Bruno ✓ · Agatha ✓ · Lance ✓",
+    "🎁 Lorelei sprite, Bruno sprite, Agatha sprite, Lance sprite, 30,000 CC, 4 stones, and 40 Dust",
+    "🔓 Blue is waiting.",
+  ], "a run: how far it got, the prize, and the unlock");
 
   const lost = outcomeOf(player([10], 5), "brock");
-  const l = buildChallengeEmbed(lost, challengeNames(lost, "A")).toJSON();
-  assertEqual(l.title, "Gym Leader Brock wins!", "single loss title");
-  assertTrue(l.description.includes("💸 Lost 10% of their CC."), "loss line");
-  assertTrue(!embedText(buildChallengeEmbed(lost, challengeNames(lost, "A"))).includes("1,234") && !embedText(buildChallengeEmbed(lost, challengeNames(lost, "A"))).includes("1234"), "no exact amount");
+  const l = buildChallengeEmbed(lost, challengeNames(lost, "A"));
+  assertEqual(l.toJSON().description, "💸 Lost 10% of their CC.", "a loss: the loss line");
+  assertTrue(!embedText(l).includes("1,234") && !embedText(l).includes("1234"), "no exact amount");
 
   const eighth = outcomeOf(player(STRONG, 100, Object.fromEntries(GYMS.slice(0, 7).map((k) => [k, "d"]))), "giovanni");
   assertTrue(buildChallengeEmbed(eighth, challengeNames(eighth, "A")).toJSON().description.includes("🔓 The Elite Four is open!"), "Elite Four unlock line");
 
   const rematch = outcomeOf(player(STRONG, 100, { brock: "d" }), "brock");
-  const m = buildChallengeEmbed(rematch, challengeNames(rematch, "A")).toJSON();
-  assertTrue(!m.description.includes("🎁") && !m.description.includes("🏅") && !m.thumbnail, "a rematch shows no prize or Badge");
+  assertEqual(buildChallengeEmbed(rematch, challengeNames(rematch, "A")), null, "a rematch win has nothing to add, so no embed");
 
   assertEqual(prizeText("brock", { cc: 2500, stones: 1, dust: 5, sprites: [{ trainerKey: "brock", cc: 7500 }] }),
     "7,500 CC for owning every Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "sprite fallback text");
@@ -174,8 +171,6 @@ section("Run loss");
   }
   assertTrue(lost !== null, "fixture: a run that ends after Lorelei");
   const e = buildChallengeEmbed(lost, challengeNames(lost, "A")).toJSON();
-  const last = CHALLENGES.elite4.opponents[lost.fights.length - 1].name;
-  assertEqual(e.title, `The Elite Four run ends at ${last}.`, "run loss title");
   const progress = CHALLENGES.elite4.opponents.slice(0, lost.fights.length).map((o, i) => `${o.name} ${i === lost.fights.length - 1 ? "✗" : "✓"}`).join(" · ");
   assertTrue(e.description.includes(progress), `run progress (${progress})`);
   assertTrue(e.description.includes("💸 Lost 10% of their CC."), "a failed run's loss line");
@@ -211,7 +206,7 @@ section("Elite Four replay, one fight at a time");
   const fights = steps.map((s) => shown(s).fights[s.step]);
   const expected = fights.reduce((t, f) => t + pickFrameTurns(f.result.turns, PLAYBACK.maxUpdates).length + 1, 0) + fights.length - 1;
   assertEqual(rec.edits.length, expected, "each fight: start frame, turns, final frame on the same message");
-  assertEqual(rec.edits.at(-1).embeds?.[0]?.toJSON().title, "🏆 A cleared the Elite Four!", "the result embed comes with the last frame");
+  assertTrue(rec.edits.at(-1).embeds?.[0]?.toJSON().description.startsWith("Lorelei ✓ · Bruno ✓ · Agatha ✓ · Lance ✓"), "the result embed comes with the last frame");
   assertTrue(rec.edits.slice(0, -1).every((e) => !e.embeds?.length), "no embed before the end");
   assertEqual(free, [true, true, true, true], "the replay slot is free after each fight");
   assertTrue(!OPPONENT_KEYS.some((k) => texts(rec).includes(`<@${k}`)), "no leader is ever a mention");
@@ -277,6 +272,12 @@ section("Single fights in public");
   await playChallenge(win.channel, brockWin, challengeNames(brockWin, "A"));
   const w = texts(win);
   assertTrue(w.includes("Earned the Boulder Badge") && w.includes("2,500 CC"), "a first win shows the Badge and prize");
+  assertTrue(!w.includes("EXP") && !all.includes("EXP"), "and no EXP: it's private, as in /battle");
+
+  const again = recorder();
+  const rematch = outcomeOf(player(STRONG, 100, { brock: "d" }), "brock");
+  await playChallenge(again.channel, rematch, challengeNames(rematch, "A"));
+  assertTrue(again.edits.every((e) => !e.embeds?.length), "a rematch win ends on its image alone");
 }
 
 section("A fight lost before a move is made");
@@ -289,7 +290,7 @@ section("A fight lost before a move is made");
   const rec = recorder();
   await playChallenge(rec.channel, zero, challengeNames(zero, "A"));
   assertEqual([rec.sent.length, rec.edits.length], [1, 1], "the start frame, then straight to the result");
-  assertEqual(rec.edits[0].embeds?.[0]?.toJSON().title, "Gym Leader Brock wins!", "with the result embed");
+  assertEqual(rec.edits[0].embeds?.[0]?.toJSON().description, "💸 Lost 10% of their CC.", "with the result embed");
 }
 
 section("Replay slots");

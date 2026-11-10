@@ -8,7 +8,7 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { execute, data, refusal, boardEmbed, reviveMenu, previewMessage, cardView } from "../commands/challenge.js";
+import { execute, data, refusal, boardEmbed, reviveMenu, previewMessage, cardView, challengeExpMessage } from "../commands/challenge.js";
 import { challengeCardView, cardAltText, cardSlots, CHALLENGE_CARD_SIZE } from "../utils/render/challengeCard.js";
 import { previewChallenge } from "../utils/challenge/runChallenge.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
@@ -78,7 +78,7 @@ const brightnessAt = async (png, x, y) => {
 // controllable collector. log.seq records public and private writes in order.
 function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail = false } = {}) {
   const trainerData = { A: user };
-  const log = { replies: [], replyEdits: [], channel: [], menus: [], seq: [] };
+  const log = { replies: [], replyEdits: [], channel: [], menus: [], seq: [], results: [] };
   const collectors = [];
   let ids = 0;
   const collectorStub = (opts) => ({ opts, h: {}, stopped: null, on(e, f) { this.h[e] = f; }, stop(reason) { this.stopped ??= reason; } });
@@ -127,6 +127,11 @@ function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail
       editReply: async (o) => { b.edits.push(o); log.seq.push(["private", o]); },
       followUp: async (o) => {
         b.followUps.push(o);
+        if (!o.components) { // the private result after the replay
+          log.results.push(o);
+          log.seq.push(["private", o]);
+          return { id: `P${++ids}` };
+        }
         if (menusFail === "silent") return undefined; // bot_final's wrapper swallows "Unknown interaction"
         if (menusFail) throw new Error("Unknown Webhook");
         const menu = { id: `P${++ids}`, opts: o, from: b, collector: null };
@@ -293,6 +298,31 @@ section("Preview");
   assertTrue(card(rematch.log.replies[0]).description.includes("Rematch. Win: EXP only."), "a rematch says so");
 }
 
+section("The private EXP message");
+{
+  const t = harness(STRONG());
+  await t.run("brock");
+  await t.click("fight");
+  const quietWarn = console.warn;
+  console.warn = () => {};
+  const text = await challengeExpMessage(
+    // The same Outcome shape the command gets; a fresh win over Brock.
+    (await import("../utils/challenge/runChallenge.js")).runChallenge({ trainerData: { A: STRONG() }, userId: "A", key: "brock", seed: 1 }),
+    { A: "Ash", brock: "Gym Leader Brock" }, null, { render: async () => { throw new Error("boom"); } });
+  console.warn = quietWarn;
+  assertEqual(text.files, undefined, "a card that can't render sends text instead");
+  assertTrue(text.content.startsWith("You won! 🎁 Brock sprite") && text.content.split("\n").length === 7, "the result, then one line per Team member");
+  assertTrue(/^Mewtwo Lv 100 · \+\d+ EXP$/.test(text.content.split("\n")[1]), "each with its Level and EXP gained");
+
+  const fails = harness(STRONG());
+  await fails.run("brock");
+  const b = fails.button(`challenge_fight:${fails.nonce()}`);
+  b.followUp = async () => { throw new Error("Invalid Webhook Token"); };
+  let threw = false;
+  await fails.collectors.at(-1).h.collect(b).catch(() => { threw = true; });
+  assertTrue(!threw && fails.trainerData.A.challenge.won.brock, "a refused follow-up (an expired reply window) doesn't throw; the win still counts");
+}
+
 section("Preview: the embed when the card can't render");
 {
   const user = WEAK();
@@ -344,8 +374,10 @@ section("Fight! and a loss");
   const t = harness();
   await t.run(LOSES);
   const b = await t.click("fight");
-  assertTrue(textOf(b.edits[0]).includes("You lost 1,234 CC."), "the private reply shows the exact loss");
-  assertEqual(b.edits[0].components, [], "and drops the buttons");
+  const res = t.log.results.at(-1);
+  assertEqual(res.content, "You lost 1,234 CC.", "the private result shows the exact loss");
+  assertEqual([res.flags, res.files?.map((f) => f.name)], [64, ["exp.png"]], "with the EXP card, privately, as /battle sends it");
+  assertEqual(b.edits, [], "the \"starting below\" message stays as it is");
   assertEqual([t.trainerData.A.cc, t.trainerData.A.challenge.attempts], [11111, 1], "CC and the attempt are recorded");
   assertEqual(t.log.channel.length, 2, "the intro card and the replay post");
   const intro = t.log.channel[0].opts;
@@ -384,7 +416,7 @@ section("Clicks while a Fight! is saving");
   finishSave();
   await fighting;
   assertTrue(!t.log.replyEdits.some((e) => e.content === "Preview expired."), "expiry during the save doesn't cover the fight");
-  assertTrue(textOf(fight.edits.at(-1)).includes("You lost 1,234 CC."), "the fight finishes and shows its result");
+  assertTrue(textOf(fight.followUps.at(-1)).includes("You lost 1,234 CC."), "the fight finishes and shows its result");
   assertEqual(t.trainerData.A.challenge.attempts, 1, "one attempt used");
 }
 
@@ -393,7 +425,7 @@ section("Fight! and a first win");
   const t = harness(STRONG());
   await t.run("brock");
   const b = await t.click("fight");
-  assertEqual(textOf(b.edits[0]), "You won! 🎁 Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "the private reply shows the prize");
+  assertEqual(t.log.results.at(-1).content, "You won! 🎁 Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "the private result shows the prize");
   const intro = card(t.log.channel[0].opts);
   assertTrue(intro.description.includes("The Boulder Badge is on the line. Win: Brock sprite, 2,500 CC, 1 stone, and 5 Dust."),
     "the intro card shows the Badge and prize before they were won");
@@ -452,7 +484,7 @@ section("Review Focus: changes between preview and Fight!");
   await richer.run(LOSES);
   richer.trainerData.A.cc = 50000;
   const rb = await richer.click("fight");
-  assertTrue(textOf(rb.edits[0]).includes("You lost 1,234 CC."), "the loss never exceeds what the preview showed");
+  assertEqual(richer.log.results.at(-1).content, "You lost 1,234 CC.", "the loss never exceeds what the preview showed");
   assertEqual(richer.trainerData.A.cc, 50000 - 1234, "balance after the capped loss");
 }
 
@@ -517,7 +549,7 @@ section("Elite Four run: picking a Revive");
   const privateAt = t.log.seq.findIndex(([k, o]) => k === "private" && textOf(o).startsWith("You won! 🎁 Lorelei sprite"));
   const finalFrame = t.log.seq.findLastIndex(([k, o]) => k === "public" && o.embeds?.length);
   assertTrue(privateAt > finalFrame && finalFrame > 0, "the private result arrives after the last replay");
-  assertTrue(textOf(t.log.channel[1].edits.at(-1)).includes("cleared the Elite Four"), "the run ends with its result embed");
+  assertTrue(textOf(t.log.channel[1].edits.at(-1)).includes("Lorelei ✓ · Bruno ✓ · Agatha ✓ · Lance ✓"), "the run ends with its result embed");
 }
 
 section("A Revive menu for six fainted Pokémon");
@@ -574,7 +606,7 @@ section("Elite Four run: a loss at Lorelei");
   await t.run("elite4");
   const fight = await t.fightRun(async () => {});
   assertEqual([t.log.menus.length, t.trainerData.A.cc, t.trainerData.A.challenge.run], [0, 11111, undefined], "no menu; 10% lost; the run is closed");
-  assertTrue(textOf(fight.edits.at(-1)).includes("You lost 1,234 CC."), "the private result shows the amount");
+  assertEqual(t.log.results.at(-1).content, "You lost 1,234 CC.", "the private result shows the amount");
   assertTrue(!t.publicText().includes("1,234") && !t.publicText().includes("1234"), "the public replay never does");
 }
 
@@ -614,7 +646,7 @@ section("A live run is never stale");
   assertEqual(t.log.replies.at(-1).content, "Finish your Elite Four run first.", "/challenge leaves a run that's still playing alone");
   const fight = await playing;
   CHALLENGE.pickMs = 60000;
-  assertTrue(textOf(fight.edits.at(-1)).startsWith("You won!"), "and the run finishes with its private result");
+  assertTrue(t.log.results.at(-1).content.startsWith("You won!"), "and the run finishes with its private result");
   assertTrue(!t.publicText().includes("stopped unexpectedly"), "with no stopped note");
 }
 

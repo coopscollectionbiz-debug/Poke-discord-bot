@@ -23,8 +23,9 @@ import { badgeUrl } from "../utils/challenge/badgeImages.js";
 import { challengeCardView, renderChallengeCard, cardAltText } from "../utils/render/challengeCard.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../public/picker-pokemon/badges.js";
 import {
-  playChallenge, playChallengeFight, showChoosing, showRunResult, challengeNames, prizeText,
+  playChallenge, playChallengeFight, showChoosing, showRunResult, challengeNames, prizeText, challengeExpText,
 } from "../utils/battle/playback.js";
+import { expMembers, renderExpCard } from "../utils/render/expCard.js";
 import { utcDay } from "../utils/battle/rewards.js";
 import { CHALLENGE, PLAYBACK } from "../utils/battle/tuning.js";
 import { spritePaths } from "../spriteconfig.js";
@@ -133,6 +134,27 @@ const privateResult = (outcome) => {
   return outcome.prize ? `You won! 🎁 ${prizeText(outcome.key, outcome.prize)}` : "You won!";
 };
 
+// After the replay the player gets /battle's private EXP card, captioned
+// with the result (the exact CC lost, or the prize); text if it can't render.
+// `user` is their record after the challenge.
+export async function challengeExpMessage(outcome, names, user, { render = renderExpCard } = {}) {
+  const caption = privateResult(outcome);
+  try {
+    const png = await render({
+      opponent: CHALLENGES[outcome.key].kind === "elite4" ? "the Elite Four" : names[outcome.fights.at(-1).opponentKey],
+      won: outcome.cleared,
+      rating: null, // challenges never change Battle rating
+      surge: false,
+      pot: 0,
+      members: expMembers(outcome.exp[outcome.userId], user),
+    });
+    return { content: caption, files: [new AttachmentBuilder(png, { name: "exp.png" })], flags: MessageFlags.Ephemeral };
+  } catch (err) {
+    console.warn("⚠️ challenge EXP card render failed; sending text:", err?.message || err);
+    return { content: `${caption}\n${challengeExpText(outcome)}`, flags: MessageFlags.Ephemeral };
+  }
+}
+
 const logChallenge = (userId, outcome, extra = {}) => logEvent("challenge", userId, { ...challengeLogEntry(outcome), ...extra });
 
 // How long a Revive menu still answers clicks after its pick or deadline.
@@ -220,7 +242,8 @@ async function askRevive(latest, step) {
 // Replays and drives an Elite Four run from its first Step to its end:
 // replay the fight, offer a Revive if anything fainted, play the next fight.
 // A replay that fails (a deleted message) stops only the replay. Resolves to
-// { outcome, posted }, or null if the run was finished elsewhere meanwhile.
+// { outcome, posted, latest } (latest: the newest click, whose reply window
+// is freshest), or null if the run was finished elsewhere meanwhile.
 async function playRun({ channel, fightClick, step, trainerData, userId, lockUser, enqueueSave, playerName, trainer }) {
   let message = null;
   let replaying = true;
@@ -246,7 +269,7 @@ async function playRun({ channel, fightClick, step, trainerData, userId, lockUse
         });
       }
     }
-    if (step.ended) return { outcome: step.outcome, posted };
+    if (step.ended) return { outcome: step.outcome, posted, latest };
     let slot;
     if (step.fainted.length) {
       if (replaying) await showChoosing(message, step.view, step.step);
@@ -337,6 +360,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
 
     let posted = true;
     let outcome = first;
+    let reply = i; // where the private result goes
     const trainer = first.card?.player.trainerFile ?? null; // the replay's portrait, as on the intro card
     try {
       await interaction.channel.send(await previewMessage(key, first.atStake, first.card));
@@ -353,6 +377,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
       if (!played) return; // a stale finish closed it and shows the result
       outcome = played.outcome;
       posted &&= played.posted;
+      reply = played.latest;
       logChallenge(userId, outcome);
     } else if (posted) {
       await playChallenge(interaction.channel, outcome, challengeNames(outcome, playerName), { ...PLAYBACK, trainer }).catch((err) => {
@@ -360,8 +385,11 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
         posted = false;
       });
     }
-    const note = posted ? "" : "\nIt counted, but I couldn't post it in this channel.";
-    await i.editReply({ content: `${privateResult(outcome)}${note}`, embeds: [], components: [] }).catch(() => {});
+    // As /battle does: a failed post says so on the "starting below" message,
+    // and the result and EXP card arrive as a new private message.
+    if (!posted) await i.editReply({ content: "Your challenge counted, but I couldn't post it in this channel.", embeds: [], components: [] }).catch(() => {});
+    await reply.followUp(await challengeExpMessage(outcome, challengeNames(outcome, playerName), trainerData[userId]))
+      .catch((err) => console.warn("⚠️ challenge result message failed:", err?.message || err));
   });
 
   collector.on("end", (_, reason) => {

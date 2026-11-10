@@ -64,6 +64,7 @@ import { createMegaHandlers } from "./services/megaApi.js";
 import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
 import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
 import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
+import { pokemonDetail } from "./services/pokemonDetail.js";
 import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
@@ -2004,6 +2005,18 @@ app.get("/api/user-pokemon", (req, res) => {
   });
 });
 
+
+// ✅ GET — one Pokémon's details for the Collection drawer (B2). Read-only:
+// stats, moves and EXP from the same functions as the Discord cards.
+app.get("/api/pokemon/detail", (req, res) => {
+  const { id, species } = req.query;
+  if (!id || species == null) return res.status(400).json({ error: "Missing id/species" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  const { status, body } = pokemonDetail(user, species);
+  return res.status(status).json(body);
+});
 
 // ✅ POST — set full Pokémon team (up to 6) — Variant-safe + Ghost Auto-Clean
 // teamType: "display" (default; user.displayedPokemon, as before) or

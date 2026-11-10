@@ -11,7 +11,7 @@ import {
   challengeNames, challengeHeader, buildChallengeEmbed, playChallenge, prizeText, createQueue,
   playChallengeFight, showChoosing, showRunResult, challengeTheme, challengeAward,
 } from "../utils/battle/playback.js";
-import { pickFrameTurns, portraitBox, AWARD, ANIMATION, FRAME_WIDTH, CHALLENGE_LAYOUT } from "../utils/battle/render.js";
+import { pickFrameTurns, portraitBox, AWARD, ANIMATION, FRAME_WIDTH, LAYOUT } from "../utils/battle/render.js";
 import { GifReader } from "omggif";
 import { runChallenge, startRun, continueRun } from "../utils/challenge/runChallenge.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
@@ -145,7 +145,7 @@ section("Themed replay frames");
   await playChallenge(win.channel, brockWin, challengeNames(brockWin, "A"), { ...PLAYBACK, trainer: "acerola-masters.png" });
   const start = composite(gifOf(win.sent[0]), 0).px;
   let white = 0;
-  for (let y = CHALLENGE_LAYOUT.pillY; y < CHALLENGE_LAYOUT.pillY + 34; y++) for (let x = FRAME_WIDTH / 2 - 120; x < FRAME_WIDTH / 2 + 120; x++) if (bright(start, x, y) > 700) white++;
+  for (let y = LAYOUT.pillY; y < LAYOUT.pillY + 34; y++) for (let x = FRAME_WIDTH / 2 - 120; x < FRAME_WIDTH / 2 + 120; x++) if (bright(start, x, y) > 700) white++;
   assertTrue(white > 60, "the replay's frames carry the challenge theme (the Boulder Badge in the center pill)");
   const bare = recorder();
   await playChallenge(bare.channel, brockWin, challengeNames(brockWin, "A"));

@@ -1,9 +1,10 @@
 // ==========================================================
 // utils/battle/render.js
-// One animated GIF per playback update: both Teams in centered rows, the
-// fighting pair spotlit, game-style HP bars, and a text box narrating the
-// turn. Sprites play their own GIF animation. /challenge adds a theme: the
-// trainers' portraits, the opponent's type, the Badge, and the award screen.
+// One animated GIF per playback update: each player's trainer at the left
+// of their row, both Teams beside them, the fighting pair spotlit,
+// game-style HP bars, and a text box narrating the turn. Sprites play their
+// own GIF animation. /challenge adds a theme: the opponent's type, the
+// Badge, and the award screen.
 //
 // Memory: frames are encoded as they're drawn and sprite frames are decoded
 // as an image reaches them, so a 6v6 battle adds about 60 MB rather than 270
@@ -31,7 +32,6 @@ const GAP = 18; // between the rows, where the turn badge sits
 const TEXT_H = 64;
 const H = PAD + ROW_H * 2 + GAP + PAD + TEXT_H + PAD;
 const ROW_TOP = [PAD, PAD + ROW_H + GAP];
-const TILE_W = 144;
 const SIDE_COLOR = ["#4f8cff", "#ff5a6a"];
 const GOLD = "#f5c84c";
 const INK = "#0e1120";
@@ -50,21 +50,19 @@ export function pickFrameTurns(totalTurns, frames) {
   return [...new Set(turns)];
 }
 
-// /challenge frames: each row's trainer stands in a portrait at its left, and
-// the tiles narrow from 144 to 124 px so the frame stays 900 wide (GIF memory
-// scales with its area). 124 still holds the 116 px HP bar, and 97% of
-// battle sprites are 104 px wide or less.
+// Each row's trainer stands in a portrait at its left, so the tiles are 124
+// px (144 before portraits) and the frame stays 900 wide: GIF memory scales
+// with its area. 124 still holds the 116 px HP bar, and 97% of battle
+// sprites are 104 px wide or less.
 const PORTRAIT_W = 116;
 export const portraitBox = (s) => ({ x: PAD + 6, y: ROW_TOP[s] + 4, w: PORTRAIT_W, h: ROW_H - 8 });
-const PLAIN_LAYOUT = { left: 0, right: W, tileW: TILE_W };
-export const CHALLENGE_LAYOUT = { left: PAD + 6 + PORTRAIT_W + 4, right: W - PAD, tileW: 124, pillY: ROW_TOP[1] - GAP / 2 - 17 };
+export const LAYOUT = { left: PAD + 6 + PORTRAIT_W + 4, right: W - PAD, tileW: 124, pillY: ROW_TOP[1] - GAP / 2 - 17 };
 // The award screen's medallion, centered on the field. 96 px is the 16 px Badge art at 6×.
 export const AWARD = { cx: W / 2, cy: (ROW_TOP[0] + ROW_TOP[1] + ROW_H) / 2, r: 66, size: 96 };
 
-// Every row is centered on the same line, so a short Team sits under the
-// middle of a full one.
-export const tileCenter = (count, i, layout = PLAIN_LAYOUT) =>
-  layout.left + (layout.right - layout.left - count * layout.tileW) / 2 + layout.tileW * (i + 0.5);
+// Every row is centered on the same line beside the portraits, so a short
+// Team sits under the middle of a full one.
+export const tileCenter = (count, i) => LAYOUT.left + (LAYOUT.right - LAYOUT.left - count * LAYOUT.tileW) / 2 + LAYOUT.tileW * (i + 0.5);
 
 // The game-style text box for one hit.
 export function turnText(event, sides) {
@@ -330,12 +328,12 @@ function frameState(f, { hpBefore, events }) {
  *   are no events, like the games' end-of-battle messages
  * - a member with levelUp: true shows its Level in green (the result image)
  * - sprites: a Map of loaded sprite GIFs to share between one battle's images
- * - theme (/challenge only; /battle passes none and keeps its layout):
- *   { trainers: [file, file] (null: an empty portrait), type (the opponent's,
- *   or null), badgeFile (in the center pill, or null), award: { screen,
- *   badgeFile, title } on the text screen at index `screen`, or null }
+ * - trainers: each side's displayed trainer file (null: an empty portrait)
+ * - theme (/challenge only): { type (the opponent's, or null), badgeFile (in
+ *   the center pill, or null), award: { screen, badgeFile, title } on the
+ *   text screen at index `screen`, or null }
  */
-export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), theme = null }) {
+export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], theme = null }) {
   const load = (s, i, folder) => {
     const id = sides[s].members[i].speciesId;
     const key = `${folder}/${id}`;
@@ -354,8 +352,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     if (!sprites.has(key)) sprites.set(key, load());
     return sprites.get(key);
   };
-  const layout = theme ? CHALLENGE_LAYOUT : PLAIN_LAYOUT;
-  const portraits = theme ? await Promise.all(theme.trainers.map((f) => (f ? cached(`trainer/${f}`, () => loadTrimmedTrainerSprite(f)) : null))) : null;
+  const portraits = await Promise.all(trainers.map((f) => (f ? cached(`trainer/${f}`, () => loadTrimmedTrainerSprite(f)) : null)));
   const badgeIcon = (f) => (f ? cached(`badge/${f}`, () => loadBadgeSprite(f)) : null);
   const pillIcon = await badgeIcon(theme?.badgeFile);
   const awardIcon = await badgeIcon(theme?.award?.badgeFile);
@@ -393,10 +390,10 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
       ctx.strokeStyle = winnerSide === s ? GOLD : surgeSide === s ? "#ff9800" : `${SIDE_COLOR[s]}66`;
       ctx.stroke();
 
-      if (theme) drawPortrait(ctx, s, portraits[s], s === 1 && typeFill ? typeFill : SIDE_COLOR[s]);
+      drawPortrait(ctx, s, portraits[s], s === 1 && typeFill ? typeFill : SIDE_COLOR[s]);
 
       // Nameplate: trainer name, the opponent's type (challenges), and a ball per Team member.
-      const nameX = theme ? layout.left + 8 : PAD + 16;
+      const nameX = LAYOUT.left + 8;
       ctx.font = `700 16px ${FONT}`;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
@@ -414,7 +411,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 
       for (let i = 0; i < members.length; i++) {
         const m = members[i];
-        const cx = tileCenter(members.length, i, layout);
+        const cx = tileCenter(members.length, i);
         const floor = top + 126;
         const frac = state.hp[s][i];
         const fighting = active[s] === i;
@@ -475,7 +472,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     const textW = ctx.measureText(badge).width;
     const [bh, icon] = pillIcon ? [34, 38] : [26, 0];
     const bw = textW + 28 + icon;
-    const bx = W / 2 - bw / 2, by = pillIcon ? CHALLENGE_LAYOUT.pillY : ROW_TOP[1] - GAP / 2 - 13;
+    const bx = W / 2 - bw / 2, by = pillIcon ? LAYOUT.pillY : ROW_TOP[1] - GAP / 2 - 13;
     ctx.fillStyle = INK;
     pill(ctx, bx, by, bw, bh);
     ctx.fill();

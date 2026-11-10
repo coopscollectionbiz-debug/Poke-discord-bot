@@ -125,13 +125,14 @@ const replays = createQueue(PLAYBACK.maxAtOnce);
 // edit stops the replay and returns null. `fight` is { sides, surge,
 // result, winnerId, exp }; `exp` sets the Levels on the result frame.
 // `paceStart` holds the previous fight's result frame up for a full delay.
-// `theme` (challenges) styles every frame; `award` (challengeAward) adds its
-// screen to the result frame, right after who won.
-async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, theme = null, award = null }) {
+// `trainers` are each side's trainer files for the portraits. `theme`
+// (challenges) styles every frame; `award` (challengeAward) adds its screen
+// to the result frame, right after who won.
+async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], theme = null, award = null }) {
   const sides = fight.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = fight.result;
   const image = async (opts) => new AttachmentBuilder(
-    await renderBattleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, theme, ...opts }),
+    await renderBattleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, theme, ...opts }),
     { name: "battle.gif" },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.
@@ -201,11 +202,12 @@ async function waitForSlot(channel, queue, heading, message = null) {
 
 // Sends a new channel message (a fresh message is what actually notifies
 // the @mentioned players; edits never do) and replays the battle on it.
-export async function playBattle(channel, outcome, names, { maxUpdates, delayMs, queue = replays } = PLAYBACK) {
+// `trainers` are the two sides' displayed trainer files (null: none).
+export async function playBattle(channel, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null] } = PLAYBACK) {
   const { message, release } = await waitForSlot(channel, queue, header(outcome));
   try {
     await replayFight({
-      channel, message, heading: header(outcome), fight: outcome, names, sprites: new Map(), maxUpdates, delayMs,
+      channel, message, heading: header(outcome), fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers,
       finalEmbed: buildResultEmbed(outcome, names),
     });
   } finally {
@@ -324,6 +326,7 @@ export function challengeAward(outcome, playerName) {
 // post that fails throws; a later failed edit stops the replay and returns null.
 export async function playChallengeFight(channel, message, outcome, i, names, { last, maxUpdates, delayMs, queue = replays, trainer = null } = PLAYBACK) {
   const heading = challengeHeader(outcome, i);
+  const { trainers, ...theme } = challengeTheme(outcome, i, trainer);
   const posted = message;
   const slot = await waitForSlot(channel, queue, heading, message);
   try {
@@ -333,7 +336,8 @@ export async function playChallengeFight(channel, message, outcome, i, names, { 
       paceStart: posted !== null,
       fight: { ...outcome.fights[i], exp: last ? outcome.exp : {} },
       finalEmbed: last ? buildChallengeEmbed(outcome, names) : null,
-      theme: challengeTheme(outcome, i, trainer),
+      trainers,
+      theme,
       award: last ? challengeAward(outcome, names[outcome.userId]) : null,
     });
     // Only the first post can fail to appear; later fights edit a message that's already up.

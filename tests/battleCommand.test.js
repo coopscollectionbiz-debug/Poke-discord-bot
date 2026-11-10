@@ -15,6 +15,8 @@ import { grantCatch } from "../utils/training.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { refundAllPending } from "../utils/battle/wager.js";
 import { PLAYBACK } from "../utils/battle/tuning.js";
+import { GifReader } from "omggif";
+import { portraitBox, FRAME_WIDTH } from "../utils/battle/render.js";
 
 PLAYBACK.delayMs = 0;
 const quiet = console.log;
@@ -221,6 +223,30 @@ section("Private EXP messages");
     .catch(() => { threw = true; });
   assertTrue(!threw, "a refused Challenger follow-up doesn't throw");
   assertEqual(late.log.followUps.map((f) => f.userId), ["B"], "the Defender still gets theirs");
+}
+
+section("Each player's trainer in the replay");
+{
+  const startFrame = async (trainerA) => {
+    const t = harness();
+    t.trainerData.A.displayedTrainer = trainerA;
+    await t.run("A", "B");
+    const r = new GifReader(t.log.messages[0].opts.files[0].attachment);
+    const px = new Uint8Array(r.width * r.height * 4);
+    r.decodeAndBlitFrameRGBA(0, px);
+    return px;
+  };
+  const [withTrainer, without] = [await startFrame("acerola-masters.png"), await startFrame(null)];
+  const differ = (box) => {
+    let n = 0;
+    for (let y = box.y; y < box.y + box.h; y++) for (let x = box.x; x < box.x + box.w; x++) {
+      const i = (y * FRAME_WIDTH + x) * 4;
+      if (Math.abs(withTrainer[i] - without[i]) + Math.abs(withTrainer[i + 1] - without[i + 1]) + Math.abs(withTrainer[i + 2] - without[i + 2]) > 60) n++;
+    }
+    return n;
+  };
+  assertTrue(differ(portraitBox(0)) > 600, "the Challenger's displayed trainer stands at the left of their row");
+  assertEqual(differ(portraitBox(1)), 0, "the Defender, with none displayed, gets an empty portrait");
 }
 
 section("Missing channel permissions");

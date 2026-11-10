@@ -25,6 +25,16 @@ const MULTIHIT_ODDS = [2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 5, 5, 
 // this battle only. Level, moves and everything stored stay the base
 // Pokémon's. HP comes from the profile's base HP at battle start (equal to
 // the base form's for every battle-eligible Mega; see MEGA-BATTLE-DESIGN §4).
+/**
+ * A fighter's moves: the player's chosen moveset for this team (member.moves,
+ * validated in runBattle.buildTeam), else the automatic moveset at the
+ * Pokémon's REAL Level (realLevel in ranked/wager, where it fights at Lv 50
+ * but only knows what it has learned). Casual members carry neither, so
+ * their moves are exactly as before.
+ */
+export const memberMoves = (member) =>
+  (Array.isArray(member.moves) && member.moves.length ? member.moves : autoMoveset(member.speciesId, member.realLevel ?? member.level));
+
 export function buildMon(member, levelMult = 1) {
   const species = getSpecies(member.speciesId);
   const profile = member.battleProfile ?? null;
@@ -38,7 +48,7 @@ export function buildMon(member, levelMult = 1) {
     atk: s.atk, def: s.def, spa: s.spa, spd: s.spd, spe: s.spe,
     maxHp,
     hp: maxHp,
-    moves: autoMoveset(member.speciesId, member.level).map(getMove),
+    moves: memberMoves(member).map(getMove),
     ...(profile && { ability: profile.ability, megaForm: profile.formId, name: profile.name }),
   };
 }
@@ -141,7 +151,7 @@ export function simulateBattle({ sides, seed, surge }) {
     sides.forEach((side, i) => side.members.forEach((member, j) => {
       const mon = teams[i][j];
       if (mon.speciesId === SHEDINJA) mon.ability ??= "Wonder Guard";
-      prepareBattler(mon, autoMoveset(member.speciesId, member.level), member.name);
+      prepareBattler(mon, memberMoves(member), member.name);
     }));
     return simulateBattleFx({ teams, rng });
   }

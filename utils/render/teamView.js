@@ -64,7 +64,8 @@ export function slotView(user, member, index) {
     generation: entry.generation ?? null,
     stats,
     statTotal: stats ? stats.hp + stats.atk + stats.def + stats.spa + stats.spd + stats.spe : null,
-    moves: species ? autoMoveset(id, level).map((m) => getMove(m)?.name ?? m) : [],
+    // The moves this member battles with: the team's chosen moveset (member.moves), else automatic.
+    moves: species ? (Array.isArray(member.moves) && member.moves.length ? member.moves : autoMoveset(id, level)).map((m) => getMove(m)?.name ?? m) : [],
   };
 }
 

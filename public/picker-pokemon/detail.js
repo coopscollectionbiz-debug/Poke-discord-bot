@@ -69,8 +69,12 @@ function render(d, ctx) {
     ${d.megaForms?.length ? `<section class="dt-sec"><h3>Mega forms</h3><div class="dt-forms">${d.megaForms.map((f) => `<div class="dt-form"><img src="/public/sprites/pokemon/mega/${shownVariant === "shiny" ? "shiny" : "normal"}/${esc(f.id)}.gif" alt=""><b>${esc(f.name)}</b><small>${f.unlocked[shownVariant] ? "Unlocked" : "Locked"}</small></div>`).join("")}</div><p class="dt-muted">Forms of ${esc(d.name)}: they never count as Pokédex entries.</p></section>` : ""}
     ${c ? `<section class="dt-sec"><h3>Stats at Lv ${c.level}</h3>${statBars(c.stats)}
       <p class="dt-muted">Power ${c.power.toLocaleString("en-US")} · at Lv 50 in ranked: ${c.power50?.toLocaleString("en-US") ?? "—"}</p></section>
-      <section class="dt-sec"><h3>Battle moves</h3><div class="dt-moves">${c.moves.map((m) => `<div class="dt-move"><span>${esc(m.name)}</span>${m.type ? `<span class="cc-type" data-type="${esc(m.type.toLowerCase())}">${esc(m.type)}</span>` : ""}</div>`).join("")}</div>
-      ${c.nextMoves.length ? `<p class="dt-muted">Learns next: ${c.nextMoves.map((m) => esc(m.name)).join(", ")}</p>` : ""}</section>`
+      ${["display", "battle"].map((team) => {
+        const set = c.movesets?.[team];
+        const list = set ?? c.moves;
+        return `<section class="dt-sec"><h3>${team === "battle" ? "Battle team moves" : "Display team moves"}${set ? "" : " · automatic"}</h3><div class="dt-moves">${list.map((m) => `<div class="dt-move"><span>${esc(m.name)}</span>${m.type ? `<span class="cc-type" data-type="${esc(m.type.toLowerCase())}">${esc(m.type)}</span>` : ""}</div>`).join("")}</div></section>`;
+      }).join("")}
+      <section class="dt-sec"><p class="dt-muted" style="margin:0">${c.nextMoves.length ? `Learns next: ${c.nextMoves.map((m) => esc(m.name)).join(", ")}. ` : ""}Change moves on the <a href="${pageHref("/public/teams/", ctx.userId)}">Teams page</a> (each team keeps its own).</p></section>`
     : d.baseStats ? `<section class="dt-sec"><h3>Base stats</h3>${statBars(d.baseStats)}<p class="dt-muted">Total ${d.baseTotal}</p></section>` : ""}
     ${evo.length > 1 ? `<section class="dt-sec"><h3>Evolution</h3><div class="dt-evo">${evo.map((e) => `<button type="button" class="dt-evo-step${e.rel === "this" ? " is-this" : ""}" data-species="${e.id}"${e.rel === "this" ? ' aria-current="true"' : ""}><img src="/public/sprites/pokemon/normal/${e.id}.gif" alt="">${esc(e.name)}</button>`).join('<span aria-hidden="true">›</span>')}</div></section>` : ""}
     ${owned.length ? `<section class="dt-sec dt-actions">

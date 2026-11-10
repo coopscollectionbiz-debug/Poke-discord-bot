@@ -19,6 +19,7 @@
 import { playerId, showBanner, showExpired, toast, showActionError, confirmDialog } from "/public/shared/shell.js";
 import { displaySpeciesName } from "/public/shared/names.js";
 import { scanFx } from "/public/shared/spriteFx.js";
+import { openMovesEditor } from "/public/teams/moves.js";
 
 const TEAMS = ["display", "battle"];
 const LABEL = { display: "Display team", battle: "Battle team" };
@@ -303,6 +304,7 @@ function slotCard(t, s, i) {
       <div class="tm-slot-meta">${lvl}</div>
       ${typeChips(s.id)}
       <div class="tm-slot-tags">${tags}</div>
+      <button type="button" class="tm-movesbtn" data-act="moves" data-team="${t}" data-i="${i}" aria-label="${esc(species(s.id).name)}’s moves on your ${LABEL[t]}">Moves</button>
       ${state.megaOn && megaFormsFor(s).length ? `<button type="button" class="tm-megabtn${s.mega ? " is-on" : ""}" data-act="mega" data-team="${t}" data-i="${i}" aria-label="Mega form for ${esc(species(s.id).name)}: ${s.mega ? esc(megaCard(s.mega)?.name ?? s.mega) : "off"}. Change">${s.mega ? `Mega: ${esc((megaCard(s.mega)?.name ?? s.mega).replace(/^Mega /, ""))}` : "Mega: off"}</button>` : ""}
     </div>
     <div class="tm-slot-ctl">
@@ -495,6 +497,10 @@ function onClick(e) {
   else if (act === "add") add(state.active, { id: Number(el.dataset.id), variant: el.dataset.variant });
   else if (act === "copy") copyDisplay();
   else if (act === "mega") cycleMega(t, i);
+  else if (act === "moves") {
+    const s = team(t)[i];
+    if (s) openMovesEditor({ userId, team: t, s, name: species(s.id).name, onSaved: () => render() });
+  }
   else if (act === "discard") discard();
   else if (act === "save") save();
   else if (act === "show") { state.filter.show = el.dataset.show; render(); }

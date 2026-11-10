@@ -22,6 +22,7 @@ import { simulateBattle } from "./sim.js";
 import { teamPower, rollSurge } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, getCasualRecord, capBlock, recordStart } from "./rewards.js";
 import { RANKED } from "./tuning.js";
+import { chosenMoves } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
 
@@ -37,7 +38,9 @@ export function withBothLocks(lockUser, idA, idB, fn) {
 // (services/megaTeam.js resolveBattleMega, fail-closed) gets a battle-only
 // profile: Mega stats, types, ability and name. speciesId, variant and Level
 // stay the base line's, so EXP, Levels and ownership never see the Mega.
-export function buildTeam(user, { env = process.env, team = user.displayedPokemon } = {}) {
+// movesetTeam: whose chosen movesets apply ("display" for casual battles and
+// displays, "battle" for ranked/wager). Members without one use automatic moves.
+export function buildTeam(user, { env = process.env, team = user.displayedPokemon, movesetTeam = "display" } = {}) {
   const mega = resolveBattleMega(user, { env, team });
   if (mega && !mega.ok && isMegaCapabilityEnabled("battle", env)) console.warn(`⚠️ Mega slot battles as its base form (${mega.reason}).`);
   return normalizeTeam(team, 6)
@@ -49,6 +52,8 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
         name: speciesName(slot.id),
         level: getTraining(user, slot.id, slot.variant).level,
       };
+      const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant);
+      if (moves) member.moves = moves;
       if (!mega?.ok || mega.key !== `${slot.id}:${slot.variant}`) return member;
       return { ...member, name: mega.profile.name, baseName: member.name, megaForm: mega.formId, battleProfile: mega.profile };
     });
@@ -61,7 +66,7 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
  */
 export function buildBattleTeam(user, { env = process.env } = {}) {
   if (!Array.isArray(user?.battleTeam)) return [];
-  return buildTeam(user, { env, team: user.battleTeam }).map((m) => ({ ...m, realLevel: m.level, level: RANKED.level }));
+  return buildTeam(user, { env, team: user.battleTeam, movesetTeam: "battle" }).map((m) => ({ ...m, realLevel: m.level, level: RANKED.level }));
 }
 
 /** A player's fighters for this mode. */

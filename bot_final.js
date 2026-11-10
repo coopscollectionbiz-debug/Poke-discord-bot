@@ -65,6 +65,7 @@ import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
 import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
 import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
 import { pokemonDetail } from "./services/pokemonDetail.js";
+import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
 import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
@@ -2016,6 +2017,34 @@ app.get("/api/pokemon/detail", (req, res) => {
   if (!user) return res.status(404).json({ error: "User not found" });
   const { status, body } = pokemonDetail(user, species);
   return res.status(status).json(body);
+});
+
+// ✅ POST — a copy's chosen moveset for one team (owner: separate per team).
+// Body: { id, team: "display"|"battle", pokeId, variant, moves: [moveId…] | null }
+// moves null → automatic moves again. 1–4 distinct moves it has learned
+// (level-up at or below its real Level; TMs later). services/movesets.js.
+app.post("/api/pokemon/moveset", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { id, team, pokeId, variant, moves } = req.body || {};
+    if (!id || pokeId == null) return res.status(400).json({ success: false, error: "Missing id/pokeId" });
+    if (!TEAM_TYPES.includes(team)) return res.status(400).json({ success: false, error: "Unknown team type" });
+    if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    await lockUser(id, async () => {
+      const u = trainerData[id];
+      if (!u) return res.status(404).json({ success: false, error: "User not found" });
+      const v = variant === "shiny" ? "shiny" : "normal";
+      if (moves !== null) {
+        const check = validateMoveset(u, pokeId, v, moves);
+        if (!check.ok) return res.status(check.status).json({ success: false, error: check.error, code: check.code });
+        setMoveset(u, team, pokeId, v, check.moves);
+      } else setMoveset(u, team, pokeId, v, null);
+      const saveAck = await saveAndAck(trainerData);
+      return res.json({ ...saveAckFields(saveAck), success: true, team, moves: chosenMoves(u, team, pokeId, v) });
+    });
+  } catch (err) {
+    console.error("❌ /api/pokemon/moveset:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
 });
 
 // ✅ POST — set full Pokémon team (up to 6) — Variant-safe + Ghost Auto-Clean

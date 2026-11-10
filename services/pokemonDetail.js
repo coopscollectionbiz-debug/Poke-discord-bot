@@ -19,10 +19,11 @@ import { megasOfSpecies } from "../utils/megas.js";
 import { unlockedForms, megaLineKey } from "./megaUnlocks.js";
 import { isMegaCapabilityEnabled } from "../config/features.js";
 import { toTeamObj } from "../utils/economyRules.js";
+import { learnableMoves, chosenMoves, moveInfo as movesetMoveInfo } from "./movesets.js";
 
 const sum = (s) => (s ? s.hp + s.atk + s.def + s.spa + s.spd + s.spe : null);
 const nameOf = (id) => displaySpeciesName(id, getSpeciesEntry(id)?.name);
-const moveInfo = (m) => { const x = getMove(m); return x ? { name: x.name, type: x.type ?? null, power: x.power ?? null } : { name: String(m), type: null, power: null }; };
+const moveInfo = (m) => { const x = getMove(m); return x ? { id: m, name: x.name, type: x.type ?? null, power: x.power ?? null } : { id: m, name: String(m), type: null, power: null }; };
 
 /** Where this copy sits on each team: { display: 2, battle: null } (1-based slots). */
 function teamSlots(user, id, variant) {
@@ -62,7 +63,13 @@ export function pokemonDetail(user, speciesId, { env = process.env } = {}) {
       power: v.statTotal,
       stats50,
       power50: sum(stats50),
-      moves: species ? autoMoveset(id, level).map(moveInfo) : [], // the battle moveset (slotView uses the same function)
+      moves: species ? autoMoveset(id, level).map(moveInfo) : [], // the automatic moveset (slotView uses the same function)
+      // Chosen movesets per team (null = automatic) and every move it may equip.
+      movesets: {
+        display: chosenMoves(user, "display", id, variant)?.map(movesetMoveInfo) ?? null,
+        battle: chosenMoves(user, "battle", id, variant)?.map(movesetMoveInfo) ?? null,
+      },
+      learnable: species ? learnableMoves(user, id, variant, { level }).map((m) => ({ ...movesetMoveInfo(m.id), learnedAt: m.learnedAt, source: m.source })) : [],
       nextMoves: species ? movesLearned(id, level, Math.min(100, level + 20)).map(moveInfo) : [],
       teams: teamSlots(user, id, variant),
     };

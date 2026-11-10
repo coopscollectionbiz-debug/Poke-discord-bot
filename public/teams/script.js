@@ -23,6 +23,8 @@ const TEAMS = ["display", "battle"];
 const LABEL = { display: "Display team", battle: "Battle team" };
 const MAX = 6;
 const BATTLE_LEVEL = 50;
+// pokemonData.json type ids (same order as the Pokémon page's TYPE_MAP).
+const TYPE_NAMES = [null, "normal", "fighting", "flying", "poison", "ground", "rock", "bug", "ghost", "steel", "fire", "water", "grass", "electric", "psychic", "ice", "dragon", "dark", "fairy"];
 const NOTICE_KEY = "cc-battle-team-notice";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -54,6 +56,8 @@ const state = {
 // ---------- helpers ----------
 const species = (id) => state.data[id] ?? { name: `#${id}`, tier: "common", types: [] };
 const isMythic = (id) => String(species(id).tier).toLowerCase() === "mythic";
+/** Type chips (text on the type color, never color alone). Base form's types. */
+const typeChips = (id) => `<span class="tm-types">${(species(id).types ?? []).map((t) => TYPE_NAMES[t]).filter(Boolean).map((t) => `<span class="cc-type" data-type="${t}">${t}</span>`).join("")}</span>`;
 const levelOf = (s) => state.levels[keyOf(s)] ?? "?";
 const powerOf = (s) => state.powers[keyOf(s)] ?? 0;
 const slotName = (s) => (s.mega && state.megaOn ? megaName(s) : species(s.id).name);
@@ -270,6 +274,7 @@ function slotCard(t, s, i) {
     <div class="tm-slot-body">
       <div class="tm-slot-name">${esc(name)}</div>
       <div class="tm-slot-meta">${lvl}</div>
+      ${typeChips(s.id)}
       <div class="tm-slot-tags">${tags}</div>
     </div>
     <div class="tm-slot-ctl">
@@ -375,6 +380,7 @@ function boxTile(s) {
       ${shiny ? `<span class="tm-shiny tm-shiny--sm"><svg class="tm-ic" aria-hidden="true"><use href="#tm-sparkle"/></svg></span>` : ""}
       <img class="cc-sprite" src="/public/sprites/pokemon/${shiny ? "shiny" : "normal"}/${s.id}.gif" alt="" loading="lazy" onerror="this.onerror=null;this.src='/public/sprites/items/pokeball.png'">
       <span class="tm-tile-name">${esc(sp.name)}</span>
+      ${typeChips(s.id)}
       <span class="tm-tile-lv">Lv ${levelOf(s)}${isMythic(s.id) && !blocked ? ` · <b class="tier-text mythic">Mythic</b>` : ""}</span>
     </button></li>`;
 }

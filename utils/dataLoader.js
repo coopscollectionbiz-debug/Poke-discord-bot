@@ -142,7 +142,7 @@ export async function getFlattenedTrainers() {
 // ==========================================================
 // 🔧 Flatten and Normalize Trainer Sprites (Respects "disabled" flag)
 // ==========================================================
-function flattenTrainerSprites(spritesObj) {
+export function flattenTrainerSprites(spritesObj) {
   const flat = [];
 
   for (const [key, info] of Object.entries(spritesObj)) {
@@ -162,10 +162,11 @@ function flattenTrainerSprites(spritesObj) {
         .filter(Boolean);
     }
 
-    // 🔒 Fallback — if no valid sprites, generate a predictable filename
-    if (spriteArray.length === 0) {
-      spriteArray = [`${lowerKey}.png`];
-    }
+    // A group whose sprites are all disabled has nothing to give or sell.
+    // (This used to fall back to "<key>.png", a file that mostly doesn't
+    // exist, so admin rolls and the Starter Pack could grant a sprite that
+    // never renders.)
+    if (spriteArray.length === 0) continue;
 
     const spriteFile = spriteArray[0];
 

@@ -887,12 +887,6 @@
     ],
     "tier": "Rare"
   },
-  "bugsymasters": {
-    "sprites": [
-     "bugsy-masters.png"
-    ],
-    "tier": "Epic"
-  },
   "burgh": {
     "sprites": [
       "burgh.png"
@@ -1109,7 +1103,7 @@
     ],
     "tier": "Mythic"
   },
-  "che": {
+  "chef": {
     "sprites": [
       "chef.png"
     ],
@@ -1231,7 +1225,7 @@
     ],
     "tier": "Uncommon"
   },
-  "clif": {
+  "cliff": {
     "sprites": [
       "cliff.png"
     ],
@@ -2094,15 +2088,6 @@
     ],
     "tier": "Epic"
   },
-"gloriaalt": {
-    "sprites": [
-      "gloria-dojo.png",
-      "gloria-league.png",
-      "gloria-masters.png",
-      "gloria-tundra.png"
-    ],
-    "tier": "Legendary"
-  },
 
   "golfer": {
     "sprites": [
@@ -2317,14 +2302,6 @@
       "hilbert.png"
     ],
     "tier": "Epic"
-  },
- "hilbertalt": {
-    "sprites": [
-      "hilbert-masters.png",
-      "hilbert-masters2.png",
-      "hilbert-wonderlauncher.png"
-    ],
-    "tier": "Legendary"
   },
   "hilda": {
     "sprites": [
@@ -2885,13 +2862,13 @@
     ],
     "tier": "Mythic"
   },
-  "leaguestaf": {
+  "leaguestaff": {
     "sprites": [
       "leaguestaff.png"
     ],
     "tier": "Epic"
   },
-  "leaguestaff": {
+  "leaguestafff": {
     "sprites": [
       "leaguestafff.png"
     ],
@@ -4172,7 +4149,7 @@
     ],
     "tier": "Rare"
   },
-  "railstaf": {
+  "railstaff": {
     "sprites": [
       "railstaff.png"
     ],
@@ -4501,12 +4478,6 @@
       "sabrina.png"
     ],
     "tier": "Rare"
-  },
-  "sabrinamasters": {
-    "sprites": [
-  "sabrina-masters.png"
-    ],
-    "tier": "Epic"
   },
   "sada": {
     "sprites": [
@@ -5391,15 +5362,6 @@
     ],
     "tier": "Epic"
   },
- "victoralt": {
-    "sprites": [
-      "victor-dojo.png",
-      "victor-league.png",
-      "victor-masters.png",
-      "victor-tundra.png"
-    ],
-    "tier": "Legendary"
-  },
   "vince": {
     "sprites": [
       "vince.png"
@@ -5459,12 +5421,6 @@
       "wallace.png"
     ],
     "tier": "Legendary"
-  },
-  "wallacemasters": {
-    "sprites": [
-      "wallace-masters.png"
-    ],
-    "tier": "Mythic"
   },
   "wally": {
     "sprites": [

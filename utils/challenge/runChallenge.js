@@ -18,6 +18,7 @@ import { teamExp, utcDay } from "../battle/rewards.js";
 import { CHALLENGE } from "../battle/tuning.js";
 import { speciesName } from "../training.js";
 import { TRAINER_COSTS } from "../trainerCosts.js";
+import { trackProgress } from "../../progression/achievements.js";
 import { ownsTrainer, grantTrainer } from "../../services/assets.js";
 import { grantItem } from "../../services/inventory.js";
 
@@ -147,7 +148,7 @@ const owns = (user, m) => (user.pokemon?.[m.speciesId]?.[m.variant] ?? 0) > 0;
 // Applies a finished challenge: EXP (`totals` per Team slot) to the members
 // the player still owns, then the first-win prize, Badge, and unlock, or the
 // loss of min(maxLoss, 10%). The attempt was counted already.
-function settle({ user, userId, key, team, totals, cleared, day, maxLoss }) {
+function settle({ user, userId, key, team, totals, cleared, day, maxLoss, now }) {
   const kept = team.flatMap((m, i) => (owns(user, m) ? [i] : []));
   const exp = { [userId]: applyGains(user, kept.map((i) => team[i]), kept.map((i) => totals[i])) };
   const challenge = CHALLENGES[key];
@@ -167,6 +168,9 @@ function settle({ user, userId, key, team, totals, cleared, day, maxLoss }) {
     ccLost = Math.min(maxLoss, challengeLoss(user.cc));
     user.cc = (user.cc ?? 0) - ccLost;
   }
+  // Achievements for Levels gained and prize sprites. Not a "battle" event:
+  // that moves Battle win streaks, and challenges never touch the Battle record.
+  trackProgress(user, [{ type: "pokemon" }, { type: "trainers" }], now.getTime());
   return { exp, prize, badge, unlocked, ccLost };
 }
 
@@ -179,7 +183,7 @@ export function runChallenge({ trainerData, userId, key, seed, maxLoss = Infinit
   const totals = team.map((_, i) => fights.reduce((t, f) => t + f.gains[i], 0));
   const day = utcDay(now);
   getChallengeRecord(user, day).attempts++;
-  const settled = settle({ user, userId, key, team, totals, cleared, day, maxLoss });
+  const settled = settle({ user, userId, key, team, totals, cleared, day, maxLoss, now });
   return { ok: true, key, userId, seed, fights: fights.map((f) => outcomeFight(userId, f)), cleared, ...settled };
 }
 
@@ -219,7 +223,7 @@ function playStep(user, userId, members, now) {
   const cleared = fight.won;
   delete user.challenge.run;
   const settled = settle({
-    user, userId, key: "elite4", team: run.team, totals: run.gains, cleared, day: run.day, maxLoss: run.maxLoss ?? Infinity,
+    user, userId, key: "elite4", team: run.team, totals: run.gains, cleared, day: run.day, maxLoss: run.maxLoss ?? Infinity, now,
   });
   const outcome = { ok: true, key: "elite4", userId, seed: run.seed, fights, breaks: view.breaks, cleared, ...settled };
   return { ...base, ended: true, outcome, fainted: [], next: null };

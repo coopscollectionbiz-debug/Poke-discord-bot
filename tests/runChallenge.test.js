@@ -17,6 +17,7 @@ import { createNewUser } from "../utils/userSchema.js";
 import { CHALLENGE } from "../utils/battle/tuning.js";
 import { simulateBattle } from "../utils/battle/sim.js";
 import { createRng } from "../utils/battle/rng.js";
+import { trackProgress } from "../progression/achievements.js";
 import { readFileSync } from "fs";
 
 const D = new Date("2026-11-09T12:00:00Z");
@@ -134,6 +135,25 @@ section("Sprite fallback");
   stray.A.trainers["y.png"] = 1;
   run(stray, "brock");
   assertEqual([...stray.A.trainers], ["x.png", "y.png", "brock-gen3.png"], "the prize keeps a trainer stored as an array property");
+}
+
+section("Achievements");
+{
+  // trackProgress(user, []) runs the one-time look back over the whole
+  // record first, so only the challenge's own events can unlock below.
+  const collector = world();
+  collector.A.trainers = Array.from({ length: 9 }, (_, i) => `t${i}.png`);
+  trackProgress(collector.A, [], D.getTime());
+  run(collector, "brock");
+  assertTrue("trainer_10" in (collector.A.ach ?? {}), "a prize sprite counts toward Trainer Collector (10 trainers)");
+
+  const almost = world(STRONG, 49);
+  for (const sid of STRONG) almost.A.training[`${sid}:normal`].exp = 50 ** 3 - 1;
+  trackProgress(almost.A, [], D.getTime());
+  assertTrue(!("lvl_50" in (almost.A.ach ?? {})), "no Lv 50 before the challenge");
+  run(almost, "brock");
+  assertTrue("lvl_50" in (almost.A.ach ?? {}), "a Level reached in a challenge counts toward Seasoned (Lv 50)");
+  assertEqual(almost.A.stats?.winStreak ?? 0, 0, "a challenge win doesn't move the Battle win streak");
 }
 
 section("Prize items go through the inventory service");

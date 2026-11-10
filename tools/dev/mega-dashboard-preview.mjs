@@ -41,7 +41,7 @@ const user = {
   displayedPokemon: [{ id: 6, variant: "normal", mega: "mega-charizard-x" }, { id: 25, variant: "normal" }, { id: 150, variant: "normal" }],
   megaUnlocks: {
     "6:normal": { forms: { "mega-charizard-x": { at: Date.now(), stone: "megastone_charizarditex" } }, preferred: "mega-charizard-x" },
-    "6:shiny": { forms: { "mega-charizard-y": { at: Date.now(), stone: "megastone_charizarditey" } }, preferred: null }, // a shiny Mega
+    "6:shiny": { forms: { "mega-charizard-y": { at: Date.now(), stone: "megastone_charizarditey" } }, preferred: null }, // a shiny Mega (X only on the normal line)
     "150:normal": { forms: { "mega-mewtwo-x": { at: Date.now(), stone: "megastone_mewtwonitex" } }, preferred: null },
     "26:normal": { forms: { "mega-raichu-x": { at: Date.now(), stone: "megastone_raichunitex" } }, preferred: null }, // Legends: Z-A: unlocked, can't battle
     "384:normal": { forms: { "mega-rayquaza": { at: Date.now(), stone: null } }, preferred: null }, // blocked form (only via bad data)

@@ -47,7 +47,7 @@ export async function initMega(context) {
   grid?.parentNode?.insertBefore(section, grid);
   render();
   onModeChange(ctx.getMode());
-  return { enabled: true, onModeChange, render, refresh, megaSprite, megaSlotState };
+  return { enabled: true, onModeChange, render, refresh, megaSprite, megaSlotState, isMegaUnlockedOn };
 }
 
 /**
@@ -90,6 +90,11 @@ function teamMegaSlot() {
 
 function cardForSlot(slot) {
   return slot ? state.cards.find((x) => x.formId === slot.mega && x.line === `${slot.id}:${slot.variant}`) ?? null : null;
+}
+
+/** True when `formId` is unlocked and usable on this Pokémon's normal or shiny line. */
+export function isMegaUnlockedOn(id, variant, formId) {
+  return state.cards.some((c) => c.formId === formId && c.line === `${Number(id)}:${variant}` && c.state === "active" && c.teamSelectable);
 }
 
 /**

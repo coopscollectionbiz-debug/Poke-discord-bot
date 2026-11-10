@@ -4,7 +4,7 @@
 |---|---|
 | Branch | `feature/mega-evolution-m3` (local only; not pushed, no PR) |
 | Worktree | `E:\Poke-discord-bot-mega-m3` |
-| Based on | M2 `8d793c8a`, plus a merge of current master `38884217` (`6e03179d`) |
+| Based on | M2 `8d793c8a`, plus merges of master `38884217` (`6e03179d`) and `770618c4` (#60) |
 | Production | Untouched. No push, no deploy, no Fly.io or environment change, no player data, no stones distributed, no encounter or generation change. Mega battles still need `MEGA_EVOLUTION_ENABLED` **and** `MEGA_BATTLES_ENABLED=1`; neither is set. Rewards stay hard-off. |
 
 ## 1. Summary
@@ -37,6 +37,15 @@
 | #55 achievements date fix | The suite is fully green. |
 
 **Conflicts:** none. The merge applied cleanly; no newer master code was discarded.
+
+**Update: master `770618c4` (#60, the dashboard shiny toggle) merged into this branch as well.**
+- **Merge:** no conflicts. The full suite still passes (61/61 files, 2,099 assertions, 0/3,000 battle differences).
+- **Discord images:** all 23 no-Mega images are still byte-identical to the new master, with Mega off and on.
+- **Dashboard with Mega off:** markup and layout match the new master exactly, at 1024 and 375 px.
+- **Bug found and fixed:** #60's ✨ toggle rewrote a Team slot without its Mega, and the Mega section kept saying the Mega was on the Team.
+  - Now the Mega stays on the slot only if the same form is unlocked on the copy switched to (Megas are unlocked per normal/shiny line). Otherwise the slot becomes the base form.
+  - The Mega section refreshes straight away.
+  - Checked in the browser: Mega X → shiny Mega Y (shiny Mega sprite in the Save preview) → toggle to normal → Mega dropped, base Charizard, Team line cleared. No console errors.
 
 ## 3. Visual architecture audit
 

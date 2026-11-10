@@ -623,9 +623,17 @@ function toggleCardVariant(id) {
   if (!ownsVariant(pid, next)) return;
   viewVariant.set(pid, next);
   const idx = findTeamIndex(pid);
-  if (currentMode === "team" && idx >= 0) selectedTeam[idx] = { id: pid, variant: next };
+  if (currentMode === "team" && idx >= 0) {
+    // A Mega is unlocked per line (normal/shiny): it stays on the slot only
+    // if the same form is unlocked on the copy switched to.
+    const prev = selectedTeam[idx];
+    const slot = { id: pid, variant: next };
+    if (prev?.mega && megaUI?.isMegaUnlockedOn?.(pid, next, prev.mega)) slot.mega = prev.mega;
+    selectedTeam[idx] = slot;
+  }
   renderPokemonGrid();
   updateTeamCounter();
+  megaUI?.render?.(); // the Mega section's Team line follows the edit
   // Keep keyboard focus on the toggle after the re-render.
   document.querySelector(`.pokemon-card[data-id="${pid}"] .variant-toggle`)?.focus({ preventScroll: true });
 }

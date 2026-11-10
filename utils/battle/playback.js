@@ -245,6 +245,16 @@ export function prizeText(key, prize) {
   return list([...sprites, `${n(prize.cc)} CC`, plural(prize.stones, "stone"), `${n(prize.dust)} Dust`]);
 }
 
+// The challenger's EXP, shown in the challenge result embed (/battle sends
+// EXP privately instead; a challenge has only one player earning it).
+function expLines(entries) {
+  return entries.slice(0, 6).map((e) => {
+    if (e.toLevel === e.fromLevel) return `${e.name} Lv ${e.fromLevel} · +${e.gained} EXP`;
+    const learned = e.learned.length ? ` · learned **${list(e.learned)}**` : "";
+    return `⬆️ **${e.name}** Lv ${e.fromLevel} → **${e.toLevel}**${learned}`;
+  }).join("\n") || "—";
+}
+
 export function buildChallengeEmbed(outcome, names) {
   const player = names[outcome.userId];
   const last = outcome.fights.at(-1);

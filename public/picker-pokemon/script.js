@@ -38,6 +38,7 @@ import { showMessage, showActionError, showExpired, showBanner, toast, EXPIRED_M
 import { displaySpeciesName, nameMatches } from "/public/shared/names.js";
 
 const LOCK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>`;
+const SPARKLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>`;
 const capitalize = (s) => String(s).charAt(0).toUpperCase() + String(s).slice(1);
 
 // ===========================================================
@@ -576,6 +577,46 @@ function clampTeamTo6Unique() {
 // ===========================================================
 // 🎴 Pokémon Grid Renderer (HARDENED)
 // ===========================================================
+// ===========================================================
+// ✨ Which variant each card shows (and which one actions use)
+// In-memory only. Default: the Team's variant if it's on the Team,
+// shiny if that's the only one owned, otherwise normal. A choice made
+// with the card's toggle sticks while that variant is still owned.
+// ===========================================================
+const viewVariant = new Map(); // Pokémon ID -> "normal" | "shiny"
+
+function defaultVariant(id) {
+  const owned = ownedCounts(id);
+  const slot = selectedTeam[findTeamIndex(id)];
+  if (slot && ownsVariant(id, slot.variant)) return normVariant(slot.variant);
+  return owned.shiny > 0 && owned.normal <= 0 ? "shiny" : "normal";
+}
+
+function variantShown(id) {
+  const chosen = viewVariant.get(Number(id));
+  return chosen && ownsVariant(id, chosen) ? chosen : defaultVariant(id);
+}
+
+function spriteFor(id, variant) {
+  return `/public/sprites/pokemon/${normVariant(variant) === "shiny" ? "shiny" : "normal"}/${id}.gif`;
+}
+
+// Flip a card between its normal and shiny copy (only when both are owned).
+// In Change Team mode, a Pokémon already on the Team switches its slot to
+// that copy too (unsaved until Save Team, like every other Team edit).
+function toggleCardVariant(id) {
+  const pid = Number(id);
+  const next = variantShown(pid) === "shiny" ? "normal" : "shiny";
+  if (!ownsVariant(pid, next)) return;
+  viewVariant.set(pid, next);
+  const idx = findTeamIndex(pid);
+  if (currentMode === "team" && idx >= 0) selectedTeam[idx] = { id: pid, variant: next };
+  renderPokemonGrid();
+  updateTeamCounter();
+  // Keep keyboard focus on the toggle after the re-render.
+  document.querySelector(`.pokemon-card[data-id="${pid}"] .variant-toggle`)?.focus({ preventScroll: true });
+}
+
 // Highest value among the owned variants of a species (null if none owned).
 // `map` is userData.levels or userData.powers ({ "25:normal": 16 }).
 function bestOwned(map, id) {
@@ -660,14 +701,19 @@ function renderPokemonGrid() {
       locked = owned.normal <= 0 || owned.shiny > 0 || dust < cost || cost <= 0;
     }
 
-    // Sprite path (display normal art as primary; locked uses grayscale).
-    // Multi-select locks cards you own, so they stay in color: grayscale means "unowned".
-    const spritePath = locked && !inMultiSelect
-      ? `/public/sprites/pokemon/grayscale/${id}.gif`
-      : `/public/sprites/pokemon/normal/${id}.gif`;
+    // Sprite: grayscale means "unowned" only. Owned cards show the copy
+    // chosen with the toggle (shiny by default when it's the only one owned);
+    // a locked owned card is dimmed instead of grayed out.
+    const shownVariant = isOwnedAny ? variantShown(id) : "normal";
+    const hasBoth = owned.normal > 0 && owned.shiny > 0;
+    const spritePath = isOwnedAny
+      ? spriteFor(id, shownVariant)
+      : `/public/sprites/pokemon/grayscale/${id}.gif`;
 
     const card = document.createElement("div");
     card.className = `pokemon-card ${isOwnedAny ? "owned" : "unowned"}`;
+    if (shownVariant === "shiny") card.classList.add("shiny-view");
+    if (hasBoth) card.classList.add("has-toggle");
     if (locked) card.classList.add("locked");
     const multiPicked = inMultiSelect && multiSelected.has(id);
     if (multiPicked) card.classList.add("multi-selected");
@@ -735,16 +781,19 @@ function renderPokemonGrid() {
     let countHTML = "";
     let levelHTML = "";
     if (owned.any > 0) {
-      const parts = [];
-      if (owned.normal > 0) parts.push(`×${owned.normal}`);
-      if (owned.shiny > 0) parts.push(`<span class="shiny-count">✨×${owned.shiny}</span>`);
-      countHTML = `<div class="count-label bottom-left">${parts.join(" · ")}</div>`;
+      // Normal count bottom-left, shiny count bottom-right (lifted above a
+      // mode badge, which also sits bottom-right).
+      if (owned.normal > 0) countHTML += `<div class="count-label bottom-left" title="Normal copies">×${owned.normal}</div>`;
+      if (owned.shiny > 0) {
+        countHTML += `<div class="count-label shiny-count bottom-right${badgeHTML ? " lifted" : ""}" title="Shiny copies">✨×${owned.shiny}</div>`;
+      }
 
       // Level tag per owned variant, under the name (like the battle screen)
       const lv = (variant) => userData.levels?.[`${id}:${variant}`] ?? "?";
       const tags = [];
-      if (owned.normal > 0) tags.push(`<span class="poke-level">Lv ${lv("normal")}</span>`);
-      if (owned.shiny > 0) tags.push(`<span class="poke-level shiny">✨ Lv ${lv("shiny")}</span>`);
+      const viewing = (v) => (hasBoth && shownVariant === v ? " is-viewing" : "");
+      if (owned.normal > 0) tags.push(`<span class="poke-level${viewing("normal")}">Lv ${lv("normal")}</span>`);
+      if (owned.shiny > 0) tags.push(`<span class="poke-level shiny${viewing("shiny")}">✨ Lv ${lv("shiny")}</span>`);
       levelHTML = `<div class="poke-levels">${tags.join("")}</div>`;
       // While sorting by Power, show the number being sorted on.
       const power = sortOrder.startsWith("power") ? bestPower(id) : null;
@@ -758,6 +807,13 @@ function renderPokemonGrid() {
       <div class="sprite-wrapper">
         <img src="${spritePath}" class="poke-sprite" alt="" loading="lazy">
         ${teamBadgeHTML}
+        ${
+          hasBoth
+            ? `<button type="button" class="variant-toggle" aria-pressed="${shownVariant === "shiny"}"
+                 aria-label="${shownVariant === "shiny" ? `Showing shiny ${name}. Show normal` : `Showing normal ${name}. Show shiny`}"
+                 title="${shownVariant === "shiny" ? "Shiny shown — tap for normal" : "Normal shown — tap for shiny"}">${SPARKLE_ICON}</button>`
+            : ""
+        }
         ${locked ? `<div class="lock-overlay">${LOCK_ICON}</div>` : ""}
         ${multiPicked ? `<div class="multi-check" aria-hidden="true">✓</div>` : ""}
         ${countHTML}
@@ -775,6 +831,7 @@ function renderPokemonGrid() {
     const states = [];
     if (teamIdx >= 0) states.push(`on Team, slot ${teamIdx + 1}`);
     if (multiPicked) states.push("selected");
+    if (shownVariant === "shiny") states.push("shiny");
     if (!isOwnedAny) states.push("not owned");
     else if (locked) states.push("unavailable in this mode");
     card.tabIndex = 0;
@@ -788,6 +845,17 @@ function renderPokemonGrid() {
       if (locked) return showBlockedActionModal(id);
       onPokemonClick(id);
     });
+
+    // The ✨ toggle only changes the copy shown (and used); it never
+    // triggers the card's own action.
+    card.querySelector(".variant-toggle")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleCardVariant(id);
+    });
+    // Missing shiny art never silently falls back to the normal sprite.
+    card.querySelector(".poke-sprite").addEventListener("error", (e) => {
+      e.currentTarget.src = "/public/sprites/items/pokeball.png";
+    }, { once: true });
 
     (cardsByRegion[p.region] ??= []).push(card);
     sortable.push({ id, card });
@@ -885,19 +953,15 @@ function toggleTeamSelection(id) {
     return;
   }
 
-  // Owns both -> choose variant
-  openVariantChoiceModal({
-    title: "⭐ Choose Variant for Team",
-    pokeId: pid,
-    onChoose: (variant) => {
-      // TEAM RULE: ensure only one slot for this Pokémon
-      selectedTeam = selectedTeam.filter((s) => Number(s.id) !== pid);
-      selectedTeam.push({ id: pid, variant: normVariant(variant) });
-      clampTeamTo6Unique();
-      renderPokemonGrid();
-      updateTeamCounter();
-    },
-  });
+  // Owns both -> add the copy the card is showing (chosen with its ✨ toggle).
+  const variant = variantShown(pid);
+  // TEAM RULE: ensure only one slot for this Pokémon
+  selectedTeam = selectedTeam.filter((s) => Number(s.id) !== pid);
+  selectedTeam.push({ id: pid, variant });
+  viewVariant.set(pid, variant);
+  clampTeamTo6Unique();
+  renderPokemonGrid();
+  updateTeamCounter();
 }
 
 function updateTeamCounter() {
@@ -1320,80 +1384,6 @@ function showBlockedActionModal(pokeId) {
 }
 
 // ===========================================================
-// ⭐ Variant Choice Modal (Team / Donate entrypoint)
-// ===========================================================
-function openVariantChoiceModal({ title, pokeId, onChoose }) {
-  const p = pokemonData[pokeId];
-  if (!p) return;
-
-  const owned = ownedCounts(pokeId);
-  const overlay = createOverlay();
-
-  const modal = document.createElement("div");
-  modal.style.cssText = `
-    background: var(--card);
-    border: 2px solid var(--brand);
-    border-radius: 14px;
-    padding: 1.5rem 1.75rem;
-    text-align: center;
-    max-width: 520px;
-    width: 92%;
-  `;
-
-  const normalSprite = `/public/sprites/pokemon/normal/${pokeId}.gif`;
-  const shinySprite = `/public/sprites/pokemon/shiny/${pokeId}.gif`;
-
-  const normalBtn =
-    owned.normal > 0
-      ? `<button class="pick-normal" style="background: var(--brand); color: var(--bg); border:none; padding:10px 14px; border-radius:10px; font-weight:800; cursor:pointer;">Use Normal (x${owned.normal})</button>`
-      : `<button disabled style="background:var(--cc-surface-sunken); color:var(--cc-text-faint); border:none; padding:10px 14px; border-radius:10px; font-weight:800;">Normal (x0)</button>`;
-
-  const shinyBtn =
-    owned.shiny > 0
-      ? `<button class="pick-shiny" style="background: var(--cc-gold); color: var(--bg); border:none; padding:10px 14px; border-radius:10px; font-weight:900; cursor:pointer;">Use Shiny (✨x${owned.shiny})</button>`
-      : `<button disabled style="background:var(--cc-surface-sunken); color:var(--cc-text-faint); border:none; padding:10px 14px; border-radius:10px; font-weight:900;">Shiny (✨x0)</button>`;
-
-  modal.innerHTML = `
-    <h2 style="color: var(--brand); margin:0 0 0.75rem;">${title}</h2>
-    <p style="color:var(--cc-text-muted);margin:0 0 1rem;">${p.name}</p>
-
-    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;">
-      <div style="background:var(--cc-surface-sunken);border:1px solid var(--border);border-radius:12px;padding:12px;min-width:180px;">
-        <img src="${normalSprite}" style="width:96px;height:96px;image-rendering:pixelated;">
-        <div style="margin-top:8px;">${normalBtn}</div>
-      </div>
-
-      <div style="background:var(--cc-surface-sunken);border:1px solid var(--border);border-radius:12px;padding:12px;min-width:180px;">
-        <img src="${shinySprite}" style="width:96px;height:96px;image-rendering:pixelated;">
-        <div style="margin-top:8px;">${shinyBtn}</div>
-      </div>
-    </div>
-
-    <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 22px; border-radius: 10px; cursor: pointer; font-weight:700;">
-      Cancel
-    </button>
-  `;
-
-  modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
-
-  const bn = modal.querySelector(".pick-normal");
-  const bs = modal.querySelector(".pick-shiny");
-
-  if (bn)
-    bn.addEventListener("click", () => {
-      closeOverlay(overlay);
-      onChoose?.("normal");
-    });
-  if (bs)
-    bs.addEventListener("click", () => {
-      closeOverlay(overlay);
-      onChoose?.("shiny");
-    });
-
-  overlay.appendChild(modal);
-}
-
-// ===========================================================
 // ✨ Convert Modal + Confirm
 // ===========================================================
 function openConvertModal(pokeId) {
@@ -1534,7 +1524,8 @@ function openEvolutionModal(baseId) {
     max-width: 640px; width: 92%;
   `;
 
-  let chosenVariant = owned.normal > 0 ? "normal" : "shiny";
+  // Start on the copy the card shows (its ✨ toggle); the modal can still switch.
+  let chosenVariant = variantShown(baseId);
 
   const baseSpriteFor = (v) =>
     v === "shiny"
@@ -1786,17 +1777,9 @@ function openDonationModal(pokeId) {
   const owned = ownedCounts(pokeId);
   if (owned.any <= 0) return;
 
-  if (owned.normal > 0 && owned.shiny > 0) {
-    openVariantChoiceModal({
-      title: "💝 Donate — Choose Variant",
-      pokeId,
-      onChoose: (variant) => openDonationConfirmModal(pokeId, variant),
-    });
-    return;
-  }
-
-  const variant = owned.normal > 0 ? "normal" : "shiny";
-  openDonationConfirmModal(pokeId, variant);
+  // Donate the copy the card shows (its ✨ toggle). The confirm dialog
+  // names the variant and shows its sprite before anything is sent.
+  openDonationConfirmModal(pokeId, variantShown(pokeId));
 }
 
 function openDonationConfirmModal(pokeId, variant) {
@@ -1828,6 +1811,7 @@ function openDonationConfirmModal(pokeId, variant) {
     <p style="margin-top:-0.25rem;color:var(--cc-text-muted);font-weight:700;">
       Variant: ${v === "shiny" ? "✨ Shiny" : "Normal"}
     </p>
+    ${ownedCounts(pokeId).normal > 0 && ownedCounts(pokeId).shiny > 0 ? `<p style="color:var(--cc-text-faint);font-size:0.85rem;margin-top:-0.25rem;">You own both. To donate the ${v === "shiny" ? "normal" : "shiny"} one instead, cancel and tap ✨ on the card.</p>` : ""}
     <p>You'll receive <b style="color: var(--cc-gold);">💰 ${ccValue} CC</b></p>
     ${
       dustPreview > 0

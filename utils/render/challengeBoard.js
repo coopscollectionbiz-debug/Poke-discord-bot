@@ -158,14 +158,11 @@ function drawHeader(ctx, v) {
   ctx.font = font(18, 800);
   ctx.fillStyle = COLOR.textMuted;
   ctx.fillText("KANTO CHALLENGES", M + 4, M + 22);
-  const t = fitFont(ctx, v.name, 560, 44, 26, 800);
+  // No Badge count here: the lit Badges below already show it.
+  const t = fitFont(ctx, v.name, 760, 44, 26, 800);
   ctx.font = font(t.size, 800);
   ctx.fillStyle = COLOR.text;
   ctx.fillText(t.text, M + 4, M + 70);
-  const nameW = ctx.measureText(t.text).width;
-  ctx.font = font(26, 800);
-  ctx.fillStyle = v.badges ? COLOR.gold : COLOR.textMuted;
-  ctx.fillText(`${v.badges}/${v.gyms.length} Badges`, M + 4 + nameW + 20, M + 70);
 
   ctx.textAlign = "right";
   ctx.font = font(18, 800);

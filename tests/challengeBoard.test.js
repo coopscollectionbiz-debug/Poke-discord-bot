@@ -102,7 +102,14 @@ section("Render");
     out[name] = await renderBoard(view(u));
     assertEqual(dims(out[name]), [BOARD_SIZE.w, BOARD_SIZE.h], `renders: ${name}`);
   }
+  const partwayHeader = await pixels(out.partway);
   if (process.env.CHALLENGE_BOARD_OUT) for (const [name, png] of Object.entries(out)) fs.writeFileSync(`${process.env.CHALLENGE_BOARD_OUT}/challenge-board-${name}.png`, png);
+
+  // The header names the player and nothing else on that side: the lit
+  // Badges below already show the count.
+  let lit = 0;
+  for (let y = 54; y < 100; y++) for (let x = 160; x < 700; x++) if (bright(partwayHeader, x, y) > 300) lit++; // under the eyebrow
+  assertEqual(lit, 0, "no Badge count beside the player's name");
 
   const slots = boardSlots();
   const [fresh, partway, openRun, champion] = await Promise.all([out.fresh, out.partway, out.openRun, out.champion].map(pixels));

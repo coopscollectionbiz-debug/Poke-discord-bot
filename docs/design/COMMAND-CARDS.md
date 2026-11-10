@@ -33,7 +33,7 @@ Every command keeps its old embed or text as a **fallback** if rendering throws.
 | Change | Detail |
 |---|---|
 | New | `tests/commandCards.test.js` (39 checks) |
-| New (`feat/challenges`) | `tests/challengeCard.test.js` (41), `tests/challengeBoard.test.js` (31) |
+| New (`feat/challenges`) | `tests/challengeCard.test.js` (41), `tests/challengeBoard.test.js` (32) |
 | Updated (`feat/challenges`) | `tests/battleRender.test.js`: portraits on every replay, the challenge styling and award screen. `tests/battleCommand.test.js`: each player's trainer in the replay. `tests/challengePlayback.test.js` and `tests/challengeCommand.test.js`: the card, the styling and the award in place of the embed images |
 | New | `tests/catchMessage.test.js` (19) |
 | New | `tests/showteamCommand.test.js` (30) |

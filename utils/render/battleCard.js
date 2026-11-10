@@ -66,7 +66,12 @@ async function card(ctx, stage, s, x, y, w, h, i, ph) {
   let tx = x + w - 10;
   if (s.shiny) { P.drawShinyMark(ctx, tx - 12, y + 22, 9); tx -= 32; }
   if (s.mega) P.drawMegaTag(ctx, tx, y + 10, { h: 22, size: 12, align: "right" });
-  if (s.tier === "mythic") P.drawTag(ctx, "MYTHIC", x + 42, y + 10, { fill: TIER.mythic, color: "#fff", h: 22, size: 12 });
+  if (s.tier === "mythic") {
+    // Centered at the top of the card, clear of the slot badge (left) and the shiny/Mega marks (right).
+    ctx.font = P.font(12, 800);
+    const tw = Math.ceil(ctx.measureText("MYTHIC").width) + 22;
+    P.drawTag(ctx, "MYTHIC", cx - tw / 2, y + 10, { fill: TIER.mythic, color: "#fff", h: 22, size: 12 });
+  }
   ctx.textBaseline = "alphabetic"; // the badge and tags leave it on "middle"
   ctx.textAlign = "center";
   const nm = P.fitFont(ctx, s.name, w - 16, 22, 15, 800);

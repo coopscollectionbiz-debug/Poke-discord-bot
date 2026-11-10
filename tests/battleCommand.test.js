@@ -202,7 +202,8 @@ section("Private EXP messages");
   assertEqual(t.log.followUps.map((f) => f.userId), ["A"], "Open battle: only the Challenger gets an EXP message");
   const [a] = t.log.followUps;
   assertEqual(a.flags, MessageFlags.Ephemeral, "only they can see it");
-  assertTrue(a.content.startsWith("EXP from your battle with B:") && a.content.includes("Pikachu"), "it lists their Team's EXP");
+  assertEqual(a.content, "EXP from your battle with B:", "a one-line caption");
+  assertEqual(a.files?.map((f) => f.name), ["exp.png"], "the EXP card carries their Team's EXP");
   assertTrue(a.afterResult, "it arrives after the result is shown");
 
   const w = harness();

@@ -8,6 +8,7 @@ import { grantItem, normalizeInventory } from "../services/inventory.js";
 import {
   SlashCommandBuilder,
   EmbedBuilder,
+  AttachmentBuilder,
   MessageFlags
 } from "discord.js";
 
@@ -21,6 +22,9 @@ import { broadcastReward } from "../utils/broadcastReward.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { spritePaths, rarityEmojis, rarityColors } from "../spriteconfig.js";
 import { logEvent } from "../utils/eventLog.js";
+import { getRank } from "../utils/rankSystem.js";
+import { catchView } from "../utils/render/catchCard.js";
+import { renderDailyCard } from "../utils/render/dailyCard.js";
 
 // ==========================================================
 // Constants
@@ -128,8 +132,10 @@ export async function execute(
       // ======================================================
       // Apply Pokémon to inventory
       // ======================================================
-      grantCatch(user, pick1.id, shiny1 ? "shiny" : "normal");
-      grantCatch(user, pick2.id, shiny2 ? "shiny" : "normal");
+      // Each catch's result (catch Level, first catch or duplicate EXP) is shown on the card.
+      const rankBefore = getRank(user.tp);
+      const caught1 = grantCatch(user, pick1.id, shiny1 ? "shiny" : "normal");
+      const caught2 = grantCatch(user, pick2.id, shiny2 ? "shiny" : "normal");
 
       // ======================================================
       // Apply CC + TP
@@ -241,6 +247,29 @@ export async function execute(
         summary.setThumbnail(`${spritePaths.items}evolution_stone.png`);
       }
       if (saveAck.note) summary.setDescription(saveAck.note);
+
+      // One rewards card; the three embeds above are the fallback.
+      try {
+        const view = (pick, shiny, result) => catchView(user, {
+          id: pick.id, variant: shiny ? "shiny" : "normal", catchResult: result, trainerName: interaction.user.username,
+        });
+        const rankAfter = getRank(user.tp);
+        const png = await renderDailyCard({
+          pokemon: [view(pick1, shiny1, caught1), view(pick2, shiny2, caught2)],
+          cc: DAILY_CC,
+          tp: DAILY_TP,
+          stone: stoneAwarded,
+          balance: { cc: user.cc, tp: user.tp },
+          rankUp: rankAfter && rankAfter !== rankBefore ? rankAfter : null,
+        });
+        return safeReply(interaction, {
+          ...(saveAck.note ? { content: saveAck.note } : {}),
+          files: [new AttachmentBuilder(png, { name: "daily.png" })],
+          flags: MessageFlags.Ephemeral
+        });
+      } catch (err) {
+        console.warn("⚠️ /daily card render failed; sending embeds:", err?.message || err);
+      }
 
       return safeReply(interaction, {
         embeds: [embed1, embed2, summary],

@@ -15,6 +15,10 @@ Read-only audit of production `master` 5157cfe6 (Fly v21, `POKEMON_GENERATIONS` 
 | `MEGA-IMPLEMENTATION-PLAN.md` | Phases M0–M5, files, gates, estimate |
 | `MEGA-TEST-AND-ROLLBACK-PLAN.md` | Test suites, flag, rollback |
 | `audit-data/` | Probe results, Showdown dump, scripts, Z-A contact sheet |
+| `MEGA-ABILITY-MANIFEST.md` | Phase M0: ability categories and the engine work required (from `data/pokedex/mega-abilities.json`) |
+| `M0-IMPLEMENTATION-REPORT.md` | Phase M0: what was built, totals, deviations, tests, M1 work |
+
+**Status:** decisions D-1 to D-17 approved on 2026-11-10. Phase M0 (data foundation) is implemented on `feature/mega-evolution-m0`. Mega Evolution stays disabled.
 
 ## Reproduce
 

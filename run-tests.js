@@ -37,6 +37,9 @@ const STRIPPED_ENV = [
   "BATTLE_FRAME_OUT",
   // Tests decide their own generation settings (config/generations.js).
   "POKEMON_GENERATIONS",
+  // ...and their own Mega Evolution flags (config/features.js).
+  "MEGA_EVOLUTION_ENABLED",
+  "MEGA_FORMS",
   "PUBLIC_URL",
 ];
 

@@ -37,7 +37,7 @@
 - New metrics count only owned lines; `megaWins` increments once per battle.
 
 ### Trading / gift: `tests/megaGift.test.js`
-- `/gift` of a Mega-unlocked species: the sender keeps the unlock (the last copy can't be gifted); the recipient gets none.
+- `/gift` of a Mega-unlocked species: the sender keeps the unlock (dormant if the gift empties the normal line while a shiny remains); the recipient gets none. Implemented in Phase M0 inside `tests/megaPersistence.test.js`.
 
 ### Serialization and migration: `tests/megaMigration.test.js`
 - Synthetic players modelled on the production schema (counts, training, items with legacy keys, itemsLegacy, ach, battle, displayedPokemon in all 3 legacy shapes): load → normalize → save → load round-trips with no change except the added defaults.

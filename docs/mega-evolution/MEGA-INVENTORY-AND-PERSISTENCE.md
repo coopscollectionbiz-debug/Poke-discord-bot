@@ -99,7 +99,7 @@ No transform of existing data is needed. The feature only adds keys.
 | Missing Mega fields default safely | `megaUnlocks ?? {}`, `items[x] ?? 0`, `slot.mega` absent = base |
 | Pokémon ids unchanged | Species keys and training keys untouched. Megas have no dex numbers |
 | Shiny status and Levels preserved | Unlock keyed by `id:variant`. EXP stays on the base training key |
-| Trades and gifts | `/gift` moves counts only, and never the last copy; the unlock stays on the sender's line (policy in the architecture audit, §3.4) |
+| Trades and gifts | `/gift` moves counts only and refuses the species' last copy (normal + shiny together); the unlock always stays on the sender's line, dormant if that line was emptied (policy in the architecture audit, §3.4) |
 | Concurrency, idempotency, no partial unlock | §3 |
 | Old backups restorable | Yes. They simply lack the new fields |
 

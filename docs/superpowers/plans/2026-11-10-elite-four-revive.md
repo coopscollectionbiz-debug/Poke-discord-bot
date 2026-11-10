@@ -181,7 +181,7 @@
 ### Task 5: Startup, docs, and the full check
 
 **Files:**
-- Modify: `bot_final.js` (next to `refundPendingWagersOnStartup`, `bot_final.js:2817`), `README.md`, the spec
+- Modify: `bot_final.js` (next to `refundPendingWagersOnStartup`, `bot_final.js:2299` after the rebase), `README.md`, the spec
 
 - [ ] **Step 1: Startup.** Add `finishOpenRunsOnStartup()`.
   - It calls `finishAllOpenRuns(trainerData, new Date())`, then saves with `enqueueSave(..., { force: true })` if any were finished.

@@ -1,6 +1,6 @@
 # Challenges: locked design (grill-with-docs synthesis)
 
-Branch: `feat/challenges` (from origin/master 7398d386).
+Branch: `feat/challenges` (branched from origin/master 7398d386; rebased onto 4a78a4ae on 2026-11-09).
 Glossary: `CONTEXT.md` (Challenge, Badge, Elite Four run).
 
 Targets in this spec are design goals that a test enforces, not measurements. Every measured number names the command that measured it. Quantities nobody has measured yet are listed under Open checks with no figure.
@@ -17,7 +17,7 @@ Targets in this spec are design goals that a test enforces, not measurements. Ev
 
 - Every Gym Leader and Elite Four member fields 6 Pokémon. Each team starts from the leader's FireRed/LeafGreen team and is filled to 6 with on-type Pokémon from that leader's later canon teams (the Let's Go rematch first, then the HGSS rematch).
 - Each team keeps its canon Level spread, with the ace highest. The whole team shifts until the ace hits its target, and filled-in Pokémon take the rounded average of the shifted canon Levels. The roster file writes out every Level literally.
-- Blue fields his FireRed/LeafGreen Champion lineup with the Blastoise ace. The bot never records a player's starter (`starterPokemon` is `null` by default at `bot_final.js:1373`, and nothing writes it), so Blue can't counter it the way he does in the games.
+- Blue fields his FireRed/LeafGreen Champion lineup with the Blastoise ace. The bot never records a player's starter (`starterPokemon` is `null` by default at `utils/userSchema.js:72`, and nothing writes it), so Blue can't counter it the way he does in the games.
 - Red fields his HeartGold/SoulSilver team at its canon Levels.
 - Leaders use the same automatic moves as players: the last 4 damaging moves learned by Level (`utils/battle/moveset.js`). The sim has no status moves, so canon movesets wouldn't work.
 
@@ -70,7 +70,7 @@ Sources: [pokemondb FRLG](https://pokemondb.net/firered-leafgreen/gymleaders-eli
 - The run is simulated one fight at a time. After each fight the bot saves the run's progress on the player's record, then replays that fight. The replay slot is released during the pause, so the next fight may show its place in line.
 - Each private message uses the newest click's reply window (Discord interaction tokens are valid for 15 minutes, [Discord docs](https://docs.discord.com/developers/interactions/receiving-and-responding)). If a long replay queue pushes a pick message past that window, that break gets no Revive and the run continues.
 - If the public replay message is deleted mid-run, the run keeps going and still resolves; only the replay stops.
-- A restart mid-run finishes every open run at startup with no Revives, applies EXP and the prize or loss, and edits the run's public message to the result with a note that the bot restarted. Unanswered wager offers are closed the same way today (`bot_final.js:2817`).
+- A restart mid-run finishes every open run at startup with no Revives, applies EXP and the prize or loss, and edits the run's public message to the result with a note that the bot restarted. Unanswered wager offers are closed the same way today (`refundPendingWagersOnStartup`, `bot_final.js:2299`).
 - While a run is open, `/challenge` with an opponent refuses privately: "Finish your Elite Four run first." Fight! on any older preview re-checks under the lock and refuses the same way. `/battle` still works.
 - Every way out of a break leads to the next fight or the end of the run: a pick, the 60-second deadline, a pick message that couldn't be sent, or a replay edit that failed.
 - A run can't stay stuck. If its last saved step is more than 15 minutes old and no command is still playing it (an unexpected error stopped it), the player's next `/challenge` first finishes it with no Revives, applies the results, and clears it, then carries on with their request. A run still being played is never finished this way, even when a long replay queue holds its step for 15 minutes.
@@ -109,7 +109,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - Unlocked sprites go into the `trainers` array through `grantTrainer` (`services/assets.js`), like every other trainer grant.
 - Prize stones and Dust go through `grantItem` (`services/inventory.js`). Prize Dust doesn't count toward the 8-a-week cap on Dust from normal donations (`NON_SHINY_DUST_WEEKLY_CAP`, `utils/economyRules.js:87`).
 - Levels gained and prize sprites count toward achievements: the challenge sends `pokemon` and `trainers` events to `trackProgress` (`progression/achievements.js`). It never sends a `battle` event, which would move Battle win streaks.
-- Reference values: `/daily` pays 1,000 CC (`commands/daily.js:25`), a stone costs 5,000 CC (`bot_final.js:2183`), shiny crafting costs 15 to 120 Dust (`bot_final.js:132-139`), and normal donations pay at most 8 Dust a week (`bot_final.js:229`).
+- Reference values: `/daily` pays 1,000 CC (`commands/daily.js:32`), a stone costs 5,000 CC (`bot_final.js:1880`), shiny crafting costs 15 to 120 Dust (`utils/economyRules.js:61`), and normal donations pay at most 8 Dust a week (`utils/economyRules.js:87`).
 
 ## Losing
 
@@ -137,7 +137,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 - Badge art comes from 8 Badge PNGs. The same files are uploaded as the bot application's own emojis and served from `public/sprites/badges/`.
 - Discord confirms application emojis: an app can own up to 2,000, uploads are 128×128 and at most 256 KiB, the portal can manage them, and `USE_EXTERNAL_EMOJIS` isn't needed ([Discord emoji docs](https://docs.discord.com/developers/resources/emoji)). The emoji IDs live in a constants file. IDs aren't secrets.
 - `/trainercard` and `/showcard` draw a Badge row on the rendered card (`utils/render/trainerCard.js`; decided 2026-11-09, after master made the card an image): the count out of 8 and all 8 Badges, earned ones in color and the rest dimmed. The text fallback, sent when the card can't render, keeps one description line with the count and the earned Badge emojis.
-- The dashboard adds a Badges row under the stats bar with all 8 images, unearned ones dimmed. The dashboard is `public/picker-pokemon/`, where `/auth/dashboard` lands (`bot_final.js:539-555`). `public/dashboard/` isn't served. `/api/user` returns the whole player record (`bot_final.js:1421-1435`) except an open run (`hideOpenRun`).
+- The dashboard adds a Badges row under the stats bar with all 8 images, unearned ones dimmed. The dashboard is `public/picker-pokemon/`, where `/auth/dashboard` lands (`bot_final.js:437`). `public/dashboard/` isn't served. `/api/user` returns the whole player record (`bot_final.js:1239-1253`) except an open run (`hideOpenRun`).
 - The 8 Gym Badges are defined once, in `public/picker-pokemon/badges.js`. It has no DOM access, so the bot can import it too, the same pattern `regions.js` uses.
 
 ## Data

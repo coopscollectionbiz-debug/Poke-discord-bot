@@ -23,7 +23,7 @@ Glossary: `CONTEXT.md`.
 
 ## Fairness & randomness
 - Levels and rarity count in full. Fairness comes from EXP scaling (Gen 5 formula pays little for beating lower-level foes), the Battle cap, Defender never losing anything in Open battles, and Elo giving little for beating weaker teams.
-- **Underdog surge**: rare, announced, gap-scaled whole-team boost for the Underdog. Mechanism (Task 7): the surge raises the Underdog's Levels until the Power rating gap is 1.3×; chance = min(8%, 15% × (ratio − 1)) above a 1.25× gap. (The cap was 20% until the challenges branch, 2026-11-10: a Team of one always surges at the cap and, lifted to Lv 100, nearly always wins, so a lone Lv 30 Charizard beat six Lv 40s 21% of the time. At 8% it's 7.8%, `tests/battleBalance.test.js`.) A fixed stat boost measured only ~0.1% upsets at 5× gaps (most of a big gap is Level), so the boost scales with the gap.
+- **Underdog surge**: rare, announced, gap-scaled whole-team boost for the Underdog. Mechanism (Task 7): the surge raises the Underdog's Levels until the Power rating gap is 1.3×; chance = min(8%, 15% × (ratio − 1)) above a 1.25× gap. (The cap was 20% until the challenges branch, 2026-11-10: a Team of one always surges at the cap and, lifted to Lv 100, nearly always wins, so a lone Lv 30 Charizard beat six Lv 40s 21% of the time. At 8% it's 7.65% on the Gen 6–9 data, `tests/battleBalance.test.js`; 7.8% on the Gen 1–5 data.) A fixed stat boost measured only ~0.1% upsets at 5× gaps (most of a big gap is Level), so the boost scales with the gap.
 - Plus modestly widened global variance (damage roll / crit).
 - Target underdog win-rate curve: OPEN CHECK (set in spec, verified by Monte Carlo test).
 

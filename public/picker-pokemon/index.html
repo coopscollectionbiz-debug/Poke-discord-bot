@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Pokémon · Coop’s Collection</title>
+    <title>Collection · Coop’s Collection</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -14,9 +14,9 @@
 
   <body data-page="pokemon">
     <header class="cc-page-head">
-      <p class="cc-eyebrow">Your collection</p>
-      <h1>Pokémon</h1>
-      <p>Build your Team, evolve with stones, donate for CC and convert to shiny.</p>
+      <p class="cc-eyebrow">Your Pokémon</p>
+      <h1>Collection</h1>
+      <p>Every Pokémon in the live regions. Tap one for details, or evolve, donate and convert. Teams are built on the Teams page.</p>
     </header>
 
     <main id="ccMain" tabindex="-1">
@@ -46,7 +46,7 @@
 
       <div id="pokemonPanel">
         <div id="modeToggle" role="group" aria-label="Mode">
-          <button class="mode-btn active" data-mode="team" type="button">Change Team</button>
+          <button class="mode-btn active" data-mode="browse" type="button">Browse</button>
           <button class="mode-btn" data-mode="evolve" type="button">Evolve</button>
           <button class="mode-btn" data-mode="donate" type="button">Donate</button>
           <button class="mode-btn" data-mode="convert" type="button">Convert</button>
@@ -108,21 +108,21 @@
             <option value="name">Sort: Name (A → Z)</option>
           </select>
 
-          <!-- Owned / unowned filter (Change Team mode). IDs must match JS. -->
+          <!-- Owned / missing filter (Browse mode). IDs must match JS. -->
           <div class="toggle-group" role="group" aria-label="Show">
             <button id="ownedToggle" class="mode-btn" type="button">Owned</button>
-            <button id="unownedToggle" class="mode-btn" type="button">Unowned</button>
+            <button id="unownedToggle" class="mode-btn" type="button">Missing</button>
+            <button id="shinyOnlyToggle" class="mode-btn" type="button" aria-pressed="false">✨ Shiny only</button>
           </div>
         </div>
+
+        <div id="regionChips" class="region-chips" role="group" aria-label="Region"></div>
 
         <div id="pokemonGrid">
           <p class="cc-empty">Loading your Pokémon…</p>
         </div>
 
         <footer class="team-footer">
-          <p id="teamCounter" aria-live="polite">0/6 selected</p>
-          <button id="saveTeamBtn" class="save-btn" type="button">Save Team</button>
-          <p id="teamStatus" class="status-msg"></p>
           <p class="fine-print">Opened from /dashboard in Discord · Links last 10 minutes</p>
         </footer>
 

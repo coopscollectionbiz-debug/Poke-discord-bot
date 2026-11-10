@@ -1,0 +1,51 @@
+/* ===========================================================
+   Overview (dashboard home). Built on tokens.css + components.css only.
+=========================================================== */
+#ccMain { max-width: 1180px; margin: 0 auto; padding: 0 24px 48px; }
+@media (max-width: 820px) { #ccMain { padding: 0 16px 48px; } }
+.ov-loading { padding: 32px 0; text-align: center; color: var(--cc-text-muted); }
+.ov-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+.ov-card { min-width: 0; padding: 16px; border-radius: var(--cc-r-md); border: 1.5px solid var(--cc-line); background: var(--cc-surface); box-shadow: var(--cc-shadow); }
+.ov-card h2 { margin: 0; font-size: 18px; font-weight: 800; }
+.ov-rank { grid-column: span 5; border-color: #4f8cff66; background: linear-gradient(180deg, #4f8cff14, transparent 120px), var(--cc-surface); }
+.ov-casual { grid-column: span 3; background: linear-gradient(180deg, #f5c84c0f, transparent 120px), var(--cc-surface); }
+.ov-rewards { grid-column: span 4; }
+.ov-teams { grid-column: span 7; }
+.ov-dex { grid-column: span 5; }
+.ov-rating { display: flex; align-items: flex-end; gap: 16px; margin-top: 10px; }
+.ov-big { font-size: 46px; font-weight: 800; line-height: 1; color: var(--cc-gold); }
+.ov-pos { font-size: 18px; font-weight: 800; }
+.ov-pos small { color: var(--cc-text-muted); font-size: 13px; }
+.ov-kv { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 12px 0 0; }
+.ov-kv dt { color: var(--cc-text-muted); font-size: 13px; font-weight: 600; }
+.ov-kv dd { margin: 0; font-size: 18px; font-weight: 800; }
+.ov-kv dd.good { color: var(--cc-green); }
+.ov-wl { height: 8px; margin-top: 12px; border-radius: 4px; background: var(--cc-red); overflow: hidden; }
+.ov-wl i { display: block; height: 100%; background: var(--cc-green); }
+.ov-note { margin: 8px 0 0; font-size: 13px; color: var(--cc-text-muted); }
+.ov-reward { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 10px; border-radius: 12px; background: var(--cc-surface-raised); }
+.ov-reward img { width: 32px; height: 32px; image-rendering: pixelated; }
+.ov-reward p { flex: 1; margin: 0; color: var(--cc-text); font-weight: 700; font-size: 14px; }
+.ov-reward small { display: block; color: var(--cc-text-muted); font-weight: 600; }
+.ov-reward .cc-btn { padding: 0 14px; }
+.ov-teamhead { display: flex; align-items: center; gap: 8px; margin: 0 0 8px !important; font-size: 15px !important; }
+.ov-teamhead + .ov-strip + .ov-teamhead, .ov-teamhead + .ov-empty + .ov-teamhead { margin-top: 14px !important; }
+.ov-teamhead a { margin-left: auto; display: inline-flex; align-items: center; justify-content: flex-end; min-height: 44px; min-width: 44px; font-size: 13px; font-weight: 700; }
+.ov-lv50 { padding: 1px 8px; border-radius: 999px; background: var(--cc-blue); color: #fff; font-size: 11px; }
+.ov-strip { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.ov-strip li { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 92px; padding: 4px 2px; border-radius: 10px; background: var(--cc-surface-raised); border: 1.5px solid var(--cc-line); overflow: hidden; }
+.ov-strip li.lead { border-color: #4f8cffaa; }
+.ov-strip li.shiny { border-color: #f5c84caa; }
+.ov-strip img { position: relative; z-index: 1; height: 56px; max-width: 100%; object-fit: contain; image-rendering: pixelated; }
+.ov-strip small { position: relative; z-index: 1; font-size: 11.5px; font-weight: 800; color: var(--cc-text-muted); }
+.ov-strip small.b { color: var(--cc-blue); }
+.ov-mega { position: absolute; top: 3px; right: 3px; z-index: 2; padding: 0 5px; border-radius: 999px; background: var(--cc-mega); color: var(--cc-ink); font-size: 9px; font-weight: 800; }
+.ov-empty { margin: 0 0 8px; padding: 12px; border-radius: 10px; border: 1.5px dashed var(--cc-line); color: var(--cc-text-muted); font-size: 13.5px; }
+.ov-reg { display: grid; grid-template-columns: 70px 1fr 64px; gap: 10px; align-items: center; margin: 8px 0; font-weight: 700; font-size: 13.5px; }
+.ov-bar { height: 8px; border-radius: 4px; background: var(--cc-surface-sunken); overflow: hidden; }
+.ov-bar i { display: block; height: 100%; background: var(--cc-green); }
+.ov-reg span:last-child { text-align: right; color: var(--cc-text-muted); }
+.ov-link { display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; }
+@media (max-width: 1100px) { .ov-rank, .ov-teams, .ov-dex { grid-column: span 12; } .ov-casual, .ov-rewards { grid-column: span 6; } }
+@media (max-width: 820px) { .ov-casual, .ov-rewards { grid-column: span 12; } .ov-strip img { height: 40px; } .ov-strip li { height: 74px; } .ov-strip { gap: 4px; } }
+.ov-wl.is-empty { background: var(--cc-surface-sunken); }

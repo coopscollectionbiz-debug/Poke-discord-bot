@@ -4,10 +4,15 @@
 // Builds N random battles (random species incl. Shedinja, multi-hit,
 // recoil, crash and drain users; random Levels; open and wager modes;
 // underdog surges) and runs each through runBattle() of the engine found
-// under `root`. Returns one digest per battle covering the whole result
-// (winner, turns, end reason, log, knockouts, HP snapshots, surge, power,
-// EXP, Elo) and the players' post-battle records (training, battle record,
-// CC, achievement stats).
+// under `root`. Returns one digest per battle covering the battle ENGINE's
+// output (winner, turns, end reason, log, knockouts, HP snapshots, surge,
+// power, fighters, EXP) and the EXP actually applied (training).
+//
+// Version 2 (ranked battles): every case runs as an open (casual) battle,
+// whose engine path is the same in every version: Display teams at real
+// Levels with the Underdog surge. Ratings, records and wager pots are left
+// out on purpose: open battles became unrated and wagers became Lv 50
+// Battle-team battles (owner decision), which tests/runBattle.test.js covers.
 //
 //   node tools/dev/battle-corpus.mjs <engineRoot> <count> <out.json> [envJSON]
 //
@@ -21,7 +26,7 @@ import fs from "fs";
 import path from "path";
 import { pathToFileURL } from "url";
 
-export const CORPUS_VERSION = 1;
+export const CORPUS_VERSION = 2;
 const FEATURED = [292, 6, 9, 3, 25, 143, 286, 106, 237, 398, 389, 409, 94, 150, 248, 445, 448, 130, 212, 214, 373, 376, 384, 493, 649, 650, 1025, 980, 999];
 
 function rng32(seed) {
@@ -82,10 +87,9 @@ export async function buildCorpus(root, count, { env = {} } = {}) {
   const out = [];
   for (const [i, c] of corpusCases(count).entries()) {
     const td = { A: makeUser("A", c.a, createNewUser), B: makeUser("B", c.b, createNewUser) };
-    if (c.mode === "wager") { td.A.cc -= c.stake; td.B.cc -= c.stake; }
-    const res = runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: c.mode, stake: c.mode === "wager" ? c.stake : 0, seed: c.seed, now });
-    const result = res.ok ? { winnerId: res.winnerId, turns: res.result.turns, endedBy: res.result.endedBy, log: res.result.log, knockouts: res.result.knockouts, snapshots: res.result.snapshots, surge: res.surge, powers: res.sides.map((s) => s.power), members: res.sides.map((s) => s.members), exp: res.exp, rating: res.rating } : { refused: res.reason };
-    const users = ["A", "B"].map((k) => ({ training: td[k].training, battle: td[k].battle, cc: td[k].cc, stats: td[k].stats, ach: td[k].ach }));
+    const res = runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "open", stake: 0, seed: c.seed, now });
+    const result = res.ok ? { winnerId: res.winnerId, turns: res.result.turns, endedBy: res.result.endedBy, log: res.result.log, knockouts: res.result.knockouts, snapshots: res.result.snapshots, surge: res.surge, powers: res.sides.map((s) => s.power), members: res.sides.map((s) => s.members), exp: res.exp } : { refused: res.reason };
+    const users = ["A", "B"].map((k) => ({ training: td[k].training }));
     out.push({ i, winner: res.winnerId ?? null, turns: res.result?.turns ?? null, result: sha(result), users: sha(users) });
   }
   return out;

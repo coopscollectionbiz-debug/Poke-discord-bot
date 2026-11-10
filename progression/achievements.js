@@ -20,6 +20,7 @@ import { listAchievements, getAchievement, BY_METRIC, CATALOG_REVISION, CATEGORI
 import { speciesOfKey, isSpeciesKey } from "../utils/forms.js";
 import { TYPE_ID_TO_NAME, LEGACY_TYPE_IDS } from "../utils/battle/data.js";
 import { levelsForUser } from "../utils/training.js";
+import { lifetimeRanked } from "../utils/battle/rewards.js";
 import { getQuantity, grantItem, validateHoldableItem } from "../services/inventory.js";
 import { grantCurrency } from "../services/assets.js";
 
@@ -241,8 +242,13 @@ export function computeMetrics(user, wanted) {
     if (isCollectionKey(key)) { coll ??= collectionMetrics(user); out[full] = coll[key] || 0; continue; }
     if (key.startsWith("trainerTier:")) { out[full] = trainerTierCount(user, key.slice(12)); continue; }
     switch (key) {
-      case "battleWins": out[full] = Number(user.battle?.wins) || 0; break;
-      case "battleRating": out[full] = Number(user.battle?.rating) || 0; break;
+      // Battle achievements count ranked + wager battles, across every season:
+      // the rating reset never takes back progress (utils/battle/rewards.js).
+      case "battleWins": out[full] = lifetimeRanked(user).wins; break;
+      case "battleRating": out[full] = lifetimeRanked(user).bestRating; break;
+      // Casual (open) battles: user.casual, written by runBattle.
+      case "casualWins": out[full] = Number(user.casual?.wins) || 0; break;
+      case "casualBestStreak": out[full] = Number(user.casual?.bestStreak) || 0; break;
       case "tp": out[full] = Number(user.tp) || 0; break;
       case "trainers": out[full] = Array.isArray(user.trainers) ? user.trainers.length : Object.keys(user.trainers || {}).length; break;
       case "maxLevel": { let m = 0; for (const lv of Object.values(levelsForUser(user))) if (lv > m) m = lv; out[full] = m; break; }
@@ -267,6 +273,7 @@ const EVENT_METRICS = {
   trainers: TRAINER_METRICS,
   daily: ["counter:dailyClaims", "counter:bestDailyStreak"],
   weekly: ["counter:weeklyClaims"],
+  casual: ["state:casualWins", "state:casualBestStreak", "state:maxLevel"],
 };
 
 const bump = (user, key, n = 1) => {

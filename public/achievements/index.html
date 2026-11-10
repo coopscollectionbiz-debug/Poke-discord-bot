@@ -22,6 +22,12 @@
   <main id="ccMain" tabindex="-1">
     <section class="shop-section" aria-label="Achievements">
       <div id="achSummary" class="ach-summary"></div>
+      <div id="achGroups" class="ach-groups" role="group" aria-label="Achievement group">
+        <button type="button" data-group="all" aria-pressed="true">All</button>
+        <button type="button" data-group="ranked" aria-pressed="false">⚔️ Ranked</button>
+        <button type="button" data-group="casual" aria-pressed="false">🎮 Casual</button>
+        <button type="button" data-group="other" aria-pressed="false">📚 Collection &amp; more</button>
+      </div>
       <div class="bag-controls">
         <label>Category <select id="achCategory"><option value="">All categories</option></select></label>
         <label>Show

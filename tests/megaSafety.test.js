@@ -90,6 +90,10 @@ const MEGA_USERS = [
   "utils/battle/runBattle.js", "utils/battle/sim.js", "utils/battle/effects.js", "utils/battle/abilities.js", "utils/battle/power.js", "utils/battle/render.js",
   // Phase M3: presentation only (shared Mega display rules, Mega sprite files, the EXP card).
   "utils/megaDisplay.js", "utils/render/sprites.js", "utils/render/expCard.js",
+  // Teams: the Battle team reuses team validation and cleaning (one Mega per team).
+  "services/battleTeam.js",
+  // Collection detail (B2): lists a species' Mega forms and whether each is unlocked (read-only).
+  "services/pokemonDetail.js",
 ];
 const megaModule = /megaUnlocks\.js|megas\.js|config\/features\.js|megaRewards\.js|megaApi\.js|megaTeam\.js|\/mega\.js|"\.\/mega\.js"/;
 const users = live.filter((f) => megaModule.test(fs.readFileSync(path.join(ROOT, f), "utf8")));

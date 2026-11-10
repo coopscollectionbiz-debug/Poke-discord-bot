@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Teams · Coop’s Collection</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/public/shared/tokens.css" />
+    <link rel="stylesheet" href="/public/shared/components.css" />
+    <link rel="stylesheet" href="/public/teams/style.css" />
+  </head>
+
+  <body data-page="teams">
+    <header class="cc-page-head">
+      <p class="cc-eyebrow">Your Pokémon</p>
+      <h1>Teams</h1>
+      <p>Your Display team shows on /showteam and fights open battles. Your Battle team fights ranked and wager battles at Lv 50.</p>
+    </header>
+
+    <main id="ccMain" tabindex="-1">
+      <div id="teamsApp"><p class="tm-loading">Loading your teams…</p></div>
+    </main>
+
+    <dialog id="boxSheet" class="tm-sheet" aria-labelledby="boxSheetTitle">
+      <div class="tm-sheet-head">
+        <h2 class="tm-h2" id="boxSheetTitle">Add to your team</h2>
+        <button type="button" class="tm-ib" id="boxSheetClose" aria-label="Close">✕</button>
+      </div>
+      <div id="boxSheetBody"></div>
+    </dialog>
+
+    <script type="module" src="/public/shared/shell.js"></script>
+    <script type="module" src="/public/teams/script.js"></script>
+  </body>
+</html>

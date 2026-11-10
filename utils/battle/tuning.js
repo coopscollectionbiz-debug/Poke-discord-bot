@@ -39,6 +39,10 @@ export const TRAINER_BATTLE_MULT = 1.5;
 export const WIN_EXP_MULT = 1.5;
 
 export const ELO = { start: 1000, k: 32 };
+// Ranked and wager battles: Battle teams fight at one fixed Level (stored
+// Levels unchanged; EXP still uses them). `season` resets every ranked
+// record when it changes (owner decision: all ratings reset at launch).
+export const RANKED = { level: 50, season: 1 };
 export const CAPS = { perDay: 10, perOpponent: 3 };
 export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000 };
 // Playback: one image per turn, 2 s apart; longer battles are spread over 12.

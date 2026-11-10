@@ -1,0 +1,119 @@
+<!doctype html>
+<!-- Design mockup (static, synthetic data). Not served by the bot.
+     Teams, option B: a team switcher shows one team at a time; the box is pinned beside it
+     (desktop) or opens as a sheet (phone). Add = tap a box Pokémon; it joins the team on screen.
+     States: ?state=edit (default) | add | empty -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Teams · Option B (mockup)</title>
+<link rel="stylesheet" href="../../../../public/shared/tokens.css" />
+<link rel="stylesheet" href="../../../../public/shared/components.css" />
+<link rel="stylesheet" href="mock.css" />
+<style>
+  .b-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 16px; }
+  .b-tab { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 44px; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text-muted); text-align: left; }
+  .b-tab[aria-selected="true"] { color: var(--cc-text); border-color: var(--cc-blue); box-shadow: var(--cc-ring-blue); background: linear-gradient(180deg, #4f8cff1f, transparent), var(--cc-surface); }
+  .b-tab-title { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; width: 100%; }
+  .b-tab-title .mk-ic { width: 20px; height: 20px; }
+  .b-tab-title small { margin-left: auto; font-size: 12px; color: var(--cc-text-faint); font-weight: 700; }
+  .b-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--cc-blue); }
+  .b-mini { display: flex; gap: 2px; }
+  .b-mini img { width: 34px; height: 30px; object-fit: contain; image-rendering: pixelated; }
+  .b-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
+  .b-team .mk-slots { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .b-box { position: sticky; top: 16px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
+  .b-box .mk-box { grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: auto; padding: 2px; }
+  .b-box .mk-boxbar select { flex: 1; }
+  .b-box .mk-seg { width: 100%; }
+  .b-box .mk-seg button { flex: 1; justify-content: center; padding: 0 6px; font-size: 12.5px; white-space: nowrap; }
+  .b-addbtn { display: none; }
+  @media (max-width: 1100px) { .b-layout { grid-template-columns: 1fr; } .b-box { position: static; max-height: none; } }
+  @media (max-width: 820px) {
+    .b-switch { position: sticky; top: 0; z-index: 30; margin: 0 -16px 12px; padding: 8px 16px; background: var(--cc-chrome); border-bottom: 1px solid var(--cc-line); gap: 6px; }
+    .b-tab { padding: 8px 10px; }
+    .b-tab-title { font-size: 14px; }
+    .b-mini img { width: 22px; height: 20px; }
+    .b-team .mk-slots { grid-template-columns: 1fr; gap: 6px; }
+    .b-team .mk-slot { flex-direction: row; align-items: center; gap: 10px; padding: 6px 8px; }
+    .b-team .mk-stage { flex: none; width: 64px; height: 60px; }
+    .b-team .mk-stage img { max-height: 52px; margin-bottom: 6px; transform: none; }
+    .b-team .mk-stage::after { bottom: 5px; height: 10px; }
+    .b-team .mk-no { top: 3px; left: 3px; width: 20px; height: 20px; font-size: 11px; }
+    .b-team .mk-shiny { top: 2px; right: 2px; }
+    .b-team .mk-slot-body { flex: 1; padding: 0; }
+    .b-team .mk-slot-name { font-size: 14.5px; }
+    .b-team .mk-slot-tags { min-height: 0; margin-top: 2px; }
+    .b-team .mk-slot-ctl { margin: 0; gap: 2px; }
+    .b-team .mk-slot-ctl .mk-ib { width: 44px; flex: none; }
+    .b-team .mk-slot.is-empty { padding: 0; }
+    .b-team .mk-slot-add { flex-direction: row; min-height: 60px; }
+    .b-box { display: none; }
+    .b-addbtn { display: flex; width: 100%; margin-top: 12px; }
+    .mk-sheet .mk-box { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body data-page="teams">
+<header class="cc-page-head">
+  <p class="cc-eyebrow">Your Pokémon</p>
+  <h1>Teams</h1>
+  <p>Switch between your two teams. Pokémon you tap in the box join the team on screen.</p>
+</header>
+<main id="ccMain" tabindex="-1"></main>
+<script src="mock-data.js"></script>
+<script src="mock-kit.js"></script>
+<script>
+const { icon, slotCard, team, rules, ruleError, movedNotice, saveBar, boxList, sprite, q } = MK;
+MK.shell("teams");
+const state = q.get("state") || "edit";
+const empty = state === "empty";
+const main = document.getElementById("ccMain");
+const BLOCKED = ["384:normal", "249:normal", "151:shiny"]; // mythic-tier, not on the team
+
+const mini = (members) => `<span class="b-mini" aria-hidden="true">${members.filter(Boolean).map((p) => `<img src="${sprite(p.id, p.variant, p.mega?.id)}" alt="">`).join("")}</span>`;
+const display = team("display"), battle = empty ? [] : team("battle");
+
+function switcher() {
+  return `<div class="b-switch" role="tablist" aria-label="Team">
+    <button type="button" class="b-tab" role="tab" aria-selected="false" aria-controls="teamPanel">
+      <span class="b-tab-title">${icon("smile")}Display team<small>6/6</small></span>${mini(display)}</button>
+    <button type="button" class="b-tab" role="tab" aria-selected="true" aria-controls="teamPanel">
+      <span class="b-tab-title">${icon("swords")}Battle team${empty ? "<small>Not set</small>" : `<small><span class="b-dot" title="Unsaved changes"></span></small>`}</span>${empty ? `<span class="mk-sub" style="margin:0">Needed for ranked</span>` : mini(battle)}</button>
+  </div>`;
+}
+
+function teamPanel() {
+  const slots = Array.from({ length: 6 }, (_, i) => slotCard(battle[i] ?? null, { team: "battle", index: i, size: "lg" }));
+  return `<section id="teamPanel" class="mk-panel mk-panel--battle b-team" role="tabpanel" aria-label="Battle team">
+    <div class="mk-panel-head"><div><h2 class="mk-h2">${icon("swords")}Battle team</h2>
+      <p class="mk-sub">Ranked and wager battles at Lv 50 for everyone. Your real Level is shown small.</p></div>
+      ${rules({ mythic: empty ? 0 : 1, mega: empty ? 0 : 1, count: battle.length, error: state === "edit" })}</div>
+    ${empty
+      ? `<div class="cc-empty" style="padding:24px 8px"><p style="margin:0 0 12px"><strong style="color:var(--cc-text)">No Battle team yet.</strong><br>Ranked and wager battles need one.</p>
+          <button type="button" class="cc-btn cc-btn--primary">Copy my Display team</button>
+          <p style="margin:12px 0 0;font-size:13px">Lugia would be left out: one mythic-tier Pokémon per Battle team.</p></div>`
+      : `<ol class="mk-slots">${slots.join("")}</ol>`}
+    ${state === "edit" ? ruleError() : ""}
+    <button type="button" class="cc-btn b-addbtn">${icon("plus")}Add from your box</button>
+  </section>`;
+}
+
+function box(inSheet = false) {
+  return `<div class="mk-panel-head"><div><h2 class="mk-h2">Add to Battle team</h2><p class="mk-sub">Tap to add. Locked: would break a Battle team rule.</p></div></div>
+    <div class="mk-boxbar"><label class="sr-only" for="bs${inSheet}">Search</label><input id="bs${inSheet}" type="search" placeholder="Search…">
+      <select aria-label="Sort"><option>Power</option><option>Level</option><option>Pokédex #</option></select>
+      <div class="mk-seg" role="group" aria-label="Show"><button type="button" aria-pressed="true">All</button><button type="button" aria-pressed="false">${icon("sparkle")}Shiny</button><button type="button" aria-pressed="false">Not on a team</button></div></div>
+    <ul class="mk-box">${boxList({ blocked: BLOCKED, limit: inSheet ? 12 : 24 })}</ul>`;
+}
+
+let html = empty ? "" : movedNotice();
+html += switcher();
+html += `<div class="b-layout">${teamPanel()}<aside class="mk-panel b-box" aria-label="Your box">${box()}</aside></div>`;
+if (!empty) html += saveBar();
+if (state === "add") html += `<div class="mk-sheet-scrim"></div><div class="mk-sheet" role="dialog" aria-label="Add to Battle team">${box(true)}</div>`;
+main.innerHTML = html;
+</script>
+</body>
+</html>

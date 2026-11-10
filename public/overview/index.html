@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Overview · Coop’s Collection</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/public/shared/tokens.css" />
+    <link rel="stylesheet" href="/public/shared/components.css" />
+    <link rel="stylesheet" href="/public/overview/style.css" />
+  </head>
+
+  <body data-page="overview">
+    <header class="cc-page-head">
+      <p class="cc-eyebrow">Overview</p>
+      <h1 id="ovTitle">Welcome back</h1>
+      <p id="ovSub">Your teams, records and rewards at a glance.</p>
+    </header>
+
+    <main id="ccMain" tabindex="-1">
+      <div id="ovApp"><p class="ov-loading">Loading…</p></div>
+    </main>
+
+    <script type="module" src="/public/shared/shell.js"></script>
+    <script type="module" src="/public/overview/script.js"></script>
+  </body>
+</html>

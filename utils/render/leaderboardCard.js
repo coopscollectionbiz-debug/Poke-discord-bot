@@ -13,7 +13,7 @@ import { rr, font, fitText, fitFont, drawBall } from "./primitives.js";
 import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, drawSprite } from "./sprites.js";
 import { poseAtFrame } from "../trainerIdle.js";
 import { spriteStage } from "./stage.js";
-import { buildTeam } from "../battle/runBattle.js";
+import { buildTeam, buildBattleTeam } from "../battle/runBattle.js";
 
 const W = 1000, M = 20, HEADER = 84, PODIUM = 330, ROW = 66, YOU = 82;
 const MEDAL = ["#f5c84c", "#c9d2e3", "#d48a52"];
@@ -24,7 +24,7 @@ const winPct = (w, l) => (w + l ? Math.round((100 * w) / (w + l)) : 0);
 export function leaderboardView(board, trainerData, viewerId) {
   const decorate = (p, position) => {
     const u = trainerData[p.userId] ?? {};
-    const lead = buildTeam(u)[0] ?? null;
+    const lead = buildBattleTeam(u)[0] ?? buildTeam(u)[0] ?? null; // the ranked lead (Battle team), else the Display lead
     return { ...p, position, trainerFile: u.displayedTrainer ?? null, lead: lead && { id: lead.megaForm ?? lead.speciesId, variant: lead.variant } /* a Mega lead (validated by buildTeam) shows as the Mega */, isYou: p.userId === viewerId };
   };
   const top = board.top.map((p, i) => decorate(p, i + 1));

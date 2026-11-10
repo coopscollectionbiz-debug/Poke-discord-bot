@@ -17,6 +17,7 @@ import { autoMoveset } from "../battle/moveset.js";
 import { teamPower } from "../battle/power.js";
 import { getTraining, expForLevel } from "../training.js";
 import { LEVEL_CAP } from "../battle/tuning.js";
+import { rankedRecord } from "../battle/rewards.js";
 import { getRank } from "../rankSystem.js";
 import { TYPE_ID_TO_NAME } from "../battle/data.js";
 import { displaySpeciesName } from "./names.js";
@@ -63,7 +64,8 @@ export function slotView(user, member, index) {
     generation: entry.generation ?? null,
     stats,
     statTotal: stats ? stats.hp + stats.atk + stats.def + stats.spa + stats.spd + stats.spe : null,
-    moves: species ? autoMoveset(id, level).map((m) => getMove(m)?.name ?? m) : [],
+    // The moves this member battles with: the team's chosen moveset (member.moves), else automatic.
+    moves: species ? (Array.isArray(member.moves) && member.moves.length ? member.moves : autoMoveset(id, level)).map((m) => getMove(m)?.name ?? m) : [],
   };
 }
 
@@ -96,7 +98,8 @@ export function buildTeamView(user, { displayName = "Trainer", trainerFile = nul
     rank: getRank(user?.tp ?? 0) ?? "Unranked", // getRank is null under 100 TP; no rank name is invented
     tp: Math.floor(user?.tp ?? 0),
     trainerFile: trainerFile ?? user?.displayedTrainer ?? null,
-    battle: user?.battle ? { rating: user.battle.rating ?? null, wins: user.battle.wins ?? 0, losses: user.battle.losses ?? 0 } : null,
+    // This season's ranked record (null before the first ranked battle of the season).
+    battle: (() => { const r = rankedRecord(user); return r.wins + r.losses > 0 ? r : null; })(),
     power: known.length ? teamPower(known) : 0,
     slots,
     fallback,

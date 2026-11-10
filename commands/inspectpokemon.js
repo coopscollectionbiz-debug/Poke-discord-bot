@@ -16,21 +16,27 @@ import { getTraining } from "../utils/training.js";
 import { getSpecies, getMove } from "../utils/battle/data.js";
 import { computeStats } from "../utils/battle/stats.js";
 import { autoMoveset } from "../utils/battle/moveset.js";
+import { chosenMoves } from "../services/movesets.js";
 import { formatTypesLine } from "./pokedex.js";
 
 const statLine = (s) => `HP ${s.hp} · Atk ${s.atk} · Def ${s.def} · SpA ${s.spa} · SpD ${s.spd} · Spe ${s.spe}`;
 
-// Level, stats at that Level, and auto-picked moves for each variant the
-// player owns; base stats when they own none.
+// Level, stats at that Level, and moves for each variant the player owns
+// (the Display team's chosen moveset, else the automatic one; the Battle
+// team's too when it has its own); base stats when they own none.
 export function battleInfo(user, speciesId) {
   const species = getSpecies(speciesId);
   const owned = ["normal", "shiny"].filter((v) => (user?.pokemon?.[speciesId]?.[v] ?? 0) > 0);
   if (!owned.length) return `Base stats: ${statLine(species.baseStats)}`;
   return owned.map((variant) => {
     const { level } = getTraining(user, speciesId, variant);
-    const moves = autoMoveset(speciesId, level).map((m) => getMove(m).name).join(", ");
+    const names = (ids) => ids.map((m) => getMove(m)?.name ?? m).join(", ");
+    const display = chosenMoves(user, "display", speciesId, variant);
+    const battle = chosenMoves(user, "battle", speciesId, variant);
+    const moves = names(display ?? autoMoveset(speciesId, level));
     const label = variant === "shiny" ? `✨ shiny Lv ${level}` : `Lv ${level}`;
-    return `**Your ${label}** · ${statLine(computeStats(species.baseStats, level))}\nMoves: ${moves}`;
+    const battleLine = battle ? `\nBattle team moves: ${names(battle)}` : "";
+    return `**Your ${label}** · ${statLine(computeStats(species.baseStats, level))}\nMoves: ${moves}${battleLine}`;
   }).join("\n\n");
 }
 
@@ -123,7 +129,13 @@ export function inspectSlots(user, pokemon) {
   const id = Number(pokemon.id);
   const owned = ["normal", "shiny"].filter((v) => (user?.pokemon?.[id]?.[v] ?? 0) > 0);
   if (owned.length) {
-    return owned.map((variant) => ({ ...slotView(user, { speciesId: id, variant, level: getTraining(user, id, variant).level }, 0), slot: null }));
+    // The card shows the Display team's chosen moves (displays use the Display team), else the automatic ones.
+    return owned.map((variant) => {
+      const member = { speciesId: id, variant, level: getTraining(user, id, variant).level };
+      const moves = chosenMoves(user, "display", id, variant);
+      if (moves) member.moves = moves;
+      return { ...slotView(user, member, 0), slot: null };
+    });
   }
   const base = slotView({}, { speciesId: id, variant: "normal", level: 1 }, 0);
   return [{ ...base, slot: null, level: null, expFrac: 0, stats: getSpecies(id)?.baseStats ?? null, moves: [] }];

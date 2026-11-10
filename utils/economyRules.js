@@ -24,12 +24,14 @@ export function toTeamObj(entry) {
   return null;
 }
 
+// True when this exact copy (species + variant) is on the Display team
+// (displayedPokemon) OR the Battle team (battleTeam). Donate, bulk donate,
+// evolve and convert all refuse a copy that is on either team.
 export function isDisplayedVariant(user, pokeId, variant) {
-  const teamRaw = Array.isArray(user.displayedPokemon) ? user.displayedPokemon : [];
-  const team = teamRaw.map(toTeamObj).filter(Boolean);
   const pid = Number(pokeId);
   const v = normVariant(variant);
-  return team.some((t) => t.id === pid && t.variant === v);
+  const on = (raw) => (Array.isArray(raw) ? raw : []).map(toTeamObj).filter(Boolean).some((t) => t.id === pid && t.variant === v);
+  return on(user.displayedPokemon) || on(user.battleTeam);
 }
 
 // ==========================================================

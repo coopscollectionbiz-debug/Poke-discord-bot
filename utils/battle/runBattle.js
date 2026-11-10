@@ -29,7 +29,6 @@ export function buildTeam(user) {
       variant: slot.variant,
       name: speciesName(slot.id),
       level: getTraining(user, slot.id, slot.variant).level,
-      moves: getMoveset(user, slot.id, slot.variant),
     }));
 }
 
@@ -74,7 +73,10 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
   if (reason) return { ok: false, reason };
   const challenger = trainerData[challengerId];
   const defender = trainerData[defenderId];
-  const teams = [buildTeam(challenger), buildTeam(defender)];
+  // Movesets are added here, not in buildTeam, because cards also draw Teams
+  // with buildTeam and must work for species with no battle data.
+  const teams = [challenger, defender].map((user) =>
+    buildTeam(user).map((m) => ({ ...m, moves: getMoveset(user, m.speciesId, m.variant) })));
   const day = utcDay(now);
   const records = [getBattleRecord(challenger, day), getBattleRecord(defender, day)];
 

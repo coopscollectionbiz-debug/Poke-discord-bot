@@ -4,7 +4,7 @@
 // ==========================================================
 
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
-import inspectpokemon, { battleInfo, infoLines } from "../commands/inspectpokemon.js";
+import inspectpokemon, { battleInfo, infoLines, inspectSlots } from "../commands/inspectpokemon.js";
 import { findPokemonByName } from "../utils/dataLoader.js";
 import { expForLevel } from "../utils/training.js";
 
@@ -18,6 +18,7 @@ assertTrue(text.includes("Moves: ") && text.includes("Vine Whip"), "shows the de
 // At Lv 27 Bulbasaur learned Double-Edge, and this player had it forget Razor Leaf instead of Tackle.
 const chooser = { pokemon: { 1: { normal: 1, shiny: 0 } }, training: { "1:normal": { exp: expForLevel(27), moves: ["tackle", "vinewhip", "takedown", "doubleedge"], movesLevel: 27 } } };
 assertTrue(battleInfo(chooser, 1).includes("Moves: Tackle, Vine Whip, Take Down, Double-Edge"), "shows the player's chosen moves");
+assertEqual(inspectSlots(chooser, { id: 1 })[0].moves, ["Tackle", "Vine Whip", "Take Down", "Double-Edge"], "the card shows the player's chosen moves too");
 assertEqual(battleInfo({}, 1), "Base stats: HP 45 · Atk 49 · Def 49 · SpA 65 · SpD 65 · Spe 45", "not owned → base stats only");
 
 section("/inspectpokemon header");

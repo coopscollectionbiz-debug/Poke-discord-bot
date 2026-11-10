@@ -111,7 +111,9 @@ section("Result embed");
   for (const [label, outcome] of [["Open", out], ["Wager", wager]]) {
     const embed = buildResultEmbed(outcome, names).data;
     assertEqual(embed.fields.map((f) => f.name), ["Battle rating"], `${label}: the only field is Battle rating`);
-    assertTrue(!embed.title && !embed.description, `${label}: no title or description (the image shows the rest)`);
+    assertTrue(!embed.title, `${label}: no title (the image shows the winner)`);
+    if (label === "Open") assertTrue(!embed.description, "Open: no description");
+    else assertEqual(embed.description, `💰 ${names[outcome.winnerId]} takes the **60 CC** pot!`, "Wager: says who took the pot (nothing else does)");
   }
   const value = buildResultEmbed(out, names).data.fields[0].value;
   assertTrue(value.includes(`Ash **${td.A.battle.rating}**`) && value.includes(`Gary **${td.B.battle.rating}**`), "both new ratings are shown");

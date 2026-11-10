@@ -4,7 +4,9 @@
 // ==========================================================
 
 import { pokemonSpriteUrl } from "../utils/sprites.js";
-import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags, AttachmentBuilder } from "discord.js";
+import { slotView } from "../utils/render/teamView.js";
+import { renderInspectCard } from "../utils/render/inspectCard.js";
 import { spritePaths } from "../spriteconfig.js";
 import { findPokemonByName } from "../utils/dataLoader.js";
 import { validateNameQuery } from "../utils/validators.js";
@@ -94,6 +96,32 @@ export default {
       .setFooter({ text: "Pokémon data sourced from Coop's Collection" })
       .setTimestamp();
 
+    // Rendered cards (utils/render/inspectCard.js); the embed above is the fallback.
+    try {
+      const files = [];
+      for (const [i, slot] of inspectSlots(trainerData[interaction.user.id], pokemon).entries()) {
+        const eyebrow = slot.level == null ? "NOT IN YOUR COLLECTION" : slot.shiny ? "YOUR SHINY" : "YOUR POKÉMON";
+        files.push(new AttachmentBuilder(await renderInspectCard(slot, { eyebrow }), { name: `pokemon-${i + 1}.png` }));
+      }
+      return await safeReply(interaction, { files, flags: MessageFlags.Ephemeral });
+    } catch (err) {
+      console.warn("⚠️ inspect card render failed; sending embed:", err?.message || err);
+    }
+
     await safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
   },
 };
+
+/**
+ * What /inspectpokemon draws: one card per variant the player owns (stats at
+ * their Level, battle moves), or one base-stats card when they own neither.
+ */
+export function inspectSlots(user, pokemon) {
+  const id = Number(pokemon.id);
+  const owned = ["normal", "shiny"].filter((v) => (user?.pokemon?.[id]?.[v] ?? 0) > 0);
+  if (owned.length) {
+    return owned.map((variant) => ({ ...slotView(user, { speciesId: id, variant, level: getTraining(user, id, variant).level }, 0), slot: null }));
+  }
+  const base = slotView({}, { speciesId: id, variant: "normal", level: 1 }, 0);
+  return [{ ...base, slot: null, level: null, expFrac: 0, stats: getSpecies(id)?.baseStats ?? null, moves: [] }];
+}

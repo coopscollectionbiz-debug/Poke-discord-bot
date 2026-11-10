@@ -5,7 +5,7 @@
 // ==========================================================
 
 import {
-  SlashCommandBuilder, MessageFlags, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType,
+  SlashCommandBuilder, MessageFlags, EmbedBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType,
   PermissionFlagsBits,
 } from "discord.js";
 import { randomInt, randomUUID } from "crypto";
@@ -16,6 +16,7 @@ import { teamPower } from "../utils/battle/power.js";
 import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/battle/wager.js";
 import { WAGER } from "../utils/battle/tuning.js";
 import { offerMoveChoices } from "../utils/moveChoice.js";
+import { expView, renderExpCard } from "../utils/render/expCard.js";
 
 export const data = new SlashCommandBuilder()
   .setName("battle")
@@ -57,8 +58,21 @@ export function displayNames(interaction, opponent) {
 // ends so it doesn't show level-ups early. Discord accepts follow-ups for 15
 // minutes after the interaction, so a Challenger whose Wager was accepted
 // near the end of the offer window can miss theirs; the EXP still counts.
-function sendExp(reply, outcome, userId, names) {
-  return reply.followUp({ content: expSummary(outcome, userId, names), flags: MessageFlags.Ephemeral })
+// The message is a rendered EXP card (utils/render/expCard.js) under a
+// one-line caption; if rendering fails, the plain-text summary goes instead.
+export async function expMessage(outcome, userId, names, user, { render = renderExpCard } = {}) {
+  const text = expSummary(outcome, userId, names);
+  try {
+    const png = await render(expView(outcome, userId, names, user));
+    return { content: text.split("\n")[0], files: [new AttachmentBuilder(png, { name: "exp.png" })], flags: MessageFlags.Ephemeral };
+  } catch (err) {
+    console.warn("⚠️ EXP card render failed; sending text:", err?.message || err);
+    return { content: text, flags: MessageFlags.Ephemeral };
+  }
+}
+
+async function sendExp(reply, outcome, userId, names, user) {
+  return reply.followUp(await expMessage(outcome, userId, names, user))
     .catch((err) => console.warn("⚠️ EXP message failed:", err?.message || err));
 }
 
@@ -111,7 +125,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
     console.warn("⚠️ battle post failed:", err?.message || err);
     await interaction.editReply("Your battle counted, but I couldn't post it in this channel.").catch(() => {});
   }
-  await sendExp(interaction, outcome, challengerId, names); // only the Challenger earns EXP in an Open battle
+  await sendExp(interaction, outcome, challengerId, names, trainerData[challengerId]); // only the Challenger earns EXP in an Open battle
   await offerMoves(interaction, outcome, challengerId, { trainerData, lockUser, enqueueSave });
 }
 
@@ -231,8 +245,8 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     // The Challenger's /battle and the Defender's Accept click are the two interactions to reply on.
     const services = { trainerData, lockUser, enqueueSave };
     await Promise.all([
-      sendExp(interaction, outcome, challengerId, names).then(() => offerMoves(interaction, outcome, challengerId, services)),
-      sendExp(i, outcome, defenderId, names).then(() => offerMoves(i, outcome, defenderId, services)),
+      sendExp(interaction, outcome, challengerId, names, trainerData[challengerId]).then(() => offerMoves(interaction, outcome, challengerId, services)),
+      sendExp(i, outcome, defenderId, names, trainerData[defenderId]).then(() => offerMoves(i, outcome, defenderId, services)),
     ]);
   });
 

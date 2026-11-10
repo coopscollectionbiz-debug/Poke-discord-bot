@@ -25,8 +25,9 @@ const ID_RE = /^\d{5,25}$/;
  * @param {Function} deps.lockUser
  * @param {(data:object) => Promise<{saved:boolean, note:string}>} deps.save
  * @param {{ isApproved: (entry) => boolean }} [deps.policy]
+ * @param {() => number} [deps.now]  clock for claim timestamps (injectable for tests)
  */
-export function createAchievementHandlers({ getTrainerData, lockUser, save, policy = defaultRewardPolicy }) {
+export function createAchievementHandlers({ getTrainerData, lockUser, save, policy = defaultRewardPolicy, now = Date.now }) {
   /** Read-only view. */
   function view({ query, isAuthorized }) {
     const id = typeof query?.id === "string" ? query.id : "";
@@ -57,7 +58,7 @@ export function createAchievementHandlers({ getTrainerData, lockUser, save, poli
       save,
       requestId,
       payloadKey: `ach-claim:${achievementId}`,
-      mutate: (user) => claimAchievement(user, achievementId, { policy }),
+      mutate: (user) => claimAchievement(user, achievementId, { policy, now: now() }),
     });
     if (!tx.ok) {
       const { ok, status = 400, ...rest } = tx;

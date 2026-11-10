@@ -59,10 +59,11 @@ export function expSummary(outcome, userId, names) {
   return [`EXP from your battle with ${names[opponentId]}:`, ...lines].join("\n");
 }
 
-// Only the rating changes: everything else is on the result image or in
-// the message header.
+// The rating changes, plus (Wager battles) who took the pot, which neither
+// the result image nor the header says. Everything else is on the image.
 export function buildResultEmbed(outcome, names) {
   const embed = new EmbedBuilder().setColor(0xf1c40f);
+  if (outcome.mode === "wager") embed.setDescription(`💰 ${names[outcome.winnerId]} takes the **${2 * outcome.stake} CC** pot!`);
   const rating = Object.entries(outcome.rating)
     .map(([userId, r]) => `${names[userId]} **${r.to}** ${r.to >= r.from ? "▲" : "▼"}${Math.abs(r.to - r.from)}`)
     .join("\n");

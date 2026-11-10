@@ -1,0 +1,115 @@
+{
+ "grid/full/png-cold": {
+  "ms": 62,
+  "bytes": 154348
+ },
+ "grid/full/png-warm": {
+  "ms": 53,
+  "bytes": 154348
+ },
+ "grid/full/gif": {
+  "ms": 725,
+  "bytes": 476380
+ },
+ "grid/partial/png-cold": {
+  "ms": 44,
+  "bytes": 130709
+ },
+ "grid/stress/png-cold": {
+  "ms": 55,
+  "bytes": 146739
+ },
+ "grid/fallback/png-cold": {
+  "ms": 45,
+  "bytes": 124796
+ },
+ "grid/empty/png-cold": {
+  "ms": 32,
+  "bytes": 101897
+ },
+ "roster/full/png-cold": {
+  "ms": 53,
+  "bytes": 223621
+ },
+ "roster/full/png-warm": {
+  "ms": 56,
+  "bytes": 223621
+ },
+ "roster/full/gif": {
+  "ms": 409,
+  "bytes": 489629
+ },
+ "roster/partial/png-cold": {
+  "ms": 41,
+  "bytes": 159112
+ },
+ "roster/stress/png-cold": {
+  "ms": 55,
+  "bytes": 212754
+ },
+ "roster/fallback/png-cold": {
+  "ms": 44,
+  "bytes": 177261
+ },
+ "roster/empty/png-cold": {
+  "ms": 29,
+  "bytes": 86405
+ },
+ "hybrid/full/png-cold": {
+  "ms": 53,
+  "bytes": 163032
+ },
+ "hybrid/full/png-warm": {
+  "ms": 50,
+  "bytes": 163032
+ },
+ "hybrid/full/gif": {
+  "ms": 672,
+  "bytes": 506358
+ },
+ "hybrid/partial/png-cold": {
+  "ms": 45,
+  "bytes": 147170
+ },
+ "hybrid/stress/png-cold": {
+  "ms": 59,
+  "bytes": 168136
+ },
+ "hybrid/fallback/png-cold": {
+  "ms": 46,
+  "bytes": 140862
+ },
+ "hybrid/empty/png-cold": {
+  "ms": 32,
+  "bytes": 98637
+ },
+ "refined/full/png-cold": {
+  "ms": 59,
+  "bytes": 197881
+ },
+ "refined/full/png-warm": {
+  "ms": 56,
+  "bytes": 197881
+ },
+ "refined/full/gif": {
+  "ms": 365,
+  "bytes": 728804
+ },
+ "refined/partial/png-cold": {
+  "ms": 47,
+  "bytes": 140062
+ },
+ "refined/stress/png-cold": {
+  "ms": 58,
+  "bytes": 182962
+ },
+ "refined/fallback/png-cold": {
+  "ms": 52,
+  "bytes": 155129
+ },
+ "refined/empty/png-cold": {
+  "ms": 35,
+  "bytes": 89702
+ },
+ "rssMB": 112
+}

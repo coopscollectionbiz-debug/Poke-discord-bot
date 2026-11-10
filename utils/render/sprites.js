@@ -17,6 +17,8 @@ import { createCanvas, ImageData, loadImage } from "@napi-rs/canvas";
 import { GifReader } from "omggif";
 import { spriteRecord } from "../sprites.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
+import { breathingPoses } from "../trainerIdle.js";
+import { trainerIdle, trainersAnimated } from "../trainerAssets.js";
 
 const PUBLIC = new URL("../../public/", import.meta.url);
 const CACHE_LIMIT = 200; // trimmed sprites are ~15 KB of pixels each
@@ -105,6 +107,39 @@ export async function loadTrainerSprite(fileName) {
   }
 }
 
+const poseCache = new Map(); // fileName -> Promise<poses|null>
+const POSE_CACHE_LIMIT = 40; // 3 poses × 80×80 RGBA ≈ 77 KB each
+
+/**
+ * The trainer's breathing idle as drawable sprites (utils/trainerIdle.js):
+ * { poses: [rest, headLag, exhale] (sprite-like), rgba: rest pixels, width, height }.
+ * Null when the file has no approved idle (data/sprites/trainer-idles.json),
+ * TRAINERS_ANIMATED=0, or the sprite can't be read; callers then draw the
+ * static sprite. Pose 0 is the unchanged PNG.
+ */
+export function loadTrainerPoses(fileName, { env = process.env } = {}) {
+  if (!fileName || !trainersAnimated(env) || !trainerIdle(fileName)) return Promise.resolve(null);
+  if (poseCache.has(fileName)) return poseCache.get(fileName);
+  const p = (async () => {
+    const t = await loadTrainerSprite(fileName);
+    if (!t) return null;
+    const c = createCanvas(t.width, t.height);
+    c.getContext("2d").drawImage(t.image, 0, 0);
+    const rgba = c.getContext("2d").getImageData(0, 0, t.width, t.height).data;
+    const b = breathingPoses(rgba, t.width, t.height);
+    if (!b) return null;
+    const poses = b.poses.map((px) => {
+      const pc = createCanvas(t.width, t.height);
+      pc.getContext("2d").putImageData(new ImageData(new Uint8ClampedArray(px), t.width, t.height), 0, 0);
+      return { image: pc, width: t.width, height: t.height };
+    });
+    return { poses, rgba, width: t.width, height: t.height };
+  })().catch(() => null);
+  poseCache.set(fileName, p);
+  if (poseCache.size > POSE_CACHE_LIMIT) poseCache.delete(poseCache.keys().next().value);
+  return p;
+}
+
 /**
  * The scale for one sprite: the image's shared `scale` (every Pokémon in an
  * image at the same pixel size, as in the games, so Pikachu stays smaller
@@ -140,4 +175,5 @@ export function drawSprite(ctx, sprite, cx, floorY, boxW, boxH, { scale = 2, alp
 
 export function clearSpriteCacheForTesting() {
   cache.clear();
+  poseCache.clear();
 }

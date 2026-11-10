@@ -25,6 +25,7 @@ import {
   PermissionFlagsBits, // ✅ Added import
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
+import { trainerImageUrl } from "../utils/trainerAssets.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { createPaginationButtons } from "../utils/pagination.js";
 import { safeReply } from "../utils/safeReply.js";
@@ -255,7 +256,7 @@ export default {
       if (!t) return null;
 
       const isOwned = !!owned[t.sprite];
-      const fullURL = `${spritePaths.trainers}${t.sprite}`;
+      const fullURL = trainerImageUrl(t.sprite);
 
       const embed = new EmbedBuilder()
         .setTitle(`🎓 ${t.name} — ${t.sprite.replace(".png", "")}`)

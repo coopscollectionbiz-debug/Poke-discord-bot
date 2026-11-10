@@ -37,6 +37,7 @@ import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
 import { broadcastReward } from "../utils/broadcastReward.js";
 import { spritePaths } from "../spriteconfig.js";
+import { trainerImageUrl } from "../utils/trainerAssets.js";
 import { publicBaseUrl } from "../utils/publicUrl.js";
 import {
   createSuccessEmbed,
@@ -265,7 +266,7 @@ export default {
               }
               if (trainerKey) {
                 grantTrainer(live, trainerKey);
-                rewardEmbeds.push(createTrainerRewardEmbed(rareTrainer, `${spritePaths.trainers}${trainerKey}`));
+                rewardEmbeds.push(createTrainerRewardEmbed(rareTrainer, trainerImageUrl(trainerKey)));
                 broadcastQueue.push({ type: "trainer", item: { id: rareTrainer.id, name: rareTrainer.name, rarity: rareTrainer.tier || "rare" }, shiny: false });
               }
               live.purchases.push("starter_pack");

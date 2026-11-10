@@ -35,6 +35,8 @@ export const spritePaths = {
   // Trainer sprites
   trainers: `${BASE}/public/sprites/trainers_2/`,
   trainersGray: `${BASE}/public/sprites/trainers_2/grayscale/`,
+  // Breathing idle GIFs (tools/generate-trainer-idles.mjs); use utils/trainerAssets.js.
+  trainersIdle: `${BASE}/public/sprites/trainers_idle/`,
 
   // Type icons (1–18; 18 = Fairy)
   types: `${BASE}/public/sprites/types/`,

@@ -30,6 +30,11 @@ const TRAINER_COSTS = {
 // GLOBAL STATE
 // ===========================================================
 let allTrainers = {};
+// Breathing idle GIFs: { "file.png": "file.gif" } (tools/generate-trainer-idles.mjs)
+let trainerIdles = {};
+// A trainer image: the breathing idle when `animated` and one exists, else the PNG.
+const trainerImg = (file, animated) =>
+  animated && trainerIdles[file] ? `/public/sprites/trainers_idle/${trainerIdles[file]}` : `${TRAINER_SPRITE_PATH}${file}`;
 let ownedTrainers = [];
 let userId = null;
 
@@ -122,6 +127,10 @@ async function loadData() {
     // 1) Load trainer definitions
     const spriteRes = await fetch(TRAINER_DATA_FILE, { credentials: "same-origin" });
     allTrainers = await spriteRes.json();
+    // Breathing idles (optional: trainers stay static PNGs without it)
+    trainerIdles = await fetch("/public/sprites/trainers_idle/manifest.json", { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : {}))
+      .catch(() => ({}));
 
     // 2) Load owned trainers + CC (+ equipped trainer) using cookie session
     await refreshUserState();
@@ -212,7 +221,9 @@ function render(filter = "") {
       if (showOwnedOnly && !owns) return;
       if (showUnownedOnly && owns) return;
 
-      const imgPath = `${TRAINER_SPRITE_PATH}${fileName}`;
+      // Owned trainers breathe (idle GIF); unowned stay static (CSS grays them).
+      const staticPath = `${TRAINER_SPRITE_PATH}${fileName}`;
+      const imgPath = trainerImg(fileName, owns);
 
       const card = document.createElement("div");
       card.className = `trainer-card ${owns ? "owned" : "unowned"}`;
@@ -226,7 +237,10 @@ function render(filter = "") {
       img.src = imgPath;
       img.alt = "";
       img.loading = "lazy";
-      img.onerror = () => card.remove();
+      img.onerror = () => {
+        if (img.src.endsWith(".gif")) { img.src = staticPath; return; } // idle GIF missing: use the PNG
+        card.remove();
+      };
 
       wrapper.appendChild(img);
 
@@ -342,7 +356,7 @@ function askToEquipTrainer(name, file) {
   createTrainerModal({
     title: "Equip This Trainer?",
     message: `Would you like to equip <strong>${name}</strong>?`,
-    sprite: `${TRAINER_SPRITE_PATH}${file}`,
+    sprite: trainerImg(file, true),
     confirmText: "Equip",
     onConfirm: () => selectTrainer(name, file),
   });
@@ -362,7 +376,7 @@ async function selectTrainer(name, file) {
       return createTrainerModal({
         title: "Equip Failed",
         message: data?.error || "Could not equip trainer.",
-        sprite: `${TRAINER_SPRITE_PATH}${file}`,
+        sprite: trainerImg(file, true),
         confirmText: "OK",
       });
     }
@@ -376,7 +390,7 @@ async function selectTrainer(name, file) {
     createTrainerModal({
       title: "Trainer Equipped!",
       message: `${name} is now your active trainer.`,
-      sprite: `${TRAINER_SPRITE_PATH}${file}`,
+      sprite: trainerImg(file, true),
       confirmText: "OK",
     });
   } catch (err) {
@@ -390,7 +404,7 @@ async function selectTrainer(name, file) {
     createTrainerModal({
       title: "Equip Failed",
       message: "Network error. Please try again.",
-      sprite: `${TRAINER_SPRITE_PATH}${file}`,
+      sprite: trainerImg(file, true),
       confirmText: "OK",
     });
   } finally {
@@ -407,7 +421,7 @@ function askToBuyTrainer(name, file, rarity, price) {
 
   createTrainerModal({
     title: "Unlock Trainer?",
-    sprite: `${TRAINER_SPRITE_PATH}${file}`,
+    sprite: trainerImg(file, false),
     price,
     message: canAfford
       ? `Purchase <strong>${name}</strong>?`
@@ -435,7 +449,7 @@ async function purchaseTrainer(file) {
       return createTrainerModal({
         title: "Purchase Failed",
         message: data?.error || "Could not purchase trainer.",
-        sprite: `${TRAINER_SPRITE_PATH}${file}`,
+        sprite: trainerImg(file, false),
         confirmText: "OK",
       });
     }
@@ -452,7 +466,7 @@ async function purchaseTrainer(file) {
     createTrainerModal({
       title: "Trainer Unlocked!",
       message: "You can now equip this trainer.",
-      sprite: `${TRAINER_SPRITE_PATH}${file}`,
+      sprite: trainerImg(file, true),
       confirmText: "OK",
     });
   } catch (err) {
@@ -466,7 +480,7 @@ async function purchaseTrainer(file) {
     createTrainerModal({
       title: "Purchase Failed",
       message: "Network error. Please try again.",
-      sprite: `${TRAINER_SPRITE_PATH}${file}`,
+      sprite: trainerImg(file, false),
       confirmText: "OK",
     });
   } finally {

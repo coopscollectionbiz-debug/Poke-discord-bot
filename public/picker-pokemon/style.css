@@ -226,6 +226,43 @@ main:focus { outline: none; }
   box-shadow: var(--cc-ring-gold), var(--cc-shadow);
 }
 
+/* Shiny shown: faint gold wash + gold platform (DESIGN-SYSTEM.md §5) */
+.pokemon-card.shiny-view .sprite-wrapper {
+  background: radial-gradient(circle at 50% 65%, #f5c84c2e, transparent 62%), var(--cc-surface-sunken);
+}
+.pokemon-card.shiny-view .sprite-wrapper::after { background: #f5c84c33; border-color: #f5c84c88; }
+.pokemon-card.shiny-view:not(.selected):not(.multi-selected) { border-color: #f5c84c80; }
+
+/* ✨ normal/shiny toggle: 36 px visual, 44 px hit area */
+.variant-toggle {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--cc-line);
+  background: #0e1120d9;
+  color: var(--cc-text-faint);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.variant-toggle::before { content: ""; position: absolute; inset: -4px; } /* 44 px target */
+.variant-toggle svg { width: 18px; height: 18px; }
+.variant-toggle:hover { color: var(--cc-gold); border-color: #f5c84c88; }
+.variant-toggle[aria-pressed="true"] { background: var(--cc-gold); border-color: var(--cc-gold); color: var(--cc-ink); }
+.variant-toggle:focus-visible { outline: 2px solid var(--cc-blue); outline-offset: 2px; }
+/* Keep the lock / multi-select check clear of the toggle */
+.pokemon-card.has-toggle .lock-overlay, .pokemon-card.has-toggle .multi-check { right: 46px; }
+
+/* Level tag of the copy being shown */
+.poke-level.is-viewing { border-color: var(--cc-text-muted); }
+.poke-level.shiny.is-viewing { border-color: var(--cc-gold); background: #f5c84c1f; }
+
 /* Badges */
 .lock-overlay, .multi-check, .team-badge {
   position: absolute;

@@ -2,7 +2,7 @@
 // tests/encounterCard.test.js
 // The Trainer encounter card (docs/superpowers/specs/2026-11-10-trainer-
 // encounters-design.md, Discord UX): the facts it shows, that it never
-// shows a Level (disguises hold), its alt text, the games' "!" over the
+// shows a Level, its alt text, the games' "!" over the
 // Trainer, and that the pieces land where the layout says. Synthetic data.
 // ==========================================================
 
@@ -58,7 +58,7 @@ section("What the card shows");
     "the sprite, the party as a count, and the Prize money");
   assertEqual([v.player.name, v.player.trainerFile, v.player.team.map((s) => s.id)], ["Ash", "acerola-masters.png", [6, 94, 445]],
     "the player, their trainer and the Team that will fight");
-  assertTrue(!/level/i.test(JSON.stringify(v)), "no Levels anywhere: disguises hold");
+  assertTrue(!/level/i.test(JSON.stringify(v)), "no Levels anywhere");
   assertEqual(JSON.stringify(user), before, "never mutates the record");
 }
 

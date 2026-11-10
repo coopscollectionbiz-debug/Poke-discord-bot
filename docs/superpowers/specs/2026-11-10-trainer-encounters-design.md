@@ -45,7 +45,7 @@ While a player chats, a computer-run Trainer can spot them and ask for a fight, 
 ## Discord UX
 
 - **The card.** A rendered card in the style of the Gym VS card, toned down (`utils/render/encounterCard.js`). The player's trainer and Team stand on the blue half. The Trainer stands on the red half with the games' "!" over their head (pixel art drawn in code on a 16×16 grid, decided), their class and name, and their party as Poké Balls. There are no Levels, no type tint, and no Badges. A games-style text box reads "Youngster Joey challenged Ash!" with the Trainer's line under it, and the stakes read "Win or lose: 260 CC". The message @mentions the player. The card has alt text, and when it can't render an embed with the same facts goes instead.
-- **Lines.** Every class has its own lines in its own voice. Over-tier Trainers of a class other than Ace Trainer draw from a shared pool of calm, too-confident lines instead: that line is the only hint (decided). The surprise gets no hint. Ace Trainers use their own confident lines. All copy is written fresh in the games' voice, not copied from the games.
+- **Lines.** Every class has its own lines in its own voice. Over-tier Trainers of a class other than Ace Trainer draw from a shared pool of calm, too-confident lines instead, a hint they're strong (decided). The surprise's line gives no hint. The Prize money on the card is a second hint: it's the class base × the last Pokémon's Level, so a player who knows the bases can read a strong Trainer or a surprise from it. That was accepted when the amount went on the card (decided 2026-11-10). Ace Trainers use their own confident lines. All copy is written fresh in the games' voice, not copied from the games.
 - **Buttons.** Battle! and Run, answered for 2 minutes (decided). Only the spotted player's clicks count; anyone else gets a private "This Trainer has their eye on Ash."
 - **Run, or no answer.** The card shrinks to one text line with no image, from rotating pools: "Ash ran away from Youngster Joey.", "Ash scurried away from Youngster Joey.", "Youngster Joey lost interest."
 - **Battle!** The buttons go and the card stays as the intro. Under the player's lock the bot re-checks the Team, open runs and wagers, fights with the card's Team, settles CC and EXP, and saves; then the replay posts below the card with both trainers' portraits, no type tint, no Badge pill, and no award screen. It waits for a replay slot like every other replay (`PLAYBACK.maxAtOnce`, `tuning.js:65`). Under the final image: the Trainer's after-battle line, then "Ash got 260 CC for winning!" or "Ash whited out!". The loss line has no amount: a short balance would reveal how much the player holds. After the replay the player gets a private message with the exact CC won or paid and the EXP card (`utils/render/expCard.js`).
@@ -54,7 +54,7 @@ While a player chats, a computer-run Trainer can spot them and ask for a fight, 
 
 ## Data
 
-- `user.encounter = { day, count, lastAt }`: the UTC day, encounters posted that day, and when the last one posted (ms). The record normalizer and validator keep unknown fields (`normalizeUserSchema` in `bot_final.js:259`, `validateUserSchema` in `utils/userSchema.js:108`); a test pins this for `encounter`.
+- `user.encounter = { day, count, lastAt }`: the UTC day, encounters posted that day, and when the last one posted (ms). The record normalizer and validator keep unknown fields (`normalizeUserSchema` in `bot_final.js:259`, `validateUserSchema` in `utils/userSchema.js:108`); `tests/runEncounter.test.js` pins the validator's half for `encounter` (the normalizer lives in `bot_final.js`, which tests can't import).
 - The event log gets one `encounter` event per step: `spotted` (tier, class, party size, prize money, surprise), `answered` (battle, run, timeout), and `result` (won, CC moved). These are for tuning the rates.
 
 ## Code
@@ -70,8 +70,8 @@ While a player chats, a computer-run Trainer can spot them and ask for a fight, 
 
 ## Tests
 
-- `tests/encounterRoster.test.js`: classes, sprites, bases, lines, and species coverage for every class at every Level.
-- `tests/encounterGenerate.test.js`: tier shares, bands, party size, order, Ace Trainers, the surprise, forms that fit the Level, prize money.
+- `tests/encounterRoster.test.js`: classes, sprites, bases, and lines.
+- `tests/encounterGenerate.test.js`: tier shares, bands, party size, order, Ace Trainers, the surprise, forms that fit the Level, species coverage for every class at every Level, prize money.
 - `tests/runEncounter.test.js`: who can be spotted, the record, the fight and its settlement.
 - `tests/encounterCard.test.js`: the card's facts, alt text, and layout.
 - `tests/encounterFlow.test.js`: the Discord flow with stub objects, including the replay and the private message.

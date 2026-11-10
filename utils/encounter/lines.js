@@ -4,7 +4,8 @@
 // games' voice, not copied from them. A set's `intro` goes on the card;
 // after the fight, `lost` is the Trainer losing and `won` the Trainer
 // winning. Over-tier Trainers of any class but Ace Trainer say an
-// OVER_INTRO line instead of their own: it's the only hint they're strong.
+// OVER_INTRO line instead of their own, a hint they're strong besides the
+// Prize money on the card.
 // RAN and LOST_INTEREST replace a card the player ran from or ignored.
 // Lines stay within one line of the card's text box (64 characters).
 // ==========================================================

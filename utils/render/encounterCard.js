@@ -6,7 +6,8 @@
 // blue half and the Trainer on the red half under the games' "!", their
 // party as Poké Balls. Below, a games-style text box says who challenged
 // whom and the Trainer's line, beside the Prize money at stake. It never
-// shows a Level, so a strong Trainer's disguise holds. Read-only.
+// shows a Level, though the Prize money (class base × the last Pokémon's
+// Level) hints at a strong Trainer to players who know the bases. Read-only.
 // ==========================================================
 
 import { createCanvas } from "@napi-rs/canvas";

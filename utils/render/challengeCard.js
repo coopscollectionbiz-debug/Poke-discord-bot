@@ -90,9 +90,12 @@ export function cardSlots(v) {
   };
 }
 
-const splitX = (y) => SPLIT.top + ((SPLIT.bottom - SPLIT.top) * y) / MAIN_H;
+// The split field: its height and the diagonal seam's x at its top and bottom.
+// The encounter card (utils/render/encounterCard.js) draws a shorter one.
+const FIELD = { h: MAIN_H, top: SPLIT.top, bottom: SPLIT.bottom };
+const splitX = (y, field) => field.top + ((field.bottom - field.top) * y) / field.h;
 
-function drawHalves(ctx, accent) {
+export function drawHalves(ctx, accent, field = FIELD) {
   const half = (points, color, fromX, toX, alphas) => {
     const g = ctx.createLinearGradient(fromX, 0, toX, 0);
     g.addColorStop(0, `${color}${alphas[0]}`);
@@ -103,22 +106,22 @@ function drawHalves(ctx, accent) {
     ctx.closePath();
     ctx.fill();
   };
-  half([[0, 0], [SPLIT.top, 0], [SPLIT.bottom, MAIN_H], [0, MAIN_H]], COLOR.blue, 0, SPLIT.top, ["38", "0c"]);
-  half([[SPLIT.top, 0], [W, 0], [W, MAIN_H], [SPLIT.bottom, MAIN_H]], accent, SPLIT.bottom, W, ["10", "40"]);
+  half([[0, 0], [field.top, 0], [field.bottom, field.h], [0, field.h]], COLOR.blue, 0, field.top, ["38", "0c"]);
+  half([[field.top, 0], [W, 0], [W, field.h], [field.bottom, field.h]], accent, field.bottom, W, ["10", "40"]);
   // The seam: an ink band with a light edge on each side.
   ctx.lineCap = "butt";
   for (const [width, color] of [[18, "#ffffff22"], [12, COLOR.ink]]) {
     ctx.lineWidth = width;
     ctx.strokeStyle = color;
     ctx.beginPath();
-    ctx.moveTo(SPLIT.top, 0);
-    ctx.lineTo(SPLIT.bottom, MAIN_H);
+    ctx.moveTo(field.top, 0);
+    ctx.lineTo(field.bottom, field.h);
     ctx.stroke();
   }
 }
 
-function drawVs(ctx) {
-  const cx = splitX(MAIN_H / 2) - 6, cy = MAIN_H / 2 + 34;
+export function drawVs(ctx, field = FIELD) {
+  const cx = splitX(field.h / 2, field) - 6, cy = field.h / 2 + 34;
   ctx.save();
   ctx.font = font(104, 900);
   ctx.textAlign = "center";
@@ -144,7 +147,7 @@ function eyebrowAndTitle(ctx, eyebrow, title, x, align, maxW) {
   ctx.fillText(t.text, x, M + 76);
 }
 
-async function drawTrainer(ctx, file, cx, floor, accent, { scale = 4, box = TRAINER_BOX, trimmed = false } = {}) {
+export async function drawTrainer(ctx, file, cx, floor, accent, { scale = 4, box = TRAINER_BOX, trimmed = false } = {}) {
   drawPlatform(ctx, cx, floor, scale === 4 ? 118 : 52, scale === 4 ? 20 : 10, accent);
   const t = trimmed ? await loadTrimmedTrainerSprite(file) : await loadTrainerSprite(file);
   if (t) {
@@ -168,17 +171,22 @@ async function drawPlayer(ctx, v, { player: slot, badges }) {
   ctx.globalAlpha = 1;
   ctx.imageSmoothingEnabled = true;
   await drawTrainer(ctx, v.player.trainerFile, slot.cx, slot.floor, COLOR.blue);
+  await drawTeamGrid(ctx, v.player.team, 348, 176); // clear of the VS on the seam
+}
 
-  // The battle Team, 2 × 3, at 1× (clear of the VS on the seam).
-  const gx = 348, gy = 176, cell = 74, gap = 8;
+// The battle Team ({ id, variant, shiny } per slot), 2 × 3, at 1×, under a
+// TEAM label; (gx, gy) is the first cell's top left.
+export async function drawTeamGrid(ctx, team, gx, gy) {
+  const cell = 74, gap = 8;
   ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
   ctx.font = font(18, 800);
   ctx.fillStyle = COLOR.textMuted;
   ctx.fillText("TEAM", gx, gy - 8);
   const ph = await loadPlaceholder();
   for (let i = 0; i < 6; i++) {
     const x = gx + (i % 2) * (cell + gap), y = gy + Math.floor(i / 2) * (cell + gap);
-    const s = v.player.team[i];
+    const s = team[i];
     ctx.fillStyle = s ? "#1a2135cc" : "#ffffff08";
     rr(ctx, x, y, cell, cell, 12);
     ctx.fill();

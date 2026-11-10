@@ -1,26 +1,26 @@
 {
  "newCommon/png": {
-  "ms": 20,
-  "kb": 51
+  "ms": 12,
+  "kb": 31
  },
  "newCommon/gif": {
-  "ms": 138,
-  "kb": 65
+  "ms": 84,
+  "kb": 53
  },
  "shinyDuplicate/png": {
-  "ms": 17,
-  "kb": 61
+  "ms": 9,
+  "kb": 39
  },
  "shinyDuplicate/gif": {
-  "ms": 113,
-  "kb": 122
+  "ms": 67,
+  "kb": 86
  },
  "newLegendary/png": {
-  "ms": 15,
-  "kb": 55
+  "ms": 8,
+  "kb": 37
  },
  "newLegendary/gif": {
-  "ms": 100,
-  "kb": 128
+  "ms": 61,
+  "kb": 89
  }
 }

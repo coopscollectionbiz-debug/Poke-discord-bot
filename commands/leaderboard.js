@@ -3,6 +3,7 @@
 // ==========================================================
 
 import { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } from "discord.js";
+import { cardImage } from "../utils/render/stage.js";
 import { leaderboardView, renderLeaderboard } from "../utils/render/leaderboardCard.js";
 
 export const data = new SlashCommandBuilder()
@@ -32,8 +33,9 @@ export function buildLeaderboardEmbed({ top, you }) {
 export async function leaderboardMessage(trainerData, userId, { render = renderLeaderboard } = {}) {
   const board = rankBattleRatings(trainerData, userId);
   try {
-    const png = await render(leaderboardView(board, trainerData, userId));
-    return { files: [new AttachmentBuilder(png, { name: "leaderboard.png" })] };
+    const view = leaderboardView(board, trainerData, userId);
+    const card = await cardImage((animate) => render(view, { animate }), "leaderboard");
+    return { files: [new AttachmentBuilder(card.buffer, { name: card.name })] };
   } catch (err) {
     console.warn("⚠️ leaderboard render failed; sending text:", err?.message || err);
     return { embeds: [buildLeaderboardEmbed(board)] };

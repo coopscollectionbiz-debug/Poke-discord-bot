@@ -5,6 +5,7 @@
 
 import { pokemonSpriteUrl } from "../utils/sprites.js";
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags, AttachmentBuilder } from "discord.js";
+import { cardImage } from "../utils/render/stage.js";
 import { slotView } from "../utils/render/teamView.js";
 import { renderInspectCard } from "../utils/render/inspectCard.js";
 import { spritePaths } from "../spriteconfig.js";
@@ -102,7 +103,8 @@ export default {
       const files = [];
       for (const [i, slot] of inspectSlots(trainerData[interaction.user.id], pokemon).entries()) {
         const eyebrow = slot.level == null ? "NOT IN YOUR COLLECTION" : slot.shiny ? "YOUR SHINY" : "YOUR POKÉMON";
-        files.push(new AttachmentBuilder(await renderInspectCard(slot, { eyebrow }), { name: `pokemon-${i + 1}.png` }));
+        const card = await cardImage((animate) => renderInspectCard(slot, { eyebrow, animate }), `pokemon-${i + 1}`);
+        files.push(new AttachmentBuilder(card.buffer, { name: card.name }));
       }
       return await safeReply(interaction, { files, flags: MessageFlags.Ephemeral });
     } catch (err) {

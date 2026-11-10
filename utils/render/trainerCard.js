@@ -10,6 +10,7 @@ import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
 import { rr, font, fitText, fitFont, drawBall, drawShinyMark } from "./primitives.js";
 import { loadStaticSprite, loadTrainerSprite, loadPlaceholder, drawSprite } from "./sprites.js";
+import { spriteStage } from "./stage.js";
 import { buildTeamView } from "./teamView.js";
 import { getRankProgress } from "../rankSystem.js";
 
@@ -57,10 +58,11 @@ function stat(ctx, label, value, x, y, w, color = COLOR.text) {
   ctx.fillText(v.text, x + 18, y + 70);
 }
 
-export async function renderTrainerCard(v) {
+export async function renderTrainerCard(v, { animate = false } = {}) {
   const { w: W, h: H } = TRAINER_CARD_SIZE;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
+  const stage = spriteStage({ animate });
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, "#131a2d");
   bg.addColorStop(1, "#1c1530");
@@ -174,7 +176,7 @@ export async function renderTrainerCard(v) {
     ctx.stroke();
     if (!s) continue;
     const sp = (await loadStaticSprite(s.id, s.variant)) ?? ph;
-    drawSprite(ctx, sp, x + slotW / 2, y + slotH - 40, slotW - 12, slotH - 50, { scale: 2 });
+    stage.place(ctx, sp, x + slotW / 2, y + slotH - 40, slotW - 12, slotH - 50, { scale: 2 }, { id: s.id, variant: s.variant });
     ctx.textAlign = "center";
     ctx.font = font(15, 800);
     ctx.fillStyle = COLOR.textMuted;
@@ -182,5 +184,5 @@ export async function renderTrainerCard(v) {
     ctx.textAlign = "left";
     if (s.shiny) drawShinyMark(ctx, x + slotW - 18, y + 18, 8);
   }
-  return canvas.toBuffer("image/png");
+  return stage.output(canvas);
 }

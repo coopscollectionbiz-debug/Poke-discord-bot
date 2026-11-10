@@ -203,7 +203,7 @@ section("Private EXP messages");
   const [a] = t.log.followUps;
   assertEqual(a.flags, MessageFlags.Ephemeral, "only they can see it");
   assertEqual(a.content, "EXP from your battle with B:", "a one-line caption");
-  assertEqual(a.files?.map((f) => f.name), ["exp.png"], "the EXP card carries their Team's EXP");
+  assertTrue(a.files?.length === 1 && /^exp\.(gif|png)$/.test(a.files[0].name), "the EXP card carries their Team's EXP");
   assertTrue(a.afterResult, "it arrives after the result is shown");
 
   const w = harness();

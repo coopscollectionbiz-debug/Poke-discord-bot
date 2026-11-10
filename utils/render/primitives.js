@@ -257,3 +257,6 @@ export function drawTag(ctx, text, x, y, { fill = COLOR.gold, color = COLOR.ink,
   ctx.textAlign = "left";
   return w;
 }
+
+/** National Pokédex number as shown on every card: "#0613". */
+export const dexNo = (id) => `#${String(Number(id)).padStart(4, "0")}`;

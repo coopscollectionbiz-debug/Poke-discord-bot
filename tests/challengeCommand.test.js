@@ -8,7 +8,7 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { execute, data, refusal, boardEmbed, reviveMenu, previewMessage } from "../commands/challenge.js";
+import { execute, data, refusal, boardEmbed, reviveMenu, previewMessage, cardView } from "../commands/challenge.js";
 import { challengeCardView, cardAltText, cardSlots, CHALLENGE_CARD_SIZE } from "../utils/render/challengeCard.js";
 import { previewChallenge } from "../utils/challenge/runChallenge.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
@@ -312,6 +312,14 @@ section("Preview: the embed when the card can't render");
   assertEqual(field("Win"), "Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "the prize");
   assertEqual(field("Lose"), "1,234 CC (10% of your CC)", "the exact loss, privately");
   assertEqual(embedJson(pub.embeds[0]).fields.find((f) => f.name === "Lose").value, "10% of their CC", "and 10% in public");
+
+  // Building the card's facts can fail too (before the fight is saved, under the lock): the embed still goes.
+  console.warn = () => {};
+  const broken = cardView("no-such-challenge", preview, user, "Ash");
+  const noView = await previewMessage("brock", preview, broken, { exactLoss: true });
+  console.warn = quietWarn;
+  assertEqual(broken, null, "facts that can't be built give no view, without throwing");
+  assertEqual(embedJson(noView.embeds[0]).fields.find((f) => f.name === "Lose").value, "1,234 CC (10% of your CC)", "and the preview sends the embed");
 }
 
 section("Not now and expiry");

@@ -172,7 +172,7 @@ async function drawPlayer(ctx, v, { player: slot, badges }) {
   // The battle Team, 2 × 3, at 1× (clear of the VS on the seam).
   const gx = 348, gy = 176, cell = 74, gap = 8;
   ctx.textAlign = "left";
-  ctx.font = font(16, 800);
+  ctx.font = font(18, 800);
   ctx.fillStyle = COLOR.textMuted;
   ctx.fillText("TEAM", gx, gy - 8);
   const ph = await loadPlaceholder();
@@ -227,7 +227,7 @@ async function drawMedallion(ctx, v, m) {
   drawSparkle(ctx, m.cx - m.r * 0.86, m.cy + m.r * 0.5, 6);
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-  ctx.font = font(16, 800);
+  ctx.font = font(18, 800);
   ctx.fillStyle = COLOR.textMuted;
   ctx.fillText(v.rematch ? "REMATCH" : "ON THE LINE", m.cx, m.cy - m.r - 14);
   ctx.font = font(22, 800);
@@ -245,10 +245,14 @@ async function drawOpponents(ctx, v, slots) {
     if (slots.medallion) await drawMedallion(ctx, v, slots.medallion);
     return;
   }
+  // A rule the player can't see anywhere else before Fight!: 22 px, the
+  // design system's floor for text a player must read, on two lines to stay
+  // clear of the seam.
   ctx.textAlign = "right";
-  ctx.font = font(20, 600);
+  ctx.font = font(22, 600);
   ctx.fillStyle = COLOR.textMuted;
-  ctx.fillText("Four battles in a row. Revive one Pokémon between them.", right, M + 112);
+  ctx.fillText("Four battles in a row.", right, M + 112);
+  ctx.fillText("Revive one Pokémon between them.", right, M + 140);
   for (const [i, o] of v.opponents.entries()) {
     const s = slots.opponents[i];
     const accent = typeStyle(o.type).fill;
@@ -258,8 +262,8 @@ async function drawOpponents(ctx, v, slots) {
     ctx.font = font(22, 800);
     ctx.fillStyle = COLOR.text;
     ctx.fillText(fitText(ctx, o.name, s.box.w - 6), s.cx, s.floor + 40);
-    const w = typeChipsWidth(ctx, [o.type], { h: 26, size: 14 });
-    drawTypeChip(ctx, o.type, s.cx - w / 2, s.floor + 52, { h: 26, size: 14 });
+    const w = typeChipsWidth(ctx, [o.type], { h: 30, size: 17 });
+    drawTypeChip(ctx, o.type, s.cx - w / 2, s.floor + 52, { h: 30, size: 17 });
   }
 }
 
@@ -291,7 +295,7 @@ function drawPrizeBar(ctx, v) {
   const block = (label, color, text, x, maxW) => {
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
-    ctx.font = font(16, 800);
+    ctx.font = font(18, 800);
     ctx.fillStyle = color;
     ctx.fillText(label, x, y + 32);
     const { size, lines } = prizeLines(ctx, text, maxW);

@@ -99,12 +99,24 @@ export function previewEmbed(key, preview, { exactLoss = false } = {}) {
   );
 }
 
+// The VS card's facts, or null when they can't be built. It runs under the
+// lock before the fight is saved, so it must never throw there.
+export function cardView(key, preview, user, displayName) {
+  try {
+    return challengeCardView(key, preview, user, { displayName });
+  } catch (err) {
+    console.warn("⚠️ challenge card view failed; sending the embed:", err?.message || err);
+    return null;
+  }
+}
+
 // The preview and the public intro: the VS card, or previewEmbed when it
-// can't render. `view` is challengeCardView(), built before the fight is
+// can't be built or rendered. `view` is challengeCardView(), built before the fight is
 // saved so the intro shows the Badge still on the line. Only the private
 // preview (exactLoss) says the amount, in text: the card itself goes public.
 export async function previewMessage(key, preview, view, { exactLoss = false, render = renderChallengeCard } = {}) {
   try {
+    if (!view) throw new Error("no card view");
     const png = await render(view);
     return {
       ...(exactLoss && { content: `A loss costs you **${n(preview.loss)} CC**.` }),
@@ -271,7 +283,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   // A loss never costs more than this preview shows, even if the balance grows before Fight!.
   const shown = previewChallenge(trainerData[userId], key);
   const nonce = randomUUID();
-  const view = challengeCardView(key, shown, trainerData[userId], { displayName: playerName });
+  const view = cardView(key, shown, trainerData[userId], playerName);
   const response = await interaction.reply({
     ...(await previewMessage(key, shown, view, { exactLoss: true })),
     components: [new ActionRowBuilder().addComponents(
@@ -307,7 +319,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
       const live = trainerData[userId];
       const atStake = live && previewChallenge(live, key);
       // Built before the fight changes the record, so the intro shows the Badge still on the line.
-      const card = live && challengeCardView(key, atStake, live, { displayName: playerName });
+      const card = live && cardView(key, atStake, live, playerName);
       const seed = randomInt(0, 2 ** 31 - 1);
       const out = isRun
         ? startRun({ trainerData, userId, seed, maxLoss: shown.loss, channelId: interaction.channelId })
@@ -325,7 +337,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
 
     let posted = true;
     let outcome = first;
-    const trainer = first.card.player.trainerFile; // the replay's portrait, as on the intro card
+    const trainer = first.card?.player.trainerFile ?? null; // the replay's portrait, as on the intro card
     try {
       await interaction.channel.send(await previewMessage(key, first.atStake, first.card));
     } catch (err) {

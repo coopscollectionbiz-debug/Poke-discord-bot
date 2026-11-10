@@ -154,7 +154,7 @@ Tabs:
 | **C2 — Inspect & shared names** | `/inspectpokemon` → rendered card (C-style lead panel) + embed text fallback; display names across embeds | M | C1 |
 | **C3 — Embed consistency** | One brand color; tier palette consolidation; `/daily` result as one rendered strip | S–M | C1 |
 | **C4 — Battle encoder adoption** | Battle uses `gif.js` (no visual change) | S | C1 |
-| **D — Dashboard foundation** | `shared/tokens.css`, `components.css`, new nav (sidebar/tab bar, real links), restyle all player pages in place, a11y baseline, error/expiry states | L (4–6 days) | — (can run in parallel with C) |
+| **D — Dashboard foundation** ✅ (`feature/dashboard-foundation`; previews in `previews/dashboard-*.png`) | `shared/tokens.css`, `components.css`, new nav (sidebar/tab bar, real links), restyle all player pages in place, a11y baseline, error/expiry states | L (4–6 days) | — (can run in parallel with C) |
 | **E1 — My Team page** | Mockup → real (reorder, add/remove, save bar) using the existing endpoint | M | D |
 | **E2 — Collection upgrades** | Shiny/region filters, sort, incremental rendering, list view | M | D |
 | **E3 — Overview + detail** | Home page; detail drawer | M | D, approvals B1–B3 |

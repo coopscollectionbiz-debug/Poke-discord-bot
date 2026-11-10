@@ -10,6 +10,14 @@ let userId = null;
 
 import { rarityEmojis, rarityColors } from "/public/spriteconfig.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
+import { showExpired, showBanner, showMessage, isExpired } from "/public/shared/shell.js";
+import { displayNameFromStored } from "/public/shared/names.js";
+
+// Tier pill (text + tier color) for reward lines.
+function tierPill(rarity) {
+  const r = String(rarity || "common").toLowerCase();
+  return `<span class="cc-tier" data-tier="${escapeHtml(r)}">${escapeHtml(r)}</span>`;
+}
 
 window.rarityEmojis = rarityEmojis;
 window.rarityColors = rarityColors;
@@ -31,32 +39,30 @@ async function loadUser() {
   const params = new URLSearchParams(window.location.search);
   userId = params.get("id");
 
+  // No id: the shared shell already shows the "open from /dashboard" banner.
   if (!userId) {
-    document.body.innerHTML = `
-      <div style="padding:2rem;text-align:center;color:#ccc">
-        <h2>🔒 Dashboard Access Required</h2>
-        <p>Please open this page from Discord using the /dashboard command.</p>
-      </div>
-    `;
+    setBuyButtonsDisabled(true);
     return;
   }
 
-  const res = await fetch(`/api/user?id=${encodeURIComponent(userId)}`, {
-    credentials: "same-origin",
-  });
+  let res;
+  try {
+    res = await fetch(`/api/user?id=${encodeURIComponent(userId)}`, {
+      credentials: "same-origin",
+    });
+  } catch {
+    showBanner("Couldn’t reach the server. Check your connection and refresh.", { title: "Couldn’t load the Shop", key: "load" });
+    return;
+  }
 
   if (res.status === 403) {
-    document.body.innerHTML = `
-      <div style="padding:2rem;text-align:center;color:#ccc">
-        <h2>⏱ Session Expired</h2>
-        <p>Please return to Discord and re-open the dashboard.</p>
-      </div>
-    `;
+    showExpired();
+    setBuyButtonsDisabled(true);
     return;
   }
 
   if (!res.ok) {
-    document.body.innerHTML = "<p>Failed to load dashboard.</p>";
+    showBanner("Please refresh the page in a moment.", { title: "Couldn’t load the Shop", key: "load" });
     return;
   }
 
@@ -90,9 +96,9 @@ function showLoadingModal() {
   modal.id = "shopModal";
 
   modal.innerHTML = `
-    <h2 style="color:#00ff9d;margin-top:0;">Processing...</h2>
-    <p style="color:#ccc;">Please wait</p>
-    <div class="spinner"></div>
+    <h2>Processing…</h2>
+    <p>Please wait</p>
+    <div class="spinner" aria-hidden="true"></div>
   `;
 
   overlay.appendChild(modal);
@@ -105,6 +111,8 @@ function showLoadingModal() {
 // SHOP MODAL (CONFIRM + CANCEL)
 // ======================================================
 function showShopModal({ title, message, sprites = [], onConfirm }) {
+  // After a session expiry the shared banner is the only message.
+  if (isExpired()) return;
   const overlay = document.createElement("div");
   overlay.id = "shopModalOverlay";
 
@@ -112,16 +120,16 @@ function showShopModal({ title, message, sprites = [], onConfirm }) {
   modal.id = "shopModal";
 
   const spriteHTML = sprites
-    .map((src) => `<img src="${src}" alt="sprite">`)
+    .map((src) => `<img src="${src}" alt="">`)
     .join("");
 
   modal.innerHTML = `
-    <h2 style="color:#00ff9d;margin-top:0;">${title}</h2>
+    <h2>${title}</h2>
     <div>${spriteHTML}</div>
-    <p style="margin:1rem 0;color:#ccc;">${message}</p>
+    <p style="margin:1rem 0;">${message}</p>
     <div class="modal-buttons">
-      <button class="modal-btn cancel">Cancel</button>
-      <button class="modal-btn confirm">Confirm</button>
+      <button type="button" class="modal-btn cancel">Cancel</button>
+      <button type="button" class="modal-btn confirm">Confirm</button>
     </div>
   `;
 
@@ -143,6 +151,9 @@ function showShopModal({ title, message, sprites = [], onConfirm }) {
 
     try {
       await onConfirm();
+    } catch (err) {
+      console.error("Shop action failed:", err);
+      if (!isExpired()) showMessage({ title: "Something went wrong", message: "Couldn’t reach the server. Check your CC before trying again.", tone: "error" });
     } finally {
       closeLoading();
       overlay.remove();
@@ -168,7 +179,7 @@ function canClaimWeeklyPack() {
 function updateUI() {
   if (!user) return;
 
-  document.getElementById("ccCount").textContent = user.cc ?? 0;
+  document.getElementById("ccCount").textContent = Number(user.cc ?? 0).toLocaleString("en-US");
   document.getElementById("stoneCount").textContent =
     user.items?.evolution_stone || 0;
 
@@ -271,13 +282,17 @@ async function buyStone(cost) {
         title: "Purchase Complete!",
         // The modal renders HTML, so escape the server's notice text.
         message: res.saveNotice
-          ? `You bought an Evolution Stone!<br><br><span style="color:#facc15;">${escapeHtml(res.saveNotice)}</span>`
+          ? `You bought an Evolution Stone!<br><br><span style="color:var(--cc-gold);">${escapeHtml(res.saveNotice)}</span>`
           : "You bought an Evolution Stone!",
         sprites: ["/public/sprites/items/evolution_stone.png"],
         onConfirm: () => {},
       });
     },
   });
+}
+
+function setBuyButtonsDisabled(disabled) {
+  document.querySelectorAll(".buy-btn").forEach((b) => (b.disabled = disabled));
 }
 
 function escapeHtml(text) {
@@ -321,19 +336,11 @@ async function buyPokeball(type, cost) {
         updateUI();
       }
 
-      const rarity = reward.pokemon.rarity;
-      const emoji = rarityEmojis[rarity] ?? "";
-      const color = rarityColors[rarity] ?? "#fff";
-
-      const rarityHTML = `
-        <span style="color:${color};font-weight:700;">
-          ${emoji} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}
-        </span>
-      `;
+      const rarityHTML = tierPill(reward.pokemon.rarity);
 
       showShopModal({
         title: "You caught a Pokémon!",
-        message: `${rarityHTML}<br>${reward.pokemon.name}`,
+        message: `${rarityHTML}<br><strong class="reward-line">${escapeHtml(displayNameFromStored(reward.pokemon.name))}</strong>`,
         sprites: [reward.pokemon.sprite],
         onConfirm: () => {},
       });
@@ -367,17 +374,22 @@ async function claimWeeklyPack() {
 
   const closeLoading = showLoadingModal();
 
-  const res = await fetch("/api/weekly-pack", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: userId }),
-  }).then((r) => r.json());
+  let res;
+  try {
+    res = await fetch("/api/weekly-pack", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: userId }),
+    }).then((r) => r.json());
+  } catch {
+    res = { success: false, error: "Couldn’t reach the server. Refresh to check whether your pack was claimed." };
+  }
 
   closeLoading();
 
   if (!res.success) {
-    alert(res.error || "Weekly pack unavailable.");
+    if (!isExpired()) showMessage({ title: "Weekly Pack unavailable", message: res.error || "Weekly pack unavailable.", tone: "error" });
     updateUI();
     return;
   }
@@ -387,19 +399,13 @@ async function claimWeeklyPack() {
   await loadUser();
   updateUI();
 
-  const rewardLines = rewards.map((r) => {
-    const emoji = window.rarityEmojis?.[r.rarity] ?? "";
-    const color = window.rarityColors?.[r.rarity] ?? "#fff";
-    return `
-      <span style="color:${color}; font-weight:700;">
-        ${emoji} ${r.rarity}
-      </span> — ${r.name}
-    `;
-  });
+  const rewardLines = rewards.map(
+    (r) => `<span class="reward-line">${tierPill(r.rarity)} ${escapeHtml(displayNameFromStored(r.name))}</span>`
+  );
 
   showShopModal({
     title: "Weekly Pack Rewards!",
-    message: rewardLines.join("<br>"),
+    message: rewardLines.join(""),
     sprites: [
       "/public/sprites/items/starter_pack.png",
       ...rewards.map((r) => r.sprite),
@@ -441,40 +447,4 @@ window.addEventListener("DOMContentLoaded", () => {
   if (weeklyBtn) weeklyBtn.onclick = claimWeeklyPack;
 });
 
-// ======================================================
-// TOKEN-FREE NAVIGATION
-// ======================================================
-(function initNavTabs() {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
-  if (!id) return;
-
-  const goPokemon = document.getElementById("goPokemon");
-  const goTrainers = document.getElementById("goTrainers");
-  const goShop = document.getElementById("goShop");
-
-  if (goPokemon)
-    goPokemon.onclick = () =>
-      (window.location.href = `/public/picker-pokemon/?id=${encodeURIComponent(
-        id
-      )}`);
-
-  if (goTrainers)
-    goTrainers.onclick = () =>
-      (window.location.href = `/public/picker/?id=${encodeURIComponent(id)}`);
-
-  if (goShop)
-    goShop.onclick = () =>
-      (window.location.href = `/public/dashboardshop/?id=${encodeURIComponent(
-        id
-      )}`);
-
-  const goBag = document.getElementById("goBag");
-  if (goBag)
-    goBag.onclick = () =>
-      (window.location.href = `/public/bag/?id=${encodeURIComponent(id)}`);
-  const goAchievements = document.getElementById("goAchievements");
-  if (goAchievements)
-    goAchievements.onclick = () =>
-      (window.location.href = `/public/achievements/?id=${encodeURIComponent(id)}`);
-})();
+// Navigation lives in /public/shared/shell.js (real links with ?id=).

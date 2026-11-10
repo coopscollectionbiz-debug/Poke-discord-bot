@@ -1,0 +1,446 @@
+/* ===========================================================
+   public/shared/components.css — shared dashboard components
+   Requires tokens.css. Loaded by every player page BEFORE the
+   page's own stylesheet, so pages can refine but never re-theme.
+   See docs/design/DESIGN-SYSTEM.md §4–§6 and DASHBOARD-UX-ROADMAP.md §1, §7.
+=========================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--cc-font);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--cc-text);
+  background-color: var(--cc-bg-top);
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% 100%, #4f8cff14, transparent 70%),
+    linear-gradient(180deg, var(--cc-bg-top), var(--cc-bg-bottom));
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+h1, h2, h3 { color: var(--cc-text); line-height: 1.2; }
+p { color: var(--cc-text-muted); }
+a { color: var(--cc-blue); }
+code { background: var(--cc-surface-sunken); padding: 1px 6px; border-radius: 6px; }
+
+/* Sprites and pixel art stay crisp at every scale. */
+img.poke-sprite, img.cc-sprite, .item-icon, .stat-icon, .modal-sprite,
+.trainer-card img, .overlay img, #shopModal img, #trainerModal img, .bulk-tile img {
+  image-rendering: pixelated;
+}
+
+/* -----------------------------------------------------------
+   Accessibility baseline
+----------------------------------------------------------- */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--cc-blue);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cc-skip {
+  position: fixed;
+  left: 12px; top: -60px;
+  z-index: 100000;
+  min-height: var(--cc-touch);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: var(--cc-r-sm);
+  background: var(--cc-blue);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+.cc-skip:focus { top: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* -----------------------------------------------------------
+   Controls: buttons, inputs, selects (≥44 px touch targets)
+----------------------------------------------------------- */
+button, input, select, textarea { font: inherit; color: inherit; }
+
+button, select, input[type="text"], input[type="search"] {
+  min-height: var(--cc-touch);
+}
+
+button { cursor: pointer; }
+button:disabled, button[aria-disabled="true"] { cursor: not-allowed; opacity: 0.5; }
+
+input[type="text"], input[type="search"], select {
+  background: var(--cc-surface-sunken);
+  color: var(--cc-text);
+  border: 1.5px solid var(--cc-line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  max-width: 100%;
+}
+input[type="text"]:hover, input[type="search"]:hover, select:hover { border-color: #3d4870; }
+input[type="text"]:focus-visible, input[type="search"]:focus-visible, select:focus-visible {
+  border-color: var(--cc-blue);
+  outline: 2px solid var(--cc-blue);
+  outline-offset: 1px;
+}
+input::placeholder { color: var(--cc-text-faint); }
+
+.cc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--cc-touch);
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1.5px solid var(--cc-line);
+  background: var(--cc-surface-raised);
+  color: var(--cc-text);
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.cc-btn:hover:not(:disabled) { border-color: #3d4870; transform: translateY(-1px); }
+.cc-btn--primary { background: var(--cc-blue); border-color: var(--cc-blue); color: #fff; }
+.cc-btn--primary:hover:not(:disabled) { background: #3d78e8; border-color: #3d78e8; }
+.cc-btn--gold { background: var(--cc-gold); border-color: var(--cc-gold); color: var(--cc-ink); }
+.cc-btn--danger { background: var(--cc-red); border-color: var(--cc-red); color: var(--cc-ink); }
+
+/* -----------------------------------------------------------
+   Chips, pills, tags
+----------------------------------------------------------- */
+.cc-type {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: var(--cc-r-chip);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  box-shadow: inset 0 1px 0 #ffffff40;
+  white-space: nowrap;
+}
+
+.cc-tier {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: var(--cc-r-chip);
+  border: 1.5px solid var(--tier, var(--cc-tier-common));
+  color: var(--tier, var(--cc-tier-common));
+  background: color-mix(in srgb, var(--tier, var(--cc-tier-common)) 14%, transparent);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.cc-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: var(--cc-r-chip);
+  background: var(--cc-surface-raised);
+  color: var(--cc-text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cc-eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cc-text-faint);
+  margin: 0;
+}
+
+/* -----------------------------------------------------------
+   Cards
+----------------------------------------------------------- */
+.cc-card {
+  background: var(--cc-surface);
+  border: 1.5px solid var(--cc-line);
+  border-radius: var(--cc-r-md);
+  box-shadow: var(--cc-shadow);
+}
+
+/* -----------------------------------------------------------
+   App shell: desktop sidebar (> 820 px), phone tab bar (≤ 820 px)
+----------------------------------------------------------- */
+body.cc-shell { padding-left: var(--cc-sidebar-w); }
+
+.cc-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--cc-sidebar-w);
+  z-index: 950;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 14px;
+  background: var(--cc-chrome);
+  border-right: 1px solid var(--cc-line);
+  overflow-y: auto;
+  text-align: left;
+}
+
+.cc-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px 18px;
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--cc-text);
+}
+.cc-brand i {
+  width: 22px; height: 22px; flex: none;
+  border-radius: 50%;
+  background: linear-gradient(#e5483d 50%, #f4f4f4 50%);
+  border: 3px solid var(--cc-ink);
+  box-shadow: 0 0 0 1px #ffffff33;
+}
+
+.cc-nav-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+
+.cc-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--cc-touch);
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--cc-text-muted);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.cc-nav-link:hover { background: var(--cc-surface); color: var(--cc-text); }
+.cc-nav-link[aria-current="page"] {
+  background: var(--cc-surface-raised);
+  color: var(--cc-text);
+  box-shadow: inset 3px 0 0 var(--cc-blue);
+}
+.cc-nav-link svg { width: 20px; height: 20px; flex: none; }
+
+.cc-sidebar-foot {
+  margin-top: auto;
+  padding: 12px;
+  border: 1px solid var(--cc-line);
+  border-radius: 12px;
+  font-size: 12.5px;
+  color: var(--cc-text-faint);
+}
+
+.cc-tabbar { display: none; }
+
+@media (max-width: 820px) {
+  body.cc-shell {
+    padding-left: 0;
+    padding-bottom: calc(var(--cc-tabbar-h) + env(safe-area-inset-bottom));
+  }
+  .cc-sidebar { display: none; }
+
+  .cc-tabbar {
+    display: block;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 950;
+    background: var(--cc-chrome);
+    border-top: 1px solid var(--cc-line);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  .cc-tabbar .cc-nav-list { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; }
+  .cc-tabbar .cc-nav-link {
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: 52px;
+    padding: 4px 2px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--cc-text-faint);
+    text-align: center;
+    border-radius: 10px;
+  }
+  .cc-tabbar .cc-nav-link span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cc-tabbar .cc-nav-link svg { width: 22px; height: 22px; }
+  @media (max-width: 420px) {
+    .cc-tabbar { padding-left: 0; padding-right: 0; }
+    .cc-tabbar .cc-nav-link { padding: 4px 0; font-size: 10px; letter-spacing: -0.02em; }
+  }
+  .cc-tabbar .cc-nav-link[aria-current="page"] {
+    background: transparent;
+    color: var(--cc-text);
+    box-shadow: inset 0 3px 0 var(--cc-blue);
+  }
+}
+
+/* -----------------------------------------------------------
+   Page header
+----------------------------------------------------------- */
+.cc-page-head {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 24px 8px;
+  text-align: left;
+}
+.cc-page-head h1 { margin: 4px 0 4px; font-size: 30px; font-weight: 800; color: var(--cc-text); }
+.cc-page-head p { margin: 0; color: var(--cc-text-muted); }
+
+@media (max-width: 820px) {
+  .cc-page-head { padding: 18px 16px 4px; }
+  .cc-page-head h1 { font-size: 24px; }
+}
+
+/* -----------------------------------------------------------
+   Status: banner (game text box), toasts, empty, loading
+----------------------------------------------------------- */
+#ccStatus { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+#ccStatus:empty { display: none; }
+@media (max-width: 820px) { #ccStatus { padding: 0 16px; } }
+
+.cc-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 14px 16px;
+  border-radius: var(--cc-r-md);
+  background: var(--cc-textbox);
+  color: var(--cc-textbox-ink);
+  border: 3px solid var(--cc-textbox-border);
+  font-weight: 700;
+  text-align: left;
+}
+.cc-banner p { color: inherit; margin: 0; }
+.cc-banner strong { display: block; font-size: 16px; }
+.cc-banner--error { border-color: var(--cc-red); }
+.cc-banner::before {
+  content: "";
+  flex: none;
+  width: 14px; height: 14px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--cc-red);
+}
+.cc-banner--info::before { background: var(--cc-blue); }
+
+#ccToasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 100001;
+  display: grid;
+  gap: 8px;
+  width: min(380px, calc(100vw - 32px));
+  pointer-events: none;
+}
+@media (max-width: 820px) {
+  #ccToasts { left: 16px; right: 16px; width: auto; bottom: calc(var(--cc-tabbar-h) + 12px + env(safe-area-inset-bottom)); }
+}
+
+.cc-toast {
+  pointer-events: auto;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--cc-textbox);
+  color: var(--cc-textbox-ink);
+  border: 3px solid var(--cc-textbox-border);
+  box-shadow: var(--cc-shadow);
+  font-weight: 700;
+  text-align: left;
+  animation: cc-toast-in 0.18s ease;
+}
+.cc-toast--error { border-color: var(--cc-red); }
+.cc-toast--success { border-color: var(--cc-green); }
+@keyframes cc-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.cc-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--cc-text-muted);
+  font-weight: 600;
+}
+
+/* -----------------------------------------------------------
+   Dialogs. Native <dialog> for new in-page messages, plus a
+   shared look for the pages' existing JS-built overlays.
+----------------------------------------------------------- */
+dialog.cc-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 24px;
+  border: 1.5px solid var(--cc-line);
+  border-radius: var(--cc-r-lg);
+  background: var(--cc-surface);
+  color: var(--cc-text);
+  box-shadow: var(--cc-shadow);
+  text-align: center;
+}
+dialog.cc-dialog::backdrop { background: #05070fcc; }
+dialog.cc-dialog h2 { margin: 0 0 8px; font-size: 20px; }
+dialog.cc-dialog p { margin: 0 0 18px; white-space: pre-line; }
+dialog.cc-dialog.is-error { border-color: var(--cc-red); }
+dialog.cc-dialog .cc-dialog-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+.overlay, #trainerModalOverlay, #shopModalOverlay {
+  background: #05070fcc !important;
+}
+
+.overlay > div, #trainerModal, #shopModal {
+  background: var(--cc-surface) !important;
+  border-radius: var(--cc-r-lg) !important;
+  box-shadow: var(--cc-shadow) !important;
+  color: var(--cc-text);
+}
+.overlay > div h2, #trainerModal h2, #shopModal h2 { margin-top: 0; font-size: 20px; }
+
+/* Buttons inside JS-built modals: consistent size and focus ring
+   (their colors come from inline styles mapped to the tokens). */
+.overlay button, #trainerModal button, #shopModal button {
+  min-height: var(--cc-touch);
+  min-width: 96px;
+  border-radius: 10px !important;
+  font-weight: 700;
+}
+
+#processingOverlay { background: #05070fcc !important; }
+#processingBox {
+  background: var(--cc-textbox) !important;
+  color: var(--cc-textbox-ink) !important;
+  border: 3px solid var(--cc-textbox-border) !important;
+}

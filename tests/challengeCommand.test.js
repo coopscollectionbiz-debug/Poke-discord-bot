@@ -8,7 +8,8 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { execute, data, refusal, boardEmbed, reviveMenu, previewMessage, cardView, challengeExpMessage } from "../commands/challenge.js";
+import { execute, data, refusal, boardEmbed, boardMessage, reviveMenu, previewMessage, cardView, challengeExpMessage } from "../commands/challenge.js";
+import { boardView, boardAltText, BOARD_SIZE } from "../utils/render/challengeBoard.js";
 import { challengeCardView, cardAltText, cardSlots, CHALLENGE_CARD_SIZE } from "../utils/render/challengeCard.js";
 import { previewChallenge } from "../utils/challenge/runChallenge.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
@@ -191,7 +192,18 @@ section("Board");
   await t.run(null);
   const r = t.log.replies[0];
   assertEqual(r.flags, 64, "private");
-  const e = embedJson(r.embeds[0]);
+  const board = r.files?.find((f) => f.name === "board.png");
+  assertEqual(board && dims(board.attachment), [BOARD_SIZE.w, BOARD_SIZE.h], "the board card");
+  assertEqual(board.description, boardAltText(boardView(t.trainerData.A, { displayName: "Ash", now: new Date() })), "described for screen readers");
+  assertEqual(t.log.channel.length, 0, "nothing public");
+
+  // The embed, sent when the card can't render.
+  const quietWarn = console.warn;
+  console.warn = () => {};
+  const fallback = await boardMessage(t.trainerData.A, "Ash", new Date(), { render: async () => { throw new Error("boom"); } });
+  console.warn = quietWarn;
+  assertTrue(!fallback.files?.length, "no image when it can't render");
+  const e = embedJson(fallback.embeds[0]);
   assertEqual(e.title, "Kanto challenges", "titled");
   const lines = e.description.split("\n");
   assertEqual(lines.length, 11, "8 Gyms, Elite Four, Blue, Red");
@@ -201,7 +213,6 @@ section("Board");
   assertTrue(lines.at(-1) === "**Red**", "Red open");
   assertTrue(!JSON.stringify(e).includes("Lv"), "no Levels");
   assertEqual(e.footer.text, "Challenges left today: 5/5", "attempts left");
-  assertEqual(t.log.channel.length, 0, "nothing public");
 
   const u = WEAK();
   u.challenge = { won: Object.fromEntries(GYMS.slice(0, 7).map((k) => [k, "d"])), day: new Date().toISOString().slice(0, 10), attempts: 2 };
@@ -217,7 +228,7 @@ section("Board");
   const nobody = harness();
   delete nobody.trainerData.A;
   await nobody.run(null);
-  assertEqual(embedJson(nobody.log.replies[0].embeds[0]).footer.text, "Challenges left today: 5/5", "a player with no record still sees the board");
+  assertTrue(nobody.log.replies[0].files[0].description.endsWith("5 of 5 challenges left today."), "a player with no record still sees the board");
 }
 
 section("Refusals");
@@ -623,7 +634,7 @@ section("While a run is open");
   await t.run("brock");
   assertEqual(t.log.replies.at(-1), { content: "Finish your Elite Four run first.", flags: 64 }, "/challenge with an opponent refuses");
   await t.run(null);
-  assertEqual(embedJson(t.log.replies.at(-1).embeds[0]).title, "Kanto challenges", "the board still works");
+  assertEqual(t.log.replies.at(-1).files?.[0]?.name, "board.png", "the board still works");
   const old = t.button(`challenge_fight:${olderNonce}`);
   await olderCollector.h.collect(old);
   assertEqual(textOf(old.edits.at(-1)), "Finish your Elite Four run first.", "Fight! on an older preview refuses the same way");
@@ -664,7 +675,7 @@ section("A run that stopped unexpectedly");
     "the next /challenge finishes it, applies the result, and saves");
   assertEqual(replay.edits.at(-1).content, "⚔️ <@A>'s Elite Four run stopped unexpectedly and finished without Revives.", "the run's message says so");
   assertEqual(embedJson(replay.edits.at(-1).embeds[0]).title, "🏆 Ash cleared the Elite Four!", "with the result");
-  assertEqual(embedJson(t.log.replies.at(-1).embeds[0]).title, "Kanto challenges", "then the board shows");
+  assertEqual(t.log.replies.at(-1).files?.[0]?.name, "board.png", "then the board shows");
 
   const preview = harness(runner());
   startRun({ trainerData: preview.trainerData, userId: "A", seed: 1, maxLoss: 1234, channelId: "C1", now: new Date() });

@@ -21,6 +21,7 @@ import {
 } from "../utils/challenge/runChallenge.js";
 import { badgeUrl } from "../utils/challenge/badgeImages.js";
 import { challengeCardView, renderChallengeCard, cardAltText } from "../utils/render/challengeCard.js";
+import { boardView, renderBoard, boardAltText } from "../utils/render/challengeBoard.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../public/picker-pokemon/badges.js";
 import {
   playChallenge, playChallengeFight, showChoosing, showRunResult, challengeNames, prizeText, challengeExpText,
@@ -63,6 +64,7 @@ export function refusal(reason, user) {
   }[reason] ?? "That challenge can't happen right now.";
 }
 
+// The board in text: boardMessage sends it when the image can't render.
 export function boardEmbed(user, now = new Date()) {
   const won = user.challenge?.won ?? {};
   const check = (key) => (key in won ? " ✅" : "");
@@ -80,6 +82,18 @@ export function boardEmbed(user, now = new Date()) {
     .setTitle("Kanto challenges")
     .setDescription(lines.join("\n"))
     .setFooter({ text: `Challenges left today: ${CHALLENGE.perDay - used}/${CHALLENGE.perDay}` });
+}
+
+// The board as an image (utils/render/challengeBoard.js), or boardEmbed when
+// it can't render. `user` may be null (no record yet).
+export async function boardMessage(user, displayName, now = new Date(), { render = renderBoard } = {}) {
+  try {
+    const view = boardView(user, { displayName, now });
+    return { files: [new AttachmentBuilder(await render(view), { name: "board.png", description: boardAltText(view) })] };
+  } catch (err) {
+    console.warn("⚠️ challenge board render failed; sending the embed:", err?.message || err);
+    return { embeds: [boardEmbed(user ?? {}, now)] };
+  }
 }
 
 // `preview` is previewChallenge(user, key). The private preview shows the
@@ -298,7 +312,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   // Finished first, so the board and the checks below see the result.
   if (isRunStale(trainerData[userId])) await finishStaleRun({ trainerData, userId, lockUser, enqueueSave, client, playerName });
 
-  if (!key) return interaction.reply({ embeds: [boardEmbed(trainerData[userId] ?? {})], flags: MessageFlags.Ephemeral });
+  if (!key) return interaction.reply({ ...(await boardMessage(trainerData[userId] ?? null, playerName)), flags: MessageFlags.Ephemeral });
   if (interaction.appPermissions && !interaction.appPermissions.has(CHANNEL_PERMISSIONS)) return ephemeral(refusal("no_perms"));
   const early = challengeBlock({ trainerData, userId, key });
   if (early) return ephemeral(refusal(early, trainerData[userId]));

@@ -130,11 +130,30 @@ _Avoid_: gauntlet, E4 challenge, league
 The player's pick, after each fight won in an **Elite Four run**, of one fainted Pokémon to bring back at full HP for the next fight. A pick not made in time is lost.
 _Avoid_: heal, Max Revive (as a term), second wind
 
+### Trainer encounters
+
+**Trainer encounter**:
+A computer-run Trainer spotting a player while they chat and asking for a fight the player may accept or decline. It is neither a **Battle** nor a **Challenge**: no other player takes part, and the Trainer is not one of the fixed Kanto teams.
+_Avoid_: trainer battle, random battle, wild trainer, NPC battle
+
+**Trainer class**:
+The kind of Trainer met in a **Trainer encounter**, such as Youngster, Lass, or Hiker, which sets the Trainer's look and the kind of Pokémon they carry.
+_Avoid_: trainer type, NPC type
+
+**Ace Trainer**:
+The **Trainer class** that only the strongest **Trainer encounters** use. Those encounters can also come as any other class, so a Trainer's class never proves they are weak.
+_Avoid_: elite trainer, boss trainer
+
+**Prize money**:
+The CC at stake in a **Trainer encounter**, set by the **Trainer class** and the Level of the Trainer's last Pokémon. The Trainer pays it to a player who wins, and a player who loses pays the same amount, or all their CC if they hold less.
+_Avoid_: reward, bounty, payout (as a noun)
+
 ## Flagged ambiguities
 
 - "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.
 - "Pokédex completion" is counted per Pokémon, not per variant. A player holding one normal and one shiny Pikachu has 1 toward Kanto, not 2.
 - "Challenge" is not what a **Challenger** does. A **Challenger** starts a **Battle** against another player. A **Challenge** has no **Challenger** or **Defender**, only the player and the Kanto team they face.
+- "Trainer" means a player everywhere except **Trainer encounters**, where it means the computer-run opponent. "Ace Trainer" is not one of the "Elite Four", which belong only to the **Elite Four run**.
 
 ## Example dialogue
 

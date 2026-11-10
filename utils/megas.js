@@ -17,6 +17,7 @@ import { isMegaFormAllowedByFlags, isMegaEvolutionEnabled, isMegaCapabilityEnabl
 import { generationOfDex } from "../config/generations.js";
 import { isGenerationLive } from "./speciesCatalog.js";
 import { PLACEHOLDER_PATH } from "./sprites.js";
+import { getAbility } from "./battle/abilities.js";
 
 const read = (rel) => JSON.parse(fs.readFileSync(new URL(rel, import.meta.url), "utf8"));
 const DATA = read("../data/pokedex/megas.json");
@@ -52,16 +53,9 @@ export const megaAbilities = () => ABILITIES.abilities;
  * form is launchReady (D-5: battle abilities first). Returns every reason, so
  * callers and tests can see exactly what blocks it.
  */
-export function megaAvailability(id, { env = process.env, generationLive = isGenerationLive } = {}) {
-  const f = getMega(id);
-  if (!f) return { available: false, reasons: ["unknown Mega form"] };
-  const reasons = [];
-  if (!isMegaEvolutionEnabled(env)) reasons.push("MEGA_EVOLUTION_ENABLED is off");
-  else if (!isMegaFormAllowedByFlags(id, env)) reasons.push("not in MEGA_FORMS");
-  if (f.status !== "eligible") reasons.push(...f.blockReasons);
-  if (!f.launchReady) reasons.push(...f.launchBlockers);
-  if (!generationLive(generationOfDex(f.species))) reasons.push(`generation ${generationOfDex(f.species)} is not live`);
-  return { available: reasons.length === 0, reasons };
+export function megaAvailability(id, opts = {}) {
+  const e = megaBattleEligibility(id, opts);
+  return { available: e.battleReady, reasons: e.reasons };
 }
 export const isMegaAvailable = (id, opts) => megaAvailability(id, opts).available;
 
@@ -101,15 +95,31 @@ export function megaFormGate(id, capability, { env = process.env, generationLive
  * Lists every reason (battle capability not built, launch blockers, ability
  * not implemented, ability unverified) so nothing claims to work.
  */
-export function megaBattleEligibility(id, { env = process.env } = {}) {
+export function megaBattleEligibility(id, { env = process.env, generationLive = isGenerationLive } = {}) {
   const f = getMega(id);
   if (!f) return { battleReady: false, reasons: ["unknown Mega form"] };
   const reasons = [];
-  if (!isMegaCapabilityEnabled("battle", env)) reasons.push("Mega battles are not built yet (Phase M2)");
+  if (!isMegaCapabilityEnabled("battle", env)) reasons.push("Mega battles are switched off");
+  const allow = megaFormAllowlist(env);
+  if (allow !== null && !allow.has(id)) reasons.push("not in MEGA_FORMS");
   if (f.status !== "eligible") reasons.push(...f.blockReasons);
-  if (!f.launchReady) reasons.push(...f.launchBlockers);
-  const a = megaAbility(f.ability);
-  if (!a?.implemented) reasons.push(`ability ${f.ability} is not implemented (${a?.category ?? "unknown"})`);
-  if (f.abilityVerification.startsWith("unverified")) reasons.push(`ability ${f.ability} is unverified official data`);
-  return { battleReady: reasons.length === 0, reasons, abilityCategory: a?.category ?? null, abilityVerified: !f.abilityVerification.startsWith("unverified") };
+  if (!f.battleProfile?.verified) reasons.push("battle profile unverified (Legends: Z-A has no abilities in play)");
+  const status = getAbility(f.ability)?.status;
+  if (status !== "implemented" && status !== "no-effect") reasons.push(`ability ${f.ability} is not modelled`);
+  if (!megaSpriteRecord(id)) reasons.push("no sprite");
+  if (!generationLive(generationOfDex(f.species))) reasons.push(`generation ${generationOfDex(f.species)} is not live`);
+  return {
+    battleReady: reasons.length === 0,
+    reasons,
+    abilityStatus: status ?? "missing",
+    abilityVerified: !!f.battleProfile?.verified,
+    profileConfidence: f.battleProfile?.confidence ?? "unverified",
+  };
+}
+
+/** The battle-only profile for a form (stats, types, ability, display name). */
+export function megaBattleProfile(id) {
+  const f = getMega(id);
+  if (!f) return null;
+  return Object.freeze({ formId: f.id, name: f.name, species: f.species, types: [...f.types], baseStats: { ...f.baseStats }, ability: f.ability });
 }

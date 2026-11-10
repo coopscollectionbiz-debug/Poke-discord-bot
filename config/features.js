@@ -51,13 +51,16 @@ export function isMegaFormAllowedByFlags(formId, env = process.env) {
 //   MEGA_DASHBOARD_ENABLED  Mega cards and previews on the dashboard
 //   MEGA_UNLOCKS_ENABLED    using a Mega Stone to unlock a form
 //   MEGA_TEAMS_ENABLED      placing a Mega card in the battle team
-//   (battle)                Mega transformation in battle: Phase M2 (not built)
+//   MEGA_BATTLES_ENABLED    Mega transformation in battle (Phase M2). OPT-IN:
+//                           off unless explicitly "1"/"true"/"yes"/"on", even
+//                           when the master switch is on
 //   (rewards)               Mega Stone / Shard acquisition: Phase M4 (not built)
 // ----------------------------------------------------------
 
 export const MEGA_CAPABILITIES = Object.freeze(["dashboard", "unlock", "team", "battle", "rewards"]);
-const BUILT = Object.freeze({ dashboard: true, unlock: true, team: true, battle: false, rewards: false });
-const SUB_FLAG = Object.freeze({ dashboard: "MEGA_DASHBOARD_ENABLED", unlock: "MEGA_UNLOCKS_ENABLED", team: "MEGA_TEAMS_ENABLED" });
+const BUILT = Object.freeze({ dashboard: true, unlock: true, team: true, battle: true, rewards: false });
+const SUB_FLAG = Object.freeze({ dashboard: "MEGA_DASHBOARD_ENABLED", unlock: "MEGA_UNLOCKS_ENABLED", team: "MEGA_TEAMS_ENABLED", battle: "MEGA_BATTLES_ENABLED" });
+const OPT_IN = new Set(["battle"]); // these sub-switches default OFF
 const OFF = new Set(["0", "false", "no", "off"]);
 
 /** Is one Mega capability available? Unknown capabilities are always off. */
@@ -65,7 +68,9 @@ export function isMegaCapabilityEnabled(capability, env = process.env) {
   if (!Object.prototype.hasOwnProperty.call(BUILT, capability) || BUILT[capability] !== true) return false;
   if (!isMegaEvolutionEnabled(env)) return false;
   const sub = SUB_FLAG[capability];
-  return !(sub && OFF.has(String(env[sub] ?? "").trim().toLowerCase()));
+  const value = String(env[sub] ?? "").trim().toLowerCase();
+  if (OPT_IN.has(capability)) return TRUE.has(value);
+  return !(sub && OFF.has(value));
 }
 
 /** Every capability's state, for status endpoints and tests. */

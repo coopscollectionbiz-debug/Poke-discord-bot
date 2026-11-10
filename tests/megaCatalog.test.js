@@ -70,12 +70,13 @@ section("Ability implementation manifest (D-5)");
 assertEqual(ABILITIES.length, 69, "69 distinct abilities across all slots");
 const cats = ABILITIES.reduce((a, x) => ((a[x.category] = (a[x.category] || 0) + 1), a), {});
 assertEqual([cats.supported ?? 0, cats["current-engine"], cats["new-system"], cats["no-effect"]], [0, 34, 20, 15], "0 already supported / 34 current engine / 20 new system / 15 no effect");
-assertTrue(ABILITIES.every((a) => a.implemented === false), "no ability claims to be implemented");
+const { ABILITY_REGISTRY } = await import("../utils/battle/abilities.js");
+assertTrue(ABILITIES.every((a) => a.implemented === (ABILITY_REGISTRY[a.name]?.status === "implemented") && a.registryStatus === ABILITY_REGISTRY[a.name]?.status), "M2: implemented in the manifest equals the battle ability registry (nothing claimed without code)");
 assertTrue(ABILITIES.filter((a) => a.category === "new-system").every((a) => a.requires.length > 0), "every new-system ability names the systems it needs");
 assertEqual(ABILITIES.filter((a) => a.moveFlags.length).length, 8, "8 abilities need move flags");
 const simSrc = fs.readFileSync(new URL("../utils/battle/sim.js", import.meta.url), "utf8");
-assertTrue(simSrc.includes("No abilities (except Shedinja's") && !/\.abilit(y|ies)\b/.test(simSrc), "the current sim models no abilities except Shedinja's Wonder Guard (category 'supported' must stay empty)");
-assertTrue(!Object.values(BATTLE.moves).some((m) => m.flags), "battle data has no move flags yet (needed by 8 abilities)");
+assertTrue(simSrc.includes("No abilities (except Shedinja's") && /return simulateBattleFx\(/.test(simSrc), "M2: the legacy loop still models no abilities; battles with an ability are handed to the effects engine");
+assertTrue(!Object.values(BATTLE.moves).some((m) => m.flags), "battleData.json stays unchanged: move flags live in data/battle/move-flags.json");
 
 section("Special cases");
 const ray = byId["mega-rayquaza"];

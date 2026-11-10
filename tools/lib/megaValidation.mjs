@@ -110,7 +110,12 @@ export async function megaProblems() {
   const cats = { "current-engine": 0, "new-system": 0, "no-effect": 0, supported: 0 };
   for (const a of abilities) cats[a.category] = (cats[a.category] ?? 0) + 1;
   if (JSON.stringify(cats) !== JSON.stringify(EXPECTED.abilityCategories)) out.push(`ability categories ${JSON.stringify(cats)}`);
-  if (abilities.some((a) => a.implemented)) out.push("an ability is marked implemented in M0");
+  const { ABILITY_REGISTRY } = await import("../../utils/battle/abilities.js");
+  for (const a of abilities) {
+    const r = ABILITY_REGISTRY[a.name];
+    if (!r) out.push(`ability ${a.name} missing from the battle registry`);
+    else if (a.implemented !== (r.status === "implemented")) out.push(`ability ${a.name}: manifest and registry disagree`);
+  }
   if (abilities.some((a) => a.category === "new-system" && !a.requires.length)) out.push("a new-system ability lists no requirement");
   return out;
 }

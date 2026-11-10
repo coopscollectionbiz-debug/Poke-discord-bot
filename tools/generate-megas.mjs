@@ -26,6 +26,7 @@ import fs from "fs";
 import { Dex } from "@pkmn/dex";
 import { readCsv } from "./lib/csv.mjs";
 import { POKEAPI_SHA, POKEAPI_CACHE } from "./lib/paths.mjs";
+import { ABILITY_REGISTRY } from "../utils/battle/abilities.js";
 import { MEGA_DIMENSION_OVERRIDES, BLOCKED, VARIANT_GROUPS, ABILITY_SLOT_RULE, ABILITY_RULES, ENGINE_REQUIREMENTS } from "./lib/megaRules.mjs";
 
 const ROOT = new URL("..", import.meta.url);
@@ -186,8 +187,17 @@ async function main() {
         : { normal: null, shiny: null, grayscale: null },
       status: blockReasons.length ? "blocked" : "eligible",
       blockReasons,
-      launchReady: false,
-      launchBlockers: ["D-5: battle abilities not implemented (Phase M2)", "Mega battle transformation not built (Phase M2)"],
+      // Phase M2: battle profile. A form may enter battle only with a verified
+      // profile (official games with abilities: X/Y, ORAS). Legends: Z-A has no
+      // abilities in play, so its Megas stay out of battle until verified.
+      battleProfile: future
+        ? { verified: false, confidence: "unverified", source: "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play" }
+        : { verified: true, confidence: "high", source: "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data" },
+      launchReady: false, // "activated for players" — needs the owner's approval (Phase M5)
+      launchBlockers: [
+        ...(future ? ["Battle profile unverified: Legends: Z-A has no abilities in play"] : []),
+        "Mega battles not activated for players (owner approval required)",
+      ],
       source: { showdown: `@pkmn/dex ${PKMN_VERSION}`, pokeapi: POKEAPI_SHA, pokeapiPokemonId: Number(pid), statsAndTypesCrossChecked: true },
     });
     if (stoneId) {
@@ -229,7 +239,10 @@ async function main() {
     return {
       name, id: a.id, category: r.category, rule: r.rule, requires: r.requires ?? [], moveFlags: r.moveFlags ?? [],
       showdownDescription: a.shortDesc || a.desc, showdownNonstandard: a.isNonstandard ?? null,
-      megas: users, unusedSlotOf: alternateOnly, implemented: false,
+      megas: users, unusedSlotOf: alternateOnly,
+      registryStatus: ABILITY_REGISTRY[name]?.status ?? "missing",
+      implemented: ABILITY_REGISTRY[name]?.status === "implemented",
+      showdownBreakable: !!a.flags?.breakable, showdownNoTrace: !!(a.flags?.notrace || a.flags?.failroleplay),
     };
   });
 

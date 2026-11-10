@@ -51,7 +51,9 @@ assertEqual([cx.types, cx.baseStats, cx.ability.name, cx.ability.verified], [["F
 assertEqual(cx.sprite, "/public/sprites/pokemon/mega/normal/mega-charizard-x.gif", "the card uses the Mega sprite (normal line)");
 assertEqual(byId["6:shiny/mega-charizard-x"]?.sprite, "/public/sprites/pokemon/mega/shiny/mega-charizard-x.gif", "a shiny-line card uses the shiny Mega sprite");
 assertTrue(cards.every((c) => c.sprite !== `/public/sprites/pokemon/normal/${c.species}.gif` && c.sprite !== `/public/sprites/pokemon/shiny/${c.species}.gif`), "no card ever shows the base species sprite");
-assertTrue(cards.every((c) => c.battle.battleReady === false && c.battle.reasons.some((x) => /Phase M2/.test(x))), "every card is marked not battle-ready (Phase M2)");
+assertTrue(cards.every((c) => c.battle.battleReady === false && c.battle.reasons.includes("Mega battles are switched off")), "M2: with MEGA_BATTLES_ENABLED unset no card is battle-ready (battles are opt-in)");
+const battleOn = buildMegaCards(u, { env: { ...ON, MEGA_BATTLES_ENABLED: "1" } });
+assertTrue(battleOn.find((c) => c.cardId === "6:normal/mega-charizard-x").battle.battleReady === true, "M2: with battles switched on, a verified X/Y Mega card is battle-ready");
 assertTrue(byId["6:normal/mega-charizard-x"].teamSelectable && !byId["6:normal/mega-charizard-x"].onTeam, "an active card is team-selectable");
 const ty = byId["248:normal/mega-tyranitar"];
 assertEqual([ty.state, ty.level, ty.teamSelectable], ["dormant", null, false], "an unlock on a line with zero copies is a dormant card: kept, no Level, not selectable");
@@ -170,8 +172,10 @@ section("Battle boundary: a Mega team battles as base forms, nothing persistent 
 const A = unlocked();
 A.displayedPokemon = [{ id: 6, variant: "normal", mega: "mega-charizard-x" }, { id: 25, variant: "normal" }];
 const B = { id: "B", name: "B", pokemon: { 19: { normal: 1, shiny: 0 } }, training: {}, displayedPokemon: [{ id: 19, variant: "normal" }] };
-const bound = megaBattleBoundary(A, { env: { ...ON, MEGA_BATTLES_ENABLED: "1" } });
-assertEqual([bound.megaBattles, bound.requestedMega, bound.battlesAs.map((s) => s.form)], [false, "mega-charizard-x", ["base", "base"]], "the boundary reports: Mega requested, battled as base (battles not built)");
+const bound = megaBattleBoundary(A, { env: ON });
+assertEqual([bound.megaBattles, bound.requestedMega, bound.battlesAs.map((s) => s.form)], [false, "mega-charizard-x", ["base", "base"]], "the boundary reports: Mega requested, battled as base (MEGA_BATTLES_ENABLED not set)");
+const boundOn = megaBattleBoundary(A, { env: { ...ON, MEGA_BATTLES_ENABLED: "1" } });
+assertEqual([boundOn.megaBattles, boundOn.battlesAs.map((s) => s.form)], [true, ["mega-charizard-x", "base"]], "M2: with battles switched on, the unlocked Mega slot battles as Mega Charizard X");
 assertEqual(buildTeam(A).map((m) => [m.speciesId, m.variant, "megaForm" in m]), [[6, "normal", false], [25, "normal", false]], "buildTeam gives the battle engine base Charizard (no Mega form, no Mega stats)");
 const megaBefore = JSON.stringify(A.megaUnlocks), pokemonBefore = JSON.stringify(A.pokemon), itemsBefore = JSON.stringify(A.items), teamBefore = JSON.stringify(A.displayedPokemon);
 let res, threw = null;
@@ -182,6 +186,6 @@ assertEqual([JSON.stringify(A.megaUnlocks), JSON.stringify(A.pokemon), JSON.stri
 const plainA = clone(A); plainA.displayedPokemon = [{ id: 6, variant: "normal" }, { id: 25, variant: "normal" }];
 const resPlain = runBattle({ trainerData: { A: plainA, B: clone(B) }, challengerId: "A", defenderId: "B", mode: "open", seed: 42, now: new Date(T0) });
 assertEqual(JSON.stringify(res.result.log), JSON.stringify(resPlain.result.log), "the battle log is identical to the same team without the Mega card (no accidental transformation)");
-assertTrue(megaSpritePath("mega-charizard-x") !== "" && !fs.readFileSync(new URL("../utils/battle/render.js", import.meta.url), "utf8").includes("mega"), "the battle renderer has no Mega code yet");
+assertTrue(megaSpritePath("mega-charizard-x") !== "", "Mega sprite path resolves (battle rendering is covered by tests/megaBattle.test.js)");
 
 finish();

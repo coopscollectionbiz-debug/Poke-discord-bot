@@ -12,11 +12,11 @@
 //     the line must be owned, the form must pass megaFormGate("team")
 //   • a Mega slot is one ordinary slot (1–6 total)
 //
-// Battle boundary (explicit): Mega battles are NOT built (capability
-// "battle" is hard-off in config/features.js). buildTeam() in
-// utils/battle/runBattle.js reads the team through normalizeTeam(), which
-// keeps only { id, variant }, so a Mega slot battles as its base form and no
-// player data is touched. megaBattleBoundary() reports that decision.
+// Battle boundary (Phase M2): buildTeam() in utils/battle/runBattle.js asks
+// resolveBattleMega() (below) which slot, if any, battles as a Mega. Only a
+// fully valid, battle-eligible Mega passes (capability "battle" is opt-in:
+// MEGA_EVOLUTION_ENABLED and MEGA_BATTLES_ENABLED); otherwise every slot
+// battles as its base form. Nothing is written to player data.
 //
 // Rollback: production v21 rebuilds every slot as { id, variant }, so the
 // extra field simply disappears and the slot battles as the base form.
@@ -24,7 +24,7 @@
 
 import { toTeamObj } from "../utils/economyRules.js";
 import { normalizeTeam } from "../utils/teamNormalize.js";
-import { getMega, megaFormGate, MEGA_ID_PATTERN } from "../utils/megas.js";
+import { getMega, megaFormGate, megaBattleEligibility, megaBattleProfile, MEGA_ID_PATTERN } from "../utils/megas.js";
 import { unlockedForms, megaLineKey } from "./megaUnlocks.js";
 import { isMegaCapabilityEnabled } from "../config/features.js";
 
@@ -139,11 +139,39 @@ export function prepareTeamSelection(user, rawTeam, { env = process.env } = {}) 
 export function megaBattleBoundary(user, { env = process.env } = {}) {
   const raw = Array.isArray(user?.displayedPokemon) ? user.displayedPokemon : [];
   const requested = raw.map(megaFieldOf).filter(Boolean);
-  const battleBuilt = isMegaCapabilityEnabled("battle", env);
+  const mega = resolveBattleMega(user, { env });
   return {
-    megaBattles: battleBuilt,
+    megaBattles: isMegaCapabilityEnabled("battle", env),
     requestedMega: requested[0] ?? null,
-    battlesAs: normalizeTeam(raw, 6).map((s) => ({ id: s.id, variant: s.variant, form: "base" })),
-    reason: battleBuilt ? null : "Mega battles are not built yet (Phase M2): Mega slots battle as their base form.",
+    battlesAs: normalizeTeam(raw, 6).map((s) => ({ id: s.id, variant: s.variant, form: mega?.ok && mega.key === `${s.id}:${s.variant}` ? mega.formId : "base" })),
+    reason: mega && !mega.ok ? mega.reason : null,
   };
+}
+
+/**
+ * Phase M2: which team slot (if any) battles as a Mega, decided at battle
+ * time from the stored team. FAIL-CLOSED: on any doubt — battles switched
+ * off, more than one Mega slot, form unknown or of another species, not
+ * unlocked on that line, line not owned, form blocked, battle profile
+ * unverified, ability not modelled, generation not live — NO slot battles as
+ * a Mega (everyone battles as their base form, never an unearned advantage).
+ * Pure: reads only.
+ * @returns {null | {ok:true, key:string, formId:string, profile:object} | {ok:false, reason:string, formId?:string}}
+ */
+export function resolveBattleMega(user, { env = process.env } = {}) {
+  const raw = Array.isArray(user?.displayedPokemon) ? user.displayedPokemon : [];
+  const megaSlots = raw.filter((t) => megaFieldOf(t));
+  if (!megaSlots.length) return null;
+  if (!isMegaCapabilityEnabled("battle", env)) return { ok: false, reason: "Mega battles are switched off" };
+  if (megaSlots.length > 1) return { ok: false, reason: "more than one Mega slot in the stored team" };
+  const t = megaSlots[0];
+  const slot = { id: Number(t.id), variant: t.variant === "shiny" ? "shiny" : "normal" };
+  const formId = megaFieldOf(t);
+  const f = getMega(formId);
+  if (!f || f.species !== slot.id) return { ok: false, reason: "form doesn't belong to that Pokémon", formId };
+  if (!(Number(user.pokemon?.[slot.id]?.[slot.variant]) > 0)) return { ok: false, reason: "line not owned", formId };
+  if (!unlockedForms(user, megaLineKey(slot.id, slot.variant)).includes(formId)) return { ok: false, reason: "not unlocked on that line", formId };
+  const e = megaBattleEligibility(formId, { env });
+  if (!e.battleReady) return { ok: false, reason: e.reasons[0], formId };
+  return { ok: true, key: `${slot.id}:${slot.variant}`, formId, profile: megaBattleProfile(formId) };
 }

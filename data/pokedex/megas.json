@@ -86,10 +86,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -169,10 +173,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -252,10 +260,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -331,10 +343,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -414,10 +430,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -497,10 +517,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -576,10 +600,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -655,10 +684,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -736,10 +770,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -815,10 +854,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -898,10 +941,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -981,10 +1029,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1064,10 +1116,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1143,10 +1199,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1226,10 +1286,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1307,10 +1372,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1390,10 +1459,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1473,10 +1546,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1556,10 +1633,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1637,10 +1719,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1716,10 +1802,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1797,10 +1887,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1878,10 +1973,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -1959,10 +2059,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2042,10 +2146,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2125,10 +2233,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2208,10 +2320,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2291,10 +2407,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2374,10 +2495,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2457,10 +2582,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2538,10 +2667,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2621,10 +2754,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2704,10 +2841,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2787,10 +2928,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2870,10 +3015,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -2953,10 +3102,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3034,10 +3187,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3117,10 +3274,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3196,10 +3357,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3279,10 +3444,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3362,10 +3531,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3445,10 +3618,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3524,10 +3701,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3605,10 +3786,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3684,10 +3870,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3765,10 +3955,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3844,10 +4039,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -3927,10 +4126,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4010,10 +4213,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4093,10 +4300,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4176,10 +4387,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4262,10 +4477,14 @@
    "blockReasons": [
     "prerequisite-move: Mega Rayquaza needs Dragon Ascent, not a stone (D-9). The bot's movesets are automatic, and Rayquaza's Gen 5 level-up list has no Dragon Ascent, so the prerequisite can't be met yet."
    ],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4345,10 +4564,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4426,10 +4650,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4509,10 +4737,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4590,10 +4822,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4673,10 +4910,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4756,10 +4997,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4839,10 +5085,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -4922,10 +5172,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5005,10 +5259,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5089,10 +5348,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5168,10 +5432,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5251,10 +5520,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5334,10 +5608,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5415,10 +5694,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5498,10 +5781,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5581,10 +5869,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5660,10 +5953,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5743,10 +6041,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5826,10 +6129,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5909,10 +6217,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -5992,10 +6305,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6075,10 +6393,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6158,10 +6481,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6239,10 +6567,15 @@
    "blockReasons": [
     "prerequisite-forme: only Floette-Eternal can Mega Evolve. The bot has only regular Floette (#670) (D-16)."
    ],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6322,10 +6655,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6405,10 +6743,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6488,10 +6831,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6571,10 +6919,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6654,10 +7007,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6737,10 +7095,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6823,10 +7186,15 @@
     "prerequisite-forme: only Zygarde Complete Forme can Mega Evolve. The bot has only base Zygarde (#718) (D-16).",
     "sprite: no acceptable 2D sprite (normal or shiny) in any audited source."
    ],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6906,10 +7274,14 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": true,
+    "confidence": "high",
+    "source": "X/Y / Omega Ruby–Alpha Sapphire: Pokémon Showdown (@pkmn/dex) and PokéAPI agree on stats and types; ability from Showdown's X/Y/ORAS data"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -6989,10 +7361,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7072,10 +7449,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7155,10 +7537,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7242,10 +7629,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7331,10 +7723,15 @@
    "blockReasons": [
     "unsupported-variant: only the standard Magearna Mega is supported (D-8). The bot has no Original Color Magearna."
    ],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7410,10 +7807,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7489,10 +7891,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7572,10 +7979,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7655,10 +8067,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7743,10 +8160,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7831,10 +8253,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -7919,10 +8346,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",
@@ -8002,10 +8434,15 @@
    },
    "status": "eligible",
    "blockReasons": [],
+   "battleProfile": {
+    "verified": false,
+    "confidence": "unverified",
+    "source": "Pokémon Showdown 'Future' data (@pkmn/dex); Legends: Z-A has no abilities in play"
+   },
    "launchReady": false,
    "launchBlockers": [
-    "D-5: battle abilities not implemented (Phase M2)",
-    "Mega battle transformation not built (Phase M2)"
+    "Battle profile unverified: Legends: Z-A has no abilities in play",
+    "Mega battles not activated for players (owner approval required)"
    ],
    "source": {
     "showdown": "@pkmn/dex 0.10.12",

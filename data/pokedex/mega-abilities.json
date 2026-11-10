@@ -25,7 +25,10 @@
     "mega-glimmora"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Aerilate",
@@ -41,7 +44,10 @@
     "mega-salamence"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Aura Break",
@@ -56,7 +62,10 @@
     "mega-zygarde"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Aura Guard",
@@ -73,7 +82,10 @@
     "mega-lucario-z"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Bad Dreams",
@@ -88,7 +100,10 @@
     "mega-darkrai"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Berserk",
@@ -105,7 +120,10 @@
     "mega-drampa"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Bulletproof",
@@ -122,7 +140,10 @@
     "mega-chesnaught"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Commander",
@@ -139,7 +160,10 @@
     "mega-tatsugiri-stretchy"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": true
   },
   {
    "name": "Contrary",
@@ -157,7 +181,10 @@
     "mega-malamar"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Defiant",
@@ -175,7 +202,10 @@
     "mega-falinks"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Delta Stream",
@@ -193,7 +223,10 @@
     "mega-rayquaza"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Dragonize",
@@ -208,7 +241,10 @@
     "mega-feraligatr"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Drought",
@@ -226,7 +262,10 @@
     "mega-charizard-y"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Eelevate",
@@ -243,7 +282,10 @@
     "mega-eelektross"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Electric Surge",
@@ -261,7 +303,10 @@
     "mega-raichu-x"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Fairy Aura",
@@ -276,7 +321,10 @@
     "mega-floette"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Filter",
@@ -291,7 +339,10 @@
     "mega-aggron"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Fire Mane",
@@ -306,7 +357,10 @@
     "mega-pyroar"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Flame Body",
@@ -323,7 +377,10 @@
    "unusedSlotOf": [
     "mega-heatran"
    ],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Flash Fire",
@@ -338,7 +395,10 @@
     "mega-heatran"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Healer",
@@ -353,7 +413,10 @@
     "mega-audino"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Huge Power",
@@ -369,7 +432,10 @@
     "mega-mawile"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Infiltrator",
@@ -384,7 +450,10 @@
     "mega-chandelure"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Innards Out",
@@ -399,7 +468,10 @@
     "mega-victreebel"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Inner Focus",
@@ -414,7 +486,10 @@
     "mega-gallade"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Insomnia",
@@ -429,7 +504,10 @@
     "mega-mewtwo-y"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Intimidate",
@@ -448,7 +526,10 @@
     "mega-scrafty"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Iron Fist",
@@ -465,7 +546,10 @@
     "mega-crabominable"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Levitate",
@@ -484,7 +568,10 @@
     "mega-delphox"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Lightning Rod",
@@ -501,7 +588,10 @@
     "mega-sceptile"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Magic Bounce",
@@ -519,7 +609,10 @@
     "mega-diancie"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Mega Launcher",
@@ -536,7 +629,10 @@
     "mega-blastoise"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Mega Sol",
@@ -551,7 +647,10 @@
     "mega-meganium"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Mold Breaker",
@@ -568,7 +667,10 @@
     "mega-emboar"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Multiscale",
@@ -583,7 +685,10 @@
     "mega-dragonite"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "No Guard",
@@ -600,7 +705,10 @@
     "mega-hawlucha"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Parental Bond",
@@ -615,7 +723,10 @@
     "mega-kangaskhan"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Piercing Drill",
@@ -630,7 +741,10 @@
     "mega-excadrill"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Pixilate",
@@ -646,7 +760,10 @@
     "mega-altaria"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Prankster",
@@ -661,7 +778,10 @@
     "mega-banette"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Protean",
@@ -678,7 +798,10 @@
     "mega-greninja"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Pure Power",
@@ -693,7 +816,10 @@
     "mega-medicham"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Refrigerate",
@@ -708,7 +834,10 @@
     "mega-glalie"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Regenerator",
@@ -723,7 +852,10 @@
     "mega-dragalge"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Sand Force",
@@ -741,7 +873,10 @@
     "mega-garchomp"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Sand Stream",
@@ -760,7 +895,10 @@
     "mega-tyranitar"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Scrappy",
@@ -775,7 +913,10 @@
     "mega-lopunny"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Shadow Tag",
@@ -790,7 +931,10 @@
     "mega-gengar"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Sharpness",
@@ -807,7 +951,10 @@
     "mega-absol-z"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Sheer Force",
@@ -824,7 +971,10 @@
     "mega-camerupt"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Shell Armor",
@@ -840,7 +990,10 @@
     "mega-scolipede"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Skill Link",
@@ -855,7 +1008,10 @@
     "mega-heracross"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Snow Warning",
@@ -874,7 +1030,10 @@
     "mega-froslass"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Solar Power",
@@ -892,7 +1051,10 @@
     "mega-houndoom"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Soul-Heart",
@@ -910,7 +1072,10 @@
     "mega-magearna-original"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Speed Boost",
@@ -928,7 +1093,10 @@
     "mega-blaziken"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Spicy Spray",
@@ -945,7 +1113,10 @@
     "mega-scovillain"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Stalwart",
@@ -960,7 +1131,10 @@
     "mega-skarmory"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Steadfast",
@@ -975,7 +1149,10 @@
     "mega-mewtwo-x"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Storm Drain",
@@ -994,7 +1171,10 @@
     "mega-tatsugiri-droopy",
     "mega-tatsugiri-stretchy"
    ],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Strong Jaw",
@@ -1011,7 +1191,10 @@
     "mega-sharpedo"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Swift Swim",
@@ -1028,7 +1211,10 @@
     "mega-swampert"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Technician",
@@ -1043,7 +1229,10 @@
     "mega-scizor"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Thermal Exchange",
@@ -1061,7 +1250,10 @@
     "mega-baxcalibur"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Thick Fat",
@@ -1076,7 +1268,10 @@
     "mega-venusaur"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   },
   {
    "name": "Tough Claws",
@@ -1097,7 +1292,10 @@
     "mega-golisopod"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Trace",
@@ -1114,7 +1312,10 @@
     "mega-meowstic-m"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": false,
+   "showdownNoTrace": true
   },
   {
    "name": "Unseen Fist",
@@ -1129,7 +1330,10 @@
     "mega-golurk"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "no-effect",
+   "implemented": false,
+   "showdownBreakable": false,
+   "showdownNoTrace": false
   },
   {
    "name": "Volt Absorb",
@@ -1144,7 +1348,10 @@
     "mega-zeraora"
    ],
    "unusedSlotOf": [],
-   "implemented": false
+   "registryStatus": "implemented",
+   "implemented": true,
+   "showdownBreakable": true,
+   "showdownNoTrace": false
   }
  ]
 }

@@ -38,8 +38,10 @@ assertTrue(F.isMegaFormAllowedByFlags("mega-charizard-x", { MEGA_EVOLUTION_ENABL
 section("Nothing is usable in Phase M0, whatever the flags");
 const allOn = { MEGA_EVOLUTION_ENABLED: "1", MEGA_FORMS: "all" };
 assertTrue(MEGAS.every((f) => !M.isMegaAvailable(f.id, { env: {} })), "flag off: no form available");
-assertTrue(MEGAS.every((f) => !M.isMegaAvailable(f.id, { env: allOn, generationLive: () => true })), "flag on and every generation live: still no form available (none launch-ready, D-5)");
-assertTrue(M.megaAvailability("mega-venusaur", { env: allOn, generationLive: () => true }).reasons.some((r) => r.startsWith("D-5")), "the reason given is the D-5 ability gate");
+assertTrue(MEGAS.every((f) => !M.isMegaAvailable(f.id, { env: allOn, generationLive: () => true })), "M2: master flag on but MEGA_BATTLES_ENABLED unset: no form available for battle");
+const battlesOn = { ...allOn, MEGA_BATTLES_ENABLED: "1" };
+assertEqual(MEGAS.filter((f) => M.isMegaAvailable(f.id, { env: battlesOn, generationLive: () => true })).length, 47, "M2: with battles explicitly on, exactly the 47 verified, unblocked X/Y/ORAS forms are battle-available (all generations live)");
+assertTrue(MEGAS.filter((f) => !f.battleProfile.verified).every((f) => !M.isMegaAvailable(f.id, { env: battlesOn, generationLive: () => true })), "unverified Legends: Z-A forms are never battle-available");
 assertTrue(M.megaAvailability("mega-greninja", { env: allOn }).reasons.some((r) => /generation 6 is not live/.test(r)), "an unreleased generation is reported as its own reason");
 
 section("Generation controls are independent of Mega flags");
@@ -84,14 +86,16 @@ assertTrue(live.length > 100 && live.includes("bot_final.js") && live.includes("
 const MEGA_USERS = [
   "bot_final.js", "services/inventory.js", "services/mega.js", "services/megaApi.js", "services/megaTeam.js",
   "services/megaUnlocks.js", "utils/megas.js", "utils/userSchema.js", "public/picker-pokemon/script.js", "public/picker-pokemon/mega.js",
+  // Phase M2: the battle engine (Mega participants, abilities, rendering).
+  "utils/battle/runBattle.js", "utils/battle/sim.js", "utils/battle/effects.js", "utils/battle/abilities.js", "utils/battle/power.js", "utils/battle/render.js",
 ];
 const megaModule = /megaUnlocks\.js|megas\.js|config\/features\.js|megaRewards\.js|megaApi\.js|megaTeam\.js|\/mega\.js|"\.\/mega\.js"/;
 const users = live.filter((f) => megaModule.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
 assertEqual(users.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1 files import Mega modules (no battle, reward, shop, catch, daily, quest or achievement code)");
 const megaRefs = live.filter((f) => /megastone_|mega_shard|megaUnlocks/.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
 assertEqual(megaRefs.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1 files reference Mega Stones, Shards or megaUnlocks");
-const NEVER = live.filter((f) => /^(utils\/battle\/|commands\/(battle|daily|quest|recruit|shop|addinventory|gift)\.js|progression\/|services\/gameplay\.js|utils\/weightedRandom\.js)/.test(f));
-assertEqual(NEVER.filter((f) => /mega/i.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), [], `battle, reward and acquisition code (${NEVER.length} files) never mentions Mega`);
+const NEVER = live.filter((f) => /^(utils\/battle\/(rewards|playback|data|moveset|stats|tuning|wager|rng)\.js|commands\/(battle|daily|quest|recruit|shop|addinventory|gift)\.js|progression\/|services\/gameplay\.js|utils\/weightedRandom\.js)/.test(f));
+assertEqual(NEVER.filter((f) => /mega/i.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), [], `EXP/rewards, playback, battle data and acquisition code (${NEVER.length} files) never mentions Mega`);
 assertTrue(!live.some((f) => /megaRewards/.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), "nothing reads the (inactive) Mega reward config");
 section("Routes and dashboard: gated, session-checked, nothing rendered while off");
 const botSrc = fs.readFileSync(path.join(ROOT, "bot_final.js"), "utf8");

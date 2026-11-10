@@ -8,7 +8,7 @@
 // ==========================================================
 
 import { pokemonSpriteUrl } from "./sprites.js";
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, AttachmentBuilder } from "discord.js";
 import { spritePaths, rarityEmojis } from "../spriteconfig.js";
 import fs from "fs";
 import path from "path";
@@ -33,6 +33,8 @@ export async function broadcastReward(
     shiny = false,
     source = "random", // e.g. "Starter Pack", "Daily", "Admin Grant"
     originChannel = null,
+    image = null,      // optional rendered card { buffer, name } (random catches); replaces the embed
+    caption = null,    // the line posted with `image` (no pings)
   }
 ) {
   try {
@@ -189,15 +191,21 @@ const embed = new EmbedBuilder()
         ),
       ]).catch(err => console.error("⚠️ Broadcast send failed:", err.message));
 
-    if (globalChannel) await safeSend(globalChannel, { embeds: [embed] });
+    // With a rendered card, every channel gets the card under the caption
+    // (a fresh attachment per send); otherwise the embed, as before.
+    const payload = () => (image?.buffer
+      ? { content: caption ?? undefined, files: [new AttachmentBuilder(image.buffer, { name: image.name ?? "catch.png" })], allowedMentions: { parse: [] } }
+      : { embeds: [embed] });
+
+    if (globalChannel) await safeSend(globalChannel, payload());
     if (rareChannel && (isRareTier || shiny))
-      await safeSend(rareChannel, { embeds: [embed] });
+      await safeSend(rareChannel, payload());
     if (
       localChannel &&
       localChannel.id !== globalChannel?.id &&
       localChannel.id !== rareChannel?.id
     )
-      await safeSend(localChannel, { embeds: [embed] });
+      await safeSend(localChannel, payload());
 
     console.log(
       `📢 Broadcasted ${type} (${displayName}) [${rarity}${shiny ? "✨" : ""}] for ${user.username} | Source: ${source}`

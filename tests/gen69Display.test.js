@@ -84,13 +84,16 @@ const hidden = await lookup("Sylveon");
 assertTrue(/isn't in the Pokédex yet/.test(hidden?.content ?? ""), "unreleased species: not shown to players who don't own it");
 enable([6]);
 const shown = await lookup("sylveon");
-const embed = shown?.embeds?.[0]?.data ?? shown?.embeds?.[0];
-assertTrue(embed && /\/public\/sprites\/pokemon\/normal\/700\.gif$/.test(embed.image?.url ?? ""), "released: embed shows the Sylveon sprite");
-assertTrue(/^https:\/\/poke-discord-bot-49shta\.fly\.dev\//.test(embed?.image?.url ?? ""), "embed image is served from the Fly host");
-assertTrue(/Smogon X\/Y Sprite Project/.test(embed?.footer?.text ?? "") && /\/credits/.test(embed?.footer?.text ?? ""), "footer credits the sprite project");
+// /pokedex now sends a rendered entry card (utils/render/pokedexCard.js) with
+// the sprite drawn in from local files and the credit printed on the card.
+const { pokedexView } = await import("../utils/render/pokedexCard.js");
+assertTrue(shown?.files?.[0]?.name === "pokedex.png" && !(shown?.embeds?.length), "released: the Sylveon entry card is sent");
+assertTrue(shown.files[0].attachment.readUInt32BE(16) === 1000, "the sprite is drawn into the card, not hot-linked");
+const credit = pokedexView(700, {}).credit ?? "";
+assertTrue(/Smogon X\/Y Sprite Project/.test(credit) && /\/credits/.test(credit), "the card credits the sprite project");
 enable(null);
 const owned = await lookup("Flabébé", { 669: { normal: 1, shiny: 0 } });
-assertTrue((owned?.embeds?.length ?? 0) > 0, "an owner can still look up a species from a disabled generation");
+assertTrue((owned?.files?.length ?? owned?.embeds?.length ?? 0) > 0, "an owner can still look up a species from a disabled generation");
 
 await fsp.rm(dir, { recursive: true, force: true });
 finish();

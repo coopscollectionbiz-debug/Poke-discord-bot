@@ -4,18 +4,20 @@ Every trainer sprite gets the same **procedural breathing idle**, built only fro
 
 ## The breathing idle (`utils/trainerIdle.js`)
 
-- **Three poses:**
+- **Poses:**
   - **rest:** the unchanged PNG.
-  - **head-lag:** the body drops 1 px and the neck row is repeated.
   - **exhale:** the upper body drops 1 px.
-- No colours are added and nothing is redrawn.
+  - **clean steps** (owner-approved 2026-11-10): up to 3 in-between poses where only the rows above a "step" row have dropped. On the out-breath the head settles first and the drop works down to the waist; on the in-breath the waist rises first and the head last.
+- No colours are added, nothing is redrawn, and there are no blended or faded frames (tried and rejected: they looked like ghosting).
 - **Cut lines** are chosen where the 1 px change is invisible:
   - the waist row whose dropped row equals the row above it;
-  - the neck row whose repeated row equals the row below it.
+  - the neck row whose repeated row equals the row below it;
+  - step rows, one per band of the torso between neck and waist, by the same rule as the waist, each no more visible than the sprite's own seam (min 4 px) and at least 3 rows apart.
+- Of 1,271 sprites, 987 get 1–3 clean steps. The other 284 have no clean step row and use the classic head-lag as their one step (the body drops first, the neck row is repeated), which is the earlier loop.
 - The leftover difference is the "seam", in pixels.
-- **Loops:**
-  - **Standalone GIFs** (embeds, web): rest about 900 ms, lag 110, exhale about 700, lag 110, scaled per trainer (below).
-  - **Cards** (24 frames, 100 ms): `poseAtFrame` gives rest ×11, lag, exhale ×9, lag, rest ×2, shifted per trainer.
+- **Loops** (`breathLoop`, `poseAtFrame` in `utils/trainerIdle.js`):
+  - **Standalone GIFs** (embeds, web): rest about 900 ms, the out-breath steps over 360 ms (eased: they gather in the middle, each ≥ 60 ms), exhale about 700 ms, the in-breath steps over 360 ms. The holds scale per trainer (below); the steps don't.
+  - **Cards** (24 frames, 100 ms): the same 2.4 s breath sampled at 100 ms, shifted per trainer. At that speed a 3-step trainer shows 2–3 of its steps each way.
 
 ## Offsets and part motions (`utils/trainerMotion.js`, pass 2)
 
@@ -23,26 +25,28 @@ Every trainer sprite gets the same **procedural breathing idle**, built only fro
 
 Every trainer gets its own breath **tempo** (0.85× to 1.2×) and **starting point**, both from a hash of its file name. They're stable for that trainer, but trainers shown together (the dashboard, the picker, the leaderboard podium) never breathe in step. On cards, `cardSchedule` shifts the breath by the trainer's phase.
 
-### Part motions (`data/sprites/trainer-parts.json`, 169 trainers)
+### Part motions (`data/sprites/trainer-parts.json`, 69 trainers)
 
 - **How a move works:** a part moves exactly 1 px. Each vacated pixel takes the colour of the pixel just behind it, so arms stay attached and clear background stays clear.
-- **Several parts in one event all move the same way.** Leon's cape sways like wind; it never bulges.
-- **Blinks:** dark eye pixels take the lid colour above them for about 120 ms.
+- **Wind sway** (`kind: "sway"`): only the rows of the rect from `from` down move, so hair or cloth bends where it hangs instead of sliding as a block. It is one hard 1-px step, held about 0.6 s (smoother bending and a gust band were tried and rejected).
+- **Several parts in one event all move the same way.** A cape or hair sways one way like wind; it never bulges.
+- **Blinks:** each eye rect (one per eye, covering its white and pupil) closes for about 120 ms: the eye takes the lid colour above it and its bottom row becomes the eye's own darkest colour, a lash line.
 - **Event timing:** events sit at a trainer-specific point in the loop. Frames shorter than 60 ms are folded away, so nothing flickers.
 
 | Motion | Sprites | Source |
 |---|---|---|
-| Held Poké Ball lifts 1 px and settles | 78 | Detected, then each one reviewed by eye |
-| Raised hand nudges outward 1 px, twice | 96 | Detected, then each one reviewed by eye |
-| Salute snap + blink (`sailor-gen3`), wave (`hiker`), cape caught by wind (`leon`) | 3 | Hand-made |
+| Held Poké Ball lifts 1 px and settles | 58 | Detected, then each one reviewed close-up at 6× |
+| Wind sway of hair, cape, skirt or sleeves (+ blink on 5) | 8 Legendary showcase: `cynthia`, `lance`, `iris-masters`, `diantha`, `geeta` (replaces her ball lift), `wallace-gen6`, `n`, `caitlin-masters` | Hand-placed on zoomed grids, reviewed |
+| Salute snap + blink (`sailor-gen3`), wave (`hiker`), cape and hair in the wind + blink (`leon`) | 3 | Hand-made |
 
-- **Detection:** `tools/detect-trainer-parts.mjs <out.json>` proposes candidates; it never writes the data file.
-  - It found 206 balls (78 kept: the rest were ties, scarves, shoes, belt balls and trays) and 225 raised hands (96 kept: the rest were hats, hair, headbands, held props and hands near the face).
+- **Eyes are placed by hand.** Automatic eye detection was tried and was wrong on most sprites (hair ornaments, hands, hat crowns); trainers whose eyes are hidden by hair (`n`, `wallace-gen6`) or already half-closed (`diantha`) get no blink.
+- **Detection:** `tools/detect-trainer-parts.mjs <out.json>` proposes Poké Ball candidates; it never writes the data file.
+  - Of 206 ball candidates, 59 were kept after a 6× close-up review (the rest were ties, scarves, shoes, belt balls, trays, skirts and shoulders). Raised-hand nudges were dropped entirely: at 1 px they read as fingers or elbows jutting out.
 - **Adding or removing one:** edit `data/sprites/trainer-parts.json`, then run `npm run generate:trainer-idles`.
 
 ## Assets (`npm run generate:trainer-idles`)
 
-- `public/sprites/trainers_idle/<name>.gif`: one per selectable sprite (1,271; 6.1 MB with offsets and part motions). Each uses the sprite's exact palette, so the rest frame is pixel-identical to the PNG (loops start at the trainer's own phase, so it isn't always frame 0). One sprite with more than 255 colours (`ash-hoenn`) is quantised.
+- `public/sprites/trainers_idle/<name>.gif`: one per selectable sprite (1,271; 9.5 MB with clean steps, offsets and part motions). Each uses the sprite's exact palette, so the rest frame is pixel-identical to the PNG (loops start at the trainer's own phase, so it isn't always frame 0). One sprite with more than 255 colours (`ash-hoenn`) is quantised.
 - `data/sprites/trainer-idles.json`: the manifest the bot reads (`status`, `seam`, cut rows, `gif`).
 - `public/sprites/trainers_idle/manifest.json`: `{ "file.png": "file.gif" }` for the web pages.
 - `data/sprites/trainer-idle-review.json`: the manual review record.
@@ -83,6 +87,6 @@ Twinkles and meteors are placed only where a dilated silhouette mask of the trai
 
 - `TRAINERS_ANIMATED=0`: every trainer goes back to its static PNG, and backdrops are drawn as one still frame.
 - `CARDS_ANIMATED=0`: every card is a PNG, as before.
-- **Cost:** an animated `/trainercard` renders in about 210 ms median (p95 300 ms with part motions) under the shared GIF gate of 2, against about 24 ms as a PNG; peak RSS about 120 MB.
+- **Cost:** an animated `/trainercard` renders in about 230 ms (measured on the four preview cards) under the shared GIF gate of 2, against about 24 ms as a PNG; peak RSS about 120 MB.
 
 **Previews:** `docs/design/previews/trainercard-breathing-{common,epic,legendary,mythic}.gif`.

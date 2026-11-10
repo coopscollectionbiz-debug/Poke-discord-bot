@@ -20,7 +20,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { loadImage, createCanvas } from "@napi-rs/canvas";
 import gifenc from "gifenc";
-import { breathingPoses, IDLE_LOOP } from "../utils/trainerIdle.js";
+import { breathingPoses, stepCount } from "../utils/trainerIdle.js";
 import { motionStates, idleTimeline, poseOf } from "../utils/trainerMotion.js";
 
 const { GIFEncoder, quantize, applyPalette } = gifenc;
@@ -108,7 +108,7 @@ function encodeIdle(frames, delays, W, H) {
 function idleFrames(file, px, W, H, cuts) {
   const events = parts[file]?.events ?? [];
   const m = motionStates(px, W, H, events);
-  const steps = idleTimeline(file, events);
+  const steps = idleTimeline(file, events, stepCount(cuts));
   return { frames: steps.map((s) => poseOf(m.states[s.state], W, cuts, s.pose)), delays: steps.map((s) => s.ms), events: events.length };
 }
 

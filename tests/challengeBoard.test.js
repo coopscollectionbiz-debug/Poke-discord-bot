@@ -8,7 +8,7 @@
 import fs from "fs";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
-import { boardView, boardAltText, renderBoard, boardSlots, BOARD_SIZE } from "../utils/render/challengeBoard.js";
+import { boardView, boardAltText, renderBoard, boardSlots, stageCaptions, stageTitles, BOARD_SIZE } from "../utils/render/challengeBoard.js";
 import { createNewUser } from "../utils/userSchema.js";
 
 const NOW = new Date("2026-11-10T12:00:00Z");
@@ -52,14 +52,25 @@ section("What the board shows");
   assertEqual(view(null).left, 5, "a player with no record sees a fresh board");
 }
 
+section("Stage captions");
+// Only rules the board can't show: the lit Badges already say how many are left.
+assertEqual(stageCaptions(view(player({ brock: "d" }))), { elite4: "Earn all 8 Badges", blue: "Clear the Elite Four", red: null }, "locked: what opens each");
+assertEqual(stageCaptions(view(player({ ...allGyms }))), { elite4: "Four battles in a row", blue: "Clear the Elite Four", red: null }, "an open run says how it works");
+assertEqual(stageCaptions(view(player({ ...allGyms, elite4: "d", blue: "d" }))), { elite4: null, blue: null, red: null }, "cleared stages say nothing (the tag does)");
+
+section("Stage titles");
+// A locked Champion is a mystery, like the Elite Four's names ("???").
+assertEqual(stageTitles(view(player())), { elite4: "The Elite Four", blue: "???", red: "Red" }, "locked: the Champion's name is hidden");
+assertEqual(stageTitles(view(player({ ...allGyms, elite4: "d" }))).blue, "Blue", "named once the Elite Four is cleared");
+
 section("Alt text");
 assertEqual(boardAltText(view(player({ brock: "d", misty: "d" }, 1))),
-  "Ash's Kanto challenges: 2 of 8 Badges (Brock and Misty). Elite Four: locked, 6 more Badges. Blue: locked, clear the Elite Four first. Red: open. 4 of 5 challenges left today.",
+  "Ash's Kanto challenges: 2 of 8 Badges (Brock and Misty). Elite Four: locked, 6 more Badges. Champion: locked, clear the Elite Four first. Red: open. 4 of 5 challenges left today.",
   "a player partway through");
 assertEqual(boardAltText(view(player({ ...allGyms, elite4: "d", red: "d" }))),
   "Ash's Kanto challenges: 8 of 8 Badges (Brock, Misty, Lt. Surge, Erika, Koga, Sabrina, Blaine, and Giovanni). Elite Four: cleared. Blue: open. Red: cleared. 5 of 5 challenges left today.",
   "a player near the end");
-assertTrue(boardAltText(view(player({ ...allGyms }))).includes(" Elite Four: open. Blue: locked, clear the Elite Four first."), "an open run");
+assertTrue(boardAltText(view(player({ ...allGyms }))).includes(" Elite Four: open. Champion: locked, clear the Elite Four first."), "an open run");
 
 section("Render");
 {

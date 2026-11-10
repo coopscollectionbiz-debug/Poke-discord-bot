@@ -62,14 +62,30 @@ export function boardView(user, { displayName, now = new Date() }) {
 export function boardAltText(v) {
   const earned = v.gyms.filter((g) => g.earned).map((g) => g.leader);
   const e4 = v.elite4.state === "locked" ? `locked, ${v.elite4.missing} more Badge${v.elite4.missing === 1 ? "" : "s"}` : v.elite4.state;
-  const blue = v.blue.state === "locked" ? "locked, clear the Elite Four first" : v.blue.state;
+  // Says what the image shows: a locked Champion is unnamed there.
+  const blue = v.blue.state === "locked" ? "Champion: locked, clear the Elite Four first" : `Blue: ${v.blue.state}`;
   return [
     `${v.name}'s Kanto challenges: ${v.badges} of ${v.gyms.length} Badges${earned.length ? ` (${list(earned)})` : ""}.`,
     `Elite Four: ${e4}.`,
-    `Blue: ${blue}.`,
+    `${blue}.`,
     `Red: ${v.red.state}.`,
     `${v.left} of ${v.perDay} challenges left today.`,
   ].join(" ");
+}
+
+/**
+ * Each stage's caption: only a rule the board can't show (what opens it, or
+ * how the run works). The lit Badges already say how many are left, and a
+ * cleared stage has its tag.
+ */
+export function stageCaptions(v) {
+  const e4 = { locked: "Earn all 8 Badges", open: "Four battles in a row" }[v.elite4.state] ?? null;
+  return { elite4: e4, blue: v.blue.state === "locked" ? "Clear the Elite Four" : null, red: null };
+}
+
+/** Each stage's title. A locked Champion is "???", like the Elite Four's names. */
+export function stageTitles(v) {
+  return { elite4: STAGE.elite4.title, blue: v.blue.state === "locked" ? "???" : STAGE.blue.title, red: STAGE.red.title };
 }
 
 /** Where the board draws each piece (also used by tests). */
@@ -204,7 +220,7 @@ async function drawGyms(ctx, v, slots) {
 }
 
 // One League stage: dark, lit from below in its color, more so once open.
-function drawStage(ctx, key, state, box) {
+function drawStage(ctx, key, state, box, title) {
   const { accent } = STAGE[key];
   const locked = state === "locked";
   ctx.save();
@@ -251,7 +267,7 @@ function drawStage(ctx, key, state, box) {
   rr(ctx, box.x + 1, box.y + 1, box.w - 2, box.h - 2, 18);
   ctx.stroke();
 
-  const { eyebrow, title } = STAGE[key];
+  const { eyebrow } = STAGE[key];
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.font = font(18, 800);
@@ -280,11 +296,11 @@ function caption(ctx, text, box, y) {
 }
 
 async function drawLeague(ctx, v, slots) {
+  const captions = stageCaptions(v), titles = stageTitles(v);
   const e4 = slots.elite4;
-  drawStage(ctx, "elite4", v.elite4.state, e4);
+  drawStage(ctx, "elite4", v.elite4.state, e4, titles.elite4);
   const locked = v.elite4.state === "locked";
-  if (locked) caption(ctx, `Earn all 8 Badges · ${v.elite4.missing} to go`, e4, e4.y + 106);
-  else if (v.elite4.state === "open") caption(ctx, "Four battles in a row", e4, e4.y + 106);
+  if (captions.elite4) caption(ctx, captions.elite4, e4, e4.y + 106);
   for (const [i, m] of v.elite4.members.entries()) {
     const box = e4.members[i];
     if (!locked) drawFloor(ctx, box.x + box.w / 2, box.y + box.h, 50, typeStyle(m.type).fill);
@@ -298,8 +314,8 @@ async function drawLeague(ctx, v, slots) {
   for (const key of ["blue", "red"]) {
     const box = slots[key];
     const { state, trainerFile } = v[key];
-    drawStage(ctx, key, state, box);
-    if (key === "blue" && state === "locked") caption(ctx, "Clear the Elite Four", box, box.y + 106);
+    drawStage(ctx, key, state, box, titles[key]);
+    if (captions[key]) caption(ctx, captions[key], box, box.y + 106);
     if (state !== "locked") drawFloor(ctx, box.sprite.x + box.sprite.w / 2, box.sprite.y + box.sprite.h, 70, STAGE[key].accent);
     drawTrainer(ctx, await loadTrimmedTrainerSprite(trainerFile), box.sprite, { max: 3, silhouette: state === "locked" });
   }

@@ -6,7 +6,7 @@
 // (desktop) or opens as a sheet (phone). Tapping a box Pokémon adds it to
 // the team on screen.
 //
-// Reads  GET  /api/user-pokemon   (pokemon, levels, powers, currentTeam, battleTeam, battleTeamMigration)
+// Reads  GET  /api/user-pokemon   (pokemon, levels, powers, currentTeam, battleTeam)
 //        GET  /api/mega           (only to know whether Mega sprites show)
 //        GET  /public/pokemonData.json
 // Writes POST /api/set-pokemon-team { id, team, teamType: "display" | "battle" }
@@ -26,7 +26,6 @@ const MAX = 6;
 const BATTLE_LEVEL = 50;
 // pokemonData.json type ids (same order as the Pokémon page's TYPE_MAP).
 const TYPE_NAMES = [null, "normal", "fighting", "flying", "poison", "ground", "rock", "bug", "ghost", "steel", "fire", "water", "grass", "electric", "psychic", "ice", "dragon", "dark", "fairy"];
-const NOTICE_KEY = "cc-battle-team-notice";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const keyOf = (s) => `${s.id}:${s.variant}`;
@@ -48,8 +47,6 @@ const state = {
   draft: { display: [], battle: null },
   active: "display",
   error: { display: null, battle: null },
-  migration: null,
-  noticeOpen: false,
   filter: { q: "", show: "all", sort: "power" },
   saving: false,
 };
@@ -405,14 +402,6 @@ function boxPanel(where) {
     ${items.length ? `<ul class="tm-box">${items.map(boxTile).join("")}</ul>` : `<p class="cc-empty">${Object.keys(state.pokemon).length ? "No Pokémon match." : "You haven’t caught any Pokémon yet. Try /daily in Discord."}</p>`}`;
 }
 
-function notice() {
-  if (!state.noticeOpen || !state.migration) return "";
-  const dropped = (state.migration.dropped ?? []).map((s) => species(s.id).name);
-  return `<div class="cc-banner cc-banner--info tm-notice" role="status">
-    <p><strong>Meet your new Battle team</strong>We copied your team into a new Battle team for ranked and wager battles.${dropped.length ? ` ${esc(dropped.join(", "))} ${dropped.length > 1 ? "were" : "was"} left out: a Battle team can have one mythic-tier Pokémon.` : ""} Your Display team didn’t change.</p>
-    <button type="button" class="cc-btn tm-notice-x" data-act="dismiss" aria-label="Dismiss">✕</button></div>`;
-}
-
 function saveBar() {
   if (!anyDirty()) return "";
   const parts = TEAMS.filter(isDirty).map((t) => {
@@ -449,7 +438,7 @@ document.body.insertAdjacentHTML("afterbegin", ICONS);
 
 function render() {
   const searchFocus = document.activeElement?.dataset?.act === "search" ? { where: document.activeElement.id, pos: document.activeElement.selectionStart } : null;
-  app.innerHTML = `${notice()}${switcher()}<div class="tm-layout">${teamPanel()}<aside class="tm-panel tm-boxpanel" aria-labelledby="boxHeading">${boxPanel("side")}</aside></div>${saveBar()}`;
+  app.innerHTML = `${switcher()}<div class="tm-layout">${teamPanel()}<aside class="tm-panel tm-boxpanel" aria-labelledby="boxHeading">${boxPanel("side")}</aside></div>${saveBar()}`;
   if (sheet.open) { sheetBody.innerHTML = boxPanel("sheet"); scanFx(sheetBody); }
   scanFx(app); // shiny backdrops (same as the Discord cards)
   document.getElementById("boxSheetTitle").textContent = `Add to your ${LABEL[state.active]}`;
@@ -478,11 +467,7 @@ function onClick(e) {
   else if (act === "discard") discard();
   else if (act === "save") save();
   else if (act === "show") { state.filter.show = el.dataset.show; render(); }
-  else if (act === "dismiss") {
-    state.noticeOpen = false;
-    try { localStorage.setItem(NOTICE_KEY, String(state.migration?.at ?? "")); } catch { /* storage blocked */ }
-    render();
-  } else if (act === "openbox") openSheet();
+  else if (act === "openbox") openSheet();
 }
 function onInput(e) {
   const el = e.target;
@@ -645,12 +630,8 @@ async function load() {
     const norm = (list) => (Array.isArray(list) ? list.map((s) => ({ id: Number(s.id), variant: s.variant === "shiny" ? "shiny" : "normal", ...(s.mega ? { mega: s.mega } : {}) })) : null);
     state.saved = { display: norm(u.currentTeam) ?? [], battle: norm(u.battleTeam) };
     state.draft = clone(state.saved);
-    state.migration = u.battleTeamMigration ?? null;
-    let seen = null;
-    try { seen = localStorage.getItem(NOTICE_KEY); } catch { /* storage blocked */ }
-    state.noticeOpen = !!state.migration && seen !== String(state.migration.at);
     const want = new URLSearchParams(location.search).get("team");
-    state.active = want === "battle" || want === "display" ? want : state.noticeOpen ? "battle" : "display";
+    state.active = want === "battle" || want === "display" ? want : "display";
   } catch (err) {
     app.innerHTML = "";
     showBanner(err?.message || "Couldn’t load your teams. Please try again.", { title: "Couldn’t load your teams" });

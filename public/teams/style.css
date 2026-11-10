@@ -109,9 +109,6 @@
 .tm-error p { margin: 0; color: var(--cc-text); font-size: 13.5px; }
 .tm-error strong { display: block; margin-bottom: 2px; }
 
-.tm-notice { margin: 12px 0 16px; align-items: center; }
-.tm-notice p { flex: 1; font-weight: 600; font-size: 14px; }
-.tm-notice-x { width: 44px; padding: 0; flex: none; background: transparent; border-color: #3a425655; color: var(--cc-textbox-ink); }
 
 /* ---------- Box ---------- */
 .tm-boxbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }

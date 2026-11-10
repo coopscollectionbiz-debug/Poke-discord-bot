@@ -14,6 +14,8 @@
 //
 // Rollback safety: production v28 never reads battleTeam, so the extra field
 // is ignored there. `battleTeam` missing means "never set" (no Battle team).
+// Players set it themselves on the Teams page (owner decision: no automatic
+// copy of the Display team).
 //
 // Nothing here runs battles; the ranked/wager side reads the Battle team in a
 // later milestone.
@@ -81,42 +83,6 @@ export function prepareBattleTeamSelection(user, rawTeam, opts = {}) {
     };
   }
   return prepared;
-}
-
-/**
- * The first-mythic rule applied to a team: keeps the first mythic-tier slot,
- * drops later ones. Pure. Used by the one-time move-over and by the
- * dashboard's "Copy my Display team".
- */
-export function applyMythicLimit(team) {
-  const kept = [];
-  const dropped = [];
-  let mythics = 0;
-  for (const slot of team) {
-    if (isMythicTier(slot.id)) {
-      if (mythics >= BATTLE_TEAM_MAX_MYTHIC) { dropped.push(slot); continue; }
-      mythics++;
-    }
-    kept.push(slot);
-  }
-  return { kept, dropped };
-}
-
-/**
- * B7 — one-time move-over (idempotent). When the player has no Battle team,
- * copy the Display team into it (cleaned the same way, Mega kept), keeping
- * the first mythic-tier Pokémon and dropping later ones. Records
- * user.battleTeamMigration = { at, dropped: [{id, variant}] } so the
- * dashboard can show a one-time notice. IN PLACE.
- * @returns {null | { copied: number, dropped: Array<{id,variant}> }} null when nothing changed
- */
-export function moveOverBattleTeam(user, { now = Date.now() } = {}) {
-  if (!user || typeof user !== "object" || hasBattleTeam(user)) return null;
-  const source = cleanStoredTeam(user, user.displayedPokemon).slice(0, 6);
-  const { kept, dropped } = applyMythicLimit(source);
-  user.battleTeam = kept.map((s) => ({ ...s }));
-  user.battleTeamMigration = { at: now, dropped: dropped.map((s) => ({ id: s.id, variant: s.variant })) };
-  return { copied: kept.length, dropped: user.battleTeamMigration.dropped };
 }
 
 /** Is this exact copy (species + variant) on either team? */

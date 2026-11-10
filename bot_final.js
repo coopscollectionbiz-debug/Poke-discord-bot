@@ -1997,7 +1997,6 @@ app.get("/api/user-pokemon", (req, res) => {
     pokemon,
     currentTeam, // NEW FORMAT: [{ id: Number, variant: "normal" | "shiny" }]
     battleTeam, // Battle team (ranked/wager), same shape; null = not set
-    battleTeamMigration: u.battleTeamMigration ?? null, // { at, dropped:[{id,variant}] } from the one-time move-over
     // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
     levels,
     powers: powersFromLevels(levels), // { "6:normal": 410 }

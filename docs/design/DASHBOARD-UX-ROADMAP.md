@@ -159,7 +159,7 @@ Tabs:
 | **D — Dashboard foundation** ✅ (`feature/dashboard-foundation`; previews in `previews/dashboard-*.png`) | `shared/tokens.css`, `components.css`, new nav (sidebar/tab bar, real links), restyle all player pages in place, a11y baseline, error/expiry states | L (4–6 days) | — (can run in parallel with C) |
 | ~~E1 — My Team page~~ | Replaced by **E1 Teams** (§11) | — | — |
 | **E0 — Design choice** (this branch) | Mockups for Teams (3), Collection (2), `/showbattlecard` (2), Overview, Achievements split | — | — |
-| **E1 — Teams page** (§11) ✅ built on `feature/teams-battle-team` (option B; previews `previews/dashboard-teams-*.png`) | Display + Battle teams, box, rules, one save flow; B6–B8 + B10 (team fields); B7 as `tools/migrate-battle-teams.mjs` (dry run by default) | M–L | E0 choice, B6–B9 |
+| **E1 — Teams page** (§11) ✅ built on `feature/teams-battle-team` (option B; previews `previews/dashboard-teams-*.png`) | Display + Battle teams, box, rules, one save flow; B6–B8 + B10 (team fields); no automatic team copy (B7 dropped) | M–L | E0 choice, B6–B9 |
 | **E2 — Collection / Pokédex** (§11) | Replaces the Pokémon page: real dex, filters, modes, detail drawer | M | E0 choice, B2 |
 | **E3 — Overview** (§11) | Home: both teams, ranked/casual records, rewards, completion | M | B10, B11 |
 | **E4 — Achievements split** (§11) | Ranked / Casual / Collection tabs | S | B11, achievement definitions |
@@ -222,10 +222,10 @@ Sidebar: Overview · Teams · Collection · Trainers · Bag · Achievements · S
 | # | Change | Rollback safety |
 |---|---|---|
 | B6 | `battleTeam` field (`displayedPokemon` stays the Display team) | v28 ignores `battleTeam` |
-| B7 | One-time move-over: copy the team into `battleTeam`, drop mythics after the first, record `battleTeamMigration` for the notice | Additive only; dry run first; data-change approval |
+| B7 | ~~One-time move-over~~ **Dropped** (owner, 2026-11-10): players set their Battle team themselves; the Teams page offers "Copy my Display team" | — |
 | B8 | `set-pokemon-team` takes `teamType` (default `display`); battle saves enforce the mythic rule server-side | Old clients unchanged |
 | B9 | Optional single "save both" request | — |
-| B10 | Read-only `battleTeam`, `battleTeamMigration`, `ranked`, `casual` on `GET /api/user-pokemon` (supersedes B1) | Read-only |
+| B10 | Read-only `battleTeam`, `ranked`, `casual` on `GET /api/user-pokemon` (supersedes B1) | Read-only |
 | B11 | Separate ranked and casual records; reset ranked ratings; streak counters | Game-logic change; owner approval |
 | B2 | Detail endpoint returning `slotView()` (unchanged) | Read-only |
 
@@ -243,7 +243,7 @@ Sidebar: Overview · Teams · Collection · Trainers · Bag · Achievements · S
 - **`/showbattlecard`** (option 2): `utils/render/battleCard.js` and `commands/showbattlecard.js`.
 - **Release checklist (owner):**
   1. Register commands (`/showbattlecard` is new; `/battle` gains `ranked`). Use `tools/commands-diff.mjs --expect-add showbattlecard`; the `/battle` change shows as a changed command.
-  2. Dry-run the B7 move-over on a copy of production data: `node tools/migrate-battle-teams.mjs <copy>`. Review the dropped-mythic counts before approving the real run. Until it runs, players have no Battle team and see "Copy my Display team" on the Teams page.
+  2. No team migration (owner decision): players set their Battle team on the Teams page before playing ranked or wager battles; ranked refuses with a pointer to the Teams page until then.
   3. The rating reset happens by itself (season 1). Players' old ratings stay in `battle.past`.
 
 ### Acceptance criteria
@@ -260,7 +260,6 @@ Sidebar: Overview · Teams · Collection · Trainers · Bag · Achievements · S
   - leaving with unsaved changes asks via an in-page dialog, never `confirm()`.
 - 403 shows the expiry message; 503 shows the server's message.
 - `mega.js` hooks keep working (`withMega`, `teamSlotSprite`, `initMegaUI`), and `megaSafety`/`megaPresentation` tests pass.
-- The moved-over notice shows once, for players whose copy dropped a mythic (B7).
 
 **E2 Collection:**
 - Dex counts exclude Mega forms and non-live generations.

@@ -123,8 +123,9 @@ function world({ perms = true, sendFails = false, roll = 0, renderFails = false,
   const click = (customId, userId = "A") => {
     const i = {
       customId, user: { id: userId }, channel,
-      updates: [], replies: [], followUps: [], deferred: 0,
+      updates: [], replies: [], followUps: [], edits: [], deferred: 0,
       update: async (o) => { i.updates.push(o); },
+      editReply: async (o) => { i.edits.push(o); },
       reply: async (o) => { i.replies.push(o); },
       followUp: async (o) => { i.followUps.push(o); },
       deferUpdate: async () => { i.deferred++; },
@@ -234,7 +235,8 @@ section("Answering");
   const [battle] = w.ids(w.log.sent[0]);
   const i = w.click(battle);
   await w.service.handleButton(i);
-  assertEqual(i.updates, [{ components: [] }], "Battle!: the buttons go and the card stays as the intro");
+  assertEqual([i.deferred, i.updates.length], [1, 0], "Battle! is acknowledged at once");
+  assertEqual(i.edits, [{ components: [] }], "then the buttons go and the card stays as the intro");
   const replay = w.log.sent[1];
   assertTrue(replay && replay.opts.content.startsWith("⚔️ <@A> vs "), "the replay posts below the card");
   const result = description(replay.edits.at(-1));
@@ -265,11 +267,30 @@ section("Answering");
   w.user.pendingWager = { stake: 5 };
   const refused = w.click(battle);
   await w.service.handleButton(refused);
-  assertEqual(refused.replies, [{ content: "Finish your pending wager first.", flags: 64 }], "a refused Battle! answers privately");
+  assertEqual([refused.deferred, refused.edits.length], [1, 0], "a refused Battle! leaves the card as it was");
+  assertEqual(refused.followUps, [{ content: "Finish your pending wager first.", flags: 64 }], "and answers privately");
   assertEqual([w.service.openCount(), w.timers.size, w.log.sent.length], [1, 1, 1], "and keeps the encounter open");
   delete w.user.pendingWager;
   await w.service.handleButton(w.click(battle));
   assertEqual(w.log.sent.length, 2, "then it can still be fought");
+}
+{
+  // Another command can hold the player's lock for seconds while it waits on
+  // a save; Discord fails a click that isn't acknowledged within 3.
+  const w = world();
+  await w.service.maybeSpot(w.message());
+  const [battle] = w.ids(w.log.sent[0]);
+  let release;
+  const held = lockUser("A", () => new Promise((r) => { release = r; }));
+  const i = w.click(battle);
+  const pressed = w.service.handleButton(i);
+  await new Promise((r) => setTimeout(r, 20));
+  assertEqual([i.deferred, w.log.sent.length], [1, 1], "Battle! is acknowledged while another command holds the player's record");
+  release();
+  await held;
+  await pressed;
+  assertEqual(i.edits, [{ components: [] }], "then it plays out once the record is free");
+  assertTrue(w.log.sent.length === 2 && i.followUps.some((f) => f.files?.[0]?.name === "exp.png"), "with the replay and the private result");
 }
 {
   const w = world();

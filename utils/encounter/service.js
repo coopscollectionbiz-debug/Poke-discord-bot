@@ -159,6 +159,10 @@ export function createEncounterService({
   async function battle(i, e) {
     // Set before any await: a second click or the timer now leaves this to us.
     e.busy = true;
+    // Acknowledged before the lock, which can wait seconds on another
+    // command's save; Discord fails a click left unanswered for 3 s. After
+    // this, the card changes with editReply and private replies are followUps.
+    await i.deferUpdate().catch(() => {});
     const outcome = await lockUser(e.userId, () => {
       const trainerData = getTrainerData();
       const result = fightEncounter({ trainerData, userId: e.userId, encounter: { team: e.team, trainer: e.trainer }, seed: e.seed + 1, now: now() });
@@ -167,12 +171,12 @@ export function createEncounterService({
     });
     if (!outcome.ok) {
       e.busy = false;
-      await i.reply({ content: REFUSALS[outcome.reason] ?? "This battle can't happen right now.", flags: MessageFlags.Ephemeral }).catch(() => {});
+      await i.followUp({ content: REFUSALS[outcome.reason] ?? "This battle can't happen right now.", flags: MessageFlags.Ephemeral }).catch(() => {});
       if (now().getTime() >= e.deadline) await expire(e.nonce);
       return;
     }
     close(e);
-    await i.update({ components: [] }).catch(() => {});
+    await i.editReply({ components: [] }).catch(() => {});
     record(e.userId, { phase: "answered", answer: "battle" });
     record(e.userId, { phase: "result", won: outcome.won, prize: outcome.prize, paid: outcome.paid });
     const names = encounterNames(outcome, e.displayName);

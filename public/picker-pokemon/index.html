@@ -98,6 +98,14 @@
             <option value="normal">Normal</option>
           </select>
 
+          <label class="sr-only" for="sortOrder">Sort</label>
+          <select id="sortOrder">
+            <option value="dex">Sort: Pokédex #</option>
+            <option value="level-desc">Sort: Level (high → low)</option>
+            <option value="level-asc">Sort: Level (low → high)</option>
+            <option value="name">Sort: Name (A → Z)</option>
+          </select>
+
           <!-- Owned / unowned filter (Change Team mode). IDs must match JS. -->
           <div class="toggle-group" role="group" aria-label="Show">
             <button id="ownedToggle" class="mode-btn" type="button">Owned</button>

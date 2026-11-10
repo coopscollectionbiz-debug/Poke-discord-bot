@@ -576,6 +576,16 @@ function clampTeamTo6Unique() {
 // ===========================================================
 // 🎴 Pokémon Grid Renderer (HARDENED)
 // ===========================================================
+// Highest Level among the owned variants of a species (null if none owned).
+function bestLevel(id) {
+  const owned = ownedCounts(id);
+  const lv = [];
+  if (owned.normal > 0) lv.push(Number(userData.levels?.[`${id}:normal`]));
+  if (owned.shiny > 0) lv.push(Number(userData.levels?.[`${id}:shiny`]));
+  const known = lv.filter(Number.isFinite);
+  return known.length ? Math.max(...known) : null;
+}
+
 function renderPokemonGrid() {
   const container = document.getElementById("pokemonGrid");
   if (!container) return;
@@ -594,8 +604,11 @@ function renderPokemonGrid() {
   const rarityFilter = (rarityEl?.value || "").toLowerCase();
   const typeFilter = (typeEl?.value || "").toLowerCase();
 
+  const sortOrder = document.getElementById("sortOrder")?.value || "dex";
+
   const ids = Object.keys(pokemonData).map(Number).sort((a, b) => a - b);
   const cardsByRegion = {};
+  const sortable = []; // [{ id, card }] for the non-Pokédex sort orders
   let shown = 0;
 
   for (const id of ids) {
@@ -768,7 +781,27 @@ function renderPokemonGrid() {
     });
 
     (cardsByRegion[p.region] ??= []).push(card);
+    sortable.push({ id, card });
     shown++;
+  }
+
+  // Level / name sorts: one flat list (region headers only make sense in Dex order).
+  if (sortOrder !== "dex") {
+    const byName = (a, b) => String(pokemonData[a.id].name).localeCompare(String(pokemonData[b.id].name));
+    if (sortOrder === "level-desc" || sortOrder === "level-asc") {
+      const dir = sortOrder === "level-desc" ? -1 : 1;
+      sortable.sort((a, b) => {
+        const la = bestLevel(a.id), lb = bestLevel(b.id);
+        // Unowned (no Level) always last; ties fall back to Dex #.
+        if (la == null || lb == null) return (la == null) - (lb == null) || a.id - b.id;
+        return dir * (la - lb) || a.id - b.id;
+      });
+    } else if (sortOrder === "name") {
+      sortable.sort(byName);
+    }
+    container.append(...sortable.map((s) => s.card));
+    if (shown === 0) container.innerHTML = `<p class="empty-msg">No Pokémon match your filters.</p>`;
+    return;
   }
 
   // Only regions with a visible card get a header. The count is full-region
@@ -965,6 +998,7 @@ async function init() {
     document.getElementById("search")?.addEventListener("input", renderPokemonGrid);
     document.getElementById("rarityFilter")?.addEventListener("change", renderPokemonGrid);
     document.getElementById("typeFilter")?.addEventListener("change", renderPokemonGrid);
+    document.getElementById("sortOrder")?.addEventListener("change", renderPokemonGrid);
 
     // Mode buttons
     document.querySelectorAll("#modeToggle .mode-btn").forEach((btn) => {

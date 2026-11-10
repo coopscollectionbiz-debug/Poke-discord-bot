@@ -21,6 +21,7 @@ import { fileURLToPath } from "url";
 import { loadImage, createCanvas } from "@napi-rs/canvas";
 import gifenc from "gifenc";
 import { breathingPoses, IDLE_LOOP } from "../utils/trainerIdle.js";
+import { motionStates, idleTimeline, poseOf } from "../utils/trainerMotion.js";
 
 const { GIFEncoder, quantize, applyPalette } = gifenc;
 let quantised = 0; // sprites with > 255 colours (GIF palette quantised)
@@ -38,6 +39,9 @@ const CHECK = process.argv.includes("--check");
 const registry = JSON.parse(fs.readFileSync(path.join(ROOT, "trainerSprites.json"), "utf8"));
 const review = fs.existsSync(REVIEW) ? JSON.parse(fs.readFileSync(REVIEW, "utf8")) : { approved: [], excluded: {} };
 const approved = new Set(review.approved ?? []);
+// Part motions (salutes, waves, held Poké Balls, capes): reviewed data.
+const PARTS = path.join(ROOT, "data/sprites/trainer-parts.json");
+const parts = fs.existsSync(PARTS) ? JSON.parse(fs.readFileSync(PARTS, "utf8")).sprites ?? {} : {};
 const excluded = review.excluded ?? {};
 
 // Selectable sprite files (disabled entries are never shown to players).
@@ -81,20 +85,31 @@ function indexPoses(poses, W, H) {
   return { palette: q, indexed, exact: false };
 }
 
-/** GIF of the idle loop (IDLE_LOOP timing, infinite loop, 1-bit transparency). */
-function encodeIdle(poses, W, H) {
-  const { palette, indexed, exact } = indexPoses(poses, W, H);
+/**
+ * GIF of the idle loop: the trainer's own timeline (utils/trainerMotion.js:
+ * tempo, phase and part events), infinite loop, 1-bit transparency.
+ */
+function encodeIdle(frames, delays, W, H) {
+  const { palette, indexed, exact } = indexPoses(frames, W, H);
   if (!exact) quantised++;
   const T = palette.length; // transparent index = first free slot
   const pal = [...palette, [0, 0, 0]];
   while (pal.length < 2 || (pal.length & (pal.length - 1))) pal.push([0, 0, 0]); // power of two
   for (const idx of indexed) for (let i = 0; i < idx.length; i++) if (idx[i] === 255 && T !== 255) idx[i] = T;
   const gif = GIFEncoder();
-  IDLE_LOOP.forEach(([pose, ms], k) => {
-    gif.writeFrame(indexed[pose], W, H, { palette: k === 0 ? pal : undefined, delay: ms, transparent: true, transparentIndex: T, dispose: 2, repeat: 0 });
+  indexed.forEach((idx, k) => {
+    gif.writeFrame(idx, W, H, { palette: k === 0 ? pal : undefined, delay: delays[k], transparent: true, transparentIndex: T, dispose: 2, repeat: 0 });
   });
   gif.finish();
   return Buffer.from(gif.bytes());
+}
+
+/** The trainer's idle frames and delays: breathing + offsets + its part events. */
+function idleFrames(file, px, W, H, cuts) {
+  const events = parts[file]?.events ?? [];
+  const m = motionStates(px, W, H, events);
+  const steps = idleTimeline(file, events);
+  return { frames: steps.map((s) => poseOf(m.states[s.state], W, cuts, s.pose)), delays: steps.map((s) => s.ms), events: events.length };
 }
 
 async function rgbaOf(file) {
@@ -121,7 +136,9 @@ for (const file of [...files].sort()) {
       const { seam, waist, neck } = b.cuts;
       rec = seam <= SEAM_OK || approved.has(file) ? { status: "ok", seam, waist, neck, gif: `${base}.gif` } : { status: "review", seam, waist, neck };
       if (rec.status === "ok") {
-        const buf = encodeIdle(b.poses, W, H);
+        const { frames, delays, events } = idleFrames(file, px, W, H, b.cuts);
+        if (events) rec.parts = events;
+        const buf = encodeIdle(frames, delays, W, H);
         const out = path.join(OUT, rec.gif);
         const same = fs.existsSync(out) && fs.readFileSync(out).equals(buf);
         if (!same) {
@@ -141,7 +158,7 @@ const keep = new Set(Object.values(web));
 const orphans = fs.existsSync(OUT) ? fs.readdirSync(OUT).filter((f) => f.endsWith(".gif") && !keep.has(f)) : [];
 
 // One line per sprite, so diffs stay readable.
-const manifestText = `{"seamOk":${SEAM_OK},"loop":${JSON.stringify(IDLE_LOOP)},"files":{\n${Object.entries(manifest)
+const manifestText = `{"seamOk":${SEAM_OK},"loop":"per trainer (utils/trainerMotion.js idleTimeline)","files":{\n${Object.entries(manifest)
   .map(([f, r]) => `${JSON.stringify(f)}:${JSON.stringify(r)}`)
   .join(",\n")}\n}}\n`;
 const webText = JSON.stringify(web) + "\n";

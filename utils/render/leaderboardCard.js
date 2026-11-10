@@ -58,7 +58,7 @@ async function podium(ctx, p, cx, floor, height, place, stage) {
   const t = await loadTrainerSprite(p.trainerFile);
   if (t) {
     const idle = await loadTrainerPoses(p.trainerFile); // breathing idle, or null → static
-    stage.placePosed(ctx, idle?.poses ?? [t], poseAtFrame, cx, floor, 200, 150, { scale: 2 });
+    stage.placePosed(ctx, idle?.poses ?? [t], idle?.poseAt ?? poseAtFrame, cx, floor, 200, 150, { scale: 2 }); // own phase: podium trainers breathe out of step
   }
   else { ctx.globalAlpha = 0.35; drawBall(ctx, cx, floor - 40, 26, false); ctx.globalAlpha = 1; }
   // Name, rating, record above the sprite area's baseline.

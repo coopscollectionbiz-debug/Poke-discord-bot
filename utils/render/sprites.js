@@ -17,8 +17,9 @@ import { createCanvas, ImageData, loadImage } from "@napi-rs/canvas";
 import { GifReader } from "omggif";
 import { spriteRecord } from "../sprites.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
-import { breathingPoses } from "../trainerIdle.js";
-import { trainerIdle, trainersAnimated } from "../trainerAssets.js";
+import { poseAtFrame } from "../trainerIdle.js";
+import { motionStates, poseOf, cardSchedule } from "../trainerMotion.js";
+import { trainerIdle, trainersAnimated, trainerParts } from "../trainerAssets.js";
 
 const PUBLIC = new URL("../../public/", import.meta.url);
 const CACHE_LIMIT = 200; // trimmed sprites are ~15 KB of pixels each
@@ -110,12 +111,18 @@ export async function loadTrainerSprite(fileName) {
 const poseCache = new Map(); // fileName -> Promise<poses|null>
 const POSE_CACHE_LIMIT = 40; // 3 poses × 80×80 RGBA ≈ 77 KB each
 
+/** Card loop length the trainer schedule is prepared for (utils/render/stage.js FRAMES). */
+const CARD_FRAMES = 24;
+
 /**
- * The trainer's breathing idle as drawable sprites (utils/trainerIdle.js):
- * { poses: [rest, headLag, exhale] (sprite-like), rgba: rest pixels, width, height }.
+ * The trainer's idle as drawable sprites, for cards:
+ * { poses: [distinct frames] (sprite-like; poses[0] is the unchanged PNG),
+ *   poseAt(frame, n) → index into poses, rgba, width, height }.
+ * Breathing (utils/trainerIdle.js) at the trainer's own phase, plus its part
+ * motions (utils/trainerMotion.js, data/sprites/trainer-parts.json).
  * Null when the file has no approved idle (data/sprites/trainer-idles.json),
  * TRAINERS_ANIMATED=0, or the sprite can't be read; callers then draw the
- * static sprite. Pose 0 is the unchanged PNG.
+ * static sprite.
  */
 export function loadTrainerPoses(fileName, { env = process.env } = {}) {
   if (!fileName || !trainersAnimated(env) || !trainerIdle(fileName)) return Promise.resolve(null);
@@ -126,14 +133,30 @@ export function loadTrainerPoses(fileName, { env = process.env } = {}) {
     const c = createCanvas(t.width, t.height);
     c.getContext("2d").drawImage(t.image, 0, 0);
     const rgba = c.getContext("2d").getImageData(0, 0, t.width, t.height).data;
-    const b = breathingPoses(rgba, t.width, t.height);
-    if (!b) return null;
-    const poses = b.poses.map((px) => {
-      const pc = createCanvas(t.width, t.height);
-      pc.getContext("2d").putImageData(new ImageData(new Uint8ClampedArray(px), t.width, t.height), 0, 0);
-      return { image: pc, width: t.width, height: t.height };
-    });
-    return { poses, rgba, width: t.width, height: t.height };
+    const events = trainerParts(fileName);
+    const m = motionStates(rgba, t.width, t.height, events);
+    if (!m) return null;
+    // One sprite per distinct (part state, breath pose), made on demand.
+    const poses = [], index = new Map();
+    const spriteFor = (state, pose) => {
+      const key = `${state}:${pose}`;
+      if (!index.has(key)) {
+        const px = poseOf(m.states[state], t.width, m.cuts, pose);
+        const pc = createCanvas(t.width, t.height);
+        pc.getContext("2d").putImageData(new ImageData(new Uint8ClampedArray(px), t.width, t.height), 0, 0);
+        poses.push({ image: pc, width: t.width, height: t.height });
+        index.set(key, poses.length - 1);
+      }
+      return index.get(key);
+    };
+    spriteFor(0, 0);
+    const schedules = new Map();
+    const scheduleFor = (n) => {
+      if (!schedules.has(n)) schedules.set(n, cardSchedule(fileName, n, events, poseAtFrame).map(({ state, pose }) => spriteFor(state, pose)));
+      return schedules.get(n);
+    };
+    scheduleFor(CARD_FRAMES); // so `poses` is complete before the stage sees it
+    return { poses, poseAt: (f, n) => scheduleFor(n)[((f % n) + n) % n], rgba, width: t.width, height: t.height };
   })().catch(() => null);
   poseCache.set(fileName, p);
   if (poseCache.size > POSE_CACHE_LIMIT) poseCache.delete(poseCache.keys().next().value);

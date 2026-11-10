@@ -1,0 +1,141 @@
+{
+  "showteam-charizardX": {
+    "file": "showteam-charizardX.png",
+    "bytes": 181793,
+    "w": 1200,
+    "h": 920,
+    "megaNotice": null
+  },
+  "trainercard-charizardX": {
+    "file": "trainercard-charizardX.png",
+    "bytes": 102922,
+    "w": 1200,
+    "h": 640
+  },
+  "inspect-charizardX": {
+    "file": "inspect-charizardX.png",
+    "bytes": 72311,
+    "w": 1000,
+    "h": 440
+  },
+  "showteam-charizardY": {
+    "file": "showteam-charizardY.png",
+    "bytes": 173923,
+    "w": 1200,
+    "h": 920,
+    "megaNotice": null
+  },
+  "trainercard-charizardY": {
+    "file": "trainercard-charizardY.png",
+    "bytes": 98394,
+    "w": 1200,
+    "h": 640
+  },
+  "inspect-charizardY": {
+    "file": "inspect-charizardY.png",
+    "bytes": 75476,
+    "w": 1000,
+    "h": 440
+  },
+  "showteam-mewtwoX": {
+    "file": "showteam-mewtwoX.png",
+    "bytes": 131599,
+    "w": 1200,
+    "h": 920,
+    "megaNotice": null
+  },
+  "trainercard-mewtwoX": {
+    "file": "trainercard-mewtwoX.png",
+    "bytes": 89992,
+    "w": 1200,
+    "h": 640
+  },
+  "inspect-mewtwoX": {
+    "file": "inspect-mewtwoX.png",
+    "bytes": 75536,
+    "w": 1000,
+    "h": 440
+  },
+  "showteam-shinyMega": {
+    "file": "showteam-shinyMega.png",
+    "bytes": 130757,
+    "w": 1200,
+    "h": 920,
+    "megaNotice": null
+  },
+  "trainercard-shinyMega": {
+    "file": "trainercard-shinyMega.png",
+    "bytes": 90557,
+    "w": 1200,
+    "h": 640
+  },
+  "inspect-shinyMega": {
+    "file": "inspect-shinyMega.png",
+    "bytes": 73042,
+    "w": 1000,
+    "h": 440
+  },
+  "showteam-zaUnavailable": {
+    "file": "showteam-zaUnavailable.png",
+    "bytes": 129388,
+    "w": 1200,
+    "h": 920,
+    "megaNotice": "Mega Raichu X is on this Team but battles as Raichu for now. This Mega can't battle yet: its battle data hasn't been confirmed."
+  },
+  "trainercard-zaUnavailable": {
+    "file": "trainercard-zaUnavailable.png",
+    "bytes": 88726,
+    "w": 1200,
+    "h": 640
+  },
+  "inspect-zaUnavailable": {
+    "file": "inspect-zaUnavailable.png",
+    "bytes": 66598,
+    "w": 1000,
+    "h": 440
+  },
+  "showteam-charizardX-animated": {
+    "file": "showteam-charizardX-animated.gif",
+    "bytes": 679509,
+    "w": 1200,
+    "h": 920
+  },
+  "battle-start": {
+    "file": "battle-start.gif",
+    "bytes": 243809,
+    "w": 900,
+    "h": 474
+  },
+  "battle-fainted-mega": {
+    "file": "battle-fainted-mega.gif",
+    "bytes": 210413,
+    "w": 900,
+    "h": 474
+  },
+  "exp-charizardX": {
+    "file": "exp-charizardX.png",
+    "bytes": 93947,
+    "w": 1000,
+    "h": 632
+  },
+  "battle": {
+    "winner": "A",
+    "turns": 9,
+    "members": [
+      [
+        "Mega Charizard X",
+        "Pikachu",
+        "Mewtwo",
+        "Blastoise",
+        "Venusaur",
+        "Dragonite"
+      ],
+      [
+        "Starmie",
+        "Mega Charizard Y",
+        "Gyarados",
+        "Lapras"
+      ]
+    ]
+  }
+}

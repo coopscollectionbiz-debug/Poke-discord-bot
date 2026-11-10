@@ -74,7 +74,7 @@ user.megaUnlocks = Object.fromEntries(MEGAS.filter((f) => f.species <= 649).map(
 assertEqual(computeMetrics(user, ["state:uniqueSpecies", "state:classicSpecies", "state:regions"]), base, "unique species, classic Pokédex and regions unchanged by Mega unlocks");
 assertEqual(base["state:classicSpecies"], 649, "a full classic Pokédex is still exactly 649");
 
-section("Mega code is wired only where Phase M1 needs it");
+section("Mega code is wired only where Phases M1–M3 need it");
 const ROOT = path.resolve(new URL("..", import.meta.url).pathname.replace(/^\/(\w:)/, "$1"));
 const live = ["bot_final.js", ...["commands", "services", "routes", "utils", "progression", "persistence", "public"].flatMap((d) => walk(path.join(ROOT, d)).map((f) => path.relative(ROOT, f).split(path.sep).join("/")))];
 function walk(dir) {
@@ -88,12 +88,14 @@ const MEGA_USERS = [
   "services/megaUnlocks.js", "utils/megas.js", "utils/userSchema.js", "public/picker-pokemon/script.js", "public/picker-pokemon/mega.js",
   // Phase M2: the battle engine (Mega participants, abilities, rendering).
   "utils/battle/runBattle.js", "utils/battle/sim.js", "utils/battle/effects.js", "utils/battle/abilities.js", "utils/battle/power.js", "utils/battle/render.js",
+  // Phase M3: presentation only (shared Mega display rules, Mega sprite files, the EXP card).
+  "utils/megaDisplay.js", "utils/render/sprites.js", "utils/render/expCard.js",
 ];
 const megaModule = /megaUnlocks\.js|megas\.js|config\/features\.js|megaRewards\.js|megaApi\.js|megaTeam\.js|\/mega\.js|"\.\/mega\.js"/;
 const users = live.filter((f) => megaModule.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
-assertEqual(users.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1 files import Mega modules (no battle, reward, shop, catch, daily, quest or achievement code)");
+assertEqual(users.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1–M3 files import Mega modules (no reward, shop, catch, daily, quest or achievement code)");
 const megaRefs = live.filter((f) => /megastone_|mega_shard|megaUnlocks/.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
-assertEqual(megaRefs.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1 files reference Mega Stones, Shards or megaUnlocks");
+assertEqual(megaRefs.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1–M3 files reference Mega Stones, Shards or megaUnlocks");
 const NEVER = live.filter((f) => /^(utils\/battle\/(rewards|playback|data|moveset|stats|tuning|wager|rng)\.js|commands\/(battle|daily|quest|recruit|shop|addinventory|gift)\.js|progression\/|services\/gameplay\.js|utils\/weightedRandom\.js)/.test(f));
 assertEqual(NEVER.filter((f) => /mega/i.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), [], `EXP/rewards, playback, battle data and acquisition code (${NEVER.length} files) never mentions Mega`);
 assertTrue(!live.some((f) => /megaRewards/.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), "nothing reads the (inactive) Mega reward config");

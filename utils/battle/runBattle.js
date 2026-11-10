@@ -59,6 +59,10 @@ function applyExp(user, side, result, sideIndex) {
       toLevel,
       gained: gains[i],
       learned: movesLearned(m.speciesId, fromLevel, toLevel).map((id) => getMove(id).name),
+      // Display only (the EXP card): which Mega this member battled as. The
+      // EXP itself always goes to the base line above. Absent for ordinary
+      // members, so their results are byte-for-byte unchanged.
+      ...(m.megaForm ? { megaForm: m.megaForm, baseName: m.baseName } : {}),
     };
   });
 }

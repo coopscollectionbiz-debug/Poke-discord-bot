@@ -50,3 +50,4 @@ Read-only audit of production `master` 5157cfe6 (Fly v21, `POKEMON_GENERATIONS` 
 | D-17 | Achievement rewards (each entry) | Per `MEGA-ACHIEVEMENTS.md`, through the existing approval policy |
 
 | `M2-IMPLEMENTATION-REPORT.md` | Phase M2: battle engine, abilities, regression corpus, benchmark, ability coverage table |
+| `M3-IMPLEMENTATION-REPORT.md` | Phase M3: Mega display in /showteam, trainer card, inspect, EXP and battle images, dashboard cards, battle states, collection progress, no-Mega pixel gate (`m3-previews/`) |

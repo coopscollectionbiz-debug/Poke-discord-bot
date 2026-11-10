@@ -19,7 +19,7 @@ import {
   drawShinyMark, drawLevel, levelWidth, drawExpBar, drawSlotBadge, drawPlatform, drawBall, drawTag,
 } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, loadTrainerSprite, drawSprite } from "./sprites.js";
-import { loadSprite as loadAnimated, spritePlayer } from "../battle/render.js";
+import { loadAnimatedSprite, spritePlayer } from "../battle/render.js";
 import { encodeGif } from "./gif.js";
 import { refinedLayout } from "./showteamRefined.js";
 
@@ -423,7 +423,7 @@ export async function renderShowteam(view, { layout = "hybrid", animate = false,
   const size = LAYOUTS[layout] && sizeFor(layout, view);
   if (!size) throw new Error(`Unknown layout ${layout}`);
   const ph = await loadPlaceholder();
-  const sprites = await Promise.all(view.slots.map(async (s) => (await loadStaticSprite(s.id, s.variant)) ?? ph));
+  const sprites = await Promise.all(view.slots.map(async (s) => (await loadStaticSprite(s.spriteId ?? s.id, s.variant)) ?? ph));
   const trainer = layout === "hybrid" ? await loadTrainerSprite(view.trainerFile) : null;
   const canvas = createCanvas(size.w, size.h);
   const ctx = canvas.getContext("2d");
@@ -438,7 +438,7 @@ export async function renderShowteam(view, { layout = "hybrid", animate = false,
     return canvas.toBuffer("image/png");
   }
   // Animated: each slot's GIF plays through the battle's sprite player.
-  const anim = await Promise.all(view.slots.map((s, i) => (sprites[i]?.placeholder ? null : loadAnimated(s.variant, s.id))));
+  const anim = await Promise.all(view.slots.map((s, i) => (sprites[i]?.placeholder ? null : loadAnimatedSprite(s.spriteId ?? s.id, s.variant))));
   const players = anim.map((a) => (a && a.gif.numFrames() > 1 ? spritePlayer(a) : null));
   let ms = 0;
   const frameFor = (i) => (players[i] ? players[i](ms) : null);

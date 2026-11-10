@@ -14,6 +14,8 @@ import { GifReader } from "omggif";
 import gifenc from "gifenc"; // CommonJS without named-export hints, so Node needs the default import
 import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
+import { isMegaId, megaSpriteRecord } from "../megas.js";
+import { COLOR as TOKENS } from "../render/tokens.js";
 
 const { GIFEncoder, quantize, nearestColorIndex } = gifenc;
 
@@ -31,7 +33,7 @@ const TILE_W = 144;
 const SIDE_COLOR = ["#4f8cff", "#ff5a6a"];
 const GOLD = "#f5c84c";
 const INK = "#0e1120";
-const MEGA_TAG = "#c084fc"; // the dashboard's Mega colour
+const MEGA_TAG = TOKENS.mega; // the shared Mega colour (dashboard --cc-mega)
 
 // GIF timing: 100 ms frames; an attack takes 7 of them, then the scene holds
 // with sprites still moving. Discord ignores a long last-frame delay and loops
@@ -103,6 +105,18 @@ export async function loadSprite(folder, id) {
   } catch {
     return null; // missing or unreadable sprite: the tile renders without it
   }
+}
+
+/**
+ * The animated sprite for a species number or a Mega form id, in `folder`
+ * ("normal" | "shiny" | "grayscale"). A Mega reads
+ * public/sprites/pokemon/mega/<folder>/<form>.gif, and only when the Mega
+ * manifest lists it: a missing Mega sprite is null (the tile renders without
+ * a sprite), never the base form's art.
+ */
+export function loadAnimatedSprite(id, folder) {
+  if (!isMegaId(id)) return loadSprite(folder, id);
+  return megaSpriteRecord(id)?.[folder]?.file ? loadSprite(`mega/${folder}`, id) : Promise.resolve(null);
 }
 
 // Plays one sprite through one image: returns a canvas showing the frame at
@@ -257,11 +271,10 @@ function frameState(f, { hpBefore, events }) {
 export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map() }) {
   const load = (s, i, folder) => {
     const m = sides[s].members[i];
-    // A Mega battles with its own sprite: public/sprites/pokemon/mega/<variant|grayscale>/<form>.gif
-    const [dir, id] = m.megaForm ? [`mega/${folder}`, m.megaForm] : [folder, m.speciesId];
-    folder = dir;
-    const key = `${folder}/${id}`;
-    if (!sprites.has(key)) sprites.set(key, loadSprite(folder, id));
+    // A Mega battles with its own sprite (loadAnimatedSprite: mega/<variant|grayscale>/<form>.gif).
+    const id = m.megaForm ?? m.speciesId;
+    const key = m.megaForm ? `mega/${folder}/${id}` : `${folder}/${id}`; // the file's path under sprites/pokemon
+    if (!sprites.has(key)) sprites.set(key, loadAnimatedSprite(id, folder));
     return sprites.get(key);
   };
   const live = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>

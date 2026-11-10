@@ -47,13 +47,17 @@ export async function initMega(context) {
   grid?.parentNode?.insertBefore(section, grid);
   render();
   onModeChange(ctx.getMode());
-  return { enabled: true, onModeChange, render, refresh, megaSprite };
+  return { enabled: true, onModeChange, render, refresh, megaSprite, megaSlotState };
 }
 
-/** Sprite for a team slot that carries a Mega form (used by team previews). */
+/**
+ * Sprite for a Team slot that carries a Mega form (used by Team previews):
+ * the Mega's own sprite only when that slot battles as the Mega, so the
+ * dashboard shows the same form as /showteam, the trainer card and battles.
+ */
 export function megaSprite(slot) {
-  const c = state.cards.find((x) => x.formId === slot.mega && x.line === `${slot.id}:${slot.variant}`);
-  return c?.sprite ?? null;
+  const c = cardForSlot(slot);
+  return c && c.battleStatus?.state === "ready" ? c.sprite : null;
 }
 
 function onModeChange(mode) {
@@ -84,17 +88,48 @@ function teamMegaSlot() {
   return ctx.getTeam().find((s) => s.mega) ?? null;
 }
 
+function cardForSlot(slot) {
+  return slot ? state.cards.find((x) => x.formId === slot.mega && x.line === `${slot.id}:${slot.variant}`) ?? null : null;
+}
+
+/**
+ * "ready" when this Team slot battles (and is shown everywhere) as its Mega;
+ * anything else means it battles and shows as its base form.
+ */
+export function megaSlotState(slot) {
+  return cardForSlot(slot)?.battleStatus?.state ?? "locked";
+}
+
+function progressHTML() {
+  const p = state.progress;
+  if (!p) return "";
+  return `<p class="mega-progress"><span class="mega-progress-count"><b>${p.unlocked}</b> / ${p.available}</span>
+    <span class="mega-progress-label">Mega forms unlocked${p.shiny ? ` · ${p.shiny} shiny` : ""}<small>Separate from your Pokédex</small></span></p>`;
+}
+
+function teamLineHTML() {
+  const slot = teamMegaSlot();
+  const c = cardForSlot(slot);
+  if (!c) return "";
+  if (c.battleStatus?.state === "ready") {
+    return `<p class="mega-team ready">On your Team: <b>${esc(c.name)}</b> · Battle-ready</p>`;
+  }
+  return `<p class="mega-team warn"><b>${esc(c.name)}</b> is on your Team but battles as ${esc(c.baseSpecies)} for now. ${esc(c.battleStatus?.detail ?? "")}</p>`;
+}
+
 function render() {
   if (!section) return;
   const cards = state.cards;
   const unlocked = cards.filter((c) => c.unlocked);
   const locked = cards.filter((c) => c.state === "locked");
-  const onTeam = teamMegaSlot();
   section.innerHTML = `
     <div class="mega-head">
-      <h2>🧬 Mega Evolutions</h2>
-      <p class="mega-sub">Battle forms of Pokémon you own. They share their Pokémon's Level, and one Mega can join your team.
-        ${state.capabilities?.battle ? "" : `<span class="mega-note">Mega battles arrive in a later update; for now a Mega on your team battles as its base form.</span>`}</p>
+      <div class="mega-title">
+        <h2><span class="mega-mark" aria-hidden="true">MEGA</span> Mega Evolutions</h2>
+        ${progressHTML()}
+      </div>
+      <p class="mega-sub">Mega forms of Pokémon you own. A Mega shares its Pokémon's Level and Team slot, and one Mega can be on your Team.</p>
+      ${teamLineHTML()}
       <p class="mega-status" role="status" aria-live="polite">${esc(statusText)}</p>
       ${state.stones.length ? `<p class="mega-stones">💎 ${state.stones.map((s) => `${esc(s.name)} ×${s.quantity}`).join(" · ")}</p>` : ""}
     </div>
@@ -102,7 +137,6 @@ function render() {
     ${locked.length ? `<details class="mega-locked"${unlocked.length ? "" : " open"}><summary>Unlockable Megas for your Pokémon (${locked.length})</summary><div class="mega-grid">${locked.map(cardHTML).join("")}</div></details>` : ""}
   `;
   section.querySelectorAll("[data-action]").forEach((btn) => btn.addEventListener("click", () => onAction(btn.dataset.action, btn.dataset.card)));
-  void onTeam;
 }
 
 function typeIcons(c) {
@@ -116,42 +150,56 @@ function statRows(c) {
   }).join("");
 }
 
+// The ability, and honestly whether it does anything: an unconfirmed ability
+// (Legends: Z-A Megas) is never described as working.
 function abilityLine(c) {
-  const status = c.ability.category === "no-effect" ? "No effect in Coop battles"
-    : c.battle.battleReady ? "Works in Coop battles" : "Not active in battles yet";
-  return `<p class="mega-ability"><b>${esc(c.ability.name)}</b> <span class="mega-tag">${status}</span>${c.ability.verified ? "" : ` <span class="mega-tag warn" title="Legends: Z-A has no abilities in play; this comes from community battle data.">unverified</span>`}</p>`;
+  const note = !c.ability.verified ? "not confirmed yet"
+    : c.ability.category === "no-effect" ? "no effect in Coop battles" : "";
+  return `<p class="mega-ability">Ability <b>${esc(c.ability.name)}</b>${note ? ` <span class="mega-tag${c.ability.verified ? "" : " warn"}">${note}</span>` : ""}</p>`;
+}
+
+function battleLine(c) {
+  const bs = c.battleStatus ?? { state: "locked", label: "Locked", detail: "" };
+  return `<p class="mega-battle ${esc(bs.state)}"><span class="mega-dot" aria-hidden="true"></span>${esc(bs.label)}</p>
+    ${bs.detail ? `<p class="mega-battle-detail">${esc(bs.detail)}</p>` : ""}`;
 }
 
 function cardHTML(c) {
   const shiny = c.variant === "shiny";
   const badge = { active: "Unlocked", dormant: "Not owned", locked: "Locked", blocked: "Unavailable" }[c.state];
   const variantLabel = c.variantChoice ? Object.values(c.variantChoice)[0] : "";
-  const onTeam = c.onTeam || (teamMegaSlot()?.mega === c.formId && `${teamMegaSlot().id}:${teamMegaSlot().variant}` === c.line);
+  const slot = teamMegaSlot();
+  // The Team being edited on this page (not the saved one), so Replace/Remove update at once.
+  const onTeam = !!slot && slot.mega === c.formId && `${slot.id}:${slot.variant}` === c.line;
   const buttons = [];
   if (c.state === "active") {
     if (c.teamSelectable) buttons.push(onTeam
-      ? `<button class="mega-btn on" data-action="team-remove" data-card="${esc(c.cardId)}">✓ On team (remove)</button>`
-      : `<button class="mega-btn" data-action="team-add" data-card="${esc(c.cardId)}">Add to team</button>`);
+      ? `<button type="button" class="mega-btn on" data-action="team-remove" data-card="${esc(c.cardId)}" aria-pressed="true">✓ On Team</button>`
+      : `<button type="button" class="mega-btn" data-action="team-add" data-card="${esc(c.cardId)}">Add to Team</button>`);
     buttons.push(c.preferred
-      ? `<button class="mega-btn ghost" data-action="unprefer" data-card="${esc(c.cardId)}">★ Preferred</button>`
-      : `<button class="mega-btn ghost" data-action="prefer" data-card="${esc(c.cardId)}">☆ Set preferred</button>`);
+      ? `<button type="button" class="mega-btn ghost" data-action="unprefer" data-card="${esc(c.cardId)}" aria-pressed="true">★ Preferred</button>`
+      : `<button type="button" class="mega-btn ghost" data-action="prefer" data-card="${esc(c.cardId)}">☆ Set preferred</button>`);
   }
   if (c.state === "locked") {
     buttons.push(c.canUnlock
-      ? `<button class="mega-btn unlock" data-action="unlock" data-card="${esc(c.cardId)}">Use ${esc(c.requiredStone?.name)}</button>`
+      ? `<button type="button" class="mega-btn unlock" data-action="unlock" data-card="${esc(c.cardId)}">Use ${esc(c.requiredStone?.name)}</button>`
       : `<span class="mega-need">Needs ${esc(c.requiredStone?.name)}${c.requiredStone ? ` (you have ${c.requiredStone.have})` : ""}</span>`);
   }
   return `
-  <article class="mega-card ${c.state}${shiny ? " shiny" : ""}${onTeam ? " on-team" : ""}" data-card="${esc(c.cardId)}">
-    <span class="mega-badge ${c.state}">${badge}</span>
-    <img class="mega-sprite${c.state === "locked" || c.state === "dormant" ? " dim" : ""}" src="${esc(c.sprite)}" alt="${esc(c.name)}" loading="lazy">
-    <h4>${esc(c.name)}${shiny ? " ✨" : ""}</h4>
-    <p class="mega-base">Battle form of your ${shiny ? "shiny " : ""}${esc(c.baseSpecies)}${variantLabel && c.state === "locked" ? ` · ${esc(variantLabel)}` : ""}</p>
-    <p class="mega-level">${c.level ? `Lv ${c.level} <small>(shared)</small>` : "No copies owned — unlock kept"}</p>
+  <article class="mega-card ${c.state}${shiny ? " shiny" : ""}${onTeam ? " on-team" : ""}" data-card="${esc(c.cardId)}" aria-label="${esc(c.name)}${shiny ? " (shiny)" : ""}, ${esc(badge)}">
+    <div class="mega-card-top">
+      <span class="mega-badge ${c.state}">${badge}</span>
+      ${shiny ? `<span class="mega-shiny" title="Shiny">✨</span>` : ""}
+    </div>
+    <img class="mega-sprite${c.state === "locked" || c.state === "dormant" ? " dim" : ""}" src="${esc(c.sprite)}" alt="${esc(c.name)}${shiny ? " (shiny)" : ""}" width="96" height="96" loading="lazy">
+    <h4>${esc(c.name)}</h4>
+    <p class="mega-base">Mega form of your ${shiny ? "shiny " : ""}${esc(c.baseSpecies)}${variantLabel && c.state === "locked" ? ` · ${esc(variantLabel)}` : ""}</p>
+    <p class="mega-level">${c.level ? `Lv ${c.level} <small>shared with ${esc(c.baseSpecies)}</small>` : "No copies owned. The unlock is kept."}</p>
     <div class="mega-types">${typeIcons(c)}</div>
+    ${battleLine(c)}
     ${abilityLine(c)}
     <details class="mega-stats"><summary>Stats vs ${esc(c.baseSpecies)} · BST ${c.bst}</summary>${statRows(c)}</details>
-    <p class="mega-stone">💎 ${c.requiredStone ? esc(c.requiredStone.name) : "—"}</p>
+    <p class="mega-stone">💎 ${c.requiredStone ? esc(c.requiredStone.name) : "No Mega Stone"}</p>
     <div class="mega-actions">${buttons.join("")}</div>
   </article>`;
 }

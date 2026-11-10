@@ -11,7 +11,7 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { drawSprite } from "./sprites.js";
-import { loadSprite as loadAnimated, spritePlayer } from "../battle/render.js";
+import { loadAnimatedSprite, spritePlayer } from "../battle/render.js";
 import { encodeGif } from "./gif.js";
 import { createRenderGate } from "./renderGate.js";
 
@@ -31,7 +31,7 @@ export function spriteStage({ animate = false } = {}) {
       const ctx = canvas.getContext("2d");
       const drawAll = (frameOf) => placed.forEach((p, i) => drawSprite(ctx, p.sprite, p.cx, p.floorY, p.boxW, p.boxH, { ...p.opts, frame: frameOf(i) }));
       if (!placed.length) return canvas.toBuffer("image/png");
-      const anims = await Promise.all(placed.map((p) => loadAnimated(p.who.variant, p.who.id)));
+      const anims = await Promise.all(placed.map((p) => loadAnimatedSprite(p.who.id, p.who.variant)));
       const players = anims.map((a) => (a && a.gif.numFrames() > 1 ? spritePlayer(a) : null));
       if (!players.some(Boolean)) {
         drawAll(() => null);

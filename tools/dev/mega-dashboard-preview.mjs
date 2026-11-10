@@ -7,7 +7,10 @@
 // in memory. No Discord login, no player data, nothing written to disk
 // (saves are no-ops). Never deploy or import this from the bot.
 //
-// Run: node tools/dev/mega-dashboard-preview.mjs [port]
+// Run: node tools/dev/mega-dashboard-preview.mjs [port] [battles|teams|off]
+//   battles (default): Mega battles on (MEGA_BATTLES_ENABLED=1)
+//   teams:             Mega cards and Teams on, battles off
+//   off:               Mega Evolution off (the production default)
 // Open: http://localhost:<port>/public/picker-pokemon?id=100000000000000001
 // ==========================================================
 
@@ -16,7 +19,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // Flags for THIS process only (the preview never runs in production).
-process.env.MEGA_EVOLUTION_ENABLED = "1";
+const MODE = process.argv[3] || "battles";
+if (MODE !== "off") process.env.MEGA_EVOLUTION_ENABLED = "1";
+if (MODE === "battles") process.env.MEGA_BATTLES_ENABLED = "1";
 process.env.TRAINERDATA_DIR ??= path.join(process.env.TEMP || "/tmp", "mega-preview-no-writes");
 
 const { createMegaHandlers } = await import("../../services/megaApi.js");
@@ -30,12 +35,16 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const ID = "100000000000000001";
 const user = {
   id: ID, name: "Preview Trainer", cc: 25000, tp: 30000,
-  pokemon: { 3: { normal: 1, shiny: 0 }, 6: { normal: 2, shiny: 1 }, 25: { normal: 3, shiny: 0 }, 94: { normal: 1, shiny: 0 }, 150: { normal: 1, shiny: 0 }, 248: { normal: 1, shiny: 0 }, 384: { normal: 1, shiny: 0 }, 445: { normal: 1, shiny: 0 } },
-  training: { "6:normal": { exp: 125000 }, "6:shiny": { exp: 64000 }, "150:normal": { exp: 343000 } },
+  pokemon: { 3: { normal: 1, shiny: 0 }, 6: { normal: 2, shiny: 1 }, 25: { normal: 3, shiny: 0 }, 26: { normal: 1, shiny: 0 }, 94: { normal: 1, shiny: 0 }, 150: { normal: 1, shiny: 0 }, 248: { normal: 1, shiny: 0 }, 384: { normal: 1, shiny: 0 }, 445: { normal: 1, shiny: 0 } },
+  training: { "6:normal": { exp: 125000 }, "6:shiny": { exp: 64000 }, "26:normal": { exp: 91125 }, "150:normal": { exp: 343000 } },
   items: { evolution_stone: 3, shiny_dust: 40, megastone_charizarditey: 1, megastone_mewtwonitex: 1, megastone_mewtwonitey: 1, megastone_gengarite: 2 },
-  displayedPokemon: [{ id: 6, variant: "normal" }, { id: 25, variant: "normal" }, { id: 150, variant: "normal" }],
+  displayedPokemon: [{ id: 6, variant: "normal", mega: "mega-charizard-x" }, { id: 25, variant: "normal" }, { id: 150, variant: "normal" }],
   megaUnlocks: {
     "6:normal": { forms: { "mega-charizard-x": { at: Date.now(), stone: "megastone_charizarditex" } }, preferred: "mega-charizard-x" },
+    "6:shiny": { forms: { "mega-charizard-y": { at: Date.now(), stone: "megastone_charizarditey" } }, preferred: null }, // a shiny Mega
+    "150:normal": { forms: { "mega-mewtwo-x": { at: Date.now(), stone: "megastone_mewtwonitex" } }, preferred: null },
+    "26:normal": { forms: { "mega-raichu-x": { at: Date.now(), stone: "megastone_raichunitex" } }, preferred: null }, // Legends: Z-A: unlocked, can't battle
+    "384:normal": { forms: { "mega-rayquaza": { at: Date.now(), stone: null } }, preferred: null }, // blocked form (only via bad data)
     "248:shiny": { forms: { "mega-tyranitar": { at: Date.now(), stone: "megastone_tyranitarite" } }, preferred: null }, // dormant: no shiny Tyranitar owned
   },
 };

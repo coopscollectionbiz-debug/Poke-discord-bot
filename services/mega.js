@@ -21,6 +21,7 @@ import { parseLineKey, ownsLine, checkMegaUnlock, recordMegaUnlock, variantChoic
 import { getTraining } from "../utils/training.js";
 import { megaFieldOf } from "./megaTeam.js";
 import { isMegaCapabilityEnabled } from "../config/features.js";
+import { megaBattleStatus, megaShortName } from "../utils/megaDisplay.js";
 
 export const STONE_ID_PATTERN = /^megastone_[a-z0-9]{1,40}$/;
 const fail = (error, code, status = 400) => ({ ok: false, error, code, status });
@@ -113,6 +114,7 @@ function formView(f, variant, env) {
     base: { types: f.base.types, baseStats: f.base.botBaseStats ?? f.base.baseStats },
     ability: { name: f.ability, category: a?.category ?? null, rule: a?.rule ?? null, verified: !f.abilityVerification.startsWith("unverified") },
     variantChoice: f.variant && f.variant.kind !== "color" ? { [f.variant.kind]: f.variant.value } : null,
+    shortName: megaShortName(f),
     sprite: megaSpritePath(f.id, variant),
     stone: f.prerequisite.kind === "stone" ? f.prerequisite.item : null,
     battle: megaBattleEligibility(f.id, { env }),
@@ -151,6 +153,7 @@ export function buildMegaCards(user, { env = process.env } = {}) {
         onTeam: !!teamMega && teamMega.m === formId && Number(teamMega.s.id) === species && (teamMega.s.variant === "shiny" ? "shiny" : "normal") === variant,
         teamSelectable: state === "active" && teamCap && teamGate.allowed,
         ...formView(f, variant, env),
+        battleStatus: blocked ? { state: "locked", label: "Unavailable", detail: "This Mega isn't available." } : megaBattleStatus({ formId, unlocked: true, owned, env }),
         requiredStone: f.prerequisite.kind === "stone" ? stoneInfo(user, f.prerequisite.item) : null,
       });
     }
@@ -173,6 +176,7 @@ export function buildMegaCards(user, { env = process.env } = {}) {
           level: getTraining(user, species, variant).level,
           unlocked: false, preferred: false, onTeam: false, teamSelectable: false,
           ...formView(f, variant, env),
+          battleStatus: megaBattleStatus({ formId: f.id, unlocked: false, owned: true, env }),
           requiredStone: stone,
           canUnlock: unlockCap && stone.have > 0 && megaFormGate(f.id, "unlock", { env }).allowed,
         });

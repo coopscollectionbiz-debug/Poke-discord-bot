@@ -19,6 +19,7 @@ import { useMegaStone, buildMegaCards, megaStoneBag, STONE_ID_PATTERN } from "./
 import { setPreferredMega, LINE_PATTERN } from "./megaUnlocks.js";
 import { MEGA_ID_PATTERN } from "../utils/megas.js";
 import { isMegaCapabilityEnabled, megaCapabilities } from "../config/features.js";
+import { megaCollectionProgress } from "../utils/megaDisplay.js";
 
 const reply = (status, body) => ({ status, body });
 const ownKey = (o, k) => typeof k === "string" && Object.prototype.hasOwnProperty.call(o, k);
@@ -55,6 +56,8 @@ export function createMegaHandlers({ getTrainerData, lockUser, save, getEnv = ()
       capabilities: { unlock: caps.unlock, team: caps.team, battle: caps.battle, rewards: caps.rewards },
       cards: buildMegaCards(user, { env }),
       stones: megaStoneBag(user),
+      // Mega collection progress — separate from the National Pokédex.
+      progress: megaCollectionProgress(user, { env }),
     });
   }
 

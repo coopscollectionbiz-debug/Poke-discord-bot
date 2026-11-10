@@ -18,6 +18,8 @@ import { teamExp, utcDay } from "../battle/rewards.js";
 import { CHALLENGE } from "../battle/tuning.js";
 import { speciesName } from "../training.js";
 import { TRAINER_COSTS } from "../trainerCosts.js";
+import { ownsTrainer, grantTrainer } from "../../services/assets.js";
+import { grantItem } from "../../services/inventory.js";
 
 export const challengeLoss = (cc) => Math.floor((cc ?? 0) * CHALLENGE.lossShare);
 
@@ -52,14 +54,10 @@ export function challengeBlock({ trainerData, userId, key, now = new Date() }) {
   return null;
 }
 
-const ownedTrainers = (user) =>
-  Array.isArray(user.trainers) ? user.trainers : Object.keys(user.trainers ?? {});
-
 // The first enabled sprite the player doesn't own, or half its shop price in CC.
 export function prizeSprite(user, trainerKey) {
-  const owned = new Set(ownedTrainers(user).map((f) => String(f).trim().toLowerCase()));
   const { files, tier } = enabledSprites(trainerKey);
-  const file = files.find((f) => !owned.has(f.toLowerCase()));
+  const file = files.find((f) => !ownsTrainer(user, f));
   return file ? { trainerKey, file } : { trainerKey, cc: TRAINER_COSTS[tier] / 2 };
 }
 
@@ -123,12 +121,12 @@ export function simulateChallenge({ team, opponents, seed, pick = () => null }) 
 
 function grantPrize(user, prize) {
   user.cc = (user.cc ?? 0) + prize.cc + prize.sprites.reduce((t, s) => t + (s.cc ?? 0), 0);
-  user.items ??= {};
-  user.items.evolution_stone = (user.items.evolution_stone ?? 0) + prize.stones;
   // Prize Dust skips the weekly cap on Dust from normal donations (spec: Prizes).
-  user.items.shiny_dust = (user.items.shiny_dust ?? 0) + prize.dust;
-  const files = prize.sprites.filter((s) => s.file).map((s) => s.file);
-  if (files.length) user.trainers = [...ownedTrainers(user), ...files];
+  for (const [id, qty] of [["evolution_stone", prize.stones], ["shiny_dust", prize.dust]]) {
+    const r = qty > 0 ? grantItem(user, id, qty) : { ok: true };
+    if (!r.ok) console.warn(`⚠️ challenge prize: ${id} grant refused: ${r.error}`);
+  }
+  for (const s of prize.sprites) if (s.file) grantTrainer(user, s.file);
 }
 
 // The Outcome's view of one fight, in the shape playback reads.

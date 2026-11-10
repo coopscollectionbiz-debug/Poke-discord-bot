@@ -123,6 +123,25 @@ section("Sprite fallback");
   run(legacy, "brock");
   assertTrue(Array.isArray(legacy.A.trainers) && legacy.A.trainers.includes("x.png") && legacy.A.trainers.includes("brock-gen3.png"),
     "a legacy trainers object becomes an array with the new sprite");
+
+  // Older code wrote trainers onto the array as properties (services/assets.js, D1).
+  const owned = ["x.png"];
+  owned["brock-gen3.png"] = 1;
+  assertEqual(prizeSprite({ trainers: owned }, "brock"), { trainerKey: "brock", file: "brock-lgpe.png" },
+    "a trainer stored as an array property counts as owned");
+  const stray = world();
+  stray.A.trainers = ["x.png"];
+  stray.A.trainers["y.png"] = 1;
+  run(stray, "brock");
+  assertEqual([...stray.A.trainers], ["x.png", "y.png", "brock-gen3.png"], "the prize keeps a trainer stored as an array property");
+}
+
+section("Prize items go through the inventory service");
+{
+  const td = world();
+  td.A.items.shiny_dust = 1_000_000_000; // catalog/items.js ABSOLUTE_MAX_STACK
+  run(td, "brock");
+  assertEqual([td.A.items.shiny_dust, td.A.items.evolution_stone], [1_000_000_000, 1], "Dust stops at the stack limit; the stone still arrives");
 }
 
 section("Loss");

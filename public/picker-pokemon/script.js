@@ -43,6 +43,7 @@ import { showMessage, showActionError, showExpired, showBanner, toast, EXPIRED_M
 import { displaySpeciesName, nameMatches } from "/public/shared/names.js";
 import { scanFx } from "/public/shared/spriteFx.js";
 import { openDetail } from "/public/picker-pokemon/detail.js";
+import { mountCopyChoice } from "/public/picker-pokemon/copyChoice.js";
 
 const LOCK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>`;
 const SPARKLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>`;
@@ -389,13 +390,22 @@ async function saveTeam() {
 
 // One request id per confirmation dialog: a double click or a retry after a
 // network error sends the same id, and the server applies the action once.
+// One request id per dialog AND copy choice (switching the copy is a different action).
+function requestIds() {
+  const ids = new Map();
+  return (key) => { if (!ids.has(key)) ids.set(key, newRequestId()); return ids.get(key); };
+}
+
 function newRequestId() {
   if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
-async function evolvePokemon(baseId, targetId, variant, requestId) {
-  const body = { id: userId, baseId, targetId, variant: normVariant(variant), requestId };
+// copy (TM system T5): { uid, rev, confirmTrained } of a chosen trained copy, or null.
+const copyFields = (copy) => (copy?.uid ? { uid: copy.uid, rev: copy.rev, ...(copy.confirmTrained ? { confirmTrained: true } : {}) } : {});
+
+async function evolvePokemon(baseId, targetId, variant, requestId, copy = null) {
+  const body = { id: userId, baseId, targetId, variant: normVariant(variant), requestId, ...copyFields(copy) };
   return await apiJSON("/api/pokemon/evolve", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -403,8 +413,8 @@ async function evolvePokemon(baseId, targetId, variant, requestId) {
   });
 }
 
-async function donatePokemon(pokeId, variant, requestId) {
-  const body = { id: userId, pokeId, variant: normVariant(variant), requestId };
+async function donatePokemon(pokeId, variant, requestId, copy = null) {
+  const body = { id: userId, pokeId, variant: normVariant(variant), requestId, ...copyFields(copy) };
   return await apiJSON("/api/pokemon/donate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -421,8 +431,8 @@ async function donateBulk(mode, items, requestId) {
   });
 }
 
-async function convertPokemonToShiny(pokeId, requestId) {
-  const body = { id: userId, pokeId, requestId };
+async function convertPokemonToShiny(pokeId, requestId, copy = null) {
+  const body = { id: userId, pokeId, requestId, ...copyFields(copy) };
   return await apiJSON("/api/pokemon/convert-to-shiny", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1559,6 +1569,7 @@ function openConvertModal(pokeId) {
       You have: <span style="color:var(--cc-text);font-weight:900;">${dust}</span>
     </p>
 
+    <div class="cc-copyslot"></div>
     <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
       <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight:800;">Cancel</button>
       <button class="confirm-btn" style="background:var(--cc-gold);color:var(--bg);border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:900;">Confirm</button>
@@ -1566,21 +1577,29 @@ function openConvertModal(pokeId) {
   `;
 
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
-  const requestId = newRequestId();
-  modal.querySelector(".confirm-btn").addEventListener("click", () => {
-    withActionLock(() => handleConvertConfirm(pokeId, cost, overlay, requestId));
+  const idFor = requestIds();
+  const confirmEl = modal.querySelector(".confirm-btn");
+  const picker = mountCopyChoice(modal.querySelector(".cc-copyslot"), {
+    userData, pokeId, variant: "normal", name: p.name, owned: owned.normal, mode: "convert",
+    onChange: () => { confirmEl.disabled = !picker.get().ok; },
+  });
+  confirmEl.disabled = !picker.get().ok;
+  confirmEl.addEventListener("click", () => {
+    const copy = picker.get();
+    if (!copy.ok) return;
+    withActionLock(() => handleConvertConfirm(pokeId, cost, overlay, idFor(copy.uid ?? "untrained"), copy));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleConvertConfirm(pokeId, cost, overlay, requestId) {
+async function handleConvertConfirm(pokeId, cost, overlay, requestId, copy = null) {
   try {
     const p = pokemonData[pokeId];
 
     const prev = structuredClone(userData);
 
-    const res = await convertPokemonToShiny(pokeId, requestId);
+    const res = await convertPokemonToShiny(pokeId, requestId, copy);
     if (!res?.success) throw new Error(res?.error || "Convert failed");
 
     // If this Pokémon was on the team, keep it but flip variant to shiny (optional UX)
@@ -1695,8 +1714,9 @@ function openEvolutionModal(baseId) {
 
   let selectedTarget = null;
   const evoRequestIds = new Map();
-  const requestIdFor = (targetId, v) => {
-    const k = `${targetId}:${v}`;
+  let picker = { needed: false, get: () => ({ ok: true, uid: null }) };
+  const requestIdFor = (targetId, v, uid) => {
+    const k = `${targetId}:${v}:${uid ?? "untrained"}`;
     if (!evoRequestIds.has(k)) evoRequestIds.set(k, newRequestId());
     return evoRequestIds.get(k);
   };
@@ -1816,6 +1836,16 @@ function openEvolutionModal(baseId) {
     }
 
     renderEvoTargets();
+    // TM system (T5): which copy evolves, when this variant has trained copies.
+    let slot = modal.querySelector(".cc-copyslot");
+    if (!slot) {
+      slot = document.createElement("div");
+      slot.className = "cc-copyslot";
+      confirmBtn.parentElement.before(slot);
+    }
+    picker = ownsVariant(baseId, chosenVariant)
+      ? mountCopyChoice(slot, { userData, pokeId: baseId, variant: chosenVariant, name: base.name, owned: owned[chosenVariant], mode: "evolve" })
+      : mountCopyChoice(slot, { userData, pokeId: baseId, variant: chosenVariant, name: base.name, owned: 0, mode: "evolve" });
   }
 
   if (btnNormal) {
@@ -1837,20 +1867,22 @@ function openEvolutionModal(baseId) {
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
   confirmBtn.addEventListener("click", () => {
     if (!selectedTarget) return;
-    withActionLock(() => handleEvolutionConfirm(baseId, selectedTarget, chosenVariant, overlay, requestIdFor(selectedTarget, chosenVariant)));
+    const copy = picker.get();
+    if (!copy.ok) { hintEl.textContent = copy.reason; hintEl.style.color = "var(--cc-red)"; return; }
+    withActionLock(() => handleEvolutionConfirm(baseId, selectedTarget, chosenVariant, overlay, requestIdFor(selectedTarget, chosenVariant, copy.uid), copy));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleEvolutionConfirm(baseId, targetId, variant, overlay, requestId) {
+async function handleEvolutionConfirm(baseId, targetId, variant, overlay, requestId, copy = null) {
   try {
     const base = pokemonData[baseId];
     const target = pokemonData[targetId];
 
     const prev = structuredClone(userData);
 
-    const res = await evolvePokemon(baseId, targetId, variant, requestId);
+    const res = await evolvePokemon(baseId, targetId, variant, requestId, copy);
     if (!res?.success) throw new Error(res?.error || "Evolution failed");
 
     // If this Pokémon was on team, remove it (UI convenience)
@@ -1951,29 +1983,46 @@ function openDonationConfirmModal(pokeId, variant) {
         ? `<p style="color:var(--cc-gold);font-weight:900;margin-top:-6px;">✨ +${dustPreview} Shiny Dust</p>`
         : ""
     }
+    <div class="cc-copyslot"></div>
     <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
       <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
       <button class="confirm-btn" style="background: var(--cc-gold); color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
     </div>
   `;
 
-  modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
-  const requestId = newRequestId();
-  modal.querySelector(".confirm-btn").addEventListener("click", () => {
-    withActionLock(() => handleDonationConfirm(pokeId, v, overlay, requestId));
+  const cancelEl = modal.querySelector(".cancel-btn");
+  cancelEl.addEventListener("click", () => closeOverlay(overlay));
+  const idFor = requestIds();
+  const confirmEl = modal.querySelector(".confirm-btn");
+  // TM system (T5): which copy, and the TM warning for a trained one (D-T10).
+  const syncButtons = () => {
+    const c = picker.get();
+    confirmEl.disabled = !c.ok;
+    confirmEl.style.opacity = c.ok ? "1" : "0.5";
+    confirmEl.textContent = c.copy ? `Donate trained ${p.name}` : "Confirm";
+    cancelEl.textContent = c.copy ? "Keep it" : "Cancel";
+  };
+  const picker = mountCopyChoice(modal.querySelector(".cc-copyslot"), {
+    userData, pokeId, variant: v, name: p.name, owned: ownedCounts(pokeId)[v], mode: "donate", onChange: syncButtons,
+  });
+  syncButtons();
+  confirmEl.addEventListener("click", () => {
+    const copy = picker.get();
+    if (!copy.ok) return;
+    withActionLock(() => handleDonationConfirm(pokeId, v, overlay, idFor(copy.uid ?? "untrained"), copy));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleDonationConfirm(pokeId, variant, overlay, requestId) {
+async function handleDonationConfirm(pokeId, variant, overlay, requestId, copy = null) {
   try {
     const p = pokemonData[pokeId];
     const v = normVariant(variant);
 
     const prev = structuredClone(userData);
 
-    const res = await donatePokemon(pokeId, v, requestId);
+    const res = await donatePokemon(pokeId, v, requestId, copy);
     if (!res?.success) throw new Error(res?.error || "Donation failed");
 
     // If this Pokémon is on team, remove it (since counts changed)
@@ -2050,7 +2099,7 @@ function onlyVariant(pid) {
 }
 
 function duplicateRows() {
-  return bulkRules.duplicateRows(userData.pokemon, pokemonData);
+  return bulkRules.duplicateRows(userData.pokemon, pokemonData, userData.trained);
 }
 
 function multiSelectRows() {
@@ -2061,7 +2110,7 @@ function multiSelectRows() {
 // Change Team edits, so it can't be used for these locks.
 function multiSelectBlock(pid) {
   const savedTeam = (userData.currentTeam || []).map(toTeamObj).filter(Boolean);
-  return bulkRules.multiSelectBlock(pid, { pokemon: userData.pokemon, pokemonData, savedTeam });
+  return bulkRules.multiSelectBlock(pid, { pokemon: userData.pokemon, pokemonData, savedTeam, trained: userData.trained });
 }
 
 function bulkTotals(rows) {
@@ -2127,7 +2176,7 @@ function openDonateDuplicatesModal() {
     mode: "duplicates",
     rows,
     title: `🧹 Donate ${copies} duplicate${copies === 1 ? "" : "s"}?`,
-    subtitle: "You'll keep 1 of each.",
+    subtitle: bulkRules.keptTrained(rows, userData.trained) ? `You'll keep 1 untrained of each, and every TM-trained copy (${bulkRules.keptTrained(rows, userData.trained)}).` : "You'll keep 1 of each.",
   });
 }
 

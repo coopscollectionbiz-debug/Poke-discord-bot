@@ -20,6 +20,7 @@ import { playerId, showBanner, showExpired, toast, showActionError, confirmDialo
 import { displaySpeciesName } from "/public/shared/names.js";
 import { scanFx } from "/public/shared/spriteFx.js";
 import { openMovesEditor } from "/public/teams/moves.js";
+import { chooseCopy } from "/public/teams/copyPicker.js";
 
 const TEAMS = ["display", "battle"];
 const LABEL = { display: "Display team", battle: "Battle team" };
@@ -46,6 +47,7 @@ const state = {
   pokemon: {},           // owned counts
   levels: {},            // "6:normal" → Level
   powers: {},            // "6:normal" → Power
+  trained: {},           // "6:normal" → [trained copies] (TM system)
   megaOn: false,
   megaCards: [], // GET /api/mega cards (only while Mega Evolution is on)
   saved: { display: [], battle: null },
@@ -116,10 +118,18 @@ let focusAfter = null;
  * replace: swap out the Pokémon at that slot (drag onto a filled slot of a
  * full team). Same rules as the server.
  */
+const trainedOf = (s) => state.trained[keyOf(s)] ?? [];
+
 function add(t, s, { at = null, replace = false } = {}) {
   const list = [...team(t)];
   const existing = list.findIndex((m) => m.id === s.id && m.variant === s.variant);
   if (existing >= 0 && at != null) return moveTo(t, existing, Math.min(at, list.length - 1)); // already on it: just move
+  // TM system (T5): a Pokémon with trained copies asks which copy first.
+  if (existing < 0 && s.uid === undefined && trainedOf(s).length) {
+    chooseCopy({ userData: state, pokeId: s.id, variant: s.variant, name: species(s.id).name, owned: state.pokemon?.[s.id]?.[s.variant] ?? 0 })
+      .then((uid) => { if (uid !== undefined) add(t, { ...s, uid }, { at, replace }); });
+    return;
+  }
   const replaceAt = replace && at != null && at < list.length ? at : -1;
   const why = blockReason(t, s, { replaceAt });
   if (why) {
@@ -129,7 +139,9 @@ function add(t, s, { at = null, replace = false } = {}) {
     return;
   }
   state.error[t] = null;
-  const slot = { id: s.id, variant: s.variant };
+  // uid: a trained copy; null = explicitly an untrained copy (only sent for
+  // Pokémon that have trained copies, so the server doesn't keep the old one).
+  const slot = { id: s.id, variant: s.variant, ...(s.uid ? { uid: s.uid } : s.uid === null && trainedOf(s).length ? { uid: null } : {}) };
   let pos;
   if (replaceAt >= 0) {
     const [out] = list.splice(replaceAt, 1, slot);
@@ -309,6 +321,7 @@ function slotCard(t, s, i) {
       ${typeChips(s.id)}
       <div class="tm-slot-tags">${tags}</div>
       <button type="button" class="tm-movesbtn" data-act="moves" data-team="${t}" data-i="${i}" aria-label="${esc(species(s.id).name)}’s moves on your ${LABEL[t]}">Moves</button>
+      ${trainedOf(s).length ? `<button type="button" class="tm-movesbtn" data-act="pickcopy" data-team="${t}" data-i="${i}" aria-label="Change which ${esc(species(s.id).name)} is on your ${LABEL[t]}">Change copy</button>` : ""}
       ${state.megaOn && megaFormsFor(s).length ? `<button type="button" class="tm-megabtn${s.mega ? " is-on" : ""}" data-act="mega" data-team="${t}" data-i="${i}" aria-label="Mega form for ${esc(species(s.id).name)}: ${s.mega ? esc(megaCard(s.mega)?.name ?? s.mega) : "off"}. Change">${s.mega ? `Mega: ${esc((megaCard(s.mega)?.name ?? s.mega).replace(/^Mega /, ""))}` : "Mega: off"}</button>` : ""}
     </div>
     <div class="tm-slot-ctl">
@@ -501,6 +514,20 @@ function onClick(e) {
   else if (act === "add") add(state.active, { id: Number(el.dataset.id), variant: el.dataset.variant });
   else if (act === "copy") copyDisplay();
   else if (act === "mega") cycleMega(t, i);
+  else if (act === "pickcopy") {
+    const s = team(t)[i];
+    if (s) {
+      chooseCopy({ userData: state, pokeId: s.id, variant: s.variant, name: species(s.id).name, owned: state.pokemon?.[s.id]?.[s.variant] ?? 0, current: s.uid ?? null })
+        .then((uid) => {
+          if (uid === undefined) return;
+          const list = [...team(t)];
+          const { uid: _old, ...base } = list[i];
+          list[i] = uid ? { ...base, uid } : { ...base, uid: null };
+          state.draft[t] = list;
+          render();
+        });
+    }
+  }
   else if (act === "moves") {
     const s = team(t)[i];
     if (s) openMovesEditor({ userId, team: t, s, name: species(s.id).name, onSaved: () => render(), onTaught: () => refreshCopies() });
@@ -657,6 +684,7 @@ async function refreshCopies() {
     if (res.status === 403) return showExpired();
     if (!res.ok) return;
     const u = await res.json();
+    state.trained = u.trained ?? {};
     const stored = { display: (u.currentTeam ?? []).map(slotFromServer), battle: Array.isArray(u.battleTeam) ? u.battleTeam.map(slotFromServer) : null };
     for (const t of TEAMS) {
       const uidOf = new Map((stored[t] ?? []).filter((s) => s.uid).map((s) => [keyOf(s), s.uid]));
@@ -691,6 +719,7 @@ async function load() {
     state.pokemon = u.pokemon ?? {};
     state.levels = u.levels ?? {};
     state.powers = u.powers ?? {};
+    state.trained = u.trained ?? {};
     const norm = (list) => (Array.isArray(list) ? list.map(slotFromServer) : null);
     state.saved = { display: norm(u.currentTeam) ?? [], battle: norm(u.battleTeam) };
     state.draft = clone(state.saved);

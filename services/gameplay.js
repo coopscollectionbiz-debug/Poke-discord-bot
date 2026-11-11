@@ -169,7 +169,7 @@ export function createGameplayHandlers(deps) {
   async function evolve({ body, isAuthorized }) {
     const stop = guard(body, isAuthorized, (b) => (b.baseId == null || b.targetId == null ? reply(400, { error: "Missing baseId/targetId" }) : null));
     if (stop) return stop;
-    const { id, baseId, targetId, shiny, variant, requestId = null } = body;
+    const { id, baseId, targetId, shiny, variant, requestId = null, uid = null, rev = null } = body;
 
     const pokemonData = await loadPokemonData();
     const bId = Number(baseId);
@@ -201,7 +201,7 @@ export function createGameplayHandlers(deps) {
       lock: lockUser,
       save,
       requestId,
-      payloadKey: `evolve:${bId}>${tId}:${chosenVariant}`,
+      payloadKey: `evolve:${bId}>${tId}:${chosenVariant}:${uid ?? "untrained"}`,
       mutate: (user) => {
         normalizeUserSchema(id, user);
         if (getQuantity(user, "evolution_stone") < cost) return { ok: false, error: "Not enough Evolution Stones." };
@@ -219,7 +219,8 @@ export function createGameplayHandlers(deps) {
         }
         // TM safety (services/ownership.js): a plain copy evolves; a copy with
         // TM-trained moves is never picked automatically. Checked BEFORE spending.
-        const move = { from: { id: bId, variant: chosenVariant }, to: { id: tId, variant: chosenVariant } };
+        // uid (T5): the player picked this trained copy; its moves follow it.
+        const move = { from: { id: bId, variant: chosenVariant }, to: { id: tId, variant: chosenVariant }, ...(uid != null && { uid: String(uid), confirmRev: rev }) };
         const can = canTransformCopy(user, move);
         if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
         // All checks passed: everything below is applied together.
@@ -257,7 +258,7 @@ export function createGameplayHandlers(deps) {
   async function convertToShiny({ body, isAuthorized }) {
     const stop = guard(body, isAuthorized, (b) => (b.pokeId == null ? reply(400, { error: "Missing pokeId" }) : null));
     if (stop) return stop;
-    const { id, pokeId, requestId = null } = body;
+    const { id, pokeId, requestId = null, uid = null, rev = null } = body;
 
     const pokemonData = await loadPokemonData();
     const pid = Number(pokeId);
@@ -272,7 +273,7 @@ export function createGameplayHandlers(deps) {
       lock: lockUser,
       save,
       requestId,
-      payloadKey: `convert:${pid}`,
+      payloadKey: `convert:${pid}:${uid ?? "untrained"}`,
       mutate: (user) => {
         normalizeUserSchema(id, user);
         if (isDisplayedVariant(user, pid, "normal")) {
@@ -285,7 +286,7 @@ export function createGameplayHandlers(deps) {
           return { ok: false, error: `Not enough Shiny Dust. Requires ${dustCost}.`, dustRequired: dustCost, dustAvailable: getQuantity(user, "shiny_dust") };
         }
         // TM safety (services/ownership.js): checked BEFORE spending Dust.
-        const move = { from: { id: pid, variant: "normal" }, to: { id: pid, variant: "shiny" } };
+        const move = { from: { id: pid, variant: "normal" }, to: { id: pid, variant: "shiny" }, ...(uid != null && { uid: String(uid), confirmRev: rev }) };
         const can = canTransformCopy(user, move);
         if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
         const spent = consumeItems(user, { shiny_dust: dustCost });

@@ -146,7 +146,7 @@ function copyReward(user, pid, p, variant, economy) {
  * All checks run before anything changes.
  * @returns {{ error:string, code?:string, protected?:Array } | { event, gainedCC, shinyDustGained }}
  */
-export function donateOne({ user, pokeId, variant, pokemonData, economy, isOnTeam }) {
+export function donateOne({ user, pokeId, variant, pokemonData, economy, isOnTeam, uid = null, rev = null, confirmTrained = false }) {
   const pid = Number(pokeId);
   const p = Number.isInteger(pid) ? pokemonData[pid] : null;
   if (!p) return { error: "Invalid Pokémon ID" };
@@ -157,11 +157,21 @@ export function donateOne({ user, pokeId, variant, pokemonData, economy, isOnTea
   if ((user.pokemon?.[pid]?.[variant] ?? 0) <= 0) {
     return { error: `You don’t own a ${variant === "shiny" ? "shiny " : ""}${p.name} to donate.` };
   }
-  const can = canRemoveCopies(user, { id: pid, variant, n: 1 });
+  // T5 (owner decision D-T10): a trained copy goes only when the player
+  // named it, saw the TM warning and ticked its checkbox (confirmTrained),
+  // with the rev the warning showed. Without a uid, a plain copy is used.
+  if (uid != null && confirmTrained !== true) {
+    return { error: "Confirm that this Pokémon's TM-trained moves will be lost.", code: "confirm_required" };
+  }
+  const args = uid != null
+    ? { id: pid, variant, n: 1, customUids: [uid], confirmRevs: { [uid]: rev }, exact: true }
+    : { id: pid, variant, n: 1 };
+  const can = canRemoveCopies(user, args);
   if (!can.ok) return { error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
 
   const event = copyReward(user, pid, p, variant, economy);
-  const removed = removeCopies(user, { id: pid, variant, n: 1 });
+  if (uid != null) event.trainedUid = uid;
+  const removed = removeCopies(user, args);
   if (!removed.ok) throw new Error(`donateOne: removal refused after validation (${removed.code})`);
   user.cc = (user.cc ?? 0) + event.ccGained;
   if (event.dustGained > 0) {

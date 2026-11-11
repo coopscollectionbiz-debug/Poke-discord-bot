@@ -38,7 +38,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
-import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid, carryCopyUids } from "./services/ownership.js";
+import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid, carryCopyUids, trainedSummary } from "./services/ownership.js";
 
 // Local saver — writes trainerData.json (in TRAINERDATA_DIR) & marks dirty
 import {
@@ -2083,6 +2083,9 @@ app.get("/api/user-pokemon", (req, res) => {
     // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
     levels,
     powers: powersFromLevels(levels), // { "6:normal": 410 }
+    // TM system (T5): trained copies per line, for the copy choosers in
+    // donate / evolve / shiny craft / Teams. { "6:normal": [{ uid, rev, tmMoves, teams }] }
+    trained: trainedSummary(u),
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
   });
 });
@@ -2285,7 +2288,7 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
 // donates twice (double click / retried request).
 app.post("/api/pokemon/donate", express.json(), async (req, res) => {
   try {
-    const { id, pokeId, shiny, variant, requestId = null } = req.body || {};
+    const { id, pokeId, shiny, variant, requestId = null, uid = null, rev = null, confirmTrained = false } = req.body || {};
 
     if (!id) return res.status(400).json({ error: "Missing id" });
     if (pokeId == null) return res.status(400).json({ error: "Missing pokeId" });
@@ -2307,7 +2310,7 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
       lock: lockUser,
       save: saveAndAck,
       requestId,
-      payloadKey: `donate:${Number(pokeId)}:${chosenVariant}`,
+      payloadKey: `donate:${Number(pokeId)}:${chosenVariant}:${uid ?? "untrained"}`,
       mutate: (u) => {
         normalizeUserSchema(id, u); // in place
         ensureWeeklyReset(u);
@@ -2318,6 +2321,10 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
           pokemonData,
           economy: donationEconomy(),
           isOnTeam: (pid, v) => isDisplayedVariant(u, pid, v),
+          // T5: a named trained copy, with the TM warning confirmed
+          uid: uid == null ? null : String(uid),
+          rev,
+          confirmTrained: confirmTrained === true,
         });
         if (r.error) return { ok: false, status: 400, error: r.error, ...(r.code && { code: r.code }), ...(r.protected && { protected: r.protected }) };
         trackProgress(u, [{ type: "donated" }]); // Release C

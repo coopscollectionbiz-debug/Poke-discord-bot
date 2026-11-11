@@ -10,7 +10,12 @@
 // pokemonData: id → { name, tier }
 // savedTeam:   [{ id, variant }] as the server has it. Not the unsaved
 //              Change Team edits, because the server checks the saved Team.
+// trained:     { "6:normal": [trained copy, …] } from /api/user-pokemon.
+//              Copies with TM-trained moves are never bulk-donated (TM
+//              system, D-T10): only untrained copies count here.
 // ==========================================================
+
+const trainedCount = (trained, pid, variant) => (trained?.[`${Number(pid)}:${variant}`] ?? []).length;
 
 function countsOf(pokemon, pid) {
   const entry = pokemon?.[pid];
@@ -24,22 +29,24 @@ export function onlyVariant(pokemon, pid) {
   return countsOf(pokemon, pid).shiny === 1 ? "shiny" : "normal";
 }
 
-// Every copy past the first, per variant (shinies included).
-export function duplicateRows(pokemon, pokemonData) {
+// Every UNTRAINED copy past the first, per variant (shinies included).
+// Trained copies are always kept.
+export function duplicateRows(pokemon, pokemonData, trained = {}) {
   const rows = [];
   const ids = Object.keys(pokemon || {}).map(Number).sort((a, b) => a - b);
   for (const pid of ids) {
     if (!pokemonData[pid]) continue; // server rejects unknown IDs
     const owned = countsOf(pokemon, pid);
     for (const variant of ["normal", "shiny"]) {
-      if (owned[variant] > 1) rows.push({ pokeId: pid, variant, count: owned[variant] - 1 });
+      const untrained = owned[variant] - trainedCount(trained, pid, variant);
+      if (untrained > 1) rows.push({ pokeId: pid, variant, count: untrained - 1 });
     }
   }
   return rows;
 }
 
 // Why a card can't be picked in Multi-select, or null if it can.
-export function multiSelectBlock(pid, { pokemon, pokemonData, savedTeam }) {
+export function multiSelectBlock(pid, { pokemon, pokemonData, savedTeam, trained = {} }) {
   const name = pokemonData[pid]?.name || `#${pid}`;
   const owned = countsOf(pokemon, pid);
 
@@ -63,8 +70,16 @@ export function multiSelectBlock(pid, { pokemon, pokemonData, savedTeam }) {
   if (owned.any !== 1) return { title: "🔒 Not Owned", message: `You don’t own ${name}.` };
 
   const variant = onlyVariant(pokemon, pid);
+  if (trainedCount(trained, pid, variant) > 0) {
+    return { title: "🔒 TM-Trained", message: `Your ${name} has TM-trained moves. Turn off Multi-select and donate it on its own to confirm.` };
+  }
   if (savedTeam.some((s) => s.id === Number(pid) && s.variant === variant)) {
     return { title: "🔒 On Your Team", message: `${name} is on your Team. Remove it from your Team first.` };
   }
   return null;
+}
+
+// How many TM-trained copies a Donate Duplicates list keeps (for its summary).
+export function keptTrained(rows, trained = {}) {
+  return rows.reduce((n, r) => n + trainedCount(trained, r.pokeId, r.variant), 0);
 }

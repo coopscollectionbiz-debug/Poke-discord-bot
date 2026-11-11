@@ -87,7 +87,7 @@ Peak RSS for the whole benchmark process was 169 MB. Expect Fly to be 2–3× sl
 | Battle EXP | Bottom-right of each tile |
 | Inspect, `/pokedex` | Already shown there; both now use the same helper |
 
-**Public cards no longer show Pokédex progress.** "Kanto Pokédex 121/151" read confusingly next to the National number. The catch card dropped it and shrank to **900 × 200** (about 550 × 122 in Discord).
+**Public cards no longer show Pokédex progress.** "Kanto Pokédex 121/151" read confusingly next to the National number. The catch card dropped it and shrank to **900 × 200** (about 550 × 122 in Discord), then to **320 × 96**, the width of the old embed, without the "WILD POKÉMON CAUGHT!" line (the message text says it). Discord shows an image at its own size up to about 550 wide, so a card drawn smaller shows smaller. The sprite is drawn at 1×, so it stays sharp.
 
 **Private progress instead.** Random catches come from chat messages, and Discord allows private replies only to interactions, so there is no private reply after a catch. The owner chose to show progress in the two private views:
 

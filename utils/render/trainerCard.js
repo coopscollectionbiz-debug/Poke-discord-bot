@@ -8,7 +8,7 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag, fillTextMid } from "./primitives.js";
 import { createCanvas as makeCanvas } from "@napi-rs/canvas";
 import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadPlaceholder, spriteScale } from "./sprites.js";
 import { spriteStage, FRAMES } from "./stage.js";
@@ -162,9 +162,7 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
     ctx.strokeStyle = `${accent}aa`;
     ctx.stroke();
     ctx.fillStyle = TIER[tier] ?? accent;
-    ctx.textBaseline = "middle";
-    ctx.fillText(label, cx, floor + 129);
-    ctx.textBaseline = "alphabetic";
+    fillTextMid(ctx, label, cx, floor + 128);
   }
   ctx.textAlign = "left";
 

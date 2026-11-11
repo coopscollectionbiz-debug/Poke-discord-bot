@@ -46,6 +46,7 @@ const state = {
   megaOn: false,
   megaCards: [], // GET /api/mega cards (only while Mega Evolution is on)
   saved: { display: [], battle: null },
+  notices: [],           // one-time Battle team notices (GET /api/user-pokemon)
   draft: { display: [], battle: null },
   active: "display",
   error: { display: null, battle: null },
@@ -271,6 +272,22 @@ async function save() {
   }
 }
 
+/** Hide the Battle team notices and tell the server they were seen. */
+async function dismissNotices() {
+  const ids = state.notices.map((n) => n.id);
+  state.notices = [];
+  render();
+  try {
+    const res = await fetch("/api/dismiss-notices", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: userId, ids }),
+    });
+    if (res.status === 403) showExpired();
+  } catch { /* shown again next visit; harmless */ }
+}
+
 // ---------- rendering ----------
 function slotCard(t, s, i) {
   if (!s) {
@@ -349,10 +366,13 @@ function teamPanel() {
   } else {
     body = `<ol class="tm-slots">${Array.from({ length: MAX }, (_, i) => slotCard(t, list[i] ?? null, i)).join("")}</ol>`;
   }
+  const note = isB && state.notices.length
+    ? `<div class="tm-notice" role="status"><p>${state.notices.map((n) => esc(n.text)).join("<br>")}</p><button type="button" class="cc-btn" data-act="dismiss">Got it</button></div>`
+    : "";
   const e = state.error[t];
   const err = e ? `<div class="tm-error" role="alert"><svg class="tm-ic" aria-hidden="true"><use href="#tm-lock"/></svg><p><strong>${esc(e.title ?? "Can’t add that Pokémon")}</strong>${esc(e.text)}</p></div>` : "";
   return `<section id="teamPanel" class="tm-panel tm-panel--${t} tm-team" role="tabpanel" aria-labelledby="tab-${t}">
-    <div class="tm-panel-head">${head}</div>${body}${err}
+    <div class="tm-panel-head">${head}</div>${note}${body}${err}
     <button type="button" class="cc-btn tm-addbtn" data-act="openbox"><svg class="tm-ic" aria-hidden="true"><use href="#tm-plus"/></svg>Add from your box</button>
   </section>`;
 }
@@ -505,6 +525,7 @@ function onClick(e) {
   else if (act === "save") save();
   else if (act === "show") { state.filter.show = el.dataset.show; render(); }
   else if (act === "openbox") openSheet();
+  else if (act === "dismiss") dismissNotices();
 }
 function onInput(e) {
   const el = e.target;
@@ -666,9 +687,10 @@ async function load() {
     state.powers = u.powers ?? {};
     const norm = (list) => (Array.isArray(list) ? list.map((s) => ({ id: Number(s.id), variant: s.variant === "shiny" ? "shiny" : "normal", ...(s.mega ? { mega: s.mega } : {}) })) : null);
     state.saved = { display: norm(u.currentTeam) ?? [], battle: norm(u.battleTeam) };
+    state.notices = Array.isArray(u.notices) ? u.notices.filter((n) => n.kind === "battle_team_trim") : [];
     state.draft = clone(state.saved);
     const want = new URLSearchParams(location.search).get("team");
-    state.active = want === "battle" || want === "display" ? want : "display";
+    state.active = want === "battle" || want === "display" ? want : state.notices.length ? "battle" : "display";
   } catch (err) {
     app.innerHTML = "";
     showBanner(err?.message || "Couldn’t load your teams. Please try again.", { title: "Couldn’t load your teams" });

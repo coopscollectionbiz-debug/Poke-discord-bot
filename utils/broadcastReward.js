@@ -168,7 +168,7 @@ const title =
 const description =
   type === "pokemon"
     ? `**${nameSafe}** caught **${displayName}**!\n${rarityDisplay}\n🌿 *A wild Pokémon appeared!*`
-    : `**${nameSafe}** recruited **${displayName}**!\n${rarityDisplay}\n🏫 *A new ally joins the adventure!*`;
+    : `**${nameSafe}** recruited **${displayName}**!\n${rarityDisplay}`;
 
 const embed = new EmbedBuilder()
   .setTitle(title)
@@ -178,7 +178,7 @@ const embed = new EmbedBuilder()
   )
   .setThumbnail(spriteUrl)
   .setFooter({
-    text: `🌟 Coop’s Collection Broadcast${isBypassSource ? " (Bypass)" : ""}`,
+    text: `🌟 Coop's Collection Broadcast${isBypassSource ? " (Bypass)" : ""}`,
   })
   .setTimestamp();
 

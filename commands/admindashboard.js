@@ -33,7 +33,7 @@ const ADMIN_ROLE_NAME = process.env.ADMIN_ROLE_NAME || "Developer";
 export default {
   data: new SlashCommandBuilder()
     .setName("admindashboard")
-    .setDescription("Open the admin analytics dashboard (Developer role required)."),
+    .setDescription("Admin: Open the analytics dashboard (Developer role)."),
 
   async execute(interaction) {
     try {
@@ -50,7 +50,7 @@ export default {
 
       if (!hasRole) {
         await interaction.reply({
-          content: `❌ You need the **${ADMIN_ROLE_NAME}** role to open the admin dashboard.`,
+          content: `You need the **${ADMIN_ROLE_NAME}** role to open the admin dashboard.`,
           flags: MessageFlags.Ephemeral,
         });
         return;
@@ -75,7 +75,7 @@ export default {
       if (!baseUrl) {
         await interaction.reply({
           content:
-            "❌ Admin dashboard URL is not configured. Set `PUBLIC_URL` (or `FLY_APP_NAME`) on the bot host.",
+            "Admin dashboard URL is not configured. Set `PUBLIC_URL` (or `FLY_APP_NAME`) on the bot host.",
           flags: MessageFlags.Ephemeral,
         });
         return;
@@ -89,7 +89,7 @@ export default {
           `Access the admin analytics dashboard:\n\n🔗 [Open Admin Dashboard](${dashboardUrl})\n\nYour link expires in **10 minutes**.`
         )
         .setColor(0xef4444)
-        .setFooter({ text: "Coop's Collection — Admin Access" })
+        .setFooter({ text: "Admin dashboard link" })
         .setTimestamp();
 
       await interaction.reply({
@@ -104,7 +104,7 @@ export default {
       console.error("❌ /admindashboard failed:", err);
       try {
         await interaction.followUp({
-          content: "❌ Something went wrong generating your admin dashboard link.",
+          content: "Something went wrong generating your admin dashboard link.",
           flags: MessageFlags.Ephemeral,
         });
       } catch (e) {

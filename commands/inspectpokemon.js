@@ -43,7 +43,7 @@ export function battleInfo(user, speciesId) {
 // Rarity, type, and region, with the field names pokemonData uses.
 export function infoLines(pokemon) {
   return (
-    `**Rarity:** ${String(pokemon.tier ?? "unknown").toUpperCase()}\n` +
+    `**Tier:** ${String(pokemon.tier ?? "unknown").toUpperCase()}\n` +
     `**Type:** ${formatTypesLine(pokemon.types)}\n` +
     `**Region:** ${pokemon.region ?? "Unknown"}\n`
   );
@@ -85,7 +85,7 @@ export default {
 
     if (!pokemon) {
       return safeReply(interaction, {
-        content: `❌ Pokémon **${input}** not found.`,
+        content: `Pokémon **${input}** not found.`,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -101,7 +101,6 @@ export default {
       )
       .setImage(spriteUrl)
       .setColor(0x1abc9c)
-      .setFooter({ text: "Pokémon data sourced from Coop's Collection" })
       .setTimestamp();
 
     // Rendered cards (utils/render/inspectCard.js); the embed above is the fallback.

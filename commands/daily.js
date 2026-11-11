@@ -51,7 +51,7 @@ function getUTCDateString() {
 // ==========================================================
 export const data = new SlashCommandBuilder()
   .setName("daily")
-  .setDescription("Claim your daily reward (2 Pokémon + CC + TP + stone chance)");
+  .setDescription("Claim 2 Pokémon, CC, TP and a chance at an Evolution Stone, once per UTC day");
 
 
 // ==========================================================
@@ -104,7 +104,7 @@ export async function execute(
       const allPokemon = await getAcquirablePokemon(); // live generations only
       if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
         return safeReply(interaction, {
-          content: "❌ Pokémon data unavailable.",
+          content: "Pokémon data unavailable.",
           flags: MessageFlags.Ephemeral
         });
       }
@@ -117,7 +117,7 @@ export async function execute(
 
       if (!pick1 || !pick2) {
         return safeReply(interaction, {
-          content: "❌ Daily failed — no Pokémon could be selected.",
+          content: "Daily failed because no Pokémon could be picked. Try again.",
           flags: MessageFlags.Ephemeral
         });
       }
@@ -285,7 +285,7 @@ export async function execute(
     console.error("❌ /daily ERROR:", err);
 
     return safeReply(interaction, {
-      content: "❌ An error occurred processing your daily reward.",
+      content: "An error occurred processing your daily reward.",
       flags: MessageFlags.Ephemeral
     });
   }

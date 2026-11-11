@@ -109,7 +109,7 @@ export async function updateUserRole(member, tp, contextChannel = null) {
 
       if (!targetRoleId) {
         console.warn(
-          `⚠️ Missing rank role for "${baseRank}" (${hasFemale ? "female" : "male"}). ` +
+          `Missing rank role for "${baseRank}" (${hasFemale ? "female" : "male"}). ` +
           `Check role names exactly match: "${baseRank}" and/or "${baseRank} (F)".`
         );
         // Don’t keep trying every flush — wait 10 minutes before reattempting

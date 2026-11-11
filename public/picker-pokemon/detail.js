@@ -43,7 +43,7 @@ function render(d, ctx) {
   if (!owned.includes(shownVariant)) shownVariant = owned[0] ?? "normal";
   const c = copies[shownVariant];
   const tier = d.tier;
-  const slots = c ? [c.teams.display ? `Display team slot ${c.teams.display}` : "", c.teams.battle ? `Battle team slot ${c.teams.battle}` : ""].filter(Boolean) : [];
+  const slots = c ? [c.teams.display ? `Showcase team slot ${c.teams.display}` : "", c.teams.battle ? `Battle team slot ${c.teams.battle}` : ""].filter(Boolean) : [];
   const variantToggle = owned.length > 1
     ? `<div class="dt-seg" role="group" aria-label="Copy">${owned.map((v) => `<button type="button" data-variant="${v}" aria-pressed="${v === shownVariant}">${v === "shiny" ? "✨ Shiny" : "Normal"}</button>`).join("")}</div>`
     : "";
@@ -72,7 +72,7 @@ function render(d, ctx) {
       ${["display", "battle"].map((team) => {
         const set = c.movesets?.[team];
         const list = set ?? c.moves;
-        return `<section class="dt-sec"><h3>${team === "battle" ? "Battle team moves" : "Display team moves"}${set ? "" : " · automatic"}</h3><div class="dt-moves">${list.map((m) => `<div class="dt-move"><span>${esc(m.name)}</span>${m.type ? `<span class="cc-type" data-type="${esc(m.type.toLowerCase())}">${esc(m.type)}</span>` : ""}</div>`).join("")}</div></section>`;
+        return `<section class="dt-sec"><h3>${team === "battle" ? "Battle team moves" : "Showcase team moves"}${set ? "" : " · automatic"}</h3><div class="dt-moves">${list.map((m) => `<div class="dt-move"><span>${esc(m.name)}</span>${m.type ? `<span class="cc-type" data-type="${esc(m.type.toLowerCase())}">${esc(m.type)}</span>` : ""}</div>`).join("")}</div></section>`;
       }).join("")}
       <section class="dt-sec"><p class="dt-muted" style="margin:0">${c.nextMoves.length ? `Learns next: ${c.nextMoves.map((m) => esc(m.name)).join(", ")}. ` : ""}Change moves on the <a href="${pageHref("/public/teams/", ctx.userId)}">Teams page</a> (each team keeps its own).</p></section>`
     : d.baseStats ? `<section class="dt-sec"><h3>Base stats</h3>${statBars(d.baseStats)}<p class="dt-muted">Total ${d.baseTotal}</p></section>` : ""}
@@ -112,7 +112,7 @@ async function load(id, ctx) {
     };
     dialog.querySelector(".dt-close")?.focus();
   } catch (err) {
-    dialog.innerHTML = `<div class="dt-head"><h2 id="detailTitle">Couldn’t load this Pokémon</h2><button type="button" class="dt-close" aria-label="Close">✕</button></div><p class="dt-muted" style="padding:0 16px 16px">${esc(err?.message || "Please try again.")}</p>`;
+    dialog.innerHTML = `<div class="dt-head"><h2 id="detailTitle">Couldn't load this Pokémon</h2><button type="button" class="dt-close" aria-label="Close">✕</button></div><p class="dt-muted" style="padding:0 16px 16px">${esc(err?.message || "Please try again.")}</p>`;
     dialog.onclick = (e) => { if (e.target === dialog || e.target.closest(".dt-close")) dialog.close(); };
   }
 }

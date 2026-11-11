@@ -31,8 +31,8 @@ export function giftPokemon(sender, recipient, key, name, amount) {
 
   // Only normals move, so only normals can cover the amount. Counting shinies
   // here let 1 normal + 3 shiny send 3 normals, creating 2 from nothing.
-  if (normal < amount) return `❌ You don't have ${amount}× normal ${name} to gift. Shiny Pokémon can't be gifted.`;
-  if (normal + shiny - amount === 0) return `⚠️ You can't gift your last ${name}.`;
+  if (normal < amount) return `You don't have ${amount}× normal ${name} to gift. Shiny Pokémon can't be gifted.`;
+  if (normal + shiny - amount === 0) return `You can't gift your last ${name}.`;
 
   if (!recipient.pokemon[key]) recipient.pokemon[key] = { normal: 0, shiny: 0 };
 
@@ -44,9 +44,9 @@ export function giftPokemon(sender, recipient, key, name, amount) {
 
 // Moves one trainer sprite. Returns why it can't, or null once moved.
 export function giftTrainer(sender, recipient, key, name) {
-  if (!ownsTrainer(sender, key)) return `❌ You don't own ${name}.`;
-  if (trainerCount(sender) <= 1) return `⚠️ You can't gift your only trainer sprite.`;
-  if (ownsTrainer(recipient, key)) return `⚠️ They already own ${name}.`;
+  if (!ownsTrainer(sender, key)) return `You don't own ${name}.`;
+  if (trainerCount(sender) <= 1) return `You can't gift your only trainer sprite.`;
+  if (ownsTrainer(recipient, key)) return `They already own ${name}.`;
   revokeTrainer(sender, key);
   grantTrainer(recipient, key);
   trackProgress(recipient, [{ type: "trainers" }]); // achievements (inside lockUsers)
@@ -96,7 +96,7 @@ export default {
     .addIntegerOption((option) =>
       option
         .setName("amount")
-        .setDescription("How many coins or Pokémon to send (ignored for trainer).")
+        .setDescription("How much CC, or how many Pokémon, to send (ignored for Trainers).")
         .setMinValue(1)
         .setRequired(false)
     ),
@@ -115,11 +115,11 @@ export default {
 
     // Basic validation
     if (!receiver)
-      return safeReply(interaction, { content: "❌ Invalid user.", flags: MessageFlags.Ephemeral });
+      return safeReply(interaction, { content: "Invalid user.", flags: MessageFlags.Ephemeral });
 
     if (receiver.id === senderId)
       return safeReply(interaction, {
-        content: "⚠️ You can't gift yourself.",
+        content: "You can't gift yourself.",
         flags: MessageFlags.Ephemeral,
       });
 
@@ -140,7 +140,7 @@ export default {
     let trainerTarget = null;
     try {
       if (type === "pokemon" || type === "trainer") {
-        if (!itemName) return reply(`❌ You must specify which ${type === "pokemon" ? "Pokémon" : "Trainer"} to gift.`);
+        if (!itemName) return reply(`You must specify which ${type === "pokemon" ? "Pokémon" : "Trainer"} to gift.`);
         const nameValidation = validateNameQuery(itemName);
         if (!nameValidation.valid) return reply(`❌ ${nameValidation.error}`);
 
@@ -149,19 +149,19 @@ export default {
             pokemonTarget = await findPokemonByName(nameValidation.sanitized);
           } catch (err) {
             console.error("❌ Error finding Pokémon:", err);
-            return reply("❌ Error searching for Pokémon. Please try again.");
+            return reply("Error searching for Pokémon. Please try again.");
           }
-          if (!pokemonTarget) return reply(`⚠️ Pokémon \"${itemName}\" not found.`);
+          if (!pokemonTarget) return reply(`Pokémon \"${itemName}\" not found.`);
         } else {
-          if (amount && amount !== 1) return reply("⚠️ Trainer gifts are always 1. Ignore the amount parameter.");
+          if (amount && amount !== 1) return reply("Trainers are gifted one at a time. Leave the amount empty.");
           const flatTrainers = await getFlattenedTrainers();
           trainerTarget = findTrainerByQuery(flatTrainers, nameValidation.sanitized);
-          if (!trainerTarget) return reply(`⚠️ Trainer \"${itemName}\" not found.`);
+          if (!trainerTarget) return reply(`Trainer \"${itemName}\" not found.`);
         }
       }
     } catch (err) {
       console.error("❌ Gift command error:", err);
-      return reply(`❌ An error occurred: ${err.message}`);
+      return reply(`An error occurred: ${err.message}`);
     }
 
     // ---- Both players locked: validate + move in one synchronous block, then save ----
@@ -182,7 +182,7 @@ export default {
           refusal = giftTrainer(sender, recipient, getTrainerKey(trainerTarget), trainerTarget.name);
           description = `🧑‍🏫 ${interaction.user.username} sent the **${trainerTarget.name}** trainer sprite to ${receiver.username}!`;
         } else {
-          refusal = "❌ Unknown gift type.";
+          refusal = "Unknown gift type.";
         }
         if (refusal) return reply(refusal);
 
@@ -194,7 +194,7 @@ export default {
       });
     } catch (err) {
       console.error("❌ Gift command error:", err);
-      return reply(`❌ An error occurred: ${err.message}`);
+      return reply(`An error occurred: ${err.message}`);
     }
   },
 };

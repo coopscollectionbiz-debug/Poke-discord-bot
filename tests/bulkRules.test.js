@@ -149,7 +149,7 @@ test("the server accepts every duplicate row and leaves 1 of each variant", () =
 // Multi-select
 // ==========================================================
 test("multiSelectBlock explains each lock", () => {
-  assertEqual(block(19)?.title, "🔒 More Than One Copy", "Rattata x2");
+  assertEqual(block(19)?.title, "🔒 More than one copy", "Rattata x2");
   assertTrue(
     block(19)?.message.startsWith("You have 2 Rattata."),
     `Rattata x2 message names the count (got: ${block(19)?.message})`
@@ -158,9 +158,9 @@ test("multiSelectBlock explains each lock", () => {
     block(92)?.message.startsWith("You have 3 shiny Gastly."),
     `shiny-only duplicates name the shiny count (got: ${block(92)?.message})`
   );
-  assertEqual(block(25)?.title, "🔒 You Own Both Variants", "Pikachu x1 · ✨x1");
-  assertEqual(block(39)?.title, "🔒 Not Owned", "unowned Pokémon");
-  assertEqual(block(1)?.title, "🔒 On Your Team", "Bulbasaur on the saved Team");
+  assertEqual(block(25)?.title, "🔒 You own both variants", "Pikachu x1 · ✨x1");
+  assertEqual(block(39)?.title, "🔒 Not owned", "unowned Pokémon");
+  assertEqual(block(1)?.title, "🔒 On your Showcase team", "Bulbasaur on the saved Team");
   assertEqual(block(41), null, "Zubat x1 is selectable");
   assertEqual(block(150), null, "a lone shiny is selectable");
 });
@@ -179,7 +179,7 @@ test("More Than One Copy says 'then select it' only when Donate Duplicates unloc
   }
 
   // Pidgey x4 · ✨x2 ends at 1 of each; Charmander x3 ends at its Team copy.
-  for (const [pid, lock] of [[16, "🔒 You Own Both Variants"], [4, "🔒 On Your Team"]]) {
+  for (const [pid, lock] of [[16, "🔒 You own both variants"], [4, "🔒 On your Showcase team"]]) {
     const name = pokemonData[pid].name;
     assertTrue(
       !block(pid)?.message.includes("select it"),
@@ -193,7 +193,7 @@ test("the Team lock matches the variant on the Team", () => {
   assertEqual(block(7), null, "Team has shiny Squirtle, player owns only a normal: selectable");
   assertEqual(
     block(150, makeCollection(), [{ id: 150, variant: "shiny" }])?.title,
-    "🔒 On Your Team",
+    "🔒 On your Showcase team",
     "lone shiny Mewtwo on the Team is locked"
   );
 });

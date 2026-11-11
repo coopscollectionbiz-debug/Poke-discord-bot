@@ -10,7 +10,7 @@ import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("resetteam")
-    .setDescription("Admin: Reset a user's Display and Battle teams.")
+    .setDescription("Admin: Reset a user's Showcase and Battle teams.")
     .addUserOption(option =>
       option
         .setName("user")
@@ -35,7 +35,7 @@ export default {
       // Permission
       if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
         return safeReply(interaction, {
-          content: "⛔ You do not have permission to use this command.",
+          content: "You do not have permission to use this command.",
           flags: MessageFlags.Ephemeral
         });
       }
@@ -52,7 +52,7 @@ export default {
 
         if (!user) {
           return safeReply(interaction, {
-            content: `❌ User <@${userId}> has no saved data.`,
+            content: `User <@${userId}> has no saved data.`,
             flags: MessageFlags.Ephemeral
           });
         }
@@ -70,7 +70,7 @@ export default {
         const saveAck = await saveAndAck(trainerData);
 
         return safeReply(interaction, {
-          content: withSaveNote(`✅ Reset **${target.username}'s** Display and Battle teams (and their chosen moves).\nThey can now pick new teams on the dashboard's Teams page.`, saveAck),
+          content: withSaveNote(`Reset **${target.username}'s** Showcase and Battle teams (and their chosen moves).\nThey can now pick new teams on the dashboard's Teams page.`, saveAck),
           flags: MessageFlags.Ephemeral
         });
 
@@ -78,7 +78,7 @@ export default {
     } catch (err) {
       console.error("❌ /resetteam failed:", err);
       return safeReply(interaction, {
-        content: `❌ Error resetting team: ${err.message}`,
+        content: `Error resetting team: ${err.message}`,
         flags: MessageFlags.Ephemeral
       });
     }

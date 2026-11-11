@@ -69,7 +69,7 @@ export default {
     // 💰 CC Check
     if (user.cc < RECRUIT_COST_CC) {
       return safeReply(interaction, {
-        content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
+        content: "You need **100 CC** to recruit! Earn more using `/daily`.",
         flags: MessageFlags.Ephemeral
       });
     }
@@ -111,7 +111,7 @@ export default {
     collector.on("collect", async (i) => {
       if (i.customId === "cancel_recruit") {
         collector.stop();
-        return safeReply(i, { content: "❌ Recruitment cancelled.", flags: MessageFlags.Ephemeral });
+        return safeReply(i, { content: "Recruitment cancelled.", flags: MessageFlags.Ephemeral });
       }
 
       if (i.customId === "recruit_type") {
@@ -120,7 +120,7 @@ export default {
 
         if (user.cc < RECRUIT_COST_CC) {
           return safeReply(i, {
-            content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
+            content: "You need **100 CC** to recruit! Earn more using `/daily`.",
             flags: MessageFlags.Ephemeral
           });
         }
@@ -136,7 +136,7 @@ export default {
     collector.on("end", async (_, reason) => {
       if (reason === "time") {
         await safeReply(interaction, {
-          content: "⏱️ Recruitment timed out – try again later.",
+          content: "⏱️ Recruitment timed out. Run /recruit again.",
           flags: MessageFlags.Ephemeral
         });
       }
@@ -149,7 +149,7 @@ export default {
 // Awaits (catalog look-ups) happen before the lock; inside it the live
 // record is re-checked, mutated in one synchronous block, then saved.
 // ==========================================================
-const NOT_ENOUGH_CC = "❌ You need **100 CC** to recruit! Earn more using `/daily`.";
+const NOT_ENOUGH_CC = "You need **100 CC** to recruit! Earn more using `/daily`.";
 
 // Species of live generations only (config/generations.js; Gens 1–5 by
 // default). Replaces the old hard-coded "national dex 1–649" cap.
@@ -173,7 +173,7 @@ export function chargeAndGrant(user, grant, now = Date.now()) {
 async function recruitPokemon(i, trainerData) {
   const pool = recruitPool(await getPokemonCached());
   if (!pool.length) {
-    return safeReply(i, { content: "❌ Recruitment is unavailable right now. Please try again later.", flags: MessageFlags.Ephemeral });
+    return safeReply(i, { content: "Recruitment is unavailable right now. Please try again later.", flags: MessageFlags.Ephemeral });
   }
 
   await lockUser(i.user.id, async () => {

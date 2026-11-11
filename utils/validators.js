@@ -158,7 +158,7 @@ export function validateCooldown(lastUsed, cooldownMs) {
  */
 export function validateNotSelf(senderId, receiverId) {
   if (senderId === receiverId) {
-    return { valid: false, error: "⚠️ You can't perform this action on yourself." };
+    return { valid: false, error: "You can't perform this action on yourself." };
   }
   return { valid: true, error: null };
 }

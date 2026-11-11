@@ -99,8 +99,8 @@ function drawHeader(ctx, view) {
 
   if (hasNote(view)) {
     const msg = view.slots.length
-      ? "No Team set: showing your first Pokémon. Pick your Team on /dashboard."
-      : "No Pokémon yet. Catch some by chatting, then pick your Team on /dashboard.";
+      ? "No Showcase team set, so this shows your first Pokémon. Pick one on /dashboard."
+      : "No Pokémon yet. Catch some by chatting, then pick a Showcase team on /dashboard.";
     ctx.font = font(19, 700);
     const tw = ctx.measureText(msg).width + 36;
     ctx.fillStyle = "#f5c84c1f";

@@ -26,9 +26,9 @@ export const data = new SlashCommandBuilder()
   .setDescription("Battle another trainer's Team")
   .addUserOption((o) => o.setName("opponent").setDescription("Who to battle").setRequired(true))
   .addBooleanOption((o) =>
-    o.setName("ranked").setDescription("Ranked: Battle teams at Lv 50, changes your rating"))
+    o.setName("ranked").setDescription("Battle teams at Lv 50. Moves both players' Ranked rating"))
   .addIntegerOption((o) =>
-    o.setName("wager").setDescription("CC each of you puts in the pot (they must accept). Always ranked").setMinValue(1));
+    o.setName("wager").setDescription("CC each of you puts in the pot. They must accept. Moves your Ranked rating").setMinValue(1));
 
 // Battles and wager offers are posted as new channel messages.
 const CHANNEL_PERMISSIONS = [
@@ -40,10 +40,10 @@ export function refusal(reason, opponentId) {
     self: "You can't battle yourself.",
     bot: "You can't battle a bot.",
     no_perms: "I can't post battles in this channel. Try another one.",
-    no_team_challenger: "Set a Team on your dashboard before battling.",
-    no_team_defender: `<@${opponentId}> hasn't set a team yet.`,
-    no_battle_team_challenger: "Ranked and wager battles use your Battle team. Set it on the Teams page: run /dashboard.",
-    no_battle_team_defender: `<@${opponentId}> hasn't set a Battle team yet, so you can't play a ranked or wager battle with them.`,
+    no_team_challenger: "Set a Showcase team on the Teams page (/dashboard) before battling.",
+    no_team_defender: `<@${opponentId}> hasn't set a Showcase team yet.`,
+    no_battle_team_challenger: "Ranked and Wager battles use your Battle team. Set one on the Teams page (/dashboard).",
+    no_battle_team_defender: `<@${opponentId}> hasn't set a Battle team yet, so you can't play a Ranked or Wager battle with them.`,
     cap_daily: "You've used all 10 battles for today. Battles reset at midnight UTC.",
     cap_opponent: `You've battled <@${opponentId}> 3 times today. Try someone else.`,
     defender_cap_daily: `<@${opponentId}> has no battles left today.`,
@@ -254,9 +254,9 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     }
     collector.stop("answered");
     if (outcome.canceled) {
-      const why = outcome.canceled === "team_changed" ? `<@${challengerId}>'s Team got stronger since the offer`
-        : outcome.canceled.startsWith("no_team") ? "a Team is empty" : "one of you is out of battles";
-      return closeOffer(`Wager canceled — ${why}. Stake refunded.`);
+      const why = outcome.canceled === "team_changed" ? `<@${challengerId}>'s Battle team got stronger since the offer`
+        : outcome.canceled.startsWith("no_team") ? "a Battle team is empty" : "one of you is out of battles";
+      return closeOffer(`Wager canceled because ${why}. Stake refunded.`);
     }
     logEvent("battle", challengerId, {
       defenderId, mode: "wager", stake: outcome.stake, seed: outcome.seed,
@@ -278,5 +278,5 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
   });
 
   // Last, once the buttons are live: if this reply fails, the offer still works.
-  await interaction.editReply("⚔️ Wager offered. Your Coop Coin Stake is held until they respond.").catch(() => {});
+  await interaction.editReply("⚔️ Wager offered. Your CC Stake is held until they respond.").catch(() => {});
 }

@@ -161,7 +161,7 @@ section("Result embed");
   const casual = open(world(), 1);
   const ce = buildResultEmbed(casual, names).data;
   assertEqual(ce.fields.map((f) => f.name), ["Casual battle"], "Casual: says it's unrated instead of a rating");
-  assertTrue(ce.fields[0].value.includes("Unrated") && ce.fields[0].value.includes(names[casual.winnerId]), "Casual: names the winner");
+  assertTrue(ce.fields[0].value.includes("don't change your Ranked rating") && ce.fields[0].value.includes(names[casual.winnerId]), "Casual: names the winner");
   const wager = runBattle({ trainerData: world(), challengerId: "A", defenderId: "B", mode: "wager", stake: 30, seed: 3, now: NOW });
   for (const [label, outcome] of [["Ranked", out], ["Wager", wager]]) {
     const embed = buildResultEmbed(outcome, names).data;

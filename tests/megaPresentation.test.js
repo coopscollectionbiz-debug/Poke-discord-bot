@@ -98,7 +98,7 @@ section("Fail-closed display: base form everywhere, with a plain reason");
 const asBase = (env, u = ash) => buildTeamView(u, { env });
 const teamsOnly = asBase(TEAMS);
 assertEqual([teamsOnly.slots[0].name, teamsOnly.slots[0].spriteId, teamsOnly.slots[0].mega], ["Charizard", 6, null], "battles off: Charizard is shown as Charizard");
-assertEqual(teamsOnly.megaNotice, "Mega Charizard X is on this Team but battles as Charizard for now. Mega battles aren't available yet.", "…and the Team says why, in plain words");
+assertEqual(teamsOnly.megaNotice, "Mega Charizard X is on this team but battles as Charizard for now. Mega battles aren't available yet.", "…and the Team says why, in plain words");
 const allOff = asBase(OFF);
 assertEqual(JSON.stringify(allOff), JSON.stringify(buildTeamView(strip(ash), { env: OFF })), "Mega Evolution off: the view is exactly the view without any Mega (no notice, no fields)");
 const za = player("300000000000000004", [[26, "normal", 50, "mega-raichu-x"]]);
@@ -107,7 +107,7 @@ assertEqual([zav.slots[0].name, zav.slots[0].spriteId], ["Raichu", 26], "an unlo
 assertTrue(/battle data hasn't been confirmed/.test(zav.megaNotice), "…with the reason that it can't battle yet");
 const two = player("300000000000000005", [[6, "normal", 60, "mega-charizard-x"], [150, "normal", 70, "mega-mewtwo-x"]]);
 assertEqual(asBase(ON, two).slots.map((s) => s.name), ["Charizard", "Mewtwo"], "two Megas in a stored Team: every slot shows its base form");
-assertTrue(/Only one Mega/.test(asBase(ON, two).megaNotice), "…and the notice says only one Mega can be on a Team");
+assertTrue(/only one Mega/.test(asBase(ON, two).megaNotice), "…and the notice says only one Mega can be on a Team");
 const notUnlocked = player("300000000000000006", [[6, "normal", 60]]);
 notUnlocked.displayedPokemon[0].mega = "mega-charizard-x";
 assertEqual(asBase(ON, notUnlocked).slots[0].name, "Charizard", "a Mega that isn't unlocked on that line is never shown");

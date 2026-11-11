@@ -47,7 +47,7 @@ const html = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coop’s Collection — Sprite Credits</title>
+  <title>Sprite Credits · Coop's Collection</title>
   <style>
     :root { color-scheme: dark; --bg:#0f1115; --card:#181b22; --text:#e5e7eb; --muted:#9ca3af; --brand:#facc15; }
     body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui, sans-serif; }
@@ -69,13 +69,13 @@ const html = `<!DOCTYPE html>
   <section>
     <h2>Projects and sources</h2>
     <ul>
-${PROJECTS.map(([n, u, d]) => `      <li><a href="${u}" rel="noopener">${esc(n)}</a> — ${esc(d)}</li>`).join("\n")}
+${PROJECTS.map(([n, u, d]) => `      <li><a href="${u}" rel="noopener">${esc(n)}</a>: ${esc(d)}</li>`).join("\n")}
     </ul>
-    <p class="muted">The Generation 6–9 sprites are fan-made pixel art by the Smogon sprite project contributors, credited here as the projects ask. The Fairy type icon comes from Pokémon Showdown’s type icons, like the other 17.</p>
+    <p class="muted">The Generation 6–9 sprites are fan-made pixel art by the Smogon sprite project contributors, credited here as the projects ask. The Fairy type icon comes from Pokémon Showdown's type icons, like the other 17.</p>
   </section>
   <section>
     <h2>Generation 6–9 sprites</h2>
-    <p class="muted">Artist names come from the projects’ public trackers where one is listed.</p>
+    <p class="muted">Artist names come from the projects' public trackers where one is listed.</p>
     <div class="scroll"><table>
       <thead><tr><th>#</th><th>Pokémon</th><th>Sprite</th><th>Project</th><th>Artist / animator</th></tr></thead>
       <tbody>

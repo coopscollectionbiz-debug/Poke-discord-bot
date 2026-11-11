@@ -34,12 +34,12 @@ export async function atomicSave(trainerData, saveTrainerDataLocal, saveDataToDi
     // the data stays in memory and the save keeps retrying in the background.
     const saved = await enqueueSave(trainerData);
     if (saved === false) {
-      const msg = "❌ Local save failed (retrying in background; data is still in memory)";
+      const msg = "Local save failed (retrying in background; data is still in memory)";
       console.error(msg);
       errors.push(msg);
     }
   } catch (err) {
-    const msg = `❌ Local save failed: ${err.message}`;
+    const msg = `Local save failed: ${err.message}`;
     console.error(msg);
     errors.push(msg);
   }
@@ -54,7 +54,7 @@ export async function atomicSave(trainerData, saveTrainerDataLocal, saveDataToDi
 // retrying, so a rollback would just diverge from what gets written.
 // Instead, the reply tells the player it was saved with a delay.
 export const SAVE_DELAYED_NOTE =
-  "⚠️ Saved with a delay: your change is kept and will be written shortly. If the bot restarts before then, it could be lost.";
+  "Saved with a delay: your change is kept and will be written shortly. If the bot restarts before then, it could be lost.";
 
 /**
  * Save and report whether the change reached disk.

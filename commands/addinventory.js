@@ -33,7 +33,7 @@ function normalizeKey(input) {
 export default {
   data: new SlashCommandBuilder()
     .setName("addinventory")
-    .setDescription("Add a Pokémon, Trainer, or Item to a user's inventory (Admin only).")
+    .setDescription("Admin: Add a Pokémon, Trainer or item to a user.")
     .addUserOption(option =>
       option.setName("user").setDescription("Target user").setRequired(true)
     )
@@ -76,7 +76,7 @@ export default {
     // Permission validation
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
       return safeReply(interaction, {
-        content: "⛔ You do not have permission to use this command.",
+        content: "You do not have permission to use this command.",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -115,14 +115,14 @@ export default {
           const pokemon = await findPokemonByName(name);
           if (!pokemon) {
             return safeReply(interaction, {
-              content: `⛔ Pokémon "${name}" not found.`,
+              content: `Pokémon "${name}" not found.`,
               flags: MessageFlags.Ephemeral,
             });
           }
 
           if (!isAcquirable(pokemon.id) && !allowUnreleased) {
             return safeReply(interaction, {
-              content: `⛔ ${pokemon.name} is from Generation ${pokemon.generation}, which is not released yet. Re-run with \`allow_unreleased:True\` to grant it for testing.`,
+              content: `${pokemon.name} is from Generation ${pokemon.generation}, which is not released yet. Re-run with \`allow_unreleased:True\` to grant it for testing.`,
               flags: MessageFlags.Ephemeral,
             });
           }
@@ -148,7 +148,7 @@ export default {
 
           if (!trainer) {
             return safeReply(interaction, {
-              content: `⛔ Trainer "${name}" not found.`,
+              content: `Trainer "${name}" not found.`,
               flags: MessageFlags.Ephemeral,
             });
           }
@@ -194,7 +194,7 @@ export default {
           } else {
             if (!globalThis.SHOP_ITEMS || !globalThis.SHOP_ITEMS[key]) {
               return safeReply(interaction, {
-                content: `⛔ Item "${name}" not recognized.`,
+                content: `Item "${name}" not recognized.`,
                 flags: MessageFlags.Ephemeral,
               });
             }
@@ -216,7 +216,7 @@ export default {
           }
         } else {
           return safeReply(interaction, {
-            content: `⛔ Invalid type.`,
+            content: `Invalid type.`,
             flags: MessageFlags.Ephemeral,
           });
         }
@@ -230,13 +230,13 @@ export default {
         // ✅ Confirmation reply
         // ======================================================
         return safeReply(interaction, {
-          content: withSaveNote(`✅ Added ${confirmationText} to **${targetUser.username}**.`, saveAck),
+          content: withSaveNote(`Added ${confirmationText} to **${targetUser.username}**.`, saveAck),
           flags: MessageFlags.Ephemeral,
         });
       } catch (err) {
         console.error("❌ Add inventory error:", err);
         return safeReply(interaction, {
-          content: `❌ Error: ${err.message}`,
+          content: `Error: ${err.message}`,
           flags: MessageFlags.Ephemeral,
         });
       }

@@ -140,7 +140,7 @@ export default {
 
       if (!poke) {
         return safeReply(interaction, {
-          content: `❌ Pokémon "**${name}**" not found.`,
+          content: `Pokémon "**${name}**" not found.`,
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -197,7 +197,7 @@ export default {
               `**Viewing:** ${viewingShiny ? "✨ Shiny sprite" : "Normal sprite"}`
           )
           .setImage(getSprite(viewingShiny))
-          .setFooter({ text: Number(poke.id) >= 650 ? `Coop's Collection — /pokedex · Sprite: ${spriteRecord(poke.id)?.credit?.project?.replace(/ \(.*$/, "") ?? "Smogon sprite project"} · /credits` : "Coop's Collection — /pokedex" });
+          .setFooter({ text: Number(poke.id) >= 650 ? `Coop's Collection · Sprite: ${spriteRecord(poke.id)?.credit?.project?.replace(/ \(.*$/, "") ?? "Smogon sprite project"} · /credits` : "Coop's Collection" });
       };
 
       // IMPORTANT: rebuild components each time so toggling always updates cleanly
@@ -281,7 +281,7 @@ export default {
     } catch (err) {
       console.error("❌ /pokedex error:", err);
       return safeReply(interaction, {
-        content: "❌ Failed to load Pokédex entry.",
+        content: "Failed to load Pokédex entry.",
         flags: MessageFlags.Ephemeral,
       });
     }

@@ -71,8 +71,8 @@ function drawHeader(ctx, view, x, y, w) {
 function drawFallbackNote(ctx, view, x, y, w) {
   if (!view.fallback && view.slots.length) return;
   const msg = view.slots.length
-    ? "No Team set: showing your first Pokémon. Pick your Team on /dashboard."
-    : "No Pokémon yet. Catch some by chatting, then pick your Team on /dashboard.";
+    ? "No Showcase team set, so this shows your first Pokémon. Pick one on /dashboard."
+    : "No Pokémon yet. Catch some by chatting, then pick a Showcase team on /dashboard.";
   ctx.font = font(TEXT.micro, 700);
   const tw = Math.min(w, ctx.measureText(msg).width + 32);
   ctx.fillStyle = "#f5c84c22";
@@ -237,7 +237,7 @@ function drawRoster(ctx, view, sprites, frameFor) {
   ctx.strokeStyle = COLOR.textboxBorder;
   ctx.stroke();
   ctx.fillStyle = "#1d2233";
-  const { text, size } = fitFont(ctx, `${view.displayName}'s Team`, 520, TEXT.title, 22, 800);
+  const { text, size } = fitFont(ctx, `${view.displayName}'s Showcase team`, 520, TEXT.title, 22, 800);
   ctx.font = font(size, 800);
   ctx.fillText(text, pad + 26, ty + 40);
   ctx.font = font(TEXT.label, 600);

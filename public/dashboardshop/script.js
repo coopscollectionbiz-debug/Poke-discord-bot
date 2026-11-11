@@ -51,7 +51,7 @@ async function loadUser() {
       credentials: "same-origin",
     });
   } catch {
-    showBanner("Couldn’t reach the server. Check your connection and refresh.", { title: "Couldn’t load the Shop", key: "load" });
+    showBanner("Couldn't reach the server. Check your connection and refresh.", { title: "Couldn't load the Shop", key: "load" });
     return;
   }
 
@@ -62,7 +62,7 @@ async function loadUser() {
   }
 
   if (!res.ok) {
-    showBanner("Please refresh the page in a moment.", { title: "Couldn’t load the Shop", key: "load" });
+    showBanner("Please refresh the page in a moment.", { title: "Couldn't load the Shop", key: "load" });
     return;
   }
 
@@ -153,7 +153,7 @@ function showShopModal({ title, message, sprites = [], onConfirm }) {
       await onConfirm();
     } catch (err) {
       console.error("Shop action failed:", err);
-      if (!isExpired()) showMessage({ title: "Something went wrong", message: "Couldn’t reach the server. Check your CC before trying again.", tone: "error" });
+      if (!isExpired()) showMessage({ title: "Something went wrong", message: "Couldn't reach the server. Check your CC before trying again.", tone: "error" });
     } finally {
       closeLoading();
       overlay.remove();
@@ -228,7 +228,7 @@ async function buyStone(cost) {
       if (!canAfford(cost)) {
         showShopModal({
           title: "Not enough CC",
-          message: "You don’t have enough CC for this purchase.",
+          message: "You don't have enough CC for this purchase.",
           onConfirm: () => {},
         });
         return;
@@ -383,7 +383,7 @@ async function claimWeeklyPack() {
       body: JSON.stringify({ id: userId }),
     }).then((r) => r.json());
   } catch {
-    res = { success: false, error: "Couldn’t reach the server. Refresh to check whether your pack was claimed." };
+    res = { success: false, error: "Couldn't reach the server. Refresh to check whether your pack was claimed." };
   }
 
   closeLoading();

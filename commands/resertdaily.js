@@ -41,14 +41,14 @@ export default {
 
       // permission check
       if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
-        return interaction.editReply("⛔ You do not have permission.");
+        return interaction.editReply("You do not have permission.");
       }
 
       const targetUser = interaction.options.getUser("user");
       const resetStreak = interaction.options.getBoolean("resetstreak") || false;
 
       if (!targetUser) {
-        return interaction.editReply("❌ Invalid user.");
+        return interaction.editReply("Invalid user.");
       }
 
       const userId = targetUser.id;
@@ -61,7 +61,7 @@ export default {
 
         if (!user) {
           return interaction.editReply(
-            `❌ <@${userId}> has no trainer data.`
+            `<@${userId}> has no trainer data.`
           );
         }
 
@@ -98,7 +98,7 @@ export default {
       console.error("❌ /resetdaily error:", err);
 
       try {
-        await interaction.editReply(`❌ Failed: ${err.message}`);
+        await interaction.editReply(`Failed: ${err.message}`);
       } catch {
         console.warn("⚠ EditReply failed — interaction likely already resolved.");
       }

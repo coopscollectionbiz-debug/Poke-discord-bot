@@ -28,7 +28,7 @@ export default {
       let user = trainerData[userId];
       if (!user) {
         return safeReply(interaction, {
-          content: "⚠️ You don’t have a Trainer Card yet! Use `/trainercard` to create one.",
+          content: "You don't have a Trainer Card yet! Use `/trainercard` to create one.",
           flags: MessageFlags.Ephemeral
         });
       }
@@ -47,7 +47,7 @@ export default {
     } catch (err) {
       console.error("❌ /showcard error:", err);
       await safeReply(interaction, {
-        content: "❌ Failed to show Trainer Card. Please try again later.",
+        content: "Failed to show Trainer Card. Please try again later.",
         flags: MessageFlags.Ephemeral
       });
     }

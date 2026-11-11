@@ -2,7 +2,7 @@
 // ==========================================================
 // /showteam — the player's battle Team as one image (the approved refined
 // A/B layout, utils/render/showteamRefined.js), with two controls:
-//   • "Inspect a Team member…" (anyone): an ephemeral single-Pokémon card
+//   • "Inspect a Pokémon…" (anyone): an ephemeral single-Pokémon card
 //   • "Manage Team" (owner only): an ephemeral dashboard link
 // Read-only: nothing here writes the Team or any other player data. Team
 // changes stay on the dashboard's POST /api/set-pokemon-team.
@@ -40,7 +40,7 @@ export function buildShowteamComponents(view, { nonce, disabled = false }) {
   if (!view.slots.length) return [];
   const menu = new StringSelectMenuBuilder()
     .setCustomId(`showteam:${nonce}:inspect`)
-    .setPlaceholder("Inspect a Team member…")
+    .setPlaceholder("Inspect a Pokémon…")
     .setDisabled(disabled)
     .addOptions(view.slots.map((s) => ({
       label: `${s.slot} · ${s.shiny ? "Shiny " : ""}${s.name} (Lv ${s.level})`.slice(0, 100),
@@ -69,7 +69,7 @@ export function routeShowteamInteraction({ customId, userId, values }, { nonce, 
   if (what === "manage") {
     return userId === ownerId
       ? { action: "manage" }
-      : { action: "deny", reason: `This is ${ownerName}'s Team. Use /showteam to show yours, or /dashboard to manage it.` };
+      : { action: "deny", reason: `This is ${ownerName}'s Showcase team. Use /showteam to show yours, or /dashboard to manage it.` };
   }
   return null;
 }
@@ -79,7 +79,7 @@ export function manageReply(ownerId, channelId) {
   const token = generateToken(ownerId, channelId);
   const url = `${publicBaseUrl()}/auth/dashboard?id=${encodeURIComponent(ownerId)}&code=${token}`;
   return {
-    content: "Change your Team on the dashboard. This link is just for you and expires in **10 minutes**.",
+    content: "Change your Showcase team on the Teams page. This link is just for you and expires in **10 minutes**.",
     components: [new ActionRowBuilder().addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("Open dashboard").setURL(url))],
     flags: MessageFlags.Ephemeral,
   };
@@ -88,7 +88,7 @@ export function manageReply(ownerId, channelId) {
 export default {
   data: new SlashCommandBuilder()
     .setName("showteam")
-    .setDescription("Show your trainer + full team as a canvas card."),
+    .setDescription("Post your Trainer and Showcase team as an image."),
 
   async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
     await interaction.deferReply(); // public, as before

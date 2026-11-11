@@ -118,7 +118,7 @@ section("Challenger's Team gets stronger after the offer");
   await t.collectors[0].h.collect(t.button("B", `wager_accept:${nonce}`));
   assertEqual([t.trainerData.A.cc, t.trainerData.B.cc, t.trainerData.A.pendingWager], [100, 100, null], "the Stake is refunded");
   assertEqual(t.log.messages.length, 1, "no battle runs");
-  assertTrue(t.log.messages[0].edits.at(-1)?.content.includes("Team got stronger"), "the offer says why it closed");
+  assertTrue(t.log.messages[0].edits.at(-1)?.content.includes("Battle team got stronger"), "the offer says why it closed");
 }
 
 section("Expiry and decline after a replaced record");

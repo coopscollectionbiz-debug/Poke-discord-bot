@@ -1934,7 +1934,7 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
         normalizeUserSchema(id, user); // in place
         user.cc ??= 0;
         if (user.cc < COST) {
-          return { ok: false, error: `Not enough CC — requires ${COST} CC.`, cc: user.cc, status: 400 };
+          return { ok: false, error: `Not enough CC. This costs ${COST} CC.`, cc: user.cc, status: 400 };
         }
         const granted = grantItem(user, "evolution_stone", 1);
         if (!granted.ok) return { ok: false, error: granted.error, status: 400 };
@@ -2227,14 +2227,14 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
 
     if (isDisplayedVariant(u, pid, chosenVariant)) {
       return res.status(400).json({
-        error: `You can’t donate your ${chosenVariant} ${p.name} because it’s on one of your teams (Display or Battle). Remove it from that team first.`,
+        error: `You can't donate your ${chosenVariant} ${p.name} because it's on one of your teams (Showcase or Battle). Remove it from that team first.`,
       });
     }
 
     const owned = u.pokemon?.[pid]?.[chosenVariant] || 0;
     if (owned <= 0) {
       return res.status(400).json({
-        error: `You don’t own a ${chosenVariant === "shiny" ? "shiny " : ""}${p.name} to donate.`,
+        error: `You don't own a ${chosenVariant === "shiny" ? "shiny " : ""}${p.name} to donate.`,
       });
     }
 

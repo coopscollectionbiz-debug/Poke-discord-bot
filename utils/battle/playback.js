@@ -67,7 +67,7 @@ export function buildResultEmbed(outcome, names) {
   const entries = Object.entries(outcome.rating ?? {});
   if (!entries.length) {
     // Casual (open) battles are unrated.
-    embed.addFields({ name: "Casual battle", value: `${names[outcome.winnerId]} wins! Unrated. For a rated battle: /battle ranked:True` });
+    embed.addFields({ name: "Casual battle", value: `${names[outcome.winnerId]} wins! Casual battles don't change your Ranked rating. For a Ranked battle: /battle ranked:True` });
     return embed;
   }
   const rating = entries
@@ -80,9 +80,9 @@ export function buildResultEmbed(outcome, names) {
 function header(outcome) {
   const [c, d] = outcome.sides.map((s) => `<@${s.userId}>`);
   const intro = outcome.mode === "wager"
-    ? `⚔️ ${c} vs ${d} — Wager battle for ${outcome.stake} CC each! Battle teams at Lv 50.`
+    ? `⚔️ ${c} vs ${d} in a Wager battle for ${outcome.stake} CC each! Battle teams at Lv 50.`
     : outcome.mode === "ranked"
-      ? `⚔️ ${c} challenged ${d} to a ranked battle! Battle teams at Lv 50.`
+      ? `⚔️ ${c} challenged ${d} to a Ranked battle! Battle teams at Lv 50.`
       : `⚔️ ${c} challenged ${d}!`;
   if (!outcome.surge) return intro;
   return `${intro}\n🔥 The crowd is behind <@${outcome.sides[outcome.surge.side].userId}>! Underdog surge!`;
@@ -144,7 +144,7 @@ export async function playBattle(channel, outcome, names, { maxUpdates, delayMs,
   let message = null;
   let placeShown = Promise.resolve();
   const showPlace = (n) => {
-    const content = `${header(outcome)}\n⏳ Wow, lots of battles right now! You're #${n} in line.`;
+    const content = `${header(outcome)}\n⏳ Lots of battles right now. You're #${n} in line.`;
     placeShown = placeShown
       .then(async () => {
         if (message) await message.edit({ content });

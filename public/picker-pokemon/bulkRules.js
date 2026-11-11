@@ -50,21 +50,21 @@ export function multiSelectBlock(pid, { pokemon, pokemonData, savedTeam }) {
     const left = { [pid]: { normal: Math.min(owned.normal, 1), shiny: Math.min(owned.shiny, 1) } };
     const unlocks = multiSelectBlock(pid, { pokemon: left, pokemonData, savedTeam }) === null;
     return {
-      title: "🔒 More Than One Copy",
+      title: "🔒 More than one copy",
       message: `You have ${have}. Use Donate Duplicates to bring it down to 1${unlocks ? ", then select it" : ""}.`,
     };
   }
   if (owned.normal === 1 && owned.shiny === 1) {
     return {
-      title: "🔒 You Own Both Variants",
+      title: "🔒 You own both variants",
       message: `You have a normal and a shiny ${name}. Turn off Multi-select and tap it to choose which one to donate.`,
     };
   }
-  if (owned.any !== 1) return { title: "🔒 Not Owned", message: `You don’t own ${name}.` };
+  if (owned.any !== 1) return { title: "🔒 Not owned", message: `You don't own ${name}.` };
 
   const variant = onlyVariant(pokemon, pid);
   if (savedTeam.some((s) => s.id === Number(pid) && s.variant === variant)) {
-    return { title: "🔒 On Your Team", message: `${name} is on your Team. Remove it from your Team first.` };
+    return { title: "🔒 On your Showcase team", message: `${name} is on your Showcase team. Remove it on the Teams page first.` };
   }
   return null;
 }

@@ -71,7 +71,7 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
       const total = (user.pokemon[pid].normal ?? 0) + (user.pokemon[pid].shiny ?? 0);
       if (total > 1) return { error: `You have more than one ${p.name} now.` };
       if (isOnTeam(pid, variant)) {
-        return { error: `${p.name} is on one of your teams (Display or Battle). Remove it from that team first.` };
+        return { error: `${p.name} is on one of your teams (Showcase or Battle). Remove it from that team first.` };
       }
     }
 

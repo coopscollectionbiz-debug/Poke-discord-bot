@@ -56,7 +56,7 @@ section("Leaderboard");
   const msg = await leaderboardMessage(td, "p6");
   assertEqual(dims(msg.files[0].attachment), [1000, leaderboardSize(v).h], "renders the board image");
   const fb = await leaderboardMessage(td, "p6", { render: async () => { throw new Error("boom"); } });
-  assertTrue(fb.embeds[0].data.description.startsWith("1. MistyCascade — 1212"), "render failure: the text embed instead");
+  assertTrue(fb.embeds[0].data.description.startsWith("1. MistyCascade · 1212"), "render failure: the text embed instead");
   const empty = await leaderboardMessage({}, "x");
   assertTrue(empty.files.length === 1, "an empty ladder still renders");
 }

@@ -10,7 +10,7 @@ import { ensureUserInitialized } from "../utils/userInitializer.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("addcurrency")
-    .setDescription("Add TP or CC to a user's account.")
+    .setDescription("Admin: Add TP or CC to a user.")
     .addUserOption(option =>
       option.setName("user").setDescription("The target user").setRequired(true)
     )
@@ -44,7 +44,7 @@ export default {
     // Permission check
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
       return safeReply(interaction, {
-        content: "⛔ You do not have permission to use this command.",
+        content: "You do not have permission to use this command.",
         flags: MessageFlags.Ephemeral
       });
     }
@@ -56,14 +56,14 @@ export default {
     // Validation
     if (amount <= 0) {
       return safeReply(interaction, {
-        content: "❌ Amount must be greater than 0.",
+        content: "Amount must be greater than 0.",
         flags: MessageFlags.Ephemeral
       });
     }
 
     if (amount > 1_000_000) {
       return safeReply(interaction, {
-        content: "❌ Amount exceeds maximum (1,000,000).",
+        content: "Amount exceeds maximum (1,000,000).",
         flags: MessageFlags.Ephemeral
       });
     }
@@ -92,7 +92,7 @@ export default {
     });
 
     return safeReply(interaction, {
-      content: withSaveNote(`✅ Added **${amount} ${type.toUpperCase()}** to **${targetUser.username}**.`, saveAck),
+      content: withSaveNote(`Added **${amount} ${type.toUpperCase()}** to **${targetUser.username}**.`, saveAck),
       flags: MessageFlags.Ephemeral
     });
   }

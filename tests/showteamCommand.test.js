@@ -21,7 +21,7 @@ const ctx = { nonce: "abc123", ownerId: "111", ownerName: "Coop", slotCount: vie
 section("Command definition unchanged");
 {
   const json = showteam.data.toJSON();
-  assertEqual([json.name, json.description, (json.options ?? []).length], ["showteam", "Show your trainer + full team as a canvas card.", 0], "same name, description, no options");
+  assertEqual([json.name, json.description, (json.options ?? []).length], ["showteam", "Post your Trainer and Showcase team as an image.", 0], "same name, description, no options");
   assertEqual(json.default_member_permissions ?? null, null, "no permission gate (as before)");
   assertEqual(LAYOUT, "refined", "uses the approved refined layout");
   assertEqual(COLLECTOR_MS, 600_000, "controls expire after 10 minutes");
@@ -49,7 +49,7 @@ section("Routing and permissions");
   assertEqual(route({ customId: "showteam:abc123:inspect", userId: "111", values: ["7"] }), null, "out-of-range slot ignored");
   assertEqual(route({ customId: "showteam:abc123:manage", userId: "111" }), { action: "manage" }, "owner may manage");
   const deny = route({ customId: "showteam:abc123:manage", userId: "999" });
-  assertTrue(deny.action === "deny" && deny.reason.includes("Coop's Team"), "others are told whose Team it is");
+  assertTrue(deny.action === "deny" && deny.reason.includes("Coop's Showcase team"), "others are told whose Showcase team it is");
   assertEqual(route({ customId: "showteam:zzz:manage", userId: "111" }), null, "another message's nonce is not ours");
   assertEqual(route({ customId: "inv:abc123:next", userId: "111" }), null, "other commands' ids ignored");
 }

@@ -10,8 +10,8 @@
 // No API calls and no game logic live here.
 // ==========================================================
 
-export const EXPIRED_MESSAGE = "Your dashboard link expired — run /dashboard in Discord.";
-export const MISSING_ID_MESSAGE = "This page needs your dashboard link — run /dashboard in Discord.";
+export const EXPIRED_MESSAGE = "Your dashboard link expired. Run /dashboard in Discord for a new one.";
+export const MISSING_ID_MESSAGE = "This page needs your dashboard link. Run /dashboard in Discord.";
 
 export const NAV_ITEMS = Object.freeze([
   { key: "overview", label: "Overview", short: "Home", href: "/public/overview/", icon: "home" },
@@ -82,7 +82,7 @@ function mountShell() {
   side.setAttribute("aria-label", "Dashboard");
   const brand = document.createElement("div");
   brand.className = "cc-brand";
-  brand.innerHTML = `<i aria-hidden="true"></i><span>Coop’s Collection</span>`;
+  brand.innerHTML = `<i aria-hidden="true"></i><span>Coop's Collection</span>`;
   const foot = document.createElement("p");
   foot.className = "cc-sidebar-foot";
   foot.textContent = "Opened from /dashboard in Discord. Links last 10 minutes. ";

@@ -45,13 +45,13 @@ export default {
         await saveDiscord(trainerData);
 
         await interaction.editReply({
-          content: withSaveNote(`✅ Weekly pack reset for **${target.username}**`, ack),
+          content: withSaveNote(`Weekly pack reset for **${target.username}**`, ack),
         });
       });
     } catch (err) {
       console.error("❌ /resetweekly error:", err);
       await interaction.editReply({
-        content: "❌ Failed to reset weekly pack.",
+        content: "Failed to reset weekly pack.",
       });
     }
   },

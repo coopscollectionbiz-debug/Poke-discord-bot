@@ -14,7 +14,7 @@ import { rarityColors } from "../utils/rarityPalette.js"; // color palette
 export default {
   data: new SlashCommandBuilder()
     .setName("luck")
-    .setDescription("Shows your random reward luck meter (pity system)"),
+    .setDescription("Show your luck meter for random chat rewards"),
 
   async execute(interaction, trainerData) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -25,7 +25,7 @@ export default {
     const user = trainerData[userId];
     if (!user) {
       return safeReply(interaction, {
-        content: "❌ You haven’t earned any progress yet. Try chatting to begin!",
+        content: "You haven't earned any progress yet. Try chatting to begin!",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -56,9 +56,9 @@ export default {
     // ======================================================
     const embed = new EmbedBuilder()
       .setColor(rarityColors.success ?? "#00ff9d")
-      .setTitle("🍀 Your Luck Meter (Random Reward Pity)")
+      .setTitle("🍀 Your luck meter")
       .setDescription(
-`Each time you chat or react and **don’t** get a random reward, your luck increases.
+`Each time you chat or react and **don't** get a random reward, your luck increases.
 When you *do* get a reward → your luck resets to 0.
 
 **Final Chance:** \`${percent}%\`

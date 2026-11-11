@@ -42,7 +42,7 @@ export default {
     .addStringOption((option) =>
       option
         .setName("rarity")
-        .setDescription("Filter trainers by rarity.")
+        .setDescription("Filter by tier.")
         .addChoices(
           { name: "All", value: "all" },
           { name: "Common", value: "common" },
@@ -74,7 +74,7 @@ export default {
     const user = trainerData[userId];
     if (!user) {
       return safeReply(interaction, {
-        content: "❌ You don’t have a trainer profile yet. Use `/trainercard` first!",
+        content: "You don't have a trainer profile yet. Use `/trainercard` first!",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -123,7 +123,7 @@ export default {
 
     if (rows.length === 0) {
       return safeReply(interaction, {
-        content: "⚠️ No trainers match your current filters or ownership status.",
+        content: "No trainers match your current filters or ownership status.",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -152,7 +152,7 @@ export default {
         .join("\n");
 
       const embed = new EmbedBuilder()
-        .setTitle(`🎓 ${interaction.user.username}’s Trainer Collection`)
+        .setTitle(`🎓 ${interaction.user.username}'s Trainer Collection`)
         .setDescription(
           [
             `Owned: ${totalOwned}/${totalAvailable} (${percentOwned}%)`,
@@ -259,7 +259,7 @@ export default {
       const fullURL = trainerImageUrl(t.sprite);
 
       const embed = new EmbedBuilder()
-        .setTitle(`🎓 ${t.name} — ${t.sprite.replace(".png", "")}`)
+        .setTitle(`🎓 ${t.name} · ${t.sprite.replace(".png", "")}`)
         .setDescription(
           [
             `**Rarity:** ${t.rarity?.toUpperCase() || "COMMON"}`,
@@ -302,7 +302,7 @@ export default {
     collector.on("collect", async (i) => {
       if (i.user.id !== interaction.user.id)
         return safeReply(i, {
-          content: "⚠️ You can’t control this menu.",
+          content: "You can't control this menu.",
           flags: MessageFlags.Ephemeral,
         });
 
@@ -329,7 +329,7 @@ export default {
         const className = variant?.name;
         const rendered = renderSprite(spriteFile, className);
         if (!rendered)
-          return safeReply(i, { content: "❌ Sprite not found.", flags: MessageFlags.Ephemeral });
+          return safeReply(i, { content: "Sprite not found.", flags: MessageFlags.Ephemeral });
         return safeReply(i, {
           embeds: [rendered.embed],
           components: [rendered.row],

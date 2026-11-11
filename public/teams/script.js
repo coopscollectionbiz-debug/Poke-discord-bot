@@ -22,7 +22,7 @@ import { scanFx } from "/public/shared/spriteFx.js";
 import { openMovesEditor } from "/public/teams/moves.js";
 
 const TEAMS = ["display", "battle"];
-const LABEL = { display: "Display team", battle: "Battle team" };
+const LABEL = { display: "Showcase team", battle: "Battle team" }; // `display` is the stored key for the Showcase team
 const MAX = 6;
 const BATTLE_LEVEL = 50;
 // pokemonData.json type ids (same order as the Pokémon page's TYPE_MAP).
@@ -92,7 +92,7 @@ function blockReason(t, s, { replaceAt = -1 } = {}) {
         code: "mythic",
         short: "Mythic limit",
         title: "One mythic-tier Pokémon per Battle team",
-        text: `${species(s.id).name} can’t join your Battle team: it already has a mythic-tier Pokémon (${species(other.id).name}). Remove ${species(other.id).name} first, or add ${species(s.id).name} to your Display team.`,
+        text: `${species(s.id).name} can't join your Battle team: it already has a mythic-tier Pokémon (${species(other.id).name}). Remove ${species(other.id).name} first, or add ${species(s.id).name} to your Display team.`,
       };
     }
   }
@@ -210,8 +210,8 @@ function copyDisplay() {
   state.draft.battle = kept;
   state.error.battle = null;
   const msg = dropped.length
-    ? `Copied your Display team. ${dropped.map((s) => species(s.id).name).join(", ")} left out: one mythic-tier Pokémon per Battle team.`
-    : "Copied your Display team.";
+    ? `Copied your Showcase team. ${dropped.map((s) => species(s.id).name).join(", ")} left out: one mythic-tier Pokémon per Battle team.`
+    : "Copied your Showcase team.";
   announce(msg);
   toast(msg);
   render();
@@ -249,7 +249,7 @@ async function save() {
       try { body = await res.json(); } catch { /* non-JSON */ }
       if (res.status === 403) { showExpired(); return; }
       if (!res.ok || !body.success) {
-        const err = new Error(body.error || `Couldn’t save your ${LABEL[t]} (${res.status}).`);
+        const err = new Error(body.error || `Couldn't save your ${LABEL[t]} (${res.status}).`);
         err.team = t;
         throw err;
       }
@@ -265,7 +265,7 @@ async function save() {
       state.active = err.team;
       if (/mythic/i.test(err.message)) state.error[err.team] = { title: "One mythic-tier Pokémon per Battle team", text: err.message };
     }
-    showActionError(err, `Couldn’t save your ${err.team ? LABEL[err.team] : "teams"}`);
+    showActionError(err, `Couldn't save your ${err.team ? LABEL[err.team] : "teams"}`);
   } finally {
     state.saving = false;
     render();
@@ -321,7 +321,7 @@ function slotCard(t, s, i) {
       <div class="tm-slot-meta">${lvl}</div>
       ${typeChips(s.id)}
       <div class="tm-slot-tags">${tags}</div>
-      <button type="button" class="tm-movesbtn" data-act="moves" data-team="${t}" data-i="${i}" aria-label="${esc(species(s.id).name)}’s moves on your ${LABEL[t]}">Moves</button>
+      <button type="button" class="tm-movesbtn" data-act="moves" data-team="${t}" data-i="${i}" aria-label="${esc(species(s.id).name)}'s moves on your ${LABEL[t]}">Moves</button>
       ${state.megaOn && megaFormsFor(s).length ? `<button type="button" class="tm-megabtn${s.mega ? " is-on" : ""}" data-act="mega" data-team="${t}" data-i="${i}" aria-label="Mega form for ${esc(species(s.id).name)}: ${s.mega ? esc(megaCard(s.mega)?.name ?? s.mega) : "off"}. Change">${s.mega ? `Mega: ${esc((megaCard(s.mega)?.name ?? s.mega).replace(/^Mega /, ""))}` : "Mega: off"}</button>` : ""}
     </div>
     <div class="tm-slot-ctl">
@@ -353,16 +353,16 @@ function teamPanel() {
   const head = isB
     ? `<div><h2 class="tm-h2" id="teamHeading" tabindex="-1"><svg class="tm-ic" aria-hidden="true"><use href="#tm-swords"/></svg>Battle team</h2>
          <p class="tm-sub">Ranked and wager battles. Everyone fights at Lv ${BATTLE_LEVEL}; your Pokémon still earn EXP at their real Level.</p></div>${state.draft.battle ? rules() : ""}`
-    : `<div><h2 class="tm-h2" id="teamHeading" tabindex="-1"><svg class="tm-ic" aria-hidden="true"><use href="#tm-smile"/></svg>Display team</h2>
-         <p class="tm-sub">Open battles at real Levels, plus /showteam and your trainer card. Slot 1 leads.</p></div>`;
+    : `<div><h2 class="tm-h2" id="teamHeading" tabindex="-1"><svg class="tm-ic" aria-hidden="true"><use href="#tm-smile"/></svg>Showcase team</h2>
+         <p class="tm-sub">Casual battles at real Levels, plus /showteam and your trainer card. Slot 1 leads.</p></div>`;
   let body;
   if (isB && state.draft.battle == null) {
     body = `<div class="tm-empty"><p><strong>No Battle team yet.</strong><br>Ranked and wager battles will use it.</p>
-      <button type="button" class="cc-btn cc-btn--primary" data-act="copy"${team("display").length ? "" : " disabled"}>Copy my Display team</button>
+      <button type="button" class="cc-btn cc-btn--primary" data-act="copy"${team("display").length ? "" : " disabled"}>Copy my Showcase team</button>
       <p class="tm-sub" style="margin-top:12px">Or pick Pokémon from your box. One mythic-tier Pokémon at most.</p></div>`;
   } else if (!list.length) {
     body = `<div class="tm-empty"><p><strong>This team is empty.</strong> Pick up to six Pokémon from your box.</p>
-      ${isB && team("display").length ? `<button type="button" class="cc-btn" data-act="copy">Copy my Display team</button>` : ""}</div>`;
+      ${isB && team("display").length ? `<button type="button" class="cc-btn" data-act="copy">Copy my Showcase team</button>` : ""}</div>`;
   } else {
     body = `<ol class="tm-slots">${Array.from({ length: MAX }, (_, i) => slotCard(t, list[i] ?? null, i)).join("")}</ol>`;
   }
@@ -370,7 +370,7 @@ function teamPanel() {
     ? `<div class="tm-notice" role="status"><p>${state.notices.map((n) => esc(n.text)).join("<br>")}</p><button type="button" class="cc-btn" data-act="dismiss">Got it</button></div>`
     : "";
   const e = state.error[t];
-  const err = e ? `<div class="tm-error" role="alert"><svg class="tm-ic" aria-hidden="true"><use href="#tm-lock"/></svg><p><strong>${esc(e.title ?? "Can’t add that Pokémon")}</strong>${esc(e.text)}</p></div>` : "";
+  const err = e ? `<div class="tm-error" role="alert"><svg class="tm-ic" aria-hidden="true"><use href="#tm-lock"/></svg><p><strong>${esc(e.title ?? "Can't add that Pokémon")}</strong>${esc(e.text)}</p></div>` : "";
   return `<section id="teamPanel" class="tm-panel tm-panel--${t} tm-team" role="tabpanel" aria-labelledby="tab-${t}">
     <div class="tm-panel-head">${head}</div>${note}${body}${err}
     <button type="button" class="cc-btn tm-addbtn" data-act="openbox"><svg class="tm-ic" aria-hidden="true"><use href="#tm-plus"/></svg>Add from your box</button>
@@ -419,7 +419,7 @@ function boxTile(s) {
   const t = state.active;
   const sp = species(s.id);
   const why = state.draft[t] == null && t === "battle" ? null : blockReason(t, s);
-  const badges = membership(s).map((m) => `<span class="tm-mem tm-mem--${m.t}" title="${LABEL[m.t]}, slot ${m.slot}">${m.t === "battle" ? "B" : "D"}${m.slot}</span>`).join("");
+  const badges = membership(s).map((m) => `<span class="tm-mem tm-mem--${m.t}" title="${LABEL[m.t]}, slot ${m.slot}">${m.t === "battle" ? "B" : "S"}${m.slot}</span>`).join("");
   const shiny = s.variant === "shiny";
   const blocked = why && why.code === "mythic";
   const label = `${sp.name}${shiny ? " (shiny)" : ""}, Lv ${levelOf(s)}${why ? `. ${why.short}` : `. Add to your ${LABEL[t]}`}`;
@@ -441,7 +441,7 @@ function boxPanel(where) {
   const f = state.filter;
   const seg = (v, label) => `<button type="button" data-act="show" data-show="${v}" aria-pressed="${f.show === v}">${label}</button>`;
   return `<div class="tm-panel-head"><div>${where === "sheet" ? "" : `<h2 class="tm-h2" id="boxHeading">Add to ${LABEL[t]}</h2>`}
-      <p class="tm-sub">Tap to add.${t === "battle" ? " Locked: would break a Battle team rule." : ""} D = Display slot, B = Battle slot.</p></div></div>
+      <p class="tm-sub">Tap to add.${t === "battle" ? " Locked: would break a Battle team rule." : ""} S = Showcase slot, B = Battle slot.</p></div></div>
     <div class="tm-boxbar">
       <label class="sr-only" for="boxSearch-${where}">Search your Pokémon</label>
       <input id="boxSearch-${where}" type="search" placeholder="Search…" value="${esc(f.q)}" data-act="search" autocomplete="off">
@@ -451,7 +451,7 @@ function boxPanel(where) {
       </select>
       <div class="tm-seg" role="group" aria-label="Show">${seg("all", "All")}${seg("shiny", "Shiny")}${seg("free", "Not on a team")}</div>
     </div>
-    ${items.length ? `<ul class="tm-box">${items.map(boxTile).join("")}</ul>` : `<p class="cc-empty">${Object.keys(state.pokemon).length ? "No Pokémon match." : "You haven’t caught any Pokémon yet. Try /daily in Discord."}</p>`}`;
+    ${items.length ? `<ul class="tm-box">${items.map(boxTile).join("")}</ul>` : `<p class="cc-empty">${Object.keys(state.pokemon).length ? "No Pokémon match." : "You haven't caught any Pokémon yet. Try /daily in Discord."}</p>`}`;
 }
 
 function saveBar() {
@@ -654,7 +654,7 @@ document.addEventListener("click", async (e) => {
   e.preventDefault();
   const leave = await confirmDialog({
     title: "Leave without saving?",
-    message: "Your team changes aren’t saved yet.",
+    message: "Your team changes aren't saved yet.",
     okText: "Leave",
     cancelText: "Stay",
     tone: "error",
@@ -674,7 +674,7 @@ async function load() {
       fetch(`/api/user-pokemon?id=${encodeURIComponent(userId)}`, { credentials: "same-origin" }),
     ]);
     if (userRes.status === 403) { app.innerHTML = ""; showExpired(); return; }
-    if (!pdRes.ok || !userRes.ok) throw new Error(`Couldn’t load your teams (${userRes.status}).`);
+    if (!pdRes.ok || !userRes.ok) throw new Error(`Couldn't load your teams (${userRes.status}).`);
     const data = await pdRes.json();
     for (const [id, p] of Object.entries(data)) {
       p.storedName = p.name;
@@ -693,7 +693,7 @@ async function load() {
     state.active = want === "battle" || want === "display" ? want : state.notices.length ? "battle" : "display";
   } catch (err) {
     app.innerHTML = "";
-    showBanner(err?.message || "Couldn’t load your teams. Please try again.", { title: "Couldn’t load your teams" });
+    showBanner(err?.message || "Couldn't load your teams. Please try again.", { title: "Couldn't load your teams" });
     return;
   }
   // Mega sprites only while Mega Evolution is switched on server-side.

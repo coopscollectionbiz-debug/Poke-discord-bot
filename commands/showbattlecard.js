@@ -18,7 +18,7 @@ const trainerSprites = JSON.parse(fs.readFileSync(path.join(__dirname, "../train
 
 export const data = new SlashCommandBuilder()
   .setName("showbattlecard")
-  .setDescription("Show your Battle team card: ranked rating, record and leaderboard position");
+  .setDescription("Post your Battle team card: Ranked rating, record and leaderboard position");
 
 /** { name, tier } of the equipped trainer file, from trainerSprites.json, or null. */
 export function equippedTrainer(file) {
@@ -42,7 +42,7 @@ export async function battleCardMessage(trainerData, userId, displayName, { rend
     return { files: [new AttachmentBuilder(card.buffer, { name: card.name })] };
   } catch (err) {
     console.warn("⚠️ battle card render failed; sending text:", err?.message || err);
-    const record = view.played ? `${view.rating} rating · ${view.wins}W–${view.losses}L${view.position ? ` · #${view.position} of ${view.players}` : ""}` : "No ranked battles this season.";
+    const record = view.played ? `${view.rating} rating · ${view.wins}W–${view.losses}L${view.position ? ` · #${view.position} of ${view.players}` : ""}` : "No Ranked battles this season.";
     const team = view.team.length ? view.team.map((s) => `${s.name} Lv 50`).join(", ") : "No Battle team yet. Set one on the Teams page (/dashboard).";
     return { content: `**${displayName}'s Battle team**\n${record}\n${team}` };
   }

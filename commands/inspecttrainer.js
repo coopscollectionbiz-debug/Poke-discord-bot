@@ -39,7 +39,7 @@ export default {
     .addStringOption((option) =>
       option
         .setName("rarity")
-        .setDescription("Filter by trainer rarity.")
+        .setDescription("Filter by tier.")
         .addChoices(
           { name: "All", value: "all" },
           { name: "Common", value: "common" },
@@ -63,7 +63,7 @@ export default {
 
     if (!trainerData[targetUser.id]) {
       return safeReply(interaction, {
-        content: `❌ ${targetUser.username} doesn't have a trainer profile yet.`,
+        content: `${targetUser.username} doesn't have a trainer profile yet.`,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -73,7 +73,7 @@ export default {
 
     if (ownedTrainerKeys.length === 0) {
       return safeReply(interaction, {
-        content: `⚠️ ${targetUser.username} doesn't own any trainers yet.`,
+        content: `${targetUser.username} doesn't own any trainers yet.`,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -93,7 +93,7 @@ export default {
 
     if (filtered.length === 0) {
       return safeReply(interaction, {
-        content: `⚠️ No trainers found matching **${filterRarity}** rarity.`,
+        content: `No trainers in the **${filterRarity}** tier.`,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -112,7 +112,7 @@ export default {
         .setTitle(`🎓 ${targetUser.username}'s Trainer Collection`)
         .setDescription(
           filterRarity !== "all"
-            ? `Filtering by **${filterRarity.toUpperCase()}** rarity`
+            ? `Showing the **${filterRarity.toUpperCase()}** tier`
             : "Showing all owned trainers"
         )
         .setColor(0x5865f2)
@@ -149,7 +149,7 @@ export default {
     collector.on("collect", async (i) => {
       if (i.user.id !== interaction.user.id) {
         return safeReply(i, {
-          content: "⚠️ You can't control this menu.",
+          content: "You can't control this menu.",
           flags: MessageFlags.Ephemeral,
         });
       }

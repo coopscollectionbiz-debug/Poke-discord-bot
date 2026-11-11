@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Shop · Coop’s Collection</title>
+  <title>Shop · Coop's Collection</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/public/shared/tokens.css" />
@@ -15,7 +15,7 @@
   <header class="cc-page-head">
     <p class="cc-eyebrow">Spend CC</p>
     <h1>Shop</h1>
-    <p>Use your CC to buy items and grow your collection.</p>
+    <p>Spend Coop Coins (CC) on Poké Balls, Evolution Stones and the weekly pack.</p>
   </header>
 
   <main id="ccMain" tabindex="-1">
@@ -33,13 +33,13 @@
 
     <section class="shop-section" aria-labelledby="ballsHeading">
       <h2 id="ballsHeading">Poké Balls</h2>
-      <p class="subtitle">Gives 1 random Pokémon. Better balls increase rarity odds.</p>
+      <p class="subtitle">Gives 1 random Pokémon. Great and Ultra Balls skip the lowest tiers and favor higher ones.</p>
 
       <div class="shop-grid">
         <div class="shop-item">
           <img src="/public/sprites/items/pokeball.png" class="item-icon" alt="" />
           <h3>Poké Ball</h3>
-          <p class="desc">Basic ball. Higher chance of Common.</p>
+          <p class="desc">Any tier. Common is the most likely.</p>
           <p class="price"><span class="price-value" data-price="pokeball">–</span> CC</p>
           <button type="button" class="buy-btn" data-item="pokeball" aria-label="Buy a Poké Ball">Buy</button>
         </div>
@@ -47,7 +47,7 @@
         <div class="shop-item">
           <img src="/public/sprites/items/greatball.png" class="item-icon" alt="" />
           <h3>Great Ball</h3>
-          <p class="desc">Catches Uncommon and better.</p>
+          <p class="desc">Uncommon tier or higher.</p>
           <p class="price"><span class="price-value" data-price="greatball">–</span> CC</p>
           <button type="button" class="buy-btn" data-item="greatball" aria-label="Buy a Great Ball">Buy</button>
         </div>
@@ -55,7 +55,7 @@
         <div class="shop-item">
           <img src="/public/sprites/items/ultraball.png" class="item-icon" alt="" />
           <h3>Ultra Ball</h3>
-          <p class="desc">Only catches Rare and better.</p>
+          <p class="desc">Rare tier or higher.</p>
           <p class="price"><span class="price-value" data-price="ultraball">–</span> CC</p>
           <button type="button" class="buy-btn" data-item="ultraball" aria-label="Buy an Ultra Ball">Buy</button>
         </div>

@@ -449,7 +449,7 @@ function updateDustTimer() {
   if (!el || !userData) return;
   const earned = userData.nonShinyDustEarnedThisWeek ?? 0;
   const countdown = formatCountdown(getNextMondayUTC().getTime() - Date.now());
-  el.textContent = `${earned}/8 shiny dust received from donations this week — resets in ${countdown}`;
+  el.textContent = `${earned}/8 Shiny Dust from donations this week. Resets in ${countdown}`;
 }
 
 function updateHUD() {
@@ -887,7 +887,7 @@ function renderPokemonGridCards() {
     const slotOf = (raw) => (Array.isArray(raw) ? raw : []).findIndex((s) => Number(s?.id) === id);
     const dIdx = slotOf(userData.currentTeam), bIdx = slotOf(userData.battleTeam);
     const teamBadgeHTML = dIdx >= 0 || bIdx >= 0
-      ? `<div class="team-badges">${dIdx >= 0 ? `<span class="mem mem-d" title="Display team, slot ${dIdx + 1}">D${dIdx + 1}</span>` : ""}${bIdx >= 0 ? `<span class="mem mem-b" title="Battle team, slot ${bIdx + 1}">B${bIdx + 1}</span>` : ""}</div>`
+      ? `<div class="team-badges">${dIdx >= 0 ? `<span class="mem mem-d" title="Showcase team, slot ${dIdx + 1}">S${dIdx + 1}</span>` : ""}${bIdx >= 0 ? `<span class="mem mem-b" title="Battle team, slot ${bIdx + 1}">B${bIdx + 1}</span>` : ""}</div>`
       : "";
 
     card.innerHTML = `
@@ -917,7 +917,7 @@ function renderPokemonGridCards() {
 
     // Keyboard + screen reader: the card is the control.
     const states = [];
-    if (dIdx >= 0) states.push(`Display team slot ${dIdx + 1}`);
+    if (dIdx >= 0) states.push(`Showcase team slot ${dIdx + 1}`);
     if (bIdx >= 0) states.push(`Battle team slot ${bIdx + 1}`);
     if (multiPicked) states.push("selected");
     if (shownVariant === "shiny") states.push("shiny");
@@ -1159,7 +1159,7 @@ async function init() {
 
     // Load Pokemon data
     const pokeRes = await fetch("/public/pokemonData.json", { credentials: "same-origin" });
-    if (!pokeRes.ok) throw new Error("Couldn’t load the Pokédex. Please refresh the page.");
+    if (!pokeRes.ok) throw new Error("Couldn't load the Pokédex. Please refresh the page.");
     pokemonData = await pokeRes.json();
     // Display names for the 24 slug-named species (display only; the
     // stored name is kept for search and is never sent to the server).
@@ -1174,7 +1174,7 @@ async function init() {
     } catch (err) {
       setGridMessage("");
       if (err?.status === 403) showExpired();
-      else showBanner(err?.message || "Couldn’t load your Pokémon. Please try again.", { title: "Couldn’t load your Pokémon" });
+      else showBanner(err?.message || "Couldn't load your Pokémon. Please try again.", { title: "Couldn't load your Pokémon" });
       return;
     }
 
@@ -1304,7 +1304,7 @@ async function init() {
                 confirmBox.querySelector("button").addEventListener("click", () => closeOverlay(modal2));
                 modal2.appendChild(confirmBox);
               } catch (err) {
-                showActionError(err, "Couldn’t save your Team");
+                showActionError(err, "Couldn't save your Team");
               } finally {
                 closeOverlay(overlay);
               }
@@ -1316,7 +1316,7 @@ async function init() {
   } catch (err) {
     console.error("Init failed:", err);
     setGridMessage("");
-    showBanner(err?.message || "Something went wrong. Please refresh the page.", { title: "Couldn’t load this page" });
+    showBanner(err?.message || "Something went wrong. Please refresh the page.", { title: "Couldn't load this page" });
   }
 }
 
@@ -1413,7 +1413,7 @@ function showBlockedActionModal(pokeId) {
   const overlay = createOverlay();
 
   let title = "⚠️ Action Unavailable";
-  let message = "You can’t do that right now.";
+  let message = "You can't do that right now.";
   let borderColor = "var(--brand)";
 
   const owned = ownedCounts(pokeId);
@@ -1421,7 +1421,7 @@ function showBlockedActionModal(pokeId) {
 
   if (currentMode === "team") {
     title = "🔒 Not Owned Yet";
-    message = `You don’t own ${p.name} yet.`;
+    message = `You don't own ${p.name} yet.`;
     borderColor = "var(--border)";
   }
 
@@ -1431,7 +1431,7 @@ function showBlockedActionModal(pokeId) {
 
     if (!evos.length) {
       title = "🧬 No Evolutions";
-      message = `${p.name} doesn’t have an evolution in this bot yet.`;
+      message = `${p.name} doesn't have an evolution in this bot yet.`;
     } else if (owned.any <= 0) {
       title = "🔒 Not Owned";
       message = `You need to own ${p.name} before evolving it.`;
@@ -1445,14 +1445,14 @@ function showBlockedActionModal(pokeId) {
         message = `You need at least ${minCost} evolution stones to evolve ${p.name}.\nYou currently have ${stones}.`;
       } else {
         title = "⚠️ Evolution Blocked";
-        message = `You can’t evolve ${p.name} right now.`;
+        message = `You can't evolve ${p.name} right now.`;
       }
     }
   }
 
   if (currentMode === "donate") {
     title = "🔒 Not Owned";
-    message = `You don’t own ${p.name}, so you can’t donate it.`;
+    message = `You don't own ${p.name}, so you can't donate it.`;
     borderColor = "var(--cc-gold)";
 
     const block = multiSelectOn ? multiSelectBlock(pokeId) : null;
@@ -1470,7 +1470,7 @@ function showBlockedActionModal(pokeId) {
     else if (owned.shiny > 0) message = `You already own a shiny ${p.name}.`;
     else if (cost <= 0) message = `Convert cost for ${tierOf(p)} is not configured.`;
     else if (dust < cost) message = `Not enough Shiny Dust.\nCost: ${cost}\nYou have: ${dust}`;
-    else message = `You can’t convert ${p.name} right now.`;
+    else message = `You can't convert ${p.name} right now.`;
   }
 
   const sprite =
@@ -1618,7 +1618,7 @@ async function handleConvertConfirm(pokeId, cost, overlay) {
     closeOverlay(overlay);
   } catch (err) {
     closeOverlay(overlay);
-    showActionError(err, "Couldn’t convert");
+    showActionError(err, "Couldn't convert");
     return;
     closeOverlay(overlay);
   }
@@ -1793,7 +1793,7 @@ function openEvolutionModal(baseId) {
     if (baseSpriteEl) baseSpriteEl.src = baseSpriteFor(chosenVariant);
 
     if (!ownsVariant(baseId, chosenVariant)) {
-      hintEl.textContent = `You don’t own a ${chosenVariant} ${base.name}.`;
+      hintEl.textContent = `You don't own a ${chosenVariant} ${base.name}.`;
       hintEl.style.color = "var(--cc-red)";
       confirmBtn.disabled = true;
     } else {
@@ -1880,7 +1880,7 @@ async function handleEvolutionConfirm(baseId, targetId, variant, overlay) {
     closeOverlay(overlay);
   } catch (err) {
     closeOverlay(overlay);
-    showActionError(err, "Couldn’t evolve");
+    showActionError(err, "Couldn't evolve");
     return;
     closeOverlay(overlay);
   }
@@ -2018,7 +2018,7 @@ async function handleDonationConfirm(pokeId, variant, overlay) {
     closeOverlay(overlay);
   } catch (err) {
     closeOverlay(overlay);
-    showActionError(err, "Couldn’t donate");
+    showActionError(err, "Couldn't donate");
     return;
     closeOverlay(overlay);
   }
@@ -2187,7 +2187,7 @@ async function handleBulkDonate(mode, rows, overlay) {
     return err?.status
       ? showBulkErrorModal("Nothing was donated.", err.message)
       : showBulkErrorModal(
-          "Couldn’t reach the server.",
+          "Couldn't reach the server.",
           "Your collection has been refreshed. Check it before trying again."
         );
   }

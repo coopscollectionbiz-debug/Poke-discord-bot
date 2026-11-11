@@ -308,7 +308,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     });
   } catch (err) {
     console.error("starterSelection error:", err);
-    return interaction.editReply({ content: "❌ Starter selection failed." });
+    return interaction.editReply({ content: "Starter selection failed." });
   }
 }
 
@@ -536,7 +536,7 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
       .setDescription(
         `🏆 **Rank:** ${rank}\n` +
           `${TP_EMOJI} **${user.tp ?? 0}** | ${CC_EMOJI} **${user.cc ?? 0}**\n\n` +
-          `🧍 **Trainer:** ${trainerInfo.name} — ${trainerInfo.rarityLabel} ${trainerInfo.emoji}\n\n` +
+          `🧍 **Trainer:** ${trainerInfo.name} · ${trainerInfo.rarityLabel} ${trainerInfo.emoji}\n\n` +
           `📊 **Pokémon Owned:** ${pokemonOwned}\n` +
           `✨ **Shiny Pokémon:** ${shinyCount}\n` +
           `🧍 **Trainers:** ${trainerCount}\n\n` +
@@ -573,6 +573,6 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
     });
   } catch (err) {
     console.error("trainerCard error:", err);
-    return interaction.editReply({ content: "❌ Failed to show Trainer Card." });
+    return interaction.editReply({ content: "Failed to show Trainer Card." });
   }
 }

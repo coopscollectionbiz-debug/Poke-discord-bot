@@ -36,7 +36,7 @@ export default {
 
       if (!user) {
         return safeReply(interaction, {
-          content: "⚠️ You don't have trainer data yet. Use `/trainercard` first.",
+          content: "You don't have trainer data yet. Use `/trainercard` first.",
           flags: MessageFlags.Ephemeral
         });
       }
@@ -52,7 +52,7 @@ export default {
 
       if (!baseRole || !femaleRole) {
         return safeReply(interaction, {
-          content: "⚠️ Your rank roles are missing. Please notify an admin.",
+          content: "Your rank roles are missing. Please notify an admin.",
           flags: MessageFlags.Ephemeral
         });
       }
@@ -73,7 +73,7 @@ export default {
             embeds: [
               new EmbedBuilder()
                 .setTitle("🌸 Icon Swapped!")
-                .setDescription(`You are now using the **Female Icon** for **${baseRank}**.`)
+                .setDescription(`You're now using the **female icon** for **${baseRank}**.`)
                 .setColor(0xff69b4)
                 .setTimestamp()
             ],
@@ -92,7 +92,7 @@ export default {
             embeds: [
               new EmbedBuilder()
                 .setTitle("💪 Icon Swapped!")
-                .setDescription(`You are now using the **Default Icon** for **${baseRank}**.`)
+                .setDescription(`You're now using the **default icon** for **${baseRank}**.`)
                 .setColor(0x5865f2)
                 .setTimestamp()
             ],
@@ -109,7 +109,7 @@ export default {
           embeds: [
             new EmbedBuilder()
               .setTitle("🔧 Rank Icon Restored")
-              .setDescription(`You were missing a rank icon — **${baseRank}** has been assigned.`)
+              .setDescription(`You had no rank icon, so you now have the **${baseRank}** icon.`)
               .setColor(0x43b581)
               .setTimestamp()
           ],
@@ -119,7 +119,7 @@ export default {
       } catch (err) {
         console.error("❌ swapicon failed:", err);
         return safeReply(interaction, {
-          content: "❌ Something went wrong while swapping your icons.",
+          content: "Something went wrong while swapping your icons.",
           flags: MessageFlags.Ephemeral
         });
       }

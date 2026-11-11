@@ -10,7 +10,7 @@ import { leaderboardView, renderLeaderboard } from "../utils/render/leaderboardC
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard")
-  .setDescription("Top trainers by ranked rating");
+  .setDescription("Top trainers by Ranked rating");
 
 export function rankBattleRatings(trainerData, userId) {
   const ranked = Object.entries(trainerData)
@@ -27,8 +27,8 @@ export function buildLeaderboardEmbed({ top, you }) {
   return new EmbedBuilder()
     .setColor(0xf1c40f)
     .setTitle("🏆 Ranked leaderboard")
-    .setDescription(top.map((p, i) => `${i + 1}. ${p.name} — ${p.rating} (${p.wins}W–${p.losses}L)`).join("\n") || "No battles yet.")
-    .setFooter({ text: you ? `Your position: #${you.position} · ${you.rating}` : "Play a ranked battle (/battle ranked:True) to join the leaderboard." });
+    .setDescription(top.map((p, i) => `${i + 1}. ${p.name} · ${p.rating} (${p.wins}W–${p.losses}L)`).join("\n") || "No battles yet.")
+    .setFooter({ text: you ? `Your position: #${you.position} · ${you.rating}` : "Play a Ranked battle (/battle ranked:True) to join the leaderboard." });
 }
 
 // The podium image (utils/render/leaderboardCard.js); text embed on failure.

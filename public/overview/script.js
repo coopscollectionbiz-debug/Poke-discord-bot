@@ -26,13 +26,13 @@ const pct = (w, l) => (w + l ? Math.round((100 * w) / (w + l)) : 0);
 async function getJSON(url) {
   const res = await fetch(url, { credentials: "same-origin" });
   if (res.status === 403) { const e = new Error("expired"); e.expired = true; throw e; }
-  if (!res.ok) throw new Error(`Couldn’t load the overview (${res.status}).`);
+  if (!res.ok) throw new Error(`Couldn't load the overview (${res.status}).`);
   return res.json();
 }
 
 function strip(team, { battle, data, levels, megaOn }) {
   if (!team?.length) {
-    return `<p class="ov-empty">${battle ? "No Battle team yet. Ranked and wager battles need one." : "No Display team yet."} <a href="${pageHref("/public/teams/")}${battle ? "&team=battle" : ""}">Set it up</a></p>`;
+    return `<p class="ov-empty">${battle ? "No Battle team yet. Ranked and Wager battles need one." : "No Showcase team yet."} <a href="${pageHref("/public/teams/")}${battle ? "&team=battle" : ""}">Set it up</a></p>`;
   }
   return `<ul class="ov-strip">${team.map((s, i) => {
     const shiny = s.variant === "shiny";
@@ -63,7 +63,7 @@ async function load() {
   } catch (err) {
     app.innerHTML = "";
     if (err.expired) return showExpired();
-    return showBanner(err.message, { title: "Couldn’t load the overview" });
+    return showBanner(err.message, { title: "Couldn't load the overview" });
   }
   for (const [k, p] of Object.entries(data)) p.name = displaySpeciesName(k, p.name);
 
@@ -90,11 +90,11 @@ async function load() {
       <div class="ov-rating"><span class="ov-big">${fmt(r.rating)}</span>${r.position ? `<span class="ov-pos">#${r.position} <small>of ${fmt(r.players)}</small></span>` : `<span class="ov-pos"><small>Not ranked yet</small></span>`}</div>
       <dl class="ov-kv"><div><dt>Record</dt><dd>${r.wins}W–${r.losses}L</dd></div><div><dt>Win rate</dt><dd>${pct(r.wins, r.losses)}%</dd></div><div><dt>Streak</dt><dd class="good">${r.streak ? `W${r.streak}` : "—"}</dd></div></dl>
       <div class="ov-wl${r.wins + r.losses ? "" : " is-empty"}" role="img" aria-label="${r.wins} wins, ${r.losses} losses"><i style="width:${pct(r.wins, r.losses)}%"></i></div>
-      <p class="ov-note">${r.wins + r.losses ? "This season’s ranked and wager battles." : "Play a ranked battle in Discord: /battle ranked:True"}</p>
+      <p class="ov-note">${r.wins + r.losses ? "This season's Ranked and Wager battles." : "Play a Ranked battle in Discord: /battle ranked:True"}</p>
     </section>
     <section class="ov-card ov-casual" aria-labelledby="ovCasual">
       <h2 id="ovCasual">Casual</h2>
-      <p class="ov-note">Open battles · unrated</p>
+      <p class="ov-note">Showcase team · unrated</p>
       <dl class="ov-kv"><div><dt>Record</dt><dd>${c.wins}W–${c.losses}L</dd></div><div><dt>Best streak</dt><dd>${c.bestStreak ? `W${c.bestStreak}` : "—"}</dd></div></dl>
     </section>
     <section class="ov-card ov-rewards" aria-labelledby="ovRewards">
@@ -103,7 +103,7 @@ async function load() {
       <div class="ov-reward"><img src="/public/sprites/items/starter_pack.png" alt=""><p>${weeklyReady ? "Weekly pack ready" : "Weekly pack claimed"}<small>Resets in ${esc(resetIn)}</small></p><a class="cc-btn" href="${pageHref("/public/dashboardshop/")}">${weeklyReady ? "Open" : "Shop"}</a></div>
     </section>
     <section class="ov-card ov-teams" aria-label="Teams">
-      <h2 class="ov-teamhead">Display team <a href="${pageHref("/public/teams/")}">Edit</a></h2>${strip(up.currentTeam, { ...ctx, battle: false })}
+      <h2 class="ov-teamhead">Showcase team <a href="${pageHref("/public/teams/")}">Edit</a></h2>${strip(up.currentTeam, { ...ctx, battle: false })}
       <h2 class="ov-teamhead">Battle team <span class="ov-lv50">Lv 50</span> <a href="${pageHref("/public/teams/")}&team=battle">Edit</a></h2>${strip(up.battleTeam, { ...ctx, battle: true })}
     </section>
     <section class="ov-card ov-dex" aria-labelledby="ovDex">

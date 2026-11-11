@@ -93,7 +93,7 @@ export function createPokemonRewardEmbed(pokemon, isShiny, spriteUrl, options = 
     .setDescription(desc)
     .setColor(color)
     .setThumbnail(spriteUrl)
-    .setFooter({ text: "🌟 Coop’s Collection Reward" })
+    .setFooter({ text: "🌟 Coop's Collection Reward" })
     .setTimestamp();
 }
 
@@ -117,11 +117,11 @@ export function createTrainerRewardEmbed(trainer, spriteUrl, options = {}) {
   return new EmbedBuilder()
     .setTitle(`👥 ${displayName}`)
     .setDescription(
-      `🎖️ **Rarity:** ${tierDisplay}\n🧢 **Trainer Type:** ${typeLabel}`
+      `🎖️ **Tier:** ${tierDisplay}\n🧢 **Trainer Type:** ${typeLabel}`
     )
     .setColor(color)
     .setThumbnail(spriteUrl)
-    .setFooter({ text: "🌟 Coop’s Collection Reward" })
+    .setFooter({ text: "🌟 Coop's Collection Reward" })
     .setTimestamp();
 }
 
@@ -166,7 +166,7 @@ export function createCollectionStatsEmbed(username, stats, options = {}) {
     .setTitle(`${username}'s Collection`)
     .setColor(options.color || rarityColors.uncommon) // green success
     .addFields(fields)
-    .setFooter(options.footer || { text: "Keep collecting to level up!" })
+    .setFooter(options.footer ?? null)
     .setTimestamp();
 }
 

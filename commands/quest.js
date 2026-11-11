@@ -46,7 +46,7 @@ export default {
     const rewardType = Math.random() < 0.7 ? "pokemon" : "trainer";
     const pool = rewardType === "pokemon" ? recruitPool(await getPokemonCached()) : await getFlattenedTrainers();
     if (!pool.length) {
-      return safeReply(interaction, { content: "❌ Quests are unavailable right now. Please try again later.", flags: MessageFlags.Ephemeral });
+      return safeReply(interaction, { content: "Quests are unavailable right now. Please try again later.", flags: MessageFlags.Ephemeral });
     }
 
     return lockUser(id, async () => {

@@ -14,7 +14,7 @@ import { getRank } from "../utils/rankSystem.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("viewuser")
-    .setDescription("Admin-only: View a user's Trainer stats.")
+    .setDescription("Admin: View a user's Trainer stats.")
     .addUserOption(option =>
       option
         .setName("target")
@@ -32,7 +32,7 @@ export default {
 
     if (!user) {
       return interaction.editReply({
-        content: `⚠️ No trainer data found for ${targetUser.tag}.`,
+        content: `No trainer data found for ${targetUser.tag}.`,
       });
     }
 

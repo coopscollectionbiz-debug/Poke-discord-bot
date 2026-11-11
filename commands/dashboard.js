@@ -12,7 +12,7 @@ import { publicBaseUrl } from "../utils/publicUrl.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("dashboard")
-    .setDescription("Open your Pokémon & Trainer Management Dashboard."),
+    .setDescription("Get a private link to your dashboard."),
 
   async execute(interaction) {
     try {
@@ -32,10 +32,10 @@ export default {
       const embed = new EmbedBuilder()
         .setTitle("🌟 Dashboard Opened!")
         .setDescription(
-          `Manage your Pokémon team and Trainer from the dashboard:\n\n🔗 [Open Dashboard](${pickerUrl})\n\nYour link expires in **10 minutes**.`
+          `🔗 [Open your dashboard](${pickerUrl})\n\nThis link is only for you and expires in **10 minutes**.`
         )
         .setColor(0x00ff9d)
-        .setFooter({ text: "Coop’s Collection — Dashboard Access" })
+        .setFooter({ text: "Your dashboard link" })
         .setTimestamp();
 
       await interaction.reply({
@@ -50,7 +50,7 @@ export default {
       // SAFE version — never call reply() here!
       try {
         await interaction.followUp({
-          content: "❌ Something went wrong generating your dashboard link.",
+          content: "Something went wrong generating your dashboard link.",
           flags: MessageFlags.Ephemeral,
         });
       } catch (e) {

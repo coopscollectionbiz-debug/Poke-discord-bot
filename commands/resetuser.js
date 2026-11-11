@@ -12,7 +12,7 @@ import { clearTrainers } from "../services/assets.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("resetuser")
-    .setDescription("Admin: Reset a user’s daily timer, onboarding, and data safely.")
+    .setDescription("Admin: Reset a user's daily timer, onboarding and data.")
     .addUserOption(option =>
       option
         .setName("user")
@@ -30,7 +30,7 @@ export default {
 
       await lockUser(id, async () => {
       if (!trainerData[id]) {
-        await interaction.editReply(`❌ No data found for **${target.username}**.`);
+        await interaction.editReply(`No data found for **${target.username}**.`);
         return;
       }
 
@@ -78,7 +78,7 @@ export default {
 
       // ✅ Confirmation (with a delay note if the disk didn't confirm)
       await interaction.editReply(withSaveNote(
-        `✅ Successfully reset **${target.username}**!\n` +
+        `Successfully reset **${target.username}**!\n` +
           `- Daily timer cleared\n` +
           `- Pokémon & Trainer data wiped\n` +
           `- Onboarding fully reset\n` +
@@ -93,7 +93,7 @@ export default {
     } catch (err) {
       console.error("❌ /resetuser error:", err);
       try {
-        await interaction.editReply(`❌ Error resetting user: ${err.message}`);
+        await interaction.editReply(`Error resetting user: ${err.message}`);
       } catch {
         console.error("❌ Failed to send error reply:", err.message);
       }

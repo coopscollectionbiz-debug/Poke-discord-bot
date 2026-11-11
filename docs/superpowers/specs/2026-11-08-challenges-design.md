@@ -182,14 +182,14 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 
 ## Measured (stand-in Teams, 200 per Level)
 
-Every figure in this section comes from `node tests/challengeBalance.test.js`, run on master's Gen 6–9 data with the 10% stat boost (2026-11-10). The stand-in pool has 492 species from all 9 generations, including Gens 6–9 that players can't obtain until `POKEMON_GENERATIONS` releases them.
+Every figure in this section comes from `node tests/challengeBalance.test.js`, rerun with the 10% stat boost on 2026-11-11, after merging master's Pokémon re-tier. The stand-in pool has 484 species from all 9 generations, including Gens 6–9 that players can't obtain until `POKEMON_GENERATIONS` releases them. The re-tier made eight unreleased Paradox Pokémon legendary, which took them out of the pool (it had 492 on 2026-11-10).
 
-- Gate Levels: Brock 24, Misty 31, Lt. Surge 33, Erika 36, Koga 40, Sabrina 45, Blaine 50, Giovanni 53, Elite Four run 72, Blue 78, Red 90. The Gyms rise one by one, and the enforced order holds. Misty's, Blue's and Red's gates are above their aces' Levels (30, 75 and 88).
-- Without the boost (the same test before `statBoost`, 2026-11-10) the gates were 2–4 Levels lower for the Gyms and 5–7 lower for the rest: Brock 22, Misty 29, Lt. Surge 30, Erika 33, Koga 37, Sabrina 43, Blaine 47, Giovanni 49, Elite Four run 67, Blue 72, Red 83. On the earlier Gen 1–5 data, unboosted, they were 1–3 Levels higher still (Giovanni 50, Elite Four run 68, Blue 74, Red 86).
-- The Elite Four run's gate is Lv 72 for a player who revives their strongest fainted Pokémon at every break, and Lv 80 for one who never picks (67 and 73 unboosted).
-- Win rate climbs steeply, so every challenge is a Level gate and retries barely matter. A 10% win rate becomes 90% over 7 Levels for Brock (Lv 20 → 27), 12 for Giovanni (48 → 60), 14 for the Elite Four run (65 → 79), 19 for Blue (69 → 88), and 20 for Red (80 → 100).
+- Gate Levels: Brock 24, Misty 31, Lt. Surge 33, Erika 36, Koga 40, Sabrina 45, Blaine 50, Giovanni 54, Elite Four run 73, Blue 79, Red 91. On 2026-11-10, before the re-tier, Giovanni, the Elite Four run, Blue and Red were each 1 Level lower. The Gyms rise one by one, and the enforced order holds. Misty's, Blue's and Red's gates are above their aces' Levels (30, 75 and 88).
+- Without the boost (the same test before `statBoost`, on the 2026-11-10 data) the gates were 2–4 Levels lower than that day's boosted gates for the Gyms and 5–7 lower for the rest: Brock 22, Misty 29, Lt. Surge 30, Erika 33, Koga 37, Sabrina 43, Blaine 47, Giovanni 49, Elite Four run 67, Blue 72, Red 83. On the earlier Gen 1–5 data, unboosted, they were 1–3 Levels higher still (Giovanni 50, Elite Four run 68, Blue 74, Red 86).
+- The Elite Four run's gate is Lv 73 for a player who revives their strongest fainted Pokémon at every break, and Lv 79 for one who never picks (67 and 73 unboosted, on the 2026-11-10 data).
+- Win rate climbs steeply, so every challenge is a Level gate and retries barely matter. A 10% win rate becomes 90% over 7 Levels for Brock (Lv 21 → 28), 12 for Giovanni (49 → 61), 13 for the Elite Four run (67 → 80), 17 for Blue (71 → 88), and 18 for Red (82 → 100).
 - A one-Pokémon Team. Challenges have no Underdog surge, so a lone Lv 30 Charizard wins 0% of 200 runs against every challenge. With `/battle`'s surge, a Team of one was always the Underdog by a wide margin and surged to Lv 100: the same Charizard won 27% of 200 runs against every Gym from Brock through Blaine at the 20% cap (`node tests/challengeBalance.test.js` at pre-rebase commit 6e50566a, on Gen 1–5 data). That is why challenges have none.
-- Leveling pace: from Lv 72 (the Elite Four run's gate) to Lv 100 takes 27 days at 10 Battles a day, and 13 days with 5 cleared Elite Four runs a day too.
+- Leveling pace: from Lv 73 (the Elite Four run's gate) to Lv 100 takes 27 days at 10 Battles a day, and 12 days with 5 cleared Elite Four runs a day too.
 
 ## Open checks
 

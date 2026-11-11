@@ -92,7 +92,7 @@ utils/battle/sim.js               ±
 
 ## Tests
 
-- `npm run test:safe`: see the final count in the summary below this table.
+- `npm run test:safe`: **70/70 test files pass** (68 existing + 2 new) on commit 2648f3f2.
 - New: `tests/heldItems.test.js` (94 checks) and `tests/heldItemBattle.test.js` (73 checks). They cover:
   - flags and the tester allowlist;
   - unique unlocks, and ordinary stacks unchanged;

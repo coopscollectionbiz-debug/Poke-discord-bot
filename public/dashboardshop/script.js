@@ -417,6 +417,13 @@ async function claimWeeklyPack() {
 // ======================================================
 // BUTTON BINDINGS
 // ======================================================
+// The TM section (tms.js) reports CC changes so the wallet stays current.
+document.addEventListener("cc:changed", (e) => {
+  if (!user || !Number.isFinite(e.detail?.cc)) return;
+  user.cc = e.detail.cc;
+  updateUI();
+});
+
 window.addEventListener("DOMContentLoaded", () => {
   loadUser();
 

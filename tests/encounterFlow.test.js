@@ -4,7 +4,7 @@
 // 2026-11-10-trainer-encounters-design.md, Discord UX), with stub Discord
 // objects: the replay on the card and its result embed, and
 // (utils/encounter/service.js) spotting, the card, Battle! with its private
-// recap and the card shrinking to the result, Run, timeouts, other players'
+// EXP card and the card shrinking to the result, Run, timeouts, other players'
 // clicks, and clicks on cards from before a restart. Synthetic data only.
 // ==========================================================
 
@@ -71,12 +71,12 @@ section("Playback");
 
   const rec = recorder();
   const onCard = cardStub();
-  const image = await playEncounter(rec.channel, onCard, win, names, { ...PLAYBACK, trainers: ["acerola-masters.png", "youngster-gen3.png"] });
+  const finished = await playEncounter(rec.channel, onCard, win, names, { ...PLAYBACK, trainers: ["acerola-masters.png", "youngster-gen3.png"] });
   assertEqual(rec.sent.length, 0, "it plays on the encounter card, with no new message");
+  assertTrue(finished === onCard, "and finishes there");
   assertEqual(onCard.edits[0].content, "⚔️ <@A> vs Youngster Joey!", "the heading names the player");
   assertEqual(description(onCard.edits.at(-1)), buildEncounterEmbed(win, names).toJSON().description, "the result embed lands on the final image");
   assertTrue(onCard.edits.at(-1).files?.length === 1, "with the final image");
-  assertTrue(image !== null && image === onCard.edits.at(-1).files[0], "and hands the final image back for the private recap");
 
   const queue = createQueue(1);
   const hold = await queue.acquire();
@@ -256,9 +256,11 @@ section("Answering");
   assertEqual(w.user.cc, won ? ccBefore + prize : ccBefore - paid, "CC moved by the Prize money");
   assertTrue(w.log.saves >= 2, "saved");
   const priv = i.followUps[0];
-  assertEqual(priv.flags, 64, "the recap arrives privately");
-  assertEqual(priv.files?.map((f) => f.name), ["battle.gif", "exp.png"], "with the final battle image and the EXP card");
-  assertTrue(priv.files[0] === final.files[0], "the same final image the channel saw");
+  assertEqual(i.followUps.length, 1, "one private message");
+  assertEqual(priv.flags, 64, "sent privately");
+  // Two images in one message show side by side, cropped. The battle's
+  // images go with the card; the player keeps only the EXP card.
+  assertEqual(priv.files?.map((f) => f.name), ["exp.png"], "with the EXP card alone, so it shows uncropped");
   assertEqual(priv.content ?? "", won ? "" : `You paid ${w.log.events[0].trainer} ${paid.toLocaleString("en-US")} CC.`, "with the exact CC only when it was paid");
   assertEqual(w.log.events.map((e) => e.phase), ["spotted", "answered", "result"], "logged");
   assertEqual(w.service.openCount(), 0, "closed");
@@ -269,6 +271,7 @@ section("Answering");
   assertTrue(card.edits.length === shown + 1 && shrunk(line), "then the card loses its images");
   assertEqual(line.content, description(final), "leaving the Trainer's line and the CC result");
   assertEqual(line.allowedMentions, { parse: [] }, "pinging no one");
+  assertEqual([i.followUps.length, i.edits.length], [1, 1], "and the private EXP message is left alone");
   assertEqual(w.timers.size, 0, "and nothing is left running");
 }
 {
@@ -278,7 +281,7 @@ section("Answering");
   const i = w.click(w.ids(card)[0]);
   await w.service.handleButton(i);
   const priv = i.followUps[0];
-  assertTrue(priv.content?.startsWith("The battle counted, but I couldn't post it here."), "a replay that can't play: the recap says the battle still counted");
+  assertTrue(priv.content?.startsWith("The battle counted, but I couldn't post it here."), "a replay that can't play: the private message says the battle still counted");
   assertEqual(priv.files?.map((f) => f.name), ["exp.png"], "with the EXP card alone");
   await w.fireTimers();
   const line = card.edits.at(-1);
@@ -326,7 +329,7 @@ section("Answering");
   await pressed;
   assertEqual(i.edits, [{ components: [] }], "then it plays out once the record is free");
   assertTrue(w.log.sent[0].edits.some((e) => e.content?.startsWith("⚔️")) && i.followUps.some((f) => f.files?.some((x) => x.name === "exp.png")),
-    "with the replay on the card and the private recap");
+    "with the replay on the card and the private EXP card");
 }
 {
   const w = world();

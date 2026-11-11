@@ -139,9 +139,8 @@ const replays = createQueue(PLAYBACK.maxAtOnce);
 // `paceStart` holds the previous fight's result frame up for a full delay.
 // `trainers` are each side's trainer files for the portraits. `theme`
 // (challenges) styles every frame; `award` (challengeAward) adds its screen
-// to the result frame, right after who won. `onFinal` hears the result
-// frame's file before it's shown (Trainer encounters also send it privately).
-async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], theme = null, award = null, onFinal = null }) {
+// to the result frame, right after who won.
+async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], theme = null, award = null }) {
   const sides = fight.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = fight.result;
   const image = async (opts) => new AttachmentBuilder(
@@ -186,7 +185,6 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
       sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(fight), screens,
       ...(award && { theme: { ...theme, award: { screen: 1, badgeFile: award.badgeFile, title: award.title } } }),
     }));
-    onFinal?.(file);
     await message.edit({ files: [file], ...(finalEmbed && { embeds: [finalEmbed] }) });
     return message;
   } catch (err) {
@@ -404,20 +402,16 @@ export const buildEncounterEmbed = (outcome, names) => new EmbedBuilder().setCol
 // Replays the fight on the encounter card `message`, in place of the card
 // image. No new message is needed to notify the player: they just pressed
 // Battle! on it. `trainers` are the player's displayed trainer file (or null)
-// and the Trainer's sprite. Resolves to the final image, for the player's
-// private recap, or null if the replay stopped before it. A start frame that
-// can't be shown throws.
+// and the Trainer's sprite. A start frame that can't be shown throws; a later
+// failed edit stops the replay and returns null.
 export async function playEncounter(channel, message, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null] } = PLAYBACK) {
   const heading = `⚔️ <@${outcome.userId}> vs ${names.trainer}!`;
   const slot = await waitForSlot(channel, queue, heading, message);
-  let final = null;
   try {
-    await replayFight({
+    return await replayFight({
       channel, message: slot.message, heading, fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers,
       finalEmbed: buildEncounterEmbed(outcome, names),
-      onFinal: (file) => { final = file; },
     });
-    return final;
   } finally {
     slot.release(); // even a failed replay frees its slot
   }

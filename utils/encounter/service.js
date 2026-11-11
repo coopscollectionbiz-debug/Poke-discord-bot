@@ -7,8 +7,8 @@
 // reached through the bot's global button handler rather than a collector,
 // so a click on a card from before a restart still gets an answer. Every
 // answer leaves the card as text: Run and timeouts as one line, Battle! as
-// its result after the replay plays on the card, with the battle's final
-// image and the EXP card sent to the player privately.
+// its result after the replay plays on the card, with the EXP card sent to
+// the player privately in a message of its own.
 // Open encounters live only in memory and hold nothing: a restart loses
 // them, and their cards shrink on the next click.
 // ==========================================================
@@ -145,21 +145,20 @@ export function createEncounterService({
     }
   }
 
-  // The player's private recap: the battle's final image (null when the
-  // replay didn't reach it), which the card loses, and their EXP card.
-  async function recapMessage(outcome, names, note, image) {
+  // The player's private EXP card, alone in its message: a second image
+  // beside it would show both cropped. The bot never edits or removes it.
+  async function expMessage(outcome, names, note) {
     const user = getTrainerData()[outcome.userId];
     const caption = [note, outcome.won ? null : `You paid ${names.trainer} ${n(outcome.paid)} CC.`].filter(Boolean).join("\n");
-    const shown = image ? [image] : [];
     try {
       const png = await renderExp({
         opponent: names.trainer, won: outcome.won, rating: null, surge: false, pot: 0,
         members: expMembers(outcome.exp[outcome.userId], user),
       });
-      return { ...(caption && { content: caption }), files: [...shown, new AttachmentBuilder(png, { name: "exp.png" })], flags: MessageFlags.Ephemeral };
+      return { ...(caption && { content: caption }), files: [new AttachmentBuilder(png, { name: "exp.png" })], flags: MessageFlags.Ephemeral };
     } catch (err) {
       console.warn("⚠️ encounter EXP card render failed; sending text:", err?.message || err);
-      return { content: [caption, challengeExpText(outcome)].filter(Boolean).join("\n"), ...(image && { files: shown }), flags: MessageFlags.Ephemeral };
+      return { content: [caption, challengeExpText(outcome)].filter(Boolean).join("\n"), flags: MessageFlags.Ephemeral };
     }
   }
 
@@ -189,9 +188,8 @@ export function createEncounterService({
     const names = encounterNames(outcome, e.displayName);
     const user = getTrainerData()[e.userId];
     let note = null;
-    let image = null;
     try {
-      image = await play(e.channel, e.message, outcome, names, { ...PLAYBACK, trainers: [user?.displayedTrainer ?? null, e.trainer.spriteFile] });
+      await play(e.channel, e.message, outcome, names, { ...PLAYBACK, trainers: [user?.displayedTrainer ?? null, e.trainer.spriteFile] });
     } catch (err) {
       console.warn("⚠️ encounter replay couldn't post:", err?.message || err);
       note = "The battle counted, but I couldn't post it here.";
@@ -199,7 +197,7 @@ export function createEncounterService({
     // The channel keeps only the result: once the final image has been up a
     // moment, the card drops its images. A restart in that window leaves them.
     setTimer(() => e.message.edit(shrunk(encounterSummary(outcome, names))).catch(() => {}), ENCOUNTER.resultMs);
-    await i.followUp(await recapMessage(outcome, names, note, image)).catch(() => {});
+    await i.followUp(await expMessage(outcome, names, note)).catch(() => {});
   }
 
   /** A click on an encounter card's button. Never throws. */

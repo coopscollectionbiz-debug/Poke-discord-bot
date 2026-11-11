@@ -87,7 +87,7 @@ section("Idle manifest and GIFs");
 
   // Each loop starts at the trainer's own phase, so the unchanged PNG (the
   // rest pose) is somewhere in the loop rather than always frame 0.
-  for (const file of ["cynthia.png", "youngster-gen4.png", "iris-gen5bw2.png", "sailor-gen3.png"]) {
+  for (const file of ["cynthia.png", "youngster.png", "iris-gen5bw2.png", "hiker.png"]) {
     const g = new GifReader(fs.readFileSync(new URL(`public/sprites/trainers_idle/${manifest[file].gif}`, ROOT)));
     const { px, W, H } = await pixels(file);
     let rest = false;
@@ -140,7 +140,7 @@ section("Offsets and part motions");
   assertTrue(leon.parts.length >= 2 && leon.parts.every((p) => p.d[0] === 1), "Leon's cape: every part sways the same way, not outward");
 
   // Timelines: no flicker slivers, each loop shows its event states.
-  for (const f of ["sailor-gen3.png", "hiker.png", "leon.png", "youngster-gen4.png", "acetrainerf.png", "cynthia.png", "wallace-gen6.png"]) {
+  for (const f of ["hiker.png", "leon.png", "youngster.png", "acetrainerf.png", "cynthia.png", "lance.png"]) {
     const { px: fp, W: fw, H: fh } = await pixels(f);
     const tl = idleTimeline(f, parts[f]?.events ?? [], Math.max(1, idleCuts(fp, fw, fh).steps.length));
     assertTrue(tl.every((s) => s.ms >= 60), `${f}: no frame shorter than 60 ms`);
@@ -188,11 +188,11 @@ section("Tier backdrop");
 section("Rendered cards");
 {
   const v = (file, tier) => ({ displayName: "T", trainerFile: file, trainer: { name: "T", tier }, rank: { current: "A", next: "B", remaining: 1, progress: 50 }, tp: 1, cc: 1, owned: 1, shinies: 0, trainers: 1, battle: null, team: [], fallbackTeam: false });
-  assertTrue(isGif(await renderTrainerCard(v("youngster-gen4.png", "common"), { animate: true })), "a Common trainer alone animates the card (breathing)");
+  assertTrue(isGif(await renderTrainerCard(v("youngster.png", "common"), { animate: true })), "a Common trainer alone animates the card (breathing)");
   assertTrue(isGif(await renderTrainerCard(v("cynthia-masters.png", "mythic"), { animate: true })), "a Mythic trainer card animates");
   assertTrue(!isGif(await renderTrainerCard(v("cynthia-masters.png", "mythic"), { animate: false })), "still mode stays a PNG");
   process.env.TRAINERS_ANIMATED = "0";
-  assertTrue(!isGif(await renderTrainerCard(v("youngster-gen4.png", "common"), { animate: true })), "TRAINERS_ANIMATED=0: a lone static trainer stays a PNG");
+  assertTrue(!isGif(await renderTrainerCard(v("youngster.png", "common"), { animate: true })), "TRAINERS_ANIMATED=0: a lone static trainer stays a PNG");
   delete process.env.TRAINERS_ANIMATED;
   const td = leaderboardWorld();
   const board = await renderLeaderboard(leaderboardView(rankBattleRatings(td, "p6"), td, "p6"), { animate: true });

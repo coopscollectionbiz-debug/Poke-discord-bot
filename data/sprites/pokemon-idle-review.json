@@ -72,117 +72,987 @@
   "species:990"
  ],
  "excluded": {},
- "facesNote": "Faces that a breath or rig cut would cross: [firstRow, lastRow]; cuts go below or above. Read off 3x grids and the rig line sheets. Sprites with blink eyes get a face band from their eyes automatically.",
+ "facesNote": "Faces: [firstRow, lastRow] or [firstRow, lastRow, firstCol, lastCol]. Breath and rig cuts never cross the rows; the columns say where the head is, so the rig can lean it and drag its ears (eyes do this for blinking sprites). Read off 3x grids; every head mover reviewed on what-moves sheets.",
  "faces": {
-  "species:842": [
-   62,
-   76
-  ],
-  "species:917": [
-   50,
-   62
-  ],
-  "species:953": [
-   47,
-   58
-  ],
-  "species:971": [
-   44,
-   62
-  ],
-  "species:982": [
-   42,
-   60
-  ],
-  "species:985": [
-   40,
-   57
-  ],
-  "species:991": [
+  "mega:mega-aggron": [
    30,
+   44,
+   22,
    46
   ],
-  "species:955": [
-   44,
-   57
-  ],
-  "species:961": [
-   36,
+  "mega:mega-barbaracle": [
+   12,
+   26,
+   43,
    60
   ],
-  "species:909": [
+  "mega:mega-baxcalibur": [
+   24,
+   38,
+   14,
+   36
+  ],
+  "mega:mega-blastoise": [
+   48,
+   60,
+   30,
+   52
+  ],
+  "mega:mega-camerupt": [
+   38,
+   53,
+   12,
+   38
+  ],
+  "mega:mega-chandelure": [
+   43,
+   56,
+   47,
+   63
+  ],
+  "mega:mega-chesnaught": [
+   32,
+   45,
+   14,
+   36
+  ],
+  "mega:mega-chimecho": [
+   42,
+   54,
+   38,
+   56
+  ],
+  "mega:mega-clefable": [
+   44,
+   57,
+   32,
+   58
+  ],
+  "mega:mega-crabominable": [
+   45,
+   60,
+   30,
+   56
+  ],
+  "mega:mega-darkrai": [
+   36,
+   48,
+   40,
+   56
+  ],
+  "mega:mega-delphox": [
+   26,
+   40,
+   34,
+   54
+  ],
+  "mega:mega-diancie": [
+   20,
+   32,
+   40,
+   56
+  ],
+  "mega:mega-dragalge": [
+   18,
+   34,
+   32,
+   52
+  ],
+  "mega:mega-drampa": [
+   15,
+   30,
+   14,
+   36
+  ],
+  "mega:mega-eelektross": [
+   46,
+   64,
+   6,
+   26
+  ],
+  "mega:mega-emboar": [
+   26,
+   40,
+   30,
+   50
+  ],
+  "mega:mega-excadrill": [
+   40,
+   56,
+   60,
+   78
+  ],
+  "mega:mega-falinks": [
+   32,
+   50,
+   32,
+   60
+  ],
+  "mega:mega-feraligatr": [
+   36,
+   52,
+   28,
+   58
+  ],
+  "mega:mega-floette": [
+   55,
+   66,
+   36,
+   54
+  ],
+  "mega:mega-garchomp-z": [
+   22,
+   36,
+   24,
+   46
+  ],
+  "mega:mega-gengar": [
+   40,
+   62,
+   30,
+   66
+  ],
+  "mega:mega-glimmora": [
+   40,
+   54,
+   38,
+   56
+  ],
+  "mega:mega-golisopod": [
+   28,
+   44,
+   34,
+   56
+  ],
+  "mega:mega-golurk": [
+   24,
+   36,
+   40,
+   56
+  ],
+  "mega:mega-greninja": [
+   30,
+   44,
+   46,
+   64
+  ],
+  "mega:mega-gyarados": [
+   40,
+   64,
+   6,
+   36
+  ],
+  "mega:mega-heatran": [
+   28,
+   44,
+   32,
+   56
+  ],
+  "mega:mega-heracross": [
+   50,
+   62,
    38,
    58
   ],
-  "species:928": [
-   46,
-   58
-  ],
-  "species:921": [
-   54,
-   66
-  ],
-  "species:915": [
-   44,
-   56
-  ],
-  "species:850": [
-   37,
-   51
-  ],
-  "species:944": [
-   44,
-   56
-  ],
-  "species:1025": [
-   50,
-   62
-  ],
-  "mega:mega-venusaur": [
-   54,
-   68
+  "mega:mega-houndoom": [
+   28,
+   40,
+   14,
+   34
   ],
   "mega:mega-kangaskhan": [
    44,
    62
   ],
-  "mega:mega-camerupt": [
+  "mega:mega-lucario-z": [
+   26,
    38,
-   53
-  ],
-  "mega:mega-raichu-x": [
-   38,
-   57
-  ],
-  "species:911": [
-   34,
-   60
-  ],
-  "species:916": [
    38,
    54
   ],
-  "mega:mega-clefable": [
-   44,
-   57
+  "mega:mega-magearna": [
+   30,
+   42,
+   40,
+   56
   ],
-  "mega:mega-tatsugiri-curly": [
-   52,
-   68
+  "mega:mega-malamar": [
+   26,
+   38,
+   40,
+   56
   ],
-  "mega:mega-falinks": [
+  "mega:mega-meganium": [
+   22,
+   36,
+   32,
+   52
+  ],
+  "mega:mega-meowstic-f": [
+   32,
+   46,
    32,
    50
   ],
+  "mega:mega-meowstic-m": [
+   32,
+   46,
+   32,
+   52
+  ],
+  "mega:mega-pinsir": [
+   38,
+   58,
+   32,
+   56
+  ],
+  "mega:mega-raichu-x": [
+   38,
+   57,
+   2,
+   30
+  ],
+  "mega:mega-sableye": [
+   36,
+   50,
+   54,
+   70
+  ],
+  "mega:mega-sceptile": [
+   12,
+   26,
+   44,
+   62
+  ],
+  "mega:mega-scolipede": [
+   36,
+   50,
+   30,
+   56
+  ],
   "mega:mega-scovillain": [
    20,
-   48
+   48,
+   54,
+   82
+  ],
+  "mega:mega-skarmory": [
+   16,
+   30,
+   10,
+   30
+  ],
+  "mega:mega-staraptor": [
+   22,
+   40,
+   34,
+   62
+  ],
+  "mega:mega-swampert": [
+   42,
+   58,
+   34,
+   58
+  ],
+  "mega:mega-tatsugiri-curly": [
+   52,
+   68,
+   34,
+   56
+  ],
+  "mega:mega-venusaur": [
+   54,
+   68,
+   24,
+   74
+  ],
+  "mega:mega-zeraora": [
+   20,
+   34,
+   26,
+   46
+  ],
+  "species:652": [
+   26,
+   40,
+   30,
+   56
+  ],
+  "species:660": [
+   30,
+   46,
+   44,
+   64
+  ],
+  "species:673": [
+   24,
+   40,
+   22,
+   42
+  ],
+  "species:675": [
+   16,
+   32,
+   30,
+   56
+  ],
+  "species:676": [
+   28,
+   45,
+   24,
+   42
+  ],
+  "species:678": [
+   38,
+   52,
+   30,
+   58
+  ],
+  "species:687": [
+   30,
+   45,
+   34,
+   60
+  ],
+  "species:689": [
+   22,
+   36,
+   40,
+   60
+  ],
+  "species:690": [
+   36,
+   48,
+   34,
+   56
+  ],
+  "species:695": [
+   18,
+   34,
+   42,
+   62
+  ],
+  "species:710": [
+   40,
+   50,
+   36,
+   56
+  ],
+  "species:711": [
+   30,
+   44,
+   40,
+   58
+  ],
+  "species:715": [
+   22,
+   38,
+   18,
+   40
+  ],
+  "species:723": [
+   32,
+   48,
+   36,
+   60
+  ],
+  "species:724": [
+   26,
+   40,
+   36,
+   56
+  ],
+  "species:726": [
+   44,
+   60,
+   18,
+   46
+  ],
+  "species:747": [
+   50,
+   61,
+   38,
+   58
+  ],
+  "species:757": [
+   40,
+   54,
+   16,
+   38
+  ],
+  "species:758": [
+   24,
+   36,
+   20,
+   40
+  ],
+  "species:763": [
+   28,
+   44,
+   36,
+   58
+  ],
+  "species:765": [
+   26,
+   44,
+   32,
+   52
+  ],
+  "species:766": [
+   36,
+   48,
+   24,
+   44
+  ],
+  "species:768": [
+   22,
+   36,
+   26,
+   46
+  ],
+  "species:788": [
+   38,
+   54,
+   38,
+   58
+  ],
+  "species:803": [
+   40,
+   54,
+   36,
+   60
+  ],
+  "species:815": [
+   22,
+   34,
+   50,
+   70
+  ],
+  "species:825": [
+   48,
+   58,
+   30,
+   52
+  ],
+  "species:826": [
+   44,
+   56,
+   28,
+   52
+  ],
+  "species:827": [
+   44,
+   58,
+   18,
+   40
+  ],
+  "species:828": [
+   24,
+   38,
+   8,
+   30
+  ],
+  "species:829": [
+   44,
+   56,
+   40,
+   56
+  ],
+  "species:842": [
+   62,
+   76,
+   10,
+   36
+  ],
+  "species:850": [
+   37,
+   51
+  ],
+  "species:851": [
+   30,
+   48,
+   14,
+   40
+  ],
+  "species:853": [
+   30,
+   46,
+   30,
+   58
+  ],
+  "species:860": [
+   28,
+   44,
+   40,
+   62
+  ],
+  "species:865": [
+   54,
+   66,
+   44,
+   66
+  ],
+  "species:879": [
+   30,
+   46,
+   28,
+   58
+  ],
+  "species:881": [
+   24,
+   38,
+   18,
+   40
+  ],
+  "species:891": [
+   30,
+   44,
+   32,
+   56
+  ],
+  "species:892": [
+   16,
+   30,
+   38,
+   60
+  ],
+  "species:893": [
+   20,
+   34,
+   30,
+   52
+  ],
+  "species:900": [
+   18,
+   34,
+   26,
+   50
+  ],
+  "species:905": [
+   26,
+   40,
+   36,
+   58
+  ],
+  "species:909": [
+   38,
+   58
+  ],
+  "species:911": [
+   34,
+   60,
+   8,
+   40
+  ],
+  "species:912": [
+   36,
+   50,
+   34,
+   56
+  ],
+  "species:915": [
+   44,
+   56
+  ],
+  "species:916": [
+   38,
+   54,
+   22,
+   42
+  ],
+  "species:917": [
+   50,
+   62
+  ],
+  "species:919": [
+   44,
+   58,
+   30,
+   52
+  ],
+  "species:920": [
+   24,
+   40,
+   36,
+   56
+  ],
+  "species:921": [
+   54,
+   66
+  ],
+  "species:928": [
+   46,
+   58
+  ],
+  "species:930": [
+   28,
+   40,
+   40,
+   58
+  ],
+  "species:931": [
+   30,
+   44,
+   32,
+   56
+  ],
+  "species:934": [
+   28,
+   40,
+   44,
+   60
+  ],
+  "species:935": [
+   38,
+   50,
+   44,
+   60
+  ],
+  "species:936": [
+   26,
+   40,
+   36,
+   56
+  ],
+  "species:937": [
+   24,
+   38,
+   42,
+   60
+  ],
+  "species:940": [
+   34,
+   48,
+   30,
+   52
+  ],
+  "species:941": [
+   36,
+   48,
+   30,
+   52
+  ],
+  "species:943": [
+   40,
+   56,
+   20,
+   42
+  ],
+  "species:944": [
+   44,
+   56
+  ],
+  "species:945": [
+   46,
+   60,
+   36,
+   62
+  ],
+  "species:948": [
+   46,
+   58,
+   34,
+   58
+  ],
+  "species:949": [
+   30,
+   40,
+   38,
+   62
+  ],
+  "species:951": [
+   36,
+   50,
+   34,
+   56
+  ],
+  "species:952": [
+   32,
+   50,
+   44,
+   72
+  ],
+  "species:953": [
+   47,
+   58,
+   50,
+   70
+  ],
+  "species:955": [
+   44,
+   57,
+   30,
+   62
+  ],
+  "species:956": [
+   16,
+   30,
+   24,
+   44
+  ],
+  "species:959": [
+   54,
+   68,
+   22,
+   46
+  ],
+  "species:960": [
+   36,
+   48,
+   30,
+   52
+  ],
+  "species:961": [
+   36,
+   60
+  ],
+  "species:962": [
+   26,
+   40,
+   22,
+   44
+  ],
+  "species:968": [
+   32,
+   48,
+   14,
+   36
+  ],
+  "species:970": [
+   44,
+   56,
+   24,
+   42
+  ],
+  "species:971": [
+   44,
+   62,
+   24,
+   58
+  ],
+  "species:972": [
+   44,
+   64,
+   12,
+   40
+  ],
+  "species:974": [
+   40,
+   54,
+   30,
+   62
+  ],
+  "species:975": [
+   38,
+   54,
+   48,
+   72
+  ],
+  "species:976": [
+   44,
+   62,
+   20,
+   46
+  ],
+  "species:979": [
+   48,
+   62,
+   36,
+   60
+  ],
+  "species:981": [
+   26,
+   44,
+   14,
+   36
+  ],
+  "species:982": [
+   42,
+   60,
+   12,
+   46
+  ],
+  "species:983": [
+   36,
+   50,
+   38,
+   62
+  ],
+  "species:985": [
+   40,
+   57
+  ],
+  "species:986": [
+   44,
+   56,
+   42,
+   60
+  ],
+  "species:988": [
+   66,
+   82,
+   14,
+   40
+  ],
+  "species:991": [
+   30,
+   46,
+   42,
+   64
+  ],
+  "species:998": [
+   18,
+   34,
+   20,
+   46
+  ],
+  "species:1005": [
+   42,
+   58,
+   18,
+   46
+  ],
+  "species:1007": [
+   30,
+   44,
+   12,
+   40
+  ],
+  "species:1009": [
+   36,
+   52,
+   6,
+   34
+  ],
+  "species:1010": [
+   18,
+   34,
+   24,
+   46
+  ],
+  "species:1011": [
+   38,
+   50,
+   38,
+   58
+  ],
+  "species:1012": [
+   30,
+   42,
+   24,
+   42
+  ],
+  "species:1013": [
+   42,
+   54,
+   34,
+   54
+  ],
+  "species:1014": [
+   26,
+   44,
+   30,
+   52
+  ],
+  "species:1015": [
+   38,
+   54,
+   36,
+   58
+  ],
+  "species:1016": [
+   18,
+   32,
+   28,
+   50
+  ],
+  "species:1017": [
+   30,
+   46,
+   34,
+   58
+  ],
+  "species:1018": [
+   12,
+   26,
+   48,
+   64
+  ],
+  "species:1021": [
+   14,
+   34,
+   24,
+   52
+  ],
+  "species:1022": [
+   38,
+   54,
+   10,
+   36
+  ],
+  "species:1023": [
+   22,
+   36,
+   24,
+   46
+  ],
+  "species:1025": [
+   50,
+   62
   ]
  },
  "rigOffNote": "Rig moves switched off for a sprite after review: {key: {head?: reason, ears?: reason}}.",
  "rigOff": {
   "species:1025": {
    "ears": "the band catches the tops of the floating mochi orbs"
+  },
+  "mega:mega-blastoise": {
+   "ears": "the band is the top of the cannon"
+  },
+  "mega:mega-glimmora": {
+   "ears": "the band is a crystal petal, not the head"
+  },
+  "species:976": {
+   "ears": "the band is the dorsal fin"
+  },
+  "species:916": {
+   "ears": "the band runs along the back"
+  },
+  "species:942": {
+   "ears": "the band runs along the back mane"
+  },
+  "mega:mega-pinsir": {
+   "ears": "only the horn tips would move"
+  },
+  "mega:mega-aerodactyl": {
+   "ears": "only the crest points would move"
+  },
+  "mega:mega-absol-z": {
+   "ears": "only the horn points would move"
   }
- }
+ },
+ "noHead": {
+  "mega:mega-metagross": "the head is the whole body",
+  "mega:mega-sharpedo": "the head is the whole body",
+  "mega:mega-starmie": "no head",
+  "species:679": "a sword, no head",
+  "species:680": "swords, no head",
+  "species:799": "the head is the whole body",
+  "species:854": "a teacup, no head",
+  "species:855": "a teapot, no head",
+  "species:870": "a troop of six",
+  "species:894": "no head",
+  "species:946": "a tumbleweed, no head",
+  "species:947": "a tumbleweed, no head",
+  "species:950": "the head is the whole body",
+  "species:954": "tiny face under the ball",
+  "species:961": "three heads",
+  "species:965": "an engine, no head",
+  "species:966": "an engine, no head",
+  "species:977": "the head is the whole body",
+  "species:989": "magnet heads",
+  "species:990": "the head is the whole body",
+  "species:993": "two dragon heads"
+ },
+ "noHeadNote": "Static sprites with no separate head to lean (the rig squashes them only)."
 }

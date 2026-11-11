@@ -37,6 +37,8 @@ const rowDiff = (px, W, a, b) => { let n = 0; for (let x = 0; x < W; x++) if (!s
 
 /** A moving band's pieces must hold at least this many pixels and be at least this many rows tall… */
 export const BAND_MIN_PX = 12;
+/** The ear band must move at least this many pixels: a few loose tips sliding read as a glitch, not a drag. */
+export const EAR_MIN_PX = 30;
 export const BAND_MIN_ROWS = 3;
 /** …and spread at most this fraction of the head's width past either side of it. */
 export const BAND_SPREAD = 0.35;
@@ -73,7 +75,7 @@ export function headSpan(px, W, H, face, eyes) {
  * apart, so a band is used only when everything above the row is one piece
  * no wider than `soloWidth` of the sprite. → { y, c, mask } or null.
  */
-function pieceBand(px, W, H, b, lo, hi, span, soloWidth) {
+function pieceBand(px, W, H, b, lo, hi, span, soloWidth, minPx = BAND_MIN_PX) {
   lo = Math.max(1, Math.round(lo)); hi = Math.min(H - 1, Math.round(hi));
   let best = null;
   for (let y = hi; y >= lo; y--) {
@@ -97,7 +99,7 @@ function pieceBand(px, W, H, b, lo, hi, span, soloWidth) {
     }
     let keep = span ? parts.filter((q) => q.foot.some((x) => x >= span[0] && x <= span[1])) : parts.length === 1 ? parts : [];
     keep = keep.filter((q) => q.px.length >= BAND_MIN_PX && q.rows[1] - q.rows[0] + 1 >= BAND_MIN_ROWS);
-    if (!keep.length) continue;
+    if (!keep.length || keep.reduce((n, q) => n + q.px.length, 0) < minPx) continue;
     const xs = keep.flatMap((q) => q.px.map((i) => i % W)), x0 = Math.min(...xs), x1 = Math.max(...xs);
     if (span) { const w = span[1] - span[0] + 1; if (x0 < span[0] - w * BAND_SPREAD || x1 > span[1] + w * BAND_SPREAD) continue; }
     else if (x1 - x0 + 1 > b.w * soloWidth) continue;
@@ -165,7 +167,7 @@ export function rigCuts(px, W, H, { face = null, eyes = null, minHeight = 20, of
   const head = span && !off?.head ? pieceBand(px, W, H, b, headLo, headHi, span, 0) : null;
   const earHi = face ? face[0] - 1 : (head ? head.y - 4 : b.y0 + b.h * 0.3);
   const earLo = b.y0 + Math.max(BAND_MIN_ROWS + 1, (earHi - b.y0) * 0.4);
-  const ear = span && !off?.ears && earHi >= earLo ? pieceBand(px, W, H, b, earLo, earHi, span, 0) : null;
+  const ear = span && !off?.ears && earHi >= earLo ? pieceBand(px, W, H, b, earLo, earHi, span, 0, EAR_MIN_PX) : null;
   return {
     bounds: b, low, drops,
     head: head ? head.y : -1, headCost: head ? head.c : Infinity, headMask: head ? head.mask : null,

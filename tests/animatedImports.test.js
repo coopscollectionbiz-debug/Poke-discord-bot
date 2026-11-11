@@ -21,7 +21,7 @@ const recOf = (e) => (e.target.startsWith("mega:") ? MEGAS[e.megaId] : SPECIES[S
 const dirOf = (e) => (e.target.startsWith("mega:") ? "../public/sprites/pokemon/mega/" : "../public/sprites/pokemon/");
 
 section("Import record");
-assertEqual(DOC.entries.length, 170, "170 reviewed animations (109 species + 61 Megas)");
+assertEqual(DOC.entries.length, 202, "202 reviewed animations (139 species + 63 Megas)");
 assertEqual(new Set(DOC.entries.map((e) => e.target)).size, DOC.entries.length, "one animation per Pokémon / Mega");
 assertTrue(DOC.entries.every((e) => e.author && e.source && e.licence && e.shinyMethod), "every entry names its animator, source, terms and shiny method");
 assertTrue(DOC.excluded.some((x) => x.target === "species:941"), "Kilowattrel is excluded with a reason (unrecoverable resample) and stays on the rig");

@@ -9,40 +9,22 @@
   "mega:mega-tatsugiri-stretchy",
   "species:1005",
   "species:758",
-  "species:765",
   "species:827",
-  "species:829",
-  "species:911",
   "species:921",
-  "species:927",
   "species:941",
-  "species:944",
   "species:950",
   "species:953",
   "species:954",
-  "species:979",
   "species:988"
  ],
  "excluded": {},
  "facesNote": "Faces: [firstRow, lastRow] or [firstRow, lastRow, firstCol, lastCol]. Breath and rig cuts never cross the rows; the columns say where the head is, so the rig can lean it and drag its ears (eyes do this for blinking sprites). Read off 3x grids; every head mover reviewed on what-moves sheets.",
  "faces": {
-  "mega:mega-eelektross": [
-   46,
-   64,
-   6,
-   26
-  ],
   "mega:mega-houndoom": [
    28,
    40,
    14,
    34
-  ],
-  "mega:mega-malamar": [
-   26,
-   38,
-   40,
-   56
   ],
   "mega:mega-sceptile": [
    12,
@@ -56,41 +38,17 @@
    34,
    56
   ],
-  "species:690": [
-   36,
-   48,
-   34,
-   56
-  ],
   "species:710": [
    40,
    50,
    36,
    56
   ],
-  "species:726": [
-   44,
-   60,
-   18,
-   46
-  ],
   "species:758": [
    24,
    36,
    20,
    40
-  ],
-  "species:765": [
-   26,
-   44,
-   32,
-   52
-  ],
-  "species:766": [
-   36,
-   48,
-   24,
-   44
   ],
   "species:827": [
    44,
@@ -104,24 +62,6 @@
    8,
    30
   ],
-  "species:829": [
-   44,
-   56,
-   40,
-   56
-  ],
-  "species:900": [
-   18,
-   34,
-   26,
-   50
-  ],
-  "species:911": [
-   34,
-   60,
-   8,
-   40
-  ],
   "species:916": [
    38,
    54,
@@ -132,61 +72,17 @@
    54,
    66
   ],
-  "species:928": [
-   46,
-   58
-  ],
-  "species:930": [
-   28,
-   40,
-   40,
-   58
-  ],
   "species:931": [
    30,
    44,
    32,
    56
   ],
-  "species:934": [
-   28,
-   40,
-   44,
-   60
-  ],
-  "species:936": [
-   26,
-   40,
-   36,
-   56
-  ],
-  "species:940": [
-   34,
-   48,
-   30,
-   52
-  ],
   "species:941": [
    36,
    48,
    30,
    52
-  ],
-  "species:943": [
-   40,
-   56,
-   20,
-   42
-  ],
-  "species:944": [
-   44,
-   56
-  ],
-  "species:945": [
-   46,
-   60,
-   36,
-   62
   ],
   "species:951": [
    36,
@@ -212,35 +108,11 @@
    30,
    52
   ],
-  "species:962": [
-   26,
-   40,
-   22,
-   44
-  ],
   "species:970": [
    44,
    56,
    24,
    42
-  ],
-  "species:972": [
-   44,
-   64,
-   12,
-   40
-  ],
-  "species:974": [
-   40,
-   54,
-   30,
-   62
-  ],
-  "species:979": [
-   48,
-   62,
-   36,
-   60
   ],
   "species:985": [
    40,
@@ -286,11 +158,8 @@
  "noHead": {
   "mega:mega-metagross": "the head is the whole body",
   "mega:mega-sharpedo": "the head is the whole body",
-  "species:799": "the head is the whole body",
   "species:950": "the head is the whole body",
-  "species:954": "tiny face under the ball",
-  "species:989": "magnet heads",
-  "species:993": "two dragon heads"
+  "species:954": "tiny face under the ball"
  },
  "noHeadNote": "Static sprites with no separate head to lean (the rig squashes them only)."
 }

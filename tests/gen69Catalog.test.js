@@ -141,7 +141,7 @@ const byGen = {};
 for (const n of NEW) { const g = DEX[n].generation; byGen[g] ??= [0, 0]; byGen[g][auditKind(n) === "animated" ? 0 : 1]++; }
 assertEqual(byGen, { 6: [54, 18], 7: [74, 14], 8: [67, 29], 9: [25, 95] }, "per-generation animated/static split matches the audit");
 assertEqual(counts, { animated: 220 + NEW.filter((n) => isImport(n) && src.get(n).normal.kind === "static").length, static: 156 - NEW.filter((n) => isImport(n) && src.get(n).normal.kind === "static").length }, "shipped: the audit's animations plus the imported community animations; the rest stay static (rig idle)");
-assertEqual(IMPORTED.size, 109, "109 species use a reviewed community animation");
+assertEqual(IMPORTED.size, 139, "139 species use a reviewed community animation");
 assertTrue(NEW.filter((n) => !isImport(n)).every((n) => SPRITES[n].normal.sourceSha1 === src.get(n).normal.sha1 && SPRITES[n].shiny.sourceSha1 === src.get(n).shiny.sha1), "every non-imported sprite came from the audited source file");
 assertTrue([...IMPORTED.values()].every((e) => { const r = SPRITES[e.dex]; return isImport(e.dex) && r.normal.kind === "animated" && r.shiny.kind === "animated" && r.normal.fileSha1 === e.sha1.normal && r.shiny.fileSha1 === e.sha1.shiny && r.normal.sourceSha1 === e.sourceSha1.normal && r.shiny.sourceSha1 === e.sourceSha1.shiny && !r.normal.motion && !r.grayscale.motion && r.animationCredit?.animator; }), "every imported species is the reviewed animated pair (output and source SHA-1), credited, with no rig idle");
 assertTrue(SOURCE.every((e) => ["normal", "shiny"].every((v) => !e[v] || (e[v].alphaLevels <= 2 && e[v].maxColors <= 128) || e[v].maxColors <= 64)), "no 3D/render source: every source passed the 2D pixel-art check");

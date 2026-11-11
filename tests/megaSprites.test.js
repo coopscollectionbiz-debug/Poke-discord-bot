@@ -30,7 +30,7 @@ const isImport = (r) => r.normal.origin === "animated-import" && IMPORTS.has(r.i
 const audited = recs.filter((r) => !isImport(r));
 assertEqual(audited.filter((r) => r.normal.kind === "animated").length, 24, "24 audited animated normal (Showdown gen5ani / PokéAPI)");
 assertEqual(audited.filter((r) => r.shiny.kind === "animated").length, 24, "24 audited animated shiny");
-assertEqual(IMPORTS.size, 61, "61 static forms replaced by reviewed community animations");
+assertEqual(IMPORTS.size, 63, "63 static forms replaced by reviewed community animations");
 assertTrue(recs.filter(isImport).length === IMPORTS.size && recs.filter(isImport).every((r) => r.normal.kind === "animated" && r.shiny.kind === "animated"), "every imported form is animated, normal and shiny");
 assertEqual(recs.filter((r) => r.normal.kind === "static").length, 71 - IMPORTS.size, "the remaining static pixel-art fallbacks (71 − imports)");
 assertTrue(recs.every((r) => r.normal.kind === r.shiny.kind), "normal and shiny are the same kind for every form");
@@ -85,6 +85,6 @@ section("Species sprite manifest pinned");
 const norm = (rel) => sha("sha256", fs.readFileSync(new URL(rel, import.meta.url), "utf8").replace(/\r\n/g, "\n"));
 // Pinned after the community animation import (tools/import-animated-sprites.mjs) and the rig idle for the
 // remaining static sprites (tools/generate-pokemon-idles.mjs); only those tools change it.
-assertEqual(norm("../data/sprites/sprites.json"), "89034463c936f3bb1bad4fd1d0765431cb0a2a25be9e1f33e89e774c9fad1da6", "data/sprites/sprites.json unchanged since the animation import + rig idle build");
+assertEqual(norm("../data/sprites/sprites.json"), "e08846cb8f80d2f75ee0df43f2c50ad8cd0c0cbe57fd4d83c12d78366271926f", "data/sprites/sprites.json unchanged since the animation import + rig idle build");
 
 finish();

@@ -572,6 +572,39 @@
    }
   },
   {
+   "target": "species:690",
+   "name": "Skrelp",
+   "dex": 690,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/SKRELP.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x96",
+   "frames": 47,
+   "loopMs": 6110,
+   "files": {
+    "normal": "normal/690.gif",
+    "shiny": "shiny/690.gif",
+    "grayscale": "grayscale/690.gif"
+   },
+   "sha1": {
+    "normal": "05d8c2271bd06fb1fcf7a8f88b9ffa2379d367ff",
+    "shiny": "a08e011456717440feae7f948725e8bada79de1c"
+   },
+   "sourceSha1": {
+    "normal": "13cb17fa931700931477f9aa81186b27852b3281",
+    "shiny": "a97f6d586dc9eedad76e17ecbc2fdb8206408c3e"
+   }
+  },
+  {
    "target": "species:695",
    "name": "Heliolisk",
    "dex": 695,
@@ -602,6 +635,39 @@
    "sourceSha1": {
     "normal": "4720a09bc0da488f6a439fb49e301addb213fb86",
     "shiny": "ecc31f85ec617b1bd4b73cd8560a5568b1afbfbb"
+   }
+  },
+  {
+   "target": "species:699",
+   "name": "Aurorus",
+   "dex": 699,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Aurorus (PokéRogue exp/699)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "83x91",
+   "frames": 14,
+   "loopMs": 1400,
+   "files": {
+    "normal": "normal/699.gif",
+    "shiny": "shiny/699.gif",
+    "grayscale": "grayscale/699.gif"
+   },
+   "sha1": {
+    "normal": "4010e2eb61d0e0f3e3424f8d5dc4ab17aeafe3c4",
+    "shiny": "0bf8f4d71ad2b2ef8461bfcaa109ae5eec327448"
+   },
+   "sourceSha1": {
+    "normal": "4010e2eb61d0e0f3e3424f8d5dc4ab17aeafe3c4",
+    "shiny": "0bf8f4d71ad2b2ef8461bfcaa109ae5eec327448"
    }
   },
   {
@@ -770,6 +836,39 @@
    }
   },
   {
+   "target": "species:726",
+   "name": "Torracat",
+   "dex": 726,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Torracat (PokéRogue exp/726)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "56x54",
+   "frames": 12,
+   "loopMs": 1200,
+   "files": {
+    "normal": "normal/726.gif",
+    "shiny": "shiny/726.gif",
+    "grayscale": "grayscale/726.gif"
+   },
+   "sha1": {
+    "normal": "493fa3683cc56529cd59bdeae5314b9fee2343c2",
+    "shiny": "0cb3729feff0bee19894147fb035c1a175158462"
+   },
+   "sourceSha1": {
+    "normal": "493fa3683cc56529cd59bdeae5314b9fee2343c2",
+    "shiny": "0cb3729feff0bee19894147fb035c1a175158462"
+   }
+  },
+  {
    "target": "species:741",
    "name": "Oricorio",
    "dex": 741,
@@ -902,6 +1001,72 @@
    }
   },
   {
+   "target": "species:765",
+   "name": "Oranguru",
+   "dex": 765,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Oranguru (PokéRogue exp/765)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "72x74",
+   "frames": 12,
+   "loopMs": 1200,
+   "files": {
+    "normal": "normal/765.gif",
+    "shiny": "shiny/765.gif",
+    "grayscale": "grayscale/765.gif"
+   },
+   "sha1": {
+    "normal": "d6952b2a880eb47cbc86edd56800c6a418baa82c",
+    "shiny": "eeab9377cac5877c243ef65c0ada47f46eb26087"
+   },
+   "sourceSha1": {
+    "normal": "d6952b2a880eb47cbc86edd56800c6a418baa82c",
+    "shiny": "eeab9377cac5877c243ef65c0ada47f46eb26087"
+   }
+  },
+  {
+   "target": "species:766",
+   "name": "Passimian",
+   "dex": 766,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Passimian (PokéRogue exp/766)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "80x60",
+   "frames": 13,
+   "loopMs": 1300,
+   "files": {
+    "normal": "normal/766.gif",
+    "shiny": "shiny/766.gif",
+    "grayscale": "grayscale/766.gif"
+   },
+   "sha1": {
+    "normal": "672cc7d1eec9711fe54a37202989c0abbddea162",
+    "shiny": "b52a476461652eb70c324b498d4ab0b0dd533c1b"
+   },
+   "sourceSha1": {
+    "normal": "672cc7d1eec9711fe54a37202989c0abbddea162",
+    "shiny": "b52a476461652eb70c324b498d4ab0b0dd533c1b"
+   }
+  },
+  {
    "target": "species:768",
    "name": "Golisopod",
    "dex": 768,
@@ -965,6 +1130,39 @@
    "sourceSha1": {
     "normal": "0cd7aa29b6c00dd008a80aa379adc095857f55bc",
     "shiny": "568fbbfae744e0f0e5a601797d05ff8400131939"
+   }
+  },
+  {
+   "target": "species:799",
+   "name": "Guzzlord",
+   "dex": 799,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Guzzlord (PokéRogue exp/799)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "99x92",
+   "frames": 14,
+   "loopMs": 1400,
+   "files": {
+    "normal": "normal/799.gif",
+    "shiny": "shiny/799.gif",
+    "grayscale": "grayscale/799.gif"
+   },
+   "sha1": {
+    "normal": "193ec9a46a3dd91a8de02b7164abbbdc3ba9ed48",
+    "shiny": "0654804c8ddbdbdb3221eed86b8b6023f5b4fa86"
+   },
+   "sourceSha1": {
+    "normal": "193ec9a46a3dd91a8de02b7164abbbdc3ba9ed48",
+    "shiny": "0654804c8ddbdbdb3221eed86b8b6023f5b4fa86"
    }
   },
   {
@@ -1196,6 +1394,39 @@
    "sourceSha1": {
     "normal": "f28789a0a0a9ae94b1c2206e740e9173cdfbc186",
     "shiny": "8a198dc222bf01e488cb47f7baafac6ef84741c4"
+   }
+  },
+  {
+   "target": "species:829",
+   "name": "Gossifleur",
+   "dex": 829,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/Gossifleur.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x96",
+   "frames": 53,
+   "loopMs": 6840,
+   "files": {
+    "normal": "normal/829.gif",
+    "shiny": "shiny/829.gif",
+    "grayscale": "grayscale/829.gif"
+   },
+   "sha1": {
+    "normal": "a4e6de62b6cf6f3f301be02fa4763a6b7a021eb0",
+    "shiny": "64a4506baa031aea90ec3d12e4da3123638868b2"
+   },
+   "sourceSha1": {
+    "normal": "82334a82e073c494414307b3f58e6a0201b73f58",
+    "shiny": "50d23482d2c954cb4c58bc2f2fd11a23599bf658"
    }
   },
   {
@@ -1793,6 +2024,39 @@
    }
   },
   {
+   "target": "species:900",
+   "name": "Kleavor",
+   "dex": 900,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Kleavor (PokéRogue exp/900)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "120x118",
+   "frames": 110,
+   "loopMs": 11000,
+   "files": {
+    "normal": "normal/900.gif",
+    "shiny": "shiny/900.gif",
+    "grayscale": "grayscale/900.gif"
+   },
+   "sha1": {
+    "normal": "8419a4a55ac845ce17c9f5a46d2b9c9b7cf000b9",
+    "shiny": "5ba8a18bb1c6ec6d72321c2cc3df7f16c09c6661"
+   },
+   "sourceSha1": {
+    "normal": "8419a4a55ac845ce17c9f5a46d2b9c9b7cf000b9",
+    "shiny": "5ba8a18bb1c6ec6d72321c2cc3df7f16c09c6661"
+   }
+  },
+  {
    "target": "species:903",
    "name": "Sneasler",
    "dex": 903,
@@ -1988,6 +2252,72 @@
    "sourceSha1": {
     "normal": "25ad68e24b0d8309b250897f298d24af66f7ced7",
     "shiny": "97ce61c08894ad1d6d73458de7d9e7690d822fdd"
+   }
+  },
+  {
+   "target": "species:910",
+   "name": "Crocalor",
+   "dex": 910,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Crocalor (PokéRogue exp/910)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "59x70",
+   "frames": 79,
+   "loopMs": 7900,
+   "files": {
+    "normal": "normal/910.gif",
+    "shiny": "shiny/910.gif",
+    "grayscale": "grayscale/910.gif"
+   },
+   "sha1": {
+    "normal": "1ec72a6fb701b8dd079509ff7e614bcf345397f9",
+    "shiny": "1dd95b26ff299557ee0e6cb32554097d29604f8f"
+   },
+   "sourceSha1": {
+    "normal": "1ec72a6fb701b8dd079509ff7e614bcf345397f9",
+    "shiny": "1dd95b26ff299557ee0e6cb32554097d29604f8f"
+   }
+  },
+  {
+   "target": "species:911",
+   "name": "Skeledirge",
+   "dex": 911,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Skeledirge (PokéRogue exp/911)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "97x72",
+   "frames": 88,
+   "loopMs": 8800,
+   "files": {
+    "normal": "normal/911.gif",
+    "shiny": "shiny/911.gif",
+    "grayscale": "grayscale/911.gif"
+   },
+   "sha1": {
+    "normal": "66fc0e6fe43a7039b4d653b12028786b98f01827",
+    "shiny": "42fcbf854086d36cbd75d419ecf3b8ff4128d0df"
+   },
+   "sourceSha1": {
+    "normal": "66fc0e6fe43a7039b4d653b12028786b98f01827",
+    "shiny": "42fcbf854086d36cbd75d419ecf3b8ff4128d0df"
    }
   },
   {
@@ -2255,6 +2585,237 @@
    }
   },
   {
+   "target": "species:926",
+   "name": "Fidough",
+   "dex": 926,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/FIDOUGH.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x96",
+   "frames": 38,
+   "loopMs": 4560,
+   "files": {
+    "normal": "normal/926.gif",
+    "shiny": "shiny/926.gif",
+    "grayscale": "grayscale/926.gif"
+   },
+   "sha1": {
+    "normal": "b0e8699c0b5cee83cd83f921bc07ea1c5b6d536c",
+    "shiny": "628a74f0cf9d3cce421c3b7f0ce785678100260c"
+   },
+   "sourceSha1": {
+    "normal": "26d37c8d29550889d978bcf0482f7013a2e7c29c",
+    "shiny": "6a6a29dbc2193c439a588afd2f7f0a7d367657e0"
+   }
+  },
+  {
+   "target": "species:927",
+   "name": "Dachsbun",
+   "dex": 927,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/DACHSBUN.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x96",
+   "frames": 48,
+   "loopMs": 4800,
+   "files": {
+    "normal": "normal/927.gif",
+    "shiny": "shiny/927.gif",
+    "grayscale": "grayscale/927.gif"
+   },
+   "sha1": {
+    "normal": "a03b0a7238ca2eaca8be952263735df7cd1f3504",
+    "shiny": "08371bd05eb034ef9699e0cdb02ce9635911d189"
+   },
+   "sourceSha1": {
+    "normal": "87c8679a685ddf7f5cb1ec437480c25e1a95d7a3",
+    "shiny": "53f778af55fde83f740667d6bc3d1e66e7602f93"
+   }
+  },
+  {
+   "target": "species:928",
+   "name": "Smoliv",
+   "dex": 928,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/SMOLIV.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x96",
+   "frames": 40,
+   "loopMs": 4800,
+   "files": {
+    "normal": "normal/928.gif",
+    "shiny": "shiny/928.gif",
+    "grayscale": "grayscale/928.gif"
+   },
+   "sha1": {
+    "normal": "d18cc4713bdfbbf2a34d292ae1fe3aa621677f1b",
+    "shiny": "d718ab5a382ccb6839aabbac4adf14a99fe558e6"
+   },
+   "sourceSha1": {
+    "normal": "3ccc1f7ad8d9e8cde4adfa773b583da2b77aaace",
+    "shiny": "3846d782a1e23f41963327a42262ecea7c775bb2"
+   }
+  },
+  {
+   "target": "species:929",
+   "name": "Dolliv",
+   "dex": 929,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Dolliv (PokéRogue exp/929)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "40x61",
+   "frames": 20,
+   "loopMs": 4000,
+   "files": {
+    "normal": "normal/929.gif",
+    "shiny": "shiny/929.gif",
+    "grayscale": "grayscale/929.gif"
+   },
+   "sha1": {
+    "normal": "62ff745212897bf46e9b539ab80a90a07050d82c",
+    "shiny": "73269a95ae774f8d46a5d501c4e3266c0b1433ba"
+   },
+   "sourceSha1": {
+    "normal": "f9650b4dd3f25b1a360d8dd5192582aabd3d60d0",
+    "shiny": "000adf02f61a3ff9e6f2fdf27c16287c59ac80d8"
+   }
+  },
+  {
+   "target": "species:930",
+   "name": "Arboliva",
+   "dex": 930,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/ARBOLIVA.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x96",
+   "frames": 40,
+   "loopMs": 5880,
+   "files": {
+    "normal": "normal/930.gif",
+    "shiny": "shiny/930.gif",
+    "grayscale": "grayscale/930.gif"
+   },
+   "sha1": {
+    "normal": "37b6cd706c454e57691526fc8b76f9de90e4fe28",
+    "shiny": "b53bc9b37268f77431a71c0a528ec06f5919488b"
+   },
+   "sourceSha1": {
+    "normal": "7500eb8ee8b3f78b4270e95d25933b4190516c1d",
+    "shiny": "f97066d1f162800d4b336ba7d7dae3b4144b778d"
+   }
+  },
+  {
+   "target": "species:933",
+   "name": "Naclstack",
+   "dex": 933,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Naclstack (PokéRogue exp/933)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "50x41",
+   "frames": 61,
+   "loopMs": 8000,
+   "files": {
+    "normal": "normal/933.gif",
+    "shiny": "shiny/933.gif",
+    "grayscale": "grayscale/933.gif"
+   },
+   "sha1": {
+    "normal": "88fbf74e40e2cd3257e7079f8e149845877a2a74",
+    "shiny": "de60a6ff65cb3b47393fb543c04747a0208d4666"
+   },
+   "sourceSha1": {
+    "normal": "4bdbd37ac1e7d15e9bfb992a2693482f8a9f0dea",
+    "shiny": "3129b1012712b8ad94f4ef7af69093046d8804fa"
+   }
+  },
+  {
+   "target": "species:934",
+   "name": "Garganacl",
+   "dex": 934,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Garganacl (PokéRogue exp/934)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "71x73",
+   "frames": 31,
+   "loopMs": 7900,
+   "files": {
+    "normal": "normal/934.gif",
+    "shiny": "shiny/934.gif",
+    "grayscale": "grayscale/934.gif"
+   },
+   "sha1": {
+    "normal": "e0e75a1d095085e7e186405a7ccb484b96a71b65",
+    "shiny": "71eb1005eca6934831087bd8588b3f74a90155c6"
+   },
+   "sourceSha1": {
+    "normal": "40d05015d0559843e8a6d5abc641a47f958d4487",
+    "shiny": "c4f927f49a3ca4b25d17be94cdde42d0ee26b2a6"
+   }
+  },
+  {
    "target": "species:935",
    "name": "Charcadet",
    "dex": 935,
@@ -2285,6 +2846,39 @@
    "sourceSha1": {
     "normal": "4df44be276915ab66ac5477d30562f3c960963a5",
     "shiny": "449861ddd81bb391ef0079ca785f8e8e0d6b36f1"
+   }
+  },
+  {
+   "target": "species:936",
+   "name": "Armarouge",
+   "dex": 936,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/ARMAROUGE.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x96",
+   "frames": 48,
+   "loopMs": 4800,
+   "files": {
+    "normal": "normal/936.gif",
+    "shiny": "shiny/936.gif",
+    "grayscale": "grayscale/936.gif"
+   },
+   "sha1": {
+    "normal": "2a0a310155e4b8458e7dafee3ee611a6b8b9dc18",
+    "shiny": "adf88b07e71ec4d4742ece175adbe60658bafc0e"
+   },
+   "sourceSha1": {
+    "normal": "0c10a3bb5b3cfc70f8b0533acc6f2a4564b40df9",
+    "shiny": "c204e45a6e5bb434316d989d805d7bd7b30c9d67"
    }
   },
   {
@@ -2321,6 +2915,72 @@
    }
   },
   {
+   "target": "species:939",
+   "name": "Bellibolt",
+   "dex": 939,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Bellibolt (PokéRogue exp/939)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "64x64",
+   "frames": 32,
+   "loopMs": 3200,
+   "files": {
+    "normal": "normal/939.gif",
+    "shiny": "shiny/939.gif",
+    "grayscale": "grayscale/939.gif"
+   },
+   "sha1": {
+    "normal": "db3034aad6fdc713b9bca740ddd9028edb4e3906",
+    "shiny": "739395d690b0780b639b8c0ef1df83e552ddb18d"
+   },
+   "sourceSha1": {
+    "normal": "db3034aad6fdc713b9bca740ddd9028edb4e3906",
+    "shiny": "739395d690b0780b639b8c0ef1df83e552ddb18d"
+   }
+  },
+  {
+   "target": "species:940",
+   "name": "Wattrel",
+   "dex": 940,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Wattrel (PokéRogue exp/940)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "57x37",
+   "frames": 16,
+   "loopMs": 1600,
+   "files": {
+    "normal": "normal/940.gif",
+    "shiny": "shiny/940.gif",
+    "grayscale": "grayscale/940.gif"
+   },
+   "sha1": {
+    "normal": "f37b644ed0cb60bd20d7e6a52fd6295f58c5caec",
+    "shiny": "79ccdad7f3910d4d803765815e92c4e24bb7c199"
+   },
+   "sourceSha1": {
+    "normal": "f37b644ed0cb60bd20d7e6a52fd6295f58c5caec",
+    "shiny": "79ccdad7f3910d4d803765815e92c4e24bb7c199"
+   }
+  },
+  {
    "target": "species:942",
    "name": "Maschiff",
    "dex": 942,
@@ -2351,6 +3011,105 @@
    "sourceSha1": {
     "normal": "8786aef5492bf8926222ee0d65baabe1994546e2",
     "shiny": "d58b0e116218eee7be2a83555b558881334e1337"
+   }
+  },
+  {
+   "target": "species:943",
+   "name": "Mabosstiff",
+   "dex": 943,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Mabosstiff (PokéRogue exp/943)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x68",
+   "frames": 74,
+   "loopMs": 7400,
+   "files": {
+    "normal": "normal/943.gif",
+    "shiny": "shiny/943.gif",
+    "grayscale": "grayscale/943.gif"
+   },
+   "sha1": {
+    "normal": "c03417b7571ab99fbb154a97cf333091aec18175",
+    "shiny": "ce8b702ce6295b93d0090c2cbd2e9fc9c4bcdc25"
+   },
+   "sourceSha1": {
+    "normal": "c03417b7571ab99fbb154a97cf333091aec18175",
+    "shiny": "ce8b702ce6295b93d0090c2cbd2e9fc9c4bcdc25"
+   }
+  },
+  {
+   "target": "species:944",
+   "name": "Shroodle",
+   "dex": 944,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/SHROODLE.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x96",
+   "frames": 38,
+   "loopMs": 4600,
+   "files": {
+    "normal": "normal/944.gif",
+    "shiny": "shiny/944.gif",
+    "grayscale": "grayscale/944.gif"
+   },
+   "sha1": {
+    "normal": "ad16889df8200b59dc9dd7203f9e3e9dc199d2bf",
+    "shiny": "1d02189e8cfd5eba7be3d4a46c07311932ade66a"
+   },
+   "sourceSha1": {
+    "normal": "6af8b8a81171e6f5371adb2e30bcf5f491a2aa91",
+    "shiny": "25344db6df2ecdbddfd2bc0b769a2187d93932f7"
+   }
+  },
+  {
+   "target": "species:945",
+   "name": "Grafaiai",
+   "dex": 945,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Grafaiai (PokéRogue exp/945)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "65x55",
+   "frames": 8,
+   "loopMs": 1600,
+   "files": {
+    "normal": "normal/945.gif",
+    "shiny": "shiny/945.gif",
+    "grayscale": "grayscale/945.gif"
+   },
+   "sha1": {
+    "normal": "0f8c844a4c354fcb5aeffed5fa5a9347ffd8a9e3",
+    "shiny": "cb3cb105eeb5bdf215f0f2b9734249f36673ce14"
+   },
+   "sourceSha1": {
+    "normal": "496aa6005399130e969b1c64dbb3462654b652b2",
+    "shiny": "3b7a84ae42ffa58f24d90c18afee6ede23b50aa6"
    }
   },
   {
@@ -2684,6 +3443,72 @@
    }
   },
   {
+   "target": "species:962",
+   "name": "Bombirdier",
+   "dex": 962,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Bombirdier (PokéRogue exp/962)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "100x80",
+   "frames": 7,
+   "loopMs": 700,
+   "files": {
+    "normal": "normal/962.gif",
+    "shiny": "shiny/962.gif",
+    "grayscale": "grayscale/962.gif"
+   },
+   "sha1": {
+    "normal": "f19ca27f337f2c56ac31593c24e3eb2be9842b1c",
+    "shiny": "6808c1e4407af6dd6ae96bd12e1faceba6c3e108"
+   },
+   "sourceSha1": {
+    "normal": "f19ca27f337f2c56ac31593c24e3eb2be9842b1c",
+    "shiny": "6808c1e4407af6dd6ae96bd12e1faceba6c3e108"
+   }
+  },
+  {
+   "target": "species:963",
+   "name": "Finizen",
+   "dex": 963,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Finizen (PokéRogue exp/963)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "94x94",
+   "frames": 44,
+   "loopMs": 7600,
+   "files": {
+    "normal": "normal/963.gif",
+    "shiny": "shiny/963.gif",
+    "grayscale": "grayscale/963.gif"
+   },
+   "sha1": {
+    "normal": "fd621ebab13250b964b3fa56c29a86bdcc942c3c",
+    "shiny": "1bec3ce73bae611597947dc56308f5adbc2a0169"
+   },
+   "sourceSha1": {
+    "normal": "37f48d0d6e9051ca8d5c28e89290abf1b196f423",
+    "shiny": "37d18270d1fdc562c3bfedce64db7ccce38e7584"
+   }
+  },
+  {
    "target": "species:965",
    "name": "Varoom",
    "dex": 965,
@@ -2849,6 +3674,39 @@
    }
   },
   {
+   "target": "species:972",
+   "name": "Houndstone",
+   "dex": 972,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Houndstone (PokéRogue exp/972)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "61x64",
+   "frames": 12,
+   "loopMs": 1200,
+   "files": {
+    "normal": "normal/972.gif",
+    "shiny": "shiny/972.gif",
+    "grayscale": "grayscale/972.gif"
+   },
+   "sha1": {
+    "normal": "58362058317f6926ac8436e46c25c9d6c6d71a8f",
+    "shiny": "906b444f375ee651792fb537ac7cb44e0643a5eb"
+   },
+   "sourceSha1": {
+    "normal": "58362058317f6926ac8436e46c25c9d6c6d71a8f",
+    "shiny": "906b444f375ee651792fb537ac7cb44e0643a5eb"
+   }
+  },
+  {
    "target": "species:973",
    "name": "Flamigo",
    "dex": 973,
@@ -2879,6 +3737,39 @@
    "sourceSha1": {
     "normal": "7207fb83744573bdbacf5b967458899688589096",
     "shiny": "3734f23361ae1cffb4b1f7577933c30c680f48d9"
+   }
+  },
+  {
+   "target": "species:974",
+   "name": "Cetoddle",
+   "dex": 974,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Cetoddle (PokéRogue exp/974)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "60x39",
+   "frames": 58,
+   "loopMs": 5800,
+   "files": {
+    "normal": "normal/974.gif",
+    "shiny": "shiny/974.gif",
+    "grayscale": "grayscale/974.gif"
+   },
+   "sha1": {
+    "normal": "bc47c7c1d62d965cea8b27549abd07bce170b45f",
+    "shiny": "cc1bea3c84bc0da39e0786c57af06b33c45f9386"
+   },
+   "sourceSha1": {
+    "normal": "bc47c7c1d62d965cea8b27549abd07bce170b45f",
+    "shiny": "cc1bea3c84bc0da39e0786c57af06b33c45f9386"
    }
   },
   {
@@ -2981,6 +3872,39 @@
    }
   },
   {
+   "target": "species:979",
+   "name": "Annihilape",
+   "dex": 979,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/ANNIHILAPE.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x96",
+   "frames": 92,
+   "loopMs": 11040,
+   "files": {
+    "normal": "normal/979.gif",
+    "shiny": "shiny/979.gif",
+    "grayscale": "grayscale/979.gif"
+   },
+   "sha1": {
+    "normal": "1f3221330a444dad1f242ec2a564a3938d0e90d1",
+    "shiny": "1f3a467c91c2186a0fe5573847de5970edfdf1e0"
+   },
+   "sourceSha1": {
+    "normal": "e52e2535443d690bdc2cb7d04b803c3be6a8c297",
+    "shiny": "4326c8beb44872628dc8b2bd69397999d2a778de"
+   }
+  },
+  {
    "target": "species:981",
    "name": "Farigiraf",
    "dex": 981,
@@ -3080,6 +4004,39 @@
    }
   },
   {
+   "target": "species:989",
+   "name": "Sandy Shocks",
+   "dex": 989,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Sandy Shocks (PokéRogue exp/989)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "61x87",
+   "frames": 48,
+   "loopMs": 4800,
+   "files": {
+    "normal": "normal/989.gif",
+    "shiny": "shiny/989.gif",
+    "grayscale": "grayscale/989.gif"
+   },
+   "sha1": {
+    "normal": "f73ccdedf3abc52faf51fa9f0748e3efa01155e3",
+    "shiny": "c103ef519a528b4ac39ec47fce7a4fa29bbdd654"
+   },
+   "sourceSha1": {
+    "normal": "f73ccdedf3abc52faf51fa9f0748e3efa01155e3",
+    "shiny": "c103ef519a528b4ac39ec47fce7a4fa29bbdd654"
+   }
+  },
+  {
    "target": "species:990",
    "name": "Iron Treads",
    "dex": 990,
@@ -3143,6 +4100,39 @@
    "sourceSha1": {
     "normal": "a90158ecaf859aeb8238a71492c1fe522a2bf95d",
     "shiny": "ed8a5331e4062afc9376e3c98953be814b7b9f32"
+   }
+  },
+  {
+   "target": "species:993",
+   "name": "Iron Jugulis",
+   "dex": 993,
+   "megaId": null,
+   "choice": "different drawing + artist shiny",
+   "author": "PokéRogue (Pagefault Games + credited artists)",
+   "source": "PokéRogue exp sprites (GitHub)",
+   "sourceUrl": "https://github.com/pagefaultgames/pokerogue-assets/tree/beta/images/pokemon/exp",
+   "title": "Iron Jugulis (PokéRogue exp/993)",
+   "licence": "CC BY-NC-SA 4.0 (PokéRogue assets; artists in PokéRogue CREDITS.md)",
+   "terms": "CC BY-NC-SA 4.0 (pokerogue-assets README): non-commercial, attribution, share-alike; per-sprite artists in PokéRogue CREDITS.md",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x90",
+   "frames": 44,
+   "loopMs": 4800,
+   "files": {
+    "normal": "normal/993.gif",
+    "shiny": "shiny/993.gif",
+    "grayscale": "grayscale/993.gif"
+   },
+   "sha1": {
+    "normal": "3a2fe8d1465c88bb3a197f98b689c4c81106777d",
+    "shiny": "488ed7cd90d47103580bffe49adf8df62eadccb8"
+   },
+   "sourceSha1": {
+    "normal": "80aa25bf6ef5299b7c84fe05acee617cf0b8779e",
+    "shiny": "5a8ad560afe19a0aadb97d4c6cc70cb65374a03f"
    }
   },
   {
@@ -4895,6 +5885,39 @@
    }
   },
   {
+   "target": "mega:mega-eelektross",
+   "name": "Mega Eelektross",
+   "dex": 604,
+   "megaId": "mega-eelektross",
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/EELEKTROSS_Mega.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "120x120",
+   "frames": 10,
+   "loopMs": 1000,
+   "files": {
+    "normal": "normal/mega-eelektross.gif",
+    "shiny": "shiny/mega-eelektross.gif",
+    "grayscale": "grayscale/mega-eelektross.gif"
+   },
+   "sha1": {
+    "normal": "0a5e493b4b7116166a57b385682727a845600b8b",
+    "shiny": "48c45872e7f8c423b68c60262aa5a7d9ee272e77"
+   },
+   "sourceSha1": {
+    "normal": "208806a4ca9087bc54dd10a728cc102b5ae9e641",
+    "shiny": "413b91d125bb8ffcd580b8d849016736a357bb40"
+   }
+  },
+  {
    "target": "mega:mega-chandelure",
    "name": "Mega Chandelure",
    "dex": 609,
@@ -5189,6 +6212,39 @@
    "sourceSha1": {
     "normal": "f8211c9cc1e6ada92ab7e51c7c8996216ddd2f16",
     "shiny": "ceca6d01c007fdd380f328c3c42f5c8e0f9017e1"
+   }
+  },
+  {
+   "target": "mega:mega-malamar",
+   "name": "Mega Malamar",
+   "dex": 687,
+   "megaId": "mega-malamar",
+   "choice": "different drawing + artist shiny",
+   "author": "Ghasty001",
+   "source": "Ghasty001 (GitHub)",
+   "sourceUrl": "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001/blob/main/FRONT/MALAMAR_Mega.gif",
+   "title": "",
+   "licence": "Free to use with credit (Ghasty001 and the base-sprite artists)",
+   "terms": "Free to use with credit (Ghasty001 + base-sprite artists listed in README)",
+   "shinyMethod": "artist's own shiny",
+   "notes": null,
+   "splitFrom": null,
+   "upscaleRemoved": null,
+   "size": "96x96",
+   "frames": 11,
+   "loopMs": 1320,
+   "files": {
+    "normal": "normal/mega-malamar.gif",
+    "shiny": "shiny/mega-malamar.gif",
+    "grayscale": "grayscale/mega-malamar.gif"
+   },
+   "sha1": {
+    "normal": "b94bcf1ab023dd9cd07142710af8d68e40cf54b0",
+    "shiny": "299dd032b366069b5ba12bcf6f5d68a32e009c70"
+   },
+   "sourceSha1": {
+    "normal": "2bf7b6ce876c9e2a8f4d83e2a24b2ac89909a947",
+    "shiny": "34f3308d83dc0976592bd2d2e73d4701e6edd8b0"
    }
   },
   {

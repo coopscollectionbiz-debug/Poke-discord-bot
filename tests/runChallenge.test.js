@@ -10,7 +10,9 @@ import {
   challengeLoss, getChallengeRecord, isUnlocked, challengeBlock, prizeSprite,
   previewChallenge, simulateChallenge, runChallenge,
   startRun, continueRun, finishOpenRun, isRunStale, finishAllOpenRuns, attachRunMessage, challengeLogEntry, hideOpenRun,
+  challengeProgress,
 } from "../utils/challenge/runChallenge.js";
+import { earnedBadgeKeys } from "../public/picker-pokemon/badges.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
 import { learnableMoves } from "../services/movesets.js";
@@ -551,6 +553,14 @@ section("The dashboard never sees an open run");
   assertTrue(td.A.challenge.run?.seed === 1, "the record keeps its run");
   const plain = world().A;
   assertEqual(hideOpenRun(plain), plain, "a record with no open run is sent as is");
+
+  // The Collection page's Badge row reads challenge.won from /api/user-pokemon.
+  const progress = challengeProgress(td.A);
+  assertEqual(progress, { won: winAll(GYMS) }, "the Collection page gets the challenges won, and no run or attempts");
+  assertEqual(earnedBadgeKeys({ challenge: progress }), GYMS, "which lights its Badges");
+  assertEqual(challengeProgress(world().A), { won: {} }, "a player with no challenges gets none");
+  const route = readFileSync(new URL("../bot_final.js", import.meta.url), "utf8").split('app.get("/api/user-pokemon"')[1]?.split("app.")[0] ?? "";
+  assertTrue(/challenge: challengeProgress\(u\)/.test(route), "/api/user-pokemon sends it");
 }
 
 section("Event log entry");

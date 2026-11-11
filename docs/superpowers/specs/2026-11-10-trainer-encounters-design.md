@@ -40,6 +40,7 @@ While a player chats, a computer-run Trainer can spot them and ask for a fight, 
 - The card shows the amount: "Win or lose: 260 CC" (decided).
 - A win pays the prize money and EXP. A loss pays the Trainer that amount, or all the player's CC if they hold less, and still pays EXP for knockouts. EXP is `teamExp` (`utils/battle/rewards.js:23`), with the win bonus only on a win, as in challenges.
 - The Team on the card fights, because its Levels set the amount. A Pokémon the player no longer owns sits out; with none left, Battle! is refused privately.
+- The card's Team is the player's Display team, the Team casual battles use, and it fights the way a casual battle would: each Pokémon's chosen Display moves, and the card's Mega slot as a Mega if it still qualifies at the click. The Battle team never fights an encounter (decided 2026-11-10).
 - Encounters never move Battle rating or W/L. Level-ups count toward achievements (a `pokemon` event to `trackProgress`, as challenges send), never a `battle` event.
 
 ## Discord UX

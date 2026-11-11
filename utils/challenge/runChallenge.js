@@ -296,6 +296,10 @@ export function hideOpenRun(user) {
   return { ...user, challenge };
 }
 
+// What the Collection page's Badge row needs from /api/user-pokemon: the
+// challenges won (Badges are the Gym keys), never the open run or attempts.
+export const challengeProgress = (user) => ({ won: { ...(user?.challenge?.won ?? {}) } });
+
 // The event log's record of a finished challenge. A run lists each break's
 // Revive: the slot, "none" when nothing had fainted, or null for no pick.
 export const challengeLogEntry = (outcome) => ({

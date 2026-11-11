@@ -12,6 +12,7 @@ Targets in this spec are design goals that a test enforces, not measurements. Ev
 - Clearing the Elite Four run once unlocks Blue for good. Blue is a separate single fight, so losing to Blue means retrying Blue, not the run.
 - Red is open to every player from day one.
 - A beaten leader can be fought again, and a cleared Elite Four run can be run again. Repeats pay EXP only.
+- The player fights with their Display team, the Team casual battles use: real Levels, each Pokémon's chosen Display moves, and its Mega. The Battle team (ranked and wager battles, Lv 50) never fights a challenge (decided 2026-11-10, after master added the two teams).
 
 ## Opponents
 
@@ -58,7 +59,7 @@ Sources: [pokemondb FRLG](https://pokemondb.net/firered-leafgreen/gymleaders-eli
 ## Elite Four run
 
 - One `/challenge` runs Lorelei, then Bruno, then Agatha, then Lance. The player's Pokémon keep their HP, as a fraction of max HP, from fight to fight, and fainted Pokémon stay fainted unless revived. Each leader starts at full HP.
-- The run uses the player's Team as it was when they clicked Fight!. Levels stay fixed during the run. EXP from every fight is added up and applied once at the end, only to Pokémon the player still owns then (giving away a Pokémon's last copy resets its Level, so EXP must not recreate it).
+- The run uses the player's Display team as it was when they clicked Fight!, chosen moves and Mega included. Levels stay fixed during the run. EXP from every fight is added up and applied once at the end, only to Pokémon the player still owns then (giving away a Pokémon's last copy resets its Level, so EXP must not recreate it).
 - The run uses 1 daily attempt, counted at Fight!.
 - There's no forfeit. A run ends when the player loses a fight or beats Lance.
 

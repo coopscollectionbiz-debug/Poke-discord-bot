@@ -4,6 +4,8 @@
 // Battle: a seeded 6v6 battle, rendered as playback would (start image,
 // every picked turn, result), reporting each image's KB, ms and frame count.
 // Catch: each CATCH_FIXTURES card as PNG and as GIF.
+// Cards: every slash-command card (the full late-game Team, an Epic trainer
+// equipped so the trainer breathes), as PNG and as GIF.
 // Peak RSS is for the whole process (one fresh Node).
 // ==========================================================
 
@@ -13,7 +15,18 @@ import { simulateBattle } from "../utils/battle/sim.js";
 import { renderBattleFrame, pickFrameTurns } from "../utils/battle/render.js";
 import { PLAYBACK } from "../utils/battle/tuning.js";
 import { catchView, renderCatchCard } from "../utils/render/catchCard.js";
-import { CATCH_FIXTURES } from "../tests/fixtures/showteamFixtures.js";
+import { CATCH_FIXTURES, FIXTURES, BATTLE_FIXTURE, leaderboardWorld } from "../tests/fixtures/showteamFixtures.js";
+import { buildTeamView } from "../utils/render/teamView.js";
+import { renderShowteam } from "../utils/render/showteam.js";
+import { trainerCardView, renderTrainerCard } from "../utils/render/trainerCard.js";
+import { battleCardView, renderBattleCard } from "../utils/render/battleCard.js";
+import { pokedexView, renderPokedexCard } from "../utils/render/pokedexCard.js";
+import { renderInspectCard } from "../utils/render/inspectCard.js";
+import { inspectSlots } from "../commands/inspectpokemon.js";
+import { renderDailyCard } from "../utils/render/dailyCard.js";
+import { expView, renderExpCard } from "../utils/render/expCard.js";
+import { leaderboardView, renderLeaderboard } from "../utils/render/leaderboardCard.js";
+import { rankBattleRatings } from "../commands/leaderboard.js";
 
 const kb = (b) => Math.round(b.length / 1024);
 const frames = (b) => (b.subarray(0, 3).toString() === "GIF" ? new GifReader(b).numFrames() : 1);
@@ -43,6 +56,27 @@ for (const [name, fx] of Object.entries(CATCH_FIXTURES)) {
   rows.push({ image: `catch ${name} png`, kb: kb(png), ms: pngMs, frames: 1 });
   const [gif, gifMs] = await time(() => renderCatchCard(v, { animate: true }));
   rows.push({ image: `catch ${name} gif`, kb: kb(gif), ms: gifMs, frames: frames(gif) });
+}
+const TRAINER = "acerola.png"; // Epic: breathes and blinks on animated cards
+const player = { ...JSON.parse(JSON.stringify(FIXTURES.full.user)), tp: 8308, cc: 5400, displayedTrainer: TRAINER };
+const trainer = { name: "Acerola", tier: "epic" };
+const td = leaderboardWorld();
+const dailyMon = (id, variant) => catchView(player, { id, variant, catchResult: { level: 5, isNew: true, expGained: 0 }, trainerName: "Coop" });
+const cards = {
+  "/showteam": (animate) => renderShowteam(buildTeamView(player, { displayName: "Coop", trainerFile: TRAINER }), { layout: "refined", animate }),
+  "/trainercard /showcard": (animate) => renderTrainerCard(trainerCardView(player, { displayName: "Coop", trainer }), { animate }),
+  "/showbattlecard": (animate) => renderBattleCard(battleCardView(player, { displayName: "Coop", trainer, board: rankBattleRatings(td, "p6") }), { animate }),
+  "/pokedex": (animate) => renderPokedexCard(pokedexView(6, player), { animate }),
+  "/inspectpokemon (shiny)": (animate) => renderInspectCard(inspectSlots(player, { id: 94 }).find((s) => s.variant === "shiny") ?? inspectSlots(player, { id: 94 })[0], { animate }),
+  "/daily": (animate) => renderDailyCard({ pokemon: [dailyMon(399, "normal"), dailyMon(361, "shiny")], cc: 1000, tp: 100, stone: false, balance: { cc: 1, tp: 1 }, rankUp: null }, { animate }),
+  "/battle EXP card": (animate) => renderExpCard(expView(BATTLE_FIXTURE.outcome, "A", BATTLE_FIXTURE.names, BATTLE_FIXTURE.users.A), { animate }),
+  "/leaderboard": (animate) => renderLeaderboard(leaderboardView(rankBattleRatings(td, "p6"), td, "p6"), { animate }),
+};
+for (const [name, render] of Object.entries(cards)) {
+  const [png, pngMs] = await time(() => render(false));
+  rows.push({ image: `${name} png`, kb: kb(png), ms: pngMs, frames: 1, size: `${png.readUInt32BE(16)}x${png.readUInt32BE(20)}` });
+  const [gif, gifMs] = await time(() => render(true));
+  rows.push({ image: `${name} gif`, kb: kb(gif), ms: gifMs, frames: frames(gif) });
 }
 console.table(rows);
 const battle = rows.filter((r) => r.image.startsWith("battle"));

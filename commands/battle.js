@@ -17,6 +17,7 @@ import { playBattle, expSummary } from "../utils/battle/playback.js";
 import { teamPower } from "../utils/battle/power.js";
 import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/battle/wager.js";
 import { WAGER, PLAYBACK } from "../utils/battle/tuning.js";
+import { peekNotices, clearNotices, NOTICE_KINDS } from "../services/notices.js";
 import { expView, renderExpCard } from "../utils/render/expCard.js";
 import { cardImage } from "../utils/render/stage.js";
 
@@ -87,6 +88,34 @@ async function sendExp(reply, outcome, userId, names, user) {
 }
 
 export async function execute(interaction, trainerData, _saveLocal, _saveDiscord, lockUser, enqueueSave) {
+  try {
+    await executeBattle(interaction, trainerData, lockUser, enqueueSave);
+  } finally {
+    await sendPendingNotices(interaction, trainerData, lockUser, enqueueSave);
+  }
+}
+
+/**
+ * One-time Battle team notices (services/notices.js), e.g. "Dialga was
+ * removed from your Battle team" after a re-tier. Sent as an ephemeral
+ * follow-up to whatever /battle replied, then cleared. Kept if sending fails.
+ */
+export async function sendPendingNotices(interaction, trainerData, lockUser, enqueueSave) {
+  const id = interaction.user.id;
+  const pending = peekNotices(trainerData[id], NOTICE_KINDS.BATTLE_TEAM_TRIM);
+  if (!pending.length || !(interaction.replied || interaction.deferred)) return;
+  try {
+    await interaction.followUp({ content: pending.map((n) => `ℹ️ ${n.text}`).join("\n"), flags: MessageFlags.Ephemeral });
+  } catch (err) {
+    console.warn("⚠️ battle notice follow-up failed:", err?.message || err);
+    return;
+  }
+  await lockUser(id, async () => {
+    if (clearNotices(trainerData[id], pending.map((n) => n.id))) await enqueueSave(trainerData);
+  });
+}
+
+async function executeBattle(interaction, trainerData, lockUser, enqueueSave) {
   const opponent = interaction.options.getUser("opponent", true);
   const wager = interaction.options.getInteger("wager");
   const challengerId = interaction.user.id;

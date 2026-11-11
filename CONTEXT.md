@@ -7,8 +7,12 @@ A Discord-native Pokémon collector game: players catch Pokémon while chatting,
 ### Collection
 
 **Tier**:
-A species' rarity class: common, uncommon, rare, epic, legendary, or mythic.
+A species' rarity class: common, uncommon, rare, epic, legendary, or mythic. It measures collectible prestige (scarcity, role in the games, popularity), not battle strength; **Base stat total** only overrides it for large outliers. Mythic means an official Mythical, or a cover legendary with a **Base stat total** of 660 or more.
 _Avoid_: rarity (as a separate concept), evolution tier
+
+**Base stat total**:
+The sum of a species' six base stats. It is the whole of a Pokémon's battle strength apart from its types and moves.
+_Avoid_: power (that is the **Team**'s summed stats at Level), BST in player-facing text
 
 **Stage**:
 A species' position in its evolution line — 1 for a base form, 2 and 3 for each evolution after it.

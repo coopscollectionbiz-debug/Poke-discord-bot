@@ -1,0 +1,278 @@
+{
+ "_comment": "Approved tier changes applied by tools/generate-pokedex.mjs after the Gen 1–5 baseline and the Gen 6–9 rule. from = the tier the baseline/rule gives; the generator fails if that drifts. Decisions: docs/audits/pokemon-tiers/DECISIONS.md (owner-approved 2026-11-11).",
+ "overrides": {
+  "55": {
+   "name": "Golduck",
+   "from": "uncommon",
+   "tier": "rare",
+   "decision": "D6",
+   "reason": "BST at or above uncommon's maximum band (top 10% ≤ 480)"
+  },
+  "59": {
+   "name": "Arcanine",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D6",
+   "reason": "BST far above rare's top 10% (≤ 505)"
+  },
+  "73": {
+   "name": "Tentacruel",
+   "from": "uncommon",
+   "tier": "rare",
+   "decision": "D6",
+   "reason": "BST at or above uncommon's maximum band (top 10% ≤ 480)"
+  },
+  "114": {
+   "name": "Tangela",
+   "from": "common",
+   "tier": "uncommon",
+   "decision": "D6",
+   "reason": "BST far above common's top 10% (≤ 341)"
+  },
+  "211": {
+   "name": "Qwilfish",
+   "from": "common",
+   "tier": "uncommon",
+   "decision": "D6",
+   "reason": "BST far above common's top 10% (≤ 341)"
+  },
+  "234": {
+   "name": "Stantler",
+   "from": "common",
+   "tier": "uncommon",
+   "decision": "D6",
+   "reason": "BST far above common's top 10% (≤ 341)"
+  },
+  "358": {
+   "name": "Chimecho",
+   "from": "common",
+   "tier": "uncommon",
+   "decision": "D6",
+   "reason": "BST far above common's top 10% (≤ 341)"
+  },
+  "437": {
+   "name": "Bronzong",
+   "from": "uncommon",
+   "tier": "rare",
+   "decision": "D6",
+   "reason": "BST at or above uncommon's maximum band (top 10% ≤ 480)"
+  },
+  "483": {
+   "name": "Dialga",
+   "from": "legendary",
+   "tier": "mythic",
+   "decision": "D2",
+   "reason": "Cover legendary with BST ≥ 660 → mythic, like Mewtwo, Lugia, Kyogre, Reshiram…"
+  },
+  "484": {
+   "name": "Palkia",
+   "from": "legendary",
+   "tier": "mythic",
+   "decision": "D2",
+   "reason": "Cover legendary with BST ≥ 660 → mythic, like Mewtwo, Lugia, Kyogre, Reshiram…"
+  },
+  "487": {
+   "name": "Giratina-altered",
+   "from": "legendary",
+   "tier": "mythic",
+   "decision": "D2",
+   "reason": "Cover legendary with BST ≥ 660 → mythic, like Mewtwo, Lugia, Kyogre, Reshiram…"
+  },
+  "550": {
+   "name": "Basculin-red-striped",
+   "from": "common",
+   "tier": "uncommon",
+   "decision": "D6",
+   "reason": "BST far above common's top 10% (≤ 341)"
+  },
+  "556": {
+   "name": "Maractus",
+   "from": "common",
+   "tier": "uncommon",
+   "decision": "D6",
+   "reason": "BST far above common's top 10% (≤ 341)"
+  },
+  "584": {
+   "name": "Vanilluxe",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D6",
+   "reason": "BST far above rare's top 10% (≤ 505)"
+  },
+  "646": {
+   "name": "Kyurem",
+   "from": "legendary",
+   "tier": "mythic",
+   "decision": "D2",
+   "reason": "Cover legendary with BST ≥ 660 → mythic, like Mewtwo, Lugia, Kyogre, Reshiram…"
+  },
+  "863": {
+   "name": "Perrserker",
+   "from": "uncommon",
+   "tier": "rare",
+   "decision": "D5",
+   "reason": "New evolution of an older species, but BST 430–440 sits in epic's bottom 10%: rare, like Ambipom"
+  },
+  "867": {
+   "name": "Runerigus",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D5",
+   "reason": "New evolution of an older species: Gen 4 made 21 of 22 of these epic (Weavile, Magmortar, Togekiss…)"
+  },
+  "884": {
+   "name": "Duraludon",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D6",
+   "reason": "BST far above rare's top 10% (≤ 505)"
+  },
+  "888": {
+   "name": "Zacian",
+   "from": "legendary",
+   "tier": "mythic",
+   "decision": "D2",
+   "reason": "Cover legendary with BST ≥ 660 → mythic, like Mewtwo, Lugia, Kyogre, Reshiram…"
+  },
+  "889": {
+   "name": "Zamazenta",
+   "from": "legendary",
+   "tier": "mythic",
+   "decision": "D2",
+   "reason": "Cover legendary with BST ≥ 660 → mythic, like Mewtwo, Lugia, Kyogre, Reshiram…"
+  },
+  "899": {
+   "name": "Wyrdeer",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D5",
+   "reason": "New evolution of an older species: Gen 4 made 21 of 22 of these epic (Weavile, Magmortar, Togekiss…)"
+  },
+  "900": {
+   "name": "Kleavor",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D5",
+   "reason": "New evolution of an older species: Gen 4 made 21 of 22 of these epic (Weavile, Magmortar, Togekiss…)"
+  },
+  "901": {
+   "name": "Ursaluna",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D5",
+   "reason": "New evolution of an older species: Gen 4 made 21 of 22 of these epic (Weavile, Magmortar, Togekiss…)"
+  },
+  "902": {
+   "name": "Basculegion",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D5",
+   "reason": "New evolution of an older species: Gen 4 made 21 of 22 of these epic (Weavile, Magmortar, Togekiss…)"
+  },
+  "903": {
+   "name": "Sneasler",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D5",
+   "reason": "New evolution of an older species: Gen 4 made 21 of 22 of these epic (Weavile, Magmortar, Togekiss…)"
+  },
+  "904": {
+   "name": "Overqwil",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D5",
+   "reason": "New evolution of an older species: Gen 4 made 21 of 22 of these epic (Weavile, Magmortar, Togekiss…)"
+  },
+  "967": {
+   "name": "Cyclizar",
+   "from": "uncommon",
+   "tier": "rare",
+   "decision": "D6",
+   "reason": "BST at or above uncommon's maximum band (top 10% ≤ 480)"
+  },
+  "977": {
+   "name": "Dondozo",
+   "from": "rare",
+   "tier": "epic",
+   "decision": "D6",
+   "reason": "BST far above rare's top 10% (≤ 505)"
+  },
+  "980": {
+   "name": "Clodsire",
+   "from": "uncommon",
+   "tier": "rare",
+   "decision": "D5",
+   "reason": "New evolution of an older species, but BST 430–440 sits in epic's bottom 10%: rare, like Ambipom"
+  },
+  "1005": {
+   "name": "Roaring Moon",
+   "from": "epic",
+   "tier": "legendary",
+   "decision": "D3",
+   "reason": "Paradox at BST 590: above every epic except Slaking; Paradox counterpart of a legendary or one-per-save"
+  },
+  "1006": {
+   "name": "Iron Valiant",
+   "from": "epic",
+   "tier": "legendary",
+   "decision": "D3",
+   "reason": "Paradox at BST 590: above every epic except Slaking; Paradox counterpart of a legendary or one-per-save"
+  },
+  "1009": {
+   "name": "Walking Wake",
+   "from": "epic",
+   "tier": "legendary",
+   "decision": "D3",
+   "reason": "Paradox at BST 590: above every epic except Slaking; Paradox counterpart of a legendary or one-per-save"
+  },
+  "1010": {
+   "name": "Iron Leaves",
+   "from": "epic",
+   "tier": "legendary",
+   "decision": "D3",
+   "reason": "Paradox at BST 590: above every epic except Slaking; Paradox counterpart of a legendary or one-per-save"
+  },
+  "1011": {
+   "name": "Dipplin",
+   "from": "epic",
+   "tier": "rare",
+   "decision": "D9",
+   "reason": "Same BST (485) and role as its siblings Flapple and Appletun, which are rare"
+  },
+  "1018": {
+   "name": "Archaludon",
+   "from": "epic",
+   "tier": "legendary",
+   "decision": "D4",
+   "reason": "BST 600 with no drawback: stronger than any epic"
+  },
+  "1020": {
+   "name": "Gouging Fire",
+   "from": "epic",
+   "tier": "legendary",
+   "decision": "D3",
+   "reason": "Paradox at BST 590: above every epic except Slaking; Paradox counterpart of a legendary or one-per-save"
+  },
+  "1021": {
+   "name": "Raging Bolt",
+   "from": "epic",
+   "tier": "legendary",
+   "decision": "D3",
+   "reason": "Paradox at BST 590: above every epic except Slaking; Paradox counterpart of a legendary or one-per-save"
+  },
+  "1022": {
+   "name": "Iron Boulder",
+   "from": "epic",
+   "tier": "legendary",
+   "decision": "D3",
+   "reason": "Paradox at BST 590: above every epic except Slaking; Paradox counterpart of a legendary or one-per-save"
+  },
+  "1023": {
+   "name": "Iron Crown",
+   "from": "epic",
+   "tier": "legendary",
+   "decision": "D3",
+   "reason": "Paradox at BST 590: above every epic except Slaking; Paradox counterpart of a legendary or one-per-save"
+  }
+ }
+}

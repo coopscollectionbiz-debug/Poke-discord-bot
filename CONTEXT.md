@@ -66,6 +66,20 @@ _Avoid_: dex count, seen/caught
 Permanently giving up a copy in exchange for CC, and sometimes Shiny Dust.
 _Avoid_: sell, release
 
+### Administration
+
+**Last active**:
+The last time a player earned TP from chat or used a slash command. Players who have done neither since it started being recorded count from their latest daily, quest, recruit or weekly pack claim.
+_Avoid_: last seen, last online, last login
+
+**Admin change**:
+A change an admin makes to a player's account from the admin dashboard: adding or removing CC, TP, items, Pokémon or trainers, setting a **Level**, or resetting cooldowns. Every one is recorded permanently with who made it, when, before and after, and why.
+_Avoid_: edit, override, admin action (for player-made actions)
+
+**Grant**:
+An **Admin change** that only adds to an account or resets cooldowns. Only **Grants** can go to many players at once; removals are made one player at a time.
+_Avoid_: gift (that is player-to-player), reward, compensation (as the action's name)
+
 ### Battles
 
 **Battle**:

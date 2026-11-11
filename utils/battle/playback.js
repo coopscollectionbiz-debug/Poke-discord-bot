@@ -3,7 +3,8 @@
 // "Watch it happen": posts a battle image in the channel, edits it once
 // per turn (up to PLAYBACK.maxUpdates, spread evenly over longer battles),
 // then shows the result image with a Battle rating embed. (/battle sends
-// each player's EXP privately afterward.) Results are already saved before
+// each player's EXP privately afterward.) Every update has its own file
+// name: battle-start.gif, battle-t<turn>.gif, battle-final.gif. Results are already saved before
 // this runs; a failed edit just stops the replay. At most
 // PLAYBACK.maxAtOnce replays run at once; the rest wait in line.
 // Challenges replay here too, themed (the trainers, the opponent's type, the
@@ -87,6 +88,9 @@ export function buildResultEmbed(outcome, names) {
   return embed;
 }
 
+/** The attachment name for one playback update: "start", a turn number, or "final". */
+export const battleImageName = (step) => (typeof step === "number" ? `battle-t${step}.gif` : `battle-${step}.gif`);
+
 function header(outcome) {
   const [c, d] = outcome.sides.map((s) => `<@${s.userId}>`);
   const intro = outcome.mode === "wager"
@@ -139,13 +143,17 @@ const replays = createQueue(PLAYBACK.maxAtOnce);
 // `paceStart` holds the previous fight's result frame up for a full delay.
 // `trainers` are each side's trainer files for the portraits. `theme`
 // (challenges) styles every frame; `award` (challengeAward) adds its screen
-// to the result frame, right after who won.
-async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], theme = null, award = null }) {
+// to the result frame, right after who won. `namePrefix` keeps file names
+// unique when several fights replay on one message (an Elite Four run).
+async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], theme = null, award = null, namePrefix = "" }) {
   const sides = fight.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = fight.result;
-  const image = async (opts) => new AttachmentBuilder(
+  // Each update gets its own file name (battleImageName). With one shared
+  // "battle.gif", a desktop client whose first load failed kept showing the
+  // broken image for every later edit, result included.
+  const image = async (step, opts) => new AttachmentBuilder(
     await renderBattleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, theme, ...opts }),
-    { name: "battle.gif" },
+    { name: namePrefix + battleImageName(step) },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.
   const paced = async (render) => {
@@ -157,7 +165,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
 
   // In an Elite Four run, a Pokémon that fainted in an earlier fight can't lead off.
   const leads = sides.map((s, i) => s.members[snapshots[0][i].findIndex((hp) => hp > 0)]?.name).join(" and ");
-  const startImage = () => image({ hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] });
+  const startImage = () => image("start", { hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] });
   const start = { content: heading, files: [paceStart ? await paced(startImage) : await startImage()] };
   if (message) await message.edit(start);
   else message = await channel.send(start);
@@ -166,7 +174,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
     // A fight lost before anyone moves (0 turns) goes straight to the result.
     for (const turn of total ? pickFrameTurns(total, maxUpdates) : []) {
       const badge = turn - shown > 1 ? `TURNS ${shown + 1}–${turn}` : `TURN ${turn}`;
-      const file = await paced(() => image({ hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }));
+      const file = await paced(() => image(turn, { hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }));
       await message.edit({ files: [file] });
       shown = turn;
     }
@@ -181,7 +189,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
     }));
     const screens = resultScreens(fight, names);
     if (award) screens.splice(1, 0, award.lines);
-    const file = await paced(() => image({
+    const file = await paced(() => image("final", {
       sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(fight), screens,
       ...(award && { theme: { ...theme, award: { screen: 1, badgeFile: award.badgeFile, title: award.title } } }),
     }));
@@ -338,6 +346,8 @@ export async function playChallengeFight(channel, message, outcome, i, names, { 
       trainers,
       theme,
       award: last ? challengeAward(outcome, names[outcome.userId]) : null,
+      // Several fights share one message, so each one's file names differ.
+      namePrefix: outcome.fights.length > 1 ? `fight${i + 1}-` : "",
     });
     // Only the first post can fail to appear; later fights edit a message that's already up.
     return posted ? await replay.catch((err) => {

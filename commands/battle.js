@@ -19,6 +19,7 @@ import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/ba
 import { WAGER } from "../utils/battle/tuning.js";
 import { expView, renderExpCard } from "../utils/render/expCard.js";
 import { cardImage } from "../utils/render/stage.js";
+import { shardDropLine } from "../services/megaShards.js";
 
 export const data = new SlashCommandBuilder()
   .setName("battle")
@@ -68,13 +69,15 @@ export function displayNames(interaction, opponent) {
 // one-line caption; if rendering fails, the plain-text summary goes instead.
 export async function expMessage(outcome, userId, names, user, { render = renderExpCard } = {}) {
   const text = expSummary(outcome, userId, names);
+  const shards = shardDropLine(outcome.megaShards?.[userId] ?? 0); // "" unless a Mega Shard dropped
+  const withShards = (s) => (shards ? `${s}\n${shards}` : s);
   try {
     const view = expView(outcome, userId, names, user);
     const card = await cardImage((animate) => render(view, { animate }), "exp");
-    return { content: text.split("\n")[0], files: [new AttachmentBuilder(card.buffer, { name: card.name })], flags: MessageFlags.Ephemeral };
+    return { content: withShards(text.split("\n")[0]), files: [new AttachmentBuilder(card.buffer, { name: card.name })], flags: MessageFlags.Ephemeral };
   } catch (err) {
     console.warn("⚠️ EXP card render failed; sending text:", err?.message || err);
-    return { content: text, flags: MessageFlags.Ephemeral };
+    return { content: withShards(text), flags: MessageFlags.Ephemeral };
   }
 }
 

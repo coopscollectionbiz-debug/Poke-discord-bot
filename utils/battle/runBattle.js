@@ -25,6 +25,8 @@ import { RANKED } from "./tuning.js";
 import { chosenMoves } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
+import { rewardsOn, rollBattleShards } from "../../services/megaShards.js";
+import { createRng } from "./rng.js";
 
 // Locks both players in a fixed (ascending id) order so two battles between
 // the same pair, started from either side, can't deadlock.
@@ -184,6 +186,15 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
     trainerData[winnerId].cc = (trainerData[winnerId].cc ?? 0) + 2 * stake;
   }
 
+  // Mega Shards: a chance for the winner, if they chose to play (the
+  // Challenger, or either side of an accepted wager). Its own seeded RNG, so
+  // the battle itself is unchanged; while the rewards switch is off nothing
+  // is rolled and the result has no megaShards key.
+  const shardResult = {};
+  if (rewardsOn(env) && (winnerId === challengerId || mode === "wager")) {
+    shardResult.megaShards = { [winnerId]: rollBattleShards(trainerData[winnerId], { rng: createRng((seed ^ 0x5a17d) >>> 0).next, now: now.getTime(), env }) };
+  }
+
   return {
     ok: true,
     seed,
@@ -197,5 +208,6 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
     exp,
     rated,
     rating, // {} for casual battles
+    ...shardResult, // megaShards: { [winnerId]: n } only while Mega rewards are on
   };
 }

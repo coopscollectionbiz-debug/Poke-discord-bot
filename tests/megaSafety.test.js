@@ -61,11 +61,15 @@ for (let i = 0; i < 3000; i++) for (const ball of ["pokeball", "greatball", "ult
 assertEqual(leaked, 0, "9,000 selector draws (chat catch, daily, packs, dashboard capture) from a pool seeded with every Mega: none drawn");
 assertTrue(!Object.keys(DEX).some((k) => !/^\d+$/.test(k)) && Object.keys(DEX).length === 1025, "pokemonData.json (wild/starter/shop species source) holds only the 1,025 numeric species");
 
-section("No Mega in shops, rewards or item grants");
+section("Mega items: never active, never in the legacy shop, grantable only while Mega rewards are on");
 assertTrue(items.listCatalog().filter((i) => /^mega/.test(i.id)).every((i) => !i.shop && i.status === "defined"), "no Mega item has a shop entry or is active");
 assertTrue(items.listCatalog().filter((i) => /^mega/.test(i.id)).every((i) => !grantItem({ items: {} }, i.id, 1).ok), "grantItem (daily, shop, achievements, /addinventory) refuses every Mega item");
 assertTrue(!/mega/i.test(fs.readFileSync(new URL("../catalog/achievements.js", import.meta.url), "utf8")), "no achievement rewards or mentions Mega items (D-17: framework approved, entries not added)");
-assertEqual(MEGA_REWARDS.active, false, "the Mega reward config is inactive");
+const REWARDS_ON = { MEGA_EVOLUTION_ENABLED: "1", MEGA_REWARDS_ENABLED: "1" };
+assertTrue(items.listCatalog().filter((i) => /^mega/.test(i.id)).every((i) => !grantItem({ items: {} }, i.id, 1, { env: { MEGA_EVOLUTION_ENABLED: "1", MEGA_BATTLES_ENABLED: "1" } }).ok), "with the master switch on but rewards off, every Mega item is still refused");
+assertTrue(grantItem({ items: {} }, "mega_shard", 1, { env: REWARDS_ON }).ok && grantItem({ items: {} }, "megastone_charizarditex", 1, { env: REWARDS_ON }).ok, "rewards on: shards and stones can be granted");
+assertTrue(!grantItem({ items: {} }, "mega_stone_voucher", 1, { env: REWARDS_ON }).ok && !grantItem({ items: {} }, "mega_stone_voucher_legendary", 1, { env: REWARDS_ON }).ok, "vouchers stay refused even with rewards on");
+assertTrue(MEGA_REWARDS.version === 2 && !items.isHoldable("mega_shard") && !items.isHoldable("megastone_charizarditex"), "catalog holdability (used by /addinventory) is unchanged: Mega items are never holdable through it");
 
 section("Pokédex completion ignores Megas");
 const user = { pokemon: Object.fromEntries(Array.from({ length: 649 }, (_, i) => [i + 1, { normal: 1, shiny: 0 }])) };
@@ -94,18 +98,23 @@ const MEGA_USERS = [
   "services/battleTeam.js",
   // Collection detail (B2): lists a species' Mega forms and whether each is unlocked (read-only).
   "services/pokemonDetail.js",
+  // Mega Shards (2026-11-11): the shard service, its two drop points and the dashboard shop.
+  "services/megaShards.js", "commands/daily.js", "commands/battle.js", "public/dashboardshop/mega.js", "public/dashboardshop/index.html",
 ];
 const megaModule = /megaUnlocks\.js|megas\.js|config\/features\.js|megaRewards\.js|megaApi\.js|megaTeam\.js|\/mega\.js|"\.\/mega\.js"/;
 const users = live.filter((f) => megaModule.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
 assertEqual(users.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1–M3 files import Mega modules (no reward, shop, catch, daily, quest or achievement code)");
 const megaRefs = live.filter((f) => /megastone_|mega_shard|megaUnlocks/.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
 assertEqual(megaRefs.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1–M3 files reference Mega Stones, Shards or megaUnlocks");
-const NEVER = live.filter((f) => /^(utils\/battle\/(rewards|playback|data|moveset|stats|tuning|wager|rng)\.js|commands\/(battle|daily|quest|recruit|shop|addinventory|gift)\.js|progression\/|services\/gameplay\.js|utils\/weightedRandom\.js)/.test(f));
+const NEVER = live.filter((f) => /^(utils\/battle\/(rewards|playback|data|moveset|stats|tuning|wager|rng)\.js|commands\/(quest|recruit|shop|addinventory|gift)\.js|progression\/|services\/gameplay\.js|utils\/weightedRandom\.js)/.test(f));
 assertEqual(NEVER.filter((f) => /mega/i.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), [], `EXP/rewards, playback, battle data and acquisition code (${NEVER.length} files) never mentions Mega`);
-assertTrue(!live.some((f) => /megaRewards/.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), "nothing reads the (inactive) Mega reward config");
+assertEqual(live.filter((f) => /megaRewards/.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), ["services/megaShards.js"], "only the shard service reads the Mega reward config");
+for (const [file, call] of [["commands/daily.js", /rollDailyShards\(user\)/], ["utils/battle/runBattle.js", /rewardsOn\(env\) && \(winnerId === challengerId \|\| mode === "wager"\)/]]) {
+  assertTrue(call.test(fs.readFileSync(path.join(ROOT, file), "utf8")), `${file}: the shard roll is the gated helper call`);
+}
 section("Routes and dashboard: gated, session-checked, nothing rendered while off");
 const botSrc = fs.readFileSync(path.join(ROOT, "bot_final.js"), "utf8");
-for (const route of ['app.get("/api/mega"', 'app.post("/api/mega/unlock"', 'app.post("/api/mega/preferred"']) {
+for (const route of ['app.get("/api/mega"', 'app.post("/api/mega/unlock"', 'app.post("/api/mega/preferred"', 'app.get("/api/mega/shop"']) {
   const block = botSrc.slice(botSrc.indexOf(route), botSrc.indexOf(route) + 400);
   assertTrue(botSrc.includes(route) && /requireDashboardSession\(req, id\)/.test(block), `${route.split('"')[1]} is mounted behind the dashboard session check`);
 }

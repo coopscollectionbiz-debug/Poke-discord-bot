@@ -43,13 +43,14 @@ const player = () => ({
 const use = (u, line, stoneId, formId, extra = {}, opts = ON) => useMegaStone(u, { line, stoneId, formId, now: T0, ...extra }, opts);
 
 // ------------------------------------------------------------------
-section("Capabilities: one switch per subsystem; battle and rewards can't be switched on");
+section("Capabilities: one switch per subsystem; battle and rewards are opt-in");
 assertEqual(F.megaCapabilities({}), { dashboard: false, unlock: false, team: false, battle: false, rewards: false }, "everything off by default");
 assertEqual(F.megaCapabilities({ MEGA_EVOLUTION_ENABLED: "1" }), { dashboard: true, unlock: true, team: true, battle: false, rewards: false }, "master switch on: dashboard, unlock and team on; battle and rewards stay off");
 assertEqual(F.megaCapabilities({ MEGA_EVOLUTION_ENABLED: "1", MEGA_UNLOCKS_ENABLED: "0", MEGA_TEAMS_ENABLED: "off" }), { dashboard: true, unlock: false, team: false, battle: false, rewards: false }, "sub-switches turn single subsystems off");
 assertEqual(F.megaCapabilities({ MEGA_UNLOCKS_ENABLED: "1", MEGA_DASHBOARD_ENABLED: "1", MEGA_TEAMS_ENABLED: "1" }), { dashboard: false, unlock: false, team: false, battle: false, rewards: false }, "sub-switches alone can't turn anything on");
 const everything = { MEGA_EVOLUTION_ENABLED: "1", MEGA_BATTLES_ENABLED: "1", MEGA_REWARDS_ENABLED: "1", MEGA_BATTLE_ENABLED: "true", MEGA_FORMS: "all" };
-assertTrue(!F.isMegaCapabilityEnabled("rewards", everything) && !F.isMegaCapabilityEnabled("__proto__", everything), "no environment can enable Mega rewards (not built)");
+assertTrue(F.isMegaCapabilityEnabled("rewards", everything) && !F.isMegaCapabilityEnabled("__proto__", everything), "rewards turn on only with the master switch AND MEGA_REWARDS_ENABLED; unknown capabilities never");
+assertTrue(!F.isMegaCapabilityEnabled("rewards", { MEGA_REWARDS_ENABLED: "1" }) && !F.isMegaCapabilityEnabled("rewards", { MEGA_EVOLUTION_ENABLED: "1", MEGA_REWARDS_ENABLED: "0" }), "rewards need both switches");
 assertTrue(F.isMegaCapabilityEnabled("battle", everything) && !F.isMegaCapabilityEnabled("battle", { MEGA_EVOLUTION_ENABLED: "1" }) && !F.isMegaCapabilityEnabled("battle", { MEGA_BATTLES_ENABLED: "1" }) && !F.isMegaCapabilityEnabled("battle", { MEGA_EVOLUTION_ENABLED: "1", MEGA_BATTLES_ENABLED: "0" }), "M2: Mega battles need BOTH the master switch and an explicit MEGA_BATTLES_ENABLED=1 (opt-in)");
 
 // ------------------------------------------------------------------

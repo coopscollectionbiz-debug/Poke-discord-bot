@@ -1332,6 +1332,24 @@ app.post("/api/mega/preferred", express.json({ limit: "4kb" }), async (req, res)
     return res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
+// Mega Shard shop: capability "rewards" (MEGA_REWARDS_ENABLED=1). Off: the
+// view says { enabled: false } and both purchases refuse with 403.
+app.get("/api/mega/shop", (req, res) => {
+  const { status, body } = mega.shop({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
+  return res.status(status).json(body);
+});
+for (const [route, handler] of [["/api/mega/shop/buy-shards", "buyShards"], ["/api/mega/shop/buy-stone", "buyStone"]]) {
+  app.post(route, express.json({ limit: "4kb" }), async (req, res) => {
+    try {
+      const { status, body } = await mega[handler]({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+      if (status === 200 && !body.replayed) logEvent(handler === "buyShards" ? "mega_shard_purchase" : "mega_stone_purchase", req.body.id, handler === "buyShards" ? { shards: body.bought, cost: body.cost } : { stoneId: body.stoneId, shards: body.price });
+      return res.status(status).json(body);
+    } catch (err) {
+      console.error(`❌ ${route}:`, err?.message || err);
+      return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  });
+}
 
 // D14: dashboard replies say whether the change reached disk. On a failed
 // write the change stays in memory and is retried; the reply carries a

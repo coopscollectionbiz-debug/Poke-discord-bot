@@ -40,11 +40,17 @@ export function validateQuantity(q) {
   return { ok: true, value: q };
 }
 
+// Mega Stones and Mega Shards stay "defined" in the catalog. They can be
+// granted only while the Mega "rewards" capability is on (config/features.js:
+// MEGA_EVOLUTION_ENABLED + MEGA_REWARDS_ENABLED=1). Vouchers stay refused.
+const isMegaRewardItem = (entry) => !!entry?.mega || entry?.id === "mega_shard";
+const megaGrantable = (entry, env) => isMegaRewardItem(entry) && isMegaCapabilityEnabled("rewards", env);
+
 /** An item that may be held in user.items today (active + inventory-stored). */
-export function validateHoldableItem(id) {
+export function validateHoldableItem(id, { env = process.env } = {}) {
   const entry = getCatalogItem(id);
   if (!entry) return fail("Unknown item.");
-  if (entry.status !== "active") return fail(`${entry.name} isn't available yet.`);
+  if (entry.status !== "active" && !megaGrantable(entry, env)) return fail(`${entry.name} isn't available yet.`);
   if (entry.storage !== "inventory") return fail(`${entry.name} can't be kept in the bag.`);
   return { ok: true, entry };
 }
@@ -75,9 +81,9 @@ function ensureItems(user) {
  * non-inventory items, bad quantities, and anything over the stack limit.
  * @returns {{ok:true, quantity:number} | {ok:false, error:string}}
  */
-export function grantItem(user, id, qty) {
+export function grantItem(user, id, qty, { env = process.env } = {}) {
   if (!user || typeof user !== "object") return fail("No player record.");
-  const item = validateHoldableItem(id);
+  const item = validateHoldableItem(id, { env });
   if (!item.ok) return item;
   const q = validateQuantity(qty);
   if (!q.ok) return q;
@@ -233,6 +239,7 @@ const isUsableMegaStone = (entry, env) => !!entry?.mega && isMegaCapabilityEnabl
 function usageText(entry, env = process.env) {
   if (!entry) return "Not recognised by this version of the bot.";
   if (isUsableMegaStone(entry, env)) return "Use it on the dashboard (Mega Evolution) to permanently unlock its Mega form for one of your Pokémon.";
+  if (entry.id === "mega_shard" && isMegaCapabilityEnabled("rewards", env)) return "Spend Mega Shards in the dashboard shop on any Mega Stone that can battle.";
   if (entry.status !== "active") return "Not usable yet.";
   if (entry.id === "evolution_stone") return "Used when evolving a Pokémon on the dashboard.";
   if (entry.id === "shiny_dust") return "Used on the dashboard to make a Pokémon shiny, or to evolve a shiny one.";

@@ -251,13 +251,13 @@ ITEMS.push(
   item({
     id: "mega_shard",
     name: "Mega Shard",
-    description: "Fragments of Mega energy. Exchange 25 for any regular Mega Stone.",
+    description: "Fragments of Mega energy. Spend them in the dashboard shop on Mega Stones.",
     category: "evolution",
     rarity: "rare",
     consumable: true,
     status: "defined",
     storage: "inventory",
-    sources: ["mega_drop", "mega_duplicate", "achievement"],
+    sources: ["daily", "battle_win", "shop"],
     sinceRelease: "M",
   }),
   item({

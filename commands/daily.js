@@ -5,6 +5,7 @@
 import { pokemonSpriteUrl } from "../utils/sprites.js";
 import { trackProgress } from "../progression/achievements.js";
 import { grantItem, normalizeInventory } from "../services/inventory.js";
+import { rollDailyShards, shardDropLine } from "../services/megaShards.js";
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -153,6 +154,10 @@ export async function execute(
         // Same 1-stone reward as before, through the inventory service.
         stoneAwarded = grantItem(user, "evolution_stone", 1).ok;
       }
+      // Mega Shards: a separate roll, only while the Mega rewards switch is on
+      // (returns 0 and touches nothing otherwise).
+      const shardsAwarded = rollDailyShards(user);
+      const shardLine = shardDropLine(shardsAwarded);
 
       user.lastDaily = today;
       // Release C: achievement progress (Pokémon, shinies, TP/rank).
@@ -195,6 +200,7 @@ export async function execute(
         ccAwarded: DAILY_CC,
         tpAwarded: DAILY_TP,
         stoneAwarded,
+        ...(shardsAwarded ? { megaShardsAwarded: shardsAwarded } : {}),
         pokemon: [
           {
             pokemonId: pick1.id,
@@ -248,6 +254,7 @@ export async function execute(
         });
         summary.setThumbnail(`${spritePaths.items}evolution_stone.png`);
       }
+      if (shardLine) summary.addFields({ name: "💠 Mega Shards", value: shardLine });
       if (saveAck.note) summary.setDescription(saveAck.note);
 
       // One rewards card; the three embeds above are the fallback.
@@ -267,7 +274,7 @@ export async function execute(
         };
         const card = await cardImage((animate) => renderDailyCard(dailyView, { animate }), "daily");
         return safeReply(interaction, {
-          ...(saveAck.note ? { content: saveAck.note } : {}),
+          ...(saveAck.note || shardLine ? { content: [saveAck.note, shardLine].filter(Boolean).join("\n") } : {}),
           files: [new AttachmentBuilder(card.buffer, { name: card.name })],
           flags: MessageFlags.Ephemeral
         });

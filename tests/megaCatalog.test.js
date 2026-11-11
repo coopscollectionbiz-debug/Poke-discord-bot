@@ -110,6 +110,6 @@ assertEqual(M.megasForStone("megastone_meowsticite").map((f) => f.id), ["mega-me
 assertEqual(M.megasForStone("megastone_tatsugirinite").length, 3, "Tatsugirinite maps to the 3 appearances");
 assertTrue(MEGAS.stones.every((s) => s.forms.every((id) => byId[id].species === s.species)), "every stone maps only to forms of its own species");
 const { MEGA_REWARDS } = await import("../config/megaRewards.js");
-assertEqual([MEGA_REWARDS.shardItem, MEGA_REWARDS.daily, MEGA_REWARDS.battleWin, MEGA_REWARDS.shop.ccPerShard, MEGA_REWARDS.shop.stonePrice], ["mega_shard", { chance: 0.25, shards: 2 }, { chance: 0.1, shards: 1, maxPerUtcDay: 2 }, 200, { regular: 25, legendary: 50 }], "shard economy (2026-11-11): daily 25% for 2, battle win 10% for 1 (max 2/day), 200 CC per shard, stones 25 / 50 shards");
+assertEqual([MEGA_REWARDS.shardItem, MEGA_REWARDS.daily, MEGA_REWARDS.battleWin, MEGA_REWARDS.shop.ccPerShard, MEGA_REWARDS.shop.maxCcShardsPerWeek, MEGA_REWARDS.shop.stonePrice], ["mega_shard", { chance: 0.25, shards: 2 }, { chance: 0.1, shards: 1, maxPerUtcDay: 2 }, 1000, 25, { regular: 25, legendary: 50 }], "shard economy (2026-11-11): daily 25% for 2, battle win 10% for 1 (max 2/day), 1,000 CC per shard (max 25 a week), stones 25 / 50 shards");
 
 finish();

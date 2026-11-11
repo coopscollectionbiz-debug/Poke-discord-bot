@@ -17,6 +17,7 @@ import { getQuantity, grantItem, consumeItems } from "./inventory.js";
 import { allMegaStones, getMega, megaBattleEligibility, megaSpritePath } from "../utils/megas.js";
 import { isMegaCapabilityEnabled } from "../config/features.js";
 import { MEGA_REWARDS } from "../config/megaRewards.js";
+import { getISOWeekKeyUTC } from "../utils/economyRules.js";
 
 export const SHARD_ID = MEGA_REWARDS.shardItem;
 const fail = (error, code, status = 400) => ({ ok: false, error, code, status });
@@ -68,8 +69,9 @@ const shopStoneById = (id, env) => shopStones({ env }).find((s) => s.id === id) 
 export const shardCount = (user) => getQuantity(user, SHARD_ID);
 
 /** Dashboard view of the shop (prices, balance, stones and how many the player holds). */
-export function megaShopView(user, { env = process.env } = {}) {
+export function megaShopView(user, { env = process.env, now = Date.now() } = {}) {
   if (!rewardsOn(env)) return { enabled: false };
+  const weekly = ccShardsThisWeek(user, now);
   return {
     enabled: true,
     shards: shardCount(user),
@@ -77,6 +79,9 @@ export function megaShopView(user, { env = process.env } = {}) {
     ccPerShard: MEGA_REWARDS.shop.ccPerShard,
     shardPacks: [...MEGA_REWARDS.shop.shardPacks],
     maxShardsPerPurchase: MEGA_REWARDS.shop.maxShardsPerPurchase,
+    weeklyLimit: weekly.limit,
+    weeklyBought: weekly.bought,
+    weeklyRemaining: weekly.remaining,
     stones: shopStones({ env }).map((s) => ({ ...s, owned: getQuantity(user, s.id) })),
   };
 }
@@ -85,18 +90,38 @@ export function megaShopView(user, { env = process.env } = {}) {
 // Writes (synchronous, all-or-nothing)
 // ----------------------------------------------------------
 
-/** Buy `qty` shards with CC. */
-export function buyShards(user, qty, { env = process.env } = {}) {
+/**
+ * Shards bought with CC this ISO week (UTC, Monday reset), read-only.
+ * Stored as user.megaShardPurchases = { week: "2026-W46", bought: n };
+ * a record from another week, or a malformed one, counts as 0.
+ */
+export function ccShardsThisWeek(user, now = Date.now()) {
+  const week = getISOWeekKeyUTC(new Date(now));
+  const rec = user?.megaShardPurchases;
+  const bought = rec && typeof rec === "object" && rec.week === week && Number.isSafeInteger(rec.bought) && rec.bought > 0 ? rec.bought : 0;
+  const limit = MEGA_REWARDS.shop.maxCcShardsPerWeek;
+  return { week, bought, limit, remaining: Math.max(0, limit - bought) };
+}
+
+/** Buy `qty` shards with CC (weekly limit applies). */
+export function buyShards(user, qty, { env = process.env, now = Date.now() } = {}) {
   if (!rewardsOn(env)) return fail("Mega Shards aren't available yet.", "rewards_off", 403);
   const max = MEGA_REWARDS.shop.maxShardsPerPurchase;
   if (!Number.isSafeInteger(qty) || qty < 1 || qty > max) return fail(`Choose between 1 and ${max} shards.`, "bad_quantity");
+  const weekly = ccShardsThisWeek(user, now);
+  if (qty > weekly.remaining) {
+    return fail(weekly.remaining
+      ? `You can buy ${weekly.remaining} more Mega Shard${weekly.remaining === 1 ? "" : "s"} with CC this week (limit ${weekly.limit}). The limit resets Monday 00:00 UTC.`
+      : `You've bought this week's ${weekly.limit} Mega Shards with CC. The limit resets Monday 00:00 UTC.`, "weekly_limit");
+  }
   const cost = qty * MEGA_REWARDS.shop.ccPerShard;
-  const cc = Number.isSafeInteger(user.cc) ? user.cc : 0;
+  const cc = Number.isFinite(user.cc) ? user.cc : 0;
   if (cc < cost) return fail(`Not enough CC: ${qty} Mega Shard${qty === 1 ? "" : "s"} cost ${cost.toLocaleString()} CC.`, "no_cc");
   const granted = grantItem(user, SHARD_ID, qty, { env });
   if (!granted.ok) return fail(granted.error, "grant_failed");
   user.cc = cc - cost;
-  return { ok: true, bought: qty, cost, shards: granted.quantity, cc: user.cc };
+  user.megaShardPurchases = { week: weekly.week, bought: weekly.bought + qty };
+  return { ok: true, bought: qty, cost, shards: granted.quantity, cc: user.cc, weeklyBought: weekly.bought + qty, weeklyRemaining: weekly.remaining - qty };
 }
 
 /** Spend shards on one battle-eligible Mega Stone. */

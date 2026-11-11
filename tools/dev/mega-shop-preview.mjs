@@ -17,7 +17,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const [portArg = "5191", mode = "on"] = process.argv.slice(2);
 const env = mode === "off" ? {} : { MEGA_EVOLUTION_ENABLED: "1", MEGA_REWARDS_ENABLED: "1", MEGA_BATTLES_ENABLED: "1" };
 const ID = "100000000000000009";
-const td = { [ID]: { id: ID, cc: 12000, tp: 4100, items: { evolution_stone: 2, mega_shard: 30, megastone_lucarionite: 1 }, pokemon: { 6: { normal: 1, shiny: 0 } }, weeklyPackClaimed: false } };
+const td = { [ID]: { id: ID, cc: 40000, tp: 4100, items: { evolution_stone: 2, mega_shard: 30, megastone_lucarionite: 1 }, pokemon: { 6: { normal: 1, shiny: 0 } }, weeklyPackClaimed: false } };
 const mega = createMegaHandlers({ getTrainerData: () => td, lockUser, save: async () => ({ saved: true, note: "" }), getEnv: () => env });
 const auth = () => true;
 

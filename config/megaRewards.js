@@ -8,8 +8,10 @@
 //   • battle wins     — a 10% chance of 1 shard, at most 2 per UTC day; only
 //                       a player who started or accepted the battle
 //                       (the Challenger, or either side of a wager)
-//   • shop (CC)       — 200 CC per shard (25 shards = 5,000 CC, the price of
-//                       an Evolution Stone)
+//   • shop (CC)       — 1,000 CC per shard (a regular stone = 25,000 CC,
+//                       between the Rare→Epic and Epic→Legendary evolution
+//                       steps), at most 25 shards per week (Monday 00:00
+//                       UTC reset, like the Weekly Pack); drops don't count
 //   • shop (shards)   — 25 shards per regular stone; 50 for a Legendary or
 //                       Mythical stone
 //
@@ -27,9 +29,10 @@ export const MEGA_REWARDS = Object.freeze({
   battleWin: Object.freeze({ chance: 0.1, shards: 1, maxPerUtcDay: 2 }),
 
   shop: Object.freeze({
-    ccPerShard: 200,
+    ccPerShard: 1000,
     shardPacks: Object.freeze([1, 5, 25]), // the quantities the dashboard offers
-    maxShardsPerPurchase: 100,
+    maxShardsPerPurchase: 25,
+    maxCcShardsPerWeek: 25, // shards bought with CC per ISO week (UTC)
     stonePrice: Object.freeze({ regular: 25, legendary: 50 }),
   }),
 });

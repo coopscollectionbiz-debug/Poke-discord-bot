@@ -8,9 +8,19 @@ Owner decision, 2026-11-11. This replaces the earlier M4 economy in `MEGA-STONE-
 |---|---|
 | `/daily` | 25% chance (the same as the Evolution Stone) of **2 shards** |
 | Battle win | 10% chance of **1 shard**, at most 2 drops per UTC day. Only for a winner who chose to battle: the Challenger, or either side of an accepted wager. A Defender who wins a casual or ranked battle they didn't start gets nothing. |
-| Shop (CC) | **200 CC per shard**, in packs of 1, 5 or 25 (25 shards = 5,000 CC, the price of an Evolution Stone) |
+| Shop (CC) | **1,000 CC per shard**, in packs of 1, 5 or 25, at most **25 shards per week** (resets Monday 00:00 UTC, like the Weekly Pack). Drops don't count toward the limit. |
 
-On average, `/daily` alone gives about 0.5 shards a day.
+On average, `/daily` alone gives about 0.5 shards a day, and an active battler gets up to another 0.5.
+
+### Why these numbers (owner decision 2026-11-11: Evolution Stones stay as they are)
+
+A Mega is a bigger power jump than a final evolution, so a regular stone (25 shards) is priced at 25,000 CC with CC. That sits between the Rare→Epic step (5 Evolution Stones = 25,000 CC) and the Epic→Legendary step (8 = 40,000 CC). Legendary stones (50 shards) cost 50,000 CC.
+
+- **Drops only:** about one regular Mega every 4–6 weeks.
+- **Drops plus `/daily` CC:** about one every 2–3 weeks.
+- **Weekly limit:** CC can buy at most one regular stone's worth (25 shards) a week, so large CC balances can't buy every Mega at launch.
+
+Most Megas also need the final evolution first; Charizard alone is 13 Evolution Stones. A few have no evolution: Kangaskhan, Pinsir, Aerodactyl, Heracross, Absol and Mawile.
 
 ## Spending shards
 

@@ -56,13 +56,25 @@ assertTrue(gen6.some((s) => s.id === "megastone_diancite" && s.special && s.pric
 G.setGenerationsForTesting(null); C.resetCatalogCachesForTesting();
 
 // ------------------------------------------------------------------
-section("Buying shards with CC");
-const b = { cc: 6000, items: {} };
-assertEqual(S.buyShards(b, 25, { env: ON }), { ok: true, bought: 25, cost: 5000, shards: 25, cc: 1000 }, "25 shards cost 5,000 CC");
-assertEqual(S.buyShards(b, 6, { env: ON }).code, "no_cc", "not enough CC: refused");
-assertEqual([b.cc, getQuantity(b, "mega_shard")], [1000, 25], "a refused purchase changes nothing");
-for (const bad of [0, -1, 1.5, 101, "5", null, Number.MAX_SAFE_INTEGER]) assertEqual(S.buyShards({ cc: 1e9, items: {} }, bad, { env: ON }).code, "bad_quantity", `quantity ${JSON.stringify(bad)} refused`);
+section("Buying shards with CC: 1,000 CC each, at most 25 a week");
+const MON = Date.UTC(2026, 10, 9, 0, 0); // Monday 2026-11-09 00:00 UTC (ISO week 46)
+const b = { cc: 30000, items: {} };
+assertEqual(S.buyShards(b, 5, { env: ON, now: MON }), { ok: true, bought: 5, cost: 5000, shards: 5, cc: 25000, weeklyBought: 5, weeklyRemaining: 20 }, "5 shards cost 5,000 CC; 20 left this week");
+assertEqual(b.megaShardPurchases, { week: "2026-W46", bought: 5 }, "the week's CC purchases are recorded");
+assertEqual(S.buyShards(b, 25, { env: ON, now: MON }).code, "weekly_limit", "25 more would pass the weekly limit: refused");
+assertTrue(/20 more/.test(S.buyShards(b, 25, { env: ON, now: MON }).error), "the refusal says how many are left");
+assertTrue(S.buyShards(b, 20, { env: ON, now: MON + 6 * 86_400_000 + 86_399_000 }).ok, "the remaining 20 can be bought up to Sunday 23:59:59 UTC");
+assertEqual([S.buyShards(b, 1, { env: ON, now: MON + 6 * 86_400_000 }).code, b.cc, getQuantity(b, "mega_shard")], ["weekly_limit", 5000, 25], "limit reached: refused, nothing charged");
+assertEqual(S.ccShardsThisWeek(b, MON + 7 * 86_400_000), { week: "2026-W47", bought: 0, limit: 25, remaining: 25 }, "the limit resets Monday 00:00 UTC");
+assertEqual(S.buyShards(b, 6, { env: ON, now: MON + 7 * 86_400_000 }).code, "no_cc", "next week: not enough CC (6,000 needed) is refused");
+assertEqual([b.cc, getQuantity(b, "mega_shard"), b.megaShardPurchases.week], [5000, 25, "2026-W46"], "a refused purchase changes nothing");
+const dropOnly = { cc: 1e6, items: { mega_shard: 40 } };
+assertTrue(S.buyShards(dropOnly, 25, { env: ON, now: MON }).ok, "shards from drops don't count toward the CC limit");
+assertEqual(S.ccShardsThisWeek({ megaShardPurchases: { week: "2026-W46", bought: -3 } }, MON).remaining, 25, "a malformed counter counts as 0");
+for (const bad of [0, -1, 1.5, 26, "5", null, Number.MAX_SAFE_INTEGER]) assertEqual(S.buyShards({ cc: 1e9, items: {} }, bad, { env: ON }).code, "bad_quantity", `quantity ${JSON.stringify(bad)} refused`);
 assertEqual(S.buyShards({ items: {} }, 1, { env: ON }).code, "no_cc", "a player with no CC field can't buy");
+const viewWeek = S.megaShopView(b, { env: ON, now: MON });
+assertEqual([viewWeek.ccPerShard, viewWeek.weeklyLimit, viewWeek.weeklyBought, viewWeek.weeklyRemaining], [1000, 25, 25, 0], "the shop view reports the price and this week's limit");
 
 // ------------------------------------------------------------------
 section("Spending shards on a Mega Stone");
@@ -165,7 +177,7 @@ assertEqual(plain.content, noDrop.content, "rewards off: the EXP message is unch
 section("API: gated, validated, replay-safe");
 const UID = "100000000000000042";
 let saves = 0;
-const td = { [UID]: { id: UID, cc: 20000, items: {}, pokemon: {} } };
+const td = { [UID]: { id: UID, cc: 30000, items: {}, pokemon: {} } };
 const handlers = (env) => createMegaHandlers({ getTrainerData: () => td, lockUser, save: async () => { saves++; return { saved: true, note: "" }; }, getEnv: () => env });
 const auth = (id) => id === UID;
 const off = handlers(OFF);
@@ -175,13 +187,13 @@ assertEqual((await off.buyShards({ body: { id: UID, quantity: 1, requestId: "req
 assertEqual((await off.buyStone({ body: { id: UID, stoneId: "megastone_charizarditex", requestId: "req-off-0002" }, isAuthorized: auth })).status, 403, "off: buying a stone → 403");
 assertEqual([on.shop({ query: { id: UID }, isAuthorized: () => false }).status, on.shop({ query: { id: "x" }, isAuthorized: auth }).status], [403, 400], "session and id checks come first");
 const view = on.shop({ query: { id: UID }, isAuthorized: auth }).body;
-assertTrue(view.enabled && view.stones.length === 46 && view.shards === 0 && view.cc === 20000 && view.ccPerShard === 200, "on: the view lists the stones, balance and price");
+assertTrue(view.enabled && view.stones.length === 46 && view.shards === 0 && view.cc === 30000 && view.ccPerShard === 1000 && view.weeklyRemaining === 25, "on: the view lists the stones, balance and price");
 assertEqual((await on.buyShards({ body: { id: UID, quantity: 25 }, isAuthorized: auth })).status, 400, "a request id is required");
 assertEqual((await on.buyShards({ body: { id: UID, quantity: "25", requestId: "req-shards-01" }, isAuthorized: auth })).status, 400, "the quantity must be a number");
 const first = await on.buyShards({ body: { id: UID, quantity: 25, requestId: "req-shards-02" }, isAuthorized: auth });
 const again = await on.buyShards({ body: { id: UID, quantity: 25, requestId: "req-shards-02" }, isAuthorized: auth });
 assertTrue(first.status === 200 && !first.body.replayed && again.body.replayed, "the same request id is a replay");
-assertEqual([td[UID].cc, getQuantity(td[UID], "mega_shard")], [15000, 25], "a double click buys once");
+assertEqual([td[UID].cc, getQuantity(td[UID], "mega_shard"), td[UID].megaShardPurchases.bought], [5000, 25, 25], "a double click buys once (and counts once toward the weekly limit)");
 const both = await Promise.all([1, 2].map((i) => on.buyStone({ body: { id: UID, stoneId: "megastone_lucarionite", requestId: `req-stone-0${i}` }, isAuthorized: auth })));
 assertEqual(both.map((r) => r.status).sort(), [200, 400], "two different concurrent stone purchases with 25 shards: one succeeds, one is refused");
 assertEqual([getQuantity(td[UID], "megastone_lucarionite"), getQuantity(td[UID], "mega_shard")], [1, 0], "exactly one stone, shards never negative");

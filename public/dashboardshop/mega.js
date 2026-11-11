@@ -64,10 +64,15 @@ function render() {
   section.hidden = false;
   if (stat) { stat.hidden = false; stat.querySelector("#shardCount").textContent = fmt(state.shards); }
 
-  // --- Shard packs (CC) ---
+  // --- Shard packs (CC), limited per week ---
+  const weekly = section.querySelector("#megaWeekly");
+  weekly.textContent = state.weeklyRemaining > 0
+    ? `You can buy ${state.weeklyRemaining} more with CC this week (limit ${state.weeklyLimit}, resets Monday 00:00 UTC). Shards from /daily and battles don’t count.`
+    : `You’ve bought this week’s ${state.weeklyLimit} shards with CC. The limit resets Monday 00:00 UTC. Shards from /daily and battles don’t count.`;
   const packs = section.querySelector("#megaShardPacks");
   packs.replaceChildren(...state.shardPacks.map((qty) => {
     const cost = qty * state.ccPerShard;
+    const overLimit = qty > state.weeklyRemaining;
     const card = el("div", "shop-item mega-item");
     card.append(
       el("div", "mega-shard-icon", "💠"),
@@ -77,7 +82,8 @@ function render() {
     );
     const b = el("button", "buy-btn", "Buy");
     b.type = "button";
-    b.disabled = state.cc < cost;
+    b.disabled = state.cc < cost || overLimit;
+    if (overLimit) b.textContent = "Weekly limit";
     b.setAttribute("aria-label", `Buy ${qty} Mega Shard${qty === 1 ? "" : "s"} for ${fmt(cost)} CC`);
     b.addEventListener("click", () => buyShards(qty, cost));
     card.append(b);
@@ -133,6 +139,8 @@ async function buyShards(qty, cost) {
   if (!ok) return;
   await run("/api/mega/shop/buy-shards", { quantity: qty }, (d) => {
     state.shards = d.shards;
+    state.weeklyBought = d.weeklyBought;
+    state.weeklyRemaining = d.weeklyRemaining;
     setCc(d.cc);
     toast(`Bought ${d.bought} Mega Shard${d.bought === 1 ? "" : "s"}.`);
   });

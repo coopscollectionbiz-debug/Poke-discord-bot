@@ -1,19 +1,20 @@
 // ==========================================================
-// tools/generate-pokemon-idles.mjs — the breathing idle for every STATIC
-// Pokémon sprite (species in data/sprites/sprites.json, Mega forms in
+// tools/generate-pokemon-idles.mjs — the rig idle for every STATIC Pokémon
+// sprite (species in data/sprites/sprites.json, Mega forms in
 // data/sprites/megas.json). Animated sprites are never touched.
 //
-// The idle (utils/spriteBreathing.js — the trainer idle's clean-step 1 px
-// breathing, but whole-body: everything above a row near the feet moves as
-// one piece so a head is never split; at the sprite's own tempo, plus a closed-lid blink where
-// data/sprites/pokemon-blinks.json lists eyes) is baked into the sprite's
-// own GIF at its existing path, so
-// embeds, the dashboard, rendered cards and battles all animate with no
+// The rig (utils/spriteRig.js) is modelled on the hand-animated Gen 5
+// sprites. Each Pokémon gets its own seeded performance: a squash of up to
+// 3 px above the reviewed low cut (utils/spriteBreathing.js pokemonCuts), a
+// 1 px head lean, the ear/crest band dragging behind, and a rest with the
+// closed-lid blink where data/sprites/pokemon-blinks.json lists eyes. No cut
+// crosses a face. It's baked into the sprite's own GIF at its existing path,
+// so embeds, the dashboard, rendered cards and battles all animate with no
 // per-surface code. Frame 0 is the untouched sprite (first-frame hashes and
 // colour budgets are unchanged); only the sprite's own pixels are used.
 //
 // Rules
-//   • normal and shiny breathe together or not at all (a shiny is the same
+//   • normal and shiny move together or not at all (a shiny is the same
 //     drawing recoloured; a mismatch would look like a glitch);
 //   • grayscale (dashboard "not owned") is rebuilt from the normal's frames;
 //   • review gate: seam ≤ SEAM_OK (11, as calibrated for trainers) → ok;
@@ -23,7 +24,7 @@
 //   • one set of cut lines (the normal sprite's) drives normal, shiny and
 //     grayscale, so all three move in step;
 //   • the record keeps kind "static" (the art is static) and gains
-//     motion: "breathing", frames and the new file hashes.
+//     motion: "rig", frames and the new file hashes.
 //
 // Run after import-sprites / import-mega-sprites:
 //   node tools/generate-pokemon-idles.mjs           (write)
@@ -34,7 +35,8 @@ import fs from "fs";
 import crypto from "crypto";
 import omggif from "omggif";
 import gifenc from "gifenc";
-import { pokemonCuts, breathPose, stepCount, blinkEyes, pokemonLoop } from "../utils/spriteBreathing.js";
+import { pokemonCuts, blinkEyes } from "../utils/spriteBreathing.js";
+import { rigCuts, rigPose, rigPlan } from "../utils/spriteRig.js";
 
 const { GIFEncoder } = gifenc;
 const ROOT = new URL("..", import.meta.url);
@@ -94,10 +96,21 @@ function encode(W, H, frames) {
   return Buffer.from(gif.bytes());
 }
 
-/** The loop's frames for one variant: breath poses from the shared cuts, eyes closed during the blink. */
-function loopFrames(key, px, W, cuts, eyes, H) {
+/**
+ * The rig idle's frames for one variant: the shared cuts and plan, eyes
+ * closed on blink frames. Neighbouring frames that come out identical are
+ * merged (their delays add up).
+ */
+function loopFrames(plan, rc, px, W, H, eyes) {
   const shut = eyes ? blinkEyes(px, W, H, eyes) : null;
-  return pokemonLoop(key, stepCount(cuts), { blink: !!eyes }).map(({ pose, blink, ms }) => ({ px: breathPose(blink ? shut : px, W, cuts, pose), ms }));
+  const out = [];
+  for (const f of plan.frames) {
+    const img = rigPose(f.blink ? shut : px, W, H, rc, f);
+    const last = out.at(-1);
+    if (last && Buffer.compare(Buffer.from(last.px.buffer), Buffer.from(img.buffer)) === 0) last.ms += plan.ms;
+    else out.push({ px: img, ms: plan.ms });
+  }
+  return out;
 }
 const gray = (px) => {
   const out = new Uint8ClampedArray(px);
@@ -119,7 +132,7 @@ function targets() {
   return out;
 }
 
-const report = { generatedBy: "tools/generate-pokemon-idles.mjs", seamOk: SEAM_OK, minHeight: MIN_HEIGHT, breathing: 0, blinking: 0, still: 0, review: [], excluded: [], stale: [] };
+const report = { generatedBy: "tools/generate-pokemon-idles.mjs", seamOk: SEAM_OK, minHeight: MIN_HEIGHT, breathing: 0, blinking: 0, still: 0, review: [], excluded: [], stale: [], rigs: {} };
 const writes = [];
 
 for (const t of targets()) {
@@ -144,20 +157,24 @@ for (const t of targets()) {
   const set = (v, bytes, frames) => {
     const rec = t.rec[v];
     const next = { ...rec, frames, fileSha1: sha("sha1", bytes), ...(t.sha256 && { fileSha256: sha("sha256", bytes) }) };
-    if (breathe && v !== "grayscale") next.motion = "breathing"; else delete next.motion;
-    if (v === "grayscale") { delete next.frames; if (breathe) next.motion = "breathing"; }
+    if (breathe && v !== "grayscale") next.motion = "rig"; else delete next.motion;
+    if (v === "grayscale") { delete next.frames; if (breathe) next.motion = "rig"; }
     writes.push({ file: P(t.base + rec.file), bytes, apply: () => { t.rec[v] = next; } });
   };
-  const cuts = breathe ? results[variants[0]].cuts : null; // the normal's when it is static
+  // One rig (cuts + plan, from the normal sprite when it is static) drives normal, shiny and grayscale.
+  const lead = src[variants[0]];
+  const rc = breathe ? rigCuts(lead.px, lead.W, lead.H, { face: faces[t.key] ?? null, minHeight: MIN_HEIGHT }) : null;
   const eyes = breathe ? blinks[t.key] ?? null : null;
+  const plan = breathe ? rigPlan(t.key, rc, { blink: !!eyes }) : null;
   if (eyes) report.blinking++;
+  if (rc) report.rigs[t.key] = { drops: rc.drops, head: rc.head, headCost: rc.headCost, ears: rc.ears, earCost: rc.earCost, ms: plan.ms, frames: plan.frames.length };
   for (const v of variants) {
-    const frames = breathe ? loopFrames(t.key, src[v].px, src[v].W, cuts, eyes, src[v].H) : [{ px: src[v].px, ms: 0 }];
+    const frames = breathe ? loopFrames(plan, rc, src[v].px, src[v].W, src[v].H, eyes) : [{ px: src[v].px, ms: 0 }];
     set(v, encode(src[v].W, src[v].H, frames), frames.length);
   }
   // Grayscale follows the normal sprite whenever the normal is static.
   if (variants.includes("normal") && t.rec.grayscale?.file) {
-    const frames = breathe ? loopFrames(t.key, src.normal.px, src.normal.W, cuts, eyes, src.normal.H).map((f) => ({ ...f, px: gray(f.px) })) : [{ px: gray(src.normal.px), ms: 0 }];
+    const frames = breathe ? loopFrames(plan, rc, src.normal.px, src.normal.W, src.normal.H, eyes).map((f) => ({ ...f, px: gray(f.px) })) : [{ px: gray(src.normal.px), ms: 0 }];
     set("grayscale", encode(src.normal.W, src.normal.H, frames), frames.length);
   }
   if (breathe) report.breathing++; else report.still++;

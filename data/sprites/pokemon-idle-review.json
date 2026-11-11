@@ -72,7 +72,7 @@
   "species:990"
  ],
  "excluded": {},
- "facesNote": "Faces low in the body that a low cut would cross: [firstRow, lastRow]; the cut goes below or above. Read off 3x grids. Sprites with blink eyes get a face band from their eyes automatically.",
+ "facesNote": "Faces that a breath or rig cut would cross: [firstRow, lastRow]; cuts go below or above. Read off 3x grids and the rig line sheets. Sprites with blink eyes get a face band from their eyes automatically.",
  "faces": {
   "species:842": [
    62,
@@ -153,6 +153,30 @@
   "mega:mega-raichu-x": [
    38,
    57
+  ],
+  "species:911": [
+   34,
+   60
+  ],
+  "species:916": [
+   38,
+   54
+  ],
+  "mega:mega-clefable": [
+   44,
+   57
+  ],
+  "mega:mega-tatsugiri-curly": [
+   52,
+   68
+  ],
+  "mega:mega-falinks": [
+   32,
+   50
+  ],
+  "mega:mega-scovillain": [
+   20,
+   48
   ]
  }
 }

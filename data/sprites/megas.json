@@ -10,40 +10,40 @@
    "normal": {
     "file": "normal/mega-venusaur.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "2e3dc7260ea33384e941460a8e9098ef0c1c732c",
-    "fileSha256": "3f4f86b00d63d36ead91cbdb6180c5eb1771c0c9c046f0739a1ef0b25ff4c88d",
+    "fileSha1": "19073746ccf28ebd78f24e0b99e041c859098e24",
+    "fileSha256": "a523dc0bf4b8c7e4bd8a77bcbe071edd2edb1613d726ee2a886260c976467e87",
     "firstFrameSha1": "d342f7234d3ab001da3aec08f8690b39bd98a1f8",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/venusaur-mega.png",
     "sourceSha1": "2c602e6ad2422a9658335ff945c41da1ca5b4437",
     "sourceSha256": "085699b024c38143d2abb8ae247cda43a1fcdb173da6c1c8b5b8663fd2ce12aa",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-venusaur.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "6a1fe20fcd53b9b8f733d6b93499fe2bfe27ba02",
-    "fileSha256": "dfaa32f22f450452b25d09993f13764b67f784f4ce4898585cb72cda7e0f012c",
+    "fileSha1": "16372937f94bd55c95249dd0269281e177df287e",
+    "fileSha256": "ec1931323161c3b0d2d8c5abca99bfb31020d35d51cd93e98a16dca03e01ca4b",
     "firstFrameSha1": "0f9732c50e88eb3f002a08155ff86822abb874ea",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/venusaur-mega.png",
     "sourceSha1": "13c4a50e32e9ea81529e5405d96c07a634c5b6d8",
     "sourceSha256": "30c0ea82ca3a42ee94228fc92e9da9c75a92ff63e7fa738948b224bc0a6eda5c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-venusaur.gif",
-    "fileSha1": "40ec2c73c362668001ea8600d0383739381c4ff5",
-    "fileSha256": "0af9f900214840dc7485adc4f2be93083fcd6ed8d548a4ef0b37b4885fc29a3b",
-    "motion": "breathing"
+    "fileSha1": "1235e63808dd511bb6b6c3c5746f961083dc5ce3",
+    "fileSha256": "171304719538bca0b70e7a76ad45fac5b3becbdb77a1620a1c6c00fb8976e058",
+    "motion": "rig"
    }
   },
   "mega-charizard-x": {
@@ -95,40 +95,40 @@
    "normal": {
     "file": "normal/mega-charizard-y.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 10,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "642876141946953fd79f3cce399a13c7d1245047",
-    "fileSha256": "065f805e4f03115bb960134411f7346a3c1273e11a69ff684d6725623470dd95",
+    "fileSha1": "87892d670cedac61a258878e5659fe2e404a9fbd",
+    "fileSha256": "5015f5ed8182dcda0e3851a49538120f457e3e6fa7d630995a1c7443aec48e07",
     "firstFrameSha1": "fcffee28d002b9a8d8393a2f05c5931e4bd31ee9",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/charizard-megay.png",
     "sourceSha1": "193b4422cd09a61f89308a31ac2fa677df73d7c7",
     "sourceSha256": "8d74345ecb86f73b8d2b5d4c049bbeba28c7a5d130cd675a318218e0b2632618",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-charizard-y.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 10,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "0b37cc55a1f35c1ce33abd4e1caf6d5559b76864",
-    "fileSha256": "8b9409bd97bca2dbe8c8a6f0f4c851250443b81d076c5ab2fb25defcd01a366c",
+    "fileSha1": "a81b75f596f81fa82513b1c8b874cefa99dc95b4",
+    "fileSha256": "1862a854f80aeefed60c7b1714d5771777ca9be7a1a74ab505e9d88e581f9aeb",
     "firstFrameSha1": "0e0e58a8454cc4b7f545ebde2ced20611334bf9a",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/charizard-megay.png",
     "sourceSha1": "23b23d5e74279efbc390c7e85e5f03bc542d16e6",
     "sourceSha256": "bffad72f118b2c1aea277c0ad23299027ac0a4ef64e5b38ea1a8ae6ae95ddb10",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-charizard-y.gif",
-    "fileSha1": "283a82ca3c35e826a353606fd9fc9d18b5b78d6d",
-    "fileSha256": "7dd32512f76d96fec86b00043443e58872d97b3db0eacb0bb61238cccca98a78",
-    "motion": "breathing"
+    "fileSha1": "70f0d1f3cd76b97b6b9b850414305fd3dbffe73e",
+    "fileSha256": "e0350cf6bbdfbe2fa64806c9e0d60ef87f1a4c3074261e72c1b81e8d7f054504",
+    "motion": "rig"
    }
   },
   "mega-blastoise": {
@@ -139,40 +139,40 @@
    "normal": {
     "file": "normal/mega-blastoise.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 8,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "a6bad4eb701e7e55ab55e832aca933b7c3821d16",
-    "fileSha256": "330fc4462c8733d94086872bd394f834f15f9a0d637e48e9e00bb1edd79898ee",
+    "fileSha1": "736b90ebb644ace12ba344313a044ad24afcac17",
+    "fileSha256": "71df402d0f2ca80fc7b5327d5c4ea1c7d368cf60aa8e8d25a869cad0689ad23c",
     "firstFrameSha1": "aa6547773703a7581d13586eb9f2ab52c12bf97e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/blastoise-mega.png",
     "sourceSha1": "f1d715a1b8f044f040ce2ae0f4d2a8782d16a858",
     "sourceSha256": "9520927731abe549a0033887a7f1e76db0cfd4045ba2d5b1574997fc9f7422fc",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-blastoise.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 8,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "cb66f7cfda6507b2472f9a247f1e5adbf779dff6",
-    "fileSha256": "607e6e78677b941b556677438f2805fff61b0fba8a1c885db9d7ef41adc3980a",
+    "fileSha1": "67804295364d77eec3cb5625e4c635d2e9db5c37",
+    "fileSha256": "d3efeee7558f58ea26d1da9e003050be2018776b222bdadf571d76f501cd3fca",
     "firstFrameSha1": "fe74ba336206ee9f1cabab1f342b7db562e8de57",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/blastoise-mega.png",
     "sourceSha1": "b1f9d8235ae375a3418ce794692320ceeef743e7",
     "sourceSha256": "5eab248dc35767cac016187e07b72ba6ab6ffa07b131fe5c644a70ec9a1f8ed5",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-blastoise.gif",
-    "fileSha1": "bbe1f32f33224dcfeddc6e7f2d6996a12daefd24",
-    "fileSha256": "54c60615c7b89f30b5d0e53b97e026fd1d369933a1eded6b69c1b27e7c384ac7",
-    "motion": "breathing"
+    "fileSha1": "a51324165800bdecb615945141a3e06caa7fdf6f",
+    "fileSha256": "21b835d56b83d3b0bf3032e9f61ce8a4ab4dff9fa5d524f94ee61d059425b984",
+    "motion": "rig"
    }
   },
   "mega-beedrill": {
@@ -224,40 +224,40 @@
    "normal": {
     "file": "normal/mega-pidgeot.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 18,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "4736dfcd1b5c489679c9e4200773b3436fbb8d20",
-    "fileSha256": "810b498f213afa388e5d6b3731eea9199842f08d9cfba871285ec51d40ade903",
+    "fileSha1": "48f2d938751c429886363d996dd7559fed4dc6f1",
+    "fileSha256": "ed74ce0da650abaa6e42a9127b2c5dd5edff0449bd39992e82974e45f8caac08",
     "firstFrameSha1": "0c81d15e1199f0207652e56cf4a71fa095845537",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/pidgeot-mega.png",
     "sourceSha1": "8da148868f7e21296241bf911b5c9d428d6fbb49",
     "sourceSha256": "828ee55eac9c1832ae889e1a4882c1dbc5b4f155d96931e43db1cc553b2abab2",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-pidgeot.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 18,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "2fc45dda2680a907c7ca92eb82977bae9c44de4c",
-    "fileSha256": "dd97c6769749080f3e3db645a44d6617d6abf0cc1903bdc4350485815d93d969",
+    "fileSha1": "f480dad1bfd17575ada6a8ca22ebbeb045341a79",
+    "fileSha256": "bbb98fd1ac7f4cddd759735de7fc63d6a49c98d7072a3593f603f028f3c3506d",
     "firstFrameSha1": "1d24d0ce4dcb7b2fd72ede03fd675a5d5cf85a67",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/pidgeot-mega.png",
     "sourceSha1": "f62c733b68d391e6292f1470fc5e445d61064120",
     "sourceSha256": "800297ad7d389a18e97fe9c5ae48d3cff56551f1ef2b95c4369e458385f051a3",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-pidgeot.gif",
-    "fileSha1": "53b7dc6efb7e94cf98fd3200d0f7c36cdcd0c0e6",
-    "fileSha256": "751980d07db218e835361823df9fa314e9e58ce56553da9682b499484da6d01b",
-    "motion": "breathing"
+    "fileSha1": "a0207826854868d8bac5c3de6d133ab63084e386",
+    "fileSha256": "55222f3c86533b75d36f9111ff17474acf74bd5b1ed080fa7f0fb768452ed049",
+    "motion": "rig"
    }
   },
   "mega-raichu-x": {
@@ -268,40 +268,40 @@
    "normal": {
     "file": "normal/mega-raichu-x.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 10,
     "size": "96x96",
     "colours": 23,
-    "fileSha1": "2f8408d8afa08f850c1e84d0790285b6b9b45f6e",
-    "fileSha256": "24b96f97c7dcd746caae62458d919c28dcd60fd47b2e0987bab9fb4e7223ab84",
+    "fileSha1": "d2b660a5977cbb27b23b517f9b546b25be230209",
+    "fileSha256": "83ae5b01a9743552b06bf6616afd1ae5cfb53bedaf9a2ac384a9398e94699c8d",
     "firstFrameSha1": "cfa59ed3d0a8c72b67e900f33ea707ffad10e671",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10304.png",
     "sourceSha1": "ab3d2fdfe3aea11697b282170ec0a97344bb9ff0",
     "sourceSha256": "dd5b7b7cd905189bc68fb7633a73865005c95a496fa20d22e170e4f91490d85b",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-raichu-x.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 10,
     "size": "96x96",
     "colours": 22,
-    "fileSha1": "6de5f33ad1c4114cc0ffb2e5c09ee65cd10abd72",
-    "fileSha256": "2ae235274e37f03e27ce886c4d9bdd6b216ca98dcb73dab07052fbd6ea00702a",
+    "fileSha1": "5aa2cb3aeaa7ecbb593b56931a9e625701beebad",
+    "fileSha256": "bd7263d90f58f31859a760367daa45bbfd16af29aa03e8adb73889eac35a5f8e",
     "firstFrameSha1": "d57bf2821f7db715017805d480aaf20dbdf3898b",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10304.png",
     "sourceSha1": "8920c70cdb1c2fae012bc361335f936f87eb168f",
     "sourceSha256": "cbdf20ba0755cf5bebea3a98fd53f7d51641884a67e1396d1d17d8b20473918d",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-raichu-x.gif",
-    "fileSha1": "af64167822b75ea0cfc369c6ffbdaa965ec6d5e7",
-    "fileSha256": "50a223304f5427bbb3d0e1e7baedc50e98be40742c3480abaf4bc78e7d10bec2",
-    "motion": "breathing"
+    "fileSha1": "8d517e1df551c971f3a22f4e24d65d532d0b3571",
+    "fileSha256": "c08f122298068bcfd4a55c43f464ab07b2258efda9be9f125f9f713d532807ab",
+    "motion": "rig"
    }
   },
   "mega-raichu-y": {
@@ -312,40 +312,40 @@
    "normal": {
     "file": "normal/mega-raichu-y.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 16,
     "size": "96x96",
     "colours": 23,
-    "fileSha1": "25a313fa5390495e0ce12b49bec061aab9128c4e",
-    "fileSha256": "7da16f7bf6cd74154b1b544e3c879f21ff9b423c2a99652734863c32dfdf591e",
+    "fileSha1": "1514c19223bd3a191f8fa7fa695abad42dcf20a9",
+    "fileSha256": "990715da11ba27d89c8bf3690d054ecf12dc979296690c3d6f2c708e6ce67567",
     "firstFrameSha1": "5bdacbcbfd198515d67029158c32dfe4aa94c563",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10305.png",
     "sourceSha1": "521a69f610a9251a27302e216e5a65200e37a343",
     "sourceSha256": "31b620f4422613f698b27c6eeec60bb4c85e85627c655396b201e808ef661822",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-raichu-y.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 16,
     "size": "96x96",
     "colours": 22,
-    "fileSha1": "57278ff0b6aa99a610427e29798e02c62a28020d",
-    "fileSha256": "f0a887bed10373ccd6d6b55e8892542e518e61eb3253ba671876646f14611d25",
+    "fileSha1": "4d5d44d098d5fb161fe2fea88ed4978ae15d8008",
+    "fileSha256": "cd5321d843adbbea7d8e77cbafae8980fbc5b0171f893560892691ec0d4ed99e",
     "firstFrameSha1": "cee6ce9b9f726f98c556243b1ecfd5346d103618",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10305.png",
     "sourceSha1": "be74211dd27b8d64cad646fe203658ff6e45fe7a",
     "sourceSha256": "8a7deec4584ce9f65a533aecb41e15a2b0bb6a07d7ffcaef007a5547b3a3f358",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-raichu-y.gif",
-    "fileSha1": "6dd75f9b757ea42f75c046a3bf1eae236e1b0e7b",
-    "fileSha256": "02fbae97b464f628f0244c5386b35b2accf3a17e500664649b66c06f9dd93e10",
-    "motion": "breathing"
+    "fileSha1": "fad2f3d9857f7a568cb1235fbb1f7f2b1131f22b",
+    "fileSha256": "f18aaa644dd111dc29ea8172fd892fbc7696a0900d0c6fc21cb93e8f8546bcf6",
+    "motion": "rig"
    }
   },
   "mega-clefable": {
@@ -356,40 +356,40 @@
    "normal": {
     "file": "normal/mega-clefable.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 17,
     "size": "96x96",
     "colours": 23,
-    "fileSha1": "d646d63aec970f3fee4352e7a3990cc439e15ab0",
-    "fileSha256": "c6bdc148138ba737c89c2ddc8f62fa7e7e0fe168770ae079302c3374e270947e",
+    "fileSha1": "1271400e14f91517300032f97f7847890e7271cd",
+    "fileSha256": "e87485d7ab89844e19b00694621089c3511db3b21b5bd1c974d1ffa1851edad3",
     "firstFrameSha1": "0e6d8978d5286494b16d02ff3d690c5f6ac485d0",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10278.png",
     "sourceSha1": "167260702a7bb446ccdcc7550e8087f9212f183f",
     "sourceSha256": "97231e5bcbb76d22f2e466ca8109dac16bee36afa7470b8d9296301076f8bb4b",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-clefable.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 17,
     "size": "96x96",
     "colours": 23,
-    "fileSha1": "06ee89e23e020508141b0448c5e96dea4ec8c3cc",
-    "fileSha256": "36657e980b75fb40619f94d54c8dec1293ffddb333185d8d626e0254b83f7ce7",
+    "fileSha1": "cc42633d5c56466f38a276d829818ce3e8c4bd16",
+    "fileSha256": "17d28928518dd609732dd77719a1937eab0b53d9ce93af41e7c8b2bb84cc1cd3",
     "firstFrameSha1": "4337b8ea1260a763331cad597a9820da50368e81",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10278.png",
     "sourceSha1": "8c6fd1f4094167705049c031b0ef1cfaef40d72c",
     "sourceSha256": "06652e070824adec82a93346d2325b08ef75986421cea8c6d6eaf64f2046c40f",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-clefable.gif",
-    "fileSha1": "8f5698e8f6426a899d6319d5b3ffa273546e1cdd",
-    "fileSha256": "2de0d380604a37e6fad33b739412c2f7805fcda965668dfef7c9d09c22d2dcee",
-    "motion": "breathing"
+    "fileSha1": "01735d730ad025c2943a6b8f46d1134cd20da302",
+    "fileSha256": "3a6296bb2876331ac53af7dfd0276bf35fee235f8f3a6e9bca2fa1fadb59cdf3",
+    "motion": "rig"
    }
   },
   "mega-alakazam": {
@@ -439,40 +439,40 @@
    "normal": {
     "file": "normal/mega-victreebel.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 21,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "362ef2b921423f160b90ffcdba9d8a3a8baeece8",
-    "fileSha256": "04f908828efe89fd6c1bd957d1b02e2ea18f78148dbd70b6e06d5bd92ad57edd",
+    "fileSha1": "174d88320a43c5da8a67f46d55b6c8fe68ae1e9a",
+    "fileSha256": "b8cfaea85b4110bb655633db84de12074aaf0cabc8b11490cdd686463df6a665",
     "firstFrameSha1": "e14d46c2b46cd77b8d33b4a72f558fd64b6a587f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/victreebel-mega.png",
     "sourceSha1": "0a217675be7b9282dd1bf9d95e24a153389012e8",
     "sourceSha256": "13c882e2c1b7a784606cacba031927fb1d9e46bbc85135528a796438d84d16fc",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-victreebel.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 21,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "993d650d1546072c5d2a27182c914905884f0b17",
-    "fileSha256": "39b228ecef2d3b2075c1038716c9935bfd1fcb6293d751b56d6c1d3258fdd74d",
+    "fileSha1": "44b1378a076f900c8150a0816a54cc4ddd71d4bf",
+    "fileSha256": "4cf1bdbfb39741e6ebfc015a137a2e7c271d9ee33fb238d37691e75eb35d7195",
     "firstFrameSha1": "f7dd7c2d882943ac4e4ae261d5e9df4078ce2d9c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/victreebel-mega.png",
     "sourceSha1": "2e32cf551b4317e8af934ea9dbffefa5a312e73c",
     "sourceSha256": "e8208a3bad505d2a2b383148b81e669756ad06fbaa2dd15e5ed99d8cdf80be13",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-victreebel.gif",
-    "fileSha1": "91cac31b262381157701f9f3d747a7c71c83089b",
-    "fileSha256": "f804df9ce21788fa4a30f2bb5310818c3220555c534be299147a0ec7492ce3cf",
-    "motion": "breathing"
+    "fileSha1": "1e6e7a554797dde33a84a8c358b19695736004eb",
+    "fileSha256": "dfd049000cdfce26e3501b26dde25df0de0cada1a471d7848c279011210cef56",
+    "motion": "rig"
    }
   },
   "mega-slowbro": {
@@ -483,40 +483,40 @@
    "normal": {
     "file": "normal/mega-slowbro.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 22,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "77a2242f66b330f19baa21f350c71ce79c332cf6",
-    "fileSha256": "94141142a07d8cecaccc84d399d1c8e01a270938f210c19908f0b19d2db972d3",
+    "fileSha1": "8c2728f9347311530d5c6f201333d135f48b944a",
+    "fileSha256": "adab716cf54a14eeade72161e882bb3da77e41c40d903626b207b47459e58eb6",
     "firstFrameSha1": "7a449e6123fd698103bfef2318d7d3550c674788",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/slowbro-mega.png",
     "sourceSha1": "9ace49a3f4a5aef5bd7719be414e0c1e651c12ea",
     "sourceSha256": "53d6a72d7247817b019d7be86e13d98622e662b76d6440ef8c2fea2dbfa4f626",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-slowbro.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 22,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "ac56c16b0a6225e26661e561424d06435cea96f7",
-    "fileSha256": "88de94db6e7a59be8868f2791715f212486b091ec3a561de373075ecdc69b465",
+    "fileSha1": "7ea5b2c4bca0f6d38ab8f8db7a5c7054ef96db6f",
+    "fileSha256": "ecea02f6d1492eca3b5969b8fdcc29aeb94e352fb0c19bafb88195237b06cd10",
     "firstFrameSha1": "a0ed87562e698667ee833341bd9a4f1614666c50",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/slowbro-mega.png",
     "sourceSha1": "b3d36e0c3f7c53386ef25570143247b0fc45eacf",
     "sourceSha256": "44218fd4325331b51e9adcdd3f46b338917f1b4e52931e635c2d9719d8414cf6",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-slowbro.gif",
-    "fileSha1": "cf5cb0d3e0a4421e7e7dcc56e9cc837c8c72bb07",
-    "fileSha256": "52990b914c963775187900da32aaa1e756ce21a3eb160df32075846019730378",
-    "motion": "breathing"
+    "fileSha1": "fe77fc5ee870fe477afa87a99ffb8a5221d9da55",
+    "fileSha256": "bc8131315c6f6380719272b9f2ee1b892f9b131a19ec463b8d7f965f41db44de",
+    "motion": "rig"
    }
   },
   "mega-gengar": {
@@ -527,40 +527,40 @@
    "normal": {
     "file": "normal/mega-gengar.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 19,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "a1b9ec9aca9cb54327f54ba6a57e627c074399f0",
-    "fileSha256": "04d65b070d04ca4622106f6e3adc6ffc10cd709e945ca5ffaaa77e6c4bc21ee4",
+    "fileSha1": "74b48104b5454779b125585208e72901e0a1d4e1",
+    "fileSha256": "0f7512e427bdbecc545b92466e930ce16c6c53458a0975a46071cc31b8210771",
     "firstFrameSha1": "02a34a44db52bf0d724486de98dc4e0d17219cef",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/gengar-mega.png",
     "sourceSha1": "c2014faacbf89f328383b2cd9342abb43e786d00",
     "sourceSha256": "b10c7cb7a1c8d47bfd91ea20b32c36876df2d58b809bc97e2ca1ce27355f3e5e",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-gengar.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 19,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "28e1ecc4c50d038e74151a0621aaff8ec0154f4d",
-    "fileSha256": "2dce2c556d8ad3c253046ae6fd54a5789a734279cfca9fa86fe55e345dc3d42e",
+    "fileSha1": "2c07bacdca3560608852d3733676734e0f2387cf",
+    "fileSha256": "db3617bcb56f273bd0778e2bc9f64cee538953eb504f4ea4545a189bc4632a43",
     "firstFrameSha1": "148269b789b58408728d9d778bcf63843f8e964f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/gengar-mega.png",
     "sourceSha1": "0aa6fe30214910d2407bad69e84fa0dd608ad06d",
     "sourceSha256": "f7ac4b5086d443013af450f60756b080f78c67769bf25dd9967ac96904d2cb67",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-gengar.gif",
-    "fileSha1": "7d1264be8420ce3f6c365a6854c9d3e55a34f1fc",
-    "fileSha256": "06f6baefae413f6292331ba440dbfe7c4a6a1b16f27f731faabdec6ece1c4cc2",
-    "motion": "breathing"
+    "fileSha1": "f21b983ec6701a3222486c26f5f2e051f0748c6f",
+    "fileSha256": "7a3929a9d1caa37aa55f4bd2548b43468d8973ac1aead6879ff013db8ed357ff",
+    "motion": "rig"
    }
   },
   "mega-kangaskhan": {
@@ -571,40 +571,40 @@
    "normal": {
     "file": "normal/mega-kangaskhan.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 13,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "eae8ddc3da6d9bb1e4bbe5323a4fcc2b4f714b4d",
-    "fileSha256": "0ad9a7fc38adbbe56f91b18526d5785ab6000066671d3f1368d6fd283ff17114",
+    "fileSha1": "f57ad94e4ca8e29929bfa8eb4ef93e4227ca48d9",
+    "fileSha256": "961242ebea966146c9477626876a31c6858d6d364bda20e758ae2b78b92f5957",
     "firstFrameSha1": "c1d851081e188538fd4295cff3e7c27be3c93d1e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/kangaskhan-mega.png",
     "sourceSha1": "eb70e20dc7859e719b77b30e444706290e11cf03",
     "sourceSha256": "59d78dfa1d4695121242c1f0131c9b3ad20a9c3f349467d17d9063f7fce46cc0",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-kangaskhan.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 13,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "d513d57abb0fed5d15a2350f51ef761cdf028306",
-    "fileSha256": "cab5c59b4a1c20147f5edbceb6c5855e068115971fcf487c42eb2a79ca1c4622",
+    "fileSha1": "b56aba56786faecba8e22cfeecf8d3dd164e2fc8",
+    "fileSha256": "b48543fb092ee3bee34776d2f545062d5a220810ff8ff2753786935b2e987829",
     "firstFrameSha1": "17d34570949636dbe011b0932ca13b3942466b96",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/kangaskhan-mega.png",
     "sourceSha1": "f5a42617197033ab0f818a43e1dbce451bcd1d3d",
     "sourceSha256": "e3405b87a74b03c3683aabe21c8976d0f25f0caf8a27466f677af5247fa60569",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-kangaskhan.gif",
-    "fileSha1": "712c0be1d3f4f5599f9bdefb7f6322de97f776d6",
-    "fileSha256": "bc57472c8ea4f5aabcc505f6b621f73f73534353b21b3365dbc933635e526f81",
-    "motion": "breathing"
+    "fileSha1": "ccc14b33f1e7e81464fd6c446701161926a65647",
+    "fileSha256": "806f636da551babad7e81b8700a3688695b9765780c82b99f662b9884b96fc5d",
+    "motion": "rig"
    }
   },
   "mega-starmie": {
@@ -615,40 +615,40 @@
    "normal": {
     "file": "normal/mega-starmie.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 22,
     "size": "96x96",
     "colours": 16,
-    "fileSha1": "b268ed58acdc9430115784dcde960d5989e8da52",
-    "fileSha256": "911b07f06039b9d24d239e4b29a131a125e9e087be4b303584c1c8aeef09e682",
+    "fileSha1": "13ecc9f0b78b9adc26f18b95a361531a7546ae67",
+    "fileSha256": "078309b7ee0f3a1b584a0e0bcdc2bc76b30c2afeb126f5e704e2f066c21b05ea",
     "firstFrameSha1": "3c3c5ba62f3f0fffb44312e875ef474a315ea5ba",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10280.png",
     "sourceSha1": "475cf4f7507b56e779835917b2d9bf57304498fc",
     "sourceSha256": "0c6babe07a5d0e144c25ec5b6042a4af736ef97d21ef4e1006b00a85077e0dbc",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-starmie.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 22,
     "size": "96x96",
     "colours": 16,
-    "fileSha1": "b1d45f404a2879b19610dbb4fd3c899e60d4e48f",
-    "fileSha256": "8a391a1ef7b4742f6636ea21d99209f00d1266914cc1be74cf2bd9fb0f3eeb9d",
+    "fileSha1": "afbaf92d051d58a5a5472536a3252309714a0e2a",
+    "fileSha256": "788b83b7e6d9ae659e81810c73ced1d8cdacf26ff9581199b6c43f89a263e0ec",
     "firstFrameSha1": "e54954b7f77afd1253bb711acfa25f10caa311c8",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10280.png",
     "sourceSha1": "79d421fc9befc31fffa9176842ce514a6e3b55e2",
     "sourceSha256": "4deec41784c7b3a7daff0d4c842e18cf78ba7d5d696b8c5c921c64e5acf5123c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-starmie.gif",
-    "fileSha1": "6ace8fb51745105d89df724c4133039b1c1cd8e7",
-    "fileSha256": "4dc25c0001c42ca0bb1de14b43b2e1a4a8f0942909a5c5a0b0e821cf8125002b",
-    "motion": "breathing"
+    "fileSha1": "8014f989480fcfa5d5f4e98b8c47cfb4b207dbda",
+    "fileSha256": "4cc752f69e6940e9c621ec6b38f58d3d5c3a7028221a79943261e85aa364dd0f",
+    "motion": "rig"
    }
   },
   "mega-pinsir": {
@@ -659,40 +659,40 @@
    "normal": {
     "file": "normal/mega-pinsir.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 20,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "1baa06b047a685df569723b03c791ebb495b018b",
-    "fileSha256": "61e6d34f84d635f8809ecd97c453eec22c3bc03ebe2dd447987d3cc47f92cddb",
+    "fileSha1": "a74801e57c4293fe34c52f03b4d1addbd4665c75",
+    "fileSha256": "5c03355012a1f817c99154edab023e8b987d90dba372c5fc5ed955940a4c5d49",
     "firstFrameSha1": "d9dbeed31fe61a1d676b541c0f9a69baf941a591",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/pinsir-mega.png",
     "sourceSha1": "ac4b81da0e7f7b459ffc47d957cf5e78e868e056",
     "sourceSha256": "b455f99afbb61f8825f297c4dfb86e62e56ca67f94bd6eb854e2e349a855229b",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-pinsir.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 20,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "4542136aaa14c925306c858d39b7b296de9a551f",
-    "fileSha256": "6322a5d0c8f614bd25c134e25f1efe0959f8708385e1b8a62b1c493091dd097b",
+    "fileSha1": "2c9f0d9535d6b534367616b31304e4b2bd871497",
+    "fileSha256": "e06b83ef9ea77963bf911666e2b45fa1433d0368ad5a679eac2b056ca45f3424",
     "firstFrameSha1": "8acb3536f8102f38f7418c19925bb1bfa42b42f8",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/pinsir-mega.png",
     "sourceSha1": "88221a8c54d97134b313a58fbd03a268177aeb67",
     "sourceSha256": "f6fc24f3a0d5c24fba1d04a18e038af07e295b9a83f4f4ac4a5121572f8df9c8",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-pinsir.gif",
-    "fileSha1": "21584c3622c5315faf3dc956c320b4c445b53ea6",
-    "fileSha256": "75c4bec73c0f06c5df894b2a3361b580df599119b1534e0c510f80ec5b3104ec",
-    "motion": "breathing"
+    "fileSha1": "2bc56de0a0b83d8ffa669b0965c7c4cc752fcdb8",
+    "fileSha256": "05d858c14546123df8487bc299e276ab14eaa8bd4e5bbd3a4502c16ed966539d",
+    "motion": "rig"
    }
   },
   "mega-gyarados": {
@@ -703,40 +703,40 @@
    "normal": {
     "file": "normal/mega-gyarados.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 14,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "bee800396c19d3881d234c45608ae1bb10a2b5ad",
-    "fileSha256": "4939a2f65b31428679546ba27a24e249be5c2d7beaa8a14c40f5acc52da9e19d",
+    "fileSha1": "e248520c02a8e3b7587444142e3e626e3c6bbf97",
+    "fileSha256": "b1b6a1c0f11a2d2a17c9c0ac00e0ee1799fc277cad05fe92966ac598aac4ee58",
     "firstFrameSha1": "64fab049aa71001a054869a34925e8165c7ea8fe",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/gyarados-mega.png",
     "sourceSha1": "8429ead72968196da6814124156a1a9855a23a35",
     "sourceSha256": "bb575c030a35e5956610f097475c9108943fcd9a4aad7c0440e7c0048c1169c1",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-gyarados.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 14,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "cad9f1d87c64c68cffc285da546b2b818740fd63",
-    "fileSha256": "54f1be5bc08d5eec7fa36b8e54a20b7f8ce9eb40d9e046dbe787f8e735d45a58",
+    "fileSha1": "8d2305f2ccc4bcc0adc99e8ff971b68e42c731ae",
+    "fileSha256": "b7ea01bd1c01cfa0c7ce53ab2a477c37061cd7f171be8a1264388ecd37b02f2a",
     "firstFrameSha1": "87d64b30e764d0aa8dbf255065875371b366cab2",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/gyarados-mega.png",
     "sourceSha1": "bd5d20abf9ebd3f5f5011560d55c895411b944da",
     "sourceSha256": "34fbb290b925a2fcf21431afd66aea039bc2f87a47189d26c5affab0aa48a420",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-gyarados.gif",
-    "fileSha1": "63c13a65e39d45144141ad07529fb80e49297e82",
-    "fileSha256": "1b2b43b8dc63ed8e592d36c78d25759e595cca8cc9831ab5e3952491cbf46631",
-    "motion": "breathing"
+    "fileSha1": "6766b720ca124eacaded65d1d5b568ac3b2a10aa",
+    "fileSha256": "76ca332c44c39154c2724c4ff8a00d0a784fb4e6bb06c29146fdf05ab6c3a893",
+    "motion": "rig"
    }
   },
   "mega-aerodactyl": {
@@ -747,40 +747,40 @@
    "normal": {
     "file": "normal/mega-aerodactyl.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 23,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "b7c4f086c029f1458cff453a887b76938e54047d",
-    "fileSha256": "8ed598417314924e113676ba22077291c77185274859d66eeff9e3f6eafac391",
+    "fileSha1": "2bf238124c493bad5ab04d9a20385330c4a06c61",
+    "fileSha256": "df0b6b723acdafb452eaa10c97cfc44a2184f25981f8c9004a152b30161ac2b8",
     "firstFrameSha1": "7227b2d6b2d7070a6c2e752c20c877718b3c0dff",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/aerodactyl-mega.png",
     "sourceSha1": "cea6c3a0b61e55327cbbb6d976906400b7b71655",
     "sourceSha256": "7d93bde66025e9d09ad117baccb042e839378d7f8100f35001ac014c1cd3f2ac",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-aerodactyl.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 23,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "e11dab5825ec7ed6eaeca4bf023a5db82cbc7258",
-    "fileSha256": "020a065c83941cf54bfeb2cc0d12a48aaf3254e19cf32e4da193225145f95b66",
+    "fileSha1": "3c55b8705dd3fbb8015d883929b3b81cf0e2c792",
+    "fileSha256": "dfe0a81270814ac18acdf7265b51532569fdd7a487eb60767a4e72c4131aec55",
     "firstFrameSha1": "1ff21c9e00b8c8cfbf849d92073cd5d3b01dc131",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/aerodactyl-mega.png",
     "sourceSha1": "7012a7d09c4f90eceada91f1c9a95b46f81a9fd0",
     "sourceSha256": "78194dd543ffa65cfbde191e8d52ea73b92ab2f5c254aeed4ae5f9556ed3263c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-aerodactyl.gif",
-    "fileSha1": "2862f87871299fba2ee1f546e4626320e9d40bb6",
-    "fileSha256": "cb6d5d421291c0237c098024f2d25be2f58e229470b8a986c0591dcfe721539d",
-    "motion": "breathing"
+    "fileSha1": "459e368e408c34b2444cf5671b021ddf3f979e28",
+    "fileSha256": "051f208e8a086a7a3502b85d1054076c2e4d3953d34f791df97f3e8a218c1b19",
+    "motion": "rig"
    }
   },
   "mega-dragonite": {
@@ -791,40 +791,40 @@
    "normal": {
     "file": "normal/mega-dragonite.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 12,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "69866552770b8f892324df33be814985315195a3",
-    "fileSha256": "7b8f7e2805fade3783f48e6196a2f25440f7023153f61cc2959abe0a6bd225ee",
+    "fileSha1": "8bd72ee0788e0aaa8b387f08d5eacc1af1de1109",
+    "fileSha256": "a749e036c5259ae9c6287021bf2a778ee6a2423e995d4084ff00478dbe3e84b4",
     "firstFrameSha1": "34e54d6d693e0a812830f76f912d520fd16e7163",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/dragonite-mega.png",
     "sourceSha1": "f47396e96e0ac60c8c3485100730be4ef93544fc",
     "sourceSha256": "799576a703a9f2397f8f89731c61b715810ea726f1a10783c624516c86bfb897",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-dragonite.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 12,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "84fc89026d927280d5d7a33be12a61bbe39baf44",
-    "fileSha256": "69ae6c535a87f3ee44fc527a9e08e57a75603f54f385c0f87f8a7ee536c94a74",
+    "fileSha1": "e28c151d16909643383a06a7243cda35b2ad024c",
+    "fileSha256": "759daed4b2e6759f244511a8f3b24b62d3fa2e2f38a426da157bb49d08ed0ccc",
     "firstFrameSha1": "d62dba86478a3bd315c517b5a2a2b12cabb49170",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/dragonite-mega.png",
     "sourceSha1": "dec748c1022c56661c8a788e56dc74e35b698025",
     "sourceSha256": "85e57d480a1de966321bb5a3863ac13432cf6e43a0edd9233d8ea8c57becfe25",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-dragonite.gif",
-    "fileSha1": "fa11bec0266499715f86c9a8ca177b5437bb8cc7",
-    "fileSha256": "ac21b55605967030a456577ae7ade1cc1a5b8becb062c6550abcb565d417a19e",
-    "motion": "breathing"
+    "fileSha1": "9a01f537a8890a7c4cf91625f8628d6be02f140e",
+    "fileSha256": "421188be2695388b8c3f910e77608b8901265233290bee4752cc4780f9faa6b3",
+    "motion": "rig"
    }
   },
   "mega-mewtwo-x": {
@@ -917,40 +917,40 @@
    "normal": {
     "file": "normal/mega-meganium.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 10,
     "size": "96x96",
     "colours": 24,
-    "fileSha1": "6e33433d97d761c25f0e3c49fa942b77b38d7006",
-    "fileSha256": "36dd78932511335245252c0e9dc8ccedbe50e0c0f3618a82ce398d7afe970ec0",
+    "fileSha1": "d93ce8f78a686e5ae300d7392728d577e94650ae",
+    "fileSha256": "375a38b3daab34a06f03775316b3f6961a092d7b82bd51f946b85fae5e28788f",
     "firstFrameSha1": "716f39bd214eb2d7c792053de094ddcd49611c7e",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10282.png",
     "sourceSha1": "f62440b3632a1a31302d9443390036d79ede9d77",
     "sourceSha256": "e4199f8b23f2651edbb0fbc3be13d82ffcf5ecdb026684ea3d99faa2bf1857f1",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-meganium.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 10,
     "size": "96x96",
     "colours": 24,
-    "fileSha1": "6673af5626d0ad0ba3b1bb3ca16d3c77ea0c5ba2",
-    "fileSha256": "5049ec2ee7154bdecd5d235e967b572121dc06bfcad9fe869e9a7a9c463439d9",
+    "fileSha1": "08cf6510ba2f817fd5508d0f29932514321110d4",
+    "fileSha256": "1e9222c48b845fe66d3a9240776488549e44d63dc429f31614507a88abd5bbea",
     "firstFrameSha1": "c55e2bf87eacc0ce9b18548cbf996c6af8f45c36",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10282.png",
     "sourceSha1": "4e6afd55f02b9fa2ee1f21e826d06c89575e7a15",
     "sourceSha256": "9e904704cc4cd6d0e2081da0ff4d92a673a066718e9863de334e9427e7b9d87e",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-meganium.gif",
-    "fileSha1": "72c767cdbe0047f93bb10bf2ba1a17fcf544a536",
-    "fileSha256": "495c89d3f33d7b34e49a68df0b508a6f47de802792094d693b7192657120f21a",
-    "motion": "breathing"
+    "fileSha1": "1fd340d5680b58cf0ea537304581ab358b04fe5d",
+    "fileSha256": "9fa21e8c8033339502d3aba831a1c4d47689a2d6dd267dd7da83b812f365c9ac",
+    "motion": "rig"
    }
   },
   "mega-feraligatr": {
@@ -961,40 +961,40 @@
    "normal": {
     "file": "normal/mega-feraligatr.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 11,
     "size": "96x96",
     "colours": 16,
-    "fileSha1": "6350d1ec99488b9b039717b7a549a39336cdcff1",
-    "fileSha256": "a9f38bd652a79247c7047f61c273ed887d2f61bcda22e8f2d6bc2cf5829f9ad0",
+    "fileSha1": "e58d990cdf1808a4839eecc7e26fa7e48b5866a8",
+    "fileSha256": "d5c64d0293cf98cc761266c62b5e727c6d9c1ab74ccddd9fd0d23d9b4da3de8b",
     "firstFrameSha1": "3245d7c9996e421a157267c46ba4d1aeb881cbe5",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10283.png",
     "sourceSha1": "70c1d2b0fa746d1c9c77559eddb124de462d7504",
     "sourceSha256": "fb70c0614b03674154c852c2253abfb9ab211fcdcaf6da84e9cc178d5f69ca2b",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-feraligatr.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 11,
     "size": "96x96",
     "colours": 16,
-    "fileSha1": "66a44e3cd39263e50e41beb0b76c99001a53f9ec",
-    "fileSha256": "5b93ae4d361f3704a9a5bc8bc1432892260b0a90bdaf17a26aa51244f42c3ab0",
+    "fileSha1": "fc3c076a0186ff0055d75044fb01cbb4b2acb9b4",
+    "fileSha256": "b8770ab2bc209722387ed23dcc1e6780794f0e849fcb2bfaed0185b14aaeb9cf",
     "firstFrameSha1": "93cc6bb57d270b6176f701e9099ebe053325487c",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10283.png",
     "sourceSha1": "1d07a724fbf7eea0801026e1b5f0965bb59e4211",
     "sourceSha256": "b9f0551d31f28cb764fa554fd03933edf030f3c4067047ac8602d11f402a4ee5",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-feraligatr.gif",
-    "fileSha1": "4de6337b2857c5a35ce7698dad48714dd3028776",
-    "fileSha256": "ee58ac1e302a1b462ed277e29ed2a9fe607d5cad250a103e2a00ee011cc79042",
-    "motion": "breathing"
+    "fileSha1": "ba667b244a8740903ddc5dc3fb671689ff80b88d",
+    "fileSha256": "1aea6ed268f589fdcc5e80d25b5dc8f49492e0e71e48f6f304c39f3e72af6777",
+    "motion": "rig"
    }
   },
   "mega-ampharos": {
@@ -1124,40 +1124,40 @@
    "normal": {
     "file": "normal/mega-heracross.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 10,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "2f3111c6fd801286ff05c430a0aca0cc4c719b80",
-    "fileSha256": "47cd34e186125d784ad274b4429baad2bdebb48fa9dbf32a00f8df535cd566b1",
+    "fileSha1": "e9ee53812e78ba9a00244e6dce9c7343a6d607a4",
+    "fileSha256": "448527ece53017f857ae64b39758e5b0db0a62deac66c93cb8cc3f68ac435b74",
     "firstFrameSha1": "ad9f839df00f352084d7107e3fefd46c2db282d0",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/heracross-mega.png",
     "sourceSha1": "e05ffe1061d4a213832c7d9fda6b69aab824a134",
     "sourceSha256": "c3b86aa317e799c2414c2a320db0c0bb4f111462b871568254c85b0f7ab9a8c8",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-heracross.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 10,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "78b291a1abdf2ee955ed396b1d5e6ea05836d2d9",
-    "fileSha256": "6f641b0d0e9a46bc37ee365e96870c87a9abdde848c93c7d2c7a6ee1ac1f3490",
+    "fileSha1": "04a5e20892a374eef249e3284d70d8a04b8d3424",
+    "fileSha256": "30a4b73dc171efdc3d4245d27f6e0d25f6b41b3293de5528b0b2ba0ebdb82656",
     "firstFrameSha1": "aae578a24a861b997fb8d41864caf82038f4dee9",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/heracross-mega.png",
     "sourceSha1": "8811b616f03730e2928d918b58b05d17f7ea468c",
     "sourceSha256": "24220cd90cac83b5e73239f400c60ef50b7294b2495734ed02bbfaa37416f726",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-heracross.gif",
-    "fileSha1": "380fb017b64d8e893ef09c225863753e3eefdea3",
-    "fileSha256": "71189bc9bd236013b19ddb32ad25f2749807dcac195b3e719566e39d341b6f90",
-    "motion": "breathing"
+    "fileSha1": "f744ea5bf1115dc17913a02bb14bd7db1a0d63bc",
+    "fileSha256": "5b2d5ed8d4cf0b59f4304044db8280b527ebac405353ecc267e2c8305a14ca60",
+    "motion": "rig"
    }
   },
   "mega-skarmory": {
@@ -1168,40 +1168,40 @@
    "normal": {
     "file": "normal/mega-skarmory.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 23,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "05bdcdcadaa680591d29121b92878deb93fe055b",
-    "fileSha256": "4c7ec1a25af68b5db002d56a351900d3989a9258e900206fee467cd489a94c53",
+    "fileSha1": "05bb6a83ff52722437d4d47c8a01de900919c36c",
+    "fileSha256": "d0a816be05f0c92eec7f83ddeac18a688c90e6669ed90f898ba18db88f12806a",
     "firstFrameSha1": "3c5238ed2d1ebdc95c208bcb8285c419437d2045",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10284.png",
     "sourceSha1": "a8868ef695f4dfb0646b4bc262b48bb56e5cc134",
     "sourceSha256": "7daf1e929601496844ef44a92b73a3c30c659f59644a53020d8e1f67f3fac759",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-skarmory.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 23,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "08e341420725c09ac3b0305cacb48c98c7e4c44b",
-    "fileSha256": "d9d9b013df13171d37204799afcf8e8a5ad91ab94c1d8ec91723f00816c05863",
+    "fileSha1": "67ec5c7cac7a4aebb3a1fb6de953fdf06496dd1a",
+    "fileSha256": "6e7ca898f1c2825ca9cfe651441f561a4e27442a957c735f5e2a3370e75dcf52",
     "firstFrameSha1": "8550370299bf25fd65caa0b4aa145a144df63f1e",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10284.png",
     "sourceSha1": "64cf16f9319d72cbb574a7fe9df0a34c4dde75af",
     "sourceSha256": "70d915228649883870df24b17d93466cebb2673e55513f52386629354a31ffcf",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-skarmory.gif",
-    "fileSha1": "64a827030e2e8f90e130feefe14c9f0aa259661a",
-    "fileSha256": "f8427ecd9fbf75f776472f5671f857a98bc420fbdefb4a5e30b9217dbc28c19b",
-    "motion": "breathing"
+    "fileSha1": "643fafef63da54ea1e359f697a7e0066fa12d20a",
+    "fileSha256": "06b4eb7b2b9fb5d974a9cdad33a3448eafc8198c7935e4e31dfd887d3ecea869",
+    "motion": "rig"
    }
   },
   "mega-houndoom": {
@@ -1212,40 +1212,40 @@
    "normal": {
     "file": "normal/mega-houndoom.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 10,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "e6c90ed8e1fe7fa73f71439a75b75886586492f9",
-    "fileSha256": "eb6b8995da5696b86f9753670684222f7fc7e45f4381efd1ad8a0bae97082205",
+    "fileSha1": "b0976f49e1471df2d7a976908fc7d8c289c7f2ee",
+    "fileSha256": "abe4291aa4917b2675d5265f914e7080729a52b537563406ffb1a2fad98ed4a4",
     "firstFrameSha1": "84940460fbe4006a3386b99d1ea1ef0cf714c01a",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/houndoom-mega.png",
     "sourceSha1": "225f2fa7eefb5eddc148ec718159c57f9f91cede",
     "sourceSha256": "913180be43987b7db932b773d24bdf35c1f838ffee8b8f2975d4ba8216fad9d6",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-houndoom.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 10,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "7ef6af7b0d6bb2063cceedcdbc80a391e9f4a37b",
-    "fileSha256": "bee4db19f3b83941c83ac71e6faad9303dfcba40e35ea5b42ed96a072bcb5962",
+    "fileSha1": "ca4d8e1366caa65892cfebe44ad86eaac583ce76",
+    "fileSha256": "7ae7c79f8cc178151a687371eb3fa13bf95b9a8cc51b1f86cf0a931091cff936",
     "firstFrameSha1": "796b43cb1593bd2ae4911ba8e3654c110f79de9c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/houndoom-mega.png",
     "sourceSha1": "0ce8a109adbba080abb84b72d31e078910061e69",
     "sourceSha256": "18be1613086f6bd60e5301ce4ba297fbf55c721da8faabd1c4ad65cf691b10a4",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-houndoom.gif",
-    "fileSha1": "890911a953d59fb25ff18974f55e7b6ed2f3d9f8",
-    "fileSha256": "28646eb62984bd617578ef3acb03833cd62ee225b2e33aa25822a00cf0f31e67",
-    "motion": "breathing"
+    "fileSha1": "09ef135cb38db7dc75edb5565980b26c97209541",
+    "fileSha256": "6ef127772deac561ff6082c0d68da9c6c152f529255b8d50a627650dc7bec2d6",
+    "motion": "rig"
    }
   },
   "mega-tyranitar": {
@@ -1295,40 +1295,40 @@
    "normal": {
     "file": "normal/mega-sceptile.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 7,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "b95c8ac383296d74aec2db51ecc8f7c5288628a7",
-    "fileSha256": "2a30dec2ad3443d85f595a7850694846c4eec6ea499d6c4723b6e8d26a83447c",
+    "fileSha1": "2c0ddf6147068c9daef39cf5f9d56608cb5876c3",
+    "fileSha256": "59fc7538b3a6a0c6fc89a2c513272d71372a4c3c6f0d934b671a11c20e80b611",
     "firstFrameSha1": "b777e1ee0f92b418177eb2213c20fe077920a8b0",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/sceptile-mega.png",
     "sourceSha1": "f44bacdb7d75cf17242f593da260c36c9033bac3",
     "sourceSha256": "c246e1da887ba942ce4f27dd964de05022d43c600c0664a284318ebaecb20afd",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-sceptile.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 7,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "b3d9b83429ac90ea3708bdff466a81b2fae59f72",
-    "fileSha256": "095b1b2d17b4c6ef0d9f749a4bf94aba724f4ddc6a2511dc2df9be305f2315d1",
+    "fileSha1": "abda3f2aa9d0cd1f71ee172d1a50996531899a24",
+    "fileSha256": "fd9f6e5056ba4397b2cc6eea049b233cbbf94412f81ec76f0cdd22653ee8400c",
     "firstFrameSha1": "03ad00acb265738daada8f6721018115090e344f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/sceptile-mega.png",
     "sourceSha1": "11f2a1c40d46efe1237c11b03e5f9027398108b3",
     "sourceSha256": "8ab4829e0d4acd52574341c87801e4f074a26df1540146cc84111afa754475eb",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-sceptile.gif",
-    "fileSha1": "b69555c475da5e40722a32f47da852f59b4894db",
-    "fileSha256": "9cfbf39719a43f99d2514d52163601ac2e316155c6746b2d67552f11cd348e26",
-    "motion": "breathing"
+    "fileSha1": "77a66c621e30957e448d140630884c55f8aa67a3",
+    "fileSha256": "87e8012f24c644cbc307bf3c35d7b66a13723631b8fea3fc85cf0a3ec596ec0d",
+    "motion": "rig"
    }
   },
   "mega-blaziken": {
@@ -1380,40 +1380,40 @@
    "normal": {
     "file": "normal/mega-swampert.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 14,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "feda6109a0028d3f3650318b60548b5a4d70b3a5",
-    "fileSha256": "7b442868acbfd6084656b16d61147146460b0148ed620abeffbca5794558d7e5",
+    "fileSha1": "e8f2ae13bd651fa3dda102090b6cf41d9db7282e",
+    "fileSha256": "e77e5d57ed16b968b0ec8df5e7ee375ff460dcfc2dee62c7b29970805dc729b0",
     "firstFrameSha1": "542eb7aa3d908e052e27ddf76b2ce1989f73275c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/swampert-mega.png",
     "sourceSha1": "ecd40f1aae126e7cbd2fa4ab8ad683bba4c5ca38",
     "sourceSha256": "256aa57db96b64309c046aafd8444908e1c3fcf13a9e50e8d36512a37327e255",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-swampert.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 14,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "5d11a15b8c7b8346cd64dc8d7063ea740952e231",
-    "fileSha256": "310bab7718ac08051e3ff6496ac7b9a20164eac0e0db9cf650ecaf89771737fa",
+    "fileSha1": "38f9417bf9e474fab8a648587028ec73d20b4685",
+    "fileSha256": "8d62f1eb39b47983431bdd1a0317f395763c96b4384bc902f951ed4bc6e2fdab",
     "firstFrameSha1": "818716d274acb7f2629d897259a62222f817ffe5",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/swampert-mega.png",
     "sourceSha1": "d38e32d6f80907cc2da02ee5731b14f0edd3fe37",
     "sourceSha256": "74131a04d43ad1a9629b9ebb183e0316be3058a2c2a4a512ed0e4c6cde30cbab",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-swampert.gif",
-    "fileSha1": "e5864e1a2a8bb1e874fdc6ebeb232585a34f770b",
-    "fileSha256": "fdf51d2a5d338f37d7b476f2602d68129c91d2e6e7cc96c6653b85a8d115e3d3",
-    "motion": "breathing"
+    "fileSha1": "676e966e2f64c303eb8b60ee77519dfaf42acad4",
+    "fileSha256": "7bd9cfa2d7b1adedd1adae261e970d208fac9ab57c94aee46b7f32e62256828c",
+    "motion": "rig"
    }
   },
   "mega-gardevoir": {
@@ -1463,40 +1463,40 @@
    "normal": {
     "file": "normal/mega-sableye.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 31,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "1c963e8fffcf4e5d40e4126bdd2960bb67cd9a61",
-    "fileSha256": "d4b6ab49278f726cc81bb0c74a3601260a7ba466d238353bfdd3bc86429e47e8",
+    "fileSha1": "74e3ada8f1307c5a6abb0caefd0e89188293f26b",
+    "fileSha256": "120ef23eec4024b3712d001627e7e1f6674df3d10e9fb9f238d61af96f5f1bd4",
     "firstFrameSha1": "3706fc08636b7d7ae6b6b9ffa1034da0de92ea9e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/sableye-mega.png",
     "sourceSha1": "768a0e1c8cb1009ca0337f276ddf62af4e66878a",
     "sourceSha256": "9f637f732b6a1e0afd6f8dcd2854e9fbf36686357566b90eba4204f313b8821e",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-sableye.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 31,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "b5938d6ab12fba714540678a2147b0645f625838",
-    "fileSha256": "e1bfe2a77f712391f0b0f200cad64629936f97f9cfca6bcd17d03be38a6ae337",
+    "fileSha1": "557bf361abfce03c3eaf58d4169c994545ee0ca9",
+    "fileSha256": "687d47ea8d82ab0f01500fde8e05452ff3149def41950c1cdc2f790b69e10219",
     "firstFrameSha1": "eb4a0c1f1e068d98109ed84d3a233f07133da7da",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/sableye-mega.png",
     "sourceSha1": "9ab6134b2e929e18741c597caa7e9ffeaed664eb",
     "sourceSha256": "adf1855b3ed8e2a78d975ec17bf867966385eb32cf2be6e4aac264a8d70a433d",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-sableye.gif",
-    "fileSha1": "9ed7fafd1c7b5c5f4f73bd55074b0aad415b6b11",
-    "fileSha256": "fffe0841f8074bcf03506cefb62f4ef4545fa25de9ada77298803575c349da62",
-    "motion": "breathing"
+    "fileSha1": "466e441f581f1b09649554f8c41b17ae2dc34c06",
+    "fileSha256": "408b4667729cfa2b460f40b019f49ebcac50eb1f7469fe3dc0f7e3b56c7c24ed",
+    "motion": "rig"
    }
   },
   "mega-mawile": {
@@ -1546,40 +1546,40 @@
    "normal": {
     "file": "normal/mega-aggron.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 12,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "1f952cb2dcf0ea6e028d9e666c81474b865afe12",
-    "fileSha256": "e7b686bf3f0c9241d19184dac6430fac67ca4673d1f99d0e95eed408e425592c",
+    "fileSha1": "d07d324cf8c0a9be66f90e421a219a7aa03b1857",
+    "fileSha256": "235d93d7e2ad4b2020d72810eea5c62edc8a84ed84ede5387876d085472d45c0",
     "firstFrameSha1": "6b16ebc2ec49a67a3755ffe10e744d73ccd0a677",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/aggron-mega.png",
     "sourceSha1": "9eabeba20bc577a8ad2ba34bfa07945f67c8c8e1",
     "sourceSha256": "95fe84d3fc40c7a8e1757039c4e476fb2f4cd5ed5395475a00ae2704e23b284e",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-aggron.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 12,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "db63a463a69dbb813b45475f6fe400c59b5d0e25",
-    "fileSha256": "b63d3ea96400b081aefaa321f01523174323b1f8b4db046f187a309601122eda",
+    "fileSha1": "a48aee97dc1eb422a5d25f050d02522be4724c04",
+    "fileSha256": "47c2c356cf09d2fb0678620ad4a068e22562f4277d5d2eba346f3513e529190d",
     "firstFrameSha1": "3e4a23d9185f0f32fcb9615fc69bfdb9d95e1814",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/aggron-mega.png",
     "sourceSha1": "f7f6a86e8a92cebc96675bb9231fad2d5ce7bc87",
     "sourceSha256": "b9db1400f2b22df1dece120d59ecb665a9bcd3d3d10016d274742de550f2fd33",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-aggron.gif",
-    "fileSha1": "7596a6ef70b62fecf7b2990d419de68373d849c2",
-    "fileSha256": "36d4f2ae206886fe41d823221c033002f2610f7b616074d177d2935cfa1b037f",
-    "motion": "breathing"
+    "fileSha1": "33deb05446b8876abe7217368cd2e926a2a091f7",
+    "fileSha256": "f249a4e1755be4934b3ed3d989c982ed13d443554a027639d91217e274f682ef",
+    "motion": "rig"
    }
   },
   "mega-medicham": {
@@ -1672,40 +1672,40 @@
    "normal": {
     "file": "normal/mega-sharpedo.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 27,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "e9af1b3236954b31ea60d4b21e74214544faffd6",
-    "fileSha256": "dfd27ca857f9e7c1f4b1d9c4196fe370d7c3639d9f08a6ff72996061ee38929e",
+    "fileSha1": "423932bab434adee5d3a7d2ef0afddeac56939ce",
+    "fileSha256": "c4379884442ef2bc8a30110c499c50b7d976440b92155f979ae1c43b96d3b853",
     "firstFrameSha1": "3ee8a6f23e09593a24d87ef8ab296e08c30c0c23",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/sharpedo-mega.png",
     "sourceSha1": "5ef0f9d6e9799accae9a9c594d8f56bc2cd5c956",
     "sourceSha256": "a7fc94f557f460a44bfaa0eeb0b2175dae08c1baca327ea8c19b1d2c0c657a32",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-sharpedo.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 27,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "b9de1bff9574fbb1de9b4a4bfe3e0b71d4c381c6",
-    "fileSha256": "f950a82ea1194e5a1c463e7b7a30d6b9249c5b56467014a19122899e11d7d42e",
+    "fileSha1": "0dbab3a112d1acb51f1286cfaeb91e4e05787b01",
+    "fileSha256": "199482109520b96043d763d98a3c18a646579aa93840d75a103b103f10942fbb",
     "firstFrameSha1": "a14f4ab5453bd8667397b563002c4f88c99d5dde",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/sharpedo-mega.png",
     "sourceSha1": "068377144888bfa78bcf2a7b2ea4850df1cb04ab",
     "sourceSha256": "42798700c1d8550ec24450bc0e7c1ca9542db7107c8c1a438950efd9014bffe6",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-sharpedo.gif",
-    "fileSha1": "b3ab152c50914aafde9a84aab4b61aff5724508d",
-    "fileSha256": "9eec485ce1556eb4cba19c91337fc7175d6a029c0e81fe5c484abdf6b7b1d68a",
-    "motion": "breathing"
+    "fileSha1": "760cc18f6d8823d30ab3cb01f45029876000aecf",
+    "fileSha256": "dd9f09cb727f0eb48647a74a31053fc733abaae270ecfb961295b9f5d9482d56",
+    "motion": "rig"
    }
   },
   "mega-camerupt": {
@@ -1716,40 +1716,40 @@
    "normal": {
     "file": "normal/mega-camerupt.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 11,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "52cd8f78077fa3b58608c239c13ed7b3ea74b7db",
-    "fileSha256": "64ff793c5f84d00ec60d75925d1012a62d51ac38b0474a8c6c36859b88bfe8d2",
+    "fileSha1": "d6baf1c7ef7e357654e73c7404bd1c0e4d0c9056",
+    "fileSha256": "b405012a2112bc09f1dfe019902c8f4d0386f69fbf3f87c63cc68f597d1e9f54",
     "firstFrameSha1": "dc761dad8f0d47acfe5b0f86d5721a9d4ada5ddc",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/camerupt-mega.png",
     "sourceSha1": "d5478eee8b8bcb4980e2fc7672aadb78d54dd1f5",
     "sourceSha256": "808e8d5808f56f0badaec516181c34bf6c963d66acb54fa180587bb3f806cbe1",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-camerupt.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 11,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "1e86a1f6a5d22ecbbf8ad56bb36f90f826c5134f",
-    "fileSha256": "a56ccf1e8259c23e60bd912972fa3ac55d8e32dc74b140bffbf655ff43495ad9",
+    "fileSha1": "e4c038a0e939c38ac3c28b2d0138db609cf28f9e",
+    "fileSha256": "5b2d041545d472b3321f98953b2abad534fc2e3a2b4b3320e5a47b28ddc27cd9",
     "firstFrameSha1": "8bc9cc8fa01dd9846d8f29275f02cf949e4f5aaa",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/camerupt-mega.png",
     "sourceSha1": "63968b444fcd84ae6e4261273202a9ab302f0390",
     "sourceSha256": "f25dff6afae9365e07736896ce1b934552b87863211c20458da8e010ea045e29",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-camerupt.gif",
-    "fileSha1": "7b9bc89c4a459d5de8471b6f97ee1a220b2ce1e6",
-    "fileSha256": "02907c5ebb5073c2e61b3f8804b8bea37f8f2da3bd842ee79ae011a6e3a4c8d9",
-    "motion": "breathing"
+    "fileSha1": "aecf7f3816af9d28eb0f69fdc8226ea3bf6a09db",
+    "fileSha256": "5b29770976a970af602a167d63ecdd98a606438a4bfa9d0df277a2e19bc28173",
+    "motion": "rig"
    }
   },
   "mega-altaria": {
@@ -1760,40 +1760,40 @@
    "normal": {
     "file": "normal/mega-altaria.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 14,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "fd341968cdab9d4307d11237fc4979b83810307c",
-    "fileSha256": "667ddbf5b43981f5072c3e5e6a49d51e33ff197994e471a3194cdad15a2e4147",
+    "fileSha1": "dc3fc466e1bcba856160318c86217a6f4a8aa735",
+    "fileSha256": "63894ac1699162ce22f044dd86b98fc0555360c9d18779e5bf3225044128dc73",
     "firstFrameSha1": "d6245238b85d5d919f9f38c0fa52e29cd4d86a28",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/altaria-mega.png",
     "sourceSha1": "69f5937c894e2401ef86ae97abcafc819aa17beb",
     "sourceSha256": "de73b10002dcec54aaa5a6e41c431c690f90d320be0d0b65c0cd08b0ff09b62d",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-altaria.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 14,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "4e932dac0fd3178085d15ccdc10a09b7d5ce1cb6",
-    "fileSha256": "c95da84361909a03244003494759c42beb589457b23df016590ca1e7446aa25e",
+    "fileSha1": "04f3d6d5da51814beeecbbebf7e918b97bcf1ad2",
+    "fileSha256": "1ad19db13827b0ffe3be6172d02676598e6a99f89873ca29e46bd4410162f4f7",
     "firstFrameSha1": "235a40f0471a6f5a01a5294928309db1baca0692",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/altaria-mega.png",
     "sourceSha1": "cee0f6f1e71f7aae9027f90f84746a25a31fe42f",
     "sourceSha256": "9b13c7ad721647abfea2be030479e29b126a85f8b93a8f239bd56e7fedf02f46",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-altaria.gif",
-    "fileSha1": "e88359a43768cc94702c783db5877cdeacf435a1",
-    "fileSha256": "56ff7996bf3fffb9a023e14f0f9e41e473b74f3b82ddedc3ffce26b2be775ed7",
-    "motion": "breathing"
+    "fileSha1": "eb44efe5743ad58274b61520a50635faa3d475f5",
+    "fileSha256": "61c803f6d5074e0471b9a5f4be2aa5ea1d1292cef2b217d2034106c87d4fe5f6",
+    "motion": "rig"
    }
   },
   "mega-banette": {
@@ -1843,40 +1843,40 @@
    "normal": {
     "file": "normal/mega-chimecho.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 13,
     "size": "96x96",
     "colours": 20,
-    "fileSha1": "ba877057fcdccb0694fb906e33fe528c49b35ad6",
-    "fileSha256": "c9b16fe1aa6e759c99fb4bbd880ab6ffc9a327559492abee6b8116c86f3d8681",
+    "fileSha1": "4bd092cd27fec7f2df641d10573d3b925d2cdb77",
+    "fileSha256": "a35b986c129064c5d10fe304c97b4a2e575028ffde8779ab3ac722080c27c8f8",
     "firstFrameSha1": "705ff8dd4e8386daa424cb1b39f48328b5db8743",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10306.png",
     "sourceSha1": "3d9971ca96931b7af331cfd8871125350a376425",
     "sourceSha256": "2f47bcdb71f0b2bcf1d46a6fff81dd0da135b3b3cfbc7f186983969bc3bfee7c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-chimecho.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 13,
     "size": "96x96",
     "colours": 20,
-    "fileSha1": "e15fd650f10755b044249fa45f0683f62f4b7192",
-    "fileSha256": "acc6eac76d051abd3951ad9bd5d8a477e3555748ec0154a0057eea6bbab654a2",
+    "fileSha1": "3e68c00147bb96c1cb715721f5a89cb450de9adc",
+    "fileSha256": "b6378d142cedbec35a96ddeb51f2e5c7b1e5b5ffbdbb5e5a2a69a7e38c71a0a3",
     "firstFrameSha1": "9808cbe303910089d7a19b746cc9ca064af18f1d",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10306.png",
     "sourceSha1": "6ab869b79bc98238ecf1f23802103d21631bfeee",
     "sourceSha256": "251326d9536363e11dbdf469328ae211c7d51493dfff7f8987f63d08825a392f",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-chimecho.gif",
-    "fileSha1": "15ffde8f353d52a062f4c6544479d1d49228e0b2",
-    "fileSha256": "34b5fd67651fccc76fc0d1724121677fde679ca65109728f23520c0820968416",
-    "motion": "breathing"
+    "fileSha1": "e308c625367112a20c081dce0f35e689d37d71a6",
+    "fileSha256": "16419383dce57be4c427851307ac9f6d53cddbb261a806d49a25ac5450816698",
+    "motion": "rig"
    }
   },
   "mega-absol": {
@@ -1926,40 +1926,40 @@
    "normal": {
     "file": "normal/mega-absol-z.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 14,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "b01d64472fa646e4cf564876025aa3fb8f501f35",
-    "fileSha256": "9a27fe993f8a8bf5a350262b31216087c93a7ea0f660762f67228be2a2487275",
+    "fileSha1": "d90b55aa0d7698181fa9deb1ceccb22b375e2ede",
+    "fileSha256": "636c3d0caf72067934ed440695378d00cdc93bb023d20aea46b45040e2c52f2c",
     "firstFrameSha1": "b472d8e1ec4bc8827661e3d4cba8ad1c6ee846ba",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10307.png",
     "sourceSha1": "cc4e60ed55804c5bf707a5f1455bcdac03b20015",
     "sourceSha256": "2c38a1de479c21fd776cb60b86dc15ecb93fdb4582f860aa914a0c60fc838d0c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-absol-z.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 14,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "2f454071473018377deae3ba9feaabb34fe9f5b4",
-    "fileSha256": "805c5ce98a1b7e8fdb733eb9cee8e12833e7a308d264eebe295a9bde98074ad2",
+    "fileSha1": "44a0d903d96bd2c47c8d427a6af13a4f2810dd24",
+    "fileSha256": "d428c6eff1c3df458af5ccc02221b3468b63544089e19986fc85b2e9dacf0438",
     "firstFrameSha1": "fd144c0b84b0b41ef1708fb9dfb723c47d9399fa",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10307.png",
     "sourceSha1": "01d50358800651d40ae24e7dadd6bb4534da4bd5",
     "sourceSha256": "e3df5d79498732b6f3b1a5f55e071c262a1631904a206e202b8cd7623c2b206c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-absol-z.gif",
-    "fileSha1": "3eccf503c27412d60f27649465605317af1688dd",
-    "fileSha256": "ea3a8b9c0230fbdfbbd4878a953618a47ffc06eaa0f94fdc801225e8dcb70002",
-    "motion": "breathing"
+    "fileSha1": "9bf0e0c315ee0e9473ab38b655b176a781d1dc8f",
+    "fileSha256": "be966127edcd0f6a647ceb3b31fc97313a2df0896a7a48b06de2b3f52f1da09e",
+    "motion": "rig"
    }
   },
   "mega-glalie": {
@@ -2050,40 +2050,40 @@
    "normal": {
     "file": "normal/mega-metagross.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 12,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "6caeb4455f60771a81dca4c0b59321e0bdd42198",
-    "fileSha256": "0d1fa27a9c04d4a6a9f5faab8f560f1f618503b7ff01e9440a974b10a3a1f628",
+    "fileSha1": "c32f073ac7efb6058cdfd8f47b9c6919c1852cec",
+    "fileSha256": "199d9dd7a304b41b969587bd400bdc0894556232650198da2a77c333870b7136",
     "firstFrameSha1": "dbfe253771cdbaca8fdc1fc5f2472113559cf045",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/metagross-mega.png",
     "sourceSha1": "1dd7b8d64a3d01561319c16cda287f8e737e524c",
     "sourceSha256": "79923dfae8a7824ba7d2ae0f8bf7e7d350dae6ce3854a8fb13ea977b02aa3dd5",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-metagross.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 12,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "adf68c50e358cbdc081780d0bc98f6c8c29de6b7",
-    "fileSha256": "caf6a469a87dfdb1a20ada4f1a3357d83da776074622d3a6700f278e71531897",
+    "fileSha1": "a8ed0c193497ca7e432247e4f2c0a564b2d1bf05",
+    "fileSha256": "b3dac94cc7fd3db52f7f3e9f7ec2ab6cd5263bb2d1016f2756b80bbd6d564c25",
     "firstFrameSha1": "e6a417bd9f9bca62fff4e1383a2825205ef143c6",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/metagross-mega.png",
     "sourceSha1": "e03032d914fe909454a1c6e01922730e75320464",
     "sourceSha256": "212a878550a605b3bf5db2b71039321fa192dd4cc8a019ffa9e3e31dd165a210",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-metagross.gif",
-    "fileSha1": "4b010af785ed19d1d2d7b589e25f8b438760c686",
-    "fileSha256": "7522f41823d49c006b3d2f4da12a914be7b42539cb36737b444e78fca653916e",
-    "motion": "breathing"
+    "fileSha1": "d8ae4a6ae82dfa367f493740b69922a7a9e586a3",
+    "fileSha256": "eba8f2728fcb01939605f63047b5a874bffb767c160ce6a2efaa850b131746c5",
+    "motion": "rig"
    }
   },
   "mega-latias": {
@@ -2215,40 +2215,40 @@
    "normal": {
     "file": "normal/mega-staraptor.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 19,
-    "fileSha1": "b2175b8067ff84b38d6335c859cf0cd840499080",
-    "fileSha256": "007ed80a13aab85894f57f0e2816460aad4ebd97a649115b2b762f30fb201b7c",
+    "fileSha1": "3f7a6dd2de2aaca8ee8430f5c2fb2e52a5591394",
+    "fileSha256": "06f1ecda6de5a9ee1e140434897502da5f5351364b37dc033175330346306a9b",
     "firstFrameSha1": "5312a9a24dca3c95c3ec9eb62ae8f52c40a42aa2",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10308.png",
     "sourceSha1": "e4c12abf794fdfa7a1242d4c3424791c2b513780",
     "sourceSha256": "755e888cd010019fb5f862c35b4dc2321540dae1f5c17b01b7cc67fc447003ff",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-staraptor.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 19,
-    "fileSha1": "d94cdca11223b70426861585c17ff3ba74c81561",
-    "fileSha256": "e6e90f1947dc472224e81bcff8c9978d3785595d0be66b5ecb1d164104e87af4",
+    "fileSha1": "cfd20bc1d67a728cebbb22050f8c722eeab7f8c3",
+    "fileSha256": "051b2585b96be4581282d22c6245f73d4fa0e9aead12ec6b9dbce681111d7c04",
     "firstFrameSha1": "65a5a2a18a4173900636181b252315c131b27dde",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10308.png",
     "sourceSha1": "b9c47ed440e08beb46605ae0e2a97ad65f2fd90c",
     "sourceSha256": "fd426a5a6b744ec3701c64f810d9577ce44262914a063eaadc089c17feb6143a",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-staraptor.gif",
-    "fileSha1": "e2fb6e33622f188437502d815783aafef2240664",
-    "fileSha256": "62143477d89b6d8f4d74721fd41ec15a80bb42bdd93b64d0b62f49d472df21ae",
-    "motion": "breathing"
+    "fileSha1": "81ae8f54046f8b8832fbdb69fc097a33aa56b6e4",
+    "fileSha256": "c9783f2b401d3bce040a0e4d63f64a908792f2a0f8bab20afb91b11988f44bc9",
+    "motion": "rig"
    }
   },
   "mega-lopunny": {
@@ -2259,40 +2259,40 @@
    "normal": {
     "file": "normal/mega-lopunny.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 22,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "c11a01bb725ca7a0994b8a13b7cad47d692a497b",
-    "fileSha256": "2137f9a7f39a1f4e9bbf42376301885f18ce883168ef7632c683f0ba9a0c4bd8",
+    "fileSha1": "d339d5256b5e449aa28312e5fe25c9794a7f5436",
+    "fileSha256": "b8d259a647950f4eea9362e396c0a29e93285878f04c783ab8b49f882c35cc7a",
     "firstFrameSha1": "c87bcc7b4588f3bcf1710c315b81ee0c89f8636e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/lopunny-mega.png",
     "sourceSha1": "01519b8b73d67b72a47542fe09449946b593ec36",
     "sourceSha256": "e092a6e0eaf78223a2019a038c56d28abdea19eab6e81ef47688259e84120cd2",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-lopunny.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 22,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "bc2a2a315fec3827a998c689aa2e6df027d0518c",
-    "fileSha256": "1d9cbfd5727221fce5acb07d9a0d30aa3e5e8bfc220f5fa49343440ab02420b0",
+    "fileSha1": "f8f0630747f5e99e8af3ff7fdef5b89ed9210265",
+    "fileSha256": "bccce694b3fd6811f34de325ac064d01d7833438f8b8bb5978034805c099d962",
     "firstFrameSha1": "e1bca2ad285f00daad703e2f10137d746f7ff18d",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/lopunny-mega.png",
     "sourceSha1": "3efdc2514f6a92bc577eaede7a386cbccb2c5d40",
     "sourceSha256": "aa83f540ccf5f19e008a90e8c0851fd5d6a832c87b6e428bc5ad1652f4f29bb5",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-lopunny.gif",
-    "fileSha1": "1e20753be8e033ff838a2cb95af0c69dc01c3af1",
-    "fileSha256": "1dbb4314266d6d96065f5ac70dbc4851e4520b1fa9fd380f2a4fef3f90809c79",
-    "motion": "breathing"
+    "fileSha1": "149f45e3e08ff768aa27ed4449a19940912eeea3",
+    "fileSha256": "d0456ce5641ec588d4c8dd196ba05107c3044591ca37ce6552ae72c67abd49f3",
+    "motion": "rig"
    }
   },
   "mega-garchomp": {
@@ -2344,40 +2344,40 @@
    "normal": {
     "file": "normal/mega-garchomp-z.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 13,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "1b6aa441443765634ec814a1b0a18b35fbc0ef6c",
-    "fileSha256": "7620dfaeb9611c251ef61972ed5b5a550a586fa0f5b97426b2b0a1e59488fd36",
+    "fileSha1": "956f577a6a4514adfc401b6ed1936813605d6c89",
+    "fileSha256": "f5098be191881ce201fde83ca29cae19f83da7fc14ebdbfe9b7080634e5dd01e",
     "firstFrameSha1": "9157a0c7be08b9806027d82f95be1d110d9efa61",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10309.png",
     "sourceSha1": "ef834fd8d9ad17c085d12672ff03f1e0adefcc26",
     "sourceSha256": "9e339f1bd824b354fff326455adda7109ca58d23bbca73adde45a42c85ead68f",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-garchomp-z.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 13,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "6cee0382d55b988e8d0b368a87fe6fd9564875b8",
-    "fileSha256": "7169a0fecbc4437ccf2ccefebbdefce7eb319c6bf29666bb4216d9ad54732f02",
+    "fileSha1": "dd9b2b9882133ba06d17c067e5f71023eb237476",
+    "fileSha256": "b2ad176ef4e0ec9e1bf19e4cee7a82980144707650dddba60f4d843a2382aa43",
     "firstFrameSha1": "a6f5eadb40dc5692f9ca0583adb623df59109b87",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10309.png",
     "sourceSha1": "c63deb1e2ef3d5a30ed4a87c4463db1ef6ec3056",
     "sourceSha256": "922c8aa6828fd20c8de7f46ab70e904baa724fdf3daff0fbe693c632241fc8df",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-garchomp-z.gif",
-    "fileSha1": "68d6865d673fd99a064487ea8283020f49eadcf3",
-    "fileSha256": "8e24ece6f4ef49433c8d41f4929fddf1eefd5265e11e3812a10bc9e7cd6e16c1",
-    "motion": "breathing"
+    "fileSha1": "d156468211884dfcaf0bf0e916683a3abff12744",
+    "fileSha256": "f2fb66f50a6ef7401b3112a603d2abc12fac1f2b5c33811ac2001adb1806acc9",
+    "motion": "rig"
    }
   },
   "mega-lucario": {
@@ -2427,40 +2427,40 @@
    "normal": {
     "file": "normal/mega-lucario-z.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 19,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "73f5fa2e0aab86af8b1c2814f8b2e7cfe3f1d9af",
-    "fileSha256": "f7985707435c6b3c10029aedbb243fdafb8eab324f7931356cc27eb54576d7bd",
+    "fileSha1": "0e9d0ab89c66b346df3e8aed78ad01896add0432",
+    "fileSha256": "278a5ab526bceaf1321822ddcef50602fc59893018ea24e734cd035c058ebb9f",
     "firstFrameSha1": "edc86285ba6491c502ea59869745be53f8543805",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10310.png",
     "sourceSha1": "251475011900be9387e41bcaebaf29fd0bf867c1",
     "sourceSha256": "cc21da34970fefb2ae442b8606aba0b7660b2e6489efd69d2ef04239ca904d0f",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-lucario-z.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 19,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "7b78c7a2cb2c5214f6c91037cf3af7f8fd136f3f",
-    "fileSha256": "aff1db52f77020d723c02ef4ed7043f6cbfbd64873e672f88e20b743cf5d555e",
+    "fileSha1": "0fb4237bb14b61ef8adb935ac9b406b0201d2eb7",
+    "fileSha256": "08bec24935919d7fc398d2ef20e548c502dfb04bd659fca27b25a9d7c1ab437b",
     "firstFrameSha1": "33824ac359677a08524b6c129e24d3b285055c92",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10310.png",
     "sourceSha1": "613da1695c8f9f3ee6a4e04652882a2d9f162be3",
     "sourceSha256": "2b23d50a74b6be71c6d8dcbff2c49079ae23d2c54e367e67cba95576ee3a5af5",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-lucario-z.gif",
-    "fileSha1": "e69b970bf8ee1b53b092ec9fc71293c16692d857",
-    "fileSha256": "7b74ffab44860c98fb91fc839af6e598f054e9dce446f0759cab95c63f0aa30f",
-    "motion": "breathing"
+    "fileSha1": "52a54a219d45ff8e43904aad21a6ff9c6b4874e5",
+    "fileSha256": "ddf98cf9019f6c03c16522ff5ffad3d05416a94cb21fcfaf7e1cb206682bc570",
+    "motion": "rig"
    }
   },
   "mega-abomasnow": {
@@ -2510,40 +2510,40 @@
    "normal": {
     "file": "normal/mega-gallade.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 29,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "7c8a20a4779ad830fb9509729e215ec642f86ea7",
-    "fileSha256": "5ca17e9c7d5e64beac888ff5e2c2cf82cf057539841edac6caf7895f8b8eef00",
+    "fileSha1": "3521f474132dfd7b2a9d8fc76ed80bbbc4ee6cb1",
+    "fileSha256": "7da00e054ad7160d601f1bf07bb045e7f38a6ff674090a3e66440e5db428c0eb",
     "firstFrameSha1": "c71a6098bda3ce7516257d04d1ebcdb5387b931b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/gallade-mega.png",
     "sourceSha1": "05c5a2103df73b4fb05656f0d8d1bc698b1c93a7",
     "sourceSha256": "e4979bf2730b77eea99f233f1e7e20610191bd46d842226d5a0383da940c5524",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-gallade.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 29,
     "size": "96x96",
     "colours": 14,
-    "fileSha1": "b2f88efbaaea6fdc409d909b1bab615fd09db710",
-    "fileSha256": "11fdc7a29f8d50fb0f5e10537facf9361653c8f9c1174f007151542a76c08b7a",
+    "fileSha1": "6d3ac58c91dc11068952ee03a1431f682027a928",
+    "fileSha256": "5dd7cb4b36f1db3b279b9c3b78ff55c1b0827a68b1ad4a88c8b760e162b6c556",
     "firstFrameSha1": "0c11a2eae0f6ff6729ca5017792545e2a146e63f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/gallade-mega.png",
     "sourceSha1": "f31c0289b981d0f8a5a54b6ffed08daff7ae4b6a",
     "sourceSha256": "6d2e9d1b2f41e30d39e66ac0d76f3591aa9d6a90628b257df845dc12bbb647dc",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-gallade.gif",
-    "fileSha1": "a8c5f168bfcc2ef2486079ea13c077db401af377",
-    "fileSha256": "94cf14a421f8efc92f6133c83111f5dbfb5cd9bbfef5455e6ae7390c81332075",
-    "motion": "breathing"
+    "fileSha1": "8b8d3e752f300cea730c5d8a78774c6622922c0d",
+    "fileSha256": "c72a05f2b5c44c13d1871da60c7cb276aaa99d4812f1bbf13783e654c7ad14bb",
+    "motion": "rig"
    }
   },
   "mega-froslass": {
@@ -2554,40 +2554,40 @@
    "normal": {
     "file": "normal/mega-froslass.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 25,
     "size": "96x96",
     "colours": 26,
-    "fileSha1": "c9982c23eb9c268f8ef22fbae2242777682b5110",
-    "fileSha256": "ae435b4238054be33e0e3c28644e9acaa87ce005a518014829e4084b5c59eb4d",
+    "fileSha1": "c31adb7df0b10554a9a30467e4fdf30c67d43217",
+    "fileSha256": "e0ab732bc4d2c244eeafbf8edf5ab255f377c979fe1466a5916123450bd1dfd3",
     "firstFrameSha1": "7e8913b6d5b1981ed3965d1a139f69fbb1fd9438",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10285.png",
     "sourceSha1": "933b949dee6370b514ae1d6bb4e4abad62f7e282",
     "sourceSha256": "3565aabfa75ef5b7e44decff3de8cb487b8731216d8a562ddacd3774e5d30350",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-froslass.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 25,
     "size": "96x96",
     "colours": 26,
-    "fileSha1": "f9880173257615d5b20e26f7a03dcaf459ee167b",
-    "fileSha256": "15edcfbb2071892c3dc03ff46b3f4833566adff4c5e5fb172f736400b8a2e646",
+    "fileSha1": "a0c514ede84587f0197f98792cb6393bbbef32a6",
+    "fileSha256": "9d48eeb0fe471e2ec892492336ef28cedb33c393468a6cb6cd00c2d53266d6c9",
     "firstFrameSha1": "1e3cde2bce97e55921ad03f8c9e15c701e6ea30d",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10285.png",
     "sourceSha1": "67e2b95811fc0604e27ca30d3a8c9a0daace209b",
     "sourceSha256": "b7075b1fc53f417783244ca96e41829b0e6ac8afe266ac35e0ff864987dbae13",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-froslass.gif",
-    "fileSha1": "7ff1cbe6ed8bd41aa14de8c9ce9baca84d9e42d6",
-    "fileSha256": "ad90aefe72b9a434ee66feabf497fa26c8fc4f29c362fba70f9336befa2f90d2",
-    "motion": "breathing"
+    "fileSha1": "e4f00b8004f446587fdff354989d3d4fa246d33a",
+    "fileSha256": "e5f2a7f147c877af146abae0a462357db52295d11f6ff9214b6a92a467791022",
+    "motion": "rig"
    }
   },
   "mega-heatran": {
@@ -2598,40 +2598,40 @@
    "normal": {
     "file": "normal/mega-heatran.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 13,
     "size": "96x96",
     "colours": 23,
-    "fileSha1": "3a678d0eb87e619171f4b593a212dd4d870ab1d5",
-    "fileSha256": "6e9e217ef2396c7b5040296495dce459c1e70e402ff00cf9863bf2a6bb7c9dc2",
+    "fileSha1": "0b119f43fd25fb18850826759b2b9b1592ff576a",
+    "fileSha256": "3db5177498a4005ee91434a6ec906cc1e057969e2d9ee80880eccf56fc1ec5b7",
     "firstFrameSha1": "1dfbc05b8d3536baafaa4c24e1ead2729b009c6e",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10311.png",
     "sourceSha1": "9d223f9c9461d1ef3f95654e4554783850ff8262",
     "sourceSha256": "20af794baee04323b4b5707d44eb76e57df6c86218e8fa45ee9d76d811334197",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-heatran.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 13,
     "size": "96x96",
     "colours": 23,
-    "fileSha1": "ee03b3b87b6a37a524ed64e04f8210e4c37c1e35",
-    "fileSha256": "46efcf970526e3039352eaa38689df620e354c91051eeeb3851a5de2559b004e",
+    "fileSha1": "d03ed21630675d84974832f6868a7f2b508bdda4",
+    "fileSha256": "170ef4eeeece29b6e115db5b31f01e665d8c433184dce00cdc618f2310047dd4",
     "firstFrameSha1": "428a11c5badd7d1fd9fe783a492d2da54a3beb38",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10311.png",
     "sourceSha1": "f7162747e27729cae2a0d2adf2db32cf48f6b299",
     "sourceSha256": "15ea6e1242cae8a7b9e3bf11f99e57e8260519a8d59d6bda7144b9f7762ab571",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-heatran.gif",
-    "fileSha1": "8f83f5ecd60b2935313431846c6c49483352ae5c",
-    "fileSha256": "ac7f9c4bcebff111a5af74d76a0b19b8d9783d5f2919572d3ec83899418e47ea",
-    "motion": "breathing"
+    "fileSha1": "3776baeb57f6a74ea3adeee3b70b668f61e28408",
+    "fileSha256": "0479b100977033df9ca781009db37aa53c476761a1b2857bb4c24f777a759a52",
+    "motion": "rig"
    }
   },
   "mega-darkrai": {
@@ -2642,40 +2642,40 @@
    "normal": {
     "file": "normal/mega-darkrai.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 9,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "072fb7f5effd4cf7a21f575aea02b16e6b8e3cb0",
-    "fileSha256": "e71c60a5d0ecae2b0907f16fbc6d9a6fc77c5a59975a3e16991ab505d33b363a",
+    "fileSha1": "0758f412babbdf9e62c0f757546f3be90d8ab730",
+    "fileSha256": "25d4bbeac2cfd38b5336bc419d0e5e77d84d2425b3ea44aed0a5015411997103",
     "firstFrameSha1": "5ef3390b423a00a0783cc2822811331366cfd35b",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10312.png",
     "sourceSha1": "9e944d712148363cfeb04d35e865d18d97af50fd",
     "sourceSha256": "299dd7998632d572af01a18d304b11f239afa6bc37b634c046327df128fa3f8f",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-darkrai.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 9,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "16c492034b2fa975b236aac9f7cf385d2c173cee",
-    "fileSha256": "5758bbbd5adde9c89a2f7d22d810e6810341f91b578ad143f85f44304cfc6b8b",
+    "fileSha1": "a493eed3521bb454af3592230823f49606850564",
+    "fileSha256": "10765c7346d31eed6a7beec7131805e2a4cd159547c3cc370637474ed7ed8621",
     "firstFrameSha1": "2dc7a1caa55bae3fd57ce6f61af81c6dff19a6c1",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10312.png",
     "sourceSha1": "4c1ecbf7843b8b2d7898c66d0be277c607d8560b",
     "sourceSha256": "4f2f0910b3e3bfe126c00daae505fde51d028155e18a4b1d87bffb7d5793e2e4",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-darkrai.gif",
-    "fileSha1": "7f0109f4c5cea8ceb875fb624d209bd8db1712ca",
-    "fileSha256": "c082544543d67b1762f8c31a9e80047a0b3ed0bdc2e813b249b4237bee8de68c",
-    "motion": "breathing"
+    "fileSha1": "2060c6e1f452c7f3b269ffe494f70e0f06985340",
+    "fileSha256": "4fee19d3b8a485a277cfc326036e540c39e2198b92df1901c9865875b8a35cb6",
+    "motion": "rig"
    }
   },
   "mega-emboar": {
@@ -2686,40 +2686,40 @@
    "normal": {
     "file": "normal/mega-emboar.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "12a2f4cdb4bd45937530c9f3de7ac775f08be61e",
-    "fileSha256": "f8c54f9dafd176cd8fdca4a0128cf6ec32f93786d7fe68e032bab71bc89cf404",
+    "fileSha1": "e722c0255d43cf5c178244532c426cc70b9ee90d",
+    "fileSha256": "e3ce58f0b33faf0514e8d711ad94f447a74b121b207580c81efdde6fc2034342",
     "firstFrameSha1": "00011bae56a4d89bbc6f8ed41715ad0dc4719185",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10286.png",
     "sourceSha1": "453aeca59b8235d0f27f20d4689743d8e02e3c39",
     "sourceSha256": "5fe2cbfb344ed4ad95a95d72769a1bc34bbf0b163e65b2320747aac21460dadd",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-emboar.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "3481148184af5f67408d8e7f75e07721e3626c1f",
-    "fileSha256": "5314851823eaf9692c3fecef574ae5e0ebab6a0a29943727a6494ce649f99df2",
+    "fileSha1": "83d68d7f2bc4f49984389fef56c9f9cd7b770e6f",
+    "fileSha256": "3e65f715b14e4112a68df6bf07ac876a10776fe50076826661451940c5ac9eb0",
     "firstFrameSha1": "9475135ada0bbcc08a6db240fec851324d6d6e88",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10286.png",
     "sourceSha1": "988bec4822577745b0546d3428ed11237a887787",
     "sourceSha256": "6cdcdae4f97926b1a2ad097167f5e59dce5a660ac7acb1209536bd0726bd5c72",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-emboar.gif",
-    "fileSha1": "40b5c4ca536d734429a8d961df9cc9852a5a1e13",
-    "fileSha256": "342bfd4a0a113c16960a4b0aa725b5e3f49ef127ab9b3d4638c82497966c182c",
-    "motion": "breathing"
+    "fileSha1": "645c32f35cbf3e9225981257b424c7768038198e",
+    "fileSha256": "c52ba75399daa91d5ca98882d00b463dda3c11f47c3c19dab376b3819d409caf",
+    "motion": "rig"
    }
   },
   "mega-excadrill": {
@@ -2730,40 +2730,40 @@
    "normal": {
     "file": "normal/mega-excadrill.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 14,
     "size": "96x96",
     "colours": 22,
-    "fileSha1": "d20f2a9a8ffb90b5c1a2f1143c5c7a5e2efc190d",
-    "fileSha256": "b68287a249a62244d1093da49a6e4a7ef1a5d9ce87a547de46cb9099760bca62",
+    "fileSha1": "2ac7731c68c13307c015ed53dd1f49972af16ab2",
+    "fileSha256": "43d916cb939bc888635722d300078a12c6ee6f7e0d25452881b1d7575cd21a00",
     "firstFrameSha1": "45ebeb64c9d4bf018a57e0470c5ebed7ccf55898",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10287.png",
     "sourceSha1": "8ff542f1547700fcc2cf6fc267826738ac660d25",
     "sourceSha256": "52115473909a07de117edd2b937494344f7ffd913df9dc30c18b0f24b91ee3fc",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-excadrill.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 14,
     "size": "96x96",
     "colours": 21,
-    "fileSha1": "215b7a35b770a8b285e7419e1d61cd0784d05cda",
-    "fileSha256": "63f1f4f4c0d6b2d85898d1be62c851875667b95b3005b5b19409070b9a663ce4",
+    "fileSha1": "339cc48d32810637b17a8f1a68e38fdbd0b1f17e",
+    "fileSha256": "8b999caa6abcc51ed8b59483679db3a3bde3b8f3708449cec6a5ab5fdf606026",
     "firstFrameSha1": "3846e05b921156b26857e7ddf24559ba7487045e",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10287.png",
     "sourceSha1": "dad957ab666fce56e6df18aade69663723330a90",
     "sourceSha256": "8cf829971cfa79f35992551fe586fa338c4827b314a140b2f46004e51aae82eb",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-excadrill.gif",
-    "fileSha1": "490fdfed23deba0a461264af6e8a1f4947f20418",
-    "fileSha256": "7df1fd6a596ca3dcd34a2446452b15a5c06f262e5e1790b9fe5ca9f1efcd73b6",
-    "motion": "breathing"
+    "fileSha1": "df641873d4bfe9bc6b532cc722a3cae0560a6d8c",
+    "fileSha256": "3e0ff7388d1f0f7552c19d459672ba2fdfe82b325eff468d4e7ad301bfd5d970",
+    "motion": "rig"
    }
   },
   "mega-audino": {
@@ -2774,40 +2774,40 @@
    "normal": {
     "file": "normal/mega-audino.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 27,
     "size": "96x96",
     "colours": 12,
-    "fileSha1": "fb02f01dcc759e913efb3190d2bb71560bd2f40a",
-    "fileSha256": "ae9ee4342daca41e5b1e877e901deba0ad924f04172cf297831f92773ead23a2",
+    "fileSha1": "102b55817c7ed1b682dbf48f461cca56fead6217",
+    "fileSha256": "e06bb2b474dc1148a842a141da4c40e2ae41cac34f7ebcbe47906c907010853f",
     "firstFrameSha1": "6aa25754cfe388a65632cc0f8cd1b97eed619852",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/audino-mega.png",
     "sourceSha1": "9217b59bebb25b0ee17044a90ef1eeb7cffa1c3e",
     "sourceSha256": "02438c9897c0c572c6eb4569cf5430c317f83ae80324362aee9228ac1cd78d0e",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-audino.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 27,
     "size": "96x96",
     "colours": 12,
-    "fileSha1": "3150e6d1fe7524b22c7f2506e59edca6fdc9c21c",
-    "fileSha256": "4199743bca42fc1491c4bf253c2cb10cc9fe2e68c9e1c13c0eef471b62a475a6",
+    "fileSha1": "f850646329feb67492e2ea9a4733869eac7964c0",
+    "fileSha256": "7c79e1a000f031ff53b5b51bfbd388f78671a529cd2ece19d80636c52a7c464d",
     "firstFrameSha1": "f964a2db66d57f2e7124c921aec6bb0e067b7614",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/audino-mega.png",
     "sourceSha1": "5acf79e45543bece1f5a88d75a330a40392dcc21",
     "sourceSha256": "715f02a6bc3249049cea48fa5a4e7c9b92fabb1a4116783f74825815e6655c3a",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-audino.gif",
-    "fileSha1": "ae361c69dae62290fa3252c2b9f2b638d77b24a0",
-    "fileSha256": "341a98d5c09a3a808eb15a6ee19868a9072644a2d790d2d5144e9bd7731630e8",
-    "motion": "breathing"
+    "fileSha1": "f6f7505b85f7336701ac21fa19e72ecbea051647",
+    "fileSha256": "db2454ea7a8f32617a1b61fa6fedbc7fae5d3fe751ceea6da2e8176c256a9bbe",
+    "motion": "rig"
    }
   },
   "mega-scolipede": {
@@ -2818,40 +2818,40 @@
    "normal": {
     "file": "normal/mega-scolipede.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 30,
     "size": "96x96",
     "colours": 20,
-    "fileSha1": "6f37b5d08000f8269fb9c5f3879a789b28dde0ae",
-    "fileSha256": "d52336dfc04335eb39e8a11b9a2cade70e28da16d10056a0c05dc297ba943212",
+    "fileSha1": "7d06cd1312e01ba37b35376edc45562fe0238e50",
+    "fileSha256": "717046580ee03945180194c995339afa553469683b18436fb642c571fe26c927",
     "firstFrameSha1": "c70c3d261deddbbeee43b80f7cc199c1caf09158",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10288.png",
     "sourceSha1": "71313af7d200d79e3ec939ea3f5b47cf82088ea5",
     "sourceSha256": "5d9fe3be17edcebd519004f66b597c9ed518d5155b807af2f752699d33029140",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-scolipede.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 30,
     "size": "96x96",
     "colours": 20,
-    "fileSha1": "4e785a24faf73c6f56b1f133cb9facc8278831e1",
-    "fileSha256": "ddb9f45e566447b9e32b38c54d14950fe031c41bbe25202d073933d93e7b9b87",
+    "fileSha1": "5d39bba5f642a5beb19133d270223ec8fa285b30",
+    "fileSha256": "36b43b21b777977bd3207881126c335f1f2dea4a68fa17c3aa600b10053e0317",
     "firstFrameSha1": "3d02099cdf7d34d33216d7473cb695aa64190428",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10288.png",
     "sourceSha1": "1d353c751ba3bd475ef89ff0573530cbf8d67c35",
     "sourceSha256": "cb507bf2d09313b619593fa0f1f233e814064a37a9cebd89ec53286c6ec72d2a",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-scolipede.gif",
-    "fileSha1": "c383912289d09fc2bb30ced83f08a524ec176142",
-    "fileSha256": "e246c611060f954df30358161a19f3a4d6d13546ab94651e4344a295a2721bd1",
-    "motion": "breathing"
+    "fileSha1": "51942acc5295c3a5ef18f5da9237f5a32d1ad48d",
+    "fileSha256": "f8b9d13fe1013ced8f25ca8ddcfa9427b06568c23031630c601e59f92449ef3e",
+    "motion": "rig"
    }
   },
   "mega-scrafty": {
@@ -2862,40 +2862,40 @@
    "normal": {
     "file": "normal/mega-scrafty.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 13,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "47d698ae8bb33e2032a1f2fd7f36833d5eaaff98",
-    "fileSha256": "827b4b5d2389fbbfaa326be56ff5df299f1eca0c920f302f2b97766690c1fcdf",
+    "fileSha1": "e8a8b33a8db5cfca0cbb68a560441515bfaea5cf",
+    "fileSha256": "eb1b85ed2afec7c105138ab154c0313114de52f8f969337f794d9a1e6fc03374",
     "firstFrameSha1": "244ce71669fb83291b72a8dd30ce8060c3df7979",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10289.png",
     "sourceSha1": "298349add3f5147aa782a6b676b06463ab66df99",
     "sourceSha256": "d16d5a62936b8d0b545cba722e7a2e7087223b7f625fc5efcdcda2009fce8355",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-scrafty.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 13,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "917537b335b7bb3271b8a26686d847e75383fcff",
-    "fileSha256": "4c40389581bbb07a567c9f7b8a214a0fa924a25cb6959530184bd0341569ac50",
+    "fileSha1": "6a4a4a81a85ad51b3e165621beefc37db364ca9f",
+    "fileSha256": "94dd4df81f320df1b28971c70c3adaef14fd3785b4514b89b0d7b49d83139481",
     "firstFrameSha1": "6bdad90eb97e57f2bc4b4da6da1b60a8736306d5",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10289.png",
     "sourceSha1": "e8771b5d20a2a8c0839659ed20323c56222f77a1",
     "sourceSha256": "4452937955680bbe2ab2f62e62e1a74cd48ecb44c588ee0a2ea40d005b3052b1",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-scrafty.gif",
-    "fileSha1": "345723a39abe302a077e2cb0a1595e473559058a",
-    "fileSha256": "3b70deb7ca72d0db786f5f70c27be97db3b3b1bfe344fb8fa098442ed64638de",
-    "motion": "breathing"
+    "fileSha1": "70862a335e0fa911f1f63ffaa6bd7eae2aaf5193",
+    "fileSha256": "fc2df53750121f626ad3bbef0ff1433b374e6ea72ea69f8709c7ed6f412b9f66",
+    "motion": "rig"
    }
   },
   "mega-eelektross": {
@@ -2906,40 +2906,40 @@
    "normal": {
     "file": "normal/mega-eelektross.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 11,
     "size": "96x96",
     "colours": 22,
-    "fileSha1": "e2b37fbe2faccc47b7dbe15146c97fe505c50428",
-    "fileSha256": "f3f1e7ee25877505b6adeaacde02dee8b3cc5f6f085386f24a0919912f0378a2",
+    "fileSha1": "515b853ab5c223c3ec5794f6d7c2620bef6a45d1",
+    "fileSha256": "8777ef29351cfec4763f620f508d39df60d735e26239a139b78b509aec0347e0",
     "firstFrameSha1": "78f6e07d92564abcf0f20958001b04c87b99e68c",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10290.png",
     "sourceSha1": "d336a05080eae7784ee251870fbe605146e2122a",
     "sourceSha256": "fc9251ed073766f0483d4eb1df130c18ef77ca648d3fe25953757c16dcb6a442",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-eelektross.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 11,
     "size": "96x96",
     "colours": 21,
-    "fileSha1": "09cab57ad0caebeaaa1ffd39fdd9b4095f781aef",
-    "fileSha256": "00f5b110642fbac6d2148ff3e8643c8f109f5c7755f1697e519c17d53575b8fc",
+    "fileSha1": "7edacd605eb8bac057fc291cd854b3f4454aa427",
+    "fileSha256": "0728e28f6619f264cecde71c044af4b57e611baaa8976f58bab9637e30c77ce5",
     "firstFrameSha1": "e68c28e4c5070be025778ef645e6a0b179c55cff",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10290.png",
     "sourceSha1": "a1f4c830a3861e898487f7a0c941a43aa047ea04",
     "sourceSha256": "1f99c7c61fe8b54cf2ab50a9a4550c49e095ea42ec90523a4681a74a50455526",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-eelektross.gif",
-    "fileSha1": "af572df427eff3e5e7bc3f87fe28e87bdb0fdbdd",
-    "fileSha256": "25d44deba3852d0c50d7d1e0c8c737862051e45f872c18b82384adb4f25d0e4a",
-    "motion": "breathing"
+    "fileSha1": "599af6d0b32cfb513b575c4f683277bfd109e8ef",
+    "fileSha256": "4762c8160e9f8cbae7fa0443d1f224c1d19bf683bd38061ecbe79768f05506f5",
+    "motion": "rig"
    }
   },
   "mega-chandelure": {
@@ -2950,40 +2950,40 @@
    "normal": {
     "file": "normal/mega-chandelure.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 21,
     "size": "96x96",
     "colours": 16,
-    "fileSha1": "47355144820dd9e4e994a2deacc3b0c8f1a2053f",
-    "fileSha256": "eaf3d43b34689d92aeeb70d2c15ec807f88bb2e0a89901827ed6e04c9e7d08d0",
+    "fileSha1": "62a6e1563b315f3cf163bd922f609fefefba5ed3",
+    "fileSha256": "eadc5fd4410e477d86db14722a1610c41ecf881c2f52c06c3e0998f66c1e4133",
     "firstFrameSha1": "476212ebbe3649d14c94bb3b6a248dd32452fccc",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10291.png",
     "sourceSha1": "8d8ccbddd76c4f5deede4d717221f1f8b6ee5f22",
     "sourceSha256": "5c7b68623045f342ec513f2b867f724cf5f8c0d0c164a4de5733c79d88020f3f",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-chandelure.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 21,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "8ab1526bb8a4b63a7b5d768a944f99039401c3bb",
-    "fileSha256": "6203cceb6a417b1fcfb5dbb187b8931848a1cec5cce348e65983d0a53db2873d",
+    "fileSha1": "6b4b24bd67958b6950d385ff24de198ab348a28f",
+    "fileSha256": "9fd23bfd6418902a7df3b12b6d942ca4e92b4f9415c1df92d78007bd25018154",
     "firstFrameSha1": "32c4486fab5c77f81722b16711f055a2b7a6f034",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10291.png",
     "sourceSha1": "98d1f751ebbf34de21331e97dfd16dd081fb6755",
     "sourceSha256": "e22cf39ba12d05071183dafce4f79b7979c80c1d8862791969cbad8ee2666857",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-chandelure.gif",
-    "fileSha1": "ca5444552d370856a981f53a111d318cab091b96",
-    "fileSha256": "cdf1d32b3004fdb7e226adf68030cc967f4d61b662a8ef0333655c751983a236",
-    "motion": "breathing"
+    "fileSha1": "3bae8d4ce682df6920150665cf8c24585665afff",
+    "fileSha256": "c20c447b8b5e5c9325b251ffc07ba871dbdb0324af7ef3b81bfdec10f86a9646",
+    "motion": "rig"
    }
   },
   "mega-golurk": {
@@ -2994,40 +2994,40 @@
    "normal": {
     "file": "normal/mega-golurk.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 11,
     "size": "96x96",
     "colours": 16,
-    "fileSha1": "8fdb02f6c2a02a26569e919fc05f2255ac254371",
-    "fileSha256": "7ab627214765fe4147405f5349fe43078b67f0c636af05a1c38497bff0464442",
+    "fileSha1": "8f3028bf521c3b86e45d3088130263f5b380e96f",
+    "fileSha256": "84cfc10077df6665b06cfb35c846fcebd3a5e4e84351829e455c6938a8ffce71",
     "firstFrameSha1": "86aab9cf3e05fd3f551ce4b4df788c8906280655",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10313.png",
     "sourceSha1": "498ff4ddaac1ea61f6caaaf3ac01ad259be7677e",
     "sourceSha256": "6492f65bfd04fcdbe89d14f468689ad1e9dc2d84b0ac00f93549e70e64099098",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-golurk.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 11,
     "size": "96x96",
     "colours": 16,
-    "fileSha1": "2731dfa00acb6ee8712200721bb370d8793da69c",
-    "fileSha256": "ed7e7251d667670e48da62eb4eac261473801ea49ad176a6aca13f03799bb9ab",
+    "fileSha1": "2e43c6d3fc38cc6c7f16fd2d45d183efdcadafa0",
+    "fileSha256": "e37811a0e81f4d3bb46f929e85e12ad882fc9d9f5d9797fe4a91909a9f4f6007",
     "firstFrameSha1": "f1a685a20acf4f42c74e89bf612bacbf405aaf93",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10313.png",
     "sourceSha1": "e6e84391abc54c25cf911d1032c4dd8452e4b3cf",
     "sourceSha256": "e19a2f0d96e697aa7a3bbc1d47630b45cd6a5d3660702faafbef12d16a4f8844",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-golurk.gif",
-    "fileSha1": "20cf22d2e2602720e2db6fdc43c0d4fe75750efe",
-    "fileSha256": "4e11be68b1092472f779941cabac892c626b5783207b0d4e045f0a6fe05f47b6",
-    "motion": "breathing"
+    "fileSha1": "e0a5615a57195aee64f9ff1b0fe154c231c52cc9",
+    "fileSha256": "cb53d24066f1803eccb27f9a6f4f7edf856407805c22d688b01a364169a601fd",
+    "motion": "rig"
    }
   },
   "mega-chesnaught": {
@@ -3038,40 +3038,40 @@
    "normal": {
     "file": "normal/mega-chesnaught.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 7,
     "size": "96x96",
     "colours": 19,
-    "fileSha1": "8089d8d2fed3dbe2a392beab664bdc1ab022e88d",
-    "fileSha256": "4cacbfcb4d4218b797635862505fd856d80952e03cd2e24ed12b8dd216d842d5",
+    "fileSha1": "2b36bcc9d3fe1ccbb2b4ea2d109a435792af3f19",
+    "fileSha256": "ad8687a50f12ed60b0f66deef1c2fa16b755e7aca39195b4d73242124b9edb5d",
     "firstFrameSha1": "a247783f417f3d0b96d69ce1975f7ecd52711891",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10292.png",
     "sourceSha1": "c6ca0aa15beb7bfa8cdf417ad518cc1ede1db856",
     "sourceSha256": "10d3746ce94226f7a723b9aac8390b21d4c20e541b44f14da3dda47800bd7167",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-chesnaught.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 7,
     "size": "96x96",
     "colours": 19,
-    "fileSha1": "55e949a4f4fb9d38e7171798aca42643686510b6",
-    "fileSha256": "e8b674d840ac865b382f2395e30eeb22431978f761b697c5b1a3810ae2741bf5",
+    "fileSha1": "83dd5089e55a7a16fe804c254e189d212f8ff06a",
+    "fileSha256": "0b184fb7bcff3f0caf837e01fb120e31df0c99cd7c0ba6a7519765d2f751f51f",
     "firstFrameSha1": "9362ea83f1038cfb92ed515cbff0ef013f651046",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10292.png",
     "sourceSha1": "ed382b65f6dd333ca8198d83be1d01d9e3284e49",
     "sourceSha256": "02508397ce964b9bb68907ca7d7cc73e12dbf370468770f16c2a2f4b95306b5f",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-chesnaught.gif",
-    "fileSha1": "0132b6145124e26766a76f3d1c0647d37b205dc2",
-    "fileSha256": "a7c2158358bb1d8b05d3208ad4d27639426f05adc61bf157170f3c0fda8ebc6c",
-    "motion": "breathing"
+    "fileSha1": "1c99930892022e4bc013b3d6eb37729d0ab4cd6c",
+    "fileSha256": "519883acb8e5b75ecd86f1bb544bcabd7ac8d80271340057678e00045bd92ba0",
+    "motion": "rig"
    }
   },
   "mega-delphox": {
@@ -3082,40 +3082,40 @@
    "normal": {
     "file": "normal/mega-delphox.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 9,
     "size": "96x96",
     "colours": 37,
-    "fileSha1": "c21679dfd967748a18e4b39f65be4abf423de15a",
-    "fileSha256": "5c96e38dbe5e7a04cb9f543349dc0673e822a7e225875903cf4413886d070f3f",
+    "fileSha1": "c00892be579b1f5c48b3d8cd0342af36eacc0858",
+    "fileSha256": "84c66b9ab6a984a8da830569b137a6bca1c0e4833e25989ec9b167eb792401d9",
     "firstFrameSha1": "a53ecfaefe10274eb7aa5ef1f5c8c606094689b8",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10293.png",
     "sourceSha1": "4f853f8bbc9695fe0277938f5fef601cebc99d40",
     "sourceSha256": "d07c9806d43b9bb01e0424d38ab8d1861db025c074b845051f5062a24d61f74c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-delphox.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 9,
     "size": "96x96",
     "colours": 36,
-    "fileSha1": "933a5fc589020c964578187df2440552fa4551c7",
-    "fileSha256": "a90254ce122be50bedb533de57edd1cf3ac26f60ea8ca70c21a21a6a3dc6f733",
+    "fileSha1": "21df9be08a49cf78f236b0b6191f6bc5d8932dd2",
+    "fileSha256": "1ea602c2e93690bed51f43061996aab5637d6eb1c457f196257e84de7ddc085a",
     "firstFrameSha1": "dfc850ab5d841b7f54975d16375c66e7da80b3fc",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10293.png",
     "sourceSha1": "72ebec5202bb504fe1edd06705a15716de5a6624",
     "sourceSha256": "5d536996d8416540714322f9c083352afb28f03a243c6c13869cdb5cbe8dc136",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-delphox.gif",
-    "fileSha1": "5606dc56fb14ec9a60eae979446b953c05be5009",
-    "fileSha256": "5134fffc6cff189225a66efc85a1398508b4dea3f1a5d33f3196695dab492b51",
-    "motion": "breathing"
+    "fileSha1": "b1ab7094f845caebecdd760b4d431151bd80457e",
+    "fileSha256": "b6ae1c64d1c8b715a535c6d924aa9ede41a23538c3015e4b93d680c9091a39ba",
+    "motion": "rig"
    }
   },
   "mega-greninja": {
@@ -3126,40 +3126,40 @@
    "normal": {
     "file": "normal/mega-greninja.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 12,
     "size": "96x96",
     "colours": 24,
-    "fileSha1": "91f7d964c86b00303ca21cc8882c8de5cae63ac3",
-    "fileSha256": "77e29223d8df55e06993596e26e7e783c90f9a1541bfdbec30c2095bf801c475",
+    "fileSha1": "ba4db51364c2d4e587a46bac329901bc3923f540",
+    "fileSha256": "9b1fe14265e9ad8465fee8b9b2dc1f429a69d9529cdb9fde289c9f74b5531df1",
     "firstFrameSha1": "e948320f33bf949599df4d914a6877b79e693d96",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10294.png",
     "sourceSha1": "942a3f4f58faaecaccf465ec13e050139f4cf20f",
     "sourceSha256": "c576e5ab02a06ab3f62029c3e797d53219607d856a4eabde52de2e2a126a14fc",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-greninja.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 12,
     "size": "96x96",
     "colours": 22,
-    "fileSha1": "61343a4fedde7c3f4c93e4106c644346b63b0073",
-    "fileSha256": "ca401eb609a4bd3dc00ca6110cc1afaf1932d2330907dcd64e216a28606e9011",
+    "fileSha1": "50fbcab15582d630591821de44cc29439fdc3b3a",
+    "fileSha256": "78e1bad9b7836f03ce77c5c63e9ff582793c286d8e1d7ddaf5c9a35011566054",
     "firstFrameSha1": "dea0d4f3ea8910f0dde6f13675a34dd14af46d91",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10294.png",
     "sourceSha1": "532b2eafc5372e3d90961cbed72070251cb69d29",
     "sourceSha256": "0560e198b374fc595a3396a6d97b69a7bd555168a2d9f7eb2194dd91cb2d4b39",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-greninja.gif",
-    "fileSha1": "1946b5a45c95742e03c7c9ff8fbe786270b5e237",
-    "fileSha256": "f8823e10817aac4e1f9828062259fc339b7a75ab580ed4c74005de96837bd8ae",
-    "motion": "breathing"
+    "fileSha1": "e6df5805b72d0356194524a0ee67f82be14eb19c",
+    "fileSha256": "e565b669160516c8181ab146a3ec6e851404ed849e504263f8df08ead219a1d3",
+    "motion": "rig"
    }
   },
   "mega-pyroar": {
@@ -3170,40 +3170,40 @@
    "normal": {
     "file": "normal/mega-pyroar.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 11,
     "size": "96x96",
     "colours": 18,
-    "fileSha1": "544b8f8138ce70081b0790599d910a280a773355",
-    "fileSha256": "966ffff84fc6e2f2f59308911b3056709e942d2f7452cd1313f4f843950d3061",
+    "fileSha1": "c6d86cf08c49f59f01071fa91db21fdbea7ed925",
+    "fileSha256": "e1b9873d495f8c5bcd5c0458e4839f37bc1d877441a440970b9735f90995355c",
     "firstFrameSha1": "073a9520c5564c55ed3fe847a42a1a2b8385fc92",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10295.png",
     "sourceSha1": "387216c63811389294ef38016927d7666a75f0a3",
     "sourceSha256": "3ec1aca714ec301f083e51d0b75c226491acba00b5fa160e890a8e18a41115e8",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-pyroar.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 11,
     "size": "96x96",
     "colours": 18,
-    "fileSha1": "992bb830b0ce58e6a5108896a27900fb387c1ef7",
-    "fileSha256": "81509a12d439a919115960d15268416e342f76202654864da89d4de0609b175f",
+    "fileSha1": "e9ef04cc24584be89dd93472418a76098d9b10e8",
+    "fileSha256": "23c4d4e86c05063f46219866ea0442290302f21f1f93ffab0b88663ce12bceb7",
     "firstFrameSha1": "4b0160fc0c067beeb5a84527121ec24b0579a060",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10295.png",
     "sourceSha1": "6e3e60924c5e026db122eaa5980446fc8aa75362",
     "sourceSha256": "d9a0dda635b2d29f4eeaf77750576bcaa15ff1a3a8f97b481c8dc7b2d8fed74c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-pyroar.gif",
-    "fileSha1": "04c9de86a986b431ed932feb47c707482b101d8d",
-    "fileSha256": "28a3e4aea7119c10e2ee4cc09fff22caa9f9265bd408d55e5452c4c05ba09fe0",
-    "motion": "breathing"
+    "fileSha1": "7fb890e29e806715599b5b80e620d03ae6056976",
+    "fileSha256": "35ce3d26111e69cfc051fd132a57e79e66c082b78a1d1ab3621fb5ec4237d19d",
+    "motion": "rig"
    }
   },
   "mega-floette": {
@@ -3214,40 +3214,40 @@
    "normal": {
     "file": "normal/mega-floette.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 12,
     "size": "96x96",
     "colours": 17,
-    "fileSha1": "fa0c96cb4cd5db0359366ece78db3969ea7ee2e2",
-    "fileSha256": "8e05c0845ef57418df7b0211b41f9dfe56e679f2e2d9ec2138be5dc394b915ef",
+    "fileSha1": "bf2638d8590daca24dd76e15ed122f55b21dac61",
+    "fileSha256": "5b0c8adaf5f17a6d4487597a8100c41ddda1498920b7c72ee4af5b4bfe7092f5",
     "firstFrameSha1": "14fdf3a174b95c250102fc684c4c123d859f30b2",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10296.png",
     "sourceSha1": "40a472d1c5572b4b710093f7693ddd9183f6c034",
     "sourceSha256": "fc25ba9f9e4ee02efe47067a6ea937eeb73b1ddea4a6fd6b33a4ec52feeca86d",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-floette.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 12,
     "size": "96x96",
     "colours": 17,
-    "fileSha1": "a0acdd049e5ba7eb55c87b645344276e0dca363b",
-    "fileSha256": "6a282838d3ed32e695b28dd54af51b290ab92149d6af5f3304478f14966023b2",
+    "fileSha1": "45aeab94ab05d302c5d625d34a32e7d0b3651230",
+    "fileSha256": "b1ac34e74e519d6c2e572cf021f9df600b577b40c0c9e4a083d86b0fe72772ee",
     "firstFrameSha1": "23346cca6d2dec7258fd8c617dd59261fe3f3a9c",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10296.png",
     "sourceSha1": "93d6afc52b1b61110e2058d2d3b98ed0e4b7d34c",
     "sourceSha256": "fe1319316f7837557715351650475369d7c931ef0e7d4fd1481315bc8b179fd1",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-floette.gif",
-    "fileSha1": "c5f0578743d7cbd6e2b3fef80fbb5a3229ca2c13",
-    "fileSha256": "bcad9f28dc87c631c70fee53e2cb78ca003935e25b147ba7a7f4f4760a54882a",
-    "motion": "breathing"
+    "fileSha1": "698dbd7aa04a4b6b8866147b2981bc5ba760f94b",
+    "fileSha256": "dcffa16f583d7c47a908a134323b0327d71def317427a7ec9188a5da7a6c8ee3",
+    "motion": "rig"
    }
   },
   "mega-meowstic-f": {
@@ -3259,40 +3259,40 @@
    "normal": {
     "file": "normal/mega-meowstic-f.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 17,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "a85223b6f009149fff71f900571c3f45bbb6b5ab",
-    "fileSha256": "b3387ac067a6fe50c96358f062ea9fff3ec8c404ad04edfbb65ff99a3f408a5b",
+    "fileSha1": "6160eda8a5eb3b6bc45226e7e83e9cbd5c9f5653",
+    "fileSha256": "7c310755eb73435fa8f09787bdcaeb8b9f084900a978525ec45e3ff973fc3d34",
     "firstFrameSha1": "15049abeb61b66472cc6e77beaad5cade8b06ef2",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10326.png",
     "sourceSha1": "34536214db1e93b2d97bc26bce2a5564e8c8a27f",
     "sourceSha256": "94a64feba9f154285dd10d49329cbd53eb281d291735c391f72ad0b6579a0466",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-meowstic-f.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 17,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "54863849f098238731d9162c0774f8ea54f979d2",
-    "fileSha256": "ce2ff9d9e281bfaefae2a17ab2d18cf9d741811d5dbc192515534f6b7a60d73a",
+    "fileSha1": "3acd6e9eea0b24515bf55e58aec848212ca32fe2",
+    "fileSha256": "8959e216b4c66e44f7b9ca98da36418c9372e52f0bf46a139ad9b06828e25105",
     "firstFrameSha1": "4501f488f53ffdabcf5dc7ffee4417e10b3fcd65",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10326.png",
     "sourceSha1": "8e405d77aca04b0080a5a4e946ed4ea32ece1235",
     "sourceSha256": "92e67fe63cf9cb007da1bfbae43cd4839d4c57a9988cef218c1a6b4fcac2a2e5",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-meowstic-f.gif",
-    "fileSha1": "c96d810342f3ba6b2cd2db7dc5488c9b0f558ab1",
-    "fileSha256": "9a0eb6b9c2af54db4b818eab48ffec6accb3e298e9145faa01b770c308012a00",
-    "motion": "breathing"
+    "fileSha1": "326786f974546d7b348f6f2819a1d907fcdb675b",
+    "fileSha256": "b48b6db8a38ad67bb14d0e6f8951800b8dac29a319498480bf7dcca9fa085109",
+    "motion": "rig"
    }
   },
   "mega-meowstic-m": {
@@ -3304,40 +3304,40 @@
    "normal": {
     "file": "normal/mega-meowstic-m.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "114972eb5e0bdf34c426076780b6d938e4d00a44",
-    "fileSha256": "a14f7e34b7732ccdcd3a9947d8294889f58a2693c2027fc42eebf6dc98231120",
+    "fileSha1": "b254a45b9b3c24e27e1c215303ca2a4d1cdafdb5",
+    "fileSha256": "5b0c3b92e9292dca09f01db043a2419bb00a2f27b821a1bfacdfff0e610961ef",
     "firstFrameSha1": "15049abeb61b66472cc6e77beaad5cade8b06ef2",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10314.png",
     "sourceSha1": "34536214db1e93b2d97bc26bce2a5564e8c8a27f",
     "sourceSha256": "94a64feba9f154285dd10d49329cbd53eb281d291735c391f72ad0b6579a0466",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-meowstic-m.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 13,
-    "fileSha1": "74a601af874d30e881dce5215d7ea310872e8a62",
-    "fileSha256": "ee273aa51ba979aac0c2fd41ca774f811fd6e2ad58b372b8e978ba24cd7546cc",
+    "fileSha1": "63395cd395625100abf7df274989f7f0e7ebe5eb",
+    "fileSha256": "77e3cfd58de7967f4bf66823d5a0363f7a4b15f1f571c13a21284c1b3f050be8",
     "firstFrameSha1": "4501f488f53ffdabcf5dc7ffee4417e10b3fcd65",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10314.png",
     "sourceSha1": "8e405d77aca04b0080a5a4e946ed4ea32ece1235",
     "sourceSha256": "92e67fe63cf9cb007da1bfbae43cd4839d4c57a9988cef218c1a6b4fcac2a2e5",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-meowstic-m.gif",
-    "fileSha1": "949d5d68ad065a48d782f135f7b2ffefa0a32a95",
-    "fileSha256": "046c7f0f0324c10197e1fe367f6e747bcb8cfaef269d854d6fce25ab9e471313",
-    "motion": "breathing"
+    "fileSha1": "85243db1f54367baefee866bd33ccf2d517f5fdf",
+    "fileSha256": "840030cbf54dac40ed59792e3fed3507a1afd714be95e3b454f6ecd67b359a03",
+    "motion": "rig"
    }
   },
   "mega-malamar": {
@@ -3348,40 +3348,40 @@
    "normal": {
     "file": "normal/mega-malamar.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 34,
-    "fileSha1": "02022b89f7f0dd60a4cdbd61a5a9557210c1b3ba",
-    "fileSha256": "f4185d4ba1ea9b6098d12f95897ca26203956c735e68ab8876f2dee64d0791ce",
+    "fileSha1": "9fde00a5ad283ec7c20b08afc194b4fe18ceb4ef",
+    "fileSha256": "45cab4716d1f9c26a945992cc40076e7a373e13aab800a0a9c664faf0ea9eb65",
     "firstFrameSha1": "2aaa2a09a9aacd993486c4b11e4032964759c287",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10297.png",
     "sourceSha1": "29eb2d07ca6bb1076bdfa617df5190a7e9014b3a",
     "sourceSha256": "a68022ff62cea0307b446049ddde961afd2958caa5ff270cdd0b391a5764939f",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-malamar.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 34,
-    "fileSha1": "a3e87ff44d52c6c40ab86e170f19d3b49700cc93",
-    "fileSha256": "252fac058f8da1a01719ba21d3b95768a64322d558499c702b697180a1e1b986",
+    "fileSha1": "ba26e1faa19adeac533e79b853d996a1a13ecb16",
+    "fileSha256": "4f92aafb75053b0c3b15ed6add5d32f2b5d43a288f98a2fd83f2d55ba65d8825",
     "firstFrameSha1": "eee0f71a3173e7ea6a5d709234ef370bf7910158",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10297.png",
     "sourceSha1": "c5bff2fabd489302372d4e7c96fe91a7cd3a8c23",
     "sourceSha256": "9334a465bd4be6c4556ca34f12d1d09e9fef2a911da5b9e76d82cbedb511825e",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-malamar.gif",
-    "fileSha1": "d99758d68cde8eda6168bc1e007cc10254c9889b",
-    "fileSha256": "16065b6889e7d91d1c5fa71cdcd22ddb16473efef519179ef88ec35ce23d59e4",
-    "motion": "breathing"
+    "fileSha1": "e198f2d7b8c05edbb470b85e9cdf1422a9b1c098",
+    "fileSha256": "bfb257460b0b1b40aec7719354e8e2bd2320ddf3a7dfca5ca3d3b85b876c0530",
+    "motion": "rig"
    }
   },
   "mega-barbaracle": {
@@ -3392,40 +3392,40 @@
    "normal": {
     "file": "normal/mega-barbaracle.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 28,
     "size": "96x96",
     "colours": 17,
-    "fileSha1": "aaaccf4604ce53479039f6785f271e2588b3f67b",
-    "fileSha256": "ed0fd78d8eef60661c06a84462edcbc40457637f024911cf086c230ec05bbbee",
+    "fileSha1": "e1ff7015a15c58f76a448f8079073c32864e0da3",
+    "fileSha256": "9373a6bd274681866e3a61bcd20c2d66f04f714ed778e68173dc6e9ba33951c5",
     "firstFrameSha1": "f399c35b840eae37d0ce785d22895061b9d247a2",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10298.png",
     "sourceSha1": "65ecf18e6f0138bbd61b02ddec6d70552e4a5af2",
     "sourceSha256": "9d81b010aaab7ae6bcd50a0759ff5c6f022c0e276550d17856a9d53222ce9b50",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-barbaracle.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 28,
     "size": "96x96",
     "colours": 17,
-    "fileSha1": "f8b616aa74308bed9c5c96e49598f1d291d21a6c",
-    "fileSha256": "501b6654f9f92c5ea2040923c0ffb6291a1676579c97b92c9a16858e367317f3",
+    "fileSha1": "6798613080c4e02971b4a80f7ab088776692e7f9",
+    "fileSha256": "78ccec8701b12b67a5e576c6e9cfc2c1daf9d919efbb34c7e89c5545c16f0a5b",
     "firstFrameSha1": "4e72f7142983d6e5aaabc9e87e69cadaf4d9be6a",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10298.png",
     "sourceSha1": "71ba9e3cc97322bb4a620cac3d9b3d252b066f30",
     "sourceSha256": "e0c4c3494b0d1a7ae42d20a3419fc65a713d1f63d49e1f3f4d8e21a1f07c5b77",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-barbaracle.gif",
-    "fileSha1": "33d8d0f91e1b0bd089d3287716027677f25a045c",
-    "fileSha256": "80ad4cc7537c99be553904c965cbdea8a7503d37c91a96b0412ceb4aa14311c1",
-    "motion": "breathing"
+    "fileSha1": "5c8344dcab44e8c20f9394e4ae30d24e76fa3c8e",
+    "fileSha256": "6147634601e8573ec04ce8b70cd863e497bf2eba6e6ba8b9e6331670402ab2c3",
+    "motion": "rig"
    }
   },
   "mega-dragalge": {
@@ -3436,40 +3436,40 @@
    "normal": {
     "file": "normal/mega-dragalge.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 15,
     "size": "96x96",
     "colours": 20,
-    "fileSha1": "68101019bfec78b299c4d910c081a2c55720538d",
-    "fileSha256": "de8edd6ccdf337efc9123bb9356a88242420eb74e80d06d22175b35c6e59bbf3",
+    "fileSha1": "9ed235c3d7c83a9788c13cdfc5ad484b29c3f92a",
+    "fileSha256": "cc9df091bcac678476af214b95310a0be872abfff9a5fee82f893ddfd9bde141",
     "firstFrameSha1": "7f8d88849a6453e0c1d2fb6818ab4e1b5e6ac312",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10299.png",
     "sourceSha1": "aba25c01800c07de8142d17e7b91513e213287cd",
     "sourceSha256": "b5a92a2a5a4d2fec837ad3b2186ec74c03c753985b9d21afae4eb394820b99ab",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-dragalge.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 15,
     "size": "96x96",
     "colours": 20,
-    "fileSha1": "1faaaa61036fb4164271ce5df80b52ebbf4a6ef4",
-    "fileSha256": "c46bce1019ee849e9318d6ec6f20c7807ad66306a7f35cd0505509402d86548a",
+    "fileSha1": "f6b91eb319a8e55bc141a847a41685492a461321",
+    "fileSha256": "5200cd9ffe39d935d331e97a91471a20688808ceddbc261230d276a5c436d910",
     "firstFrameSha1": "319b50f1a1fb43abf816894c6aa15d73c81a8573",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10299.png",
     "sourceSha1": "57031a2197abcef9e0fc81644c506a447f06d841",
     "sourceSha256": "fa2c0121a97c6e118faace1eaa6fc26c77a7ec5a9f2e62a28b41df134171cf06",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-dragalge.gif",
-    "fileSha1": "ae3b6e0cea469b75183c8ca94284cdeb2aa4fc34",
-    "fileSha256": "7240a60c8b7b7d343cbb04eaefb72b0adf88ae9c36596caacd6305f48f98ed0e",
-    "motion": "breathing"
+    "fileSha1": "ccc5f644c6ef377ace775443c06f104f0a193f01",
+    "fileSha256": "3bcd3f1a3f4a70ae8d4fff293bc701fb9569cea71f2effae395a56e258684171",
+    "motion": "rig"
    }
   },
   "mega-hawlucha": {
@@ -3480,40 +3480,40 @@
    "normal": {
     "file": "normal/mega-hawlucha.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 21,
     "size": "96x96",
     "colours": 23,
-    "fileSha1": "cabe1f526498b9170b0f1c004282516a45b635e9",
-    "fileSha256": "07b30229e8e3804beedf471973c6b16deacf6e49758600d1f364ddd41f2a08df",
+    "fileSha1": "5947230dc806d1730cca01ee17e453c80a3ff7c1",
+    "fileSha256": "3e00bb93918f1fac88a1c1ffd2b95c4192e5bd80ebaf7b8ca4476480ca4ab797",
     "firstFrameSha1": "83239eacbe78647d46b5c69ed24775f4b89e4030",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10300.png",
     "sourceSha1": "6826276b0f1e468a55fc434a4dfe0368a9429006",
     "sourceSha256": "6de16623b3b9f9e070931b4f605307f5752ae77ac72558c3c07db4ef3b9a4964",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-hawlucha.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 21,
     "size": "96x96",
     "colours": 23,
-    "fileSha1": "a0983c3a7e9166e65767229efdb4c3cce6aca411",
-    "fileSha256": "ae0661bd32d77d6e36b500115298539b482349ab33725d239ecd08e7b2ae0c1b",
+    "fileSha1": "f3bd6f694e35932420a432d81d88da7880b7e324",
+    "fileSha256": "74dbe6b45964c609e70f65ff25b61baa864345d344e7e1bca754ec376098ff94",
     "firstFrameSha1": "0d006276b78f5ed19cbe2e59a65b6bea5b7e62d8",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10300.png",
     "sourceSha1": "bcc3683854fbd3d43a2d724b681fcba35ab30e9a",
     "sourceSha256": "cb31da22563482e3142a2ae254d754abce000593a18588858d86dd5c473e619e",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-hawlucha.gif",
-    "fileSha1": "ff548ec7daaa0c37d2bb0e7bfd3dba53f0ee932b",
-    "fileSha256": "dcc40faf502268415a9fae5c2e7d8a6b5d21c184201ba16394abd44d40300785",
-    "motion": "breathing"
+    "fileSha1": "e05461255ff4a01fd9abeb4d1aa9ee5e2c51e854",
+    "fileSha256": "bc0cabc65b91a57b8e96c667fb0edaadad394af5d16ad5ae9889f5826e32a62a",
+    "motion": "rig"
    }
   },
   "mega-diancie": {
@@ -3524,40 +3524,40 @@
    "normal": {
     "file": "normal/mega-diancie.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 7,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "388e49b11ef6835542b17b39ccd1585aa5637caf",
-    "fileSha256": "9d28e8a4b0767f2eb7078493199798d38d0b211459cfdb5c29c1ca7ea5c29668",
+    "fileSha1": "b1465df604b796c4b1c236f7630eee213d405d5c",
+    "fileSha256": "0ba59f73c1391219a189e6ca0a2d0e1c5631c292bb80b6a7e542bc694f98fb24",
     "firstFrameSha1": "aa2c6ee1764b8541c3a877683730019607118374",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/diancie-mega.png",
     "sourceSha1": "e4c187313e8b617f6c5f9910237f26eebd01eb94",
     "sourceSha256": "93699238c2c82c450609f8e8ecca9c8878548107e2a6f361d698d732a7742cf6",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-diancie.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 7,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "9cb1108777f7c1ff877bf9848bc437545b9ed8bb",
-    "fileSha256": "705a5e70f86ead0e7da8b29c7834b7d3dcd003a58511630b5fdba122579c1447",
+    "fileSha1": "05e7b04a719ddb20070ce719ee5c8a794d5ca3bd",
+    "fileSha256": "7d5de9636af1e804cbebf1f4d92086d8cfb0d8690d4acd10572bdc73639ce446",
     "firstFrameSha1": "92d940663bcb75cf482b65963280adf7931b3f81",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/diancie-mega.png",
     "sourceSha1": "6a7431e3cd517a63222b2782435d9f8ee971bb8f",
     "sourceSha256": "2b353cacbe7e0e02c615b7e543e586d63ed895659e397d3224d7d0950a3de66c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-diancie.gif",
-    "fileSha1": "72c4e2c5b2e2eccfbdfafae4c89d1c8442769f47",
-    "fileSha256": "9fcc4970107e1fa445f2e1c811fc7220057d7a4ceb774d0414f6b0663f7c11e1",
-    "motion": "breathing"
+    "fileSha1": "8e706f49b6ceac2fb1ce5306c1cc691aca2b21ec",
+    "fileSha256": "14bbfe1a0592f6db12f91b2f6323434318461ca24605484736ccfe700345b4b9",
+    "motion": "rig"
    }
   },
   "mega-crabominable": {
@@ -3568,40 +3568,40 @@
    "normal": {
     "file": "normal/mega-crabominable.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 19,
-    "fileSha1": "fec5cde41dced5ef43257982274417e87bf1ed95",
-    "fileSha256": "3dc03e8e4b047569e68fe0a0313405119305533baa8ea13956453cbd1974fe04",
+    "fileSha1": "fe45ef7b89bd4b0ef9113082fc081a0f65b44314",
+    "fileSha256": "1deefe059432cf044450c683fd4fd2797bfc63ccd893ccf485435365a302d15f",
     "firstFrameSha1": "b1a417c7f7999586d09b600ffcafeb25e5c51fc7",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10315.png",
     "sourceSha1": "c23c2eb181997e9b562852ba43b396b73ba478de",
     "sourceSha256": "a62c4fafb9fe9285d30e2602f426758b4494c53a6ef50a05e7d37dca9e8cc062",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-crabominable.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 18,
     "size": "96x96",
     "colours": 19,
-    "fileSha1": "3178b31c538c245408c30ab9b27449cdc685f59c",
-    "fileSha256": "2a948277e830d33fc9a1b749e230bdc76f62d5bc6e4efe493d4fd52e7f556e90",
+    "fileSha1": "ae081d0b514c1d49579d817d1c0353f4d10beaea",
+    "fileSha256": "2be9b5cccd1fe95c2a1bfe4c297b35d37d9114adba81eaa7e08e371f62eb782c",
     "firstFrameSha1": "ee8d3830ed6fb149a027aa53adc511f78e51d8b2",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10315.png",
     "sourceSha1": "1a991a995cd58de46a7ce084e84e9d2972fed965",
     "sourceSha256": "8fa81b7908b9a3f43995ac5dfe14925cf7c2d58d21356285a176a24faa82ae2c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-crabominable.gif",
-    "fileSha1": "f0ce0e357b416fc6f89ccf03e4a8493462770923",
-    "fileSha256": "266fc5a6a22a7037a3df0765f65c821dc676ed76f5a8959fee8efb66c4cfe270",
-    "motion": "breathing"
+    "fileSha1": "c6c4f59eebef89ef2b288068fd4078c89f6bfd99",
+    "fileSha256": "842526594b419c3a4e6a9ed6e96eb0bfc25916d0fcd5209f7fcb6c30e93def69",
+    "motion": "rig"
    }
   },
   "mega-golisopod": {
@@ -3612,40 +3612,40 @@
    "normal": {
     "file": "normal/mega-golisopod.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 7,
     "size": "96x96",
     "colours": 17,
-    "fileSha1": "ffe918cfa359e48ca68f960c9c9f4a2fe5ed423d",
-    "fileSha256": "99c5da0ff8bcd78501cca060e2ea67e8513e22754d80635d1d90289ac409154e",
+    "fileSha1": "720cfc255515c84aa123b2f2894e69af2649ae2f",
+    "fileSha256": "a81632b166d1d75571e780567c4d3e172c77367458d19f586551276f6020d41a",
     "firstFrameSha1": "ef59a4a27b2c9d75dbd7d4777b1a37c77c985d33",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10316.png",
     "sourceSha1": "1c86f028640650dbba23fe7657c90a2e5cc6a656",
     "sourceSha256": "06178a8e9f3b86379292d2b14bd12d98616054bf95e62bafd080a65325b50998",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-golisopod.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 7,
     "size": "96x96",
     "colours": 17,
-    "fileSha1": "b7034cdcbf08ae2ddf9aa819064f33c7294a5dd8",
-    "fileSha256": "568cb682693e289468522eedd5df8f95bebc911dfdd1902abdccb782bf299b02",
+    "fileSha1": "1567e158ee3a6612aabc67489f3fe2fba13d5dbd",
+    "fileSha256": "dcbcdb623e27189aa6e694c0ece3ce9f3630d80a2712798669fd833c4d80552f",
     "firstFrameSha1": "696eb466a9f042743e81c5a8c51638fe97bcc8f2",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10316.png",
     "sourceSha1": "a3193853c6f41821d7629ffe1c8fb6e95410e716",
     "sourceSha256": "441dd4e0dc1cd10149669eb44c56a3f0799a5af113099bc01100740b618fd479",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-golisopod.gif",
-    "fileSha1": "b95b61bb36d231d63f81ddf513032768eb0b97b7",
-    "fileSha256": "3b2072a609dac3d4cf05ee316f293f440c2aa30972241c71ef5d7241d18aa301",
-    "motion": "breathing"
+    "fileSha1": "a207278adea697a393fe322da607a138c1f9d800",
+    "fileSha256": "92ec71d4b2b4a4f2e6a7740427da08880ecb3270188d6bcfc71e63fb6fdef795",
+    "motion": "rig"
    }
   },
   "mega-drampa": {
@@ -3656,40 +3656,40 @@
    "normal": {
     "file": "normal/mega-drampa.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 15,
     "size": "96x96",
     "colours": 19,
-    "fileSha1": "c1999a9fecdf56f8c0c3b9e36025aa4581ec7af8",
-    "fileSha256": "dcfa63de1a61b351b205e4bba7cc5477abd3c8fd5948562d37e7822246fd1249",
+    "fileSha1": "7aec321543f9f37c7cf80a5dbfa628ce6741b6f3",
+    "fileSha256": "883989901401a0f3d3f4de8998b1399826d7cc9a4d0c85262a00410db4e5b6fe",
     "firstFrameSha1": "96b4b3b91d9163467ef87fac255284e9b76a1125",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10302.png",
     "sourceSha1": "79de5bbcd3f5a683d6f51d70cf22df4703273d4a",
     "sourceSha256": "863baed4aaba7d61c147b4d87b14966d897eca955ce83fa48835f3e59e5bcd43",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-drampa.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 15,
     "size": "96x96",
     "colours": 19,
-    "fileSha1": "b9a6e6c13c66052e3625bbb7f5feafc5ab3671a9",
-    "fileSha256": "1e92dcbe870d3601039b0b7c68255e61f1ebfc7445659a6e9adf68533182cd42",
+    "fileSha1": "e516f8a88f0319de21f07dafee0a6e62990a430e",
+    "fileSha256": "73dc0deebb8a48b3ea7df8b504ce50fd58659cb501682ed9fc61495f857ef865",
     "firstFrameSha1": "f4523ee2604be7124f4997966d7da1e1e768b6b3",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10302.png",
     "sourceSha1": "4bdc51a71867f1bc40d2ae02dfb530fca80cdfd4",
     "sourceSha256": "4ee6fefa5ad7c8f36b680a2d3fc4de3efaf8d63ff4dd85a71aae2303baf80a7f",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-drampa.gif",
-    "fileSha1": "cf02cb5c3d1bab4501b57fd7c6e756790cf2e040",
-    "fileSha256": "579908fabee31242e6dbac7f56b694069fd6a08ddcdad385e50bd3c14878c71e",
-    "motion": "breathing"
+    "fileSha1": "7648faff20ac2e578fe6b074fa2717528c911b31",
+    "fileSha256": "28f7b06af1774aeaa21041117552316fcdfa06a24e0efc07503a71c9b6f0321c",
+    "motion": "rig"
    }
   },
   "mega-magearna": {
@@ -3700,40 +3700,40 @@
    "normal": {
     "file": "normal/mega-magearna.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 15,
     "size": "96x96",
     "colours": 35,
-    "fileSha1": "e30d6e35d8ef43e22dc946db0aaab1662a9d56e1",
-    "fileSha256": "64d2ed6171252049b319992ff2a2b50a99a83414432508a1a689704e34604eb1",
+    "fileSha1": "51d1c46d14f4ca4ab4cf69840d4f9c5c1049bf83",
+    "fileSha256": "374191cab9546caf05e9b37264dc94ed97aecc371c9f9a8aa6fe817b053de271",
     "firstFrameSha1": "6f9ff240f23889188c71c2bd24990abae1bd455e",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10317.png",
     "sourceSha1": "0ea2f554d72a8bd24cbeb534ba74c8f3175ca686",
     "sourceSha256": "b7797e3ffad6d4756fd22dc214c47c2ba6ed4e8c223fc53810f4bb321984ba83",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-magearna.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 15,
     "size": "96x96",
     "colours": 17,
-    "fileSha1": "aca33beb6d9ed89bde3920fff05b9ca2e7329c66",
-    "fileSha256": "a0ea36dde9dd0efc495182a46e2e6cf8c5bfbc996d1654451e5b38e7f295e9d7",
+    "fileSha1": "7a6764f655cafdd81600873cad9dc2c17b4ddaf8",
+    "fileSha256": "c4114e0ab6f0bfdf09c1f528718b0b9ba2c894a95a70b2b246f6a1b9fd2fb9f4",
     "firstFrameSha1": "216e36dde5c22b305711a3db69ea6c4b6bc855f0",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10317.png",
     "sourceSha1": "0a7b2ab446d62adbfecf3ca611ee5c3d685af919",
     "sourceSha256": "0e419cbdbdbfffac8e0e21b8b52fb6cfdf84b59fc46261122c67c09bb8e5bb4a",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-magearna.gif",
-    "fileSha1": "0e2daabb8c85993e0edb4669d5d7b1f27e013d8a",
-    "fileSha256": "aa7fbf47768b3ba16d10e1f571f4ab65b4ea6a15ce5862b580a9256fe3aff537",
-    "motion": "breathing"
+    "fileSha1": "236f270d5f83667c4aa52aa794a5bbdbc404eda9",
+    "fileSha256": "b7ab0218958b0d1a54fbd91e5c60588b350f08b77231d1d39b5b437d9fa7f849",
+    "motion": "rig"
    }
   },
   "mega-zeraora": {
@@ -3744,40 +3744,40 @@
    "normal": {
     "file": "normal/mega-zeraora.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 24,
     "size": "96x96",
     "colours": 17,
-    "fileSha1": "c1ac6eab382b8e691643c1b4997df20fd55f32cd",
-    "fileSha256": "5d0b14fe2ee56e9857d53e2f2174a24d00960c8407eee2efee58eb963c211b4a",
+    "fileSha1": "b4f0f53b6f151a64ffbccfb6052d2b5417ac60d8",
+    "fileSha256": "8448f808d89e554563cb28ea1899ae5a3aedf87ca8c45365aaa40a37da9222db",
     "firstFrameSha1": "52d30055f209e797b7972ee954b6c27537b4f44c",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10319.png",
     "sourceSha1": "765b4f260a46a9d178b64fb64941f2852036e043",
     "sourceSha256": "20c934954cbf0fb6af861c61f671b7a65b38d5bb51b9982b48adb6cb9e665983",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-zeraora.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 24,
     "size": "96x96",
     "colours": 17,
-    "fileSha1": "24e7979a127054997109900f786ed98c78d2805f",
-    "fileSha256": "696e0ce946b544fecf5e92c02c22a9d68e3bff2f57d41c060313202d169169dd",
+    "fileSha1": "29194bf2fb4317fea705e3f26a5bb688ef648219",
+    "fileSha256": "e821ff0d1d19ab069847f50691cb5725e655a294693ed255babdfcb27d3de584",
     "firstFrameSha1": "aa69462b0e5b1c348a4f23fcc46e94853f60d393",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10319.png",
     "sourceSha1": "5eba24c53873cf9f2e2e0a94b7fc5808003aa63d",
     "sourceSha256": "15db610053c3e03824d1121abbefa60577d1914942257bcbdb8a7ae67d0ff99e",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-zeraora.gif",
-    "fileSha1": "880bd12255a313fe64e0afa4fb10f9bef3f196ae",
-    "fileSha256": "71bf5111183f32d4d8a06e60b9a25723d58c26a91f7cc81e3d10ccc325b3de39",
-    "motion": "breathing"
+    "fileSha1": "05664ad7ff349a5284612023621b542588885d2e",
+    "fileSha256": "ff560a8a7857f46acca11071d8a2c17ed183f745ad32299fda32f01f333fd6ae",
+    "motion": "rig"
    }
   },
   "mega-falinks": {
@@ -3788,40 +3788,40 @@
    "normal": {
     "file": "normal/mega-falinks.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 12,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "2e651e4f0dcc14f613999c52fb8c506da43ae8a4",
-    "fileSha256": "0269ec0ea54faf3a1df12e4f85c5444d7fecf4845a1bf6e791ef83b1d7ba39fc",
+    "fileSha1": "5c0ed91d1852747c26cc7dd06e74f0244ed6a5b0",
+    "fileSha256": "9b0813a9bbdad2658cfcb7a925789861d6720fc42054a0e4c5783f7cba81aef1",
     "firstFrameSha1": "98045186d3a2400bc950cba9f222938ac242c635",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10303.png",
     "sourceSha1": "d54b48e1fe5aeb149fddb36b6329fee2559b5a9e",
     "sourceSha256": "2c58d76943010ab1546cdef54dd2876207335d22bd5c11abdefa48ddab52a99b",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-falinks.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 12,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "394e79bff75a2dd14cd555f68dade54e4634e849",
-    "fileSha256": "9d7ae3850280ac44d49bc0dd4f8814adc3fd40182e729f8c7fe518c6409fdf26",
+    "fileSha1": "080bfa7057d1b6e7a2c885f1a55ecee94b1eb7fe",
+    "fileSha256": "79513160a24f97eb6ef2511369ec9a3cad47f2a16869db04bae213dde9524177",
     "firstFrameSha1": "3099c255c9c6982fc5dbe79c7d70c573b18cf8bd",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10303.png",
     "sourceSha1": "ff76ce18ccfd84b07a36ec02a794ffa6bdaecddc",
     "sourceSha256": "27c2d484de024bb3f9de1ea38a0470bf0ab78e12db2c51effeb1ef9a2b3f8eb3",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-falinks.gif",
-    "fileSha1": "bf3a0b8ae7c98da46ae8673f5411ca2f0fe3c772",
-    "fileSha256": "936939a99cb8eeb5a4fee0986acf130fbd98970c32122e900746bc21583c0f5b",
-    "motion": "breathing"
+    "fileSha1": "8ac1cd64af517a6d63134459e8ee9d040670fd8c",
+    "fileSha256": "b39b1bcdbbf6eae0bcf2d419a6ee0fd00030712dedd7612aa31659b606321fac",
+    "motion": "rig"
    }
   },
   "mega-scovillain": {
@@ -3832,40 +3832,40 @@
    "normal": {
     "file": "normal/mega-scovillain.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 11,
     "size": "96x96",
     "colours": 31,
-    "fileSha1": "b788f609c8546a54db62430db163c3ec49e9f6cd",
-    "fileSha256": "967461923e687b4a4f6c33ee8307ab5f3bed8c8463ee91c08653f2a41f5e9f43",
+    "fileSha1": "88204c3b81abe06b25960c2c34be25f87e3d9e12",
+    "fileSha256": "a89bcf5906b8834090ac02e9bab852c4843c4238458888dc33c205b8f3e747b3",
     "firstFrameSha1": "02d5e9d4e3bad96e5f61a7bf6307a5e109f88d7d",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10320.png",
     "sourceSha1": "f7222149bf4a98560b7195d6949dc2a7e0735e53",
     "sourceSha256": "5702ec2e7c6cb9d479209d6ff58d4d769aba3d79d14c5c955cc271130f3ad734",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-scovillain.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 11,
     "size": "96x96",
     "colours": 29,
-    "fileSha1": "c0b5db9cd326f5be80cbad1c77844769ccb3804b",
-    "fileSha256": "b196e092b9d0ee4290861cbcd8f93ebd30d7055f7a07d85829744ad9003776e6",
+    "fileSha1": "6304dfa9814f23e5d7813ac117b5a49d3fdc8788",
+    "fileSha256": "da7b2c579976dba552e558b87ee031bde76660d760d2c29cd8e1e3b40b234810",
     "firstFrameSha1": "ad2a98683d62047d4d8d33d09f505d9549c75d30",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10320.png",
     "sourceSha1": "9e656e2e94383b92ea46c975bfe2684cb895cd92",
     "sourceSha256": "5ecbc6c0ff8aeb48221517a24c504c18a00a36e50d3dbb66344e43974b35f5eb",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-scovillain.gif",
-    "fileSha1": "531d4a5572f1cf06d75d08d3264a87c1bce3a814",
-    "fileSha256": "70d34edc05e31289a62bcf654a2459ffb2b4cfe4d6cd6135ea4bce13d5ad5bef",
-    "motion": "breathing"
+    "fileSha1": "feb705cf6035da1dd47a8f8382c21c0f1894523a",
+    "fileSha256": "9162db6f5b499aeb5b74341b896f8f691135b682996ca83fd672313226f2f4a2",
+    "motion": "rig"
    }
   },
   "mega-glimmora": {
@@ -3876,40 +3876,40 @@
    "normal": {
     "file": "normal/mega-glimmora.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 17,
     "size": "96x96",
     "colours": 27,
-    "fileSha1": "a82caf7ca9900afd6a59f35bedbf7264c8ffb96c",
-    "fileSha256": "bbb4a58d35c0a9cc7802a946c220d09707aa268dff1fb150ad3b077f06d66c00",
+    "fileSha1": "b6a24021b56bd6ba3229a2a20ac93385bd053fb0",
+    "fileSha256": "f073413e192ceed4c21ceadf44bdf2af83120460f1fcba6705354df5c06642b7",
     "firstFrameSha1": "3e73c54eed752fe3e0b752b4a7bcc1ec295e35d4",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10321.png",
     "sourceSha1": "d7aef736f9a572a33917afde4035593656c93f43",
     "sourceSha256": "1d4235b0c3b542c99ab5993d21200fbb23cceac86d5d571b72ba4c06225b70b7",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-glimmora.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 17,
     "size": "96x96",
     "colours": 27,
-    "fileSha1": "20c9ec041ff41033a0f5a43ebd812361b74216c8",
-    "fileSha256": "90c553ec1733980809fa62bdb455360b471614c42b3d134a5fc2c8855a5bdc9f",
+    "fileSha1": "9d10b5e29d7c11fa9a324802ae0036d0c81705e3",
+    "fileSha256": "ff1f0faf73620a2baa8f799640fafc7a431871af7482b8a15a1a8f2d33b33bb5",
     "firstFrameSha1": "f6a95204aa86345de003d62e22cbb67d1f1b4093",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10321.png",
     "sourceSha1": "8a8842b875380dc2afe5daef24e43192ac238ba8",
     "sourceSha256": "fae1c0b91e43c13551bb92ce801aa991e1fbcc41086fd0f7a0ec3e41f156920c",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-glimmora.gif",
-    "fileSha1": "8479b24478b3ceebbff713f22ab00ed2e76a4257",
-    "fileSha256": "2f6a8e99d75b02149b04a1960f988991dd5ff737ed85282572d3a7125e4fe3a2",
-    "motion": "breathing"
+    "fileSha1": "2ede6251e1dba25a6f41818c66e116058da08d98",
+    "fileSha256": "c0ec145d35816d8b0e241c7bfaaecc4088bc45a77ccf408cb33426c384ca6cfe",
+    "motion": "rig"
    }
   },
   "mega-tatsugiri-curly": {
@@ -3920,40 +3920,40 @@
    "normal": {
     "file": "normal/mega-tatsugiri-curly.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 7,
     "size": "96x96",
     "colours": 39,
-    "fileSha1": "542e5031eb711e008ec36fe339002a15fd56256e",
-    "fileSha256": "b995bfababb0bb3b4dd2e0493d5f8b2825a8adabc4d102269cdd6b186c595c95",
+    "fileSha1": "ba621e7d85a9a4214927e8dbfa84e0cdebe1defb",
+    "fileSha256": "831e5deb25322ac08a259c6970a55941c8f240c9b296b35a423dfee1e2771a74",
     "firstFrameSha1": "57f9f012c2f786f4c0ac362d494f92a3b2381a28",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10322.png",
     "sourceSha1": "ba2fa9b8cb5b93c26a67e6399999f1ca782d24c7",
     "sourceSha256": "8ceb58e876b513ff653491816547df086da4488a16a1b7f8b63a917391e1d454",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-tatsugiri-curly.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 7,
     "size": "96x96",
     "colours": 39,
-    "fileSha1": "0299bedfce992fb3c49222bc123f910202b6525d",
-    "fileSha256": "6814434a4acea65f5723a09cf589347b52d53e75579c5eac1eab1e9d6b850d10",
+    "fileSha1": "d556741dcc9c5037e096455f47336e4242b2fe16",
+    "fileSha256": "6e54abd781391d271e6b9c7e514610a2d1217341652bd8408b8b0aabbe102103",
     "firstFrameSha1": "d060ed64cfd6e43ac0bbb6977cd5c8ea4f2f5e28",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10322.png",
     "sourceSha1": "b1b3c84eb55aa07ce981f6256d1095e74a725645",
     "sourceSha256": "e27fb3ed429259e2a8a3d9b8726eb9663cc532874a7a1030976af813d0fe0699",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-tatsugiri-curly.gif",
-    "fileSha1": "589947d760003f96bdc31e471212c1e2f66ef6aa",
-    "fileSha256": "2e7c0b10a86b90576816e800e7d67d64d8d85eba60853554d78ba0d898e5ba4d",
-    "motion": "breathing"
+    "fileSha1": "5e8483dc1c7e77ff6c44aa8e7ed1e90a33d4cfd8",
+    "fileSha256": "4ac6d87934c850d56e01714f6402986c0786f89a712ca319bafa0a3dd4cab6cb",
+    "motion": "rig"
    }
   },
   "mega-tatsugiri-droopy": {
@@ -3964,40 +3964,40 @@
    "normal": {
     "file": "normal/mega-tatsugiri-droopy.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 14,
     "size": "96x96",
     "colours": 41,
-    "fileSha1": "f0df8882c2f3af179ec451dbd625fdefb6684537",
-    "fileSha256": "7fa523e2a033cd820b47673837cb95dd6720ca64ed150a6889bc6c7968fd37d7",
+    "fileSha1": "46f111487ab60d469b96582fb54b01694f9f13a2",
+    "fileSha256": "e28b5e7767749229140fa8c92a1d9023af3dbfd1066fe987f7c47d8b8b76cf03",
     "firstFrameSha1": "76179c1ce42d7abae0aacbbad4c0d485c379e039",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10323.png",
     "sourceSha1": "06c518a7ce5ea180fe5f2fe01d8861ea5657a9fe",
     "sourceSha256": "74845b292a4360122ac7e1412b2a5f8b35892b5f772e5d0e525e51ff093030dc",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-tatsugiri-droopy.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 14,
     "size": "96x96",
     "colours": 41,
-    "fileSha1": "89c22f1044835f018ef65dab96f2cd03f649a2ae",
-    "fileSha256": "3598ae8bd16714788850181cea7471067342766320b71fb4579174bbe95653fc",
+    "fileSha1": "5d7b0131ca738f0e1a3f5641d1b035b675e699ff",
+    "fileSha256": "bbac9fd68110c34ca150024016fde9350dab2dd8a8a5e37c1ec8840b913a4692",
     "firstFrameSha1": "82f93b924a2e99a68fb5abd756855391fc17e8c2",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10323.png",
     "sourceSha1": "b91f939d88a7dea2cdc8267b124b1ef2c4a719c6",
     "sourceSha256": "3754c01998ff85acc8f5fa1594c78a39523ac7bf5586278a7154743bfaf196b4",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-tatsugiri-droopy.gif",
-    "fileSha1": "66ae8da45f618499573dacb7c740aa31a7b11898",
-    "fileSha256": "e41c6088c6931c276181c9088109a43564bc29e4f3bb261c211fe113238134c6",
-    "motion": "breathing"
+    "fileSha1": "085be7e102524be7e68b99b864f6e1a20adc2015",
+    "fileSha256": "72e836e01936d717b0584b03067d6b9b13ab01bf4e6ec003c73c5d297be86742",
+    "motion": "rig"
    }
   },
   "mega-tatsugiri-stretchy": {
@@ -4008,40 +4008,40 @@
    "normal": {
     "file": "normal/mega-tatsugiri-stretchy.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 16,
     "size": "96x96",
     "colours": 40,
-    "fileSha1": "7f0ceccd3a49df8f781d2d83cfca366715a58e37",
-    "fileSha256": "31b3437871b0394ab951713e581d8433e15f75e3acaed23d2cc65a37ecc3b692",
+    "fileSha1": "5764c1cff18c36bec2e93f702972a10d0206e539",
+    "fileSha256": "6e13566258b5175043970d50669ec8af194bad1685f7f5c4fbbbe3f1b031fe05",
     "firstFrameSha1": "5c529cd7114d64e937d97b21863ad85571efa324",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10324.png",
     "sourceSha1": "2731826b757fc750493eb404d314ae78dfeef712",
     "sourceSha256": "11c63872053f2aad47664193a97545de9fa80f9decdf4f30d9cf07bf81b317ab",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-tatsugiri-stretchy.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 16,
     "size": "96x96",
     "colours": 40,
-    "fileSha1": "6c66e0b5dd0190a562e44ced2eaa59ee9114beec",
-    "fileSha256": "cbffa85986b96e40536ef8f9078b594df272e88592362d6bf148433bcf5b710e",
+    "fileSha1": "ca06e9f45147afd86a260e8978e5ba6654d8943f",
+    "fileSha256": "9bbe4a590b5201046c12dac2ce72b940d41aa483d6425d4ed93a8b34107e79f3",
     "firstFrameSha1": "759a73f900be1e3840abab6a1f53f3b6c4aa75fa",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10324.png",
     "sourceSha1": "768b3ad631fe6fd3c6f9cfa8ea71116c6434b4e7",
     "sourceSha256": "b7ae0f53fb9443ed3740d26c9623ec6464daf1ab785e98ba57d9b667ff2d4c01",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-tatsugiri-stretchy.gif",
-    "fileSha1": "af7368b3d546ec33702bbd69d26134f1abf07ece",
-    "fileSha256": "bbaae35cfd97a245a386c47781853ea48ba1e53f06e6f8792bab248b31f1a438",
-    "motion": "breathing"
+    "fileSha1": "afdc600b6ac1999fdc82ba42246b88e884e56c56",
+    "fileSha256": "f2c1437f0f3d9275d257ccc064e6b9a7240e847ce6b69f4bd7b867a48ca4e251",
+    "motion": "rig"
    }
   },
   "mega-baxcalibur": {
@@ -4052,40 +4052,40 @@
    "normal": {
     "file": "normal/mega-baxcalibur.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 13,
     "size": "96x96",
     "colours": 20,
-    "fileSha1": "aaca6d5f2085886b48793e67e164a4361d62e3f3",
-    "fileSha256": "53f10da19c0131d05b398171319c86e0393fcd69c66ec925f5e7ff33cd75f464",
+    "fileSha1": "0244b8dd107b26043bc5c0187401118501acd1f5",
+    "fileSha256": "3f643e1805e0e8df9b05e32deb728befa01be5234d141ec5f96af447e6406981",
     "firstFrameSha1": "801f7bc2c9d2e3b0ced799fb5b4349ace9a4a137",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10325.png",
     "sourceSha1": "12f809dab4407a99cd81b3b493e7f677f0c60a5d",
     "sourceSha256": "28064426491ccf3360a88fa4e7e98a7e25d49eed28c9357144b7c2068856c586",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "shiny": {
     "file": "shiny/mega-baxcalibur.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 13,
     "size": "96x96",
     "colours": 20,
-    "fileSha1": "44e9648f68137737ec4636310b7345d79f0bb8d8",
-    "fileSha256": "6cafd29a6e096c5554a7caa9a8ae3818dbab395d06454c4f8e3b52d43834fb74",
+    "fileSha1": "16c9c2e0d8d59f020e73f205f157f35e3047120d",
+    "fileSha256": "b5b0877c7f2bbedd4b66767dce40da71f8c552dc904c7659b6748ca17eb80b6a",
     "firstFrameSha1": "6fe671c0260b826b3773e997b261d0348c74d1db",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/10325.png",
     "sourceSha1": "2996db17f165b5871e93b844a044c7800548a95e",
     "sourceSha256": "f24a15ca79be48180c37f728aafcf49edbd59816f6be965c4d738251ca9fc0f7",
     "transformed": "static PNG → single-frame GIF",
-    "motion": "breathing"
+    "motion": "rig"
    },
    "grayscale": {
     "file": "grayscale/mega-baxcalibur.gif",
-    "fileSha1": "db76416d41521687c4cf47819efbcbb06d40161d",
-    "fileSha256": "f98e3a97e4bd0e60e8c2e910df056693b5e9fb6231b3890c8c25c6b9a2acedc8",
-    "motion": "breathing"
+    "fileSha1": "ccec79876bbf851060ef0fe88ee86a9b96b21b17",
+    "fileSha256": "34e6be0f12a6b7a8e1dccbdd3e3f867b546f389b4c2cdc80df368be96217b2e2",
+    "motion": "rig"
    }
   }
  }

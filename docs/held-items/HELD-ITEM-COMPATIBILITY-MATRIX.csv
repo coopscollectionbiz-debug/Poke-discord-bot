@@ -1,0 +1,35 @@
+item_id,class,hooks_needed,stat_mult,base_power_mod,final_damage_mod,survive_ko,after_hit_target,after_move_attacker,end_of_turn,turn_order,move_choice_ai,needs_contact_flag,needs_crit_stages,needs_status_system,needs_stat_stages_everywhere,needs_switching,needs_weather_terrain,once_per_battle_flag,extra_rng_draws,playback_note,dashboard_compat_rule,mega_slot,sim_tested,engine_risk
+leftovers,2,onResidual,,,,,,,heal 1/16,,,no,no,no,no,no,no,no,no,"restored a little HP using its Leftovers!",any,ignored if D-H5=A,yes,"Low: bounded by TURN_CAP; heal clamps to max HP; never heals a fainted battler"
+sitrus_berry,2,onAfterHit,,,,,heal 1/4 at <=50%,,,,,no,no,no,no,no,no,yes,no,"ate its Sitrus Berry and restored HP!",any,ignored if D-H5=A,yes,"Low: fires once per battle; resets at battle end because battle state is rebuilt"
+focus_sash,2,onTryKO,,,,1 HP from full,,,,,,no,no,no,no,no,no,yes,no,"hung on using its Focus Sash!",any (Shedinja allowed: mainline),ignored if D-H5=A,yes,"Low: applies per hit; multi-hit follow-ups can KO (mainline)"
+choice_band,2,"onModifyStat, onChooseMove",atk x1.5,,,,,,,,lock first move until holder faints,no,no,no,no,no,no,no,"no (lock draws none)","(none; card shows Choice lock)",any,ignored if D-H5=A,yes,"Medium: AI must score with the boost and skip its random-move draw while locked (keeps RNG stream deterministic)"
+choice_specs,2,"onModifyStat, onChooseMove",spa x1.5,,,,,,,,lock,no,no,no,no,no,no,no,no,,any,ignored if D-H5=A,yes,"Medium: as Choice Band"
+choice_scarf,2,"onModifySpe, onChooseMove",spe x1.5,,,,,,,speed,lock,no,no,no,no,no,no,no,no,,any,ignored if D-H5=A,yes,"Medium: speedOf() must apply it in entries and turn order"
+eviolite,1,onModifyStat,def/spd x1.5 if NFE,,,,,,,,,no,no,no,no,no,no,no,no,,"warn (not block) when the holder can't evolve: no effect",ignored if D-H5=A,yes,"Low: NFE = evolvesTo non-empty in pokemonData; must use the battling species, not the Mega profile"
+expert_belt,1,onFinalDamage,,,x1.2 on super-effective,,,,,,AI expected damage,no,no,no,no,no,no,no,no,,any,ignored if D-H5=A,yes,Low
+muscle_band,1,onBasePower,,physical x1.1,,,,,,,AI,no,no,no,no,no,no,no,no,,any,ignored if D-H5=A,yes,Low
+wise_glasses,1,onBasePower,,special x1.1,,,,,,,AI,no,no,no,no,no,no,no,no,,any,ignored if D-H5=A,yes,Low
+shell_bell,2,onAfterMove,,,,,,heal 1/8 of damage dealt,,,,no,no,no,no,no,no,no,no,"restored a little HP using its Shell Bell!",any,ignored if D-H5=A,yes,"Low: no heal if holder fainted from recoil"
+quick_claw,2,onFractionalPriority,,,,,,,,20% first within bracket,,no,no,no,no,no,no,no,"yes, only when a holder is active",“Quick Claw let it move first!”,any,ignored if D-H5=A,yes,"Low: draws only with a holder so no-item battles keep their RNG stream"
+black_sludge,2,onResidual,,,,,,,heal 1/16 (Poison) or lose 1/8,,,no,no,no,no,no,no,no,no,"restored / was hurt by its Black Sludge",warn when holder is not Poison type,ignored if D-H5=A,partial,"Low: self-damage can faint the holder (KO attributed to the foe on field)"
+light_ball,1,onModifyStat,atk/spa x2 (Pikachu),,,,,,,,,no,no,no,no,no,no,no,no,,Pikachu only: refuse others,ignored if D-H5=A,no,Low
+thick_club,1,onModifyStat,atk x2 (Cubone/Marowak),,,,,,,,,no,no,no,no,no,no,no,no,,Cubone/Marowak only,ignored if D-H5=A,no,"Low (balance: watch Marowak at Lv 50)"
+type_boosters (18),1,onBasePower,,matching type x1.2,,,,,,,AI,no,no,no,no,no,no,no,no,,any,ignored if D-H5=A,yes,Low
+life_orb,2,"onFinalDamage, onAfterMove",,,x1.3,,,lose 1/10 max HP,,,AI,no,no,no,no,no,no,no,no,"lost some of its HP!",any,ignored if D-H5=A,yes,"Balance, not engine: net negative in Coop's long battles (deferred)"
+rocky_helmet,2,onDamagingHit,,,,,attacker loses 1/6 on contact,,,,,yes (data/battle/move-flags.json has 223 contact moves),no,no,no,no,no,proposed,no,"was hurt by the Rocky Helmet!",any,ignored if D-H5=A,yes,"Balance outlier: AI never avoids contact; defer until a nerf is approved"
+assault_vest,1,onModifyStat,spd x1.5,,,,,,,,,no,no,no,no,no,no,no,no,,any,ignored if D-H5=A,yes,"Balance: its drawback (no status moves) is inert because Coop has no status moves"
+scope_lens,2,onModifyCritRatio,,,,,,,,,,no,yes,no,no,no,no,no,no,,any,ignored if D-H5=A,yes,"Low; crit ladder must be defined above Coop's 1/12 base"
+leek / lucky_punch,2,onModifyCritRatio,,,,,,,,,,no,yes,no,no,no,no,no,no,,species only,ignored if D-H5=A,no,Low
+wide_lens / zoom_lens,1-2,onModifyAccuracy,,,,,,,,,AI accuracy term,no,no,no,no,no,no,no,no,,any,ignored if D-H5=A,no,Low
+metronome,2,onBasePower + last-move memory,,x(1+0.2n) max x2,,,,,,,AI,no,no,no,no,no,no,no,no,,any,ignored if D-H5=A,no,"Medium balance: the AI repeats its best move, so the cap is reached often"
+big_root,1,onDrain,,,,,,drain x1.3,,,,no,no,no,no,no,no,no,no,,any,ignored if D-H5=A,no,Low
+focus_band,2,onTryKO,,,,10% survive,,,,,,no,no,no,no,no,no,no,"yes, only when holder is KO'd",,any,ignored if D-H5=A,no,Low (feel: luck)
+air_balloon,2,"onTryHit (Ground immunity), onDamagingHit (pop)",,,,,,,,,AI must see the immunity,no,no,no,no,no,no,yes,no,"floats in the air with its Air Balloon! / Air Balloon popped!",any,ignored if D-H5=A,no,Low
+oran_berry / pinch berries,2,onAfterHit,,,,,heal,,,,,no,no,no,no,no,no,yes,no,,any,ignored if D-H5=A,no,Low
+resist berries (18),2,onSourceFinalDamage,,,x0.5 once on SE hit of its type,,,,,,AI expected damage,no,no,no,no,no,no,yes,no,"weakened the damage with its Occa Berry!",any,ignored if D-H5=A,no,Low
+kings_rock,3,onAfterHit + flinch state,,,,,,,,,,no,no,no,no,no,no,no,yes,,any,ignored if D-H5=A,no,Needs a flinch mechanic
+lum_berry / status berries,3,onSetStatus,,,,,,,,,,no,no,yes,no,no,no,yes,no,,any,ignored if D-H5=A,no,Needs a status system (only burn exists)
+white_herb / weakness_policy / clear_amulet / throat_spray,3,stat-stage hooks,,,,,,,,,,no,no,no,yes,no,no,yes,no,,any,ignored if D-H5=A,no,Needs stat stages in every battle
+eject_button / red_card / shed_shell,4,,,,,,,,,,,no,no,no,no,yes,no,,,,,,no,No switching in Coop battles
+weather rocks / seeds / terrain extender / light_clay,4,,,,,,,,,,,no,no,no,no,no,yes,,,,,,no,Weather/terrain only from Mega abilities; no screens
+iron_ball / mental_herb / leppa_berry / covert_cloak / power_herb / booster_energy / heavy_duty_boots / safety_goggles,4,,,,,,,,,,,,,,,,,,,,,,no,No matching mechanic in Coop battles

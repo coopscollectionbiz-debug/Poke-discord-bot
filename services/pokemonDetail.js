@@ -21,10 +21,11 @@ import { isMegaCapabilityEnabled } from "../config/features.js";
 import { toTeamObj } from "../utils/economyRules.js";
 import { learnableMoves, chosenMoves, moveInfo as movesetMoveInfo } from "./movesets.js";
 import { customCopiesOf, plainCount } from "./ownership.js";
+import { isTmEnabled } from "../config/tmFeatures.js";
 
 const sum = (s) => (s ? s.hp + s.atk + s.def + s.spa + s.spd + s.spe : null);
 const nameOf = (id) => displaySpeciesName(id, getSpeciesEntry(id)?.name);
-const moveInfo = (m) => { const x = getMove(m); return x ? { id: m, name: x.name, type: x.type ?? null, power: x.power ?? null } : { id: m, name: String(m), type: null, power: null }; };
+const moveInfo = (m) => { const x = getMove(m); return x ? { id: m, name: x.name, type: x.type ?? null, power: x.power ?? null, category: x.category ?? null } : { id: m, name: String(m), type: null, power: null, category: null }; };
 
 /** Where this copy sits on each team: { display: 2, battle: null } (1-based slots). */
 function teamSlots(user, id, variant) {
@@ -136,6 +137,8 @@ export function pokemonDetail(user, speciesId, { env = process.env } = {}) {
       owned: counts,
       copies,
       megaForms,
+      // TM system (T4): whether "Teach a TM" is offered (TM_ENABLED).
+      tm: { enabled: isTmEnabled(env) },
     },
   };
 }

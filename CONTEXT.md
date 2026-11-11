@@ -22,6 +22,14 @@ _Avoid_: form, version, shiny status
 One owned unit of a Pokémon in a specific variant.
 _Avoid_: instance, unit
 
+**TM**:
+A consumable item that teaches one specific move to one compatible **Copy**, and is used up when it does.
+_Avoid_: technical machine (in UI text), move disc
+
+**Trained copy**:
+A **Copy** that has learned at least one move from a **TM**. It keeps those moves for good, through evolution and shiny crafting, and is never picked automatically when copies are removed. Every other copy is an untrained copy, and all untrained copies of the same Pokémon and **Variant** are interchangeable.
+_Avoid_: custom copy, customized copy, instance, TM copy
+
 **Duplicate**:
 Any copy beyond the first of the same Pokémon *and* variant. Pidgey x4 · ✨x2 has 3 normal duplicates and 1 shiny duplicate. One normal plus one shiny of the same Pokémon is not a duplicate.
 _Avoid_: extra, spare

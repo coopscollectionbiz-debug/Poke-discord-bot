@@ -18,7 +18,7 @@ const { tmShopView, buyTms } = await imp("services/tmShop.js");
 const { runInventoryTransaction } = await imp("services/inventory.js");
 
 const ID = "100000000000000009";
-const env = { TM_SHOP_ENABLED: "1" };
+const env = { TM_ENABLED: "1" };
 const trainerData = {
   [ID]: {
     id: ID, cc: 26000, tp: 4100, rank: "Advanced Trainer",

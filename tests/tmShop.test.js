@@ -9,9 +9,9 @@ import { TM_PRICE_BY_TIER, tmTierOf } from "../catalog/tms.js";
 import { tmMoveIds } from "../utils/battle/tmData.js";
 import { grantItem, runInventoryTransaction, listInventory } from "../services/inventory.js";
 import { tmShopView, buyTms, sellableTms, tmBoughtThisWeek } from "../services/tmShop.js";
-import { isTmShopEnabled, tmWeeklyCap } from "../config/tmFeatures.js";
+import { isTmEnabled, tmWeeklyCap } from "../config/tmFeatures.js";
 
-const ON = { TM_SHOP_ENABLED: "1" };
+const ON = { TM_ENABLED: "1" };
 const OFF = {};
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const player = (cc = 50000) => ({ cc, items: { evolution_stone: 0 }, pokemon: { 6: { normal: 1, shiny: 0 }, 25: { normal: 0, shiny: 1 } } });
@@ -38,7 +38,7 @@ section("catalog items and approved prices (D-T6)");
 }
 
 section("flags");
-assertEqual([isTmShopEnabled(OFF), isTmShopEnabled(ON), isTmShopEnabled({ TM_SHOP_ENABLED: "0" })], [false, true, false], "TM_SHOP_ENABLED is opt-in");
+assertEqual([isTmEnabled(OFF), isTmEnabled(ON), isTmEnabled({ TM_ENABLED: "0" })], [false, true, false], "TM_ENABLED is opt-in");
 assertEqual([tmWeeklyCap({}), tmWeeklyCap({ TM_WEEKLY_CAP: "10" }), tmWeeklyCap({ TM_WEEKLY_CAP: "0" }), tmWeeklyCap({ TM_WEEKLY_CAP: "abc" })], [null, 10, null, null], "weekly cap off unless a positive whole number (D-T7)");
 
 section("shop switched off");

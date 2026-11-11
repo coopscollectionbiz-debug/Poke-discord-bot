@@ -30,6 +30,9 @@ const TYPE_NAMES = [null, "normal", "fighting", "flying", "poison", "ground", "r
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const keyOf = (s) => `${s.id}:${s.variant}`;
+// A stored slot as the page keeps it. `uid` names a trained copy (TM system);
+// it must survive every edit, or saving would drop the copy from its slot.
+const slotFromServer = (s) => ({ id: Number(s.id), variant: s.variant === "shiny" ? "shiny" : "normal", ...(s.mega ? { mega: s.mega } : {}), ...(s.uid ? { uid: s.uid } : {}) });
 const clone = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
@@ -291,6 +294,7 @@ function slotCard(t, s, i) {
     s.mega && state.megaOn ? `<span class="tm-tag tm-tag--mega">Mega</span>` : "",
     isMythic(s.id) ? `<span class="cc-tier" data-tier="mythic">Mythic</span>` : "",
     change ? `<span class="tm-tag tm-tag--change">${change}</span>` : "",
+    s.uid ? `<span class="tm-tag tm-tag--trained" title="This copy learned moves from TMs">★ Trained</span>` : "",
   ].join("");
   const shiny = s.variant === "shiny";
   return `<li class="tm-slot tm-slot--lg${i === 0 ? " is-lead" : ""}${shiny ? " is-shiny" : ""}${s.mega && state.megaOn ? " is-mega" : ""}${change ? " is-changed" : ""}" draggable="true" data-team="${t}" data-i="${i}">
@@ -499,7 +503,7 @@ function onClick(e) {
   else if (act === "mega") cycleMega(t, i);
   else if (act === "moves") {
     const s = team(t)[i];
-    if (s) openMovesEditor({ userId, team: t, s, name: species(s.id).name, onSaved: () => render() });
+    if (s) openMovesEditor({ userId, team: t, s, name: species(s.id).name, onSaved: () => render(), onTaught: () => refreshCopies() });
   }
   else if (act === "discard") discard();
   else if (act === "save") save();
@@ -644,6 +648,29 @@ document.addEventListener("click", async (e) => {
   }
 });
 
+// After teaching a TM the server may have moved slots onto a new trained copy
+// (every untrained slot of that Pokémon). Take the stored uids without
+// touching unsaved drafts of other slots.
+async function refreshCopies() {
+  try {
+    const res = await fetch(`/api/user-pokemon?id=${encodeURIComponent(userId)}`, { credentials: "same-origin" });
+    if (res.status === 403) return showExpired();
+    if (!res.ok) return;
+    const u = await res.json();
+    const stored = { display: (u.currentTeam ?? []).map(slotFromServer), battle: Array.isArray(u.battleTeam) ? u.battleTeam.map(slotFromServer) : null };
+    for (const t of TEAMS) {
+      const uidOf = new Map((stored[t] ?? []).filter((s) => s.uid).map((s) => [keyOf(s), s.uid]));
+      for (const list of [state.saved[t], state.draft[t]]) {
+        for (const s of list ?? []) {
+          const uid = uidOf.get(keyOf(s));
+          if (uid) s.uid = uid;
+        }
+      }
+    }
+    render();
+  } catch { /* the next save still keeps trained copies (server rule) */ }
+}
+
 // ---------- load ----------
 async function load() {
   if (!userId) { app.innerHTML = ""; return; }
@@ -664,7 +691,7 @@ async function load() {
     state.pokemon = u.pokemon ?? {};
     state.levels = u.levels ?? {};
     state.powers = u.powers ?? {};
-    const norm = (list) => (Array.isArray(list) ? list.map((s) => ({ id: Number(s.id), variant: s.variant === "shiny" ? "shiny" : "normal", ...(s.mega ? { mega: s.mega } : {}) })) : null);
+    const norm = (list) => (Array.isArray(list) ? list.map(slotFromServer) : null);
     state.saved = { display: norm(u.currentTeam) ?? [], battle: norm(u.battleTeam) };
     state.draft = clone(state.saved);
     const want = new URLSearchParams(location.search).get("team");

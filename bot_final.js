@@ -38,7 +38,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
-import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid } from "./services/ownership.js";
+import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid, carryCopyUids } from "./services/ownership.js";
 
 // Local saver — writes trainerData.json (in TRAINERDATA_DIR) & marks dirty
 import {
@@ -59,6 +59,7 @@ import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
 import { handleInventoryRequest } from "./services/inventoryApi.js";
 import { tmShopView, buyTms } from "./services/tmShop.js";
+import { teachOptions, teachTm } from "./services/tmTeaching.js";
 import { createGameplayHandlers } from "./services/gameplay.js";
 import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
 import { createAchievementHandlers } from "./services/achievementsApi.js";
@@ -1400,6 +1401,10 @@ app.post("/api/updateUser", express.json({ limit: "32kb" }), async (req, res) =>
       // wagers, battles), and their later CC/TP writes were lost.
       const user = normalizeUserSchema(id, trainerData[id]);
 
+      // TM system: keep trained copies on their slots (this route's clients
+      // never send `uid`); see services/ownership.js carryCopyUids.
+      if (patch.displayedPokemon) patch.displayedPokemon = carryCopyUids(user, user.displayedPokemon, patch.displayedPokemon, req.body.user.displayedPokemon);
+
       // Apply patch only (NO blind merge of arbitrary user fields)
       Object.assign(user, patch);
       normalizeUserSchema(id, user);
@@ -1884,7 +1889,7 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
 // ==========================================================
 // ==========================================================
 // 💿 TM shop (TM system phase T3; services/tmShop.js). Off unless
-// TM_SHOP_ENABLED is set. Prices come from the catalog, never the client.
+// TM_ENABLED is set. Prices come from the catalog, never the client.
 // ==========================================================
 app.get("/api/tms", (req, res) => {
   const { id } = req.query;
@@ -2126,6 +2131,53 @@ app.post("/api/pokemon/moveset", express.json({ limit: "4kb" }), async (req, res
   }
 });
 
+// ==========================================================
+// 💿 Teach a TM (TM system phase T4; services/tmTeaching.js). Off unless
+// TM_ENABLED is set. The client sends ids and the moves it showed; the
+// server re-checks everything and refuses (TM kept) if anything changed.
+// ==========================================================
+app.get("/api/pokemon/tm-options", (req, res) => {
+  const { id, species, variant } = req.query;
+  if (!id || species == null) return res.status(400).json({ error: "Missing id/species" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  const r = teachOptions(user, { speciesId: species, variant });
+  if (!r.ok) { const { ok, status = 400, ...rest } = r; return res.status(status).json(rest); }
+  const { ok, ...body } = r;
+  return res.json(body);
+});
+
+// Body: { id, item, pokeId, variant, uid|null, rev, expect, equip, requestId? }
+app.post("/api/pokemon/teach-tm", express.json({ limit: "8kb" }), async (req, res) => {
+  try {
+    const { id, item, pokeId, variant, uid = null, rev = null, expect = null, equip = null, requestId = null } = req.body || {};
+    if (!id || pokeId == null || !item) return res.status(400).json({ success: false, error: "Missing id/pokeId/item" });
+    if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    if (!trainerData[id]) return res.status(404).json({ success: false, error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId))) return res.status(400).json({ success: false, error: "Invalid request id" });
+    const tx = await runInventoryTransaction({
+      trainerData,
+      userId: id,
+      lock: lockUser,
+      save: saveAndAck,
+      requestId,
+      payloadKey: `teach-tm:${String(item).slice(0, 64)}:${Number(pokeId)}:${variant === "shiny" ? "shiny" : "normal"}:${uid ?? "untrained"}`,
+      mutate: (user) => {
+        normalizeUserSchema(id, user); // in place
+        return teachTm(user, { item, pokeId, variant, uid, rev, expect, equip }, { requestId });
+      },
+    });
+    if (!tx.ok) { const { ok, status = 400, ...rest } = tx; return res.status(status).json({ success: false, ...rest }); }
+    if (!tx.replayed) logEvent("tm_taught", id, { item: tx.result.item, move: tx.result.move.id, pokemonId: Number(pokeId), variant: variant === "shiny" ? "shiny" : "normal", uid: tx.result.uid, created: tx.result.created });
+    const { ok, ...result } = tx.result;
+    return res.json({ ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...result });
+  } catch (err) {
+    console.error("❌ /api/pokemon/teach-tm:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 // ✅ POST — set full Pokémon team (up to 6) — Variant-safe + Ghost Auto-Clean
 // teamType: "display" (default; user.displayedPokemon, as before) or
 // "battle" (user.battleTeam; also at most one mythic-tier Pokémon,
@@ -2178,7 +2230,9 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       if (!prepared.ok) {
         return res.status(prepared.status).json({ success: false, error: prepared.error, code: prepared.code });
       }
-      const normalized = prepared.team;
+      // TM system: a slot sent without `uid` keeps the trained copy it held
+      // (older clients don't know about trained copies); `uid: null` = untrained.
+      const normalized = carryCopyUids(u, teamType === "battle" ? u.battleTeam : u.displayedPokemon, prepared.team, team);
 
       // 5) Save
       if (teamType === "battle") u.battleTeam = normalized;

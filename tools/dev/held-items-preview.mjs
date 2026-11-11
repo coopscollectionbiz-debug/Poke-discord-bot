@@ -29,6 +29,9 @@ u.cc = 24000;
 for (const s of [6, 25, 143, 94, 1, 105, 248, 131, 9]) u.pokemon[s] = { normal: 1, shiny: s === 25 ? 1 : 0 };
 u.displayedPokemon = [6, 25, 143, 94, 1, 105].map((id) => ({ id, variant: "normal" }));
 u.battleTeam = [248, 143, 94, 131, 9].map((id) => ({ id, variant: "normal" }));
+// PREVIEW_MEGA=1: show Charizard as a Mega slot on the Display team (the
+// placeholder comes from the stored team; Mega itself stays off here).
+if (process.env.PREVIEW_MEGA === "1") u.displayedPokemon[0].mega = "mega-charizard-x";
 const td = { [ID]: u };
 const api = createHeldItemHandlers({ getTrainerData: () => td, lockUser, save: async () => ({ saved: true, note: "" }), getEnv: () => env, allowWrite: createRateLimiter({ max: 1000 }) });
 const ok = () => true;

@@ -571,6 +571,13 @@ function onClick(e) {
       openItemPicker({
         userId, team: t, s, name: species(s.id).name, nameOf: (id) => species(id).name,
         getHeld: () => state.held,
+        // Allowed but unwise picks, said plainly (the server allows them, as the games do).
+        warningFor: (itemId) => {
+          const sp = species(s.id);
+          if (itemId === "eviolite" && !(sp.evolvesTo ?? []).length) return `No effect: ${sp.name} can’t evolve.`;
+          if (itemId === "black_sludge" && !(sp.types ?? []).includes(4)) return `Hurts ${sp.name} every turn: only Poison types are healed.`;
+          return null;
+        },
         onChange: (data) => { applyHeld(data); render(); },
       });
     }

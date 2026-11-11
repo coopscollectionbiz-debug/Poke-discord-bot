@@ -286,7 +286,8 @@ for (const [label, mk] of [
   const gains = [];
   for (let i = 0; i < N; i++) {
     const a = pickFrom(casualPool).cur, b = pickFrom(casualPool).cur;
-    const { r } = fight(a, b);
+    // No side swap here: EXP is attributed to side 0 (the challenger).
+    const r = simulateBattle({ sides: [{ members: a }, { members: b }], seed: rng.int(2 ** 31), surge: null });
     const ko = r.knockouts.filter((k) => k.bySide === 0).map((k) => b[k.slot]);
     gains.push(teamExp({ members: a, knockedOut: ko, won: r.winner === 0 })[0]);
   }

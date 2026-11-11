@@ -343,3 +343,5 @@ dialog.hi-dialog { width: min(640px, calc(100vw - 24px)); }
 /* Phones: the compact slot's stage is too small for a corner badge without
    covering the sprite; the Item button already shows the item. */
 @media (max-width: 820px) { .tm-stage .hi-badge { display: none; } }
+.hi-note--warn { color: var(--cc-gold); font-weight: 700; }
+@media (max-width: 820px) { .hi-slotbtn { white-space: normal; text-align: left; line-height: 1.2; padding: 6px 12px; } }

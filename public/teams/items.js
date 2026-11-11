@@ -69,8 +69,9 @@ export async function buyHeldItem(userId, itemId) {
  * @param {() => object} o.getHeld                 current held state { items, rev, teams }
  * @param {(data:object) => void} o.onChange       server reply (rev/teams/items) after any change or conflict
  * @param {(id:number) => string} o.nameOf         species id → display name
+ * @param {(itemId:string) => string|null} [o.warningFor] a warning for this Pokémon (e.g. no effect)
  */
-export function openItemPicker({ userId, team, s, name, getHeld, onChange, nameOf }) {
+export function openItemPicker({ userId, team, s, name, getHeld, onChange, nameOf, warningFor = null }) {
   lastFocus = document.activeElement;
   const d = ensureDialog();
   const line = `${s.id}:${s.variant}`;
@@ -102,7 +103,8 @@ export function openItemPicker({ userId, team, s, name, getHeld, onChange, nameO
       : `<span class="hi-state hi-state--locked">🔒 Can’t hold</span>`;
     const confirm = ui.confirmMove === it.id && st.holder
       ? `<p class="hi-note">${esc(nameOf(st.holder.id))} will hold nothing on your ${LABEL[team]}. Your other team is not changed.</p>` : "";
-    const evo = it.id === "eviolite" ? `<p class="hi-note">No effect if ${esc(name)} can’t evolve.</p>` : "";
+    const warn = warningFor?.(it.id);
+    const evo = warn ? `<p class="hi-note hi-note--warn">⚠ ${esc(warn)}</p>` : "";
     return `<li class="hi-row${st.kind === "here" ? " is-here" : ""}${st.kind === "locked" || st.kind === "shop" ? " is-muted" : ""}">
       ${itemIcon(it)}
       <div class="hi-row-body">

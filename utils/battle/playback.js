@@ -3,7 +3,8 @@
 // "Watch it happen": posts a battle image in the channel, edits it once
 // per turn (up to PLAYBACK.maxUpdates, spread evenly over longer battles),
 // then shows the result image with a Battle rating embed. (/battle sends
-// each player's EXP privately afterward.) Results are already saved before
+// each player's EXP privately afterward.) Every update has its own file
+// name: battle-start.gif, battle-t<turn>.gif, battle-final.gif. Results are already saved before
 // this runs; a failed edit just stops the replay. At most
 // PLAYBACK.maxAtOnce replays run at once; the rest wait in line.
 // ==========================================================
@@ -77,6 +78,9 @@ export function buildResultEmbed(outcome, names) {
   return embed;
 }
 
+/** The attachment name for one playback update: "start", a turn number, or "final". */
+export const battleImageName = (step) => (typeof step === "number" ? `battle-t${step}.gif` : `battle-${step}.gif`);
+
 function header(outcome) {
   const [c, d] = outcome.sides.map((s) => `<@${s.userId}>`);
   const intro = outcome.mode === "wager"
@@ -127,9 +131,12 @@ export async function playBattle(channel, outcome, names, { maxUpdates, delayMs,
   const sides = outcome.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = outcome.result;
   const sprites = new Map(); // each sprite GIF is read once per battle
-  const image = async (opts) => new AttachmentBuilder(
+  // Each update gets its own file name (battleImageName). With one shared
+  // "battle.gif", a desktop client whose first load failed kept showing the
+  // broken image for every later edit, result included.
+  const image = async (step, opts) => new AttachmentBuilder(
     await renderBattleFrame({ sides, surgeSide: outcome.surge?.side ?? null, sprites, ...opts }),
-    { name: "battle.gif" },
+    { name: battleImageName(step) },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.
   const paced = async (render) => {
@@ -158,7 +165,7 @@ export async function playBattle(channel, outcome, names, { maxUpdates, delayMs,
     const leads = sides.map((s) => s.members[0]?.name).join(" and ");
     const start = {
       content: header(outcome),
-      files: [await image({ hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] })],
+      files: [await image("start", { hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] })],
     };
     if (message) await message.edit(start);
     else message = await channel.send(start);
@@ -166,7 +173,7 @@ export async function playBattle(channel, outcome, names, { maxUpdates, delayMs,
       let shown = 0;
       for (const turn of pickFrameTurns(total, maxUpdates)) {
         const badge = turn - shown > 1 ? `TURNS ${shown + 1}–${turn}` : `TURN ${turn}`;
-        const file = await paced(() => image({ hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }));
+        const file = await paced(() => image(turn, { hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }));
         await message.edit({ files: [file] });
         shown = turn;
       }
@@ -179,7 +186,7 @@ export async function playBattle(channel, outcome, names, { maxUpdates, delayMs,
           return level > m.level ? { ...m, level, levelUp: true } : m;
         }),
       }));
-      const file = await paced(() => image({
+      const file = await paced(() => image("final", {
         sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(outcome), screens: resultScreens(outcome, names),
       }));
       await message.edit({ files: [file], embeds: [buildResultEmbed(outcome, names)] });

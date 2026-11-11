@@ -8,8 +8,13 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBall, drawShinyMark } from "./primitives.js";
-import { loadStaticSprite, loadTrainerSprite, loadBadgeSprite, loadPlaceholder, drawSprite } from "./sprites.js";
+import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag } from "./primitives.js";
+import { createCanvas as makeCanvas } from "@napi-rs/canvas";
+import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadBadgeSprite, loadPlaceholder, spriteScale } from "./sprites.js";
+import { spriteStage, FRAMES } from "./stage.js";
+import { createBackdrop, hasBackdrop } from "./trainerBackdrop.js";
+import { poseAtFrame } from "../trainerIdle.js";
+import { trainersAnimated } from "../trainerAssets.js";
 import { buildTeamView } from "./teamView.js";
 import { getRankProgress } from "../rankSystem.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.js";
@@ -52,6 +57,46 @@ export function trainerCardView(user, { displayName, trainer }) {
   };
 }
 
+/**
+ * The Epic+ tier backdrop behind the trainer, on a grid of the trainer's own
+ * on-card pixels (so its pixel art lines up with the sprite). Animated through
+ * the stage; one still frame when TRAINERS_ANIMATED=0 or for PNG cards.
+ */
+export function trainerBackdrop(ctx, stage, { tier, sprite, cx, box, panel, floor }) {
+  const s = spriteScale(sprite.width, sprite.height, box.w, box.h, box.scale);
+  const w = Math.round(sprite.width * s), h = Math.round(sprite.height * s);
+  const x = Math.round(cx - w / 2), y = Math.round(box.floor - h);
+  const u = s; // one grid cell = one sprite pixel on the card
+  const X0 = x - u * Math.floor((x - panel.x) / u), Y0 = y - u * Math.floor((y - panel.y) / u);
+  const gridW = Math.floor((panel.x + panel.w - X0) / u), gridH = Math.floor((floor + 20 - Y0) / u);
+  const ox = Math.round((x - X0) / u), oy = Math.round((y - Y0) / u);
+  // Silhouette mask (dilated 3 cells), so sparkles never sit behind the trainer.
+  const px = makeCanvas(sprite.width, sprite.height);
+  px.getContext("2d").drawImage(sprite.image, 0, 0);
+  const rgba = px.getContext("2d").getImageData(0, 0, sprite.width, sprite.height).data;
+  const mask = new Uint8Array(gridW * gridH);
+  for (let sy = 0; sy < sprite.height; sy++) for (let sx = 0; sx < sprite.width; sx++) {
+    if (rgba[(sy * sprite.width + sx) * 4 + 3] < 8) continue;
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+      const gx = ox + sx + dx, gy = oy + sy + dy;
+      if (gx >= 0 && gy >= 0 && gx < gridW && gy < gridH) mask[gy * gridW + gx] = 1;
+    }
+  }
+  const bd = createBackdrop({
+    tier, gridW, gridH, mask, frames: FRAMES,
+    halo: { cx: (cx - X0) / u, cy: (y + h * 0.45 - Y0) / u, rx: 40, ry: 54 },
+    floorRow: Math.floor((floor - Y0) / u),
+  });
+  if (!bd) return;
+  const draw = (c, f) => {
+    c.imageSmoothingEnabled = false;
+    c.drawImage(bd.frame(f), X0, Y0, gridW * u, gridH * u);
+    c.imageSmoothingEnabled = true;
+  };
+  if (trainersAnimated()) stage.layer(ctx, draw);
+  else draw(ctx, 0);
+}
+
 function stat(ctx, label, value, x, y, w, color = COLOR.text) {
   ctx.fillStyle = "#1a2135";
   rr(ctx, x, y, w, 86, 14);
@@ -68,10 +113,11 @@ function stat(ctx, label, value, x, y, w, color = COLOR.text) {
   ctx.fillText(v.text, x + 18, y + 70);
 }
 
-export async function renderTrainerCard(v) {
+export async function renderTrainerCard(v, { animate = false } = {}) {
   const { w: W, h: H } = TRAINER_CARD_SIZE;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
+  const stage = spriteStage({ animate });
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, "#131a2d");
   bg.addColorStop(1, "#1c1530");
@@ -90,11 +136,11 @@ export async function renderTrainerCard(v) {
   ctx.strokeStyle = `${accent}88`;
   ctx.stroke();
   const cx = M + LEFT_W / 2, floor = M + 400;
-  const spot = ctx.createRadialGradient(cx, floor - 130, 10, cx, floor - 130, 240);
-  spot.addColorStop(0, `${accent}30`);
-  spot.addColorStop(1, `${accent}00`);
-  ctx.fillStyle = spot;
-  ctx.fillRect(M, M, LEFT_W, 460);
+  const t = await loadTrainerSprite(v.trainerFile);
+  // Epic and above get the pixel-art tier backdrop; Rare and below a plain
+  // panel. (The old smooth spotlight banded into rings once the breathing
+  // trainer made every card a GIF.) The tier-lit platform below stays for all.
+  const fancy = Boolean(t && hasBackdrop(tier));
   ctx.fillStyle = `${accent}3a`;
   ctx.beginPath();
   ctx.ellipse(cx, floor, 120, 22, 0, 0, Math.PI * 2);
@@ -102,9 +148,12 @@ export async function renderTrainerCard(v) {
   ctx.lineWidth = 2;
   ctx.strokeStyle = `${accent}aa`;
   ctx.stroke();
-  const t = await loadTrainerSprite(v.trainerFile);
-  if (t) drawSprite(ctx, t, cx, floor + 6, LEFT_W - 40, 330, { scale: 4 });
-  else { ctx.globalAlpha = 0.35; drawBall(ctx, cx, floor - 70, 40, false); ctx.globalAlpha = 1; }
+  if (t) {
+    const idle = await loadTrainerPoses(v.trainerFile);
+    const box = { w: LEFT_W - 40, h: 330, floor: floor + 6, scale: 4 };
+    if (fancy) trainerBackdrop(ctx, stage, { tier, sprite: t, cx, box, panel: { x: M, y: M, w: LEFT_W }, floor });
+    stage.placePosed(ctx, idle?.poses ?? [t], idle?.poseAt ?? poseAtFrame, cx, box.floor, box.w, box.h, { scale: box.scale });
+  } else { ctx.globalAlpha = 0.35; drawBall(ctx, cx, floor - 70, 40, false); ctx.globalAlpha = 1; }
   ctx.textAlign = "center";
   ctx.font = font(15, 800);
   ctx.fillStyle = COLOR.textFaint;
@@ -199,17 +248,19 @@ export async function renderTrainerCard(v) {
     rr(ctx, x, y, slotW, slotH, 12);
     ctx.fill();
     ctx.lineWidth = s?.shiny || i === 0 ? 2.5 : 1.5;
-    ctx.strokeStyle = !s ? "#2a3350" : s.shiny ? COLOR.gold : i === 0 ? COLOR.blue : "#323c5c";
+    ctx.strokeStyle = !s ? "#2a3350" : s.shiny ? COLOR.gold : i === 0 ? COLOR.blue : s.mega ? COLOR.mega : "#323c5c";
     ctx.stroke();
     if (!s) continue;
-    const sp = (await loadStaticSprite(s.id, s.variant)) ?? ph;
-    drawSprite(ctx, sp, x + slotW / 2, y + slotH - 40, slotW - 12, slotH - 50, { scale: 2 });
+    const spriteId = s.spriteId ?? s.id; // a Mega slot (teamView) draws its Mega sprite
+    const sp = (await loadStaticSprite(spriteId, s.variant)) ?? ph;
+    stage.place(ctx, sp, x + slotW / 2, y + slotH - 40, slotW - 12, slotH - 50, { scale: 2 }, { id: spriteId, variant: s.variant });
     ctx.textAlign = "center";
     ctx.font = font(15, 800);
     ctx.fillStyle = COLOR.textMuted;
     ctx.fillText(fitText(ctx, `Lv ${s.level}`, slotW - 10), x + slotW / 2, y + slotH - 14);
     ctx.textAlign = "left";
     if (s.shiny) drawShinyMark(ctx, x + slotW - 18, y + 18, 8);
+    if (s.mega) drawMegaTag(ctx, x + 7, y + 7, { h: 20, size: 11 });
   }
-  return canvas.toBuffer("image/png");
+  return stage.output(canvas);
 }

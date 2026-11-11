@@ -121,12 +121,14 @@ for (const n of NEW) {
   counts[r.normal.kind]++;
   for (const v of ["normal", "shiny"]) {
     const g = new omggif.GifReader(fs.readFileSync(new URL(`../public/sprites/pokemon/${r[v].file}`, import.meta.url)));
-    if (g.numFrames() < 1 || (r[v].kind === "animated") !== (g.numFrames() > 1)) gifOk = false;
+    // Animated art, or static art with the 4-frame breathing idle (tools/generate-pokemon-idles.mjs).
+    const moving = r[v].kind === "animated" || r[v].motion === "breathing";
+    if (g.numFrames() < 1 || moving !== (g.numFrames() > 1) || (r[v].motion === "breathing" && g.numFrames() !== 4)) gifOk = false;
   }
 }
 assertTrue(fileOk, "every shipped file matches the manifest SHA-1");
 assertTrue(distinct, "every new species has a shiny distinct from its normal sprite");
-assertTrue(gifOk, "every sprite is a valid GIF; animated ↔ multi-frame");
+assertTrue(gifOk, "every sprite is a valid GIF; animated or breathing ↔ multi-frame (breathing = 4 frames)");
 assertEqual(counts, { animated: 220, static: 156 }, "220 animated + 156 static normal sprites (audited coverage)");
 const byGen = {};
 for (const n of NEW) { const g = DEX[n].generation; byGen[g] ??= [0, 0]; byGen[g][SPRITES[n].normal.kind === "animated" ? 0 : 1]++; }

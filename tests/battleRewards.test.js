@@ -42,14 +42,14 @@ assertTrue(teamPower([{ speciesId: 6, level: 30 }, { speciesId: 25, level: 30 }]
 
 section("Underdog surge odds");
 assertEqual(surgeChance(100, 100), { underdog: null, chance: 0 }, "no surge between even teams");
-assertEqual(surgeChance(100, 500), { underdog: 0, chance: SURGE.maxChance }, "5× gap → side 0 is the Underdog at the max chance");
+assertEqual(surgeChance(100, 500), { underdog: 0, chance: 0.2 }, "5× gap → side 0 is the Underdog at the max chance");
 assertEqual(surgeChance(300, 200).underdog, 1, "the weaker side is the Underdog");
 assertEqual(rollSurge([100, 100], 1), null, "even teams never surge");
-const seedThatSurges = Array.from({ length: 50 }, (_, i) => i).find((s) => createRng(s).next() < SURGE.maxChance);
+const seedThatSurges = Array.from({ length: 50 }, (_, i) => i).find((s) => createRng(s).next() < 0.2);
 const surge = rollSurge([100, 500], seedThatSurges);
 assertEqual(surge?.side, 0, "a surge goes to the Underdog");
 assertTrue(Math.abs(surge.levelMult - 5 / SURGE.residual) < 1e-9, "a surge closes the gap to the residual ratio");
-const seedThatDoesnt = Array.from({ length: 50 }, (_, i) => i).find((s) => createRng(s).next() >= SURGE.maxChance);
+const seedThatDoesnt = Array.from({ length: 50 }, (_, i) => i).find((s) => createRng(s).next() >= 0.2);
 assertEqual(rollSurge([100, 500], seedThatDoesnt), null, "no surge when the roll misses");
 
 section("Gen V EXP");

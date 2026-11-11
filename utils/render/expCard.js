@@ -9,8 +9,11 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawShinyMark, drawTag } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawShinyMark, drawTag, dexNo, drawMegaTag } from "./primitives.js";
+import { getMega } from "../megas.js";
+import { megaShortName } from "../megaDisplay.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
+import { spriteStage } from "./stage.js";
 import { getTraining } from "../training.js";
 import { expProgress } from "./teamView.js";
 import { displaySpeciesName } from "./names.js";
@@ -24,11 +27,16 @@ export function expMembers(entries, user) {
   return (entries ?? []).map((e) => {
     const [id, variant] = String(e.key).split(":");
     const t = user ? getTraining(user, Number(id), variant) : null;
+    // A member that battled as a Mega (runBattle's validated participant)
+    // shows the Mega; the EXP and Level are its base line's.
+    const mega = e.megaForm && getMega(e.megaForm)?.species === Number(id) ? e.megaForm : null;
     return {
       id: Number(id),
+      spriteId: mega ?? Number(id),
+      mega: mega ? { formId: mega, name: e.name, shortName: megaShortName(mega) } : null,
       variant,
       shiny: variant === "shiny",
-      name: displaySpeciesName(id, e.name),
+      name: mega ? megaShortName(mega) : displaySpeciesName(id, e.name),
       fromLevel: e.fromLevel,
       toLevel: e.toLevel,
       gained: e.gained,
@@ -83,7 +91,7 @@ function drawHeader(ctx, v) {
   }
 }
 
-function drawTile(ctx, m, x, y, w, sprite) {
+function drawTile(ctx, m, x, y, w, sprite, stage) {
   const up = m.toLevel > m.fromLevel;
   const accent = up ? "#3fd46c" : m.shiny ? COLOR.gold : null;
   ctx.fillStyle = "#1a2135";
@@ -99,11 +107,12 @@ function drawTile(ctx, m, x, y, w, sprite) {
   ctx.beginPath();
   ctx.ellipse(sx, floor, 58, 12, 0, 0, Math.PI * 2);
   ctx.fill();
-  drawSprite(ctx, sprite, sx, floor + 6, 150, TILE_H - 36, { scale: 2 });
+  stage.place(ctx, sprite, sx, floor + 6, 150, TILE_H - 36, { scale: 2 }, { id: m.spriteId ?? m.id, variant: m.variant });
 
   const tx = x + 168, tw = w - 168 - 18;
   // Name.
-  const nm = fitFont(ctx, m.name, tw - (m.shiny ? 30 : 0) - (up ? 120 : 0), 28, 20, 800);
+  const megaW = m.mega ? 66 : 0; // the MEGA tag after the name
+  const nm = fitFont(ctx, m.name, tw - (m.shiny ? 30 : 0) - (up ? 120 : 0) - megaW, 28, 20, 800);
   ctx.font = font(nm.size, 800);
   ctx.fillStyle = COLOR.text;
   ctx.textAlign = "left";
@@ -111,6 +120,7 @@ function drawTile(ctx, m, x, y, w, sprite) {
   ctx.fillText(nm.text, tx, y + 42);
   let after = tx + ctx.measureText(nm.text).width;
   if (m.shiny) { drawShinyMark(ctx, after + 16, y + 42 - nm.size * 0.4, 10); after += 30; }
+  if (m.mega) drawMegaTag(ctx, after + 10, y + 42 - 19, { h: 24, size: 13 });
   if (up) drawTag(ctx, "LEVEL UP!", x + w - 18 - 112, y + 20, { fill: "#3fd46c", color: COLOR.ink, h: 28, size: 15 });
 
   // Level line: "Lv 41 → 42" or "Lv 41", then the EXP gained.
@@ -144,19 +154,27 @@ function drawTile(ctx, m, x, y, w, sprite) {
       ctx.fill();
     }
   }
-  // New moves.
+  // National Pokédex number, bottom right of every tile.
+  ctx.textAlign = "right";
+  ctx.font = font(16, 800);
+  ctx.fillStyle = COLOR.textFaint;
+  ctx.fillText(dexNo(m.id), x + w - 18, y + 130);
+  const dexW = ctx.measureText(dexNo(m.id)).width + 14;
+  ctx.textAlign = "left";
+  // New moves (left of the number).
   if (m.learned.length) {
     ctx.font = font(18, 700);
     ctx.fillStyle = "#3fd46c";
-    ctx.fillText(fitText(ctx, `Learned ${m.learned.join(", ")}`, tw), tx, y + 130);
+    ctx.fillText(fitText(ctx, `Learned ${m.learned.join(", ")}`, tw - dexW), tx, y + 130);
   }
 }
 
 /** PNG of one player's post-battle EXP. */
-export async function renderExpCard(v) {
+export async function renderExpCard(v, { animate = false } = {}) {
   const { w, h } = expCardSize(v.members.length);
   const canvas = createCanvas(w, h);
   const ctx = canvas.getContext("2d");
+  const stage = spriteStage({ animate });
   const bg = ctx.createLinearGradient(0, 0, 0, h);
   bg.addColorStop(0, "#131a2d");
   bg.addColorStop(1, "#1c1530");
@@ -173,8 +191,8 @@ export async function renderExpCard(v) {
   const ph = await loadPlaceholder();
   const tileW = (W - 2 * M - GAP) / 2;
   for (const [i, m] of v.members.entries()) {
-    const sprite = (await loadStaticSprite(m.id, m.variant)) ?? ph;
-    drawTile(ctx, m, M + (i % 2) * (tileW + GAP), M + HEADER + Math.floor(i / 2) * (TILE_H + GAP), tileW, sprite);
+    const sprite = (await loadStaticSprite(m.spriteId ?? m.id, m.variant)) ?? ph;
+    drawTile(ctx, m, M + (i % 2) * (tileW + GAP), M + HEADER + Math.floor(i / 2) * (TILE_H + GAP), tileW, sprite, stage);
   }
-  return canvas.toBuffer("image/png");
+  return stage.output(canvas);
 }

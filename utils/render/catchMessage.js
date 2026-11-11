@@ -1,38 +1,22 @@
 // ==========================================================
 // utils/render/catchMessage.js
-// The random-catch announcement: a one-line caption plus the catch card
-// (utils/render/catchCard.js). Shiny and Rare-or-better catches animate,
-// one GIF at a time; everything else, or a catch while a GIF is rendering,
-// is a PNG. CATCH_ANIMATED=0 forces PNG. Callers fall back to the old embed
-// when this throws.
+// The catch announcement: a one-line caption plus the catch card
+// (utils/render/catchCard.js). Every catch animates when its sprite does and
+// a GIF slot is free (the shared card gate, utils/render/stage.js);
+// otherwise it's a PNG. CATCH_ANIMATED=0 or CARDS_ANIMATED=0 forces PNG.
+// Callers fall back to the old embed when this throws.
 // ==========================================================
 
 import { AttachmentBuilder, escapeMarkdown } from "discord.js";
 import { renderCatchCard, catchView } from "./catchCard.js";
-import { createRenderGate } from "./renderGate.js";
+import { cardImage, cardGifGate } from "./stage.js";
 
-const gifGate = createRenderGate(1);
-const ANIMATED_TIERS = new Set(["rare", "epic", "legendary", "mythic"]);
-
-/** Shiny and Rare-or-better catches get the animated card. */
-export const shouldAnimate = (view) => view.shiny || ANIMATED_TIERS.has(view.tier);
-
-/** { buffer, name } — a GIF when warranted and a slot is free, else a PNG. */
-export async function renderCatchImage(view, { gate = gifGate, env = process.env, render = renderCatchCard } = {}) {
-  const release = shouldAnimate(view) && env.CATCH_ANIMATED !== "0" ? gate.tryAcquire() : null;
-  if (release) {
-    try {
-      return { buffer: await render(view, { animate: true }), name: "catch.gif" };
-    } catch (err) {
-      console.warn("⚠️ catch GIF render failed; sending PNG:", err?.message || err);
-    } finally {
-      release();
-    }
-  }
-  return { buffer: await render(view), name: "catch.png" };
+/** { buffer, name } — the animated card when a slot is free, else a PNG. */
+export function renderCatchImage(view, { gate = cardGifGate, env = process.env, render = renderCatchCard } = {}) {
+  return cardImage((animate) => render(view, { animate }), "catch", { gate, env, flag: "CATCH_ANIMATED" });
 }
 
-const what = (view) => (view.shiny ? `a ✨ shiny **${view.name}**` : `a wild **${view.name}**`);
+const what = (view) => (view.shiny ? `a ✨ shiny **${view.name}**` : view.sighting ? `**${view.name}**` : `a wild **${view.name}**`);
 
 /** The channel line under which the card is posted; it pings the catcher. */
 export const catchCaption = (view, userId) => `🎉 <@${userId}> caught ${what(view)}!`;

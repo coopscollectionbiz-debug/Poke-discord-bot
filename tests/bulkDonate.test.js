@@ -219,7 +219,7 @@ test("multiselect rejects a Team member", () => {
     makeUser(),
     "multiselect",
     [{ pokeId: 1, variant: "normal", count: 1 }],
-    "Bulbasaur is on your Team. Remove it from your Team first.",
+    "Bulbasaur is on one of your teams (Display or Battle). Remove it from that team first.",
     "Bulbasaur on Team"
   );
 });

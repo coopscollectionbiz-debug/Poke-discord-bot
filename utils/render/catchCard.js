@@ -1,26 +1,28 @@
 // ==========================================================
-// utils/render/catchCard.js — PROTOTYPE: the random-catch announcement
-// as one image card, replacing today's embed (80 px thumbnail under a
-// "GIF" badge, the catch said twice, no types or Level).
+// utils/render/catchCard.js
+// The catch announcement card: a compact banner (900 × 200, about 550 × 122
+// in Discord) with the animated sprite on a tier-lit platform, name, Level,
+// types, rarity, National Pokédex number, and NEW or +EXP. Pokédex progress
+// is private, so it lives on /daily and /pokedex instead (dexProgress.js).
 //
 // catchView() reads the player AFTER grantCatch() and takes grantCatch's
-// own result ({ level, isNew, expGained }), which the live code currently
-// discards. Pure: never mutates the record.
+// own result ({ level, isNew, expGained }). sightingView() is the same card
+// for broadcasts that have no catch result (daily, starter pack, dashboard
+// rewards): sprite, name, types and rarity only. Both are pure.
 // ==========================================================
 
 import fs from "fs";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth } from "./primitives.js";
-import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
-import { loadSprite as loadAnimated, spritePlayer } from "../battle/render.js";
-import { encodeGif } from "./gif.js";
+import { rr, font, fitFont, drawTypeChips, drawShinyMark, drawLevel, dexNo } from "./primitives.js";
+import { loadStaticSprite, loadPlaceholder } from "./sprites.js";
+import { spriteStage } from "./stage.js";
 import { displaySpeciesName } from "./names.js";
 import { getSpecies, TYPE_ID_TO_NAME } from "../battle/data.js";
 import { ALL_REGIONS } from "../../catalog/achievements.js";
 
 const POKEMON = JSON.parse(fs.readFileSync(new URL("../../pokemonData.json", import.meta.url), "utf8"));
-export const CATCH_SIZE = Object.freeze({ w: 1000, h: 360 });
+export const CATCH_SIZE = Object.freeze({ w: 900, h: 200 });
 const TIER_NAME = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", mythic: "Mythic" };
 const fmt = (n) => Number(n ?? 0).toLocaleString("en-US");
 
@@ -36,153 +38,139 @@ export function regionCompletion(user, region) {
   return { region, owned, total };
 }
 
+function speciesFacts(id, variant) {
+  const entry = POKEMON[id] ?? {};
+  return {
+    id: Number(id),
+    variant,
+    shiny: variant === "shiny",
+    name: displaySpeciesName(id, entry.name),
+    types: getSpecies(id)?.types ?? (entry.types ?? []).map((t) => TYPE_ID_TO_NAME[t]).filter(Boolean),
+    tier: String(entry.tier ?? "common").toLowerCase(),
+    region: entry.region ?? null,
+  };
+}
+
 /**
  * @param user        the player record after grantCatch
  * @param catchResult grantCatch's return: { level, isNew, expGained }
  */
 export function catchView(user, { id, variant, catchResult, trainerName }) {
-  const entry = POKEMON[id] ?? {};
-  const species = getSpecies(id);
+  const f = speciesFacts(id, variant);
   return {
+    ...f,
     trainerName,
-    id,
-    variant,
-    shiny: variant === "shiny",
-    name: displaySpeciesName(id, entry.name),
-    types: species?.types ?? (entry.types ?? []).map((t) => TYPE_ID_TO_NAME[t]).filter(Boolean),
-    tier: String(entry.tier ?? "common").toLowerCase(),
     level: catchResult.level,
     isNew: catchResult.isNew,
     expGained: catchResult.expGained,
     copies: user?.pokemon?.[id]?.[variant] ?? 1,
-    dex: entry.region ? regionCompletion(user, entry.region) : null,
+    dex: f.region ? regionCompletion(user, f.region) : null,
   };
 }
 
-function drawCard(ctx, v) {
+/** A broadcast without a catch result: no Level, NEW/EXP or Pokédex line. */
+export function sightingView({ id, shiny = false }) {
+  return { ...speciesFacts(id, shiny ? "shiny" : "normal"), level: null, isNew: null, expGained: 0, copies: null, dex: null, sighting: true };
+}
+
+function drawPill(ctx, text, right, y, color) {
+  ctx.font = font(17, 800);
+  const w = ctx.measureText(text).width + 30;
+  ctx.fillStyle = `${color}22`;
+  rr(ctx, right - w, y, w, 32, 16);
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = `${color}aa`;
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, right - w + 15, y + 17);
+  ctx.textBaseline = "alphabetic";
+  return w;
+}
+
+/** PNG, or (animate: true) a looping GIF when the sprite is animated. */
+export async function renderCatchCard(v, { animate = false } = {}) {
   const { w: W, h: H } = CATCH_SIZE;
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext("2d");
+  const stage = spriteStage({ animate });
   const accent = v.shiny ? COLOR.gold : tierColor(v.tier);
+
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, "#131a2d");
   bg.addColorStop(1, "#1c1530");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
-  // Tier (or shiny) color edge on the left, like an embed's color bar.
   ctx.fillStyle = accent;
-  ctx.fillRect(0, 0, 8, H);
+  ctx.fillRect(0, 0, 7, H); // tier (or shiny) edge, like an embed's color bar
 
   // Stage.
-  const sx = 8, sw = 340, cx = sx + sw / 2, floor = H - 62;
-  const spot = ctx.createRadialGradient(cx, floor - 100, 10, cx, floor - 100, 220);
+  const sw = 260, cx = 7 + sw / 2, floor = H - 30;
+  const spot = ctx.createRadialGradient(cx, floor - 70, 8, cx, floor - 70, 170);
   spot.addColorStop(0, `${accent}2e`);
   spot.addColorStop(1, `${accent}00`);
   ctx.fillStyle = spot;
-  ctx.fillRect(sx, 0, sw, H);
+  ctx.fillRect(7, 0, sw, H);
   ctx.fillStyle = `${accent}3a`;
   ctx.beginPath();
-  ctx.ellipse(cx, floor, 118, 22, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, floor, 96, 16, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.lineWidth = 2;
   ctx.strokeStyle = `${accent}aa`;
   ctx.stroke();
+  const sprite = (await loadStaticSprite(v.id, v.variant)) ?? (await loadPlaceholder());
+  stage.place(ctx, sprite, cx, floor + 6, sw - 30, floor - 16, { scale: 3 }, { id: v.id, variant: v.variant });
 
   // Text column.
-  const x = 372, right = W - 36;
+  const x = 292, right = W - 28;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.font = font(22, 800);
+  ctx.font = font(18, 800);
   ctx.fillStyle = v.shiny ? COLOR.gold : COLOR.textMuted;
-  const eyebrow = v.shiny ? "SHINY POKÉMON CAUGHT!" : "WILD POKÉMON CAUGHT!";
-  ctx.fillText(eyebrow, x, 62);
-
-  // Rarity pill, top right.
-  const label = (TIER_NAME[v.tier] ?? "Common").toUpperCase();
+  const eyebrow = v.sighting
+    ? (v.shiny ? "SHINY POKÉMON FOUND!" : `${(TIER_NAME[v.tier] ?? "Common").toUpperCase()} POKÉMON FOUND!`)
+    : (v.shiny ? "SHINY POKÉMON CAUGHT!" : "WILD POKÉMON CAUGHT!");
+  ctx.fillText(eyebrow, x, 44);
+  const pillW = drawPill(ctx, (TIER_NAME[v.tier] ?? "Common").toUpperCase(), right, 22, TIER[v.tier] ?? tierColor(v.tier));
+  // National Pokédex number, beside the rarity pill.
+  ctx.textAlign = "right";
   ctx.font = font(19, 800);
-  const pw = ctx.measureText(label).width + 36;
-  ctx.fillStyle = `${tierColor(v.tier)}22`;
-  rr(ctx, right - pw, 36, pw, 36, 18);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = `${tierColor(v.tier)}aa`;
-  ctx.stroke();
-  ctx.fillStyle = TIER[v.tier] ?? tierColor(v.tier);
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, right - pw + 18, 55);
-  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = COLOR.textMuted;
+  ctx.fillText(dexNo(v.id), right - pillW - 14, 44);
+  ctx.textAlign = "left";
 
-  // Name.
-  const nm = fitFont(ctx, v.name, right - x - (v.shiny ? 50 : 0), 64, 36, 800);
+  // Name, shiny sparkle, then NEW or +EXP right beside the name.
+  const tag = v.isNew === true ? { text: "NEW", fill: COLOR.blue, color: "#ffffff" }
+    : v.isNew === false && v.expGained > 0 ? { text: `+${fmt(v.expGained)} EXP`, fill: "#16314f", color: COLOR.exp }
+    : null;
+  ctx.font = font(17, 800);
+  const tagW = tag ? ctx.measureText(tag.text).width + 26 : 0;
+  const nm = fitFont(ctx, v.name, right - x - (v.shiny ? 44 : 0) - (tag ? tagW + 16 : 0), 52, 30, 800);
   ctx.font = font(nm.size, 800);
   ctx.fillStyle = COLOR.text;
-  ctx.fillText(nm.text, x, 134);
-  if (v.shiny) drawShinyMark(ctx, x + ctx.measureText(nm.text).width + 28, 134 - nm.size * 0.42, 15);
-
-  // Level + types.
-  const lw = drawLevel(ctx, v.level, x, 196, { size: 38 });
-  if (v.types.length) drawTypeChips(ctx, v.types, x + lw + 20, 166, { h: 40, size: 22, gap: 10 });
-
-  // Outcome: NEW (first catch of this species + variant) or the duplicate's EXP.
-  let bx = x;
-  const tag = (text, fill, color) => {
-    ctx.font = font(21, 800);
-    const w = ctx.measureText(text).width + 32;
-    ctx.fillStyle = fill;
-    rr(ctx, bx, 230, w, 40, 20);
+  ctx.fillText(nm.text, x, 104);
+  let after = x + ctx.measureText(nm.text).width;
+  if (v.shiny) { drawShinyMark(ctx, after + 24, 104 - nm.size * 0.4, 13); after += 40; }
+  if (tag) {
+    const ty = Math.round(104 - nm.size * 0.36 - 16); // centred on the name's capitals
+    ctx.fillStyle = tag.fill;
+    rr(ctx, after + 16, ty, tagW, 32, 16);
     ctx.fill();
-    ctx.fillStyle = color;
+    ctx.font = font(17, 800);
+    ctx.fillStyle = tag.color;
     ctx.textBaseline = "middle";
-    ctx.fillText(text, bx + 16, 251);
+    ctx.fillText(tag.text, after + 16 + 13, ty + 17);
     ctx.textBaseline = "alphabetic";
-    bx += w + 12;
-  };
-  if (v.isNew) tag("NEW", COLOR.blue, "#ffffff");
-  else {
-    if (v.expGained > 0) tag(`+${fmt(v.expGained)} EXP`, "#5ab4ff26", COLOR.exp);
-    tag(`×${fmt(v.copies)} owned`, "#ffffff12", COLOR.textMuted);
   }
 
-  // Footer: who caught it, and regional Pokédex progress.
-  ctx.fillStyle = COLOR.line;
-  ctx.fillRect(x, 292, right - x, 1.5);
-  let nameRoom = right - x;
-  if (v.dex) {
-    const txt = `${v.dex.region} Pokédex  ${v.dex.owned}/${v.dex.total}`;
-    ctx.font = font(20, 700);
-    const tw = ctx.measureText(txt).width;
-    const barW = 120, bxr = right - barW;
-    nameRoom = bxr - 16 - tw - 28 - x; // the trainer name never runs into the Pokédex line
-    ctx.fillStyle = COLOR.textMuted;
-    ctx.fillText(txt, bxr - 16 - tw, 330);
-    ctx.fillStyle = "#0c111e";
-    rr(ctx, bxr, 318, barW, 10, 5);
-    ctx.fill();
-    ctx.fillStyle = COLOR.exp;
-    rr(ctx, bxr, 318, Math.max(10, (barW * v.dex.owned) / v.dex.total), 10, 5);
-    ctx.fill();
-  }
-  ctx.font = font(22, 600);
-  ctx.fillStyle = COLOR.textMuted;
-  ctx.fillText(fitText(ctx, `Caught by ${v.trainerName}`, nameRoom), x, 330);
-  return { cx, floor };
-}
+  // Level and types.
+  let rx = x;
+  if (v.level != null) rx += drawLevel(ctx, v.level, x, 158, { size: 32 }) + 16;
+  const chip = { h: 34, size: 18, gap: 8 };
+  if (v.types.length) drawTypeChips(ctx, v.types, rx, 132, chip);
 
-/** PNG (default) or looping GIF of the catch card. */
-export async function renderCatchCard(v, { animate = false, frames = 20, delayMs = 100 } = {}) {
-  const { w: W, h: H } = CATCH_SIZE;
-  const sprite = (await loadStaticSprite(v.id, v.variant)) ?? (await loadPlaceholder());
-  const base = createCanvas(W, H);
-  const { cx, floor } = drawCard(base.getContext("2d"), v);
-  const canvas = createCanvas(W, H);
-  const ctx = canvas.getContext("2d");
-  const draw = (frame) => {
-    ctx.drawImage(base, 0, 0);
-    drawSprite(ctx, sprite, cx, floor + 8, 320, floor - 14, { scale: 3, frame });
-  };
-  if (!animate) {
-    draw(null);
-    return canvas.toBuffer("image/png");
-  }
-  const anim = sprite.placeholder ? null : await loadAnimated(v.variant, v.id);
-  const play = anim && anim.gif.numFrames() > 1 ? spritePlayer(anim) : null;
-  return encodeGif(canvas, (f) => draw(play ? play(f * delayMs) : null), frames, delayMs);
+  // Pokédex progress is the catcher's own business: it is not on the public
+  // card (and would read confusingly next to the National Pokédex number).
+  return stage.output(canvas);
 }

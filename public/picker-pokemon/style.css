@@ -1,64 +1,21 @@
 /* ===========================================================
-   Coop's Collection — Pokémon Management Styles (UPDATED FULL)
-   Works with:
-   - Sticky HUD (#statsBar)
-   - Controls (#controls)
-   - Mode Buttons (#modeToggle .mode-btn)
-   - Grid (#pokemonGrid .pokemon-card)
-   - JS overlay modals (generic .overlay / .modal)
-   Notes:
-   ✅ Fix: only grayscale Pokémon sprite, not type/badge icons
-   ✅ Add: convert-cost helper (gold)
-   ✅ Add: badge fit helpers to prevent overlap on tiny cards
+   Coop's Collection — Pokémon page
+   Uses public/shared/tokens.css + components.css (no own palette).
+   Works with the same DOM IDs/classes the script builds:
+   #statsBar, #modeToggle .mode-btn, #controls, #pokemonGrid .pokemon-card,
+   #bulkDonateRow, #multiSelectBar, and the JS .overlay modals.
 =========================================================== */
 
-:root{
-  --bg:#0d1117;
-  --card:#161b22;
-  --border:#30363d;
-  --brand:#00ff9d;
-  --text:#ffffff;
-  --muted:#cccccc;
-  --gold:#facc15;
-  --danger:#ef4444;
-  --info:#3b82f6;
-}
-
-/* -----------------------------------------------------------
-   Base
------------------------------------------------------------ */
-* { box-sizing: border-box; }
-
-html, body { height: 100%; }
-
-body {
-  font-family: "Inter", Arial, sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
-  margin: 0;
-  padding: 0;
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px 40px;
   text-align: center;
 }
-
-header { padding: 2rem 1rem 1rem; }
-
-h1 {
-  margin-bottom: 0.25rem;
-  color: var(--brand);
-  font-size: 2rem;
-  line-height: 1.1;
-}
-
-p {
-  margin: 0.5rem 0;
-  color: var(--muted);
-}
-
-a { color: var(--brand); text-decoration: none; }
-a:hover { text-decoration: underline; }
+main:focus { outline: none; }
 
 /* -----------------------------------------------------------
-   Sticky HUD + Compact Transition
+   Sticky stats bar
 ----------------------------------------------------------- */
 #statsBar {
   position: sticky;
@@ -67,663 +24,361 @@ a:hover { text-decoration: underline; }
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.5rem 2rem;
-  padding: 0.75rem 1rem;
-  background: rgba(22, 27, 34, 0.9);
+  gap: 6px 22px;
+  margin: 12px 0 0;
+  padding: 10px 16px;
+  background: var(--cc-chrome);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-  transition: all 0.25s ease;
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--text);
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-r-md);
+  font-weight: 700;
+  transition: padding 0.2s ease;
 }
-
 #statsBar .stat-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-weight: 600;
-  color: var(--brand);
+  color: var(--cc-text);
   font-size: 0.95rem;
+  white-space: nowrap;
 }
+#statsBar .stat-label { color: var(--cc-text-muted); font-weight: 600; }
+#statsBar .stat-gold #dustCount { color: var(--cc-gold); }
+#statsBar.compact { padding: 6px 12px; font-size: 0.85rem; }
+.stat-icon { width: 20px; height: 20px; image-rendering: pixelated; }
 
-#statsBar.compact {
-  padding: 0.4rem 0.75rem;
-  font-size: 0.85rem;
-  background: rgba(13, 17, 23, 0.9);
-  gap: 1rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
-}
-
-.stat-icon {
-  width: 18px;
-  height: 18px;
-  image-rendering: pixelated;
-  vertical-align: middle;
-  margin-right: 4px;
-}
-
-#statsBar.compact .stat-icon {
-  width: 16px;
-  height: 16px;
-  margin-right: 3px;
-}
-
-/* Badges row (/challenge), under the stats bar; wraps on narrow screens */
+/* Gym Badges (/challenge), under the stats bar; wraps on narrow screens */
 .badge-row {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  padding: 0.5rem 1rem;
+  padding: 8px 16px 0;
 }
-
 .badge-row img {
   width: 32px;
   height: 32px;
   object-fit: contain;
   image-rendering: pixelated;
 }
+.badge-row img.unearned { opacity: 0.25; filter: grayscale(1); }
 
-.badge-row img.unearned {
-  opacity: 0.25;
-  filter: grayscale(1);
-}
-
-/* Pulse animation for stats */
 @keyframes pulseUp {
-  0% { transform: scale(1); color: var(--text); }
-  50% { transform: scale(1.3); color: var(--pulse-color, var(--brand)); }
-  100% { transform: scale(1); color: var(--text); }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); color: var(--pulse-color, var(--cc-blue)); }
+  100% { transform: scale(1); }
 }
-.pulse { animation: pulseUp 0.4s ease; }
+.pulse { display: inline-block; animation: pulseUp 0.4s ease; }
 
-/* ---------- Timer Status ---------- */
 .timer-status {
-  text-align: center;
   font-size: 13px;
-  color: var(--text-dim, #9ca3af);
-  margin: 6px 0 0;
-  padding: 0 12px;
+  color: var(--cc-text-muted);
+  margin: 10px 0 0;
 }
 
 /* -----------------------------------------------------------
-   Navigation Tabs (Shared)
+   Mode segmented control + filters
 ----------------------------------------------------------- */
-.nav-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 1rem auto 1.25rem;
-  flex-wrap: wrap;
-}
-
-.nav-tab {
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.nav-tab:hover { border-color: var(--brand); opacity: 0.9; }
-
-.nav-tab.active {
-  background: var(--brand);
-  color: var(--bg);
-  box-shadow: 0 0 8px #00ff9d60;
-}
-
-/* -----------------------------------------------------------
-   Controls / Filters
------------------------------------------------------------ */
-#controls {
+#modeToggle, #bulkDonateRow, #controls {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 10px;
-  margin: 1rem auto 1.25rem;
-  max-width: 900px;
-  padding: 0 1rem;
+  gap: 8px;
 }
-
-#controls input,
-#controls select,
-#controls button {
-  background: var(--card);
-  color: white;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-#controls input { width: 240px; }
-
-#controls button:hover,
-#controls select:hover,
-#controls input:focus {
-  border-color: var(--brand);
-  outline: none;
-}
-
-#controls button.active {
-  background: var(--brand);
-  color: var(--bg);
-  font-weight: 600;
-  box-shadow: 0 0 10px #00ff9d40;
-}
-
-/* -----------------------------------------------------------
-   Mode Buttons
------------------------------------------------------------ */
-#modeToggle {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-  padding: 0 1rem;
-}
+#modeToggle { margin-top: 16px; }
+#bulkDonateRow { margin-top: 10px; }
+#controls { margin: 14px auto 6px; max-width: 900px; }
 
 .mode-btn {
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: #fff;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.15s ease;
-  min-width: 140px;
+  min-height: var(--cc-touch);
+  min-width: 120px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--cc-line);
+  background: var(--cc-surface);
+  color: var(--cc-text);
+  font-weight: 700;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-
-.mode-btn:hover:not(.active) {
-  border-color: var(--brand);
-  opacity: 0.85;
-}
-
+.mode-btn:hover:not(.active):not(:disabled) { background: var(--cc-surface-raised); border-color: #3d4870; }
 .mode-btn.active {
-  background: var(--brand);
-  color: var(--bg);
-  box-shadow: 0 0 8px #00ff9d60;
+  background: var(--cc-blue);
+  border-color: var(--cc-blue);
+  color: #fff;
 }
+#bulkDonateRow .mode-btn:disabled { opacity: 0.45; }
+
+#controls input { width: 260px; }
+.toggle-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.toggle-group .mode-btn { min-width: 96px; }
 
 /* -----------------------------------------------------------
-   Bulk Donate (Donate mode): button row, multi-select, action bar
+   Grid & cards
 ----------------------------------------------------------- */
-#bulkDonateRow {
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-  padding: 0 1rem;
-}
-
-#bulkDonateRow .mode-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.pokemon-card.multi-selected {
-  border-color: var(--gold);
-  box-shadow: 0 0 12px rgba(250, 204, 21, 0.45);
-}
-
-.multi-check {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--gold);
-  color: var(--bg);
-  font-weight: 900;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-#multiSelectBar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000; /* above the grid + sticky HUD, below modal overlays (9999) */
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 16px;
-  background: var(--card);
-  border-top: 2px solid var(--gold);
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.5);
-}
-
-#multiSelectSummary {
-  font-weight: 700;
-  margin-right: 6px;
-}
-
-#multiSelectBar button {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 18px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-#multiSelectClear {
-  background: var(--border);
-  color: #fff;
-}
-
-#multiSelectDonate {
-  background: var(--gold);
-  color: var(--bg);
-}
-
-#multiSelectDonate:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* Keep the last row of cards + footer reachable above the bar.
-   On the panel, not body: body is height:100%, so its padding
-   doesn't extend the scrollable page. The bar wraps to ~66px on phones. */
-body.multi-select-on #pokemonPanel {
-  padding-bottom: 96px;
-}
-
-/* Confirmation modal tile grid */
-.bulk-grid {
+#pokemonGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-  gap: 8px;
-  overflow-y: auto;
-  min-height: 0; /* lets the grid shrink + scroll inside the flex modal */
-  padding: 2px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+  padding: 12px 0 0;
+  margin: 0 auto 24px;
 }
 
-.bulk-tile {
-  border: 1px solid var(--border);
+.region-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  text-align: left;
+  margin: 18px 0 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--cc-line);
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.region-count { font-size: 0.9rem; font-weight: 700; color: var(--cc-text-faint); }
+
+.pokemon-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 200px;
+  padding: 8px 8px 10px;
+  background: var(--cc-surface);
+  border: 1.5px solid var(--cc-line);
+  border-radius: var(--cc-r-md);
+  box-shadow: var(--cc-shadow);
+  text-align: center;
+  overflow: hidden;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Sprite stage with a platform, as on the Discord cards */
+.sprite-wrapper {
+  position: relative;
+  width: 100%;
+  height: 112px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 12px;
+  background: var(--cc-surface-sunken);
   border-radius: 10px;
-  padding: 6px 4px;
-  background: rgba(0, 0, 0, 0.25);
+  overflow: hidden;
 }
-
-.bulk-tile.shiny {
-  border-color: var(--gold);
+.sprite-wrapper::after {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  width: 72px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff10;
+  border: 2px solid #ffffff1c;
+  z-index: 0;
 }
+.pokemon-card.selected .sprite-wrapper::after { background: #4f8cff55; border-color: #4f8cffbb; }
 
-.bulk-tile img {
-  width: 56px;
-  height: 56px;
+.pokemon-card .poke-sprite {
+  position: relative;
+  z-index: 1;
+  display: block;
+  max-width: 96px;
+  max-height: 96px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   image-rendering: pixelated;
 }
+.sprite-wrapper > * { z-index: 2; }
+.sprite-wrapper img.poke-sprite { z-index: 1; }
 
-.bulk-tile-name {
-  font-size: 0.75rem;
+.pokemon-name {
+  max-width: 100%;
+  margin: 6px 0 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--cc-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.bulk-tile-count {
-  color: var(--gold);
-  font-weight: 800;
-  font-size: 0.85rem;
-}
-
-/* -----------------------------------------------------------
-   Save Button + Team Counter
------------------------------------------------------------ */
-.save-btn {
-  background: var(--brand);
-  border: none;
-  border-radius: 10px;
-  padding: 10px 18px;
-  color: var(--bg);
-  font-weight: 800;
-  cursor: pointer;
-  margin: 0.5rem auto 0.35rem;
-  transition: all 0.2s ease;
-}
-
-.save-btn:hover {
-  transform: translateY(-1px) scale(1.03);
-  box-shadow: 0 0 12px #00ff9d60;
-}
-
-#teamCounter {
-  margin: 0.15rem 0 0.75rem;
-  color: #bbb;
-  font-weight: 700;
-  min-height: 1.25em;
-}
-
-/* -----------------------------------------------------------
-   Grid & Cards
------------------------------------------------------------ */
-#pokemonGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 1.2rem;
-  padding: 1rem;
-  max-width: 1200px;
-  margin: 0 auto 2rem;
-}
-
-/* Region headers sit inside the grid and span a full row; body is centered, so align left explicitly */
-.region-header {
-  grid-column: 1 / -1;
-  text-align: left;
-  margin: 0.5rem 0 0;
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid var(--border);
-  font-size: 1.25rem;
-  color: var(--text);
-}
-
-.region-count {
-  margin-left: 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #8b949e;
-}
-
-/* Read by screen readers, hidden on screen: "Kanto 75/151 owned" */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-.pokemon-card {
-  background: var(--card);
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  padding: 10px 6px;
-  text-align: center;
-  transition: all 0.15s ease;
-  position: relative;
-  overflow: hidden;
-  min-height: 160px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* wrapper so badges/locks stay consistent */
-.sprite-wrapper {
-  position: relative;
-  width: 100%;
-  height: 120px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-}
-
-/* Sprite */
-.pokemon-card img,
-.pokemon-card .poke-sprite {
-  image-rendering: pixelated;
-  max-width: 96px;
-  max-height: 96px;
-  width: auto;
-  height: auto;
-  margin: 0 auto;
-  display: block;
-  object-fit: contain;
-  position: relative;
-  top: 0;
-}
-
-/* Ensure overlays and badges always render above sprites */
-.sprite-wrapper > * { z-index: 2; }
-.sprite-wrapper img.poke-sprite { z-index: 1; }
-
-/* Text */
-.pokemon-name {
-  margin: 4px 0 2px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #eee;
-  letter-spacing: 0.1px;
-}
-
-/* Level tags under the name: one per owned variant */
-.poke-levels {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 4px;
-  margin: 2px 0 4px;
-}
+.poke-levels { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .poke-level {
-  background: #0e1120;
-  border: 1px solid #00ff9d55;
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 0.7rem;
+  padding: 1px 8px;
+  border-radius: var(--cc-r-chip);
+  background: var(--cc-surface-sunken);
+  border: 1px solid var(--cc-line);
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.3px;
-  color: var(--brand);
-  line-height: 1.2;
+  color: var(--cc-text);
   white-space: nowrap;
 }
-.poke-level.shiny {
-  border-color: rgba(250, 204, 21, 0.45);
-  color: var(--gold);
-}
+.poke-level.shiny { border-color: #f5c84c88; color: var(--cc-gold); }
+.poke-power { font-size: 0.75rem; font-weight: 700; color: var(--cc-text-muted); }
+.poke-power b { color: var(--cc-text); font-weight: 800; }
 
-/* Tier Display */
-.pokemon-tier {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-weight: 600;
-  font-size: 0.85em;
-}
-.pokemon-tier .tier-emoji { font-size: 1em; }
-.pokemon-tier .tier-text { text-transform: capitalize; }
+.type-icons { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin: 2px 0; }
+.pokemon-tier { display: flex; justify-content: center; margin-top: auto; }
 
-.tier-text.common    { color: #9ca3af; }
-.tier-text.uncommon  { color: #10b981; }
-.tier-text.rare      { color: #3b82f6; }
-.tier-text.epic      { color: #a855f7; }
-.tier-text.legendary { color: var(--gold); }
-.tier-text.mythic    { color: var(--danger); }
-
-/* Type icons */
-.type-icons {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-  margin: 4px 0;
-}
-.type-icons img {
-  width: 32px;
-  height: 32px;
-  image-rendering: pixelated;
-}
-
-/* -----------------------------------------------------------
-   States
------------------------------------------------------------ */
+/* States */
 .pokemon-card.owned { cursor: pointer; }
+.pokemon-card.owned:hover { background: var(--cc-surface-raised); transform: translateY(-2px); }
+.pokemon-card.unowned { cursor: not-allowed; }
+.pokemon-card.unowned .poke-sprite { filter: grayscale(1); opacity: 0.8; }
 
-.pokemon-card.owned:hover {
-  transform: translateY(-2px) scale(1.04);
-  border-color: var(--brand);
-  box-shadow: 0 0 10px #00ff9d60;
-}
+.pokemon-card.locked { cursor: not-allowed; opacity: 0.62; }
+.pokemon-card.locked:hover { background: var(--cc-surface); transform: none; }
 
-/* Unowned still appears but is non-interactive in TEAM mode */
-.pokemon-card.unowned {
-  cursor: not-allowed;
-  opacity: 0.85;
-}
-
-/* ✅ IMPORTANT FIX:
-   Do NOT grayscale all images (that would grayscale type icons and badge icons too).
-   Only grayscale the Pokémon sprite itself. */
-.pokemon-card.unowned img.poke-sprite {
-  filter: grayscale(1);
-  opacity: 0.9;
-}
-
-/* Locked (TEAM unowned / EVOLVE ineligible / DONATE none / CONVERT blocked) */
-.pokemon-card.locked {
-  cursor: not-allowed;
-  opacity: 0.65;
-  transform: none !important;
-}
-
-.pokemon-card.locked:hover {
-  border-color: var(--border);
-  box-shadow: none;
-  transform: none;
-}
-
-/* Selected (any variant of that Pokémon is on team) */
 .pokemon-card.selected {
-  border-color: var(--brand);
-  box-shadow: 0 0 12px #00ff9d70;
-  transform: scale(1.04);
+  border-color: var(--cc-blue);
+  box-shadow: var(--cc-ring-blue), var(--cc-shadow);
+}
+.pokemon-card.multi-selected {
+  border-color: var(--cc-gold);
+  box-shadow: var(--cc-ring-gold), var(--cc-shadow);
 }
 
-/* Optional: evolve-ready style if you decide to add class later */
-.pokemon-card.eligible {
-  border-color: #7c3aed;
-  box-shadow: 0 0 10px rgba(124, 58, 237, 0.45);
+/* Shiny shown: gold platform + the motes/stars backdrop (DESIGN-SYSTEM.md §5) */
+.pokemon-card.shiny-view .sprite-wrapper {
+  /* Shiny: the Discord cards' motes + stars backdrop (public/shared/spriteFx.js), no glow. */
+  background: var(--cc-surface-sunken);
 }
+.pokemon-card.shiny-view .sprite-wrapper::after { background: #f5c84c33; border-color: #f5c84c88; }
+.pokemon-card.shiny-view:not(.selected):not(.multi-selected) { border-color: #f5c84c80; }
 
-/* -----------------------------------------------------------
-   Badges / Overlays
------------------------------------------------------------ */
-.lock-overlay {
+/* ✨ normal/shiny toggle: 36 px visual, 44 px hit area */
+.variant-toggle {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--cc-line);
+  background: #0e1120d9;
+  color: var(--cc-text-faint);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.variant-toggle::before { content: ""; position: absolute; inset: -4px; } /* 44 px target */
+.variant-toggle svg { width: 18px; height: 18px; }
+.variant-toggle:hover { color: var(--cc-gold); border-color: #f5c84c88; }
+.variant-toggle[aria-pressed="true"] { background: var(--cc-gold); border-color: var(--cc-gold); color: var(--cc-ink); }
+.variant-toggle:focus-visible { outline: 2px solid var(--cc-blue); outline-offset: 2px; }
+/* Keep the lock / multi-select check clear of the toggle */
+.pokemon-card.has-toggle .lock-overlay, .pokemon-card.has-toggle .multi-check { right: 46px; }
+
+/* Level tag of the copy being shown */
+.poke-level.is-viewing { border-color: var(--cc-text-muted); }
+.poke-level.shiny.is-viewing { border-color: var(--cc-gold); background: #f5c84c1f; }
+
+/* Badges */
+.lock-overlay, .multi-check, .team-badge {
   position: absolute;
   top: 6px;
-  right: 6px;
-  width: 22px;
-  height: 22px;
-  background: rgba(0, 0, 0, 0.45);
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
   pointer-events: none;
 }
-.lock-overlay span {
-  color: #fff;
-  font-size: 13px;
-  user-select: none;
-}
+.lock-overlay { right: 6px; background: #000000a0; color: var(--cc-text-muted); }
+.lock-overlay svg { width: 13px; height: 13px; }
+.multi-check { right: 6px; background: var(--cc-gold); color: var(--cc-ink); }
+.team-badge { left: 6px; background: var(--cc-blue); color: #fff; }
 
-/* Team badge (1..6) */
-.team-badge {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  background: var(--brand);
-  color: var(--bg);
-  font-weight: 800;
-  font-size: 0.8rem;
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 6px #00ff9d80;
-}
-
-/* Count label bottom-left */
-.count-label {
+.count-label, .evolve-cost, .donate-value {
   position: absolute;
   bottom: 6px;
-  left: 6px;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--brand);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-/* Evolve / Donate badges bottom-right */
-.evolve-cost,
-.donate-value {
-  position: absolute;
-  bottom: 6px;
-  right: 6px;
-  background: var(--bg);
-  border: 1px solid var(--brand);
-  border-radius: 8px;
-  padding: 2px 6px;
-  font-size: 0.75rem;
-  color: var(--brand);
-  font-weight: 700;
-  box-shadow: 0 0 4px #00ff9d60;
-  letter-spacing: 0.2px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  line-height: 1;
-}
-
-.donate-value {
-  border-color: var(--gold);
-  color: var(--gold);
-  box-shadow: 0 0 4px rgba(250,204,21,0.35);
-}
-
-/* ✅ Optional helper if you add class="evolve-cost convert-cost" in convert mode */
-.convert-cost {
-  border-color: var(--gold);
-  color: var(--gold);
-  box-shadow: 0 0 4px rgba(250,204,21,0.35);
-}
-
-/* ✅ Prevent badge text from overflowing on small cards */
-.count-label,
-.evolve-cost,
-.donate-value {
   max-width: calc(100% - 12px);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
   white-space: nowrap;
+  background: #0e1120d9;
+  border: 1px solid var(--cc-line);
 }
+.count-label { color: var(--cc-text); max-width: calc(50% - 9px); }
+.count-label.bottom-left { left: 6px; }
+.count-label.bottom-right { right: 6px; }
+.count-label.bottom-right.lifted { bottom: 30px; }
+.count-label.shiny-count { color: var(--cc-gold); border-color: #f5c84c66; }
+.evolve-cost { right: 6px; color: var(--cc-text); }
+.donate-value { right: 6px; color: var(--cc-gold); border-color: #f5c84c66; }
+.convert-cost { color: var(--cc-gold); border-color: #f5c84c66; }
+.evolve-cost img, .donate-value img { width: 16px; height: 16px; image-rendering: pixelated; }
 
 /* -----------------------------------------------------------
-   Generic Overlay + Modal (for JS createOverlay())
+   Team footer
 ----------------------------------------------------------- */
-/* The overlay is the scroll container. `margin: auto` on the modal
-   centres it while it fits and pins it to the top edge once it is
-   taller than the screen, so its top and bottom stay reachable. */
+.team-footer { padding: 8px 0 16px; }
+#teamCounter { margin: 0 0 8px; font-weight: 800; color: var(--cc-text); }
+.save-btn {
+  min-height: 48px;
+  padding: 0 28px;
+  border: none;
+  border-radius: 12px;
+  background: var(--cc-blue);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.save-btn:hover { background: #3d78e8; transform: translateY(-1px); }
+.fine-print { margin-top: 14px; font-size: 0.85rem; color: var(--cc-text-faint); }
+
+/* -----------------------------------------------------------
+   Multi-select bar (fixed; sits above the phone tab bar)
+----------------------------------------------------------- */
+#multiSelectBar {
+  position: fixed;
+  left: var(--cc-sidebar-w);
+  right: 0;
+  bottom: 0;
+  z-index: 1000; /* above grid + sticky stats, below modal overlays */
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--cc-chrome);
+  border-top: 2px solid var(--cc-gold);
+  box-shadow: 0 -4px 16px #00000080;
+}
+#multiSelectSummary { font-weight: 800; }
+#multiSelectBar button {
+  min-height: var(--cc-touch);
+  padding: 0 18px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 800;
+}
+#multiSelectClear { background: var(--cc-surface-raised); color: var(--cc-text); }
+#multiSelectDonate { background: var(--cc-gold); color: var(--cc-ink); }
+body.multi-select-on #pokemonPanel { padding-bottom: 110px; }
+
+/* -----------------------------------------------------------
+   JS modal content
+----------------------------------------------------------- */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.75);
   display: flex;
   padding: 16px;
   overflow-y: auto;
@@ -731,116 +386,119 @@ body.multi-select-on #pokemonPanel {
   z-index: 9999;
   animation: fadeIn 0.18s ease;
 }
+.overlay > * { margin: auto; }
+.overlay p { color: var(--cc-text-muted); }
 
-.overlay > * {
-  margin: auto;
-}
-
-.modal {
-  background: var(--card);
-  border: 2px solid var(--brand);
-  border-radius: 14px;
-  padding: 1.75rem 1.75rem;
-  text-align: center;
-  box-shadow: 0 0 20px #00ff9d50;
-  max-width: 520px;
-  width: 92%;
-  color: #fff;
-}
-
-.modal.gold {
-  border-color: var(--gold);
-  box-shadow: 0 0 20px rgba(250,204,21,0.35);
-}
-
-.modal h2 {
-  margin: 0 0 0.75rem;
-  color: var(--brand);
-  font-size: 1.35rem;
-  line-height: 1.2;
-}
-
-.modal.gold h2 { color: var(--gold); }
-
-.modal p { color: #ccc; }
-
-.btn-row {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 1rem;
-}
-
-.btn {
-  border: none;
-  border-radius: 10px;
-  padding: 10px 18px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-primary { background: var(--brand); color: var(--bg); }
-.btn-secondary { background: var(--border); color: #fff; }
-.btn-gold { background: var(--gold); color: var(--bg); }
-
-.btn:hover { transform: translateY(-1px) scale(1.03); }
-.btn-primary:hover { box-shadow: 0 0 12px #00ff9d60; }
-.btn-gold:hover { box-shadow: 0 0 12px rgba(250,204,21,0.45); }
-
-/* Evo grid cards (optional class support if you refactor inline styles later) */
-.evo-grid {
+.bulk-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1rem;
-  margin: 1rem 0;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 2px;
 }
-.evo-card {
-  background: var(--card);
-  border: 2px solid var(--border);
+.bulk-tile {
+  padding: 6px 4px;
+  border: 1px solid var(--cc-line);
   border-radius: 10px;
-  padding: 10px;
-  user-select: none;
+  background: var(--cc-surface-sunken);
 }
+.bulk-tile.shiny { border-color: var(--cc-gold); }
+.bulk-tile img { width: 56px; height: 56px; image-rendering: pixelated; }
+.bulk-tile-name { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bulk-tile-count { color: var(--cc-gold); font-weight: 800; font-size: 0.85rem; }
 
-/* -----------------------------------------------------------
-   Empty/Error messages
------------------------------------------------------------ */
-.empty-msg {
-  padding: 1rem;
-  color: #aaa;
-  font-weight: 700;
-}
+.evo-card { user-select: none; }
 
-.error {
-  padding: 2rem 1rem;
-  color: var(--danger);
-  font-weight: 800;
-}
-
-/* -----------------------------------------------------------
-   Footer
------------------------------------------------------------ */
-footer {
-  padding-bottom: 1.5rem;
-  font-size: 0.85rem;
-  color: #7a7a7a;
-}
+.empty-msg, .cc-empty { grid-column: 1 / -1; }
+.error { padding: 2rem 1rem; color: var(--cc-red); font-weight: 800; }
 
 /* -----------------------------------------------------------
    Responsive
 ----------------------------------------------------------- */
-@media (max-width: 520px) {
-  #controls input { width: 100%; }
-  .mode-btn { min-width: 110px; }
-  #pokemonGrid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+@media (max-width: 820px) {
+  main { padding: 0 16px 24px; }
+  #multiSelectBar { left: 0; bottom: calc(var(--cc-tabbar-h) + env(safe-area-inset-bottom)); }
+  #statsBar { gap: 4px 14px; padding: 8px 10px; }
+  #statsBar .stat-item { font-size: 0.85rem; }
 }
 
-/* -----------------------------------------------------------
-   Animations
------------------------------------------------------------ */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+@media (max-width: 520px) {
+  #controls input { width: 100%; }
+  #controls select { flex: 1 1 140px; }
+  #modeToggle .mode-btn { flex: 1 1 calc(50% - 8px); min-width: 0; }
+  #bulkDonateRow .mode-btn { flex: 1 1 auto; }
+  #pokemonGrid { gap: 10px; }
+  #statsBar .stat-label { display: none; }
 }
+
+@media (max-width: 380px) {
+  #pokemonGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ===========================================================
+   Collection (design option A): region chips, dex numbers, team
+   badges, unowned silhouettes, and the detail drawer / sheet.
+=========================================================== */
+.region-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 4px 0 14px; }
+.region-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text-muted); font-weight: 700; font-size: 13.5px; }
+.region-chip small { color: var(--cc-text-faint); font-weight: 700; }
+.region-chip[aria-pressed="true"] { border-color: var(--cc-blue); background: var(--cc-blue-soft); color: var(--cc-text); }
+.dex-no { margin-top: 6px; font-size: 11px; font-weight: 800; color: var(--cc-text-faint); letter-spacing: .02em; }
+.dex-no + .pokemon-name { margin-top: 0; }
+.team-badges { position: absolute; top: 6px; left: 6px; z-index: 3; display: flex; gap: 3px; }
+.team-badges .mem { display: inline-grid; place-items: center; min-width: 24px; height: 20px; padding: 0 5px; border-radius: 6px; font-size: 10.5px; font-weight: 800; }
+.team-badges .mem-d { background: var(--cc-surface-raised); color: var(--cc-gold); border: 1px solid #f5c84c66; }
+.team-badges .mem-b { background: var(--cc-blue); color: #fff; }
+/* Unowned: a dark silhouette (a real Pokédex), not a grey copy. */
+.pokemon-card.unowned .poke-sprite { filter: brightness(0) invert(.22); opacity: .9; }
+
+dialog.cc-detail {
+  margin: 0 0 0 auto; inset: 0 0 0 auto; width: min(420px, 100vw); height: 100dvh; max-height: 100dvh;
+  padding: 0; border: 0; border-left: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text);
+  overflow-y: auto; text-align: left; box-shadow: -12px 0 40px #000a;
+}
+dialog.cc-detail::backdrop { background: #05070f99; }
+@media (max-width: 820px) {
+  dialog.cc-detail { inset: auto 0 0 0; margin: auto 0 0 0; width: 100%; max-width: 100%; height: auto; max-height: 86dvh; border-left: 0; border-top: 1.5px solid var(--cc-line); border-radius: 20px 20px 0 0; }
+  dialog.cc-detail::before { content: ""; display: block; width: 44px; height: 5px; margin: 8px auto 0; border-radius: 3px; background: var(--cc-line); }
+}
+.dt-head { display: flex; align-items: flex-start; gap: 8px; padding: 16px 16px 0; }
+.dt-head h2 { margin: 2px 0 6px; font-size: 24px; }
+.dt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dt-close { margin-left: auto; width: 44px; height: 44px; flex: none; border-radius: 10px; border: 1.5px solid var(--cc-line); background: var(--cc-surface-raised); color: var(--cc-text); }
+.dt-stage { position: relative; margin: 12px 16px 0; height: 190px; border-radius: 14px; display: flex; align-items: flex-end; justify-content: center; background: var(--cc-surface-sunken); overflow: hidden; }
+.dt-stage img { position: relative; z-index: 1; max-height: 140px; transform: scale(1.4); transform-origin: bottom center; margin-bottom: 20px; image-rendering: pixelated; }
+.dt-stage img.silhouette { filter: brightness(0) invert(.22); }
+.dt-stage::after { content: ""; position: absolute; bottom: 14px; width: 60%; height: 18px; border-radius: 50%; background: #ffffff10; border: 1.5px solid #ffffff1c; }
+.dt-stage.is-shiny::after { background: #f5c84c33; border-color: #f5c84c88; }
+.dt-seg { position: absolute; top: 8px; right: 8px; z-index: 2; display: inline-flex; padding: 3px; gap: 3px; border-radius: 12px; background: var(--cc-surface); border: 1.5px solid var(--cc-line); }
+.dt-seg button { min-height: 44px; min-width: 44px; padding: 0 10px; border: 0; border-radius: 9px; background: transparent; color: var(--cc-text-muted); font-weight: 700; }
+.dt-seg button[aria-pressed="true"] { background: var(--cc-surface-raised); color: var(--cc-text); }
+.dt-flavor { margin: 12px 16px 0; font-size: 13.5px; font-style: italic; }
+.dt-sec { padding: 12px 16px; border-top: 1px solid var(--cc-line); margin-top: 12px; }
+.dt-sec h3 { margin: 0 0 8px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--cc-text-faint); }
+.dt-muted { margin: 6px 0 0; font-size: 12.5px; color: var(--cc-text-muted); }
+.dt-copy { display: flex; align-items: center; gap: 10px; padding: 6px 8px; margin-bottom: 6px; border-radius: 10px; background: var(--cc-surface-raised); font-size: 13.5px; }
+.dt-copy img { width: 44px; height: 40px; object-fit: contain; image-rendering: pixelated; }
+.dt-copy small { color: var(--cc-text-muted); }
+.dt-stat { display: grid; grid-template-columns: 40px 36px 1fr; gap: 8px; align-items: center; font-size: 12.5px; font-weight: 700; margin: 4px 0; }
+.dt-stat span:first-child { color: var(--cc-text-muted); }
+.dt-bar { height: 8px; border-radius: 4px; background: var(--cc-surface-sunken); overflow: hidden; }
+.dt-bar i { display: block; height: 100%; background: var(--cc-exp); }
+.dt-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dt-move { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px; border-radius: 10px; background: var(--cc-surface-raised); font-size: 13px; font-weight: 700; }
+.dt-move .cc-type { font-size: 9px; padding: 2px 6px; }
+.dt-forms { display: flex; gap: 6px; }
+.dt-form { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 10px; border: 1.5px solid #c084fc88; background: var(--cc-surface-raised); font-size: 12px; }
+.dt-form img { height: 48px; image-rendering: pixelated; }
+.dt-form small { color: var(--cc-text-faint); }
+.dt-evo { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; color: var(--cc-text-faint); }
+.dt-evo-step { display: flex; flex-direction: column; align-items: center; min-width: 72px; min-height: 44px; padding: 4px; border-radius: 10px; border: 1.5px solid transparent; background: transparent; color: var(--cc-text-muted); font-size: 12px; font-weight: 700; }
+.dt-evo-step img { height: 40px; image-rendering: pixelated; }
+.dt-evo-step.is-this { color: var(--cc-text); border-color: var(--cc-line); background: var(--cc-surface-raised); }
+.dt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dt-actions .cc-btn { padding: 0 10px; }
+.dt-actions .cc-btn--primary { grid-column: 1 / -1; }

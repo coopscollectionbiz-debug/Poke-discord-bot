@@ -4,7 +4,9 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { buildTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
+import { buildTeam, buildBattleTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
+import { RANKED } from "../utils/battle/tuning.js";
+import { rankedRecord, lifetimeRanked } from "../utils/battle/rewards.js";
 import { buildResultEmbed, createQueue, expSummary, playBattle, resultScreens } from "../utils/battle/playback.js";
 import { pickFrameTurns } from "../utils/battle/render.js";
 import { lockUser } from "../utils/userLocks.js";
@@ -18,6 +20,7 @@ function trainer(id, team) {
   const u = createNewUser(id, `Trainer ${id}`);
   for (const [speciesId] of team) grantCatch(u, speciesId, "normal", fixed);
   u.displayedPokemon = team.map(([speciesId]) => ({ id: speciesId, variant: "normal" }));
+  u.battleTeam = team.map(([speciesId]) => ({ id: speciesId, variant: "normal" })); // ranked/wager team
   return u;
 }
 const world = () => ({
@@ -28,7 +31,10 @@ const world = () => ({
 const open = (td, seed = 1, c = "A", d = "B") =>
   runBattle({ trainerData: td, challengerId: c, defenderId: d, mode: "open", seed, now: NOW });
 
-section("Open battle");
+const ranked = (td, seed = 1, c = "A", d = "B") =>
+  runBattle({ trainerData: td, challengerId: c, defenderId: d, mode: "ranked", seed, now: NOW });
+
+section("Casual (open) battle: Display teams, real Levels, unrated");
 {
   const td = world();
   const before = { a: JSON.stringify(td.A.training), b: JSON.stringify(td.B.training) };
@@ -38,12 +44,69 @@ section("Open battle");
   assertTrue(JSON.stringify(td.A.training) !== before.a, "Challenger's Team gains EXP");
   assertEqual(JSON.stringify(td.B.training), before.b, "Defender's training is unchanged");
   assertEqual([td.A.battle.started, td.B.battle.started], [1, 0], "only the Challenger uses a battle");
-  const dA = td.A.battle.rating - 1000, dB = td.B.battle.rating - 1000;
-  assertTrue(dA === -dB && dA !== 0, "ratings move equal and opposite");
-  assertEqual(td[out.winnerId].battle.wins + td[out.loserId].battle.losses, 2, "W/L recorded");
+  assertEqual([rankedRecord(td.A).rating, rankedRecord(td.B).rating], [1000, 1000], "ratings don't move");
+  assertEqual(rankedRecord(td.A).wins + rankedRecord(td.A).losses, 0, "no ranked W/L");
+  assertEqual(td[out.winnerId].casual.wins + td[out.loserId].casual.losses, 2, "casual W/L recorded for both");
+  assertEqual([td[out.winnerId].casual.streak, td[out.loserId].casual.streak], [1, 0], "casual streaks");
+  assertTrue(!!td[out.winnerId].ach?.cas_first_win && !td[out.loserId].ach?.cas_first_win, "the winner unlocks the casual Friendly Match achievement");
+  assertTrue(!td[out.winnerId].ach?.bat_first_win, "casual wins don't count toward ranked battle achievements");
+  assertEqual(out.rated, false, "outcome says unrated");
+  assertEqual(out.rating, {}, "no rating changes");
+  assertTrue(out.sides[0].members.every((m) => m.realLevel == null), "real Levels (no Lv 50)");
   assertEqual(Object.keys(out.exp), ["A"], "EXP report covers the Challenger only");
   assertTrue(out.exp.A.every((e) => e.toLevel >= e.fromLevel && Array.isArray(e.learned)), "EXP report has Level changes and learned moves");
   assertEqual(out.sides.map((s) => s.members.length), [3, 2], "both Teams fought");
+}
+
+section("The Underdog surge is casual-only");
+{
+  // A lone Caterpie against six legendaries is the Underdog by far, so a
+  // casual battle surges at the top chance; ranked and wager battles never do.
+  const lopsided = () => ({ A: trainer("A", [[10]]), B: trainer("B", [[150], [249], [250], [384], [483], [484]]) });
+  const seeds = Array.from({ length: 40 }, (_, i) => i + 1);
+  const surges = (mode) => seeds.filter((seed) =>
+    runBattle({ trainerData: lopsided(), challengerId: "A", defenderId: "B", mode, stake: mode === "wager" ? 1 : 0, seed, now: NOW }).surge).length;
+  assertTrue(surges("open") > 0, "the same pairing surges in casual battles");
+  assertEqual([surges("ranked"), surges("wager")], [0, 0], "and never in ranked or wager battles");
+}
+
+section("Ranked battle: Battle teams at Lv 50, rated, no surge");
+{
+  const td = world();
+  td.A.battleTeam = [{ id: 6, variant: "normal" }]; // differs from the Display team
+  const before = JSON.stringify(td.A.training);
+  const out = ranked(td);
+  assertTrue(out.ok && out.rated, "ranked battle runs, rated");
+  assertEqual(out.sides[0].members.map((m) => m.speciesId), [6], "the Battle team fights, not the Display team");
+  assertTrue(out.sides.every((s) => s.members.every((m) => m.level === RANKED.level && Number.isInteger(m.realLevel))), "every fighter is Lv 50 and keeps its real Level");
+  assertEqual(out.surge, null, "no Underdog surge");
+  const dA = td.A.battle.rating - 1000, dB = td.B.battle.rating - 1000;
+  assertTrue(dA === -dB && dA !== 0, "ratings move equal and opposite");
+  assertEqual(td[out.winnerId].battle.wins + td[out.loserId].battle.losses, 2, "ranked W/L recorded");
+  assertEqual([td.A.battle.season, td.B.battle.season], [RANKED.season, RANKED.season], "records are this season's");
+  assertTrue(!td.A.casual && !td.B.casual, "no casual record written");
+  assertTrue(JSON.stringify(td.A.training) !== before, "Challenger still earns EXP");
+  assertEqual(out.exp.A[0].fromLevel, out.sides[0].members[0].realLevel, "EXP is applied at the real Level, not Lv 50");
+  const noBT = world();
+  delete noBT.B.battleTeam;
+  assertEqual(ranked(noBT).reason, "no_battle_team_defender", "a Defender without a Battle team can't be challenged to ranked");
+  delete noBT.A.battleTeam;
+  assertEqual(ranked(noBT).reason, "no_battle_team_challenger", "a Challenger needs a Battle team");
+  assertTrue(open(noBT).ok, "casual battles don't need a Battle team");
+  assertEqual(buildBattleTeam(noBT.A), [], "no Battle team, no fighters");
+}
+
+section("Ranked season: old records are archived and reset");
+{
+  const td = world();
+  td.A.battle = { rating: 1450, wins: 30, losses: 4, day: "2026-11-01", started: 0, vs: {} }; // pre-season record
+  assertEqual(rankedRecord(td.A), { rating: 1000, wins: 0, losses: 0 }, "an old-season record reads as reset");
+  ranked(td);
+  assertEqual(td.A.battle.past, [{ season: 0, rating: 1450, wins: 30, losses: 4 }], "the old record is archived");
+  assertEqual(td.A.battle.season, RANKED.season, "the record moves to this season");
+  assertEqual(td.A.battle.wins + td.A.battle.losses, 1, "and counts from zero");
+  const life = lifetimeRanked(td.A);
+  assertEqual([life.wins, life.bestRating >= 1450], [30 + td.A.battle.wins, true], "achievement progress keeps every season's wins and the best rating");
 }
 
 section("Wager battle");
@@ -106,13 +169,17 @@ section("Result embed");
 {
   const names = { A: "Ash", B: "Gary" };
   const td = world();
-  const out = open(td, 1);
+  const out = ranked(td, 1);
+  const casual = open(world(), 1);
+  const ce = buildResultEmbed(casual, names).data;
+  assertEqual(ce.fields.map((f) => f.name), ["Casual battle"], "Casual: says it's unrated instead of a rating");
+  assertTrue(ce.fields[0].value.includes("Unrated") && ce.fields[0].value.includes(names[casual.winnerId]), "Casual: names the winner");
   const wager = runBattle({ trainerData: world(), challengerId: "A", defenderId: "B", mode: "wager", stake: 30, seed: 3, now: NOW });
-  for (const [label, outcome] of [["Open", out], ["Wager", wager]]) {
+  for (const [label, outcome] of [["Ranked", out], ["Wager", wager]]) {
     const embed = buildResultEmbed(outcome, names).data;
-    assertEqual(embed.fields.map((f) => f.name), ["Battle rating"], `${label}: the only field is Battle rating`);
+    assertEqual(embed.fields.map((f) => f.name), ["Ranked rating"], `${label}: the only field is Ranked rating`);
     assertTrue(!embed.title, `${label}: no title (the image shows the winner)`);
-    if (label === "Open") assertTrue(!embed.description, "Open: no description");
+    if (label === "Ranked") assertTrue(!embed.description, "Ranked: no description");
     else assertEqual(embed.description, `💰 ${names[outcome.winnerId]} takes the **60 CC** pot!`, "Wager: says who took the pot (nothing else does)");
   }
   const value = buildResultEmbed(out, names).data.fields[0].value;

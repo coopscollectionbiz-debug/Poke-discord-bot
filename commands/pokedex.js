@@ -21,6 +21,7 @@ import {
   MessageFlags,
   AttachmentBuilder,
 } from "discord.js";
+import { cardImage } from "../utils/render/stage.js";
 import { pokedexView, renderPokedexCard } from "../utils/render/pokedexCard.js";
 
 import { safeReply } from "../utils/safeReply.js";
@@ -217,8 +218,9 @@ export default {
       // The entry card (utils/render/pokedexCard.js); the embed is the fallback.
       const entry = async () => {
         try {
-          const png = await renderPokedexCard(pokedexView(poke.id, user), { shiny: viewingShiny });
-          return { embeds: [], attachments: [], files: [new AttachmentBuilder(png, { name: "pokedex.png" })] };
+          const view = pokedexView(poke.id, user);
+          const card = await cardImage((animate) => renderPokedexCard(view, { shiny: viewingShiny, animate }), "pokedex");
+          return { embeds: [], attachments: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })] };
         } catch (err) {
           console.warn("⚠️ pokedex card render failed; sending embed:", err?.message || err);
           return { embeds: [buildEmbed()], attachments: [], files: [] };

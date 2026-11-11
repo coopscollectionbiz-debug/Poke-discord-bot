@@ -39,7 +39,8 @@ export const CATEGORIES = Object.freeze({
   collection: { label: "Pokémon Collection", emoji: "📚", order: 1 },
   shiny: { label: "Shiny Hunting", emoji: "✨", order: 2 },
   evolution: { label: "Evolution", emoji: "💎", order: 3 },
-  battle: { label: "Battles", emoji: "⚔️", order: 4 },
+  battle: { label: "Ranked Battles", emoji: "⚔️", order: 4 }, // ranked + wager battles (owner decision)
+  casual: { label: "Casual Battles", emoji: "🎮", order: 4.5 }, // open (casual) battles
   training: { label: "Training", emoji: "📈", order: 5 },
   economy: { label: "Economy", emoji: "💰", order: 6 },
   activity: { label: "Daily & Weekly", emoji: "📅", order: 7 },
@@ -120,12 +121,12 @@ for (const [n, roman, ap, reward, tier] of [[1, "I", 5, null, 1], [10, "II", 10,
 }
 
 // ---------------- Battles (state from user.battle; retro full for the battle era) ----------------
-add({ id: "bat_first_win", name: "First Victory", description: "Win a battle.", category: "battle", metric: { kind: "state", key: "battleWins" }, target: 1, tier: 1, ap: 5, reward: { cc: 500 }, retro: "full" });
+add({ id: "bat_first_win", name: "First Victory", description: "Win a ranked or wager battle.", category: "battle", metric: { kind: "state", key: "battleWins" }, target: 1, tier: 1, ap: 5, reward: { cc: 500 }, retro: "full" });
 for (const [n, roman, ap, reward, tier] of [[10, "I", 10, { cc: 1000 }, 1], [50, "II", 25, { cc: 2500 }, 2], [100, "III", 50, { cc: 5000 }, 3], [500, "IV", 100, { title: "Ace Trainer" }, 4]]) {
-  add({ id: `bat_wins_${n}`, name: `Battler ${roman}`, description: `Win ${n} battles.`, category: "battle", metric: { kind: "state", key: "battleWins" }, target: n, tier, ap, reward, retro: "full" });
+  add({ id: `bat_wins_${n}`, name: `Battler ${roman}`, description: `Win ${n} ranked or wager battles.`, category: "battle", metric: { kind: "state", key: "battleWins" }, target: n, tier, ap, reward, retro: "full" });
 }
 for (const [n, name, ap, tier] of [[1200, "Rising Star", 15, 2], [1400, "Contender", 30, 3], [1600, "Elite", 60, 4]]) {
-  add({ id: `bat_rating_${n}`, name, description: `Reach a Battle rating of ${n}.`, category: "battle", metric: { kind: "state", key: "battleRating" }, target: n, tier, ap, reward: { badge: `badge_rating_${n}` }, retro: "full" });
+  add({ id: `bat_rating_${n}`, name, description: `Reach a ranked rating of ${n}.`, category: "battle", metric: { kind: "state", key: "battleRating" }, target: n, tier, ap, reward: { badge: `badge_rating_${n}` }, retro: "full" });
 }
 
 // ---------------- Training (rank from TP, levels, trainers; state) ----------------
@@ -195,12 +196,12 @@ add({ id: "evo_family_eevee", name: "Eeveelution Gallery", description: "Own Eev
 
 // ---- Battle mastery ----
 for (const [n, roman, ap] of [[1000, "V", 150], [2500, "VI", 200]]) {
-  add({ id: `bat_wins_${n}`, name: `Battler ${roman}`, description: `Win ${n} battles.`, category: "battle", metric: { kind: "state", key: "battleWins" }, target: n, tier: 5, ap, retro: "full" });
+  add({ id: `bat_wins_${n}`, name: `Battler ${roman}`, description: `Win ${n} ranked or wager battles.`, category: "battle", metric: { kind: "state", key: "battleWins" }, target: n, tier: 5, ap, retro: "full" });
 }
 for (const [n, name, ap, tier] of [[3, "Hot Streak", 10, 2], [5, "On Fire", 20, 3], [10, "Unstoppable", 40, 4], [20, "Legendary Run", 80, 5]]) {
-  add({ id: `bat_streak_${n}`, name, description: `Win ${n} battles in a row (counted from this expansion on).`, category: "battle", metric: { kind: "counter", key: "bestWinStreak" }, target: n, tier, ap, retro: "none" });
+  add({ id: `bat_streak_${n}`, name, description: `Win ${n} ranked or wager battles in a row (counted from this expansion on).`, category: "battle", metric: { kind: "counter", key: "bestWinStreak" }, target: n, tier, ap, retro: "none" });
 }
-add({ id: "bat_upset", name: "Giant Slayer", description: "Win a battle against an opponent rated at least 200 higher than you.", category: "battle", metric: { kind: "counter", key: "upsetWins" }, target: 1, tier: 3, ap: 25, retro: "none", hidden: true });
+add({ id: "bat_upset", name: "Giant Slayer", description: "Win a ranked or wager battle against an opponent rated at least 200 higher than you.", category: "battle", metric: { kind: "counter", key: "upsetWins" }, target: 1, tier: 3, ap: 25, retro: "none", hidden: true });
 
 // ---- Trainer collection mastery (745 trainers in trainerSprites.json) ----
 for (const [n, roman, ap] of [[500, "V", 120], [700, "VI", 160]]) {
@@ -219,6 +220,20 @@ for (const [n, name, ap, tier] of [[7, "Week Streak", 10, 2], [30, "Month Streak
 }
 for (const [n, name, ap, tier] of [[5, "Weekly Regular", 10, 2], [25, "Weekly Devotee", 30, 3], [52, "A Year of Packs", 60, 5]]) {
   add({ id: `weekly_${n}`, name, description: `Claim the weekly pack ${n} times (counted from this expansion on).`, category: "activity", metric: { kind: "counter", key: "weeklyClaims" }, target: n, tier, ap, retro: "none" });
+}
+
+// ==========================================================
+// Casual battles (open battles, user.casual). Counted from the ranked/casual
+// split on (retro "none": there is no earlier casual record). No rewards
+// yet: rewards are added the same way as the others, after approval.
+// ==========================================================
+SINCE = 4;
+add({ id: "cas_first_win", name: "Friendly Match", description: "Win a casual (open) battle.", category: "casual", metric: { kind: "state", key: "casualWins" }, target: 1, tier: 1, ap: 5, retro: "none" });
+for (const [n, roman, tier, ap] of [[10, "I", 1, 10], [50, "II", 2, 20], [100, "III", 3, 40], [500, "IV", 4, 80]]) {
+  add({ id: `cas_wins_${n}`, name: `Sparring Partner ${roman}`, description: `Win ${n} casual battles.`, category: "casual", metric: { kind: "state", key: "casualWins" }, target: n, tier, ap, retro: "none" });
+}
+for (const [n, name, tier, ap] of [[3, "Warm Streak", 2, 10], [5, "Crowd Favourite", 3, 20], [10, "Untouchable", 4, 40]]) {
+  add({ id: `cas_streak_${n}`, name, description: `Win ${n} casual battles in a row.`, category: "casual", metric: { kind: "state", key: "casualBestStreak" }, target: n, tier, ap, retro: "none" });
 }
 
 SINCE = 1;

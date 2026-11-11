@@ -19,6 +19,7 @@
 // ==========================================================
 
 import { getCatalogItem, isHoldable, CATEGORIES, RARITIES, ABSOLUTE_MAX_STACK } from "../catalog/items.js";
+import { isMegaCapabilityEnabled } from "../config/features.js";
 
 /** Largest quantity a single grant/consume may move. */
 export const MAX_QUANTITY_PER_OP = 1_000_000;
@@ -225,8 +226,13 @@ export function auditInventory(user) {
 // ----------------------------------------------------------
 const RARITY_RANK = Object.fromEntries(RARITIES.map((r, i) => [r, i]));
 
-function usageText(entry) {
+// Mega Stones stay "defined" (never grantable) but become usable from the
+// dashboard when the Mega "unlock" capability is on (config/features.js).
+const isUsableMegaStone = (entry, env) => !!entry?.mega && isMegaCapabilityEnabled("unlock", env);
+
+function usageText(entry, env = process.env) {
   if (!entry) return "Not recognised by this version of the bot.";
+  if (isUsableMegaStone(entry, env)) return "Use it on the dashboard (Mega Evolution) to permanently unlock its Mega form for one of your Pokémon.";
   if (entry.status !== "active") return "Not usable yet.";
   if (entry.id === "evolution_stone") return "Used when evolving a Pokémon on the dashboard.";
   if (entry.id === "shiny_dust") return "Used on the dashboard to make a Pokémon shiny, or to evolve a shiny one.";
@@ -239,7 +245,7 @@ function usageText(entry) {
  * @param {{ category?: string }} [opts]
  * @returns {Array<{id,name,description,category,categoryLabel,rarity,quantity,status,known,usable,usage}>}
  */
-export function listInventory(user, { category = null } = {}) {
+export function listInventory(user, { category = null, env = process.env } = {}) {
   const items = user?.items && typeof user.items === "object" && !Array.isArray(user.items) ? user.items : {};
   const rows = [];
   for (const id of Object.keys(items)) {
@@ -259,8 +265,8 @@ export function listInventory(user, { category = null } = {}) {
       quantity,
       status: entry?.status ?? "unknown",
       known: !!entry,
-      usable: !!entry && entry.status === "active" && (entry.id === "evolution_stone" || entry.id === "shiny_dust"),
-      usage: usageText(entry),
+      usable: (!!entry && entry.status === "active" && (entry.id === "evolution_stone" || entry.id === "shiny_dust")) || isUsableMegaStone(entry, env),
+      usage: usageText(entry, env),
       icon: entry?.icon ?? null,
     });
   }

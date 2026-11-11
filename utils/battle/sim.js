@@ -11,6 +11,7 @@ import { getSpecies, getMove, effectiveness } from "./data.js";
 import { computeStats } from "./stats.js";
 import { autoMoveset } from "./moveset.js";
 import { createRng } from "./rng.js";
+import { simulateBattleFx, prepareBattler } from "./effects.js";
 import {
   DAMAGE_ROLL_MIN, CRIT_CHANCE, HIGH_CRIT_CHANCE, CRIT_MULT, MOVE_RANDOM_CHANCE, TURN_CAP,
 } from "./tuning.js";
@@ -19,18 +20,34 @@ const SHEDINJA = 292;
 // Gen 5 odds for a 2-5 hit move: 2 or 3 hits 35% each, 4 or 5 hits 15% each.
 const MULTIHIT_ODDS = [2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5];
 
+// member.battleProfile (Mega Evolution, resolved and validated by
+// runBattle.buildTeam) swaps in the Mega's base stats, types and ability for
+// this battle only. Level, moves and everything stored stay the base
+// Pokémon's. HP comes from the profile's base HP at battle start (equal to
+// the base form's for every battle-eligible Mega; see MEGA-BATTLE-DESIGN §4).
+/**
+ * A fighter's moves: the player's chosen moveset for this team (member.moves,
+ * validated in runBattle.buildTeam), else the automatic moveset at the
+ * Pokémon's REAL Level (realLevel in ranked/wager, where it fights at Lv 50
+ * but only knows what it has learned). Casual members carry neither, so
+ * their moves are exactly as before.
+ */
+export const memberMoves = (member) =>
+  (Array.isArray(member.moves) && member.moves.length ? member.moves : autoMoveset(member.speciesId, member.realLevel ?? member.level));
+
 // member.statMult raises every stat, HP included, without changing the
 // Level: challenge opponents fight with CHALLENGE.statBoost.
 export function buildMon(member, levelMult = 1) {
   const species = getSpecies(member.speciesId);
+  const profile = member.battleProfile ?? null;
   const level = Math.min(100, Math.round(member.level * levelMult));
   const k = member.statMult ?? 1;
-  const s = Object.fromEntries(Object.entries(computeStats(species.baseStats, level)).map(([stat, v]) => [stat, Math.round(v * k)]));
+  const s = Object.fromEntries(Object.entries(computeStats((profile ?? species).baseStats, level)).map(([stat, v]) => [stat, Math.round(v * k)]));
   const maxHp = member.speciesId === SHEDINJA ? 1 : s.hp;
   return {
     speciesId: member.speciesId,
     level,
-    types: species.types,
+    types: profile ? [...profile.types] : species.types,
     atk: s.atk, def: s.def, spa: s.spa, spd: s.spd, spe: s.spe,
     maxHp,
     // hpFraction carries damage between Elite Four fights: absent is full HP,
@@ -38,7 +55,8 @@ export function buildMon(member, levelMult = 1) {
     hp: member.hpFraction === undefined ? maxHp
       : member.hpFraction <= 0 ? 0
       : Math.max(1, Math.round(maxHp * member.hpFraction)),
-    moves: autoMoveset(member.speciesId, member.level).map(getMove),
+    moves: memberMoves(member).map(getMove),
+    ...(profile && { ability: profile.ability, megaForm: profile.formId, name: profile.name }),
   };
 }
 
@@ -132,6 +150,18 @@ export function simulateBattle({ sides, seed, surge }) {
   const rng = createRng(seed);
   const teams = sides.map((side, i) =>
     side.members.map((m) => buildMon(m, surge && surge.side === i ? surge.levelMult : 1)));
+
+  // Battles with abilities (a Mega Evolution is present) run on the
+  // effect-aware engine (effects.js). Every other battle runs the legacy
+  // loop below, unchanged (tests/megaBattleRegression.test.js).
+  if (teams.some((t) => t.some((m) => m.ability))) {
+    sides.forEach((side, i) => side.members.forEach((member, j) => {
+      const mon = teams[i][j];
+      if (mon.speciesId === SHEDINJA) mon.ability ??= "Wonder Guard";
+      prepareBattler(mon, memberMoves(member), member.name);
+    }));
+    return simulateBattleFx({ teams, rng });
+  }
   const snapshot = () => teams.map((t) => t.map((m) => m.hp / m.maxHp));
   const activeSlot = (i) => teams[i].findIndex((m) => m.hp > 0);
   const snapshots = [snapshot()];

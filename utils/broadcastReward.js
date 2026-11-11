@@ -9,7 +9,10 @@
 
 import { pokemonSpriteUrl } from "./sprites.js";
 import { EmbedBuilder, AttachmentBuilder } from "discord.js";
+import { sightingView } from "./render/catchCard.js";
+import { renderCatchImage, broadcastCaption } from "./render/catchMessage.js";
 import { spritePaths, rarityEmojis } from "../spriteconfig.js";
+import { trainerImageUrl } from "./trainerAssets.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -120,7 +123,7 @@ export async function broadcastReward(
 
       if (!spriteFile.match(/\.(png|jpg|jpeg|gif)$/i)) spriteFile += ".png";
       spriteFile = spriteFile.replace(/\.png\.png$/i, ".png");
-      spriteUrl = `${base}${spriteFile}`;
+      spriteUrl = trainerImageUrl(spriteFile) ?? `${base}${spriteFile}`;
 
       let nameSource =
         item.name ||
@@ -191,10 +194,23 @@ const embed = new EmbedBuilder()
         ),
       ]).catch(err => console.error("⚠️ Broadcast send failed:", err.message));
 
-    // With a rendered card, every channel gets the card under the caption
-    // (a fresh attachment per send); otherwise the embed, as before.
-    const payload = () => (image?.buffer
-      ? { content: caption ?? undefined, files: [new AttachmentBuilder(image.buffer, { name: image.name ?? "catch.png" })], allowedMentions: { parse: [] } }
+    // Pokémon broadcasts always post a card: the caller's (random catches),
+    // or a "sighting" card rendered here for every other source (daily,
+    // starter pack, dashboard rewards). The embed is only the fallback when
+    // rendering fails, and for trainers.
+    let card = image, line = caption;
+    if (!card?.buffer && type === "pokemon") {
+      try {
+        const view = sightingView({ id: item.id, shiny });
+        card = await renderCatchImage(view);
+        line = broadcastCaption(view, nameSafe);
+      } catch (err) {
+        console.warn("⚠️ sighting card failed; broadcasting the embed:", err?.message || err);
+      }
+    }
+    // Every channel gets the card under the caption (a fresh attachment per send).
+    const payload = () => (card?.buffer
+      ? { content: line ?? undefined, files: [new AttachmentBuilder(card.buffer, { name: card.name ?? "catch.png" })], allowedMentions: { parse: [] } }
       : { embeds: [embed] });
 
     if (globalChannel) await safeSend(globalChannel, payload());

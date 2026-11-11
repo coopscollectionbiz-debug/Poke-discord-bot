@@ -51,6 +51,11 @@ export default {
       clearTrainers(targetData);
       targetData.displayedPokemon = [];
       targetData.displayedTrainer = null;
+      // Battle team, chosen movesets and the casual record go too. The
+      // ranked record (battle) is kept, as before this change.
+      delete targetData.battleTeam;
+      delete targetData.movesets;
+      delete targetData.casual;
 
       // ✅ Full onboarding reset
       targetData.onboardingComplete = false;

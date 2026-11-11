@@ -18,7 +18,8 @@ import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import { loadTrimmedTrainerSprite, loadBadgeSprite } from "../render/sprites.js";
 import { drawSparkle, drawTypeChip } from "../render/primitives.js";
-import { typeStyle } from "../render/tokens.js";
+import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
+import { isMegaId, megaSpriteRecord } from "../megas.js";
 
 const { GIFEncoder, quantize, nearestColorIndex } = gifenc;
 
@@ -35,6 +36,7 @@ const ROW_TOP = [PAD, PAD + ROW_H + GAP];
 const SIDE_COLOR = ["#4f8cff", "#ff5a6a"];
 const GOLD = "#f5c84c";
 const INK = "#0e1120";
+const MEGA_TAG = TOKENS.mega; // the shared Mega colour (dashboard --cc-mega)
 
 // GIF timing: 100 ms frames; an attack takes 7 of them, then the scene holds
 // with sprites still moving. Discord ignores a long last-frame delay and loops
@@ -84,7 +86,11 @@ export function turnText(event, sides) {
     event.fainted && `${target} fainted!`,
     event.userFainted && `${attacker} fainted!`,
   );
-  return [`${attacker} used ${event.move}!`, notes.filter(Boolean).join(" ")];
+  // Mega battles (effects engine): entry, ability, weather and stat messages.
+  // Absent from ordinary battles, so their text is unchanged.
+  const extra = [...(event.preNotes ?? []), ...notes.filter(Boolean), ...(event.notes ?? []), ...(event.endNotes ?? [])];
+  const dedup = extra.filter((t, i) => t && extra.indexOf(t) === i);
+  return [`${attacker} used ${event.move}!`, dedup.join(" ")];
 }
 
 // The text box's two lines. When the second line is too long (a recoil
@@ -112,6 +118,18 @@ export async function loadSprite(folder, id) {
   } catch {
     return null; // missing or unreadable sprite: the tile renders without it
   }
+}
+
+/**
+ * The animated sprite for a species number or a Mega form id, in `folder`
+ * ("normal" | "shiny" | "grayscale"). A Mega reads
+ * public/sprites/pokemon/mega/<folder>/<form>.gif, and only when the Mega
+ * manifest lists it: a missing Mega sprite is null (the tile renders without
+ * a sprite), never the base form's art.
+ */
+export function loadAnimatedSprite(id, folder) {
+  if (!isMegaId(id)) return loadSprite(folder, id);
+  return megaSpriteRecord(id)?.[folder]?.file ? loadSprite(`mega/${folder}`, id) : Promise.resolve(null);
 }
 
 // Plays one sprite through one image: returns a canvas showing the frame at
@@ -335,9 +353,11 @@ function frameState(f, { hpBefore, events }) {
  */
 export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], theme = null }) {
   const load = (s, i, folder) => {
-    const id = sides[s].members[i].speciesId;
-    const key = `${folder}/${id}`;
-    if (!sprites.has(key)) sprites.set(key, loadSprite(folder, id));
+    const m = sides[s].members[i];
+    // A Mega battles with its own sprite (loadAnimatedSprite: mega/<variant|grayscale>/<form>.gif).
+    const id = m.megaForm ?? m.speciesId;
+    const key = m.megaForm ? `mega/${folder}/${id}` : `${folder}/${id}`; // the file's path under sprites/pokemon
+    if (!sprites.has(key)) sprites.set(key, loadAnimatedSprite(id, folder));
     return sprites.get(key);
   };
   const live = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>
@@ -450,7 +470,10 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
         // Name, Level, and HP.
         ctx.textBaseline = "alphabetic";
         ctx.font = `700 13px ${FONT}`;
-        const label = fitText(ctx, m.name ?? `#${m.speciesId}`, 80);
+        // A Mega shows its base name (+ X/Y/Z) and a MEGA tag, so it fits the
+        // tile: 80 px leaves room for the Level in a 124 px tile.
+        const megaSuffix = m.megaForm ? (m.name?.match(/ ([XYZ])$/)?.[1] ?? "") : "";
+        const label = fitText(ctx, m.megaForm ? `${m.baseName ?? m.name}${megaSuffix ? ` ${megaSuffix}` : ""}` : (m.name ?? `#${m.speciesId}`), 80);
         const level = `Lv${m.level}`;
         const nameW = ctx.measureText(label).width;
         ctx.font = `600 12px ${FONT}`;
@@ -464,6 +487,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
         ctx.fillStyle = m.levelUp ? "#5ee08a" : frac <= 0 ? "#7d8396" : "#c9cfe0";
         ctx.fillText(level, startX + nameW + 6, top + 152);
         drawHpBar(ctx, cx, top + 158, frac);
+        if (m.megaForm) drawTag(ctx, "MEGA", Math.round(cx + LAYOUT.tileW / 2 - 8), top + 30, frac <= 0 ? "#7d8396" : MEGA_TAG);
       }
     }
 

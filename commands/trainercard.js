@@ -23,6 +23,7 @@ import {
   MessageFlags,
   AttachmentBuilder,
 } from "discord.js";
+import { cardImage } from "../utils/render/stage.js";
 import { trainerCardView, renderTrainerCard } from "../utils/render/trainerCard.js";
 import fs from "fs";
 import path from "path";
@@ -31,6 +32,7 @@ import { fileURLToPath } from "url";
 import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch, getTraining } from "../utils/training.js";
 import { spritePaths, rarityEmojis } from "../spriteconfig.js";
+import { trainerImageUrl } from "../utils/trainerAssets.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getRank } from "../utils/rankSystem.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
@@ -326,7 +328,7 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
     new EmbedBuilder()
       .setTitle("🧍 Choose Your Trainer")
       .setDescription(`Confirm **${t.label}** as your Trainer.`)
-      .setImage(`${ensureTrailingSlash(spritePaths.trainers)}${t.id}`)
+      .setImage(trainerImageUrl(t.id))
       .setColor(0x5865f2)
       .setFooter({ text: `Page ${index + 1} / ${trainers.length}` });
 
@@ -471,7 +473,7 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
 
     // Trainer thumbnail
     const trainerPath = user.displayedTrainer
-      ? `${ensureTrailingSlash(spritePaths.trainers)}${user.displayedTrainer}`
+      ? trainerImageUrl(user.displayedTrainer)
       : null;
 
     // Trainer info (name, rarity, emoji)
@@ -557,11 +559,12 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
 
     // The rendered card (utils/render/trainerCard.js); the embed above is the fallback.
     try {
-      const png = await renderTrainerCard(trainerCardView(user, {
+      const tcView = trainerCardView(user, {
         displayName: username,
         trainer: user.displayedTrainer ? { name: trainerInfo.name, tier: trainerInfo.rarityKey } : null,
-      }));
-      return await interaction.editReply({ embeds: [], files: [new AttachmentBuilder(png, { name: "trainercard.png" })], components: [] });
+      });
+      const card = await cardImage((animate) => renderTrainerCard(tcView, { animate }), "trainercard");
+      return await interaction.editReply({ embeds: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })], components: [] });
     } catch (err) {
       console.warn("⚠️ trainer card render failed; sending embed:", err?.message || err);
     }

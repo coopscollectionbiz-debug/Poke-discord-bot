@@ -23,8 +23,10 @@ import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { spritePaths, rarityEmojis, rarityColors } from "../spriteconfig.js";
 import { logEvent } from "../utils/eventLog.js";
 import { getRank } from "../utils/rankSystem.js";
+import { cardImage } from "../utils/render/stage.js";
 import { catchView } from "../utils/render/catchCard.js";
 import { renderDailyCard } from "../utils/render/dailyCard.js";
+import { dexProgress } from "../utils/render/dexProgress.js";
 
 // ==========================================================
 // Constants
@@ -254,17 +256,19 @@ export async function execute(
           id: pick.id, variant: shiny ? "shiny" : "normal", catchResult: result, trainerName: interaction.user.username,
         });
         const rankAfter = getRank(user.tp);
-        const png = await renderDailyCard({
+        const dailyView = {
           pokemon: [view(pick1, shiny1, caught1), view(pick2, shiny2, caught2)],
           cc: DAILY_CC,
           tp: DAILY_TP,
           stone: stoneAwarded,
           balance: { cc: user.cc, tp: user.tp },
           rankUp: rankAfter && rankAfter !== rankBefore ? rankAfter : null,
-        });
+          dex: dexProgress(user, [pick1.id, pick2.id]), // today's regions + national, after both catches
+        };
+        const card = await cardImage((animate) => renderDailyCard(dailyView, { animate }), "daily");
         return safeReply(interaction, {
           ...(saveAck.note ? { content: saveAck.note } : {}),
-          files: [new AttachmentBuilder(png, { name: "daily.png" })],
+          files: [new AttachmentBuilder(card.buffer, { name: card.name })],
           flags: MessageFlags.Ephemeral
         });
       } catch (err) {

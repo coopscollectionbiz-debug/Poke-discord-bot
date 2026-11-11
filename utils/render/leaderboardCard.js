@@ -10,8 +10,10 @@
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR } from "./tokens.js";
 import { rr, font, fitText, fitFont, drawBall } from "./primitives.js";
-import { loadStaticSprite, loadTrainerSprite, drawSprite } from "./sprites.js";
-import { buildTeam } from "../battle/runBattle.js";
+import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, drawSprite } from "./sprites.js";
+import { poseAtFrame } from "../trainerIdle.js";
+import { spriteStage } from "./stage.js";
+import { buildTeam, buildBattleTeam } from "../battle/runBattle.js";
 
 const W = 1000, M = 20, HEADER = 84, PODIUM = 330, ROW = 66, YOU = 82;
 const MEDAL = ["#f5c84c", "#c9d2e3", "#d48a52"];
@@ -22,8 +24,8 @@ const winPct = (w, l) => (w + l ? Math.round((100 * w) / (w + l)) : 0);
 export function leaderboardView(board, trainerData, viewerId) {
   const decorate = (p, position) => {
     const u = trainerData[p.userId] ?? {};
-    const lead = buildTeam(u)[0] ?? null;
-    return { ...p, position, trainerFile: u.displayedTrainer ?? null, lead: lead && { id: lead.speciesId, variant: lead.variant }, isYou: p.userId === viewerId };
+    const lead = buildBattleTeam(u)[0] ?? buildTeam(u)[0] ?? null; // the ranked lead (Battle team), else the Display lead
+    return { ...p, position, trainerFile: u.displayedTrainer ?? null, lead: lead && { id: lead.megaForm ?? lead.speciesId, variant: lead.variant } /* a Mega lead (validated by buildTeam) shows as the Mega */, isYou: p.userId === viewerId };
   };
   const top = board.top.map((p, i) => decorate(p, i + 1));
   let you = null;
@@ -33,7 +35,7 @@ export function leaderboardView(board, trainerData, viewerId) {
 
 export const leaderboardSize = (v) => ({ w: W, h: M + HEADER + (v.top.length ? PODIUM : 120) + Math.max(0, v.top.length - 3) * ROW + YOU + M });
 
-async function podium(ctx, p, cx, floor, height, place) {
+async function podium(ctx, p, cx, floor, height, place, stage) {
   const medal = MEDAL[place];
   // Pedestal.
   ctx.fillStyle = `${medal}26`;
@@ -54,7 +56,10 @@ async function podium(ctx, p, cx, floor, height, place) {
   ctx.ellipse(cx, floor - 6, 92, 16, 0, 0, Math.PI * 2);
   ctx.fill();
   const t = await loadTrainerSprite(p.trainerFile);
-  if (t) drawSprite(ctx, t, cx, floor, 200, 150, { scale: 2 });
+  if (t) {
+    const idle = await loadTrainerPoses(p.trainerFile); // breathing idle, or null → static
+    stage.placePosed(ctx, idle?.poses ?? [t], idle?.poseAt ?? poseAtFrame, cx, floor, 200, 150, { scale: 2 }); // own phase: podium trainers breathe out of step
+  }
   else { ctx.globalAlpha = 0.35; drawBall(ctx, cx, floor - 40, 26, false); ctx.globalAlpha = 1; }
   // Name, rating, record above the sprite area's baseline.
   const top = floor - 196;
@@ -68,7 +73,7 @@ async function podium(ctx, p, cx, floor, height, place) {
   ctx.textAlign = "left";
 }
 
-function row(ctx, p, y, lead) {
+function row(ctx, p, y, lead, stage) {
   ctx.fillStyle = p.isYou ? "#4f8cff1f" : "#1a2135";
   rr(ctx, M, y, W - 2 * M, ROW - 8, 12);
   ctx.fill();
@@ -82,7 +87,7 @@ function row(ctx, p, y, lead) {
   ctx.textAlign = "center";
   ctx.fillText(`#${p.position}`, M + 44, cy + 1);
   ctx.textAlign = "left";
-  if (lead) drawSprite(ctx, lead, M + 118, y + ROW - 12, 70, ROW - 14, { scale: 1 });
+  if (lead) stage.place(ctx, lead, M + 118, y + ROW - 12, 70, ROW - 14, { scale: 1 }, p.lead);
   ctx.font = font(24, 800);
   ctx.fillStyle = COLOR.text;
   ctx.fillText(fitText(ctx, p.name ?? "Trainer", 330), M + 168, cy + 1);
@@ -98,10 +103,11 @@ function row(ctx, p, y, lead) {
 }
 
 /** PNG of the leaderboard. */
-export async function renderLeaderboard(v) {
+export async function renderLeaderboard(v, { animate = false } = {}) {
   const { w, h } = leaderboardSize(v);
   const canvas = createCanvas(w, h);
   const ctx = canvas.getContext("2d");
+  const stage = spriteStage({ animate });
   const bg = ctx.createLinearGradient(0, 0, 0, h);
   bg.addColorStop(0, "#131a2d");
   bg.addColorStop(1, "#1c1530");
@@ -130,11 +136,11 @@ export async function renderLeaderboard(v) {
     // Podium: 2nd · 1st · 3rd, with 1st tallest.
     const floorBase = y + PODIUM - 10;
     const spots = [[1, W / 2 - 260, 70], [0, W / 2, 104], [2, W / 2 + 260, 50]];
-    for (const [i, cx, ht] of spots) if (v.top[i]) await podium(ctx, v.top[i], cx, floorBase - ht, ht, i);
+    for (const [i, cx, ht] of spots) if (v.top[i]) await podium(ctx, v.top[i], cx, floorBase - ht, ht, i, stage);
     y += PODIUM;
     for (const p of v.top.slice(3)) {
       const lead = p.lead ? await loadStaticSprite(p.lead.id, p.lead.variant) : null;
-      row(ctx, p, y, lead);
+      row(ctx, p, y, lead, stage);
       y += ROW;
     }
   }
@@ -145,7 +151,7 @@ export async function renderLeaderboard(v) {
   ctx.fillRect(M, y, W - 2 * M, 1.5);
   if (v.you && v.you.position > 10) {
     const lead = v.you.lead ? await loadStaticSprite(v.you.lead.id, v.you.lead.variant) : null;
-    row(ctx, { ...v.you, isYou: true }, y + 12, lead);
+    row(ctx, { ...v.you, isYou: true }, y + 12, lead, stage);
   } else {
     ctx.font = font(24, 700);
     ctx.fillStyle = v.you ? COLOR.blue : COLOR.textMuted;
@@ -153,5 +159,5 @@ export async function renderLeaderboard(v) {
     ctx.fillText(v.you ? `You're #${v.you.position} with ${fmt(v.you.rating)}.` : "Battle someone to join the leaderboard.", M + 4, y + 40);
     ctx.textBaseline = "alphabetic";
   }
-  return canvas.toBuffer("image/png");
+  return stage.output(canvas);
 }

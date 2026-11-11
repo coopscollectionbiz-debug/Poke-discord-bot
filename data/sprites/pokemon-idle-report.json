@@ -1,0 +1,9 @@
+{
+ "generatedBy": "tools/generate-pokemon-idles.mjs",
+ "seamOk": 11,
+ "minHeight": 20,
+ "breathing": 234,
+ "still": 0,
+ "review": [],
+ "excluded": []
+}

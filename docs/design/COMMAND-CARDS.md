@@ -49,3 +49,55 @@ Full suite: **49/49 test files pass** on the rollout branch, and **56/56** on `f
 
 - **Font bundling.** Fly renders in DejaVu Sans. All text is fitted by measurement.
 - **Before release:** check Discord's image height cap in a real client, and measure render time and RSS on Fly. Every merge to master deploys.
+
+## Follow-up (2026-11-10, after PR #56 went live)
+
+The owner's feedback from production, and what changed:
+
+| Feedback | Change |
+|---|---|
+| "The random catch is too big" | The catch card is now a **900 × 240** banner (about 550 × 147 in Discord; it was 1000 × 360, about 550 × 198). Pokédex progress moved onto its own short line. |
+| "Remove the 'Caught by' section" | Removed. The caption above the card already names the catcher. |
+| "Sprites should be animated everywhere, on every card, where available" | New shared **sprite stage** (`utils/render/stage.js`). In GIF mode, each card draws everything once and redraws only the Pokémon sprites per frame, using the battle's sprite player. This now applies to the catch card (every catch, not only shiny or Rare+), the inspect card, the battle EXP card, the leaderboard leads, `/daily`, the trainer card's Team strip and `/pokedex`. A card whose sprites are all static (for example #1025) stays a PNG. Trainer sprites are static PNG art. |
+| "Rare sightings wasn't updated" | `broadcastReward` used to fall back to the old embed whenever the caller passed no card: `/daily`, the starter pack (`/shop`) and dashboard rewards. It now renders a **sighting card** itself (sprite, name, types, rarity; "RARE POKÉMON FOUND!"), so every Pokémon broadcast in every channel, rare sightings included, is a card. Trainer broadcasts keep their embed. |
+
+**Load limits:** one **shared GIF gate** (`cardGifGate`, limit 2) now covers every card, including `/showteam`. A request that finds both slots busy gets the PNG immediately.
+
+**Kill switches:** `CARDS_ANIMATED=0` turns off all animation. The per-surface switches `SHOWTEAM_ANIMATED=0` and `CATCH_ANIMATED=0` still work.
+
+**Measured on the dev PC** (PNG / GIF):
+
+| Card | PNG | GIF |
+|---|---|---|
+| Catch | 8 ms | 99 ms, 58 KB |
+| Inspect | — | 144 ms |
+| EXP | — | 180 ms |
+| Leaderboard | — | 264 ms |
+| Daily | — | 155 ms |
+| Trainer | — | 203 ms, 343 KB |
+| Pokédex | — | 122 ms |
+
+Peak RSS for the whole benchmark process was 169 MB. Expect Fly to be 2–3× slower.
+
+### National Pokédex number and private Pokédex progress (same follow-up)
+
+**National Pokédex number** (`#0613`, the shared `dexNo()` helper):
+
+| Card | Where the number is |
+|---|---|
+| Catch / sighting | Beside the rarity pill |
+| `/showteam` | After the slot badge (and LEAD tag), on a dark backing |
+| `/daily` | After the NEW / +EXP tag |
+| Battle EXP | Bottom-right of each tile |
+| Inspect, `/pokedex` | Already shown there; both now use the same helper |
+
+**Public cards no longer show Pokédex progress.** "Kanto Pokédex 121/151" read confusingly next to the National number. The catch card dropped it and shrank to **900 × 200** (about 550 × 122 in Discord).
+
+**Private progress instead.** Random catches come from chat messages, and Discord allows private replies only to interactions, so there is no private reply after a catch. The owner chose to show progress in the two private views:
+
+- **`/daily`**: a Pokédex strip with the regions of today's two Pokémon, then **National**.
+- **`/pokedex`**: a "Your Pokédex" row with the species' region, then National.
+
+**How it's counted** (`utils/render/dexProgress.js`, following CONTEXT.md): distinct species owned now, in either variant.
+- **Regional:** out of the region's size from the achievements catalog.
+- **National:** out of the species in released generations (649 with Gens 1–5). It grows when a generation is released.

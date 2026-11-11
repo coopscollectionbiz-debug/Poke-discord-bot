@@ -12,6 +12,8 @@ Mockups use synthetic data and are not served by the bot:
 
 ---
 
+> **Update (Teams & battle modes):** two teams (Display / Battle) and two battle types (casual / ranked) change the page structure. **§11 replaces E1 and reshapes E2/E3**, and supersedes §1's "My Team / My Pokémon" split, §4 and B1. Mockup options, comparison and backend needs: `TEAMS-COLLECTION-REDESIGN.md`.
+
 ## 1. Information architecture
 
 **Today:** five emoji tab buttons (Manage Pokémon · Manage Trainers · Shop · Bag · Achievements). The login lands on Manage Pokémon. There is no home page.
@@ -154,10 +156,14 @@ Tabs:
 | **C2 — Inspect & shared names** | `/inspectpokemon` → rendered card (C-style lead panel) + embed text fallback; display names across embeds | M | C1 |
 | **C3 — Embed consistency** | One brand color; tier palette consolidation; `/daily` result as one rendered strip | S–M | C1 |
 | **C4 — Battle encoder adoption** | Battle uses `gif.js` (no visual change) | S | C1 |
-| **D — Dashboard foundation** | `shared/tokens.css`, `components.css`, new nav (sidebar/tab bar, real links), restyle all player pages in place, a11y baseline, error/expiry states | L (4–6 days) | — (can run in parallel with C) |
-| **E1 — My Team page** | Mockup → real (reorder, add/remove, save bar) using the existing endpoint | M | D |
-| **E2 — Collection upgrades** | Shiny/region filters, sort, incremental rendering, list view | M | D |
-| **E3 — Overview + detail** | Home page; detail drawer | M | D, approvals B1–B3 |
+| **D — Dashboard foundation** ✅ (`feature/dashboard-foundation`; previews in `previews/dashboard-*.png`) | `shared/tokens.css`, `components.css`, new nav (sidebar/tab bar, real links), restyle all player pages in place, a11y baseline, error/expiry states | L (4–6 days) | — (can run in parallel with C) |
+| ~~E1 — My Team page~~ | Replaced by **E1 Teams** (§11) | — | — |
+| **E0 — Design choice** (this branch) | Mockups for Teams (3), Collection (2), `/showbattlecard` (2), Overview, Achievements split | — | — |
+| **E1 — Teams page** (§11) ✅ built on `feature/teams-battle-team` (option B; previews `previews/dashboard-teams-*.png`) | Display + Battle teams, box, rules, one save flow; B6–B8 + B10 (team fields); no automatic team copy (B7 dropped) | M–L | E0 choice, B6–B9 |
+| **E2 — Collection / Pokédex** (§11) | Replaces the Pokémon page: real dex, filters, modes, detail drawer | M | E0 choice, B2 |
+| **E3 — Overview** (§11) | Home: both teams, ranked/casual records, rewards, completion | M | B10, B11 |
+| **E4 — Achievements split** (§11) | Ranked / Casual / Collection tabs | S | B11, achievement definitions |
+| **E5 — `/showbattlecard`** (§11) | Ranked card in Discord; existing displays keep the Display team | S | B6, B10 |
 
 ### Acceptance criteria
 
@@ -185,18 +191,102 @@ Tabs:
 - Expired-session message on every page.
 - Every existing action still works: team save, evolve, donate, bulk donate, convert, set trainer, unlock trainer, shop purchases, weekly pack, achievement claim. This is checked against a local bot with synthetic data.
 
-**E1:**
-- Reorder by buttons and by drag.
-- Saved order equals the battle order (`buildTeam`).
-- Save is disabled until something changes.
-- 403/503 are handled.
-- Works at 390 px.
+E1–E5 acceptance criteria are in §11.
 
-**E2:**
-- Filters combine.
-- 1,025-card worst case is interactive in < 1 s on a mid-range phone (Lighthouse, throttled).
-- Shiny and region filters are correct against fixtures.
+## 11. Teams & battle modes (replaces E1, reshapes E2/E3)
 
-**E3:**
-- Every Overview number matches its API field.
-- Detail stats and moves equal the Discord inspect output for the same Pokémon (same `slotView`).
+The game change, decided by the owner:
+
+| | **Display team** (casual) | **Battle team** (ranked) |
+|---|---|---|
+| **Used by** | Open battles; `/showteam`, the trainer card and every existing display | Ranked and wager battles |
+| **Levels** | Real Levels | Lv 50 for everyone (stored Levels unchanged); EXP still uses real Levels |
+| **Underdog surge** | Yes | No |
+| **Rating** | Unrated | Elo (all ratings reset at launch); leaderboard ranks this |
+| **Rule** | 1–6 owned | 1–6 owned, at most 1 `tier: "mythic"`; at most 1 Mega per team |
+
+### Page structure
+
+| Page | Replaces | Content |
+|---|---|---|
+| **Overview** (home) | — | Both teams, ranked record (rating, W/L, position, streak), casual record, rewards waiting, Pokédex completion |
+| **Teams** | Change Team mode | Display + Battle teams with a box of owned copies; rules; one save flow |
+| **Collection** | Pokémon page | Real Pokédex (owned + unowned, dex numbers, live generations only); filters; Evolve / Donate / Convert / bulk donate; detail drawer/sheet; Mega forms only inside their Pokémon |
+| Trainers · Bag · Shop | — | Unchanged |
+| **Achievements** | Same page | Ranked · Casual · Collection tabs |
+
+Sidebar: Overview · Teams · Collection · Trainers · Bag · Achievements · Shop. Phone tab bar: Home · Teams · Pokédex · Bag · More.
+
+### Backend needs (approval required; none built)
+
+| # | Change | Rollback safety |
+|---|---|---|
+| B6 | `battleTeam` field (`displayedPokemon` stays the Display team) | v28 ignores `battleTeam` |
+| B7 | ~~One-time move-over~~ **Dropped** (owner, 2026-11-10): players set their Battle team themselves; the Teams page offers "Copy my Display team" | — |
+| B8 | `set-pokemon-team` takes `teamType` (default `display`); battle saves enforce the mythic rule server-side | Old clients unchanged |
+| B9 | Optional single "save both" request | — |
+| B10 | Read-only `battleTeam`, `ranked`, `casual` on `GET /api/user-pokemon` (supersedes B1) | Read-only |
+| B11 | Separate ranked and casual records; reset ranked ratings; streak counters | Game-logic change; owner approval |
+| B2 | Detail endpoint returning `slotView()` (unchanged) | Read-only |
+
+### Ranked battles (built on `feature/teams-battle-team`)
+
+- **Modes:**
+  - `/battle opponent` is **casual**: Display teams, real Levels, Underdog surge, unrated. It writes `user.casual` (W/L and streaks) and earns no battle achievements.
+  - `/battle opponent ranked:True` is **ranked**: Battle teams at Lv 50, no surge, rated in `user.battle`, with battle achievements. No consent is needed.
+  - `/battle opponent wager:N` is ranked plus the accepted pot.
+  - EXP uses real Levels in every mode. Only the Challenger earns EXP in casual and ranked battles; both earn it in wagers, as before.
+- **Season reset:** `RANKED.season` (utils/battle/tuning.js) resets every ranked record. Readers (`rankedRecord`) treat an older season as 1000, 0–0. The first ranked write archives the old record to `battle.past`. Daily caps are shared by every mode.
+- **Achievements:** battle achievements (wins, rating, streaks, upsets) count ranked and wager battles only, per the owner's decision. Their progress uses lifetime ranked wins and the best rating ever reached (`lifetimeRanked`), so the season reset never takes back achievement progress.
+- **Battle engine unchanged:** `tests/megaBattleRegression.test.js` (corpus v2, re-recorded from 880ba6c8) proves 3,000 open battles are identical to the pre-Mega engine.
+- **`/leaderboard`:** ranks this season's ranked rating, and shows each player's Battle team lead.
+- **`/showbattlecard`** (option 2): `utils/render/battleCard.js` and `commands/showbattlecard.js`.
+- **Release checklist (owner):**
+  1. Register commands (`/showbattlecard` is new; `/battle` gains `ranked`). Use `tools/commands-diff.mjs --expect-add showbattlecard`; the `/battle` change shows as a changed command.
+  2. No team migration (owner decision): players set their Battle team on the Teams page before playing ranked or wager battles; ranked refuses with a pointer to the Teams page until then.
+  3. The rating reset happens by itself (season 1). Players' old ratings stay in `battle.past`.
+
+### Acceptance criteria
+
+**E1 Teams:**
+- Both teams are visible together at 1280 px and 390 px.
+- Reorder works by buttons (keyboard and screen reader) and by drag on desktop.
+- Saved order equals battle order: `buildTeam` for Display; the Battle equivalent for Battle.
+- The mythic rule and the one-Mega rule are enforced by the server (B8). The page shows the server's message and never relies on client checks alone.
+- Battle slots show Lv 50 and the real Level.
+- One save flow:
+  - disabled until something changes;
+  - Discard restores the last saved state;
+  - leaving with unsaved changes asks via an in-page dialog, never `confirm()`.
+- 403 shows the expiry message; 503 shows the server's message.
+- `mega.js` hooks keep working (`withMega`, `teamSlotSprite`, `initMegaUI`), and `megaSafety`/`megaPresentation` tests pass.
+
+**E2 Collection:**
+- Dex counts exclude Mega forms and non-live generations.
+- Filters combine: region, type, rarity, shiny, owned/missing.
+- Sort by dex #, Power, Level and name.
+- Every existing action still works: evolve, donate, bulk donate, convert, and the shiny toggle.
+- Detail stats and moves equal the Discord inspect output (same `slotView`).
+- A 1,025-entry worst case is interactive in under 1 s on a throttled mid-range phone.
+
+**E3 Overview:**
+- Every number matches its API field (B10).
+- Ranked position matches `/leaderboard`.
+
+**E4 Achievements:**
+- Ranked and casual lists are separate.
+- Claim works per item.
+- Progress bars have ARIA values.
+
+**E5 `/showbattlecard`:**
+- Shows the Battle team at Lv 50, with the real Level, rating, W/L, leaderboard position and rank.
+- Existing displays still show the Display team.
+- Renders within the existing render gate.
+
+**All:**
+- No horizontal scroll at 360 px.
+- Touch targets are at least 44 px.
+- `:focus-visible` is shown everywhere.
+- `prefers-reduced-motion` is respected.
+- No `alert()`/`confirm()`.
+- Only the tokens and components (extended in `components.css`) are used.

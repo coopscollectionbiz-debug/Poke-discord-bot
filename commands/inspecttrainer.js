@@ -13,6 +13,7 @@ import {
   MessageFlags,
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
+import { trainerImageUrl } from "../utils/trainerAssets.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import {
   createPaginationButtons,
@@ -121,11 +122,7 @@ export default {
       const grid = trainersToShow
         .map((t) => {
           const file = t.filename || t.file;
-          const spriteUrl = t.url
-            ? t.url
-            : t.grayscale
-            ? `${spritePaths.trainersGray}${file}`
-            : `${spritePaths.trainers}${file}`;
+          const spriteUrl = t.url ?? trainerImageUrl(file, { grayscale: !!t.grayscale });
           return `**${t.name}**\n[Sprite Link](${spriteUrl})`;
         })
         .join("\n\n");

@@ -1,0 +1,192 @@
+/* ===========================================================
+   Mega Evolution cards (Phases M1–M3). Loaded by mega.js only when
+   /api/mega reports Mega Evolution enabled, so with Mega switched off
+   the page is exactly as before. Built on the dashboard design system
+   (public/shared/tokens.css: --cc-* surfaces, radii, spacing, touch
+   size) with one extra accent, --cc-mega, shared with the Discord
+   images (utils/render/tokens.js COLOR.mega).
+=========================================================== */
+#megaSection {
+  --mega: var(--cc-mega, #c084fc);
+  --mega-soft: #c084fc29;
+  margin: var(--cc-s3) auto var(--cc-s4);
+  padding: var(--cc-s4);
+  max-width: 1200px;
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-r-md);
+  background: linear-gradient(180deg, var(--mega-soft), transparent 140px), var(--cc-surface);
+  box-shadow: var(--cc-shadow);
+  text-align: left;
+  font-family: var(--cc-font);
+  min-width: 0;
+}
+
+/* ---------- head ---------- */
+.mega-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cc-s2) var(--cc-s4);
+}
+#megaSection h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-s2);
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--cc-text);
+}
+.mega-mark,
+.mega-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--cc-r-chip);
+  background: var(--mega);
+  color: var(--cc-ink);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+.mega-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--cc-s2);
+  margin: 0;
+  padding: var(--cc-s1) var(--cc-s3);
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-r-sm);
+  background: var(--cc-surface-sunken);
+}
+.mega-progress-count { font-size: 1.05rem; color: var(--cc-text-muted); white-space: nowrap; }
+.mega-progress-count b { font-size: 1.25rem; color: var(--mega); }
+.mega-progress-label { display: flex; flex-direction: column; font-size: 0.8rem; font-weight: 700; color: var(--cc-text); }
+.mega-progress-label small { font-weight: 600; color: var(--cc-text-faint); }
+.mega-sub { margin: var(--cc-s2) 0 var(--cc-s1); color: var(--cc-text-muted); font-size: 0.88rem; line-height: 1.4; }
+.mega-team {
+  margin: var(--cc-s2) 0 0;
+  padding: var(--cc-s2) var(--cc-s3);
+  border-radius: var(--cc-r-sm);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+.mega-team.ready { background: var(--mega-soft); color: var(--cc-text); border-left: 3px solid var(--mega); }
+.mega-team.warn { background: var(--cc-gold-soft); color: var(--cc-text); border-left: 3px solid var(--cc-gold); }
+.mega-status { margin: var(--cc-s2) 0 0; min-height: 1.2em; font-size: 0.86rem; font-weight: 600; color: var(--cc-text); }
+.mega-status:empty { display: none; }
+.mega-stones { margin: var(--cc-s2) 0 0; font-size: 0.85rem; color: var(--cc-text-muted); }
+.mega-h3 { margin: var(--cc-s4) 0 var(--cc-s2); font-size: 0.95rem; font-weight: 800; color: var(--cc-text); }
+.mega-empty { margin: var(--cc-s3) 0; color: var(--cc-text-muted); font-size: 0.88rem; }
+.mega-locked > summary {
+  cursor: pointer;
+  min-height: var(--cc-touch);
+  display: flex;
+  align-items: center;
+  margin: var(--cc-s2) 0;
+  font-weight: 700;
+  color: var(--cc-text-muted);
+}
+.mega-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--cc-s3);
+  margin-bottom: var(--cc-s2);
+}
+
+/* ---------- card ---------- */
+.mega-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cc-s1);
+  padding: var(--cc-s3);
+  border: 2px solid var(--mega);
+  border-radius: var(--cc-r-md);
+  background: var(--cc-surface-sunken);
+  text-align: center;
+  min-width: 0;
+}
+.mega-card.shiny { border-color: var(--cc-gold); }
+.mega-card.locked { border-style: dashed; border-color: var(--cc-line); }
+.mega-card.dormant { border-color: var(--cc-line); }
+.mega-card.blocked { border-color: var(--cc-red); opacity: 0.6; }
+.mega-card.on-team { box-shadow: var(--cc-ring-blue); }
+.mega-card-top { align-self: stretch; display: flex; justify-content: space-between; align-items: center; min-height: 22px; }
+.mega-badge.locked, .mega-badge.dormant { background: var(--cc-surface-raised); color: var(--cc-text-muted); }
+.mega-badge.blocked { background: var(--cc-red); color: #fff; }
+.mega-shiny { font-size: 1rem; }
+.mega-sprite { width: 96px; height: 96px; image-rendering: pixelated; object-fit: contain; }
+.mega-sprite.dim { filter: grayscale(0.85) brightness(0.8); }
+.mega-card h4 { margin: 0; font-size: 1rem; font-weight: 800; color: var(--cc-text); overflow-wrap: anywhere; }
+.mega-base, .mega-level, .mega-stone { margin: 0; font-size: 0.78rem; color: var(--cc-text-muted); overflow-wrap: anywhere; }
+.mega-level small { color: var(--cc-text-faint); }
+.mega-types { display: flex; gap: var(--cc-s1); justify-content: center; }
+.mega-type { height: 14px; image-rendering: pixelated; }
+
+/* Battle availability: three states, never more optimistic than the server. */
+.mega-battle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: var(--cc-s1) 0 0;
+  padding: 2px 10px;
+  border-radius: var(--cc-r-chip);
+  font-size: 0.75rem;
+  font-weight: 800;
+  background: var(--cc-surface-raised);
+  color: var(--cc-text-muted);
+}
+.mega-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cc-text-faint); flex: none; }
+.mega-battle.ready { background: #3fd46c26; color: var(--cc-green); }
+.mega-battle.ready .mega-dot { background: var(--cc-green); }
+.mega-battle.unavailable { background: var(--cc-gold-soft); color: var(--cc-gold); }
+.mega-battle.unavailable .mega-dot { background: var(--cc-gold); }
+.mega-battle-detail { margin: 0; font-size: 0.72rem; color: var(--cc-text-muted); line-height: 1.35; }
+.mega-ability { margin: 2px 0 0; font-size: 0.78rem; color: var(--cc-text-muted); }
+.mega-ability b { color: var(--cc-text); }
+.mega-tag { display: inline-block; padding: 1px 6px; border-radius: 6px; background: var(--cc-surface-raised); color: var(--cc-text-muted); font-size: 0.68rem; }
+.mega-tag.warn { background: var(--cc-gold-soft); color: var(--cc-gold); }
+.mega-stats { width: 100%; font-size: 0.74rem; }
+.mega-stats > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; justify-content: center; color: var(--cc-text-muted); }
+.mega-stat { display: grid; grid-template-columns: 30px 1fr 30px 30px; align-items: center; gap: var(--cc-s1); margin-top: 2px; }
+.mega-bar { height: 6px; background: var(--cc-surface-raised); border-radius: 3px; overflow: hidden; }
+.mega-bar i { display: block; height: 100%; background: var(--mega); }
+.mega-stat b { text-align: right; }
+.mega-stat em { font-style: normal; text-align: right; }
+.mega-stat em.up { color: var(--cc-green); }
+.mega-stat em.down { color: var(--cc-red); }
+
+/* ---------- actions ---------- */
+.mega-actions { display: flex; flex-wrap: wrap; gap: var(--cc-s2); justify-content: center; margin-top: var(--cc-s1); width: 100%; }
+.mega-btn {
+  min-height: var(--cc-touch);
+  padding: 0 var(--cc-s3);
+  border: 1px solid var(--mega);
+  border-radius: var(--cc-r-sm);
+  background: transparent;
+  color: var(--cc-text);
+  font: 700 0.8rem var(--cc-font);
+  cursor: pointer;
+}
+.mega-btn:hover { background: var(--mega-soft); }
+.mega-btn:focus-visible { outline: none; box-shadow: var(--cc-ring-blue); }
+.mega-btn.on { background: var(--cc-blue); border-color: var(--cc-blue); color: #fff; }
+.mega-btn.unlock { background: var(--mega); color: var(--cc-ink); }
+.mega-btn.ghost { border-color: var(--cc-line); color: var(--cc-text-muted); }
+.mega-need { font-size: 0.75rem; color: var(--cc-text-muted); }
+.mega-warn { color: var(--cc-gold); font-size: 0.85rem; }
+
+@media (max-width: 560px) {
+  #megaSection { margin: var(--cc-s2) 0 var(--cc-s3); padding: var(--cc-s3); border-radius: var(--cc-r-sm); }
+  .mega-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cc-s2); }
+  .mega-card { padding: var(--cc-s2); }
+  .mega-sprite { width: 72px; height: 72px; }
+  .mega-stat { grid-template-columns: 26px 1fr 26px 26px; }
+  .mega-btn { width: 100%; }
+}
+@media (max-width: 340px) {
+  .mega-grid { grid-template-columns: minmax(0, 1fr); }
+}

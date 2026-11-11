@@ -20,10 +20,15 @@
 let userId;
 let userData = {};
 let pokemonData = {};
-let currentMode = "team"; // "team" | "evolve" | "donate" | "convert"
+// Collection modes. "browse" (default) opens a Pokémon's details; teams are
+// edited on the Teams page (/public/teams/). The old "team" mode code below
+// stays for the Mega hooks but has no button.
+let currentMode = "browse"; // "browse" | "evolve" | "donate" | "convert"
 let selectedTeam = []; // [{id:Number, variant:"normal"|"shiny"}]
 let showOwnedOnly = false;
 let showUnownedOnly = false;
+let regionFilter = ""; // "" = every live region
+let shinyOnly = false;
 let regions = []; // [{ name, ids }], built once from pokemonData in init()
 // Multi-select (Donate mode). In-memory only; a reload resets it, and the
 // pageshow handler below resets it on a back/forward cache restore.
@@ -34,7 +39,15 @@ import { rarityEmojis } from "/public/spriteconfig.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
 import { getRegions, countOwned } from "/public/picker-pokemon/regions.js";
 import * as bulkRules from "/public/picker-pokemon/bulkRules.js";
+import { showMessage, showActionError, showExpired, showBanner, toast, EXPIRED_MESSAGE } from "/public/shared/shell.js";
+import { displaySpeciesName, nameMatches } from "/public/shared/names.js";
+import { scanFx } from "/public/shared/spriteFx.js";
+import { openDetail } from "/public/picker-pokemon/detail.js";
 import { GYM_BADGES, earnedBadgeKeys } from "/public/picker-pokemon/badges.js";
+
+const LOCK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>`;
+const SPARKLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>`;
+const capitalize = (s) => String(s).charAt(0).toUpperCase() + String(s).slice(1);
 
 // ===========================================================
 // 🎨 Type ID to Name Mapping (for filtering)
@@ -253,9 +266,19 @@ function toTeamObj(entry) {
     const legacyIsShiny =
       entry.variant == null && (entry.shiny === true || entry.isShiny === true);
 
-    return { id: pid, variant: legacyIsShiny ? "shiny" : normVariant(entry.variant) };
+    const slot = { id: pid, variant: legacyIsShiny ? "shiny" : normVariant(entry.variant) };
+    // Mega Evolution: a slot may carry its Mega form (validated server-side).
+    if (typeof entry.mega === "string" && /^mega-[a-z0-9]+(-[a-z0-9]+)*$/.test(entry.mega)) slot.mega = entry.mega;
+    return slot;
   }
   return null;
+}
+
+// Keep { id, variant } and at most ONE Mega slot (the first) — team rule.
+function withMega(slot, megaTaken) {
+  const out = { id: Number(slot.id), variant: normVariant(slot.variant) };
+  if (slot.mega && !megaTaken.value) { out.mega = slot.mega; megaTaken.value = true; }
+  return out;
 }
 
 // TEAM RULE: 1 per Pokémon ID (ignore variant for uniqueness)
@@ -284,11 +307,12 @@ function normalizeTeam(rawTeam) {
   // dedupe by Pokémon ID, keep order, clamp to 6
   const seen = new Set();
   const deduped = [];
+  const megaTaken = { value: false };
   for (const slot of mapped) {
     const k = teamKey(slot);
     if (seen.has(k)) continue;
     seen.add(k);
-    deduped.push({ id: Number(slot.id), variant: normVariant(slot.variant) });
+    deduped.push(withMega(slot, megaTaken));
     if (deduped.length >= 6) break;
   }
   return deduped;
@@ -314,9 +338,7 @@ async function apiJSON(url, opts = {}) {
     const msg =
       data?.error ||
       data?.message ||
-      (res.status === 403
-        ? "❌ Session expired. Please re-open the dashboard link from Discord."
-        : `Request failed (${res.status})`);
+      (res.status === 403 ? EXPIRED_MESSAGE : `Request failed (${res.status})`);
 
     const err = new Error(msg);
     err.status = res.status;
@@ -446,8 +468,8 @@ function updateHUD() {
 
   if (stoneEl) stoneEl.textContent = stones;
   if (dustEl) dustEl.textContent = dust;
-  if (ccEl) ccEl.textContent = cc;
-  if (tpEl) tpEl.textContent = tp;
+  if (ccEl) ccEl.textContent = Number(cc).toLocaleString("en-US");
+  if (tpEl) tpEl.textContent = Number(tp).toLocaleString("en-US");
   if (rankEl) rankEl.textContent = rank;
 
   const badgeRow = document.getElementById("badgeRow");
@@ -476,12 +498,12 @@ function refreshStats(newData, prevData) {
   const ccBefore = prevData.cc ?? 0;
   const ccAfter = newData.cc ?? 0;
 
-  if (dustAfter > dustBefore) flashCounter("dustCount", "#facc15");
-  if (dustAfter < dustBefore) flashCounter("dustCount", "#ef4444");
+  if (dustAfter > dustBefore) flashCounter("dustCount", "#f5c84c");
+  if (dustAfter < dustBefore) flashCounter("dustCount", "#ff5a6a");
 
-  if (stonesAfter < stonesBefore) flashCounter("stoneCount", "#ef4444");
-  if (ccAfter > ccBefore) flashCounter("ccCount", "#10b981");
-  if ((newData.tp ?? 0) > (prevData.tp ?? 0)) flashCounter("tpCount", "#00ff9d");
+  if (stonesAfter < stonesBefore) flashCounter("stoneCount", "#ff5a6a");
+  if (ccAfter > ccBefore) flashCounter("ccCount", "#3fd46c");
+  if ((newData.tp ?? 0) > (prevData.tp ?? 0)) flashCounter("tpCount", "#4f8cff");
 
   updateHUD();
 }
@@ -499,11 +521,12 @@ function setMode(mode) {
 
   document.querySelectorAll("#modeToggle .mode-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.mode === mode);
+    btn.setAttribute("aria-pressed", String(btn.dataset.mode === mode));
   });
 
-  // Optional: hide owned/unowned toggles outside Team mode
+  // Owned / missing toggles only make sense in Browse (other modes show owned only).
   const tg = document.querySelector(".toggle-group");
-  if (tg) tg.style.display = mode === "team" ? "flex" : "none";
+  if (tg) tg.style.display = mode === "browse" || mode === "team" ? "flex" : "none";
 
   // Show dust cap only in donate mode
   const dustEl = document.getElementById("dustStatus");
@@ -514,6 +537,53 @@ function setMode(mode) {
 
   renderPokemonGrid();
   updateTeamCounter();
+  megaUI?.onModeChange?.(mode);
+}
+
+// ===========================================================
+// 🗺️ Collection filters: region chips (live regions, with Pokédex counts)
+// and "Shiny only". Mega forms never count: regions hold species only.
+// ===========================================================
+function initCollectionFilters() {
+  const host = document.getElementById("regionChips");
+  if (host) {
+    const chip = (value, label, count) =>
+      `<button type="button" class="region-chip" data-region="${value}" aria-pressed="${regionFilter === value}">${label}${count ? ` <small>${count}</small>` : ""}</button>`;
+    const draw = () => {
+      host.innerHTML = chip("", "All", "") + regions.map((r) => chip(r.name, r.name, `${countOwned(r, userData.pokemon)}/${r.ids.length}`)).join("");
+    };
+    draw();
+    host.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-region]");
+      if (!b) return;
+      regionFilter = b.dataset.region;
+      draw();
+      renderPokemonGrid();
+    });
+  }
+  const shinyBtn = document.getElementById("shinyOnlyToggle");
+  shinyBtn?.addEventListener("click", () => {
+    shinyOnly = !shinyOnly;
+    shinyBtn.setAttribute("aria-pressed", String(shinyOnly));
+    shinyBtn.classList.toggle("active", shinyOnly);
+    renderPokemonGrid();
+  });
+}
+
+/** What the detail drawer (detail.js) may use: data and this page's existing action flows. */
+function detailContext() {
+  return {
+    userId,
+    apiJSON,
+    pokemonData,
+    userData,
+    typeName: (tid) => TYPE_MAP[tid],
+    ownedCounts,
+    evolve: (id) => openEvolutionModal(id),
+    donate: (id, variant) => openDonationConfirmModal(id, variant),
+    convert: (id) => openConvertModal(id),
+    canEvolve: (id) => isEvolutionEligibleAnyVariant(id),
+  };
 }
 
 // ===========================================================
@@ -527,12 +597,18 @@ function initToggles() {
   const shinyBtn = document.getElementById("shinyToggle");
   if (shinyBtn) shinyBtn.style.display = "none";
 
+  function syncPressed() {
+    ownedBtn?.setAttribute("aria-pressed", String(showOwnedOnly));
+    unownedBtn?.setAttribute("aria-pressed", String(showUnownedOnly));
+  }
+
   if (ownedBtn) {
     ownedBtn.addEventListener("click", () => {
       showOwnedOnly = !showOwnedOnly;
       if (showOwnedOnly) showUnownedOnly = false;
       ownedBtn.classList.toggle("active", showOwnedOnly);
       if (unownedBtn) unownedBtn.classList.remove("active");
+      syncPressed();
       renderPokemonGrid();
     });
   }
@@ -543,6 +619,7 @@ function initToggles() {
       if (showUnownedOnly) showOwnedOnly = false;
       unownedBtn.classList.toggle("active", showUnownedOnly);
       if (ownedBtn) ownedBtn.classList.remove("active");
+      syncPressed();
       renderPokemonGrid();
     });
   }
@@ -552,6 +629,7 @@ function initToggles() {
     showOwnedOnly = true;
     ownedBtn.classList.add("active");
   }
+  syncPressed();
 }
 
 // ===========================================================
@@ -565,11 +643,12 @@ function findTeamIndex(pid) {
 function clampTeamTo6Unique() {
   const seen = new Set();
   const next = [];
+  const megaTaken = { value: false };
   for (const slot of selectedTeam) {
     const k = teamKey(slot);
     if (seen.has(k)) continue;
     seen.add(k);
-    next.push({ id: Number(slot.id), variant: normVariant(slot.variant) });
+    next.push(withMega(slot, megaTaken));
     if (next.length >= 6) break;
   }
   selectedTeam = next;
@@ -578,7 +657,78 @@ function clampTeamTo6Unique() {
 // ===========================================================
 // 🎴 Pokémon Grid Renderer (HARDENED)
 // ===========================================================
+// ===========================================================
+// ✨ Which variant each card shows (and which one actions use)
+// In-memory only. Default: the Team's variant if it's on the Team,
+// shiny if that's the only one owned, otherwise normal. A choice made
+// with the card's toggle sticks while that variant is still owned.
+// ===========================================================
+const viewVariant = new Map(); // Pokémon ID -> "normal" | "shiny"
+
+function defaultVariant(id) {
+  const owned = ownedCounts(id);
+  const slot = selectedTeam[findTeamIndex(id)];
+  if (slot && ownsVariant(id, slot.variant)) return normVariant(slot.variant);
+  return owned.shiny > 0 && owned.normal <= 0 ? "shiny" : "normal";
+}
+
+function variantShown(id) {
+  const chosen = viewVariant.get(Number(id));
+  return chosen && ownsVariant(id, chosen) ? chosen : defaultVariant(id);
+}
+
+function spriteFor(id, variant) {
+  return `/public/sprites/pokemon/${normVariant(variant) === "shiny" ? "shiny" : "normal"}/${id}.gif`;
+}
+
+// Flip a card between its normal and shiny copy (only when both are owned).
+// In Change Team mode, a Pokémon already on the Team switches its slot to
+// that copy too (unsaved until Save Team, like every other Team edit).
+function toggleCardVariant(id) {
+  const pid = Number(id);
+  const next = variantShown(pid) === "shiny" ? "normal" : "shiny";
+  if (!ownsVariant(pid, next)) return;
+  viewVariant.set(pid, next);
+  const idx = findTeamIndex(pid);
+  if (currentMode === "team" && idx >= 0) {
+    // A Mega is unlocked per line (normal/shiny): it stays on the slot only
+    // if the same form is unlocked on the copy switched to.
+    const prev = selectedTeam[idx];
+    const slot = { id: pid, variant: next };
+    if (prev?.mega && megaUI?.isMegaUnlockedOn?.(pid, next, prev.mega)) slot.mega = prev.mega;
+    selectedTeam[idx] = slot;
+  }
+  renderPokemonGrid();
+  updateTeamCounter();
+  megaUI?.render?.(); // the Mega section's Team line follows the edit
+  // Keep keyboard focus on the toggle after the re-render.
+  document.querySelector(`.pokemon-card[data-id="${pid}"] .variant-toggle`)?.focus({ preventScroll: true });
+}
+
+// Highest value among the owned variants of a species (null if none owned).
+// `map` is userData.levels or userData.powers ({ "25:normal": 16 }).
+function bestOwned(map, id) {
+  const owned = ownedCounts(id);
+  const vals = [];
+  if (owned.normal > 0) vals.push(Number(map?.[`${id}:normal`]));
+  if (owned.shiny > 0) vals.push(Number(map?.[`${id}:shiny`]));
+  const known = vals.filter(Number.isFinite);
+  return known.length ? Math.max(...known) : null;
+}
+const bestLevel = (id) => bestOwned(userData.levels, id);
+// Power = six-stat total at Level, computed by the server with the same
+// functions as /showteam's Team Power (GET /api/user-pokemon `powers`).
+const bestPower = (id) => bestOwned(userData.powers, id);
+const SORT_KEYS = { level: bestLevel, power: bestPower };
+
+// Renders the grid, then the shiny backdrops (the Discord cards' motes + stars).
 function renderPokemonGrid() {
+  renderPokemonGridCards();
+  const grid = document.getElementById("pokemonGrid");
+  if (grid) scanFx(grid);
+}
+
+function renderPokemonGridCards() {
   const container = document.getElementById("pokemonGrid");
   if (!container) return;
   container.innerHTML = "";
@@ -596,8 +746,11 @@ function renderPokemonGrid() {
   const rarityFilter = (rarityEl?.value || "").toLowerCase();
   const typeFilter = (typeEl?.value || "").toLowerCase();
 
+  const sortOrder = document.getElementById("sortOrder")?.value || "dex";
+
   const ids = Object.keys(pokemonData).map(Number).sort((a, b) => a - b);
   const cardsByRegion = {};
+  const sortable = []; // [{ id, card }] for the non-Pokédex sort orders
   let shown = 0;
 
   for (const id of ids) {
@@ -608,7 +761,8 @@ function renderPokemonGrid() {
     const tier = tierOf(p);
     const types = Array.isArray(p.types) ? p.types : [];
 
-    if (search && !name.toLowerCase().includes(search)) continue;
+    // Matches the display name and the stored name (e.g. "Mr. Mime" and "Mr-mime").
+    if (search && !nameMatches(search, id, p.storedName ?? p.name)) continue;
     if (rarityFilter && tier !== rarityFilter) continue;
 
     if (typeFilter) {
@@ -618,6 +772,8 @@ function renderPokemonGrid() {
 
     const owned = ownedCounts(id);
     const isOwnedAny = owned.any > 0;
+    if (regionFilter && p.region !== regionFilter) continue;
+    if (shinyOnly && owned.shiny <= 0) continue;
 
     // Mode filtering
     if (currentMode === "evolve" || currentMode === "donate" || currentMode === "convert") {
@@ -642,14 +798,19 @@ function renderPokemonGrid() {
       locked = owned.normal <= 0 || owned.shiny > 0 || dust < cost || cost <= 0;
     }
 
-    // Sprite path (display normal art as primary; locked uses grayscale).
-    // Multi-select locks cards you own, so they stay in color: grayscale means "unowned".
-    const spritePath = locked && !inMultiSelect
-      ? `/public/sprites/pokemon/grayscale/${id}.gif`
-      : `/public/sprites/pokemon/normal/${id}.gif`;
+    // Sprite: grayscale means "unowned" only. Owned cards show the copy
+    // chosen with the toggle (shiny by default when it's the only one owned);
+    // a locked owned card is dimmed instead of grayed out.
+    const shownVariant = isOwnedAny ? variantShown(id) : "normal";
+    const hasBoth = owned.normal > 0 && owned.shiny > 0;
+    const spritePath = isOwnedAny
+      ? spriteFor(id, shownVariant)
+      : `/public/sprites/pokemon/grayscale/${id}.gif`;
 
     const card = document.createElement("div");
     card.className = `pokemon-card ${isOwnedAny ? "owned" : "unowned"}`;
+    if (shownVariant === "shiny") card.classList.add("shiny-view");
+    if (hasBoth) card.classList.add("has-toggle");
     if (locked) card.classList.add("locked");
     const multiPicked = inMultiSelect && multiSelected.has(id);
     if (multiPicked) card.classList.add("multi-selected");
@@ -657,14 +818,13 @@ function renderPokemonGrid() {
 
     // Selected state + team badge
     const teamIdx = findTeamIndex(id);
-    if (teamIdx >= 0) card.classList.add("selected");
+    if (currentMode === "team" && teamIdx >= 0) card.classList.add("selected");
 
+    // Type chips: text label on the type color (never color alone).
     const typeIcons = types
-      .map(
-        (typeId) =>
-          `<img src="/public/sprites/types/${typeId}.png" alt="${TYPE_MAP[typeId] || ""}"
-               style="width: 32px; height: 32px; image-rendering: pixelated;">`
-      )
+      .map((typeId) => TYPE_MAP[typeId])
+      .filter(Boolean)
+      .map((t) => `<span class="cc-type" data-type="${t}">${t}</span>`)
       .join("");
 
     // Badges
@@ -675,16 +835,17 @@ function renderPokemonGrid() {
       const normalVal = owned.normal > 0 ? getDonationValue(tier, false) : null;
       const shinyVal = owned.shiny > 0 ? getDonationValue(tier, true) : null;
 
+      const coin = `<img src="/public/sprites/items/cc_coin.png" alt="">`;
       if (normalVal != null && shinyVal != null) {
         badgeHTML = `
-          <div class="donate-value" style="bottom:6px; right:6px;">
-            💰 ${normalVal} · ✨💰 ${shinyVal}
+          <div class="donate-value" title="Donation value in CC (normal · shiny)">
+            ${coin}${fmtCC(normalVal)} · ✨${fmtCC(shinyVal)}
           </div>`;
       } else {
         const val = shinyVal ?? normalVal ?? 0;
         badgeHTML = `
-          <div class="donate-value" style="bottom:6px; right:6px;">
-            💰 ${val}${shinyVal != null ? " ✨" : ""}
+          <div class="donate-value" title="Donation value in CC">
+            ${coin}${fmtCC(val)}${shinyVal != null ? " ✨" : ""}
           </div>`;
       }
     }
@@ -717,49 +878,112 @@ function renderPokemonGrid() {
     let countHTML = "";
     let levelHTML = "";
     if (owned.any > 0) {
-      const parts = [];
-      if (owned.normal > 0) parts.push(`x${owned.normal}`);
-      if (owned.shiny > 0) parts.push(`✨x${owned.shiny}`);
-      countHTML = `<div class="count-label bottom-left">${parts.join(" · ")}</div>`;
+      // Normal count bottom-left, shiny count bottom-right (lifted above a
+      // mode badge, which also sits bottom-right).
+      if (owned.normal > 0) countHTML += `<div class="count-label bottom-left" title="Normal copies">×${owned.normal}</div>`;
+      if (owned.shiny > 0) {
+        countHTML += `<div class="count-label shiny-count bottom-right${badgeHTML ? " lifted" : ""}" title="Shiny copies">✨×${owned.shiny}</div>`;
+      }
 
       // Level tag per owned variant, under the name (like the battle screen)
       const lv = (variant) => userData.levels?.[`${id}:${variant}`] ?? "?";
       const tags = [];
-      if (owned.normal > 0) tags.push(`<span class="poke-level">Lv ${lv("normal")}</span>`);
-      if (owned.shiny > 0) tags.push(`<span class="poke-level shiny">✨ Lv ${lv("shiny")}</span>`);
+      const viewing = (v) => (hasBoth && shownVariant === v ? " is-viewing" : "");
+      if (owned.normal > 0) tags.push(`<span class="poke-level${viewing("normal")}">Lv ${lv("normal")}</span>`);
+      if (owned.shiny > 0) tags.push(`<span class="poke-level shiny${viewing("shiny")}">✨ Lv ${lv("shiny")}</span>`);
       levelHTML = `<div class="poke-levels">${tags.join("")}</div>`;
+      // While sorting by Power, show the number being sorted on.
+      const power = sortOrder.startsWith("power") ? bestPower(id) : null;
+      if (power != null) levelHTML += `<div class="poke-power" title="Power: total of all six stats at its Level (highest owned copy)">Power <b>${power.toLocaleString("en-US")}</b></div>`;
     }
 
-    // Team badge number
-    const teamBadgeHTML = teamIdx >= 0 ? `<div class="team-badge">${teamIdx + 1}</div>` : "";
+    // Team badges: D = Display team slot, B = Battle team slot (read-only; teams are edited on the Teams page).
+    const slotOf = (raw) => (Array.isArray(raw) ? raw : []).findIndex((s) => Number(s?.id) === id);
+    const dIdx = slotOf(userData.currentTeam), bIdx = slotOf(userData.battleTeam);
+    const teamBadgeHTML = dIdx >= 0 || bIdx >= 0
+      ? `<div class="team-badges">${dIdx >= 0 ? `<span class="mem mem-d" title="Display team, slot ${dIdx + 1}">D${dIdx + 1}</span>` : ""}${bIdx >= 0 ? `<span class="mem mem-b" title="Battle team, slot ${bIdx + 1}">B${bIdx + 1}</span>` : ""}</div>`
+      : "";
 
     card.innerHTML = `
-      <div class="sprite-wrapper">
-        <img src="${spritePath}" class="poke-sprite" alt="${name}">
+      <div class="sprite-wrapper"${shownVariant === "shiny" ? ` data-fx="shiny" data-fx-seed="${id}"` : ""}>
+        <img src="${spritePath}" class="poke-sprite" alt="" loading="lazy">
         ${teamBadgeHTML}
-        ${locked ? `<div class="lock-overlay"><span>🔒</span></div>` : ""}
-        ${multiPicked ? `<div class="multi-check" aria-label="Selected">✓</div>` : ""}
+        ${
+          hasBoth
+            ? `<button type="button" class="variant-toggle" aria-pressed="${shownVariant === "shiny"}"
+                 aria-label="${shownVariant === "shiny" ? `Showing shiny ${name}. Show normal` : `Showing normal ${name}. Show shiny`}"
+                 title="${shownVariant === "shiny" ? "Shiny shown — tap for normal" : "Normal shown — tap for shiny"}">${SPARKLE_ICON}</button>`
+            : ""
+        }
+        ${locked ? `<div class="lock-overlay">${LOCK_ICON}</div>` : ""}
+        ${multiPicked ? `<div class="multi-check" aria-hidden="true">✓</div>` : ""}
         ${countHTML}
         ${badgeHTML}
       </div>
+      <div class="dex-no">#${String(id).padStart(4, "0")}</div>
       <div class="pokemon-name">${name}</div>
       ${levelHTML}
-      <div class="type-icons" style="display:flex; gap:4px; justify-content:center; margin:4px 0;">
-        ${typeIcons}
-      </div>
+      <div class="type-icons">${typeIcons}</div>
       <div class="pokemon-tier">
-        <span class="tier-emoji">${rarityEmojis?.[tier] || ""}</span>
-        <span class="tier-text ${tier}">${tier.charAt(0).toUpperCase() + tier.slice(1)}</span>
+        <span class="cc-tier" data-tier="${tier}">${capitalize(tier)}</span>
       </div>
     `;
+
+    // Keyboard + screen reader: the card is the control.
+    const states = [];
+    if (dIdx >= 0) states.push(`Display team slot ${dIdx + 1}`);
+    if (bIdx >= 0) states.push(`Battle team slot ${bIdx + 1}`);
+    if (multiPicked) states.push("selected");
+    if (shownVariant === "shiny") states.push("shiny");
+    if (!isOwnedAny) states.push("not owned");
+    else if (locked) states.push("unavailable in this mode");
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.dataset.ccActivate = "1";
+    card.setAttribute("aria-label", `#${id} ${name}${states.length ? `, ${states.join(", ")}` : ""}`);
+    if (locked) card.setAttribute("aria-disabled", "true");
+    if (currentMode === "team" || inMultiSelect) card.setAttribute("aria-pressed", String(inMultiSelect ? multiPicked : teamIdx >= 0));
 
     card.addEventListener("click", () => {
       if (locked) return showBlockedActionModal(id);
       onPokemonClick(id);
     });
 
+    // The ✨ toggle only changes the copy shown (and used); it never
+    // triggers the card's own action.
+    card.querySelector(".variant-toggle")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleCardVariant(id);
+    });
+    // Missing shiny art never silently falls back to the normal sprite.
+    card.querySelector(".poke-sprite").addEventListener("error", (e) => {
+      e.currentTarget.src = "/public/sprites/items/pokeball.png";
+    }, { once: true });
+
     (cardsByRegion[p.region] ??= []).push(card);
+    sortable.push({ id, card });
     shown++;
+  }
+
+  // Level / name sorts: one flat list (region headers only make sense in Dex order).
+  if (sortOrder !== "dex") {
+    const byName = (a, b) => String(pokemonData[a.id].name).localeCompare(String(pokemonData[b.id].name));
+    const [field, way] = sortOrder.split("-");
+    if (SORT_KEYS[field]) {
+      const key = SORT_KEYS[field];
+      const dir = way === "desc" ? -1 : 1;
+      sortable.sort((a, b) => {
+        const la = key(a.id), lb = key(b.id);
+        // Unowned (no Level) always last; ties fall back to Dex #.
+        if (la == null || lb == null) return (la == null) - (lb == null) || a.id - b.id;
+        return dir * (la - lb) || a.id - b.id;
+      });
+    } else if (sortOrder === "name") {
+      sortable.sort(byName);
+    }
+    container.append(...sortable.map((s) => s.card));
+    if (shown === 0) container.innerHTML = `<p class="empty-msg">No Pokémon match your filters.</p>`;
+    return;
   }
 
   // Only regions with a visible card get a header. The count is full-region
@@ -782,7 +1006,8 @@ function renderPokemonGrid() {
 // 🖱️ Click Handler
 // ===========================================================
 function onPokemonClick(id) {
-  if (currentMode === "team") toggleTeamSelection(id);
+  if (currentMode === "browse") openDetail(id, detailContext());
+  else if (currentMode === "team") toggleTeamSelection(id);
   else if (currentMode === "evolve") openEvolutionModal(id);
   else if (currentMode === "donate") multiSelectOn ? toggleMultiSelected(id) : openDonationModal(id);
   else if (currentMode === "convert") openConvertModal(id);
@@ -808,7 +1033,7 @@ function toggleTeamSelection(id) {
 
   // Adding new slot
   if (selectedTeam.length >= 6) {
-    alert("⚠️ Team is full! Maximum 6 Pokémon.");
+    toast("Your Team is full (6 Pokémon). Tap a Team member to remove it first.", { tone: "error" });
     return;
   }
 
@@ -832,19 +1057,51 @@ function toggleTeamSelection(id) {
     return;
   }
 
-  // Owns both -> choose variant
-  openVariantChoiceModal({
-    title: "⭐ Choose Variant for Team",
-    pokeId: pid,
-    onChoose: (variant) => {
-      // TEAM RULE: ensure only one slot for this Pokémon
-      selectedTeam = selectedTeam.filter((s) => Number(s.id) !== pid);
-      selectedTeam.push({ id: pid, variant: normVariant(variant) });
-      clampTeamTo6Unique();
-      renderPokemonGrid();
-      updateTeamCounter();
-    },
-  });
+  // Owns both -> add the copy the card is showing (chosen with its ✨ toggle).
+  const variant = variantShown(pid);
+  // TEAM RULE: ensure only one slot for this Pokémon
+  selectedTeam = selectedTeam.filter((s) => Number(s.id) !== pid);
+  selectedTeam.push({ id: pid, variant });
+  viewVariant.set(pid, variant);
+  clampTeamTo6Unique();
+  renderPokemonGrid();
+  updateTeamCounter();
+}
+
+// Team preview sprite: the Mega's sprite for a Mega slot, else the base one.
+function teamSlotSprite(slot) {
+  const id = Number(slot.id);
+  const v = normVariant(slot.variant);
+  const mega = slot.mega ? megaUI?.megaSprite?.(slot) : null;
+  return mega || (v === "shiny" ? `/public/sprites/pokemon/shiny/${id}.gif` : `/public/sprites/pokemon/normal/${id}.gif`);
+}
+
+// ===========================================================
+// 🧬 Mega Evolution (Phase M1) — mega.js renders nothing unless the
+// server reports Mega Evolution enabled (GET /api/mega).
+// ===========================================================
+let megaUI = null;
+async function initMegaUI() {
+  try {
+    const mod = await import("/public/picker-pokemon/mega.js");
+    const ui = await mod.initMega({
+      userId,
+      apiJSON,
+      withActionLock,
+      createConfirmModal,
+      getMode: () => currentMode,
+      getTeam: () => selectedTeam, // the saved Display team (read-only here)
+      // No setTeam: teams are edited on the Teams page, so the Mega cards link there.
+      refreshUser: async () => {
+        await fetchUserData();
+        updateHUD();
+      },
+    });
+    megaUI = ui?.enabled ? ui : null;
+  } catch (err) {
+    console.warn("Mega Evolution UI unavailable:", err?.message || err);
+    megaUI = null;
+  }
 }
 
 function updateTeamCounter() {
@@ -909,21 +1166,29 @@ async function init() {
     userId = params.get("id");
 
     if (!userId) {
-      document.body.innerHTML = "<p class='error'>❌ Missing user id.</p>";
+      // The shell shows the "open from /dashboard" banner.
+      setGridMessage("");
       return;
     }
 
     // Load Pokemon data
     const pokeRes = await fetch("/public/pokemonData.json", { credentials: "same-origin" });
-    if (!pokeRes.ok) throw new Error("Pokemon data failed");
+    if (!pokeRes.ok) throw new Error("Couldn’t load the Pokédex. Please refresh the page.");
     pokemonData = await pokeRes.json();
+    // Display names for the 24 slug-named species (display only; the
+    // stored name is kept for search and is never sent to the server).
+    for (const [id, p] of Object.entries(pokemonData)) {
+      p.storedName = p.name;
+      p.name = displaySpeciesName(id, p.name);
+    }
 
     // Load user data (cookie session; backend will 403 if invalid)
     try {
       await fetchUserData();
     } catch (err) {
-      document.body.innerHTML =
-        "<p class='error'>❌ Session expired. Please re-open the dashboard link from Discord.</p>";
+      setGridMessage("");
+      if (err?.status === 403) showExpired();
+      else showBanner(err?.message || "Couldn’t load your Pokémon. Please try again.", { title: "Couldn’t load your Pokémon" });
       return;
     }
 
@@ -941,13 +1206,16 @@ async function init() {
     initStickyHUD();
     setInterval(updateDustTimer, 30_000);
     initToggles();
-    renderPokemonGrid();
+    initCollectionFilters();
+    setMode(currentMode);
     startWeeklyPackCountdown();
+    initMegaUI(); // no-op unless Mega Evolution is enabled server-side
 
     // Filters
     document.getElementById("search")?.addEventListener("input", renderPokemonGrid);
     document.getElementById("rarityFilter")?.addEventListener("change", renderPokemonGrid);
     document.getElementById("typeFilter")?.addEventListener("change", renderPokemonGrid);
+    document.getElementById("sortOrder")?.addEventListener("change", renderPokemonGrid);
 
     // Mode buttons
     document.querySelectorAll("#modeToggle .mode-btn").forEach((btn) => {
@@ -972,18 +1240,13 @@ async function init() {
     if (saveBtn) {
       saveBtn.addEventListener("click", () => {
         if (selectedTeam.length === 0) {
-          alert("⚠️ Select at least one Pokémon!");
+          toast("Select at least one Pokémon for your Team.", { tone: "error" });
           return;
         }
 
         const previewHTML = selectedTeam
           .map((slot) => {
-            const id = Number(slot.id);
-            const v = normVariant(slot.variant);
-            const sprite =
-              v === "shiny"
-                ? `/public/sprites/pokemon/shiny/${id}.gif`
-                : `/public/sprites/pokemon/normal/${id}.gif`;
+            const sprite = teamSlotSprite(slot);
             return `<img src="${sprite}" style="width:64px;height:64px;image-rendering:pixelated;">`;
           })
           .join("");
@@ -1008,6 +1271,7 @@ async function init() {
                 await fetchUserData();
                 selectedTeam = normalizeTeam(userData.currentTeam);
                 clampTeamTo6Unique();
+                megaUI?.render?.();
 
                 refreshStats(userData, prev);
                 renderPokemonGrid();
@@ -1027,19 +1291,14 @@ async function init() {
 
                 const teamPreview = selectedTeam
                   .map((slot) => {
-                    const id = Number(slot.id);
-                    const v = normVariant(slot.variant);
-                    const sprite =
-                      v === "shiny"
-                        ? `/public/sprites/pokemon/shiny/${id}.gif`
-                        : `/public/sprites/pokemon/normal/${id}.gif`;
+                    const sprite = teamSlotSprite(slot);
                     return `<img src="${sprite}" style="width:64px;height:64px;image-rendering:pixelated;">`;
                   })
                   .join("");
 
                 confirmBox.innerHTML = `
                   <h2 style="color: var(--brand);">✅ Team Saved!</h2>
-                  <p style="margin:0.5rem 0 1rem;color:#ccc;">
+                  <p style="margin:0.5rem 0 1rem;color:var(--cc-text-muted);">
                     Your new team has been successfully updated.
                   </p>
                   <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;">
@@ -1059,7 +1318,7 @@ async function init() {
                 confirmBox.querySelector("button").addEventListener("click", () => closeOverlay(modal2));
                 modal2.appendChild(confirmBox);
               } catch (err) {
-                alert("❌ " + (err?.message || "Save failed"));
+                showActionError(err, "Couldn’t save your Team");
               } finally {
                 closeOverlay(overlay);
               }
@@ -1070,7 +1329,20 @@ async function init() {
     }
   } catch (err) {
     console.error("Init failed:", err);
-    document.body.innerHTML = `<p class='error'>❌ ${err.message}</p>`;
+    setGridMessage("");
+    showBanner(err?.message || "Something went wrong. Please refresh the page.", { title: "Couldn’t load this page" });
+  }
+}
+
+function setGridMessage(text) {
+  const grid = document.getElementById("pokemonGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  if (text) {
+    const p = document.createElement("p");
+    p.className = "cc-empty";
+    p.textContent = text;
+    grid.append(p);
   }
 }
 
@@ -1103,7 +1375,7 @@ function closeOverlay(overlay) {
 // ===========================================================
 // 💾 Confirmation Modal (used for Save Team)
 // ===========================================================
-function createConfirmModal({ title, message, onConfirm, onCancel }) {
+function createConfirmModal({ title, message, onConfirm, onCancel, confirmLabel = "Confirm Save" }) {
   const overlay = createOverlay();
   const modal = document.createElement("div");
   modal.style.cssText = `
@@ -1118,10 +1390,10 @@ function createConfirmModal({ title, message, onConfirm, onCancel }) {
 
   modal.innerHTML = `
     <h2 style="color: var(--brand); margin-bottom: 0.5rem;">${title}</h2>
-    <p style="margin-bottom: 1rem; color: #ccc;">${message}</p>
+    <p style="margin-bottom: 1rem; color:var(--cc-text-muted);">${message}</p>
     <div style="display: flex; gap: 1rem; justify-content: center;">
       <button class="cancel-btn"
-        style="background: var(--border); color: white; border: none;
+        style="background: var(--cc-surface-raised); color: var(--cc-text); border: none;
                padding: 10px 20px; border-radius: 8px; cursor: pointer;">
         Cancel
       </button>
@@ -1129,7 +1401,7 @@ function createConfirmModal({ title, message, onConfirm, onCancel }) {
         style="background: var(--brand); color: var(--bg); border: none;
                padding: 10px 20px; border-radius: 8px; cursor: pointer;
                font-weight: 700;">
-        Confirm Save
+        ${confirmLabel}
       </button>
     </div>
   `;
@@ -1168,7 +1440,7 @@ function showBlockedActionModal(pokeId) {
   }
 
   if (currentMode === "evolve") {
-    borderColor = "#ef4444";
+    borderColor = "var(--cc-red)";
     const evos = getEvoList(p);
 
     if (!evos.length) {
@@ -1195,7 +1467,7 @@ function showBlockedActionModal(pokeId) {
   if (currentMode === "donate") {
     title = "🔒 Not Owned";
     message = `You don’t own ${p.name}, so you can’t donate it.`;
-    borderColor = "#facc15";
+    borderColor = "var(--cc-gold)";
 
     const block = multiSelectOn ? multiSelectBlock(pokeId) : null;
     if (block) ({ title, message } = block);
@@ -1203,7 +1475,7 @@ function showBlockedActionModal(pokeId) {
 
   if (currentMode === "convert") {
     title = "✨ Convert Unavailable";
-    borderColor = "#facc15";
+    borderColor = "var(--cc-gold)";
 
     const dust = userData.items?.shiny_dust ?? 0;
     const cost = dustCostForTier(tierOf(p));
@@ -1234,87 +1506,13 @@ function showBlockedActionModal(pokeId) {
   modal.innerHTML = `
     <h2 style="margin:0 0 0.75rem;color:${borderColor};">${title}</h2>
     <img src="${sprite}" style="width:96px;height:96px;image-rendering:pixelated;margin:0.5rem 0 0.75rem;">
-    <p style="white-space:pre-line;color:#ccc;font-weight:650;margin:0 0 1.25rem;">${message}</p>
+    <p style="white-space:pre-line;color:var(--cc-text-muted);font-weight:650;margin:0 0 1.25rem;">${message}</p>
     <button class="ok-btn" style="background:${borderColor};color:var(--bg);border:none;padding:10px 24px;border-radius:10px;cursor:pointer;font-weight:800;">
       OK
     </button>
   `;
 
   modal.querySelector(".ok-btn").addEventListener("click", () => closeOverlay(overlay));
-  overlay.appendChild(modal);
-}
-
-// ===========================================================
-// ⭐ Variant Choice Modal (Team / Donate entrypoint)
-// ===========================================================
-function openVariantChoiceModal({ title, pokeId, onChoose }) {
-  const p = pokemonData[pokeId];
-  if (!p) return;
-
-  const owned = ownedCounts(pokeId);
-  const overlay = createOverlay();
-
-  const modal = document.createElement("div");
-  modal.style.cssText = `
-    background: var(--card);
-    border: 2px solid var(--brand);
-    border-radius: 14px;
-    padding: 1.5rem 1.75rem;
-    text-align: center;
-    max-width: 520px;
-    width: 92%;
-  `;
-
-  const normalSprite = `/public/sprites/pokemon/normal/${pokeId}.gif`;
-  const shinySprite = `/public/sprites/pokemon/shiny/${pokeId}.gif`;
-
-  const normalBtn =
-    owned.normal > 0
-      ? `<button class="pick-normal" style="background: var(--brand); color: var(--bg); border:none; padding:10px 14px; border-radius:10px; font-weight:800; cursor:pointer;">Use Normal (x${owned.normal})</button>`
-      : `<button disabled style="background:#444; color:#999; border:none; padding:10px 14px; border-radius:10px; font-weight:800;">Normal (x0)</button>`;
-
-  const shinyBtn =
-    owned.shiny > 0
-      ? `<button class="pick-shiny" style="background: #facc15; color: var(--bg); border:none; padding:10px 14px; border-radius:10px; font-weight:900; cursor:pointer;">Use Shiny (✨x${owned.shiny})</button>`
-      : `<button disabled style="background:#444; color:#999; border:none; padding:10px 14px; border-radius:10px; font-weight:900;">Shiny (✨x0)</button>`;
-
-  modal.innerHTML = `
-    <h2 style="color: var(--brand); margin:0 0 0.75rem;">${title}</h2>
-    <p style="color:#ccc;margin:0 0 1rem;">${p.name}</p>
-
-    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;">
-      <div style="background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:12px;padding:12px;min-width:180px;">
-        <img src="${normalSprite}" style="width:96px;height:96px;image-rendering:pixelated;">
-        <div style="margin-top:8px;">${normalBtn}</div>
-      </div>
-
-      <div style="background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:12px;padding:12px;min-width:180px;">
-        <img src="${shinySprite}" style="width:96px;height:96px;image-rendering:pixelated;">
-        <div style="margin-top:8px;">${shinyBtn}</div>
-      </div>
-    </div>
-
-    <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 22px; border-radius: 10px; cursor: pointer; font-weight:700;">
-      Cancel
-    </button>
-  `;
-
-  modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
-
-  const bn = modal.querySelector(".pick-normal");
-  const bs = modal.querySelector(".pick-shiny");
-
-  if (bn)
-    bn.addEventListener("click", () => {
-      closeOverlay(overlay);
-      onChoose?.("normal");
-    });
-  if (bs)
-    bs.addEventListener("click", () => {
-      closeOverlay(overlay);
-      onChoose?.("shiny");
-    });
-
   overlay.appendChild(modal);
 }
 
@@ -1337,7 +1535,7 @@ function openConvertModal(pokeId) {
   const overlay = createOverlay();
   const modal = document.createElement("div");
   modal.style.cssText = `
-    background: var(--card); border: 2px solid #facc15;
+    background: var(--card); border: 2px solid var(--cc-gold);
     border-radius: 14px; padding: 2rem; text-align: center;
     max-width: 460px; width: 92%;
   `;
@@ -1346,31 +1544,31 @@ function openConvertModal(pokeId) {
   const shinySprite = `/public/sprites/pokemon/shiny/${pokeId}.gif`;
 
   modal.innerHTML = `
-    <h2 style="color:#facc15;">✨ Convert to Shiny?</h2>
-    <p style="color:#ccc;font-weight:800;margin:0.25rem 0 0.75rem;">${p.name}</p>
+    <h2 style="color:var(--cc-gold);">✨ Convert to Shiny?</h2>
+    <p style="color:var(--cc-text-muted);font-weight:800;margin:0.25rem 0 0.75rem;">${p.name}</p>
 
     <div style="display:flex;gap:14px;justify-content:center;align-items:center;margin:0.75rem 0 1rem;flex-wrap:wrap;">
-      <div style="padding:10px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.25);">
-        <div style="color:#aaa;font-weight:700;margin-bottom:6px;">Normal</div>
+      <div style="padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--cc-surface-sunken);">
+        <div style="color:var(--cc-text-muted);font-weight:700;margin-bottom:6px;">Normal</div>
         <img src="${normalSprite}" style="width:96px;height:96px;image-rendering:pixelated;">
       </div>
 
       <div style="font-size:26px;opacity:0.85;">➡️</div>
 
-      <div style="padding:10px;border:1px solid #facc15;border-radius:12px;background:rgba(250,204,21,0.08);">
-        <div style="color:#facc15;font-weight:900;margin-bottom:6px;">✨ Shiny</div>
+      <div style="padding:10px;border:1px solid var(--cc-gold);border-radius:12px;background:var(--cc-gold-soft);">
+        <div style="color:var(--cc-gold);font-weight:900;margin-bottom:6px;">✨ Shiny</div>
         <img src="${shinySprite}" style="width:96px;height:96px;image-rendering:pixelated;">
       </div>
     </div>
 
-    <p style="color:#aaa;margin:0 0 0.5rem;font-weight:800;">
-      Cost: <span style="color:#facc15;font-weight:900;">${cost}</span> Shiny Dust<br>
-      You have: <span style="color:#fff;font-weight:900;">${dust}</span>
+    <p style="color:var(--cc-text-muted);margin:0 0 0.5rem;font-weight:800;">
+      Cost: <span style="color:var(--cc-gold);font-weight:900;">${cost}</span> Shiny Dust<br>
+      You have: <span style="color:var(--cc-text);font-weight:900;">${dust}</span>
     </p>
 
     <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
-      <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight:800;">Cancel</button>
-      <button class="confirm-btn" style="background:#facc15;color:var(--bg);border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:900;">Confirm</button>
+      <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight:800;">Cancel</button>
+      <button class="confirm-btn" style="background:var(--cc-gold);color:var(--bg);border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:900;">Confirm</button>
     </div>
   `;
 
@@ -1403,7 +1601,7 @@ async function handleConvertConfirm(pokeId, cost, overlay) {
     const modal2 = createOverlay();
     const successModal = document.createElement("div");
     successModal.style.cssText = `
-      background: var(--card); border: 2px solid #facc15;
+      background: var(--card); border: 2px solid var(--cc-gold);
       border-radius: 14px; padding: 2rem; text-align: center;
       max-width: 420px; width: 92%;
     `;
@@ -1411,18 +1609,18 @@ async function handleConvertConfirm(pokeId, cost, overlay) {
     const shinySprite = `/public/sprites/pokemon/shiny/${pokeId}.gif`;
 
     successModal.innerHTML = `
-      <h2 style="color:#facc15;">✨ Conversion Complete!</h2>
-      <p style="color:#ccc;font-weight:800;margin:0.25rem 0 0.75rem;">
+      <h2 style="color:var(--cc-gold);">✨ Conversion Complete!</h2>
+      <p style="color:var(--cc-text-muted);font-weight:800;margin:0.25rem 0 0.75rem;">
         ${p.name} is now shiny!
       </p>
 
       <img src="${shinySprite}" style="width:120px;height:120px;image-rendering:pixelated;margin:0.75rem 0 0.75rem;">
 
-      <p style="color:#ef4444;font-weight:900;margin:0.25rem 0;">
+      <p style="color:var(--cc-red);font-weight:900;margin:0.25rem 0;">
         -${res.dustSpent ?? cost} Shiny Dust
       </p>
 
-      <button class="ok-btn" style="background:#facc15;color:var(--bg);border:none;padding:10px 24px;border-radius:10px;cursor:pointer;font-weight:900;">OK</button>
+      <button class="ok-btn" style="background:var(--cc-gold);color:var(--bg);border:none;padding:10px 24px;border-radius:10px;cursor:pointer;font-weight:900;">OK</button>
     `;
 
     successModal.querySelector(".ok-btn").addEventListener("click", () => closeOverlay(modal2));
@@ -1433,7 +1631,9 @@ async function handleConvertConfirm(pokeId, cost, overlay) {
     updateTeamCounter();
     closeOverlay(overlay);
   } catch (err) {
-    alert("❌ " + (err?.message || "Convert failed"));
+    closeOverlay(overlay);
+    showActionError(err, "Couldn’t convert");
+    return;
     closeOverlay(overlay);
   }
 }
@@ -1457,7 +1657,8 @@ function openEvolutionModal(baseId) {
     max-width: 640px; width: 92%;
   `;
 
-  let chosenVariant = owned.normal > 0 ? "normal" : "shiny";
+  // Start on the copy the card shows (its ✨ toggle); the modal can still switch.
+  let chosenVariant = variantShown(baseId);
 
   const baseSpriteFor = (v) =>
     v === "shiny"
@@ -1468,10 +1669,10 @@ function openEvolutionModal(baseId) {
     <h2 style="color: var(--brand);">🧬 Choose Evolution</h2>
 
     <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:0.75rem 0 0.25rem;">
-      <button class="variant-btn v-normal" style="padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:#fff;font-weight:800;cursor:pointer;">
+      <button class="variant-btn v-normal" style="padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--cc-text);font-weight:800;cursor:pointer;">
         Normal (${owned.normal})
       </button>
-      <button class="variant-btn v-shiny" style="padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:#fff;font-weight:900;cursor:pointer;">
+      <button class="variant-btn v-shiny" style="padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--cc-text);font-weight:900;cursor:pointer;">
         ✨ Shiny (${owned.shiny})
       </button>
     </div>
@@ -1484,11 +1685,11 @@ function openEvolutionModal(baseId) {
     <div class="evo-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); gap: 1rem; margin: 1rem 0;"></div>
 
     <div style="display: flex; gap: 1rem; justify-content: center;">
-      <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
+      <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
       <button class="confirm-btn" disabled style="background: var(--brand); color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Evolve</button>
     </div>
 
-    <p class="hint" style="margin-top:0.75rem;color:#aaa;font-weight:600;"></p>
+    <p class="hint" style="margin-top:0.75rem;color:var(--cc-text-muted);font-weight:600;"></p>
   `;
 
   const btnNormal = modal.querySelector(".v-normal");
@@ -1553,11 +1754,11 @@ function openEvolutionModal(baseId) {
       const dustRow =
         chosenVariant === "shiny" && dustReq > 0
           ? `
-            <div style="margin-top:6px;color:#facc15;font-weight:900;">
+            <div style="margin-top:6px;color:var(--cc-gold);font-weight:900;">
               <img src="/public/sprites/items/shiny_dust.png"
                    style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
               ${dustReq}
-              <span style="color:#aaa;font-weight:800;">(you have ${dust})</span>
+              <span style="color:var(--cc-text-muted);font-weight:800;">(you have ${dust})</span>
             </div>
           `
           : "";
@@ -1565,20 +1766,24 @@ function openEvolutionModal(baseId) {
       card.innerHTML = `
         <img src="${sprite}" style="width:80px;height:80px;image-rendering:pixelated;">
         <div style="font-weight:600;margin-top:0.5rem;">${target.name}</div>
-        <div style="color:#aaa;text-transform:capitalize;">${tierOf(target)}</div>
+        <div style="color:var(--cc-text-muted);text-transform:capitalize;">${tierOf(target)}</div>
 
         <div style="margin-top:0.5rem;color:var(--brand);font-weight:800;">
           <img src="/public/sprites/items/evolution_stone.png"
                style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;">
           ${stoneCost}
-          <span style="color:#aaa;font-weight:800;">(you have ${stones})</span>
+          <span style="color:var(--cc-text-muted);font-weight:800;">(you have ${stones})</span>
         </div>
 
         ${dustRow}
-        ${requiredEvolutionLevel(base, target) ? `<div style="margin-top:6px;color:#aaa;font-weight:800;">Requires Lv. ${requiredEvolutionLevel(base, target)}</div>` : ""}
+        ${requiredEvolutionLevel(base, target) ? `<div style="margin-top:6px;color:var(--cc-text-muted);font-weight:800;">Requires Lv. ${requiredEvolutionLevel(base, target)}</div>` : ""}
       `;
 
       if (allowed) {
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.dataset.ccActivate = "1";
+        card.setAttribute("aria-label", `Evolve into ${target.name}`);
         card.addEventListener("click", () => selectTarget(card, targetId));
         choices.push([card, targetId]);
       }
@@ -1595,15 +1800,15 @@ function openEvolutionModal(baseId) {
 
     const isN = chosenVariant === "normal";
     btnNormal.style.borderColor = isN ? "var(--brand)" : "var(--border)";
-    btnNormal.style.boxShadow = isN ? "0 0 10px #00ff9d40" : "none";
-    btnShiny.style.borderColor = !isN ? "#facc15" : "var(--border)";
-    btnShiny.style.boxShadow = !isN ? "0 0 10px rgba(250,204,21,0.35)" : "none";
+    btnNormal.style.boxShadow = isN ? "0 0 10px #4f8cff55" : "none";
+    btnShiny.style.borderColor = !isN ? "var(--cc-gold)" : "var(--border)";
+    btnShiny.style.boxShadow = !isN ? "0 0 10px var(--cc-gold-soft)" : "none";
 
     if (baseSpriteEl) baseSpriteEl.src = baseSpriteFor(chosenVariant);
 
     if (!ownsVariant(baseId, chosenVariant)) {
       hintEl.textContent = `You don’t own a ${chosenVariant} ${base.name}.`;
-      hintEl.style.color = "#ef4444";
+      hintEl.style.color = "var(--cc-red)";
       confirmBtn.disabled = true;
     } else {
       hintEl.textContent = `Evolving ${chosenVariant === "shiny" ? "✨ shiny " : ""}${base.name}.`;
@@ -1668,7 +1873,7 @@ async function handleEvolutionConfirm(baseId, targetId, variant, overlay) {
     successModal.innerHTML = `
       <h2 style="color: var(--brand);">✨ Evolution Complete!</h2>
       <p>${base.name} evolved into ${target.name}!</p>
-      <p style="color:#aaa;font-weight:700;margin:0.25rem 0 0.75rem;">
+      <p style="color:var(--cc-text-muted);font-weight:700;margin:0.25rem 0 0.75rem;">
         Variant: ${normVariant(variant) === "shiny" ? "✨ Shiny" : "Normal"}
       </p>
       <img src="${targetSprite}" style="width: 120px; height: 120px; image-rendering: pixelated; margin: 1rem 0;">
@@ -1688,7 +1893,9 @@ async function handleEvolutionConfirm(baseId, targetId, variant, overlay) {
     updateTeamCounter();
     closeOverlay(overlay);
   } catch (err) {
-    alert("❌ " + (err?.message || "Evolution failed"));
+    closeOverlay(overlay);
+    showActionError(err, "Couldn’t evolve");
+    return;
     closeOverlay(overlay);
   }
 }
@@ -1703,17 +1910,9 @@ function openDonationModal(pokeId) {
   const owned = ownedCounts(pokeId);
   if (owned.any <= 0) return;
 
-  if (owned.normal > 0 && owned.shiny > 0) {
-    openVariantChoiceModal({
-      title: "💝 Donate — Choose Variant",
-      pokeId,
-      onChoose: (variant) => openDonationConfirmModal(pokeId, variant),
-    });
-    return;
-  }
-
-  const variant = owned.normal > 0 ? "normal" : "shiny";
-  openDonationConfirmModal(pokeId, variant);
+  // Donate the copy the card shows (its ✨ toggle). The confirm dialog
+  // names the variant and shows its sprite before anything is sent.
+  openDonationConfirmModal(pokeId, variantShown(pokeId));
 }
 
 function openDonationConfirmModal(pokeId, variant) {
@@ -1725,7 +1924,7 @@ function openDonationConfirmModal(pokeId, variant) {
 
   const modal = document.createElement("div");
   modal.style.cssText = `
-    background: var(--card); border: 2px solid #facc15;
+    background: var(--card); border: 2px solid var(--cc-gold);
     border-radius: 14px; padding: 2rem; text-align: center;
     max-width: 440px; width: 92%;
   `;
@@ -1740,20 +1939,21 @@ function openDonationConfirmModal(pokeId, variant) {
     v === "shiny" ? SHINY_DUST_REWARD[String(tierOf(p)).toLowerCase()] ?? 0 : 0;
 
   modal.innerHTML = `
-    <h2 style="color: #facc15;">💝 Donate ${v === "shiny" ? "✨ " : ""}${p.name}?</h2>
+    <h2 style="color: var(--cc-gold);">💝 Donate ${v === "shiny" ? "✨ " : ""}${p.name}?</h2>
     <img src="${sprite}" style="width: 96px; height: 96px; image-rendering: pixelated; margin: 1rem 0;">
-    <p style="margin-top:-0.25rem;color:#aaa;font-weight:700;">
+    <p style="margin-top:-0.25rem;color:var(--cc-text-muted);font-weight:700;">
       Variant: ${v === "shiny" ? "✨ Shiny" : "Normal"}
     </p>
-    <p>You'll receive <b style="color: #facc15;">💰 ${ccValue} CC</b></p>
+    ${ownedCounts(pokeId).normal > 0 && ownedCounts(pokeId).shiny > 0 ? `<p style="color:var(--cc-text-faint);font-size:0.85rem;margin-top:-0.25rem;">You own both. To donate the ${v === "shiny" ? "normal" : "shiny"} one instead, cancel and tap ✨ on the card.</p>` : ""}
+    <p>You'll receive <b style="color: var(--cc-gold);">💰 ${ccValue} CC</b></p>
     ${
       dustPreview > 0
-        ? `<p style="color:#facc15;font-weight:900;margin-top:-6px;">✨ +${dustPreview} Shiny Dust</p>`
+        ? `<p style="color:var(--cc-gold);font-weight:900;margin-top:-6px;">✨ +${dustPreview} Shiny Dust</p>`
         : ""
     }
     <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
-      <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
-      <button class="confirm-btn" style="background: #facc15; color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
+      <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
+      <button class="confirm-btn" style="background: var(--cc-gold); color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
     </div>
   `;
 
@@ -1782,7 +1982,7 @@ async function handleDonationConfirm(pokeId, variant, overlay) {
     const modal2 = createOverlay();
     const successModal = document.createElement("div");
     successModal.style.cssText = `
-      background: var(--card); border: 2px solid #facc15;
+      background: var(--card); border: 2px solid var(--cc-gold);
       border-radius: 14px; padding: 2rem; text-align: center;
       max-width: 420px; width: 92%;
     `;
@@ -1793,22 +1993,22 @@ async function handleDonationConfirm(pokeId, variant, overlay) {
         : `/public/sprites/pokemon/normal/${pokeId}.gif`;
 
     successModal.innerHTML = `
-      <h2 style="color: #facc15;">💰 Donation Complete!</h2>
+      <h2 style="color: var(--cc-gold);">💰 Donation Complete!</h2>
       <p>You donated ${v === "shiny" ? "✨ " : ""}${p.name}!</p>
-      <p style="color:#aaa;font-weight:700;margin:0.25rem 0 0.75rem;">
+      <p style="color:var(--cc-text-muted);font-weight:700;margin:0.25rem 0 0.75rem;">
         Variant: ${v === "shiny" ? "✨ Shiny" : "Normal"}
       </p>
       <img src="${sprite}" style="width: 96px; height: 96px; image-rendering: pixelated; margin: 1rem 0;">
-      <p style="color: #facc15; font-weight: 800;">Received ${res.gainedCC} CC!</p>
+      <p style="color: var(--cc-gold); font-weight: 800;">Received ${res.gainedCC} CC!</p>
 
       ${
         (res.shinyDustGained ?? 0) > 0
-          ? `<p style="color:#facc15;font-weight:900;">✨ +${res.shinyDustGained} Shiny Dust</p>`
+          ? `<p style="color:var(--cc-gold);font-weight:900;">✨ +${res.shinyDustGained} Shiny Dust</p>`
           : ""
       }
 
       <button class="ok-btn" style="
-        background: #facc15;
+        background: var(--cc-gold);
         color: var(--bg);
         border: none;
         padding: 10px 24px;
@@ -1831,7 +2031,9 @@ async function handleDonationConfirm(pokeId, variant, overlay) {
     updateTeamCounter();
     closeOverlay(overlay);
   } catch (err) {
-    alert("❌ " + (err?.message || "Donation failed"));
+    closeOverlay(overlay);
+    showActionError(err, "Couldn’t donate");
+    return;
     closeOverlay(overlay);
   }
 }
@@ -1886,7 +2088,7 @@ function updateBulkUI() {
   const dupBtn = document.getElementById("donateDuplicatesBtn");
   if (dupBtn) {
     const { copies } = bulkTotals(duplicateRows());
-    dupBtn.textContent = `🧹 Donate Duplicates (${copies})`;
+    dupBtn.textContent = `Donate Duplicates (${copies})`;
     dupBtn.disabled = copies === 0;
   }
 
@@ -1903,7 +2105,7 @@ function updateBulkUI() {
   const summary = document.getElementById("multiSelectSummary");
   if (summary) {
     const { cc } = bulkTotals(multiSelectRows());
-    summary.textContent = `${multiSelected.size} selected · 💰 ${fmtCC(cc)} CC`;
+    summary.textContent = `${multiSelected.size} selected · ${fmtCC(cc)} CC`;
   }
   const donateBtn = document.getElementById("multiSelectDonate");
   if (donateBtn) donateBtn.disabled = multiSelected.size === 0;
@@ -1944,7 +2146,7 @@ function openBulkConfirmModal({ mode, rows, title, subtitle }) {
   const overlay = createOverlay();
   const modal = document.createElement("div");
   modal.style.cssText = `
-    background: var(--card); border: 2px solid #facc15;
+    background: var(--card); border: 2px solid var(--cc-gold);
     border-radius: 14px; padding: 1.5rem; text-align: center;
     max-width: 560px; width: 92%; max-height: 90vh;
     display: flex; flex-direction: column;
@@ -1964,14 +2166,14 @@ function openBulkConfirmModal({ mode, rows, title, subtitle }) {
     .join("");
 
   modal.innerHTML = `
-    <h2 style="color:#facc15;margin:0 0 0.25rem;">${title}</h2>
-    <p style="color:#ccc;margin:0 0 0.75rem;font-weight:600;">${subtitle}</p>
+    <h2 style="color:var(--cc-gold);margin:0 0 0.25rem;">${title}</h2>
+    <p style="color:var(--cc-text-muted);margin:0 0 0.75rem;font-weight:600;">${subtitle}</p>
     <div class="bulk-grid">${tiles}</div>
-    <p style="color:#facc15;font-weight:800;margin:0.75rem 0 0;">💰 +${fmtCC(cc)} CC</p>
-    ${dust > 0 ? `<p style="color:#facc15;font-weight:900;margin:0.25rem 0 0;">✨ +${dust} Shiny Dust</p>` : ""}
+    <p style="color:var(--cc-gold);font-weight:800;margin:0.75rem 0 0;">💰 +${fmtCC(cc)} CC</p>
+    ${dust > 0 ? `<p style="color:var(--cc-gold);font-weight:900;margin:0.25rem 0 0;">✨ +${dust} Shiny Dust</p>` : ""}
     <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
-      <button class="cancel-btn" style="background: var(--border); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
-      <button class="confirm-btn" style="background: #facc15; color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
+      <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
+      <button class="confirm-btn" style="background: var(--cc-gold); color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
     </div>
   `;
 
@@ -2028,20 +2230,20 @@ function showBulkResultModal(res) {
   const overlay = createOverlay();
   const modal = document.createElement("div");
   modal.style.cssText = `
-    background: var(--card); border: 2px solid #facc15;
+    background: var(--card); border: 2px solid var(--cc-gold);
     border-radius: 14px; padding: 2rem; text-align: center;
     max-width: 420px; width: 92%;
   `;
 
   modal.innerHTML = `
-    <h2 style="color: #facc15;">💰 Donation Complete!</h2>
+    <h2 style="color: var(--cc-gold);">💰 Donation Complete!</h2>
     <p>You donated ${res.donatedCopies} Pokémon for ${fmtCC(res.gainedCC)} CC.</p>
     ${
       (res.shinyDustGained ?? 0) > 0
-        ? `<p style="color:#facc15;font-weight:900;">✨ +${res.shinyDustGained} Shiny Dust</p>`
+        ? `<p style="color:var(--cc-gold);font-weight:900;">✨ +${res.shinyDustGained} Shiny Dust</p>`
         : ""
     }
-    <button class="ok-btn" style="background: #facc15; color: var(--bg); border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">OK</button>
+    <button class="ok-btn" style="background: var(--cc-gold); color: var(--bg); border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">OK</button>
   `;
 
   modal.querySelector(".ok-btn").addEventListener("click", () => closeOverlay(overlay));
@@ -2052,58 +2254,27 @@ function showBulkErrorModal(title, message) {
   const overlay = createOverlay();
   const modal = document.createElement("div");
   modal.style.cssText = `
-    background: var(--card); border: 2px solid #ef4444;
+    background: var(--card); border: 2px solid var(--cc-red);
     border-radius: 14px; padding: 2rem; text-align: center;
     max-width: 420px; width: 92%;
   `;
 
   const h2 = document.createElement("h2");
-  h2.style.cssText = "color:#ef4444;margin:0 0 0.75rem;";
+  h2.style.cssText = "color:var(--cc-red);margin:0 0 0.75rem;";
   h2.textContent = title;
 
   const p = document.createElement("p");
-  p.style.cssText = "color:#ccc;font-weight:650;margin:0 0 1.25rem;";
+  p.style.cssText = "color:var(--cc-text-muted);font-weight:650;margin:0 0 1.25rem;";
   p.textContent = message; // server text: keep it out of innerHTML
 
   const ok = document.createElement("button");
   ok.textContent = "OK";
   ok.style.cssText =
-    "background:#ef4444;color:var(--bg);border:none;padding:10px 24px;border-radius:10px;cursor:pointer;font-weight:800;";
+    "background:var(--cc-red);color:var(--bg);border:none;padding:10px 24px;border-radius:10px;cursor:pointer;font-weight:800;";
   ok.addEventListener("click", () => closeOverlay(overlay));
 
   modal.append(h2, p, ok);
   overlay.appendChild(modal);
 }
 
-// ======================================================
-// 🔄 NAVIGATION TABS — COOKIE SESSION (NO TOKEN IN URL)
-// ======================================================
-(function initNavTabs() {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
-  if (!id) return;
-
-  const goPokemon = document.getElementById("goPokemon");
-  const goTrainers = document.getElementById("goTrainers");
-  const goShop = document.getElementById("goShop");
-
-  if (goPokemon)
-    goPokemon.onclick = () =>
-      (window.location.href = `/public/picker-pokemon/?id=${encodeURIComponent(id)}`);
-
-  if (goTrainers)
-    goTrainers.onclick = () =>
-      (window.location.href = `/public/picker/?id=${encodeURIComponent(id)}`);
-
-  if (goShop)
-    goShop.onclick = () =>
-      (window.location.href = `/public/dashboardshop/?id=${encodeURIComponent(id)}`);
-  const goBag = document.getElementById("goBag");
-  if (goBag)
-    goBag.onclick = () =>
-      (window.location.href = `/public/bag/?id=${encodeURIComponent(id)}`);
-  const goAchievements = document.getElementById("goAchievements");
-  if (goAchievements)
-    goAchievements.onclick = () =>
-      (window.location.href = `/public/achievements/?id=${encodeURIComponent(id)}`);
-})();
+// Navigation lives in /public/shared/shell.js (real links with ?id=).

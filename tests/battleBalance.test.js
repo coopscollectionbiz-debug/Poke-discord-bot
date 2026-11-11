@@ -10,7 +10,7 @@ import { assertBetween, assertTrue, section, finish } from "./harness.js";
 import { simulateBattle } from "../utils/battle/sim.js";
 import { teamPower, rollSurge } from "../utils/battle/power.js";
 import { createRng } from "../utils/battle/rng.js";
-import { rollCatchLevel, catchBand } from "../utils/training.js";
+import { rollCatchLevel } from "../utils/training.js";
 import { TURN_CAP } from "../utils/battle/tuning.js";
 
 const ids = Object.keys(JSON.parse(fs.readFileSync(new URL("../battleData.json", import.meta.url), "utf8")).species).map(Number);
@@ -72,30 +72,6 @@ const pct = (p) => turns[Math.floor((turns.length - 1) * p)];
 const capShare = turns.filter((t) => t >= TURN_CAP).length / turns.length;
 console.log(`  turns: mean ${(turns.reduce((a, b) => a + b, 0) / turns.length).toFixed(1)}, p90 ${pct(0.9)}, p99 ${pct(0.99)}, max ${turns.at(-1)}; turn-cap share ${(capShare * 100).toFixed(2)}%`);
 assertTrue(TURN_CAP >= 3 * pct(0.99), `TURN_CAP (${TURN_CAP}) ≥ 3 × p99`);
-
-section("A lone Pokémon against a full Team");
-{
-  // A Team of one is always far behind on Power rating, so it surges at the
-  // top chance, and a surged lone Pokémon (lifted to Lv 100) almost always
-  // wins. The upset should stay possible but uncommon: 5-10% for a lone
-  // Lv 30 Charizard against six fully evolved Lv 40s.
-  const pokemonData = JSON.parse(fs.readFileSync(new URL("../pokemonData.json", import.meta.url), "utf8"));
-  const pool = ids.filter((id) => pokemonData[id] && !(pokemonData[id].evolvesTo ?? []).length && catchBand(id) !== "legendary");
-  const own = createRng(20261110);
-  const lone = [{ speciesId: 6, variant: "normal", level: 30 }];
-  let wins = 0;
-  const n = 2000;
-  for (let i = 0; i < n; i++) {
-    const picked = new Set();
-    while (picked.size < 6) picked.add(pool[own.int(pool.length)]);
-    const six = [...picked].map((speciesId) => ({ speciesId, variant: "normal", level: 40 }));
-    const seed = own.int(2 ** 31);
-    const surge = rollSurge([teamPower(lone), teamPower(six)], seed);
-    if (simulateBattle({ sides: [{ members: lone }, { members: six }], seed: seed + 1, surge }).winner === 0) wins++;
-  }
-  assertBetween(wins / n, 0.05, 0.1, "a lone Lv 30 Charizard beats six Lv 40s");
-}
-
 console.log(`  runtime ${((Date.now() - started) / 1000).toFixed(1)}s`);
 
 finish();

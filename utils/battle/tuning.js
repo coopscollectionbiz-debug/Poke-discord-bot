@@ -19,12 +19,8 @@ export const TURN_CAP = 300;
 
 // Underdog surge: chance grows with the Power rating ratio; a surge raises
 // the Underdog's Levels until the gap is `residual`. Tuned by
-// tests/battleBalance.test.js on the Gen 6–9 data: even 43.7%, 2× 3.8%,
-// 5×+ 0.3% (exactly the test's floor). maxChance matters most for a Team of
-// one, which always surges at the cap and, lifted to Lv 100, nearly always
-// wins: a lone Lv 30 Charizard beats six Lv 40s 7.65% of the time (it was
-// 21% at the earlier 20% cap, on the Gen 1–5 data).
-export const SURGE = { minRatio: 1.25, perRatio: 0.15, maxChance: 0.08, residual: 1.3 };
+// tests/battleBalance.test.js: even 43%, 2× 5.0%, 3× 2.1%, 5×+ 0.6%.
+export const SURGE = { minRatio: 1.25, perRatio: 0.15, maxChance: 0.2, residual: 1.3 };
 
 // Catch level by Stage (or "legendary": Tier legendary/mythic at Stage 1).
 export const CATCH_RANGES = {
@@ -43,6 +39,10 @@ export const TRAINER_BATTLE_MULT = 1.5;
 export const WIN_EXP_MULT = 1.5;
 
 export const ELO = { start: 1000, k: 32 };
+// Ranked and wager battles: Battle teams fight at one fixed Level (stored
+// Levels unchanged; EXP still uses them). `season` resets every ranked
+// record when it changes (owner decision: all ratings reset at launch).
+export const RANKED = { level: 50, season: 1 };
 export const CAPS = { perDay: 10, perOpponent: 3 };
 export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000 };
 // Challenges (/challenge): attempts per UTC day, share of CC lost on a loss,

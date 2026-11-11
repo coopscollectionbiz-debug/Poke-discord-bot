@@ -15,6 +15,7 @@ import {
   MessageFlags
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
+import { trainerImageUrl } from "../utils/trainerAssets.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
@@ -237,7 +238,7 @@ async function recruitTrainer(i, trainerData) {
       .setColor(0x5865f2)
       .setTitle("🎭 Trainer Recruited!")
       .setDescription(withSaveNote(`You recruited **${pick.name}**!`, ack))
-      .setThumbnail(`${spritePaths.trainers}${file}`)
+      .setThumbnail(trainerImageUrl(file))
       .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
 
     return safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });

@@ -9,6 +9,7 @@
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
+import { RANKED } from "../utils/battle/tuning.js";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
 
 const dir = await fs.mkdtemp(path.join(os.tmpdir(), "achievements-"));
@@ -42,7 +43,7 @@ section("Catalog");
   assertEqual(new Set(ids).size, ids.length, "ids are unique");
   assertTrue(ids.every((id) => cat.ACHIEVEMENT_ID_PATTERN.test(id)), "ids are stable snake_case");
   assertTrue(all.length >= 80, `${all.length} achievements`);
-  assertEqual(Object.keys(cat.CATEGORIES).length, 8, "8 categories (activity added in revision 2)");
+  assertEqual(Object.keys(cat.CATEGORIES).length, 9, "9 categories (activity added in revision 2, casual with the ranked/casual split)");
   assertTrue(all.every((a) => cat.CATEGORIES[a.category] && a.name && a.description && Number.isSafeInteger(a.target) && a.target > 0 && Number.isSafeInteger(a.ap) && a.ap >= 0), "required metadata present");
   assertTrue(all.every((a) => ["state", "counter"].includes(a.metric.kind) && ["full", "baseline", "none"].includes(a.retro)), "metric kind and retroactivity declared");
   assertTrue(all.every((a) => Object.isFrozen(a)), "entries are frozen");
@@ -85,7 +86,7 @@ section("Normalization");
 // ======================= Progress =======================
 section("Targeted progress");
 {
-  const u = { tp: 0, pokemon: {}, battle: { wins: 0, rating: 1000 } };
+  const u = { tp: 0, pokemon: {}, battle: { wins: 0, rating: 1000, season: RANKED.season } };
   P.retroEvaluate(u, NOW);
   assertEqual(u.ach ?? {}, {}, "a brand-new player unlocks nothing");
   u.pokemon = species([25]);
@@ -126,7 +127,7 @@ section("Targeted progress");
 // ======================= Retroactive =======================
 section("Retroactive recognition");
 {
-  const longtime = { tp: 12000, pokemon: species(range(1, 300), range(1, 12)), battle: { wins: 55, rating: 1450 }, trainers: ["a.png"], customField: { keep: true } };
+  const longtime = { tp: 12000, pokemon: species(range(1, 300), range(1, 12)), battle: { wins: 55, rating: 1450, season: RANKED.season }, trainers: ["a.png"], customField: { keep: true } };
   const before = clone(longtime);
   const n1 = P.retroEvaluate(longtime, NOW);
   assertTrue(n1.length > 10, `a long-time player gets ${n1.length} provable unlocks`);

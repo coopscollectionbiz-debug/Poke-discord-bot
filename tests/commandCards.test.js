@@ -12,7 +12,8 @@ import { expView, renderExpCard, expCardSize } from "../utils/render/expCard.js"
 import { rankBattleRatings, leaderboardMessage } from "../commands/leaderboard.js";
 import { leaderboardView, leaderboardSize } from "../utils/render/leaderboardCard.js";
 import { catchView } from "../utils/render/catchCard.js";
-import { renderDailyCard, DAILY_SIZE } from "../utils/render/dailyCard.js";
+import { renderDailyCard, DAILY_SIZE, dailySize } from "../utils/render/dailyCard.js";
+import { dexProgress, nationalCompletion } from "../utils/render/dexProgress.js";
 import { trainerCardView, renderTrainerCard, TRAINER_CARD_SIZE, badgeSlot } from "../utils/render/trainerCard.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { pokedexView, renderPokedexCard, POKEDEX_SIZE } from "../utils/render/pokedexCard.js";
@@ -20,7 +21,8 @@ import { inspectSlots, battleInfo } from "../commands/inspectpokemon.js";
 import { renderInspectCard, INSPECT_SIZE } from "../utils/render/inspectCard.js";
 import { BATTLE_FIXTURE, FIXTURES, leaderboardWorld } from "./fixtures/showteamFixtures.js";
 
-const dims = (png) => [png.readUInt32BE(16), png.readUInt32BE(20)];
+// Width × height of a PNG or GIF (cards animate when their sprites do).
+const dims = (b) => (b.subarray(0, 3).toString() === "GIF" ? [b.readUInt16LE(6), b.readUInt16LE(8)] : [b.readUInt32BE(16), b.readUInt32BE(20)]);
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
 section("Battle: private EXP card");
@@ -127,6 +129,43 @@ section("/inspectpokemon cards");
   const base = inspectSlots({}, { id: 1 });
   assertEqual([base.length, base[0].level, base[0].moves, base[0].stats.hp], [1, null, [], 45], "not owned: one base-stats card, no moves");
   for (const s of [...slots, ...base]) assertEqual(dims(await renderInspectCard(s, { eyebrow: "TEST" })), [INSPECT_SIZE.w, INSPECT_SIZE.h], `renders ${s.variant}${s.level == null ? " (base)" : ""}`);
+}
+
+section("Every card animates when asked");
+{
+  const { outcome, names, users } = BATTLE_FIXTURE;
+  const td = leaderboardWorld();
+  const user = { pokemon: { 399: { normal: 1, shiny: 0 }, 361: { normal: 0, shiny: 1 } } };
+  const p = (id, variant) => catchView(user, { id, variant, catchResult: { level: 5, isNew: true, expGained: 0 }, trainerName: "Coop" });
+  const cards = {
+    exp: () => renderExpCard(expView(outcome, "A", names, users.A), { animate: true }),
+    leaderboard: () => import("../utils/render/leaderboardCard.js").then((m) => m.renderLeaderboard(leaderboardView(rankBattleRatings(td, "p6"), td, "p6"), { animate: true })),
+    daily: () => renderDailyCard({ pokemon: [p(399, "normal"), p(361, "shiny")], cc: 1000, tp: 100, stone: false, balance: { cc: 1, tp: 1 }, rankUp: null }, { animate: true }),
+    trainer: () => renderTrainerCard(trainerCardView({ ...clone(FIXTURES.full.user), tp: 500 }, { displayName: "x", trainer: null }), { animate: true }),
+    pokedex: () => renderPokedexCard(pokedexView(133, {}), { animate: true }),
+    inspect: () => renderInspectCard(inspectSlots({ pokemon: { 1: { normal: 1 } } }, { id: 1 })[0], { animate: true }),
+  };
+  for (const [name, render] of Object.entries(cards)) {
+    const buf = await render();
+    assertEqual(buf.subarray(0, 3).toString(), "GIF", `${name}: animated GIF`);
+  }
+  // A species with only static art (#1025) breathes (tools/generate-pokemon-idles.mjs), so it animates too.
+  const breathing = await renderPokedexCard(pokedexView(1025, {}), { animate: true });
+  assertEqual(breathing.subarray(0, 3).toString(), "GIF", "static-art sprite with the breathing idle: animated GIF");
+}
+
+section("Pokédex progress (private cards only)");
+{
+  const user = { pokemon: { 1: { normal: 1, shiny: 0 }, 4: { normal: 0, shiny: 1 }, 7: { normal: 0, shiny: 0 }, 399: { normal: 2, shiny: 0 }, 700: { normal: 1, shiny: 0 }, "52:galar": { normal: 1, shiny: 0 } } };
+  const before = clone(user);
+  assertEqual(nationalCompletion(user), { owned: 3, total: 649 }, "national: species owned now out of released generations (Gen 6 Sylveon, emptied entries and forms don't count)");
+  assertEqual(dexProgress(user, [399, 1, 4]).map((r) => [r.label, r.owned, r.total]), [["Sinnoh", 1, 107], ["Kanto", 2, 151], ["National", 3, 649]], "regions in order, deduplicated, then national");
+  assertEqual(user, before, "never mutates the record");
+  const p = catchView(user, { id: 399, variant: "normal", catchResult: { level: 3, isNew: false, expGained: 1 }, trainerName: "x" });
+  const v = { pokemon: [p, p], cc: 1, tp: 1, stone: false, balance: { cc: 1, tp: 1 }, rankUp: null, dex: dexProgress(user, [399]) };
+  assertEqual(dims(await renderDailyCard(v)), [dailySize(v).w, dailySize(v).h], "/daily grows a Pokédex row");
+  assertEqual(dailySize(v).h - DAILY_SIZE.h, 80, "by 80 px");
+  assertEqual(pokedexView(133, user).dex.map((r) => r.label), ["Kanto", "National"], "/pokedex: the species' region + national");
 }
 
 finish();

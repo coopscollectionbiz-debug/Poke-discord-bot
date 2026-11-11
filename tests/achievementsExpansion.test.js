@@ -13,6 +13,7 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
+import { RANKED } from "../utils/battle/tuning.js";
 
 const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ach-expansion-"));
 process.env.TRAINERDATA_DIR = dir;
@@ -52,7 +53,7 @@ section("Catalog integrity (revision 2)");
   const all = cat.listAchievements();
   const ids = all.map((a) => a.id);
   assertEqual(cat.CATALOG_REVISION, 3, "catalog revision is 3 (Generations 6–9)");
-  assertEqual(all.length, 157, "157 achievements (141 + 16 for Generations 6–9)");
+  assertEqual(all.length, 165, "165 achievements (141 + 16 for Generations 6–9 + 8 casual battle)");
   assertEqual(new Set(ids).size, ids.length, "ids unique");
   // Every revision-1 entry is unchanged (ids, targets, metrics, AP, tiers).
   const REV1 = { col_first: [1, 5], col_species_500: [500, 100], col_region_unova_full: [156, 75], col_mythic: [1, 40], shiny_100: [100, 150], shiny_species_50: [50, 80], evo_100: [100, 50], bat_wins_500: [500, 100], bat_rating_1600: [1600, 60], trainer_250: [250, 80], don_5000: [5000, 80], econ_buy_100: [100, 30], meta_ap_1500: [1500, 0], lvl_100: [100, 60] };
@@ -239,14 +240,15 @@ section("Evolution families (real graph) and distinct evolved species");
 section("Battle streaks through the real runBattle");
 {
   const fixed = () => 0.5;
-  const mk = (id, team) => { const u = createNewUser(id, `T${id}`); for (const s of team) grantCatch(u, s, "normal", fixed); u.displayedPokemon = team.map((s) => ({ id: s, variant: "normal" })); return u; };
+  const mk = (id, team) => { const u = createNewUser(id, `T${id}`); for (const s of team) grantCatch(u, s, "normal", fixed); u.displayedPokemon = team.map((s) => ({ id: s, variant: "normal" })); u.battleTeam = u.displayedPokemon.map((s) => ({ ...s })); return u; };
   // Evenly matched teams so the real simulation produces both outcomes.
   const td = { A: mk("A", [7, 4]), B: mk("B", [4, 7]) };
   let day = 0;
   const results = [];
   const upsets = { A: 0, B: 0 };
   for (let seed = 1; seed <= 40; seed++) {
-    const out = runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "open", seed, now: new Date(NOW + 86_400_000 * day++) });
+    // Battle achievements count ranked (and wager) battles.
+    const out = runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "ranked", seed, now: new Date(NOW + 86_400_000 * day++) });
     if (!out.ok) continue;
     results.push(out.winnerId);
     if (out.rating[out.loserId].from - out.rating[out.winnerId].from >= 200) upsets[out.winnerId]++;
@@ -261,7 +263,7 @@ section("Battle streaks through the real runBattle");
   const winSeeds = [];
   for (let s = 1; s < 400 && winSeeds.length < 1; s++) {
     const t2 = { X: mk("X", [150, 249, 250]), Y: mk("Y", [10]) };
-    if (runBattle({ trainerData: t2, challengerId: "X", defenderId: "Y", mode: "open", seed: s, now: new Date(NOW) }).winnerId === "X") winSeeds.push(s);
+    if (runBattle({ trainerData: t2, challengerId: "X", defenderId: "Y", mode: "ranked", seed: s, now: new Date(NOW) }).winnerId === "X") winSeeds.push(s);
   }
   const opp = ["B"];
   // Engine-level contract with the exact runBattle event (won true/false).
@@ -282,9 +284,9 @@ section("Battle streaks through the real runBattle");
   assertTrue(!lost.ach?.bat_upset && !lost.stats?.upsetWins, "losing never counts as an upset (no reward for losing)");
   // Upset flag from real ratings.
   const ut = { X: mk("X", [150, 249, 250]), Y: mk("Y", [10]) };
-  ut.X.battle = { rating: 1000, wins: 0, losses: 0, day: "", started: 0, vs: {} };
-  ut.Y.battle = { rating: 1300, wins: 0, losses: 0, day: "", started: 0, vs: {} };
-  const o = runBattle({ trainerData: ut, challengerId: "X", defenderId: "Y", mode: "open", seed: winSeeds[0], now: new Date(NOW) });
+  ut.X.battle = { rating: 1000, wins: 0, losses: 0, day: "", started: 0, vs: {}, season: RANKED.season };
+  ut.Y.battle = { rating: 1300, wins: 0, losses: 0, day: "", started: 0, vs: {}, season: RANKED.season };
+  const o = runBattle({ trainerData: ut, challengerId: "X", defenderId: "Y", mode: "ranked", seed: winSeeds[0], now: new Date(NOW) });
   if (o.winnerId === "X") assertEqual(ut.X.stats.upsetWins, 1, "real battle: 300-point underdog win recorded as an upset");
   else assertTrue(!ut.X.stats?.upsetWins, "real battle: no upset without a win");
   assertEqual([td.A.stats?.upsetWins ?? 0, td.B.stats?.upsetWins ?? 0], [upsets.A, upsets.B], `upsets recorded exactly when the winner was rated 200+ lower before the battle (A ${upsets.A}, B ${upsets.B})`);
@@ -431,7 +433,7 @@ section("Hidden privacy, dashboard and Discord with the larger catalog");
   assertTrue(after && after.unlocked && after.name === "Eeveelution Gallery" && after.ap === 40, "once unlocked, the details become visible");
   assertEqual(H.view({ query: { id: B }, isAuthorized: (id) => id === A }).status, 403, "cross-user view denied");
   assertEqual(H.view({ query: { id: A, category: "activity" }, isAuthorized: () => true }).body.achievements.length, 10, "activity category filter");
-  assertTrue(body.categories.length === 8 && body.total === cat.listAchievements().filter(cat.isAchievementActive).length, "category counts cover all 8 categories (released generations only)");
+  assertTrue(body.categories.length === 9 && body.total === cat.listAchievements().filter(cat.isAchievementActive).length, "category counts cover all 9 categories (released generations only)");
   // Discord: every page of every category within embed limits; no claim button (nothing approved).
   const nonce = "a1b2c3d4e5f6";
   let pages = 0;
@@ -449,7 +451,7 @@ section("Hidden privacy, dashboard and Discord with the larger catalog");
   const ov = D.buildAchievementsView(td[B], { nonce });
   assertTrue(/Daily & Weekly: \*\*\d+\/10\*\* \(\d+%\)/.test(ov.embeds[0].data.description) && /\(\d+%\)/.test(ov.embeds[0].data.title), "overview shows completion percentages");
   const sel = ov.components[0].components[0].options.map((o) => o.data.value);
-  assertEqual(sel, ["all", "collection", "shiny", "evolution", "battle", "training", "economy", "activity", "special"], "category select includes Daily & Weekly");
+  assertEqual(sel, ["all", "collection", "shiny", "evolution", "battle", "casual", "training", "economy", "activity", "special"], "category select includes Daily & Weekly and Casual Battles");
   const st = { category: "all", page: 0 };
   assertTrue(D.reduceAchievementsInteraction(st, { userId: B, customId: `ach:${nonce}:cat`, values: ["activity"] }, { ownerId: B, nonce }).allowed, "owner can pick the new category");
   assertTrue(!D.reduceAchievementsInteraction(st, { userId: A, customId: `ach:${nonce}:next` }, { ownerId: B, nonce }).allowed, "another player can't press the buttons");

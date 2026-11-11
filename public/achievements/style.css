@@ -1,9 +1,37 @@
-/* Achievements page: reuses shop + bag styles; only these are new. */
-.ach-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
-.ach-summary .chip { padding: 6px 12px; border-radius: 999px; background: #262b36; font-weight: 600; }
-.ach-card.locked { opacity: 0.72; }
-.ach-card .tier { font-size: 0.8rem; opacity: 0.85; }
-.ach-bar { height: 8px; border-radius: 6px; background: #333a47; overflow: hidden; margin: 8px 0 4px; }
-.ach-bar > span { display: block; height: 100%; background: #f5b301; }
-.ach-card .reward { font-size: 0.85rem; margin-top: 6px; }
-.ach-card .claim-btn { margin-top: 8px; }
+/* Achievements page: reuses Shop + Bag styles; only these are new.
+   Gold = achievement (DESIGN-SYSTEM.md §1). */
+.ach-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
+.ach-summary .chip {
+  padding: 6px 12px;
+  border-radius: var(--cc-r-chip);
+  background: var(--cc-surface);
+  border: 1px solid var(--cc-line);
+  color: var(--cc-text);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.ach-summary .chip:first-child { border-color: var(--cc-gold); color: var(--cc-gold); }
+
+.ach-card { align-items: stretch; text-align: left; }
+.ach-card h3 { display: flex; gap: 8px; align-items: center; }
+.ach-card.locked { opacity: 0.7; }
+.ach-card.unlocked { border-color: #f5c84c66; }
+.ach-card .tier { margin: 0 0 4px; font-size: 0.8rem; font-weight: 700; color: var(--cc-text-faint); }
+.ach-bar {
+  height: 8px;
+  margin: 8px 0 4px;
+  border-radius: var(--cc-r-chip);
+  background: var(--cc-surface-sunken);
+  overflow: hidden;
+}
+.ach-bar > span { display: block; height: 100%; background: var(--cc-gold); border-radius: inherit; }
+.ach-card .usage { margin: 0; }
+.ach-card .reward { margin: 8px 0 0; font-size: 0.85rem; color: var(--cc-text-muted); }
+.ach-card .claim-btn { margin-top: 12px; background: var(--cc-gold); color: var(--cc-ink); }
+.ach-card .claim-btn:hover:not(:disabled) { background: #f7d36e; }
+
+/* Ranked / Casual / Collection & more tabs */
+.ach-groups { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 12px 0; }
+.ach-groups button { position: relative; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text-muted); font-weight: 800; font-size: 13.5px; }
+.ach-groups button[aria-pressed="true"] { border-color: var(--cc-blue); background: var(--cc-blue-soft); color: var(--cc-text); }
+.ach-groups button[data-ready]:not([data-ready=""])::after { content: attr(data-ready); position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--cc-gold); color: var(--cc-ink); font-size: 11px; line-height: 20px; }

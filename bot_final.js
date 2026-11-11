@@ -60,6 +60,14 @@ import { handleInventoryRequest } from "./services/inventoryApi.js";
 import { createGameplayHandlers } from "./services/gameplay.js";
 import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
 import { createAchievementHandlers } from "./services/achievementsApi.js";
+import { createMegaHandlers } from "./services/megaApi.js";
+import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
+import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
+import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
+import { pokemonDetail } from "./services/pokemonDetail.js";
+import { rankBattleRatings } from "./commands/leaderboard.js";
+import { rankedRecord } from "./utils/battle/rewards.js";
+import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
 import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
@@ -303,29 +311,13 @@ function normalizeUserSchema(id, user) {
 // NEW FORMAT: [{ id: Number, variant: "normal"|"shiny" }]
 // Backwards compatible with legacy [Number, Number, ...]
 // ==========================================================
-if (!Array.isArray(user.displayedPokemon)) {
-  user.displayedPokemon = [];
-}
-
-// Convert legacy [243,245] => [{id:243, variant:"normal"}, ...]
-if (user.displayedPokemon.length && typeof user.displayedPokemon[0] !== "object") {
-  user.displayedPokemon = user.displayedPokemon
-    .map((pid) => ({ id: Number(pid), variant: "normal" }))
-    .filter((t) => Number.isInteger(t.id));
-}
-
-// Normalize + remove ghosts (must own that specific variant)
-user.displayedPokemon = user.displayedPokemon
-  .map((t) => ({
-    id: Number(t?.id),
-    variant: t?.variant === "shiny" ? "shiny" : "normal",
-  }))
-  .filter((t) => Number.isInteger(t.id))
-  .filter((t) => {
-    const owned = user.pokemon?.[t.id];
-    if (!owned) return false;
-    return Number(owned?.[t.variant] || 0) > 0;
-  });
+// Mega Evolution (Phase M1): repair megaUnlocks first (no-op for players
+// without it), then normalize the team. services/megaTeam.js holds the same
+// team code that used to be inline here, plus keeping a valid Mega slot.
+normalizeMegaUnlocks(user);
+normalizeDisplayedTeam(user);
+// Battle team (ranked/wager): same cleaning; never created here (missing = not set).
+normalizeBattleTeam(user);
 
 
   // ==========================================================
@@ -423,6 +415,7 @@ import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils
 import { refundAllPending } from "./utils/battle/wager.js";
 import { finishAllOpenRuns, challengeLogEntry, hideOpenRun } from "./utils/challenge/runChallenge.js";
 import { showRunResult, challengeNames } from "./utils/battle/playback.js";
+import { powersFromLevels } from "./utils/battle/power.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -451,7 +444,7 @@ app.get("/auth/dashboard", (req, res) => {
     maxAge: 10 * 60 * 1000,
   });
 
-  res.redirect(`/public/picker-pokemon?id=${encodeURIComponent(id)}`);
+  res.redirect(`/public/overview?id=${encodeURIComponent(id)}`); // the dashboard home
 });
 
 // ==========================================================
@@ -510,6 +503,12 @@ app.get("/public/picker", (_, res) =>
 );
 app.get("/public/picker-pokemon", (_, res) =>
   res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
+);
+app.get("/public/overview", (_, res) =>
+  res.sendFile(path.join(staticPath, "overview", "index.html"))
+);
+app.get("/public/teams", (_, res) =>
+  res.sendFile(path.join(staticPath, "teams", "index.html"))
 );
 
 // ✅ Shop page (new canonical)
@@ -1312,6 +1311,33 @@ app.post("/api/achievements/claim", express.json({ limit: "4kb" }), async (req, 
 });
 
 
+// 🧬 MEGA EVOLUTION (Phase M1): every endpoint is behind its own capability
+// (config/features.js). With MEGA_EVOLUTION_ENABLED unset (production), the
+// view answers { enabled: false } and the writes refuse with 403.
+const mega = createMegaHandlers({ getTrainerData: () => trainerData, lockUser, save: saveAndAck });
+app.get("/api/mega", (req, res) => {
+  const { status, body } = mega.view({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
+  return res.status(status).json(body);
+});
+app.post("/api/mega/unlock", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { status, body } = await mega.unlock({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(status).json(body);
+  } catch (err) {
+    console.error("❌ /api/mega/unlock:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+app.post("/api/mega/preferred", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { status, body } = await mega.preferred({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(status).json(body);
+  } catch (err) {
+    console.error("❌ /api/mega/preferred:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 // D14: dashboard replies say whether the change reached disk. On a failed
 // write the change stays in memory and is retried; the reply carries a
 // "saved with a delay" notice instead of an unqualified success.
@@ -1980,8 +2006,11 @@ app.get("/api/user-pokemon", (req, res) => {
   const rank = getRank(tp);
   const pokemon = u.pokemon ?? {};
   const currentTeam = Array.isArray(u.displayedPokemon) ? u.displayedPokemon : [];
+  // Battle team: null when the player has never set one.
+  const battleTeam = hasBattleTeam(u) ? u.battleTeam : null;
 
   ensureWeeklyReset(u);
+  const levels = levelsForUser(u); // { "6:normal": 23 } for every owned variant
 
   // flatten response for front-end
   return res.json({
@@ -1992,13 +2021,67 @@ app.get("/api/user-pokemon", (req, res) => {
     items,
     pokemon,
     currentTeam, // NEW FORMAT: [{ id: Number, variant: "normal" | "shiny" }]
-    levels: levelsForUser(u), // { "6:normal": 23 } for every owned variant
+    battleTeam, // Battle team (ranked/wager), same shape; null = not set
+    // Read-only records (B10): this season's ranked record with the same
+    // leaderboard position as /leaderboard, and the casual (open battle) one.
+    ranked: (() => {
+      const r = rankedRecord(u);
+      const board = rankBattleRatings(trainerData, id);
+      return { ...r, position: board.you?.position ?? null, players: board.total, streak: r.wins + r.losses > 0 ? Number(u.stats?.winStreak) || 0 : 0 };
+    })(),
+    casual: { wins: u.casual?.wins ?? 0, losses: u.casual?.losses ?? 0, streak: u.casual?.streak ?? 0, bestStreak: u.casual?.bestStreak ?? 0 },
+    // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
+    levels,
+    powers: powersFromLevels(levels), // { "6:normal": 410 }
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
   });
 });
 
 
+// ✅ GET — one Pokémon's details for the Collection drawer (B2). Read-only:
+// stats, moves and EXP from the same functions as the Discord cards.
+app.get("/api/pokemon/detail", (req, res) => {
+  const { id, species } = req.query;
+  if (!id || species == null) return res.status(400).json({ error: "Missing id/species" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  const { status, body } = pokemonDetail(user, species);
+  return res.status(status).json(body);
+});
+
+// ✅ POST — a copy's chosen moveset for one team (owner: separate per team).
+// Body: { id, team: "display"|"battle", pokeId, variant, moves: [moveId…] | null }
+// moves null → automatic moves again. 1–4 distinct moves it has learned
+// (level-up at or below its real Level; TMs later). services/movesets.js.
+app.post("/api/pokemon/moveset", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { id, team, pokeId, variant, moves } = req.body || {};
+    if (!id || pokeId == null) return res.status(400).json({ success: false, error: "Missing id/pokeId" });
+    if (!TEAM_TYPES.includes(team)) return res.status(400).json({ success: false, error: "Unknown team type" });
+    if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    await lockUser(id, async () => {
+      const u = trainerData[id];
+      if (!u) return res.status(404).json({ success: false, error: "User not found" });
+      const v = variant === "shiny" ? "shiny" : "normal";
+      if (moves !== null) {
+        const check = validateMoveset(u, pokeId, v, moves);
+        if (!check.ok) return res.status(check.status).json({ success: false, error: check.error, code: check.code });
+        setMoveset(u, team, pokeId, v, check.moves);
+      } else setMoveset(u, team, pokeId, v, null);
+      const saveAck = await saveAndAck(trainerData);
+      return res.json({ ...saveAckFields(saveAck), success: true, team, moves: chosenMoves(u, team, pokeId, v) });
+    });
+  } catch (err) {
+    console.error("❌ /api/pokemon/moveset:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 // ✅ POST — set full Pokémon team (up to 6) — Variant-safe + Ghost Auto-Clean
+// teamType: "display" (default; user.displayedPokemon, as before) or
+// "battle" (user.battleTeam; also at most one mythic-tier Pokémon,
+// services/battleTeam.js). Old clients send no teamType and are unchanged.
 // NEW TEAM FORMAT (frontend -> backend):
 // team = [{ id: 243, variant: "normal" }, { id: 245, variant: "shiny" }, ...]
 // Back-compat accepted:
@@ -2007,9 +2090,13 @@ app.get("/api/user-pokemon", (req, res) => {
 app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
   try {
     const { id, team } = req.body;
+    const teamType = req.body?.teamType ?? "display";
 
     if (!id || !Array.isArray(team)) {
       return res.status(400).json({ success: false, error: "Missing id/team" });
+    }
+    if (teamType !== "display" && teamType !== "battle") {
+      return res.status(400).json({ success: false, error: "Unknown team type" });
     }
 
     if (!requireDashboardSession(req, id)) {
@@ -2031,55 +2118,34 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       const u = trainerData[id];
 
 
-      const ownsVariant = (pid, variant) => {
-        const p = u.pokemon?.[pid];
-        if (!p) return false;
-        return (p[variant] ?? 0) > 0;
-      };
+      // 1) Auto-clean existing displayedPokemon (remove ghost variant slots;
+      //    keeps a valid Mega selection — services/megaTeam.js)
+      normalizeDisplayedTeam(u);
 
-      // 1) Auto-clean existing displayedPokemon (remove ghost variant slots)
-      u.displayedPokemon = Array.isArray(u.displayedPokemon) ? u.displayedPokemon : [];
-      u.displayedPokemon = u.displayedPokemon
-        .map(toTeamObj)
-        .filter(Boolean)
-        .filter((slot) => ownsVariant(slot.id, slot.variant));
-
-      // 2) Parse incoming team
-      const parsed = team.map(toTeamObj).filter(Boolean);
-
-      // 3) Enforce constraints: 1–6 unique slots
-      // Unique = (id + variant) pair. Allow same Pokémon in both variants if they own both.
-      const dedupMap = new Map(); // key "id:variant" -> slot
-      for (const slot of parsed) {
-        const key = `${slot.id}:${slot.variant}`;
-        if (!dedupMap.has(key)) dedupMap.set(key, slot);
+      // 2–4) Parse, 1–6 unique (id + variant) slots, ownership per variant,
+      //      and the Mega rules (one Mega, not with its own base, unlocked,
+      //      MEGA_TEAMS capability) — services/megaTeam.js prepareTeamSelection.
+      //      Battle team: the same rules plus at most one mythic-tier Pokémon.
+      const prepared = teamType === "battle" ? prepareBattleTeamSelection(u, team) : prepareTeamSelection(u, team);
+      if (!prepared.ok) {
+        return res.status(prepared.status).json({ success: false, error: prepared.error, code: prepared.code });
       }
-      const normalized = [...dedupMap.values()];
-
-      if (normalized.length === 0 || normalized.length > 6) {
-        return res.status(400).json({
-          success: false,
-          error: "Team must be 1–6 unique slots (unique = Pokémon + variant).",
-        });
-      }
-
-      // 4) Validate ownership per variant (IMPORTANT for your new UI rules)
-      const unowned = normalized.filter((slot) => !ownsVariant(slot.id, slot.variant));
-      if (unowned.length) {
-        const list = unowned.map((s) => `#${s.id} (${s.variant})`).join(", ");
-        return res.status(400).json({
-          success: false,
-          error: `Unowned Pokémon slots: ${list}`,
-        });
-      }
+      const normalized = prepared.team;
 
       // 5) Save
-      u.displayedPokemon = normalized;
+      if (teamType === "battle") u.battleTeam = normalized;
+      else u.displayedPokemon = normalized;
       trainerData[id] = u;
 
       const saveAck = await saveAndAck(trainerData);
 
-      return res.json({ ...saveAckFields(saveAck), success: true, currentTeam: u.displayedPokemon });
+      return res.json({
+        ...saveAckFields(saveAck),
+        success: true,
+        teamType,
+        currentTeam: u.displayedPokemon,
+        battleTeam: hasBattleTeam(u) ? u.battleTeam : null,
+      });
     });
   } catch (err) {
     console.error("❌ /api/set-pokemon-team:", err?.message || err);
@@ -2142,7 +2208,7 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
 
     if (isDisplayedVariant(u, pid, chosenVariant)) {
       return res.status(400).json({
-        error: `You can’t donate your ${chosenVariant} ${p.name} because it’s currently displayed on your team. Remove it from your team first.`,
+        error: `You can’t donate your ${chosenVariant} ${p.name} because it’s on one of your teams (Display or Battle). Remove it from that team first.`,
       });
     }
 

@@ -1,0 +1,124 @@
+/* ===========================================================
+   public/shared/tokens.css — Coop's Collection design tokens
+   The dashboard's single palette. Values mirror utils/render/tokens.js
+   (the Discord image renderer) so both surfaces read as one product.
+   See docs/design/DESIGN-SYSTEM.md §1, §3, §8.
+
+   Meaning is fixed: gold = shiny / achievement, blue = lead / selected,
+   red = destructive / error.
+=========================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* Core */
+  --cc-ink: #0e1120;
+  --cc-bg-top: #141a2c;
+  --cc-bg-bottom: #1d1530;
+  --cc-surface: #1b2236;
+  --cc-surface-raised: #232b44;
+  --cc-surface-sunken: #121729;
+  --cc-chrome: #0f1424f2; /* sidebar, tab bar, sticky bars */
+  --cc-line: #2e3756;
+  --cc-text: #f4f6fb;
+  --cc-text-muted: #aab2c8;
+  --cc-text-faint: #6f7891;
+  --cc-gold: #f5c84c;
+  --cc-gold-soft: #f5c84c33;
+  --cc-blue: #4f8cff;
+  --cc-blue-soft: #4f8cff33;
+  --cc-red: #ff5a6a;
+  --cc-red-soft: #ff5a6a26;
+  --cc-green: #3fd46c;
+  --cc-exp: #5ab4ff;
+  --cc-mega: #c084fc; /* Mega Evolution accents (utils/render/tokens.js COLOR.mega) */
+  --cc-textbox: #f8f8f0;
+  --cc-textbox-border: #3a4256;
+  --cc-textbox-ink: #1d2233;
+
+  /* Tiers (rarity) — the existing colors players already know */
+  --cc-tier-common: #9ca3af;
+  --cc-tier-uncommon: #10b981;
+  --cc-tier-rare: #3b82f6;
+  --cc-tier-epic: #a855f7;
+  --cc-tier-legendary: #facc15;
+  --cc-tier-mythic: #ef4444;
+
+  /* Shape */
+  --cc-r-chip: 999px;
+  --cc-r-sm: 8px;
+  --cc-r-md: 14px;
+  --cc-r-lg: 20px;
+  --cc-s1: 4px;
+  --cc-s2: 8px;
+  --cc-s3: 12px;
+  --cc-s4: 16px;
+  --cc-s5: 24px;
+  --cc-s6: 32px;
+  --cc-shadow: 0 6px 18px #00000066;
+  --cc-ring-blue: 0 0 0 3px var(--cc-blue);
+  --cc-ring-gold: 0 0 0 3px var(--cc-gold);
+
+  /* Type & sizing */
+  --cc-font: "Inter", "Segoe UI", "Noto Sans", system-ui, Arial, sans-serif;
+  --cc-touch: 44px;
+  --cc-sidebar-w: 232px;
+  --cc-tabbar-h: 64px;
+
+  /* -----------------------------------------------------------
+     Legacy aliases. The page scripts still build some markup with
+     inline styles that reference these names; they now resolve to
+     the shared tokens so no page keeps its own palette.
+  ----------------------------------------------------------- */
+  --bg: var(--cc-ink);
+  --card: var(--cc-surface);
+  --card-hover: var(--cc-surface-raised);
+  --border: var(--cc-line);
+  --brand: var(--cc-blue);
+  --brand-hover: #3d78e8;
+  --accent: var(--cc-gold);
+  --text: var(--cc-text);
+  --muted: var(--cc-text-muted);
+  --text-dim: var(--cc-text-muted);
+  --gold: var(--cc-gold);
+  --danger: var(--cc-red);
+  --info: var(--cc-blue);
+}
+
+/* -----------------------------------------------------------
+   Types (18). Fill + readable label color, from tokens.js TYPE.
+   Usage: <span class="cc-type" data-type="fire">Fire</span>
+----------------------------------------------------------- */
+.cc-type { background: #5b6478; color: #fff; }
+.cc-type[data-type="normal"]   { background: #a8a77a; color: var(--cc-ink); }
+.cc-type[data-type="fighting"] { background: #c8423a; color: #fff; }
+.cc-type[data-type="flying"]   { background: #98a8f0; color: var(--cc-ink); }
+.cc-type[data-type="poison"]   { background: #a04aa0; color: #fff; }
+.cc-type[data-type="ground"]   { background: #dcbc68; color: var(--cc-ink); }
+.cc-type[data-type="rock"]     { background: #b8a038; color: var(--cc-ink); }
+.cc-type[data-type="bug"]      { background: #a8b820; color: var(--cc-ink); }
+.cc-type[data-type="ghost"]    { background: #705898; color: #fff; }
+.cc-type[data-type="steel"]    { background: #b8b8d0; color: var(--cc-ink); }
+.cc-type[data-type="fire"]     { background: #f08030; color: var(--cc-ink); }
+.cc-type[data-type="water"]    { background: #6890f0; color: #fff; }
+.cc-type[data-type="grass"]    { background: #6cc04a; color: var(--cc-ink); }
+.cc-type[data-type="electric"] { background: #f8d030; color: var(--cc-ink); }
+.cc-type[data-type="psychic"]  { background: #f85888; color: #fff; }
+.cc-type[data-type="ice"]      { background: #98d8d8; color: var(--cc-ink); }
+.cc-type[data-type="dragon"]   { background: #7038f8; color: #fff; }
+.cc-type[data-type="dark"]     { background: #5a4a40; color: #fff; }
+.cc-type[data-type="fairy"]    { background: #ee99ac; color: var(--cc-ink); }
+
+/* Tier pill + tier text. Usage: <span class="cc-tier" data-tier="rare">Rare</span> */
+[data-tier="common"]    { --tier: var(--cc-tier-common); }
+[data-tier="uncommon"]  { --tier: var(--cc-tier-uncommon); }
+[data-tier="rare"]      { --tier: var(--cc-tier-rare); }
+[data-tier="epic"]      { --tier: var(--cc-tier-epic); }
+[data-tier="legendary"] { --tier: var(--cc-tier-legendary); }
+[data-tier="mythic"]    { --tier: var(--cc-tier-mythic); }
+.tier-text.common    { color: var(--cc-tier-common); }
+.tier-text.uncommon  { color: var(--cc-tier-uncommon); }
+.tier-text.rare      { color: var(--cc-tier-rare); }
+.tier-text.epic      { color: var(--cc-tier-epic); }
+.tier-text.legendary { color: var(--cc-tier-legendary); }
+.tier-text.mythic    { color: var(--cc-tier-mythic); }

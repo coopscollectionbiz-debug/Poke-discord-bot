@@ -30,6 +30,7 @@ export const COLOR = Object.freeze({
   hp: { high: "#3fd46c", mid: "#f5c431", low: "#ef4b4b" },
   textbox: "#f8f8f0",
   textboxBorder: "#3a4256",
+  mega: "#c084fc", // Mega Evolution: MEGA tags and Mega card accents (dashboard --cc-mega)
 });
 
 // The 18 types. Each has a fill (chip background) and a readable label color.

@@ -1,0 +1,138 @@
+<!doctype html>
+<!-- Design mockup (static, synthetic data). Not served by the bot.
+     Collection, option B: a list / table Pokédex. Region sections with completion bars,
+     rows that expand inline for details, checkboxes for bulk donate. Shown in Donate mode. -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Collection · Option B (mockup)</title>
+<link rel="stylesheet" href="../../../../public/shared/tokens.css" />
+<link rel="stylesheet" href="../../../../public/shared/components.css" />
+<link rel="stylesheet" href="mock.css" />
+<style>
+  .cb-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 12px; }
+  .cb-top input[type="search"] { flex: 1 1 220px; min-width: 0; }
+  .cb-sec { margin-top: 12px; }
+  .cb-sechead { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px 12px 0 0; background: var(--cc-surface-raised); border: 1.5px solid var(--cc-line); border-bottom: 0; }
+  .cb-sechead h2 { margin: 0; font-size: 16px; }
+  .cb-sechead span { font-size: 13px; color: var(--cc-text-muted); font-weight: 700; }
+  .cb-sechead .bar { flex: 1; max-width: 240px; height: 7px; border-radius: 4px; background: var(--cc-surface-sunken); overflow: hidden; }
+  .cb-sechead .bar i { display: block; height: 100%; background: var(--cc-green); }
+  .cb-sechead .mk-ib { margin-left: auto; }
+  .cb-list { list-style: none; margin: 0; padding: 0; border: 1.5px solid var(--cc-line); border-radius: 0 0 12px 12px; overflow: hidden; background: var(--cc-surface); }
+  .cb-head, .cb-row { display: grid; grid-template-columns: 44px 56px 56px minmax(150px, 1.4fr) 110px 100px 70px 80px 90px 44px; align-items: center; gap: 6px; padding: 0 8px; }
+  .cb-head { min-height: 34px; font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--cc-text-faint); background: var(--cc-surface-sunken); }
+  .cb-row { min-height: 56px; border-top: 1px solid var(--cc-line); font-size: 13.5px; font-weight: 700; }
+  .cb-row.unowned { color: var(--cc-text-faint); background: #0000001a; }
+  .cb-row.unowned img { filter: brightness(0) invert(.22); }
+  .cb-row.sel { background: #4f8cff17; }
+  .cb-row img { width: 52px; height: 46px; object-fit: contain; image-rendering: pixelated; }
+  .cb-no { color: var(--cc-text-faint); font-size: 12px; }
+  .cb-name { min-width: 0; }
+  .cb-name b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cb-name .types { display: flex; gap: 4px; margin-top: 2px; }
+  .cb-name .types .cc-type { font-size: 9px; padding: 1px 6px; }
+  .cb-chip { display: inline-flex; margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 10px; font-weight: 800; background: var(--cc-mega); color: var(--cc-ink); vertical-align: 2px; }
+  .cb-own .s { color: var(--cc-gold); }
+  .cb-check { width: 44px; height: 44px; display: grid; place-items: center; }
+  .cb-check input { width: 20px; height: 20px; accent-color: var(--cc-blue); }
+  .cb-check input:disabled { opacity: .3; }
+  .cb-teams { display: flex; gap: 3px; flex-wrap: wrap; }
+  .cb-exp { grid-column: 1 / -1; display: grid; grid-template-columns: 180px 1fr 1fr; gap: 16px; padding: 12px 16px 16px; border-top: 1px dashed var(--cc-line); background: var(--cc-surface-sunken); }
+  .cb-exp .stage { display: flex; align-items: flex-end; justify-content: center; height: 140px; border-radius: 12px; background: radial-gradient(circle at 50% 70%, #f5c84c26, transparent 62%), var(--cc-surface); }
+  .cb-exp .stage img { height: 110px; width: auto; transform: scale(1.3); transform-origin: bottom; margin-bottom: 14px; }
+  .cb-exp h3 { margin: 0 0 6px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--cc-text-faint); }
+  .cb-exp p { margin: 0 0 4px; font-size: 13px; }
+  .cb-kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 12px; font-size: 13px; font-weight: 700; }
+  .cb-kv span { color: var(--cc-text-muted); font-weight: 600; margin-right: 4px; }
+  .cb-bulk { position: fixed; z-index: 960; left: calc(var(--cc-sidebar-w) + 24px); right: 24px; bottom: 16px; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; background: var(--cc-surface); border: 1.5px solid var(--cc-blue); box-shadow: var(--cc-shadow); }
+  .cb-bulk p { flex: 1; margin: 0; color: var(--cc-text); font-weight: 700; }
+  .cb-bulk p small { display: block; color: var(--cc-text-muted); font-weight: 600; }
+  .ph { display: none; }
+  @media (max-width: 1000px) {
+    .cb-head { display: none; }
+    .cb-row { grid-template-columns: 44px 48px minmax(0, 1fr) auto 44px; gap: 4px; padding: 4px 4px; }
+    .cb-row > .d { display: none; }
+    .cb-row img { width: 46px; height: 42px; }
+    .ph { display: block; font-size: 11.5px; color: var(--cc-text-muted); font-weight: 600; }
+    .cb-right { text-align: right; font-size: 12.5px; }
+    .cb-exp { grid-template-columns: 1fr; }
+    .cb-kv { grid-template-columns: 1fr 1fr; }
+    .cb-bulk { left: 8px; right: 8px; bottom: calc(var(--cc-tabbar-h) + 8px + env(safe-area-inset-bottom)); }
+  }
+  @media (min-width: 1001px) { .cb-right .ph { display: none; } }
+</style>
+</head>
+<body data-page="collection">
+<header class="cc-page-head">
+  <p class="cc-eyebrow">Your Pokémon</p>
+  <h1>Collection</h1>
+  <p>Every Pokémon in the live regions, as a list. Tick rows to donate several at once.</p>
+</header>
+<main id="ccMain" tabindex="-1"></main>
+<script src="mock-data.js"></script>
+<script src="mock-kit.js"></script>
+<script>
+const { icon, sprite, typeChips, tierPill, esc, M } = MK;
+MK.shell("collection");
+const main = document.getElementById("ccMain");
+const kantoOwned = M.dex.filter((p) => p.normal + p.shiny > 0).length;
+const SELECTED = [10, 16, 19];
+const power = (p) => MK.owned(p.id, p.shiny && !p.normal ? "shiny" : "normal")?.power ?? null;
+
+function row(p) {
+  const own = p.normal + p.shiny > 0;
+  const v = p.shiny && !p.normal ? "shiny" : "normal";
+  const onTeam = MK.membership(p.id, "normal").length + MK.membership(p.id, "shiny").length > 0;
+  const sel = SELECTED.includes(p.id);
+  const pw = own ? (power(p) ?? p.power) : null;
+  const teams = MK.memberBadges(p.id, "normal") + MK.memberBadges(p.id, "shiny");
+  const megas = M.megas.filter((m) => m.species === p.id).length;
+  return `<li class="cb-row${own ? "" : " unowned"}${sel ? " sel" : ""}">
+    <label class="cb-check"><span class="sr-only">Select ${esc(p.name)}</span><input type="checkbox"${sel ? " checked" : ""}${!own || onTeam ? " disabled" : ""}${onTeam ? ' title="On a team: remove it first"' : ""}></label>
+    <span class="cb-no d">#${String(p.id).padStart(4, "0")}</span>
+    <img src="${sprite(p.id, v)}" alt="" loading="lazy">
+    <span class="cb-name"><b>${esc(p.name)}${megas ? `<span class="cb-chip" title="Mega forms (not separate Pokédex entries)">+${megas} Mega</span>` : ""}</b>
+      <span class="ph">#${String(p.id).padStart(4, "0")} · ${own ? `Lv ${p.level}` : "Not caught"}</span>
+      <span class="types d">${typeChips(p.types)}</span></span>
+    <span class="d">${tierPill(p.tier)}</span>
+    <span class="cb-own cb-right">${own ? `×${p.normal}${p.shiny ? ` <span class="s">✦${p.shiny}</span>` : ""}` : "—"}<span class="ph">${teams || ""}</span></span>
+    <span class="d">${own ? `Lv ${p.level}` : ""}</span>
+    <span class="d">${pw ?? ""}</span>
+    <span class="cb-teams d">${teams}</span>
+    <button type="button" class="mk-ib" aria-expanded="${p.id === 6}" aria-label="${esc(p.name)} details">${icon(p.id === 6 ? "up" : "down")}</button>
+    ${p.id === 6 ? expand() : ""}
+  </li>`;
+}
+
+function expand() {
+  const d = M.detail[6];
+  const s = d.stats;
+  return `<div class="cb-exp">
+    <div class="stage"><img src="${sprite(6)}" alt="Charizard"></div>
+    <div><h3>Your copies</h3><p>Normal ×1 · Lv 58 · <span class="mk-mem mk-mem--display">D1</span> <span class="mk-mem mk-mem--battle">B1</span> <span class="mk-sub">as Mega Charizard X</span></p><p><span style="color:var(--cc-gold)">Shiny</span> ×1 · Lv 36 <span class="mk-sub">· not on a team</span></p>
+      <h3 style="margin-top:10px">Forms</h3><p>Mega Charizard X <span class="mk-sub">unlocked</span> · Mega Charizard Y <span class="mk-sub">needs its stone</span></p>
+      <div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="cc-btn">Donate shiny</button><button type="button" class="cc-btn cc-btn--primary">Add to a team</button></div></div>
+    <div><h3>Stats at Lv 58 (normal copy)</h3><div class="cb-kv"><div><span>HP</span>${s.hp}</div><div><span>Atk</span>${s.atk}</div><div><span>Def</span>${s.def}</div><div><span>SpA</span>${s.spa}</div><div><span>SpD</span>${s.spd}</div><div><span>Spe</span>${s.spe}</div></div>
+      <h3 style="margin-top:10px">Battle moves</h3><p>${d.moves.map((m) => esc(m.name)).join(" · ")}</p></div>
+  </div>`;
+}
+
+main.innerHTML = `
+<div class="cb-top"><label class="sr-only" for="q">Search</label><input id="q" type="search" placeholder="Search name or #…">
+  <div class="mk-seg" role="group" aria-label="Mode"><button type="button" aria-pressed="false">Browse</button><button type="button" aria-pressed="false">Evolve</button><button type="button" aria-pressed="true">Donate</button><button type="button" aria-pressed="false">Convert</button></div>
+  <button type="button" class="cc-btn">${icon("filter")}Filters · Kanto</button>
+  <select aria-label="Sort"><option>Sort: Pokédex #</option></select></div>
+<p class="mk-note">${icon("info")}Donate mode: tick Pokémon to donate. Pokémon on either team can’t be ticked (the server already refuses to donate a team member).</p>
+<section class="cb-sec" aria-label="Kanto">
+  <div class="cb-sechead"><h2>Kanto</h2><span>${kantoOwned}/151</span><span class="bar"><i style="width:${Math.round((kantoOwned / 151) * 100)}%"></i></span><button type="button" class="mk-ib" aria-label="Collapse Kanto" aria-expanded="true">${icon("up")}</button></div>
+  <ul class="cb-list">
+    <li class="cb-head" aria-hidden="true"><span></span><span>#</span><span></span><span>Pokémon</span><span>Rarity</span><span>Owned</span><span>Level</span><span>Power</span><span>Teams</span><span></span></li>
+    ${M.dex.slice(0, 26).map(row).join("")}
+  </ul>
+</section>
+<div class="cb-bulk" role="region" aria-label="Selection"><p>3 selected <small>Caterpie ×1 · Pidgey ×1 · Rattata ×1</small></p><button type="button" class="cc-btn">Clear</button><button type="button" class="cc-btn cc-btn--primary">Donate 3</button></div>`;
+</script>
+</body>
+</html>

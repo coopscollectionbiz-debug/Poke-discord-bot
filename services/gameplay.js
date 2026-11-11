@@ -205,7 +205,7 @@ export function createGameplayHandlers(deps) {
         normalizeUserSchema(id, user);
         if (getQuantity(user, "evolution_stone") < cost) return { ok: false, error: "Not enough Evolution Stones." };
         if (isDisplayedVariant(user, bId, chosenVariant)) {
-          return { ok: false, error: `You can’t evolve your ${chosenVariant} ${base.name} because it’s currently displayed on your team. Remove it from your team first.` };
+          return { ok: false, error: `You can’t evolve your ${chosenVariant} ${base.name} because it’s on one of your teams (Display or Battle). Remove it from that team first.` };
         }
         if ((user.pokemon?.[bId]?.[chosenVariant] || 0) <= 0) {
           return { ok: false, error: `You do not own a ${chosenVariant === "shiny" ? "shiny " : ""}${base.name}.` };
@@ -274,7 +274,7 @@ export function createGameplayHandlers(deps) {
       mutate: (user) => {
         normalizeUserSchema(id, user);
         if (isDisplayedVariant(user, pid, "normal")) {
-          return { ok: false, error: `You can’t convert ${p.name} to shiny because its normal variant is currently displayed on your team. Remove it from your team first.` };
+          return { ok: false, error: `You can’t convert ${p.name} to shiny because its normal variant is on one of your teams (Display or Battle). Remove it from that team first.` };
         }
         // Check ownership BEFORE touching user.pokemon (a refused conversion
         // used to leave an empty {normal:0, shiny:0} entry behind).

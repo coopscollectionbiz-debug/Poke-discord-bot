@@ -5,6 +5,8 @@
 // All text is inserted with textContent, never as HTML.
 // ==========================================================
 
+import { showExpired, toast } from "/public/shared/shell.js";
+
 const params = new URLSearchParams(window.location.search);
 const userId = params.get("id");
 const $ = (id) => document.getElementById(id);
@@ -15,16 +17,6 @@ function el(tag, cls, text) {
   if (cls) e.className = cls;
   if (text != null) e.textContent = text;
   return e;
-}
-
-function nav() {
-  if (!userId) return;
-  const go = (path) => () => (window.location.href = `${path}?id=${encodeURIComponent(userId)}`);
-  $("goPokemon").onclick = go("/public/picker-pokemon/");
-  $("goTrainers").onclick = go("/public/picker/");
-  $("goShop").onclick = go("/public/dashboardshop/");
-  $("goBag").onclick = go("/public/bag/");
-  $("goAchievements").onclick = go("/public/achievements/");
 }
 
 function newRequestId() {
@@ -44,6 +36,21 @@ function rewardLine(r) {
   return `🎁 ${parts.join(", ")} · ${state}`;
 }
 
+// Ranked and casual battles are shown separately (owner decision); everything
+// else is "Collection & more". Client-side over the loaded list.
+let group = "all";
+const GROUP_OF = (cat) => (cat === "battle" ? "ranked" : cat === "casual" ? "casual" : "other");
+
+function renderGroups() {
+  for (const b of document.querySelectorAll("#achGroups [data-group]")) {
+    const g = b.dataset.group;
+    const ready = data ? data.achievements.filter((r) => r.claimable && (g === "all" || GROUP_OF(r.category) === g)).length : 0;
+    b.setAttribute("aria-pressed", String(g === group));
+    b.dataset.ready = ready ? String(ready) : "";
+    b.title = ready ? `${ready} reward${ready > 1 ? "s" : ""} ready` : "";
+  }
+}
+
 function render() {
   const grid = $("achGrid");
   grid.replaceChildren();
@@ -57,19 +64,27 @@ function render() {
     summary.append(chip);
   }
 
+  renderGroups();
   const f = $("achFilter").value;
   const list = data.achievements.filter(
-    (r) => f === "all" || (f === "unlocked" && r.unlocked) || (f === "locked" && !r.unlocked) || (f === "claimable" && r.claimable)
+    (r) => (group === "all" || GROUP_OF(r.category) === group)
+      && (f === "all" || (f === "unlocked" && r.unlocked) || (f === "locked" && !r.unlocked) || (f === "claimable" && r.claimable))
   );
   $("achStatus").textContent = list.length ? `${list.length} achievement${list.length === 1 ? "" : "s"}` : "Nothing to show here.";
 
   for (const r of list) {
-    const card = el("div", `shop-item bag-item ach-card${r.unlocked ? "" : " locked"}`);
+    const card = el("div", `shop-item bag-item ach-card${r.unlocked ? " unlocked" : " locked"}`);
     card.append(el("h3", null, `${r.unlocked ? "✅" : r.hidden ? "❔" : "🔒"} ${r.name}`));
     card.append(el("p", "tier", r.ap == null ? r.tierName : `${r.tierName} · ${r.ap} AP`));
     card.append(el("p", "desc", r.description));
     if (r.progress && !r.unlocked) {
       const wrap = el("div", "ach-bar");
+      const pctDone = Math.round((100 * r.progress.value) / Math.max(1, r.progress.target));
+      wrap.setAttribute("role", "progressbar");
+      wrap.setAttribute("aria-valuemin", "0");
+      wrap.setAttribute("aria-valuemax", "100");
+      wrap.setAttribute("aria-valuenow", String(Math.min(100, pctDone)));
+      wrap.setAttribute("aria-label", `${r.name}: ${Math.min(100, pctDone)}% complete`);
       const fill = el("span");
       fill.style.width = `${Math.round((100 * r.progress.value) / Math.max(1, r.progress.target))}%`;
       wrap.append(fill);
@@ -105,11 +120,13 @@ async function claim(achievementId, button) {
   }
   if (!res.ok || !body.success) {
     button.disabled = false;
-    $("achStatus").textContent = body.error || "Could not claim this reward.";
+    if (res.status === 403) showExpired();
+    $("achStatus").textContent = res.status === 403 ? "" : body.error || "Could not claim this reward.";
     return;
   }
   await load(false);
   $("achStatus").textContent = body.saveNotice ? `Reward claimed. ${body.saveNotice}` : "Reward claimed!";
+  toast("Reward claimed!", { tone: "success" });
 }
 
 async function load(resetStatus = true) {
@@ -124,7 +141,8 @@ async function load(resetStatus = true) {
   }
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.success) {
-    $("achStatus").textContent = res.status === 403 ? "Your session expired. Open a new link with /dashboard in Discord." : body.error || "Could not load achievements.";
+    if (res.status === 403) showExpired();
+    $("achStatus").textContent = res.status === 403 ? "" : body.error || "Could not load achievements.";
     return;
   }
   const select = $("achCategory");
@@ -139,11 +157,16 @@ async function load(resetStatus = true) {
   render();
 }
 
-nav();
 if (!userId) {
-  $("achStatus").textContent = "Missing player id. Open the dashboard from Discord with /dashboard.";
+  $("achStatus").textContent = ""; // the shared shell shows the missing-link banner
 } else {
   $("achCategory").onchange = () => load();
   $("achFilter").onchange = render;
+  document.getElementById("achGroups").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-group]");
+    if (!b) return;
+    group = b.dataset.group;
+    render();
+  });
   load();
 }

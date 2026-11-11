@@ -31,6 +31,7 @@ export const spritePaths = {
   // Trainer sprites
   trainers: '/public/sprites/trainers_2/',
   trainersGray: '/public/sprites/trainers_2/grayscale/',
+  trainersIdle: '/public/sprites/trainers_idle/',
 
   // Type icons (1–17)
   types: '/public/sprites/types/',

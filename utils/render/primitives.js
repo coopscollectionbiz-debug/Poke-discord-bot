@@ -290,3 +290,18 @@ export function drawAlertBubble(ctx, x, y, scale) {
     }
   }
 }
+
+/**
+ * The MEGA indicator, one look on every image (Mega colour, ink text). Drawn
+ * only for a slot that really is a Mega (teamView/megaDisplay decide).
+ * `align: "right"` makes x the right edge. Returns the tag width.
+ */
+export function drawMegaTag(ctx, x, y, { h = 26, size = 15, align = "left", muted = false } = {}) {
+  ctx.font = font(size, 800);
+  const w = Math.ceil(ctx.measureText("MEGA").width) + h;
+  drawTag(ctx, "MEGA", align === "right" ? x - w : x, y, { fill: muted ? "#7d8396" : COLOR.mega, color: COLOR.ink, h, size });
+  return w;
+}
+
+/** National Pokédex number as shown on every card: "#0613". */
+export const dexNo = (id) => `#${String(Number(id)).padStart(4, "0")}`;

@@ -20,6 +20,11 @@
 //
 // Rollback: production v21 rebuilds every slot as { id, variant }, so the
 // extra field simply disappears and the slot battles as the base form.
+//
+// TM system (phase T1): a slot may also carry `uid`, naming one customized
+// (TM-trained) copy of that line (services/ownership.js). It is kept only
+// when the record exists for that exact line; no uid = a plain copy, as
+// before. Lines stay unique per team, so a team holds at most one copy.
 // ==========================================================
 
 import { toTeamObj } from "../utils/economyRules.js";
@@ -27,6 +32,7 @@ import { normalizeTeam } from "../utils/teamNormalize.js";
 import { getMega, megaFormGate, megaBattleEligibility, megaBattleProfile, MEGA_ID_PATTERN } from "../utils/megas.js";
 import { unlockedForms, megaLineKey } from "./megaUnlocks.js";
 import { isMegaCapabilityEnabled } from "../config/features.js";
+import { slotCopyUid } from "./ownership.js";
 
 const fail = (status, error, code) => ({ ok: false, status, error, code });
 
@@ -62,7 +68,9 @@ export function normalizeDisplayedTeam(user) {
     .map((t) => {
       const slot = { id: Number(t?.id), variant: t?.variant === "shiny" ? "shiny" : "normal" };
       const mega = megaFieldOf(t);
-      return mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
+      const uid = slotCopyUid(user, { ...slot, uid: t?.uid });
+      const out = mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
+      return uid ? { ...out, uid } : out;
     })
     .filter((t) => Number.isInteger(t.id))
     .filter((t) => {
@@ -94,11 +102,20 @@ export function prepareTeamSelection(user, rawTeam, { env = process.env } = {}) 
     const slot = toTeamObj(entry);
     if (!slot) continue;
     const hasMegaKey = entry && typeof entry === "object" && !Array.isArray(entry) && entry.mega !== undefined && entry.mega !== null;
+    let out = slot;
     if (hasMegaKey) {
       const mega = megaFieldOf(entry);
       if (!mega) return fail(400, "Invalid Mega form.", "bad_mega");
-      parsed.push({ ...slot, mega });
-    } else parsed.push(slot);
+      out = { ...slot, mega };
+    }
+    // TM system: a named customized copy must exist for this exact line.
+    const hasUidKey = entry && typeof entry === "object" && !Array.isArray(entry) && entry.uid !== undefined && entry.uid !== null;
+    if (hasUidKey) {
+      const uid = slotCopyUid(user, { ...slot, uid: entry.uid });
+      if (!uid) return fail(400, "That Pokémon copy no longer exists. Reload and try again.", "unknown_copy");
+      out = { ...out, uid };
+    }
+    parsed.push(out);
   }
 
   const megaSlots = parsed.filter((s) => s.mega);

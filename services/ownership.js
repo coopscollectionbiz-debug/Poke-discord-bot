@@ -25,8 +25,11 @@
 // ==========================================================
 
 import { carryLevel, resetLevelIfGone } from "../utils/training.js";
+import { getSpeciesEntry } from "../utils/speciesCatalog.js";
 
 const VARIANTS = new Set(["normal", "shiny"]);
+/** Server-generated customized-copy ids: "c_" + 10 base62 characters. */
+export const CUSTOM_UID_PATTERN = /^c_[A-Za-z0-9]{10}$/;
 const fail = (code, error, extra = {}) => ({ ok: false, code, error, ...extra });
 
 const countOf = (user, id, variant) => {
@@ -209,4 +212,121 @@ export function ownershipProblems(user) {
     if (n > owned) out.push(`${k} ${n} custom > ${owned} owned`);
   }
   return out;
+}
+
+// ==========================================================
+// Phase T1: customized-copy records in teams and normalization
+// ==========================================================
+
+/**
+ * The customized copy a team slot points at, or null. A slot's `uid` counts
+ * only when the record exists, is not suspended and belongs to the slot's
+ * exact line (species + variant). Read-only.
+ */
+export function slotCopyUid(user, slot) {
+  const uid = slot && typeof slot === "object" ? slot.uid : undefined;
+  if (typeof uid !== "string" || !CUSTOM_UID_PATTERN.test(uid)) return null;
+  const c = user?.customPokemon?.[uid];
+  if (!c || c.suspended) return null;
+  return Number(c.speciesId) === Number(slot.id) && c.variant === (slot.variant === "shiny" ? "shiny" : "normal") ? uid : null;
+}
+
+function quarantine(user, key, value, reason) {
+  if (!Array.isArray(user.customPokemonLegacy)) user.customPokemonLegacy = [];
+  let json;
+  try { json = JSON.stringify(value) ?? String(value); } catch { json = String(value); }
+  if (user.customPokemonLegacy.some((e) => e && e.key === key && e.reason === reason && e.value === json)) return;
+  user.customPokemonLegacy.push({ key: String(key), value: json, reason, at: new Date().toISOString() });
+}
+
+/**
+ * IN PLACE, idempotent. Never creates the field, never deletes a valid
+ * record, never changes Pokémon counts (docs/tm-system TM-DATA-MIGRATION §3):
+ *   1. field absent → nothing; not a plain object → quarantined, removed
+ *   2. malformed records → quarantined (customPokemonLegacy), not deleted
+ *   3. invariant I-1: when a line has more records than copies (only after a
+ *      rollback to code without this service), the NEWEST excess records are
+ *      marked suspended; when copies come back, they are restored
+ *   4. team slots keep `uid` only when slotCopyUid() accepts it
+ *   5. per-copy movesets ("u:<uid>") whose record is gone are dropped
+ * @returns {{ changed: boolean, quarantined: number, suspended: number, restored: number }}
+ */
+export function normalizeCustomPokemon(user) {
+  const res = { changed: false, quarantined: 0, suspended: 0, restored: 0 };
+  if (!user || typeof user !== "object") return res;
+
+  if ("customPokemon" in user) {
+    const all = user.customPokemon;
+    if (!all || typeof all !== "object" || Array.isArray(all)) {
+      quarantine(user, "(customPokemon)", all, "customPokemon was not an object");
+      delete user.customPokemon;
+      res.quarantined++;
+      res.changed = true;
+    } else {
+      for (const [key, c] of Object.entries(all)) {
+        const why =
+          !CUSTOM_UID_PATTERN.test(key) ? "bad uid"
+          : !c || typeof c !== "object" || Array.isArray(c) ? "record was not an object"
+          : c.uid !== key ? "uid does not match its key"
+          : !Number.isInteger(c.speciesId) || !getSpeciesEntry(c.speciesId) ? "unknown species"
+          : !VARIANTS.has(c.variant) ? "bad variant"
+          : !Array.isArray(c.tmMoves) || c.tmMoves.some((m) => typeof m !== "string" || m.length > 40) ? "bad tmMoves"
+          : null;
+        if (why) {
+          quarantine(user, key, c, why);
+          delete all[key];
+          res.quarantined++;
+          res.changed = true;
+          continue;
+        }
+        const moves = [...new Set(c.tmMoves)];
+        if (moves.length !== c.tmMoves.length) { c.tmMoves = moves; res.changed = true; }
+        if (!Number.isInteger(c.rev) || c.rev < 0) { c.rev = 0; res.changed = true; }
+        if (!Array.isArray(c.history)) { c.history = []; res.changed = true; }
+      }
+
+      // 3. I-1 per line: oldest records keep their copies first.
+      const lines = new Map();
+      for (const c of Object.values(all)) {
+        const k = `${c.speciesId}:${c.variant}`;
+        if (!lines.has(k)) lines.set(k, []);
+        lines.get(k).push(c);
+      }
+      for (const [k, recs] of lines) {
+        const [id, variant] = k.split(":");
+        let room = countOf(user, id, variant);
+        recs.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0) || a.uid.localeCompare(b.uid));
+        for (const c of recs) {
+          if (room > 0) {
+            room--;
+            if (c.suspended === "invariant") { delete c.suspended; res.restored++; res.changed = true; }
+          } else if (!c.suspended) {
+            c.suspended = "invariant";
+            res.suspended++;
+            res.changed = true;
+          }
+        }
+      }
+      if (Object.keys(all).length === 0) { delete user.customPokemon; res.changed = true; }
+    }
+  }
+
+  // 4. team slots: keep a uid only when it is valid for that slot.
+  for (const field of ["displayedPokemon", "battleTeam"]) {
+    if (!Array.isArray(user[field])) continue;
+    for (const slot of user[field]) {
+      if (slot && typeof slot === "object" && "uid" in slot && !slotCopyUid(user, slot)) {
+        delete slot.uid;
+        res.changed = true;
+      }
+    }
+  }
+  // 5. per-copy movesets without a record.
+  for (const team of Object.values(user.movesets ?? {})) {
+    if (!team || typeof team !== "object") continue;
+    for (const k of Object.keys(team)) {
+      if (k.startsWith("u:") && !user.customPokemon?.[k.slice(2)]) { delete team[k]; res.changed = true; }
+    }
+  }
+  return res;
 }

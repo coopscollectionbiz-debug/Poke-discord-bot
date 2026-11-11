@@ -25,6 +25,8 @@ import { RANKED } from "./tuning.js";
 import { chosenMoves } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
+import { toTeamObj } from "../economyRules.js";
+import { slotCopyUid } from "../../services/ownership.js";
 
 // Locks both players in a fixed (ascending id) order so two battles between
 // the same pair, started from either side, can't deadlock.
@@ -40,9 +42,18 @@ export function withBothLocks(lockUser, idA, idB, fn) {
 // stay the base line's, so EXP, Levels and ownership never see the Mega.
 // movesetTeam: whose chosen movesets apply ("display" for casual battles and
 // displays, "battle" for ranked/wager). Members without one use automatic moves.
+// TM system (T1): a slot naming a customized copy (`uid`, services/ownership.js)
+// fights with that copy's moves (its TM moves included); the member carries
+// `uid`. Slots without one are built exactly as before.
 export function buildTeam(user, { env = process.env, team = user.displayedPokemon, movesetTeam = "display" } = {}) {
   const mega = resolveBattleMega(user, { env, team });
   if (mega && !mega.ok && isMegaCapabilityEnabled("battle", env)) console.warn(`⚠️ Mega slot battles as its base form (${mega.reason}).`);
+  const uids = new Map();
+  for (const entry of Array.isArray(team) ? team : []) {
+    const t = toTeamObj(entry);
+    if (!t || uids.has(`${t.id}:${t.variant}`)) continue;
+    uids.set(`${t.id}:${t.variant}`, slotCopyUid(user, { ...t, uid: entry?.uid }));
+  }
   return normalizeTeam(team, 6)
     .filter((slot) => (user.pokemon?.[slot.id]?.[slot.variant] ?? 0) > 0)
     .map((slot) => {
@@ -52,7 +63,9 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
         name: speciesName(slot.id),
         level: getTraining(user, slot.id, slot.variant).level,
       };
-      const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant);
+      const uid = uids.get(`${slot.id}:${slot.variant}`) ?? null;
+      if (uid) member.uid = uid;
+      const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant, { uid });
       if (moves) member.moves = moves;
       if (!mega?.ok || mega.key !== `${slot.id}:${slot.variant}`) return member;
       return { ...member, name: mega.profile.name, baseName: member.name, megaForm: mega.formId, battleProfile: mega.profile };

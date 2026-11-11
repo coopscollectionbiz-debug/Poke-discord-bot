@@ -199,9 +199,32 @@ section("Reliability");
 }
 
 section("Generation independence");
+assertTrue(!megaBattleEligibility("mega-greninja", { env: ON }).battleReady, "Gen 6 not live: Mega Greninja can't battle");
 G.setGenerationsForTesting([6]); C.resetCatalogCachesForTesting();
-assertTrue(!megaBattleEligibility("mega-greninja", { env: ON }).battleReady, "releasing Gen 6 doesn't make an unverified Z-A Mega (Greninja) battle-ready");
+const gren = megaBattleEligibility("mega-greninja", { env: ON });
+assertTrue(gren.battleReady && gren.profileConfidence === "accepted" && !gren.abilityVerified, "Gen 6 live: Mega Greninja battles with its owner-accepted Z-A profile (still reported as unverified data)");
+assertTrue(!megaBattleEligibility("mega-zeraora", { env: ON }).battleReady, "Gen 7 not live: Mega Zeraora still can't battle");
 G.setGenerationsForTesting(null); C.resetCatalogCachesForTesting();
+
+section("Gen 6–9 Z-A Megas (owner-accepted profiles) run in the engine");
+const allGens = { env: ON, generationLive: () => true };
+const accepted = Object.values((await import("../data/pokedex/megas.json", { with: { type: "json" } })).default.forms)
+  .filter((f) => f.species >= 650 && !f.battleProfile.verified && megaBattleEligibility(f.id, allGens).battleReady);
+assertEqual(accepted.length, 22, "22 Gen 6–9 Z-A forms can battle once their generations are live");
+assertTrue(!["mega-floette", "mega-zygarde", "mega-magearna-original"].some((id) => megaBattleEligibility(id, allGens).battleReady), "Floette, Zygarde and Original Color Magearna stay blocked");
+assertTrue(["mega-dragonite", "mega-starmie", "mega-raichu-x", "mega-garchomp-z", "mega-emboar"].every((id) => !megaBattleEligibility(id, allGens).battleReady), "Z-A Megas of Gen 1–5 Pokémon stay out of battle");
+let engineOk = true;
+for (const f of accepted) {
+  for (const foe of [143, 6, 248]) {
+    for (let seed = 1; seed <= 5; seed++) {
+      const r = simulateBattle({ sides: [{ members: [{ speciesId: f.species, level: 50, name: f.name, battleProfile: megaBattleProfile(f.id) }] }, { members: [{ speciesId: foe, level: 50, name: `#${foe}` }] }], seed, surge: null });
+      if (!(r.winner === 0 || r.winner === 1) || !(r.turns > 0)) engineOk = false;
+    }
+  }
+}
+assertTrue(engineOk, `every accepted form finishes 15 battles (3 foes × 5 seeds) with a winner (${accepted.length * 15} battles)`);
+const mirror = simulateBattle({ sides: [{ members: accepted.slice(0, 6).map((f) => ({ speciesId: f.species, level: 50, name: f.name, battleProfile: megaBattleProfile(f.id) })) }, { members: accepted.slice(6, 12).map((f) => ({ speciesId: f.species, level: 50, name: f.name, battleProfile: megaBattleProfile(f.id) })) }], seed: 9, surge: null });
+assertTrue(mirror.winner === 0 || mirror.winner === 1, "a six-against-six battle of accepted Megas finishes");
 
 console.warn = quietWarn;
 finish();

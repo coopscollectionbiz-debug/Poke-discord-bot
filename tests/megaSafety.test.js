@@ -40,8 +40,9 @@ const allOn = { MEGA_EVOLUTION_ENABLED: "1", MEGA_FORMS: "all" };
 assertTrue(MEGAS.every((f) => !M.isMegaAvailable(f.id, { env: {} })), "flag off: no form available");
 assertTrue(MEGAS.every((f) => !M.isMegaAvailable(f.id, { env: allOn, generationLive: () => true })), "M2: master flag on but MEGA_BATTLES_ENABLED unset: no form available for battle");
 const battlesOn = { ...allOn, MEGA_BATTLES_ENABLED: "1" };
-assertEqual(MEGAS.filter((f) => M.isMegaAvailable(f.id, { env: battlesOn, generationLive: () => true })).length, 47, "M2: with battles explicitly on, exactly the 47 verified, unblocked X/Y/ORAS forms are battle-available (all generations live)");
-assertTrue(MEGAS.filter((f) => !f.battleProfile.verified).every((f) => !M.isMegaAvailable(f.id, { env: battlesOn, generationLive: () => true })), "unverified Legends: Z-A forms are never battle-available");
+assertEqual(MEGAS.filter((f) => M.isMegaAvailable(f.id, { env: battlesOn, generationLive: () => true })).length, 69, "with battles explicitly on and all generations live: the 47 verified X/Y/ORAS forms plus the 22 owner-accepted Gen 6–9 Z-A forms");
+assertTrue(MEGAS.filter((f) => !f.battleProfile.verified && f.species < 650).every((f) => !M.isMegaAvailable(f.id, { env: battlesOn, generationLive: () => true })), "Z-A Megas of Gen 1–5 Pokémon are never battle-available");
+assertEqual(MEGAS.filter((f) => M.isMegaAvailable(f.id, { env: battlesOn })).length, 46, "with today's live generations (1–5) the battle set is unchanged: 46 forms");
 assertTrue(M.megaAvailability("mega-greninja", { env: allOn }).reasons.some((r) => /generation 6 is not live/.test(r)), "an unreleased generation is reported as its own reason");
 
 section("Generation controls are independent of Mega flags");

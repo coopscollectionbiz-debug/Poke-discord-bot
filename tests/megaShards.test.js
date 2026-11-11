@@ -52,7 +52,13 @@ assertEqual(S.shopStones({ env: { ...ON, MEGA_BATTLES_ENABLED: "0" } }).length, 
 assertEqual(S.shopStones({ env: { ...ON, MEGA_FORMS: "mega-charizard-x,mega-lucario" } }).map((s) => s.id), ["megastone_charizarditex", "megastone_lucarionite"], "MEGA_FORMS limits the shop to the allowlisted forms");
 G.setGenerationsForTesting([6]); C.resetCatalogCachesForTesting();
 const gen6 = S.shopStones({ env: ON });
-assertTrue(gen6.some((s) => s.id === "megastone_diancite" && s.special && s.price === 50) && gen6.length === 47, "Gen 6 live: Diancite joins at the Legendary price (47 stones)");
+assertTrue(gen6.some((s) => s.id === "megastone_diancite" && s.special && s.price === 50) && gen6.length === 56, "Gen 6 live: Diancite (Legendary price) and 9 Z-A Gen 6 stones join (56 stones)");
+assertTrue(gen6.some((s) => s.id === "megastone_meowsticite" && s.forms.length === 2) && !gen6.some((s) => ["megastone_floettite", "megastone_zygardite"].includes(s.id)), "Meowsticite lists both genders; Floettite and Zygardite stay out");
+G.setGenerationsForTesting([6, 7, 8, 9]); C.resetCatalogCachesForTesting();
+const gen69 = S.shopStones({ env: ON });
+assertEqual(gen69.length, 66, "all generations live: 66 stones");
+assertEqual(gen69.filter((s) => s.species >= 650 && s.special).map((s) => s.id).sort(), ["megastone_diancite", "megastone_magearnite", "megastone_zeraorite"], "Gen 6–9 Mythical stones at 50: Diancite, Magearnite, Zeraorite");
+assertTrue(gen69.find((s) => s.id === "megastone_magearnite").forms.map((f) => f.id).join() === "mega-magearna", "Magearnite advertises only the standard Mega");
 G.setGenerationsForTesting(null); C.resetCatalogCachesForTesting();
 
 // ------------------------------------------------------------------

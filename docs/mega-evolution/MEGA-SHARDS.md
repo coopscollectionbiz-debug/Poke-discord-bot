@@ -24,7 +24,20 @@ Most Megas also need the final evolution first; Charizard alone is 13 Evolution 
 
 ## Spending shards
 
-The dashboard Shop has a Mega Evolution section that sells **only stones whose Mega can battle**. A stone is listed only if at least one of its forms passes the battle-eligibility rule (`megaBattleEligibility`): a verified profile, a modelled ability, a sprite, a live generation and `MEGA_FORMS`. That's 46 stones while Gens 1–5 are live; Diancite joins when Gen 6 goes live. Pausing Mega battles (`MEGA_BATTLES_ENABLED=0`) doesn't empty the shop.
+The dashboard Shop has a Mega Evolution section that sells **only stones whose Mega can battle**. A stone is listed only if at least one of its forms passes the battle-eligibility rule (`megaBattleEligibility`): a verified profile, a modelled ability, a sprite, a live generation and `MEGA_FORMS`. That's 46 stones while Gens 1–5 are live, and 66 once Gens 6–9 are live. Pausing Mega battles (`MEGA_BATTLES_ENABLED=0`) doesn't empty the shop.
+
+### Gen 6–9 Megas (owner decision 2026-11-11)
+
+Most Gen 6–9 Megas debuted in Legends: Z-A, which has no abilities in play, so `megas.json` marks their battle profile "unverified" (stats and types from Z-A; ability from Pokémon Showdown's "Future" data). The owner accepted those profiles for **Gen 6–9 Pokémon** (`config/megaBattleProfiles.js`), so these Megas battle and are sold as soon as their generation goes live. Every ability involved is already modelled by the battle engine.
+
+| Generation | Stones that join the shop when it goes live |
+|---|---|
+| 6 | Chesnaughtite, Delphoxite, Greninjite, Pyroarite, Meowsticite (M/F), Malamarite, Barbaracite, Dragalgite, Hawluchanite, Diancite (Mythical, 50) |
+| 7 | Crabominite, Golisopite, Drampanite, Magearnite (Mythical, 50), Zeraorite (Mythical, 50) |
+| 8 | Falinksite |
+| 9 | Scovillainite, Glimmoranite, Tatsugirinite (3 appearances), Baxcalibrite |
+
+Still blocked: Mega Floette (needs Floette-Eternal), Mega Zygarde (needs Complete Forme; no sprite) and Original Color Mega Magearna. Z-A Megas of **Gen 1–5** Pokémon (e.g. Mega Dragonite, Mega Starmie, Mega Raichu X/Y) are not accepted and stay out of battle and the shop.
 
 | Stone | Price |
 |---|---|

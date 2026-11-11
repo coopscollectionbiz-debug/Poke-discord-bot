@@ -75,7 +75,7 @@ assertEqual(megaSpritePath("mega-charizard-x", true), "/public/sprites/pokemon/m
 
 section("Species sprite manifest pinned");
 const norm = (rel) => sha("sha256", fs.readFileSync(new URL(rel, import.meta.url), "utf8").replace(/\r\n/g, "\n"));
-// Pinned after the breathing idle for static sprites (tools/generate-pokemon-idles.mjs); only that tool changes it.
-assertEqual(norm("../data/sprites/sprites.json"), "de22fb9b1e91b667faaf6e3e1842e76e68a8f9514d8a76f11c59f6f235a2ca82", "data/sprites/sprites.json unchanged since the breathing-idle build");
+// Pinned after the idle for static sprites (rig idle + blinks, tools/generate-pokemon-idles.mjs); only that tool changes it.
+assertEqual(norm("../data/sprites/sprites.json"), "6777d77cfe50524f6c727d7cf3e634c1143ee8104a0ffd58495745ef5ea95324", "data/sprites/sprites.json unchanged since the rig idle build");
 
 finish();

@@ -3,6 +3,7 @@
  "seamOk": 11,
  "minHeight": 20,
  "breathing": 234,
+ "blinking": 58,
  "still": 0,
  "review": [],
  "excluded": []

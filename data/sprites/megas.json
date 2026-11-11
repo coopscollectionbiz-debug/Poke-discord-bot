@@ -483,11 +483,11 @@
    "normal": {
     "file": "normal/mega-slowbro.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 6,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "45797b06c22b12b61f8067937008b3b0c478d8f2",
-    "fileSha256": "28908cabfbb1201e334b009f3ee32a880517412c61f2289e1020a341e752c8ae",
+    "fileSha1": "77a2242f66b330f19baa21f350c71ce79c332cf6",
+    "fileSha256": "94141142a07d8cecaccc84d399d1c8e01a270938f210c19908f0b19d2db972d3",
     "firstFrameSha1": "7a449e6123fd698103bfef2318d7d3550c674788",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/slowbro-mega.png",
@@ -499,11 +499,11 @@
    "shiny": {
     "file": "shiny/mega-slowbro.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 6,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "6c0009d6911a5b7ed2e9b3e1b3dcefe42fd439bd",
-    "fileSha256": "a390b63ab29c330e0c5db0c6d14a2b1f0ceaf2b7d395a35871e692c524124de2",
+    "fileSha1": "ac56c16b0a6225e26661e561424d06435cea96f7",
+    "fileSha256": "88de94db6e7a59be8868f2791715f212486b091ec3a561de373075ecdc69b465",
     "firstFrameSha1": "a0ed87562e698667ee833341bd9a4f1614666c50",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/slowbro-mega.png",
@@ -514,8 +514,8 @@
    },
    "grayscale": {
     "file": "grayscale/mega-slowbro.gif",
-    "fileSha1": "f9057cf8be66bf9c6e51eb19ade3da59192b8155",
-    "fileSha256": "07f190f0669108cc72207cda08b7fb5032f334fc7fe33635aaad64ebde61de4c",
+    "fileSha1": "cf5cb0d3e0a4421e7e7dcc56e9cc837c8c72bb07",
+    "fileSha256": "52990b914c963775187900da32aaa1e756ce21a3eb160df32075846019730378",
     "motion": "breathing"
    }
   },
@@ -571,11 +571,11 @@
    "normal": {
     "file": "normal/mega-kangaskhan.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 6,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "69940ecb740c8beea3a09b0201af9c3b12671667",
-    "fileSha256": "d8d3a4b091240f2f3beb9db65bbac466e4c5712b176ce2e5a531e72237704170",
+    "fileSha1": "eae8ddc3da6d9bb1e4bbe5323a4fcc2b4f714b4d",
+    "fileSha256": "0ad9a7fc38adbbe56f91b18526d5785ab6000066671d3f1368d6fd283ff17114",
     "firstFrameSha1": "c1d851081e188538fd4295cff3e7c27be3c93d1e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/kangaskhan-mega.png",
@@ -587,11 +587,11 @@
    "shiny": {
     "file": "shiny/mega-kangaskhan.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 6,
     "size": "96x96",
     "colours": 15,
-    "fileSha1": "1a9e6e51ae7a7a40f73e133bfd8a8caa920e46fb",
-    "fileSha256": "94419223878d9dda47ee559b7bc2bbf928af5d9a0ab8b4ad6818d95c715f0e78",
+    "fileSha1": "d513d57abb0fed5d15a2350f51ef761cdf028306",
+    "fileSha256": "cab5c59b4a1c20147f5edbceb6c5855e068115971fcf487c42eb2a79ca1c4622",
     "firstFrameSha1": "17d34570949636dbe011b0932ca13b3942466b96",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/kangaskhan-mega.png",
@@ -602,8 +602,8 @@
    },
    "grayscale": {
     "file": "grayscale/mega-kangaskhan.gif",
-    "fileSha1": "aeb64765e6629daee2f8c6456fa022122e772df3",
-    "fileSha256": "078f21109d599d0de752ec2cbd4f71cfc3a4ed751ff161b21beddf183e365076",
+    "fileSha1": "712c0be1d3f4f5599f9bdefb7f6322de97f776d6",
+    "fileSha256": "bc57472c8ea4f5aabcc505f6b621f73f73534353b21b3365dbc933635e526f81",
     "motion": "breathing"
    }
   },

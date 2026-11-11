@@ -50,7 +50,7 @@ const keys = new Set(files.map((f) => f.key));
 const listed = [...Object.keys(BLINKS.blinks), ...Object.keys(BLINKS.noBlink)];
 assertEqual([...keys].filter((k) => !listed.includes(k)), [], "every static sprite is decided in pokemon-blinks.json (blink or a reason it doesn't)");
 assertEqual(listed.filter((k) => !keys.has(k)), [], "pokemon-blinks.json lists only static sprites");
-assertTrue(Object.values(BLINKS.blinks).every((rs) => rs.length >= 1 && rs.length <= 2 && rs.every(([x0, y0, x1, y1]) => x1 >= x0 && y1 >= y0 && x1 - x0 < 6 && y1 - y0 < 5)), "blinks: one or two eyes, each rect at most 6×5 px");
+assertTrue(Object.values(BLINKS.blinks).every((rs) => rs.length >= 1 && rs.length <= 2 && rs.every(([x0, y0, x1, y1]) => x1 >= x0 && y1 >= y0 && x1 - x0 < 10 && y1 - y0 < 8)), "blinks: one or two eyes, each rect at most 10×8 px (Scream Tail has the biggest)");
 
 // The expected loop for each sprite: the normal sprite's whole-body cut lines (shared by shiny and grayscale) and its blink.
 const REVIEW = read("../data/sprites/pokemon-idle-review.json");

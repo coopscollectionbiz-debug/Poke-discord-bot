@@ -17,7 +17,7 @@ const PROJECTS = [
   ["Smogon Sun/Moon Sprite Project", "https://www.smogon.com/forums/threads/sun-moon-sprite-project.3577711/", "Generation 7 Black/White-style sprites and animations. Led by Layell; leParagon."],
   ["Smogon Sprite Project (Generation 8 onward)", "https://www.smogon.com/forums/threads/smogon-sprite-project.3647722/", "Generation 8 and 9 Black/White-style sprites and animations. Led by G.E.Z.; leParagon."],
   ["Pokémon Showdown", "https://play.pokemonshowdown.com/sprites/", "Hosts the Smogon project sprites (gen5ani / gen5) and the type icons; credits at pokemonshowdown.com/credits."],
-  ["PokéAPI sprites", "https://github.com/PokeAPI/sprites", "Official Black/White sprites for #1–649, a mirror of the Smogon project sprites, and the official held-item bag icons (Pokémon games © Nintendo / Creatures / GAME FREAK)."],
+  ["PokéAPI sprites", "https://github.com/PokeAPI/sprites", "Official Black/White sprites for #1–649, a mirror of the Smogon project sprites, and the official held-item and Mega Stone bag icons (Pokémon games © Nintendo / Creatures / GAME FREAK)."],
 ];
 
 // Trainer sprites: artists of the community-drawn ones (data/sprites/trainer-credits.json,

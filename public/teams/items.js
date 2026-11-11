@@ -25,7 +25,14 @@ let lastFocus = null;
  * load, the emoji glyph is shown instead.
  */
 export function itemIcon(item, { size = "md", mega = false } = {}) {
-  if (mega) return `<span class="hi-icon hi-icon--${size} hi-icon--mega" aria-hidden="true">💎</span>`;
+  if (mega) {
+    // `mega` may be the slot's Mega Stone placeholder ({ icon, iconSmooth }) or just true.
+    const m = typeof mega === "object" ? mega : null;
+    const img = m?.icon
+      ? `<img class="hi-icon-img${m.iconSmooth ? " is-smooth" : ""}" src="${esc(m.icon)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('💎'))">`
+      : "💎";
+    return `<span class="hi-icon hi-icon--${size} hi-icon--mega" aria-hidden="true">${img}</span>`;
+  }
   if (!item) return `<span class="hi-icon hi-icon--${size} hi-icon--empty" aria-hidden="true">+</span>`;
   const glyph = esc(item.glyph ?? "•");
   const img = item.icon

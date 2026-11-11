@@ -121,7 +121,7 @@ utils/battle/sim.js               ±
 ## Remaining limitations (not done, or pending validation)
 
 1. **Production-like validation:** the dry run used the 2026-11-10 16:17 copy, which predates Battle teams. It must be rerun on a fresh copy before the deploy (rollout step 3). The UI was tested against the local preview, not the real bot process with Discord.
-2. **Item icons** are the official in-game bag icons, owner-approved and downloaded from the PokeAPI sprites repository into `public/sprites/items/held/` (33 PNGs, 18 KB). They are credited on `/credits`, and a test checks that every item has a valid file. Fairy Feather (Gen 9) only exists as a 160×160 HD icon, so it is scaled smoothly while the others stay pixel-crisp. Mega slots still show a 💎 glyph for the Mega Stone placeholder.
+2. **Item icons** are the official in-game bag icons, owner-approved and downloaded from the PokeAPI sprites repository into `public/sprites/items/held/` (33 PNGs, 18 KB). They are credited on `/credits`, and a test checks that every item has a valid file. Fairy Feather (Gen 9) only exists as a 160×160 HD icon, so it is scaled smoothly while the others stay pixel-crisp. Mega slots show the official icon of their Mega Stone (all 92 stones downloaded into `public/sprites/items/megastones/`, 330 KB; 45 Legends: Z-A-era stones are HD-only and scale smoothly).
 3. **Discord displays:**
    - battle replays show item activations through the existing notes;
    - `/inventory` lists held items;

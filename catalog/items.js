@@ -219,6 +219,18 @@ const ITEMS = [
 const MEGA_DATA = JSON.parse(fs.readFileSync(new URL("../data/pokedex/megas.json", import.meta.url), "utf8"));
 const MEGA_FORM_NAMES = Object.fromEntries(MEGA_DATA.forms.map((f) => [f.id, f.name]));
 export const MEGA_STONE_IDS = Object.freeze(MEGA_DATA.stones.map((s) => s.id));
+// Official Mega Stone icons: public/sprites/items/megastones/<id>.png (PokeAPI
+// sprites repository; see /credits). Classic stones are 30×30 pixel art; the
+// Legends: Z-A-era stones only exist as 160×160 HD icons (iconSmooth). A
+// missing file simply leaves the entry without an icon.
+function stoneIcon(id) {
+  try {
+    const b = fs.readFileSync(new URL(`../public/sprites/items/megastones/${id}.png`, import.meta.url));
+    return { icon: `items/megastones/${id}.png`, iconSmooth: b.readUInt32BE(16) > 30 };
+  } catch {
+    return { icon: null, iconSmooth: false };
+  }
+}
 for (const s of MEGA_DATA.stones) {
   const special = s.acquisition !== "random-pool";
   ITEMS.push(item({
@@ -233,6 +245,7 @@ for (const s of MEGA_DATA.stones) {
     storage: "inventory",
     sources: special ? ["milestone_voucher", "event"] : ["quest_rare", "daily_rare", "achievement", "event", "shard_exchange"],
     mega: Object.freeze({ species: s.species, forms: Object.freeze([...s.forms]), officialStatus: s.officialStatus, acquisition: s.acquisition }),
+    ...stoneIcon(s.id),
     sinceRelease: "M",
   }));
 }

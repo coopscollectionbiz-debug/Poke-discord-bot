@@ -102,8 +102,8 @@ function itemControls(t, s, i, name) {
   if (megaDraft || entry?.megaSlot) {
     const stone = entry?.megaSlot?.stoneName ?? "Mega Stone";
     return {
-      badge: `<span class="hi-badge" title="${esc(stone)}: Mega Evolution uses this item slot">${itemIcon(null, { size: "sm", mega: true })}</span>`,
-      button: `<span class="hi-slotbtn is-mega" title="Mega Evolution uses the item slot on this team">💎 ${esc(stone)}</span>`,
+      badge: `<span class="hi-badge" title="${esc(stone)}: Mega Evolution uses this item slot">${itemIcon(null, { size: "sm", mega: entry?.megaSlot ?? true })}</span>`,
+      button: `<span class="hi-slotbtn is-mega" title="Mega Evolution uses the item slot on this team">${itemIcon(null, { size: "xs", mega: entry?.megaSlot ?? true })} ${esc(stone)}</span>`,
     };
   }
   if (!savedOn(t, s)) {
@@ -125,7 +125,7 @@ function loadoutSummary(t) {
   const ids = lo.map((m) => m.item).filter(Boolean);
   const valid = new Set(ids).size === ids.length;
   return `<div class="hi-summary" role="status">
-    <div class="hi-summary-icons" aria-hidden="true">${lo.map((m) => itemIcon(heldItem(m.item), { size: "sm", mega: !!m.megaSlot })).join("")}</div>
+    <div class="hi-summary-icons" aria-hidden="true">${lo.map((m) => itemIcon(heldItem(m.item), { size: "sm", mega: m.megaSlot ?? false })).join("")}</div>
     <p><b>Items ${held}/${lo.length}</b>${mega ? ` · ${mega} Mega Stone` : ""}${open ? ` · ${open} empty` : " · every slot equipped"} · ${valid ? "✓ all different" : "⚠ duplicate item"}</p>
     <p class="hi-summary-note">Items are permanent unlocks: one unlock works on every team, but only one Pokémon per team can hold it.</p>
   </div>`;

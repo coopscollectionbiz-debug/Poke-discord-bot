@@ -13,7 +13,7 @@ import {
 } from "../services/heldItems.js";
 import { createHeldItemHandlers, createRateLimiter } from "../services/heldItemsApi.js";
 import { STARTER_HELD_ITEMS } from "../catalog/heldItems.js";
-import { getCatalogItem, listCatalog, isHeldItem } from "../catalog/items.js";
+import { getCatalogItem, listCatalog, isHeldItem, MEGA_STONE_IDS } from "../catalog/items.js";
 import { grantItem, consumeItem, normalizeInventory, getQuantity } from "../services/inventory.js";
 import { validateUserSchema, createNewUser } from "../utils/userSchema.js";
 import { lockUser } from "../utils/userLocks.js";
@@ -65,6 +65,18 @@ section("Every held item has its official icon file");
   assertEqual(bad, [], `all ${held.length} held items point at an existing PNG in public/sprites/items/held`);
   const sizes = held.map((e) => { const b = fs.readFileSync(new URL(`../public/sprites/${e.icon}`, import.meta.url)); return [e.id, b.readUInt32BE(16), !!e.held.iconSmooth]; });
   assertEqual(sizes.filter(([, w, smooth]) => (w === 30) === smooth).map(([id]) => id), [], "30×30 pixel icons render pixelated; only larger HD icons (Fairy Feather) are marked smooth");
+
+  // Mega Stones: the Mega-slot placeholder shows the official stone icon.
+  const stones = MEGA_STONE_IDS.map((id) => getCatalogItem(id));
+  const badStones = stones.filter((e) => {
+    if (!e.icon) return true;
+    const b = fs.readFileSync(new URL(`../public/sprites/${e.icon}`, import.meta.url));
+    return !b.subarray(0, 8).equals(PNG) || (b.readUInt32BE(16) > 30) !== e.iconSmooth;
+  }).map((e) => e.id);
+  assertEqual(badStones, [], `all ${stones.length} Mega Stones have a valid icon (HD ones scale smoothly)`);
+  const u = player({ display: [6] });
+  u.displayedPokemon[0].mega = "mega-charizard-x";
+  assertEqual(describeLoadout(u, "display")[0].megaSlot.icon, "/public/sprites/items/megastones/megastone_charizarditex.png", "the Mega slot placeholder carries its stone's icon");
 }
 
 // ------------------------------------------------------------------

@@ -137,7 +137,15 @@ export function megaPlaceholder(slot) {
   if (!slot?.mega) return null;
   const f = getMega(slot.mega);
   const stone = f?.prerequisite?.kind === "stone" ? f.prerequisite.item : null;
-  return { formId: slot.mega, name: f?.name ?? slot.mega, stone, stoneName: stone ? getCatalogItem(stone)?.name ?? stone : "Mega Stone" };
+  const entry = stone ? getCatalogItem(stone) : null;
+  return {
+    formId: slot.mega,
+    name: f?.name ?? slot.mega,
+    stone,
+    stoneName: entry?.name ?? stone ?? "Mega Stone",
+    icon: entry?.icon ? `/public/sprites/${entry.icon}` : null,
+    iconSmooth: !!entry?.iconSmooth,
+  };
 }
 
 /**

@@ -6,6 +6,11 @@
 // account-wide unlock: user.items[id] is 0 or 1 (maxStack 1), and one unlock
 // can be equipped on one Pokémon in EACH team (Item Clause per team).
 //
+// Icons: the official in-game bag icons, public/sprites/items/held/<id>.png
+// (from the PokeAPI sprites repository; see /credits). All are 30×30 pixel
+// art except Fairy Feather (Gen 9), which only exists as a 160×160 HD
+// icon, so it is marked iconSmooth (scaled smoothly, not pixelated).
+//
 // Battle behaviour lives in utils/battle/items.js under the same id; this
 // file never contains code. `effect` is the exact player-facing rule and
 // must match the registry (tests/heldItemCatalog.test.js).
@@ -87,8 +92,8 @@ export const HELD_ITEM_DEFS = Object.freeze([
   T("Dark", "black_glasses", "Black Glasses", "🕶️"),
   T("Steel", "metal_coat", "Metal Coat", "⚙️"),
   T("Normal", "silk_scarf", "Silk Scarf", "🧣"),
-  T("Fairy", "fairy_feather", "Fairy Feather", "🪽"),
-].map((d) => Object.freeze({ starter: false, combat: true, restrictSpecies: null, boostsType: null, price: null, ...d })));
+  { ...T("Fairy", "fairy_feather", "Fairy Feather", "🪽"), iconSmooth: true },
+].map((d) => Object.freeze({ starter: false, combat: true, restrictSpecies: null, boostsType: null, price: null, iconSmooth: false, icon: `items/held/${d.id}.png`, ...d })));
 
 export const HELD_ITEM_IDS = Object.freeze(HELD_ITEM_DEFS.map((d) => d.id));
 const BY_ID = new Map(HELD_ITEM_DEFS.map((d) => [d.id, d]));

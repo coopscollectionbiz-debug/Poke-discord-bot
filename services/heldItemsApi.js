@@ -40,6 +40,8 @@ export function heldCatalogRows(user) {
     group: e.held.group,
     groupLabel: e.held.groupLabel,
     glyph: e.held.glyph,
+    icon: e.icon ? `/public/sprites/${e.icon}` : null,
+    iconSmooth: !!e.held.iconSmooth,
     effect: e.held.effect,
     rule: e.held.rule,
     starter: e.held.starter,

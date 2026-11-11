@@ -458,3 +458,8 @@ dialog.cc-dialog .cc-dialog-actions { display: flex; gap: 10px; justify-content:
 .hi-icon[data-group="utility"] { border-color: var(--cc-gold); }
 .hi-icon[data-group="type"] { border-color: #9ca3af; }
 .hi-icon[data-group="species"] { border-color: #f472b6; }
+/* Official bag icons (30×30 pixel art) inside the disc. */
+.hi-icon { overflow: hidden; }
+.hi-icon--xs { width: 22px; height: 22px; font-size: 12px; border-width: 1px; }
+.hi-icon-img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; padding: 8%; box-sizing: border-box; }
+.hi-icon-img.is-smooth { image-rendering: auto; padding: 14%; }

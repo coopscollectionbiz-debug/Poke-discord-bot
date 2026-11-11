@@ -19,11 +19,19 @@ const newRequestId = () => (crypto.randomUUID ? crypto.randomUUID() : `r${Date.n
 let dialog = null;
 let lastFocus = null;
 
-/** The small round item icon (emoji glyph on a tinted disc; no image assets yet). */
+/**
+ * The small round item icon: the official in-game bag icon on a tinted disc
+ * (pixel-crisp; Fairy Feather's HD icon scales smoothly). If the image can't
+ * load, the emoji glyph is shown instead.
+ */
 export function itemIcon(item, { size = "md", mega = false } = {}) {
   if (mega) return `<span class="hi-icon hi-icon--${size} hi-icon--mega" aria-hidden="true">💎</span>`;
   if (!item) return `<span class="hi-icon hi-icon--${size} hi-icon--empty" aria-hidden="true">+</span>`;
-  return `<span class="hi-icon hi-icon--${size}" data-group="${esc(item.group)}" aria-hidden="true">${esc(item.glyph ?? "•")}</span>`;
+  const glyph = esc(item.glyph ?? "•");
+  const img = item.icon
+    ? `<img class="hi-icon-img${item.iconSmooth ? " is-smooth" : ""}" src="${esc(item.icon)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode(this.dataset.glyph))" data-glyph="${glyph}">`
+    : glyph;
+  return `<span class="hi-icon hi-icon--${size}" data-group="${esc(item.group)}" aria-hidden="true">${img}</span>`;
 }
 
 function ensureDialog() {

@@ -112,7 +112,7 @@ function itemControls(t, s, i, name) {
   const it = heldItem(entry?.item);
   return {
     badge: `<button type="button" class="hi-badge" data-act="item" data-team="${t}" data-i="${i}" aria-label="${it ? `${esc(name)} holds ${esc(it.name)}. Change item` : `${esc(name)} holds no item. Add an item`}">${itemIcon(it, { size: "sm" })}</button>`,
-    button: `<button type="button" class="hi-slotbtn${it ? " is-set" : ""}" data-act="item" data-team="${t}" data-i="${i}" aria-label="${esc(name)}’s item on your ${LABEL[t]}: ${it ? esc(it.name) : "none"}. Change">${it ? `${esc(it.glyph)} ${esc(it.name)}` : "＋ Add item"}</button>`,
+    button: `<button type="button" class="hi-slotbtn${it ? " is-set" : ""}" data-act="item" data-team="${t}" data-i="${i}" aria-label="${esc(name)}’s item on your ${LABEL[t]}: ${it ? esc(it.name) : "none"}. Change">${it ? `${itemIcon(it, { size: "xs" })} ${esc(it.name)}` : "＋ Add item"}</button>`,
   };
 }
 /** The team's equipment at a glance (saved loadout). */

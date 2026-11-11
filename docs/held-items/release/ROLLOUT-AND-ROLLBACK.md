@@ -42,7 +42,7 @@
 ## D. Owner decisions before step 13
 
 - Shop prices: 3,000 for type boosters; 4,000 for Muscle Band, Wise Glasses and Black Sludge; 5,000 for Shell Bell, Light Ball and Thick Club; 6,000 for Eviolite. Total 87,000 CC (amendment §8).
-- Item icons are emoji glyphs today. Approve them as final, or source pixel-art icons (licensing and credits).
+- Item icons: done. They are the official bag icons from PokeAPI's sprite repository, credited on `/credits`.
 - Whether the EXP card should say "Lucky Egg ×1.5". The data (`bonusFrom`, `baseGained`) is already in the result.
 
 ## E. Rollback

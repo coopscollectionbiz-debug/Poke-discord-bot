@@ -5,6 +5,7 @@
 // Synthetic players only; nothing touches real data.
 // ==========================================================
 
+import fs from "fs";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
 import {
   ensureStarterHeldItems, starterPending, applyEquip, checkEquip, teamEquipment, equipmentRev, reconcileTeamEquipment,
@@ -50,6 +51,20 @@ section("Ownership is a unique unlock in the existing inventory");
   assertTrue(grantItem(u, "evolution_stone", 3).ok && grantItem(u, "evolution_stone", 3).ok && getQuantity(u, "evolution_stone") === 6, "ordinary stackable items are unchanged");
   assertEqual(getCatalogItem("charcoal").category, "held", "the old placeholder Charcoal id is now the active held item (no duplicate id)");
   assertEqual(new Set(listCatalog().map((e) => e.id)).size, listCatalog().length, "catalog ids are unique");
+}
+
+// ------------------------------------------------------------------
+section("Every held item has its official icon file");
+{
+  const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const held = listCatalog().filter(isHeldItem);
+  const bad = held.filter((e) => {
+    const f = new URL(`../public/sprites/${e.icon}`, import.meta.url);
+    return !e.icon || !fs.existsSync(f) || !fs.readFileSync(f).subarray(0, 8).equals(PNG);
+  }).map((e) => e.id);
+  assertEqual(bad, [], `all ${held.length} held items point at an existing PNG in public/sprites/items/held`);
+  const sizes = held.map((e) => { const b = fs.readFileSync(new URL(`../public/sprites/${e.icon}`, import.meta.url)); return [e.id, b.readUInt32BE(16), !!e.held.iconSmooth]; });
+  assertEqual(sizes.filter(([, w, smooth]) => (w === 30) === smooth).map(([id]) => id), [], "30×30 pixel icons render pixelated; only larger HD icons (Fairy Feather) are marked smooth");
 }
 
 // ------------------------------------------------------------------

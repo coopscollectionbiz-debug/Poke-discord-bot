@@ -295,6 +295,7 @@ for (const d of HELD_ITEM_DEFS) {
     status: "active",
     storage: "inventory",
     shop: d.price ? { eligible: true, channel: "dashboard", price: { cc: d.price } } : null,
+    icon: d.icon,
     sources: d.starter ? ["starter"] : ["shop", "admin"],
     held: Object.freeze({
       group: d.group,
@@ -302,6 +303,7 @@ for (const d of HELD_ITEM_DEFS) {
       effect: d.effect,
       rule: d.rule,
       glyph: d.glyph,
+      iconSmooth: d.iconSmooth,
       starter: d.starter,
       combat: d.combat,
       restrictSpecies: d.restrictSpecies ? Object.freeze([...d.restrictSpecies]) : null,

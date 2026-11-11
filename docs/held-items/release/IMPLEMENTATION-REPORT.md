@@ -11,7 +11,7 @@
 ## What was built
 
 ### Data and services
-- **`catalog/heldItems.js`**: the 33 launch items as data (name, group, exact effect text, activation rule, price, starter flag, species restriction, glyph). Choice Band, Choice Specs, Choice Scarf, Life Orb, Rocky Helmet and Assault Vest are deliberately absent.
+- **`catalog/heldItems.js`**: the 33 launch items as data (name, group, exact effect text, activation rule, price, starter flag, species restriction, official icon path, and an emoji glyph used only if the icon fails to load). Choice Band, Choice Specs, Choice Scarf, Life Orb, Rocky Helmet and Assault Vest are deliberately absent.
 - **`catalog/items.js`**: adds the 33 as `category: "held"` entries with `maxStack: 1`, `equip: { slot: "pokemon" }` and a shop price. Replaces the never-obtainable `charcoal` placeholder (same id). Adds `isHeldItem()`.
 - **`services/inventory.js`**: held-item grants are also gated by the held-item flags, per player. A second copy gives `already_owned`. `/inventory` usage text for held items. Stackable items are unchanged.
 - **`config/features.js`**: `HELD_ITEMS_ENABLED`, `HELD_ITEMS_TESTERS`, and the sub-flags `DASHBOARD`, `STARTER`, `SHOP` and `BATTLES` (battles are opt-in).
@@ -93,7 +93,7 @@ utils/battle/sim.js               ±
 ## Tests
 
 - `npm run test:safe`: **70/70 test files pass** (68 existing + 2 new) on commit 2648f3f2.
-- New: `tests/heldItems.test.js` (94 checks) and `tests/heldItemBattle.test.js` (73 checks). They cover:
+- New: `tests/heldItems.test.js` (96 checks) and `tests/heldItemBattle.test.js` (73 checks). They cover:
   - flags and the tester allowlist;
   - unique unlocks, and ordinary stacks unchanged;
   - the starter grant: eight items, once, idempotent, no overwrite, nothing else touched;
@@ -121,7 +121,7 @@ utils/battle/sim.js               ±
 ## Remaining limitations (not done, or pending validation)
 
 1. **Production-like validation:** the dry run used the 2026-11-10 16:17 copy, which predates Battle teams. It must be rerun on a fresh copy before the deploy (rollout step 3). The UI was tested against the local preview, not the real bot process with Discord.
-2. **Item icons** are emoji glyphs, because no held-item sprite assets exist. Final art needs the owner's choice and licensing.
+2. **Item icons** are the official in-game bag icons, owner-approved and downloaded from the PokeAPI sprites repository into `public/sprites/items/held/` (33 PNGs, 18 KB). They are credited on `/credits`, and a test checks that every item has a valid file. Fairy Feather (Gen 9) only exists as a 160×160 HD icon, so it is scaled smoothly while the others stay pixel-crisp. Mega slots still show a 💎 glyph for the Mega Stone placeholder.
 3. **Discord displays:**
    - battle replays show item activations through the existing notes;
    - `/inventory` lists held items;

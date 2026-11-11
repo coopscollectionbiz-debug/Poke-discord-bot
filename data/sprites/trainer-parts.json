@@ -184,7 +184,6 @@
 "lance-masters.png":{"source":"blink (eyes reviewed close-up)","events":[{"kind":"blink","eyes":[[34,14,35,16],[39,14,40,16]],"at":0.62,"ms":120}]},
 "lance-masters2.png":{"source":"blink (eyes reviewed close-up)","events":[{"kind":"blink","eyes":[[35,14,36,15],[41,14,42,15]],"at":0.71,"ms":120}]},
 "lance.png":{"source":"manual: cape sways in the wind + blink","events":[{"kind":"sway","parts":[{"rect":[13,36,19,66],"from":0.3,"d":[-1,0]},{"rect":[52,32,58,62],"from":0.3,"d":[-1,0]}],"at":0.15,"ms":600},{"kind":"blink","eyes":[[30,16,31,17],[36,16,37,17]],"at":0.7,"ms":120}]},
-"larry.png":{"source":"blink (eyes reviewed close-up)","events":[{"kind":"blink","eyes":[[33,12,35,14],[38,12,40,14]],"at":0.77,"ms":120}]},
 "lass.png":{"source":"ball (detected, reviewed close-up)","events":[{"kind":"move","parts":[{"rect":[18,8,24,15],"d":[0,-1]}],"at":0.38,"ms":300}]},
 "leaf-gen3.png":{"source":"blink (eyes reviewed close-up)","events":[{"kind":"blink","eyes":[[35,23,36,24],[41,23,42,24]],"at":0.66,"ms":120}]},
 "leaf-masters.png":{"source":"blink (eyes reviewed close-up)","events":[{"kind":"blink","eyes":[[35,21,36,23],[42,21,43,23]],"at":0.67,"ms":120}]},

@@ -1,0 +1,133 @@
+{
+ "note": "Real (artist-made) trainer animations. They replace the generated breathing idle for these sprites. Import with tools/import-trainer-animations.mjs, then run tools/generate-trainer-idles.mjs. Credits must stay with the artist.",
+ "files": {
+  "larry.png": {
+   "from": "hayate_larry.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    83
+   ],
+   "offset": [
+    22,
+    0
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "grusha.png": {
+   "from": "hayate_grusha.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    14,
+    2
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "ryme.png": {
+   "from": "hayate_ryme.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    5,
+    4
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "tulip.png": {
+   "from": "hayate_tulip.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    9,
+    4
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "brassius.png": {
+   "from": "hayate_brassius.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    86
+   ],
+   "offset": [
+    8,
+    0
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "katy.png": {
+   "from": "hayate_katy.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    15,
+    5
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "kofu.png": {
+   "from": "hayate_kofu.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    13,
+    0
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "iono.png": {
+   "from": "hayate_iono.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    87,
+    89
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 32,
+   "ms": 100
+  }
+ }
+}

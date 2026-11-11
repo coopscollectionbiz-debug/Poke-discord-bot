@@ -32,7 +32,7 @@ Moves follow Gen 5 rules for priority, multi-hit, drain, recoil, and crash damag
 
 - `/battle opponent:@user` starts a casual battle between both players' Display teams at their real Levels. It runs right away, costs nothing, and is unrated. It counts toward a separate casual record and the casual achievements. Only the Challenger earns EXP.
 - `/battle opponent:@user ranked:True` starts a ranked battle between both players' Battle teams, with every Pokémon at Lv 50. It runs right away, and both players' Ranked ratings change. Only the Challenger earns EXP. Both players need a Battle team.
-- `/battle opponent:@user wager:100` offers a Wager battle, a ranked battle with CC on it, so it uses Battle teams at Lv 50 and both ratings change. The bot holds the Challenger's CC until the Defender accepts or declines, or for 15 minutes. A Defender with less CC than the Stake can accept with everything they have, and the Challenger gets the difference back. Both players earn EXP, and the winner takes the pot. If the Challenger's Battle team gets stronger before the Defender answers, Accept cancels the offer instead. A restart refunds any Stake still waiting for an answer.
+- `/battle opponent:@user wager:100` offers a Wager battle. Like a ranked battle, it uses Battle teams at Lv 50 and changes both ratings, and it puts CC on the line. The bot holds the Challenger's CC until the Defender accepts or declines, or for 15 minutes. A Defender with less CC than the Stake can accept with everything they have, and the Challenger gets the difference back. Both players earn EXP, and the winner takes the pot. If the Challenger's Battle team gets stronger before the Defender answers, Accept cancels the offer instead. A restart refunds any Stake still waiting for an answer.
 - `/leaderboard` shows the top 10 Ranked ratings this season and your position. Casual battles don't count.
 - `/showbattlecard` shows the player's Battle team at Lv 50 as an image, with their Ranked rating, record, and leaderboard position.
 
@@ -98,7 +98,7 @@ Open encounters live only in memory and hold nothing, so a restart loses them; a
 
 ## Achievements
 
-`/achievements` (private) and the dashboard's Achievements page list every achievement in 9 categories: Pokémon Collection, Shiny Hunting, Evolution, Ranked Battles, Casual Battles, Training, Economy, Daily & Weekly, and Special Milestones. Hidden ones show as "???". Each achievement a player reaches earns Achievement Points. The CC, item, and title rewards some achievements list show as "pending approval", and none can be claimed until its id is added to `APPROVED_REWARD_IDS` in `config/achievementRewards.js`, which is empty. Ranked Battles counts ranked and wager battles, and Casual Battles counts casual wins and win streaks. The catalog is `catalog/achievements.js`, and the progress rules are in `progression/achievements.js`.
+`/achievements` (private) and the dashboard's Achievements page list every achievement in 9 categories: Pokémon Collection, Shiny Hunting, Evolution, Ranked Battles, Casual Battles, Training, Economy, Daily & Weekly, and Special Milestones. Hidden ones show as "???". Each achievement a player reaches earns Achievement Points. The rewards some achievements list, such as CC, items, titles, and badges, show as "pending approval", and none can be claimed until its id is added to `APPROVED_REWARD_IDS` in `config/achievementRewards.js`, which is empty. Ranked Battles counts ranked and wager battles, and Casual Battles counts casual wins and win streaks. The catalog is `catalog/achievements.js`, and the progress rules are in `progression/achievements.js`.
 
 ## Mega Evolution
 
@@ -193,8 +193,8 @@ NODE_ENV=development
 PORT=3000
 REGISTER_COMMANDS=true     # set true on first run; flip to false afterwards to skip re-registration
 CHALLENGE_CHANNEL_ID=      # optional: the only channel /challenge works in (unset: any channel)
-REWARD_CHANNEL_ID=         # optional: the channel for catch and recruit broadcasts
-RARE_SIGHTINGS_CHANNEL_ID= # optional: the channel for Rare and rarer catches and recruits
+REWARD_CHANNEL_ID=         # optional: gets every catch and recruit broadcast (they also post where they happened)
+RARE_SIGHTINGS_CHANNEL_ID= # optional: also gets the Rare-and-up and shiny ones
 ADMIN_ROLE_NAME=Developer  # the role allowed to use /admindashboard (default: Developer)
 ADMIN_DASH_TOKEN=          # optional: a shared secret that also opens the admin dashboard's API
 ```

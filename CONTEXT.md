@@ -75,14 +75,14 @@ _Avoid_: sell, release
 
 **Bag**:
 The items a player holds, such as **Evolution Stones**, **Shiny Dust** and Poké Balls.
-_Avoid_: inventory, items list
+_Avoid_: backpack, item list
 
 **Evolution Stone**:
 The item spent to evolve a Pokémon.
 _Avoid_: evo stone, stone (alone, now that **Mega Stones** exist)
 
 **Shiny Dust**:
-The item earned by **Donation** and spent on shinies, to convert a normal copy into a shiny one or to evolve a shiny.
+The item earned by **Donation** and as a **Challenge** prize, and spent on shinies, to convert a normal copy into a shiny one or to evolve a shiny.
 _Avoid_: dust (alone), stardust
 
 ### Battles
@@ -101,14 +101,14 @@ _Avoid_: target, opponent (when the role matters)
 
 **Casual battle**:
 A **Battle** between two **Display teams** at their real **Levels** that runs immediately without the **Defender's** consent. It is unrated, no CC changes hands, and only the **Challenger** can earn EXP.
-_Avoid_: open battle, auto-battle, friendly
+_Avoid_: auto-battle, friendly
 
 **Ranked battle**:
 A **Battle** between two **Battle teams**, every Pokémon at Lv 50, that runs immediately and moves both players' **Ranked rating**. Only the **Challenger** can earn EXP.
 _Avoid_: rated battle, competitive battle
 
 **Wager battle**:
-A **Ranked battle** with a CC **Stake** that runs only after the **Defender** accepts; both players can earn EXP and the winner takes the pot.
+A **Battle** between two **Battle teams** at Lv 50 with a CC **Stake**, which runs only after the **Defender** accepts. It moves both players' **Ranked rating** as a **Ranked battle** does, both players can earn EXP, and the winner takes the pot.
 _Avoid_: bet, stakes battle
 
 **Stake**:
@@ -201,7 +201,7 @@ _Avoid_: trophy, quest
 - "Pokédex completion" is counted per Pokémon, not per variant. A player holding one normal and one shiny Pikachu has 1 toward Kanto, not 2.
 - "Challenge" is not what a **Challenger** does. A **Challenger** starts a **Battle** against another player. A **Challenge** has no **Challenger** or **Defender**, only the player and the Kanto team they face.
 - "Trainer" means a player everywhere except **Trainer encounters**, where it means the computer-run opponent. "Ace Trainer" is not one of the "Elite Four", which belong only to the **Elite Four run**.
-- "Casual battle" and "open battle" are the same thing. The Teams and Overview pages and the code still say "open"; use **Casual battle**.
+- "Casual battle" and "open battle" are the same thing. The Teams and Overview pages and the code say "open", and `/battle` and the achievements say "casual".
 - "Ranked" has nothing to do with **Rank**. A player's **Rank** comes from chatting; their **Ranked rating** comes from **Ranked battles** and **Wager battles**.
 - Some **Achievements** list a badge as their reward, such as a region's badge for completing its Pokédex. That is not a **Badge**, which only comes from beating a Gym Leader's **Challenge**.
 
@@ -217,6 +217,6 @@ _Avoid_: trophy, quest
 > **Dev:** And if I want it to count?
 > **Domain expert:** Play a **Ranked battle**. It uses both players' **Battle teams** at Lv 50, and both ratings move. Elo barely moves either rating when a much stronger **Team** wins.
 > **Dev:** What if I want CC on the line?
-> **Domain expert:** Then it's a **Wager battle**, a **Ranked battle** with a **Stake**. They have to accept first, it uses one of each player's **Battle cap**, and both of you earn EXP.
+> **Domain expert:** Then it's a **Wager battle**, which plays by the ranked rules with a **Stake** on top. They have to accept first, it uses one of each player's **Battle cap**, and both of you earn EXP.
 > **Dev:** I caught a second Charmander — does it get its own **Level**?
 > **Domain expert:** No. Your Charmanders share one **Level**; the new one adds EXP to it instead.

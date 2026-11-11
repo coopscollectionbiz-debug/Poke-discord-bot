@@ -66,6 +66,7 @@ import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTea
 import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
 import { normalizeNotices, peekNotices, clearNotices, NOTICE_KINDS } from "./services/notices.js";
 import { pokemonDetail } from "./services/pokemonDetail.js";
+import { parseTeamCopy, applyTeamCopy } from "./services/teamCopy.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
 import { rankedRecord } from "./utils/battle/rewards.js";
 import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
@@ -2117,12 +2118,15 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
     if (teamType !== "display" && teamType !== "battle") {
       return res.status(400).json({ success: false, error: "Unknown team type" });
     }
-
     if (!requireDashboardSession(req, id)) {
       return res
         .status(403)
         .json({ success: false, error: "Invalid or expired session" });
     }
+    // Optional: this team was copied from the other one (Teams page "Copy
+    // from …"); the copied Pokémon's moves come along in the same write.
+    const copy = parseTeamCopy(req.body, teamType);
+    if (!copy.ok) return res.status(copy.status).json({ success: false, error: copy.error, code: copy.code });
 
     await lockUser(id, async () => {
       const user = trainerData[id];
@@ -2154,6 +2158,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       // 5) Save
       if (teamType === "battle") u.battleTeam = normalized;
       else u.displayedPokemon = normalized;
+      const copiedMoves = copy.copy ? applyTeamCopy(u, { ...copy.copy, to: teamType }, normalized) : [];
       trainerData[id] = u;
 
       const saveAck = await saveAndAck(trainerData);
@@ -2164,6 +2169,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
         teamType,
         currentTeam: u.displayedPokemon,
         battleTeam: hasBattleTeam(u) ? u.battleTeam : null,
+        ...(copy.copy ? { copiedMoves } : {}),
       });
     });
   } catch (err) {

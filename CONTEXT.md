@@ -42,19 +42,22 @@ _Avoid_: wild level, spawn level
 
 **Rank**:
 A player's title on the TP ladder (Novice Trainer → Legend), earned by chatting.
-_Avoid_: using "rank" for battle standing — that's **Battle rating**
+_Avoid_: using "rank" for battle standing, which is the **Ranked rating**
 
 **Team**:
 Up to 6 Pokémon a player sets to fight in slot order, one slot per Pokémon, each slot a specific **Variant**. Each player has two: the **Display team** and the **Battle team**.
 _Avoid_: party, lineup
 
 **Display team**:
-The **Team** a player shows on their trainer card; it fights **Open battles**, challenges and **Trainer encounters** at its real Levels.
-_Avoid_: casual team, displayed Pokémon
+The **Team** a player shows on their trainer card; it fights **Casual battles**, **Challenges** and **Trainer encounters** at its real Levels.
+_Avoid_: displayed Pokémon
 
 **Battle team**:
-The **Team** a player sets for ranked battles and **Wager battles**, where every Pokémon fights at Lv 50.
-_Avoid_: ranked team
+The **Team** a player sets for **Ranked battles** and **Wager battles**, where every Pokémon fights at Lv 50. It holds at most one mythic-tier Pokémon.
+
+**Moveset**:
+The up to 4 moves a player picks for one Pokémon on one **Team**, from the moves it has learned by its real **Level**. A Pokémon with none picked uses the last four moves it learned.
+_Avoid_: move set, loadout
 
 **Region**:
 A named set of Pokémon that share a home region: Kanto, Johto, Hoenn, Sinnoh, Unova, Kalos, Alola, Galar, or Paldea. The game's Pokémon data puts every Pokémon in exactly one region, by National Dex number: the Hisui-introduced species #899–905 belong to Galar, and alternate forms (Galarian Meowth, Mega Charizard…) count toward their base species, never as extra Pokémon. Kalos, Alola, Galar and Paldea only appear once their generation is released.
@@ -67,8 +70,20 @@ _Avoid_: dex count, seen/caught
 ### Economy
 
 **Donation**:
-Permanently giving up a copy in exchange for CC, and sometimes Shiny Dust.
+Permanently giving up a copy in exchange for CC, and sometimes **Shiny Dust**.
 _Avoid_: sell, release
+
+**Bag**:
+The items a player holds, such as **Evolution Stones**, **Shiny Dust** and Poké Balls.
+_Avoid_: inventory, items list
+
+**Evolution Stone**:
+The item spent to evolve a Pokémon.
+_Avoid_: evo stone, stone (alone, now that **Mega Stones** exist)
+
+**Shiny Dust**:
+The item earned by **Donation** and spent on shinies, to convert a normal copy into a shiny one or to evolve a shiny.
+_Avoid_: dust (alone), stardust
 
 ### Battles
 
@@ -84,13 +99,17 @@ _Avoid_: attacker, initiator
 The player a **Challenger** names as their opponent.
 _Avoid_: target, opponent (when the role matters)
 
-**Open battle**:
-A **Battle** that runs immediately without the **Defender's** consent; no CC changes hands and only the **Challenger** can earn EXP.
-_Avoid_: auto-battle, friendly, casual
+**Casual battle**:
+A **Battle** between two **Display teams** at their real **Levels** that runs immediately without the **Defender's** consent. It is unrated, no CC changes hands, and only the **Challenger** can earn EXP.
+_Avoid_: open battle, auto-battle, friendly
+
+**Ranked battle**:
+A **Battle** between two **Battle teams**, every Pokémon at Lv 50, that runs immediately and moves both players' **Ranked rating**. Only the **Challenger** can earn EXP.
+_Avoid_: rated battle, competitive battle
 
 **Wager battle**:
-A **Battle** with a CC stake that runs only after the **Defender** accepts; both players can earn EXP and the winner takes the pot.
-_Avoid_: bet, ranked, stakes battle
+A **Ranked battle** with a CC **Stake** that runs only after the **Defender** accepts; both players can earn EXP and the winner takes the pot.
+_Avoid_: bet, stakes battle
 
 **Stake**:
 The CC each player puts into a **Wager battle's** pot; held from the moment it's offered or accepted until the **Battle** ends or the offer lapses.
@@ -100,12 +119,16 @@ _Avoid_: bet, wager amount, ante
 Accepting a **Wager battle** with less than the full **Stake** by putting up one's entire CC balance; the **Challenger's** excess is refunded.
 _Avoid_: partial accept, short call
 
-**Battle rating**:
-A player's Elo score from **Battles**, moved for both players after every **Battle**.
-_Avoid_: rank, server rank, ELO (as a noun for the player's standing), MMR
+**Ranked rating**:
+A player's Elo score from **Ranked battles** and **Wager battles** in the current **Season**, moved for both players after each one.
+_Avoid_: Battle rating, rank, server rank, ELO (as a noun for the player's standing), MMR
+
+**Season**:
+A numbered period of ranked play. A new **Season** starts every player's **Ranked rating** and ranked record over and keeps the old ones as history.
+_Avoid_: ladder reset, split
 
 **Battle cap**:
-The limit on how many **Battles** a player may start per UTC day, overall and against any one **Defender**.
+The limit on how many **Battles** a player may start per UTC day, across all three kinds together and against any one **Defender**.
 _Avoid_: stamina, energy, battle limit
 
 **Power rating**:
@@ -117,13 +140,13 @@ The player whose **Team** has the lower **Power rating** going into a **Battle**
 _Avoid_: weaker player, loser
 
 **Underdog surge**:
-A rare, announced boost to the **Underdog's** whole **Team** for one **Battle**, likelier the wider the **Power rating** gap. **Challenges** have none.
+A rare, announced boost to the **Underdog's** whole **Team** for one **Casual battle**, likelier the wider the **Power rating** gap. **Ranked battles**, **Wager battles**, **Challenges** and **Trainer encounters** have none.
 _Avoid_: comeback mechanic, rubber-banding, luck boost
 
 ### Challenges
 
 **Challenge**:
-A fight between a player's **Team** and a fixed Kanto team: one of the 8 Gym Leaders, the **Elite Four run**, Blue, or Red. It is not a **Battle**: no other player takes part.
+A fight between a player's **Display team** and a fixed Kanto team: one of the 8 Gym Leaders, the **Elite Four run**, Blue, or Red. It is not a **Battle**: no other player takes part.
 _Avoid_: PvE battle, gym battle, NPC battle, raid
 
 **Badge**:
@@ -156,12 +179,31 @@ _Avoid_: elite trainer, boss trainer
 The CC at stake in a **Trainer encounter**, set by the **Trainer class** and the Level of the Trainer's last Pokémon. The Trainer pays it to a player who wins, and a player who loses pays the same amount, or all their CC if they hold less.
 _Avoid_: reward, bounty, payout (as a noun)
 
+### Mega Evolution
+
+**Mega form**:
+A Mega Evolution of a species, unlocked for good on one species + **Variant** a player owns. It is never a species of its own. It shares that Pokémon's **Level** and **Team** slot, doesn't count toward **Pokédex completion**, and a **Team** holds at most one.
+_Avoid_: Mega species, Mega Pokémon (as something caught)
+
+**Mega Stone**:
+The item that unlocks one **Mega form** on one species + **Variant**, used up when it does.
+_Avoid_: Key Stone, mega item
+
+### Achievements
+
+**Achievement**:
+A goal reached through play, such as a catch count or a win streak, that earns Achievement Points (AP), a score with no other use, and may list a reward.
+_Avoid_: trophy, quest
+
 ## Flagged ambiguities
 
 - "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.
 - "Pokédex completion" is counted per Pokémon, not per variant. A player holding one normal and one shiny Pikachu has 1 toward Kanto, not 2.
 - "Challenge" is not what a **Challenger** does. A **Challenger** starts a **Battle** against another player. A **Challenge** has no **Challenger** or **Defender**, only the player and the Kanto team they face.
 - "Trainer" means a player everywhere except **Trainer encounters**, where it means the computer-run opponent. "Ace Trainer" is not one of the "Elite Four", which belong only to the **Elite Four run**.
+- "Casual battle" and "open battle" are the same thing. The Teams and Overview pages and the code still say "open"; use **Casual battle**.
+- "Ranked" has nothing to do with **Rank**. A player's **Rank** comes from chatting; their **Ranked rating** comes from **Ranked battles** and **Wager battles**.
+- Some **Achievements** list a badge as their reward, such as a region's badge for completing its Pokédex. That is not a **Badge**, which only comes from beating a Gym Leader's **Challenge**.
 
 ## Example dialogue
 
@@ -171,8 +213,10 @@ _Avoid_: reward, bounty, payout (as a noun)
 > **Domain expert:** No duplicates. Each variant has only one copy.
 
 > **Dev:** If I challenge someone way weaker than me, do they lose anything?
-> **Domain expert:** In an **Open battle** the **Defender** never loses CC or Pokémon — only their **Battle rating** moves, and Elo barely moves it when a much stronger **Team** wins. Your EXP shrinks when you knock out Pokémon far below your **Level**, so picking on weak teams doesn't pay.
+> **Domain expert:** Not in a **Casual battle**. The **Defender** never loses CC or Pokémon, and it's unrated, so nobody's **Ranked rating** moves. Your EXP shrinks when you knock out Pokémon far below your **Level**, so picking on weak teams doesn't pay.
+> **Dev:** And if I want it to count?
+> **Domain expert:** Play a **Ranked battle**. It uses both players' **Battle teams** at Lv 50, and both ratings move. Elo barely moves either rating when a much stronger **Team** wins.
 > **Dev:** What if I want CC on the line?
-> **Domain expert:** Then it's a **Wager battle** — they have to accept first, it uses one of each player's **Battle cap**, and both of you earn EXP.
+> **Domain expert:** Then it's a **Wager battle**, a **Ranked battle** with a **Stake**. They have to accept first, it uses one of each player's **Battle cap**, and both of you earn EXP.
 > **Dev:** I caught a second Charmander — does it get its own **Level**?
 > **Domain expert:** No. Your Charmanders share one **Level**; the new one adds EXP to it instead.

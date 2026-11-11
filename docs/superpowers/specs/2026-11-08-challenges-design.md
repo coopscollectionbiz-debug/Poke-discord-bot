@@ -101,7 +101,7 @@ A first win pays the leader's trainer sprite, CC, evolution stones, and Shiny Du
 | Koga | 6,000 | 2 | 15 | Epic |
 | Sabrina | 7,500 | 2 | 15 | Rare |
 | Blaine | 9,000 | 2 | 20 | Rare |
-| Giovanni | 12,000 | 3 | 25 | Epic |
+| Giovanni | 12,000 | 3 | 25 | Legendary (since the 2026-11-10 re-tier) |
 | Elite Four run | 30,000 | 4 | 40 | Epic ×3 (Lorelei, Bruno, Agatha), Legendary (Lance) |
 | Blue | 50,000 | 5 | 60 | Mythic |
 | Red | 100,000 | 6 | 120 | Mythic |

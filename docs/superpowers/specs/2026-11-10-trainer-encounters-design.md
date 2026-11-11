@@ -79,31 +79,31 @@ While a player chats, a computer-run Trainer can spot them and ask for a fight, 
 - `tests/startupReadiness.test.js`: the encounter roll runs only after a message that didn't catch.
 - `tests/encounterBalance.test.js`: the open checks below.
 
-## Measured (stand-in Teams, 100 fights per tier per case)
+## Measured (stand-in Teams, 400 fights per tier per case)
 
-Command: `TRAINERDATA_DIR=<dir> node tests/encounterBalance.test.js` (run 2026-11-10). A stand-in Team is random distinct fully evolved, non-legendary species, all at the average Level.
+Command: `TRAINERDATA_DIR=<dir> node tests/encounterBalance.test.js` (run 2026-11-11). A stand-in Team is random distinct fully evolved, non-legendary species, all at the average Level. The first run used 100 fights per case. After master's 2026-11-11 Pokémon re-tier made eight unreleased species legendary, the stand-in pool shrank and one row's order flipped within sampling noise, so the test now runs 400.
 
 Win rate by tier (the test prints every Team size from 1 to 6):
 
 | avg Lv | Team | Under | Even | Over |
 |---|---|---|---|---|
-| 10 | 1 | 79% | 30% | 0% |
-| 10 | 3 | 96% | 80% | 0% |
-| 10 | 6 | 97% | 100% | 1% |
-| 30 | 1 | 38% | 3% | 0% |
-| 30 | 3 | 95% | 35% | 1% |
-| 30 | 6 | 98% | 93% | 5% |
-| 60 | 1 | 14% | 7% | 1% |
-| 60 | 3 | 72% | 40% | 7% |
-| 60 | 6 | 99% | 89% | 38% |
-| 90 | 1 | 10% | 6% | 3% |
-| 90 | 3 | 64% | 38% | 21% |
-| 90 | 6 | 96% | 89% | 58% |
+| 10 | 1 | 80% | 27% | 0% |
+| 10 | 3 | 98% | 83% | 0% |
+| 10 | 6 | 98% | 99% | 0% |
+| 30 | 1 | 39% | 7% | 0% |
+| 30 | 3 | 93% | 45% | 1% |
+| 30 | 6 | 99% | 92% | 7% |
+| 60 | 1 | 12% | 7% | 1% |
+| 60 | 3 | 71% | 42% | 8% |
+| 60 | 6 | 99% | 86% | 34% |
+| 90 | 1 | 9% | 7% | 2% |
+| 90 | 3 | 56% | 43% | 17% |
+| 90 | 6 | 94% | 87% | 55% |
 
-- Small Teams lose most encounters, because the Trainer brings 3 to 6 Pokémon whatever the Team size. A Team of one at avg Lv 30 wins 38% of Under encounters.
-- Over-tier encounters are nearly unwinnable for low-Level Teams (0% to 5% at avg Lv 10 to 30) and closer to even for high ones (38% to 58% at avg Lv 60 to 90, Team of 6): the same +5 to +15 Levels matter more at low Levels.
-- A Lv 100 Pokémon carrying five Lv 5s (avg Lv 21) wins 99% to 100% of every tier, for a mean Prize money of 267 CC (Under) to 763 CC (Over), while the Lv 5s take EXP for every knockout.
-- CC per accepted encounter, Team of 6, the player always holding enough: avg Lv 10, +51 CC (408 a day at 8); avg Lv 30, +251 (2,004 a day); avg Lv 60, +661 (5,290 a day); avg Lv 90, +1,041 (8,330 a day). For scale, `/daily` pays 1,000 CC.
+- Small Teams lose most encounters, because the Trainer brings 3 to 6 Pokémon whatever the Team size. A Team of one at avg Lv 30 wins 39% of Under encounters.
+- Over-tier encounters are nearly unwinnable for low-Level Teams (0% to 7% at avg Lv 10 to 30) and closer to even for high ones (34% to 55% at avg Lv 60 to 90, Team of 6): the same +5 to +15 Levels matter more at low Levels.
+- A Lv 100 Pokémon carrying five Lv 5s (avg Lv 21) wins 98% to 100% of every tier, for a mean Prize money of 232 CC (Under) to 744 CC (Over), while the Lv 5s take EXP for every knockout.
+- CC per accepted encounter, Team of 6, the player always holding enough: avg Lv 10, +42 CC (334 a day at 8); avg Lv 30, +230 (1,837 a day); avg Lv 60, +586 (4,687 a day); avg Lv 90, +916 (7,325 a day). For scale, `/daily` pays 1,000 CC.
 - Leveling pace, with 10 Battles a day as in `tests/challengeBalance.test.js` and the encounters' worst case (8 a day, all won, every Trainer Pokémon knocked out): Lv 5 to 100 takes 56 days without encounters and 30 days with them; Lv 50 to 100 takes 42 days and 22 days.
 
 ## Open checks

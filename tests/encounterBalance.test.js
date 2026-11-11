@@ -26,7 +26,9 @@ const started = Date.now();
 const battleData = JSON.parse(readFileSync(new URL("../battleData.json", import.meta.url)));
 const pokemonData = JSON.parse(readFileSync(new URL("../pokemonData.json", import.meta.url)));
 const SEED = 20261110;
-const N = 100; // fights per tier per case
+// Fights per tier per case. At 100, a one-Pokémon Team's 5-10% win rates
+// moved by more than the 5 points of slack when the stand-in pool changed.
+const N = 400;
 
 const pool = Object.keys(battleData.species).map(Number)
   .filter((id) => pokemonData[id] && !(pokemonData[id].evolvesTo ?? []).length && catchBand(id) !== "legendary");

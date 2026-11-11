@@ -18,6 +18,7 @@
     "generate:pokedex": "node tools/generate-pokedex.mjs",
     "generate:megas": "node tools/generate-megas.mjs",
     "generate:move-flags": "node tools/generate-move-flags.mjs",
+    "generate:tm-data": "node tools/generate-tm-data.mjs",
     "import:mega-sprites": "node tools/import-mega-sprites.mjs",
     "validate:megas": "node tools/validate-megas.mjs",
     "import:sprites": "node tools/import-sprites.mjs",

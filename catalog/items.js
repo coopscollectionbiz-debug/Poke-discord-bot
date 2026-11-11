@@ -21,6 +21,7 @@
 // ==========================================================
 
 import fs from "fs";
+import { tmItemDefinitions } from "./tms.js";
 
 export const CATEGORIES = Object.freeze({
   capture: { label: "Capture", emoji: "🎯", order: 1 },
@@ -31,6 +32,7 @@ export const CATEGORIES = Object.freeze({
   cosmetic: { label: "Cosmetics", emoji: "🖼️", order: 6 },
   quest: { label: "Quest items", emoji: "📜", order: 7 },
   special: { label: "Special", emoji: "🎁", order: 8 },
+  tm: { label: "Technical Machines", emoji: "💿", order: 9 },
 });
 
 export const RARITIES = Object.freeze(["common", "uncommon", "rare", "epic", "legendary", "mythic"]);
@@ -285,6 +287,10 @@ ITEMS.push(
     sinceRelease: "M",
   }),
 );
+
+// ---------------- Technical Machines (TM system phase T3) ----------------
+// 156 launch TMs "active", 16 held TMs "defined" (catalog/tms.js).
+for (const def of tmItemDefinitions()) ITEMS.push(item(def));
 
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));
 

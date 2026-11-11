@@ -13,9 +13,9 @@
     68,
     59
    ],
-   "head": 54,
+   "head": 56,
    "headCost": 1,
-   "ears": 34,
+   "ears": 38,
    "earCost": 1,
    "ms": 120,
    "frames": 28
@@ -25,12 +25,12 @@
     83,
     69
    ],
-   "head": 42,
-   "headCost": 0,
-   "ears": 13,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 26
+   "frames": 19
   },
   "species:655": {
    "drops": [
@@ -38,20 +38,20 @@
     79,
     69
    ],
-   "head": 40,
-   "headCost": 1,
-   "ears": 6,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 28
+   "frames": 20
   },
   "species:657": {
    "drops": [
     70,
     61
    ],
-   "head": 48,
-   "headCost": 1,
+   "head": -1,
+   "headCost": null,
    "ears": 29,
    "earCost": 0,
    "ms": 110,
@@ -63,12 +63,12 @@
     68,
     63
    ],
-   "head": 57,
-   "headCost": 0,
-   "ears": 21,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 37
+   "frames": 25
   },
   "species:660": {
    "drops": [
@@ -76,12 +76,12 @@
     64,
     58
    ],
-   "head": 40,
-   "headCost": 0,
-   "ears": 16,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 34
+   "frames": 25
   },
   "species:673": {
    "drops": [
@@ -89,10 +89,10 @@
     59,
     55
    ],
-   "head": 46,
-   "headCost": 0,
-   "ears": 18,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
    "frames": 27
   },
@@ -100,12 +100,12 @@
    "drops": [
     76
    ],
-   "head": 54,
-   "headCost": 0,
-   "ears": 31,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 16
+   "frames": 13
   },
   "species:676": {
    "drops": [
@@ -113,12 +113,12 @@
     66,
     59
    ],
-   "head": 51,
-   "headCost": 1,
-   "ears": 23,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 51
+   "frames": 47
   },
   "species:677": {
    "drops": [
@@ -126,10 +126,10 @@
     61,
     53
    ],
-   "head": 54,
+   "head": 61,
    "headCost": 0,
-   "ears": 31,
-   "earCost": 0,
+   "ears": 36,
+   "earCost": 2,
    "ms": 80,
    "frames": 27
   },
@@ -139,12 +139,12 @@
     70,
     67
    ],
-   "head": 54,
-   "headCost": 1,
-   "ears": 22,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 27
+   "frames": 25
   },
   "species:679": {
    "drops": [
@@ -152,24 +152,24 @@
     60,
     50
    ],
-   "head": 44,
-   "headCost": 0,
-   "ears": 23,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 25
+   "frames": 29
   },
   "species:680": {
    "drops": [
     71,
     64
    ],
-   "head": 44,
-   "headCost": 0,
-   "ears": 32,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 32
+   "frames": 28
   },
   "species:683": {
    "drops": [
@@ -179,7 +179,7 @@
    ],
    "head": 50,
    "headCost": 1,
-   "ears": 21,
+   "ears": 32,
    "earCost": 0,
    "ms": 100,
    "frames": 29
@@ -190,7 +190,7 @@
    ],
    "head": 63,
    "headCost": 0,
-   "ears": 29,
+   "ears": 41,
    "earCost": 0,
    "ms": 90,
    "frames": 22
@@ -201,24 +201,24 @@
     58,
     55
    ],
-   "head": 35,
-   "headCost": 0,
-   "ears": 11,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 35
+   "frames": 30
   },
   "species:689": {
    "drops": [
     78,
     75
    ],
-   "head": 45,
-   "headCost": 0,
-   "ears": 13,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 22
+   "frames": 17
   },
   "species:690": {
    "drops": [
@@ -226,12 +226,12 @@
     56,
     52
    ],
-   "head": 47,
-   "headCost": 0,
-   "ears": 31,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 27
+   "frames": 26
   },
   "species:695": {
    "drops": [
@@ -239,10 +239,10 @@
     72,
     52
    ],
-   "head": 44,
-   "headCost": 2,
-   "ears": 20,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
    "frames": 18
   },
@@ -252,12 +252,12 @@
     79,
     49
    ],
-   "head": 37,
-   "headCost": 1,
-   "ears": 7,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 30
+   "frames": 23
   },
   "species:701": {
    "drops": [
@@ -265,9 +265,9 @@
     70,
     65
    ],
-   "head": 46,
-   "headCost": 0,
-   "ears": 21,
+   "head": -1,
+   "headCost": null,
+   "ears": 27,
    "earCost": 0,
    "ms": 80,
    "frames": 38
@@ -278,35 +278,35 @@
     52,
     49
    ],
-   "head": 45,
-   "headCost": 0,
-   "ears": 30,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 26
+   "frames": 21
   },
   "species:711": {
    "drops": [
     69,
     53
    ],
-   "head": 42,
-   "headCost": 0,
-   "ears": 12,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 37
+   "frames": 29
   },
   "species:715": {
    "drops": [
     74
    ],
    "head": -1,
-   "headCost": 7,
-   "ears": 19,
-   "earCost": 3,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 27
+   "frames": 20
   },
   "species:723": {
    "drops": [
@@ -314,12 +314,12 @@
     61,
     54
    ],
-   "head": 47,
-   "headCost": 2,
-   "ears": 29,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 28
+   "frames": 24
   },
   "species:724": {
    "drops": [
@@ -327,24 +327,24 @@
     56,
     53
    ],
-   "head": 37,
-   "headCost": 0,
-   "ears": 14,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 21
+   "frames": 14
   },
   "species:726": {
    "drops": [
     73,
     69
    ],
-   "head": 53,
-   "headCost": 0,
-   "ears": 24,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 37
+   "frames": 36
   },
   "species:741": {
    "drops": [
@@ -352,24 +352,24 @@
     51,
     44
    ],
-   "head": 49,
-   "headCost": 0,
-   "ears": 24,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 24
+   "frames": 22
   },
   "species:747": {
    "drops": [
     62,
     52
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 32,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 28
+   "frames": 24
   },
   "species:757": {
    "drops": [
@@ -377,12 +377,12 @@
     58,
     53
    ],
-   "head": 46,
-   "headCost": 3,
-   "ears": 32,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 21
+   "frames": 20
   },
   "species:758": {
    "drops": [
@@ -390,12 +390,12 @@
     67,
     54
    ],
-   "head": 43,
-   "headCost": 1,
-   "ears": 20,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 19
+   "frames": 20
   },
   "species:763": {
    "drops": [
@@ -403,12 +403,12 @@
     80,
     71
    ],
-   "head": 48,
-   "headCost": 0,
-   "ears": 15,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 28
+   "frames": 20
   },
   "species:765": {
    "drops": [
@@ -416,23 +416,23 @@
     66,
     57
    ],
-   "head": 42,
-   "headCost": 0,
-   "ears": 26,
-   "earCost": 2,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 30
+   "frames": 21
   },
   "species:766": {
    "drops": [
     68
    ],
-   "head": 40,
-   "headCost": 0,
-   "ears": 15,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 20
+   "frames": 16
   },
   "species:768": {
    "drops": [
@@ -441,11 +441,11 @@
     67
    ],
    "head": -1,
-   "headCost": 5,
-   "ears": 29,
-   "earCost": 0,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 23
+   "frames": 25
   },
   "species:788": {
    "drops": [
@@ -453,23 +453,23 @@
     55
    ],
    "head": -1,
-   "headCost": 6,
-   "ears": 19,
-   "earCost": 0,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 29
+   "frames": 19
   },
   "species:799": {
    "drops": [
     85,
     80
    ],
-   "head": 54,
-   "headCost": 1,
-   "ears": 11,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 20
+   "frames": 19
   },
   "species:803": {
    "drops": [
@@ -477,21 +477,21 @@
     62,
     57
    ],
-   "head": 50,
-   "headCost": 0,
-   "ears": 28,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 24
+   "frames": 17
   },
   "species:812": {
    "drops": [
     85,
     79
    ],
-   "head": 47,
+   "head": 49,
    "headCost": 0,
-   "ears": 18,
+   "ears": 20,
    "earCost": 0,
    "ms": 100,
    "frames": 36
@@ -502,12 +502,12 @@
     78,
     75
    ],
-   "head": 36,
-   "headCost": 0,
-   "ears": 27,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 23
+   "frames": 20
   },
   "species:819": {
    "drops": [
@@ -517,7 +517,7 @@
    ],
    "head": 57,
    "headCost": 0,
-   "ears": 26,
+   "ears": 33,
    "earCost": 0,
    "ms": 120,
    "frames": 34
@@ -528,23 +528,23 @@
     70,
     49
    ],
-   "head": 64,
-   "headCost": 1,
-   "ears": 17,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 32
+   "frames": 27
   },
   "species:825": {
    "drops": [
     64
    ],
-   "head": 43,
-   "headCost": 2,
-   "ears": 28,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 26
+   "frames": 27
   },
   "species:826": {
    "drops": [
@@ -552,12 +552,12 @@
     75,
     58
    ],
-   "head": 48,
-   "headCost": 0,
-   "ears": 16,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 39
+   "frames": 36
   },
   "species:827": {
    "drops": [
@@ -565,12 +565,12 @@
     60,
     57
    ],
-   "head": 49,
-   "headCost": 0,
-   "ears": 40,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 39
+   "frames": 31
   },
   "species:828": {
    "drops": [
@@ -578,22 +578,22 @@
     61,
     53
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 30,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 22
+   "frames": 15
   },
   "species:829": {
    "drops": [
     64,
     57
    ],
-   "head": 41,
-   "headCost": 2,
-   "ears": 25,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
    "frames": 16
   },
@@ -603,10 +603,10 @@
     67,
     48
    ],
-   "head": 38,
-   "headCost": 1,
-   "ears": 19,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": 18,
+   "earCost": 2,
    "ms": 110,
    "frames": 21
   },
@@ -616,35 +616,35 @@
     62,
     57
    ],
-   "head": 56,
-   "headCost": 1,
-   "ears": 21,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 22
+   "frames": 20
   },
   "species:842": {
    "drops": [
     81
    ],
-   "head": 78,
-   "headCost": 2,
-   "ears": 25,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 36
+   "frames": 29
   },
   "species:850": {
    "drops": [
     62,
     55
    ],
-   "head": 56,
-   "headCost": 0,
-   "ears": 30,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 18
+   "frames": 14
   },
   "species:851": {
    "drops": [
@@ -652,54 +652,54 @@
     66,
     62
    ],
-   "head": 51,
-   "headCost": 0,
-   "ears": 13,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 22
+   "frames": 19
   },
   "species:853": {
    "drops": [
     68
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 17,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 25
+   "frames": 23
   },
   "species:854": {
    "drops": [
     58
    ],
-   "head": 46,
-   "headCost": 0,
-   "ears": 36,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 32
+   "frames": 22
   },
   "species:855": {
    "drops": [
     75,
     66
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 19,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 31
+   "frames": 27
   },
   "species:857": {
    "drops": [
     68
    ],
-   "head": 56,
+   "head": 62,
    "headCost": 0,
-   "ears": 23,
+   "ears": 41,
    "earCost": 0,
    "ms": 80,
    "frames": 30
@@ -709,12 +709,12 @@
     69,
     52
    ],
-   "head": 50,
-   "headCost": 2,
-   "ears": 20,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 27
+   "frames": 19
   },
   "species:865": {
    "drops": [
@@ -722,35 +722,35 @@
     56,
     53
    ],
-   "head": 45,
-   "headCost": 1,
-   "ears": 13,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 28
+   "frames": 30
   },
   "species:870": {
    "drops": [
     69
    ],
-   "head": 49,
-   "headCost": 3,
-   "ears": 27,
-   "earCost": 2,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 22
+   "frames": 17
   },
   "species:879": {
    "drops": [
     66,
     54
    ],
-   "head": 38,
-   "headCost": 1,
-   "ears": 15,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 32
+   "frames": 26
   },
   "species:881": {
    "drops": [
@@ -758,12 +758,12 @@
     69,
     64
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 23,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 30
+   "frames": 27
   },
   "species:891": {
    "drops": [
@@ -771,12 +771,12 @@
     68,
     65
    ],
-   "head": 40,
-   "headCost": 0,
-   "ears": 35,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 41
+   "frames": 30
   },
   "species:892": {
    "drops": [
@@ -784,47 +784,47 @@
     73,
     59
    ],
-   "head": 37,
-   "headCost": 0,
-   "ears": 20,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 37
+   "frames": 30
   },
   "species:893": {
    "drops": [
     67
    ],
-   "head": 40,
-   "headCost": 1,
-   "ears": 16,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 28
+   "frames": 25
   },
   "species:894": {
    "drops": [
     82,
     78
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 17,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 35
+   "frames": 36
   },
   "species:900": {
    "drops": [
     81,
     64
    ],
-   "head": 34,
-   "headCost": 0,
-   "ears": 12,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 35
+   "frames": 33
   },
   "species:903": {
    "drops": [
@@ -832,12 +832,12 @@
     58,
     55
    ],
-   "head": 32,
-   "headCost": 0,
-   "ears": 12,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 20
+   "frames": 17
   },
   "species:905": {
    "drops": [
@@ -845,22 +845,22 @@
     65,
     58
    ],
-   "head": 33,
-   "headCost": 0,
-   "ears": 3,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 23
+   "frames": 18
   },
   "species:906": {
    "drops": [
     71,
     68
    ],
-   "head": 61,
+   "head": 65,
    "headCost": 0,
-   "ears": 37,
-   "earCost": 0,
+   "ears": 43,
+   "earCost": 3,
    "ms": 80,
    "frames": 36
   },
@@ -870,9 +870,9 @@
     71,
     63
    ],
-   "head": 55,
+   "head": 47,
    "headCost": 0,
-   "ears": 23,
+   "ears": 25,
    "earCost": 1,
    "ms": 120,
    "frames": 20
@@ -885,8 +885,8 @@
    ],
    "head": 39,
    "headCost": 0,
-   "ears": 14,
-   "earCost": 2,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
    "frames": 28
   },
@@ -896,7 +896,7 @@
    ],
    "head": 61,
    "headCost": 2,
-   "ears": 32,
+   "ears": 37,
    "earCost": 0,
    "ms": 90,
    "frames": 25
@@ -905,9 +905,9 @@
    "drops": [
     63
    ],
-   "head": 57,
-   "headCost": 1,
-   "ears": 22,
+   "head": 55,
+   "headCost": 0,
+   "ears": 32,
    "earCost": 0,
    "ms": 90,
    "frames": 17
@@ -917,11 +917,11 @@
     74
    ],
    "head": -1,
-   "headCost": 5,
-   "ears": 33,
-   "earCost": 0,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 29
+   "frames": 25
   },
   "species:912": {
    "drops": [
@@ -929,12 +929,12 @@
     59,
     56
    ],
-   "head": 51,
-   "headCost": 0,
-   "ears": 29,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 18
+   "frames": 17
   },
   "species:913": {
    "drops": [
@@ -944,7 +944,7 @@
    ],
    "head": 45,
    "headCost": 0,
-   "ears": 17,
+   "ears": 23,
    "earCost": 0,
    "ms": 90,
    "frames": 27
@@ -955,9 +955,9 @@
     73,
     58
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 22,
+   "head": -1,
+   "headCost": null,
+   "ears": 24,
    "earCost": 0,
    "ms": 80,
    "frames": 24
@@ -967,9 +967,9 @@
     62,
     57
    ],
-   "head": 59,
-   "headCost": 2,
-   "ears": 38,
+   "head": -1,
+   "headCost": null,
+   "ears": 40,
    "earCost": 0,
    "ms": 90,
    "frames": 27
@@ -981,11 +981,11 @@
     55
    ],
    "head": -1,
-   "headCost": 11,
-   "ears": 27,
-   "earCost": 0,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 20
+   "frames": 15
   },
   "species:917": {
    "drops": [
@@ -993,8 +993,8 @@
     67
    ],
    "head": -1,
-   "headCost": 9,
-   "ears": 24,
+   "headCost": null,
+   "ears": 44,
    "earCost": 0,
    "ms": 120,
    "frames": 41
@@ -1005,8 +1005,8 @@
     74,
     69
    ],
-   "head": 44,
-   "headCost": 0,
+   "head": 40,
+   "headCost": 2,
    "ears": -1,
    "earCost": null,
    "ms": 80,
@@ -1017,12 +1017,12 @@
     65,
     62
    ],
-   "head": 48,
-   "headCost": 0,
-   "ears": 32,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 35
+   "frames": 34
   },
   "species:920": {
    "drops": [
@@ -1030,12 +1030,12 @@
     74,
     68
    ],
-   "head": 48,
-   "headCost": 0,
-   "ears": 14,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 19
+   "frames": 14
   },
   "species:921": {
    "drops": [
@@ -1067,9 +1067,9 @@
     63,
     60
    ],
-   "head": 51,
+   "head": 53,
    "headCost": 0,
-   "ears": 18,
+   "ears": 31,
    "earCost": 0,
    "ms": 80,
    "frames": 23
@@ -1078,9 +1078,9 @@
    "drops": [
     62
    ],
-   "head": 51,
+   "head": 55,
    "headCost": 0,
-   "ears": 33,
+   "ears": 35,
    "earCost": 0,
    "ms": 120,
    "frames": 35
@@ -1091,10 +1091,10 @@
     73,
     57
    ],
-   "head": 55,
-   "headCost": 2,
-   "ears": 31,
-   "earCost": 2,
+   "head": -1,
+   "headCost": null,
+   "ears": 38,
+   "earCost": 0,
    "ms": 80,
    "frames": 33
   },
@@ -1105,7 +1105,7 @@
    ],
    "head": 59,
    "headCost": 0,
-   "ears": 31,
+   "ears": 42,
    "earCost": 0,
    "ms": 100,
    "frames": 27
@@ -1114,23 +1114,23 @@
    "drops": [
     61
    ],
-   "head": 52,
-   "headCost": 0,
-   "ears": 26,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 19
+   "frames": 18
   },
   "species:930": {
    "drops": [
     75
    ],
-   "head": 41,
-   "headCost": 0,
-   "ears": 16,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 22
+   "frames": 23
   },
   "species:931": {
    "drops": [
@@ -1138,22 +1138,22 @@
     54,
     51
    ],
-   "head": 42,
-   "headCost": 0,
-   "ears": 22,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 23
+   "frames": 20
   },
   "species:933": {
    "drops": [
     56,
     49
    ],
-   "head": 49,
+   "head": 51,
    "headCost": 2,
-   "ears": 35,
-   "earCost": 0,
+   "ears": 37,
+   "earCost": 2,
    "ms": 110,
    "frames": 35
   },
@@ -1163,24 +1163,24 @@
     82,
     79
    ],
-   "head": 35,
-   "headCost": 0,
-   "ears": 26,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 37
+   "frames": 32
   },
   "species:935": {
    "drops": [
     64,
     61
    ],
-   "head": 45,
-   "headCost": 0,
-   "ears": 25,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 34
+   "frames": 31
   },
   "species:936": {
    "drops": [
@@ -1188,12 +1188,12 @@
     80,
     77
    ],
-   "head": 45,
-   "headCost": 0,
-   "ears": 10,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 34
+   "frames": 31
   },
   "species:937": {
    "drops": [
@@ -1201,12 +1201,12 @@
     81,
     78
    ],
-   "head": 37,
-   "headCost": 0,
-   "ears": 9,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 24
+   "frames": 22
   },
   "species:939": {
    "drops": [
@@ -1214,7 +1214,7 @@
     53,
     47
    ],
-   "head": 42,
+   "head": 50,
    "headCost": 0,
    "ears": -1,
    "earCost": null,
@@ -1227,12 +1227,12 @@
     57,
     51
    ],
-   "head": 43,
-   "headCost": 1,
-   "ears": 30,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 30
+   "frames": 32
   },
   "species:941": {
    "drops": [
@@ -1240,20 +1240,20 @@
     78,
     62
    ],
-   "head": 51,
-   "headCost": 1,
-   "ears": 33,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 23
+   "frames": 20
   },
   "species:942": {
    "drops": [
     79
    ],
-   "head": 73,
-   "headCost": 0,
-   "ears": 51,
+   "head": -1,
+   "headCost": null,
+   "ears": 56,
    "earCost": 0,
    "ms": 120,
    "frames": 28
@@ -1265,11 +1265,11 @@
     70
    ],
    "head": -1,
-   "headCost": 6,
-   "ears": 33,
-   "earCost": 0,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 29
+   "frames": 23
   },
   "species:944": {
    "drops": [
@@ -1278,7 +1278,7 @@
    ],
    "head": -1,
    "headCost": null,
-   "ears": 40,
+   "ears": 42,
    "earCost": 0,
    "ms": 110,
    "frames": 18
@@ -1287,34 +1287,34 @@
    "drops": [
     75
    ],
-   "head": 65,
-   "headCost": 0,
-   "ears": 44,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 19
+   "frames": 17
   },
   "species:946": {
    "drops": [
     76
    ],
    "head": -1,
-   "headCost": 8,
-   "ears": 52,
-   "earCost": 0,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 23
+   "frames": 16
   },
   "species:947": {
    "drops": [
     78
    ],
-   "head": 52,
-   "headCost": 0,
-   "ears": 43,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 24
+   "frames": 19
   },
   "species:948": {
    "drops": [
@@ -1322,12 +1322,12 @@
     75,
     65
    ],
-   "head": 50,
-   "headCost": 0,
-   "ears": 28,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 40
+   "frames": 27
   },
   "species:949": {
    "drops": [
@@ -1335,21 +1335,21 @@
     63,
     54
    ],
-   "head": 37,
-   "headCost": 0,
-   "ears": 14,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 23
+   "frames": 19
   },
   "species:950": {
    "drops": [
     69
    ],
-   "head": 54,
-   "headCost": 0,
-   "ears": 35,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
    "frames": 18
   },
@@ -1359,12 +1359,12 @@
     60,
     54
    ],
-   "head": 50,
-   "headCost": 0,
-   "ears": 32,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 35
+   "frames": 27
   },
   "species:952": {
    "drops": [
@@ -1372,12 +1372,12 @@
     68,
     55
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 24,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 36
+   "frames": 33
   },
   "species:953": {
    "drops": [
@@ -1385,10 +1385,10 @@
    ],
    "head": -1,
    "headCost": null,
-   "ears": 33,
-   "earCost": 1,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 27
+   "frames": 18
   },
   "species:954": {
    "drops": [
@@ -1396,12 +1396,12 @@
     60,
     53
    ],
-   "head": 38,
-   "headCost": 0,
-   "ears": 16,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 39
+   "frames": 32
   },
   "species:955": {
    "drops": [
@@ -1410,8 +1410,8 @@
    ],
    "head": -1,
    "headCost": null,
-   "ears": 43,
-   "earCost": 0,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
    "frames": 32
   },
@@ -1421,20 +1421,20 @@
     75,
     66
    ],
-   "head": 50,
-   "headCost": 0,
-   "ears": 15,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 31
+   "frames": 24
   },
   "species:957": {
    "drops": [
     61
    ],
-   "head": 52,
+   "head": 58,
    "headCost": 0,
-   "ears": 29,
+   "ears": 36,
    "earCost": 0,
    "ms": 80,
    "frames": 25
@@ -1443,10 +1443,10 @@
    "drops": [
     65
    ],
-   "head": 51,
-   "headCost": 0,
-   "ears": 26,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": 35,
+   "earCost": 2,
    "ms": 100,
    "frames": 16
   },
@@ -1454,12 +1454,12 @@
    "drops": [
     78
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 13,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 16
+   "frames": 10
   },
   "species:960": {
    "drops": [
@@ -1467,12 +1467,12 @@
     56,
     53
    ],
-   "head": 43,
-   "headCost": 1,
-   "ears": 31,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 23
+   "frames": 17
   },
   "species:961": {
    "drops": [
@@ -1480,34 +1480,34 @@
     72,
     62
    ],
-   "head": 65,
-   "headCost": 1,
-   "ears": 21,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 27
+   "frames": 21
   },
   "species:962": {
    "drops": [
     78,
     71
    ],
-   "head": 46,
-   "headCost": 0,
-   "ears": 18,
-   "earCost": 2,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 35
+   "frames": 26
   },
   "species:963": {
    "drops": [
     67,
     60
    ],
-   "head": 57,
-   "headCost": 0,
-   "ears": 38,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": 40,
+   "earCost": 1,
    "ms": 120,
    "frames": 22
   },
@@ -1516,10 +1516,10 @@
     67,
     60
    ],
-   "head": 57,
-   "headCost": 0,
-   "ears": 38,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": 40,
+   "earCost": 1,
    "ms": 100,
    "frames": 29
   },
@@ -1528,12 +1528,12 @@
     61,
     58
    ],
-   "head": 45,
-   "headCost": 0,
-   "ears": 28,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 17
+   "frames": 19
   },
   "species:966": {
    "drops": [
@@ -1542,11 +1542,11 @@
     54
    ],
    "head": -1,
-   "headCost": 7,
-   "ears": 27,
-   "earCost": 2,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 41
+   "frames": 34
   },
   "species:967": {
    "drops": [
@@ -1556,7 +1556,7 @@
    ],
    "head": 36,
    "headCost": 0,
-   "ears": 17,
+   "ears": 22,
    "earCost": 2,
    "ms": 80,
    "frames": 28
@@ -1565,24 +1565,24 @@
    "drops": [
     77
    ],
-   "head": 50,
-   "headCost": 0,
-   "ears": 33,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 16
+   "frames": 15
   },
   "species:970": {
    "drops": [
     69,
     64
    ],
-   "head": 52,
-   "headCost": 0,
-   "ears": 23,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 43
+   "frames": 34
   },
   "species:971": {
    "drops": [
@@ -1590,21 +1590,21 @@
    ],
    "head": -1,
    "headCost": null,
-   "ears": 22,
-   "earCost": 0,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 19
+   "frames": 16
   },
   "species:972": {
    "drops": [
     71
    ],
-   "head": 43,
-   "headCost": 2,
-   "ears": 32,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 17
+   "frames": 15
   },
   "species:973": {
    "drops": [
@@ -1612,7 +1612,7 @@
     73,
     66
    ],
-   "head": 35,
+   "head": 37,
    "headCost": 0,
    "ears": -1,
    "earCost": null,
@@ -1623,35 +1623,35 @@
    "drops": [
     65
    ],
-   "head": 50,
-   "headCost": 0,
-   "ears": 41,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 27
+   "frames": 26
   },
   "species:975": {
    "drops": [
     72,
     62
    ],
-   "head": 47,
-   "headCost": 0,
-   "ears": 18,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 33
+   "frames": 32
   },
   "species:976": {
    "drops": [
     66
    ],
-   "head": 46,
-   "headCost": 0,
-   "ears": 32,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 26
+   "frames": 21
   },
   "species:977": {
    "drops": [
@@ -1659,24 +1659,24 @@
     84,
     75
    ],
-   "head": 55,
-   "headCost": 0,
-   "ears": 21,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 29
+   "frames": 19
   },
   "species:979": {
    "drops": [
     83,
     70
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 15,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 31
+   "frames": 28
   },
   "species:981": {
    "drops": [
@@ -1684,36 +1684,36 @@
     60,
     56
    ],
-   "head": 38,
-   "headCost": 0,
-   "ears": 7,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 18
+   "frames": 14
   },
   "species:982": {
    "drops": [
     69,
     65
    ],
-   "head": 61,
-   "headCost": 0,
-   "ears": 27,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 28
+   "frames": 25
   },
   "species:983": {
    "drops": [
     83,
     80
    ],
-   "head": 42,
-   "headCost": 0,
-   "ears": 28,
-   "earCost": 2,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 25
+   "frames": 26
   },
   "species:985": {
    "drops": [
@@ -1721,8 +1721,8 @@
    ],
    "head": -1,
    "headCost": null,
-   "ears": 21,
-   "earCost": 0,
+   "ears": 39,
+   "earCost": 2,
    "ms": 100,
    "frames": 31
   },
@@ -1732,10 +1732,10 @@
     70,
     52
    ],
-   "head": 41,
-   "headCost": 4,
-   "ears": 25,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
    "frames": 24
   },
@@ -1745,24 +1745,24 @@
     63,
     55
    ],
-   "head": 54,
-   "headCost": 0,
-   "ears": 10,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 26
+   "frames": 22
   },
   "species:989": {
    "drops": [
     75,
     72
    ],
-   "head": 36,
-   "headCost": 0,
-   "ears": 10,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 48
+   "frames": 34
   },
   "species:990": {
    "drops": [
@@ -1770,12 +1770,12 @@
     68,
     65
    ],
-   "head": 46,
-   "headCost": 4,
-   "ears": 30,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 31
+   "frames": 25
   },
   "species:991": {
    "drops": [
@@ -1783,10 +1783,10 @@
     56,
     52
    ],
-   "head": 47,
-   "headCost": 0,
-   "ears": 28,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
    "frames": 29
   },
@@ -1796,12 +1796,12 @@
     76,
     71
    ],
-   "head": 40,
-   "headCost": 0,
-   "ears": 18,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 22
+   "frames": 23
   },
   "species:998": {
    "drops": [
@@ -1809,12 +1809,12 @@
     72,
     69
    ],
-   "head": 45,
-   "headCost": 0,
-   "ears": 16,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 31
+   "frames": 26
   },
   "species:1005": {
    "drops": [
@@ -1822,35 +1822,35 @@
     84,
     78
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 26,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 29
+   "frames": 21
   },
   "species:1007": {
    "drops": [
     85
    ],
-   "head": 35,
-   "headCost": 0,
-   "ears": 3,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 28
+   "frames": 22
   },
   "species:1009": {
    "drops": [
     79,
     75
    ],
-   "head": 41,
-   "headCost": 0,
-   "ears": 12,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 18
+   "frames": 15
   },
   "species:1010": {
    "drops": [
@@ -1858,12 +1858,12 @@
     77,
     74
    ],
-   "head": 42,
-   "headCost": 0,
-   "ears": 16,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 27
+   "frames": 23
   },
   "species:1011": {
    "drops": [
@@ -1871,12 +1871,12 @@
     65,
     57
    ],
-   "head": 45,
-   "headCost": 0,
-   "ears": 12,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 24
+   "frames": 27
   },
   "species:1012": {
    "drops": [
@@ -1884,12 +1884,12 @@
     60,
     55
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 27,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 23
+   "frames": 18
   },
   "species:1013": {
    "drops": [
@@ -1897,24 +1897,24 @@
     77,
     74
    ],
-   "head": 40,
-   "headCost": 0,
-   "ears": 19,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 33
+   "frames": 31
   },
   "species:1014": {
    "drops": [
     85,
     80
    ],
-   "head": 40,
-   "headCost": 0,
-   "ears": 13,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 31
+   "frames": 28
   },
   "species:1015": {
    "drops": [
@@ -1922,12 +1922,12 @@
     64,
     61
    ],
-   "head": 45,
-   "headCost": 0,
-   "ears": 20,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 24
+   "frames": 18
   },
   "species:1016": {
    "drops": [
@@ -1935,12 +1935,12 @@
     72,
     53
    ],
-   "head": 38,
-   "headCost": 0,
-   "ears": 17,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 38
+   "frames": 32
   },
   "species:1017": {
    "drops": [
@@ -1948,12 +1948,12 @@
     69,
     66
    ],
-   "head": 46,
-   "headCost": 0,
-   "ears": 17,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 27
+   "frames": 25
   },
   "species:1018": {
    "drops": [
@@ -1962,34 +1962,34 @@
     75
    ],
    "head": -1,
-   "headCost": 8,
-   "ears": 8,
-   "earCost": 3,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 23
+   "frames": 19
   },
   "species:1021": {
    "drops": [
     93,
     82
    ],
-   "head": 36,
-   "headCost": 0,
-   "ears": 21,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 40
+   "frames": 35
   },
   "species:1022": {
    "drops": [
     74
    ],
-   "head": 40,
-   "headCost": 2,
-   "ears": 19,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 32
+   "frames": 27
   },
   "species:1023": {
    "drops": [
@@ -1997,10 +1997,10 @@
     73,
     70
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 15,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
    "frames": 27
   },
@@ -2008,12 +2008,12 @@
    "drops": [
     67
    ],
-   "head": 64,
-   "headCost": 0,
-   "ears": 28,
-   "earCost": 2,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 19
+   "frames": 20
   },
   "mega:mega-venusaur": {
    "drops": [
@@ -2022,10 +2022,10 @@
    ],
    "head": -1,
    "headCost": null,
-   "ears": 13,
-   "earCost": 0,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 34
+   "frames": 29
   },
   "mega:mega-charizard-y": {
    "drops": [
@@ -2033,10 +2033,10 @@
     80,
     74
    ],
-   "head": -1,
-   "headCost": 7,
-   "ears": 10,
-   "earCost": 0,
+   "head": 31,
+   "headCost": 1,
+   "ears": 17,
+   "earCost": 2,
    "ms": 120,
    "frames": 25
   },
@@ -2044,12 +2044,12 @@
    "drops": [
     82
    ],
-   "head": 41,
-   "headCost": 0,
-   "ears": 6,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 17
+   "frames": 16
   },
   "mega:mega-pidgeot": {
    "drops": [
@@ -2057,23 +2057,23 @@
     80,
     55
    ],
-   "head": 57,
-   "headCost": 0,
-   "ears": 9,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 33
+   "frames": 25
   },
   "mega:mega-raichu-x": {
    "drops": [
     66
    ],
-   "head": 60,
-   "headCost": 1,
-   "ears": 36,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 25
+   "frames": 22
   },
   "mega:mega-raichu-y": {
    "drops": [
@@ -2081,9 +2081,9 @@
     71,
     65
    ],
-   "head": 55,
+   "head": 59,
    "headCost": 0,
-   "ears": 24,
+   "ears": 28,
    "earCost": 0,
    "ms": 120,
    "frames": 20
@@ -2094,12 +2094,12 @@
     72,
     69
    ],
-   "head": 67,
-   "headCost": 1,
-   "ears": 28,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 29
+   "frames": 27
   },
   "mega:mega-victreebel": {
    "drops": [
@@ -2107,10 +2107,10 @@
     71,
     66
    ],
-   "head": 51,
+   "head": 53,
    "headCost": 0,
-   "ears": 8,
-   "earCost": 0,
+   "ears": 33,
+   "earCost": 1,
    "ms": 80,
    "frames": 39
   },
@@ -2120,10 +2120,10 @@
     77,
     59
    ],
-   "head": 35,
-   "headCost": 0,
-   "ears": 14,
-   "earCost": 0,
+   "head": 31,
+   "headCost": 4,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
    "frames": 29
   },
@@ -2132,20 +2132,20 @@
     76,
     73
    ],
-   "head": 54,
-   "headCost": 1,
-   "ears": 46,
-   "earCost": 2,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 34
+   "frames": 22
   },
   "mega:mega-kangaskhan": {
    "drops": [
     73
    ],
    "head": -1,
-   "headCost": 6,
-   "ears": 26,
+   "headCost": null,
+   "ears": 40,
    "earCost": 0,
    "ms": 110,
    "frames": 26
@@ -2156,33 +2156,33 @@
     81,
     71
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 31,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 33
+   "frames": 28
   },
   "mega:mega-pinsir": {
    "drops": [
     77,
     74
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 16,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 37
+   "frames": 28
   },
   "mega:mega-gyarados": {
    "drops": [
     74
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 5,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
    "frames": 27
   },
@@ -2193,9 +2193,9 @@
     67
    ],
    "head": -1,
-   "headCost": 7,
-   "ears": 20,
-   "earCost": 0,
+   "headCost": null,
+   "ears": 31,
+   "earCost": 3,
    "ms": 120,
    "frames": 42
   },
@@ -2205,10 +2205,10 @@
     83,
     73
    ],
-   "head": 40,
-   "headCost": 0,
-   "ears": 7,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
    "frames": 21
   },
@@ -2217,12 +2217,12 @@
     77,
     74
    ],
-   "head": 37,
-   "headCost": 0,
-   "ears": 8,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 17
+   "frames": 18
   },
   "mega:mega-feraligatr": {
    "drops": [
@@ -2230,12 +2230,12 @@
     81,
     68
    ],
-   "head": 37,
-   "headCost": 0,
-   "ears": 11,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 21
+   "frames": 17
   },
   "mega:mega-heracross": {
    "drops": [
@@ -2243,12 +2243,12 @@
     67,
     53
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 18,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 23
+   "frames": 15
   },
   "mega:mega-skarmory": {
    "drops": [
@@ -2256,12 +2256,12 @@
     72,
     58
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 12,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 37
+   "frames": 24
   },
   "mega:mega-houndoom": {
    "drops": [
@@ -2269,21 +2269,21 @@
     69,
     57
    ],
-   "head": 42,
-   "headCost": 2,
-   "ears": 25,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 21
+   "frames": 17
   },
   "mega:mega-sceptile": {
    "drops": [
     77
    ],
-   "head": 38,
-   "headCost": 0,
-   "ears": 31,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
    "frames": 18
   },
@@ -2294,11 +2294,11 @@
     70
    ],
    "head": -1,
-   "headCost": 11,
-   "ears": 18,
-   "earCost": 2,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 29
+   "frames": 25
   },
   "mega:mega-sableye": {
    "drops": [
@@ -2306,12 +2306,12 @@
     66,
     60
    ],
-   "head": 54,
-   "headCost": 0,
-   "ears": 18,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 41
+   "frames": 34
   },
   "mega:mega-aggron": {
    "drops": [
@@ -2319,12 +2319,12 @@
     74,
     55
    ],
-   "head": 40,
-   "headCost": 3,
-   "ears": 25,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 21
+   "frames": 16
   },
   "mega:mega-sharpedo": {
    "drops": [
@@ -2332,12 +2332,12 @@
     76,
     73
    ],
-   "head": 38,
-   "headCost": 0,
-   "ears": 19,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 41
+   "frames": 23
   },
   "mega:mega-camerupt": {
    "drops": [
@@ -2345,24 +2345,24 @@
     68,
     61
    ],
-   "head": 60,
-   "headCost": 0,
-   "ears": 16,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 24
+   "frames": 23
   },
   "mega:mega-altaria": {
    "drops": [
     91,
     74
    ],
-   "head": 49,
-   "headCost": 0,
-   "ears": 4,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 26
+   "frames": 18
   },
   "mega:mega-chimecho": {
    "drops": [
@@ -2370,12 +2370,12 @@
     80,
     60
    ],
-   "head": 36,
-   "headCost": 0,
-   "ears": 10,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 21
+   "frames": 18
   },
   "mega:mega-absol-z": {
    "drops": [
@@ -2383,10 +2383,10 @@
     58,
     54
    ],
-   "head": 48,
-   "headCost": 1,
-   "ears": 17,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": 30,
+   "earCost": 1,
    "ms": 100,
    "frames": 16
   },
@@ -2396,24 +2396,24 @@
     67,
     59
    ],
-   "head": 42,
-   "headCost": 0,
-   "ears": 11,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 23
+   "frames": 24
   },
   "mega:mega-staraptor": {
    "drops": [
     91,
     80
    ],
-   "head": 44,
-   "headCost": 1,
-   "ears": 22,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 40
+   "frames": 34
   },
   "mega:mega-lopunny": {
    "drops": [
@@ -2423,8 +2423,8 @@
    ],
    "head": 45,
    "headCost": 0,
-   "ears": 17,
-   "earCost": 0,
+   "ears": 26,
+   "earCost": 1,
    "ms": 110,
    "frames": 37
   },
@@ -2434,12 +2434,12 @@
     74,
     65
    ],
-   "head": 40,
-   "headCost": 0,
-   "ears": 11,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 32
+   "frames": 23
   },
   "mega:mega-lucario-z": {
    "drops": [
@@ -2447,12 +2447,12 @@
     77,
     69
    ],
-   "head": 40,
-   "headCost": 0,
-   "ears": 25,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 40
+   "frames": 34
   },
   "mega:mega-gallade": {
    "drops": [
@@ -2460,10 +2460,10 @@
     78,
     68
    ],
-   "head": 42,
-   "headCost": 2,
-   "ears": 14,
-   "earCost": 2,
+   "head": 40,
+   "headCost": 0,
+   "ears": 20,
+   "earCost": 0,
    "ms": 120,
    "frames": 44
   },
@@ -2473,8 +2473,8 @@
     72,
     69
    ],
-   "head": 42,
-   "headCost": 0,
+   "head": 34,
+   "headCost": 2,
    "ears": 13,
    "earCost": 1,
    "ms": 90,
@@ -2485,12 +2485,12 @@
     66,
     54
    ],
-   "head": 45,
-   "headCost": 0,
-   "ears": 24,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 27
+   "frames": 20
   },
   "mega:mega-darkrai": {
    "drops": [
@@ -2498,23 +2498,23 @@
     80,
     67
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 10,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 25
+   "frames": 26
   },
   "mega:mega-emboar": {
    "drops": [
     86
    ],
-   "head": 42,
-   "headCost": 0,
-   "ears": 2,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 31
+   "frames": 28
   },
   "mega:mega-excadrill": {
    "drops": [
@@ -2522,12 +2522,12 @@
     78,
     56
    ],
-   "head": 40,
-   "headCost": 0,
-   "ears": 13,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 22
+   "frames": 17
   },
   "mega:mega-audino": {
    "drops": [
@@ -2535,9 +2535,9 @@
     63,
     52
    ],
-   "head": 49,
+   "head": 58,
    "headCost": 0,
-   "ears": 20,
+   "ears": 32,
    "earCost": 0,
    "ms": 120,
    "frames": 37
@@ -2548,20 +2548,20 @@
     90,
     78
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 18,
-   "earCost": 2,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 40
+   "frames": 34
   },
   "mega:mega-scrafty": {
    "drops": [
     74
    ],
-   "head": 63,
-   "headCost": 0,
-   "ears": 18,
+   "head": -1,
+   "headCost": null,
+   "ears": 27,
    "earCost": 0,
    "ms": 110,
    "frames": 29
@@ -2572,58 +2572,58 @@
     71,
     68
    ],
-   "head": 52,
-   "headCost": 0,
-   "ears": 20,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 26
+   "frames": 22
   },
   "mega:mega-chandelure": {
    "drops": [
     93,
     80
    ],
-   "head": 36,
-   "headCost": 0,
-   "ears": 28,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 42
+   "frames": 33
   },
   "mega:mega-golurk": {
    "drops": [
     72
    ],
-   "head": 43,
-   "headCost": 0,
-   "ears": 2,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 22
+   "frames": 19
   },
   "mega:mega-chesnaught": {
    "drops": [
     74
    ],
-   "head": 44,
-   "headCost": 0,
-   "ears": 22,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 100,
-   "frames": 19
+   "frames": 18
   },
   "mega:mega-delphox": {
    "drops": [
     85,
     82
    ],
-   "head": 44,
-   "headCost": 0,
-   "ears": 19,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 22
+   "frames": 21
   },
   "mega:mega-greninja": {
    "drops": [
@@ -2631,20 +2631,20 @@
     74,
     71
    ],
-   "head": 41,
-   "headCost": 0,
-   "ears": 19,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 27
+   "frames": 19
   },
   "mega:mega-pyroar": {
    "drops": [
     84
    ],
-   "head": 72,
+   "head": 60,
    "headCost": 0,
-   "ears": 8,
+   "ears": 44,
    "earCost": 0,
    "ms": 120,
    "frames": 21
@@ -2654,12 +2654,12 @@
     80,
     73
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 18,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 24
+   "frames": 20
   },
   "mega:mega-meowstic-f": {
    "drops": [
@@ -2667,12 +2667,12 @@
     72,
     57
    ],
-   "head": 41,
-   "headCost": 0,
-   "ears": 9,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 37
+   "frames": 33
   },
   "mega:mega-meowstic-m": {
    "drops": [
@@ -2680,12 +2680,12 @@
     72,
     57
    ],
-   "head": 41,
-   "headCost": 0,
-   "ears": 9,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 27
+   "frames": 18
   },
   "mega:mega-malamar": {
    "drops": [
@@ -2693,12 +2693,12 @@
     83,
     57
    ],
-   "head": 34,
-   "headCost": 0,
-   "ears": 2,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 30
+   "frames": 25
   },
   "mega:mega-barbaracle": {
    "drops": [
@@ -2706,33 +2706,33 @@
     81,
     77
    ],
-   "head": 35,
-   "headCost": 0,
-   "ears": 18,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 41
+   "frames": 25
   },
   "mega:mega-dragalge": {
    "drops": [
     84,
     79
    ],
-   "head": 50,
-   "headCost": 0,
-   "ears": 13,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 28
+   "frames": 24
   },
   "mega:mega-hawlucha": {
    "drops": [
     80,
     70
    ],
-   "head": 53,
-   "headCost": 0,
-   "ears": 30,
+   "head": -1,
+   "headCost": null,
+   "ears": 34,
    "earCost": 0,
    "ms": 120,
    "frames": 25
@@ -2743,10 +2743,10 @@
     89,
     72
    ],
-   "head": 36,
-   "headCost": 0,
-   "ears": 32,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
    "frames": 19
   },
@@ -2756,12 +2756,12 @@
     89,
     81
    ],
-   "head": 39,
-   "headCost": 0,
-   "ears": 20,
-   "earCost": 2,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 32
+   "frames": 23
   },
   "mega:mega-golisopod": {
    "drops": [
@@ -2769,10 +2769,10 @@
     84,
     80
    ],
-   "head": 38,
-   "headCost": 0,
-   "ears": 9,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
    "frames": 21
   },
@@ -2782,24 +2782,24 @@
     78,
     57
    ],
-   "head": 55,
-   "headCost": 0,
-   "ears": 22,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 120,
-   "frames": 29
+   "frames": 23
   },
   "mega:mega-magearna": {
    "drops": [
     82,
     78
    ],
-   "head": 42,
-   "headCost": 0,
-   "ears": 27,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 33
+   "frames": 29
   },
   "mega:mega-zeraora": {
    "drops": [
@@ -2807,10 +2807,10 @@
     77,
     73
    ],
-   "head": 36,
-   "headCost": 0,
-   "ears": 13,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
    "frames": 34
   },
@@ -2819,12 +2819,12 @@
     77,
     65
    ],
-   "head": 62,
-   "headCost": 2,
-   "ears": 23,
-   "earCost": 3,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 24
+   "frames": 20
   },
   "mega:mega-scovillain": {
    "drops": [
@@ -2832,12 +2832,12 @@
     73,
     62
    ],
-   "head": 52,
-   "headCost": 0,
-   "ears": 16,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 24
+   "frames": 22
   },
   "mega:mega-glimmora": {
    "drops": [
@@ -2845,12 +2845,12 @@
     87,
     83
    ],
-   "head": 41,
-   "headCost": 0,
-   "ears": 2,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 80,
-   "frames": 32
+   "frames": 33
   },
   "mega:mega-tatsugiri-curly": {
    "drops": [
@@ -2858,19 +2858,19 @@
    ],
    "head": -1,
    "headCost": null,
-   "ears": 49,
-   "earCost": 0,
+   "ears": -1,
+   "earCost": null,
    "ms": 90,
-   "frames": 32
+   "frames": 23
   },
   "mega:mega-tatsugiri-droopy": {
    "drops": [
     67
    ],
-   "head": 60,
-   "headCost": 3,
-   "ears": 27,
-   "earCost": 1,
+   "head": -1,
+   "headCost": null,
+   "ears": 45,
+   "earCost": 0,
    "ms": 80,
    "frames": 25
   },
@@ -2881,8 +2881,8 @@
    ],
    "head": -1,
    "headCost": null,
-   "ears": 28,
-   "earCost": 1,
+   "ears": 34,
+   "earCost": 0,
    "ms": 80,
    "frames": 32
   },
@@ -2892,12 +2892,12 @@
     88,
     85
    ],
-   "head": 35,
-   "headCost": 0,
-   "ears": 12,
-   "earCost": 0,
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
    "ms": 110,
-   "frames": 18
+   "frames": 11
   }
  }
 }

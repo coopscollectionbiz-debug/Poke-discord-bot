@@ -178,5 +178,11 @@
    20,
    48
   ]
+ },
+ "rigOffNote": "Rig moves switched off for a sprite after review: {key: {head?: reason, ears?: reason}}.",
+ "rigOff": {
+  "species:1025": {
+   "ears": "the band catches the tops of the floating mochi orbs"
+  }
  }
 }

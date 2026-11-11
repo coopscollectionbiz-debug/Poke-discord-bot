@@ -15,7 +15,7 @@ const read = (rel) => JSON.parse(fs.readFileSync(new URL(rel, import.meta.url), 
 const SPECIES = read("../data/sprites/sprites.json").species;
 const MEGAS = read("../data/sprites/megas.json").forms;
 const { LOW_CUT, blinkEyes } = await import("../utils/spriteBreathing.js");
-const { rigCuts, rigPose, rigPlan, LEAN_MAX_COST } = await import("../utils/spriteRig.js");
+const { rigCuts, rigPose, rigPlan, headSpan, LEAN_MAX_COST, BAND_SPREAD } = await import("../utils/spriteRig.js");
 const { shinyBackdrop, SHINY_GOLD } = await import("../utils/render/shinyBackdrop.js");
 const { loadStaticSprite } = await import("../utils/render/sprites.js");
 const { loadAnimatedSprite } = await import("../utils/battle/render.js");
@@ -56,10 +56,11 @@ assertTrue(Object.values(BLINKS.blinks).every((rs) => rs.length >= 1 && rs.lengt
 // The expected loop for each sprite: one rig (cuts + seeded plan, from the normal sprite when it is static) drives every variant.
 const REVIEW = read("../data/sprites/pokemon-idle-review.json");
 const FACES = { ...Object.fromEntries(Object.entries(BLINKS.blinks).map(([k, e]) => [k, [Math.min(...e.map((q) => q[1])) - 2, Math.max(...e.map((q) => q[3])) + 6]])), ...REVIEW.faces };
-const rigFor = {};
+const rigFor = {}, spanFor = {};
 for (const f of files) if (!rigFor[f.key] || f.label.endsWith("normal")) {
   const g = decode(fs.readFileSync(new URL(f.path, import.meta.url)));
-  const rc = rigCuts(g.frames[0].px, g.W, g.H, { face: FACES[f.key] ?? null, minHeight: 20 });
+  spanFor[f.key] = headSpan(g.frames[0].px, g.W, g.H, FACES[f.key] ?? null, BLINKS.blinks[f.key] ?? null);
+  const rc = rigCuts(g.frames[0].px, g.W, g.H, { face: FACES[f.key] ?? null, eyes: BLINKS.blinks[f.key] ?? null, minHeight: 20, off: REVIEW.rigOff?.[f.key] });
   rigFor[f.key] = { rc, plan: rigPlan(f.key, rc, { blink: !!BLINKS.blinks[f.key] }) };
 }
 /** The frames the generator should have written for these pixels (identical neighbours merged). */
@@ -115,7 +116,23 @@ const sigs = new Set(rigs.map(([, { plan }]) => sig(plan)));
 assertTrue(sigs.size >= rigs.length * 0.95, `no two Pokémon move alike (${sigs.size} different performances for ${rigs.length} sprites)`);
 assertEqual(new Set(rigs.map(([, { plan }]) => plan.ms)).size, 5, "five frame tempos in use (80–120 ms)");
 assertTrue(rigs.every(([k]) => sig(rigPlan(k, rigFor[k].rc, { blink: !!BLINKS.blinks[k] })) === sig(rigFor[k].plan)), "each Pokémon's performance is fixed (seeded by its sprite key)");
-assertTrue(rigs.filter(([, { rc }]) => rc.head > 0).length > 150 && rigs.filter(([, { rc }]) => rc.ears > 0).length > 150, "most sprites lean their head and drag their ears");
+// Only the head's own piece moves sideways: the band sits above its row, stays about head-wide, and only where the head is known.
+const known = (k) => !!BLINKS.blinks[k] || (REVIEW.faces?.[k]?.length ?? 0) >= 4;
+const bandOk = (k, rc, row, mask) => {
+  if (row < 0) return mask === null;
+  const span = spanFor[k], w = span[1] - span[0] + 1;
+  let n = 0;
+  for (let i = 0; i < mask.length; i++) if (mask[i]) {
+    n++;
+    const x = i % 96, y = (i / 96) | 0;
+    if (y >= row || x < span[0] - w * BAND_SPREAD - 0.5 || x > span[1] + w * BAND_SPREAD + 0.5) return false;
+  }
+  return n >= 12;
+};
+assertTrue(rigs.every(([k, { rc }]) => (rc.head < 0 && rc.ears < 0) || known(k)), "a head leans or drags its ears only where the head is known (blink eyes, or a marked face with columns)");
+assertTrue(rigs.every(([k, { rc }]) => bandOk(k, rc, rc.head, rc.headMask) && bandOk(k, rc, rc.ears, rc.earMask)), "lean and ear bands are the head's own piece above their line, within the head's width (no wing tips or arms)");
+assertTrue(Object.entries(REVIEW.rigOff ?? {}).every(([k, off]) => (!off.head || rigFor[k].rc.head < 0) && (!off.ears || rigFor[k].rc.ears < 0)), "moves switched off after review stay off (Pecharunt's ear band)");
+assertTrue(rigs.filter(([, { rc }]) => rc.head > 0 || rc.ears > 0).length >= 50, "50+ heads lean or drag their ears; the rest squash");
 const grays = Object.entries(SPECIES).filter(([, r]) => r.normal.motion === "rig").map(([id, r]) => ({ id, gr: r.grayscale, n: r.normal }));
 assertTrue(grays.every(({ gr, n }) => gr.motion === "rig" && decode(fs.readFileSync(new URL(`../public/sprites/pokemon/${gr.file}`, import.meta.url))).frames.length === decode(fs.readFileSync(new URL(`../public/sprites/pokemon/${n.file}`, import.meta.url))).frames.length), "grayscale (not-owned) copies move and blink with their normal sprite");
 const check = spawnSync(process.execPath, [fileURLToPath(new URL("../tools/generate-pokemon-idles.mjs", import.meta.url)), "--check"], { encoding: "utf8" });

@@ -22,7 +22,7 @@
 // ==========================================================
 
 import { opaqueBounds, pokemonCuts } from "./spriteBreathing.js";
-import { nameHash, movePart, rectMask } from "./trainerMotion.js";
+import { nameHash, movePart } from "./trainerMotion.js";
 
 const ALPHA_MIN = 8;
 function same(px, W, x1, y1, x2, y2) {
@@ -34,11 +34,89 @@ function same(px, W, x1, y1, x2, y2) {
   return px[i] === px[j] && px[i + 1] === px[j + 1] && px[i + 2] === px[j + 2];
 }
 const rowDiff = (px, W, a, b) => { let n = 0; for (let x = 0; x < W; x++) if (!same(px, W, x, a, x, b)) n++; return n; };
-/** How visible the break is if every row above `c` shifts dx px: mismatches it adds between rows c-1 and c. */
-function shearCost(px, W, c, dx) {
-  let n = 0;
-  for (let x = 0; x < W; x++) if (!same(px, W, x - dx, c - 1, x, c)) n++;
-  return Math.max(0, n - rowDiff(px, W, c - 1, c));
+
+/** A moving band's pieces must hold at least this many pixels and be at least this many rows tall… */
+export const BAND_MIN_PX = 12;
+export const BAND_MIN_ROWS = 3;
+/** …and spread at most this fraction of the head's width past either side of it. */
+export const BAND_SPREAD = 0.35;
+
+const opaqueAt = (px, W, H, x, y) => x >= 0 && y >= 0 && x < W && y < H && px[(y * W + x) * 4 + 3] > ALPHA_MIN;
+
+/**
+ * The head's width: the opaque runs across the face rows that hold the eyes,
+ * kept to about a head's width round them; with no eyes, the columns of a
+ * hand-marked face ([y0, y1, x0, x1]). Null when the head can't be placed.
+ */
+export function headSpan(px, W, H, face, eyes) {
+  if (!face) return null;
+  const runsAt = (y) => { const runs = []; let start = -1; for (let x = 0; x <= W; x++) { const o = x < W && opaqueAt(px, W, H, x, y); if (o && start < 0) start = x; if (!o && start >= 0) { runs.push([start, x - 1]); start = -1; } } return runs; };
+  if (eyes?.length) {
+    const ex0 = Math.min(...eyes.map((e) => e[0])), ex1 = Math.max(...eyes.map((e) => e[2]));
+    let a = Infinity, c = -1;
+    for (let y = Math.max(0, face[0]); y <= Math.min(H - 1, face[1]); y++) for (const [r0, r1] of runsAt(y)) if (r1 >= ex0 - 2 && r0 <= ex1 + 2) { a = Math.min(a, r0); c = Math.max(c, r1); }
+    if (c < 0) return null;
+    // Where the head runs straight into wings or arms at eye height, keep it to about a head's width round the eyes.
+    const reach = Math.max(8, 2 * (ex1 - ex0 + 1));
+    return [Math.max(a, ex0 - reach), Math.min(c, ex1 + reach)];
+  }
+  // No eyes: only a face marked with its own columns ([y0, y1, x0, x1]) says where the head is.
+  return face.length >= 4 ? [face[2], face[3]] : null;
+}
+
+/**
+ * A moving band: the best row in [lo, hi] where the head's own piece (and
+ * only it) can shift sideways. Everything above the row is split into
+ * connected parts; only those standing on the head's span move, so wings,
+ * a raised arm or a weapon at the same height stay put, and the moving
+ * piece must stay about head-wide. Without a face the head can't be told
+ * apart, so a band is used only when everything above the row is one piece
+ * no wider than `soloWidth` of the sprite. → { y, c, mask } or null.
+ */
+function pieceBand(px, W, H, b, lo, hi, span, soloWidth) {
+  lo = Math.max(1, Math.round(lo)); hi = Math.min(H - 1, Math.round(hi));
+  let best = null;
+  for (let y = hi; y >= lo; y--) {
+    // Connected parts (8-way) of everything above row y.
+    const lab = new Int32Array(W * y).fill(-1), parts = [];
+    for (let sy = 0; sy < y; sy++) for (let sx = 0; sx < W; sx++) {
+      if (!opaqueAt(px, W, H, sx, sy) || lab[sy * W + sx] >= 0) continue;
+      const id = parts.length, part = { px: [], rows: [H, -1], foot: [] }, st = [[sx, sy]];
+      lab[sy * W + sx] = id;
+      while (st.length) {
+        const [x, yy] = st.pop();
+        part.px.push(yy * W + x); part.rows[0] = Math.min(part.rows[0], yy); part.rows[1] = Math.max(part.rows[1], yy);
+        if (yy === y - 1) part.foot.push(x);
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx, ny = yy + dy;
+          if (ny < 0 || ny >= y || !opaqueAt(px, W, H, nx, ny) || lab[ny * W + nx] >= 0) continue;
+          lab[ny * W + nx] = id; st.push([nx, ny]);
+        }
+      }
+      parts.push(part);
+    }
+    let keep = span ? parts.filter((q) => q.foot.some((x) => x >= span[0] && x <= span[1])) : parts.length === 1 ? parts : [];
+    keep = keep.filter((q) => q.px.length >= BAND_MIN_PX && q.rows[1] - q.rows[0] + 1 >= BAND_MIN_ROWS);
+    if (!keep.length) continue;
+    const xs = keep.flatMap((q) => q.px.map((i) => i % W)), x0 = Math.min(...xs), x1 = Math.max(...xs);
+    if (span) { const w = span[1] - span[0] + 1; if (x0 < span[0] - w * BAND_SPREAD || x1 > span[1] + w * BAND_SPREAD) continue; }
+    else if (x1 - x0 + 1 > b.w * soloWidth) continue;
+    const mask = new Uint8Array(W * H);
+    for (const q of keep) for (const i of q.px) mask[i] = 1;
+    // Visibility of the break: after the move, row y-1 holds the pixel from x-dx wherever the band was or
+    // arrives (movePart fills a vacated pixel from just behind); count the mismatches with row y this adds.
+    let c = 0;
+    for (const dx of [1, -1]) {
+      let added = 0;
+      for (let x = 0; x < W; x++) {
+        if (!(mask[(y - 1) * W + x] || (x - dx >= 0 && x - dx < W && mask[(y - 1) * W + x - dx]))) continue;
+        added += (same(px, W, x - dx, y - 1, x, y) ? 0 : 1) - (same(px, W, x, y - 1, x, y) ? 0 : 1);
+      }
+      c += Math.max(0, added);
+    }
+    if (c <= LEAN_MAX_COST && (!best || c < best.c)) best = { y, c, mask };
+  }
+  return best;
 }
 
 /** A lean break is used only when it adds at most this many mismatched pixels (both directions together). */
@@ -48,10 +126,14 @@ export const SQUASH_ROW_MAX = 10;
 
 /**
  * Cut rows for the rig, or null when the sprite is too small to move.
- * → { bounds, drops: [rows, lowest first], head, headCost, ears, earCost, low }
+ * → { bounds, drops: [rows, lowest first], head, headCost, headMask, ears, earCost, earMask, low }
  * `head`/`ears` are -1 when no clean row exists (that move is left out).
+ * Both bands move only the head's own piece (`headMask`, `earMask`): pieces
+ * above the line that belong to something else (wings, a raised arm, a
+ * weapon) stay put, so no wing tip or arm slides on its own. `off` switches
+ * a move off after review ({ head?: reason, ears?: reason }).
  */
-export function rigCuts(px, W, H, { face = null, minHeight = 20 } = {}) {
+export function rigCuts(px, W, H, { face = null, eyes = null, minHeight = 20, off = null } = {}) {
   const low = pokemonCuts(px, W, H, { face, minHeight });
   if (!low) return null;
   const b = opaqueBounds(px, W, H);
@@ -75,17 +157,19 @@ export function rigCuts(px, W, H, { face = null, minHeight = 20 } = {}) {
     if (drops.every((d) => Math.abs(d - c.y) >= 3)) drops.push(c.y);
   }
   drops.sort((p, q) => q - p);
-  // Lean: the head band breaks below the face; the ear band above it.
-  const lean = (y) => shearCost(px, W, y, 1) + shearCost(px, W, y, -1);
+  // Lean: the head's own piece breaks below the face; the ear band (its top) above the face.
+  const span = headSpan(px, W, H, face, eyes);
   const headLo = face ? face[1] + 1 : b.y0 + b.h * 0.35;
   const headHi = face ? Math.min(face[1] + 1 + b.h * 0.2, low.waist - 3) : b.y0 + b.h * 0.6;
-  const head = best(headLo, headHi, lean);
-  const earHi = face ? face[0] - 1 : (head.y > 0 ? head.y - 4 : b.y0 + b.h * 0.3);
-  const ears = earHi - b.y0 >= 4 ? best(b.y0 + 2, earHi, lean) : { y: -1, c: Infinity };
+  // Without a face the head can't be told from the body above the line, so only a known head leans.
+  const head = span && !off?.head ? pieceBand(px, W, H, b, headLo, headHi, span, 0) : null;
+  const earHi = face ? face[0] - 1 : (head ? head.y - 4 : b.y0 + b.h * 0.3);
+  const earLo = b.y0 + Math.max(BAND_MIN_ROWS + 1, (earHi - b.y0) * 0.4);
+  const ear = span && !off?.ears && earHi >= earLo ? pieceBand(px, W, H, b, earLo, earHi, span, 0) : null;
   return {
     bounds: b, low, drops,
-    head: head.c <= LEAN_MAX_COST ? head.y : -1, headCost: head.c,
-    ears: ears.c <= LEAN_MAX_COST ? ears.y : -1, earCost: ears.c,
+    head: head ? head.y : -1, headCost: head ? head.c : Infinity, headMask: head ? head.mask : null,
+    ears: ear ? ear.y : -1, earCost: ear ? ear.c : Infinity, earMask: ear ? ear.mask : null,
   };
 }
 
@@ -95,7 +179,6 @@ function sinkAbove(px, W, top, split) {
   out.fill(0, top * W * 4, (top + 1) * W * 4);
   return out;
 }
-const shiftAbove = (px, W, H, cut, dx) => (dx && cut > 0 ? movePart(px, W, H, rectMask(px, W, H, [0, 0, W - 1, cut - 1]), dx, 0) : px);
 
 /**
  * One rig pose: squash `sq` px, head band leaned `head` px, ear band at `ears`
@@ -104,9 +187,9 @@ const shiftAbove = (px, W, H, cut, dx) => (dx && cut > 0 ? movePart(px, W, H, re
  */
 export function rigPose(px, W, H, rc, { sq = 0, head = 0, ears = 0 }) {
   let out = px;
-  if (rc.head > 0 && head) out = shiftAbove(out, W, H, rc.head, head);
+  if (rc.head > 0 && head) out = movePart(out, W, H, rc.headMask, head, 0);
   const earExtra = ears - (rc.head > 0 ? head : 0);
-  if (rc.ears > 0 && earExtra) out = shiftAbove(out, W, H, rc.ears, earExtra);
+  if (rc.ears > 0 && earExtra) out = movePart(out, W, H, rc.earMask, earExtra, 0);
   const top = Math.max(0, rc.bounds.y0 - 3);
   for (let i = 0; i < Math.min(sq, rc.drops.length); i++) out = sinkAbove(out, W, top, rc.drops[i]);
   return out;

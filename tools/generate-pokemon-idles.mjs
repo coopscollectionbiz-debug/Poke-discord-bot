@@ -163,7 +163,7 @@ for (const t of targets()) {
   };
   // One rig (cuts + plan, from the normal sprite when it is static) drives normal, shiny and grayscale.
   const lead = src[variants[0]];
-  const rc = breathe ? rigCuts(lead.px, lead.W, lead.H, { face: faces[t.key] ?? null, minHeight: MIN_HEIGHT }) : null;
+  const rc = breathe ? rigCuts(lead.px, lead.W, lead.H, { face: faces[t.key] ?? null, eyes: blinks[t.key] ?? null, minHeight: MIN_HEIGHT, off: review.rigOff?.[t.key] }) : null;
   const eyes = breathe ? blinks[t.key] ?? null : null;
   const plan = breathe ? rigPlan(t.key, rc, { blink: !!eyes }) : null;
   if (eyes) report.blinking++;

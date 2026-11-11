@@ -255,7 +255,7 @@ section("Refusals");
   const user = WEAK();
   assertEqual(
     ["no_team", "locked_elite4", "locked_blue", "cap", "pending_wager", "no_perms", "settled"].map((r) => refusal(r, user)),
-    ["Set a Team on your dashboard first.", "Earn all 8 Badges first. You have 0.", "Clear the Elite Four to challenge Blue.",
+    ["Challenges use your Display team. Set it on the Teams page: run /dashboard.", "Earn all 8 Badges first. You have 0.", "Clear the Elite Four to challenge Blue.",
       "You've used all 5 challenges today. They reset at midnight UTC.", "Finish your pending wager first.",
       "I can't post challenges in this channel. Try another one.", "This challenge already happened."],
     "exact copy");
@@ -540,7 +540,7 @@ section("Review Focus: changes between preview and Fight!");
   await empty.run("brock");
   empty.trainerData.A.displayedPokemon = [];
   const b = await empty.click("fight");
-  assertEqual(textOf(b.edits[0]), "Set a Team on your dashboard first.", "an emptied Team is refused at the click");
+  assertEqual(textOf(b.edits[0]), "Challenges use your Display team. Set it on the Teams page: run /dashboard.", "an emptied Team is refused at the click");
   assertEqual([empty.log.channel.length, empty.trainerData.A.challenge], [0, undefined], "nothing posts or counts");
 
   const wager = harness();

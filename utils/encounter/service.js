@@ -113,7 +113,7 @@ export function createEncounterService({
         const s = seed();
         const entry = {
           nonce: randomUUID(), userId, displayName, seed: s, channel: message.channel,
-          team: team.map(({ speciesId, variant }) => ({ speciesId, variant })),
+          team: team.map(({ speciesId, variant, megaForm }) => ({ speciesId, variant, ...(megaForm && { megaForm }) })),
           trainer: rollTrainer({ team, seed: s }),
         };
         open.set(entry.nonce, entry);

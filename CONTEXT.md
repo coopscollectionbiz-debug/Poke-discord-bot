@@ -45,8 +45,16 @@ A player's title on the TP ladder (Novice Trainer → Legend), earned by chattin
 _Avoid_: using "rank" for battle standing — that's **Battle rating**
 
 **Team**:
-The up-to-6 Pokémon a player shows on their trainer card, one slot per Pokémon, each slot a specific **Variant**; the same **Team** fights in their **Battles**, in slot order.
-_Avoid_: party, lineup, battle team, displayed Pokémon
+Up to 6 Pokémon a player sets to fight in slot order, one slot per Pokémon, each slot a specific **Variant**. Each player has two: the **Display team** and the **Battle team**.
+_Avoid_: party, lineup
+
+**Display team**:
+The **Team** a player shows on their trainer card; it fights **Open battles**, challenges and **Trainer encounters** at its real Levels.
+_Avoid_: casual team, displayed Pokémon
+
+**Battle team**:
+The **Team** a player sets for ranked battles and **Wager battles**, where every Pokémon fights at Lv 50.
+_Avoid_: ranked team
 
 **Region**:
 A named set of Pokémon that share a home region: Kanto, Johto, Hoenn, Sinnoh, Unova, Kalos, Alola, Galar, or Paldea. The game's Pokémon data puts every Pokémon in exactly one region, by National Dex number: the Hisui-introduced species #899–905 belong to Galar, and alternate forms (Galarian Meowth, Mega Charizard…) count toward their base species, never as extra Pokémon. Kalos, Alola, Galar and Paldea only appear once their generation is released.

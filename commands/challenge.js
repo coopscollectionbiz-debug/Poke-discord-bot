@@ -53,7 +53,7 @@ const challengeChannelId = () => process.env.CHALLENGE_CHANNEL_ID || null;
 
 export function refusal(reason, user) {
   return {
-    no_team: "Set a Team on your dashboard first.",
+    no_team: "Challenges use your Display team. Set it on the Teams page: run /dashboard.",
     locked_elite4: `Earn all 8 Badges first. You have ${earnedBadgeKeys(user).length}.`,
     locked_blue: "Clear the Elite Four to challenge Blue.",
     cap: `You've used all ${CHALLENGE.perDay} challenges today. They reset at midnight UTC.`,

@@ -86,7 +86,7 @@ section("Playback");
 // The service, with stub Discord objects and fake timers
 // ==========================================================
 
-function world({ perms = true, sendFails = false, roll = 0, renderFails = false, user = STRONG() } = {}) {
+function world({ perms = true, sendFails = false, roll = 0, renderFails = false, user = STRONG(), play = null } = {}) {
   const trainerData = { A: user };
   const log = { sent: [], events: [], saves: 0, rolls: 0 };
   const timers = new Map();
@@ -118,6 +118,7 @@ function world({ perms = true, sendFails = false, roll = 0, renderFails = false,
     setTimer: (fn, ms) => { const id = ++timerIds; timers.set(id, { fn, ms }); return id; },
     clearTimer: (id) => { timers.delete(id); },
     ...(renderFails && { render: async () => { throw new Error("canvas down"); } }),
+    ...(play && { play }),
     log: async (type, userId, data) => { log.events.push({ type, userId, ...data }); },
   });
   const click = (customId, userId = "A") => {
@@ -297,6 +298,24 @@ section("Answering");
   const fresh = w.click("encounter:gone-after-restart:battle");
   await w.service.handleButton(fresh);
   assertTrue(shrunk(fresh.updates[0]) && fresh.updates[0].content === STALE_LINE, "a stale click after a restart shrinks the card");
+}
+
+section("The card's Mega");
+{
+  // The card keeps the Display team's Mega slot, so Battle! fights it as a
+  // Mega, as a casual battle would.
+  const ON = { MEGA_EVOLUTION_ENABLED: "1", MEGA_BATTLES_ENABLED: "1" };
+  Object.assign(process.env, ON);
+  const u = player([6, 94, 445], 60);
+  u.displayedPokemon[0].mega = "mega-charizard-x";
+  u.megaUnlocks = { "6:normal": { forms: { "mega-charizard-x": { at: 1, stone: null } }, preferred: null } };
+  let played = null;
+  const w = world({ user: u, play: async (channel, outcome) => { played = outcome; } });
+  await w.service.maybeSpot(w.message());
+  const [battle] = w.ids(w.log.sent[0]);
+  await w.service.handleButton(w.click(battle));
+  for (const k of Object.keys(ON)) delete process.env[k];
+  assertEqual(played?.sides[0].members[0].megaForm, "mega-charizard-x", "Battle! fights the Display team's Mega as a Mega");
 }
 
 finish();

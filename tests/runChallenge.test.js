@@ -13,6 +13,7 @@ import {
 } from "../utils/challenge/runChallenge.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
+import { learnableMoves } from "../services/movesets.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { CHALLENGE } from "../utils/battle/tuning.js";
 import { simulateBattle } from "../utils/battle/sim.js";
@@ -314,6 +315,31 @@ section("Revive in the sim");
     assertTrue(offered.length > 0 && offered.every(({ s, b, k }) => b.slot === null
       && startOf(s, k).every((hp, slot) => (endOf(s, k)[slot] === 0) === (hp === 0))), `a pick of ${label} revives nothing`);
   }
+}
+
+section("The Display team fights");
+{
+  // Challenges are casual: the Display team at its real Levels with its
+  // chosen Display moves, never the Battle team (ranked and wager, Lv 50).
+  const withBattleTeam = () => {
+    const td = world();
+    td.A.pokemon[10] = { normal: 1, shiny: 0 };
+    td.A.battleTeam = [{ id: 10, variant: "normal" }];
+    const moves = learnableMoves(td.A, 150, "normal").map((m) => m.id);
+    td.A.movesets = { display: { "150:normal": [moves[0]] }, battle: { "150:normal": [moves[1]] } };
+    return { td, moves };
+  };
+  const { td, moves } = withBattleTeam();
+  const mine = run(td, "brock").fights[0].sides[0].members;
+  assertEqual(mine.map((m) => [m.speciesId, m.level]), STRONG.map((id) => [id, 100]), "the Display team at its real Levels");
+  assertEqual(mine[0].moves, [moves[0]], "with its chosen Display moves");
+  const e4 = withBattleTeam();
+  e4.td.A.challenge = { won: winAll(GYMS), day: "2026-11-09", attempts: 0 };
+  startRun({ trainerData: e4.td, userId: "A", seed: 1, now: D });
+  assertEqual(e4.td.A.challenge.run.team.map((m) => m.speciesId), STRONG, "an Elite Four run too");
+  const battleOnly = withBattleTeam().td;
+  battleOnly.A.displayedPokemon = [];
+  assertEqual(block(battleOnly, "brock"), "no_team", "a Battle team alone can't challenge");
 }
 
 section("No Underdog surge");

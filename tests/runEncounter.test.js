@@ -12,6 +12,7 @@ import { getEncounterRecord, spotBlock, recordSpot, fightEncounter } from "../ut
 import { rollTrainer } from "../utils/encounter/generate.js";
 import { createNewUser, validateUserSchema } from "../utils/userSchema.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
+import { learnableMoves } from "../services/movesets.js";
 
 function player(speciesIds, level, cc = 12345) {
   const u = createNewUser("A", "A");
@@ -116,6 +117,26 @@ section("The card's Team");
   const wager = Object.assign(STRONG(), { pendingWager: { stake: 5 } });
   assertEqual(fight(wager, weakTrainer).reason, "pending_wager", "and a pending wager");
   assertEqual(wager.cc, 12345, "a refusal changes nothing");
+}
+
+section("The card's Team fights like the Display team");
+{
+  // Encounters are casual: each Pokémon fights with its chosen Display-team
+  // moves, and the card's Mega slot as a Mega if it still qualifies at the click.
+  const u = player([6, 94, 445], 60);
+  const moves = learnableMoves(u, 6, "normal").map((m) => m.id);
+  u.movesets = { display: { "6:normal": [moves[0]] }, battle: { "6:normal": [moves[1]] } };
+  assertEqual(fight(u, weakTrainer).sides[0].members[0].moves, [moves[0]], "the Display team's chosen moves, not the Battle team's");
+  const ON = { MEGA_EVOLUTION_ENABLED: "1", MEGA_BATTLES_ENABLED: "1" };
+  Object.assign(process.env, ON);
+  u.megaUnlocks = { "6:normal": { forms: { "mega-charizard-x": { at: 1, stone: null } }, preferred: null } };
+  const team = [{ speciesId: 6, variant: "normal", megaForm: "mega-charizard-x" }, { speciesId: 94, variant: "normal" }];
+  const lead = (t) => fight(u, weakTrainer, { team: t }).sides[0].members[0];
+  assertEqual(lead(team).megaForm, "mega-charizard-x", "the card's Mega battles as the Mega");
+  delete u.megaUnlocks;
+  assertEqual(lead(team).megaForm, undefined, "and as its base form once it no longer qualifies");
+  for (const k of Object.keys(ON)) delete process.env[k];
+  assertEqual(lead(card(u)).megaForm, undefined, "a card without a Mega fights without one");
 }
 
 finish();

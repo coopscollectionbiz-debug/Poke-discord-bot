@@ -11,7 +11,7 @@
 import { buildTeam, applyGains } from "../battle/runBattle.js";
 import { simulateBattle } from "../battle/sim.js";
 import { teamExp, utcDay } from "../battle/rewards.js";
-import { getTraining, speciesName } from "../training.js";
+import { speciesName } from "../training.js";
 import { trackProgress } from "../../progression/achievements.js";
 import { ENCOUNTER } from "../battle/tuning.js";
 
@@ -46,21 +46,19 @@ export function recordSpot(user, now) {
   r.lastAt = now.getTime();
 }
 
-const owns = (user, m) => (user?.pokemon?.[m.speciesId]?.[m.variant] ?? 0) > 0;
-
 /**
- * Fights the Trainer with the card's Team (`encounter.team`, species and
- * Variant only): members the player gave up since sit out, the rest fight at
- * their current Levels. A win pays the Prize money; a loss pays the same, or
+ * Fights the Trainer with the card's Team (`encounter.team`: species,
+ * Variant, and megaForm on a Mega slot): members the player gave up since
+ * sit out, the rest fight at their current Levels. A win pays the Prize money; a loss pays the same, or
  * all the player's CC if they hold less. EXP per knockout either way.
  */
 export function fightEncounter({ trainerData, userId, encounter: { team, trainer }, seed, now = new Date() }) {
   const user = trainerData[userId];
   if (user?.challenge?.run) return { ok: false, reason: "run_open" };
   if (user?.pendingWager) return { ok: false, reason: "pending_wager" };
-  const members = team.filter((m) => owns(user, m)).map((m) => ({
-    speciesId: m.speciesId, variant: m.variant, name: speciesName(m.speciesId), level: getTraining(user, m.speciesId, m.variant).level,
-  }));
+  // As the Display team fights in casual battles: chosen Display moves, and
+  // the Mega slot as a Mega only if it still qualifies (buildTeam re-checks).
+  const members = buildTeam(user, { team: team.map((m) => ({ id: m.speciesId, variant: m.variant, ...(m.megaForm && { mega: m.megaForm }) })) });
   if (!members.length) return { ok: false, reason: "no_team" };
 
   const foes = trainer.party.map((m) => ({ speciesId: m.speciesId, variant: "normal", name: speciesName(m.speciesId), level: m.level }));

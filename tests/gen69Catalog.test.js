@@ -13,6 +13,8 @@ const read = (rel) => JSON.parse(fs.readFileSync(new URL(rel, import.meta.url), 
 const DEX = read("../pokemonData.json");
 const PUBLIC_DEX = fs.readFileSync(new URL("../public/pokemonData.json", import.meta.url), "utf8");
 const BASELINE = read("../data/pokedex/gen1-5-baseline.json");
+// Owner-approved tier changes (2026-11-11 re-tier) sit on top of the baseline.
+const TIER_OVERRIDES = read("../data/pokedex/tier-overrides.json").overrides;
 const BATTLE = read("../battleData.json");
 const SPRITES = read("../data/sprites/sprites.json").species;
 const SOURCE = read("../data/sprites/source-manifest.json").entries;
@@ -52,12 +54,15 @@ section("Gen 1–5 data preserved");
 const changed = [];
 for (let n = 1; n <= 649; n++) {
   const a = BASELINE[n], b = DEX[n];
-  for (const k of ["name", "tier", "region", "flavor"]) if (a[k] !== b[k]) changed.push(`#${n} ${k}`);
+  for (const k of ["name", "tier", "region", "flavor"]) {
+    const want = k === "tier" && TIER_OVERRIDES[n] ? (a.tier === TIER_OVERRIDES[n].from ? TIER_OVERRIDES[n].tier : `override from ${TIER_OVERRIDES[n].from}`) : a[k];
+    if (want !== b[k]) changed.push(`#${n} ${k}`);
+  }
   if (!a.evolvesFrom.every((x, i) => b.evolvesFrom[i] === x) || b.evolvesFrom.length !== a.evolvesFrom.length) changed.push(`#${n} evolvesFrom`);
   if (!a.evolvesTo.every((x, i) => b.evolvesTo[i] === x)) changed.push(`#${n} evolvesTo order`);
   if (b.evolvesTo.slice(a.evolvesTo.length).some((t) => t <= 649)) changed.push(`#${n} new Gen 1–5 evolution`);
 }
-assertEqual(changed, [], "names, tiers, regions, flavor and existing evolution links of #1–649 unchanged");
+assertEqual(changed, [], "names, tiers (apart from approved overrides), regions, flavor and existing evolution links of #1–649 unchanged");
 const retyped = [];
 for (let n = 1; n <= 649; n++) if (JSON.stringify(BASELINE[n].types) !== JSON.stringify(DEX[n].types)) retyped.push(n);
 assertEqual(retyped, [35, 36, 39, 40, 122, 173, 174, 175, 176, 183, 184, 209, 210, 280, 281, 282, 298, 303, 439, 468, 546, 547], "exactly the 22 audited species are retyped");

@@ -18,13 +18,15 @@ import { safeReply } from "../utils/safeReply.js";
 import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.js";
 import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
-import { resetLevelIfGone } from "../utils/training.js";
+import { plainCount, removeCopies } from "../services/ownership.js";
 import { lockUsers } from "../utils/userLocks.js";
 import { ownsTrainer, grantTrainer, revokeTrainer, trainerCount } from "../services/assets.js";
 import { trackProgress } from "../progression/achievements.js";
 
 // Moves `amount` normal copies of one Pokémon. Returns why it can't, or null once moved.
 // Separate from execute() so tests can run it without the save writing trainerData.json.
+// TM safety (services/ownership.js, owner decision D-T8): only plain copies
+// can be gifted; a copy with TM-trained moves never leaves its owner here.
 export function giftPokemon(sender, recipient, key, name, amount) {
   const normal = sender.pokemon[key]?.normal || 0;
   const shiny = sender.pokemon[key]?.shiny || 0;
@@ -33,11 +35,11 @@ export function giftPokemon(sender, recipient, key, name, amount) {
   // here let 1 normal + 3 shiny send 3 normals, creating 2 from nothing.
   if (normal < amount) return `❌ You don't have ${amount}× normal ${name} to gift. Shiny Pokémon can't be gifted.`;
   if (normal + shiny - amount === 0) return `⚠️ You can't gift your last ${name}.`;
+  if (plainCount(sender, key, "normal") < amount) return `❌ Some of your ${name} have TM-trained moves, and TM-trained Pokémon can't be gifted.`;
 
+  const removed = removeCopies(sender, { id: key, variant: "normal", n: amount });
+  if (!removed.ok) return `❌ ${removed.error}`;
   if (!recipient.pokemon[key]) recipient.pokemon[key] = { normal: 0, shiny: 0 };
-
-  sender.pokemon[key].normal = normal - amount;
-  resetLevelIfGone(sender, key, "normal");
   recipient.pokemon[key].normal = (recipient.pokemon[key].normal || 0) + amount;
   return null;
 }

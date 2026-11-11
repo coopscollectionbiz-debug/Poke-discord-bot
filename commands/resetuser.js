@@ -8,6 +8,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.
 import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 import { lockUser } from "../utils/userLocks.js";
 import { clearTrainers } from "../services/assets.js";
+import { wipeCollection } from "../services/ownership.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -47,7 +48,7 @@ export default {
       targetData.daily = { lastUsed: null, streak: 0, rewards: [] };
 
       // ✅ Full wipe of Pokémon & Trainer data
-      targetData.pokemon = {};
+      wipeCollection(targetData); // every copy + customized (TM-trained) records
       clearTrainers(targetData);
       targetData.displayedPokemon = [];
       targetData.displayedTrainer = null;

@@ -114,4 +114,25 @@ section("Release B: inventory is only changed through services/inventory.js");
   assertEqual(where(itemsReplaced), [], "no code replaces user.items with a new object");
 }
 
+section("TM T0: Pokémon ownership is only lowered through services/ownership.js");
+{
+  // Removing copies anywhere else could destroy a TM-trained copy
+  // (user.customPokemon) by picking "any copy" (docs/tm-system).
+  const others = lines.filter((l) => l.f !== "services/ownership.js");
+  const decrements = others.filter(
+    (l) =>
+      /\bpokemon\s*\[[^\]]+\]\s*(\.(normal|shiny)|\[[^\]]+\])\s*(-=|--)/.test(l.text) ||
+      /\.(normal|shiny)\s*(-=|--)/.test(l.text) ||
+      /\.(normal|shiny)\s*=(?!=)[^;]*\s-\s/.test(l.text)
+  );
+  assertEqual(where(decrements), [], "no direct decrements of Pokémon counts");
+  const deletes = others.filter((l) => /delete\s+[\w.?$[\]]*\bpokemon\s*\[/.test(l.text));
+  assertEqual(where(deletes), [], "no direct deletes of user.pokemon entries");
+  // The only allowed wholesale replacements repair a NON-object pokemon field.
+  const replaced = others.filter((l) => /\.pokemon\s*=\s*\{\s*\}/.test(l.text)).map((l) => l.f);
+  assertEqual(replaced, ["bot_final.js", "utils/userSchema.js"], "user.pokemon = {} only in the two non-object repairs");
+  const customWrites = others.filter((l) => /\bcustomPokemon\s*(\[[^\]]+\]\s*)?(=(?!=)|\?\?=)|delete\s+[\w.?$]*customPokemon\b/.test(l.text));
+  assertEqual(where(customWrites), [], "user.customPokemon is only written by services/ownership.js");
+}
+
 finish();

@@ -387,8 +387,15 @@ async function saveTeam() {
   });
 }
 
-async function evolvePokemon(baseId, targetId, variant) {
-  const body = { id: userId, baseId, targetId, variant: normVariant(variant) };
+// One request id per confirmation dialog: a double click or a retry after a
+// network error sends the same id, and the server applies the action once.
+function newRequestId() {
+  if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+async function evolvePokemon(baseId, targetId, variant, requestId) {
+  const body = { id: userId, baseId, targetId, variant: normVariant(variant), requestId };
   return await apiJSON("/api/pokemon/evolve", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -396,8 +403,8 @@ async function evolvePokemon(baseId, targetId, variant) {
   });
 }
 
-async function donatePokemon(pokeId, variant) {
-  const body = { id: userId, pokeId, variant: normVariant(variant) };
+async function donatePokemon(pokeId, variant, requestId) {
+  const body = { id: userId, pokeId, variant: normVariant(variant), requestId };
   return await apiJSON("/api/pokemon/donate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -405,8 +412,8 @@ async function donatePokemon(pokeId, variant) {
   });
 }
 
-async function donateBulk(mode, items) {
-  const body = { id: userId, mode, items };
+async function donateBulk(mode, items, requestId) {
+  const body = { id: userId, mode, items, requestId };
   return await apiJSON("/api/pokemon/donate-bulk", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -414,8 +421,8 @@ async function donateBulk(mode, items) {
   });
 }
 
-async function convertPokemonToShiny(pokeId) {
-  const body = { id: userId, pokeId };
+async function convertPokemonToShiny(pokeId, requestId) {
+  const body = { id: userId, pokeId, requestId };
   return await apiJSON("/api/pokemon/convert-to-shiny", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1559,20 +1566,21 @@ function openConvertModal(pokeId) {
   `;
 
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
+  const requestId = newRequestId();
   modal.querySelector(".confirm-btn").addEventListener("click", () => {
-    withActionLock(() => handleConvertConfirm(pokeId, cost, overlay));
+    withActionLock(() => handleConvertConfirm(pokeId, cost, overlay, requestId));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleConvertConfirm(pokeId, cost, overlay) {
+async function handleConvertConfirm(pokeId, cost, overlay, requestId) {
   try {
     const p = pokemonData[pokeId];
 
     const prev = structuredClone(userData);
 
-    const res = await convertPokemonToShiny(pokeId);
+    const res = await convertPokemonToShiny(pokeId, requestId);
     if (!res?.success) throw new Error(res?.error || "Convert failed");
 
     // If this Pokémon was on the team, keep it but flip variant to shiny (optional UX)
@@ -1686,6 +1694,12 @@ function openEvolutionModal(baseId) {
   const confirmBtn = modal.querySelector(".confirm-btn");
 
   let selectedTarget = null;
+  const evoRequestIds = new Map();
+  const requestIdFor = (targetId, v) => {
+    const k = `${targetId}:${v}`;
+    if (!evoRequestIds.has(k)) evoRequestIds.set(k, newRequestId());
+    return evoRequestIds.get(k);
+  };
 
   function selectTarget(card, targetId) {
     grid.querySelectorAll(".evo-card").forEach((c) => (c.style.borderColor = "var(--border)"));
@@ -1823,20 +1837,20 @@ function openEvolutionModal(baseId) {
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
   confirmBtn.addEventListener("click", () => {
     if (!selectedTarget) return;
-    withActionLock(() => handleEvolutionConfirm(baseId, selectedTarget, chosenVariant, overlay));
+    withActionLock(() => handleEvolutionConfirm(baseId, selectedTarget, chosenVariant, overlay, requestIdFor(selectedTarget, chosenVariant)));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleEvolutionConfirm(baseId, targetId, variant, overlay) {
+async function handleEvolutionConfirm(baseId, targetId, variant, overlay, requestId) {
   try {
     const base = pokemonData[baseId];
     const target = pokemonData[targetId];
 
     const prev = structuredClone(userData);
 
-    const res = await evolvePokemon(baseId, targetId, variant);
+    const res = await evolvePokemon(baseId, targetId, variant, requestId);
     if (!res?.success) throw new Error(res?.error || "Evolution failed");
 
     // If this Pokémon was on team, remove it (UI convenience)
@@ -1944,21 +1958,22 @@ function openDonationConfirmModal(pokeId, variant) {
   `;
 
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
+  const requestId = newRequestId();
   modal.querySelector(".confirm-btn").addEventListener("click", () => {
-    withActionLock(() => handleDonationConfirm(pokeId, v, overlay));
+    withActionLock(() => handleDonationConfirm(pokeId, v, overlay, requestId));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleDonationConfirm(pokeId, variant, overlay) {
+async function handleDonationConfirm(pokeId, variant, overlay, requestId) {
   try {
     const p = pokemonData[pokeId];
     const v = normVariant(variant);
 
     const prev = structuredClone(userData);
 
-    const res = await donatePokemon(pokeId, v);
+    const res = await donatePokemon(pokeId, v, requestId);
     if (!res?.success) throw new Error(res?.error || "Donation failed");
 
     // If this Pokémon is on team, remove it (since counts changed)
@@ -2164,19 +2179,20 @@ function openBulkConfirmModal({ mode, rows, title, subtitle }) {
   `;
 
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
+  const requestId = newRequestId();
   modal.querySelector(".confirm-btn").addEventListener("click", () => {
-    withActionLock(() => handleBulkDonate(mode, rows, overlay));
+    withActionLock(() => handleBulkDonate(mode, rows, overlay, requestId));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleBulkDonate(mode, rows, overlay) {
+async function handleBulkDonate(mode, rows, overlay, requestId) {
   const prev = structuredClone(userData);
   let res;
 
   try {
-    res = await donateBulk(mode, rows);
+    res = await donateBulk(mode, rows, requestId);
     if (!res?.success) throw new Error(res?.error || "Donation failed");
   } catch (err) {
     closeOverlay(overlay);

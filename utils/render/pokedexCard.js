@@ -9,7 +9,7 @@
 import fs from "fs";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, dexNo } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, dexNo, fillTextMid } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 import { displaySpeciesName } from "./names.js";
@@ -118,9 +118,7 @@ export async function renderPokedexCard(v, { shiny = false, animate = false } = 
   ctx.strokeStyle = `${tierColor(v.tier)}aa`;
   ctx.stroke();
   ctx.fillStyle = TIER[v.tier] ?? tierColor(v.tier);
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, right - pw + 17, 44);
-  ctx.textBaseline = "alphabetic";
+  fillTextMid(ctx, label, right - pw + 17, 43);
   ctx.font = font(20, 800);
   ctx.fillStyle = COLOR.textMuted;
   ctx.fillText(`${(v.region ?? "Unknown").toUpperCase()} POKÉDEX`, x, 50);
@@ -153,9 +151,7 @@ export async function renderPokedexCard(v, { shiny = false, animate = false } = 
     ctx.fill();
     if (me) { ctx.lineWidth = 2; ctx.strokeStyle = `${accent}aa`; ctx.stroke(); }
     ctx.fillStyle = me ? COLOR.text : COLOR.textMuted;
-    ctx.textBaseline = "middle";
-    ctx.fillText(t, ex + 14, 347);
-    ctx.textBaseline = "alphabetic";
+    fillTextMid(ctx, t, ex + 14, 346);
     ex += tw;
     if (i < chain.length - 1) {
       ctx.fillStyle = COLOR.textFaint;

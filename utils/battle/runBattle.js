@@ -24,6 +24,7 @@ import { teamExp, eloUpdate, utcDay, getBattleRecord, getCasualRecord, capBlock,
 import { RANKED } from "./tuning.js";
 import { chosenMoves } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
+import { megaBattleEligibility, megaBattleProfile } from "../megas.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
 
 // Locks both players in a fixed (ascending id) order so two battles between
@@ -57,6 +58,23 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
       if (!mega?.ok || mega.key !== `${slot.id}:${slot.variant}`) return member;
       return { ...member, name: mega.profile.name, baseName: member.name, megaForm: mega.formId, battleProfile: mega.profile };
     });
+}
+
+// A built Team without its Mega battle stats, for saving on the player's
+// record, which never holds them (tests/megaBattle.test.js). A Mega slot keeps
+// its megaForm id; withMegaStats puts the stats back before a fight.
+export const withoutMegaStats = (team) => team.map(({ battleProfile, ...m }) => m);
+
+// Saved fighters made ready to fight: each Mega slot gets its battle profile
+// again. A form no longer battle-ready (Mega battles switched off since it was
+// saved, say) fights as its base form, failing closed like buildTeam.
+export function withMegaStats(members, { env = process.env } = {}) {
+  return members.map((m) => {
+    if (!m.megaForm) return m;
+    if (megaBattleEligibility(m.megaForm, { env }).battleReady) return { ...m, battleProfile: megaBattleProfile(m.megaForm) };
+    const { megaForm, baseName, battleProfile, ...base } = m;
+    return { ...base, name: baseName ?? base.name };
+  });
 }
 
 /**

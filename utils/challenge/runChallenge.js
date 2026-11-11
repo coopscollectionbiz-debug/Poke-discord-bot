@@ -11,7 +11,7 @@
 import { randomUUID } from "crypto";
 import { CHALLENGES, enabledSprites } from "./roster.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.js";
-import { buildTeam, applyGains } from "../battle/runBattle.js";
+import { buildTeam, applyGains, withoutMegaStats, withMegaStats } from "../battle/runBattle.js";
 import { simulateBattle } from "../battle/sim.js";
 import { teamPower } from "../battle/power.js";
 import { teamExp, utcDay } from "../battle/rewards.js";
@@ -197,6 +197,9 @@ export function runChallenge({ trainerData, userId, key, seed, maxLoss = Infinit
 // `next` is the index of the next fight, and `gains` is EXP per slot so far.
 // Fight i uses seed + 2i + 1, as in simulateChallenge, so a run whose picks
 // match a `pick` plays out exactly like simulateChallenge with it.
+// Like every battle, `team` keeps no Mega battle stats on the record: a Mega
+// slot keeps only its megaForm id, and each fight looks the stats up again
+// (withMegaStats in runBattle.js).
 
 const RUN = CHALLENGES.elite4.opponents;
 
@@ -205,7 +208,7 @@ const RUN = CHALLENGES.elite4.opponents;
 function playStep(user, userId, members, now) {
   const run = user.challenge.run;
   const i = run.next;
-  const fight = simulateFight({ team: run.team, members, opponent: RUN[i], i, seed: run.seed });
+  const fight = simulateFight({ team: run.team, members: withMegaStats(members), opponent: RUN[i], i, seed: run.seed });
   run.gains = run.gains.map((g, slot) => g + fight.gains[slot]);
   run.fights.push({ opponentKey: fight.opponentKey, won: fight.won });
   run.hp = fight.result.snapshots.at(-1)[0];
@@ -251,10 +254,10 @@ export function startRun({ trainerData, userId, seed, maxLoss = Infinity, channe
   record.run = {
     nonce: randomUUID(), seed,
     maxLoss: Number.isFinite(maxLoss) ? maxLoss : null, // the record is saved as JSON, which has no Infinity
-    day, team, hp: null, next: 0, gains: team.map(() => 0), fights: [], breaks: [],
+    day, team: withoutMegaStats(team), hp: null, next: 0, gains: team.map(() => 0), fights: [], breaks: [],
     updatedAt: now.getTime(), channelId, messageId: null,
   };
-  return playStep(user, userId, team, now);
+  return playStep(user, userId, record.run.team, now);
 }
 
 // `step` is the index of the fight to play next; `slot` is the picked Revive,

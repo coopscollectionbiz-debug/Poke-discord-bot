@@ -627,6 +627,44 @@ section("An Elite Four run with a Mega");
       const outcome = attempt(() => finishOpenRun({ trainerData: td, userId: "A", now: D }));
       assertEqual(outcome.threw ? outcome : [outcome.cleared, td.A.challenge.run], [false, undefined], "and a restart finishes such a run without crashing");
     }
+    {
+      // Like every battle, a run keeps no Mega battle stats on the record
+      // (tests/megaBattle.test.js): only the Mega's form id.
+      const td = { A: megaPlayer() };
+      startRun({ trainerData: td, userId: "A", seed: 1, now: D });
+      const saved = JSON.stringify(td.A);
+      assertTrue(td.A.challenge.run !== undefined && !saved.includes("battleProfile") && !saved.includes('"atk"'), "an open run saves no Mega battle stats on the player's record");
+      assertEqual(td.A.challenge.run.team[0].megaForm, "mega-charizard-x", "only the Mega's form id");
+    }
+    {
+      // Saved and reloaded between fights, the run plays exactly like
+      // simulateChallenge on the Team built at Fight!, Mega included.
+      const pick = ({ hp }) => (hp.includes(0) ? hp.indexOf(0) : null);
+      const sim = simulateChallenge({ team: buildTeam(megaPlayer()), opponents: CHALLENGES.elite4.opponents, seed: 1, pick });
+      let td = { A: megaPlayer() };
+      let step = startRun({ trainerData: td, userId: "A", seed: 1, now: D });
+      const played = [step.view.fights.at(-1)];
+      while (!step.ended) {
+        td = JSON.parse(JSON.stringify(td));
+        step = continueRun({ trainerData: td, userId: "A", nonce: step.nonce, step: step.step + 1, slot: step.fainted[0]?.slot, now: D });
+        played.push(step.view.fights.at(-1));
+      }
+      const shape = (members, result) => ({ lead: members[0].name, form: members[0].battleProfile?.formId, winner: result.winner, turns: result.turns, log: JSON.stringify(result.log) });
+      assertTrue(played.length > 1 && played.length === sim.fights.length, `fixture: ${played.length} fights, as in simulateChallenge`);
+      assertEqual(played.map((f) => shape(f.sides[0].members, f.result)), sim.fights.map((f) => shape(f.members, f.result)),
+        "each fight matches simulateChallenge, with the Mega fighting as Mega Charizard X");
+    }
+    {
+      // Mega battles switched off while a run is open: the Mega fights the
+      // rest of the run as its base form, as buildTeam would.
+      const td = { A: megaPlayer() };
+      const step = startRun({ trainerData: td, userId: "A", seed: 1, now: D });
+      delete process.env.MEGA_BATTLES_ENABLED;
+      const next = continueRun({ trainerData: td, userId: "A", nonce: step.nonce, step: 1, slot: step.fainted[0]?.slot, now: D });
+      process.env.MEGA_BATTLES_ENABLED = "1";
+      const lead = next.view.fights.at(-1).sides[0].members[0];
+      assertEqual([lead.name, lead.megaForm, lead.battleProfile], ["Charizard", undefined, undefined], "a Mega no longer battle-ready fights as its base form");
+    }
   } finally {
     for (const [k, v] of Object.entries(before)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
   }

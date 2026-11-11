@@ -45,9 +45,9 @@ Ranked ratings start at 1000 and belong to a season (`RANKED.season` in `utils/b
 Each player has two Teams of 1 to 6 Pokémon in slot order, both set on the dashboard's Teams page:
 
 - The **Display team** shows on `/showteam` and the trainer card, and fights casual battles, challenges, and Trainer encounters at its real Levels.
-- The **Battle team** fights ranked and wager battles, where every Pokémon is Lv 50 (`RANKED.level`). It holds at most one mythic-tier Pokémon. Nothing fills it from the Display team except the page's Copy my Display team button.
+- The **Battle team** fights ranked and wager battles, where every Pokémon is Lv 50 (`RANKED.level`). It holds at most one mythic-tier Pokémon. Nothing fills it from the Display team except the page's Copy my Display team button. If a re-tier leaves a Battle team with more than one mythic, the bot keeps the first mythic in slot order when it starts and takes the rest off the team, which leaves them in the collection. The player gets a one-time notice (`services/notices.js`), a banner on the Teams page until dismissed or a private note after their next `/battle`, whichever comes first.
 
-Each Pokémon can have up to 4 moves chosen for each Team, picked on the Teams page from the moves it has learned by level-up at its real Level. A Battle team Pokémon fighting at Lv 50 still knows only those. Without a choice, it uses the last four moves it learned. `/inspectpokemon` shows the Display team's moves, plus the Battle team's when they're set. The team rules are in `services/battleTeam.js` and the move rules in `services/movesets.js`. The admin commands `/reset-team` and `/resetuser` clear both Teams and their moves, and `/resetuser` keeps the ranked record.
+Each Pokémon can have up to 4 moves chosen for each Team, picked on the Teams page from the moves it has learned by level-up at its real Level. A Battle team Pokémon fighting at Lv 50 still knows only those. Without a choice, it uses the last four moves it learned. The `/inspectpokemon` card shows the Display team's moves, and its text fallback adds the Battle team's when they're set. The team rules are in `services/battleTeam.js` and the move rules in `services/movesets.js`. The admin commands `/reset-team` and `/resetuser` clear both Teams and their moves. `/resetuser` also clears the casual record, and keeps the ranked record.
 
 ### Levels
 
@@ -70,7 +70,7 @@ node tests/battleData.test.js
 
 `/challenge` pits a player's Display team, the one casual battles use, against fixed Kanto teams: the 8 Gym Leaders, the Elite Four, Blue, and Red. Challenges use the same sim and replay as Battles, with no Underdog surge, and leaders appear by name, never as a mention. Every challenge opponent fights with its stats raised 10% (`CHALLENGE.statBoost`). That's hidden on purpose: players only see the roster's Levels, and EXP, which follows those Levels, is unchanged. The leader stands at the left of their row like a player's trainer, the leader's row and nameplate show their type, and a Gym's Badge sits between the rows. A first win adds a screen to the final image that presents the Badge, or "ELITE FOUR CLEARED", "CHAMPION DEFEATED", or "RED DEFEATED". After the replay, challenges follow `/battle`: the embed under the final image says only what the image doesn't (how far an Elite Four run got, the Badge, the prize, what unlocked, or the loss line; nothing after a rematch win), and the player gets a private message with the result (the exact CC lost or the prize) over the same EXP card `/battle` sends.
 
-- `/challenge` with no opponent shows a private board image: the 8 Gyms with each leader's sprite, type, and Badge (lit once earned), then the Elite Four, Blue, and Red on darker stages, as black silhouettes behind a padlock with what opens them until they open (the Elite Four's names and the Champion's show as "???"), and with a gold CLEARED tag once beaten. It shows how many challenges are left today, and never shows Levels. If the image can't render, a text embed with the same facts goes instead. Under it, a dropdown lists everyone the player can challenge now (the Elite Four and Blue join once they open); picking one opens the same private preview as naming them, for 10 minutes.
+- `/challenge` with no opponent shows a private board image: the 8 Gyms with each leader's sprite, type, and Badge (lit once earned), then the Elite Four, Blue, and Red on darker stages, as black silhouettes behind a padlock with what opens them until they open (the Elite Four's names and the Champion's show as "???"), and with a gold CLEARED tag once beaten. It shows how many challenges are left today, and never shows Levels. If the image can't render, a text embed with the same facts goes instead. Under it, a dropdown lists everyone the player can challenge now (the Elite Four and Blue join once they open); picking one opens the same private preview as naming them. The dropdown works for 10 minutes.
 - `/challenge opponent:Brock` shows a private preview: a VS card with the player's trainer, Badges, and Team against the leader, their type, a Poké Ball per Pokémon in their party, the Badge on the line, and the prize, plus a line with the exact CC a loss would cost and Fight! and Not now buttons. The Elite Four card shows all four members. Not now, or leaving the preview for 2 minutes, costs nothing. Fight! checks everything again, saves the result, then posts the same card in public and the replay. The card never shows the amount (it says "Lose: 10% of CC"), and the public one is built before the win is saved, so it still shows the Badge as on the line. If the card can't be drawn, an embed with the same facts goes instead. The player's private result, with the exact CC lost or the prize and their EXP card, arrives after the replay ends.
 - With `CHALLENGE_CHANNEL_ID` set, `/challenge` works only in that channel; anywhere else it privately points the player there. Unset, it works in any channel.
 
@@ -133,7 +133,7 @@ Set any of these to `0` to turn animation off:
 
 ## Trainer sprites
 
-`trainerSprites.json` (copied to `public/trainerSprites.json`) lists every trainer sprite by group, with a Tier that sets its shop price (`TRAINER_COSTS` in `utils/trainerCosts.js`). The 2026-11-10 re-tier set each Tier by the character's role in the games, from generic classes at Common or Uncommon up to Red and Blue at Mythic. A sprite moved up to Epic or above blinks only after its eyes are added to `data/sprites/trainer-parts.json` by hand. A group whose sprites are all disabled is skipped, so nothing can roll or grant it. The trainer artists on `/credits` come from `data/sprites/trainer-credits.json`, which `node tools/import-trainer-credits.mjs <index.php>` rebuilds from Pokémon Showdown's trainer sprite credits. Unowned trainers show in grayscale from `public/sprites/trainers_2/grayscale/`, which `pwsh tools/grayscale-trainer-sprites.ps1` builds with ImageMagick (`-Force` rebuilds every file).
+`trainerSprites.json` (copied to `public/trainerSprites.json`) lists every trainer sprite by group, with a Tier that sets its shop price (`TRAINER_COSTS` in `utils/trainerCosts.js`). The 2026-11-10 trainer re-tier set each Tier by the character's role in the games, from generic classes at Common or Uncommon up to Red and Blue at Mythic. A sprite moved up to Epic or above blinks only after its eyes are added to `data/sprites/trainer-parts.json` by hand. A group whose sprites are all disabled is skipped, so nothing can roll or grant it. The trainer artists on `/credits` come from `data/sprites/trainer-credits.json`, which `node tools/import-trainer-credits.mjs <index.php>` rebuilds from Pokémon Showdown's trainer sprite credits. Unowned trainers show in grayscale from `public/sprites/trainers_2/grayscale/`, which `pwsh tools/grayscale-trainer-sprites.ps1` builds with ImageMagick (`-Force` rebuilds every file).
 
 ## Player data
 
@@ -225,14 +225,16 @@ In your test server, run `/dashboard` — the bot should reply with an ephemeral
 
 ### 8. Pick the challenge channel (optional)
 
-`/challenge` works only in the channel `CHALLENGE_CHANNEL_ID` names, or in any channel when it's unset. Right-click the channel → **Copy Channel ID** and add it to `.env`. Production sets it in `fly.toml` under `[env]`.
+`/challenge` works only in the channel `CHALLENGE_CHANNEL_ID` names, or in any channel when it's unset. Right-click the channel → **Copy Channel ID** and add it to `.env`. For production, set it in `fly.toml` under `[env]`, where it's commented out until a channel is chosen.
 
 ## Generations 6–9
 
 All 1,025 species are in the data, but only Gens 1–5 can be obtained unless `POKEMON_GENERATIONS` releases more (see `config/generations.js`). A configured generation that fails validation stays off. Owned Pokémon are never removed by switching a generation off. Sprites: Black/White-style animated GIFs where they exist, otherwise static Black/White-style pixel art with a breathing loop (see [Cards and animated sprites](#cards-and-animated-sprites)), never 3D renders; credits for Pokémon and trainer sprites at `/credits`. Data pipeline and release process: `docs/gen6-9/README.md`.
 
+A species' Tier measures how collectible it is, not how strong it is in battle. The 2026-11-11 Pokémon re-tier changed 39 species, 15 of them in Gens 1–5, through `data/pokedex/tier-overrides.json`, which `generate:pokedex` applies last. It stops if a species' tier underneath isn't the one an override expects, or if an override would put an evolution a tier below the form it evolves from. The decisions are in `docs/audits/pokemon-tiers/DECISIONS.md`.
+
 ```bash
-npm run generate:pokedex      # pokemonData.json (+ public copy), data/pokedex/forms.json
+npm run generate:pokedex      # pokemonData.json (+ public copy), data/pokedex/forms.json, tier overrides applied last
 npm run generate:battle-data  # battleData.json
 npm run import:sprites        # sprites + data/sprites/sprites.json (verifies audited SHA-1s)
 npm run generate:credits      # public/credits/index.html, from data/sprites/sprites.json and trainer-credits.json
@@ -253,7 +255,7 @@ npm test                  # the same, but TRAINERDATA_DIR must name a writable f
 The challenge tests cover:
 
 - `challengeRoster`: the 14 teams and their Levels, the prize table, the leaders' sprites, the Badges and their 128×128 images, the Badge image URLs, and the Badge line in `/trainercard`'s text fallback.
-- `runChallenge`: the Display team fighting (never the Battle team), unlocks, the hidden stat boost on every opponent (never the player's Team, and Levels unchanged), the 5-a-day cap and its reset at midnight UTC, Elite Four HP carried between fights, Revives in the sim, EXP summed per run with Levels fixed, first-win prizes and the sprite fallback, prizes going through the trainer and inventory services, achievements for prize sprites and Levels, the 10% loss and its cap at the previewed amount, and no Underdog surge. It also covers the interactive run saved on the record: one fight per step, stale or repeated steps, a record replaced or a Team member given away mid-run, finishing open runs, the event log entry, the dashboard never receiving an open run, and the Collection page getting the challenges won for its Badge row.
+- `runChallenge`: the Display team fighting (never the Battle team), unlocks, the hidden stat boost on every opponent (never the player's Team, and Levels unchanged), the 5-a-day cap and its reset at midnight UTC, Elite Four HP carried between fights, Revives in the sim, EXP summed per run with Levels fixed, first-win prizes and the sprite fallback, prizes going through the trainer and inventory services, achievements for prize sprites and Levels, the 10% loss and its cap at the previewed amount, and no Underdog surge. It also covers the interactive run saved on the record: one fight per step, stale or repeated steps, a record replaced or a Team member given away mid-run, finishing open runs, the event log entry, the dashboard never receiving an open run, and the Collection page getting the challenges won for its Badge row. With a Mega on the Team, the run saves no Mega battle stats on the record, plays the same after a reload between fights, fights as the base form once Mega battles are off, and loses a fight it starts with every Pokémon fainted at turn 0, including after a restart.
 - `challengeCard`: the VS card's facts for a Gym, a rematch, the Elite Four, Blue, and Red, its alt text, that it never carries the loss amount or balance, the prize wrapping onto two lines, and where the trainers, Badges, and medallion are drawn.
 - `challengeBoard`: the board image's Gyms, Badges, attempts left, each League stage locked, open, or cleared, its alt text, and that locked opponents are dark silhouettes.
 - `challengePlayback`: the result embed (only what the image doesn't say, with no EXP or Badge thumbnail, and none after a rematch win), each fight's styling and the first-win award (none for a rematch or a loss), the Elite Four run replaying one fight at a time on one message with the replay slot free between fights, the Revive in each header, the "choosing" line and the result-only edit, no leader as a mention, and no exact loss in public.
@@ -268,7 +270,7 @@ The Trainer encounter tests cover:
 - `encounterCard`: the card's facts, no Levels, alt text, the "!" bitmap and where it sits, and where the trainers, text box, and Prize money are drawn.
 - `encounterFlow`: the replay and its result embed, then the service with stub Discord objects: the permission check before the roll, a miss, a posted card, a failed post, simultaneous hits, no Team, the embed fallback, someone else's click, Run, no answer, Battle! with the private EXP card, a double click racing the timeout, a refused Battle!, and a click after a restart, and the card's Mega fighting as a Mega.
 - `startupReadiness`: an encounter rolls only after a message whose catch roll missed, never before player data loads, and a failed roll is logged.
-- `encounterBalance`: prints win rates by tier for Team sizes 1 to 6, a Lv 100 carrying five Lv 5s, CC per encounter, and leveling pace with 8 a day, enforcing Under >= Even >= Over.
+- `encounterBalance`: prints win rates by tier for Team sizes 1 to 6 over 400 fights per case, a Lv 100 carrying five Lv 5s, CC per encounter, and leveling pace with 8 a day, enforcing Under >= Even >= Over.
 
 The Mega Evolution tests cover:
 
@@ -278,7 +280,7 @@ The Mega Evolution tests cover:
 - `megaPersistence`: the unlock records, and player records from before Megas.
 - `megaCardsTeam`: Mega cards, the Team rules, and where a Mega starts fighting, with Teams without a Mega unchanged.
 - `megaAbilities`: every implemented ability and the effects engine, with scripted random rolls.
-- `megaBattle`: battles through the real code path, falling back to the base form whenever a Mega doesn't qualify, EXP, and images.
+- `megaBattle`: battles through the real code path, falling back to the base form whenever a Mega doesn't qualify, EXP, images, and a side that starts with every Pokémon fainted losing at turn 0 on both engines.
 - `megaBattleRegression`: 3,000 battles without a Mega match `tests/fixtures/battle-corpus-pre-m2.json`, which `tools/dev/battle-corpus.mjs` recorded from the engine before Megas, with the switches off and all on.
 - `megaPresentation`: every card and screen shows the same form.
 - `megaSprites`: the sprite files, their hashes, and that they're 2D pixel art.
@@ -305,6 +307,7 @@ The achievement, item, and catalogue tests cover:
 - `catalog`: every trainer Tier is a known one, the public copy matches, each sprite file is in one group, and a group whose sprites are all disabled is skipped.
 - `gen69Catalog`, `gen69Display`, `gen69Generations`, `gen69Achievements`, and `gen69Balance`: Generations 6–9 in the catalogue and sprites, in battles and cards, behind the release switches on every way to get a Pokémon, in achievements, and in the catch odds.
 - `regions`: region grouping and Pokédex completion counts.
+- `pokemonRetier`: the 2026-11-11 Pokémon re-tier, with the approved tier overrides live in `pokemonData.json`, the override guards, the Battle team mythic trim, and its one-time notice reaching the player once.
 
 The player data and safety tests cover:
 

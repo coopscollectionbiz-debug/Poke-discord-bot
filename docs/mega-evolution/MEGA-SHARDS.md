@@ -24,11 +24,11 @@ Most Megas also need the final evolution first; Charizard alone is 13 Evolution 
 
 ## Spending shards
 
-The dashboard Shop has a Mega Evolution section that sells **only stones whose Mega can battle**. A stone is listed only if at least one of its forms passes the battle-eligibility rule (`megaBattleEligibility`): a verified profile, a modelled ability, a sprite, a live generation and `MEGA_FORMS`. That's 46 stones while Gens 1–5 are live, and 66 once Gens 6–9 are live. Pausing Mega battles (`MEGA_BATTLES_ENABLED=0`) doesn't empty the shop.
+The dashboard Shop has a Mega Evolution section that sells **only stones whose Mega can battle**. A stone is listed only if at least one of its forms passes the battle-eligibility rule (`megaBattleEligibility`): a verified profile, a modelled ability, a sprite, a live generation and `MEGA_FORMS`. That's 70 stones while Gens 1–5 are live, and 90 once Gens 6–9 are live. Pausing Mega battles (`MEGA_BATTLES_ENABLED=0`) doesn't empty the shop.
 
-### Gen 6–9 Megas (owner decision 2026-11-11)
+### Legends: Z-A Megas (owner decision 2026-11-11)
 
-Most Gen 6–9 Megas debuted in Legends: Z-A, which has no abilities in play, so `megas.json` marks their battle profile "unverified" (stats and types from Z-A; ability from Pokémon Showdown's "Future" data). The owner accepted those profiles for **Gen 6–9 Pokémon** (`config/megaBattleProfiles.js`), so these Megas battle and are sold as soon as their generation goes live. Every ability involved is already modelled by the battle engine.
+Most Gen 6–9 Megas debuted in Legends: Z-A, which has no abilities in play, so `megas.json` marks their battle profile "unverified" (stats and types from Z-A; ability from Pokémon Showdown's "Future" data). The owner accepted those profiles for **every generation** (`config/megaBattleProfiles.js`). The Gen 1–5 ones battle and are sold as soon as Megas are switched on; the Gen 6–9 ones join when their generation goes live. Every ability involved is already modelled by the battle engine.
 
 | Generation | Stones that join the shop when it goes live |
 |---|---|
@@ -37,7 +37,9 @@ Most Gen 6–9 Megas debuted in Legends: Z-A, which has no abilities in play, so
 | 8 | Falinksite |
 | 9 | Scovillainite, Glimmoranite, Tatsugirinite (3 appearances), Baxcalibrite |
 
-Still blocked: Mega Floette (needs Floette-Eternal), Mega Zygarde (needs Complete Forme; no sprite) and Original Color Mega Magearna. Z-A Megas of **Gen 1–5** Pokémon (e.g. Mega Dragonite, Mega Starmie, Mega Raichu X/Y) are not accepted and stay out of battle and the shop.
+**Gen 1–5 Z-A Megas, on sale from launch (24 forms):** Raichunite X/Y, Clefablite, Victreebelite, Starminite, Dragoninite, Meganiumite, Feraligite, Skarmorite, Chimechite, Absolite Z, Staraptite, Garchompite Z, Lucarionite Z, Froslassite, Emboarite, Excadrite, Scolipite, Scraftinite, Eelektrossite, Chandelurite, Golurkite, plus Heatranite and Darkranite (Legendary/Mythical, 50).
+
+Still blocked: Mega Rayquaza (needs Dragon Ascent), Mega Floette (needs Floette-Eternal), Mega Zygarde (needs Complete Forme; no sprite) and Original Color Mega Magearna.
 
 | Stone | Price |
 |---|---|

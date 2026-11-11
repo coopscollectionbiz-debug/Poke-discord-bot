@@ -44,7 +44,9 @@ for (const [id, r] of Object.entries(SPECIES)) for (const v of ["normal", "shiny
 for (const [id, r] of Object.entries(MEGAS)) for (const v of ["normal", "shiny"]) if (r[v].kind !== "static" && r[v].motion) animatedWithIdle.push(`${id} ${v}`);
 assertEqual(animatedWithIdle, [], "animated art never gets the idle");
 for (const [id, r] of Object.entries(MEGAS)) for (const v of ["normal", "shiny"]) if (r[v].kind === "static") files.push({ key: `mega:${id}`, label: `${id} ${v}`, rec: r[v], path: `../public/sprites/pokemon/mega/${r[v].file}` });
-assertEqual(files.length, 156 + 163 + 71 + 71, "461 static sprites (species normal/shiny + Mega normal/shiny)");
+// 170 static sprites were replaced by reviewed community animations (data/sprites/animated-imports.json);
+// the 64 left on the rig are 54 species and 10 Megas, normal and shiny.
+assertEqual(files.length, 54 + 54 + 10 + 10, "128 static sprites (species normal/shiny + Mega normal/shiny)");
 const notBreathing = files.filter((f) => f.rec.motion !== "rig").map((f) => f.label);
 assertEqual(notBreathing, [], "every static sprite gets the rig idle (none excluded or awaiting review)");
 const keys = new Set(files.map((f) => f.key));
@@ -132,7 +134,8 @@ const bandOk = (k, rc, row, mask) => {
 assertTrue(rigs.every(([k, { rc }]) => (rc.head < 0 && rc.ears < 0) || known(k)), "a head leans or drags its ears only where the head is known (blink eyes, or a marked face with columns)");
 assertTrue(rigs.every(([k, { rc }]) => bandOk(k, rc, rc.head, rc.headMask) && bandOk(k, rc, rc.ears, rc.earMask)), "lean and ear bands are the head's own piece above their line, within the head's width (no wing tips or arms)");
 assertTrue(Object.entries(REVIEW.rigOff ?? {}).every(([k, off]) => (!off.head || rigFor[k].rc.head < 0) && (!off.ears || rigFor[k].rc.ears < 0)), "moves switched off after review stay off (Pecharunt's ear band)");
-assertTrue(rigs.filter(([, { rc }]) => rc.head > 0 || rc.ears > 0).length >= 140, "140+ heads lean or drag their ears; the rest squash");
+// 146 of the original 234 rigs moved a head or ears; 46 of the 64 left after the community animation import do.
+assertTrue(rigs.filter(([, { rc }]) => rc.head > 0 || rc.ears > 0).length >= 45, "45+ heads lean or drag their ears; the rest squash");
 assertTrue(rigs.every(([k]) => known(k) || (REVIEW.noHead ?? {})[k]), "every static sprite has a known head (eyes or a marked face) or a reason it has none");
 assertTrue(rigs.every(([, { rc }]) => rc.ears < 0 || rc.earMask.reduce((n, v) => n + v, 0) >= EAR_MIN_PX), `ear bands move at least ${EAR_MIN_PX} px (no loose tips)`);
 const grays = Object.entries(SPECIES).filter(([, r]) => r.normal.motion === "rig").map(([id, r]) => ({ id, gr: r.grayscale, n: r.normal }));

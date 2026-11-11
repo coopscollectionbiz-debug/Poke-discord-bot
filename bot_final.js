@@ -66,6 +66,7 @@ import { normalizeEquipment, reconcileTeamEquipment, equipmentRev } from "./serv
 import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
 import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
 import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
+import { normalizeNotices, peekNotices, clearNotices, NOTICE_KINDS } from "./services/notices.js";
 import { pokemonDetail } from "./services/pokemonDetail.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
 import { rankedRecord } from "./utils/battle/rewards.js";
@@ -319,6 +320,9 @@ function normalizeUserSchema(id, user) {
 normalizeMegaUnlocks(user);
 normalizeDisplayedTeam(user);
 // Battle team (ranked/wager): same cleaning; never created here (missing = not set).
+// Also trims a team that went over the one-mythic limit after a re-tier and
+// stores a one-time notice (services/battleTeam.js trimBattleTeamMythics).
+normalizeNotices(user);
 normalizeBattleTeam(user);
 // Held items: team equipment follows the cleaned teams (assignments of
 // Pokémon no longer on a team, Mega slots and unowned items are dropped;
@@ -863,7 +867,14 @@ async function loadTrainerData() {
   setEpoch((result.maxEpoch || 0) + 1);
   console.log(`🔑 Writer epoch ${getEpoch()}${result.localOnly ? " (booted from the local volume; Discord unreachable)" : ""}`);
   const data = chosen.data;
+  const trimmedBefore = new Map(Object.entries(data).map(([id, u]) => [id, peekNotices(u, NOTICE_KINDS.BATTLE_TEAM_TRIM).length]));
   for (const [id, user] of Object.entries(data)) normalizeUserSchema(id, user);
+  {
+    // Battle teams over the one-mythic limit after a re-tier are trimmed by
+    // normalizeUserSchema → normalizeBattleTeam; count them for the boot log.
+    const trimmed = Object.entries(data).filter(([id, u]) => peekNotices(u, NOTICE_KINDS.BATTLE_TEAM_TRIM).length > (trimmedBefore.get(id) || 0)).length;
+    console.log(`⚔️ Battle teams trimmed to one mythic-tier Pokémon: ${trimmed}`);
+  }
   // Release C: retroactive achievement recognition (idempotent, once per
   // catalog revision per player; recognition only, no rewards).
   {
@@ -2045,7 +2056,33 @@ app.get("/api/user-pokemon", (req, res) => {
     levels,
     powers: powersFromLevels(levels), // { "6:normal": 410 }
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
+    // One-time notices (services/notices.js); the Teams page shows the
+    // Battle team ones and dismisses them via /api/dismiss-notices.
+    notices: peekNotices(u, NOTICE_KINDS.BATTLE_TEAM_TRIM).map(({ id: nid, kind, text }) => ({ id: nid, kind, text })),
   });
+});
+
+// ✅ POST — dismiss one-time notices the dashboard has shown.
+app.post("/api/dismiss-notices", express.json(), async (req, res) => {
+  try {
+    const { id, ids } = req.body ?? {};
+    if (!id || !Array.isArray(ids) || !ids.every((x) => typeof x === "string")) {
+      return res.status(400).json({ success: false, error: "Missing id/ids" });
+    }
+    if (!requireDashboardSession(req, id)) {
+      return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    }
+    await lockUser(id, async () => {
+      const u = trainerData[id];
+      if (!u) return res.status(404).json({ success: false, error: "User not found" });
+      const removed = clearNotices(u, ids);
+      const saveAck = removed ? await saveAndAck(trainerData) : null;
+      return res.json({ ...(saveAck ? saveAckFields(saveAck) : {}), success: true, removed });
+    });
+  } catch (err) {
+    console.error("❌ /api/dismiss-notices:", err?.message || err);
+    return res.status(500).json({ success: false });
+  }
 });
 
 

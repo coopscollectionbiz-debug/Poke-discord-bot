@@ -3,6 +3,7 @@
  "pokeapiCommit": "e2710d30d14b3f4dc6a02a4a71e8619cd835b7ff",
  "pkmnDex": "@pkmn/dex@0.10.12",
  "species": 1025,
+ "tierOverrides": 39,
  "retyped": [
   "#35 Clefairy: 1 → 18",
   "#36 Clefable: 1 → 18",
@@ -51,10 +52,10 @@
  ],
  "tiers": {
   "common": 80,
-  "uncommon": 40,
-  "rare": 104,
-  "epic": 90,
-  "legendary": 45,
-  "mythic": 17
+  "uncommon": 37,
+  "rare": 99,
+  "epic": 89,
+  "legendary": 52,
+  "mythic": 19
  }
 }

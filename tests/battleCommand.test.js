@@ -17,6 +17,16 @@ import { refundAllPending } from "../utils/battle/wager.js";
 import { PLAYBACK } from "../utils/battle/tuning.js";
 
 PLAYBACK.delayMs = 0;
+
+// An open or ranked battle's replay and EXP card run after /battle returns,
+// so tests wait for them to land.
+async function until(done, ms = 60_000) {
+  const end = Date.now() + ms;
+  while (!done()) {
+    if (Date.now() > end) throw new Error("timed out waiting for the background replay");
+    await new Promise((r) => setTimeout(r, 5));
+  }
+}
 const quiet = console.log;
 console.log = (...a) => { if (!String(a[0]).includes("loaded from memory")) quiet(...a); };
 
@@ -201,6 +211,8 @@ section("Private EXP messages");
 {
   const t = harness();
   await t.run("A", "B");
+  assertEqual(t.log.followUps.length, 0, "/battle returns before the replay ends, so it never hits the command timeout");
+  await until(() => t.log.followUps.length);
   assertEqual(t.log.followUps.map((f) => f.userId), ["A"], "Open battle: only the Challenger gets an EXP message");
   const [a] = t.log.followUps;
   assertEqual(a.flags, MessageFlags.Ephemeral, "only they can see it");

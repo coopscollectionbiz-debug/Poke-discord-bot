@@ -571,6 +571,16 @@ sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.close(); 
 let drag = null; // { kind: "slot", t, i } | { kind: "box", s }
 const clearDrop = () => document.querySelectorAll(".is-dropover, .is-dropbad, .is-dropremove").forEach((x) => x.classList.remove("is-dropover", "is-dropbad", "is-dropremove"));
 
+// Every way a drag can finish lands here. A drop re-renders the team, which
+// detaches the dragged element, so its dragend never bubbles to document:
+// without this the body keeps tm-dragging-* and the "Drop here" overlay sticks.
+function endDrag() {
+  drag = null;
+  clearDrop();
+  document.body.classList.remove("tm-dragging-slot", "tm-dragging-box");
+  document.querySelectorAll(".is-dragging").forEach((x) => x.classList.remove("is-dragging"));
+}
+
 app.addEventListener("dragstart", (e) => {
   const li = e.target.closest?.(".tm-slot[draggable]");
   const tile = e.target.closest?.(".tm-tile-btn[draggable]");
@@ -585,6 +595,8 @@ app.addEventListener("dragstart", (e) => {
   } else return;
   e.dataTransfer.setData("text/plain", drag.kind);
   document.body.classList.add(`tm-dragging-${drag.kind}`);
+  // dragend still reaches the source element after a re-render detaches it.
+  e.target.addEventListener("dragend", endDrag, { once: true });
 });
 
 /** Where a drop at this element would go, or null. */
@@ -626,20 +638,14 @@ document.addEventListener("dragover", (e) => {
 document.addEventListener("drop", (e) => {
   const d = dropTarget(e.target);
   const from = drag;
-  clearDrop();
-  if (!d || !from) return;
+  if (!d || !from) { clearDrop(); return; }
   e.preventDefault();
-  drag = null;
+  endDrag();
   if (d.type === "move") moveTo(from.t, from.i, d.to);
   else if (d.type === "remove") remove(from.t, from.i);
   else if (d.type === "add") add(state.active, from.s, { at: d.at, replace: d.replace });
 });
-document.addEventListener("dragend", () => {
-  drag = null;
-  clearDrop();
-  document.body.classList.remove("tm-dragging-slot", "tm-dragging-box");
-  document.querySelectorAll(".is-dragging").forEach((x) => x.classList.remove("is-dragging"));
-});
+document.addEventListener("dragend", endDrag);
 
 // Unsaved changes: the browser's own prompt on close/reload, and an in-page
 // dialog for the dashboard's own links.

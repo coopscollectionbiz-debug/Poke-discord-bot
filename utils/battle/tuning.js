@@ -64,8 +64,8 @@ export const CHALLENGE = {
 // shared CPU is about half as fast, so 2 keeps a margin.
 export const PLAYBACK = { maxUpdates: 12, delayMs: 2000, maxAtOnce: 2 };
 // Trainer encounters (docs/superpowers/specs/2026-11-10-trainer-encounters-design.md;
-// every value decided 2026-11-10). chance: per message that earns TP, after
-// a miss on the catch roll. gapMs and perDay count every posted card, run
+// every value decided 2026-11-10 unless dated). chance (1.5%, decided
+// 2026-11-11): per message that earns TP, after a miss on the catch roll. gapMs and perDay count every posted card, run
 // from or not. answerMs: how long Battle! and Run work. resultMs (decided
 // 2026-11-11): how long the final image stays up before the card shrinks to
 // its result line. Each tier's band is
@@ -74,7 +74,7 @@ export const PLAYBACK = { maxUpdates: 12, delayMs: 2000, maxAtOnce: 2 };
 // surprise: the part of Under-tier encounters whose last Pokémon is swapped
 // for any species at avg + band.
 export const ENCOUNTER = {
-  chance: 0.01,
+  chance: 0.015,
   gapMs: 30 * 60 * 1000,
   perDay: 8,
   answerMs: 2 * 60 * 1000,

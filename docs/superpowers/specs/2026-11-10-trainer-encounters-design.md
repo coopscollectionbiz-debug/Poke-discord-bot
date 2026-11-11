@@ -10,7 +10,7 @@ While a player chats, a computer-run Trainer can spot them and ask for a fight, 
 
 ## Spotting
 
-- Each message that earns TP rolls for an encounter, separately from the catch roll: 1% a message, with no pity (decided). A message earns TP at most once every 7 s per player (`MESSAGE_COOLDOWN`, `bot_final.js:598`). A message that produced a catch never also spots.
+- Each message that earns TP rolls for an encounter, separately from the catch roll: 1.5% a message, with no pity (decided 2026-11-11; it was 1% until the 7 s cooldown below was weighed in: at 1%, a player chatting once a minute had a 25% chance of an encounter in half an hour, and at 1.5% it's 35%). A message earns TP at most once every 7 s per player (`MESSAGE_COOLDOWN`, `bot_final.js:602`). A message that produced a catch never also spots.
 - A player is spotted at most 8 times per UTC day (decided; `utcDay`, `utils/battle/rewards.js:36`) and never within 30 minutes of their last encounter (decided). Encounters the player runs from or ignores count toward both.
 - Encounters use none of the 10 Battles a day (`CAPS.perDay`, `utils/battle/tuning.js:46`) or the 5 challenge attempts (`CHALLENGE.perDay`, `tuning.js:59`).
 - A player is never spotted when they have no Team, have an Elite Four run open, have a wager waiting for an answer, or already have an encounter open.

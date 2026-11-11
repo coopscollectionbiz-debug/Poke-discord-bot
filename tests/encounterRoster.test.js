@@ -17,7 +17,7 @@ import { ENCOUNTER } from "../utils/battle/tuning.js";
 section("Tuning");
 assertEqual(
   [ENCOUNTER.chance, ENCOUNTER.gapMs, ENCOUNTER.perDay, ENCOUNTER.answerMs, ENCOUNTER.resultMs, ENCOUNTER.minLevel, ENCOUNTER.maxLevel, ENCOUNTER.partySize, ENCOUNTER.aceShare],
-  [0.01, 30 * 60 * 1000, 8, 2 * 60 * 1000, 10 * 1000, 5, 100, [3, 6], 0.5],
+  [0.015, 30 * 60 * 1000, 8, 2 * 60 * 1000, 10 * 1000, 5, 100, [3, 6], 0.5],
   "the spec's values",
 );
 assertEqual(ENCOUNTER.tiers.map((t) => [t.key, t.share, t.band]), [["under", 0.7, [-15, -2]], ["even", 0.2, [-2, 2]], ["over", 0.1, [5, 15]]], "the tiers");

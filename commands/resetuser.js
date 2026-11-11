@@ -8,6 +8,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.
 import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 import { lockUser } from "../utils/userLocks.js";
 import { clearTrainers } from "../services/assets.js";
+import { clearTeamEquipment } from "../services/heldItems.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -56,6 +57,7 @@ export default {
       delete targetData.battleTeam;
       delete targetData.movesets;
       delete targetData.casual;
+      clearTeamEquipment(targetData); // team item assignments; held-item unlocks stay with the bag
 
       // ✅ Full onboarding reset
       targetData.onboardingComplete = false;

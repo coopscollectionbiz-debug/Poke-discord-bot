@@ -12,6 +12,7 @@ import { computeStats } from "./stats.js";
 import { autoMoveset } from "./moveset.js";
 import { createRng } from "./rng.js";
 import { simulateBattleFx, prepareBattler } from "./effects.js";
+import { isCombatItem } from "./items.js";
 import {
   DAMAGE_ROLL_MIN, CRIT_CHANCE, HIGH_CRIT_CHANCE, CRIT_MULT, MOVE_RANDOM_CHANCE, TURN_CAP,
 } from "./tuning.js";
@@ -50,6 +51,9 @@ export function buildMon(member, levelMult = 1) {
     hp: maxHp,
     moves: memberMoves(member).map(getMove),
     ...(profile && { ability: profile.ability, megaForm: profile.formId, name: profile.name }),
+    // Held item (validated in runBattle.buildTeam). Absent for members
+    // without one, so their battler is exactly as before.
+    ...(member.item && { item: member.item }),
   };
 }
 
@@ -144,10 +148,12 @@ export function simulateBattle({ sides, seed, surge }) {
   const teams = sides.map((side, i) =>
     side.members.map((m) => buildMon(m, surge && surge.side === i ? surge.levelMult : 1)));
 
-  // Battles with abilities (a Mega Evolution is present) run on the
-  // effect-aware engine (effects.js). Every other battle runs the legacy
-  // loop below, unchanged (tests/megaBattleRegression.test.js).
-  if (teams.some((t) => t.some((m) => m.ability))) {
+  // Battles with abilities (a Mega Evolution is present) or a held item
+  // that acts in combat run on the effect-aware engine (effects.js), which
+  // gives identical results when no effect is present
+  // (tests/heldItemBattle.test.js). Every other battle runs the legacy loop
+  // below, unchanged (tests/megaBattleRegression.test.js).
+  if (teams.some((t) => t.some((m) => m.ability || isCombatItem(m.item)))) {
     sides.forEach((side, i) => side.members.forEach((member, j) => {
       const mon = teams[i][j];
       if (mon.speciesId === SHEDINJA) mon.ability ??= "Wonder Guard";

@@ -94,6 +94,10 @@ const MEGA_USERS = [
   "services/battleTeam.js",
   // Collection detail (B2): lists a species' Mega forms and whether each is unlocked (read-only).
   "services/pokemonDetail.js",
+  // Held items: a slot set to Mega Evolve holds its Mega Stone, so it can't
+  // hold a regular item (read-only Mega checks), and the held-item feature
+  // flags live in the shared config/features.js. No Mega acquisition here.
+  "services/heldItems.js", "services/heldItemsApi.js",
 ];
 const megaModule = /megaUnlocks\.js|megas\.js|config\/features\.js|megaRewards\.js|megaApi\.js|megaTeam\.js|\/mega\.js|"\.\/mega\.js"/;
 const users = live.filter((f) => megaModule.test(fs.readFileSync(path.join(ROOT, f), "utf8")));

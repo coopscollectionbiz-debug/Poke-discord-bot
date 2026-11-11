@@ -70,7 +70,7 @@ import { parseTeamCopy, applyTeamCopy } from "./services/teamCopy.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
 import { rankedRecord } from "./utils/battle/rewards.js";
 import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
-import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
+import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, adminSessionOf, activateAdminSession, ADMIN_MAX_MS, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
 import {
@@ -461,13 +461,15 @@ app.get("/auth/admin", (req, res) => {
 
   if (!id || !code) return res.status(400).send("Missing id/code");
   if (!validateToken(id, code, "admin")) return res.status(403).send("Invalid or expired admin link.");
+  // From here the session slides (30 min after each use, 4 h at most).
+  activateAdminSession(code);
 
   res.cookie("admin_session", code, {
     httpOnly: true,
     secure: isProd,
     sameSite: "Lax",
     path: "/",
-    maxAge: 10 * 60 * 1000,
+    maxAge: ADMIN_MAX_MS,
   });
 
   res.redirect("/public/admindashboard");
@@ -554,7 +556,29 @@ app.get("/public/admindashboard", (_, res) =>
 mountAdminDashboard(app, {
   getTrainerData: () => trainerData,
   requireAdminSession,
+  adminSessionOf,
+  lockUser,
+  save: saveAndAck,
+  // Same gate as the player /api writes below (D8 + A2 circuit breaker).
+  writeBlocked: () =>
+    !isReady
+      ? "The bot is starting up or restarting. Try again in a moment."
+      : getSaveHealth().degraded
+        ? "Saving is temporarily unavailable. Try again shortly."
+        : null,
+  syncRole: syncRankRole,
 });
+
+// Rank role after an admin TP change. Uses the bot's server (GUILD_ID).
+async function syncRankRole(userId, tp) {
+  const guild = client.guilds.cache.get(process.env.GUILD_ID) ?? client.guilds.cache.first();
+  if (!guild) return { ok: false, reason: "The bot isn't in a server." };
+  const member = await guild.members.fetch(userId).catch(() => null);
+  if (!member) return { ok: false, reason: "They aren't in the server." };
+  if (!member.manageable) return { ok: false, reason: "The bot's role is below theirs." };
+  await updateUserRole(member, tp);
+  return { ok: true };
+}
 
 
 
@@ -1623,6 +1647,9 @@ if (interaction.isChatInputCommand()) {
         .catch(() => {});
       return;
     }
+
+    // Last active: any slash command counts. Rides along with the next save.
+    if (trainerData[interaction.user.id]) trainerData[interaction.user.id].lastActiveAt = Date.now();
 
     const command = client.commands.get(interaction.commandName);
     if (!command) {

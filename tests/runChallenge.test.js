@@ -593,4 +593,43 @@ section("Preview");
   assertEqual([after.firstWin, after.prize, after.loss], [false, null, challengeLoss(td.A.cc)], "a rematch has no prize");
 }
 
+section("An Elite Four run with a Mega");
+{
+  const ON = { MEGA_EVOLUTION_ENABLED: "1", MEGA_BATTLES_ENABLED: "1" };
+  const before = Object.fromEntries(Object.keys(ON).map((k) => [k, process.env[k]]));
+  Object.assign(process.env, ON);
+  try {
+    const megaPlayer = () => {
+      const u = player("A", [6, 150, 249, 250, 384, 483], 100);
+      u.displayedPokemon[0].mega = "mega-charizard-x";
+      u.megaUnlocks = { "6:normal": { forms: { "mega-charizard-x": { at: 1, stone: null } }, preferred: null } };
+      u.challenge = { won: winAll(GYMS), day: null, attempts: 0 };
+      return u;
+    };
+    assertEqual(buildTeam(megaPlayer())[0].megaForm, "mega-charizard-x", "fixture: Charizard battles as Mega Charizard X");
+    const attempt = (fn) => { try { return fn(); } catch (e) { return { threw: e.message }; } };
+    // After a fight won as the last Pokémon fainted too, every slot has 0 HP.
+    const allFainted = () => {
+      const td = { A: megaPlayer() };
+      const step = startRun({ trainerData: td, userId: "A", seed: 1, now: D });
+      td.A.challenge.run.hp = td.A.challenge.run.team.map(() => 0);
+      return { td, step };
+    };
+    {
+      const { td, step } = allFainted();
+      assertTrue(!step.ended, "fixture: the Mega Team beats Lorelei");
+      const next = attempt(() => continueRun({ trainerData: td, userId: "A", nonce: step.nonce, step: 1, slot: null, now: D }));
+      assertEqual(next.threw ? next : [next.ended, next.outcome.cleared, next.view.fights[1].result.turns], [true, false, 0],
+        "no Revive picked with everyone fainted: the next fight is lost at turn 0, Mega or not");
+    }
+    {
+      const { td } = allFainted();
+      const outcome = attempt(() => finishOpenRun({ trainerData: td, userId: "A", now: D }));
+      assertEqual(outcome.threw ? outcome : [outcome.cleared, td.A.challenge.run], [false, undefined], "and a restart finishes such a run without crashing");
+    }
+  } finally {
+    for (const [k, v] of Object.entries(before)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+  }
+}
+
 finish();

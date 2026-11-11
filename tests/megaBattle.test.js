@@ -198,6 +198,25 @@ section("Reliability");
   assertTrue(megaBattleEligibility("mega-zygarde", { env: ON }).reasons.includes("no sprite") && !megaBattleEligibility("mega-zygarde", { env: ON }).battleReady, "missing sprite metadata keeps a form out of battle");
 }
 
+section("A side that starts with every Pokémon fainted");
+{
+  // An Elite Four fight can start this way: the player won the last fight as
+  // their last Pokémon fainted too, and no Revive was picked. Both engines
+  // score it as a loss at turn 0.
+  const fight = (mine, theirs) => {
+    try { return simulateBattle({ sides: [{ members: mine }, { members: theirs }], seed: 7, surge: null }); }
+    catch (e) { return { threw: e.message }; }
+  };
+  const zard = { speciesId: 6, level: 60, name: "Charizard" };
+  const megaZard = { ...zard, name: "Mega Charizard X", battleProfile: megaBattleProfile("mega-charizard-x") };
+  const dragonite = { speciesId: 149, level: 60, name: "Dragonite" };
+  const fainted = (m) => ({ ...m, hpFraction: 0 });
+  const pick = (r) => (r.threw ? r : { winner: r.winner, turns: r.turns, endedBy: r.endedBy });
+  assertEqual(pick(fight([fainted(zard)], [dragonite])), { winner: 1, turns: 0, endedBy: "knockout" }, "legacy engine: the fainted side loses at turn 0");
+  assertEqual(pick(fight([fainted(megaZard)], [dragonite])), { winner: 1, turns: 0, endedBy: "knockout" }, "Mega engine: a fainted side with a Mega loses at turn 0 instead of crashing");
+  assertEqual(pick(fight([megaZard], [fainted(dragonite)])), { winner: 0, turns: 0, endedBy: "knockout" }, "Mega engine: and a fainted opponent loses at turn 0");
+}
+
 section("Generation independence");
 G.setGenerationsForTesting([6]); C.resetCatalogCachesForTesting();
 assertTrue(!megaBattleEligibility("mega-greninja", { env: ON }).battleReady, "releasing Gen 6 doesn't make an unverified Z-A Mega (Greninja) battle-ready");

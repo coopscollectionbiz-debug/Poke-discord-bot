@@ -14,7 +14,7 @@ import { assertTrue, assertEqual, section, finish } from "./harness.js";
 const read = (rel) => JSON.parse(fs.readFileSync(new URL(rel, import.meta.url), "utf8"));
 const SPECIES = read("../data/sprites/sprites.json").species;
 const MEGAS = read("../data/sprites/megas.json").forms;
-const { IDLE_LOOP, idleCuts, stepCount, pokemonLoop, breathTiming } = await import("../utils/spriteBreathing.js");
+const { IDLE_LOOP, pokemonCuts, stepCount, pokemonLoop, breathTiming, LOW_CUT } = await import("../utils/spriteBreathing.js");
 const { shinyBackdrop, SHINY_GOLD } = await import("../utils/render/shinyBackdrop.js");
 const { loadStaticSprite } = await import("../utils/render/sprites.js");
 const { loadAnimatedSprite } = await import("../utils/battle/render.js");
@@ -32,7 +32,7 @@ const decode = (buf) => {
 };
 const colours = (px) => { const s = new Set(); for (let p = 0; p < px.length; p += 4) if (px[p + 3]) s.add((px[p] << 16) | (px[p + 1] << 8) | px[p + 2]); return s; };
 
-section("Idle: clean-step breathing + blinks on every static sprite, nothing else");
+section("Idle: whole-body clean-step breathing + blinks on every static sprite, nothing else");
 const BLINKS = read("../data/sprites/pokemon-blinks.json");
 const files = [];
 const animatedWithIdle = [];
@@ -52,11 +52,13 @@ assertEqual([...keys].filter((k) => !listed.includes(k)), [], "every static spri
 assertEqual(listed.filter((k) => !keys.has(k)), [], "pokemon-blinks.json lists only static sprites");
 assertTrue(Object.values(BLINKS.blinks).every((rs) => rs.length >= 1 && rs.length <= 2 && rs.every(([x0, y0, x1, y1]) => x1 >= x0 && y1 >= y0 && x1 - x0 < 6 && y1 - y0 < 5)), "blinks: one or two eyes, each rect at most 6×5 px");
 
-// The expected loop for each sprite: the normal sprite's cut lines (shared by shiny and grayscale) and its blink.
+// The expected loop for each sprite: the normal sprite's whole-body cut lines (shared by shiny and grayscale) and its blink.
+const REVIEW = read("../data/sprites/pokemon-idle-review.json");
+const FACES = { ...Object.fromEntries(Object.entries(BLINKS.blinks).map(([k, e]) => [k, [Math.min(...e.map((q) => q[1])) - 2, Math.max(...e.map((q) => q[3])) + 6]])), ...REVIEW.faces };
 const cutsFor = {};
 for (const f of files) if (!cutsFor[f.key] || f.label.endsWith("normal")) {
   const g = decode(fs.readFileSync(new URL(f.path, import.meta.url)));
-  cutsFor[f.key] = idleCuts(g.frames[0].px, g.W, g.H, { minHeight: 20 });
+  cutsFor[f.key] = pokemonCuts(g.frames[0].px, g.W, g.H, { minHeight: 20, face: FACES[f.key] ?? null });
 }
 let shape = true, palette = true, timing = true, moves = true, stepsOk = true, blinkOk = true, firstOpen = true;
 const bad = [];
@@ -70,7 +72,7 @@ for (const f of files) {
   if (g.frames.map((x) => x.ms).join() !== loop.map((x) => x.ms).join()) timing = false;
   if (!g.frames.some((fr) => Buffer.compare(Buffer.from(fr.px), Buffer.from(g.frames[0].px)) !== 0)) moves = false;
   if (loop[0].pose !== 0 || loop[0].blink) firstOpen = false;
-  if (cutsFor[f.key].steps.some((y) => y <= cutsFor[f.key].neck || y >= cutsFor[f.key].waist)) stepsOk = false;
+  if (cutsFor[f.key].steps.some((y) => y <= cutsFor[f.key].neck || y > cutsFor[f.key].waist)) stepsOk = false;
   // The blink frame differs from the rest frame only inside the eye rects.
   const b = loop.findIndex((x) => x.blink);
   if (eyes) {
@@ -88,7 +90,12 @@ assertTrue(palette, "only the sprite's own colours, in every frame (lids and las
 assertTrue(timing, "the trainer idle's timing: clean 360 ms steps, holds at the sprite's own tempo");
 assertTrue(moves, "every sprite moves");
 assertTrue(firstOpen, "frame 0 is the rest pose with open eyes (the untouched sprite)");
-assertTrue(stepsOk, "in-between step rows sit between the neck and the waist");
+assertTrue(stepsOk, "in-between step rows sit above the low cut");
+const cuts = Object.entries(cutsFor);
+const crossing = cuts.filter(([k, c]) => FACES[k] && [c.waist, ...c.steps].some((y) => y >= FACES[k][0] && y <= FACES[k][1])).map(([k]) => k);
+assertEqual(crossing, [], "whole-body breath: no cut row crosses a face (blink eyes, or a hand-marked low face)");
+const guarded = cuts.filter(([k]) => !FACES[k] || !(REVIEW.faces ?? {})[k]);
+assertTrue(guarded.every(([, c]) => c.waist >= c.bounds.y0 + c.bounds.h * LOW_CUT[0] - 1 && c.waist <= c.bounds.y0 + c.bounds.h * LOW_CUT[1] + 1), "the low cut sits near the feet (74–90 % of the height), below the head");
 assertTrue(blinkOk, `the blink frame closes the listed eyes and changes nothing else; unlisted sprites never blink${bad.length ? `: ${bad.slice(0, 5).join(", ")}` : ""}`);
 const tempos = new Set(Object.keys(cutsFor).map((k) => breathTiming(k).rest));
 assertTrue(tempos.size > 20, `sprites breathe at their own tempo (${tempos.size} different rest holds), so a team never breathes in step`);

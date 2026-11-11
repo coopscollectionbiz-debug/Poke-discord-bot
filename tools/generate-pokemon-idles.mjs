@@ -3,8 +3,9 @@
 // Pokémon sprite (species in data/sprites/sprites.json, Mega forms in
 // data/sprites/megas.json). Animated sprites are never touched.
 //
-// The idle (utils/spriteBreathing.js — the trainer idle: clean-step 1 px
-// breathing at the sprite's own tempo, plus a closed-lid blink where
+// The idle (utils/spriteBreathing.js — the trainer idle's clean-step 1 px
+// breathing, but whole-body: everything above a row near the feet moves as
+// one piece so a head is never split; at the sprite's own tempo, plus a closed-lid blink where
 // data/sprites/pokemon-blinks.json lists eyes) is baked into the sprite's
 // own GIF at its existing path, so
 // embeds, the dashboard, rendered cards and battles all animate with no
@@ -33,7 +34,7 @@ import fs from "fs";
 import crypto from "crypto";
 import omggif from "omggif";
 import gifenc from "gifenc";
-import { breathingPoses, breathPose, stepCount, blinkEyes, pokemonLoop } from "../utils/spriteBreathing.js";
+import { pokemonCuts, breathPose, stepCount, blinkEyes, pokemonLoop } from "../utils/spriteBreathing.js";
 
 const { GIFEncoder } = gifenc;
 const ROOT = new URL("..", import.meta.url);
@@ -53,6 +54,9 @@ const review = fs.existsSync(REVIEW) ? JSON.parse(fs.readFileSync(REVIEW, "utf8"
 const approved = new Set(review.approved ?? []);
 const excluded = review.excluded ?? {};
 const blinks = JSON.parse(fs.readFileSync(BLINKS, "utf8")).blinks;
+// Face rows no breath cut may cross: hand-placed for faces low in the body,
+// and from the blink eyes (2 rows above to 6 below, for the mouth).
+const faces = { ...Object.fromEntries(Object.entries(blinks).map(([k, eyes]) => [k, [Math.min(...eyes.map((e) => e[1])) - 2, Math.max(...eyes.map((e) => e[3])) + 6]])), ...(review.faces ?? {}) };
 
 const sha = (alg, buf) => crypto.createHash(alg).update(buf).digest("hex");
 const luma709 = (r, g, b) => Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
@@ -125,7 +129,8 @@ for (const t of targets()) {
   const results = {};
   let verdict = "ok", reason = null, seam = 0;
   for (const v of variants) {
-    const r = breathingPoses(src[v].px, src[v].W, src[v].H, { minHeight: MIN_HEIGHT });
+    const c = pokemonCuts(src[v].px, src[v].W, src[v].H, { minHeight: MIN_HEIGHT, face: faces[t.key] ?? null });
+    const r = c && { cuts: c };
     results[v] = r;
     if (!r) { verdict = "excluded"; reason = "too small or no cut lines"; continue; }
     seam = Math.max(seam, r.cuts.seam);

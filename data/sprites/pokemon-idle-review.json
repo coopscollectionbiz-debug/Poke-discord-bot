@@ -1,121 +1,158 @@
 {
- "note": "Breathing idles whose seam exceeds SEAM_OK (11). Reviewed 2026-11-10 on rest/exhale sheets at 3x and 6x crops of the cut rows (seams 12-30, the trainer calibration approved 9-28): every listed sprite shifts cleanly, with no tears or detached parts. Add a key to excluded with a reason to keep a sprite still.",
+ "note": "Whole-body breathing idles whose low-cut seam exceeds SEAM_OK (11). Each listed sprite was reviewed rest vs exhale (and the in-between steps) at 3x with 6x crops of the cut rows. The earlier approvals (trainer-style neck/waist cuts) were cleared when the cuts moved to the lower body on 2026-11-10.",
  "reviewedAt": "2026-11-10",
  "approved": [
-  "mega:mega-absol-z",
-  "mega:mega-aerodactyl",
-  "mega:mega-altaria",
-  "mega:mega-barbaracle",
+  "mega:mega-aggron",
   "mega:mega-blastoise",
-  "mega:mega-camerupt",
-  "mega:mega-charizard-y",
-  "mega:mega-chesnaught",
   "mega:mega-chimecho",
-  "mega:mega-crabominable",
-  "mega:mega-darkrai",
-  "mega:mega-delphox",
   "mega:mega-diancie",
-  "mega:mega-dragonite",
-  "mega:mega-eelektross",
+  "mega:mega-dragalge",
+  "mega:mega-drampa",
   "mega:mega-emboar",
   "mega:mega-excadrill",
   "mega:mega-falinks",
   "mega:mega-feraligatr",
-  "mega:mega-floette",
-  "mega:mega-garchomp-z",
-  "mega:mega-glimmora",
-  "mega:mega-golisopod",
-  "mega:mega-golurk",
-  "mega:mega-greninja",
+  "mega:mega-gengar",
   "mega:mega-gyarados",
   "mega:mega-hawlucha",
   "mega:mega-heatran",
+  "mega:mega-heracross",
   "mega:mega-kangaskhan",
-  "mega:mega-lopunny",
-  "mega:mega-lucario-z",
-  "mega:mega-malamar",
-  "mega:mega-meganium",
+  "mega:mega-magearna",
   "mega:mega-metagross",
-  "mega:mega-pidgeot",
-  "mega:mega-pinsir",
-  "mega:mega-pyroar",
-  "mega:mega-raichu-x",
-  "mega:mega-raichu-y",
   "mega:mega-sceptile",
   "mega:mega-scolipede",
-  "mega:mega-scovillain",
-  "mega:mega-sharpedo",
-  "mega:mega-skarmory",
-  "mega:mega-staraptor",
   "mega:mega-swampert",
   "mega:mega-tatsugiri-curly",
   "mega:mega-tatsugiri-droopy",
   "mega:mega-tatsugiri-stretchy",
   "mega:mega-venusaur",
-  "mega:mega-zeraora",
   "species:1005",
-  "species:1007",
-  "species:1009",
+  "species:1011",
   "species:1012",
-  "species:1013",
-  "species:1014",
-  "species:1018",
-  "species:1022",
-  "species:1023",
   "species:1025",
-  "species:652",
-  "species:657",
-  "species:660",
-  "species:673",
+  "species:679",
   "species:680",
-  "species:689",
-  "species:701",
-  "species:715",
-  "species:726",
-  "species:768",
-  "species:788",
-  "species:799",
+  "species:686",
+  "species:741",
+  "species:747",
+  "species:757",
+  "species:758",
+  "species:765",
   "species:812",
+  "species:827",
+  "species:829",
+  "species:842",
   "species:850",
   "species:851",
   "species:854",
-  "species:855",
+  "species:865",
   "species:870",
-  "species:891",
-  "species:892",
-  "species:893",
-  "species:900",
-  "species:907",
+  "species:879",
+  "species:903",
+  "species:909",
   "species:911",
-  "species:918",
-  "species:926",
+  "species:921",
   "species:927",
-  "species:933",
-  "species:936",
-  "species:937",
-  "species:942",
-  "species:943",
-  "species:945",
+  "species:941",
+  "species:944",
   "species:946",
   "species:947",
   "species:950",
-  "species:952",
   "species:953",
-  "species:956",
+  "species:954",
+  "species:955",
   "species:958",
-  "species:959",
-  "species:965",
   "species:966",
-  "species:970",
-  "species:975",
-  "species:976",
-  "species:977",
+  "species:971",
   "species:979",
   "species:982",
   "species:983",
-  "species:989",
-  "species:990",
-  "species:993"
+  "species:988",
+  "species:990"
  ],
- "excluded": {}
+ "excluded": {},
+ "facesNote": "Faces low in the body that a low cut would cross: [firstRow, lastRow]; the cut goes below or above. Read off 3x grids. Sprites with blink eyes get a face band from their eyes automatically.",
+ "faces": {
+  "species:842": [
+   62,
+   76
+  ],
+  "species:917": [
+   50,
+   62
+  ],
+  "species:953": [
+   47,
+   58
+  ],
+  "species:971": [
+   44,
+   62
+  ],
+  "species:982": [
+   42,
+   60
+  ],
+  "species:985": [
+   40,
+   57
+  ],
+  "species:991": [
+   30,
+   46
+  ],
+  "species:955": [
+   44,
+   57
+  ],
+  "species:961": [
+   36,
+   60
+  ],
+  "species:909": [
+   38,
+   58
+  ],
+  "species:928": [
+   46,
+   58
+  ],
+  "species:921": [
+   54,
+   66
+  ],
+  "species:915": [
+   44,
+   56
+  ],
+  "species:850": [
+   37,
+   51
+  ],
+  "species:944": [
+   44,
+   56
+  ],
+  "species:1025": [
+   50,
+   62
+  ],
+  "mega:mega-venusaur": [
+   54,
+   68
+  ],
+  "mega:mega-kangaskhan": [
+   44,
+   62
+  ],
+  "mega:mega-camerupt": [
+   38,
+   53
+  ],
+  "mega:mega-raichu-x": [
+   38,
+   57
+  ]
+ }
 }

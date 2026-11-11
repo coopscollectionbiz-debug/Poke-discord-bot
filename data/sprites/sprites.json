@@ -15590,7 +15590,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "600dcd02bcee1c66508c7a0d044292feb8ff8cd2",
+    "fileSha1": "dc5aa1cfa78efbda6a0787693fadd4f8cfddb920",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/chespin.png",
     "sourceSha1": "24d06abe2d6e518b9625cd88ab16bfb9af205c70",
@@ -15602,7 +15602,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "f7f8b119f810a0e8e8d7e8a245ac7407798f59ef",
+    "fileSha1": "2f1061be24cd3df0259a4f92b6d0ecf6953429ef",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/chespin.png",
     "sourceSha1": "df0f2fa582b16095db7c83fc877d445af8772a4d",
@@ -15611,7 +15611,7 @@
    },
    "grayscale": {
     "file": "grayscale/650.gif",
-    "fileSha1": "238996848d8c475a2ba42c9c9066b529f196ef85",
+    "fileSha1": "21645a0f6d09a6dbc4745733da33b4149ce3c001",
     "motion": "breathing"
    }
   },
@@ -15673,7 +15673,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "77a1091af5ec54acb6207e894984d781e88fed80",
+    "fileSha1": "72a64b05b473806b670635b7b51ba2d848535bae",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/chesnaught.png",
     "sourceSha1": "9e2cc5b9b998f0d785c6197e8d3068eeb72e0cc9",
@@ -15764,7 +15764,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "e3c9b0816d8236da64fb1e6d1d65474d3b707831",
+    "fileSha1": "0b48df6fe0b18ce11523eab03bd039a039b899c3",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/delphox.png",
     "sourceSha1": "a1dafb7711ff0637e012325601c036348c594062",
@@ -15776,7 +15776,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "ac2d5d47383c75f733aa8accfe40e793fea1d2c0",
+    "fileSha1": "f7fb2cf4306b30d522bbb3d2749b0003ac904561",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/delphox.png",
     "sourceSha1": "75761cfd48ceeb83e5b958e5edb2e272e4f43b1a",
@@ -15785,7 +15785,7 @@
    },
    "grayscale": {
     "file": "grayscale/655.gif",
-    "fileSha1": "fd5afa51bcd2b87c35e1fcc3a971d52729390f9c",
+    "fileSha1": "58494e16d3bcf1d172b7982f545020c047d48e4a",
     "motion": "breathing"
    }
   },
@@ -15835,7 +15835,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "2e872e1edf6e4fb3c338fb766023508fc956f9c3",
+    "fileSha1": "9e968521c643d729857b9da477a7b445dbacd317",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/frogadier.png",
     "sourceSha1": "25988b8ce07333742a270b6bf72a98fb463c872a",
@@ -15847,7 +15847,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "8bbb9b914296d9e00c059fe2098e5d01f32527d2",
+    "fileSha1": "e24444e4adb197f5d08a75058bdf15b269e80ac9",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/frogadier.png",
     "sourceSha1": "958e4f1493534e401b207221941a4668220f6b23",
@@ -15856,7 +15856,7 @@
    },
    "grayscale": {
     "file": "grayscale/657.gif",
-    "fileSha1": "7ceaef04279f8dd4cc79f7297b17b31f82527dbc",
+    "fileSha1": "ced80bf0b7f34c4c75804d4db33ebe5f906c8fb7",
     "motion": "breathing"
    }
   },
@@ -15906,7 +15906,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "33f90b971ae7ed872b8e1124576cd9977ad80895",
+    "fileSha1": "f2e5cb24b5b083a47bbfcc7ef11ca7d40813ee7d",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/bunnelby.png",
     "sourceSha1": "acd6379b6e158793daeee2a55aaaca582e053174",
@@ -15918,7 +15918,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "4833494253be92b439644a6b98ed0458174cde85",
+    "fileSha1": "2ed55fc024ae0f3ba520c4f89e193c983afe87fc",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/bunnelby.png",
     "sourceSha1": "b055826befd772bca33baa3175008c88f7c8aada",
@@ -15927,7 +15927,7 @@
    },
    "grayscale": {
     "file": "grayscale/659.gif",
-    "fileSha1": "1fed6a4c1df4f2e42984f1e2828b9fe4fae4387d",
+    "fileSha1": "09c1145e6f1a05443823a345e9c485110168cfe8",
     "motion": "breathing"
    }
   },
@@ -15942,9 +15942,9 @@
    "normal": {
     "file": "normal/660.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "fbd2b8b384eafef2817a788a2d4de945fa800018",
+    "fileSha1": "3231f9f161b8eacf84d168f1e88945276509b827",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/diggersby.png",
     "sourceSha1": "4f04e30ed6aeee63f6752fb6212dafe7776381d4",
@@ -15954,9 +15954,9 @@
    "shiny": {
     "file": "shiny/660.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "b55f5ac351c16c26b4f7ce24a8c480e2dc86a6b7",
+    "fileSha1": "a698a2fbf3633ecc821a84e40c07ec5c2325d771",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/diggersby.png",
     "sourceSha1": "12b8c9350cd5553cfd6044cb02f5f79d262825d5",
@@ -15965,7 +15965,7 @@
    },
    "grayscale": {
     "file": "grayscale/660.gif",
-    "fileSha1": "d97588cbe4381dd67b898794122a294b8da80a92",
+    "fileSha1": "b7097e1f3c2ea359db44bd815569e0af530d3a5d",
     "motion": "breathing"
    }
   },
@@ -16382,7 +16382,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "1e1d8f5af2f93f61bb503a2a6b55f6e942bb920d",
+    "fileSha1": "071e747001da5c76f6092cbcd3e087c15876c802",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/gogoat.png",
     "sourceSha1": "f18968c0c7569e2ac930a1e137a347f3f3268c8d",
@@ -16394,7 +16394,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "91f65034b3f03f9abbef64ee98fd78a0e73bcff1",
+    "fileSha1": "0d4693c7f5b8142e5f083546c33142cfc2040de3",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/gogoat.png",
     "sourceSha1": "9df6e19221c45b1fe903b7fdfa5af31038c16119",
@@ -16403,7 +16403,7 @@
    },
    "grayscale": {
     "file": "grayscale/673.gif",
-    "fileSha1": "d1cbbaac55cb46630261e72d3bcecd86f8b73441",
+    "fileSha1": "b3937a4026f43f89ec9bbbdf34e59e172486d0fa",
     "motion": "breathing"
    }
   },
@@ -16463,7 +16463,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "6b97749f7359ec2fefa1bdbc2da4cff3e24647b9",
+    "fileSha1": "180c2f2ebd68d8b68895d4b0223ec1d6c2a63892",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/pangoro.png",
     "sourceSha1": "9b8c51485416b760b2e83a58730bf8b7c268bf08",
@@ -16488,7 +16488,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "d28ef7b9df38876ced8c30631e4c7bfe0cbf5161",
+    "fileSha1": "4a2e3fcfec52989bb6e861fcd4560ce81cc05839",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/furfrou.png",
     "sourceSha1": "a65e39c9fa7c867e79797fc62af858d4cbc60573",
@@ -16500,7 +16500,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "122cb279a8e365a8ea7a1d0ca2df0c6cc71fa06e",
+    "fileSha1": "e75caa9f344c90fcf6d9697ed8a6efc5299838d8",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/furfrou.png",
     "sourceSha1": "4d428f32c36c6b44edfb58f65936e0dbcef2c58b",
@@ -16509,7 +16509,7 @@
    },
    "grayscale": {
     "file": "grayscale/676.gif",
-    "fileSha1": "436886bacbed0ee5dfa428fd0ebb2c3462a02154",
+    "fileSha1": "c7043040bd6160f79067e0cf7e789ff0c9e8b4f5",
     "motion": "breathing"
    }
   },
@@ -16526,7 +16526,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "258c732e942951b1dd02d9a787161e883a93b759",
+    "fileSha1": "006325a03ca533970b5342c527bd23dce8dfd243",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/espurr.png",
     "sourceSha1": "92e7159ddbfb934f156870bbca111f0403f7d69d",
@@ -16538,7 +16538,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "1ef7447d3bdc3f730624a81bdd247fffee95a999",
+    "fileSha1": "b2e3483a0cb7a14685eea20285ec8dbf0f0b9c45",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/espurr.png",
     "sourceSha1": "bd1f523dbbee267db3a7c9df70e3d03a0ee1961a",
@@ -16547,7 +16547,7 @@
    },
    "grayscale": {
     "file": "grayscale/677.gif",
-    "fileSha1": "701751b7fe89e92259805338a2ef4e9e4694ccc6",
+    "fileSha1": "fa35f545b7345cecc39088cb26f9f51a0574a6fa",
     "motion": "breathing"
    }
   },
@@ -16564,7 +16564,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "f321003885bbeb840dc061430d848571aa93dc1a",
+    "fileSha1": "c8634d20f955794ddfb73fccd48d4ab3b35a8ef4",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/meowstic.png",
     "sourceSha1": "1f85e4b7cae5c4617f81f4a79d2d042f8673dffa",
@@ -16576,7 +16576,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "1ffd7fe0fb215600e7851f4f63d90a732b2b0bce",
+    "fileSha1": "c81c3bf99f655fe6708266c1a5c44e4af9aed8c5",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/meowstic.png",
     "sourceSha1": "7eda220fe4cdb5204e009dcdee0d14b94420d912",
@@ -16585,7 +16585,7 @@
    },
    "grayscale": {
     "file": "grayscale/678.gif",
-    "fileSha1": "1c868645c023f549c3800dc7d65ed21e6c63d0f1",
+    "fileSha1": "bd033c47e34de9efe0b8b231bdc48f581b92e506",
     "motion": "breathing"
    }
   },
@@ -16612,7 +16612,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "fe2a243577e7cf0b49cb058bb71b9fe359b4fab7",
+    "fileSha1": "f20a42ac21140cf2f94f350b8ed6616eb76b482f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/honedge.png",
     "sourceSha1": "69a0517c86d1992969ce7be97ad0432b31843ed8",
@@ -16637,7 +16637,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "8e28c7f37ed0f036c4f1163c6dbba612a1e29587",
+    "fileSha1": "9d74a04dd907a2cc351071db670743c088379f32",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/doublade.png",
     "sourceSha1": "c3e06653e6f100972d3d12c276d9a89a344d4369",
@@ -16649,7 +16649,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "fe2bc52608156858fd026c920c3e4ab3f6648312",
+    "fileSha1": "8a280e7ff178d12a59ca65a5a901324e570df7b9",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/doublade.png",
     "sourceSha1": "edb4b2812c89157f164edb8121a7a61e659e82d3",
@@ -16658,7 +16658,7 @@
    },
    "grayscale": {
     "file": "grayscale/680.gif",
-    "fileSha1": "9c84107929466ab2e24b295db901973dc1a4cc21",
+    "fileSha1": "c84796daba130809beaf4f0450f66d35efe311df",
     "motion": "breathing"
    }
   },
@@ -16741,7 +16741,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "3b2c890d138c9fa72529160e169f0a58a849af88",
+    "fileSha1": "2e76cd5476001d20c775e64738d49215bb040e7f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/aromatisse.png",
     "sourceSha1": "f5c608ba7fcdaa377d9a7549106d5f5bc0556856",
@@ -16753,7 +16753,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "6b71ea4deb4aa8cef4c19f0b96c31ad8689c025e",
+    "fileSha1": "c7f2e1481ef508d22578ce8696d4bb2b3c957cba",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/aromatisse.png",
     "sourceSha1": "c1cf44b0a1d58a6af63395bdd92a2a00df83a26b",
@@ -16762,7 +16762,7 @@
    },
    "grayscale": {
     "file": "grayscale/683.gif",
-    "fileSha1": "8631278a72bfe40886852d5cf8e20d5477eee239",
+    "fileSha1": "8b5e4f6a25d22f37909b2bd7c1cf8f3ab11c9fbf",
     "motion": "breathing"
    }
   },
@@ -16857,7 +16857,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "ebdb799d921afb0c75b50265e8c83fc89a494c2f",
+    "fileSha1": "3e0d977243b26feb12bc011d6614969199647741",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/inkay.png",
     "sourceSha1": "eec47494ad79584970a1ef618b0b333b20935eaa",
@@ -16890,9 +16890,9 @@
    "shiny": {
     "file": "shiny/687.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "a02d30cec710d041a17f8f9b249e82624da018ca",
+    "fileSha1": "c26013ad576aa332ff42c75abcc2c93d254d7fb6",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/malamar.png",
     "sourceSha1": "1563fe51eb22fa0a4bcf4a15a488bad34550606c",
@@ -16950,9 +16950,9 @@
    "normal": {
     "file": "normal/689.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "d52ee57963810e529da9277aacfc37b5f9659870",
+    "fileSha1": "adf50488b0edb8326305053dc09daf99efcd9907",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/barbaracle.png",
     "sourceSha1": "f5367a8174d60254cc5fc46cbe031f5cb24f5353",
@@ -16962,9 +16962,9 @@
    "shiny": {
     "file": "shiny/689.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "26acd7a9cbf76fd7b0b0e442361305e7b7168b0f",
+    "fileSha1": "7c0d3e8d72355f78b47857f659bab214a048b0f7",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/barbaracle.png",
     "sourceSha1": "ae05a10b8e22ea2440149c957a15939a741ad0d4",
@@ -16973,7 +16973,7 @@
    },
    "grayscale": {
     "file": "grayscale/689.gif",
-    "fileSha1": "bd19cb8d9802a07f8da1e2f3209b5e12130ff321",
+    "fileSha1": "567b11b80a735b14ecff2ce4f754e854dd5b4650",
     "motion": "breathing"
    }
   },
@@ -16990,7 +16990,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "a77f562b10a922b6bce6c5cf5ffbdf56c83feadd",
+    "fileSha1": "a6a18b6ddeb3deda0bc9dc95e41970c0f3c6ac7f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/skrelp.png",
     "sourceSha1": "a93ee41273a7e422eaed819fbbfaa825bacb99e9",
@@ -17002,7 +17002,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "7579366ade79d0fb48f90382a08ca81d39242b59",
+    "fileSha1": "cb6ca4ad9ab031e8715ccb425f9ed00844e686b6",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/skrelp.png",
     "sourceSha1": "0156602591c7e92f8f986511084ed1217c0b6a22",
@@ -17011,7 +17011,7 @@
    },
    "grayscale": {
     "file": "grayscale/690.gif",
-    "fileSha1": "3eb6a8b02e9db23bc6b4f6bbc6a73c02909706be",
+    "fileSha1": "982eedda7a9f31c1feea4551133c1c6d439fc7cc",
     "motion": "breathing"
    }
   },
@@ -17162,9 +17162,9 @@
    "normal": {
     "file": "normal/695.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "1b2bd098099bda8955313d384da03dadc17f8bb8",
+    "fileSha1": "2c3007d280801a2676281d8b6f6c26f6dc9f4412",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/heliolisk.png",
     "sourceSha1": "9f6178e5f2e882966576cc1d14948ff2555b96c0",
@@ -17174,9 +17174,9 @@
    "shiny": {
     "file": "shiny/695.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "1160ffd2ade32729a94dcfdb2f4072e5ceff8f3c",
+    "fileSha1": "6faf662d6319ebe68dc0d06f1f9fa0dac357aba1",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/heliolisk.png",
     "sourceSha1": "7b1da9e648b439a2b4bcf6dbb836d450d4a6f299",
@@ -17185,7 +17185,7 @@
    },
    "grayscale": {
     "file": "grayscale/695.gif",
-    "fileSha1": "eeb460d00e9dd2afa99be522cba0ecf8856ff025",
+    "fileSha1": "78f0ed9e0f3584a6b9777b95cad5cece1331d104",
     "motion": "breathing"
    }
   },
@@ -17301,7 +17301,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "b589c9378b3ffd01b6ef7c549434fd28cac84343",
+    "fileSha1": "e222624612170bfe9afa5aa9c6c073280ea4f4bb",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/aurorus.png",
     "sourceSha1": "5cb46d095815b7d0e379b74b32e46876783f47ab",
@@ -17313,7 +17313,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "37ebe83f2a89d1bd866243e4f8a98df4c59aa8aa",
+    "fileSha1": "3f2e2713d96f5b324b8835c695b66574ad6ff8ae",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/aurorus.png",
     "sourceSha1": "17a959ef50de70c121febb778bdca19048f1566a",
@@ -17322,7 +17322,7 @@
    },
    "grayscale": {
     "file": "grayscale/699.gif",
-    "fileSha1": "2159bb2930fb231c1b13a54731d057e15f69456e",
+    "fileSha1": "3e5c6b64b855ad827fa9050e7be535980b7f7f97",
     "motion": "breathing"
    }
   },
@@ -17370,9 +17370,9 @@
    "normal": {
     "file": "normal/701.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "f69b637c86d79ce1b4d7cba6f98e5918bb54b5da",
+    "fileSha1": "53bca322bdadb2d65a3ff597be4898f99b2f14df",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/hawlucha.png",
     "sourceSha1": "516ea44e425918f68d611858efa69e3a5bf05adc",
@@ -17382,9 +17382,9 @@
    "shiny": {
     "file": "shiny/701.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "9a0342e05d98440ac1fafaf1822a5b0e791b6a3a",
+    "fileSha1": "f51fc9594b793c94fc1a70f30e77198b8c31d98c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/hawlucha.png",
     "sourceSha1": "1116af84890dc0281374cdd76c0a1af744f9f2ed",
@@ -17393,7 +17393,7 @@
    },
    "grayscale": {
     "file": "grayscale/701.gif",
-    "fileSha1": "73dd6989acdffa13206920c281afcdcb92f7bfe7",
+    "fileSha1": "f8ee125023abdf1c5c8ff3f8ec7fa4804eb0b5d3",
     "motion": "breathing"
    }
   },
@@ -17680,7 +17680,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "f254eb6b6f5a5157b52b9ade19d3147b8c99c42e",
+    "fileSha1": "a4276816ab36cd621c56ddd79227a6d7a510dd91",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/pumpkaboo.png",
     "sourceSha1": "b6eab97c0ac65df93dd53d3f8ff9905634edb7e9",
@@ -17692,7 +17692,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "c2b9a08657a419cc445ce1a73e0b057a75d251b3",
+    "fileSha1": "374a85699a67428d16bb854c6425dc8163dc1d5c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/pumpkaboo.png",
     "sourceSha1": "92ff0149c7c11c7b961185005fe7d4089eaddde0",
@@ -17701,7 +17701,7 @@
    },
    "grayscale": {
     "file": "grayscale/710.gif",
-    "fileSha1": "49af5f96d8eeae93f813920b32071da5fa4c7c0e",
+    "fileSha1": "55c6c8787943966998acd4932da958320be1309b",
     "motion": "breathing"
    }
   },
@@ -17716,9 +17716,9 @@
    "normal": {
     "file": "normal/711.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "78d9a370c12bfacf84c4a6adcd7f3f6d7741b03a",
+    "fileSha1": "62fbf990c5930b7642ea3b144c98470dc367ce55",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/gourgeist.png",
     "sourceSha1": "289230b1bcf00552a7eb61e5c46b4d29f2042699",
@@ -17728,9 +17728,9 @@
    "shiny": {
     "file": "shiny/711.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "261524bc0b05a15b1cefedd9017264ef713c009a",
+    "fileSha1": "d821a914b96694707ddfbd0284bb68f1ea8c23c9",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/gourgeist.png",
     "sourceSha1": "b2c6f0345487de56f5b7b50bbd0664ece620ea76",
@@ -17739,7 +17739,7 @@
    },
    "grayscale": {
     "file": "grayscale/711.gif",
-    "fileSha1": "6ea8f2a21de6814ac19172ff6fb8ec686ce7af0a",
+    "fileSha1": "47e63784821819a567171c063de7e689bc28fefb",
     "motion": "breathing"
    }
   },
@@ -17867,7 +17867,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "3f5f0ffc1781e5d62468c07646adf8177fc81fb3",
+    "fileSha1": "f2b884563b1c7c0db7858ce69bde340bfce09962",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/noivern.png",
     "sourceSha1": "e49006c1b7fa389811901bbdf3875588f2ff0685",
@@ -18127,7 +18127,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "05d6589054045aa83067d06724ed98d2168055ad",
+    "fileSha1": "01fafb87b727791fb7ced34bc40d2d73b0568c38",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/dartrix.png",
     "sourceSha1": "e09895579b94c5a989c1a16734048ee9f0373753",
@@ -18139,7 +18139,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "80a07a20c1f209268bad43985797c0fd53f2ecaa",
+    "fileSha1": "df2779b378d5ff41b2fc6d15bf01bed32163d6a9",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/dartrix.png",
     "sourceSha1": "a5a87b74db9b89767007be2b546b184506a34fb7",
@@ -18148,7 +18148,7 @@
    },
    "grayscale": {
     "file": "grayscale/723.gif",
-    "fileSha1": "a712dfc68eec01179af5419700599d5fb8d4b5d7",
+    "fileSha1": "09810548ffed4a9fc6298681411f4e1125c04eed",
     "motion": "breathing"
    }
   },
@@ -18165,7 +18165,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "588a9cf8cbe7649285388eb3275323d1189766f6",
+    "fileSha1": "f6209b75cc8709439e380c9e3566089a799ecadc",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/decidueye.png",
     "sourceSha1": "d59b264a69f318a9e88ebcb2be632955518db959",
@@ -18177,7 +18177,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "b1b28dc43329a9d4cb00ce54f8255b91eadbced4",
+    "fileSha1": "b9ee39643cb586a6878a39fe4a15292550d0c1bc",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/decidueye.png",
     "sourceSha1": "427597c8f305c6f7f8371de5da40878e97ef0a23",
@@ -18186,7 +18186,7 @@
    },
    "grayscale": {
     "file": "grayscale/724.gif",
-    "fileSha1": "2699726cbfb1a5e21b6ed6adffd912f6e318658a",
+    "fileSha1": "6443bc18e4ca8076e0ed5d89cd7c010c0fe08028",
     "motion": "breathing"
    }
   },
@@ -18234,9 +18234,9 @@
    "normal": {
     "file": "normal/726.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "480d931957c5749f58d94b90f0599ecf7ceb5f25",
+    "fileSha1": "77d09068428dccaa12acd6cc7f4de835a8a3a3e2",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/torracat.png",
     "sourceSha1": "ae7e8160188526d38e54eafe24851504f01e0be7",
@@ -18246,9 +18246,9 @@
    "shiny": {
     "file": "shiny/726.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "e11910666b45494d1679ad45d931d9688e43d18e",
+    "fileSha1": "b034d1668c7f60606d1706f2281ede42f6781f47",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/torracat.png",
     "sourceSha1": "e9d3edc0ccfb01c694a1e0978837eafb8f2fe04f",
@@ -18257,7 +18257,7 @@
    },
    "grayscale": {
     "file": "grayscale/726.gif",
-    "fileSha1": "c69864ff8c5ee79edf2df99662fc4c8dc6223fcd",
+    "fileSha1": "ded46cf5330cc3114349b2f39a87d102e60f4aa1",
     "motion": "breathing"
    }
   },
@@ -18746,7 +18746,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "43a37abd547b65d3bdf2e4fcf22ffa6c180b4103",
+    "fileSha1": "bdabd56b2208ec2b6e5c3f3b5ae3c8ef92707562",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/oricorio.png",
     "sourceSha1": "cf139ffdb748ce2afa0bcee66455046ae0a68640",
@@ -18758,7 +18758,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "c00e94e78ba102f97f947138a9ca6fa10e4b081f",
+    "fileSha1": "06c8c68c4cf376fe696746fbcb4928f79112dea0",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/oricorio.png",
     "sourceSha1": "f6f84d99d41b57e8f9770719297bad0141cf21ca",
@@ -18767,7 +18767,7 @@
    },
    "grayscale": {
     "file": "grayscale/741.gif",
-    "fileSha1": "b335ccb4661daa30038a2bee4125f922787e1974",
+    "fileSha1": "0ca734d802e16b482df590cdf0253f095c3c0350",
     "motion": "breathing"
    }
   },
@@ -18950,7 +18950,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "5f1af4d4d4afa2d12e7242808651d6b23a427183",
+    "fileSha1": "83f32bd2c8d8d354463b973c8c8783f7688f6701",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/mareanie.png",
     "sourceSha1": "497025c3398c8f60c28a959308feaeb602b58e75",
@@ -18962,7 +18962,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "c5bb69c5e99fbd83e8bf5d842eca95050f050b8a",
+    "fileSha1": "d5d69942d14aef14b117d282b4b5a36ac9cb4d9d",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/mareanie.png",
     "sourceSha1": "d4015455966f2b539c1d5a56c8734b06c2476897",
@@ -18971,7 +18971,7 @@
    },
    "grayscale": {
     "file": "grayscale/747.gif",
-    "fileSha1": "4991c7edefd546cfd40c58e5753af75e515fcf9e",
+    "fileSha1": "4382d7bce2f2bdd79da71d8ad769fc4733941106",
     "motion": "breathing"
    }
   },
@@ -19291,7 +19291,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "64292a8883b454e09cb0fb6fd2d7a58378e5c3cd",
+    "fileSha1": "f6fd6331f1b4c3ae0e67e41ea31608a19c05c758",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/salandit.png",
     "sourceSha1": "06d506281da0038fee19da82cb5b5f34bd88fc28",
@@ -19303,7 +19303,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "445fddffa51d54b6831285ff0eebbfe6babfa003",
+    "fileSha1": "d0b9e5fffa1ed4aeb74f9c441f17e88fbdf2ef2a",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/salandit.png",
     "sourceSha1": "bb7a5202976891f55400f771c99e236576c7c7ff",
@@ -19312,7 +19312,7 @@
    },
    "grayscale": {
     "file": "grayscale/757.gif",
-    "fileSha1": "a5b752f9f993e66ab6ac9f1ed3b3b0fc4bb65e17",
+    "fileSha1": "903ba4d2cff14f47753d5d5d9578d08454fbb755",
     "motion": "breathing"
    }
   },
@@ -19329,7 +19329,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "3c66d8d2ad44c3fa3682a222b2d563cb21890fb2",
+    "fileSha1": "b0fea6b6f725c50ba4fb431b38f0950152a4ee32",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/salazzle.png",
     "sourceSha1": "2c83297b2480f9d31aff4435f5dc7409767ff9a7",
@@ -19341,7 +19341,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "6366209adb32dc098851f976d4359c0cf641f3e6",
+    "fileSha1": "3517d7fdc4feb658b0dea0e6002187ee4d3e77e8",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/salazzle.png",
     "sourceSha1": "d8d7548aa8222dd65b329e62fcf1482be34a38d3",
@@ -19350,7 +19350,7 @@
    },
    "grayscale": {
     "file": "grayscale/758.gif",
-    "fileSha1": "81b98e950b056d80448247003bd5ec3a21c516ab",
+    "fileSha1": "3168b7edcd81831dd84b1fae993e707929ba427e",
     "motion": "breathing"
    }
   },
@@ -19499,7 +19499,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "fe926cf54514f54245fa3044c07f9ed7e7f4fc67",
+    "fileSha1": "a3860f15947b425517be361c221584516df765d1",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/tsareena.png",
     "sourceSha1": "4e6ca4033591fdf3fb461d63b7489f8dbdb5ed74",
@@ -19511,7 +19511,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "7c626553d7e247c7cf82326c741d8ae2d3c1b0a3",
+    "fileSha1": "20ce9d10d60abf5f8378c16d95bed949372907cb",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/tsareena.png",
     "sourceSha1": "ac9a477acda402a47f8bf6c5135eaf5138c86d3a",
@@ -19520,7 +19520,7 @@
    },
    "grayscale": {
     "file": "grayscale/763.gif",
-    "fileSha1": "9044dcd94b753c0c7ec6ce9c66d2ef8caa8df35a",
+    "fileSha1": "32a08c37a8a16a3d65e2428b50c004dfb43cdabe",
     "motion": "breathing"
    }
   },
@@ -19570,7 +19570,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "456cc2efac3740fde4de4e88572178b773f54c90",
+    "fileSha1": "787563e0e9bb51c9aa773227cb9a912bc3dd46cd",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/oranguru.png",
     "sourceSha1": "1503e505bde0abb2cda10844c1cb8ee84b50f3f9",
@@ -19582,7 +19582,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "2b0b00e85ab1e166dafb58a05a9e4cdc47e3c1c7",
+    "fileSha1": "4ab2d346a0d29f2991d74c8a872bd72e51340b5a",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/oranguru.png",
     "sourceSha1": "4011bbbe65f9a5082c00a4e41e3631a2f34320da",
@@ -19591,7 +19591,7 @@
    },
    "grayscale": {
     "file": "grayscale/765.gif",
-    "fileSha1": "0e559f05012d211a900b409a03cd14625f176b7e",
+    "fileSha1": "d3e7154f6ea65ba225e3dcb18021c3cf57aa74d9",
     "motion": "breathing"
    }
   },
@@ -19606,9 +19606,9 @@
    "normal": {
     "file": "normal/766.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "82dd27a8ddde6dc1fa4e95b8efb3e034fcbd3626",
+    "fileSha1": "e86e0e3624e82c1d889af29cdf7274c2268f85c3",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/passimian.png",
     "sourceSha1": "23e3faf411696a6499e6420c0ba01248342aa0eb",
@@ -19618,9 +19618,9 @@
    "shiny": {
     "file": "shiny/766.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "0f971b0fc099c5a8f5dac91d62d0b5471d5da1e1",
+    "fileSha1": "e7ae0eaa161cb7664b8e6f6389f99ab014386346",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/passimian.png",
     "sourceSha1": "c71029a58c8db923540990cea2e6fccb7adf88b4",
@@ -19629,7 +19629,7 @@
    },
    "grayscale": {
     "file": "grayscale/766.gif",
-    "fileSha1": "85d10e01e4592b52380d12802c04cbf2655a4bbd",
+    "fileSha1": "9f6bfc1ba8f4c7562d6cae9b5f405c6eb23eb83a",
     "motion": "breathing"
    }
   },
@@ -19679,7 +19679,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "e56a6e7c3c3125fb8e8bbb2cea4acd57b174e285",
+    "fileSha1": "b6607877c335adf1af096ef717f0f01cbe73458e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/golisopod.png",
     "sourceSha1": "fa61b28dd5b7939c5802148fc93d72603b470110",
@@ -19691,7 +19691,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "c7d0e44b2d55590882c6f742ad6e3a8b36600c28",
+    "fileSha1": "bd485996096e4fd838eaf56fef74db87975581d5",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/golisopod.png",
     "sourceSha1": "60bd2280a22499baa48a57057cd6fce418bc4849",
@@ -19700,7 +19700,7 @@
    },
    "grayscale": {
     "file": "grayscale/768.gif",
-    "fileSha1": "5f8f43239e87f8e065caecd24f9b4d2137ca6035",
+    "fileSha1": "b5491d3b1231009d5d481100db767685bdcc7452",
     "motion": "breathing"
    }
   },
@@ -20350,7 +20350,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "4796b0d14c61147d9f90c2a8f34dad5cea8599de",
+    "fileSha1": "b29064f946139ae11944f92c0a2548e7971c78b8",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/tapufini.png",
     "sourceSha1": "6132dfd12b94acaf2be1a30965b9e02c3d4eeaad",
@@ -20362,7 +20362,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "97a684d0d8192457e1497e6467773147399de1eb",
+    "fileSha1": "e5795021ba734871acc1f8d48f6af3ea923eb312",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/tapufini.png",
     "sourceSha1": "0517caa20f49bb8b530d4e367b5ed7995839c4f8",
@@ -20371,7 +20371,7 @@
    },
    "grayscale": {
     "file": "grayscale/788.gif",
-    "fileSha1": "1ce007c430ca22cb5f7702c513f27a60761f66d1",
+    "fileSha1": "94478d8df0b15f99e603e1ae4fdc4a4a794ad300",
     "motion": "breathing"
    }
   },
@@ -20722,7 +20722,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "49d3f78e7640e83de0d091d0d433317daf358f59",
+    "fileSha1": "749505f6933b063c94e5eae37c98a0c0ca9ed487",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/guzzlord.png",
     "sourceSha1": "fb1da07a5c7b216db7b1597d0d0b3d7da3497825",
@@ -20734,7 +20734,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "cad4d5d8e1f3384e7ec5b1f4e0184bb9b588dc7e",
+    "fileSha1": "ff61ea9013f0e70b10066c2b9382d5b0df9ea59d",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/guzzlord.png",
     "sourceSha1": "a4fdce034c85796ce4d4103eb70d5528bafac01c",
@@ -20743,7 +20743,7 @@
    },
    "grayscale": {
     "file": "grayscale/799.gif",
-    "fileSha1": "35c4c9cccc51bcc7ce4a87b35d8373b0bca47b57",
+    "fileSha1": "c651e1bba306bcfc2fd58c0e8f720fa4703ed2f7",
     "motion": "breathing"
    }
   },
@@ -20861,7 +20861,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "5ef9692d22ac13727afbff1f4bfcc2b50fd5021b",
+    "fileSha1": "1f3164512427707d06f0bdcd5fa003d6da8e6d61",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/poipole.png",
     "sourceSha1": "d3c8f2c47fb11303b12550dde0883477704af51a",
@@ -20873,7 +20873,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "fc38a902b1aee4ae5918e82b33a1f1e06b7a86bf",
+    "fileSha1": "12fed44f0c1cf69315aad5b1f01a67a1d268d94f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/poipole.png",
     "sourceSha1": "48dfe74a3e1a4e410595cac99a1590e18a9e4166",
@@ -20882,7 +20882,7 @@
    },
    "grayscale": {
     "file": "grayscale/803.gif",
-    "fileSha1": "5591cf2d05d471f5e3f7d34f125600f1efb2b81a",
+    "fileSha1": "938859f6bc61935121f3e1e1f006f0ed74731b19",
     "motion": "breathing"
    }
   },
@@ -21163,9 +21163,9 @@
    "normal": {
     "file": "normal/812.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "f27376baafb1711fc5559a8c9cf5f30e04f7e2b0",
+    "fileSha1": "7e4365c75aeb4bc2a7eade7ff4f90539f798d501",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/rillaboom.png",
     "sourceSha1": "0956bc5496e5dbcaf7676b404373afd0d0a0c2df",
@@ -21175,9 +21175,9 @@
    "shiny": {
     "file": "shiny/812.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "b1b428f11e63fab01f4b3e3c08edf5685a52432d",
+    "fileSha1": "3b79f7a798ed8a8a445c2df7be69a3d29cc30c62",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/rillaboom.png",
     "sourceSha1": "96f9d17f10e18817e88afb8e29a685138519302f",
@@ -21186,7 +21186,7 @@
    },
    "grayscale": {
     "file": "grayscale/812.gif",
-    "fileSha1": "faa4bb652fde344cd371149cf19d641a4014adcb",
+    "fileSha1": "5e495e4365a117d4b41e982043d716eff7faa8d1",
     "motion": "breathing"
    }
   },
@@ -21268,9 +21268,9 @@
    "normal": {
     "file": "normal/815.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "eedc380ece5463481e1b6584ba90562fa5770c79",
+    "fileSha1": "40545bb888b7bc9c76ad2b8dc95099b0d5b2ab49",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/cinderace.png",
     "sourceSha1": "20aa68e0a79cd4db407b8002f31551dd76094c30",
@@ -21280,9 +21280,9 @@
    "shiny": {
     "file": "shiny/815.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "428b0a06d68c404632dbe832d3ca6b467343a3ae",
+    "fileSha1": "c2588f4c9d689e1210ef2301160dc16f910d75b1",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/cinderace.png",
     "sourceSha1": "d898f9d00cf7b0396afb3a6bed30bc4f53c6678c",
@@ -21291,7 +21291,7 @@
    },
    "grayscale": {
     "file": "grayscale/815.gif",
-    "fileSha1": "e30d6d9435c962384912e671b45b626408ba6fd7",
+    "fileSha1": "83c6c25b5a8b9dac03d18ba46f8cff2b199982e6",
     "motion": "breathing"
    }
   },
@@ -21409,7 +21409,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "79e95b602e3fbb3aa567c2f1e4f6fdb67221677b",
+    "fileSha1": "2256d18349c7415cba04e5efb0c5c361d2037f19",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/skwovet.png",
     "sourceSha1": "696c6fcf28e7955e099b8256f002020e49213150",
@@ -21421,7 +21421,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "277834799e807a37456ed430443faa72a9f8e0e7",
+    "fileSha1": "c4e83cce9f4685a3375a405121a83955e561c49b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/skwovet.png",
     "sourceSha1": "2c7e418a366aa8ece716be06806b0573283f8d13",
@@ -21430,7 +21430,7 @@
    },
    "grayscale": {
     "file": "grayscale/819.gif",
-    "fileSha1": "94fcab0037124e8c05aa0e9987fca19237034865",
+    "fileSha1": "c11973e8430169a73ea216ca4c12973a51c1491c",
     "motion": "breathing"
    }
   },
@@ -21447,7 +21447,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "61fc1eab09ad06e07cdc6534d13aa6be3097986a",
+    "fileSha1": "0b75ad33e177dc5442f8a3039841a75bba807e55",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/greedent.png",
     "sourceSha1": "31ab0070d79c35b2c44148023939bf4be7182999",
@@ -21459,7 +21459,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "30defd19f3e2589b3ca82fe05679f394b7e98f77",
+    "fileSha1": "7512bf7c7415257bef1147b88a771526e68714b8",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/greedent.png",
     "sourceSha1": "e96cbf31bfa3945f3afda3dfc999b88768a67f59",
@@ -21468,7 +21468,7 @@
    },
    "grayscale": {
     "file": "grayscale/820.gif",
-    "fileSha1": "0c88e3a8c4c02cf9045ffd65f293eed8cdcfcc7e",
+    "fileSha1": "7b751711506c621f8b407e53a49e7d96aed83610",
     "motion": "breathing"
    }
   },
@@ -21617,7 +21617,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "2ae8f052c5b2b419307744efb819aa38c26d4f91",
+    "fileSha1": "3cff291e99231025fe2e90d385455d9b5303d7b6",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/dottler.png",
     "sourceSha1": "98812eb225b2aedde764e7f0300d50c49a3917ce",
@@ -21629,7 +21629,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "a2e3abbb0d1c15cac7f16170ec5f72a078c3be44",
+    "fileSha1": "312b33275c19b41769dfdcae631409efec518b9b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/dottler.png",
     "sourceSha1": "09fcc542d4a6d42f1c8cf48b4fa8e099983a65e0",
@@ -21638,7 +21638,7 @@
    },
    "grayscale": {
     "file": "grayscale/825.gif",
-    "fileSha1": "9e2395129c8392bdb0a9db5df86610e0a571731f",
+    "fileSha1": "afbc55c77dea7bc9251526a68f4095ba795132ec",
     "motion": "breathing"
    }
   },
@@ -21655,7 +21655,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "0dae1a80c0ca4845acd00ebf014a108ab83dd8f0",
+    "fileSha1": "7c87a67ceb1e3839a627e13a760155a6ea587716",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/orbeetle.png",
     "sourceSha1": "0eb05d908677102ce630f32e95a0932cef58225a",
@@ -21667,7 +21667,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "32f431c656e61ff2e23dba7eb64119938693c837",
+    "fileSha1": "12691b4b98eae1c92807ff66c4a1a2ce26432f67",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/orbeetle.png",
     "sourceSha1": "18aeb5b81e451cc2f8b7ffb7d7a2e73bf098e511",
@@ -21676,7 +21676,7 @@
    },
    "grayscale": {
     "file": "grayscale/826.gif",
-    "fileSha1": "d87fffa98a898d8a6731364295e8bc5671a91fbf",
+    "fileSha1": "068b71eacd386722693b9d049064ff5f31e19463",
     "motion": "breathing"
    }
   },
@@ -21691,9 +21691,9 @@
    "normal": {
     "file": "normal/827.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "637069f219924d7a8390a7b724e58b08d08757a3",
+    "fileSha1": "3924d9a2c4d93667d2beb20db4b2a25edf360163",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/nickit.png",
     "sourceSha1": "241290cee730b3dee2306ed717c123fa0f08ffa1",
@@ -21703,9 +21703,9 @@
    "shiny": {
     "file": "shiny/827.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "63e5a3cc9156af342a74586a5fd85a726fdb7c39",
+    "fileSha1": "2ef2180b2d12765ec997ca6d5804f013414b30eb",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/nickit.png",
     "sourceSha1": "1393bfdcf1b81ed408c9fb9cd7471ad0a831bd2e",
@@ -21714,7 +21714,7 @@
    },
    "grayscale": {
     "file": "grayscale/827.gif",
-    "fileSha1": "af78f5f0775125fc3e65d17ae82add14198b42e0",
+    "fileSha1": "facde3df79b774a0e57eb3f42de236b5327d124d",
     "motion": "breathing"
    }
   },
@@ -21731,7 +21731,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "2ad7b5f3138981340fd59f71ddada21afea97d5e",
+    "fileSha1": "06134c37677360216250bb7d924f654180ba2bd5",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/thievul.png",
     "sourceSha1": "b99bfe7636621ec26f86c2a521dece269512e739",
@@ -21743,7 +21743,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "38993a4f0312f821d67f1f7b2bdfab16f3ae48e8",
+    "fileSha1": "fb5f8fa43183ea3840c829688eccf0f7ea305972",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/thievul.png",
     "sourceSha1": "f6c6934736fb3c3a77dcfc7610b3f08496f38e40",
@@ -21752,7 +21752,7 @@
    },
    "grayscale": {
     "file": "grayscale/828.gif",
-    "fileSha1": "0a7293256a3d5686f25f2559f266b6ed9036b97f",
+    "fileSha1": "17eebe6e7be8882c9ee89c98ee6dfd05abd961ec",
     "motion": "breathing"
    }
   },
@@ -21769,7 +21769,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "35bee8333589bcce17029e91299ef3f2fa09df03",
+    "fileSha1": "112dce421295ed1f16cfa7fd3e7a7682db2cdfff",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/gossifleur.png",
     "sourceSha1": "024b5531888aea04eb36befd85d10593b1bfcb3b",
@@ -21781,7 +21781,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "974a10bdea629e267a834ad5f64f847383cd6e9a",
+    "fileSha1": "e6fdd3788477a054bc7b9c68533b1ad2fccf21dc",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/gossifleur.png",
     "sourceSha1": "169f67bdec3a183d3a41d84cc11d886708e33f1b",
@@ -21790,7 +21790,7 @@
    },
    "grayscale": {
     "file": "grayscale/829.gif",
-    "fileSha1": "436ea42953558449259be6d2556019259841afff",
+    "fileSha1": "5a0c7952e2065f7f9c7ed9b2ecab33abca1ed836",
     "motion": "breathing"
    }
   },
@@ -22008,7 +22008,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "8d5e9d9743851cc61e5f80749ebc171fc772d5ce",
+    "fileSha1": "bcf9c6ddbd19395715ad9a0b94b06717e696fe53",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/boltund.png",
     "sourceSha1": "f73996169c0908e491613e469fd3496f2280391e",
@@ -22020,7 +22020,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "c6f4132fa27f5bd516e44f66be865c148d5998f5",
+    "fileSha1": "34b7b900fe69919c91eff9e1b65ed6b515d53787",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/boltund.png",
     "sourceSha1": "de1c13abf696098ad6c4d957972078e0a1d75010",
@@ -22029,7 +22029,7 @@
    },
    "grayscale": {
     "file": "grayscale/836.gif",
-    "fileSha1": "a347004c1ddfe942a1ecda5cc48a7b23c6d94ee2",
+    "fileSha1": "1675d9da39092d1a592ff586fdd1e574798b8afd",
     "motion": "breathing"
    }
   },
@@ -22180,7 +22180,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "39849f5a09b95bf97350c1c6b3932f9dee607f7f",
+    "fileSha1": "2d06cd9eab72509923da5ba8ae1b09f281ea09b2",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/flapple.png",
     "sourceSha1": "9115ed6fa4ee02b6242b5bae725e64ac4f640f32",
@@ -22192,7 +22192,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "52cc6efdd1cdbf7f5836f676daed4126aabea619",
+    "fileSha1": "e7cfe2fcc5e4bc93efaab01fd93ebd6d891aafa6",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/flapple.png",
     "sourceSha1": "aed5191ff2439f33b69994fb72d9de066bde1e5e",
@@ -22201,7 +22201,7 @@
    },
    "grayscale": {
     "file": "grayscale/841.gif",
-    "fileSha1": "1682b82e6256f4e5c93624c0531c882a3e23afba",
+    "fileSha1": "6bf34ade4af60944d6ab3b1f3b85742152bad2f5",
     "motion": "breathing"
    }
   },
@@ -22218,7 +22218,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "fe1af4e6b48b6ea701b30180aaf25004269d31a5",
+    "fileSha1": "261ed381e2e02ada0c441391d8fa5004948e1cc8",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/appletun.png",
     "sourceSha1": "130448b62de167c81e6c82e691adee659df7206f",
@@ -22230,7 +22230,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "72eafaebf02dfeb7fed344355e493a00fefcf54d",
+    "fileSha1": "6b8af60b140e4201828118098cd29c8c8f4453c1",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/appletun.png",
     "sourceSha1": "1ffb6352c20de3b6d1d4908e3dc04d07bdb092b1",
@@ -22239,7 +22239,7 @@
    },
    "grayscale": {
     "file": "grayscale/842.gif",
-    "fileSha1": "a21577135616d977d778ae284f29391c78b74359",
+    "fileSha1": "b5c888b920c125ca6cbf497dccd94da0036e76f0",
     "motion": "breathing"
    }
   },
@@ -22493,7 +22493,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "b0c0ae6b090224830cc2ee66cbc0847aaf8cb0ca",
+    "fileSha1": "9e9df40c806a1ba330c70fcea504a201d3bbcdc3",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/sizzlipede.png",
     "sourceSha1": "e040eadef2833b015ddf65166d3e6fca4ce1588f",
@@ -22505,7 +22505,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "bdfab83306a4f72d98517d3447de9ca756865892",
+    "fileSha1": "bba658954389df64dd4dcf107384c4281988ae61",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/sizzlipede.png",
     "sourceSha1": "d1f1e75dadc632c72ec661188681cf224f6b8be6",
@@ -22514,7 +22514,7 @@
    },
    "grayscale": {
     "file": "grayscale/850.gif",
-    "fileSha1": "01b0026e8c2c555493d78951022d2e3b55e2479b",
+    "fileSha1": "ffbc21972b44a41eb542cc931340203917a0968a",
     "motion": "breathing"
    }
   },
@@ -22529,9 +22529,9 @@
    "normal": {
     "file": "normal/851.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 8,
     "size": "96x96",
-    "fileSha1": "e96eb7b5715cabe337ad76fa2cd8d2b34068dffc",
+    "fileSha1": "97f4d0fd2e8bd887b4ba1f1af3e8f515b19ae2dc",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/centiskorch.png",
     "sourceSha1": "172629ff33edd0c97e3622f8dae7fc9995cdeca1",
@@ -22541,9 +22541,9 @@
    "shiny": {
     "file": "shiny/851.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 8,
     "size": "96x96",
-    "fileSha1": "7b9099fbd19ced99b972c342d8fcb23af678d49e",
+    "fileSha1": "e066b8866457bff92bd7684330c7453bd695d88a",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/centiskorch.png",
     "sourceSha1": "32cf75a1e31a308016cffc3ccbc0c4564340e1be",
@@ -22552,7 +22552,7 @@
    },
    "grayscale": {
     "file": "grayscale/851.gif",
-    "fileSha1": "9bbfb8c9db2412aee222cc24afaddf99f78aeb64",
+    "fileSha1": "640b6b4e05d76df3154fbe45d57eb7daa4f7ec93",
     "motion": "breathing"
    }
   },
@@ -22602,7 +22602,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "70ed4d11a52329f9df4e90d8930cb7c58f81a29e",
+    "fileSha1": "c9b81da4ed14277459d0e33943dc11f4e0fa95ec",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/grapploct.png",
     "sourceSha1": "77e16311354e4742c3b63ed19d155293e580f290",
@@ -22614,7 +22614,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "146c5fc2ee345f4886ef6510e522f3b2c6825c90",
+    "fileSha1": "fd2e88361d0dcbddc8f62761e1134b0ff833179b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/grapploct.png",
     "sourceSha1": "6214b3a1938e138edcda42b99b0a3ddda833c00e",
@@ -22623,7 +22623,7 @@
    },
    "grayscale": {
     "file": "grayscale/853.gif",
-    "fileSha1": "d72e3454935c977f624f5aa48941e490b32c3b9b",
+    "fileSha1": "202b0aadbd21ee0c5b5b5e6881d2cc9f01c1db7f",
     "motion": "breathing"
    }
   },
@@ -22640,7 +22640,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "a4f0628227d851223fb13e38d79aa4b1e5f39ef8",
+    "fileSha1": "bf91f2347380ce12fbe35918d48be57eabd452d1",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/sinistea.png",
     "sourceSha1": "1bae610b5c6424b72b089323ab47e488da478e7a",
@@ -22652,7 +22652,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "6f4db7820f8112cfaf020280d0e746dd009280e9",
+    "fileSha1": "4cd3e926d7479248679313b3fe3bcfdbdf3548e6",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/sinistea.png",
     "sourceSha1": "325c002b7f0aba6aae932bc0b27325c40b6f322a",
@@ -22661,7 +22661,7 @@
    },
    "grayscale": {
     "file": "grayscale/854.gif",
-    "fileSha1": "39dba61edaa4c2fdfa43adc430cc0a2701ed2b47",
+    "fileSha1": "da50b222282eef1a8982d71656ea9ebfb44bbfa1",
     "motion": "breathing"
    }
   },
@@ -22678,7 +22678,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "2c1d070c2dcdc4b44cf6add802152a5a0c96fa1c",
+    "fileSha1": "a276d0e1a7c318300bcaa0a052526ac9bb8c125e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/polteageist.png",
     "sourceSha1": "0a390f3f993783116a4938679ab055915d089425",
@@ -22690,7 +22690,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "36df783118722b27bdb6316ba567f658fc8504fc",
+    "fileSha1": "84b95f6eab8f5c3f8366f5a10faaffb0a952edb7",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/polteageist.png",
     "sourceSha1": "e14e73c8a44b258bd1aa30f56cff0c76090244ae",
@@ -22699,7 +22699,7 @@
    },
    "grayscale": {
     "file": "grayscale/855.gif",
-    "fileSha1": "b4ceca34c011e8a7e08c048ef9f9f647a73cc5e0",
+    "fileSha1": "46934bc36756119588f5b74860c1b95c11160d86",
     "motion": "breathing"
    }
   },
@@ -22750,7 +22750,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "4753c0b61f883992eaee444bcfc8ed5d91f0da8d",
+    "fileSha1": "35e64e4fe3911d5c5481f973d0513756e8ad04ce",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/hattrem.png",
     "sourceSha1": "6a882298ed0eb54c29fbc5956be24e776dd7ceca",
@@ -22762,7 +22762,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "9124356fe7667c702db101534059b9f22a9288be",
+    "fileSha1": "9611791e5ef9527adce46ebb079fe5c49e7def4e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/hattrem.png",
     "sourceSha1": "a88ba3cb324bedf59ebc5d49ee8a71a89e3ad522",
@@ -22771,7 +22771,7 @@
    },
    "grayscale": {
     "file": "grayscale/857.gif",
-    "fileSha1": "5d97edc9185472395f13618386964b190dea10a7",
+    "fileSha1": "ff17c1e41d1739cd3e64178e806ecc80a12899d1",
     "motion": "breathing"
    }
   },
@@ -22854,7 +22854,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "f94ad4e914aa2b7e07ed69d88a05af846d070315",
+    "fileSha1": "3cb01db7e9b044a97f89fc8fa3b050a1efa0ebad",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/morgrem.png",
     "sourceSha1": "d88980d6d93ccc281c047c3bb3f63b8792af6c6d",
@@ -22866,7 +22866,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "8e7e0a89eb16449c22c6146c85f871cad277aa43",
+    "fileSha1": "8d622f7dc24287f872795329d51d61f1aebfdd67",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/morgrem.png",
     "sourceSha1": "f30c0dee72f2a6e2c2dd6cca6416d975485991e4",
@@ -22875,7 +22875,7 @@
    },
    "grayscale": {
     "file": "grayscale/860.gif",
-    "fileSha1": "35839cc10640e9cf150ca34f9a58189c7c8d80d6",
+    "fileSha1": "8920420ff71080402c3046fbf74f64330002a0a0",
     "motion": "breathing"
    }
   },
@@ -23024,9 +23024,9 @@
    "normal": {
     "file": "normal/865.gif",
     "kind": "static",
-    "frames": 10,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "3e06327abd2c990684fff8ae429698edced02844",
+    "fileSha1": "b643e9e18187fe7304049050aabf4d0f8d1e8394",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/sirfetchd.png",
     "sourceSha1": "676ad9eeb89bfc5990ac649dff9b6b4f9cc1dae0",
@@ -23036,9 +23036,9 @@
    "shiny": {
     "file": "shiny/865.gif",
     "kind": "static",
-    "frames": 10,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "894f65047817f3a3b288432b9debf1bb013a2368",
+    "fileSha1": "96eb3827384c1b8cdcf5a6aa67fc8dabf452561b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/sirfetchd.png",
     "sourceSha1": "491c3a46b293ab2012a0649a4c867f53bdce3ad9",
@@ -23047,7 +23047,7 @@
    },
    "grayscale": {
     "file": "grayscale/865.gif",
-    "fileSha1": "f3f44f92f2d1636f3292bbb4b7ca7faf0ecf57d3",
+    "fileSha1": "c8545439c379879c0f2656241e48ec657b8a292d",
     "motion": "breathing"
    }
   },
@@ -23205,9 +23205,9 @@
    "shiny": {
     "file": "shiny/870.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "a92075f2006a7528b647a2058967e7ef0dcfe243",
+    "fileSha1": "e5d0ac8868174aa0ccd47688519bd8104cde637b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/falinks.png",
     "sourceSha1": "ca02620f088151ef9b76469accdaa952227e29ac",
@@ -23502,9 +23502,9 @@
    "normal": {
     "file": "normal/879.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "be0689e6558d63074e7a44533a6827dbb4579d85",
+    "fileSha1": "cf36a9617be81b13d13aad7856ecb9e567346ced",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/copperajah.png",
     "sourceSha1": "d1b28048e8c1200e212a6c496002eee041bbb441",
@@ -23514,9 +23514,9 @@
    "shiny": {
     "file": "shiny/879.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "7e3e92afe8a7eef91394fc019fb54978de9f692b",
+    "fileSha1": "776648003dd201f03d18d23a1611ddb8f5afd3fd",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/copperajah.png",
     "sourceSha1": "ebb918a85421110e5b1506883336ba1f4bf75aeb",
@@ -23525,7 +23525,7 @@
    },
    "grayscale": {
     "file": "grayscale/879.gif",
-    "fileSha1": "75f16909c07629ff16fbb81f368e39eb2b36a3d2",
+    "fileSha1": "3956609aa19ee425a8d5a697aee0d141abebf62e",
     "motion": "breathing"
    }
   },
@@ -23575,7 +23575,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "b5d6ad06a9d7f22eea16ef8fcebbf5c724ba82fa",
+    "fileSha1": "28b4bbf96e75c3be8e263425e2e742502589c3d3",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/arctozolt.png",
     "sourceSha1": "6d1aae483469aba1b9478b1ae2500e60d4874ac4",
@@ -23587,7 +23587,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "6ffef2e4bf48ff6ad814395c333d30c2ebc79994",
+    "fileSha1": "6aa0b734a8f10c09add8fc86a25b0694c25392eb",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/arctozolt.png",
     "sourceSha1": "edd62a7426d31940edc55e9fb7681c37bfc03973",
@@ -23596,7 +23596,7 @@
    },
    "grayscale": {
     "file": "grayscale/881.gif",
-    "fileSha1": "9e094a3f33f0e18169a23887e8fe896ad4d6553f",
+    "fileSha1": "a94e9907bae88686f4ae41e16da08c0b88ee9a31",
     "motion": "breathing"
    }
   },
@@ -23922,7 +23922,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "e3919e856c73b5a73d0e2772cd61fa0a1a916155",
+    "fileSha1": "a6a4c07b687af2b9ae8792cb9b0c5b497b7e0502",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/kubfu.png",
     "sourceSha1": "97427a13418601c22f4580db301fc4273e5ab4ab",
@@ -23934,7 +23934,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "6d94cb45e9e736f81cfee682f0048d01bfac9514",
+    "fileSha1": "ac15c308e47606563d670ba4ce35a8d991a69424",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/kubfu.png",
     "sourceSha1": "fa1b69a7d912829f0357fab41f3ad4b9c44b53be",
@@ -23943,7 +23943,7 @@
    },
    "grayscale": {
     "file": "grayscale/891.gif",
-    "fileSha1": "a4cd78e6c0bf328dd52b3e3fea213dc348306e53",
+    "fileSha1": "77248411d57446d7f1f3794b25a7654691ba9afe",
     "motion": "breathing"
    }
   },
@@ -23958,9 +23958,9 @@
    "normal": {
     "file": "normal/892.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "ec6267d377e3e2c48ad45a230562bb3bc12973b7",
+    "fileSha1": "8be711b9fc67a985fc95265d048ddeef231f3ecd",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/urshifu.png",
     "sourceSha1": "78fad691ffc86b4601ab4b4ff872811d4024ad1e",
@@ -23970,9 +23970,9 @@
    "shiny": {
     "file": "shiny/892.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "39ac93b7e797a5f6adabfcb288a8b9eee423e6cb",
+    "fileSha1": "d35cd215b0109fe0992f68f81a871ed467a97946",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/urshifu.png",
     "sourceSha1": "e3a9a6e8dad108e9d58cb17a9286d08021c7618b",
@@ -23981,7 +23981,7 @@
    },
    "grayscale": {
     "file": "grayscale/892.gif",
-    "fileSha1": "4d9a61942b52c2a84b6b54b1a25692e5884446f6",
+    "fileSha1": "c277e94b0105f01c1e909049972ddccaed1dc8cc",
     "motion": "breathing"
    }
   },
@@ -23996,9 +23996,9 @@
    "normal": {
     "file": "normal/893.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "5dac810d66d15b06dfe13a4e7fe8addb99b45984",
+    "fileSha1": "6bc69abe3ce276413877026935fcfbc93f533b19",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/zarude.png",
     "sourceSha1": "ed97c57f90786c1d518eb1fe92dace4e4d6c6afd",
@@ -24008,9 +24008,9 @@
    "shiny": {
     "file": "shiny/893.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "aacf633053a69cd7819dba6041aae1c20619cb9e",
+    "fileSha1": "3f3903558d43651b26770d97b87ca9f2c4d911a4",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/zarude.png",
     "sourceSha1": "6dbca98dcb64077b4741c690823dc2e739dfb5fc",
@@ -24019,7 +24019,7 @@
    },
    "grayscale": {
     "file": "grayscale/893.gif",
-    "fileSha1": "96ae76d039acad769d4b1023ded0681d1c7c17bb",
+    "fileSha1": "875b7edf44d5d8edca8b4ff441539b7e637488b7",
     "motion": "breathing"
    }
   },
@@ -24036,7 +24036,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "b277282baaa91607460db644c20691353cbd0e21",
+    "fileSha1": "b3578f34e419f824983be7328528b6c9a79c246c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/regieleki.png",
     "sourceSha1": "ea0acbb2750c874da250be360c6fd750d84c93db",
@@ -24048,7 +24048,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "09177c483487219c9e897a7e6c026ae155e30424",
+    "fileSha1": "752483cef04fa11afdd8cb419d391449b28854cc",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/regieleki.png",
     "sourceSha1": "e37c230bc45522229fc1335cd39f75ccab41999d",
@@ -24057,7 +24057,7 @@
    },
    "grayscale": {
     "file": "grayscale/894.gif",
-    "fileSha1": "7e2ff0b290a10f7dea15ff97a7358665151f3ff1",
+    "fileSha1": "3e22a29e059fff5ea1f3d327bae5501fdf9b8061",
     "motion": "breathing"
    }
   },
@@ -24243,7 +24243,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "9aeb5280fac71a21bc99c8f1f02915ae0f9441f8",
+    "fileSha1": "b6605ea05aee0bdd0ac4bcb6a200cb746639d5cf",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/kleavor.png",
     "sourceSha1": "7ed403a8fe07c101efaa3c5d35988507885909a8",
@@ -24255,7 +24255,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "28615253ccd91590ca369e279fe25565c211caf9",
+    "fileSha1": "4dd685fe1c97e19d0933d55595ada7aaa097eb98",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/kleavor.png",
     "sourceSha1": "f5050a437d636274861424006c681e00fb283f76",
@@ -24264,7 +24264,7 @@
    },
    "grayscale": {
     "file": "grayscale/900.gif",
-    "fileSha1": "3390dd9c07297072ee7e7b64826f9db96f27f1a3",
+    "fileSha1": "df0d6fa87a6e265e16002174af6024a07da8fb07",
     "motion": "breathing"
    }
   },
@@ -24349,7 +24349,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "094a3a9bfce8e219a1464362219dff80fd9964bf",
+    "fileSha1": "6ddbea347aee9a8e0c606e5e819c804e8335f5a5",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/sneasler.png",
     "sourceSha1": "d20b689fd438d96a13d03befeeb05669a141c72b",
@@ -24361,7 +24361,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "4ccdff68281d5d697c96390cbec5ea0b014a6277",
+    "fileSha1": "5af0f3b1108eaec4d114ac6e30ecc787a7ed7b0e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/sneasler.png",
     "sourceSha1": "f6ae33d205055768956bd3578f7af164320b5d4c",
@@ -24370,7 +24370,7 @@
    },
    "grayscale": {
     "file": "grayscale/903.gif",
-    "fileSha1": "dea869715c3bc16b5d785ee7d5e798a1db23b1e0",
+    "fileSha1": "49fe98c5d24239ab570abdb97a767f8145b2736f",
     "motion": "breathing"
    }
   },
@@ -24420,7 +24420,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "45ebd9b21f823be9e9013b4897f9ba908ec421b7",
+    "fileSha1": "732fca2e1cf75854116587c8683bdf57c4f3282c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/enamorus.png",
     "sourceSha1": "2cd8f3a89a733b89107773ce9e2ac18fbb523b91",
@@ -24432,7 +24432,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "391fc6359840eacc61fcdb55bfaeccd27693dfc7",
+    "fileSha1": "9d35c9a7fe3bf9bcb715c1cc823c4663b6e0c491",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/enamorus.png",
     "sourceSha1": "5fb5f4a39ff14905de7e047a4ab8597c974b728b",
@@ -24441,7 +24441,7 @@
    },
    "grayscale": {
     "file": "grayscale/905.gif",
-    "fileSha1": "e8d854b0219c50a32db27e5668de60b99d712178",
+    "fileSha1": "25681d454c75f0f0418a180f35184371c624e3a4",
     "motion": "breathing"
    }
   },
@@ -24458,7 +24458,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "d56dc00bc4c559ef1fd1d0e6198065a9e38915ec",
+    "fileSha1": "30a079f9a4e8342554e5986599758942f19e8d92",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/sprigatito.png",
     "sourceSha1": "4ec0f44d5b36b5eaa5315b2d06fc91ccd3b23238",
@@ -24470,7 +24470,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "acaf90616ea37a9af0ef2913ff95f3da001c0874",
+    "fileSha1": "024284c8abd42f3d171f675494d1e71f874fad98",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/sprigatito.png",
     "sourceSha1": "841ddaddf9f0cf62019179d083009473332704a7",
@@ -24479,7 +24479,7 @@
    },
    "grayscale": {
     "file": "grayscale/906.gif",
-    "fileSha1": "7e86147a408fbe4105d4ef6a47e653444b8ec445",
+    "fileSha1": "8d3c404bc9006f2acc97e8b20b64fe9a2a139a71",
     "motion": "breathing"
    }
   },
@@ -24494,9 +24494,9 @@
    "normal": {
     "file": "normal/907.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "2302ae6051f57c1c402d11d253f3d324022b326f",
+    "fileSha1": "76c3b722a67f05e42fd00ebcf0bd1377fe56a35f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/floragato.png",
     "sourceSha1": "88225bf77795047462366d0adfcea0785d94c3c4",
@@ -24506,9 +24506,9 @@
    "shiny": {
     "file": "shiny/907.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "a93beb670109b8913848f81fb8618e89876c0def",
+    "fileSha1": "2f59b4639f8683d7109ea6ef11168ccf2b17bcfd",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/floragato.png",
     "sourceSha1": "c2ea2206bed32e13759da896d78a5798c78f7bba",
@@ -24517,7 +24517,7 @@
    },
    "grayscale": {
     "file": "grayscale/907.gif",
-    "fileSha1": "571b863e15fe30dbd5e6a943986d2b58eb78c3e9",
+    "fileSha1": "c6b48f3deff305e8971228bd47ad70223cdab48e",
     "motion": "breathing"
    }
   },
@@ -24534,7 +24534,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "03a90850c47f6233b02514f31e158157637abb83",
+    "fileSha1": "035f3dd273a6c031f5bfa9b192755cee320a7780",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/meowscarada.png",
     "sourceSha1": "2545c5a0b000040d909d6a4782a797016d01a392",
@@ -24546,7 +24546,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "45590445622b40ca79490b1710ef418aefbfaa08",
+    "fileSha1": "f1ddcdaa6fe36cfca5db98cdb24b5d8e4ea059d6",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/meowscarada.png",
     "sourceSha1": "cde66c38f01051658b8e6e863e8e6fb981ac368d",
@@ -24555,7 +24555,7 @@
    },
    "grayscale": {
     "file": "grayscale/908.gif",
-    "fileSha1": "470a636302c1eaaaa78327271fe65dcd105225bd",
+    "fileSha1": "b1305fb9b73db704ca7671d8cdf54b49483a0755",
     "motion": "breathing"
    }
   },
@@ -24572,7 +24572,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "0d92a41fc68d32c0ef503768b65b0ecb5402ef94",
+    "fileSha1": "ff18514b106df0d8329c2e00d608d13cf657eefd",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/fuecoco.png",
     "sourceSha1": "2c9aa993b8a51e2e6d016455885c5712dbfd813b",
@@ -24584,7 +24584,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "1bbaa6b12dda835ced8e407fec0c84d1a462f202",
+    "fileSha1": "210845e1a589de0d83834a6f65dc2aada5fb2d8d",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/fuecoco.png",
     "sourceSha1": "677c53c62e8815d8530ff6d89e0c2361dbfa380b",
@@ -24593,7 +24593,7 @@
    },
    "grayscale": {
     "file": "grayscale/909.gif",
-    "fileSha1": "fddba7ff5f716ca71c470ed08f36c25e87dac112",
+    "fileSha1": "f81f8efdd3a438f2c9272f49f1fe85a53ecbaef2",
     "motion": "breathing"
    }
   },
@@ -24610,7 +24610,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "2e63a0a2cd371784c614737f919d0a6a21cd45c0",
+    "fileSha1": "5d75952345de3edbc0ea156c0b3ff2b90ceb0780",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/crocalor.png",
     "sourceSha1": "03e16cd1994c297676ed8c38eca948e2fd84b763",
@@ -24622,7 +24622,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "befc192164f405a22b549ce1b1d069699727cbc2",
+    "fileSha1": "7f67dc4c9334cfb7ee1f0c5e391a07a811bc4475",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/crocalor.png",
     "sourceSha1": "cbed0755f615990adce4d6eb898c52040c3a3537",
@@ -24631,7 +24631,7 @@
    },
    "grayscale": {
     "file": "grayscale/910.gif",
-    "fileSha1": "126c9066250c5426bdd99d5ada67998f29bcde3c",
+    "fileSha1": "6af6a424b873d009a20d30501844f7b8b4bb0b82",
     "motion": "breathing"
    }
   },
@@ -24648,7 +24648,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "25ef9618e3520e83d36830d34dbc1b5440f49eae",
+    "fileSha1": "9ff0ad7bfc81a5811ccb73e231a306edc7128631",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/skeledirge.png",
     "sourceSha1": "8f310dd012c52f82f5bcdda4f64d3f25da6be8ca",
@@ -24660,7 +24660,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "20fc073babd6ca46c86933981af967f85a614746",
+    "fileSha1": "6b0e2c033fc435c7c1fca06c9056a94b5850b497",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/skeledirge.png",
     "sourceSha1": "40667c7e44f2546299d27b41d3fc89b9965f35ce",
@@ -24669,7 +24669,7 @@
    },
    "grayscale": {
     "file": "grayscale/911.gif",
-    "fileSha1": "5f16f275966056d77255f26ec532603a3f1c1e4a",
+    "fileSha1": "3908ff56cdce2676b5e547ad89c11aa6a7514254",
     "motion": "breathing"
    }
   },
@@ -24684,9 +24684,9 @@
    "normal": {
     "file": "normal/912.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "ff9030ade3970443ba00f0f41b85c3121384dbb8",
+    "fileSha1": "8d1537d0341ea8afc9282d1a503441ea08513495",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/quaxly.png",
     "sourceSha1": "de242207c0cad40f11fc075ad9a3c5c4ada7887f",
@@ -24696,9 +24696,9 @@
    "shiny": {
     "file": "shiny/912.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "dce68732229107ce9737c8e44056845c4944d78f",
+    "fileSha1": "56bf3c279c1ecd8d820a51af5214afd169f5ab9c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/quaxly.png",
     "sourceSha1": "10bb8e0f36fe6cb932f7cca80246fb1c7ef2e958",
@@ -24707,7 +24707,7 @@
    },
    "grayscale": {
     "file": "grayscale/912.gif",
-    "fileSha1": "844bec59587e5fd5ead4c713ba0a00bcc3f43f35",
+    "fileSha1": "7e3955301914cc9efe39d78206edfcf0b5bf22ac",
     "motion": "breathing"
    }
   },
@@ -24724,7 +24724,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "034d87a47b22f9a19289ff9b4bfb1e19e29fdf78",
+    "fileSha1": "1c12768c6e99a688c67f666e06a306f16eb28e96",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/quaxwell.png",
     "sourceSha1": "35492412903291b6d8a340636025a95712241e99",
@@ -24736,7 +24736,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "a8e68fe93eea491938b9123072507bdb5dd5e9a0",
+    "fileSha1": "fe898ed3d660991c22d380107a08fd292c168b93",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/quaxwell.png",
     "sourceSha1": "7eace1b92a21b6166e196f871b8acc7849d5ea45",
@@ -24745,7 +24745,7 @@
    },
    "grayscale": {
     "file": "grayscale/913.gif",
-    "fileSha1": "f83a962e4c5cf5c65316c215bec3939f7e262bcf",
+    "fileSha1": "9ed6939635570cfeced4bf6ce9dc3d1513499680",
     "motion": "breathing"
    }
   },
@@ -24762,7 +24762,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "98759ba9e8bc228fdbe1f535d59ee098aaac4bf9",
+    "fileSha1": "6c69025eae1dbf8966d73c65946dd0a16e0bd2ee",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/quaquaval.png",
     "sourceSha1": "30b9e28e11d6298ef58c8762d28be3bbc0bfef00",
@@ -24774,7 +24774,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "1125d42ee89670f61af6388da982ecbc7ad92fe1",
+    "fileSha1": "55287c07f20778ac70fef954c9f8bf57d5453920",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/quaquaval.png",
     "sourceSha1": "c9443fdf8f41013f1cbcec0cac0d0ea7a4f1d1d8",
@@ -24783,7 +24783,7 @@
    },
    "grayscale": {
     "file": "grayscale/914.gif",
-    "fileSha1": "f1a234d44b02ee25e8292032b987893474d11fec",
+    "fileSha1": "26dc95a0acaeb64a032c989e240daf6c4cc59e97",
     "motion": "breathing"
    }
   },
@@ -24800,7 +24800,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "73330997b1e20b9eebce947b12b12c9c7b9ffd4a",
+    "fileSha1": "b1ee81ab6a1f6f11a5551737a8f3ce38a1073882",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/lechonk.png",
     "sourceSha1": "a95530211bc2619a8ebf6e318d5921763722f8d7",
@@ -24812,7 +24812,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "c72d7481b682b8684735b5110fda2b0ec4a5758f",
+    "fileSha1": "898f237c54ca7a43f7011b2ad35fc14154d6a575",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/lechonk.png",
     "sourceSha1": "3334b1b9705ac19f428f26710385c88356eabdde",
@@ -24821,7 +24821,7 @@
    },
    "grayscale": {
     "file": "grayscale/915.gif",
-    "fileSha1": "7a3791c945951817e767aebf02402e9305c53043",
+    "fileSha1": "45da59f64930a0ab6267f4389560700046489d0a",
     "motion": "breathing"
    }
   },
@@ -24836,9 +24836,9 @@
    "normal": {
     "file": "normal/916.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "12202895f3f77a15a9de7e7ef68ab7489d64db9a",
+    "fileSha1": "40c3fa2e781212b3fab32630a40bd4020c8537a4",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/oinkologne.png",
     "sourceSha1": "3dca0254b1de9e6bec910ab6fad2dccdc8096590",
@@ -24848,9 +24848,9 @@
    "shiny": {
     "file": "shiny/916.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "2cb1b556440297006c037629e066dec455462a65",
+    "fileSha1": "71ca1a320a17f88482b69485b9f7cfeac6999066",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/oinkologne.png",
     "sourceSha1": "493e4d3a441c376ffd187ce3400e95cfb7acc799",
@@ -24859,7 +24859,7 @@
    },
    "grayscale": {
     "file": "grayscale/916.gif",
-    "fileSha1": "1e6fc8f591d63427b7c25a314964d451d302dbcf",
+    "fileSha1": "9a6045b2a209100bb241793244416668a211ef3c",
     "motion": "breathing"
    }
   },
@@ -24876,7 +24876,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "d5dab8723a100671f6b7b23f9931390038aba664",
+    "fileSha1": "837471a528d9c9056c858e47dc5cb9f633dd56c2",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/tarountula.png",
     "sourceSha1": "2d33080e58d8ee4dd6629de18af5b1bcff23163e",
@@ -24888,7 +24888,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "32d7b5d8d310001587e3c018c1410ca58b52da87",
+    "fileSha1": "def3f4f4c6a3118f806020b9b7c4a306b4c7466f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/tarountula.png",
     "sourceSha1": "51d28d35d1a71291a5373c2e4c045cfceadf1c88",
@@ -24897,7 +24897,7 @@
    },
    "grayscale": {
     "file": "grayscale/917.gif",
-    "fileSha1": "165c6833335d1391e088a3016f5699b80894b61d",
+    "fileSha1": "246a0040381e02aeeab72d687e27089297c95825",
     "motion": "breathing"
    }
   },
@@ -24912,9 +24912,9 @@
    "normal": {
     "file": "normal/918.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "54195a0eaa4c1d7e7f45c43acefa91c993e6ffbb",
+    "fileSha1": "1c745764636f9d89bedd69b51e7586d5a9b6775e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/spidops.png",
     "sourceSha1": "7d1033aa797b029914085d79b09b6c34a4ff737d",
@@ -24924,9 +24924,9 @@
    "shiny": {
     "file": "shiny/918.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "212cc510341eeb5a97911d69d5ebd723b2d22307",
+    "fileSha1": "6ea8711d4c36fc756418948543e099998fd42e30",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/spidops.png",
     "sourceSha1": "7a6bc8c2b2f297ca1b41a94508b7ac35e11218f7",
@@ -24935,7 +24935,7 @@
    },
    "grayscale": {
     "file": "grayscale/918.gif",
-    "fileSha1": "d9fab9b1a1c8ba4b0289f97c1f69f65c2f7c8e9b",
+    "fileSha1": "6845696c50776f4b3ad00557568361c98b5d1883",
     "motion": "breathing"
    }
   },
@@ -24952,7 +24952,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "880e75885ef0f4704e1e8c8339487fed9cdf58a4",
+    "fileSha1": "6e9bd6a4f330d1202489bbe2b8988331dc43ad67",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/nymble.png",
     "sourceSha1": "dd26daef16c8480c6e03d03aa075bd4f9658a374",
@@ -24964,7 +24964,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "d042699a2d4a6641167158840e227cc69640db0b",
+    "fileSha1": "fa03c3116896912facd215bd8f49c29fc1e5c37b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/nymble.png",
     "sourceSha1": "6dbc6e5e97f446c8f359fd9e53170e0ab548a8a5",
@@ -24973,7 +24973,7 @@
    },
    "grayscale": {
     "file": "grayscale/919.gif",
-    "fileSha1": "6fb8a769df7b4628ce36a684f4a70bb782521378",
+    "fileSha1": "80e9cf25a2e2ff6989aff13833f6779f5fbbb90a",
     "motion": "breathing"
    }
   },
@@ -24990,7 +24990,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "433d75cbe25f291340cb24db2af250105f975070",
+    "fileSha1": "8a775a537a7e96f4b6c775f404a43394c7a3236d",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/lokix.png",
     "sourceSha1": "d7ff0fcd79f62d405166c3e02b12cd78566328ee",
@@ -25002,7 +25002,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "b0987e1cf6c6e4dc43bebfa780dc3442a99d8faf",
+    "fileSha1": "e45ddab1ac138f67767311bca04f0831f02b6177",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/lokix.png",
     "sourceSha1": "ed58499a1ff49e78150494ac27a17094347f59f5",
@@ -25011,7 +25011,7 @@
    },
    "grayscale": {
     "file": "grayscale/920.gif",
-    "fileSha1": "13f461994726e02704a8edc214296d68d093ff2b",
+    "fileSha1": "e1cf9220e7cb2d6966de0782cfb5b6f0741fd53f",
     "motion": "breathing"
    }
   },
@@ -25026,9 +25026,9 @@
    "normal": {
     "file": "normal/921.gif",
     "kind": "static",
-    "frames": 10,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "268978ed17177ae08e894a0707f9a6170b6c28db",
+    "fileSha1": "64840b47c7d18dbccdce7995ca1f5643296bfbe5",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/pawmi.png",
     "sourceSha1": "56ec31a5490e4a0bbee7c64b1ddd97da1dc669cc",
@@ -25038,9 +25038,9 @@
    "shiny": {
     "file": "shiny/921.gif",
     "kind": "static",
-    "frames": 10,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "40932e5443ba5e6fe6e64ba301d71f40606e6c5b",
+    "fileSha1": "ed59f0b737268ec1c3b25ad7e8d1fd93a7924d7b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/pawmi.png",
     "sourceSha1": "2101a0582946bb5f76125a83432dcbed00864f55",
@@ -25049,7 +25049,7 @@
    },
    "grayscale": {
     "file": "grayscale/921.gif",
-    "fileSha1": "659aa238344ee4118c874f0cade45f84b42ea048",
+    "fileSha1": "a202fa113233d925f95fe787ffd2bd1fbb805e36",
     "motion": "breathing"
    }
   },
@@ -25066,7 +25066,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "294a5543085bd2a5a303ce1c3fe1b1ca952744e0",
+    "fileSha1": "c315bcf8c7592c0953eeb4b20da9c83e33fb43de",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/922.png",
     "sourceSha1": "effeb368642c6b547ff562b71522dc259ed5a1c6",
@@ -25078,7 +25078,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "587646761a315bc9f34d86a58c889467e088a954",
+    "fileSha1": "bddf50e779e6ed840209f1dfe9ca729a742efbbe",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/922.png",
     "sourceSha1": "1de61a92b39fde4b898f9949ff8860eaf72baed0",
@@ -25087,7 +25087,7 @@
    },
    "grayscale": {
     "file": "grayscale/922.gif",
-    "fileSha1": "607be3bc4d2c4969b4957402c5b964fc37cd368a",
+    "fileSha1": "32b340e1b2963ecee286ae646a6a2bd9f13d21cf",
     "motion": "breathing"
    }
   },
@@ -25104,7 +25104,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "c1b4562af71850bc0fe1bc3184ea9987e7205e68",
+    "fileSha1": "2236380e80b57198f2d8d94c450cebb2debf1022",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/pawmot.png",
     "sourceSha1": "9b03ed1a59bcd3d16ff252c0de3a1a1b33b36950",
@@ -25116,7 +25116,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "7c443629c4e8d4d1034d074a97139e6e3d6f081c",
+    "fileSha1": "742fe7d452645314bea33c9e9fefde93ff0b1de4",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/pawmot.png",
     "sourceSha1": "31b4f1df753c8ab8341dcc25fd0b45acee942bff",
@@ -25125,7 +25125,7 @@
    },
    "grayscale": {
     "file": "grayscale/923.gif",
-    "fileSha1": "c1e1d438de2564a57154b3d35d32e60fd1aa2720",
+    "fileSha1": "1015c8a533894360377509f3259d2e7984d798e8",
     "motion": "breathing"
    }
   },
@@ -25212,7 +25212,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "dd3e8cc67d1941306fdb25210d51ff498a0da0f2",
+    "fileSha1": "af2bd8ad8d3bfd9b3ff0ff4a823f67573df1d909",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/fidough.png",
     "sourceSha1": "7f7fd461494644f331dbe1e673ba8e5079b2443d",
@@ -25224,7 +25224,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "47615369f686da44f0058d84f907a898e661b9ec",
+    "fileSha1": "2fe862d5db80cba40a820eb0b40ddce3462194f7",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/fidough.png",
     "sourceSha1": "62f77707cd0b1de975d5794029f8faadd4f15ea0",
@@ -25233,7 +25233,7 @@
    },
    "grayscale": {
     "file": "grayscale/926.gif",
-    "fileSha1": "067a72a4c566b3c645db75d165faf56b9b304788",
+    "fileSha1": "629c36b788b50719587475506c38eb24f620a2e7",
     "motion": "breathing"
    }
   },
@@ -25250,7 +25250,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "40025e989334881791b9162df382a5e0cf545c14",
+    "fileSha1": "3c0ace53d832281cea5d3de29da7b6cea6fb86df",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/dachsbun.png",
     "sourceSha1": "2efb7076ed1a916a1729cf38c293f1dea467bbe8",
@@ -25262,7 +25262,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "8c60bf746222b08c395b720457f9499ab246e17d",
+    "fileSha1": "ed34cbc3f729ccd609205d91659278ed280dab1f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/dachsbun.png",
     "sourceSha1": "4dfd86534dda67726b6bd2dd1911826b826d72b3",
@@ -25271,7 +25271,7 @@
    },
    "grayscale": {
     "file": "grayscale/927.gif",
-    "fileSha1": "ab5b1a2f77fc81353bdc788134ce4915a8a24ec9",
+    "fileSha1": "05dc7233d75086db2d6401687a5a737ce4d6dd20",
     "motion": "breathing"
    }
   },
@@ -25286,9 +25286,9 @@
    "normal": {
     "file": "normal/928.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "f34a5cb2ca30a75849403f5ff4fa9f852f0b9f84",
+    "fileSha1": "6821715cfb088dbeba446d6fbceefba79130a318",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/smoliv.png",
     "sourceSha1": "29c734a9a656826e79d7e26c112b0be9c58aff92",
@@ -25298,9 +25298,9 @@
    "shiny": {
     "file": "shiny/928.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "21949542c825c9aba1e8885dbb4acb8fb8eaf95d",
+    "fileSha1": "bc20620e810770addafa6f5afbd503388a255aea",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/smoliv.png",
     "sourceSha1": "f7191eaa54a5159f6af5df46a944a2be1ec1251a",
@@ -25309,7 +25309,7 @@
    },
    "grayscale": {
     "file": "grayscale/928.gif",
-    "fileSha1": "a9f35c39d09825df863577ad0d34b8eec86f270d",
+    "fileSha1": "392f25d98b727ceecfe0c285417812c13e56d615",
     "motion": "breathing"
    }
   },
@@ -25326,7 +25326,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "8d11edcefdebb8189802b69ec59e3ad120d117d6",
+    "fileSha1": "43842ce77fb56d7c21794a032ad90bae1d067bfa",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/dolliv.png",
     "sourceSha1": "de990881fc78f223982de4767de252a4af0b16cb",
@@ -25338,7 +25338,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "f3a5c15601cf26402817365a79ed06f2e5bb971b",
+    "fileSha1": "91a2afe4a355ce33939c34401ccc20caa5eb1641",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/dolliv.png",
     "sourceSha1": "bd39976f8342bd571add2983610253fa33b979f9",
@@ -25347,7 +25347,7 @@
    },
    "grayscale": {
     "file": "grayscale/929.gif",
-    "fileSha1": "1cab54b9c51951f9509577604635e4f83a5e837a",
+    "fileSha1": "296a97b6a0b7df1d634789a33421b065ae7a2755",
     "motion": "breathing"
    }
   },
@@ -25362,9 +25362,9 @@
    "normal": {
     "file": "normal/930.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "d1c3ffc45cfc4ad71986594045133e65044eaf42",
+    "fileSha1": "fc8e71f9b7a2a79a1e93c4bb8e3a258e428c1654",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/arboliva.png",
     "sourceSha1": "093f06102602f6e9e21acc4802ccc64fb36cf5f7",
@@ -25374,9 +25374,9 @@
    "shiny": {
     "file": "shiny/930.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "98bf7be0cc4a231ff8f1dfc426374bcad04ebeb6",
+    "fileSha1": "c6f37ca0652d7f3cfd1f89a2227859c40c8e11d3",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/arboliva.png",
     "sourceSha1": "532b9e2ca5415eed479249e07005f404c15bec6e",
@@ -25385,7 +25385,7 @@
    },
    "grayscale": {
     "file": "grayscale/930.gif",
-    "fileSha1": "fb6078a311e198e328964b872f9cc0f7b1971c13",
+    "fileSha1": "44b1e368dfb1fba541044121163750d2dae281d5",
     "motion": "breathing"
    }
   },
@@ -25400,9 +25400,9 @@
    "normal": {
     "file": "normal/931.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "4f8d24dd06f50be06ab4031cf8e4044bc2362fef",
+    "fileSha1": "5a4138c0ed194e1123fa022005f640250a7f9f79",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/squawkabilly.png",
     "sourceSha1": "9da503bea67070d09a31acff9b23e94543be5923",
@@ -25412,9 +25412,9 @@
    "shiny": {
     "file": "shiny/931.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "ee52cd8ac49ccca5a3c484fc3276a9437ab20b8c",
+    "fileSha1": "6b33e1f03314e96ac77d40ba6197289cb88389ce",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/squawkabilly.png",
     "sourceSha1": "e067dee87f2701f7c7239e1197bac156b1ecc73f",
@@ -25423,7 +25423,7 @@
    },
    "grayscale": {
     "file": "grayscale/931.gif",
-    "fileSha1": "3589b174d4dc305df83bff507b9a77fcf7f9de51",
+    "fileSha1": "18f4d0246f9acbe9ef2b149588de2e37d45905f9",
     "motion": "breathing"
    }
   },
@@ -25473,7 +25473,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "481294b8ccbe8ca8dd48dd9844bc8dbbe8204396",
+    "fileSha1": "a6c9bb85cfdf4dd553665e8cd5a8d20cbcc3ef6d",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/933.png",
     "sourceSha1": "789424cd52750f250ced73b43ff6e0c19a2108e6",
@@ -25485,7 +25485,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "fcc78bdc330625863d4769a065a80a1bfe8d9af3",
+    "fileSha1": "6da158bbe97e5d724162b6c9cb98909cf7ea97f7",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/933.png",
     "sourceSha1": "17e75197c1ba5179305aeb7cd8d02543cb1b47c7",
@@ -25494,7 +25494,7 @@
    },
    "grayscale": {
     "file": "grayscale/933.gif",
-    "fileSha1": "8eed61d19af6ae123d933f59aa26cdceeee48077",
+    "fileSha1": "bb04351299c3996685e0f73b7614cf4b0770f6c7",
     "motion": "breathing"
    }
   },
@@ -25509,9 +25509,9 @@
    "normal": {
     "file": "normal/934.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "7b6da7a4d2b2a18b28885792b0876867ae585373",
+    "fileSha1": "f0387211b1a5feee41c5cfef2205858f35137ad7",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/garganacl.png",
     "sourceSha1": "0ab748aa11e54572666f9cdb7aca6896027121b1",
@@ -25521,9 +25521,9 @@
    "shiny": {
     "file": "shiny/934.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "f74bf33e48e8fc95c33157a989074125c4864225",
+    "fileSha1": "a9d75aeff0c9cb1947b031529a0a004985c2b5aa",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/garganacl.png",
     "sourceSha1": "d537c550375731a80a6b9effbe891bb2d6609c55",
@@ -25532,7 +25532,7 @@
    },
    "grayscale": {
     "file": "grayscale/934.gif",
-    "fileSha1": "603b769ffacd82f08aea45297df0e3ba3002746c",
+    "fileSha1": "050cfda961bc9e1d2c3c85f5af2d6a5b9d854c2f",
     "motion": "breathing"
    }
   },
@@ -25549,7 +25549,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "66e171b9bf0de35edb9184393aec9fe7ad2534e7",
+    "fileSha1": "8ac475139df61a1c8216c3838988de38932de43a",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/charcadet.png",
     "sourceSha1": "09dbdda13e8c3a6c15524c119a5567471ea8a93c",
@@ -25561,7 +25561,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "4e1c9628e797e97c0c0c4d6a3d5fa29ee2036ebf",
+    "fileSha1": "6b02dcccacbdbb8fb116a3b940aa5b20d05be5d8",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/charcadet.png",
     "sourceSha1": "8b53e82a2e73bc3656966b1d1107e3415c1f64ab",
@@ -25570,7 +25570,7 @@
    },
    "grayscale": {
     "file": "grayscale/935.gif",
-    "fileSha1": "c0da4f7f353c061d5851c6a8b593182b04517ad7",
+    "fileSha1": "35dc9ea9056f797c07e1eea21a6453e713d8bb85",
     "motion": "breathing"
    }
   },
@@ -25585,9 +25585,9 @@
    "normal": {
     "file": "normal/936.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "d01da43095a33403da09afb4c47a4347f43b3d16",
+    "fileSha1": "e8a364e2e2d178d702d514980d5b15adad161b6f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/armarouge.png",
     "sourceSha1": "79c157db9d1f4188112d2fc84057f46477329673",
@@ -25597,9 +25597,9 @@
    "shiny": {
     "file": "shiny/936.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "71bea67aba81f1e84172e74d4689bec41465b20e",
+    "fileSha1": "854330b73e4b909c8c7b99d06c829f80f7855c4f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/armarouge.png",
     "sourceSha1": "b44de22efb2164c676ad57ccfa0d3d59d43812aa",
@@ -25608,7 +25608,7 @@
    },
    "grayscale": {
     "file": "grayscale/936.gif",
-    "fileSha1": "5e2ac34dd4dfb528bc97e3c66807132be0ea98e1",
+    "fileSha1": "d42255b8f79806534cc956f398a0631886178bfc",
     "motion": "breathing"
    }
   },
@@ -25623,9 +25623,9 @@
    "normal": {
     "file": "normal/937.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "4425d38d26e7161b1fe066f0e98f0d4e3e34a103",
+    "fileSha1": "f439f266f5856d429fe49a36b0c93f39fa2ecfaa",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/ceruledge.png",
     "sourceSha1": "4e8837d225a70f8a56ab445319780a661b8471fa",
@@ -25635,9 +25635,9 @@
    "shiny": {
     "file": "shiny/937.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "156ceba437e550747f24e0ee172a06e18c96c30d",
+    "fileSha1": "1b8ab22798ec856084de0d9d9a6a6f5ac25fd334",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/ceruledge.png",
     "sourceSha1": "d84757cd45a8939c91476e7d759c27c6d5364ef9",
@@ -25646,7 +25646,7 @@
    },
    "grayscale": {
     "file": "grayscale/937.gif",
-    "fileSha1": "8dffed97998ddfd22c5143044f7d0875844a8dd7",
+    "fileSha1": "890d8178c6684ff5ecce65875b03c93be467f377",
     "motion": "breathing"
    }
   },
@@ -25696,9 +25696,9 @@
    "normal": {
     "file": "normal/939.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 8,
     "size": "96x96",
-    "fileSha1": "0d16ca676306cb7df708ba1507753c4058803bd8",
+    "fileSha1": "b878469754d67e673780004e881a8ce52615da4f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/bellibolt.png",
     "sourceSha1": "a27a16fca8de1a1510ff5f567b39c003bcc1263e",
@@ -25708,9 +25708,9 @@
    "shiny": {
     "file": "shiny/939.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 8,
     "size": "96x96",
-    "fileSha1": "704af238eb27818cfd9308b0edbfdfb29ea18eac",
+    "fileSha1": "1189861e3bda126a4c4cca722c6f5ca1a5c67791",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/bellibolt.png",
     "sourceSha1": "8b6c4e9df680c421ea879b4e4c2de1c4f32fb813",
@@ -25719,7 +25719,7 @@
    },
    "grayscale": {
     "file": "grayscale/939.gif",
-    "fileSha1": "33be443d918ac17d5b7ffdb7619f7d05e82ec17a",
+    "fileSha1": "5676cf579e0c1aa6b27860a9578940e0d5e0834f",
     "motion": "breathing"
    }
   },
@@ -25734,9 +25734,9 @@
    "normal": {
     "file": "normal/940.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "e88050ed88228831cc4a6035689ff5b2367da95e",
+    "fileSha1": "ee5e73489e2d9588ae44e0833a7fbd65d14fdb93",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/940.png",
     "sourceSha1": "0cad71dc7549b787786be4a5626709550bddd53a",
@@ -25746,9 +25746,9 @@
    "shiny": {
     "file": "shiny/940.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "2b27bcf4c99fff7110d79709bf6ece5618599b4e",
+    "fileSha1": "360741bea69d0a06784774974b6558a180bbaba4",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/940.png",
     "sourceSha1": "5fab11947bea61d2fe9d879afd35084e26900c15",
@@ -25757,7 +25757,7 @@
    },
    "grayscale": {
     "file": "grayscale/940.gif",
-    "fileSha1": "b997e6991f42eb15ee71daea1610c49d9ee3928b",
+    "fileSha1": "16390131d6ef04037a6dbb098580fff03622bb17",
     "motion": "breathing"
    }
   },
@@ -25774,7 +25774,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "63b251dd94addd38ecd083a432e1aa0730a452e3",
+    "fileSha1": "3a0ee23d47e0d31a7c67f0a9efef17cccd24f74b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/kilowattrel.png",
     "sourceSha1": "b02823492c77f037ad96e2403be1cbf5f5ae9042",
@@ -25786,7 +25786,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "99d2faa7628056e4b814ae7b3468228aa159650b",
+    "fileSha1": "73cb1587a42bf2e4e4ce5a6d2f0153b5a928160d",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/kilowattrel.png",
     "sourceSha1": "76ac50cb4278a994ffc8ba860ac7dfac37193fd0",
@@ -25795,7 +25795,7 @@
    },
    "grayscale": {
     "file": "grayscale/941.gif",
-    "fileSha1": "d7b1e06c40f857f5727bd5b098e19b4b58539e7f",
+    "fileSha1": "c6e5ff8d6068d403fcd42f0c5a6c2bd929885013",
     "motion": "breathing"
    }
   },
@@ -25812,7 +25812,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "26454d5615e4b52566749d0abbde6a43b03dfebf",
+    "fileSha1": "aed9c0df0bb1b6f6d8a45501ae5e1c8751e1a955",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/maschiff.png",
     "sourceSha1": "89a0b83b7df9582303efe3f37b109f3ea74d49e4",
@@ -25824,7 +25824,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "80b97b7b5ff980caa32b9df18795acd83023279a",
+    "fileSha1": "62942a913f4509074ccdb59bea9433efbb136d58",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/maschiff.png",
     "sourceSha1": "bf583bc1ef2b55692cc68c7c73fd73b71b438ff0",
@@ -25833,7 +25833,7 @@
    },
    "grayscale": {
     "file": "grayscale/942.gif",
-    "fileSha1": "5ad31adf391d70f78aa9c0a62ef57ed8cea0ab06",
+    "fileSha1": "c65270d1ad666f535535aaa7c28f529a71c04881",
     "motion": "breathing"
    }
   },
@@ -25850,7 +25850,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "64f95307352200166771cf1f9fc135bba3db9a1f",
+    "fileSha1": "53b5e88e9b7271654af74e7f30d01fb987994216",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/mabosstiff.png",
     "sourceSha1": "ab787efa3760def46f167673b1116757be38c549",
@@ -25862,7 +25862,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "56e308968aefa86159cf9fe35408bc92408491ce",
+    "fileSha1": "6ae070c7edd45e5094810df93f8c85d3f9e29765",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/mabosstiff.png",
     "sourceSha1": "cea9320e36ade20f041bb2616dfd9dfd5f885c87",
@@ -25871,7 +25871,7 @@
    },
    "grayscale": {
     "file": "grayscale/943.gif",
-    "fileSha1": "6f28ef87939af6affa80ebde040d4b193d4efe0a",
+    "fileSha1": "d1ed648f83f586381c1b84abcc9386980315af55",
     "motion": "breathing"
    }
   },
@@ -25886,9 +25886,9 @@
    "normal": {
     "file": "normal/944.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "387239507e14a64104a5f422bbe462386d289727",
+    "fileSha1": "7db7940b5105cbad8fa2cefbd26a954a2b17439d",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/shroodle.png",
     "sourceSha1": "1896e97e55bc5530939b1e9ab04c20b23f8e0abe",
@@ -25898,9 +25898,9 @@
    "shiny": {
     "file": "shiny/944.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "51472af308b93f635203bfb17f22949ae5de5e2a",
+    "fileSha1": "92189f1409680089706afd98f57c9f2cc1fc9fd1",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/shroodle.png",
     "sourceSha1": "ef2b5bdfe98761800931c66169744456d108557c",
@@ -25909,7 +25909,7 @@
    },
    "grayscale": {
     "file": "grayscale/944.gif",
-    "fileSha1": "c084328dd24c30165f247c4e4d15c23d74999c93",
+    "fileSha1": "f826420d70202c513bc33e10ade35bf085ab661c",
     "motion": "breathing"
    }
   },
@@ -25924,9 +25924,9 @@
    "normal": {
     "file": "normal/945.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "a7ea4cf793088e578640d50d960d846738a9203c",
+    "fileSha1": "f374d6a367c666134ad3b563472fd40f0a2b70e6",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/grafaiai.png",
     "sourceSha1": "d74c42cc6e0d521e56fd9240b32470d50dcb1813",
@@ -25936,9 +25936,9 @@
    "shiny": {
     "file": "shiny/945.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "06ef66bb9b2e9062255bfaf835f2b225fe481c44",
+    "fileSha1": "fecda3cb6bf0f7578ad966fbc01990d883414e2f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/grafaiai.png",
     "sourceSha1": "15f2459d494e42d864947517352f95800c7a4442",
@@ -25947,7 +25947,7 @@
    },
    "grayscale": {
     "file": "grayscale/945.gif",
-    "fileSha1": "c39eb5afa586d0c9331e8dd155fb311b7c30039d",
+    "fileSha1": "d3944f27ac3d133b9397ea5e0db0eebdae8e3c84",
     "motion": "breathing"
    }
   },
@@ -25964,7 +25964,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "fb4e262cf307a1dd370e61ce3a664c9b839d3528",
+    "fileSha1": "6a27d96a4b6731678e75ef5b1ac047137314dfad",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/bramblin.png",
     "sourceSha1": "a751e4d5847104d6b0ed647f2ee6439113b74ca3",
@@ -25976,7 +25976,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "9956ab7b9c47b24541a64416fb81e3853f47f494",
+    "fileSha1": "2443527a90af484bf456775af647c3b6f0f771b9",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/bramblin.png",
     "sourceSha1": "f8678874ec3ebc08f1d5dbc5b896397023dd585f",
@@ -25985,7 +25985,7 @@
    },
    "grayscale": {
     "file": "grayscale/946.gif",
-    "fileSha1": "248a724862c69bd3b997e383ef50336ab6d4350c",
+    "fileSha1": "4c871a01058c51391ae9e9de7f6b24165f5ad506",
     "motion": "breathing"
    }
   },
@@ -26000,9 +26000,9 @@
    "normal": {
     "file": "normal/947.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "f43f4ed371672741faa66f7115d8d8cc7ee55dac",
+    "fileSha1": "ab7db97e3421e0b46c6407d9227176c908dcfede",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/brambleghast.png",
     "sourceSha1": "13a8bc10ce7b0a89a3c1dcdb2d77386aaa88c694",
@@ -26012,9 +26012,9 @@
    "shiny": {
     "file": "shiny/947.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "42be0b609d6d8c99cdbbe1bbacb12e030068b779",
+    "fileSha1": "024063d226e5a967a7b9d4db725007aa0583f9a3",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/brambleghast.png",
     "sourceSha1": "726358a4c102bf131ea08725706f8e7409f99f38",
@@ -26023,7 +26023,7 @@
    },
    "grayscale": {
     "file": "grayscale/947.gif",
-    "fileSha1": "ad7958ea8221a4c6c5637ef61c0bd8b574603854",
+    "fileSha1": "808de42be0a2722ba99b0b3492ad6b31a08d4c3f",
     "motion": "breathing"
    }
   },
@@ -26040,7 +26040,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "b160f7129e20faf101351948238a98dcfa5c943e",
+    "fileSha1": "d0633f88b044914897ed603bda22e5e3518e7aa5",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/toedscool.png",
     "sourceSha1": "1cda35bf2ff9f3b107afc2a0f704178c37deccf9",
@@ -26052,7 +26052,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "5e443137ee977d219574a881fb440a34eef46f22",
+    "fileSha1": "5085aa872760954188e5162191366ae5c2321722",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/toedscool.png",
     "sourceSha1": "0cf6db7cf2af8358e8161337073288f092429bfa",
@@ -26061,7 +26061,7 @@
    },
    "grayscale": {
     "file": "grayscale/948.gif",
-    "fileSha1": "d18248bc076b8ca8690424170555d10b495cdbe2",
+    "fileSha1": "eb378296f9b7be0bb4e35b97687195b0be4c48f4",
     "motion": "breathing"
    }
   },
@@ -26076,9 +26076,9 @@
    "normal": {
     "file": "normal/949.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "b7bf6f9a901f759803dc6a4d762d4607e9a96bf6",
+    "fileSha1": "46fb56b6454c3980945e98dbbbfd5865498817b1",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/949.png",
     "sourceSha1": "5eba0f806e4756a3520787db893fa98fd21c937c",
@@ -26088,9 +26088,9 @@
    "shiny": {
     "file": "shiny/949.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "fee4b134af67a2b4f731d7b673f1cddce145b3f8",
+    "fileSha1": "f0e7a1d13bf0747ab29ee9cd58fbef01dfe46f96",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/949.png",
     "sourceSha1": "84896f13d924bc6da88d6948d7a9f501a91e257e",
@@ -26099,7 +26099,7 @@
    },
    "grayscale": {
     "file": "grayscale/949.gif",
-    "fileSha1": "00d84e5f568dd2981f696ee764fc7556db3ec25b",
+    "fileSha1": "80b3d448decd48d66cd4a9736b7ea7318b8fb797",
     "motion": "breathing"
    }
   },
@@ -26116,7 +26116,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "09ff4147689727337a90e27fc5a422f5974a55fd",
+    "fileSha1": "7482e2152aeebe2b45657a0966c91cb0bd5766d7",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/klawf.png",
     "sourceSha1": "26ffbc8e037fe81c584e655db617e9456d61f70c",
@@ -26128,7 +26128,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "a158bd3bdf1db03af70d072b7630f2b4dedcb21d",
+    "fileSha1": "141ea5603746e67d0fb0ad5680efda0275ff3920",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/klawf.png",
     "sourceSha1": "f3deb6477535411f39348a3fc396fa2ab4ff5039",
@@ -26137,7 +26137,7 @@
    },
    "grayscale": {
     "file": "grayscale/950.gif",
-    "fileSha1": "b279170d650ffb33d152eb4fa05754a1fbcc5d29",
+    "fileSha1": "8cca6a0b4a7575ac453cd1a8b119518e21f5f906",
     "motion": "breathing"
    }
   },
@@ -26152,9 +26152,9 @@
    "normal": {
     "file": "normal/951.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "1dff5a5d07430201a3362822a8502c00e8494918",
+    "fileSha1": "063d23a618177b2f5add8f102fb00f93d8f4a296",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/capsakid.png",
     "sourceSha1": "5eb78aa632427328c37edb3990caabd69433a448",
@@ -26164,9 +26164,9 @@
    "shiny": {
     "file": "shiny/951.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "f1248c8f9a7c2c12dc6bf7dbbf80157061bc908d",
+    "fileSha1": "43f59e6891d14b7fee988199fb3633decfe745be",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/capsakid.png",
     "sourceSha1": "a36e3f4c207f7bd810c41bf929e2c3a82fa696ee",
@@ -26175,7 +26175,7 @@
    },
    "grayscale": {
     "file": "grayscale/951.gif",
-    "fileSha1": "8ae7075dad4f966cc060329f85764002772f4843",
+    "fileSha1": "0b3ab7e6cc46c981eef3dfe9f56fcedd375ffc67",
     "motion": "breathing"
    }
   },
@@ -26192,7 +26192,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "9d162eeb7c409c107826c673f59307f5712ed35c",
+    "fileSha1": "0dbfee382635e63af26a120ad79d2420c7f21dea",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/scovillain.png",
     "sourceSha1": "56286c9ef073addb7d6b616bea1292934564f4c7",
@@ -26204,7 +26204,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "4c5d0bb01a4b567d144ef9d267efa4c664149b63",
+    "fileSha1": "c4aadd7a8f950e7957e33fe20a8d40c75ad8cf4f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/scovillain.png",
     "sourceSha1": "9952b019e10a67a60dda76a2f3c531c3176fd16a",
@@ -26213,7 +26213,7 @@
    },
    "grayscale": {
     "file": "grayscale/952.gif",
-    "fileSha1": "5d5a7bb48e9e1c82858326726917b594b378606a",
+    "fileSha1": "d676bf549be92e61468b81d303639c570aad69b1",
     "motion": "breathing"
    }
   },
@@ -26230,7 +26230,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "9bd744d9021040034bbb5df5150ffa5805585757",
+    "fileSha1": "a0fed1e90aaff8b8f4f5552baca12bbd87a9983f",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/953.png",
     "sourceSha1": "bc4e1b31758e578fe05d6374102ae1153c67150d",
@@ -26242,7 +26242,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "591fc9f181b79a1c4a15e2ef366e02c1fdac14e2",
+    "fileSha1": "60544b642a827847e86f446e57474c71a21a28f9",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/953.png",
     "sourceSha1": "a316551631bd2139788e40974a259e3a7f86cf71",
@@ -26251,7 +26251,7 @@
    },
    "grayscale": {
     "file": "grayscale/953.gif",
-    "fileSha1": "bbde272227c4da86bc03bce55dedc7eab9818001",
+    "fileSha1": "b09d74840e8f36f8e6b752719ecdd6ecfeccd1ac",
     "motion": "breathing"
    }
   },
@@ -26266,9 +26266,9 @@
    "normal": {
     "file": "normal/954.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "c7aa76849d736b0caefc1cb3a1292d5aa117c2f2",
+    "fileSha1": "e605b80bcc4eb9ffbab83164cc01e5997799bf53",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/954.png",
     "sourceSha1": "1fa3c2972a8535751ae555bb0bafe8c975acd2bd",
@@ -26278,9 +26278,9 @@
    "shiny": {
     "file": "shiny/954.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "f31f7159d1cacd1f677e917e6af9605c9aae7fcf",
+    "fileSha1": "f099cb891a69da119cef45c16bb1a6eb18e7bf15",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/954.png",
     "sourceSha1": "f4f62784a5a2aa1db0be8b0202f84a7e0e31ec10",
@@ -26289,7 +26289,7 @@
    },
    "grayscale": {
     "file": "grayscale/954.gif",
-    "fileSha1": "c2e97f92145d4333873621d191dc297d8ca9eb80",
+    "fileSha1": "da37a90e2de17b52471475ce9a8d250ba90c0893",
     "motion": "breathing"
    }
   },
@@ -26306,7 +26306,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "20511f4567ee7850783c2b1f3d4a749657cf4d64",
+    "fileSha1": "a8ef0e36462ebb757743e115e05f89db3c3dd77c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/flittle.png",
     "sourceSha1": "853562570657a47bc935bb0080ee6f54b743b0de",
@@ -26318,7 +26318,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "efb7fb7df6171fe0e93b5ed5e6cd821b53007338",
+    "fileSha1": "e459d77c036e615d73a16439d3aed64ee53070af",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/flittle.png",
     "sourceSha1": "bf5dc28850e7ee3d174632e575de7482f143d3d8",
@@ -26327,7 +26327,7 @@
    },
    "grayscale": {
     "file": "grayscale/955.gif",
-    "fileSha1": "5001ea875df049c4a34cb285aff740d7174f7b45",
+    "fileSha1": "e82eecff89c5f9f2398f14e5b16c890201d895a1",
     "motion": "breathing"
    }
   },
@@ -26344,7 +26344,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "5665c1291076a7fc48965a7391740ef0ea330489",
+    "fileSha1": "604d55d05492eec83a4c69976ea31bb56904ae99",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/espathra.png",
     "sourceSha1": "2fd863895313ffe4a57f54b8b5099cde8a39b1e3",
@@ -26356,7 +26356,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "d49091248535ac9db1aeca148c797fc5eb5629c2",
+    "fileSha1": "0d277c6bf686df282091b7d405c8b92a775f2496",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/espathra.png",
     "sourceSha1": "4abdb2db6e15805090c0a0e9a58400b70e3db43b",
@@ -26365,7 +26365,7 @@
    },
    "grayscale": {
     "file": "grayscale/956.gif",
-    "fileSha1": "01dbff6df7b5ce46f872d8259b51ef9366baaaaf",
+    "fileSha1": "e86e81eaf52b1a5a1cb795c71271855545b3bd2c",
     "motion": "breathing"
    }
   },
@@ -26382,7 +26382,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "8d3d7bdb39ebef45f42ba2e075742af1c4444b96",
+    "fileSha1": "d67576669a9a25aa6ed0e5e5af9f4e8d980715be",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/tinkatink.png",
     "sourceSha1": "4fbe2b09cfef03847bf3fc4bd39c622aa43d725b",
@@ -26394,7 +26394,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "060958f5c8e452c51d2188fad6e80e2a2e68cf36",
+    "fileSha1": "027a7689901a81d2eed901f65fc895422c9e9aed",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/tinkatink.png",
     "sourceSha1": "7057f3e881acf404e961e451f599640fdc5c0968",
@@ -26403,7 +26403,7 @@
    },
    "grayscale": {
     "file": "grayscale/957.gif",
-    "fileSha1": "4cfc3709d24b5dbee62be468465e1fc1ae14f917",
+    "fileSha1": "836b105b0e67d8b3697d41df7ccdb7070842b51f",
     "motion": "breathing"
    }
   },
@@ -26418,9 +26418,9 @@
    "normal": {
     "file": "normal/958.gif",
     "kind": "static",
-    "frames": 10,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "ae7940281c4e3757c3feddf589827ef069c67d23",
+    "fileSha1": "a9aa20925c7c77d848d2c488b2260acce49b47f3",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/tinkatuff.png",
     "sourceSha1": "6689755b6ef34ed71628db8847d80e601a482494",
@@ -26430,9 +26430,9 @@
    "shiny": {
     "file": "shiny/958.gif",
     "kind": "static",
-    "frames": 10,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "ef2674b924206329c22dccd8125679ccf2033152",
+    "fileSha1": "4baf0c9571d30d2a356e64124ffc532f729ccf7f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/tinkatuff.png",
     "sourceSha1": "9d070863da2977b364b9caaca12e972d239360e0",
@@ -26441,7 +26441,7 @@
    },
    "grayscale": {
     "file": "grayscale/958.gif",
-    "fileSha1": "b6f8c95c5a1ddc071fcf80849c9b85b0261417a7",
+    "fileSha1": "f3e17710f5fa3fe370339d0d9492bb962e789b75",
     "motion": "breathing"
    }
   },
@@ -26458,7 +26458,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "2dac95a6fd1403dcdcaa3ef69ba25892bf297d7f",
+    "fileSha1": "d0f2b1d99e58b6bc6effb4295f31c0b4577d6d59",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/tinkaton.png",
     "sourceSha1": "112e37736975b54a73b406a3719647a470b0cdf8",
@@ -26470,7 +26470,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "50e92329d4c13d5f4a2bad2342e33ae54dcdc55d",
+    "fileSha1": "d9d7c1362fb6895bea38c2c5f3a2e8e1725cf7b1",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/tinkaton.png",
     "sourceSha1": "199caefe4dab2d2b5dd54ba9429c2a9719ee1ffd",
@@ -26479,7 +26479,7 @@
    },
    "grayscale": {
     "file": "grayscale/959.gif",
-    "fileSha1": "e791cc4051c9c4d0d54876c55aad64bb868ffbe7",
+    "fileSha1": "34db7186d2c0fa33dc399195f7a4ef52606bb6df",
     "motion": "breathing"
    }
   },
@@ -26494,9 +26494,9 @@
    "normal": {
     "file": "normal/960.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "367e63e5fc00dbc877a4d8f8ba295ec2e10579f6",
+    "fileSha1": "761c8a7c6f415d562ad9f8a6aec4c970dd4cc02a",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/wiglett.png",
     "sourceSha1": "b8c0c902622a75df0ca966f3333d41a0a935e4c1",
@@ -26506,9 +26506,9 @@
    "shiny": {
     "file": "shiny/960.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "1db4b4e8ed00d3870e656dcc0147a4d3b58e11e2",
+    "fileSha1": "d122166572695aa7b2c1ca173397e3a694a6e1ee",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/wiglett.png",
     "sourceSha1": "4b588ee5ad4427e66770585f7b6c7e683d170a6a",
@@ -26517,7 +26517,7 @@
    },
    "grayscale": {
     "file": "grayscale/960.gif",
-    "fileSha1": "5cec8b021dd305d78ff8eab5014f93d52a0d9f7b",
+    "fileSha1": "55c41a1d332471b55301ce447e5a57e3b2ac9cd0",
     "motion": "breathing"
    }
   },
@@ -26534,7 +26534,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "a0880193a6dadd167bf8bafe2909730bcd720c34",
+    "fileSha1": "3148b4a5d3cc719369f65dca796658d677f996f4",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/wugtrio.png",
     "sourceSha1": "acca72df6893b49373cd1f48da8dcfd636e0ce7a",
@@ -26546,7 +26546,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "2d31483c05ddd05659f32290c01e8433616c0b49",
+    "fileSha1": "2cfb26b0cbd62e2615d755d792c152415c78df0e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/wugtrio.png",
     "sourceSha1": "3b21f715b738f5d56ea66b32a6d649d07ebd2d27",
@@ -26555,7 +26555,7 @@
    },
    "grayscale": {
     "file": "grayscale/961.gif",
-    "fileSha1": "1dcc5b38787b278a1154e67c151c740fcd9001e5",
+    "fileSha1": "c1ee7e48002bfc612365c2b2f542b74295da920d",
     "motion": "breathing"
    }
   },
@@ -26570,9 +26570,9 @@
    "normal": {
     "file": "normal/962.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "53216c70133e5a0306195443bd5f2a7cca3a2e94",
+    "fileSha1": "9cdf6ac18e1579b14e9e5f856ffb4400d5f22eef",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/bombirdier.png",
     "sourceSha1": "40624dd547b880c8595b517523b1647cce1156db",
@@ -26582,9 +26582,9 @@
    "shiny": {
     "file": "shiny/962.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "354c7d745eded27ec28e54976011ea3fd360dd91",
+    "fileSha1": "c7daa6170a6bb3e9cbc8311719fe84504b65dde6",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/bombirdier.png",
     "sourceSha1": "e482809e6e264fa59d7ec2816810537f987e501d",
@@ -26593,7 +26593,7 @@
    },
    "grayscale": {
     "file": "grayscale/962.gif",
-    "fileSha1": "ba005b58255ef2f9bd917b68a387e5a01b2b772c",
+    "fileSha1": "e758f6bda127c3b923c4717807e09bbd47b7f131",
     "motion": "breathing"
    }
   },
@@ -26610,7 +26610,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "58c4a029184e7b1e862fc0f98a0f87f05794c52f",
+    "fileSha1": "42ed276a3a94b6aab92a0229e74eb2e8a5f6e823",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/finizen.png",
     "sourceSha1": "a58febfa443b9039864b32471eabef972c55dcfd",
@@ -26622,7 +26622,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "92c59dbfe09a30c58bb7a6fb07ebf7acf7f80a44",
+    "fileSha1": "dcc4d42e19b82dc7395ac17a45e90b869de3ad5b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/finizen.png",
     "sourceSha1": "f106901d6cc3ee2f8499e2206ce8607bd7dd0c69",
@@ -26631,7 +26631,7 @@
    },
    "grayscale": {
     "file": "grayscale/963.gif",
-    "fileSha1": "7ed76f736ae2854e6d828cc01212bad42e86027f",
+    "fileSha1": "e7367e140798fa17a2d2b6c2340f2820a775d264",
     "motion": "breathing"
    }
   },
@@ -26648,7 +26648,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "d79eb583d6bec8c23b1e484a72fe6a8ecbce18cb",
+    "fileSha1": "6fe405d3be89f64da026256cbacf3789765d4d25",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/palafin.png",
     "sourceSha1": "1eba132e8569864f7009f8c3972baea28c9ea70e",
@@ -26660,7 +26660,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "16dd6d8e07d892b9ca9218b87930af49ba676c58",
+    "fileSha1": "febbf48c483d22bd8a6738f9f2c9b7f2e4ec58da",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/palafin.png",
     "sourceSha1": "525afd37cc47dc9bba51f68eb572bff5957d26fe",
@@ -26669,7 +26669,7 @@
    },
    "grayscale": {
     "file": "grayscale/964.gif",
-    "fileSha1": "035787833dcf131a1f12f1137d0b6bef1a9a5f73",
+    "fileSha1": "80e0b07a93b06cb8f07c9900f63764c52855f43d",
     "motion": "breathing"
    }
   },
@@ -26686,7 +26686,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "e16ace1267fce55b87e102d5f3e76443f68f025a",
+    "fileSha1": "fd156d8152050b081bc61f823e329e9f5a67680c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/varoom.png",
     "sourceSha1": "80761d0b8373ccf36b0db1134c4528594765bfad",
@@ -26698,7 +26698,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "486e952259b6f5f145aa05e92a782c9727ffb544",
+    "fileSha1": "d87b4685454c3b523fce71ead3ed9ca3cd6aa585",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/varoom.png",
     "sourceSha1": "e7f4c63565983e761b70e0c33ec5f8c383cba11f",
@@ -26707,7 +26707,7 @@
    },
    "grayscale": {
     "file": "grayscale/965.gif",
-    "fileSha1": "62baab12484cd31de88187e87955bf68735538c4",
+    "fileSha1": "720157bbaaaee512c2a27289b6d47ec20cff11b3",
     "motion": "breathing"
    }
   },
@@ -26724,7 +26724,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "b913926ae8e00a52769e2b1b45fdba6ae29ce0e4",
+    "fileSha1": "c31b8e95cb0e59d3d0eb3c23750bf4179b08b063",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/revavroom.png",
     "sourceSha1": "059a52098968c63d1ac42c3a5354f126efa6cc51",
@@ -26736,7 +26736,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "f41c1e0160ce2cf9b6a61c02c0cc5b2e1af7bf55",
+    "fileSha1": "1c96db4d4d89b9a6b5554c676fa60607e8b39702",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/revavroom.png",
     "sourceSha1": "c6d0a421cad69b4b23a0daa8dc6bacf6aeb2a17e",
@@ -26745,7 +26745,7 @@
    },
    "grayscale": {
     "file": "grayscale/966.gif",
-    "fileSha1": "23a01a6c410a22ba475ddd5273137bd1f32227a5",
+    "fileSha1": "a78e7cdf158b283e4ed382dc247954e12be09b89",
     "motion": "breathing"
    }
   },
@@ -26762,7 +26762,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "9e9bb100ab03ef79e378ede0cacbc57d5f79df76",
+    "fileSha1": "81c78a33c39645b8a2706d1641cb4425c6f05a55",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/cyclizar.png",
     "sourceSha1": "20e76a72187c6ac3a634b255bf967c026580713b",
@@ -26774,7 +26774,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "18de09917664496f31e740b1eef5aa684aa3e674",
+    "fileSha1": "67870ee13b93da567f28a0d1f5d9d3f0886e70de",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/cyclizar.png",
     "sourceSha1": "0dd4720dba6a01dab16488da2e9600ea049d4c43",
@@ -26783,7 +26783,7 @@
    },
    "grayscale": {
     "file": "grayscale/967.gif",
-    "fileSha1": "4a43c8a289e16df8ec89b247d862d77ae986505c",
+    "fileSha1": "7218a400e28a491a57b78c8a7d4c72416276b7c4",
     "motion": "breathing"
    }
   },
@@ -26800,7 +26800,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "b1b4ac0f70e4132a1831855b87f198f708e38ba1",
+    "fileSha1": "026f03a1d936452c5ac5a5e3031538bd54a778ad",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/orthworm.png",
     "sourceSha1": "80510f4cd2bd40a3b7ab5a43ed9faed6d72f92d6",
@@ -26812,7 +26812,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "5a68e210313d3ccacc78dc3f310cc48d214fa398",
+    "fileSha1": "04d64bd9180115530e2abdff0d8b25574d4a981c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/orthworm.png",
     "sourceSha1": "156e65dadb776f191882e3ba51484ec370c02f85",
@@ -26821,7 +26821,7 @@
    },
    "grayscale": {
     "file": "grayscale/968.gif",
-    "fileSha1": "c5cdaffc1cee9f77ee7d554b7bddfe151a0e59a4",
+    "fileSha1": "31dabce427e523af18e716e8d8be328c4e7db5d7",
     "motion": "breathing"
    }
   },
@@ -26873,7 +26873,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "89d1553ca92ca8a9153000257867f9907e4c1e93",
+    "fileSha1": "bafd15d53c08f5c8193ca202e68de085445b3527",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/glimmora.png",
     "sourceSha1": "9b16d806c33ea192a4cad5bb0e69737ff0896325",
@@ -26885,7 +26885,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "2506e834b9f3e5c600708ec1d72eb0eb6ee3644a",
+    "fileSha1": "8ca326c12c37a2beefb68aca729b5fc00bf1b756",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/glimmora.png",
     "sourceSha1": "e4d63a1786a34cb9160962119432742b22d724f7",
@@ -26894,7 +26894,7 @@
    },
    "grayscale": {
     "file": "grayscale/970.gif",
-    "fileSha1": "0e6ac3576547a625cce4faf5334e275715628767",
+    "fileSha1": "b2fb3f3e29c0c0998e8f4c26890464c92ca170a3",
     "motion": "breathing"
    }
   },
@@ -26909,9 +26909,9 @@
    "normal": {
     "file": "normal/971.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "3522aeb8e87e562ee06e548713d91ffc8d82df64",
+    "fileSha1": "4cfc094b35a4fd681f621c4ea08a114bdb8fc85f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/greavard.png",
     "sourceSha1": "9c6d7d5e1388eb7c3e0bd876ebb9915bec451b1a",
@@ -26921,9 +26921,9 @@
    "shiny": {
     "file": "shiny/971.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "7729ed10715477b508b81e7de1380c883be9bb2c",
+    "fileSha1": "d011e6ee7164f8e2965b8e697ad689a91e0dc436",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/greavard.png",
     "sourceSha1": "9fb5f846d9dead06c7214e0d3cc71b004078ad99",
@@ -26932,7 +26932,7 @@
    },
    "grayscale": {
     "file": "grayscale/971.gif",
-    "fileSha1": "32efdd18403eff62ebb19fed1fa3ef9e1743ac56",
+    "fileSha1": "683e2e103ade14d03c7a20acc295594931f66f40",
     "motion": "breathing"
    }
   },
@@ -26949,7 +26949,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "51e9f86dad86f44114f6f3bf08893c77e409155a",
+    "fileSha1": "47a9f66d49c86f5968715ff140fdb53317d859e0",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/houndstone.png",
     "sourceSha1": "47c18d9250dff11e122639742b9afe5a62aab25b",
@@ -26961,7 +26961,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "978fb7a9779ea066069aff10525981db2da27235",
+    "fileSha1": "f3ea3a65d2518375868d6a040ce1a91a9df158a5",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/houndstone.png",
     "sourceSha1": "ff47525bf1e1634a33cf8649cf6661ba13a46b4c",
@@ -26970,7 +26970,7 @@
    },
    "grayscale": {
     "file": "grayscale/972.gif",
-    "fileSha1": "15d83737c584ed2bfda26616494dca5404527aca",
+    "fileSha1": "5d930d028a5144efb56cd73623400df54c5d0854",
     "motion": "breathing"
    }
   },
@@ -26985,9 +26985,9 @@
    "normal": {
     "file": "normal/973.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "f4aad56b82596eaf987454ff362a42df2419dce2",
+    "fileSha1": "caac23d7c98f17f3baeef5380c5b8ba8646b0593",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/flamigo.png",
     "sourceSha1": "3969d5426bdcefe363d2823e75a059461147c475",
@@ -26997,9 +26997,9 @@
    "shiny": {
     "file": "shiny/973.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "dcf84b27108980188f404cdb830d49371992227a",
+    "fileSha1": "acf74a32d312c790c1d82bb6fc17bcadeb096ba1",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/flamigo.png",
     "sourceSha1": "3bf57cd326385ed4cf97fe2db2f6201929b3d7f8",
@@ -27008,7 +27008,7 @@
    },
    "grayscale": {
     "file": "grayscale/973.gif",
-    "fileSha1": "c3f69d63405ade963b8f488afa2e65815b090595",
+    "fileSha1": "7f2b498f559a4f05a45f8690702db9006b78b44d",
     "motion": "breathing"
    }
   },
@@ -27025,7 +27025,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "e7b9e352ce8bd8b8f27e195bd3c7e51d0250a74d",
+    "fileSha1": "e64ab4d2a04fe541358a7c56c2a52702b4ecd9d5",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/cetoddle.png",
     "sourceSha1": "1698959aca9e140a98a5d455e8ccf7cdd999b307",
@@ -27037,7 +27037,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "60cc06e841feab1c1ba587a5d22838127a1de6c3",
+    "fileSha1": "ba4d6d8de6c34306cbc2b5449fce484419022a3c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/cetoddle.png",
     "sourceSha1": "3a2e8ca7b43ec98d3ecd61bd5ffc3f96c97a7509",
@@ -27046,7 +27046,7 @@
    },
    "grayscale": {
     "file": "grayscale/974.gif",
-    "fileSha1": "04217549c61187338286129cd83278a545c43e0b",
+    "fileSha1": "4a50c555108d668f8af606409f3a13b7510dc44b",
     "motion": "breathing"
    }
   },
@@ -27061,9 +27061,9 @@
    "normal": {
     "file": "normal/975.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "e3284670a248009752a052226c8bce1ee3c8504a",
+    "fileSha1": "a3057fc79506993d8c36db50c3e76b5d696d7de1",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/cetitan.png",
     "sourceSha1": "3b1f5cdc471a438a739bde875c7cd15b1340d62b",
@@ -27073,9 +27073,9 @@
    "shiny": {
     "file": "shiny/975.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "eba518dd36915f3a8e7e43b0ce8641c955cc4d23",
+    "fileSha1": "a84fc5adbf7b7b454f9a9901ab66b3785ddad658",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/cetitan.png",
     "sourceSha1": "394e0ee498fb75c529c2512cf42b165001dad91d",
@@ -27084,7 +27084,7 @@
    },
    "grayscale": {
     "file": "grayscale/975.gif",
-    "fileSha1": "1add0d54b2e7c3e2a0bd743e75bb612fded98c3e",
+    "fileSha1": "9d73c2bed0939b3c8816a5ab5d64b8a8bc6841dc",
     "motion": "breathing"
    }
   },
@@ -27099,9 +27099,9 @@
    "normal": {
     "file": "normal/976.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "84cdee104f8b7945a412afa4e8a79fb63fcf51f7",
+    "fileSha1": "91e203ef61a3664b6a0ed54e998d878f4823dcb3",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/veluza.png",
     "sourceSha1": "e6f7a3b51133fee66c41a2cf6cef9e0c19377eda",
@@ -27111,9 +27111,9 @@
    "shiny": {
     "file": "shiny/976.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "6acc7990dc2019a1942fd4c4935d841f50bbe146",
+    "fileSha1": "222b7dfc2b4e099bcd1df2b902124ae937255b9f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/veluza.png",
     "sourceSha1": "889354482bf444cb6687bed643e1cd3a0a60dc58",
@@ -27122,7 +27122,7 @@
    },
    "grayscale": {
     "file": "grayscale/976.gif",
-    "fileSha1": "c3a177fb0d23209d0408add4d6376648818ec4e0",
+    "fileSha1": "d4399ea5776c75ff8f89bdd0fe91dbd4785c1cec",
     "motion": "breathing"
    }
   },
@@ -27137,9 +27137,9 @@
    "normal": {
     "file": "normal/977.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "36d1aa694473d300a3c7158e9a926e31f77d3953",
+    "fileSha1": "9fc0647eb5e34d10ad1af4efebb61c844fa25074",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/dondozo.png",
     "sourceSha1": "b514924f13c6930836b75d7f6160af94d26e49d8",
@@ -27149,9 +27149,9 @@
    "shiny": {
     "file": "shiny/977.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "8ece9a425d57beb0a30efcde942dab5668679210",
+    "fileSha1": "157eef898f408421e21d7bebbbcf50bc65a1d3bb",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/dondozo.png",
     "sourceSha1": "b533f1a27da32e26f755c2bf60495f2721f1fed5",
@@ -27160,7 +27160,7 @@
    },
    "grayscale": {
     "file": "grayscale/977.gif",
-    "fileSha1": "c0e1e9c453d014681f9c855c07f3632ecdc94af4",
+    "fileSha1": "366fed3633f4d911900caeeb640fe864cf179b5e",
     "motion": "breathing"
    }
   },
@@ -27208,9 +27208,9 @@
    "normal": {
     "file": "normal/979.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "dc94d5662ad245631737f26e2ab33703883e6750",
+    "fileSha1": "77ffafe32a90a2c5a095ea51593dbc426103a4ec",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/annihilape.png",
     "sourceSha1": "be8363d3c163f6cefae4fd1e94b5306fcc7fbeb4",
@@ -27220,9 +27220,9 @@
    "shiny": {
     "file": "shiny/979.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "0369e0fbc000ad282f7cd2110df8d955d3481def",
+    "fileSha1": "6a4d36bc259eae1cb6ec455bc4466b1bee39273c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/annihilape.png",
     "sourceSha1": "a89f05524d9395180c538ccc4aadeb4842fb2e8e",
@@ -27231,7 +27231,7 @@
    },
    "grayscale": {
     "file": "grayscale/979.gif",
-    "fileSha1": "1980ffba0689ffbe2f9c3eb36b7376ad31073a56",
+    "fileSha1": "4c651402b89554a1d017c6bfc7c0d372846b099e",
     "motion": "breathing"
    }
   },
@@ -27283,7 +27283,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "606564d6c1d716066be3c49a762c22da5abad9d4",
+    "fileSha1": "718cdb666deb2f534a6e2d8205e986a16aa0b13f",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/981.png",
     "sourceSha1": "2a5eadf1f5b62972bce2e1f4ceafcf47df7f64b5",
@@ -27295,7 +27295,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "69cacbad432ca1527d678808a68b6d6fbffbc506",
+    "fileSha1": "70ddb7c49c4a08efb1e7c1dd6d1cefcfa9a3f736",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/981.png",
     "sourceSha1": "7ab1db90964a0c709d019cdbe93044bb74d0d88c",
@@ -27304,7 +27304,7 @@
    },
    "grayscale": {
     "file": "grayscale/981.gif",
-    "fileSha1": "8f60a1a875c09dcfbadffbc09166bbaa65ca8ca4",
+    "fileSha1": "3500681c99686ccd33ae4ce83615f7ea0a2c751b",
     "motion": "breathing"
    }
   },
@@ -27321,7 +27321,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "c9feeec9b3917d94368fd1dac8d7df46ed4bf0a6",
+    "fileSha1": "cc9e111c1a592496cd36bbac13666923340d155a",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/dudunsparce.png",
     "sourceSha1": "089ec3c82626b50e011fce7c547262f63f3d39cc",
@@ -27333,7 +27333,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "4719333358e16155001aaee525dbefa75d010d4e",
+    "fileSha1": "1705dba58d90bcb0d8924d1df8e0a4a7f73a9d21",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/dudunsparce.png",
     "sourceSha1": "9c8e3ae212829c05ebdd54fc8491da74c7c648a3",
@@ -27342,7 +27342,7 @@
    },
    "grayscale": {
     "file": "grayscale/982.gif",
-    "fileSha1": "b3cb5a09ee10140f06d0910a97c17874cba6f11a",
+    "fileSha1": "aa39a0aee20e10fca5fa2da4465b577fc77b1b86",
     "motion": "breathing"
    }
   },
@@ -27357,9 +27357,9 @@
    "normal": {
     "file": "normal/983.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "97f9eba2d9f4f2935d830ef21017b7ab6db1d7b4",
+    "fileSha1": "e1ca3d8f1cea510c91188d0f097871c3669b87c8",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/kingambit.png",
     "sourceSha1": "98e2bc1c4efb87b2350b629817bf96964b3b514e",
@@ -27369,9 +27369,9 @@
    "shiny": {
     "file": "shiny/983.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "c60e9d968cb7c0f7f38aa288abe13b5060a156e5",
+    "fileSha1": "6cf60b45978884619704c841a71ceb250be3b88e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/kingambit.png",
     "sourceSha1": "e16559ef7aefe1cb99efe1d415cbaad9e6399f9f",
@@ -27380,7 +27380,7 @@
    },
    "grayscale": {
     "file": "grayscale/983.gif",
-    "fileSha1": "78d6bcc3fa6abe7b4eff21b366835edeaa1cf8c3",
+    "fileSha1": "33b9a44e7d1a763032d800c1465a81af5678d153",
     "motion": "breathing"
    }
   },
@@ -27432,7 +27432,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "87b30e7b2c1264ffad728e86cb6ed3f7b69c2691",
+    "fileSha1": "439509c6c8c37694b5d7977c36d55c4bbe0cb1d9",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/screamtail.png",
     "sourceSha1": "252341da19f1c21a0ca5906a4f1e95e0a835dd4f",
@@ -27444,7 +27444,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "584cebdfcaf14354947540220dc7c94c1c501a4b",
+    "fileSha1": "2ad3d1f57422aa7e66f7a2efc93281355488ec33",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/screamtail.png",
     "sourceSha1": "4b7cd966e1a282aced4d8007d32346256b24ffaf",
@@ -27453,7 +27453,7 @@
    },
    "grayscale": {
     "file": "grayscale/985.gif",
-    "fileSha1": "19d4f5b0fe99a193a6ca518ffd34202fe486a17c",
+    "fileSha1": "e82d2088126576697d69608c66e32f21efbf1adf",
     "motion": "breathing"
    }
   },
@@ -27470,7 +27470,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "be94e30275a4c59b70b5b68b3b4c0d3841761fb1",
+    "fileSha1": "d6062ddfef0c2c35bf3958952c8e9196019e374d",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/brutebonnet.png",
     "sourceSha1": "5220df9001d42a1ffde7e97bbe5d8bd73ca0a9ce",
@@ -27482,7 +27482,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "ab61d0f7d2d7e6c81e7343dbf2339dafefd382a5",
+    "fileSha1": "c6f559c8b09068d5eb4d88ba19e761851c496d1e",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/brutebonnet.png",
     "sourceSha1": "900bcf0ad8d1d5cabb11a16d12d72b3f6a0b9459",
@@ -27491,7 +27491,7 @@
    },
    "grayscale": {
     "file": "grayscale/986.gif",
-    "fileSha1": "304b46b9d125d01cf2ff10ba58907b4c41e7575c",
+    "fileSha1": "6ba68fde17a93e96b5d1b9562b5d194df4f23de9",
     "motion": "breathing"
    }
   },
@@ -27541,9 +27541,9 @@
    "normal": {
     "file": "normal/988.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "7063c8e4e94ddd4ce53f91c20614dda446e8bbcc",
+    "fileSha1": "9d5c5e60007fc06bae1dcb365cf3a568c2369fe0",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/slitherwing.png",
     "sourceSha1": "20c210d8a000180ab98d0aa18452e536df903739",
@@ -27553,9 +27553,9 @@
    "shiny": {
     "file": "shiny/988.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "7e9b5add9a92f21000e88dec68e80334291c16db",
+    "fileSha1": "d803974b0749004b3f01abe79613cfd862bd505c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/slitherwing.png",
     "sourceSha1": "ec052bcd6697f359e3086e6c4d9bd280db6af07a",
@@ -27564,7 +27564,7 @@
    },
    "grayscale": {
     "file": "grayscale/988.gif",
-    "fileSha1": "2178522bd1d8e1e1aab3622c75266ebb753ebdd3",
+    "fileSha1": "48299d2b0e31020c4b1ed861af9a99e19820f544",
     "motion": "breathing"
    }
   },
@@ -27581,7 +27581,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "1171c18b70bf13196a11b937cfce778af82bb675",
+    "fileSha1": "01a66c6d967cd6f9ebe2fb38d85d6c7ac3a47903",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/sandyshocks.png",
     "sourceSha1": "0e8617d547fa64758f6a73c437b5942b588eaf7d",
@@ -27593,7 +27593,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "7f337f406a016e95424068e1e82c6a962f23a722",
+    "fileSha1": "205728a713da6d699d8978930ca4093782cc3238",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/sandyshocks.png",
     "sourceSha1": "f21a79e5c6547df12768fdbbbf7cbe62ee8a965a",
@@ -27602,7 +27602,7 @@
    },
    "grayscale": {
     "file": "grayscale/989.gif",
-    "fileSha1": "788f0b4e33a46cf7320c721d66d48dcac72be378",
+    "fileSha1": "4aef000a89406ed8d9deaa37d4b30e0731415922",
     "motion": "breathing"
    }
   },
@@ -27619,7 +27619,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "62e9dc1b67a71e7aa1112839b160249c0be4193e",
+    "fileSha1": "75b8b1ba2c785165c317cb7423f2281655f0765b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/irontreads.png",
     "sourceSha1": "1766db17b17bdf78e7a06b4d2be43f344d09659a",
@@ -27631,7 +27631,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "de558828a20a185dd313e6ec19817fd66ca221a7",
+    "fileSha1": "1b57b61f24eddc2d9f83a908b09ab7437d5f4bfa",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/irontreads.png",
     "sourceSha1": "2ef1ed05ca83c1f4307f7f3b9f10682aee6095d3",
@@ -27640,7 +27640,7 @@
    },
    "grayscale": {
     "file": "grayscale/990.gif",
-    "fileSha1": "dc7be2f1424bb1330e7da4e9e635918c50113b86",
+    "fileSha1": "c217dd82f090a60bc6d27ae9adb2ff5274d02e31",
     "motion": "breathing"
    }
   },
@@ -27655,9 +27655,9 @@
    "normal": {
     "file": "normal/991.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "628a2098de63249945eef4282cf63c00915bedf1",
+    "fileSha1": "0d3ff9af37efd82e8ade3b260defc08a87600702",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/ironbundle.png",
     "sourceSha1": "98e97ea0e344ad62a067f262a24f020bb645f523",
@@ -27667,9 +27667,9 @@
    "shiny": {
     "file": "shiny/991.gif",
     "kind": "static",
-    "frames": 4,
+    "frames": 6,
     "size": "96x96",
-    "fileSha1": "c6d5029dd2c0313ea063af6e50a018857b9b8b2a",
+    "fileSha1": "0637923e1d36abe667f6e5210a32d554225186f4",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/ironbundle.png",
     "sourceSha1": "632ed0a2a3d35d64a155c7ff9588151bf8b6743c",
@@ -27678,7 +27678,7 @@
    },
    "grayscale": {
     "file": "grayscale/991.gif",
-    "fileSha1": "693a845abec337057d6b989eacde284790dec042",
+    "fileSha1": "efffa525b34abe78a843de014003259c6ad73a29",
     "motion": "breathing"
    }
   },
@@ -27728,7 +27728,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "613ee6f1828606e58b23d8cef748e1a8ced084fb",
+    "fileSha1": "24492c5add24da04845db85f6ada82e043047efb",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/ironjugulis.png",
     "sourceSha1": "a76246a0613f732fa42057936004f45e5c428874",
@@ -27740,7 +27740,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "cd94111791ece6f6c8664b836cf3553bcedc7423",
+    "fileSha1": "c556d161a15787a8abf36450e1417b040d7d2764",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/ironjugulis.png",
     "sourceSha1": "85980d113f8d9d96fcdd7c9dfc99a00377258898",
@@ -27749,7 +27749,7 @@
    },
    "grayscale": {
     "file": "grayscale/993.gif",
-    "fileSha1": "9f355418036ca5d11740efe64361318843f33961",
+    "fileSha1": "de6e8d93592d3338f0b1ff9bf1bf10852878875d",
     "motion": "breathing"
    }
   },
@@ -27904,7 +27904,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "cb5a81c9a540d2a9b8fd34f9e42223f9aafee6f7",
+    "fileSha1": "c62f7bfe46db29dbde0f9ad8a2e0e89ffc4a1cca",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/baxcalibur.png",
     "sourceSha1": "bd626f018b1e062dc9b8f9a615ab8f4d861ba169",
@@ -27916,7 +27916,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "2d677aec10544ed0eb85f3d730bd96f342eb67ff",
+    "fileSha1": "92729ea8043f9113424a00bdd1fa002b53663519",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/baxcalibur.png",
     "sourceSha1": "61575c218259efd7f794d58a00e3b72ccdb54d13",
@@ -27925,7 +27925,7 @@
    },
    "grayscale": {
     "file": "grayscale/998.gif",
-    "fileSha1": "d36dccdbfaa4e1ef525f77bbdabdd3383fe859a9",
+    "fileSha1": "166b7bc5e8666fc24e5fd0b7ccaa1baf89e396fb",
     "motion": "breathing"
    }
   },
@@ -28146,9 +28146,9 @@
    "normal": {
     "file": "normal/1005.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "a7d9d88399088df62ccca46aaf696f7fa28dd309",
+    "fileSha1": "2a899aeb9068cc6cb3457146f1d20141b0abd24c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/roaringmoon.png",
     "sourceSha1": "52db521fad046855db25dac62fbe2e7ac134cbbc",
@@ -28158,9 +28158,9 @@
    "shiny": {
     "file": "shiny/1005.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "de1bc78e3ec8e862d0b1851eb97c608a4694d82c",
+    "fileSha1": "099cd5e64d803323c297e4f01eff7a86d60f0778",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/roaringmoon.png",
     "sourceSha1": "513f0a8bef289e6c0dffdb97a504876475984f20",
@@ -28169,7 +28169,7 @@
    },
    "grayscale": {
     "file": "grayscale/1005.gif",
-    "fileSha1": "dba7281e5af76c311b3cdcfe9d69eb270425df0d",
+    "fileSha1": "03b739f1515b4123aeca3dd6ac68ecdd932fb213",
     "motion": "breathing"
    }
   },
@@ -28217,9 +28217,9 @@
    "normal": {
     "file": "normal/1007.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "6249701d4f5266fea24486a5adfdc6bf35d5d88d",
+    "fileSha1": "d2275a6778bdd8e476079c88d2279388d330977f",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/koraidon.png",
     "sourceSha1": "48d863b30698e9acc2947ba11de21e207e15c2e8",
@@ -28229,9 +28229,9 @@
    "shiny": {
     "file": "shiny/1007.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "77c7b1f501dc1237d0a4d43928668e83f51e0bab",
+    "fileSha1": "8ac33bf89c699d37ea19ee47ba228583490c8600",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/koraidon.png",
     "sourceSha1": "a7737075b09c0f4156eac57ca65109cfcbb00d54",
@@ -28240,7 +28240,7 @@
    },
    "grayscale": {
     "file": "grayscale/1007.gif",
-    "fileSha1": "f77cd537bc48846ebc278588f021c76c78fd6bc6",
+    "fileSha1": "e117b41a1fc958a7b9fca3b31c21b1f34b5cc845",
     "motion": "breathing"
    }
   },
@@ -28288,9 +28288,9 @@
    "normal": {
     "file": "normal/1009.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "a91a8d1cee1bd2b38c2f21ea4886bef46aa3f5bb",
+    "fileSha1": "efee14118e65eb8790ac153daa7f3ab284b1c369",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/walkingwake.png",
     "sourceSha1": "429237f9d98736c7f7f4aca43e83f8022a6bce38",
@@ -28300,9 +28300,9 @@
    "shiny": {
     "file": "shiny/1009.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "be813820f9d8360218bea20b324f491505be800c",
+    "fileSha1": "4bfbf605f87ebc4673774bf6f7bbfc09a8a74772",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/walkingwake.png",
     "sourceSha1": "d677cf0d9c07ca223d486db6bf86d11a037aa6e7",
@@ -28311,7 +28311,7 @@
    },
    "grayscale": {
     "file": "grayscale/1009.gif",
-    "fileSha1": "4eed38e9bc6a7b9f4e9843833cebed55ebd411e6",
+    "fileSha1": "6f575af8a6efc9817c1b309c72151f950f5b5f0e",
     "motion": "breathing"
    }
   },
@@ -28328,7 +28328,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "c155107a2cf4faa4b60fa633aef87041022d7717",
+    "fileSha1": "601945abb0d19b98005719dcbf6edcbe3916accf",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/ironleaves.png",
     "sourceSha1": "9c78b5f97d27c386d767c1c682dd7fa19dab7485",
@@ -28340,7 +28340,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "29fab606ebc55f575eb4aa3266457597133047e7",
+    "fileSha1": "401acc3fe0094c6705df52fcc71e990284293c2b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/ironleaves.png",
     "sourceSha1": "17226f3cd30199e67e2efa1a435a887ed1030570",
@@ -28349,7 +28349,7 @@
    },
    "grayscale": {
     "file": "grayscale/1010.gif",
-    "fileSha1": "66c358ca2e4c49b2db3db7305ef169930ed1eed5",
+    "fileSha1": "d6057b81b9715241272befef435434a1c12fbe11",
     "motion": "breathing"
    }
   },
@@ -28366,7 +28366,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "833cf196ac36fd4a9d268ceb7f92a27ee5f92791",
+    "fileSha1": "2b53d544b641ff61f5ef90361a0a9a99a2e04403",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/dipplin.png",
     "sourceSha1": "ec82aeacc620f3d361df137437e6e6dea0ffcd91",
@@ -28378,7 +28378,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "e34c9809d8c60437f7f025da33fa8814f2cf4602",
+    "fileSha1": "885e59c7e317259165800377c30b0879db718d21",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/dipplin.png",
     "sourceSha1": "cf9ec46cd8618f907e3da07620a965a3194a62d6",
@@ -28387,7 +28387,7 @@
    },
    "grayscale": {
     "file": "grayscale/1011.gif",
-    "fileSha1": "e9631f1cd37703d15e904a3e1c4de59f64e0e08b",
+    "fileSha1": "56e9b609be2bc61f6e9697ecfbed86aa1b24ae3b",
     "motion": "breathing"
    }
   },
@@ -28402,9 +28402,9 @@
    "normal": {
     "file": "normal/1012.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "24c376a2aa715fd7a68999fef1117c2d4a76e0bc",
+    "fileSha1": "4a576caa06d46537bd11491fa71ca104cc3cb01b",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/1012.png",
     "sourceSha1": "62c25fb6fc5e1ecc935e24de24105b0aabd4cb83",
@@ -28414,9 +28414,9 @@
    "shiny": {
     "file": "shiny/1012.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "db7001137f264eda254a89a797cf93e07abdaf3b",
+    "fileSha1": "bece8c9cf39c54cf9cdb5986587bfe24e6f00655",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/1012.png",
     "sourceSha1": "c4c745e555e481e96bd3bd1693089648e9fdb952",
@@ -28425,7 +28425,7 @@
    },
    "grayscale": {
     "file": "grayscale/1012.gif",
-    "fileSha1": "70fd4de040409591b1ed47acba97084f899c9137",
+    "fileSha1": "ece95172305aad309c62b6eb4367725b1bcabbd1",
     "motion": "breathing"
    }
   },
@@ -28440,9 +28440,9 @@
    "normal": {
     "file": "normal/1013.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "4d965cbfd7cc696cae33ed85bd7114ed8ebb7bbb",
+    "fileSha1": "2b7aa4ebc0dfdcb8baa37c063c24978e6fa3a10a",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/1013.png",
     "sourceSha1": "391e799c1ff15d58038171890d74431b7a469ed6",
@@ -28452,9 +28452,9 @@
    "shiny": {
     "file": "shiny/1013.gif",
     "kind": "static",
-    "frames": 8,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "c479c054381cc767b4c4fbf6dd8d8147db30663f",
+    "fileSha1": "33f259496d891d72447057110eb813eefcf2f401",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/1013.png",
     "sourceSha1": "de475f842b6c7b541fbff41cd95259a029b47552",
@@ -28463,7 +28463,7 @@
    },
    "grayscale": {
     "file": "grayscale/1013.gif",
-    "fileSha1": "1d2fa50f350674e733b9e46134f36a751c292567",
+    "fileSha1": "b158b832cdbc1508c2c6eb02863554c6ff75a8a1",
     "motion": "breathing"
    }
   },
@@ -28480,7 +28480,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "223b2aa0daf46b5edfba99c1d1c4b5451343db2b",
+    "fileSha1": "adf771207da7c20ec57b95b5737a7817ca218271",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/okidogi.png",
     "sourceSha1": "0f2e0e510e773a12e615d31ab8159178a59e4a3d",
@@ -28492,7 +28492,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "4de30c8b0b0066efab06ad9f8a4383e999e54d5f",
+    "fileSha1": "ccfe52b3af97997523fb5913e9faca548db66041",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/okidogi.png",
     "sourceSha1": "fdda8942867812a9222e5b8f5f52fa495d19ebc3",
@@ -28501,7 +28501,7 @@
    },
    "grayscale": {
     "file": "grayscale/1014.gif",
-    "fileSha1": "2ace6c8d6604a30fa12e3ea441eab62c833ddd88",
+    "fileSha1": "df664e48a390752afe1c7f7d3854debfb7ea5fd7",
     "motion": "breathing"
    }
   },
@@ -28518,7 +28518,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "ee3c3e7a9feeda3059021d6c61fd2b9709ef7967",
+    "fileSha1": "a3b39951fb2d58b9e4a51c2a00fb9c1b96c68d68",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/munkidori.png",
     "sourceSha1": "92910f96ccdf2537a168fed6b3356d5caaff5f89",
@@ -28530,7 +28530,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "dcef8c0fdd56a7071cd7430b7503be3c8c303129",
+    "fileSha1": "f9731dce805ec454bc0373297c53e186343b6905",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/munkidori.png",
     "sourceSha1": "955b6377bd8882fa7a301ed98e67e39d8e71fad7",
@@ -28539,7 +28539,7 @@
    },
    "grayscale": {
     "file": "grayscale/1015.gif",
-    "fileSha1": "f5d916a2187b1ca85b2294146f36319e6a7e1654",
+    "fileSha1": "131e3816d20869d6d125d07352a1a7f3b813a5a6",
     "motion": "breathing"
    }
   },
@@ -28556,7 +28556,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "780b251692d7e58331b72d7c64027ab066d286e3",
+    "fileSha1": "68c451c5ca9549b84578b46e07c578db5a8fbe94",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/fezandipiti.png",
     "sourceSha1": "a3699a619834962f43977e43abff0fe268ab9ed4",
@@ -28568,7 +28568,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "7fb4f3d3044cbdcbbaaa58ae5f1a56028510e463",
+    "fileSha1": "1c4bca7dfcb09bc4f699faf2396f2fbb3e0c87c3",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/fezandipiti.png",
     "sourceSha1": "8be8f6065ccbcc12f8fcc1a07366f5b40d9d5b6a",
@@ -28577,7 +28577,7 @@
    },
    "grayscale": {
     "file": "grayscale/1016.gif",
-    "fileSha1": "2b6cda5542b11fb09e834dd991adde0860ef096f",
+    "fileSha1": "7497e92781bdebaeb3fb177fb146f75a007cae37",
     "motion": "breathing"
    }
   },
@@ -28594,7 +28594,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "c9f8a4df784fe2fb9771a3be7df7de89da22ed2c",
+    "fileSha1": "f435b1b5de5d92119301adcd80e17edf9137a410",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/1017.png",
     "sourceSha1": "c7f228b19c32bf869d64a7f47e07de71edc2f852",
@@ -28606,7 +28606,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "2cbcea62d68bed6ea99bf49b91cafc2e11ea7322",
+    "fileSha1": "d5dc41b54f64762f5140180bb95b88a8baf4151a",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/1017.png",
     "sourceSha1": "55b189372c23d68e11d526c036ffaafe29afb305",
@@ -28615,7 +28615,7 @@
    },
    "grayscale": {
     "file": "grayscale/1017.gif",
-    "fileSha1": "f0d6aa8a0c8dbb6475dbe9d4986d19d8a8502940",
+    "fileSha1": "6b4fea53c4bfd2a74abd1ee0c0724a8c2ecc0290",
     "motion": "breathing"
    }
   },
@@ -28630,9 +28630,9 @@
    "normal": {
     "file": "normal/1018.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "740e7fce0b52809e17ed132d7db1ea9d3e5b0fc9",
+    "fileSha1": "7b9ce9aa1a4a1101b62a1dac187f98ce20db9798",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/archaludon.png",
     "sourceSha1": "f7e44150dd63e721a1e22c7543a8f0276b24a02e",
@@ -28642,9 +28642,9 @@
    "shiny": {
     "file": "shiny/1018.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "363716ac90bbafbf8cba2b86af6b012ca91aa86f",
+    "fileSha1": "57901471ce65dbd1c0279a45d3994fcc0fc3629c",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/archaludon.png",
     "sourceSha1": "f54778b173828962a41a9913c37a8cd992a77926",
@@ -28653,7 +28653,7 @@
    },
    "grayscale": {
     "file": "grayscale/1018.gif",
-    "fileSha1": "d9364633565fcc55c60bee1882624933f99553ba",
+    "fileSha1": "cbe532bc57012db9503543c17af6d169d3411645",
     "motion": "breathing"
    }
   },
@@ -28738,7 +28738,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "a1c873f42f7dde31a13438c737046a2557a5040a",
+    "fileSha1": "4e9455e59f5c93f11a40962ba0a4b22c067a7479",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/ragingbolt.png",
     "sourceSha1": "20ab44719522096e6df3c1c0cca6c9562dc43e22",
@@ -28750,7 +28750,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "d5effda221a10b93865fc80e016f32292cfea7e7",
+    "fileSha1": "e3333c3f3d70d37e351f0b25092a57d84c6bb922",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/ragingbolt.png",
     "sourceSha1": "860d8024904cd7ab17107f13bb47b4c11c631b23",
@@ -28759,7 +28759,7 @@
    },
    "grayscale": {
     "file": "grayscale/1021.gif",
-    "fileSha1": "092e18abcba31d5fb0a55af13a7ad007f7e61fea",
+    "fileSha1": "5f1e2589de1d7b7239bb80e903105e0404c8beda",
     "motion": "breathing"
    }
   },
@@ -28776,7 +28776,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "fed93d4df574533ebd50849a7c8a56da5ea72780",
+    "fileSha1": "f4e0480d7415ff287216a78fb7980f61c875935a",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/ironboulder.png",
     "sourceSha1": "8125797cc776ff75eab6f74fbf3f071827005dbb",
@@ -28788,7 +28788,7 @@
     "kind": "static",
     "frames": 4,
     "size": "96x96",
-    "fileSha1": "adcb57420c314c33ff9161b7eaa7e5394b95c6e3",
+    "fileSha1": "c197ca0653bb454f04bb576116d06de0fcf8eed5",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/ironboulder.png",
     "sourceSha1": "86f5f182aa1434131bb77338afe7be96974ae367",
@@ -28797,7 +28797,7 @@
    },
    "grayscale": {
     "file": "grayscale/1022.gif",
-    "fileSha1": "50c569112a221ba1028662d073b7ae059362cc0b",
+    "fileSha1": "e74b27330bc8bf30606a5f560a162f256b84d753",
     "motion": "breathing"
    }
   },
@@ -28812,9 +28812,9 @@
    "normal": {
     "file": "normal/1023.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "23a632d62060524f492b437879d6eb84549f3e98",
+    "fileSha1": "4552150dbf24c7db5574506ac1876eced691154a",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/1023.png",
     "sourceSha1": "b2a8db4a2d95087607b2e218055f47b13ac6c55f",
@@ -28824,9 +28824,9 @@
    "shiny": {
     "file": "shiny/1023.gif",
     "kind": "static",
-    "frames": 6,
+    "frames": 4,
     "size": "96x96",
-    "fileSha1": "caa0b7ea0ee21404cb777e27ab917608da4ad518",
+    "fileSha1": "077b20576cc66aa2cdc85a7558f163b77c2a8231",
     "source": "PokéAPI sprites black-white (Smogon BW-style sprite projects)",
     "sourceUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/shiny/1023.png",
     "sourceSha1": "610e624602b42c8334997d74c890065d2feb370e",
@@ -28835,7 +28835,7 @@
    },
    "grayscale": {
     "file": "grayscale/1023.gif",
-    "fileSha1": "d0306584470ff3f4f76bcdf076a28985da13d131",
+    "fileSha1": "4299c06118970a836a284cff70a92cf66ec5a57e",
     "motion": "breathing"
    }
   },
@@ -28887,7 +28887,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "f438c7f8de1819bd33cb8a93f8b42fe9a116ec96",
+    "fileSha1": "1e69801f1858d498f56369ab5716660d6c7ec73b",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5/pecharunt.png",
     "sourceSha1": "b6c74eaccfaca644ff37c7297b239c28f65a0645",
@@ -28899,7 +28899,7 @@
     "kind": "static",
     "frames": 6,
     "size": "96x96",
-    "fileSha1": "2f3b220500c3935094612e9f69de004eeda81c51",
+    "fileSha1": "a810e72d2c986fef822520d8c75479c1624a55fd",
     "source": "Pokémon Showdown sprites/gen5 (Smogon BW-style sprite projects)",
     "sourceUrl": "https://play.pokemonshowdown.com/sprites/gen5-shiny/pecharunt.png",
     "sourceSha1": "03ae14381a9bd1870ca678ac7654599773e19bad",
@@ -28908,7 +28908,7 @@
    },
    "grayscale": {
     "file": "grayscale/1025.gif",
-    "fileSha1": "c33f4b515bcab5315514e87f44a02d33b609545f",
+    "fileSha1": "e361601ef903ad8afdbd0c4a744151a7db125e56",
     "motion": "breathing"
    }
   }

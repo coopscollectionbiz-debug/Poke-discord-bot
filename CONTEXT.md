@@ -120,6 +120,7 @@ _Avoid_: comeback mechanic, rubber-banding, luck boost
 
 - "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.
 - "Pokédex completion" is counted per Pokémon, not per variant. A player holding one normal and one shiny Pikachu has 1 toward Kanto, not 2.
+- "Copy" as a noun is always a **Copy** (one owned unit). As a verb it may describe teams and moves ("Copy from Battle team"); never call the result a "team copy".
 
 ## Example dialogue
 

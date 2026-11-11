@@ -49,7 +49,8 @@ While a player chats, a computer-run Trainer can spot them and ask for a fight, 
 - **Lines.** Every class has its own lines in its own voice. Over-tier Trainers of a class other than Ace Trainer draw from a shared pool of calm, too-confident lines instead, a hint they're strong (decided). The surprise's line gives no hint. The Prize money on the card is a second hint: it's the class base × the last Pokémon's Level, so a player who knows the bases can read a strong Trainer or a surprise from it. That was accepted when the amount went on the card (decided 2026-11-10). Ace Trainers use their own confident lines. All copy is written fresh in the games' voice, not copied from the games.
 - **Buttons.** Battle! and Run, answered for 2 minutes (decided). Only the spotted player's clicks count; anyone else gets a private "This Trainer has their eye on Ash."
 - **Run, or no answer.** The card shrinks to one text line with no image, from rotating pools: "Ash ran away from Youngster Joey.", "Ash scurried away from Youngster Joey.", "Youngster Joey lost interest."
-- **Battle!** The buttons go and the card stays as the intro. Under the player's lock the bot re-checks the Team, open runs and wagers, fights with the card's Team, settles CC and EXP, and saves; then the replay posts below the card with both trainers' portraits, no type tint, no Badge pill, and no award screen. It waits for a replay slot like every other replay (`PLAYBACK.maxAtOnce`, `tuning.js:65`). Under the final image: the Trainer's after-battle line, then "Ash got 260 CC for winning!" or "Ash whited out!". The loss line has no amount: a short balance would reveal how much the player holds. After the replay the player gets a private message with the exact CC won or paid and the EXP card (`utils/render/expCard.js`).
+- **Battle!** The buttons go. Under the player's lock the bot re-checks the Team, open runs and wagers, fights with the card's Team, settles CC and EXP, and saves; then the replay plays on the card itself, in place of the card image, with both trainers' portraits, no type tint, no Badge pill, and no award screen. It waits for a replay slot like every other replay (`PLAYBACK.maxAtOnce`, `tuning.js:65`). Under the final image: the Trainer's after-battle line, then "Ash got 260 CC for winning!" or "Ash whited out!". The loss line has no amount: a short balance would reveal how much the player holds. After the replay the player gets a private recap: the battle's final image and the EXP card (`utils/render/expCard.js`), with the exact CC paid on a loss.
+- **The result line** (decided 2026-11-11). The final image stays up 10 seconds (`ENCOUNTER.resultMs`), then the card drops its images and embed and keeps those two lines as plain text, so the channel keeps only the result. A restart in those 10 seconds leaves the final image up. A replay that can't play still leaves the line, and the recap then says "The battle counted, but I couldn't post it here." over the EXP card alone.
 - **Refused Battle!** A Battle! refused (no Pokémon left, an open run, a pending wager) replies privately and leaves the encounter open until it's answered or times out.
 - **Restart.** Open encounters live only in memory and hold nothing. A click on a card left from before a restart shrinks it to "This Trainer lost interest." Buttons go through the bot's global button handler, not a per-message collector, so these clicks are always answered.
 
@@ -60,11 +61,11 @@ While a player chats, a computer-run Trainer can spot them and ask for a fight, 
 
 ## Code
 
-- `utils/battle/tuning.js`: `ENCOUNTER` (chance, gap, daily cap, answer window, tiers, Level floor, party size, Ace share, surprise).
+- `utils/battle/tuning.js`: `ENCOUNTER` (chance, gap, daily cap, answer window, how long the final image stays up, tiers, Level floor, party size, Ace share, surprise).
 - `utils/encounter/roster.js`: the Trainer classes. `utils/encounter/lines.js`: every line.
 - `utils/encounter/generate.js`: rolling a Trainer from a Team and a seed (pure).
 - `utils/encounter/runEncounter.js`: the encounter record, who can be spotted, and the fight with its settlement (pure apart from the record it's handed).
-- `utils/encounter/service.js`: the Discord side: spotting, the card, the buttons, timeouts, stale clicks, the replay and the private message.
+- `utils/encounter/service.js`: the Discord side: spotting, the card, the buttons, timeouts, stale clicks, the replay on the card, the private recap, and the result line.
 - `utils/render/encounterCard.js`: the card; the "!" in `utils/render/primitives.js`.
 - `utils/battle/playback.js`: `playEncounter` and its result embed.
 - `utils/passiveChat.js` and `bot_final.js`: the roll after a message that didn't catch, and routing `encounter:` buttons.
@@ -75,7 +76,7 @@ While a player chats, a computer-run Trainer can spot them and ask for a fight, 
 - `tests/encounterGenerate.test.js`: tier shares, bands, party size, order, Ace Trainers, the surprise, forms that fit the Level, species coverage for every class at every Level, prize money.
 - `tests/runEncounter.test.js`: who can be spotted, the record, the fight and its settlement.
 - `tests/encounterCard.test.js`: the card's facts, alt text, and layout.
-- `tests/encounterFlow.test.js`: the Discord flow with stub objects, including the replay and the private message.
+- `tests/encounterFlow.test.js`: the Discord flow with stub objects, including the replay on the card, the private recap, the result line, and a replay that can't play.
 - `tests/startupReadiness.test.js`: the encounter roll runs only after a message that didn't catch.
 - `tests/encounterBalance.test.js`: the open checks below.
 
@@ -121,8 +122,8 @@ Win rate by tier (the test prints every Team size from 1 to 6):
 2. From a second account, press Battle!. The private "has their eye on" reply appears; the card doesn't change.
 3. Press Run. The card becomes one text line with no image.
 4. Get spotted again and wait 2 minutes. The card becomes the "lost interest" line.
-5. Press Battle! on a new card. The buttons go, the replay posts below, and the after-battle line and prize line sit under the final image. A private EXP card follows with the exact CC; CC rose by N.
-6. Lose to an Over-tier Trainer. "whited out!" shows, and CC dropped by N, or to 0 when it was under N.
+5. Press Battle! on a new card. The buttons go, the replay plays on the card with no new message, and the after-battle line and prize line sit under the final image. A private recap follows with the final image and the EXP card; CC rose by N. About 10 seconds after the final image, the card loses its images and shows only those two lines, with no ping. From the second account, the card shows the same two lines and no image.
+6. Lose to an Over-tier Trainer. "whited out!" shows, the recap says how much was paid ("You paid Ace Trainer Kent 3,000 CC."), and CC dropped by N, or to 0 when it was under N.
 7. Get spotted, change the Team on the dashboard, press Battle!. The fight uses the card's Team.
 8. Get spotted and donate one Pokémon from the card: it sits out. Donate them all: Battle! is refused privately.
 9. Restart the bot with a card open and press Battle!. The card shrinks to "This Trainer lost interest."

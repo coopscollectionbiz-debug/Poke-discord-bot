@@ -5,7 +5,10 @@
 // a chat message that didn't catch anything: it may post an encounter card
 // in that channel. handleButton answers the card's Battle! and Run buttons,
 // reached through the bot's global button handler rather than a collector,
-// so a click on a card from before a restart still gets an answer.
+// so a click on a card from before a restart still gets an answer. Every
+// answer leaves the card as text: Run and timeouts as one line, Battle! as
+// its result after the replay plays on the card, with the battle's final
+// image and the EXP card sent to the player privately.
 // Open encounters live only in memory and hold nothing: a restart loses
 // them, and their cards shrink on the next click.
 // ==========================================================
@@ -20,14 +23,15 @@ import { rollTrainer } from "./generate.js";
 import { spotBlock, recordSpot, fightEncounter } from "./runEncounter.js";
 import { RAN, LOST_INTEREST, STALE_LINE, fill } from "./lines.js";
 import { encounterCardView, encounterAltText, renderEncounterCard } from "../render/encounterCard.js";
-import { encounterNames, playEncounter, challengeExpText } from "../battle/playback.js";
+import { encounterNames, encounterSummary, playEncounter, challengeExpText } from "../battle/playback.js";
 import { expMembers, renderExpCard } from "../render/expCard.js";
 import { logEvent } from "../eventLog.js";
 
 const PREFIX = "encounter:";
 export const isEncounterButton = (customId) => typeof customId === "string" && customId.startsWith(PREFIX);
 
-// The card and the replay are new messages with images.
+// The card is a new message with an image, and the replay's images and
+// result embed go on it.
 const PERMISSIONS = [
   PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks,
 ];
@@ -40,7 +44,7 @@ const REFUSALS = {
 
 const n = (x) => x.toLocaleString("en-US");
 const trainerName = (e) => `${e.trainer.title} ${e.trainer.name}`;
-// A card reduced to one line of text: no image, no embed, no buttons.
+// A card reduced to text: no image, no embed, no buttons.
 const shrunk = (content) => ({ content, embeds: [], attachments: [], components: [], allowedMentions: { parse: [] } });
 
 export function createEncounterService({
@@ -141,18 +145,21 @@ export function createEncounterService({
     }
   }
 
-  async function expMessage(outcome, names, note) {
+  // The player's private recap: the battle's final image (null when the
+  // replay didn't reach it), which the card loses, and their EXP card.
+  async function recapMessage(outcome, names, note, image) {
     const user = getTrainerData()[outcome.userId];
     const caption = [note, outcome.won ? null : `You paid ${names.trainer} ${n(outcome.paid)} CC.`].filter(Boolean).join("\n");
+    const shown = image ? [image] : [];
     try {
       const png = await renderExp({
         opponent: names.trainer, won: outcome.won, rating: null, surge: false, pot: 0,
         members: expMembers(outcome.exp[outcome.userId], user),
       });
-      return { ...(caption && { content: caption }), files: [new AttachmentBuilder(png, { name: "exp.png" })], flags: MessageFlags.Ephemeral };
+      return { ...(caption && { content: caption }), files: [...shown, new AttachmentBuilder(png, { name: "exp.png" })], flags: MessageFlags.Ephemeral };
     } catch (err) {
       console.warn("⚠️ encounter EXP card render failed; sending text:", err?.message || err);
-      return { content: [caption, challengeExpText(outcome)].filter(Boolean).join("\n"), flags: MessageFlags.Ephemeral };
+      return { content: [caption, challengeExpText(outcome)].filter(Boolean).join("\n"), ...(image && { files: shown }), flags: MessageFlags.Ephemeral };
     }
   }
 
@@ -161,7 +168,7 @@ export function createEncounterService({
     e.busy = true;
     // Acknowledged before the lock, which can wait seconds on another
     // command's save; Discord fails a click left unanswered for 3 s. After
-    // this, the card changes with editReply and private replies are followUps.
+    // this, the buttons go with editReply and private replies are followUps.
     await i.deferUpdate().catch(() => {});
     const outcome = await lockUser(e.userId, () => {
       const trainerData = getTrainerData();
@@ -182,13 +189,17 @@ export function createEncounterService({
     const names = encounterNames(outcome, e.displayName);
     const user = getTrainerData()[e.userId];
     let note = null;
+    let image = null;
     try {
-      await play(e.channel, outcome, names, { ...PLAYBACK, trainers: [user?.displayedTrainer ?? null, e.trainer.spriteFile] });
+      image = await play(e.channel, e.message, outcome, names, { ...PLAYBACK, trainers: [user?.displayedTrainer ?? null, e.trainer.spriteFile] });
     } catch (err) {
       console.warn("⚠️ encounter replay couldn't post:", err?.message || err);
       note = "The battle counted, but I couldn't post it here.";
     }
-    await i.followUp(await expMessage(outcome, names, note)).catch(() => {});
+    // The channel keeps only the result: once the final image has been up a
+    // moment, the card drops its images. A restart in that window leaves them.
+    setTimer(() => e.message.edit(shrunk(encounterSummary(outcome, names))).catch(() => {}), ENCOUNTER.resultMs);
+    await i.followUp(await recapMessage(outcome, names, note, image)).catch(() => {});
   }
 
   /** A click on an encounter card's button. Never throws. */

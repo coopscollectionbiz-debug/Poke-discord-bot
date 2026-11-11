@@ -10,8 +10,9 @@
 // Badge) with an award screen on a first win: every fight of an Elite Four
 // run plays on one message, holding a slot only while a fight plays (the
 // Revive pick between fights can take a minute). Leaders are names, never
-// <@mentions>. Trainer encounters replay here too (playEncounter), with both
-// trainers' portraits and the Trainer's after-battle line.
+// <@mentions>. Trainer encounters replay here too, on their card
+// (playEncounter), with both trainers' portraits and the Trainer's
+// after-battle line.
 // ==========================================================
 
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -138,8 +139,9 @@ const replays = createQueue(PLAYBACK.maxAtOnce);
 // `paceStart` holds the previous fight's result frame up for a full delay.
 // `trainers` are each side's trainer files for the portraits. `theme`
 // (challenges) styles every frame; `award` (challengeAward) adds its screen
-// to the result frame, right after who won.
-async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], theme = null, award = null }) {
+// to the result frame, right after who won. `onFinal` hears the result
+// frame's file before it's shown (Trainer encounters also send it privately).
+async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], theme = null, award = null, onFinal = null }) {
   const sides = fight.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = fight.result;
   const image = async (opts) => new AttachmentBuilder(
@@ -184,6 +186,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
       sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(fight), screens,
       ...(award && { theme: { ...theme, award: { screen: 1, badgeFile: award.badgeFile, title: award.title } } }),
     }));
+    onFinal?.(file);
     await message.edit({ files: [file], ...(finalEmbed && { embeds: [finalEmbed] }) });
     return message;
   } catch (err) {
@@ -385,29 +388,37 @@ export const encounterNames = (outcome, playerName) => ({
   trainer: `${outcome.trainer.title} ${outcome.trainer.name}`,
 });
 
-// The embed under the final image: the Trainer's after-battle line, then
-// the Prize money on a win. Never the amount on a loss: a player who held
-// less than the Prize money paid all they had, which would reveal it.
-export function buildEncounterEmbed(outcome, names) {
+// The result: the Trainer's after-battle line, then the Prize money on a
+// win. Never the amount on a loss: a player who held less than the Prize
+// money paid all they had, which would reveal it. It's the embed under the
+// final image, then all the card keeps once the images go.
+export function encounterSummary(outcome, names) {
   const player = names[outcome.userId];
   const said = outcome.won ? outcome.trainer.lines.lost : outcome.trainer.lines.won;
   const result = outcome.won ? `💰 ${player} got ${outcome.prize.toLocaleString("en-US")} CC for winning!` : `${player} whited out!`;
-  return new EmbedBuilder().setColor(0xf1c40f).setDescription([`💬 ${names.trainer}: "${said}"`, result].join("\n"));
+  return [`💬 ${names.trainer}: "${said}"`, result].join("\n");
 }
 
-// Posts a new message below the encounter card (a new message is what
-// notifies the @mentioned player) and replays the fight on it. `trainers`
-// are the player's displayed trainer file (or null) and the Trainer's sprite.
-// A first post that fails throws; a later failed edit stops and returns null.
-export async function playEncounter(channel, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null] } = PLAYBACK) {
+export const buildEncounterEmbed = (outcome, names) => new EmbedBuilder().setColor(0xf1c40f).setDescription(encounterSummary(outcome, names));
+
+// Replays the fight on the encounter card `message`, in place of the card
+// image. No new message is needed to notify the player: they just pressed
+// Battle! on it. `trainers` are the player's displayed trainer file (or null)
+// and the Trainer's sprite. Resolves to the final image, for the player's
+// private recap, or null if the replay stopped before it. A start frame that
+// can't be shown throws.
+export async function playEncounter(channel, message, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null] } = PLAYBACK) {
   const heading = `⚔️ <@${outcome.userId}> vs ${names.trainer}!`;
-  const { message, release } = await waitForSlot(channel, queue, heading);
+  const slot = await waitForSlot(channel, queue, heading, message);
+  let final = null;
   try {
-    return await replayFight({
-      channel, message, heading, fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers,
+    await replayFight({
+      channel, message: slot.message, heading, fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers,
       finalEmbed: buildEncounterEmbed(outcome, names),
+      onFinal: (file) => { final = file; },
     });
+    return final;
   } finally {
-    release(); // even a failed replay frees its slot
+    slot.release(); // even a failed replay frees its slot
   }
 }

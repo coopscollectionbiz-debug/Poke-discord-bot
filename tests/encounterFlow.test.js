@@ -2,13 +2,14 @@
 // tests/encounterFlow.test.js
 // The Discord side of Trainer encounters (docs/superpowers/specs/
 // 2026-11-10-trainer-encounters-design.md, Discord UX), with stub Discord
-// objects: the replay and its result embed, and (utils/encounter/service.js)
-// spotting, the card, Battle!, Run, timeouts, other players' clicks, and
-// clicks on cards from before a restart. Synthetic data only.
+// objects: the replay on the card and its result embed, and
+// (utils/encounter/service.js) spotting, the card, Battle! with its private
+// recap and the card shrinking to the result, Run, timeouts, other players'
+// clicks, and clicks on cards from before a restart. Synthetic data only.
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { encounterNames, buildEncounterEmbed, playEncounter, createQueue } from "../utils/battle/playback.js";
+import { encounterNames, encounterSummary, buildEncounterEmbed, playEncounter, createQueue } from "../utils/battle/playback.js";
 import { fightEncounter } from "../utils/encounter/runEncounter.js";
 import { rollTrainer } from "../utils/encounter/generate.js";
 import { createNewUser } from "../utils/userSchema.js";
@@ -48,6 +49,11 @@ function recorder() {
   const channel = { send: async (o) => { sent.push(o); return { edit: async (e) => { edits.push(e); } }; } };
   return { sent, edits, channel };
 }
+// A posted encounter card, recording its edits.
+function cardStub() {
+  const m = { edits: [], edit: async (e) => { m.edits.push(e); } };
+  return m;
+}
 const description = (o) => o.embeds?.[0]?.toJSON().description ?? "";
 
 section("Playback");
@@ -61,25 +67,28 @@ section("Playback");
   const loss = settle(player([6, 9], 50), ace);
   const lossLines = buildEncounterEmbed(loss, encounterNames(loss, "Ash")).toJSON().description.split("\n");
   assertEqual(lossLines, [`💬 Ace Trainer Kent: "${ace.lines.won}"`, "Ash whited out!"], "a loss: the Trainer gloats, and no amount");
+  assertEqual(encounterSummary(win, names), buildEncounterEmbed(win, names).toJSON().description, "the card's result line says what the embed says");
 
   const rec = recorder();
-  const message = await playEncounter(rec.channel, win, names, { ...PLAYBACK, trainers: ["acerola-masters.png", "youngster-gen3.png"] });
-  assertTrue(message !== null, "the replay finishes");
-  assertEqual(rec.sent.length, 1, "one new message");
-  assertEqual(rec.sent[0].content, "⚔️ <@A> vs Youngster Joey!", "the heading @mentions the player");
-  assertEqual(description(rec.edits.at(-1)), buildEncounterEmbed(win, names).toJSON().description, "the result embed lands on the final image");
-  assertTrue(rec.edits.at(-1).files?.length === 1, "with the final image");
+  const onCard = cardStub();
+  const image = await playEncounter(rec.channel, onCard, win, names, { ...PLAYBACK, trainers: ["acerola-masters.png", "youngster-gen3.png"] });
+  assertEqual(rec.sent.length, 0, "it plays on the encounter card, with no new message");
+  assertEqual(onCard.edits[0].content, "⚔️ <@A> vs Youngster Joey!", "the heading names the player");
+  assertEqual(description(onCard.edits.at(-1)), buildEncounterEmbed(win, names).toJSON().description, "the result embed lands on the final image");
+  assertTrue(onCard.edits.at(-1).files?.length === 1, "with the final image");
+  assertTrue(image !== null && image === onCard.edits.at(-1).files[0], "and hands the final image back for the private recap");
 
   const queue = createQueue(1);
   const hold = await queue.acquire();
   const waiting = recorder();
+  const waitingCard = cardStub();
   let done = false;
-  const played = playEncounter(waiting.channel, win, names, { ...PLAYBACK, queue }).then(() => { done = true; });
+  const played = playEncounter(waiting.channel, waitingCard, win, names, { ...PLAYBACK, queue }).then(() => { done = true; });
   await new Promise((r) => setTimeout(r, 30));
-  assertTrue(!done && waiting.sent.length === 1 && waiting.sent[0].content.includes("in line"), "a busy queue: it waits its turn and says so");
+  assertTrue(!done && waiting.sent.length === 0 && waitingCard.edits[0]?.content.includes("in line"), "a busy queue: it waits its turn and says so on the card");
   hold();
   await played;
-  assertTrue(done && description(waiting.edits.at(-1)).includes("for winning"), "and plays once a slot frees up");
+  assertTrue(done && description(waitingCard.edits.at(-1)).includes("for winning"), "and plays once a slot frees up");
 }
 
 // ==========================================================
@@ -233,23 +242,47 @@ section("Answering");
   const w = world();
   const ccBefore = w.user.cc;
   await w.service.maybeSpot(w.message());
-  const [battle] = w.ids(w.log.sent[0]);
+  const card = w.log.sent[0];
+  const [battle] = w.ids(card);
   const i = w.click(battle);
   await w.service.handleButton(i);
   assertEqual([i.deferred, i.updates.length], [1, 0], "Battle! is acknowledged at once");
-  assertEqual(i.edits, [{ components: [] }], "then the buttons go and the card stays as the intro");
-  const replay = w.log.sent[1];
-  assertTrue(replay && replay.opts.content.startsWith("⚔️ <@A> vs "), "the replay posts below the card");
-  const result = description(replay.edits.at(-1));
-  const won = result.includes("for winning");
+  assertEqual(i.edits, [{ components: [] }], "then the buttons go");
+  assertEqual(w.log.sent.length, 1, "the replay plays on the card, with no new message");
+  assertTrue(card.edits[0].content.startsWith("⚔️ <@A> vs "), "starting with the heading");
+  const final = card.edits.at(-1);
+  const won = description(final).includes("for winning");
   const { prize, paid } = w.log.events.find((e) => e.phase === "result");
   assertEqual(w.user.cc, won ? ccBefore + prize : ccBefore - paid, "CC moved by the Prize money");
   assertTrue(w.log.saves >= 2, "saved");
   const priv = i.followUps[0];
-  assertTrue(priv.flags === 64 && priv.files?.[0]?.name === "exp.png", "the EXP card arrives privately");
+  assertEqual(priv.flags, 64, "the recap arrives privately");
+  assertEqual(priv.files?.map((f) => f.name), ["battle.gif", "exp.png"], "with the final battle image and the EXP card");
+  assertTrue(priv.files[0] === final.files[0], "the same final image the channel saw");
   assertEqual(priv.content ?? "", won ? "" : `You paid ${w.log.events[0].trainer} ${paid.toLocaleString("en-US")} CC.`, "with the exact CC only when it was paid");
   assertEqual(w.log.events.map((e) => e.phase), ["spotted", "answered", "result"], "logged");
-  assertEqual([w.service.openCount(), w.timers.size], [0, 0], "closed");
+  assertEqual(w.service.openCount(), 0, "closed");
+  assertEqual([...w.timers.values()].map((t) => t.ms), [10000], "the final image stays up 10 seconds");
+  const shown = card.edits.length;
+  await w.fireTimers();
+  const line = card.edits.at(-1);
+  assertTrue(card.edits.length === shown + 1 && shrunk(line), "then the card loses its images");
+  assertEqual(line.content, description(final), "leaving the Trainer's line and the CC result");
+  assertEqual(line.allowedMentions, { parse: [] }, "pinging no one");
+  assertEqual(w.timers.size, 0, "and nothing is left running");
+}
+{
+  const w = world({ play: async () => { throw new Error("Missing Permissions"); } });
+  await w.service.maybeSpot(w.message());
+  const card = w.log.sent[0];
+  const i = w.click(w.ids(card)[0]);
+  await w.service.handleButton(i);
+  const priv = i.followUps[0];
+  assertTrue(priv.content?.startsWith("The battle counted, but I couldn't post it here."), "a replay that can't play: the recap says the battle still counted");
+  assertEqual(priv.files?.map((f) => f.name), ["exp.png"], "with the EXP card alone");
+  await w.fireTimers();
+  const line = card.edits.at(-1);
+  assertTrue(shrunk(line) && line.content.startsWith(`💬 ${w.log.events[0].trainer}: "`), "and the card still shrinks to the result");
 }
 {
   const w = world();
@@ -257,8 +290,9 @@ section("Answering");
   const [battle] = w.ids(w.log.sent[0]);
   const [a, b] = [w.click(battle), w.click(battle)];
   await Promise.all([w.service.handleButton(a), w.service.handleButton(b), w.fireTimers()]);
-  assertEqual(w.log.sent.length, 2, "one outcome per encounter: a double click and the timer race, one replay");
-  assertEqual(w.log.sent[0].edits.length, 0, "and the card never shrank");
+  const card = w.log.sent[0];
+  assertEqual(card.edits.filter((e) => e.content?.startsWith("⚔️")).length, 1, "one outcome per encounter: a double click and the timer race, one replay");
+  assertTrue(!card.edits.some((e) => matchesAny(e.content, LOST_INTEREST, w.log.events[0].trainer)), "and the Trainer never lost interest");
   assertEqual(w.log.events.filter((e) => e.phase === "result").length, 1, "one result");
 }
 {
@@ -273,7 +307,7 @@ section("Answering");
   assertEqual([w.service.openCount(), w.timers.size, w.log.sent.length], [1, 1, 1], "and keeps the encounter open");
   delete w.user.pendingWager;
   await w.service.handleButton(w.click(battle));
-  assertEqual(w.log.sent.length, 2, "then it can still be fought");
+  assertEqual(w.log.events.filter((e) => e.phase === "result").length, 1, "then it can still be fought");
 }
 {
   // Another command can hold the player's lock for seconds while it waits on
@@ -291,7 +325,8 @@ section("Answering");
   await held;
   await pressed;
   assertEqual(i.edits, [{ components: [] }], "then it plays out once the record is free");
-  assertTrue(w.log.sent.length === 2 && i.followUps.some((f) => f.files?.[0]?.name === "exp.png"), "with the replay and the private result");
+  assertTrue(w.log.sent[0].edits.some((e) => e.content?.startsWith("⚔️")) && i.followUps.some((f) => f.files?.some((x) => x.name === "exp.png")),
+    "with the replay on the card and the private recap");
 }
 {
   const w = world();
@@ -310,7 +345,7 @@ section("The card's Mega");
   u.displayedPokemon[0].mega = "mega-charizard-x";
   u.megaUnlocks = { "6:normal": { forms: { "mega-charizard-x": { at: 1, stone: null } }, preferred: null } };
   let played = null;
-  const w = world({ user: u, play: async (channel, outcome) => { played = outcome; } });
+  const w = world({ user: u, play: async (channel, message, outcome) => { played = outcome; } });
   await w.service.maybeSpot(w.message());
   const [battle] = w.ids(w.log.sent[0]);
   await w.service.handleButton(w.click(battle));

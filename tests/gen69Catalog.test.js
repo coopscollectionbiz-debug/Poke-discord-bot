@@ -126,14 +126,14 @@ for (const n of NEW) {
   counts[r.normal.kind]++;
   for (const v of ["normal", "shiny"]) {
     const g = new omggif.GifReader(fs.readFileSync(new URL(`../public/sprites/pokemon/${r[v].file}`, import.meta.url)));
-    // Animated art, or static art with the 4-frame breathing idle (tools/generate-pokemon-idles.mjs).
-    const moving = r[v].kind === "animated" || r[v].motion === "breathing";
-    if (g.numFrames() < 1 || moving !== (g.numFrames() > 1) || (r[v].motion === "breathing" && g.numFrames() !== 4)) gifOk = false;
+    // Animated art, or static art with the rig idle (tools/generate-pokemon-idles.mjs: up to ~50 frames, per-Pokémon performance).
+    const moving = r[v].kind === "animated" || r[v].motion === "rig";
+    if (g.numFrames() < 1 || moving !== (g.numFrames() > 1) || (r[v].motion === "rig" && (g.numFrames() < 4 || g.numFrames() > 60))) gifOk = false;
   }
 }
 assertTrue(fileOk, "every shipped file matches the manifest SHA-1");
 assertTrue(distinct, "every new species has a shiny distinct from its normal sprite");
-assertTrue(gifOk, "every sprite is a valid GIF; animated or breathing ↔ multi-frame (breathing = 4 frames)");
+assertTrue(gifOk, "every sprite is a valid GIF; animated or breathing ↔ multi-frame (rig idle = 4–60 frames)");
 assertEqual(counts, { animated: 220, static: 156 }, "220 animated + 156 static normal sprites (audited coverage)");
 const byGen = {};
 for (const n of NEW) { const g = DEX[n].generation; byGen[g] ??= [0, 0]; byGen[g][SPRITES[n].normal.kind === "animated" ? 0 : 1]++; }

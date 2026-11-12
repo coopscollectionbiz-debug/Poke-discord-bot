@@ -21,6 +21,8 @@ import { grantTrainer } from "../services/assets.js";
 import { trackProgress } from "../progression/achievements.js";
 import { recruitPool } from "./recruit.js";
 import { catchAnnouncement } from "../utils/render/catchMessage.js";
+import { liveEffects } from "../services/liveEvents.js";
+import { scaleEarned, applyLimits, boostedWeights, pickWeighted, hasCatchEffects } from "../utils/liveEventRules.js";
 
 // ==========================================================
 // ⏱️ Constants
@@ -63,13 +65,19 @@ export default {
         });
       }
 
-      const pick = pool[Math.floor(Math.random() * pool.length)];
+      // A free roll: Live event Catch limits and boosts shape the Pokémon pick.
+      const fx = liveEffects();
+      const questPool = rewardType === "pokemon" && applyLimits(pool, fx).length ? applyLimits(pool, fx) : pool;
+      const pick = rewardType === "pokemon"
+        ? pickWeighted(boostedWeights(questPool, fx, () => 1))
+        : pool[Math.floor(Math.random() * pool.length)];
+      const questCC = scaleEarned(QUEST_CC_REWARD, fx.cc); // a Live event's CC multiplier
       let embed;
 
       if (rewardType === "pokemon") {
         const shiny = rollForShiny(user.tp || 0);
         const caught = grantCatch(user, pick.id, shiny ? "shiny" : "normal");
-        user.cc = (user.cc || 0) + QUEST_CC_REWARD;
+        user.cc = (user.cc || 0) + questCC;
         user.lastQuest = Date.now();
 
         const ack = await saveAndAck(trainerData);
@@ -81,7 +89,7 @@ export default {
           pokemonName: pick.name,
           tier: (pick.tier || "common").toLowerCase(),
           shiny,
-          ccAwarded: QUEST_CC_REWARD,
+          ccAwarded: questCC,
         });
 
         embed = new EmbedBuilder()
@@ -89,16 +97,16 @@ export default {
           .setTitle("🏆 Quest Complete!")
           .setDescription(withSaveNote(shiny ? `✨ You discovered a **Shiny ${pick.name}!**` : `You found a **${pick.name}!**`, ack))
           .setThumbnail(pokemonSpriteUrl(pick.id, shiny))
-          .setFooter({ text: `+${QUEST_CC_REWARD} CC | Balance: ${user.cc} CC` });
+          .setFooter({ text: `+${questCC} CC | Balance: ${user.cc} CC` });
         // The catch card, as random catches use (three-teams split); the embed if it can't render.
-        const shown = await catchAnnouncement({ user, catcher: interaction.user, pokemonId: pick.id, shiny, catchResult: caught, fallback: () => ({ embeds: [embed] }) });
-        const caption = withSaveNote(`🏆 Quest complete! +${QUEST_CC_REWARD} CC · Balance: ${user.cc} CC`, ack);
+        const shown = await catchAnnouncement({ user, catcher: interaction.user, pokemonId: pick.id, shiny, catchResult: caught, eventNames: hasCatchEffects(fx) ? fx.catchEvents : [], fallback: () => ({ embeds: [embed] }) });
+        const caption = withSaveNote(`🏆 Quest complete! +${questCC} CC · Balance: ${user.cc} CC`, ack);
         return safeReply(interaction, { ...shown.message, content: shown.message.embeds ? undefined : caption, flags: MessageFlags.Ephemeral });
       } else {
         const file = getTrainerKey(pick);
         grantTrainer(user, file);
         trackProgress(user, [{ type: "trainers" }]); // achievements (same lock, same save)
-        user.cc = (user.cc || 0) + QUEST_CC_REWARD;
+        user.cc = (user.cc || 0) + questCC;
         user.lastQuest = Date.now();
 
         const ack = await saveAndAck(trainerData);
@@ -109,7 +117,7 @@ export default {
           trainerFile: file,
           trainerName: pick.name,
           tier: (pick.tier || "common").toLowerCase(),
-          ccAwarded: QUEST_CC_REWARD,
+          ccAwarded: questCC,
         });
 
         embed = new EmbedBuilder()
@@ -117,7 +125,7 @@ export default {
           .setTitle("🏆 Quest Complete!")
           .setDescription(withSaveNote(`You recruited **${pick.name}**!`, ack))
           .setThumbnail(trainerImageUrl(file))
-          .setFooter({ text: `+${QUEST_CC_REWARD} CC | Balance: ${user.cc} CC` });
+          .setFooter({ text: `+${questCC} CC | Balance: ${user.cc} CC` });
       }
 
       return safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });

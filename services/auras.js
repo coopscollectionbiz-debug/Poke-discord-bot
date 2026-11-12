@@ -27,6 +27,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { AURAS, getAura, TIER_AURA } from "../catalog/auras.js";
 import { trainerTier } from "../utils/render/trainerTier.js";
+import { liveEffects } from "./liveEvents.js";
+import { discountedPrice } from "../utils/liveEventRules.js";
 
 export const AURA_AUTO = "auto";
 export const AURA_NONE = "none";
@@ -212,7 +214,7 @@ export function auraView(user, { env = process.env } = {}) {
         unlockedDay: stored[a.id] ?? null,
         ready: auraReady(a.id, env),
         howToEarn: howToEarn(a),
-        price: a.kind === "shop" ? a.price : null,
+        price: a.kind === "shop" ? discountedPrice(liveEffects(), "auras", a.price) : null, // a Live event's discount
       })),
   };
 }
@@ -224,8 +226,9 @@ export function buyAura(user, id, { env = process.env, now = Date.now() } = {}) 
   if (!auraReady(a.id, env)) return { ok: false, status: 400, error: "That Aura isn't for sale yet." };
   if (ownsAura(user, a.id)) return { ok: false, status: 400, error: "You already own this Aura." };
   const cc = Number(user.cc) || 0;
-  if (cc < a.price) return { ok: false, status: 400, error: `Requires ${a.price.toLocaleString("en-US")} CC` };
-  user.cc = cc - a.price;
+  const price = discountedPrice(liveEffects(now), "auras", a.price); // a Live event's discount
+  if (cc < price) return { ok: false, status: 400, error: `Requires ${price.toLocaleString("en-US")} CC` };
+  user.cc = cc - price;
   grantAura(user, a.id, now);
-  return { ok: true, aura: a.id, cost: a.price, cc: user.cc };
+  return { ok: true, aura: a.id, cost: price, cc: user.cc };
 }

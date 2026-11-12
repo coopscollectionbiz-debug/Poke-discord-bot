@@ -25,6 +25,8 @@ import { canLearnByTm } from "../utils/battle/tmData.js";
 import { getISOWeekKeyUTC } from "../utils/economyRules.js";
 import { isTmEnabled, tmWeeklyCap } from "../config/tmFeatures.js";
 import { trackProgress } from "../progression/achievements.js";
+import { liveEffects } from "./liveEvents.js";
+import { discountedPrice } from "../utils/liveEventRules.js";
 
 export const MAX_TMS_PER_PURCHASE = 10;
 const fail = (status, error, code, extra = {}) => ({ ok: false, status, error, code, ...extra });
@@ -66,7 +68,7 @@ export function tmShopView(user, { env = process.env, now = new Date() } = {}) {
     power: i.tm.power,
     accuracy: i.tm.accuracy,
     tier: i.shop.tier,
-    price: i.shop.price.cc,
+    price: discountedPrice(liveEffects(), "tms", i.shop.price.cc), // a Live event's discount
     owned: getQuantity(user, i.id),
     teaches: owned.filter((sid) => canLearnByTm(sid, i.tm.move)).length,
     description: i.description,
@@ -90,7 +92,7 @@ export function buyTms(user, { item, qty = 1 } = {}, { env = process.env, now = 
   if (cap != null && bought + qty > cap) {
     return fail(400, `You can buy ${Math.max(0, cap - bought)} more TM${cap - bought === 1 ? "" : "s"} this week (limit ${cap}).`, "weekly_cap", { remaining: Math.max(0, cap - bought) });
   }
-  const price = entry.shop.price.cc;
+  const price = discountedPrice(liveEffects(now.getTime()), "tms", entry.shop.price.cc); // a Live event's discount
   const cost = price * qty;
   const cc = Number(user.cc) || 0;
   if (cc < cost) return fail(400, `Not enough CC — ${qty > 1 ? `${qty} × ` : ""}${entry.name} costs ${cost.toLocaleString("en-US")} CC.`, "insufficient_cc", { cc });

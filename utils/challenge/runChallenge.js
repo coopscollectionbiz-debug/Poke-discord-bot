@@ -22,6 +22,8 @@ import { trackProgress } from "../../progression/achievements.js";
 import { ownsTrainer, grantTrainer } from "../../services/assets.js";
 import { grantChallengeAuras } from "../../services/auras.js";
 import { grantItem } from "../../services/inventory.js";
+import { liveEffects } from "../../services/liveEvents.js";
+import { scaleEarned } from "../liveEventRules.js";
 
 export const challengeLoss = (cc) => Math.floor((cc ?? 0) * CHALLENGE.lossShare);
 
@@ -64,10 +66,17 @@ export function prizeSprite(user, trainerKey) {
   return file ? { trainerKey, file } : { trainerKey, cc: TRAINER_COSTS[tier] / 2 };
 }
 
-const prizeFor = (user, key) => ({
-  ...CHALLENGES[key].prize,
-  sprites: CHALLENGES[key].opponents.map((o) => prizeSprite(user, o.trainerKey)),
-});
+// A Live event's CC and Shiny Dust multipliers scale the prize here, so the
+// preview shows exactly what a win pays (stones and sprites never change).
+const prizeFor = (user, key, fx = liveEffects()) => {
+  const base = CHALLENGES[key].prize;
+  return {
+    ...base,
+    cc: scaleEarned(base.cc, fx.cc),
+    dust: scaleEarned(base.dust, fx.dust),
+    sprites: CHALLENGES[key].opponents.map((o) => prizeSprite(user, o.trainerKey)).map((s) => (s.cc != null ? { ...s, cc: scaleEarned(s.cc, fx.cc) } : s)),
+  };
+};
 
 export function previewChallenge(user, key) {
   const firstWin = !(key in (user.challenge?.won ?? {}));

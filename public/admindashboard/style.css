@@ -211,3 +211,19 @@ pre.raw { background: var(--cc-surface-sunken); padding: var(--cc-s3); border-ra
 /* A species' individual copies (docs/adr/0001), opened from its row. */
 .copy-row td { background: var(--cc-surface-sunken, transparent); font-size: 13px; padding-top: 4px; padding-bottom: 4px; }
 .copy-row code { font-size: 12px; color: var(--cc-text-faint); }
+
+/* ---------- Live events ---------- */
+.live-card { border: 1px solid var(--cc-line); border-radius: 10px; padding: var(--cc-s3); margin-bottom: var(--cc-s3); }
+.live-card:last-child { margin-bottom: 0; }
+.live-card-head { display: flex; justify-content: space-between; gap: var(--cc-s3); flex-wrap: wrap; align-items: flex-start; }
+.live-actions { display: flex; gap: var(--cc-s2); flex-wrap: wrap; }
+.live-effects { margin: var(--cc-s2) 0 0; padding-left: 18px; }
+.live-effects li { margin: 2px 0; }
+.live-confirm { margin-top: var(--cc-s3); }
+.live-effect { border-top: 1px solid var(--cc-line); padding: var(--cc-s3) 0; }
+.live-effect:first-child { border-top: 0; padding-top: 0; }
+.live-effect h3 { margin: var(--cc-s3) 0 var(--cc-s1); }
+.live-checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.live-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.live-fieldset:disabled { opacity: .75; }
+a.btn { text-decoration: none; }

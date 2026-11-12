@@ -33,6 +33,8 @@ import { lockUser } from "../utils/userLocks.js";
 import { grantTrainer } from "../services/assets.js";
 import { trackProgress } from "../progression/achievements.js";
 import { catchAnnouncement } from "../utils/render/catchMessage.js";
+import { liveEffects, catchEffectsFor, optedIn } from "../services/liveEvents.js";
+import { discountedPrice, hasCatchEffects } from "../utils/liveEventRules.js";
 
 
 // ==========================================================
@@ -40,6 +42,8 @@ import { catchAnnouncement } from "../utils/render/catchMessage.js";
 // ==========================================================
 const RECRUIT_COOLDOWN_MS = 1000 * 30; // 30s cooldown
 const RECRUIT_COST_CC = 100;
+/** Today's price: a Live event may discount /recruit. */
+export const recruitCost = (fx = liveEffects()) => discountedPrice(fx, "recruit", RECRUIT_COST_CC);
 
 // ==========================================================
 // 🧩 Command Definition
@@ -68,9 +72,10 @@ export default {
     }
 
     // 💰 CC Check
-    if (user.cc < RECRUIT_COST_CC) {
+    const cost = recruitCost();
+    if (user.cc < cost) {
       return safeReply(interaction, {
-        content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
+        content: `❌ You need **${cost} CC** to recruit! Earn more using \`/daily\`.`,
         flags: MessageFlags.Ephemeral
       });
     }
@@ -78,7 +83,7 @@ export default {
     // 🎮 Recruitment Menu UI
     const menu = new StringSelectMenuBuilder()
       .setCustomId("recruit_type")
-      .setPlaceholder("Choose what to recruit (100 CC cost)")
+      .setPlaceholder(`Choose what to recruit (${cost} CC cost)`)
       .addOptions(
         { label: "Pokémon", value: "pokemon", emoji: "🐾" },
         { label: "Trainer", value: "trainer", emoji: "🎭" }
@@ -94,7 +99,7 @@ export default {
         new EmbedBuilder()
           .setColor(0x00ae86)
           .setTitle("🎯 Recruitment Time!")
-          .setDescription("Each recruitment costs **100 CC**.\nSelect what type of recruit you want to attempt:")
+          .setDescription(`Each recruitment costs **${cost} CC**${cost < RECRUIT_COST_CC ? ` (normally ${RECRUIT_COST_CC})` : ""}.\nSelect what type of recruit you want to attempt:${recruitEventLine(user)}`)
       ],
       components: [
         new ActionRowBuilder().addComponents(menu),
@@ -119,9 +124,9 @@ export default {
         const choice = i.values[0];
         collector.stop();
 
-        if (user.cc < RECRUIT_COST_CC) {
+        if (user.cc < recruitCost()) {
           return safeReply(i, {
-            content: "❌ You need **100 CC** to recruit! Earn more using `/daily`.",
+            content: notEnough(),
             flags: MessageFlags.Ephemeral
           });
         }
@@ -150,7 +155,15 @@ export default {
 // Awaits (catalog look-ups) happen before the lock; inside it the live
 // record is re-checked, mutated in one synchronous block, then saved.
 // ==========================================================
-const NOT_ENOUGH_CC = "❌ You need **100 CC** to recruit! Earn more using `/daily`.";
+const notEnough = (cost = recruitCost()) => `❌ You need **${cost} CC** to recruit! Earn more using \`/daily\`.`;
+
+// While a Catch boost or limit runs, say whether it applies to this paid roll.
+function recruitEventLine(user) {
+  const fx = liveEffects();
+  if (!hasCatchEffects(fx)) return "";
+  const on = optedIn(user, fx);
+  return `\n\n🎪 **${fx.catchEvents.join(" + ")}** is on. Pokémon recruits ${on ? "**use** it" : "**don't use** it"} (change with \`/events\`).`;
+}
 
 // Species of live generations only (config/generations.js; Gens 1–5 by
 // default). Replaces the old hard-coded "national dex 1–649" cap.
@@ -160,10 +173,10 @@ export const recruitPool = (allPokemon) => acquirablePokemon(allPokemon);
  * Charge the recruit cost and apply `grant(user)` atomically.
  * @returns {{ok:true}|{ok:false, reason:string}}
  */
-export function chargeAndGrant(user, grant, now = Date.now()) {
-  if (!user || !Number.isFinite(user.cc) || user.cc < RECRUIT_COST_CC) return { ok: false, reason: NOT_ENOUGH_CC };
+export function chargeAndGrant(user, grant, now = Date.now(), cost = RECRUIT_COST_CC) {
+  if (!user || !Number.isFinite(user.cc) || user.cc < cost) return { ok: false, reason: notEnough(cost) };
   grant(user);
-  user.cc -= RECRUIT_COST_CC;
+  user.cc -= cost;
   user.lastRecruit = now;
   return { ok: true };
 }
@@ -179,10 +192,14 @@ async function recruitPokemon(i, trainerData) {
 
   await lockUser(i.user.id, async () => {
     const user = trainerData[i.user.id];
-    const pick = selectRandomPokemonForUser(pool, user);
+    const cost = recruitCost();
+    // Paid roll: Catch boosts and limits only if the player chose "Use Live event".
+    const fx = catchEffectsFor(user, { paid: true });
+    const pick = selectRandomPokemonForUser(pool, user, "pokeball", { paid: true, fx });
+    if (!pick) return safeReply(i, { content: `❌ Nothing can be recruited during ${fx.catchEvents.join(" + ")}. No CC was spent.`, flags: MessageFlags.Ephemeral });
     const shiny = rollForShiny(user?.tp || 0);
     let caught = null;
-    const res = chargeAndGrant(user, (u) => { caught = grantCatch(u, pick.id, shiny ? "shiny" : "normal"); });
+    const res = chargeAndGrant(user, (u) => { caught = grantCatch(u, pick.id, shiny ? "shiny" : "normal"); }, Date.now(), cost);
     if (!res.ok) return safeReply(i, { content: res.reason, flags: MessageFlags.Ephemeral });
     trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: shiny ? 1 : 0 }]); // achievements: after a successful grant, before the save
 
@@ -195,7 +212,7 @@ async function recruitPokemon(i, trainerData) {
       pokemonName: pick.name,
       tier: (pick.tier || "common").toLowerCase(),
       shiny,
-      ccSpent: RECRUIT_COST_CC,
+      ccSpent: cost,
     });
 
     const spriteUrl = pokemonSpriteUrl(pick.id, shiny);
@@ -205,11 +222,11 @@ async function recruitPokemon(i, trainerData) {
       .setTitle("🎯 Pokémon Recruited!")
       .setDescription(withSaveNote(shiny ? `✨ You recruited a **Shiny ${pick.name}!**` : `You recruited a **${pick.name}!**`, ack))
       .setThumbnail(spriteUrl)
-      .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
+      .setFooter({ text: `-${cost} CC | Balance: ${user.cc} CC` });
 
     // The catch card, as random catches use (three-teams split); the embed if it can't render.
-    const shown = await catchAnnouncement({ user, catcher: i.user, pokemonId: pick.id, shiny, catchResult: caught, fallback: () => ({ embeds: [embed] }) });
-    const caption = withSaveNote(`🎯 Recruited! -${RECRUIT_COST_CC} CC · Balance: ${user.cc} CC`, ack);
+    const shown = await catchAnnouncement({ user, catcher: i.user, pokemonId: pick.id, shiny, catchResult: caught, eventNames: hasCatchEffects(fx) ? fx.catchEvents : [], fallback: () => ({ embeds: [embed] }) });
+    const caption = withSaveNote(`🎯 Recruited! -${cost} CC · Balance: ${user.cc} CC`, ack);
     return safeReply(i, { ...shown.message, content: shown.message.embeds ? undefined : caption, flags: MessageFlags.Ephemeral });
   });
 }
@@ -222,9 +239,10 @@ async function recruitTrainer(i, trainerData) {
 
   await lockUser(i.user.id, async () => {
     const user = trainerData[i.user.id];
+    const cost = recruitCost();
     const pick = selectRandomTrainerForUser(flatTrainers, user);
     const file = getTrainerKey(pick);
-    const res = chargeAndGrant(user, (u) => grantTrainer(u, file));
+    const res = chargeAndGrant(user, (u) => grantTrainer(u, file), Date.now(), cost);
     if (!res.ok) return safeReply(i, { content: res.reason, flags: MessageFlags.Ephemeral });
     trackProgress(user, [{ type: "trainers" }]); // achievements: after a successful grant, before the save
 
@@ -236,7 +254,7 @@ async function recruitTrainer(i, trainerData) {
       trainerFile: file,
       trainerName: pick.name,
       tier: (pick.tier || "common").toLowerCase(),
-      ccSpent: RECRUIT_COST_CC,
+      ccSpent: cost,
     });
 
     const embed = new EmbedBuilder()
@@ -244,7 +262,7 @@ async function recruitTrainer(i, trainerData) {
       .setTitle("🎭 Trainer Recruited!")
       .setDescription(withSaveNote(`You recruited **${pick.name}**!`, ack))
       .setThumbnail(trainerImageUrl(file))
-      .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
+      .setFooter({ text: `-${cost} CC | Balance: ${user.cc} CC` });
 
     return safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });
   });

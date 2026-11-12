@@ -24,6 +24,8 @@ import { getAllPokemon } from "../utils/dataLoader.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getPokemonDataCached } from "../utils/pokemonDataCache.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
+import { liveEffects, catchEffectsFor } from "./liveEvents.js";
+import { applyLimits, boostedWeights, pickWeighted, discountedPrice, hasCatchEffects } from "../utils/liveEventRules.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
 import { canTransformCopy, transformCopy } from "./ownership.js";
@@ -115,8 +117,10 @@ export function createGameplayHandlers(deps) {
     if (stop) return stop;
     const { id, source, requestId = null } = body;
 
-    const cost = Object.prototype.hasOwnProperty.call(BALL_COST, source) ? BALL_COST[source] : 0;
-    if (!cost) return reply(200, { success: false, error: `Invalid Poké Ball type: ${source}` });
+    const listPrice = Object.prototype.hasOwnProperty.call(BALL_COST, source) ? BALL_COST[source] : 0;
+    if (!listPrice) return reply(200, { success: false, error: `Invalid Poké Ball type: ${source}` });
+    const fxNow = liveEffects();
+    const cost = discountedPrice(fxNow, "balls", listPrice); // a Live event's ball discount
 
     const allPokemon = acquirablePokemon(await loadAllPokemon()); // live generations only
     if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
@@ -132,7 +136,12 @@ export function createGameplayHandlers(deps) {
       payloadKey: `capture:${source}`,
       mutate: (user) => {
         if ((user.cc ?? 0) < cost) return { ok: false, status: 200, success: false, error: `Not enough CC — requires ${cost} CC.` };
-        const reward = selectRandomPokemonForUser(allPokemon, user, source);
+        // Paid roll: Catch boosts and limits only if the player chose "Use Live event".
+        const fx = catchEffectsFor(user, { paid: true, fx: fxNow });
+        const reward = selectRandomPokemonForUser(allPokemon, user, source, { paid: true, fx });
+        if (!reward && fx.limits.length) {
+          return { ok: false, status: 200, success: false, error: `This ball has nothing it can catch during ${fx.catchEvents.join(" + ")}. Turn off "Use Live event" or pick another ball. No CC was spent.` };
+        }
         if (!reward) return { ok: false, status: 200, success: false, error: "No Pokémon could be selected." };
         const shiny = rollForShiny(user.tp || 0);
         user.cc -= cost;
@@ -140,12 +149,12 @@ export function createGameplayHandlers(deps) {
         // Release C: achievement progress (same block, same save).
         trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: shiny ? 1 : 0 }, { type: "purchase" }]);
         const rarity = reward.tier || reward.rarity || "common";
-        return { ok: true, pokemon: { id: reward.id, name: reward.name, rarity, shiny }, cc: user.cc };
+        return { ok: true, pokemon: { id: reward.id, name: reward.name, rarity, shiny }, cc: user.cc, cost, eventNames: hasCatchEffects(fx) ? fx.catchEvents : [] };
       },
     });
     if (!tx.ok) return refusal(tx);
 
-    const { pokemon, cc } = tx.result;
+    const { pokemon, cc, eventNames } = tx.result;
     if (!tx.replayed) {
       logEvent("roll", id, { ball: source, cost, pokemonId: pokemon.id, pokemonName: pokemon.name, tier: pokemon.rarity, shiny: pokemon.shiny });
       if (pokemon.shiny || ["rare", "epic", "legendary", "mythic"].includes(String(pokemon.rarity).toLowerCase())) {
@@ -161,6 +170,7 @@ export function createGameplayHandlers(deps) {
         sprite: pokemonSpriteUrl(pokemon.id, pokemon.shiny),
       },
       cc,
+      eventNames: eventNames ?? [],
     });
   }
 
@@ -371,9 +381,13 @@ export function createGameplayHandlers(deps) {
         ensureWeeklyReset(user);
         if (user.weeklyPackClaimed) return { ok: false, error: "Weekly pack already claimed." };
 
+        // Free roll: Live event Catch limits and boosts apply inside each
+        // Tier; a limit that leaves a Tier empty is skipped for that slot.
+        const fx = liveEffects();
         const pick = (tier) => {
           const pool = allPokemon.filter((p) => p.tier === tier);
-          return pool[Math.floor(Math.random() * pool.length)];
+          const limited = applyLimits(pool, fx);
+          return pickWeighted(boostedWeights(limited.length ? limited : pool, fx, () => 1));
         };
         const rewards = [];
         for (const tier of WEEKLY_PACK_TIERS) {

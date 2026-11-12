@@ -15,7 +15,14 @@ export function getRegions(pokemonData) {
   return [...byName.values()];
 }
 
-// Pokédex completion for one region: distinct Pokémon owned in at least one variant.
+// Pokédex completion for one region: distinct Pokémon registered in the
+// player's Pokédex (ever caught, either variant; never drops).
+// pokedex: { id: 1 normal | 2 shiny | 3 both } from /api/user-pokemon.
+export function countRegistered(region, pokedex) {
+  return region.ids.filter((id) => (Number(pokedex?.[id]) & 3) > 0).length;
+}
+
+// Distinct Pokémon of a region owned right now (the Collection).
 export function countOwned(region, ownedPokemon) {
   return region.ids.filter((id) => {
     const entry = ownedPokemon[id];

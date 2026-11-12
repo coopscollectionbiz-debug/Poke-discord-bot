@@ -68,7 +68,7 @@ assertTrue(!Object.keys(DEX).some((k) => !/^\d+$/.test(k)) && Object.keys(DEX).l
 
 section("Mega items: never active, never in the legacy shop, grantable only while Mega rewards are on");
 assertTrue(items.listCatalog().filter((i) => /^mega/.test(i.id)).every((i) => !i.shop && i.status === "defined"), "no Mega item has a shop entry or is active");
-assertTrue(items.listCatalog().filter((i) => /^mega/.test(i.id)).every((i) => !grantItem({ items: {} }, i.id, 1).ok), "grantItem (daily, shop, achievements, /addinventory) refuses every Mega item");
+assertTrue(items.listCatalog().filter((i) => /^mega/.test(i.id)).every((i) => !grantItem({ items: {} }, i.id, 1).ok), "grantItem (daily, shop, achievements, admin grants) refuses every Mega item");
 assertTrue(!/mega/i.test(fs.readFileSync(new URL("../catalog/achievements.js", import.meta.url), "utf8")), "no achievement rewards or mentions Mega items (D-17: framework approved, entries not added)");
 const REWARDS_ON = { MEGA_EVOLUTION_ENABLED: "1", MEGA_REWARDS_ENABLED: "1" };
 assertTrue(items.listCatalog().filter((i) => /^mega/.test(i.id)).every((i) => !grantItem({ items: {} }, i.id, 1, { env: { MEGA_EVOLUTION_ENABLED: "1", MEGA_BATTLES_ENABLED: "1" } }).ok), "with the master switch on but rewards off, every Mega item is still refused");
@@ -105,13 +105,20 @@ const MEGA_USERS = [
   "services/pokemonDetail.js",
   // Mega Shards (2026-11-11): the shard service, its two drop points and the dashboard shop.
   "services/megaShards.js", "commands/daily.js", "commands/battle.js", "public/dashboardshop/mega.js", "public/dashboardshop/index.html",
+  // Held items: a slot set to Mega Evolve holds its Mega Stone, so it can't
+  // hold a regular item (read-only Mega checks), and the held-item feature
+  // flags live in the shared config/features.js. No Mega acquisition here.
+  "services/heldItems.js", "services/heldItemsApi.js",
+  // Showcase team (three-teams split): shows any number of unlocked Megas
+  // (read-only display checks: unlocked on the line, allowed on teams).
+  "services/showcaseTeam.js", "utils/render/teamView.js",
 ];
 const megaModule = /megaUnlocks\.js|megas\.js|config\/features\.js|megaRewards\.js|megaApi\.js|megaTeam\.js|\/mega\.js|"\.\/mega\.js"/;
 const users = live.filter((f) => megaModule.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
 assertEqual(users.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1–M3 files import Mega modules (no reward, shop, catch, daily, quest or achievement code)");
 const megaRefs = live.filter((f) => /megastone_|mega_shard|megaUnlocks/.test(fs.readFileSync(path.join(ROOT, f), "utf8")));
 assertEqual(megaRefs.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1–M3 files reference Mega Stones, Shards or megaUnlocks");
-const NEVER = live.filter((f) => /^(utils\/battle\/(rewards|playback|data|moveset|stats|tuning|wager|rng)\.js|commands\/(quest|recruit|shop|addinventory|gift)\.js|progression\/|services\/gameplay\.js|utils\/weightedRandom\.js)/.test(f));
+const NEVER = live.filter((f) => /^(utils\/battle\/(rewards|playback|data|moveset|stats|tuning|wager|rng)\.js|commands\/(quest|recruit|shop|gift)\.js|services\/adminChanges\.js|progression\/|services\/gameplay\.js|utils\/weightedRandom\.js)/.test(f));
 assertEqual(NEVER.filter((f) => /mega/i.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), [], `EXP/rewards, playback, battle data and acquisition code (${NEVER.length} files) never mentions Mega`);
 assertEqual(live.filter((f) => /megaRewards/.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), ["services/megaShards.js"], "only the shard service reads the Mega reward config");
 for (const [file, call] of [["commands/daily.js", /rollDailyShards\(user\)/], ["utils/battle/runBattle.js", /rewardsOn\(env\) && \(winnerId === challengerId \|\| mode === "wager"\)/]]) {

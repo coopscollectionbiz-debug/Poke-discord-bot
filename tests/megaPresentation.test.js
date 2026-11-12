@@ -18,10 +18,14 @@ const { allMegas, getMega, megaSpriteRecord } = await import("../utils/megas.js"
 const ZA = await import("../config/megaBattleProfiles.js");
 const { spriteFileFor, loadStaticSprite } = await import("../utils/render/sprites.js");
 const { loadAnimatedSprite, renderBattleFrame } = await import("../utils/battle/render.js");
-const { buildTeamView, slotView } = await import("../utils/render/teamView.js");
+const { buildTeamView, buildShowcaseView, slotView } = await import("../utils/render/teamView.js");
+const { normalizeBox } = await import("../services/box.js");
+const { normalizeShowcase } = await import("../services/showcaseTeam.js");
+// Live records get their Showcase at load (filled once from the Casual team).
+const launched = (u) => { normalizeBox(u); normalizeShowcase(u); return u; };
 const { renderShowteam } = await import("../utils/render/showteam.js");
 const { renderInspectCard } = await import("../utils/render/inspectCard.js");
-const { trainerCardView, renderTrainerCard } = await import("../utils/render/trainerCard.js");
+const { trainerCardView, renderTrainerCard, TRAINER_CARD_SIZE } = await import("../utils/render/trainerCard.js");
 const { expView, renderExpCard } = await import("../utils/render/expCard.js");
 const { buildShowteamComponents } = await import("../commands/showteam.js");
 const { runBattle, buildTeam } = await import("../utils/battle/runBattle.js");
@@ -135,8 +139,9 @@ assertTrue(texts.every((t) => t.endsWith(".") && t.length < 90), "each reason is
 
 // ----------------------------------------------------------
 section("Same form on every surface");
+launched(ash); // the trainer card strip is the Showcase (three-teams split)
 const tc = trainerCardView(ash, { displayName: "Ash", trainer: null });
-assertTrue(JSON.stringify(tc.team) === JSON.stringify(buildTeamView(ash, { displayName: "Ash" }).slots), "the trainer card's Team is exactly /showteam's (process flags)");
+assertTrue(JSON.stringify(tc.team) === JSON.stringify(buildShowcaseView(ash, { displayName: "Ash" }).slots), "the trainer card's strip is exactly /showcase's (process flags)");
 process.env.MEGA_EVOLUTION_ENABLED = "1";
 process.env.MEGA_BATTLES_ENABLED = "1";
 const tcOn = trainerCardView(ash, { displayName: "Ash", trainer: null });
@@ -163,7 +168,7 @@ assertTrue(st.length < 8 * 2 ** 20, `/showteam PNG is far under Discord's attach
 const stGif = await renderShowteam(v, { layout: "refined", animate: true });
 assertTrue(stGif.subarray(0, 3).toString() === "GIF" && stGif.length < 8 * 2 ** 20, `animated /showteam with a Mega is a GIF under the limit (${Math.round(stGif.length / 1024)} KB)`);
 assertEqual(pngSize(await renderInspectCard(s1, { owner: "Ash" })), { w: 1000, h: 440 }, "inspect card with a Mega: same 1000×440 card");
-assertEqual(pngSize(await renderTrainerCard(trainerCardView(ash, { displayName: "Ash", trainer: null }))), { w: 1200, h: 640 }, "trainer card: same 1200×640 card");
+assertEqual(pngSize(await renderTrainerCard(trainerCardView(ash, { displayName: "Ash", trainer: null }))), { ...TRAINER_CARD_SIZE }, "trainer card: same size card");
 
 const foe = player("300000000000000010", [[282, "shiny", 55, "mega-gardevoir"], [65, "normal", 50]]);
 const td = { A: ash, B: foe };

@@ -49,7 +49,10 @@ assertEqual(JSON.stringify(legacy), before, "the record is byte-identical (field
 const viaSchema = prodLike();
 validateUserSchema(viaSchema, viaSchema.id, viaSchema.name);
 assertTrue(!("megaUnlocks" in viaSchema) && !("megaLegacy" in viaSchema), "validateUserSchema (live load path) adds no Mega fields");
-assertEqual([viaSchema.pokemon, viaSchema.training, viaSchema.displayedPokemon], [legacy.pokemon, legacy.training, legacy.displayedPokemon], "counts, Levels and team untouched by the schema pass");
+// Individual copies (docs/adr/0001): slots gain their copy's uid and training
+// gains derived lines; counts, existing Levels and the team's Pokémon stay.
+const slotKey = (s) => (s && typeof s === "object" ? `${s.id}:${s.variant}` : String(s));
+assertEqual([viaSchema.pokemon, Object.fromEntries(Object.keys(legacy.training).map((k) => [k, viaSchema.training[k]])), viaSchema.displayedPokemon.map(slotKey)], [legacy.pokemon, legacy.training, legacy.displayedPokemon.map(slotKey)], "counts, Levels and team untouched by the schema pass");
 
 section("Flag gates every write (default off)");
 const p = prodLike();
@@ -104,7 +107,9 @@ assertTrue(JSON.stringify(d.megaUnlocks) === ref && !("megaUnlocks" in recipient
 // /gift refuses only the species' last copy across normal + shiny: with a shiny
 // Charizard still owned, the last NORMAL one may go. The normal line then
 // empties: its Level is deleted, its unlock stays with the sender (dormant).
-assertEqual(giftPokemon(d, recipient, "6", "Charizard", 1), null, "with a shiny still owned, the last normal Charizard can be gifted (existing rule)");
+// A copy on a Team can't be gifted (docs/adr/0001): take it off first.
+for (const f of ["displayedPokemon", "battleTeam"]) if (Array.isArray(d[f])) d[f] = d[f].filter((s) => !(s && typeof s === "object" && Number(s.id) === 6 && s.variant !== "shiny") && Number(s) !== 6 && s !== "6");
+assertEqual(giftPokemon(d, recipient, "6", "Charizard", 1), null, "with a shiny still owned, the last normal Charizard can be gifted once it's off the team");
 resetLevelIfGone(d, 6, "normal"); // gift.js does this inside giftPokemon; repeated here to be explicit
 assertTrue(d.pokemon[6].normal === 0 && !d.training["6:normal"] && JSON.stringify(d.megaUnlocks) === ref, "the emptied normal line keeps its unlock (dormant), never transferred");
 assertTrue(!("megaUnlocks" in recipient) && !U.activeMegaForms(d).some((x) => x.line === "6:normal"), "recipient gets no unlock; the sender's normal line is inactive until re-owned");
@@ -160,7 +165,7 @@ assertEqual(JSON.stringify(rb.megaUnlocks), megaBefore, "megaUnlocks preserved u
 assertEqual([getQuantity(rb, "megastone_venusaurite"), getQuantity(rb, "mega_shard"), auditInventory(rb)], [2, 7, []], "stones and shards kept as valid inventory");
 const rows = listInventory(rb).filter((r) => r.id.startsWith("mega"));
 assertTrue(rows.length === 2 && rows.every((r) => !r.usable && r.status === "defined"), "the bag lists them as not usable yet");
-assertEqual(normalizeTeam(rb.displayedPokemon), [{ id: 6, variant: "normal" }, { id: 150, variant: "normal" }], "a Mega team slot normalizes to its base Pokémon (no Mega in battle)");
+assertEqual(normalizeTeam(rb.displayedPokemon).map(({ id, variant }) => ({ id, variant })), [{ id: 6, variant: "normal" }, { id: 150, variant: "normal" }], "a Mega team slot normalizes to its base Pokémon (no Mega in battle; each slot keeps its copy)");
 assertEqual(buildTeam(rb).map((x) => [x.speciesId, x.variant, "megaForm" in x]), [[6, "normal", false], [150, "normal", false]], "buildTeam battles the base forms only");
 
 section("Achievements and Pokédex counts ignore Megas");

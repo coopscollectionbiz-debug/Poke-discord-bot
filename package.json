@@ -18,6 +18,7 @@
     "generate:pokedex": "node tools/generate-pokedex.mjs",
     "generate:megas": "node tools/generate-megas.mjs",
     "generate:move-flags": "node tools/generate-move-flags.mjs",
+    "generate:tm-data": "node tools/generate-tm-data.mjs",
     "import:mega-sprites": "node tools/import-mega-sprites.mjs",
     "validate:megas": "node tools/validate-megas.mjs",
     "import:sprites": "node tools/import-sprites.mjs",
@@ -26,7 +27,8 @@
     "detect:trainer-parts": "node tools/detect-trainer-parts.mjs",
     "validate:catalog": "node tools/validate-catalog.mjs",
     "check:tier-rule": "node tools/check-tier-rule.mjs",
-    "report:balance": "node tools/balance-report.mjs"
+    "report:balance": "node tools/balance-report.mjs",
+    "generate:badges": "node tools/tint-badges.mjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.84",

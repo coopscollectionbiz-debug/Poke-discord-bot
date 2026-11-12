@@ -10,16 +10,26 @@
 //   • shiny Pokémon get the Legendary-tier backdrop (rising gold motes and
 //     twinkling stars, utils/render/shinyBackdrop.js) behind them; on an
 //     animated card it moves, so a shiny alone makes the card a GIF.
+//   • the loop: one length for every sprite on the card, fitted so their
+//     animations don't cut mid-motion (utils/render/spriteLoops.js), at 50 ms
+//     steps. Trainers and backdrops keep their 2.4 s, 100 ms-a-step schedule
+//     inside it. A GIF over MAX_GIF_BYTES falls back to the old 2.4 s loop,
+//     then to the still PNG.
 // ==========================================================
 
 import { createCanvas } from "@napi-rs/canvas";
+import { performance } from "perf_hooks";
 import { drawSprite } from "./sprites.js";
 import { loadAnimatedSprite, spritePlayer } from "../battle/render.js";
 import { encodeGif } from "./gif.js";
 import { createRenderGate } from "./renderGate.js";
+import { getRenderPool, renderOptions } from "./renderPool.js";
 import { shinyBackdrop, shinyFxEnabled } from "./shinyBackdrop.js";
+import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS } from "./spriteLoops.js";
 
 export const FRAMES = 24, DELAY_MS = 100;
+// Discord takes up to 10 MB a file; past this, the card falls back (see above).
+export const MAX_GIF_BYTES = 8 * 1024 * 1024;
 
 /** Stable layout seed per Pokémon, so a shiny's stars sit in the same places every time. */
 export const backdropSeed = (id) => [...String(id)].reduce((s, c) => (s * 31 + c.charCodeAt(0)) % 9973, 7);
@@ -60,9 +70,10 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
     },
     /**
      * The finished card: PNG, or GIF when anything placed animates (a Pokémon
-     * sprite, a shiny backdrop, a layer, or a breathing trainer).
+     * sprite, a shiny backdrop, a layer, or a breathing trainer). `overlay`:
+     * static content a layer draws over its animation (see above).
      */
-    async output(canvas) {
+    async output(canvas, { overlay = null } = {}) {
       const ctx = canvas.getContext("2d");
       const drawAll = (frameOf) => placed.forEach((p, i) => drawSprite(ctx, p.sprite, p.cx, p.floorY, p.boxW, p.boxH, { ...p.opts, frame: frameOf(i) }));
       const drawPosed = (f) => posed.forEach((p) => drawSprite(ctx, p.poses[p.poseAt(f, FRAMES)] ?? p.poses[0], p.cx, p.floorY, p.boxW, p.boxH, p.opts));
@@ -79,13 +90,44 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
       }
       const base = createCanvas(canvas.width, canvas.height);
       base.getContext("2d").drawImage(canvas, 0, 0);
-      return encodeGif(canvas, (f) => {
+      // The static layer the GIF encoder dithers (utils/render/gif.js): the
+      // card as drawn, plus `overlay`, static content a layer redraws each
+      // frame over an animated backdrop.
+      const still = createCanvas(canvas.width, canvas.height);
+      still.getContext("2d").drawImage(base, 0, 0);
+      if (overlay) still.getContext("2d").drawImage(overlay, 0, 0);
+      const background = still.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+      // The old loop: 2.4 s at 100 ms, each sprite from its start (also the size fallback).
+      const fixed = () => encodeGif(canvas, (f) => {
         ctx.drawImage(base, 0, 0);
         layers.forEach((draw) => draw(ctx, f));
         backdrops.forEach((b) => b?.draw(ctx, f, FRAMES));
         drawPosed(f);
         drawAll((i) => (players[i] ? players[i](f * DELAY_MS) : null));
-      }, FRAMES, DELAY_MS);
+      }, FRAMES, DELAY_MS, { background });
+      if (!pokemonLoopFit(env)) return fixed();
+      // The fitted loop. Anything on the trainers' clock keeps it whole.
+      const plans = players.map((p, i) => (p ? loopPlan(anims[i]) : null));
+      const trainerClock = layers.length > 0 || posed.length > 0 || backdrops.some(Boolean);
+      const { L, fit } = fitLoop(plans.map((p) => p?.period ?? null), { trainerClock });
+      const total = Math.max(1, Math.round(L / STEP_MS));
+      const gif = await encodeGif(canvas, (f) => {
+        const t = f * STEP_MS, f100 = Math.floor(t / DELAY_MS) % FRAMES;
+        ctx.drawImage(base, 0, 0);
+        layers.forEach((draw) => draw(ctx, f100));
+        backdrops.forEach((b) => b?.draw(ctx, f100, FRAMES));
+        drawPosed(f100);
+        drawAll((i) => (players[i] ? players[i](spriteTime(plans[i], fit[i], t)) : null));
+      }, total, STEP_MS, { background });
+      if (gif.length <= MAX_GIF_BYTES) return gif;
+      const short = await fixed();
+      if (short.length <= MAX_GIF_BYTES) return short;
+      ctx.drawImage(base, 0, 0);
+      layers.forEach((draw) => draw(ctx, 0));
+      backdrops.forEach((b) => b?.draw(ctx, 0, FRAMES));
+      drawPosed(0);
+      drawAll(() => null);
+      return canvas.toBuffer("image/png");
     },
   };
 }
@@ -93,28 +135,70 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
 /** True when a rendered buffer is a GIF. */
 export const isGif = (buf) => buf?.subarray?.(0, 3)?.toString() === "GIF";
 
-// One gate for every card's GIF encode, so at most two run at once across
-// the bot (each adds tens of MB at peak on the 512 MB machine); anyone else
-// gets the still PNG straight away.
+// With RENDER_THREADS=0 (no render threads), one gate for every card's GIF
+// encode, so at most two run at once on the main thread; anyone else gets
+// the still PNG straight away. With render threads, the pool's line is the
+// limit instead (CARD_QUEUE_WAIT_MS).
 export const cardGifGate = createRenderGate(2);
 
+// How long an animated card waits for a free render thread before the
+// still PNG goes instead. Every card command has already deferred its
+// reply, so this is about the player's wait, not Discord's 3 s deadline.
+export const CARD_QUEUE_WAIT_MS = 2000;
+
 /**
- * Renders a card animated when allowed and a slot is free, else still.
+ * A short random suffix for a card that replaces an earlier image in the same
+ * message (paging, a menu pick). With one fixed name per edit, a desktop
+ * client whose first load failed kept showing the broken image for every
+ * later edit; a new name each time makes it load fresh.
+ */
+export const uniqueSuffix = () => Math.random().toString(36).slice(2, 8);
+
+/**
+ * Renders a card animated when allowed, else still.
  * `render(animate)` returns a Buffer. → { buffer, name: `${base}.gif|png` }
  * CARDS_ANIMATED=0 (or the per-surface `flag`=0) forces still images.
+ * `unique: true` names it `${base}-<random>.gif|png` (see uniqueSuffix).
+ * With render threads (`pool`), the GIF waits up to CARD_QUEUE_WAIT_MS for
+ * a thread, then the PNG goes to the front of the line instead. Without
+ * them, the GIF needs a slot in `gate`, else the PNG is sent.
+ * Logs one timing line per card: `🖼️ card <base> gif|png <KB> KB <ms> ms`,
+ * plus "(gate full)" or "(threads busy)" when it wanted to animate but had
+ * to send the PNG.
  */
-export async function cardImage(render, base, { gate = cardGifGate, env = process.env, flag = null } = {}) {
+export async function cardImage(render, base, { gate = cardGifGate, pool = getRenderPool(), env = process.env, flag = null, unique = false, log = console.log, waitMs = CARD_QUEUE_WAIT_MS } = {}) {
+  const started = performance.now();
+  const name = unique ? `${base}-${uniqueSuffix()}` : base;
+  const done = (buffer, note = "") => {
+    const kind = isGif(buffer) ? "gif" : "png";
+    log(`🖼️ card ${base} ${kind} ${Math.round(buffer.length / 1024)} KB ${Math.round(performance.now() - started)} ms${note}`);
+    return { buffer, name: `${name}.${kind}` };
+  };
   const off = env.CARDS_ANIMATED === "0" || (flag && env[flag] === "0");
-  const release = off ? null : gate.tryAcquire();
+  if (off) return done(await renderOptions.run({}, () => render(false)));
+
+  if (pool) {
+    try {
+      return done(await renderOptions.run({ waitMs }, () => render(true)));
+    } catch (err) {
+      if (err?.code === "RENDER_QUEUE_TIMEOUT") {
+        return done(await renderOptions.run({ priority: true }, () => render(false)), " (threads busy)");
+      }
+      console.warn(`⚠️ animated ${base} render failed; sending PNG:`, err?.message || err);
+      return done(await renderOptions.run({ priority: true }, () => render(false)));
+    }
+  }
+
+  const release = gate.tryAcquire();
   if (release) {
     try {
-      const buffer = await render(true);
-      return { buffer, name: `${base}.${isGif(buffer) ? "gif" : "png"}` };
+      return done(await render(true));
     } catch (err) {
       console.warn(`⚠️ animated ${base} render failed; sending PNG:`, err?.message || err);
     } finally {
       release();
     }
+    return done(await render(false));
   }
-  return { buffer: await render(false), name: `${base}.png` };
+  return done(await render(false), " (gate full)");
 }

@@ -13,6 +13,8 @@ const read = (rel) => JSON.parse(fs.readFileSync(new URL(rel, import.meta.url), 
 const DEX = read("../pokemonData.json");
 const PUBLIC_DEX = fs.readFileSync(new URL("../public/pokemonData.json", import.meta.url), "utf8");
 const BASELINE = read("../data/pokedex/gen1-5-baseline.json");
+// Owner-approved tier changes (2026-11-11 re-tier) sit on top of the baseline.
+const TIER_OVERRIDES = read("../data/pokedex/tier-overrides.json").overrides;
 const BATTLE = read("../battleData.json");
 const SPRITES = read("../data/sprites/sprites.json").species;
 const SOURCE = read("../data/sprites/source-manifest.json").entries;
@@ -52,12 +54,15 @@ section("Gen 1–5 data preserved");
 const changed = [];
 for (let n = 1; n <= 649; n++) {
   const a = BASELINE[n], b = DEX[n];
-  for (const k of ["name", "tier", "region", "flavor"]) if (a[k] !== b[k]) changed.push(`#${n} ${k}`);
+  for (const k of ["name", "tier", "region", "flavor"]) {
+    const want = k === "tier" && TIER_OVERRIDES[n] ? (a.tier === TIER_OVERRIDES[n].from ? TIER_OVERRIDES[n].tier : `override from ${TIER_OVERRIDES[n].from}`) : a[k];
+    if (want !== b[k]) changed.push(`#${n} ${k}`);
+  }
   if (!a.evolvesFrom.every((x, i) => b.evolvesFrom[i] === x) || b.evolvesFrom.length !== a.evolvesFrom.length) changed.push(`#${n} evolvesFrom`);
   if (!a.evolvesTo.every((x, i) => b.evolvesTo[i] === x)) changed.push(`#${n} evolvesTo order`);
   if (b.evolvesTo.slice(a.evolvesTo.length).some((t) => t <= 649)) changed.push(`#${n} new Gen 1–5 evolution`);
 }
-assertEqual(changed, [], "names, tiers, regions, flavor and existing evolution links of #1–649 unchanged");
+assertEqual(changed, [], "names, tiers (apart from approved overrides), regions, flavor and existing evolution links of #1–649 unchanged");
 const retyped = [];
 for (let n = 1; n <= 649; n++) if (JSON.stringify(BASELINE[n].types) !== JSON.stringify(DEX[n].types)) retyped.push(n);
 assertEqual(retyped, [35, 36, 39, 40, 122, 173, 174, 175, 176, 183, 184, 209, 210, 280, 281, 282, 298, 303, 439, 468, 546, 547], "exactly the 22 audited species are retyped");
@@ -121,26 +126,35 @@ for (const n of NEW) {
   counts[r.normal.kind]++;
   for (const v of ["normal", "shiny"]) {
     const g = new omggif.GifReader(fs.readFileSync(new URL(`../public/sprites/pokemon/${r[v].file}`, import.meta.url)));
-    // Animated art, or static art with the 4-frame breathing idle (tools/generate-pokemon-idles.mjs).
-    const moving = r[v].kind === "animated" || r[v].motion === "breathing";
-    if (g.numFrames() < 1 || moving !== (g.numFrames() > 1) || (r[v].motion === "breathing" && g.numFrames() !== 4)) gifOk = false;
+    // Animated art, or static art with the rig idle (tools/generate-pokemon-idles.mjs: up to ~50 frames, per-Pokémon performance).
+    const moving = r[v].kind === "animated" || r[v].motion === "rig";
+    if (g.numFrames() < 1 || moving !== (g.numFrames() > 1) || (r[v].motion === "rig" && (g.numFrames() < 4 || g.numFrames() > 60))) gifOk = false;
   }
 }
 assertTrue(fileOk, "every shipped file matches the manifest SHA-1");
 assertTrue(distinct, "every new species has a shiny distinct from its normal sprite");
-assertTrue(gifOk, "every sprite is a valid GIF; animated or breathing ↔ multi-frame (breathing = 4 frames)");
-assertEqual(counts, { animated: 220, static: 156 }, "220 animated + 156 static normal sprites (audited coverage)");
-const byGen = {};
-for (const n of NEW) { const g = DEX[n].generation; byGen[g] ??= [0, 0]; byGen[g][SPRITES[n].normal.kind === "animated" ? 0 : 1]++; }
-assertEqual(byGen, { 6: [54, 18], 7: [74, 14], 8: [67, 29], 9: [25, 95] }, "per-generation animated/static split matches the audit");
+assertTrue(gifOk, "every sprite is a valid GIF; animated or breathing ↔ multi-frame (rig idle = 4–60 frames)");
+// Community animations that replaced audited static sprites (data/sprites/animated-imports.json via
+// tools/import-animated-sprites.mjs) are counted by the audit's kind here and checked against their own record below.
 const src = new Map(SOURCE.filter((e) => e.kind === "species").map((e) => [e.dex, e]));
-assertTrue(NEW.every((n) => SPRITES[n].normal.sourceSha1 === src.get(n).normal.sha1 && SPRITES[n].shiny.sourceSha1 === src.get(n).shiny.sha1), "every sprite came from the audited source file");
+const IMPORTED = new Map(read("../data/sprites/animated-imports.json").entries.filter((e) => e.target.startsWith("species:")).map((e) => [e.dex, e]));
+const isImport = (n) => SPRITES[n].normal.origin === "animated-import" && IMPORTED.has(n);
+const auditKind = (n) => (isImport(n) ? src.get(n).normal.kind : SPRITES[n].normal.kind);
+const auditCounts = { animated: 0, static: 0 }; for (const n of NEW) auditCounts[auditKind(n)]++;
+assertEqual(auditCounts, { animated: 220, static: 156 }, "220 animated + 156 static normal sprites (audited coverage)");
+const byGen = {};
+for (const n of NEW) { const g = DEX[n].generation; byGen[g] ??= [0, 0]; byGen[g][auditKind(n) === "animated" ? 0 : 1]++; }
+assertEqual(byGen, { 6: [54, 18], 7: [74, 14], 8: [67, 29], 9: [25, 95] }, "per-generation animated/static split matches the audit");
+assertEqual(counts, { animated: 220 + NEW.filter((n) => isImport(n) && src.get(n).normal.kind === "static").length, static: 156 - NEW.filter((n) => isImport(n) && src.get(n).normal.kind === "static").length }, "shipped: the audit's animations plus the imported community animations; the rest stay static (rig idle)");
+assertEqual(IMPORTED.size, 139, "139 species use a reviewed community animation");
+assertTrue(NEW.filter((n) => !isImport(n)).every((n) => SPRITES[n].normal.sourceSha1 === src.get(n).normal.sha1 && SPRITES[n].shiny.sourceSha1 === src.get(n).shiny.sha1), "every non-imported sprite came from the audited source file");
+assertTrue([...IMPORTED.values()].every((e) => { const r = SPRITES[e.dex]; return isImport(e.dex) && r.normal.kind === "animated" && r.shiny.kind === "animated" && r.normal.fileSha1 === e.sha1.normal && r.shiny.fileSha1 === e.sha1.shiny && r.normal.sourceSha1 === e.sourceSha1.normal && r.shiny.sourceSha1 === e.sourceSha1.shiny && !r.normal.motion && !r.grayscale.motion && r.animationCredit?.animator; }), "every imported species is the reviewed animated pair (output and source SHA-1), credited, with no rig idle");
 assertTrue(SOURCE.every((e) => ["normal", "shiny"].every((v) => !e[v] || (e[v].alphaLevels <= 2 && e[v].maxColors <= 128) || e[v].maxColors <= 64)), "no 3D/render source: every source passed the 2D pixel-art check");
 assertTrue(NEW.every((n) => !/\/sprites\/(ani|ani-shiny|ani-back|ani-back-shiny|dex|dex-shiny|home|home-shiny|gen6)\/|other\/(showdown|home|official-artwork)\//.test(SPRITES[n].normal.sourceUrl + SPRITES[n].shiny.sourceUrl)), "no source URL points at a 3D/render collection");
 assertEqual(pokemonSpritePath(700, "shiny"), "/public/sprites/pokemon/shiny/700.gif", "resolver: Sylveon shiny path");
 assertEqual(pokemonSpritePath(99999, "shiny"), PLACEHOLDER_PATH, "resolver: unknown species → placeholder, never another sprite");
-assertEqual(pokemonSpriteUrl(906, true, {}), "https://poke-discord-bot-49shta.fly.dev/public/sprites/pokemon/shiny/906.gif", "Discord URL uses the Fly host by default");
-assertEqual(publicBaseUrl({ RENDER_EXTERNAL_URL: "https://poke-discord-bot-2.onrender.com" }), "https://poke-discord-bot-49shta.fly.dev", "retired Render URL is ignored");
+assertEqual(pokemonSpriteUrl(906, true, {}), "https://bot.coopscollection.com/public/sprites/pokemon/shiny/906.gif", "Discord URL uses the production host by default");
+assertEqual(publicBaseUrl({ RENDER_EXTERNAL_URL: "https://poke-discord-bot-2.onrender.com" }), "https://bot.coopscollection.com", "retired Render URL is ignored");
 assertEqual(publicBaseUrl({ FLY_APP_NAME: "x-app" }), "https://x-app.fly.dev", "FLY_APP_NAME derives the host");
 assertEqual(publicBaseUrl({ PUBLIC_URL: "https://bot.example/" }), "https://bot.example", "PUBLIC_URL wins");
 assertEqual(Object.keys(KNOWN_LEGACY_SPRITE_ISSUES), ["493"], "only one known pre-existing sprite defect (Arceus shiny), reported not hidden");

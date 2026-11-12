@@ -235,3 +235,44 @@ main:focus { outline: none; }
 @media (max-width: 380px) {
   #trainerGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 }
+
+/* ===========================================================
+   Trainers / Auras tabs and the Auras tab (public/picker/auras.js)
+   =========================================================== */
+.page-tabs { display: inline-flex; gap: 4px; margin-top: 14px; padding: 4px; border-radius: var(--cc-r-chip); background: var(--cc-surface-sunken); border: 1px solid var(--cc-line); }
+.page-tabs [role="tab"] { border: 0; border-radius: var(--cc-r-chip); padding: 8px 18px; font: inherit; font-weight: 700; color: var(--cc-text-muted); background: transparent; cursor: pointer; }
+.page-tabs [role="tab"][aria-selected="true"] { background: var(--cc-blue); color: #fff; }
+.page-tabs [role="tab"]:focus-visible { outline: 2px solid var(--cc-gold); outline-offset: 2px; }
+
+#aurasPanel .muted { color: var(--cc-text-muted); margin: 4px 0 0; }
+#aurasPanel .faint { color: var(--cc-text-faint); margin: 2px 0 8px; font-size: 0.85rem; }
+.aura-now { display: grid; grid-template-columns: 180px 1fr; gap: 20px; align-items: center; padding: 16px; margin-bottom: 24px; }
+.aura-now h2 { margin: 2px 0 0; }
+.aura-quicks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.aura-quick { display: grid; text-align: left; gap: 2px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--cc-line); background: var(--cc-surface-raised); color: var(--cc-text); font: inherit; cursor: pointer; }
+.aura-quick span { color: var(--cc-text-muted); font-size: 0.85rem; }
+.aura-quick.is-on { border-color: var(--cc-blue); background: var(--cc-blue-soft); }
+
+.aura-group { margin-bottom: 28px; }
+.aura-group h2 { margin: 0; font-size: 1.15rem; }
+.aura-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 12px; }
+.aura-card { display: grid; gap: 6px; justify-items: center; text-align: center; padding: 12px; border-radius: 16px; background: var(--cc-surface); border: 1px solid var(--cc-line); }
+.aura-card h3 { margin: 4px 0 0; font-size: 0.95rem; }
+.aura-card.is-on { border-color: var(--cc-blue); box-shadow: 0 0 0 1px var(--cc-blue) inset; }
+.aura-card.is-locked .aura-preview { filter: grayscale(1) brightness(0.6); }
+.aura-state { font-size: 0.85rem; color: var(--cc-text-muted); }
+.aura-state.is-on { color: var(--cc-blue); font-weight: 700; }
+
+/* The preview: the trainer over the Aura, pixel-sharp (art is 90×105 sprite px, shown 2×). */
+.aura-preview { position: relative; width: 180px; max-width: 100%; aspect-ratio: 90 / 105; border-radius: 12px; overflow: hidden; background: var(--cc-surface-sunken); display: grid; place-items: end center; }
+.aura-preview img { position: relative; z-index: 1; width: auto; height: 82%; margin-bottom: 6%; image-rendering: pixelated; }
+.aura-art { background: var(--sky); }
+.aura-art .aura-sheet { position: absolute; inset: 0; background-image: var(--sheet); background-repeat: no-repeat; background-size: calc(var(--frames) * 100%) 100%; image-rendering: pixelated; animation: aura-steps calc(var(--frames) * 100ms) steps(var(--frames), jump-none) infinite; }
+@keyframes aura-steps { from { background-position: 0 0; } to { background-position: 100% 0; } }
+@media (prefers-reduced-motion: reduce) { .aura-art .aura-sheet { animation: none; } }
+@media (max-width: 560px) {
+  .aura-now { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .aura-quicks { justify-content: center; }
+  .aura-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aura-preview { width: 100%; }
+}

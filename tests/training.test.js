@@ -37,10 +37,11 @@ const first = grantCatch(user, 4, "normal");
 assertEqual([user.pokemon[4].normal, first.isNew], [1, true], "first catch counts and is new");
 assertEqual(user.training["4:normal"].exp, expForLevel(first.level), "first catch sets EXP to its Catch level");
 atLevel(user, 4, "normal", 10);
+// Individual copies (docs/adr/0001): a duplicate is a new Pokémon with its
+// own Catch level; it adds no EXP to the others (players Feed it instead).
 const dup = grantCatch(user, 4, "normal");
-assertEqual([user.pokemon[4].normal, dup.isNew, dup.expGained, user.training["4:normal"].exp], [2, false, 165, 1165], "duplicate adds half the next Level's EXP");
-atLevel(user, 4, "normal", 100);
-assertEqual(grantCatch(user, 4, "normal").expGained, 0, "duplicate at Lv 100 gives nothing");
+assertEqual([user.pokemon[4].normal, dup.isNew, dup.expGained], [2, false, 0], "a duplicate is its own copy: no EXP to the others");
+assertTrue(dup.uid && dup.uid !== first.uid && dup.level >= 1, "…with its own Catch level");
 assertEqual(getTraining({}, 6, "shiny"), { exp: expForLevel(32), level: 32 }, "no record → bottom of the catch range");
 // Deliberate: owners from before Levels get the same roll a new player gets.
 const veteran = { pokemon: { 65: { normal: 5, shiny: 0 } } };
@@ -49,7 +50,7 @@ const reroll = grantCatch(veteran, 65, "normal", () => 0.999);
 assertTrue(reroll.level > sat && reroll.expGained === 0, "owned before Levels → the next catch rolls a Catch level (a high roll lands above where it sat)");
 assertEqual(reroll.isNew, false, "…but it is a duplicate, not NEW (the card must not say NEW)");
 const newShiny = grantCatch(veteran, 65, "shiny");
-assertEqual(newShiny.isNew, true, "first copy of a Variant is NEW");
+assertEqual([newShiny.isNew, newShiny.isNewShiny], [false, true], "first shiny of a registered species: NEW SHINY, not NEW");
 
 section("addExp");
 const capped = {};
@@ -74,7 +75,8 @@ resetLevelIfGone(gave, 6, "normal");
 resetLevelIfGone(gave, 6, "shiny");
 assertEqual(getTraining(gave, 6, "normal").level, floorLevel(6), "no copies left → back to the bottom of the catch range");
 assertEqual(getTraining(gave, 6, "shiny").level, 50, "the Variant still owned keeps its Level");
-assertTrue(grantCatch(gave, 6, "normal", () => 0.5).isNew, "the next catch rolls a new Catch level, not duplicate EXP");
+const again = grantCatch(gave, 6, "normal", () => 0.5);
+assertTrue(!again.isNew && again.expGained === 0 && again.level >= floorLevel(6), "the next catch rolls a new Catch level; Charizard is already in the Pokédex, so not NEW");
 const emptied = { pokemon: {} }; // the routes delete a species entry once both counts hit 0
 atLevel(emptied, 6, "normal", 40);
 resetLevelIfGone(emptied, 6, "normal");

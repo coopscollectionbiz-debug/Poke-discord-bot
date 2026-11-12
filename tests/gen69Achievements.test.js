@@ -28,9 +28,10 @@ const own = (ids, shiny = false) => Object.fromEntries(ids.map((id) => [String(i
 const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 const metric = (u, k) => P.computeMetrics(u, [k])[k];
 
-section("Catalog revision 3");
-assertEqual(cat.CATALOG_REVISION, 3, "revision 3");
-assertEqual([cat.SUPPORTED_SPECIES, cat.TIER_SPECIES.legendary, cat.TIER_SPECIES.mythic, cat.MULTI_MEMBER_FAMILIES], [649, 48, 21, 225], "classic constants unchanged");
+section("Catalog revision 5");
+// Revision 4 = 2026-11-11 Pokémon re-tier: Dialga, Palkia, Giratina, Kyurem moved legendary → mythic.
+assertEqual(cat.CATALOG_REVISION, 5, "revision 5 (Pokédex-named achievements count the Pokédex)");
+assertEqual([cat.SUPPORTED_SPECIES, cat.TIER_SPECIES.legendary, cat.TIER_SPECIES.mythic, cat.MULTI_MEMBER_FAMILIES], [649, 44, 25, 225], "classic constants (Legendary 44 / Mythic 25 since the re-tier)");
 assertEqual(P.familyCount(), 225, "225 Gen 1–5 families (Gen 6–9 links don't merge or grow them)");
 assertEqual(P.FAMILY_SIZES.get(133), 8, "Eevee family is still Eevee + 7 (Sylveon is Gen 6)");
 assertEqual(cat.NEW_REGIONS, { Kalos: 72, Alola: 88, Galar: 96, Paldea: 120 }, "new regions use the full intended species sets");
@@ -40,7 +41,7 @@ assertEqual(rev12.length, 141, "141 existing achievements kept");
 assertTrue(rev12.every((e) => !e.generations), "existing achievements never depend on new generations");
 assertTrue(rev12.filter((e) => e.id.startsWith("col_type_") && e.id !== "col_type_all").length === 17, "17 classic type specialists (Fairy is separate)");
 assertEqual(cat.getAchievement("col_type_all").target, 17, "Type Encyclopedia keeps its 17-type target");
-assertEqual([cat.getAchievement("col_species_649").target, cat.getAchievement("col_legendary_all").target, cat.getAchievement("col_mythic_all").target, cat.getAchievement("evo_family_all").target], [649, 48, 21, 225], "completion targets unchanged");
+assertEqual([cat.getAchievement("col_species_649").target, cat.getAchievement("col_legendary_all").target, cat.getAchievement("col_mythic_all").target, cat.getAchievement("evo_family_all").target], [649, 44, 25, 225], "completion targets follow the re-tier (Hall of Legends 44, Mythic Archive 25)");
 
 section("Existing progress is preserved (revision 2 → 3)");
 {
@@ -52,7 +53,7 @@ section("Existing progress is preserved (revision 2 → 3)");
   const newly = P.retroEvaluate(u, NOW);
   assertTrue(Object.entries(before.ach).every(([id, d]) => u.ach[id] === d), "every existing unlock and its day is kept");
   assertEqual(JSON.stringify(u.pokemon), JSON.stringify(before.pokemon), "inventory untouched by re-evaluation");
-  assertEqual([u.stats.evolutions, u.progression.rev], [12, 3], "counters kept; stamped revision 3");
+  assertEqual([u.stats.evolutions, u.progression.rev], [12, 5], "counters kept; stamped revision 5");
   assertTrue(!newly.some((id) => /alola|kalos|galar|paldea|1025|traveler_9/.test(id)), "no unreleased-generation achievement awarded");
   // The retyped Normal species leave the Normal count, but the recorded unlock stays.
   assertTrue(metric(u, "state:type:1") < 15 || u.ach.col_type_normal, "Normal Specialist kept even if retyping lowered the count");
@@ -98,7 +99,7 @@ section("New regions are gated by generation");
   const hidden = P.achievementView(u, {}).achievements.map((r) => r.id);
   assertTrue(!hidden.some((id) => /alola|kalos|galar|paldea|_1025|traveler_9/.test(id)), "unreleased-generation achievements are not shown");
   enable([7]);
-  P.evaluate(u, ["state:region:Alola"], NOW);
+  P.evaluate(u, ["state:region:Alola", "state:dexRegion:Alola"], NOW); // Pokédex Complete counts the Pokédex
   assertTrue(u.ach.col_region_alola_full && u.ach.col_region_alola_75 && u.ach.col_region_alola_half, "Gen 7 live: Alola Explorer / Cartographer / Pokédex Complete");
   assertTrue(!u.ach.col_region_kalos_half, "Kalos still off");
   enable(null);

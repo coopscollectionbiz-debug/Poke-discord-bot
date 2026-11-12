@@ -11,11 +11,13 @@
 //   • terrain (Electric Terrain) with 5-turn duration
 //   • burn (the one status any implemented ability can cause)
 //   • entry effects (battle start and replacements) and end-of-turn effects
+//   • held items (utils/battle/items.js) at the same kind of hook points
 // Same inputs + seed → same result. Every random draw comes from `rng`.
 // ==========================================================
 
 import { getMove, effectiveness } from "./data.js";
 import { getAbility } from "./abilities.js";
+import { getItemEffect } from "./items.js";
 import {
   DAMAGE_ROLL_MIN, CRIT_CHANCE, HIGH_CRIT_CHANCE, CRIT_MULT, MOVE_RANDOM_CHANCE, TURN_CAP,
 } from "./tuning.js";
@@ -62,6 +64,30 @@ export function createField(rng) {
       return a;
     },
     hasAbility(mon, pred) { const a = this.abilityOf(mon); return !!a && pred(a); },
+    // Held items: the holder's effect, or null when it has none, it was a
+    // once-per-battle item already used, or the slot battles as a Mega.
+    itemOf(mon) {
+      if (!mon?.item || mon.itemSuppressed) return null;
+      const e = getItemEffect(mon.item);
+      if (!e || (e.oncePerBattle && mon.itemUsed)) return null;
+      return e;
+    },
+    // Item healing: Showdown rounds down with a minimum of 1, never above max
+    // HP, never on a fainted battler. `force` notes even a 0-HP heal (berries
+    // are eaten either way).
+    healItem(mon, amount, text, { force = false } = {}) {
+      if (!mon || mon.hp <= 0) return 0;
+      const healed = Math.min(mon.maxHp - mon.hp, Math.max(1, Math.floor(amount)));
+      if (healed > 0) mon.hp += healed;
+      if (healed > 0 || force) this.note(text);
+      return healed;
+    },
+    // After a battler loses HP and is still standing: berries.
+    afterHPDrop(mon) {
+      if (!mon || mon.hp <= 0) return;
+      const it = this.itemOf(mon);
+      if (it?.onAfterHPDrop?.({ fx: this, self: mon }) && it.oncePerBattle) mon.itemUsed = true;
+    },
     weatherIs(kind) { return this.weather?.kind === kind; },
     setWeather(kind, source) {
       if (this.weather?.kind === kind) return;
@@ -111,6 +137,7 @@ export function createField(rng) {
       mon.hp -= dealt;
       this.note(text);
       if (mon.hp === 0) this.fainted.push({ mon, by: cause ?? null });
+      else this.afterHPDrop(mon);
       return dealt;
     },
     chip(mon, denom, text) { return this.damage(mon, mon.maxHp / denom, text); },
@@ -165,20 +192,25 @@ export function prepareMove(fx, move, attacker, target) {
   const { type: mt, mult: typeMult } = moveTypeFor(fx, move, attacker);
   const eff = typeEff(fx, mt, attacker, target);
   const c = { fx, move, mt, attacker, target, eff, power: move.power };
+  const aItem = fx.itemOf(attacker);
+  const tItem = fx.itemOf(target);
   let power = move.power * typeMult;
   power *= aAbility?.onBasePower?.(c) ?? 1;
+  power *= aItem?.onBasePower?.({ ...c, self: attacker, physical: move.category === "Physical" }) ?? 1;
   power *= auraMult(fx, mt);
   if (fx.terrain?.kind === "electric" && mt === "Electric" && isGrounded(fx, attacker)) power *= 1.3;
   const physical = move.category === "Physical";
   const [as, ds] = physical ? ["atk", "def"] : ["spa", "spd"];
   let atkMult = aAbility?.onModifyAtk?.(c) ?? 1;
   atkMult *= tAbility?.onSourceModifyAtk?.(c) ?? 1;
-  let defMult = 1;
+  atkMult *= aItem?.onModifyAttack?.({ ...c, self: attacker, physical }) ?? 1;
+  let defMult = tItem?.onModifyDefense?.({ ...c, self: target, physical }) ?? 1;
   if (fx.weatherIs("sand") && !physical && target.types.includes("Rock")) defMult *= 1.5;
   if (fx.weatherIs("snow") && physical && target.types.includes("Ice")) defMult *= 1.5;
   const stab = attacker.types.includes(mt) ? (aAbility?.stab?.(c) ?? 1.5) : 1;
   const noGuard = !!aAbility?.noGuard || !!fx.abilityOf(target)?.noGuard;
-  return { mt, eff, power: Math.max(1, Math.round(power)), physical, as, ds, atkMult, defMult, stab, tAbility, aAbility, breaker, noGuard, c };
+  const accMult = tItem?.onModifyAccuracy?.({ ...c, self: target }) ?? 1;
+  return { mt, eff, power: Math.max(1, Math.round(power)), physical, as, ds, atkMult, defMult, stab, tAbility, aAbility, aItem, tItem, accMult, breaker, noGuard, c };
 }
 
 function attackDefense(fx, p, attacker, target, crit) {
@@ -193,6 +225,7 @@ function finalMult(fx, p, attacker, target, crit) {
   let m = weatherDamageMult(fx, p.mt, attacker);
   if (attacker.status === "brn" && p.physical) m *= 0.5;
   m *= p.tAbility?.onFinalDamage?.({ ...p.c, eff: p.eff, crit }) ?? 1;
+  m *= p.aItem?.onFinalDamage?.({ ...p.c, self: attacker, eff: p.eff, crit }) ?? 1;
   return m;
 }
 
@@ -215,7 +248,7 @@ export function expectedDamageFx(fx, move, attacker, target) {
   const hits = move.risingPower ? (move.multihit * (move.multihit + 1)) / 2
     : Array.isArray(move.multihit) ? (multi === "max" ? move.multihit[1] : 3.1)
     : move.multihit ?? (multi === "parental" ? 1.25 : 1);
-  const acc = move.accuracy === true || p.noGuard ? 1 : Math.min(1, (move.accuracy / 100) * stageMult(attacker.stages.accuracy - target.stages.evasion, true));
+  const acc = move.accuracy === true || p.noGuard ? 1 : Math.min(1, (move.accuracy / 100) * stageMult(attacker.stages.accuracy - target.stages.evasion, true) * p.accMult);
   const [a, d] = attackDefense(fx, p, attacker, target, false);
   return p.power * hits * p.stab * p.eff * (a / d) * acc * finalMult(fx, p, attacker, target, false);
 }
@@ -235,7 +268,7 @@ export function useMoveFx(fx, move, attacker, target, rng) {
   const note = (t) => fx.note(t);
   fx.abilityOf(attacker)?.onBeforeMove?.({ fx, attacker, move, mt: moveTypeFor(fx, move, attacker).type, note });
   const p = prepareMove(fx, move, attacker, target);
-  const lands = (m) => m.accuracy === true || p.noGuard || rng.next() < Math.min(1, (m.accuracy / 100) * stageMult(attacker.stages.accuracy - target.stages.evasion, true));
+  const lands = (m) => m.accuracy === true || p.noGuard || rng.next() < Math.min(1, (m.accuracy / 100) * stageMult(attacker.stages.accuracy - target.stages.evasion, true) * p.accMult);
   const missed = !lands(move);
   const result = { damage: 0, crit: false, eff: p.eff, missed };
   let immune = p.eff === 0;
@@ -262,7 +295,18 @@ export function useMoveFx(fx, move, attacker, target, rng) {
       // Parental Bond: the second strike deals 0.25× damage (Gen 7+).
       const hit = oneHit(fx, p, pw, attacker, target, rng, { critImmune, extra: parental && landed === 1 ? 0.25 : 1 });
       const hpBefore = target.hp;
-      const dealt = hurt(target, hit.amount);
+      let amount = hit.amount;
+      if (amount >= target.hp) {
+        // Held items that let the target hang on (Focus Sash, Focus Band).
+        const it = fx.itemOf(target);
+        const saved = it?.onTryKO?.({ fx, self: target, hpBefore, rng });
+        if (saved) {
+          amount = target.hp - 1;
+          if (it.oncePerBattle) target.itemUsed = true;
+          note(saved.text);
+        }
+      }
+      const dealt = hurt(target, amount);
       result.damage += dealt;
       result.crit ||= hit.crit;
       landed++;
@@ -272,6 +316,7 @@ export function useMoveFx(fx, move, attacker, target, rng) {
         break;
       }
       p.tAbility?.onDamagingHit?.(hc); // Mold Breaker suppresses breakable on-hit abilities
+      fx.afterHPDrop(target); // berries, between the hits of a multi-hit move
     }
     if (move.multihit || parental) result.hits = landed;
   }
@@ -282,6 +327,10 @@ export function useMoveFx(fx, move, attacker, target, rng) {
   }
   if (move.recoil && result.damage > 0 && attacker.hp > 0) result.recoil = hurt(attacker, Math.max(1, Math.round((result.damage * move.recoil[0]) / move.recoil[1])));
   if (move.crash && (missed || immune)) result.crash = hurt(attacker, Math.max(1, Math.floor(attacker.maxHp / 2)));
+  if (attacker.hp > 0) {
+    if (result.recoil || result.crash) fx.afterHPDrop(attacker);
+    fx.itemOf(attacker)?.onAfterMove?.({ fx, self: attacker, damage: result.damage, move });
+  }
   if (fx.notes.length > notesBefore) result.notes = fx.notes.splice(notesBefore);
   return result;
 }
@@ -298,6 +347,13 @@ export function speedOf(fx, mon) {
 export function firstToMoveFx(fx, mons, moves, rng) {
   const [p0, p1] = moves.map((m) => m.priority ?? 0);
   if (p0 !== p1) return p0 > p1 ? 0 : 1;
+  // Quick Claw: rolled only for holders (no draw in battles without one).
+  const quick = mons.map((m) => !!fx.itemOf(m)?.onFractionalPriority?.({ fx, self: m, rng }));
+  if (quick[0] !== quick[1]) {
+    const i = quick[0] ? 0 : 1;
+    fx.note(fx.itemOf(mons[i]).quickText(mons[i]));
+    return i;
+  }
   const [s0, s1] = mons.map((m) => speedOf(fx, m));
   if (s0 !== s1) return s0 > s1 ? 0 : 1;
   return rng.next() < 0.5 ? 0 : 1;
@@ -329,6 +385,9 @@ export function runResidual(fx) {
     }
   }
   for (const m of alive()) fx.abilityOf(m)?.onResidual?.({ fx, self: m, note: (t) => fx.note(t) });
+  // Held items (Leftovers, Black Sludge): faster battler first, before burn.
+  const bySpeed = alive().map((m, i) => ({ m, i })).sort((a, b) => speedOf(fx, b.m) - speedOf(fx, a.m) || a.i - b.i).map((x) => x.m);
+  for (const m of bySpeed) if (m.hp > 0) fx.itemOf(m)?.onResidual?.({ fx, self: m });
   for (const m of alive()) if (m.status === "brn") fx.chip(m, 16, `${m.name} was hurt by its burn!`);
   if (fx.weather && fx.weather.turns !== Infinity && --fx.weather.turns <= 0) { fx.note(WEATHER_TEXT[fx.weather.kind][1]); fx.weather = null; }
   if (fx.weather?.kind === "winds" && !(fx.weather.source.hp > 0)) { fx.note(WEATHER_TEXT.winds[1]); fx.weather = null; }
@@ -350,6 +409,7 @@ export function prepareBattler(mon, moveIds, name) {
   mon.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 };
   mon.status = null;
   mon.flashFire = false;
+  mon.itemUsed = false; // once-per-battle items reset every battle
   mon.moves = moveIds.map((id) => withFlags(getMove(id), id));
   mon.name ??= name ?? `#${mon.speciesId}`;
   return mon;
@@ -365,6 +425,11 @@ export function simulateBattleFx({ teams, rng }) {
   const turnNotes = [];
   let lastFaintSide = null;
   const seen = [-1, -1];
+  // A side can start with everyone fainted (an Elite Four fight after a win
+  // in which the player's last Pokémon fainted too, with no Revive). It loses
+  // at turn 0, as in sim.js's legacy loop.
+  const outAtStart = [0, 1].filter((i) => activeSlot(i) === -1);
+  if (outAtStart.length) return { winner: outAtStart.includes(0) ? 1 : 0, turns: 0, endedBy: "knockout", snapshots, knockouts, log, turnNotes };
 
   const recordFaints = (turn, slots, byMove) => {
     for (const { mon, by } of fx.fainted.splice(0)) {
@@ -390,6 +455,7 @@ export function simulateBattleFx({ teams, rng }) {
 
     const choices = [chooseMoveFx(fx, mons[0], mons[1], rng), chooseMoveFx(fx, mons[1], mons[0], rng)];
     const first = firstToMoveFx(fx, mons, choices, rng);
+    start.push(...fx.notes.splice(0)); // Quick Claw
     const events = [];
     for (const i of [first, 1 - first]) {
       const attacker = mons[i];

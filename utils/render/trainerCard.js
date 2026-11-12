@@ -2,47 +2,63 @@
 // utils/render/trainerCard.js
 // /trainercard and /showcard as one image: the equipped trainer on a
 // tier-lit platform, rank with progress to the next one, TP / CC, the
-// collection numbers, battle record, and the Team strip (the battle Team,
-// from buildTeamView, same as /showteam). Read-only.
+// collection numbers, battle record, the 8 Badges from /challenge, and the
+// Showcase strip (the Showcase team, from buildShowcaseView, same as /showcase). Read-only.
 // ==========================================================
 
+import { auraLook } from "../../services/auras.js";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag, fillTextMid, drawSoftPlatform } from "./primitives.js";
 import { createCanvas as makeCanvas } from "@napi-rs/canvas";
-import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadPlaceholder, spriteScale } from "./sprites.js";
+import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadBadgeSprite, loadPlaceholder, spriteScale } from "./sprites.js";
 import { spriteStage, FRAMES } from "./stage.js";
-import { createBackdrop, hasBackdrop } from "./trainerBackdrop.js";
+import { createBackdrop, hasBackdrop, drawTierSky } from "./trainerBackdrop.js";
 import { poseAtFrame } from "../trainerIdle.js";
 import { trainersAnimated } from "../trainerAssets.js";
-import { buildTeamView } from "./teamView.js";
+import { buildTeamView, buildShowcaseView } from "./teamView.js";
 import { getRankProgress } from "../rankSystem.js";
+import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.js";
 
-export const TRAINER_CARD_SIZE = Object.freeze({ w: 1200, h: 640 });
+export const TRAINER_CARD_SIZE = Object.freeze({ w: 1200, h: 708 });
 const M = 20, LEFT_W = 360;
+// The Badge row sits under the two rows of stat tiles. Badges are 16 px art
+// stored at 8×, so 48 px is an exact 3× with smoothing off.
+const BADGE = 48, BADGE_GAP = 14, BADGE_LABEL_W = 120, BADGE_ROW_Y = M + 166 + 2 * 86 + 12 + 20;
+
+/** Where Badge i (Gym order) is drawn. */
+export function badgeSlot(i) {
+  return { x: M + LEFT_W + 24 + BADGE_LABEL_W + i * (BADGE + BADGE_GAP), y: BADGE_ROW_Y, size: BADGE };
+}
 const TIER_NAME = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", mythic: "Mythic" };
 const fmt = (n) => Number(n ?? 0).toLocaleString("en-US");
 
 /**
  * @param trainer { name, tier } of the equipped trainer (from trainerSprites.json), or null
  */
-export function trainerCardView(user, { displayName, trainer }) {
+// luck: luckSummary() on the private card only; null when shared publicly.
+export function trainerCardView(user, { displayName, trainer, luck = null }) {
   const owned = Object.entries(user?.pokemon ?? {}).filter(([k, v]) => /^\d+$/.test(k) && (v?.normal ?? 0) + (v?.shiny ?? 0) > 0);
   const trainers = Array.isArray(user?.trainers) ? user.trainers.length : Object.keys(user?.trainers ?? {}).length;
-  const team = buildTeamView(user, { displayName });
+  const team = buildTeamView(user, { displayName }); // Ranked record only
+  const showcase = buildShowcaseView(user, { displayName }); // the strip (three-teams split)
+  const earned = earnedBadgeKeys(user);
   return {
     displayName,
     trainerFile: user?.displayedTrainer ?? null,
     trainer: trainer ?? null,
+    aura: auraLook(user), // what's drawn behind the trainer (services/auras.js)
     rank: getRankProgress(user?.tp ?? 0),
     tp: user?.tp ?? 0,
     cc: user?.cc ?? 0,
     owned: owned.length,
     shinies: owned.filter(([, v]) => (v?.shiny ?? 0) > 0).length,
     trainers,
+    badges: GYM_BADGES.map((b) => ({ key: b.key, file: b.image.split("/").pop(), earned: earned.includes(b.key) })),
     battle: team.battle,
-    team: team.slots,
-    fallbackTeam: team.fallback,
+    team: showcase.slots,
+    fallbackTeam: false,
+    luck,
   };
 }
 
@@ -129,18 +145,21 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
   // Epic and above get the pixel-art tier backdrop; Rare and below a plain
   // panel. (The old smooth spotlight banded into rings once the breathing
   // trainer made every card a GIF.) The tier-lit platform below stays for all.
-  const fancy = Boolean(t && hasBackdrop(tier));
-  ctx.fillStyle = `${accent}3a`;
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 120, 22, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = `${accent}aa`;
-  ctx.stroke();
+  const look = "aura" in v ? v.aura : tier; // the equipped Aura; older views: the trainer's tier
+  const fancy = Boolean(t && hasBackdrop(look));
+  if (fancy) { // the Aura's sky fills the panel, under the platform and the trainer
+    drawTierSky(ctx, look, { x: M, y: M, w: LEFT_W, h: H - 2 * M }, { u: 4, clip: (c) => rr(c, M, M, LEFT_W, H - 2 * M, 18) });
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = `${accent}88`;
+    rr(ctx, M, M, LEFT_W, H - 2 * M, 18);
+    ctx.stroke();
+  }
+  // The floor: a dithered pixel platform in the tier colour, like the floors under Pokémon in battle.
+  drawSoftPlatform(ctx, cx, floor, 120, 22, accent, { u: 4, peak: 0.6 });
   if (t) {
     const idle = await loadTrainerPoses(v.trainerFile);
     const box = { w: LEFT_W - 40, h: 330, floor: floor + 6, scale: 4 };
-    if (fancy) trainerBackdrop(ctx, stage, { tier, sprite: t, cx, box, panel: { x: M, y: M, w: LEFT_W }, floor });
+    if (fancy) trainerBackdrop(ctx, stage, { tier: look, sprite: t, cx, box, panel: { x: M, y: M, w: LEFT_W }, floor });
     stage.placePosed(ctx, idle?.poses ?? [t], idle?.poseAt ?? poseAtFrame, cx, box.floor, box.w, box.h, { scale: box.scale });
   } else { ctx.globalAlpha = 0.35; drawBall(ctx, cx, floor - 70, 40, false); ctx.globalAlpha = 1; }
   ctx.textAlign = "center";
@@ -162,9 +181,7 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
     ctx.strokeStyle = `${accent}aa`;
     ctx.stroke();
     ctx.fillStyle = TIER[tier] ?? accent;
-    ctx.textBaseline = "middle";
-    ctx.fillText(label, cx, floor + 129);
-    ctx.textBaseline = "alphabetic";
+    fillTextMid(ctx, label, cx, floor + 128);
   }
   ctx.textAlign = "left";
 
@@ -202,14 +219,39 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
   stat(ctx, "SHINY", fmt(v.shinies), rx + 3 * (sw + gap), sy, sw, COLOR.gold);
   const sy2 = sy + 86 + gap;
   stat(ctx, "TRAINERS", fmt(v.trainers), rx, sy2, sw);
-  stat(ctx, "BATTLE RATING", v.battle ? fmt(v.battle.rating) : "—", rx + (sw + gap), sy2, sw);
+  stat(ctx, "RANKED RATING", v.battle ? fmt(v.battle.rating) : "—", rx + (sw + gap), sy2, sw);
   stat(ctx, "RECORD", v.battle ? `${v.battle.wins}W–${v.battle.losses}L` : "—", rx + 2 * (sw + gap), sy2, 2 * sw + gap);
 
-  // Team strip.
-  const ty = sy2 + 86 + 20;
+  // Badges from /challenge: earned ones in color, the rest dimmed.
   ctx.font = font(15, 800);
   ctx.fillStyle = COLOR.textFaint;
-  ctx.fillText(v.fallbackTeam ? "TEAM  (none set: first Pokémon owned)" : "TEAM", rx, ty + 14);
+  ctx.fillText("BADGES", rx, BADGE_ROW_Y + 18);
+  ctx.font = font(24, 800);
+  ctx.fillStyle = COLOR.text;
+  ctx.fillText(`${v.badges.filter((b) => b.earned).length}/${v.badges.length}`, rx, BADGE_ROW_Y + 46);
+  ctx.imageSmoothingEnabled = false;
+  for (const [i, b] of v.badges.entries()) {
+    const sprite = await loadBadgeSprite(b.file);
+    if (!sprite) continue;
+    const { x, y, size } = badgeSlot(i);
+    ctx.globalAlpha = b.earned ? 1 : 0.22;
+    ctx.drawImage(sprite.image, x, y, size, size);
+  }
+  ctx.globalAlpha = 1;
+  ctx.imageSmoothingEnabled = true;
+
+  // Team strip, under the Badge row.
+  const ty = BADGE_ROW_Y + BADGE + 20;
+  ctx.font = font(15, 800);
+  ctx.fillStyle = COLOR.textFaint;
+  ctx.fillText(v.team.length ? "SHOWCASE" : "SHOWCASE  (no favorites picked yet)", rx, ty + 14);
+  if (v.luck) {
+    // Private copy only: the random-reward pity meter (was /luck).
+    ctx.textAlign = "right";
+    ctx.fillStyle = COLOR.textMuted;
+    ctx.fillText(`LUCK · ${v.luck.chance}% REWARD CHANCE (+${v.luck.bonus}%)`, rx + rw, ty + 14);
+    ctx.textAlign = "left";
+  }
   const slotW = (rw - 5 * 10) / 6, slotH = H - M - (ty + 26);
   const ph = await loadPlaceholder();
   for (let i = 0; i < 6; i++) {
@@ -218,8 +260,8 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
     ctx.fillStyle = s ? "#1a2135" : "#ffffff05";
     rr(ctx, x, y, slotW, slotH, 12);
     ctx.fill();
-    ctx.lineWidth = s?.shiny || i === 0 ? 2.5 : 1.5;
-    ctx.strokeStyle = !s ? "#2a3350" : s.shiny ? COLOR.gold : i === 0 ? COLOR.blue : s.mega ? COLOR.mega : "#323c5c";
+    ctx.lineWidth = s?.shiny ? 2.5 : 1.5; // the Showcase never fights: no lead highlight
+    ctx.strokeStyle = !s ? "#2a3350" : s.shiny ? COLOR.gold : s.mega ? COLOR.mega : "#323c5c";
     ctx.stroke();
     if (!s) continue;
     const spriteId = s.spriteId ?? s.id; // a Mega slot (teamView) draws its Mega sprite

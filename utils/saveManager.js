@@ -6,9 +6,16 @@
 // • Saves exactly what is in memory
 // • enqueueSave() is the ONLY local save
 // • saveDataToDiscord() is optional cloud backup
+// • Every save here is AWAITED by someone (a dashboard request or a slash
+//   command reply), so it asks the queue for a prompt flush: written within
+//   milliseconds instead of on the background 1.5 s / 5 s timers. Durability
+//   and the ack are unchanged: true only once the change is on disk.
 // ==========================================================
 
 import { enqueueSave } from "./saveQueue.js";
+
+/** The awaited save: prompt flush, same durability as enqueueSave. */
+export const promptSave = (trainerData) => enqueueSave(trainerData, { prompt: true });
 
 // ----------------------------------------------------------
 // Simple legacy save (still supported)
@@ -16,7 +23,7 @@ import { enqueueSave } from "./saveQueue.js";
 export async function saveTrainerData(trainerData) {
   try {
     // enqueueSave resolves false when the write failed (it is retried).
-    return (await enqueueSave(trainerData)) !== false;
+    return (await promptSave(trainerData)) !== false;
   } catch (err) {
     console.error("❌ saveTrainerData failed:", err);
     return false;
@@ -32,7 +39,7 @@ export async function atomicSave(trainerData, saveTrainerDataLocal, saveDataToDi
   try {
     // enqueueSave resolves false (never throws) when the disk write failed;
     // the data stays in memory and the save keeps retrying in the background.
-    const saved = await enqueueSave(trainerData);
+    const saved = await promptSave(trainerData);
     if (saved === false) {
       const msg = "❌ Local save failed (retrying in background; data is still in memory)";
       console.error(msg);
@@ -62,7 +69,7 @@ export const SAVE_DELAYED_NOTE =
  * @param {{ save?: (data:object) => Promise<boolean> }} [opts] - injectable for tests
  * @returns {Promise<{ saved: boolean, note: string }>} note is "" when saved
  */
-export async function saveAndAck(trainerData, { save = enqueueSave } = {}) {
+export async function saveAndAck(trainerData, { save = promptSave } = {}) {
   let saved = false;
   try {
     saved = (await save(trainerData)) === true;

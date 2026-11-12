@@ -24,6 +24,8 @@
 import { toTeamObj, normVariant } from "../utils/economyRules.js";
 import { getSpeciesEntry } from "../utils/speciesCatalog.js";
 import { megaFieldOf, megaFitsSlot, prepareTeamSelection } from "./megaTeam.js";
+import { slotCopyUid, slotBoxUid } from "./ownership.js";
+import { addNotice, NOTICE_KINDS } from "./notices.js";
 
 export const BATTLE_TEAM_MAX_MYTHIC = 1;
 
@@ -47,10 +49,40 @@ export function cleanStoredTeam(user, raw) {
     .map((t) => {
       const slot = { id: Number(t?.id), variant: t?.variant === "shiny" ? "shiny" : "normal" };
       const mega = megaFieldOf(t);
-      return mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
+      const uid = slotBoxUid(user, { ...slot, uid: t?.uid }) ?? slotCopyUid(user, { ...slot, uid: t?.uid }); // the slot's copy (docs/adr/0001)
+      const out = mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
+      return uid ? { ...out, uid } : out;
     })
     .filter((t) => Number.isInteger(t.id))
     .filter((t) => Number(user.pokemon?.[t.id]?.[t.variant] || 0) > 0);
+}
+
+/**
+ * IN PLACE: enforce the mythic limit on a stored Battle team. Saving already
+ * enforces it; this catches teams that went over because species changed
+ * tier (2026-11-11 re-tier: Dialga, Palkia, Giratina and Kyurem became
+ * mythic). Keeps the first mythic-tier slot in slot order, removes the rest
+ * from the Battle team (the Pokémon stay in the collection) and stores a
+ * one-time notice. Idempotent. Returns the removed slots.
+ */
+export function trimBattleTeamMythics(user, now = Date.now()) {
+  if (!hasBattleTeam(user)) return [];
+  let kept = null;
+  const removed = [];
+  user.battleTeam = user.battleTeam.filter((s) => {
+    if (!isMythicTier(s.id)) return true;
+    if (kept == null) { kept = s; return true; }
+    removed.push(s);
+    return false;
+  });
+  if (removed.length) {
+    const names = removed.map((s) => `${s.variant === "shiny" ? "shiny " : ""}${speciesName(s.id)}`);
+    const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+    addNotice(user, NOTICE_KINDS.BATTLE_TEAM_TRIM,
+      `${list} ${removed.length === 1 ? "was" : "were"} removed from your Battle team. Some Pokémon are now mythic-tier, and a Battle team can have only one (you kept ${speciesName(kept.id)}). ${removed.length === 1 ? "It's" : "They're"} still in your collection.`,
+      now);
+  }
+  return removed;
 }
 
 /** IN PLACE: clean user.battleTeam when present. Never creates the field. */
@@ -61,6 +93,7 @@ export function normalizeBattleTeam(user) {
     return undefined;
   }
   user.battleTeam = cleanStoredTeam(user, user.battleTeam);
+  trimBattleTeamMythics(user);
   return user.battleTeam;
 }
 

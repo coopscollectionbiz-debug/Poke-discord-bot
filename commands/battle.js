@@ -6,20 +6,27 @@
 // (see the wager flow below).
 // ==========================================================
 
+import { auraLook } from "../services/auras.js";
 import {
   SlashCommandBuilder, MessageFlags, EmbedBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType,
   PermissionFlagsBits,
 } from "discord.js";
 import { randomInt, randomUUID } from "crypto";
 import { logEvent } from "../utils/eventLog.js";
-import { battleBlock, buildBattleTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
+import { recordFight, battleRecord } from "../utils/fightRecordBuild.js";
+import { battleBlock, buildBattleTeam, runBattle, withBothLocks, teamFor } from "../utils/battle/runBattle.js";
+import { rankedRecord } from "../utils/battle/rewards.js";
+import { vsSide, battleVsAltText } from "../utils/render/battleVsCard.js";
+import { trainerTier, cardTrainerFx } from "../utils/render/trainerTier.js";
 import { playBattle, expSummary } from "../utils/battle/playback.js";
 import { teamPower } from "../utils/battle/power.js";
 import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/battle/wager.js";
-import { WAGER } from "../utils/battle/tuning.js";
-import { expView, renderExpCard } from "../utils/render/expCard.js";
+import { WAGER, PLAYBACK } from "../utils/battle/tuning.js";
+import { peekNotices, clearNotices, NOTICE_KINDS } from "../services/notices.js";
+import { expView } from "../utils/render/expCard.js";
 import { cardImage } from "../utils/render/stage.js";
 import { shardDropLine } from "../services/megaShards.js";
+import { threaded } from "../utils/render/renderers.js";
 
 export const data = new SlashCommandBuilder()
   .setName("battle")
@@ -67,7 +74,7 @@ export function displayNames(interaction, opponent) {
 // near the end of the offer window can miss theirs; the EXP still counts.
 // The message is a rendered EXP card (utils/render/expCard.js) under a
 // one-line caption; if rendering fails, the plain-text summary goes instead.
-export async function expMessage(outcome, userId, names, user, { render = renderExpCard } = {}) {
+export async function expMessage(outcome, userId, names, user, { render = threaded.exp } = {}) {
   const text = expSummary(outcome, userId, names);
   const shards = shardDropLine(outcome.megaShards?.[userId] ?? 0); // "" unless a Mega Shard dropped
   const withShards = (s) => (shards ? `${s}\n${shards}` : s);
@@ -81,12 +88,83 @@ export async function expMessage(outcome, userId, names, user, { render = render
   }
 }
 
+// Each side's displayed trainer, for the replay's portraits.
+export const trainersOf = (trainerData, outcome) => outcome.sides.map((s) => trainerData[s.userId]?.displayedTrainer ?? null);
+/** Both players' equipped Aura looks, in side order. */
+export const aurasOf = (trainerData, outcome) => outcome.sides.map((s) => auraLook(trainerData[s.userId]));
+
+/**
+ * A player's record for the VS card, read (never created) before the battle
+ * changes it: casual W–L and streak, or for a rated mode (Ranked, Wager)
+ * this season's Ranked rating, W–L and win streak.
+ */
+export function vsRecord(user, mode) {
+  if (mode === "open") {
+    const c = user?.casual ?? {};
+    return { wins: c.wins ?? 0, losses: c.losses ?? 0, streak: c.streak ?? 0 };
+  }
+  const r = rankedRecord(user);
+  return { ...r, streak: r.wins + r.losses > 0 ? Number(user?.stats?.winStreak) || 0 : 0 };
+}
+
+/** Both players' records before the battle, by user id. */
+export const vsRecords = (trainerData, ids, mode) => Object.fromEntries(ids.map((id) => [id, vsRecord(trainerData[id], mode)]));
+
+/**
+ * The VS card's view (utils/render/battleVsCard.js). `sides` are
+ * [{ userId, members }] in Challenger, Defender order; `records` from
+ * vsRecords; `pot` the Wager pot in CC.
+ */
+export function vsView(mode, sides, names, trainerData, records, pot = null) {
+  return {
+    mode,
+    pot: mode === "wager" ? pot : null,
+    sides: sides.map((s) => {
+      const file = trainerData[s.userId]?.displayedTrainer ?? null;
+      return vsSide({ name: names[s.userId], trainerFile: file, tier: auraLook(trainerData[s.userId]), members: s.members, record: records[s.userId] ?? vsRecord(null, mode) });
+    }),
+  };
+}
+
+// The replay's VS card, from the records captured before the battle (none: no card).
+const vsOf = (outcome, names, trainerData) => (outcome.vsRecords
+  ? vsView(outcome.mode, outcome.sides, names, trainerData, outcome.vsRecords, outcome.mode === "wager" ? 2 * outcome.stake : null)
+  : null);
+
 async function sendExp(reply, outcome, userId, names, user) {
   return reply.followUp(await expMessage(outcome, userId, names, user))
     .catch((err) => console.warn("⚠️ EXP message failed:", err?.message || err));
 }
 
 export async function execute(interaction, trainerData, _saveLocal, _saveDiscord, lockUser, enqueueSave) {
+  try {
+    await executeBattle(interaction, trainerData, lockUser, enqueueSave);
+  } finally {
+    await sendPendingNotices(interaction, trainerData, lockUser, enqueueSave);
+  }
+}
+
+/**
+ * One-time Battle team notices (services/notices.js), e.g. "Dialga was
+ * removed from your Battle team" after a re-tier. Sent as an ephemeral
+ * follow-up to whatever /battle replied, then cleared. Kept if sending fails.
+ */
+export async function sendPendingNotices(interaction, trainerData, lockUser, enqueueSave, kind = NOTICE_KINDS.BATTLE_TEAM_TRIM) {
+  const id = interaction.user.id;
+  const pending = peekNotices(trainerData[id], kind);
+  if (!pending.length || !(interaction.replied || interaction.deferred)) return;
+  try {
+    await interaction.followUp({ content: pending.map((n) => `ℹ️ ${n.text}`).join("\n"), flags: MessageFlags.Ephemeral });
+  } catch (err) {
+    console.warn("⚠️ battle notice follow-up failed:", err?.message || err);
+    return;
+  }
+  await lockUser(id, async () => {
+    if (clearNotices(trainerData[id], pending.map((n) => n.id))) await enqueueSave(trainerData);
+  });
+}
+
+async function executeBattle(interaction, trainerData, lockUser, enqueueSave) {
   const opponent = interaction.options.getUser("opponent", true);
   const wager = interaction.options.getInteger("wager");
   const challengerId = interaction.user.id;
@@ -103,7 +181,9 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const seed = randomInt(0, 2 ** 31 - 1);
   const outcome = await withBothLocks(lockUser, challengerId, opponent.id, async () => {
+    const before = vsRecords(trainerData, [challengerId, opponent.id], mode); // for the VS card
     const out = runBattle({ trainerData, challengerId, defenderId: opponent.id, mode, seed });
+    if (out.ok) out.vsRecords = before;
     // Results are applied and saved before the replay, so a failed or slow
     // replay never changes them. (A hard crash before the next Discord backup
     // can still lose them, like any other action: startup loads that backup.)
@@ -115,15 +195,24 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   logEvent("battle", challengerId, {
     defenderId: opponent.id, mode, seed, winnerId: outcome.winnerId, turns: outcome.result.turns, surge: !!outcome.surge,
   });
-  await interaction.editReply("⚔️ Your battle is starting below.");
   const names = displayNames(interaction, opponent);
+  recordFight(() => battleRecord(outcome, names, trainerData)); // Battle Records; never throws
+  await interaction.editReply("⚔️ Your battle is starting below.");
+  // The replay (up to PLAYBACK.maxUpdates images, PLAYBACK.delayMs apart) runs
+  // after the command returns, as wager battles' do, so a long battle never
+  // trips the command timeout. The EXP card still follows the replay.
+  replayThenExp(interaction, outcome, challengerId, names, trainerData);
+}
+
+/** The replay, then the Challenger's private EXP card (only they earn EXP in casual and ranked battles). Never throws. */
+export async function replayThenExp(interaction, outcome, challengerId, names, trainerData, { play = playBattle, exp = sendExp } = {}) {
   try {
-    await playBattle(interaction.channel, outcome, names);
+    await play(interaction.channel, outcome, names, { ...PLAYBACK, trainers: trainersOf(trainerData, outcome), auras: aurasOf(trainerData, outcome), vs: vsOf(outcome, names, trainerData) });
   } catch (err) {
     console.warn("⚠️ battle post failed:", err?.message || err);
     await interaction.editReply("Your battle counted, but I couldn't post it in this channel.").catch(() => {});
   }
-  await sendExp(interaction, outcome, challengerId, names, trainerData[challengerId]); // only the Challenger earns EXP in casual and ranked battles
+  await exp(interaction, outcome, challengerId, names, trainerData[challengerId]);
 }
 
 // ----------------------------------------------------------
@@ -133,6 +222,25 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
 // trainerData with a copy, so every step re-reads the live record inside
 // its lock; never hold a user object across an await.
 // ----------------------------------------------------------
+/**
+ * The Wager offer's VS card (both Battle teams, rated records, the pot), as
+ * an attachment list; empty when it can't render or CARD_TRAINER_FX=0 (the
+ * offer's text says it all). The pot shown is twice the full Stake, as the
+ * label is: an All-in amount would make the Defender's balance public.
+ */
+export async function offerCard(trainerData, challengerId, defenderId, names, stake, { render = threaded.battleVs } = {}) {
+  if (!cardTrainerFx()) return [];
+  try {
+    const sides = [challengerId, defenderId].map((userId) => ({ userId, members: teamFor(trainerData[userId], "wager") }));
+    const view = vsView("wager", sides, names, trainerData, vsRecords(trainerData, [challengerId, defenderId], "wager"), 2 * stake);
+    const card = await cardImage((animate) => render(view, { animate }), "wager-vs", { unique: true });
+    return [new AttachmentBuilder(card.buffer, { name: card.name, description: battleVsAltText(view) })];
+  } catch (err) {
+    console.warn("⚠️ wager VS card failed; sending the offer without it:", err?.message || err);
+    return [];
+  }
+}
+
 async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, stake) {
   const challengerId = interaction.user.id;
   const defenderId = opponent.id;
@@ -167,6 +275,7 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     // the Defender's balance public.
     message = await interaction.channel.send({
       content: `⚔️ <@${challengerId}> challenges <@${defenderId}> to a Wager battle for ${stake} CC!`,
+      files: await offerCard(trainerData, challengerId, defenderId, names, stake),
       embeds: [new EmbedBuilder().setColor(0xf1c40f).setDescription(
         `Power rating: ${names[challengerId]} ${offeredPower} · ${names[defenderId]} ${power(defenderId)}\n` +
         "Winner takes all. If you don't have enough Coop Coins, accepting puts you all in.\n" +
@@ -183,7 +292,7 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     return interaction.editReply(refusal("post_failed", defenderId)).catch(() => {});
   }
 
-  const closeOffer = (content) => message.edit({ content, embeds: [], components: [] }).catch(() => {});
+  const closeOffer = (content) => message.edit({ content, embeds: [], components: [], attachments: [] }).catch(() => {});
   const collector = message.createMessageComponentCollector({
     componentType: ComponentType.Button,
     time: WAGER.windowMs,
@@ -214,9 +323,11 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
       }
       const accepted = acceptStake(live(), trainerData[defenderId], nonce, Date.now());
       if (!accepted.ok) return { error: accepted.reason };
+      const before = vsRecords(trainerData, [challengerId, defenderId], "wager"); // for the VS card
       const out = runBattle({
         trainerData, challengerId, defenderId, mode: "wager", stake: accepted.stake, seed: randomInt(0, 2 ** 31 - 1),
       });
+      if (out.ok) out.vsRecords = before;
       await save();
       return out;
     });
@@ -236,8 +347,9 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
       defenderId, mode: "wager", stake: outcome.stake, seed: outcome.seed,
       winnerId: outcome.winnerId, turns: outcome.result.turns, surge: !!outcome.surge,
     });
+    recordFight(() => battleRecord(outcome, names, trainerData)); // Battle Records; never throws
     await closeOffer(`✅ <@${defenderId}> accepted! The battle is below.`);
-    await playBattle(interaction.channel, outcome, names).catch((err) =>
+    await playBattle(interaction.channel, outcome, names, { ...PLAYBACK, trainers: trainersOf(trainerData, outcome), auras: aurasOf(trainerData, outcome), vs: vsOf(outcome, names, trainerData) }).catch((err) =>
       console.warn("⚠️ wager battle post failed:", err?.message || err));
     // The Challenger's /battle and the Defender's Accept click are the two interactions to reply on.
     await Promise.all([sendExp(interaction, outcome, challengerId, names, trainerData[challengerId]), sendExp(i, outcome, defenderId, names, trainerData[defenderId])]);

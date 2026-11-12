@@ -27,13 +27,14 @@
 
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import { generateToken } from "../utils/dashboardAuth.js";
+import { publicBaseUrl } from "../utils/publicUrl.js";
 
 const ADMIN_ROLE_NAME = process.env.ADMIN_ROLE_NAME || "Developer";
 
 export default {
   data: new SlashCommandBuilder()
     .setName("admindashboard")
-    .setDescription("Open the admin analytics dashboard (Developer role required)."),
+    .setDescription("Open the admin dashboard to manage players (Developer role)."),
 
   async execute(interaction) {
     try {
@@ -58,19 +59,11 @@ export default {
 
       // Mint an admin-typed token. The "admin" type is enforced
       // downstream by requireAdminSession and /auth/admin.
-      const token = generateToken(userId, channelId, "admin");
+      const token = generateToken(userId, channelId, "admin", { name: interaction.user.username });
 
-      // Base URL resolution, in preference order:
-      //   1. PUBLIC_URL   — explicit, set via fly.toml [env] on deploy
-      //   2. FLY_APP_NAME — Fly.io injects this automatically, so we
-      //                     can derive https://<app>.fly.dev as a
-      //                     sensible zero-config fallback.
-      // No onrender default — we're off Render as of the migration,
-      // and pointing an admin link at a dead host would be worse
-      // than failing loudly below.
-      const baseUrl =
-        process.env.PUBLIC_URL ||
-        (process.env.FLY_APP_NAME ? `https://${process.env.FLY_APP_NAME}.fly.dev` : "");
+      // Same base URL as /dashboard and embed images (utils/publicUrl.js):
+      // PUBLIC_URL, then FLY_APP_NAME, then the production host.
+      const baseUrl = publicBaseUrl();
 
       if (!baseUrl) {
         await interaction.reply({
@@ -84,9 +77,9 @@ export default {
       const dashboardUrl = `${baseUrl}/auth/admin?id=${userId}&code=${token}`;
 
       const embed = new EmbedBuilder()
-        .setTitle("🛡️ Admin Dashboard")
+        .setTitle("Admin dashboard")
         .setDescription(
-          `Access the admin analytics dashboard:\n\n🔗 [Open Admin Dashboard](${dashboardUrl})\n\nYour link expires in **10 minutes**.`
+          `[Open the admin dashboard](${dashboardUrl})\n\nThe link works for 10 minutes. Once open, the session lasts 30 minutes after your last action, up to 4 hours.`
         )
         .setColor(0xef4444)
         .setFooter({ text: "Coop's Collection — Admin Access" })

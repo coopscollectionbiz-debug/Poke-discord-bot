@@ -25,7 +25,7 @@ const { lockUser } = await import("../utils/userLocks.js");
 const { saveAndAck } = await import("../utils/saveManager.js");
 const { trainingKey, expForLevel } = await import("../utils/training.js");
 const { requiredLevel, officialMethodText, checkEvolutionRequirements } = await import("../services/evolutionRules.js");
-const { default: addinventory } = await import("../commands/addinventory.js");
+const { parseChange, applyChange } = await import("../services/adminChanges.js");
 const DEX = JSON.parse(fs.readFileSync(new URL("../pokemonData.json", import.meta.url), "utf8"));
 
 const enable = (list) => { G.setGenerationsForTesting(list); C.resetCatalogCachesForTesting(); };
@@ -63,7 +63,7 @@ const SITES = [
   ["services/gameplay.js", /acquirablePokemon\(await loadAllPokemon\(\)\)/, "dashboard capture"],
   ["services/gameplay.js", /acquirablePokemon\(await loadPokemonCached\(\)\)/, "weekly pack"],
   ["services/gameplay.js", /checkEvolutionRequirements\(/, "evolution"],
-  ["commands/addinventory.js", /!isAcquirable\(pokemon\.id\) && !allowUnreleased/, "admin /addinventory"],
+  ["services/adminChanges.js", /!isAcquirable\(id\) && !ctx\.allowUnreleased/, "admin dashboard grants"],
   ["commands/trainercard.js", /filter\(\(g\) => !g\.gen \|\| isGenerationLive\(g\.gen\)\)/, "starter selection"],
 ];
 for (const [file, re, label] of SITES) assertTrue(re.test(src(file)), `${label} (${file}) draws from the generation-gated pool`);
@@ -187,26 +187,19 @@ section("Rollback of a released generation keeps newly acquired Pokémon fully u
   assertTrue(caught.length > 0 && caught.every((id) => id <= 649), "new catches are Gens 1–5 only again");
 }
 
-section("Admin /addinventory override");
-async function grant(name, allow) {
-  const td = {};
-  const interaction = {
-    member: { permissions: { has: () => true } },
-    options: { getUser: () => ({ id: "A1", username: "admin-test" }), getString: (k) => ({ type: "pokemon", name })[k], getBoolean: (k) => (k === "allow_unreleased" ? allow : null), getInteger: () => 1 },
-    async deferReply() {}, async editReply(o) { this.text = o.content; }, async reply(o) { this.text = o.content; }, async followUp(o) { this.text = o.content; },
-  };
-  await addinventory.execute(interaction, td, async () => {}, async () => {}, lockUser, async () => {}, null);
-  return { td, text: interaction.text };
+section("Admin dashboard grant override");
+function grant(speciesId, allow) {
+  const user = { pokemon: {}, training: {} };
+  const r = applyChange(user, parseChange({ kind: "pokemon", op: "add", speciesId, amount: 1 }).change, { allowUnreleased: allow === true, rand: () => 0 });
+  return { user, r };
 }
 enable([]);
-const refused = await grant("Sprigatito", null);
-assertTrue(/not released yet/.test(refused.text) && !refused.td.A1?.pokemon?.[906], "unreleased species refused without the override");
-const allowed = await grant("Sprigatito", true);
-assertEqual(allowed.td.A1?.pokemon?.[906]?.normal, 1, "explicit allow_unreleased grants it (admin testing)");
-const classic = await grant("Pikachu", null);
-assertEqual(classic.td.A1?.pokemon?.[25]?.normal, 1, "Gen 1–5 grants unchanged");
-const accent = await grant("flabebe", true);
-assertEqual(accent.td.A1?.pokemon?.[669]?.normal, 1, "name look-up ignores accents (flabebe → Flabébé)");
+const refused = grant(906, null);
+assertTrue(!refused.r.ok && /isn't released yet/.test(refused.r.error) && !refused.user.pokemon[906], "unreleased species refused without the testing switch");
+const allowed = grant(906, true);
+assertEqual(allowed.user.pokemon[906]?.normal, 1, "the testing switch grants it (admin testing)");
+const classic = grant(25, null);
+assertEqual(classic.user.pokemon[25]?.normal, 1, "Gen 1–5 grants unchanged");
 
 section("Invalid data keeps a generation off");
 enable([6]);

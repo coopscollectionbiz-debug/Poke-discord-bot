@@ -120,6 +120,16 @@ export function buildBattleTeam(user, { env = process.env } = {}) {
 }
 
 /** A player's fighters for this mode. */
+// /challenge and Trainer encounters (three-teams split): the player picks
+// their Casual or Ranked team; both fight at their REAL Levels there.
+export const TEAM_PICKS = ["casual", "ranked"];
+export function teamForPick(user, pick = "casual", opts = {}) {
+  if (pick === "ranked") return Array.isArray(user?.battleTeam) ? buildTeam(user ?? {}, { ...opts, team: user.battleTeam, movesetTeam: "battle", equipmentTeam: "battle" }) : [];
+  return buildTeam(user ?? {}, opts);
+}
+/** The picks this player can make right now (teams with at least one Pokémon). */
+export const availablePicks = (user, opts = {}) => TEAM_PICKS.filter((p) => teamForPick(user, p, opts).length > 0);
+
 export const teamFor = (user, mode, opts = {}) => (mode === "open" ? buildTeam(user ?? {}, opts) : buildBattleTeam(user ?? {}, opts));
 
 // EXP uses real Levels in every mode: the fighters' battle Levels are swapped

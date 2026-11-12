@@ -25,6 +25,8 @@ import {
 } from "discord.js";
 import { cardImage } from "../utils/render/stage.js";
 import { trainerCardView } from "../utils/render/trainerCard.js";
+import { luckSummary } from "../utils/luckMeter.js";
+import { randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -415,7 +417,10 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
 // ==========================================================
 // 🧾 SHOW TRAINER CARD  — VARIANT-SAFE + CANONICAL
 // ==========================================================
-export async function showTrainerCard(interaction, user, trainerData, saveDataToDiscord) {
+// shared: true posts the public card (no Luck row, no buttons; was /showcard).
+// Otherwise the private card has the Luck row and a "Share to channel" button.
+export const SHARE_MS = 10 * 60 * 1000;
+export async function showTrainerCard(interaction, user, trainerData, saveDataToDiscord, { shared = false } = {}) {
   try {
     const username = interaction.user.username;
     const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
@@ -565,12 +570,30 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
 
     // The rendered card (utils/render/trainerCard.js); the embed above is the fallback.
     try {
-      const tcView = trainerCardView(user, {
-        displayName: username,
-        trainer: user.displayedTrainer ? { name: trainerInfo.name, tier: trainerInfo.rarityKey } : null,
+      const trainerFacts = user.displayedTrainer ? { name: trainerInfo.name, tier: trainerInfo.rarityKey } : null;
+      const render = async (luck) => {
+        const tcView = trainerCardView(user, { displayName: username, trainer: trainerFacts, luck });
+        const card = await cardImage((animate) => threaded.trainerCard(tcView, { animate }), "trainercard", { unique: true });
+        return new AttachmentBuilder(card.buffer, { name: card.name });
+      };
+      if (shared) return await interaction.editReply({ embeds: [], files: [await render(null)], components: [] });
+      const nonce = randomBytes(6).toString("hex");
+      const shareRow = (disabled) => new ActionRowBuilder().addComponents(new ButtonBuilder()
+        .setCustomId(`tc_share:${nonce}`).setLabel("Share to channel").setStyle(ButtonStyle.Primary).setDisabled(disabled));
+      const msg = await interaction.editReply({ embeds: [], files: [await render(luckSummary(user))], components: [shareRow(false)] });
+      // One share per card: the same card, publicly, without the private Luck row.
+      const collector = msg?.createMessageComponentCollector?.({ time: SHARE_MS, max: 1, filter: (i) => i.customId === `tc_share:${nonce}` && i.user.id === interaction.user.id });
+      collector?.on("collect", async (i) => {
+        try {
+          await i.deferReply();
+          await i.editReply({ files: [await render(null)] });
+        } catch (err) {
+          console.warn("⚠️ trainer card share failed:", err?.message || err);
+          await i.followUp({ content: "I couldn't share your card here.", flags: MessageFlags.Ephemeral }).catch(() => {});
+        }
       });
-      const card = await cardImage((animate) => threaded.trainerCard(tcView, { animate }), "trainercard", { unique: true });
-      return await interaction.editReply({ embeds: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })], components: [] });
+      collector?.on("end", () => interaction.editReply({ components: [shareRow(true)] }).catch(() => {}));
+      return msg;
     } catch (err) {
       console.warn("⚠️ trainer card render failed; sending embed:", err?.message || err);
     }

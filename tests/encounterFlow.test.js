@@ -173,7 +173,7 @@ section("Spotting");
   const file = card.opts.files[0];
   assertTrue(/^encounter\.(png|gif)$/.test(file.name) && file.description.includes("challenged Ash!") && file.description.includes("Win or lose:"), "the card image, with alt text");
   const [battle, run] = w.ids(card);
-  assertTrue(/^encounter:[\w-]+:battle$/.test(battle) && run === battle.replace(":battle", ":run"), "Battle! and Run");
+  assertTrue(/^encounter:[\w-]+:battle_casual$/.test(battle) && run === battle.replace(":battle_casual", ":run"), "Battle! (the Casual team) and Run");
   assertTrue(isEncounterButton(battle) && !isEncounterButton("confirm_x"), "encounter buttons are recognizable");
   assertEqual([w.user.encounter.count, w.user.encounter.lastAt, w.log.saves], [1, Date.parse("2026-11-10T12:00:00Z"), 1], "counted and saved once posted");
   assertEqual([...w.timers.values()].map((t) => t.ms), [120000], "2 minutes to answer");

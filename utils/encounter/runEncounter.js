@@ -8,7 +8,7 @@
 // (Battle rating, W/L, Battle caps) or user.challenge.
 // ==========================================================
 
-import { buildTeam, applyGains } from "../battle/runBattle.js";
+import { buildTeam, availablePicks, applyGains } from "../battle/runBattle.js";
 import { simulateBattle } from "../battle/sim.js";
 import { teamExp, utcDay } from "../battle/rewards.js";
 import { speciesName } from "../training.js";
@@ -28,7 +28,7 @@ export function getEncounterRecord(user, day) {
 
 /** Read-only: why a Trainer can't spot this player now, or null. `open`: they already have an encounter open. */
 export function spotBlock({ user, open, now }) {
-  if (!user || !buildTeam(user).length) return "no_team";
+  if (!user || !availablePicks(user).length) return "no_team";
   if (user.challenge?.run) return "run_open";
   // A wager's Stake is out of the balance until the offer ends, which would shield it from paying out.
   if (user.pendingWager) return "pending_wager";
@@ -52,13 +52,15 @@ export function recordSpot(user, now) {
  * sit out, the rest fight at their current Levels. A win pays the Prize money; a loss pays the same, or
  * all the player's CC if they hold less. EXP per knockout either way.
  */
-export function fightEncounter({ trainerData, userId, encounter: { team, trainer }, seed, now = new Date() }) {
+export function fightEncounter({ trainerData, userId, encounter: { team, trainer, pick = "casual" }, seed, now = new Date() }) {
   const user = trainerData[userId];
   if (user?.challenge?.run) return { ok: false, reason: "run_open" };
   if (user?.pendingWager) return { ok: false, reason: "pending_wager" };
   // As the Display team fights in casual battles: chosen Display moves, and
   // the Mega slot as a Mega only if it still qualifies (buildTeam re-checks).
-  const members = buildTeam(user, { team: team.map((m) => ({ id: m.speciesId, variant: m.variant, ...(m.megaForm && { mega: m.megaForm }) })) });
+  // Ranked (three-teams split): the Ranked team's moves and held items, still at real Levels.
+  const side = pick === "ranked" ? { movesetTeam: "battle", equipmentTeam: "battle" } : {};
+  const members = buildTeam(user, { ...side, team: team.map((m) => ({ id: m.speciesId, variant: m.variant, ...(m.copyUid && { uid: m.copyUid }), ...(m.megaForm && { mega: m.megaForm }) })) });
   if (!members.length) return { ok: false, reason: "no_team" };
 
   const foes = trainer.party.map((m) => ({ speciesId: m.speciesId, variant: "normal", name: speciesName(m.speciesId), level: m.level }));

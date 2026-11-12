@@ -20,6 +20,10 @@ import { pokedexView, renderPokedexCard, POKEDEX_SIZE } from "../utils/render/po
 import { inspectSlots, battleInfo } from "../commands/inspectpokemon.js";
 import { renderInspectCard, INSPECT_SIZE } from "../utils/render/inspectCard.js";
 import { BATTLE_FIXTURE, FIXTURES, leaderboardWorld } from "./fixtures/showteamFixtures.js";
+import { normalizeBox } from "../services/box.js";
+import { normalizeShowcase } from "../services/showcaseTeam.js";
+// Live records get their Showcase at load (filled once from the Casual team).
+const launched = (u) => { normalizeBox(u); normalizeShowcase(u); return u; };
 
 // Width × height of a PNG or GIF (cards animate when their sprites do).
 const dims = (b) => (b.subarray(0, 3).toString() === "GIF" ? [b.readUInt16LE(6), b.readUInt16LE(8)] : [b.readUInt32BE(16), b.readUInt32BE(20)]);
@@ -78,10 +82,11 @@ section("Trainer card");
   const user = { ...clone(FIXTURES.full.user), cc: 5400, tp: 8308, trainers: ["a.png", "b.png"] };
   user.pokemon[999] = { normal: 0, shiny: 0 }; // an emptied entry must not count
   user.pokemon["52:galar"] = { normal: 1, shiny: 0 }; // form keys are not species
+  launched(user);
   const before = clone(user);
   const v = trainerCardView(user, { displayName: "coop13", trainer: { name: "Acerola", tier: "mythic" } });
   assertEqual([v.owned, v.shinies, v.trainers], [6, 2, 2], "counts species owned now (not empty entries or form keys)");
-  assertEqual(v.team.map((s) => s.id), [6, 94, 445, 130, 25, 637], "the Team strip is the battle Team");
+  assertEqual(v.team.map((s) => s.id), [6, 94, 445, 130, 25, 637], "the strip is the Showcase (filled from the Casual team at launch)");
   assertEqual([v.rank.current, v.rank.next], ["Expert Trainer", "Veteran Trainer"], "rank and the next rank");
   assertEqual(user, before, "never mutates the record");
   assertEqual(dims(await renderTrainerCard(v)), [TRAINER_CARD_SIZE.w, TRAINER_CARD_SIZE.h], "renders");

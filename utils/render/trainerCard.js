@@ -3,7 +3,7 @@
 // /trainercard and /showcard as one image: the equipped trainer on a
 // tier-lit platform, rank with progress to the next one, TP / CC, the
 // collection numbers, battle record, the 8 Badges from /challenge, and the
-// Team strip (the battle Team, from buildTeamView, same as /showteam). Read-only.
+// Showcase strip (the Showcase team, from buildShowcaseView, same as /showcase). Read-only.
 // ==========================================================
 
 import { createCanvas } from "@napi-rs/canvas";
@@ -15,7 +15,7 @@ import { spriteStage, FRAMES } from "./stage.js";
 import { createBackdrop, hasBackdrop } from "./trainerBackdrop.js";
 import { poseAtFrame } from "../trainerIdle.js";
 import { trainersAnimated } from "../trainerAssets.js";
-import { buildTeamView } from "./teamView.js";
+import { buildTeamView, buildShowcaseView } from "./teamView.js";
 import { getRankProgress } from "../rankSystem.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.js";
 
@@ -35,10 +35,12 @@ const fmt = (n) => Number(n ?? 0).toLocaleString("en-US");
 /**
  * @param trainer { name, tier } of the equipped trainer (from trainerSprites.json), or null
  */
-export function trainerCardView(user, { displayName, trainer }) {
+// luck: luckSummary() on the private card only; null when shared publicly.
+export function trainerCardView(user, { displayName, trainer, luck = null }) {
   const owned = Object.entries(user?.pokemon ?? {}).filter(([k, v]) => /^\d+$/.test(k) && (v?.normal ?? 0) + (v?.shiny ?? 0) > 0);
   const trainers = Array.isArray(user?.trainers) ? user.trainers.length : Object.keys(user?.trainers ?? {}).length;
-  const team = buildTeamView(user, { displayName });
+  const team = buildTeamView(user, { displayName }); // Ranked record only
+  const showcase = buildShowcaseView(user, { displayName }); // the strip (three-teams split)
   const earned = earnedBadgeKeys(user);
   return {
     displayName,
@@ -52,8 +54,9 @@ export function trainerCardView(user, { displayName, trainer }) {
     trainers,
     badges: GYM_BADGES.map((b) => ({ key: b.key, file: b.image.split("/").pop(), earned: earned.includes(b.key) })),
     battle: team.battle,
-    team: team.slots,
-    fallbackTeam: team.fallback,
+    team: showcase.slots,
+    fallbackTeam: false,
+    luck,
   };
 }
 
@@ -211,7 +214,7 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
   stat(ctx, "SHINY", fmt(v.shinies), rx + 3 * (sw + gap), sy, sw, COLOR.gold);
   const sy2 = sy + 86 + gap;
   stat(ctx, "TRAINERS", fmt(v.trainers), rx, sy2, sw);
-  stat(ctx, "BATTLE RATING", v.battle ? fmt(v.battle.rating) : "—", rx + (sw + gap), sy2, sw);
+  stat(ctx, "RANKED RATING", v.battle ? fmt(v.battle.rating) : "—", rx + (sw + gap), sy2, sw);
   stat(ctx, "RECORD", v.battle ? `${v.battle.wins}W–${v.battle.losses}L` : "—", rx + 2 * (sw + gap), sy2, 2 * sw + gap);
 
   // Badges from /challenge: earned ones in color, the rest dimmed.
@@ -236,7 +239,14 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
   const ty = BADGE_ROW_Y + BADGE + 20;
   ctx.font = font(15, 800);
   ctx.fillStyle = COLOR.textFaint;
-  ctx.fillText(v.fallbackTeam ? "TEAM  (none set: first Pokémon owned)" : "TEAM", rx, ty + 14);
+  ctx.fillText(v.team.length ? "SHOWCASE" : "SHOWCASE  (no favorites picked yet)", rx, ty + 14);
+  if (v.luck) {
+    // Private copy only: the random-reward pity meter (was /luck).
+    ctx.textAlign = "right";
+    ctx.fillStyle = COLOR.textMuted;
+    ctx.fillText(`LUCK · ${v.luck.chance}% REWARD CHANCE (+${v.luck.bonus}%)`, rx + rw, ty + 14);
+    ctx.textAlign = "left";
+  }
   const slotW = (rw - 5 * 10) / 6, slotH = H - M - (ty + 26);
   const ph = await loadPlaceholder();
   for (let i = 0; i < 6; i++) {
@@ -245,8 +255,8 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
     ctx.fillStyle = s ? "#1a2135" : "#ffffff05";
     rr(ctx, x, y, slotW, slotH, 12);
     ctx.fill();
-    ctx.lineWidth = s?.shiny || i === 0 ? 2.5 : 1.5;
-    ctx.strokeStyle = !s ? "#2a3350" : s.shiny ? COLOR.gold : i === 0 ? COLOR.blue : s.mega ? COLOR.mega : "#323c5c";
+    ctx.lineWidth = s?.shiny ? 2.5 : 1.5; // the Showcase never fights: no lead highlight
+    ctx.strokeStyle = !s ? "#2a3350" : s.shiny ? COLOR.gold : s.mega ? COLOR.mega : "#323c5c";
     ctx.stroke();
     if (!s) continue;
     const spriteId = s.spriteId ?? s.id; // a Mega slot (teamView) draws its Mega sprite

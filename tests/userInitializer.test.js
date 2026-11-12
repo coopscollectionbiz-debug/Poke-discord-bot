@@ -129,7 +129,7 @@ assertEqual(changed.filter((k) => k !== "displayedPokemon" && k !== "training"),
 assertEqual((after.displayedPokemon ?? []).map((s) => (s && typeof s === "object" ? `${s.id}:${s.variant}` : s)), (modernBefore.displayedPokemon ?? []).map((s) => (s && typeof s === "object" ? `${s.id}:${s.variant}` : s)), "the team keeps the same Pokémon in the same slots");
 const added = Object.keys(after).filter((k) => !(k in modernBefore)).sort();
 // Pre-existing behavior (unchanged by the in-place fix): absent fields get defaults.
-assertEqual(added, ["box", "lastWeeklyPack", "onboardingDate", "onboardingStage", "pokedex", "rank", "starterPokemon", "weeklyPackClaimed"],
+assertEqual(added, ["box", "lastWeeklyPack", "onboardingDate", "onboardingStage", "pokedex", "rank", "showcaseTeam", "starterPokemon", "weeklyPackClaimed"],
   "only missing fields are filled with defaults");
 assertEqual(getTraining(modern, 6, "shiny").level, getTraining(modernBefore, 6, "shiny").level, "training level unchanged");
 assertEqual(modern.pendingWager?.stake, 500, "pending wager stake kept");

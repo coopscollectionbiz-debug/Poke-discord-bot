@@ -21,7 +21,7 @@ const ctx = { nonce: "abc123", ownerId: "111", ownerName: "Coop", slotCount: vie
 section("Command definition unchanged");
 {
   const json = showteam.data.toJSON();
-  assertEqual([json.name, json.description, (json.options ?? []).length], ["showteam", "Show your trainer + full team as a canvas card.", 0], "same name, description, no options");
+  assertEqual([json.name, json.description, (json.options ?? []).length], ["showteam", "Old name for /showcase: shows your Showcase team.", 1], "kept as an alias of /showcase (user: option)");
   assertEqual(json.default_member_permissions ?? null, null, "no permission gate (as before)");
   assertEqual(LAYOUT, "refined", "uses the approved refined layout");
   assertEqual(COLLECTOR_MS, 600_000, "controls expire after 10 minutes");

@@ -40,6 +40,7 @@ import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
 import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid, carryCopyUids, trainedSummary } from "./services/ownership.js";
 import { normalizeBox, allCopies, slotsHolding, mergeDex } from "./services/box.js";
+import { normalizeShowcase, prepareShowcaseSelection } from "./services/showcaseTeam.js";
 
 // Compact per-copy rows for the dashboard (see the /api/user payload).
 const TEAM_BIT = { displayedPokemon: 1, battleTeam: 2, showcaseTeam: 4 };
@@ -361,6 +362,9 @@ normalizeBattleTeam(user);
 // counts into copies on first run, reconciles after a rollback, and points
 // every team slot at one specific copy.
 normalizeBox(user);
+// Showcase team (services/showcaseTeam.js): filled once from the Casual team
+// at launch; afterwards each slot keeps its own copy.
+normalizeShowcase(user);
 // Held items: team equipment follows the cleaned teams (assignments of
 // Pokémon no longer on a team, Mega slots and unowned items are dropped;
 // unlocks are never touched). Never creates the field.
@@ -1649,6 +1653,19 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
 
 
 client.on("interactionCreate", async (interaction) => {
+  // Autocomplete (e.g. /pokedex name): answered at once from memory, never
+  // logged per keystroke. A command without a handler answers nothing.
+  if (interaction.isAutocomplete?.()) {
+    const cmd = client.commands.get(interaction.commandName);
+    try {
+      if (cmd?.autocomplete) await cmd.autocomplete(interaction, trainerData ?? {});
+      else await interaction.respond([]);
+    } catch (e) {
+      await interaction.respond([]).catch(() => {});
+    }
+    return;
+  }
+
   // ✅ TELEMETRY (consolidated)
   lastInteractionAtMs = Date.now();
 
@@ -2240,6 +2257,7 @@ app.get("/api/user-pokemon", (req, res) => {
     // TM system (T5): trained copies per line, for the copy choosers in
     // donate / evolve / shiny craft / Teams. { "6:normal": [{ uid, rev, tmMoves, teams }] }
     trained: trainedSummary(u),
+    showcaseTeam: Array.isArray(u.showcaseTeam) ? u.showcaseTeam : [], // three-teams split
     // Pokédex (ever caught; never drops): { id: 1 normal | 2 shiny | 3 both }.
     pokedex: u.pokedex ?? {},
     // Collection: every copy, one entry each (docs/adr/0001), for the box grid.
@@ -2383,13 +2401,27 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
     if (!id || !Array.isArray(team)) {
       return res.status(400).json({ success: false, error: "Missing id/team" });
     }
-    if (teamType !== "display" && teamType !== "battle") {
+    if (teamType !== "display" && teamType !== "battle" && teamType !== "showcase") {
       return res.status(400).json({ success: false, error: "Unknown team type" });
     }
     if (!requireDashboardSession(req, id)) {
       return res
         .status(403)
         .json({ success: false, error: "Invalid or expired session" });
+    }
+    // Showcase team (three-teams split): its own rules (repeats as separate
+    // copies, any unlocked Megas, no moves or items), so its own short path.
+    if (teamType === "showcase") {
+      return await lockUser(id, async () => {
+        const user = trainerData[id];
+        if (!user) return res.status(404).json({ success: false, error: "User not found" });
+        const u = normalizeUserSchema(id, user);
+        const prepared = prepareShowcaseSelection(u, team);
+        if (!prepared.ok) return res.status(prepared.status).json({ success: false, error: prepared.error, code: prepared.code });
+        u.showcaseTeam = prepared.team;
+        const saveAck = await saveAndAck(trainerData);
+        return res.json({ ...saveAckFields(saveAck), success: true, teamType, showcaseTeam: u.showcaseTeam, currentTeam: u.displayedPokemon, battleTeam: hasBattleTeam(u) ? u.battleTeam : null });
+      });
     }
     // Optional: this team was copied from the other one (Teams page "Copy
     // from …"); the copied Pokémon's moves come along in the same write.

@@ -32,7 +32,7 @@ import { normalizeTeam } from "../utils/teamNormalize.js";
 import { getMega, megaFormGate, megaBattleEligibility, megaBattleProfile, MEGA_ID_PATTERN } from "../utils/megas.js";
 import { unlockedForms, megaLineKey } from "./megaUnlocks.js";
 import { isMegaCapabilityEnabled } from "../config/features.js";
-import { slotCopyUid } from "./ownership.js";
+import { slotCopyUid, slotBoxUid } from "./ownership.js";
 
 const fail = (status, error, code) => ({ ok: false, status, error, code });
 
@@ -68,7 +68,8 @@ export function normalizeDisplayedTeam(user) {
     .map((t) => {
       const slot = { id: Number(t?.id), variant: t?.variant === "shiny" ? "shiny" : "normal" };
       const mega = megaFieldOf(t);
-      const uid = slotCopyUid(user, { ...slot, uid: t?.uid });
+      // Any copy of the line (docs/adr/0001); trained copies are copies too.
+      const uid = slotBoxUid(user, { ...slot, uid: t?.uid }) ?? slotCopyUid(user, { ...slot, uid: t?.uid });
       const out = mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
       return uid ? { ...out, uid } : out;
     })
@@ -111,7 +112,7 @@ export function prepareTeamSelection(user, rawTeam, { env = process.env } = {}) 
     // TM system: a named customized copy must exist for this exact line.
     const hasUidKey = entry && typeof entry === "object" && !Array.isArray(entry) && entry.uid !== undefined && entry.uid !== null;
     if (hasUidKey) {
-      const uid = slotCopyUid(user, { ...slot, uid: entry.uid });
+      const uid = slotBoxUid(user, { ...slot, uid: entry.uid }) ?? slotCopyUid(user, { ...slot, uid: entry.uid });
       if (!uid) return fail(400, "That Pokémon copy no longer exists. Reload and try again.", "unknown_copy");
       out = { ...out, uid };
     }

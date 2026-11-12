@@ -341,7 +341,11 @@ section("The Display team fights");
   assertEqual(e4.td.A.challenge.run.team.map((m) => m.speciesId), STRONG, "an Elite Four run too");
   const battleOnly = withBattleTeam().td;
   battleOnly.A.displayedPokemon = [];
-  assertEqual(block(battleOnly, "brock"), "no_team", "a Battle team alone can't challenge");
+  // Three-teams split: a Ranked team alone can challenge (with Ranked), not with Casual.
+  assertEqual(block(battleOnly, "brock"), null, "a Ranked team alone can challenge");
+  assertEqual(challengeBlock({ trainerData: battleOnly, userId: "A", key: "brock", now: D, pick: "casual" }), "no_team", "…but not with the empty Casual team");
+  const rk = runChallenge({ trainerData: battleOnly, userId: "A", key: "brock", seed: 1, now: D, pick: "ranked" });
+  assertTrue(rk.ok, "Fight with Ranked runs");
 }
 
 section("No Underdog surge");

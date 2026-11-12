@@ -23,7 +23,8 @@
 // ==========================================================
 
 import { getSpeciesEntry, isAcquirable } from "../utils/speciesCatalog.js";
-import { trainingKey, getTraining, expForLevel, rollCatchLevel, resetLevelIfGone } from "../utils/training.js";
+import { trainingKey, getTraining, expForLevel, rollCatchLevel } from "../utils/training.js";
+import { canRemoveCopies, removeCopies, plainCount } from "./ownership.js";
 import { LEVEL_CAP } from "../utils/battle/tuning.js";
 import { getCatalogItem, isHoldable } from "../catalog/items.js";
 import { grantItem, consumeItem, getQuantity, MAX_QUANTITY_PER_OP } from "./inventory.js";
@@ -268,6 +269,13 @@ export function applyChange(user, change, ctx = {}) {
         return result;
       }
       if (amount > before) return fail(`They have ${fmt(before)} × ${name}.`, { current: before });
+      // TM system (services/ownership.js): admin removals take untrained copies
+      // only; a copy with TM-trained moves is never removed this way (fail closed).
+      const can = canRemoveCopies(user, { id, variant, n: amount });
+      if (!can.ok) {
+        const untrained = plainCount(user, id, variant);
+        return fail(`${fmt(before - untrained)} of their ${fmt(before)} × ${name} have TM-trained moves and can't be removed here. At most ${fmt(untrained)} can be removed.`, { current: before, untrained });
+      }
       const after = before - amount;
       const result = { ok: true, summary: `Remove ${fmt(amount)} × ${name}`, before, after, warnings };
       if (after === 0) {
@@ -277,8 +285,8 @@ export function applyChange(user, change, ctx = {}) {
         result.levelReset = level;
         clearTeamSlots(user, id, variant);
       }
-      user.pokemon[id][variant] = after;
-      resetLevelIfGone(user, id, variant);
+      const removed = removeCopies(user, { id, variant, n: amount }); // counts, Level reset, empty entry
+      if (!removed.ok) return fail(removed.error ?? "Couldn't remove those copies.");
       return result;
     }
 

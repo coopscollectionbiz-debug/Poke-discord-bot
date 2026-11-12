@@ -37,7 +37,8 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
-import { bulkDonate } from "./utils/bulkDonate.js";
+import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
+import { pruneEmptyLine } from "./services/ownership.js";
 
 // Local saver — writes trainerData.json (in TRAINERDATA_DIR) & marks dirty
 import {
@@ -174,6 +175,17 @@ const NON_SHINY_DUST_CHANCE_BY_TIER = {
 // ==========================================================
 // 🎲 Weighted Roll Helper (used by donate API)
 // ==========================================================
+// Donation rewards (single + bulk share one table; utils/bulkDonate.js).
+function donationEconomy() {
+  return {
+    ccByTier: DONATION_CC_BY_TIER,
+    shinyDustByTier: DUST_REWARD_BY_TIER,
+    normalDustChanceByTier: NON_SHINY_DUST_CHANCE_BY_TIER,
+    normalDustWeeklyCap: NON_SHINY_DUST_WEEKLY_CAP,
+    rollDust: rollWeightedDust,
+  };
+}
+
 function rollWeightedDust(table = []) {
   let r = Math.random();
   for (const entry of table) {
@@ -297,10 +309,9 @@ function normalizeUserSchema(id, user) {
     entry.normal = Number.isFinite(entry.normal) ? entry.normal : 0;
     entry.shiny = Number.isFinite(entry.shiny) ? entry.shiny : 0;
 
-    // Auto-delete empty shells
-    if (entry.normal <= 0 && entry.shiny <= 0) {
-      delete user.pokemon[pid];
-    }
+    // Auto-delete empty shells (never a line that still has a customized
+    // copy record: services/ownership.js)
+    pruneEmptyLine(user, pid);
   }
 
   // ==========================================================
@@ -427,7 +438,7 @@ ensureWeeklyReset(user);
 import { lockUser } from "./utils/userLocks.js";
 import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
 import { createEncounterService, isEncounterButton } from "./utils/encounter/service.js";
-import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
+import { grantCatch, levelsForUser } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
 import { finishAllOpenRuns, challengeLogEntry, hideOpenRun, challengeProgress } from "./utils/challenge/runChallenge.js";
 import { showRunResult, challengeNames } from "./utils/battle/playback.js";
@@ -2302,131 +2313,77 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
 //    - shiny donation: fixed dust by tier
 //    - non-shiny donation: probability-based dust by tier
 // ==========================================================
+// TM safety (phase T0): the copy is chosen by services/ownership.js through
+// utils/bulkDonate.js donateOne(): always a plain copy; a copy with
+// TM-trained moves is never picked automatically (refused instead).
+// Optional client requestId: a repeat returns the first result and never
+// donates twice (double click / retried request).
 app.post("/api/pokemon/donate", express.json(), async (req, res) => {
-  const { id, pokeId, shiny, variant } = req.body;
+  try {
+    const { id, pokeId, shiny, variant, requestId = null } = req.body || {};
 
-  if (!id) return res.status(400).json({ error: "Missing id" });
-  if (pokeId == null) return res.status(400).json({ error: "Missing pokeId" });
+    if (!id) return res.status(400).json({ error: "Missing id" });
+    if (pokeId == null) return res.status(400).json({ error: "Missing pokeId" });
 
-  if (!requireDashboardSession(req, id)) {
-    return res.status(403).json({ error: "Invalid or expired session" });
-  }
-
-  await lockUser(id, async () => {
-    const user = trainerData[id];
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    trainerData[id] = normalizeUserSchema(id, user);
-    const u = trainerData[id];
-
-    const pokemonData = await getPokemonDataCached();
-
-    const pid = Number(pokeId);
-    const p = pokemonData[pid];
-    if (!p) return res.status(400).json({ error: "Invalid Pokémon ID" });
-
-    const baseValue = DONATION_CC_BY_TIER[String(p.tier || "common").toLowerCase()] ?? 0;
-
-    const chosenVariant =
-      typeof variant === "string"
-        ? normVariant(variant)
-        : (shiny ? "shiny" : "normal");
-
-    if (isDisplayedVariant(u, pid, chosenVariant)) {
-      return res.status(400).json({
-        error: `You can’t donate your ${chosenVariant} ${p.name} because it’s on one of your teams (Display or Battle). Remove it from that team first.`,
-      });
+    if (!requireDashboardSession(req, id)) {
+      return res.status(403).json({ error: "Invalid or expired session" });
+    }
+    if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId))) {
+      return res.status(400).json({ error: "Invalid request id" });
     }
 
-    const owned = u.pokemon?.[pid]?.[chosenVariant] || 0;
-    if (owned <= 0) {
-      return res.status(400).json({
-        error: `You don’t own a ${chosenVariant === "shiny" ? "shiny " : ""}${p.name} to donate.`,
-      });
+    const chosenVariant = typeof variant === "string" ? normVariant(variant) : (shiny ? "shiny" : "normal");
+    const pokemonData = await getPokemonDataCached(); // before the lock (A1 pattern)
+
+    const tx = await runInventoryTransaction({
+      trainerData,
+      userId: id,
+      lock: lockUser,
+      save: saveAndAck,
+      requestId,
+      payloadKey: `donate:${Number(pokeId)}:${chosenVariant}`,
+      mutate: (u) => {
+        normalizeUserSchema(id, u); // in place
+        ensureWeeklyReset(u);
+        const r = donateOne({
+          user: u,
+          pokeId,
+          variant: chosenVariant,
+          pokemonData,
+          economy: donationEconomy(),
+          isOnTeam: (pid, v) => isDisplayedVariant(u, pid, v),
+        });
+        if (r.error) return { ok: false, status: 400, error: r.error, ...(r.code && { code: r.code }), ...(r.protected && { protected: r.protected }) };
+        trackProgress(u, [{ type: "donated" }]); // Release C
+        const ev = r.event;
+        return {
+          ok: true,
+          event: ev,
+          donated: { id: ev.pokemonId, name: ev.pokemonName, variant: ev.variant },
+          gainedCC: ev.ccGained,
+          totalCC: u.cc,
+          shinyDustGained: ev.dustGained,
+          shinyDustTotal: getItem(u, "shiny_dust"),
+          nonShinyDustWeeklyRemaining: ev.variant === "shiny" ? null : Math.max(0, NON_SHINY_DUST_WEEKLY_CAP - (u.nonShinyDustEarnedThisWeek ?? 0)),
+        };
+      },
+    });
+    if (!tx.ok) {
+      const { ok, status = 400, ...rest } = tx;
+      return res.status(status).json(rest);
     }
-
-    // --------------------------
-    // ✅ CC reward (unchanged)
-    // --------------------------
-    const finalValue = chosenVariant === "shiny" ? baseValue * 5 : baseValue;
-
-    // --------------------------
-    // ✅ Dust reward (NEW for non-shiny)
-    // --------------------------
-    const tier = tierKey(p.tier || "common");
-
-    let dustReward = 0;
-
-if (chosenVariant === "shiny") {
-  // fixed dust for shiny donation (NOT capped here)
-  dustReward = (DUST_REWARD_BY_TIER[tier] ?? 0);
-} else {
-  // ✅ weekly cap applies only to NON-SHINY dust
-  ensureWeeklyReset(u);
-
-  const earned = u.nonShinyDustEarnedThisWeek ?? 0;
-  const remaining = Math.max(0, NON_SHINY_DUST_WEEKLY_CAP - earned);
-
-  if (remaining > 0) {
-    const table = NON_SHINY_DUST_CHANCE_BY_TIER?.[tier] ?? [{ chance: 1, dust: 0 }];
-    const rolled = rollWeightedDust(table);
-
-    dustReward = Math.min(rolled, remaining);
-    u.nonShinyDustEarnedThisWeek = earned + dustReward;
-  } else {
-    dustReward = 0;
-  }
-}
-
-    // --------------------------
-    // Apply donation
-    // --------------------------
-    u.pokemon ??= {};
-    u.pokemon[pid] ??= { normal: 0, shiny: 0 };
-    u.pokemon[pid][chosenVariant] -= 1;
-
-    if ((u.pokemon[pid].normal ?? 0) <= 0 && (u.pokemon[pid].shiny ?? 0) <= 0) {
-      delete u.pokemon[pid];
-    }
-    resetLevelIfGone(u, pid, chosenVariant);
-
-    u.cc = (u.cc ?? 0) + finalValue;
-
-    if (dustReward > 0) {
-      addItem(u, "shiny_dust", dustReward);
-    }
-    trackProgress(u, [{ type: "donated" }]); // Release C
-
-    const saveAck = await saveAndAck(trainerData);
 
     // 📜 Event log — donations are half of the CC-flow picture (rolls
-    // being the other half). Tracks the Pokemon given up, its tier,
-    // and the CC/dust returned.
-    logEvent("donate", id, {
-      pokemonId: pid,
-      pokemonName: p.name,
-      tier: String(p.tier || "common").toLowerCase(),
-      variant: chosenVariant,
-      ccGained: finalValue,
-      dustGained: dustReward,
-    });
+    // being the other half). Never logged twice for a replayed request.
+    const { event, ok, ...body } = tx.result;
+    if (!tx.replayed) logEvent("donate", id, event);
 
-    const nonShinyDustWeeklyRemaining =
-  chosenVariant === "shiny"
-    ? null
-    : Math.max(0, NON_SHINY_DUST_WEEKLY_CAP - (u.nonShinyDustEarnedThisWeek ?? 0));
-
-return res.json({ ...saveAckFields(saveAck),
-  success: true,
-  donated: { id: pid, name: p.name, variant: chosenVariant },
-  gainedCC: finalValue,
-  totalCC: u.cc,
-  shinyDustGained: dustReward,
-  shinyDustTotal: getItem(u, "shiny_dust"),
-  nonShinyDustWeeklyRemaining,
-});
-
-  });
+    return res.json({ ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...body });
+  } catch (err) {
+    console.error("❌ /api/pokemon/donate:", err?.message || err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // ==========================================================
@@ -2437,53 +2394,66 @@ return res.json({ ...saveAckFields(saveAck),
 // stays valid. Multi-select still refuses Team members.
 // ==========================================================
 app.post("/api/pokemon/donate-bulk", express.json({ limit: "100kb" }), async (req, res) => {
-  const { id, mode, items } = req.body;
+  try {
+    const { id, mode, items, requestId = null } = req.body || {};
 
-  if (!id) return res.status(400).json({ error: "Missing id" });
+    if (!id) return res.status(400).json({ error: "Missing id" });
 
-  if (!requireDashboardSession(req, id)) {
-    return res.status(403).json({ error: "Invalid or expired session" });
-  }
+    if (!requireDashboardSession(req, id)) {
+      return res.status(403).json({ error: "Invalid or expired session" });
+    }
+    if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId))) {
+      return res.status(400).json({ error: "Invalid request id" });
+    }
 
-  await lockUser(id, async () => {
-    const user = trainerData[id];
-    if (!user) return res.status(404).json({ error: "User not found" });
+    const pokemonData = await getPokemonDataCached(); // before the lock (A1 pattern)
+    // Same id + same list → replay; same id + different list → conflict.
+    const payloadKey = `donate-bulk:${mode}:${crypto.createHash("sha256").update(JSON.stringify(items ?? null)).digest("hex").slice(0, 32)}`;
 
-    trainerData[id] = normalizeUserSchema(id, user);
-    const u = trainerData[id];
-    ensureWeeklyReset(u); // dust cap must reflect the current week before rolling
-
-    const result = bulkDonate({
-      user: u,
-      mode,
-      items,
-      pokemonData: await getPokemonDataCached(),
-      economy: {
-        ccByTier: DONATION_CC_BY_TIER,
-        shinyDustByTier: DUST_REWARD_BY_TIER,
-        normalDustChanceByTier: NON_SHINY_DUST_CHANCE_BY_TIER,
-        normalDustWeeklyCap: NON_SHINY_DUST_WEEKLY_CAP,
-        rollDust: rollWeightedDust,
+    const tx = await runInventoryTransaction({
+      trainerData,
+      userId: id,
+      lock: lockUser,
+      save: saveAndAck,
+      requestId,
+      payloadKey,
+      mutate: (u) => {
+        normalizeUserSchema(id, u); // in place
+        ensureWeeklyReset(u); // dust cap must reflect the current week before rolling
+        const result = bulkDonate({
+          user: u,
+          mode,
+          items,
+          pokemonData,
+          economy: donationEconomy(),
+          isOnTeam: (pid, variant) => isDisplayedVariant(u, pid, variant),
+        });
+        if (result.error) return { ok: false, status: 400, error: result.error };
+        trackProgress(u, [{ type: "donated", n: result.donatedCopies }]); // Release C
+        return { ok: true, ...result };
       },
-      isOnTeam: (pid, variant) => isDisplayedVariant(u, pid, variant),
     });
-
-    if (result.error) return res.status(400).json({ error: result.error });
-    trackProgress(u, [{ type: "donated", n: result.donatedCopies }]); // Release C
-
-    const saveAck = await saveAndAck(trainerData);
+    if (!tx.ok) {
+      const { ok, status = 400, ...rest } = tx;
+      return res.status(status).json(rest);
+    }
 
     // One event per copy, same shape as single donate, so admin analytics
     // count bulk donations without special-casing. logEvent never throws.
-    for (const ev of result.events) logEvent("donate", id, { ...ev, source: mode });
+    if (!tx.replayed) for (const ev of tx.result.events) logEvent("donate", id, { ...ev, source: mode });
 
-    return res.json({ ...saveAckFields(saveAck),
+    return res.json({ ...saveAckFields(tx),
       success: true,
-      donatedCopies: result.donatedCopies,
-      gainedCC: result.gainedCC,
-      shinyDustGained: result.shinyDustGained,
+      replayed: !!tx.replayed,
+      donatedCopies: tx.result.donatedCopies,
+      gainedCC: tx.result.gainedCC,
+      shinyDustGained: tx.result.shinyDustGained,
     });
-  });
+  } catch (err) {
+    console.error("❌ /api/pokemon/donate-bulk:", err?.message || err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 

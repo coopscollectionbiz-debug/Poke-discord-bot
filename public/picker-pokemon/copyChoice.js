@@ -68,11 +68,14 @@ export function copiesOf(userData, pokeId, variant) {
 /**
  * Mount the chooser into `container` (replacing its content).
  * mode: "donate" | "evolve" | "convert" | "feed". onChange(): after any change.
- * preselect: the uid of the tile the player tapped. exclude: a uid not to offer (Feed target).
+ * preselect: the uid of the tile the player tapped. exclude: uid(s) not to offer (the Feed
+ * target, or copies already on the same team).
  * Returns { needed, get(): { ok, uid, rev, confirmTrained, copy } }.
  */
 export function mountCopyChoice(container, { userData, pokeId, variant, name, mode, onChange = () => {}, preselect = null, exclude = null }) {
-  const copies = copiesOf(userData, pokeId, variant).filter((c) => c.uid !== exclude);
+  // exclude: one uid or a list (copies already used elsewhere on the same team).
+  const skip = new Set([exclude ?? []].flat());
+  const copies = copiesOf(userData, pokeId, variant).filter((c) => !skip.has(c.uid));
   container.innerHTML = "";
   const lockedOut = (c) => (mode === "donate" || mode === "feed") && c.teams > 0;
   if (mode !== "feed" && copies.length <= 1 && !copies.some((c) => c.trained)) {

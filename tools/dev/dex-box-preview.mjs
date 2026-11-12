@@ -12,6 +12,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { normalizeBox, allCopies, slotsHolding, mergeDex, feedCopy, canFeed } from "../../services/box.js";
 import { levelsForUser, expForLevel } from "../../utils/training.js";
+import { normalizeShowcase, prepareShowcaseSelection } from "../../services/showcaseTeam.js";
+import { prepareTeamSelection } from "../../services/megaTeam.js";
+import { prepareBattleTeamSelection } from "../../services/battleTeam.js";
+import { carryCopyUids } from "../../services/ownership.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const PORT = Number(process.argv[2] ?? 5200);
@@ -29,6 +33,7 @@ const user = {
 };
 let seed = 3;
 normalizeBox(user, { rand: () => ((seed = (seed * 9301 + 49297) % 233280) / 233280) });
+normalizeShowcase(user); // launch fill from the Casual team
 // Backfill stand-in: species caught before and since donated/evolved away.
 mergeDex(user, { 2: 1, 7: 1, 10: 3, 19: 1, 35: 1, 129: 1, 147: 1 });
 
@@ -37,7 +42,7 @@ const payload = () => {
   const levels = levelsForUser(user);
   return {
     id: ID, cc: user.cc, tp: user.tp, rank: "Advanced Trainer", items: user.items,
-    pokemon: user.pokemon, currentTeam: user.displayedPokemon, battleTeam: user.battleTeam,
+    pokemon: user.pokemon, currentTeam: user.displayedPokemon, battleTeam: user.battleTeam, showcaseTeam: user.showcaseTeam,
     levels, powers: {}, trained: {}, pokedex: user.pokedex ?? {},
     copies: allCopies(user).map((c) => [c.uid, c.id, c.variant === "shiny" ? 1 : 0, c.level, c.at ?? 0, c.trained ? 1 : 0, slotsHolding(user, c.uid).reduce((m, s) => m | (TEAM_BIT[s.field] ?? 0), 0)]),
     ranked: { wins: 0, losses: 0, rating: 1000, position: null, players: 1, streak: 0 },
@@ -49,7 +54,7 @@ const payload = () => {
 const app = express();
 app.use(express.json());
 app.use("/public", express.static(path.join(ROOT, "public"), { etag: false, maxAge: 0 }));
-for (const page of ["picker-pokemon", "pokedex", "overview"]) {
+for (const page of ["picker-pokemon", "pokedex", "overview", "teams"]) {
   app.get(`/public/${page}`, (_, res) => res.sendFile(path.join(ROOT, "public", page, "index.html")));
 }
 app.get("/api/pokedex-status", (_, res) => res.json({ liveGenerations: [1, 2, 3, 4, 5], maxDex: 649 }));
@@ -57,6 +62,23 @@ app.get("/api/user-pokemon", (_, res) => res.json(payload()));
 app.get("/api/user", (_, res) => res.json({ id: ID, name: "Preview", tp: user.tp, rank: "Advanced Trainer", cc: user.cc }));
 app.get("/api/achievements", (_, res) => res.json({ claimable: 0, achievements: [] }));
 app.get("/api/mega", (_, res) => res.json({ success: true, enabled: false }));
+app.get("/api/held-items", (_, res) => res.json({ success: true, enabled: false }));
+// Team saves through the real validators (no moves copy, no held items).
+app.post("/api/set-pokemon-team", (req, res) => {
+  const { team, teamType = "display" } = req.body ?? {};
+  if (teamType === "showcase") {
+    const r = prepareShowcaseSelection(user, team);
+    if (!r.ok) return res.status(r.status).json({ success: false, error: r.error });
+    user.showcaseTeam = r.team;
+  } else {
+    const r = teamType === "battle" ? prepareBattleTeamSelection(user, team) : prepareTeamSelection(user, team);
+    if (!r.ok) return res.status(r.status).json({ success: false, error: r.error });
+    const field = teamType === "battle" ? "battleTeam" : "displayedPokemon";
+    user[field] = carryCopyUids(user, user[field], r.team, team);
+    normalizeBox(user);
+  }
+  res.json({ success: true, saved: true, teamType, currentTeam: user.displayedPokemon, battleTeam: user.battleTeam, showcaseTeam: user.showcaseTeam });
+});
 app.post("/api/pokemon/feed", (req, res) => {
   const { from, to, rev } = req.body ?? {};
   const can = canFeed(user, { from, to, confirmRev: rev });

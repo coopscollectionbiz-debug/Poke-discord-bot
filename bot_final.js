@@ -94,7 +94,7 @@ import {
   ensureWeeklyReset,
 } from "./utils/economyRules.js";
 
-import { saveAndAck, SAVE_DELAYED_NOTE, saveAckFields } from "./utils/saveManager.js";
+import { saveAndAck, SAVE_DELAYED_NOTE, saveAckFields, promptSave } from "./utils/saveManager.js";
 
 // Nothing may be written to disk until player data has been loaded.
 requireLoadBeforeWrite();
@@ -1038,7 +1038,11 @@ async function saveDataToDiscord(data, { force = false } = {}) {
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   const userId = interactionUser.id;
 
-  return lockUser(userId, async () => {
+  // The lock covers the roll, the grant and the save. The card is drawn and
+  // posted after it's released, so a slow render or Discord upload never
+  // holds up the player's next command; the save is a prompt one, so the card
+  // still appears only once the catch is on disk.
+  const granted = await lockUser(userId, async () => {
     console.log("⚙️ tryGiveRandomReward executed for", interactionUser.username);
 
     // =============================
@@ -1098,56 +1102,61 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // =============================
     // 💾 SAVE (atomic)
     // =============================
-    await enqueueSave(trainerData);
+    await promptSave(trainerData);
 
-    // =============================
-    // 🖼️ SPRITE
-    // =============================
-    let spriteUrl = pokemonSpriteUrl(reward.id, isShiny);
-
-    // =============================
-    // 📣 PUBLIC ANNOUNCEMENT
-    // =============================
-    // The catch card (utils/render/catchMessage.js); the old embed if it can't render.
-    const { message: announcement, broadcast } = await catchAnnouncement({
-      user: userObj,
-      catcher: interactionUser,
-      pokemonId: reward.id,
-      shiny: isShiny,
-      catchResult: caught,
-      fallback: () => ({
-        content: `🎉 <@${userId}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`,
-        embeds: [createPokemonRewardEmbed(reward, isShiny, spriteUrl)],
-      }),
-    });
-
-    try {
-      await msgOrInteraction.channel.send(announcement);
-    } catch (err) {
-      console.warn("⚠️ Public announcement failed:", err.message);
-    }
-
-    // =============================
-    // 🌐 GLOBAL BROADCAST (fire-and-forget — don't hold the lock)
-    // =============================
-    broadcastReward(client, {
-      user: interactionUser,
-      type: "pokemon",
-      item: {
-        id: reward.id,
-        name: reward.name,
-        rarity: reward.tier || "common",
-        spriteFile: `${reward.id}.gif`
-      },
-      shiny: isShiny,
-      source: "random encounter",
-      image: broadcast?.image ?? null, // the same catch card, under a no-ping caption
-      caption: broadcast?.caption ?? null,
-    }).catch(err => console.error("❌ broadcastReward failed:", err.message));
-
-    console.log(`✅ Reward granted to ${interactionUser.username}`);
-    return "caught";
+    return { reward, isShiny, caught };
   });
+  // "cooldown", "missed" or undefined (reward selection failed): nothing to post.
+  if (!granted || typeof granted !== "object") return granted;
+  const { reward, isShiny, caught } = granted;
+
+  // =============================
+  // 🖼️ SPRITE
+  // =============================
+  let spriteUrl = pokemonSpriteUrl(reward.id, isShiny);
+
+  // =============================
+  // 📣 PUBLIC ANNOUNCEMENT
+  // =============================
+  // The catch card (utils/render/catchMessage.js); the old embed if it can't render.
+  const { message: announcement, broadcast } = await catchAnnouncement({
+    user: userObj,
+    catcher: interactionUser,
+    pokemonId: reward.id,
+    shiny: isShiny,
+    catchResult: caught,
+    fallback: () => ({
+      content: `🎉 <@${userId}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`,
+      embeds: [createPokemonRewardEmbed(reward, isShiny, spriteUrl)],
+    }),
+  });
+
+  try {
+    await msgOrInteraction.channel.send(announcement);
+  } catch (err) {
+    console.warn("⚠️ Public announcement failed:", err.message);
+  }
+
+  // =============================
+  // 🌐 GLOBAL BROADCAST (fire-and-forget — don't hold the lock)
+  // =============================
+  broadcastReward(client, {
+    user: interactionUser,
+    type: "pokemon",
+    item: {
+      id: reward.id,
+      name: reward.name,
+      rarity: reward.tier || "common",
+      spriteFile: `${reward.id}.gif`
+    },
+    shiny: isShiny,
+    source: "random encounter",
+    image: broadcast?.image ?? null, // the same catch card, under a no-ping caption
+    caption: broadcast?.caption ?? null,
+  }).catch(err => console.error("❌ broadcastReward failed:", err.message));
+
+  console.log(`✅ Reward granted to ${interactionUser.username}`);
+  return "caught";
 }
 
 // Trainer encounters (utils/encounter/service.js): open encounters live in

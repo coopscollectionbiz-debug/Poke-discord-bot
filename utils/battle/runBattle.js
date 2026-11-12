@@ -19,9 +19,10 @@ import { getTraining, addExp, trainingKey, speciesName } from "../training.js";
 import { getMove } from "./data.js";
 import { movesLearned } from "./moveset.js";
 import { simulateBattle } from "./sim.js";
-import { teamPower, rollSurge } from "./power.js";
+import { teamPower, rollSurge, cuteSurgeBoost } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, getCasualRecord, capBlock, recordStart } from "./rewards.js";
-import { RANKED } from "./tuning.js";
+import { RANKED, CUTE } from "./tuning.js";
+import { teamCuteness } from "./cuteness.js";
 import { chosenMoves } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
 import { megaBattleEligibility, megaBattleProfile } from "../megas.js";
@@ -119,11 +120,15 @@ export const teamFor = (user, mode, opts = {}) => (mode === "open" ? buildTeam(u
 // back to their real ones (ranked/wager members carry realLevel).
 const atRealLevels = (members) => members.map((m) => (m.realLevel != null ? { ...m, level: m.realLevel } : m));
 
+// After a cute surge, the surging side earns as the Levels it fought at
+// (`levelMult`, Lv 100 at most), so a far stronger opponent pays like an
+// even fight instead of a fortune in EXP.
 function applyExp(user, side, result, sideIndex) {
   const knockedOut = result.knockouts
     .filter((k) => k.bySide === sideIndex)
     .map((k) => side.opponent[k.slot]);
-  const base = teamExp({ members: atRealLevels(side.members), knockedOut: atRealLevels(knockedOut), won: result.winner === sideIndex });
+  const surged = (m) => (side.levelMult ? { ...m, level: Math.min(100, Math.round(m.level * side.levelMult)) } : m);
+  const base = teamExp({ members: atRealLevels(side.members).map(surged), knockedOut: atRealLevels(knockedOut), won: result.winner === sideIndex });
   // Lucky Egg: the holder's battle EXP × 1.5, rounded down (Gen 5+). Members
   // without an EXP item keep exactly the same gain as before.
   const gains = base.map((g, i) => Math.floor(g * expMultiplierFor(side.members[i].item)));
@@ -178,9 +183,10 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
   const records = [getBattleRecord(challenger, day), getBattleRecord(defender, day)];
 
   // Power at the Levels they fight at (Lv 50 in ranked/wager). The Underdog
-  // surge is a casual-only feature.
+  // surge, and the cute surge with it, is a casual-only feature.
   const powers = teams.map(teamPower);
-  const surge = rated ? null : rollSurge(powers, seed);
+  const surge = rated ? null : rollSurge(powers, seed, teams.map(teamCuteness));
+  if (surge?.cute) Object.assign(surge, cuteSurgeBoost(teams[surge.side], CUTE.margin * powers[1 - surge.side]));
   const result = simulateBattle({ sides: teams.map((members) => ({ members })), seed: seed + 1, surge });
 
   const ids = [challengerId, defenderId];
@@ -190,7 +196,7 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
 
   const exp = {};
   for (const i of mode === "wager" ? [0, 1] : [0]) {
-    exp[ids[i]] = applyExp(users[i], { members: teams[i], opponent: teams[1 - i] }, result, i);
+    exp[ids[i]] = applyExp(users[i], { members: teams[i], opponent: teams[1 - i], ...(surge?.cute && surge.side === i && { levelMult: surge.levelMult }) }, result, i);
   }
 
   let rating = {};

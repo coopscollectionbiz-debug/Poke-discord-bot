@@ -1,7 +1,8 @@
 import { getSpecies } from "./data.js";
 import { computeStats } from "./stats.js";
-import { SURGE } from "./tuning.js";
+import { SURGE, CUTE } from "./tuning.js";
 import { createRng } from "./rng.js";
+import { cuteFactor } from "./cuteness.js";
 
 // Power rating: the sum of every Team member's stats at its Level.
 export function teamPower(members) {
@@ -42,9 +43,30 @@ export function surgeChance(powerA, powerB) {
 // A fixed stat boost can't produce upsets at 5×+ gaps (most of that gap is
 // Level: HP and the damage formula's Level term), so it scales with the gap.
 // Uses the seed's first draw; the sim gets seed + 1.
-export function rollSurge([powerA, powerB], seed) {
+//
+// `cuteness` is each side's Team Cuteness (utils/battle/cuteness.js). An
+// Underdog over CUTE.threshold also rolls for the cute surge, on the seed's
+// second draw, so every other battle stays the same seed for seed. A cute
+// surge replaces today's and lifts the Team past the other one: runBattle
+// sets its exact Levels and stat boost with cuteSurgeBoost. When the cute
+// roll misses, the surge is today's, object for object.
+export function rollSurge([powerA, powerB], seed, cuteness = [0, 0]) {
   const { underdog, chance } = surgeChance(powerA, powerB);
-  if (underdog === null || createRng(seed).next() >= chance) return null;
+  if (underdog === null) return null;
+  const rng = createRng(seed);
+  const surges = rng.next() < chance;
   const ratio = Math.max(powerA, powerB) / Math.min(powerA, powerB);
+  const k = cuteFactor(cuteness[underdog]);
+  if (k > 0 && rng.next() < CUTE.chance * k) return { side: underdog, levelMult: ratio * CUTE.margin, statMult: 1, cute: true };
+  if (!surges) return null;
   return { side: underdog, levelMult: Math.max(1, ratio / SURGE.residual) };
+}
+
+// A cute surge's lift for `members`: Levels first, then a stat boost for
+// whatever Lv 100 leaves short, until their Power is `targetPower`. No cap.
+// Power grows about evenly with Level, so the Level lift is the Power ratio.
+export function cuteSurgeBoost(members, targetPower) {
+  const levelMult = targetPower / teamPower(members);
+  const lifted = members.map((m) => ({ ...m, level: Math.min(100, Math.round(m.level * levelMult)) }));
+  return { levelMult, statMult: Math.max(1, targetPower / teamPower(lifted)) };
 }

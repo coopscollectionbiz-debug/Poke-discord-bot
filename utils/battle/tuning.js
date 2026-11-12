@@ -21,6 +21,16 @@ export const TURN_CAP = 300;
 // the Underdog's Levels until the gap is `residual`. Tuned by
 // tests/battleBalance.test.js: even 43%, 2× 5.0%, 3× 2.1%, 5×+ 0.6%.
 export const SURGE = { minRatio: 1.25, perRatio: 0.15, maxChance: 0.2, residual: 1.3 };
+// The cute surge (docs/superpowers/specs/2026-11-11-cuteness-design.md,
+// decided 2026-11-11): a second roll for an Underdog whose Team Cuteness is
+// over `threshold`, at `chance` × a curve from 0 there to 1 at 10
+// (utils/battle/cuteness.js). It lifts the Team until its Power is `margin` ×
+// the other Team's, with no cap. The owner's targets against six mythics:
+// a Team averaging 10 wins 42% and a typical cute Team (scored 6 or 7, about
+// 6.3 on average) 20%. A straight line can't give both, so the curve rises
+// fastest just above `threshold` (`curve` < 1 is the exponent). Measured by
+// tests/cutenessBalance.test.js.
+export const CUTE = { threshold: 5, chance: 0.42, curve: 0.55, margin: 1.5 };
 
 // Catch level by Stage (or "legendary": Tier legendary/mythic at Stage 1).
 export const CATCH_RANGES = {

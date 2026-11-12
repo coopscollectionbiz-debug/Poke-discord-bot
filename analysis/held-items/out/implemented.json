@@ -1,0 +1,419 @@
+{
+  "parity": {
+    "battles": 3000,
+    "differences": 0
+  },
+  "single": [
+    {
+      "id": "leftovers",
+      "win": 0.663
+    },
+    {
+      "id": "sitrus_berry",
+      "win": 0.641
+    },
+    {
+      "id": "focus_sash",
+      "win": 0.497
+    },
+    {
+      "id": "quick_claw",
+      "win": 0.532
+    },
+    {
+      "id": "expert_belt",
+      "win": 0.5285
+    },
+    {
+      "id": "bright_powder",
+      "win": 0.5865
+    },
+    {
+      "id": "focus_band",
+      "win": 0.5355
+    },
+    {
+      "id": "eviolite",
+      "win": 0.531
+    },
+    {
+      "id": "shell_bell",
+      "win": 0.562
+    },
+    {
+      "id": "black_sludge",
+      "win": 0.352
+    },
+    {
+      "id": "muscle_band",
+      "win": 0.5365
+    },
+    {
+      "id": "wise_glasses",
+      "win": 0.5295
+    },
+    {
+      "id": "charcoal",
+      "win": 0.4965
+    },
+    {
+      "id": "mystic_water",
+      "win": 0.509
+    },
+    {
+      "id": "miracle_seed",
+      "win": 0.503
+    },
+    {
+      "id": "magnet",
+      "win": 0.498
+    },
+    {
+      "id": "never_melt_ice",
+      "win": 0.501
+    },
+    {
+      "id": "black_belt",
+      "win": 0.4735
+    },
+    {
+      "id": "poison_barb",
+      "win": 0.5095
+    },
+    {
+      "id": "soft_sand",
+      "win": 0.5015
+    },
+    {
+      "id": "sharp_beak",
+      "win": 0.493
+    },
+    {
+      "id": "twisted_spoon",
+      "win": 0.496
+    },
+    {
+      "id": "silver_powder",
+      "win": 0.4965
+    },
+    {
+      "id": "hard_stone",
+      "win": 0.5045
+    },
+    {
+      "id": "spell_tag",
+      "win": 0.502
+    },
+    {
+      "id": "dragon_fang",
+      "win": 0.4895
+    },
+    {
+      "id": "black_glasses",
+      "win": 0.5295
+    },
+    {
+      "id": "metal_coat",
+      "win": 0.491
+    },
+    {
+      "id": "silk_scarf",
+      "win": 0.557
+    },
+    {
+      "id": "fairy_feather",
+      "win": 0.5185
+    }
+  ],
+  "loadouts": {
+    "starter loadout (6 of the 7 combat starters)": {
+      "win": 0.762,
+      "turns": 29.086,
+      "cap": 0
+    },
+    "optimized 6-item loadout (all 33)": {
+      "win": 0.7865,
+      "turns": 29.4575,
+      "cap": 0
+    },
+    "optimized vs starter": {
+      "win": 0.544
+    }
+  },
+  "tiers": [
+    {
+      "lo": "common",
+      "hi": "uncommon",
+      "none": 0.0485,
+      "both": 0.0525,
+      "lowOnly": 0.1075,
+      "highOnly": 0.0195,
+      "bothStarter": 0.0565
+    },
+    {
+      "lo": "uncommon",
+      "hi": "rare",
+      "none": 0.309,
+      "both": 0.2895,
+      "lowOnly": 0.437,
+      "highOnly": 0.1775,
+      "bothStarter": 0.3015
+    },
+    {
+      "lo": "rare",
+      "hi": "epic",
+      "none": 0.2715,
+      "both": 0.2885,
+      "lowOnly": 0.3975,
+      "highOnly": 0.161,
+      "bothStarter": 0.2935
+    },
+    {
+      "lo": "epic",
+      "hi": "legendary",
+      "none": 0.073,
+      "both": 0.104,
+      "lowOnly": 0.152,
+      "highOnly": 0.048,
+      "bothStarter": 0.095
+    },
+    {
+      "lo": "rare",
+      "hi": "legendary",
+      "none": 0.0195,
+      "both": 0.0335,
+      "lowOnly": 0.052,
+      "highOnly": 0.012,
+      "bothStarter": 0.0255
+    }
+  ],
+  "rankedBins": [
+    {
+      "bin": "1–1.1",
+      "n": 1000,
+      "none": 0.257,
+      "both": 0.275,
+      "fav": 0.17,
+      "dog": 0.424
+    },
+    {
+      "bin": "1.1–1.25",
+      "n": 1000,
+      "none": 0.045,
+      "both": 0.058,
+      "fav": 0.019,
+      "dog": 0.106
+    },
+    {
+      "bin": "1.25–1.5",
+      "n": 1000,
+      "none": 0,
+      "both": 0.002,
+      "fav": 0.001,
+      "dog": 0.006
+    },
+    {
+      "bin": "1.5–2",
+      "n": 592,
+      "none": 0,
+      "both": 0,
+      "fav": 0,
+      "dog": 0
+    },
+    {
+      "bin": "2–3",
+      "n": 0,
+      "none": null,
+      "both": null,
+      "fav": null,
+      "dog": null
+    },
+    {
+      "bin": "3–∞",
+      "n": 0,
+      "none": null,
+      "both": null,
+      "fav": null,
+      "dog": null
+    }
+  ],
+  "casualBins": [
+    {
+      "bin": "1–1.1",
+      "n": 1000,
+      "none": 0.376,
+      "both": 0.498,
+      "fav": 0.166,
+      "dog": 0.657
+    },
+    {
+      "bin": "1.1–1.25",
+      "n": 396,
+      "none": 0.2828282828282828,
+      "both": 0.2878787878787879,
+      "fav": 0.2196969696969697,
+      "dog": 0.34595959595959597
+    },
+    {
+      "bin": "1.25–1.5",
+      "n": 504,
+      "none": 0.1765873015873016,
+      "both": 0.2003968253968254,
+      "fav": 0.14285714285714285,
+      "dog": 0.23412698412698413
+    },
+    {
+      "bin": "1.5–2",
+      "n": 805,
+      "none": 0.08819875776397515,
+      "both": 0.10062111801242236,
+      "fav": 0.084472049689441,
+      "dog": 0.12795031055900621
+    },
+    {
+      "bin": "2–3",
+      "n": 1000,
+      "none": 0.094,
+      "both": 0.115,
+      "fav": 0.104,
+      "dog": 0.137
+    },
+    {
+      "bin": "3–∞",
+      "n": 1000,
+      "none": 0.032,
+      "both": 0.031,
+      "fav": 0.016,
+      "dog": 0.03
+    }
+  ],
+  "rng": [
+    {
+      "label": "Bright Powder on slot 1",
+      "win": 0.5465,
+      "perBattle": {
+        "focusBand": 0,
+        "focusSash": 0,
+        "quickClaw": 0,
+        "leftovers": 0,
+        "sitrus": 0,
+        "shellBell": 0,
+        "missed": 1.609
+      },
+      "baseMisses": 1.089
+    },
+    {
+      "label": "Focus Band on slot 1",
+      "win": 0.5115,
+      "perBattle": {
+        "focusBand": 0.1015,
+        "focusSash": 0,
+        "quickClaw": 0,
+        "leftovers": 0,
+        "sitrus": 0,
+        "shellBell": 0,
+        "missed": 1.081
+      },
+      "baseMisses": 1.0215
+    },
+    {
+      "label": "Quick Claw on slot 1",
+      "win": 0.5175,
+      "perBattle": {
+        "focusBand": 0,
+        "focusSash": 0,
+        "quickClaw": 2.764,
+        "leftovers": 0,
+        "sitrus": 0,
+        "shellBell": 0,
+        "missed": 1.08
+      },
+      "baseMisses": 0.9765
+    },
+    {
+      "label": "Bright Powder + Focus Band + Quick Claw (slots 1–3)",
+      "win": 0.602,
+      "perBattle": {
+        "focusBand": 0.098,
+        "focusSash": 0,
+        "quickClaw": 2.124,
+        "leftovers": 0,
+        "sitrus": 0,
+        "shellBell": 0,
+        "missed": 1.7685
+      },
+      "baseMisses": 1.0585
+    }
+  ],
+  "species": [
+    {
+      "id": "light_ball",
+      "with": 0.2905,
+      "without": 0.1
+    },
+    {
+      "id": "thick_club",
+      "with": 0.688,
+      "without": 0.3795
+    }
+  ],
+  "mega": {
+    "itemized": 0.656,
+    "control": 0.5255,
+    "turns": 22.9495,
+    "cap": 0
+  },
+  "stall": [
+    {
+      "label": "no items (production pairs)",
+      "turns": 18.182,
+      "cap": 0,
+      "perBattle": {
+        "focusBand": 0,
+        "focusSash": 0,
+        "quickClaw": 0,
+        "leftovers": 0,
+        "sitrus": 0,
+        "shellBell": 0,
+        "missed": 0.668
+      }
+    },
+    {
+      "label": "optimized (production pairs)",
+      "turns": 20.637,
+      "cap": 0.003,
+      "perBattle": {
+        "focusBand": 0,
+        "focusSash": 0.133,
+        "quickClaw": 0.99,
+        "leftovers": 19.022,
+        "sitrus": 1.371,
+        "shellBell": 3.521,
+        "missed": 0.772
+      }
+    },
+    {
+      "label": "walls: Leftovers / Sitrus / Shell Bell / Bright Powder / Focus Band / Eviolite",
+      "turns": 38.228,
+      "cap": 0,
+      "perBattle": {
+        "focusBand": 0.215,
+        "focusSash": 0,
+        "quickClaw": 0,
+        "leftovers": 27.202,
+        "sitrus": 2,
+        "shellBell": 11.178,
+        "missed": 8.857
+      }
+    }
+  ],
+  "replay": {
+    "battles": 500,
+    "identical": 500
+  },
+  "luckyEgg": {
+    "meanBaseExpSlot1": 133.3945,
+    "meanWithEgg": 199.9215,
+    "ratio": 1.4987237104978093
+  }
+}

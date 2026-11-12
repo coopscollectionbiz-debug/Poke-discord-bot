@@ -89,10 +89,18 @@
         </div>
       </div>
     </section>
+
+    <!-- Held items (public/dashboardshop/heldItems.js; shown only when switched on) -->
+    <section class="shop-section" id="held-items" aria-labelledby="heldHeading" hidden>
+      <h2 id="heldHeading">Held items</h2>
+      <p class="subtitle">Permanent unlocks: buy an item once and equip it on one Pokémon in every team (Dashboard → Teams). Nothing is used up.</p>
+      <div class="shop-grid" id="heldGrid"></div>
+    </section>
   </main>
 
   <script type="module" src="/public/shared/shell.js"></script>
   <script type="module" src="/public/dashboardshop/script.js"></script>
+  <script type="module" src="/public/dashboardshop/heldItems.js"></script>
 
   <!-- Inject prices (ITEM_COSTS is set by script.js) -->
   <script>

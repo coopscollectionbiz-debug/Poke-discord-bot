@@ -12,13 +12,20 @@
 // one failing row rejects the whole request and the user is untouched.
 //
 // Each mode has its own rule, so the server can catch a stale list:
-//   duplicates  — must leave at least 1 copy of that variant. Team
+//   duplicates  — must leave at least 1 plain copy of that variant. Team
 //                 variants are allowed: the copy kept is the Team copy.
 //   multiselect — exactly 1 copy of that Pokémon in total, not on Team.
+//
+// TM safety (services/ownership.js): only PLAIN copies are ever donated
+// here. A copy with TM-trained moves (user.customPokemon) is never part of
+// a bulk donation; it can only go through a single, explicit donation.
+//
+// donateOne() is the single-copy donation (POST /api/pokemon/donate) with
+// the same per-copy rewards, so both routes share one rule.
 // ==========================================================
 
 import { grantItem } from "../services/inventory.js";
-import { resetLevelIfGone } from "./training.js";
+import { plainCount, customCopiesOf, canRemoveCopies, removeCopies } from "../services/ownership.js";
 
 const VARIANTS = new Set(["normal", "shiny"]);
 
@@ -58,10 +65,15 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
     seen.add(key);
 
     const owned = user.pokemon?.[pid]?.[variant] ?? 0;
+    const plain = plainCount(user, pid, variant);
+    const trained = customCopiesOf(user, pid, variant).length;
     const label = variant === "shiny" ? `shiny ${p.name}` : p.name;
 
     if (mode === "duplicates") {
-      if (owned - count < 1) {
+      if (plain - count < 1) {
+        if (trained > 0) {
+          return { error: `You have ${plain} untrained ${label} now, so donating ${count} would leave none. TM-trained copies are never bulk-donated.` };
+        }
         return { error: `You have ${owned} ${label} now, so donating ${count} would leave none.` };
       }
     } else {
@@ -70,6 +82,7 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
 
       const total = (user.pokemon[pid].normal ?? 0) + (user.pokemon[pid].shiny ?? 0);
       if (total > 1) return { error: `You have more than one ${p.name} now.` };
+      if (plain < 1) return { error: `Your ${label} has TM-trained moves. Donate it on its own to confirm.` };
       if (isOnTeam(pid, variant)) {
         return { error: `${p.name} is on one of your teams (Display or Battle). Remove it from that team first.` };
       }
@@ -84,35 +97,15 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
   const events = [];
 
   for (const { pid, p, variant, count } of rows) {
-    const tier = String(p.tier || "common").toLowerCase();
-    const baseCC = economy.ccByTier[tier] ?? 0;
-
     for (let i = 0; i < count; i++) {
-      const cc = variant === "shiny" ? baseCC * 5 : baseCC;
-      let dust = 0;
-
-      if (variant === "shiny") {
-        dust = economy.shinyDustByTier[tier] ?? 0; // not capped
-      } else {
-        const earned = user.nonShinyDustEarnedThisWeek ?? 0;
-        const remaining = Math.max(0, economy.normalDustWeeklyCap - earned);
-        if (remaining > 0) {
-          const table = economy.normalDustChanceByTier?.[tier] ?? [{ chance: 1, dust: 0 }];
-          dust = Math.min(economy.rollDust(table), remaining);
-          user.nonShinyDustEarnedThisWeek = earned + dust;
-        }
-      }
-
-      gainedCC += cc;
-      shinyDustGained += dust;
-      events.push({ pokemonId: pid, pokemonName: p.name, tier, variant, ccGained: cc, dustGained: dust });
+      const ev = copyReward(user, pid, p, variant, economy);
+      gainedCC += ev.ccGained;
+      shinyDustGained += ev.dustGained;
+      events.push(ev);
     }
-
-    user.pokemon[pid][variant] -= count;
-    if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) {
-      delete user.pokemon[pid];
-    }
-    resetLevelIfGone(user, pid, variant);
+    // Plain copies only (validated above), so this cannot be refused.
+    const removed = removeCopies(user, { id: pid, variant, n: count });
+    if (!removed.ok) throw new Error(`bulkDonate: removal refused after validation (${removed.code})`);
   }
 
   user.cc = (user.cc ?? 0) + gainedCC;
@@ -122,4 +115,58 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
   }
 
   return { donatedCopies: events.length, gainedCC, shinyDustGained, events };
+}
+
+// One donated copy's reward (CC, Shiny Dust with the weekly normal-dust cap).
+// Mutates only the weekly dust counter; the caller applies CC and Dust.
+function copyReward(user, pid, p, variant, economy) {
+  const tier = String(p.tier || "common").toLowerCase();
+  const baseCC = economy.ccByTier[tier] ?? 0;
+  const cc = variant === "shiny" ? baseCC * 5 : baseCC;
+  let dust = 0;
+  if (variant === "shiny") {
+    dust = economy.shinyDustByTier[tier] ?? 0; // not capped
+  } else {
+    const earned = user.nonShinyDustEarnedThisWeek ?? 0;
+    const remaining = Math.max(0, economy.normalDustWeeklyCap - earned);
+    if (remaining > 0) {
+      const table = economy.normalDustChanceByTier?.[tier] ?? [{ chance: 1, dust: 0 }];
+      dust = Math.min(economy.rollDust(table), remaining);
+      user.nonShinyDustEarnedThisWeek = earned + dust;
+    }
+  }
+  return { pokemonId: pid, pokemonName: p.name, tier, variant, ccGained: cc, dustGained: dust };
+}
+
+/**
+ * Donate ONE copy (POST /api/pokemon/donate). Same rewards as one bulk copy.
+ * A plain copy is always used; if only TM-trained copies remain, the
+ * donation is refused with code "custom_copies_protected" (fail closed:
+ * naming a trained copy explicitly arrives with the TM teaching UI).
+ * All checks run before anything changes.
+ * @returns {{ error:string, code?:string, protected?:Array } | { event, gainedCC, shinyDustGained }}
+ */
+export function donateOne({ user, pokeId, variant, pokemonData, economy, isOnTeam }) {
+  const pid = Number(pokeId);
+  const p = Number.isInteger(pid) ? pokemonData[pid] : null;
+  if (!p) return { error: "Invalid Pokémon ID" };
+  if (!VARIANTS.has(variant)) return { error: "Invalid variant." };
+  if (isOnTeam(pid, variant)) {
+    return { error: `You can’t donate your ${variant} ${p.name} because it’s on one of your teams (Display or Battle). Remove it from that team first.` };
+  }
+  if ((user.pokemon?.[pid]?.[variant] ?? 0) <= 0) {
+    return { error: `You don’t own a ${variant === "shiny" ? "shiny " : ""}${p.name} to donate.` };
+  }
+  const can = canRemoveCopies(user, { id: pid, variant, n: 1 });
+  if (!can.ok) return { error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
+
+  const event = copyReward(user, pid, p, variant, economy);
+  const removed = removeCopies(user, { id: pid, variant, n: 1 });
+  if (!removed.ok) throw new Error(`donateOne: removal refused after validation (${removed.code})`);
+  user.cc = (user.cc ?? 0) + event.ccGained;
+  if (event.dustGained > 0) {
+    const r = grantItem(user, "shiny_dust", event.dustGained);
+    if (!r.ok) console.warn(`⚠️ donateOne: shiny dust grant refused: ${r.error}`);
+  }
+  return { event, gainedCC: event.ccGained, shinyDustGained: event.dustGained };
 }

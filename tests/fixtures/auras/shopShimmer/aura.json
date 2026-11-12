@@ -1,0 +1,17 @@
+{
+  "id": "shopShimmer",
+  "name": "Shimmer Aura (test art)",
+  "credit": [],
+  "palette": [
+    "#e0f2fe",
+    "#7dd3fc"
+  ],
+  "sky": [
+    "#020617",
+    "#0b1d3a",
+    "#123a5c"
+  ],
+  "layers": {
+    "back": "back.png"
+  }
+}

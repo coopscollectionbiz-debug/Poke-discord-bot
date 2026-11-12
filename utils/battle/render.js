@@ -532,7 +532,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     return regionBackdrop({
       tier: tiers[s], rect, u: 2, occupied: (x, y) => occ[(y - top) * rect.w + (x - PAD)] === 1,
       from: [PAD, top + ROW_H], to: [PAD + rect.w * 0.85, top - ROW_H * 0.6],
-      floor: pc.floor + 8, frames: 24, dil: 2,
+      floor: pc.floor + 8, frames: 24, dil: 2, variant: "row", // an art Aura's row.png, if it has one
       clip: (c) => pill(c, rect.x, rect.y, rect.w, rect.h, 16),
     });
   });

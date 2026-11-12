@@ -30,13 +30,15 @@ import { LEVEL_CAP } from "../utils/battle/tuning.js";
 import { getCatalogItem, isHoldable } from "../catalog/items.js";
 import { grantItem, consumeItem, getQuantity, MAX_QUANTITY_PER_OP } from "./inventory.js";
 import { ownsTrainer, grantTrainer, revokeTrainer, normalizeTrainers, MAX_CURRENCY_GRANT } from "./assets.js";
+import { getAura } from "../catalog/auras.js";
+import { grantAura, ownsAura, revokeAura } from "./auras.js";
 import { toTeamObj } from "../utils/teamNormalize.js";
 import { getRank } from "../utils/rankSystem.js";
 import { createNewUser } from "../utils/userSchema.js";
 
-export const KINDS = Object.freeze(["cc", "tp", "item", "pokemon", "trainer", "level", "cooldown", "reset"]);
+export const KINDS = Object.freeze(["cc", "tp", "item", "pokemon", "trainer", "aura", "level", "cooldown", "reset"]);
 /** Kinds that may go to many players at once (adds only). */
-export const BULK_KINDS = Object.freeze(["cc", "tp", "item", "pokemon", "trainer", "cooldown"]);
+export const BULK_KINDS = Object.freeze(["cc", "tp", "item", "pokemon", "trainer", "aura", "cooldown"]);
 export const COOLDOWNS = Object.freeze({
   daily: "Daily",
   weekly: "Weekly pack",
@@ -132,6 +134,13 @@ export function parseChange(raw, ctx = {}) {
       key = hit;
     }
     return { ok: true, change: { kind, op, key } };
+  }
+  if (kind === "aura") { // event Auras are handed out this way (a bulk grant to everyone who took part)
+    if (!op) return fail("Choose add or remove.");
+    const a = getAura(raw.auraId);
+    if (!a) return fail("Unknown Aura.");
+    if (op === "add" && a.kind === "event" && a.retired) return fail("That event Aura is retired.");
+    return { ok: true, change: { kind, op, auraId: a.id } };
   }
   if (kind === "level") {
     const s = parseSpecies(raw.speciesId);
@@ -314,6 +323,19 @@ export function applyChange(user, change, ctx = {}) {
       revokeTrainer(user, change.key);
       if (displayed) user.displayedTrainer = null;
       return { ok: true, summary: `Remove trainer ${label}`, before: "owned", after: "not owned", warnings };
+    }
+
+    case "aura": {
+      const a = getAura(change.auraId);
+      const owned = ownsAura(user, a.id);
+      if (change.op === "add") {
+        if (owned) return fail(`They already own ${a.name}.`);
+        grantAura(user, a.id);
+        return { ok: true, summary: `Add Aura ${a.name}`, before: "not owned", after: "owned", warnings };
+      }
+      if (!owned) return fail(`They don't own ${a.name}.`);
+      if (!revokeAura(user, a.id)) return fail(`${a.name} comes from their record (a challenge win or achievement), so it can't be removed.`);
+      return { ok: true, summary: `Remove Aura ${a.name}`, before: "owned", after: "not owned", warnings };
     }
 
     case "level": {

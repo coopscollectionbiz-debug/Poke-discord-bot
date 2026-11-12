@@ -6,6 +6,10 @@ A Discord-native Pokémon collector game: players catch Pokémon while chatting,
 
 ### Collection
 
+**Aura**:
+The effect a player shows behind their trainer on their own cards and battle images. Auras are collected and kept for good: each **Tier backdrop** from owning a trainer of that tier, one per Gym Leader, Elite Four member, Blue and Red from beating them, milestone Auras from achievements, shop Auras bought with CC, and event Auras handed out during an event. A player equips one on the dashboard, or Auto (their trainer's own **Tier backdrop**, the default) or None. An Aura is not tied to the trainer it came from. Computer-run opponents never wear one.
+_Avoid_: background, backdrop (for the collectible), effect
+
 **Tier**:
 A species' rarity class: common, uncommon, rare, epic, legendary, or mythic. It measures collectible prestige (scarcity, role in the games, popularity), not battle strength; **Base stat total** only overrides it for large outliers. Mythic means an official Mythical, or a cover legendary with a **Base stat total** of 660 or more.
 _Avoid_: rarity (as a separate concept), evolution tier
@@ -89,8 +93,8 @@ The **Team** that fights **Ranked battles** and **Wager battles**, where every P
 _Avoid_: Battle team (its old name)
 
 **Tier backdrop**:
-The animated background an owned Epic, Legendary or Mythic trainer sprite brings to any card that shows it: the tier's sky colour with rising motes, plus a stepped glow and twinkles from Legendary up, and meteors with one bright hero meteor a loop for Mythic. It replaces the card's own background in that trainer's part of the card (their half of a VS card, their row in a battle), and nothing in it passes behind the trainer or anything else drawn there. Computer-run opponents and unowned sprites never have one.
-_Avoid_: aura, glow, trainer background
+The animated background an owned Epic, Legendary or Mythic trainer sprite brings to any card that shows it: the tier's sky colour with rising motes, plus a stepped glow and twinkles from Legendary up, and meteors with one bright hero meteor a loop for Mythic. It replaces the card's own background in that trainer's part of the card (their half of a VS card, their row in a battle), and nothing in it passes behind the trainer or anything else drawn there. Computer-run opponents and unowned sprites never have one. For players it is now the **Aura** shown on Auto, and the three tier backdrops are also collectible **Auras**.
+_Avoid_: glow, trainer background
 
 **Moveset**:
 The up to 4 moves a player picks for one Pokémon on one **Team**, from the moves it has learned by its real **Level**. A Pokémon with none picked uses the last four moves it learned.

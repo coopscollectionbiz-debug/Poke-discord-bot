@@ -9,7 +9,7 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBall } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawBall, drawSoftPlatform } from "./primitives.js";
 import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, drawSprite } from "./sprites.js";
 import { poseAtFrame } from "../trainerIdle.js";
 import { spriteStage } from "./stage.js";
@@ -51,10 +51,7 @@ async function podium(ctx, p, cx, floor, height, place, stage) {
   ctx.fillText(String(place + 1), cx, floor + height / 2 + 2);
   ctx.textBaseline = "alphabetic";
   // Platform + trainer sprite (or a ghost ball).
-  ctx.fillStyle = `${medal}40`;
-  ctx.beginPath();
-  ctx.ellipse(cx, floor - 6, 92, 16, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawSoftPlatform(ctx, cx, floor - 6, 92, 16, medal, { u: 2 });
   const t = await loadTrainerSprite(p.trainerFile);
   if (t) {
     const idle = await loadTrainerPoses(p.trainerFile); // breathing idle, or null → static

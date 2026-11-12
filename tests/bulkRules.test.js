@@ -7,6 +7,7 @@
 
 import { duplicateRows, multiSelectBlock, onlyVariant } from "../public/picker-pokemon/bulkRules.js";
 import { bulkDonate } from "../utils/bulkDonate.js";
+import { readFileSync } from "fs";
 
 let testsRun = 0;
 let testsPassed = 0;
@@ -223,6 +224,17 @@ test("the server accepts every selectable Pokémon and refuses every locked one"
       `server refuses locked ${pokemonData[pid].name} (got: ${JSON.stringify(r.error)})`
     );
   }
+});
+
+// Regression: the box view (#107) returned before updateBulkUI(), so the
+// Donate Duplicates / Multi-select row never showed in Donate mode.
+test("the dashboard shows the bulk donate row before the box view returns", () => {
+  const src = readFileSync(new URL("../public/picker-pokemon/script.js", import.meta.url), "utf8");
+  const start = src.indexOf("function renderPokemonGridCards()");
+  const body = src.slice(start, src.indexOf("\nfunction ", start + 10));
+  const ui = body.indexOf("updateBulkUI();");
+  const box = body.indexOf("return renderBoxTiles(");
+  assertTrue(start >= 0 && ui >= 0 && box >= 0 && ui < box, "updateBulkUI() runs before renderBoxTiles() returns");
 });
 
 // ==========================================================

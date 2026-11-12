@@ -940,12 +940,15 @@ function renderPokemonGridCards() {
   if (!container) return;
   container.innerHTML = "";
 
+  // Drop picks that stopped being selectable after a refresh.
+  for (const pid of multiSelected) if (multiSelectBlock(pid)) multiSelected.delete(pid);
+  // Runs before the box view returns: it is what shows the Donate
+  // Duplicates / Multi-select row in Donate mode.
+  updateBulkUI();
+
   // Every mode but the old team picker and Donate's multi-select is the box.
   if (currentMode !== "team" && !(currentMode === "donate" && multiSelectOn)) return renderBoxTiles(container);
 
-  // Drop picks that stopped being selectable after a refresh.
-  for (const pid of multiSelected) if (multiSelectBlock(pid)) multiSelected.delete(pid);
-  updateBulkUI();
   const inMultiSelect = currentMode === "donate" && multiSelectOn;
 
   const searchEl = document.getElementById("search");

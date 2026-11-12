@@ -239,6 +239,44 @@ export async function loadTrimmedTrainerSprite(fileName) {
   return { image: out, width: box.w, height: box.h };
 }
 
+const trimmedPoseCache = new Map(); // fileName -> Promise<{ poses, poseAt } | null>
+
+/**
+ * The trainer's idle (loadTrainerPoses) cropped to the box every pose fits
+ * in, so it stands on a floor the way loadTrimmedTrainerSprite does (battle
+ * portraits, the encounter Trainer, Elite Four line-ups). { poses, poseAt }
+ * like loadTrainerPoses; null when it has no idle (callers then draw the
+ * trimmed still).
+ */
+export function loadTrimmedTrainerPoses(fileName, { env = process.env } = {}) {
+  const key = `${fileName}`;
+  if (!trainersAnimated(env)) return Promise.resolve(null);
+  if (trimmedPoseCache.has(key)) return trimmedPoseCache.get(key);
+  const p = loadTrainerPoses(fileName, { env }).then((idle) => {
+    if (!idle?.poses?.length) return null;
+    let u = null;
+    for (const pose of idle.poses) {
+      const c = createCanvas(pose.width, pose.height);
+      c.getContext("2d").drawImage(pose.image, 0, 0);
+      const b = opaqueBounds(c.getContext("2d").getImageData(0, 0, pose.width, pose.height).data, pose.width, pose.height);
+      if (!b) continue;
+      u = u ? { x0: Math.min(u.x0, b.x), y0: Math.min(u.y0, b.y), x1: Math.max(u.x1, b.x + b.w), y1: Math.max(u.y1, b.y + b.h) }
+        : { x0: b.x, y0: b.y, x1: b.x + b.w, y1: b.y + b.h };
+    }
+    if (!u) return null;
+    const w = u.x1 - u.x0, h = u.y1 - u.y0;
+    const poses = idle.poses.map((pose) => {
+      const out = createCanvas(w, h);
+      out.getContext("2d").drawImage(pose.image, u.x0, u.y0, w, h, 0, 0, w, h);
+      return { image: out, width: w, height: h };
+    });
+    return { poses, poseAt: idle.poseAt };
+  }).catch(() => null);
+  trimmedPoseCache.set(key, p);
+  if (trimmedPoseCache.size > POSE_CACHE_LIMIT) trimmedPoseCache.delete(trimmedPoseCache.keys().next().value);
+  return p;
+}
+
 /** A Badge PNG (public/sprites/badges, from tools/tint-badges.mjs) by file name, or null. */
 export async function loadBadgeSprite(fileName) {
   if (!fileName || !/^[a-z0-9._-]+\.png$/i.test(fileName)) return null;

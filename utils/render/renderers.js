@@ -19,6 +19,8 @@ import { renderCatchCard } from "./catchCard.js";
 import { renderBoard } from "./challengeBoard.js";
 import { renderChallengeCard } from "./challengeCard.js";
 import { renderEncounterCard } from "./encounterCard.js";
+import { renderBattleVsCard } from "./battleVsCard.js";
+import { renderTrainerShowcase } from "./trainerShowcase.js";
 import { renderBattleFrame } from "../battle/render.js";
 import { threaded as wrap } from "./renderPool.js";
 
@@ -48,6 +50,8 @@ export const RENDERERS = {
   challengeBoard: renderBoard,
   challengeCard: renderChallengeCard,
   encounter: renderEncounterCard,
+  battleVs: renderBattleVsCard,
+  trainerShowcase: renderTrainerShowcase,
   battleFrame: (opts) => renderBattleFrame({ ...opts, sprites: threadSprites }),
 };
 

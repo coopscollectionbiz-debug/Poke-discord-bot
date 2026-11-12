@@ -13,12 +13,27 @@
 // is unchanged on screen, so it is transparent too, as before. The decoded
 // frames are the same as when every frame was written full size
 // (tools/render-golden.mjs checks this on real cards and battles).
+//
+// Smooth gradients (a card's halves, a battle's background): with one
+// 255-colour palette for the whole image, a dark gradient gets few colours
+// and bands into faint blocks, which the still PNG never shows. With
+// `background` (the image's static layer: everything drawn before the
+// animated parts), BG_COLOURS of the palette are chosen from that layer
+// alone, and a pixel still showing it is ordered-dithered (4×4 Bayer)
+// between them. The offset is small (±8 per channel), so a distinct colour
+// (text, pixel art) still maps to itself; only colours with close
+// neighbours in the palette, as in a gradient, spread. The dither depends only on
+// the pixel's position, so a pixel that doesn't change between frames maps
+// to the same index every frame and later frames stay as small.
 // ==========================================================
 
 import gifenc from "gifenc";
 
 const { GIFEncoder, quantize, nearestColorIndex } = gifenc;
 const pause = () => new Promise((resolve) => setImmediate(resolve));
+export const BG_COLOURS = 96;
+const DITHER = 16; // ± half this, per channel, at the extremes of the Bayer pattern
+const BAYER4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
 
 // gifenc writes every frame at (0, 0). Each frame starts with an 8-byte
 // Graphic Control Extension, then the image descriptor: 0x2c, x, y (LE16).
@@ -44,8 +59,9 @@ const u32 = (px) => (px.byteOffset % 4 === 0
  *   sample — frames whose pixels choose the palette, in sample order (the
  *            battle adds its award screen); drawn last to first, so frame 0
  *            is on the canvas when encoding starts.
+ *   background — the static layer's RGBA (W × H × 4), or null: see above.
  */
-export async function encodeFrames(canvas, draw, total, { delay = 100, sample = [0, total - 1] } = {}) {
+export async function encodeFrames(canvas, draw, total, { delay = 100, sample = [0, total - 1], background = null } = {}) {
   const W = canvas.width, H = canvas.height, N = W * H;
   const delayOf = typeof delay === "function" ? delay : () => delay;
 
@@ -55,15 +71,27 @@ export async function encodeFrames(canvas, draw, total, { delay = 100, sample = 
     pixels.set(canvas.data(), N * 4 * k);
   }
   if (sample[0] !== 0) draw(0);
-  const palette = quantize(pixels, 255);
+  const bg = background && background.length === N * 4 ? background : null;
+  const bgPal = bg ? quantize(bg, BG_COLOURS) : [];
+  const palette = [...bgPal, ...quantize(pixels, 255 - bgPal.length)];
   const clear = palette.length; // the transparent index: "same as the last frame"
   await pause();
 
   const nearest = new Int16Array(1 << 16).fill(-1); // RGB565 color -> palette index
-  const indexOf = (px, p) => {
+  const plain = (px, p) => {
     const key = ((px[p] >> 3) << 11) | ((px[p + 1] >> 2) << 5) | (px[p + 2] >> 3);
     let idx = nearest[key];
     if (idx < 0) idx = nearest[key] = nearestColorIndex(palette, [px[p], px[p + 1], px[p + 2]]);
+    return idx;
+  };
+  const dithered = new Int16Array(bg ? 1 << 18 : 1).fill(-1); // RGB666 -> background palette index
+  const indexOf = (px, p) => {
+    if (!bg || px[p] !== bg[p] || px[p + 1] !== bg[p + 1] || px[p + 2] !== bg[p + 2]) return plain(px, p);
+    const i = p >> 2, o = (BAYER4[((i / W) | 0) & 3][(i % W) & 3] / 16 - 0.5) * DITHER;
+    const r = Math.max(0, Math.min(255, px[p] + o)), g = Math.max(0, Math.min(255, px[p + 1] + o)), b = Math.max(0, Math.min(255, px[p + 2] + o));
+    const key = ((r >> 2) << 12) | ((g >> 2) << 6) | (b >> 2);
+    let idx = dithered[key];
+    if (idx < 0) idx = dithered[key] = nearestColorIndex(bgPal, [r, g, b]);
     return idx;
   };
   const shown = new Uint8Array(N); // palette index on screen after the last frame
@@ -122,7 +150,7 @@ export async function encodeFrames(canvas, draw, total, { delay = 100, sample = 
   return Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 }
 
-/** Cards: fixed delay, palette from the first and last frames. */
-export function encodeGif(canvas, draw, total, delayMs = 100) {
-  return encodeFrames(canvas, draw, total, { delay: delayMs });
+/** Cards: fixed delay, palette from the first and last frames; `background` as in encodeFrames. */
+export function encodeGif(canvas, draw, total, delayMs = 100, { background = null } = {}) {
+  return encodeFrames(canvas, draw, total, { delay: delayMs, background });
 }

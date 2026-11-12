@@ -17,11 +17,33 @@
 // ==========================================================
 
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
+import { GifReader } from "omggif";
 import { pickFrameTurns } from "./render.js";
 import { PLAYBACK } from "./tuning.js";
 import { trainingKey } from "../training.js";
 import { CHALLENGES, opponentName, displaySprite } from "../challenge/roster.js";
 import { threaded } from "../render/renderers.js";
+import { trainerTier, cardTrainerFx } from "../render/trainerTier.js";
+import { battleVsAltText } from "../render/battleVsCard.js";
+import { isGif } from "../render/stage.js";
+
+// The /battle VS card's minimum time on screen, before playback edits it
+// into turn 1. A GIF stays up a whole number of its loops (its length is
+// fitted to its sprites: 2.4, 4.8 or 7.2 s with trainers on it).
+export const VS_HOLD_MS = 4000;
+export const vsHoldMs = (loopMs) => (loopMs > 0 ? Math.ceil(VS_HOLD_MS / loopMs) * loopMs : VS_HOLD_MS);
+/** A GIF's loop length in ms (the sum of its frame delays), or 0 for anything else. */
+export function gifLoopMs(buf) {
+  if (!isGif(buf)) return 0;
+  try {
+    const g = new GifReader(buf);
+    let ms = 0;
+    for (let i = 0; i < g.numFrames(); i++) ms += (g.frameInfo(i).delay || 10) * 10;
+    return ms;
+  } catch {
+    return 0;
+  }
+}
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const list = (items) => new Intl.ListFormat("en", { type: "conjunction" }).format(items);
@@ -146,7 +168,11 @@ const replays = createQueue(PLAYBACK.maxAtOnce);
 // (challenges) styles every frame; `award` (challengeAward) adds its screen
 // to the result frame, right after who won. `namePrefix` keeps file names
 // unique when several fights replay on one message (an Elite Four run).
-async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], theme = null, award = null, namePrefix = "" }) {
+// `tiers` are each side's trainer tier for players (null for a computer-run
+// opponent): their rows get the tier backdrop. `vs` (/battle only) is the
+// VS card's view: it opens the replay in place of the start image, held for
+// vsHoldMs; if it can't render, the start image goes as before.
+async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], tiers = [null, null], theme = null, award = null, namePrefix = "", vs = null }) {
   const sides = fight.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = fight.result;
   // Each update gets its own file name (battleImageName). With one shared
@@ -156,30 +182,45 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
   // goes up, so each image's sprites carry on where the last left off.
   let clockMs = 0;
   const image = async (step, opts) => new AttachmentBuilder(
-    await threaded.battleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, theme, clockMs, ...opts }),
+    await threaded.battleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, tiers, theme, clockMs, ...opts }),
     { name: namePrefix + battleImageName(step) },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.
-  const paced = async (render) => {
+  const paced = async (render, wait = delayMs) => {
     const started = Date.now();
-    clockMs += delayMs; // this image goes up one delay after the last
+    clockMs += wait; // this image goes up `wait` after the last (the VS card's hold before turn 1)
     const file = await render();
-    await sleep(Math.max(0, delayMs - (Date.now() - started)));
+    await sleep(Math.max(0, wait - (Date.now() - started)));
     return file;
+  };
+  // The VS card (animated: idle trainers, Teams, tier backdrops), or null.
+  const vsCard = async () => {
+    if (!vs || !cardTrainerFx()) return null;
+    try {
+      const buffer = await threaded.battleVs(vs, { animate: true });
+      return { loopMs: gifLoopMs(buffer), file: new AttachmentBuilder(buffer, { name: `${namePrefix}battle-vs.${isGif(buffer) ? "gif" : "png"}`, description: battleVsAltText(vs) }) };
+    } catch (err) {
+      console.warn("⚠️ battle VS card failed; opening on the start image:", err?.message || err);
+      return null;
+    }
   };
 
   // In an Elite Four run, a Pokémon that fainted in an earlier fight can't lead off.
   const leads = sides.map((s, i) => s.members[snapshots[0][i].findIndex((hp) => hp > 0)]?.name).join(" and ");
   const startImage = () => image("start", { hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] });
-  const start = { content: heading, files: [paceStart ? await paced(startImage) : await startImage()] };
+  const opening = await vsCard();
+  const start = { content: heading, files: [opening ? opening.file : paceStart ? await paced(startImage) : await startImage()] };
   if (message) await message.edit(start);
   else message = await channel.send(start);
+  // The VS card stays up longer than an update, so both Teams can be read.
+  let wait = opening ? vsHoldMs(opening.loopMs) : delayMs;
   try {
     let shown = 0;
     // A fight lost before anyone moves (0 turns) goes straight to the result.
     for (const turn of total ? pickFrameTurns(total, maxUpdates) : []) {
       const badge = turn - shown > 1 ? `TURNS ${shown + 1}–${turn}` : `TURN ${turn}`;
-      const file = await paced(() => image(turn, { hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }));
+      const file = await paced(() => image(turn, { hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }), wait);
+      wait = delayMs;
       await message.edit({ files: [file] });
       shown = turn;
     }
@@ -197,7 +238,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
     const file = await paced(() => image("final", {
       sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(fight), screens,
       ...(award && { theme: { ...theme, award: { screen: 1, badgeFile: award.badgeFile, title: award.title } } }),
-    }));
+    }), wait);
     await message.edit({ files: [file], ...(finalEmbed && { embeds: [finalEmbed] }) });
     return message;
   } catch (err) {
@@ -227,12 +268,15 @@ async function waitForSlot(channel, queue, heading, message = null) {
 
 // Sends a new channel message (a fresh message is what actually notifies
 // the @mentioned players; edits never do) and replays the battle on it.
-// `trainers` are the two sides' displayed trainer files (null: none).
-export async function playBattle(channel, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null] } = PLAYBACK) {
+// `trainers` are the two sides' displayed trainer files (null: none); both
+// are players, so each has its tier. `vs` is the VS card's view (see
+// replayFight), built with the records from before the battle.
+export async function playBattle(channel, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null], vs = null } = PLAYBACK) {
   const { message, release } = await waitForSlot(channel, queue, header(outcome));
   try {
     await replayFight({
-      channel, message, heading: header(outcome), fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers,
+      channel, message, heading: header(outcome), fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers, vs,
+      tiers: trainers.map((f) => trainerTier(f)),
       finalEmbed: buildResultEmbed(outcome, names),
     });
   } finally {
@@ -349,6 +393,7 @@ export async function playChallengeFight(channel, message, outcome, i, names, { 
       fight: { ...outcome.fights[i], exp: last ? outcome.exp : {} },
       finalEmbed: last ? buildChallengeEmbed(outcome, names) : null,
       trainers,
+      tiers: [trainerTier(trainer), null], // the Gym Leader, run by the computer, gets none
       theme,
       award: last ? challengeAward(outcome, names[outcome.userId]) : null,
       // Several fights share one message, so each one's file names differ.
@@ -425,6 +470,7 @@ export async function playEncounter(channel, message, outcome, names, { maxUpdat
   try {
     return await replayFight({
       channel, message: slot.message, heading, fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers,
+      tiers: [trainerTier(trainers[0]), null], // the Trainer, run by the computer, gets none
       finalEmbed: buildEncounterEmbed(outcome, names),
     });
   } finally {

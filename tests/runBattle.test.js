@@ -136,16 +136,49 @@ section("Refusals and caps");
   const td = world();
   assertEqual(open(td, 1, "A", "A").reason, "self", "can't battle yourself");
   for (let i = 0; i < 3; i++) open(td, i);
-  assertEqual(open(td, 9).reason, "cap_opponent", "4th battle vs the same Defender is refused");
+  assertEqual(ranked(td, 9).reason, "cap_opponent", "4th ranked battle vs the same Defender is refused");
   td.A.battle.started = 10;
   td.C = trainer("C", [[16]]);
-  assertEqual(open(td, 9, "A", "C").reason, "cap_daily", "11th battle of the day is refused");
+  assertEqual(ranked(td, 9, "A", "C").reason, "cap_daily", "11th ranked battle of the day is refused");
   td.A.battle.day = "2026-11-01";
-  assertTrue(open(td, 9, "A", "C").ok, "caps use the day of the battle, not the offer");
+  assertTrue(ranked(td, 9, "A", "C").ok, "caps use the day of the battle, not the offer");
   const w = world();
   w.B.battle = { rating: 1000, wins: 0, losses: 0, day: "2026-11-02", started: 10, vs: {} };
   assertEqual(runBattle({ trainerData: w, challengerId: "A", defenderId: "B", mode: "wager", stake: 1, seed: 1, now: NOW }).reason,
     "defender_cap_daily", "a Defender out of battles can't take a wager");
+}
+
+section("Casual battle past the Battle cap: runs, earns no EXP");
+{
+  const leveling = (u) => JSON.stringify([u.training, u.box]);
+  const td = world();
+  for (let i = 0; i < 3; i++) assertEqual(open(td, i).overCap, null, `casual battle ${i + 1} of 3 vs B is within the cap`);
+  const before = leveling(td.A);
+  const out = open(td, 9);
+  assertTrue(out.ok, "4th casual battle vs the same Defender still runs");
+  assertEqual(out.overCap, "opponent", "outcome names the cap that was hit");
+  assertTrue(out.result.knockouts.some((k) => k.bySide === 0), "Challenger scores a knockout (fixture precondition)");
+  assertEqual(leveling(td.A), before, "Challenger's Team gains no EXP");
+  assertEqual(out.exp, {}, "no EXP report");
+  assertEqual([td.A.battle.started, td.A.battle.vs.B], [3, 3], "it uses no battle, overall or vs B");
+  assertEqual(td.A.casual.wins + td.A.casual.losses, 4, "it still counts on the casual record");
+  assertEqual(resultScreens(out, { A: "Ash", B: "Gary" }).length, 1, "result text box has no level-up screen");
+
+  td.C = trainer("C", [[16]]);
+  assertTrue(ranked(td, 10, "A", "C").ok, "over-cap casual battles leave the rest of the day's battles for ranked");
+
+  td.A.battle.started = 10;
+  const daily = open(td, 11, "A", "C");
+  assertTrue(daily.ok && daily.overCap === "daily", "11th battle of the day: a casual one runs, flagged daily");
+  assertEqual(daily.exp, {}, "…with no EXP");
+  assertEqual(td.A.battle.started, 10, "…and no battle used");
+  assertEqual(ranked(td, 12, "A", "C").reason, "cap_daily", "ranked is still refused at the cap");
+  assertEqual(runBattle({ trainerData: td, challengerId: "A", defenderId: "C", mode: "wager", stake: 1, seed: 13, now: NOW }).reason,
+    "cap_daily", "wager is still refused at the cap");
+
+  td.A.battle.day = "2026-11-01";
+  const nextDay = open(td, 14, "A", "C");
+  assertTrue(nextDay.overCap === null && Object.keys(nextDay.exp).length === 1, "a new UTC day earns EXP again");
 }
 
 section("Determinism");

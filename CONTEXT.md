@@ -183,7 +183,7 @@ A numbered period of ranked play. A new **Season** starts every player's **Ranke
 _Avoid_: ladder reset, split
 
 **Battle cap**:
-The limit on how many **Battles** a player may start per UTC day, across all three kinds together and against any one **Defender**.
+The limit on how many **Battles** a player may start per UTC day, across all three kinds together and against any one **Defender**. Past it, **Ranked battles** and **Wager battles** can't start, and a **Casual battle** still runs but earns no EXP and doesn't count toward the limit.
 _Avoid_: stamina, energy, battle limit
 
 **Power rating**:

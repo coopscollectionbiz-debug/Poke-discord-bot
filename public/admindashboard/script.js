@@ -563,7 +563,7 @@ function tabCooldowns(body, data) {
       ${data.cooldowns
         .map((c) => `<div class="cooldown-row"><label class="inline"><input type="checkbox" value="${esc(c.key)}" /> ${esc(c.label)}</label><span class="muted">${esc(c.state)}</span></div>`)
         .join("")}
-      <p class="faint">Resetting Daily keeps the daily streak. Resetting the Battle cap lets them start Battles again today; their Battle rating is untouched.</p>
+      <p class="faint">Resetting Daily keeps the daily streak. Resetting the Battle cap lets them earn battle EXP and start ranked and wager battles again today; their Battle rating is untouched.</p>
       <div class="sheet-actions"><button class="btn-primary" id="cdReview" type="button" disabled>Review reset</button></div>
     </section>`;
   const boxes = $$("input[type=checkbox]", body);

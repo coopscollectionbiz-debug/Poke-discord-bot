@@ -6,7 +6,8 @@
 //
 // Modes (owner decision, docs/design/TEAMS-COLLECTION-REDESIGN.md):
 //   open    casual: Display teams at real Levels, Underdog surge, unrated
-//           (user.casual W/L), no battle achievements
+//           (user.casual W/L), no battle achievements. Past the Challenger's
+//           Battle cap it still runs, but earns no EXP and uses no cap slot.
 //   ranked  Battle teams at Lv 50, no surge, rated (user.battle), battle
 //           achievements; no consent needed
 //   wager   as ranked, plus the accepted pot
@@ -173,6 +174,7 @@ export function applyGains(user, members, gains, base = gains) {
 
 // Read-only: why this battle can't happen right now, or null. /battle runs it
 // before deferring (instant ephemeral refusals) and runBattle re-runs it under lock.
+// The Battle cap never blocks a casual battle; runBattle withholds its EXP instead.
 export function battleBlock({ trainerData, challengerId, defenderId, mode, now = new Date(), env = process.env }) {
   if (challengerId === defenderId) return "self";
   const prefix = mode === "open" ? "no_team" : "no_battle_team";
@@ -180,7 +182,7 @@ export function battleBlock({ trainerData, challengerId, defenderId, mode, now =
   if (!teamFor(trainerData[defenderId], mode, { env }).length) return `${prefix}_defender`;
   const day = utcDay(now);
   const blockFor = (user, opponentId) => (user?.battle?.day === day ? capBlock(user.battle, opponentId) : null);
-  const block = blockFor(trainerData[challengerId], defenderId);
+  const block = mode !== "open" && blockFor(trainerData[challengerId], defenderId);
   if (block) return `cap_${block}`;
   const defenderBlock = mode === "wager" && blockFor(trainerData[defenderId], challengerId);
   if (defenderBlock) return `defender_cap_${defenderBlock}`;
@@ -196,6 +198,10 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
   const teams = [teamFor(challenger, mode, { env }), teamFor(defender, mode, { env })];
   const day = utcDay(now);
   const records = [getBattleRecord(challenger, day), getBattleRecord(defender, day)];
+  // "daily" or "opponent" when a casual battle runs past the Challenger's
+  // Battle cap. It skips only the EXP and the cap count, so it never uses up
+  // a battle the player could still play ranked.
+  const overCap = mode === "open" ? capBlock(records[0], defenderId) : null;
 
   // Power at the Levels they fight at (Lv 50 in ranked/wager). The Underdog
   // surge, and the cute surge with it, is a casual-only feature.
@@ -210,7 +216,8 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
   const loserId = ids[1 - result.winner];
 
   const exp = {};
-  for (const i of mode === "wager" ? [0, 1] : [0]) {
+  const earners = mode === "wager" ? [0, 1] : overCap ? [] : [0];
+  for (const i of earners) {
     exp[ids[i]] = applyExp(users[i], { members: teams[i], opponent: teams[1 - i], ...(surge?.cute && surge.side === i && { levelMult: surge.levelMult }) }, result, i);
   }
 
@@ -252,7 +259,7 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
     });
   }
 
-  recordStart(records[0], defenderId);
+  if (!overCap) recordStart(records[0], defenderId);
   if (mode === "wager") {
     recordStart(records[1], challengerId);
     trainerData[winnerId].cc = (trainerData[winnerId].cc ?? 0) + 2 * stake;
@@ -269,6 +276,7 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
     winnerId,
     loserId,
     exp,
+    overCap, // null unless a casual battle ran past the Battle cap
     rated,
     rating, // {} for casual battles
   };

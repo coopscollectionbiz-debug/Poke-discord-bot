@@ -49,8 +49,9 @@ export function refusal(reason, opponentId) {
     no_team_defender: `<@${opponentId}> hasn't set a team yet.`,
     no_battle_team_challenger: "Ranked and wager battles use your Battle team. Set it on the Teams page: run /dashboard.",
     no_battle_team_defender: `<@${opponentId}> hasn't set a Battle team yet, so you can't play a ranked or wager battle with them.`,
-    cap_daily: "You've used all 10 battles for today. Battles reset at midnight UTC.",
-    cap_opponent: `You've battled <@${opponentId}> 3 times today. Try someone else.`,
+    // Only ranked and wager battles are refused at the Battle cap.
+    cap_daily: "You've used all 10 battles for today. Battles reset at midnight UTC. Casual battles still run, but earn no EXP.",
+    cap_opponent: `You've battled <@${opponentId}> 3 times today. Try someone else, or play a casual battle for no EXP.`,
     defender_cap_daily: `<@${opponentId}> has no battles left today.`,
     defender_cap_opponent: "You two have battled 3 times today.",
     insufficient_cc: "You don't have that much CC.",
@@ -191,14 +192,26 @@ async function executeBattle(interaction, trainerData, lockUser, enqueueSave) {
   });
   const names = displayNames(interaction, opponent);
   recordFight(() => battleRecord(outcome, names, trainerData)); // Battle Records; never throws
-  await interaction.editReply("⚔️ Your battle is starting below.");
+  await interaction.editReply(startReply(outcome.overCap, opponent.id));
   // The replay (up to PLAYBACK.maxUpdates images, PLAYBACK.delayMs apart) runs
   // after the command returns, as wager battles' do, so a long battle never
   // trips the command timeout. The EXP card still follows the replay.
   replayThenExp(interaction, outcome, challengerId, names, trainerData);
 }
 
-/** The replay, then the Challenger's private EXP card (only they earn EXP in casual and ranked battles). Never throws. */
+// The Challenger's reply once a casual or ranked battle has run. Past the
+// Battle cap (`overCap`, from runBattle) a casual battle earns no EXP.
+function startReply(overCap, opponentId) {
+  const start = "⚔️ Your battle is starting below.";
+  if (overCap === "daily") return `${start} You've used all 10 battles for today, so this one earns no EXP.`;
+  if (overCap === "opponent") return `${start} You've battled <@${opponentId}> 3 times today, so this one earns no EXP.`;
+  return start;
+}
+
+/**
+ * The replay, then the Challenger's private EXP card (only they earn EXP in
+ * casual and ranked battles; none past the Battle cap, so no card). Never throws.
+ */
 export async function replayThenExp(interaction, outcome, challengerId, names, trainerData, { play = playBattle, exp = sendExp } = {}) {
   try {
     await play(interaction.channel, outcome, names, { ...PLAYBACK, trainers: trainersOf(trainerData, outcome), vs: vsOf(outcome, names, trainerData) });
@@ -206,7 +219,7 @@ export async function replayThenExp(interaction, outcome, challengerId, names, t
     console.warn("⚠️ battle post failed:", err?.message || err);
     await interaction.editReply("Your battle counted, but I couldn't post it in this channel.").catch(() => {});
   }
-  await exp(interaction, outcome, challengerId, names, trainerData[challengerId]);
+  if (outcome.exp[challengerId]) await exp(interaction, outcome, challengerId, names, trainerData[challengerId]);
 }
 
 // ----------------------------------------------------------

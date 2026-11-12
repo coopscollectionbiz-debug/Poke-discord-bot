@@ -11,6 +11,7 @@ Glossary: `CONTEXT.md`.
 - Any channel. Defender is @mentioned. No opt-out.
 - **Battle cap**: 10 battles started per UTC day (same reset as /daily, `commands/daily.js:35-36`), max 3 per opponent per day (your call).
   - Open battle: counts for Challenger only.
+  - Open battle past either cap (changed 2026-11-12): still runs, but earns no EXP and doesn't count toward the cap. Ranked and wager battles stay refused.
   - Wager battle: counts for **both** players, and toward the pair's 3/day in either direction. Defender at cap → Accept cancels the offer and refunds the Stake.
   - Declined/expired wagers count for nothing.
 

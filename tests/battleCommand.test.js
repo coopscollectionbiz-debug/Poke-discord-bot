@@ -8,7 +8,8 @@
 
 import { MessageFlags } from "discord.js";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { execute } from "../commands/battle.js";
+import { execute, replayThenExp } from "../commands/battle.js";
+import { getBattleRecord, utcDay } from "../utils/battle/rewards.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { grantCatch } from "../utils/training.js";
@@ -237,6 +238,32 @@ section("Private EXP messages");
     .catch(() => { threw = true; });
   assertTrue(!threw, "a refused Challenger follow-up doesn't throw");
   assertEqual(late.log.followUps.map((f) => f.userId), ["B"], "the Defender still gets theirs");
+}
+
+section("Casual battle past the Battle cap");
+{
+  const t = harness();
+  getBattleRecord(t.trainerData.A, utcDay(new Date())).started = 10;
+  await t.run("A", "B");
+  assertEqual(t.log.replies, [], "it isn't refused");
+  assertEqual(t.log.edits, ["⚔️ Your battle is starting below. You've used all 10 battles for today, so this one earns no EXP."],
+    "the Challenger is told it earns no EXP, and why");
+  await until(() => t.log.messages[0]?.edits.at(-1)?.embeds);
+  assertEqual(t.trainerData.A.battle.started, 10, "it uses no battle");
+
+  const v = harness();
+  getBattleRecord(v.trainerData.A, utcDay(new Date())).vs.B = 3;
+  await v.run("A", "B");
+  assertEqual(v.log.edits, ["⚔️ Your battle is starting below. You've battled <@B> 3 times today, so this one earns no EXP."],
+    "the per-opponent cap says which opponent");
+  await until(() => v.log.messages[0]?.edits.at(-1)?.embeds);
+
+  // The EXP card would index outcome.exp[challengerId]; past the cap there is none to send.
+  const sent = [];
+  const interaction = { channel: {}, editReply: async () => {} };
+  const outcome = { overCap: "daily", exp: {}, sides: [{ userId: "A" }, { userId: "B" }] };
+  await replayThenExp(interaction, outcome, "A", {}, t.trainerData, { play: async () => {}, exp: async (...a) => { sent.push(a); } });
+  assertEqual(sent.length, 0, "no EXP card is sent");
 }
 
 section("Each player's trainer in the replay");

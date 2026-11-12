@@ -24,7 +24,7 @@ function player(id, speciesIds, level) {
 }
 
 const td = { A: player("A", [6, 9, 3, 25], 55), B: player("B", [149, 130, 65], 50) };
-// One battle a day: the Battle cap limits battles against one Defender per UTC day.
+// One battle a day, so every battle stays inside the Battle cap.
 const day = (n) => new Date(D.getTime() + n * 86400000);
 const battles = [1, 2, 3, 4, 5].map((seed) => battleRecord(runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "open", seed, now: day(seed) }), { A: "Ash", B: "Gary" }, td, { now: day(seed) }));
 

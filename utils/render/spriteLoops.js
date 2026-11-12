@@ -29,6 +29,8 @@ export const IDLE_RETURN_MIN_MS = 2000;
 export const NUDGE = 0.15;
 export const STEP_MS = 50;
 export const TRAINER_LOOP_MS = 2400;
+// A fitted card or playback image over this falls back to the old timing.
+export const MAX_GIF_BYTES = 8 * 1024 * 1024;
 
 
 /** Every frame's full RGBA, composited as a browser plays it (disposal 0–2). */

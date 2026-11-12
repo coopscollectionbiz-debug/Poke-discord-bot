@@ -204,10 +204,10 @@ The Mega Evolution and animation switches are under [Mega Evolution](#mega-evolu
 #### Optional — production-only
 
 ```bash
-PUBLIC_URL=https://your-app.fly.dev   # base for dashboard links and embed images (defaults to https://$FLY_APP_NAME.fly.dev)
+PUBLIC_URL=https://bot.example.com   # base for dashboard links and embed images (defaults to https://$FLY_APP_NAME.fly.dev on Fly, else https://bot.coopscollection.com)
                                      # RENDER_EXTERNAL_URL still works as an older name for it, except for onrender.com addresses
 POKEMON_GENERATIONS=                 # Gens 6–9 to release, e.g. 7 or 6-9 (default: none; Gens 1–5 are always on)
-TRAINERDATA_DIR=/data                               # persistent volume path on Fly/Render
+TRAINERDATA_DIR=/srv/pokebot/data                  # persistent data directory (production VPS; see RUNBOOK.md)
 LOCAL_IS_DURABLE=1                                  # TRAINERDATA_DIR is a mounted volume; see RUNBOOK.md
 ```
 

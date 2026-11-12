@@ -153,8 +153,8 @@ assertTrue(SOURCE.every((e) => ["normal", "shiny"].every((v) => !e[v] || (e[v].a
 assertTrue(NEW.every((n) => !/\/sprites\/(ani|ani-shiny|ani-back|ani-back-shiny|dex|dex-shiny|home|home-shiny|gen6)\/|other\/(showdown|home|official-artwork)\//.test(SPRITES[n].normal.sourceUrl + SPRITES[n].shiny.sourceUrl)), "no source URL points at a 3D/render collection");
 assertEqual(pokemonSpritePath(700, "shiny"), "/public/sprites/pokemon/shiny/700.gif", "resolver: Sylveon shiny path");
 assertEqual(pokemonSpritePath(99999, "shiny"), PLACEHOLDER_PATH, "resolver: unknown species → placeholder, never another sprite");
-assertEqual(pokemonSpriteUrl(906, true, {}), "https://poke-discord-bot-49shta.fly.dev/public/sprites/pokemon/shiny/906.gif", "Discord URL uses the Fly host by default");
-assertEqual(publicBaseUrl({ RENDER_EXTERNAL_URL: "https://poke-discord-bot-2.onrender.com" }), "https://poke-discord-bot-49shta.fly.dev", "retired Render URL is ignored");
+assertEqual(pokemonSpriteUrl(906, true, {}), "https://bot.coopscollection.com/public/sprites/pokemon/shiny/906.gif", "Discord URL uses the production host by default");
+assertEqual(publicBaseUrl({ RENDER_EXTERNAL_URL: "https://poke-discord-bot-2.onrender.com" }), "https://bot.coopscollection.com", "retired Render URL is ignored");
 assertEqual(publicBaseUrl({ FLY_APP_NAME: "x-app" }), "https://x-app.fly.dev", "FLY_APP_NAME derives the host");
 assertEqual(publicBaseUrl({ PUBLIC_URL: "https://bot.example/" }), "https://bot.example", "PUBLIC_URL wins");
 assertEqual(Object.keys(KNOWN_LEGACY_SPRITE_ISSUES), ["493"], "only one known pre-existing sprite defect (Arceus shiny), reported not hidden");

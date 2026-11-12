@@ -15,6 +15,7 @@ import {
 } from "discord.js";
 import { randomInt, randomUUID } from "crypto";
 import { logEvent } from "../utils/eventLog.js";
+import { recordFight, challengeRecord } from "../utils/fightRecordBuild.js";
 import { CHALLENGES, CHALLENGE_KEYS, opponentName, displaySprite } from "../utils/challenge/roster.js";
 import {
   challengeBlock, previewChallenge, runChallenge, isUnlocked,
@@ -190,7 +191,11 @@ export async function challengeExpMessage(outcome, names, user, { render = threa
   }
 }
 
-const logChallenge = (userId, outcome, extra = {}) => logEvent("challenge", userId, { ...challengeLogEntry(outcome), ...extra });
+// The event log line, and the Fight record for Battle Records (never throws).
+const logChallenge = (userId, outcome, extra, { playerName, trainerData }) => {
+  logEvent("challenge", userId, { ...challengeLogEntry(outcome), ...extra });
+  recordFight(() => challengeRecord(outcome, playerName, trainerData));
+};
 
 // How long a Revive menu still answers clicks after its pick or deadline.
 const LATE_CLICKS_MS = 15 * 60 * 1000;
@@ -212,7 +217,7 @@ async function finishStaleRun({ trainerData, userId, lockUser, enqueueSave, clie
     return { outcome, channelId: run.channelId, messageId: run.messageId };
   });
   if (!done) return;
-  logChallenge(userId, done.outcome, { finished: "stale" });
+  logChallenge(userId, done.outcome, { finished: "stale" }, { playerName, trainerData });
   if (!done.messageId) return;
   (async () => {
     const channel = await client.channels.fetch(done.channelId);
@@ -432,7 +437,7 @@ async function openPreview(interaction, key, { trainerData, lockUser, enqueueSav
     if (!first.ok) {
       return i.editReply({ content: refusal(first.reason, trainerData[userId]), embeds: [], components: [] }).catch(() => {});
     }
-    if (!isRun) logChallenge(userId, first);
+    if (!isRun) logChallenge(userId, first, {}, { playerName, trainerData });
 
     let posted = true;
     let outcome = first;
@@ -454,7 +459,7 @@ async function openPreview(interaction, key, { trainerData, lockUser, enqueueSav
       outcome = played.outcome;
       posted &&= played.posted;
       reply = played.latest;
-      logChallenge(userId, outcome);
+      logChallenge(userId, outcome, {}, { playerName, trainerData });
     } else if (posted) {
       await playChallenge(interaction.channel, outcome, challengeNames(outcome, playerName), { ...PLAYBACK, trainer }).catch((err) => {
         console.warn("⚠️ challenge post failed:", err?.message || err);

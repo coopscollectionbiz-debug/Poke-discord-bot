@@ -26,6 +26,7 @@ import { encounterCardView, encounterAltText } from "../render/encounterCard.js"
 import { encounterNames, encounterSummary, playEncounter, challengeExpText } from "../battle/playback.js";
 import { expMembers } from "../render/expCard.js";
 import { logEvent } from "../eventLog.js";
+import { recordFight as storeFight, encounterRecord } from "../fightRecordBuild.js";
 import { threaded } from "../render/renderers.js";
 import { cardImage } from "../render/stage.js";
 
@@ -60,6 +61,7 @@ export function createEncounterService({
   renderExp = threaded.exp,
   play = playEncounter,
   log = logEvent,
+  recordFight = storeFight,
 }) {
   const open = new Map(); // nonce -> { nonce, userId, displayName, team, trainer, seed, channel, message, timer, deadline, busy }
   // Encounters answered or expired, so a late click is ignored instead of
@@ -205,6 +207,7 @@ export function createEncounterService({
     await i.editReply({ components: [] }).catch(() => {});
     record(e.userId, { phase: "answered", answer: "battle" });
     record(e.userId, { phase: "result", won: outcome.won, prize: outcome.prize, paid: outcome.paid });
+    recordFight(() => encounterRecord(outcome, e.displayName, getTrainerData())); // Battle Records; never throws
     const names = encounterNames(outcome, e.displayName);
     const user = getTrainerData()[e.userId];
     let note = null;

@@ -465,6 +465,9 @@ import { createEncounterService, isEncounterButton } from "./utils/encounter/ser
 import { grantCatch, levelsForUser } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
 import { finishAllOpenRuns, challengeLogEntry, hideOpenRun, challengeProgress } from "./utils/challenge/runChallenge.js";
+import { recordFight, challengeRecord } from "./utils/fightRecordBuild.js";
+import { fightRecords } from "./utils/fightRecords.js";
+import { createFightRecordHandlers } from "./services/fightRecordsApi.js";
 import { showRunResult, challengeNames } from "./utils/battle/playback.js";
 import { powersFromLevels } from "./utils/battle/power.js";
 
@@ -1424,6 +1427,11 @@ app.use("/api", (req, res, next) => {
 
 // 🏅 ACHIEVEMENTS (Release C): read-only view + the one claim path.
 const achievements = createAchievementHandlers({ getTrainerData: () => trainerData, lockUser, save: saveAndAck });
+// Battle Records (services/fightRecordsApi.js): the player's own Fight records.
+const fightRecordApi = createFightRecordHandlers({ store: fightRecords, isAuthorized: requireDashboardSession });
+app.get("/api/fight-records", (req, res) => fightRecordApi.list(req, res));
+app.get("/api/fight-records/:fightId", (req, res) => fightRecordApi.get(req, res));
+
 app.get("/api/achievements", (req, res) => {
   const { status, body } = achievements.view({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
   return res.status(status).json(body);
@@ -2716,6 +2724,7 @@ async function finishOpenRunsOnStartup() {
   console.log(`⚔️ Finished ${finished.length} open Elite Four run(s) after restart`);
   for (const { userId, outcome, channelId, messageId } of finished) {
     logEvent("challenge", userId, { ...challengeLogEntry(outcome), finished: "restart" });
+    recordFight(() => challengeRecord(outcome, trainerData[userId]?.name, trainerData));
     if (!channelId || !messageId) continue;
     try {
       const channel = await client.channels.fetch(channelId);

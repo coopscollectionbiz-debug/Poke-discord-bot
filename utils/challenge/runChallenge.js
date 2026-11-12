@@ -230,7 +230,9 @@ function playStep(user, userId, members, now) {
   const settled = settle({
     user, userId, key: "elite4", team: run.team, totals: run.gains, cleared, day: run.day, maxLoss: run.maxLoss ?? Infinity, now,
   });
-  const outcome = { ok: true, key: "elite4", userId, seed: run.seed, fights, breaks: view.breaks, cleared, ...settled };
+  // runTeam: the frozen team, so Battle Records can re-run the earlier
+  // fights (utils/fightRecordBuild.js); only the last one's result is kept here.
+  const outcome = { ok: true, key: "elite4", userId, seed: run.seed, fights, breaks: view.breaks, cleared, runTeam: run.team, ...settled };
   return { ...base, ended: true, outcome, fainted: [], next: null };
 }
 

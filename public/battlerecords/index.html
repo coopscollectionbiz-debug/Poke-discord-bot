@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Battle Records · Coop’s Collection</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/public/shared/tokens.css" />
+    <link rel="stylesheet" href="/public/shared/components.css" />
+    <link rel="stylesheet" href="/public/battlerecords/style.css" />
+  </head>
+
+  <body data-page="records">
+    <header class="cc-page-head">
+      <p class="cc-eyebrow">Battles</p>
+      <h1>Battle Records</h1>
+      <p>Your recent battles, Challenges and Trainer encounters. Watch any of them again.</p>
+    </header>
+
+    <main id="ccMain" tabindex="-1">
+      <div id="brTabs" class="br-tabs" role="group" aria-label="Show">
+        <button type="button" data-group="" aria-pressed="true">All</button>
+        <button type="button" data-group="battles" aria-pressed="false">Battles</button>
+        <button type="button" data-group="challenges" aria-pressed="false">Challenges</button>
+        <button type="button" data-group="encounters" aria-pressed="false">Encounters</button>
+      </div>
+      <section id="brSummary" class="br-summary" aria-label="Summary" hidden></section>
+      <p id="brStatus" class="br-status" aria-live="polite">Loading…</p>
+      <ol id="brList" class="br-list" aria-label="Fights, newest first"></ol>
+    </main>
+
+    <dialog id="brViewer" class="br-viewer" aria-label="Replay"></dialog>
+
+    <script type="module" src="/public/shared/shell.js"></script>
+    <script type="module" src="/public/battlerecords/script.js"></script>
+  </body>
+</html>

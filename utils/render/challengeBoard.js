@@ -9,7 +9,7 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, typeStyle } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBackground, drawTypeChip, typeChipsWidth, drawTag, drawSparkle } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawBackground, drawTypeChip, typeChipsWidth, drawTag, drawSparkle, drawSoftPlatform } from "./primitives.js";
 import { loadTrimmedTrainerSprite, loadBadgeSprite } from "./sprites.js";
 import { CHALLENGES, displaySprite } from "../challenge/roster.js";
 import { isUnlocked } from "../challenge/runChallenge.js";
@@ -135,10 +135,7 @@ function drawTrainer(ctx, sprite, box, { max = 2, silhouette = false } = {}) {
 }
 
 function drawFloor(ctx, cx, floor, rx, color) {
-  ctx.fillStyle = `${color}55`;
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, rx, rx * 0.2, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawSoftPlatform(ctx, cx, floor, rx, rx * 0.2, color, { u: 2 });
 }
 
 function drawPadlock(ctx, cx, cy, s, color) {

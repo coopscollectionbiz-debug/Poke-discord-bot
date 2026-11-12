@@ -79,9 +79,11 @@ The backdrop is pixel art on a grid of the trainer's own on-card pixels. Tints a
 | Tier | Backdrop |
 |---|---|
 | Common–Rare | none (plain panel + tier-lit platform) |
-| Epic | purple halo + 8 motes |
-| Legendary | amber halo (`#f59e0b`; gold turned muddy on navy) + gold motes + 8 twinkles |
-| Mythic | red halo, red/pink motes and twinkles + a meteor shower: 3 per 2.4 s loop at various heights, all down-left at 40°, easing in and out |
+| Epic | violet sky (static banded gradient) + 12 motes |
+| Legendary | amber sky + stepped gold glow (3 still bands) + gold motes + 8 twinkles |
+| Mythic | wine sky + stepped crimson glow + crimson/pink motes and twinkles + a meteor shower (3 per 2.4 s loop at various heights, all down-left at 40°, each shedding embers) + one bright hero meteor a loop, mid-flight on frame 0 |
+
+Revised 2026-11-12 from the aura locker (Epic A, Legendary B, Mythic C). The sky is drawn once under the card region (`drawTierSky`); the frames carry the glow and effects.
 
 Twinkles and meteors are placed only where a dilated silhouette mask of the trainer is clear, so nothing passes behind the trainer. The halo sits under the trainer.
 

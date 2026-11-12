@@ -11,6 +11,7 @@
 import { COLOR, TIER, tierColor } from "./tokens.js";
 import {
   rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth, drawBall, dexNo, drawMegaTag, fillTextMid,
+  drawSoftPlatform, drawPlatform,
 } from "./primitives.js";
 import { drawSprite } from "./sprites.js";
 import { shinyBackdrop } from "./shinyBackdrop.js";
@@ -127,10 +128,7 @@ function drawEmpty(ctx, r, n) {
   ctx.stroke();
   ctx.restore();
   const cx = r.x + r.w / 2, floor = r.y + r.h - INFO_H - 22;
-  ctx.fillStyle = "#ffffff0d";
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 100, 19, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawPlatform(ctx, cx, floor, 100, 19, null);
   ctx.globalAlpha = 0.3;
   drawBall(ctx, cx, floor - 46, 28, false);
   ctx.globalAlpha = 1;
@@ -171,13 +169,7 @@ function drawCardBase(ctx, slot, r) {
   ctx.fillRect(r.x, r.y + r.h - INFO_H, r.w, 1);
 
   // Platform (the battle's), lit for the lead (blue) and shiny (gold).
-  ctx.fillStyle = accent ? `${accent}40` : "#ffffff12";
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 108, 20, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = accent ? `${accent}b0` : "#ffffff26";
-  ctx.stroke();
+  drawPlatform(ctx, cx, floor, 108, 20, accent);
 
   // EXP: a flat strip along the card's bottom edge in the games' EXP blue —
   // deliberately unlike the battle HP bar (rounded pill, "HP" tag, green).
@@ -243,13 +235,7 @@ function drawSprites(ctx, view, sprites, frameFor, fx = null) {
     // Grounding shadow under the feet, sized to the sprite.
     if (sp && !sp.placeholder) {
       const sw = Math.min(r.w - 60, sp.width * SPRITE_SCALE);
-      const sh = ctx.createRadialGradient(cx, floor + 2, 2, cx, floor + 2, sw * 0.42);
-      sh.addColorStop(0, "#00000070");
-      sh.addColorStop(1, "#00000000");
-      ctx.fillStyle = sh;
-      ctx.beginPath();
-      ctx.ellipse(cx, floor + 2, sw * 0.42, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawSoftPlatform(ctx, cx, floor + 2, sw * 0.42, 12, null, { u: 4, peak: 0.4 }); // contact shadow
     }
     drawSprite(ctx, sp, cx, floor + 8, r.w - 36, floor + 8 - (r.y + 14), { scale: SPRITE_SCALE, frame: frameFor(i) });
   });

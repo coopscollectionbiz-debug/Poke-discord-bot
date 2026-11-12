@@ -89,7 +89,7 @@ The **Team** that fights **Ranked battles** and **Wager battles**, where every P
 _Avoid_: Battle team (its old name)
 
 **Tier backdrop**:
-The animated background an owned Epic, Legendary or Mythic trainer sprite brings to any card that shows it: a tinted glow with motes, plus twinkles from Legendary up and a meteor shower for Mythic. It replaces the card's own background in that trainer's part of the card (their half of a VS card, their row in a battle), and nothing in it passes behind the trainer or anything else drawn there. Computer-run opponents and unowned sprites never have one.
+The animated background an owned Epic, Legendary or Mythic trainer sprite brings to any card that shows it: the tier's sky colour with rising motes, plus a stepped glow and twinkles from Legendary up, and meteors with one bright hero meteor a loop for Mythic. It replaces the card's own background in that trainer's part of the card (their half of a VS card, their row in a battle), and nothing in it passes behind the trainer or anything else drawn there. Computer-run opponents and unowned sprites never have one.
 _Avoid_: aura, glow, trainer background
 
 **Moveset**:
@@ -195,8 +195,12 @@ The player whose **Team** has the lower **Power rating** going into a **Battle**
 _Avoid_: weaker player, loser
 
 **Underdog surge**:
-A rare, announced boost to the **Underdog's** whole **Team** for one **Casual battle**, likelier the wider the **Power rating** gap. **Ranked battles**, **Wager battles**, **Challenges** and **Trainer encounters** have none.
+A rare, announced boost to the **Underdog's** whole **Team** for one **Casual battle**, likelier the wider the **Power rating** gap, and likelier and stronger for an **Underdog** with high **Cuteness**. **Ranked battles**, **Wager battles**, **Challenges** and **Trainer encounters** have none.
 _Avoid_: comeback mechanic, rubber-banding, luck boost
+
+**Cuteness**:
+How cute a species or **Mega form** looks, scored 0 to 10, and strictly: Pokémon that aren't cute score 0 to 2, most cute ones score 6 or 7, and only a handful score 10. A **Team's** **Cuteness** is its members' average. Players never see it.
+_Avoid_: charm, appeal, cute score
 
 ### Challenges
 
@@ -233,6 +237,16 @@ _Avoid_: elite trainer, boss trainer
 **Prize money**:
 The CC at stake in a **Trainer encounter**, set by the **Trainer class** and the Level of the Trainer's last Pokémon. The Trainer pays it to a player who wins, and a player who loses pays the same amount, or all their CC if they hold less.
 _Avoid_: reward, bounty, payout (as a noun)
+
+### Battle Records
+
+**Fight record**:
+The saved account of one finished **Battle**, **Challenge** or **Trainer encounter**: who fought, both teams as they were when it ran, the result, and every turn, so it can be replayed later. A player keeps their newest 50 of each kind, and a **Battle's** record appears in both players' histories.
+_Avoid_: match, match history entry, battle record (that is a player's W/L and rating totals), replay (that is watching a record)
+
+**Battle Records**:
+The dashboard page where a player sees their own **Fight records** and replays them. Only its owner can see it.
+_Avoid_: match history, battle history
 
 ### Mega Evolution
 

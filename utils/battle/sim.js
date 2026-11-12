@@ -37,12 +37,13 @@ export const memberMoves = (member) =>
   (Array.isArray(member.moves) && member.moves.length ? member.moves : autoMoveset(member.speciesId, member.realLevel ?? member.level));
 
 // member.statMult raises every stat, HP included, without changing the
-// Level: challenge opponents fight with CHALLENGE.statBoost.
-export function buildMon(member, levelMult = 1) {
+// Level: challenge opponents fight with CHALLENGE.statBoost. `statMult` does
+// the same for a cute surge, past where Lv 100 stops its `levelMult`.
+export function buildMon(member, levelMult = 1, statMult = 1) {
   const species = getSpecies(member.speciesId);
   const profile = member.battleProfile ?? null;
   const level = Math.min(100, Math.round(member.level * levelMult));
-  const k = member.statMult ?? 1;
+  const k = (member.statMult ?? 1) * statMult;
   const s = Object.fromEntries(Object.entries(computeStats((profile ?? species).baseStats, level)).map(([stat, v]) => [stat, Math.round(v * k)]));
   const maxHp = member.speciesId === SHEDINJA ? 1 : s.hp;
   return {
@@ -153,7 +154,7 @@ export function useMove(move, attacker, target, rng) {
 export function simulateBattle({ sides, seed, surge }) {
   const rng = createRng(seed);
   const teams = sides.map((side, i) =>
-    side.members.map((m) => buildMon(m, surge && surge.side === i ? surge.levelMult : 1)));
+    side.members.map((m) => (surge && surge.side === i ? buildMon(m, surge.levelMult, surge.statMult ?? 1) : buildMon(m))));
 
   // Battles with abilities (a Mega Evolution is present) or a held item
   // that acts in combat run on the effect-aware engine (effects.js), which

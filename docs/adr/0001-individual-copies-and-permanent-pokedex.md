@@ -12,7 +12,7 @@ Until now a player's Pokémon were counts per species and Variant (`pokemon[id] 
 
 - Hard to reverse. Once players have fed, gifted and levelled individual copies, Levels can't be folded back into one per species without losing something. For a rollback window, the release keeps writing the old counts and per-species training records, derived from the copies.
 - Migration: copies on any Team and every trained copy keep the old shared Level. The other plain copies re-roll a Catch level, capped at the old Level.
-- The Pokédex can only grow. It is seeded from current ownership plus the union of every historical snapshot, built offline. Pre-evolutions are never inferred. Only a full account reset clears it.
+- The Pokédex can only grow. It is seeded from current ownership at load. After the first boot of the release, the bot itself reads its backup history in the storage channel, in the background and read-only, and adds every species (and shiny) each player had in any backup (services/dexBackfill.js). It records a cursor so a restart resumes, and a finished flag so it never runs twice. Pre-evolutions are never inferred. Only a full account reset clears it. Some Pokédex-named achievements therefore unlock during the scan, not at boot.
 - Achievements named after the Pokédex count registered species. "Own at the same time" achievements (Living Pokédex, Hall of Legends, Mythic Archive, Own N different) keep counting the Collection.
 - There is no Collection size cap for now. Data size per player is an open measurement (`tools/` copy-count script) and decides whether a cap is needed.
 - Ships as one release together with the Showcase/Casual/Ranked team split, so Team slots are rewritten once, each slot naming one specific Copy.

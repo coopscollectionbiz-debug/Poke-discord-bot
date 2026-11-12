@@ -63,7 +63,8 @@ import {
   getSaveHealth,
 } from "./utils/saveQueue.js";
 import { readLocalCandidates, readFileCandidate, setSeqAtLeast, nextSeq, dataDir, getEpoch, setEpoch, getSeq } from "./persistence/localStore.js";
-import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup, verifyUpload, newestChannelEpoch } from "./persistence/discordBackups.js";
+import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup, verifyUpload, newestChannelEpoch, listBackupPage } from "./persistence/discordBackups.js";
+import { runDexBackfill, readState as readDexScanState, writeState as writeDexScanState } from "./services/dexBackfill.js";
 import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/loader.js";
 import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
@@ -2790,6 +2791,7 @@ async function retryLoadLoop() {
     await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
+    startDexBackfill();
     return;
   }
 
@@ -2807,7 +2809,49 @@ setTimeout(retryLoadLoop, retryMs);
   await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
+  startDexBackfill();
 });
+
+// ==========================================================
+// 📖 Pokédex backfill from the bot's own backup history (docs/adr/0001,
+// services/dexBackfill.js). Runs once, in the background, after the bot is
+// ready: reads the storage channel slowly (read-only) and adds every species
+// a player ever had in a backup to their Pokédex. Resumes after a restart;
+// POKEDEX_SCAN=off skips it.
+// ==========================================================
+let dexScanRunning = false;
+function startDexBackfill() {
+  if (dexScanRunning || process.env.POKEDEX_SCAN === "off" || !process.env.STORAGE_CHANNEL_ID) return;
+  const dir = dataDir();
+  const state = readDexScanState(dir);
+  if (state?.done) return console.log(`📖 Pokédex scan: done earlier (${state.backups} backups, ${state.added} species for ${state.players} players)`);
+  dexScanRunning = true;
+  console.log(state?.cursor ? `📖 Pokédex scan: resuming (${state.backups} backups read so far)` : "📖 Pokédex scan: starting (reads the backup history in the background)");
+  let lastLog = state?.backups ?? 0;
+  runDexBackfill({
+    listPage: (before) => listBackupPage(client, process.env.STORAGE_CHANNEL_ID, before),
+    download: async (url) => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.text();
+    },
+    trainerData,
+    state,
+    saveState: (st) => {
+      try { writeDexScanState(dir, st); } catch (e) { console.warn("⚠️ Pokédex scan state not saved:", e?.message || e); }
+      if (st.backups - lastLog >= 100) { lastLog = st.backups; console.log(`📖 Pokédex scan: ${st.backups} backups read, ${st.added} species added for ${st.players} players`); }
+    },
+    onChanged: () => { enqueueSave(trainerData); },
+    shouldStop: () => shuttingDown,
+    pauseMs: 1000,
+    log: (m) => console.warn(`📖 Pokédex scan: ${m}`),
+  })
+    .then((st) => console.log(st.done
+      ? `📖 Pokédex scan finished: ${st.backups} backups read, ${st.skipped} skipped, ${st.added} species added for ${st.players} players, ${st.unlocks} achievements unlocked`
+      : `📖 Pokédex scan paused at ${st.backups} backups; resumes next boot`))
+    .catch((e) => console.warn("⚠️ Pokédex scan stopped (resumes next boot):", e?.message || e))
+    .finally(() => { dexScanRunning = false; });
+}
 
 // ==========================================================
 // 🚀 LAUNCH WEB SERVER

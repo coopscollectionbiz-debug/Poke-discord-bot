@@ -32,8 +32,12 @@ const normV = (variant) => (variant === "shiny" ? "shiny" : "normal");
 const lineKey = (id, variant) => `${Number(id)}:${normV(variant)}`;
 export const copyKey = (uid) => `u:${uid}`;
 
-/** A valid copy uid for this line (any copy; trained or not), or null. */
-const copyUid = (user, speciesId, variant, uid) => {
+/**
+ * A valid copy uid for this line, or null. Accepts both kinds of copy id
+ * (docs/adr/0001): a box copy (user.box, every copy since the Pokédex /
+ * Collection split) and a customized TM copy (user.customPokemon).
+ */
+export const copyUid = (user, speciesId, variant, uid) => {
   if (uid == null) return null;
   const slot = { id: Number(speciesId), variant: normV(variant), uid };
   return slotBoxUid(user, slot) ?? slotCopyUid(user, slot);
@@ -116,6 +120,26 @@ export function setMoveset(user, team, speciesId, variant, moves, { uid = null }
   if (moves == null) delete user.movesets[team][k];
   else user.movesets[team][k] = [...moves];
   return user.movesets[team][k] ?? null;
+}
+
+/**
+ * IN PLACE. The POST /api/pokemon/moveset body applied to one user:
+ * { team, pokeId, variant, moves: [moveId…] | null, uid? }.
+ * → { ok:true, team, uid, moves } | { ok:false, status, error, code }
+ * The slot's uid may name a box copy or a TM copy; both resolve through
+ * copyUid() (a TM-only check here refused every box copy, 2026-11-12).
+ */
+export function saveMoveset(user, { team, pokeId, variant, moves, uid = null } = {}) {
+  if (!TEAM_TYPES.includes(team)) return { ok: false, status: 400, error: "Unknown team type", code: "bad_team" };
+  const v = normV(variant);
+  const copy = uid == null ? null : copyUid(user, pokeId, v, uid);
+  if (uid != null && !copy) return fail("That Pokémon copy no longer exists. Reload and try again.", "unknown_copy");
+  if (moves !== null) {
+    const check = validateMoveset(user, pokeId, v, moves, { uid: copy });
+    if (!check.ok) return check;
+    setMoveset(user, team, pokeId, v, check.moves, { uid: copy });
+  } else setMoveset(user, team, pokeId, v, null, { uid: copy });
+  return { ok: true, team, uid: copy, moves: chosenMoves(user, team, pokeId, v, { uid: copy }) };
 }
 
 /** Display info for a move id. */

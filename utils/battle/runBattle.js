@@ -61,18 +61,12 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
   const mega = resolveBattleMega(user, { env, team });
   if (mega && !mega.ok && isMegaCapabilityEnabled("battle", env)) console.warn(`⚠️ Mega slot battles as its base form (${mega.reason}).`);
   const items = battleItems(user, equipmentTeam, { env });
-  const uids = new Map();
-  const copies = new Map(); // the specific copy in each slot (Level, EXP)
-  for (const entry of Array.isArray(team) ? team : []) {
-    const t = toTeamObj(entry);
-    if (!t || uids.has(`${t.id}:${t.variant}`)) continue;
-    uids.set(`${t.id}:${t.variant}`, slotCopyUid(user, { ...t, uid: entry?.uid }));
-    copies.set(`${t.id}:${t.variant}`, slotBoxUid(user, { ...t, uid: entry?.uid }));
-  }
+  // Each slot is one copy (docs/adr/0001); normalizeTeam keeps its uid.
   return normalizeTeam(team, 6)
     .filter((slot) => (user.pokemon?.[slot.id]?.[slot.variant] ?? 0) > 0)
     .map((slot) => {
-      const copyUid = copies.get(`${slot.id}:${slot.variant}`) ?? null;
+      const copyUid = slotBoxUid(user, slot) ?? null;
+      const key = copyUid ? `u:${copyUid}` : `${slot.id}:${slot.variant}`; // held items + Mega slot
       const member = {
         speciesId: slot.id,
         variant: slot.variant,
@@ -80,14 +74,15 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
         level: (copyUid && copyTraining(user, copyUid)?.level) ?? getTraining(user, slot.id, slot.variant).level,
       };
       if (copyUid) member.copyUid = copyUid;
-      const uid = uids.get(`${slot.id}:${slot.variant}`) ?? null;
+      const uid = slotCopyUid(user, slot) ?? null; // a trained copy (TM moves)
       if (uid) member.uid = uid;
-      const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant, { uid });
+      // The slot's own copy's moves (any copy, docs/adr/0001), else the line's.
+      const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant, { uid: copyUid ?? uid });
       if (moves) member.moves = moves;
       // A slot battling as a Mega never uses a regular item (its Mega Stone fills the slot).
-      const item = items.get(`${slot.id}:${slot.variant}`);
-      if (item && !(mega?.ok && mega.key === `${slot.id}:${slot.variant}`)) member.item = item;
-      if (!mega?.ok || mega.key !== `${slot.id}:${slot.variant}`) return member;
+      const item = items.get(key) ?? (copyUid ? items.get(`${slot.id}:${slot.variant}`) : undefined);
+      if (item && !(mega?.ok && mega.key === key)) member.item = item;
+      if (!mega?.ok || mega.key !== key) return member;
       return { ...member, name: mega.profile.name, baseName: member.name, megaForm: mega.formId, battleProfile: mega.profile };
     });
 }

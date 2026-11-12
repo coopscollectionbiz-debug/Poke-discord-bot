@@ -5,7 +5,7 @@
 //
 //   user.movesets = {
 //     display: { "6:normal": ["flamethrower", "slash", …],     // plain copies of the line
-//                "u:c_7Hk2Qm9xLp": ["dragonclaw", …] },        // one customized copy
+//                "u:c_7Hk2Qm9xLp": ["dragonclaw", …] },        // one copy (any copy, docs/adr/0001)
 //     battle:  { "6:normal": ["wingattack", …] },              // ranked + wager
 //   }
 //
@@ -15,13 +15,16 @@
 // a TM (customPokemon[uid].tmMoves). TM moves belong to the copy, never to
 // the line: a plain copy never sees another copy's TM moves.
 // 1–4 distinct moves. No stored moveset → the automatic moveset (the last
-// four learned), exactly as before. A customized copy with no selection of
-// its own uses the line's selection (its learnable pool only adds moves).
+// four learned), exactly as before. A copy with no selection of its own uses
+// the line's selection (stored before copies had their own; its learnable
+// pool decides what survives). Every copy is its own Pokémon: its moves
+// follow ITS Level, and two copies on one team keep separate movesets.
 // ==========================================================
 
 import { getSpecies, getMove } from "../utils/battle/data.js";
 import { getTraining } from "../utils/training.js";
-import { slotCopyUid } from "./ownership.js";
+import { slotCopyUid, slotBoxUid } from "./ownership.js";
+import { copyTraining } from "./box.js";
 
 export const TEAM_TYPES = Object.freeze(["display", "battle"]);
 export const MAX_MOVES = 4;
@@ -29,15 +32,19 @@ const normV = (variant) => (variant === "shiny" ? "shiny" : "normal");
 const lineKey = (id, variant) => `${Number(id)}:${normV(variant)}`;
 export const copyKey = (uid) => `u:${uid}`;
 
-/** A valid customized-copy uid for this line, or null (plain copy). */
-const copyUid = (user, speciesId, variant, uid) =>
-  uid == null ? null : slotCopyUid(user, { id: Number(speciesId), variant: normV(variant), uid });
+/** A valid copy uid for this line (any copy; trained or not), or null. */
+const copyUid = (user, speciesId, variant, uid) => {
+  if (uid == null) return null;
+  const slot = { id: Number(speciesId), variant: normV(variant), uid };
+  return slotBoxUid(user, slot) ?? slotCopyUid(user, slot);
+};
 
 /** TM moves this copy learned (none for a plain copy). Unknown move ids are skipped. */
 export function tmMovesFor(user, speciesId, variant, { uid = null } = {}) {
   const u = copyUid(user, speciesId, variant, uid);
-  if (!u) return [];
-  return user.customPokemon[u].tmMoves.filter((m) => getMove(m));
+  const rec = u ? user.customPokemon?.[u] : null;
+  if (!rec || rec.suspended) return [];
+  return rec.tmMoves.filter((m) => getMove(m));
 }
 
 /**
@@ -47,7 +54,9 @@ export function tmMovesFor(user, speciesId, variant, { uid = null } = {}) {
 export function learnableMoves(user, speciesId, variant, { level = null, uid = null } = {}) {
   const species = getSpecies(Number(speciesId));
   if (!species) return [];
-  const lv = level ?? getTraining(user ?? {}, Number(speciesId), variant).level;
+  // The copy's own Level when one is named; else the line's best copy.
+  const own = uid != null ? copyUid(user, speciesId, variant, uid) : null;
+  const lv = level ?? (own && copyTraining(user, own)?.level) ?? getTraining(user ?? {}, Number(speciesId), variant).level;
   const seen = new Map();
   for (const [at, moveId] of species.levelMoves ?? []) {
     if (at > lv) break;

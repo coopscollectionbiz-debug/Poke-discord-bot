@@ -110,8 +110,9 @@ const team = (t) => state.draft[t] ?? [];
 // ---------- held items ----------
 const heldItem = (id) => state.held.items.find((i) => i.id === id) ?? null;
 /** This member's saved loadout entry on team t ({ item, megaSlot }) or null when it isn't saved on t yet. */
-const loadoutOf = (t, s) => (state.held.teams[t] ?? []).find((m) => m.line === keyOf(s)) ?? null;
-const savedOn = (t, s) => (state.saved[t] ?? []).some((m) => keyOf(m) === keyOf(s));
+const memberKeyOf = (s) => (s.uid ? `u:${s.uid}` : keyOf(s)); // the copy in the slot
+const loadoutOf = (t, s) => (state.held.teams[t] ?? []).find((m) => m.line === memberKeyOf(s)) ?? null;
+const savedOn = (t, s) => (state.saved[t] ?? []).some((m) => memberKeyOf(m) === memberKeyOf(s));
 function applyHeld(data) {
   if (!data) return;
   if (Array.isArray(data.items)) state.held.items = data.items;
@@ -183,6 +184,7 @@ function blockReason(t, s, { replaceAt = -1 } = {}) {
     if (!freeCopy(t, s.id, s.variant, replaceAt)) return { code: "nocopy", short: "No copy left", text: `Every ${species(s.id).name} you own is already in your Showcase.` };
     return null;
   }
+  // Casual and Ranked hold each Pokémon once (only the Showcase takes repeats).
   if (list.some((m) => m.id === s.id && m.variant === s.variant)) return { code: "on", short: "On this team", text: `${species(s.id).name} is already on your ${LABEL[t]}.` };
   if (list.length >= MAX) return { code: "full", short: "Team full", text: `Your ${LABEL[t]} is full (6/6). Remove a Pokémon first.` };
   if (t === "battle" && isMythic(s.id)) {
@@ -336,7 +338,7 @@ async function copyFrom(target, source = SOURCES[target].find((t) => team(t).len
       if (lines.has(keyOf(s))) { dropped.push({ s, why: "already on the team" }); continue; }
       if (target === "battle" && isMythic(s.id) && mythics++ >= 1) { dropped.push({ s, why: "one mythic-tier Pokémon per Ranked team" }); continue; }
       if (s.mega && megas++ >= 1) delete s.mega; // one Mega per team: the rest come as their base form
-      lines.add(keyOf(s));
+      lines.add(keyOf(s)); // each Pokémon once on Casual and Ranked
     }
     kept.push(s);
   }

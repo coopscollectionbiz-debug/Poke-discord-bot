@@ -73,7 +73,7 @@ A player's title on the TP ladder (Novice Trainer → Legend), earned by chattin
 _Avoid_: using "rank" for battle standing, which is the **Ranked rating**
 
 **Team**:
-Up to 6 Pokémon a player sets in slot order, each slot one specific **Copy**. The same copy can sit on several **Teams** but only once per **Team**; a **Team** may hold two different copies of the same species. A copy on a **Team** can't be donated, gifted or fed until it is taken off. Each player has three: the **Showcase team**, the **Casual team** and the **Ranked team**.
+Up to 6 Pokémon a player sets in slot order, each slot one specific **Copy**. The same copy can sit on several **Teams**. The **Casual team** and **Ranked team** hold each Pokémon + **Variant** once; only the **Showcase team** holds the same Pokémon more than once, one copy per slot. A copy on a **Team** can't be donated, gifted or fed until it is taken off. Each player has three: the **Showcase team**, the **Casual team** and the **Ranked team**.
 _Avoid_: party, lineup
 
 **Showcase team**:

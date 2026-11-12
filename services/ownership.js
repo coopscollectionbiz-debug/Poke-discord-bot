@@ -377,7 +377,8 @@ export function normalizeCustomPokemon(user) {
   for (const team of Object.values(user.movesets ?? {})) {
     if (!team || typeof team !== "object") continue;
     for (const k of Object.keys(team)) {
-      if (k.startsWith("u:") && !user.customPokemon?.[k.slice(2)]) { delete team[k]; res.changed = true; }
+      // A copy's own moveset: kept while the copy (any copy) or its TM record exists.
+      if (k.startsWith("u:") && !user.customPokemon?.[k.slice(2)] && !user.box?.[k.slice(2)]) { delete team[k]; res.changed = true; }
     }
   }
   return res;

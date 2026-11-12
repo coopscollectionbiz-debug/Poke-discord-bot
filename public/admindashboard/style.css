@@ -207,3 +207,7 @@ pre.raw { background: var(--cc-surface-sunken); padding: var(--cc-s3); border-ra
   th, td { padding: 8px 6px; }
   .hide-sm { display: none; }
 }
+
+/* A species' individual copies (docs/adr/0001), opened from its row. */
+.copy-row td { background: var(--cc-surface-sunken, transparent); font-size: 13px; padding-top: 4px; padding-bottom: 4px; }
+.copy-row code { font-size: 12px; color: var(--cc-text-faint); }

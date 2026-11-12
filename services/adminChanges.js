@@ -81,6 +81,7 @@ function parseSpecies(v) {
  * @param {object} raw
  * @param {{ trainerKeys?: Map<string,string>|Set<string> }} [ctx] - known trainer sprite keys (lower-case → key)
  */
+const COPY_UID = /^c_[A-Za-z0-9]{10}$/;
 export function parseChange(raw, ctx = {}) {
   if (!raw || typeof raw !== "object") return fail("Missing change.");
   const kind = String(raw.kind ?? "");
@@ -107,6 +108,11 @@ export function parseChange(raw, ctx = {}) {
     const a = parseAmount(raw.amount);
     if (!a.ok) return a;
     const change = { kind, op, speciesId: s.value, variant: variantOf(raw.variant), amount: a.value };
+    // Remove one named copy (docs/adr/0001): uid, amount 1.
+    if (op === "remove" && raw.uid != null) {
+      if (!COPY_UID.test(String(raw.uid)) || a.value !== 1) return fail("Unknown copy.");
+      change.uid = String(raw.uid);
+    }
     if (op === "add" && raw.level != null && raw.level !== "") {
       const l = parseLevel(raw.level);
       if (!l.ok) return l;
@@ -132,7 +138,8 @@ export function parseChange(raw, ctx = {}) {
     if (!s.ok) return s;
     const l = parseLevel(raw.level);
     if (!l.ok) return l;
-    return { ok: true, change: { kind, speciesId: s.value, variant: variantOf(raw.variant), level: l.value } };
+    if (raw.uid != null && !COPY_UID.test(String(raw.uid))) return fail("Unknown copy.");
+    return { ok: true, change: { kind, speciesId: s.value, variant: variantOf(raw.variant), level: l.value, ...(raw.uid != null ? { uid: String(raw.uid) } : {}) } };
   }
   if (kind === "cooldown") {
     const list = Array.isArray(raw.cooldowns) ? [...new Set(raw.cooldowns.map(String))] : [];
@@ -268,7 +275,13 @@ export function applyChange(user, change, ctx = {}) {
       if (amount > before) return fail(`They have ${fmt(before)} × ${name}.`, { current: before });
       // TM system (services/ownership.js): admin removals take untrained copies
       // only; a copy with TM-trained moves is never removed this way (fail closed).
-      const can = canRemoveCopies(user, { id, variant, n: amount, allowTeam: true });
+      // A named copy (admin picked it): exactly that one, trained or not.
+      const named = change.uid ? copiesOf(user, id, variant).find((c) => c.uid === change.uid) : null;
+      if (change.uid && !named) return fail("That copy no longer exists.");
+      const removeArgs = !named ? { id, variant, n: amount, allowTeam: true }
+        : named.trained ? { id, variant, n: 1, customUids: [named.uid], confirmRevs: { [named.uid]: user.customPokemon[named.uid].rev ?? 0 }, exact: true, allowTeam: true }
+        : { id, variant, n: 1, uids: [named.uid], exact: true, allowTeam: true };
+      const can = canRemoveCopies(user, removeArgs);
       if (!can.ok) {
         const untrained = plainCount(user, id, variant);
         return fail(`${fmt(before - untrained)} of their ${fmt(before)} × ${name} have TM-trained moves and can't be removed here. At most ${fmt(untrained)} can be removed.`, { current: before, untrained });
@@ -282,7 +295,7 @@ export function applyChange(user, change, ctx = {}) {
         result.levelReset = level;
         clearTeamSlots(user, id, variant);
       }
-      const removed = removeCopies(user, { id, variant, n: amount, allowTeam: true }); // lowest Level first; the Pokédex keeps the species
+      const removed = removeCopies(user, removeArgs); // named copy, else lowest Level first; the Pokédex keeps the species
       if (!removed.ok) return fail(removed.error ?? "Couldn't remove those copies.");
       return result;
     }

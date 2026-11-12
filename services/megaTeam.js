@@ -132,7 +132,8 @@ export function prepareTeamSelection(user, rawTeam, { env = process.env } = {}) 
     if (parsed.some((s) => !s.mega && s.id === m.id && s.variant === m.variant)) return fail(400, `${f.baseSpecies} can't be on the team as both its base form and ${f.name}.`, "base_and_mega");
   }
 
-  // Unique = (id + variant) pair (unchanged rule).
+  // Unique = (id + variant) pair: Casual and Ranked hold each Pokémon once
+  // (only the Showcase takes repeats). Each slot still names its copy.
   const dedupMap = new Map();
   for (const slot of parsed) {
     const key = `${slot.id}:${slot.variant}`;
@@ -161,7 +162,7 @@ export function megaBattleBoundary(user, { env = process.env } = {}) {
   return {
     megaBattles: isMegaCapabilityEnabled("battle", env),
     requestedMega: requested[0] ?? null,
-    battlesAs: normalizeTeam(raw, 6).map((s) => ({ id: s.id, variant: s.variant, form: mega?.ok && mega.key === `${s.id}:${s.variant}` ? mega.formId : "base" })),
+    battlesAs: normalizeTeam(raw, 6).map((s) => ({ id: s.id, variant: s.variant, form: mega?.ok && mega.key === (s.uid ? `u:${s.uid}` : `${s.id}:${s.variant}`) ? mega.formId : "base" })),
     reason: mega && !mega.ok ? mega.reason : null,
   };
 }
@@ -191,5 +192,6 @@ export function resolveBattleMega(user, { env = process.env, team = user?.displa
   if (!unlockedForms(user, megaLineKey(slot.id, slot.variant)).includes(formId)) return { ok: false, reason: "not unlocked on that line", formId };
   const e = megaBattleEligibility(formId, { env });
   if (!e.battleReady) return { ok: false, reason: e.reasons[0], formId };
-  return { ok: true, key: `${slot.id}:${slot.variant}`, formId, profile: megaBattleProfile(formId) };
+  // The slot's copy when it names one (held items and the Mega slot follow the copy).
+  return { ok: true, key: typeof t.uid === "string" ? `u:${t.uid}` : `${slot.id}:${slot.variant}`, formId, profile: megaBattleProfile(formId) };
 }

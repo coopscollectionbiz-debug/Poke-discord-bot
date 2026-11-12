@@ -165,7 +165,7 @@ assertEqual(JSON.stringify(rb.megaUnlocks), megaBefore, "megaUnlocks preserved u
 assertEqual([getQuantity(rb, "megastone_venusaurite"), getQuantity(rb, "mega_shard"), auditInventory(rb)], [2, 7, []], "stones and shards kept as valid inventory");
 const rows = listInventory(rb).filter((r) => r.id.startsWith("mega"));
 assertTrue(rows.length === 2 && rows.every((r) => !r.usable && r.status === "defined"), "the bag lists them as not usable yet");
-assertEqual(normalizeTeam(rb.displayedPokemon), [{ id: 6, variant: "normal" }, { id: 150, variant: "normal" }], "a Mega team slot normalizes to its base Pokémon (no Mega in battle)");
+assertEqual(normalizeTeam(rb.displayedPokemon).map(({ id, variant }) => ({ id, variant })), [{ id: 6, variant: "normal" }, { id: 150, variant: "normal" }], "a Mega team slot normalizes to its base Pokémon (no Mega in battle; each slot keeps its copy)");
 assertEqual(buildTeam(rb).map((x) => [x.speciesId, x.variant, "megaForm" in x]), [[6, "normal", false], [150, "normal", false]], "buildTeam battles the base forms only");
 
 section("Achievements and Pokédex counts ignore Megas");

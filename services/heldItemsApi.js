@@ -158,7 +158,9 @@ export function createHeldItemHandlers({ getTrainerData, lockUser, save, getEnv 
     const move = body?.move === true;
     const expectedRev = body?.expectedRev;
     if (!Number.isSafeInteger(expectedRev) || expectedRev < 0) return reply(400, { success: false, error: "Missing revision. Reload the page." });
-    const line = lineKey(pokeId, variant);
+    // The slot's copy when the page names one (the item belongs to that Pokémon on this team).
+    const uid = typeof body?.uid === "string" && /^c_[A-Za-z0-9]{10}$/.test(body.uid) ? body.uid : null;
+    const line = uid ? `u:${uid}` : lineKey(pokeId, variant);
     const tx = await runInventoryTransaction({
       trainerData: getTrainerData(), userId: g.id, lock: lockUser, save, requestId: g.requestId,
       payloadKey: `held-equip:${team}:${line}:${itemId ?? "-"}:${move ? 1 : 0}:${expectedRev}`,

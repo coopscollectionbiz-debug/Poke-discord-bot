@@ -20,7 +20,7 @@ const { loadAnimatedSprite, renderBattleFrame } = await import("../utils/battle/
 const { buildTeamView, slotView } = await import("../utils/render/teamView.js");
 const { renderShowteam } = await import("../utils/render/showteam.js");
 const { renderInspectCard } = await import("../utils/render/inspectCard.js");
-const { trainerCardView, renderTrainerCard } = await import("../utils/render/trainerCard.js");
+const { trainerCardView, renderTrainerCard, TRAINER_CARD_SIZE } = await import("../utils/render/trainerCard.js");
 const { expView, renderExpCard } = await import("../utils/render/expCard.js");
 const { buildShowteamComponents } = await import("../commands/showteam.js");
 const { runBattle, buildTeam } = await import("../utils/battle/runBattle.js");
@@ -158,7 +158,7 @@ assertTrue(st.length < 8 * 2 ** 20, `/showteam PNG is far under Discord's attach
 const stGif = await renderShowteam(v, { layout: "refined", animate: true });
 assertTrue(stGif.subarray(0, 3).toString() === "GIF" && stGif.length < 8 * 2 ** 20, `animated /showteam with a Mega is a GIF under the limit (${Math.round(stGif.length / 1024)} KB)`);
 assertEqual(pngSize(await renderInspectCard(s1, { owner: "Ash" })), { w: 1000, h: 440 }, "inspect card with a Mega: same 1000×440 card");
-assertEqual(pngSize(await renderTrainerCard(trainerCardView(ash, { displayName: "Ash", trainer: null }))), { w: 1200, h: 640 }, "trainer card: same 1200×640 card");
+assertEqual(pngSize(await renderTrainerCard(trainerCardView(ash, { displayName: "Ash", trainer: null }))), { ...TRAINER_CARD_SIZE }, "trainer card: same size card");
 
 const foe = player("300000000000000010", [[282, "shiny", 55, "mega-gardevoir"], [65, "normal", 50]]);
 const td = { A: ash, B: foe };

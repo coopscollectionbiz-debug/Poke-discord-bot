@@ -24,6 +24,7 @@
 import { toTeamObj, normVariant } from "../utils/economyRules.js";
 import { getSpeciesEntry } from "../utils/speciesCatalog.js";
 import { megaFieldOf, megaFitsSlot, prepareTeamSelection } from "./megaTeam.js";
+import { slotCopyUid } from "./ownership.js";
 import { addNotice, NOTICE_KINDS } from "./notices.js";
 
 export const BATTLE_TEAM_MAX_MYTHIC = 1;
@@ -48,7 +49,9 @@ export function cleanStoredTeam(user, raw) {
     .map((t) => {
       const slot = { id: Number(t?.id), variant: t?.variant === "shiny" ? "shiny" : "normal" };
       const mega = megaFieldOf(t);
-      return mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
+      const uid = slotCopyUid(user, { ...slot, uid: t?.uid }); // TM system: a named customized copy
+      const out = mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
+      return uid ? { ...out, uid } : out;
     })
     .filter((t) => Number.isInteger(t.id))
     .filter((t) => Number(user.pokemon?.[t.id]?.[t.variant] || 0) > 0);

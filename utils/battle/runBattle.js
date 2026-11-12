@@ -26,6 +26,8 @@ import { chosenMoves } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
 import { megaBattleEligibility, megaBattleProfile } from "../megas.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
+import { toTeamObj } from "../economyRules.js";
+import { slotCopyUid } from "../../services/ownership.js";
 import { battleItems } from "../../services/heldItems.js";
 import { expMultiplierFor } from "./items.js";
 
@@ -43,6 +45,9 @@ export function withBothLocks(lockUser, idA, idB, fn) {
 // stay the base line's, so EXP, Levels and ownership never see the Mega.
 // movesetTeam: whose chosen movesets apply ("display" for casual battles and
 // displays, "battle" for ranked/wager). Members without one use automatic moves.
+// TM system (T1): a slot naming a customized copy (`uid`, services/ownership.js)
+// fights with that copy's moves (its TM moves included); the member carries
+// `uid`. Slots without one are built exactly as before.
 // Held items (equipmentTeam, default = movesetTeam): each member's item is
 // read here, inside the battle's locks, and copied onto the member. That
 // copy is the battle snapshot: later equipment changes can't touch a battle
@@ -53,6 +58,12 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
   const mega = resolveBattleMega(user, { env, team });
   if (mega && !mega.ok && isMegaCapabilityEnabled("battle", env)) console.warn(`⚠️ Mega slot battles as its base form (${mega.reason}).`);
   const items = battleItems(user, equipmentTeam, { env });
+  const uids = new Map();
+  for (const entry of Array.isArray(team) ? team : []) {
+    const t = toTeamObj(entry);
+    if (!t || uids.has(`${t.id}:${t.variant}`)) continue;
+    uids.set(`${t.id}:${t.variant}`, slotCopyUid(user, { ...t, uid: entry?.uid }));
+  }
   return normalizeTeam(team, 6)
     .filter((slot) => (user.pokemon?.[slot.id]?.[slot.variant] ?? 0) > 0)
     .map((slot) => {
@@ -62,7 +73,9 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
         name: speciesName(slot.id),
         level: getTraining(user, slot.id, slot.variant).level,
       };
-      const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant);
+      const uid = uids.get(`${slot.id}:${slot.variant}`) ?? null;
+      if (uid) member.uid = uid;
+      const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant, { uid });
       if (moves) member.moves = moves;
       // A slot battling as a Mega never uses a regular item (its Mega Stone fills the slot).
       const item = items.get(`${slot.id}:${slot.variant}`);

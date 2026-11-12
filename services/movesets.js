@@ -4,34 +4,47 @@
 // copy, with a copy-from-the-other-team option on the dashboard.
 //
 //   user.movesets = {
-//     display: { "6:normal": ["flamethrower", "slash", …] },  // casual battles
-//     battle:  { "6:normal": ["wingattack", …] },             // ranked + wager
+//     display: { "6:normal": ["flamethrower", "slash", …],     // plain copies of the line
+//                "u:c_7Hk2Qm9xLp": ["dragonclaw", …] },        // one customized copy
+//     battle:  { "6:normal": ["wingattack", …] },              // ranked + wager
 //   }
 //
 // A move is allowed when the species learns it by level-up at or below the
-// copy's REAL Level (never its Lv 50 ranked Level), or from a TM the player
-// has learned (TMs aren't implemented yet: tmMovesFor() returns none).
+// copy's REAL Level (never its Lv 50 ranked Level), or — for a customized
+// copy (TM system, services/ownership.js) — when that copy learned it from
+// a TM (customPokemon[uid].tmMoves). TM moves belong to the copy, never to
+// the line: a plain copy never sees another copy's TM moves.
 // 1–4 distinct moves. No stored moveset → the automatic moveset (the last
-// four learned), exactly as before.
+// four learned), exactly as before. A customized copy with no selection of
+// its own uses the line's selection (its learnable pool only adds moves).
 // ==========================================================
 
 import { getSpecies, getMove } from "../utils/battle/data.js";
 import { getTraining } from "../utils/training.js";
+import { slotCopyUid } from "./ownership.js";
 
 export const TEAM_TYPES = Object.freeze(["display", "battle"]);
 export const MAX_MOVES = 4;
-const key = (id, variant) => `${Number(id)}:${variant === "shiny" ? "shiny" : "normal"}`;
+const normV = (variant) => (variant === "shiny" ? "shiny" : "normal");
+const lineKey = (id, variant) => `${Number(id)}:${normV(variant)}`;
+export const copyKey = (uid) => `u:${uid}`;
 
-/** TM moves this copy can use. TMs are not implemented yet (hook for later). */
-export function tmMovesFor(/* user, speciesId, variant */) {
-  return [];
+/** A valid customized-copy uid for this line, or null (plain copy). */
+const copyUid = (user, speciesId, variant, uid) =>
+  uid == null ? null : slotCopyUid(user, { id: Number(speciesId), variant: normV(variant), uid });
+
+/** TM moves this copy learned (none for a plain copy). Unknown move ids are skipped. */
+export function tmMovesFor(user, speciesId, variant, { uid = null } = {}) {
+  const u = copyUid(user, speciesId, variant, uid);
+  if (!u) return [];
+  return user.customPokemon[u].tmMoves.filter((m) => getMove(m));
 }
 
 /**
  * Every move this copy may equip: level-up moves learned at or below its
- * real Level (earliest Level kept), then TM moves. [{ id, learnedAt|null, source }]
+ * real Level (earliest Level kept), then its TM moves. [{ id, learnedAt|null, source }]
  */
-export function learnableMoves(user, speciesId, variant, { level = null } = {}) {
+export function learnableMoves(user, speciesId, variant, { level = null, uid = null } = {}) {
   const species = getSpecies(Number(speciesId));
   if (!species) return [];
   const lv = level ?? getTraining(user ?? {}, Number(speciesId), variant).level;
@@ -40,8 +53,8 @@ export function learnableMoves(user, speciesId, variant, { level = null } = {}) 
     if (at > lv) break;
     if (!seen.has(moveId) && getMove(moveId)) seen.set(moveId, { id: moveId, learnedAt: at, source: "level" });
   }
-  for (const moveId of tmMovesFor(user, speciesId, variant)) {
-    if (!seen.has(moveId) && getMove(moveId)) seen.set(moveId, { id: moveId, learnedAt: null, source: "tm" });
+  for (const moveId of tmMovesFor(user, speciesId, variant, { uid })) {
+    if (!seen.has(moveId)) seen.set(moveId, { id: moveId, learnedAt: null, source: "tm" });
   }
   return [...seen.values()];
 }
@@ -49,38 +62,46 @@ export function learnableMoves(user, speciesId, variant, { level = null } = {}) 
 /**
  * The stored moveset for this copy on this team, keeping only moves it may
  * still use (null when none is stored or none survives → automatic moves).
+ * With a valid `uid`, the copy's own selection is used first, then the line's.
  */
-export function chosenMoves(user, team, speciesId, variant) {
-  const raw = user?.movesets?.[team]?.[key(speciesId, variant)];
+export function chosenMoves(user, team, speciesId, variant, { uid = null } = {}) {
+  const u = copyUid(user, speciesId, variant, uid);
+  const stored = user?.movesets?.[team] ?? {};
+  const raw = (u && stored[copyKey(u)]) || stored[lineKey(speciesId, variant)];
   if (!Array.isArray(raw) || !raw.length) return null;
-  const allowed = new Set(learnableMoves(user, speciesId, variant).map((m) => m.id));
+  const allowed = new Set(learnableMoves(user, speciesId, variant, { uid: u }).map((m) => m.id));
   const out = [...new Set(raw)].filter((m) => allowed.has(m)).slice(0, MAX_MOVES);
   return out.length ? out : null;
 }
 
 const fail = (error, code) => ({ ok: false, status: 400, error, code });
 
-/** Validate a moveset the dashboard sent. → { ok:true, moves } | { ok:false, status, error, code } */
-export function validateMoveset(user, speciesId, variant, moves) {
+/** Validate a moveset the dashboard sent. → { ok:true, moves, uid } | { ok:false, status, error, code } */
+export function validateMoveset(user, speciesId, variant, moves, { uid = null } = {}) {
   const id = Number(speciesId);
   if (!Number.isInteger(id) || !getSpecies(id)) return fail("Unknown Pokémon.", "bad_species");
-  if (!(Number(user?.pokemon?.[id]?.[variant === "shiny" ? "shiny" : "normal"]) > 0)) return fail("You don't own that Pokémon.", "unowned");
+  if (!(Number(user?.pokemon?.[id]?.[normV(variant)]) > 0)) return fail("You don't own that Pokémon.", "unowned");
+  const u = copyUid(user, id, variant, uid);
+  if (uid != null && !u) return fail("That Pokémon copy no longer exists. Reload and try again.", "unknown_copy");
   if (!Array.isArray(moves) || moves.length < 1 || moves.length > MAX_MOVES) return fail(`Choose 1–${MAX_MOVES} moves.`, "bad_size");
   if (moves.some((m) => typeof m !== "string" || m.length > 40)) return fail("Invalid move.", "bad_move");
   if (new Set(moves).size !== moves.length) return fail("Each move can only be equipped once.", "duplicate");
-  const allowed = new Set(learnableMoves(user, id, variant).map((m) => m.id));
+  const allowed = new Set(learnableMoves(user, id, variant, { uid: u }).map((m) => m.id));
   const unknown = moves.filter((m) => !allowed.has(m));
   if (unknown.length) {
     const names = unknown.map((m) => getMove(m)?.name ?? m).join(", ");
     return fail(`Not learned yet: ${names}. A Pokémon can only use moves it has learned by its current Level.`, "not_learned");
   }
-  return { ok: true, moves: [...moves] };
+  return { ok: true, moves: [...moves], uid: u };
 }
 
-/** IN PLACE. moves = null clears the choice (automatic moves). */
-export function setMoveset(user, team, speciesId, variant, moves) {
+/**
+ * IN PLACE. moves = null clears the choice (automatic moves). With `uid`
+ * (already validated by validateMoveset), the copy's own selection is set.
+ */
+export function setMoveset(user, team, speciesId, variant, moves, { uid = null } = {}) {
   if (!TEAM_TYPES.includes(team)) throw new Error("bad team");
-  const k = key(speciesId, variant);
+  const k = uid ? copyKey(uid) : lineKey(speciesId, variant);
   user.movesets ??= {};
   user.movesets[team] ??= {};
   if (moves == null) delete user.movesets[team][k];

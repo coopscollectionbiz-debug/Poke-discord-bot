@@ -38,7 +38,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
-import { pruneEmptyLine } from "./services/ownership.js";
+import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid } from "./services/ownership.js";
 
 // Local saver — writes trainerData.json (in TRAINERDATA_DIR) & marks dirty
 import {
@@ -334,6 +334,9 @@ function normalizeUserSchema(id, user) {
 // Mega Evolution (Phase M1): repair megaUnlocks first (no-op for players
 // without it), then normalize the team. services/megaTeam.js holds the same
 // team code that used to be inline here, plus keeping a valid Mega slot.
+// TM system (T1): customized-copy records first (quarantine, invariant I-1),
+// so the team normalizers below keep only valid copy uids. No-op without them.
+normalizeCustomPokemon(user);
 normalizeMegaUnlocks(user);
 normalizeDisplayedTeam(user);
 // Battle team (ranked/wager): same cleaning; never created here (missing = not set).
@@ -2183,7 +2186,7 @@ app.get("/api/pokemon/detail", (req, res) => {
 // (level-up at or below its real Level; TMs later). services/movesets.js.
 app.post("/api/pokemon/moveset", express.json({ limit: "4kb" }), async (req, res) => {
   try {
-    const { id, team, pokeId, variant, moves } = req.body || {};
+    const { id, team, pokeId, variant, moves, uid = null } = req.body || {};
     if (!id || pokeId == null) return res.status(400).json({ success: false, error: "Missing id/pokeId" });
     if (!TEAM_TYPES.includes(team)) return res.status(400).json({ success: false, error: "Unknown team type" });
     if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
@@ -2191,13 +2194,16 @@ app.post("/api/pokemon/moveset", express.json({ limit: "4kb" }), async (req, res
       const u = trainerData[id];
       if (!u) return res.status(404).json({ success: false, error: "User not found" });
       const v = variant === "shiny" ? "shiny" : "normal";
+      // uid (TM system): one customized copy's own moves; absent = the line's plain copies.
+      const copy = uid == null ? null : slotCopyUid(u, { id: Number(pokeId), variant: v, uid });
+      if (uid != null && !copy) return res.status(400).json({ success: false, error: "That Pokémon copy no longer exists. Reload and try again.", code: "unknown_copy" });
       if (moves !== null) {
-        const check = validateMoveset(u, pokeId, v, moves);
+        const check = validateMoveset(u, pokeId, v, moves, { uid: copy });
         if (!check.ok) return res.status(check.status).json({ success: false, error: check.error, code: check.code });
-        setMoveset(u, team, pokeId, v, check.moves);
-      } else setMoveset(u, team, pokeId, v, null);
+        setMoveset(u, team, pokeId, v, check.moves, { uid: copy });
+      } else setMoveset(u, team, pokeId, v, null, { uid: copy });
       const saveAck = await saveAndAck(trainerData);
-      return res.json({ ...saveAckFields(saveAck), success: true, team, moves: chosenMoves(u, team, pokeId, v) });
+      return res.json({ ...saveAckFields(saveAck), success: true, team, ...(copy && { uid: copy }), moves: chosenMoves(u, team, pokeId, v, { uid: copy }) });
     });
   } catch (err) {
     console.error("❌ /api/pokemon/moveset:", err?.message || err);

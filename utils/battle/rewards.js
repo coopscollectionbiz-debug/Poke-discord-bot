@@ -6,6 +6,7 @@
 
 import { getSpecies } from "./data.js";
 import { BST_YIELD_SCALE, TRAINER_BATTLE_MULT, WIN_EXP_MULT, ELO, CAPS, RANKED } from "./tuning.js";
+import { liveEffects } from "../../services/liveEvents.js";
 
 const bst = (speciesId) => Object.values(getSpecies(speciesId).baseStats).reduce((a, b) => a + b, 0);
 
@@ -78,8 +79,11 @@ export function getCasualRecord(user) {
   return user.casual;
 }
 
-export function capBlock(record, opponentId) {
-  if (record.started >= CAPS.perDay) return "daily";
+// A Live event can add battles to the daily total (never the per-Defender limit).
+export const dailyCap = (fx = liveEffects()) => CAPS.perDay + (fx.battleCap || 0);
+
+export function capBlock(record, opponentId, fx = liveEffects()) {
+  if (record.started >= dailyCap(fx)) return "daily";
   if ((record.vs[opponentId] ?? 0) >= CAPS.perOpponent) return "opponent";
   return null;
 }

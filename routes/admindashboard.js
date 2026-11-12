@@ -10,7 +10,8 @@
 //   /api/admin/user/:id         — one player's raw record (Summary → Raw record)
 //   /api/admin/catalog          — Pokémon, items, trainers and cooldowns for pickers
 //   /api/admin/audit            — Admin changes (filter by userId/adminId/batchId)
-//   /api/admin/events           — the 30-day event log
+//   /api/admin/events           — the 30-day event log (shown as "Activity log")
+//   /api/admin/live-events      — Live events (routes/liveEventsAdmin.js has the writes too)
 //
 // Writes (POST, JSON):
 //   /api/admin/change/preview   — dry run of one change on one player
@@ -42,6 +43,7 @@ import { normalizeTrainers } from "../services/assets.js";
 import { loadTrainerSprites } from "../utils/dataLoader.js";
 import { rankedRecord } from "../utils/battle/rewards.js";
 import { copiesOf, slotsHolding } from "../services/box.js";
+import { mountLiveEventRoutes } from "./liveEventsAdmin.js";
 
 const toNumber = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const BASE_RANK = "Novice Trainer";
@@ -358,6 +360,9 @@ export function mountAdminDashboard(app, deps) {
     const b = body(req);
     send(res, await handlers.bulkApply({ admin: req.admin, change: b.change, userIds: b.userIds, reason: b.reason, allowUnreleased: b.allowUnreleased === true, requestId: b.requestId }));
   });
+
+  // Live events (routes/liveEventsAdmin.js), same auth.
+  mountLiveEventRoutes(router, { requireRead, requireWrite, json });
 
   app.use(router);
   return { handlers };

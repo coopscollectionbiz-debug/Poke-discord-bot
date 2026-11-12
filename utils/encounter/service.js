@@ -30,6 +30,8 @@ import { logEvent } from "../eventLog.js";
 import { recordFight as storeFight, encounterRecord } from "../fightRecordBuild.js";
 import { threaded } from "../render/renderers.js";
 import { cardImage } from "../render/stage.js";
+import { liveEffects } from "../../services/liveEvents.js";
+import { scaleChance } from "../liveEventRules.js";
 
 const PREFIX = "encounter:";
 export const isEncounterButton = (customId) => typeof customId === "string" && customId.startsWith(PREFIX);
@@ -90,7 +92,10 @@ export function createEncounterService({
         : [new ButtonBuilder().setCustomId(`${PREFIX}${e.nonce}:battle_${picks[0]}`).setLabel("Battle!").setStyle(ButtonStyle.Danger)]),
       new ButtonBuilder().setCustomId(`${PREFIX}${e.nonce}:run`).setLabel("Run").setStyle(ButtonStyle.Secondary),
     );
-    const base = { content: `<@${e.userId}>`, allowedMentions: { users: [e.userId] }, components: [buttons] };
+    // A Live event's Prize money multiplier: wins pay more, the card's figure stays the loss.
+    const prizeMult = liveEffects().prize;
+    const bonus = prizeMult !== 1 ? ` · 🎪 a win pays ×${prizeMult}` : "";
+    const base = { content: `<@${e.userId}>${bonus}`, allowedMentions: { users: [e.userId] }, components: [buttons] };
     try {
       // Animated when the render threads have room, else the still PNG.
       const card = await cardImage((animate) => render(view, { animate }), "encounter");
@@ -117,7 +122,7 @@ export function createEncounterService({
       const me = message.guild?.members?.me;
       // Checked before the roll, so a channel the card can't post in never uses an encounter up.
       if (!me || !message.channel?.permissionsFor?.(me)?.has(PERMISSIONS)) return;
-      if (random() >= ENCOUNTER.chance) return;
+      if (random() >= scaleChance(ENCOUNTER.chance, liveEffects().encounterRate)) return;
       const userId = message.author.id;
       const displayName = message.member?.displayName ?? message.author.globalName ?? message.author.username;
       // Reserved in `open` under the lock, so a second hit before the card posts finds it open.

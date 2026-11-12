@@ -1,4 +1,6 @@
 // helpers/shinyOdds.js
+import { liveEffects } from "./services/liveEvents.js";
+import { scaleChance } from "./utils/liveEventRules.js";
 // ==========================================================
 // 🧠 Universal shiny rate scaling based on total TP
 // ==========================================================
@@ -22,7 +24,9 @@ export function getShinyOdds(tp = 0, baseOdds = 500) {
 // ==========================================================
 // 🪄 Shiny roll helper
 // ==========================================================
-export function rollForShiny(tp = 0, baseOdds = 500) {
-  const shinyChance = getShinyOdds(tp, baseOdds);
+// A running Live event's shiny multiplier applies to every roll, paid ones
+// included, whatever the player's "Use Live event" choice.
+export function rollForShiny(tp = 0, baseOdds = 500, now = Date.now()) {
+  const shinyChance = scaleChance(getShinyOdds(tp, baseOdds), liveEffects(now).shiny);
   return Math.random() < shinyChance;
 }

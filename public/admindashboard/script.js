@@ -1,7 +1,7 @@
 // ==========================================================
 // Admin dashboard (public/admindashboard). Hash routes:
 //   #/overview  #/players  #/player/<id>/<tab>  #/grants
-//   #/changes   #/events
+//   #/changes   #/live (Live events)   #/events (Activity log)
 // Every change goes through the review panel (openReview) or the
 // Grants page: preview first, then one Confirm. API: routes/admindashboard.js.
 // ==========================================================
@@ -107,6 +107,7 @@ async function route() {
     else if (section === "grants") await renderGrants();
     else if (section === "changes") await renderChanges(query);
     else if (section === "events") await renderEvents(query);
+    else if (section === "live") await renderLiveEvents(parts[1] || null);
     else await renderOverview();
   } catch (err) {
     main.innerHTML = `<div class="error-box">Something went wrong loading this page: ${esc(err?.message || err)}</div>`;
@@ -1027,7 +1028,7 @@ function pager(total, offset, limit, href) {
 }
 
 // ----------------------------------------------------------
-// Event log
+// Activity log (the 30-day event log; "Live events" are something else)
 // ----------------------------------------------------------
 const EVENT_TYPES = ["roll", "donate", "evolve", "convert", "daily_claim", "weekly_claim", "quest_claim", "recruit", "stone_purchase"];
 
@@ -1040,7 +1041,7 @@ async function renderEvents(query) {
   if (userId) qs.set("userId", userId);
   const r = await api(`/api/admin/events?${qs}`);
   main.innerHTML = `
-    <div class="page-head"><div><h1>Event log</h1><p>Player actions from the last 30 days.</p></div></div>
+    <div class="page-head"><div><h1>Activity log</h1><p>Player actions from the last 30 days.</p></div></div>
     <section class="panel">
       <form class="field-row" id="evFilter" style="margin-bottom:12px">
         <label>Type<select name="type"><option value="">All types</option>${EVENT_TYPES.map((t) => `<option ${t === type ? "selected" : ""}>${t}</option>`).join("")}</select></label>
@@ -1063,6 +1064,274 @@ async function renderEvents(query) {
     const q = new URLSearchParams([...fd].filter(([, v]) => String(v).trim()));
     location.hash = `#/events${q.toString() ? `?${q}` : ""}`;
   });
+}
+
+// ----------------------------------------------------------
+// Live events (routes/liveEventsAdmin.js; docs/design/live-events.md)
+//   #/live        list: Running, Scheduled, Ended + announcement channel
+//   #/live/new    editor for a new event
+//   #/live/<id>   editor for an existing one (read-only once ended)
+// ----------------------------------------------------------
+const pct = (v) => `${(v * 100).toLocaleString("en-US", { maximumFractionDigits: v < 0.01 ? 3 : 1 })}%`;
+// <input type=datetime-local> works in the admin's own time zone.
+const toLocalInput = (ms) => {
+  if (!Number.isFinite(ms)) return "";
+  const d = new Date(ms);
+  return new Date(ms - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
+const fromLocalInput = (v) => (v ? new Date(v).getTime() : NaN);
+const statusChip = (s) => `<span class="chip ${s === "running" ? "blue" : ""}">${s === "running" ? "Running" : s === "scheduled" ? "Scheduled" : "Ended"}</span>`;
+const live = { meta: null, editing: null, previewTimer: null };
+
+async function liveMeta() {
+  const r = await api("/api/admin/live-events");
+  if (r.ok) live.meta = r;
+  return r;
+}
+
+async function renderLiveEvents(which) {
+  if (which) return renderLiveEditor(which);
+  const r = await liveMeta();
+  if (!r.ok) return (main.innerHTML = `<div class="error-box">${esc(r.error || "Couldn't load Live events.")}</div>`);
+  const ro = state.session?.readOnly;
+  const group = (status, title, empty) => {
+    const list = r.events.filter((e) => e.status === status);
+    return `<section class="panel"><div class="panel-head"><h2>${title}</h2></div>${
+      list.length ? list.map((e) => eventCard(e, ro)).join("") : `<p class="muted">${empty}</p>`
+    }</section>`;
+  };
+  main.innerHTML = `<div id="livePage">
+    <div class="page-head"><div><h1>Live events</h1><p>Timed changes to catches, EXP, earnings and battles for every player. Times are in your time zone.</p></div>
+      ${ro ? "" : `<a class="btn btn-primary" href="#/live/new">New event</a>`}</div>
+    ${group("running", "Running", "Nothing is running.")}
+    ${group("scheduled", "Scheduled", "Nothing is scheduled.")}
+    ${group("ended", "Ended", "No past events.")}
+    <section class="panel">
+      <div class="panel-head"><h2>Announcements</h2></div>
+      <p class="muted">The bot posts in this channel when an event starts and when it ends. Leave it empty to post nothing.</p>
+      <div class="field-row"><label style="flex:2 1 240px">Discord channel ID<input id="liveChannel" value="${esc(r.settings.channelId || "")}" inputmode="numeric" ${ro ? "disabled" : ""} /></label>
+      ${ro ? "" : `<button class="btn-sm" id="liveChannelSave" type="button">Save channel</button>`}</div>
+    </section></div>`;
+  $("#liveChannelSave")?.addEventListener("click", async () => {
+    const s = await api("/api/admin/live-events/channel", { method: "POST", body: { channelId: $("#liveChannel").value.trim() || null } });
+    toast(s.ok ? (s.channelId ? "Announcements will post there." : "Announcements are off.") : s.error, !s.ok);
+  });
+  $("#livePage").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-live-act]");
+    if (!b) return;
+    const card = b.closest("[data-live-id]");
+    const box = $(".live-confirm", card);
+    if (b.dataset.liveAct === "cancel") return (box.hidden = true);
+    if (b.dataset.liveAct === "end" || b.dataset.liveAct === "delete") {
+      box.hidden = false;
+      box.dataset.act = b.dataset.liveAct;
+      $(".live-go", box).textContent = b.dataset.liveAct === "end" ? "End it now" : "Delete it";
+      return $("textarea", box).focus();
+    }
+    if (b.dataset.liveAct === "go") {
+      const reason = $("textarea", box).value.trim();
+      if (!reason) return toast("A reason is required.", true);
+      b.disabled = true;
+      api(`/api/admin/live-events/${card.dataset.liveId}/${box.dataset.act}`, { method: "POST", body: { reason } }).then((s) => {
+        b.disabled = false;
+        if (!s.ok) return toast(s.error, true);
+        toast(box.dataset.act === "end" ? "Ended." : "Deleted.");
+        renderLiveEvents(null);
+      });
+    }
+  });
+}
+
+function eventCard(e, ro) {
+  const window_ = `${esc(when(e.startAt))} → ${esc(when(e.stopAt))}${e.endedAt && e.endedAt < e.endAt ? " (ended early)" : ""}`;
+  return `<div class="live-card" data-live-id="${e.id}">
+    <div class="live-card-head"><div><strong>${esc(e.name)}</strong> ${statusChip(e.status)}<div class="faint">${window_}</div></div>
+      <div class="live-actions">
+        <a class="btn btn-sm" href="#/live/${e.id}">${e.status === "ended" || ro ? "View" : "Edit"}</a>
+        ${!ro && e.status === "running" ? `<button class="btn-sm btn-ghost-danger" data-live-act="end" type="button">End now</button>` : ""}
+        ${!ro && e.status === "scheduled" ? `<button class="btn-sm btn-ghost-danger" data-live-act="delete" type="button">Delete</button>` : ""}
+      </div></div>
+    <ul class="live-effects">${e.effects.map((f) => `<li>${esc(f.text)}</li>`).join("")}</ul>
+    <div class="live-confirm" hidden><label>Reason (required)<textarea maxlength="300"></textarea></label>
+      <div class="sheet-actions"><button class="btn-sm" data-live-act="cancel" type="button">Cancel</button><button class="btn-danger live-go" data-live-act="go" type="button"></button></div></div>
+  </div>`;
+}
+
+// ---- editor ----
+const blankEffect = () => ({ kind: "catchBoost", value: 2, match: {} });
+
+async function renderLiveEditor(which) {
+  await getCatalog();
+  if (!live.meta) await liveMeta();
+  if (!live.meta?.kinds) return (main.innerHTML = `<div class="error-box">Couldn't load Live events.</div>`);
+  let ev;
+  if (which === "new") {
+    const start = Date.now() + 60 * 60 * 1000;
+    ev = { id: null, status: "new", name: "", startAt: start - (start % (15 * 60000)), endAt: start - (start % (15 * 60000)) + 7 * 86400000, effects: [blankEffect()] };
+  } else {
+    const found = live.meta.events.find((e) => String(e.id) === String(which));
+    if (!found) return (main.innerHTML = `<div class="error-box">No such event. <a href="#/live">Back to Live events</a></div>`);
+    ev = JSON.parse(JSON.stringify(found));
+  }
+  live.editing = ev;
+  const locked = ev.status === "ended" || state.session?.readOnly;
+  const running = ev.status === "running";
+  main.innerHTML = `<div id="liveEditor">
+    <div class="crumbs"><a href="#/live">Live events</a> › ${ev.id ? esc(ev.name) : "New event"}</div>
+    <div class="page-head"><div><h1>${ev.id ? esc(ev.name) : "New Live event"} ${ev.id ? statusChip(ev.status) : ""}</h1>
+      <p>${locked ? "Ended events can't be changed." : running ? "It's running: changes apply from the next catch, battle or purchase. Its start can't move." : "Times are in your time zone; players see their own."}</p></div></div>
+    <fieldset class="live-fieldset" ${locked ? "disabled" : ""}>
+    <section class="panel">
+      <div class="field-row">
+        <label style="flex:2 1 220px">Name<input id="leName" maxlength="60" value="${esc(ev.name)}" placeholder="e.g. Kanto week" /></label>
+        <label>Starts<input id="leStart" type="datetime-local" value="${toLocalInput(ev.startAt)}" ${running ? "disabled" : ""} /></label>
+        <label>Ends<input id="leEnd" type="datetime-local" value="${toLocalInput(ev.endAt)}" /></label>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Effects</h2><button class="btn-sm" id="leAdd" type="button">Add effect</button></div>
+      <div id="leEffects"></div>
+    </section>
+    </fieldset>
+    <section class="panel">
+      <div class="panel-head"><h2>Preview</h2>
+        <label class="inline">Roll with <select id="leBall"><option value="pokeball">Poké Ball</option><option value="greatball">Great Ball</option><option value="ultraball">Ultra Ball</option></select></label></div>
+      <div id="lePreview"><p class="muted">Add an effect to see what it does.</p></div>
+    </section>
+    ${locked ? "" : `<section class="panel">
+      <label>Reason (required)<textarea id="leReason" maxlength="300" placeholder="e.g. Kanto community week"></textarea></label>
+      <div class="sheet-actions" style="margin-top:12px"><a class="btn btn-sm" href="#/live">Cancel</a><button class="btn-primary" id="leSave" type="button">${ev.id ? "Save changes" : "Schedule event"}</button></div>
+    </section>`}</div>`;
+  drawEffects();
+  const page = $("#liveEditor");
+  page.addEventListener("input", () => { readEditor(); queueLivePreview(); });
+  page.addEventListener("change", (e) => {
+    if (e.target.matches("[data-f=kind]")) {
+      const i = Number(e.target.closest("[data-i]").dataset.i);
+      const kind = e.target.value;
+      const def = live.meta.kinds[kind];
+      live.editing.effects[i] = { kind, ...(def.value === "mult" ? { value: 2 } : def.value === "percent" ? { value: 25 } : def.value === "count" ? { value: 5 } : {}), ...(def.match ? { match: {} } : {}), ...(kind === "discount" ? { categories: [] } : {}) };
+      drawEffects();
+    } else readEditor();
+    queueLivePreview();
+  });
+  page.addEventListener("click", (e) => {
+    const rm = e.target.closest("[data-remove]");
+    if (rm) { live.editing.effects.splice(Number(rm.dataset.remove), 1); drawEffects(); queueLivePreview(); }
+  });
+  $("#leAdd").addEventListener("click", () => { live.editing.effects.push(blankEffect()); drawEffects(); queueLivePreview(); });
+  $("#leSave")?.addEventListener("click", saveLiveEvent);
+  queueLivePreview(0);
+}
+
+function multiCheck(name, options, chosen, label = (o) => o) {
+  return `<div class="live-checks" data-multi="${name}">${options.map((o) => `<label class="inline"><input type="checkbox" value="${esc(o)}" ${chosen.includes(o) ? "checked" : ""} /> ${esc(label(o))}</label>`).join("")}</div>`;
+}
+
+function drawEffects() {
+  const m = live.meta;
+  const kinds = Object.entries(m.kinds);
+  const groups = [...new Set(kinds.map(([, d]) => d.group))];
+  const kindSelect = (cur) => `<select data-f="kind">${groups.map((g) => `<optgroup label="${esc(g)}">${kinds.filter(([, d]) => d.group === g).map(([k, d]) => `<option value="${k}" ${k === cur ? "selected" : ""}>${esc(d.label)}</option>`).join("")}</optgroup>`).join("")}</select>`;
+  $("#leEffects").innerHTML = live.editing.effects.length ? live.editing.effects.map((f, i) => {
+    const def = m.kinds[f.kind];
+    const mt = f.match || {};
+    const can = (k) => (def.match || []).includes(k);
+    const species = (mt.species || []).map((id) => { const s = state.catalog.speciesById.get(Number(id)); return s ? `${s.name} #${s.id}` : `#${id}`; }).join(", ");
+    return `<div class="live-effect" data-i="${i}">
+      <div class="field-row">
+        <label>Effect${kindSelect(f.kind)}</label>
+        ${def.value === "mult" ? `<label>Multiplier (×)<input data-f="value" type="number" step="any" min="0" value="${esc(f.value)}" /></label>` : ""}
+        ${def.value === "percent" ? `<label>Discount (%)<input data-f="value" type="number" min="1" max="100" value="${esc(f.value)}" /></label>` : ""}
+        ${def.value === "count" ? `<label>Extra battles per day<input data-f="value" type="number" min="1" step="1" value="${esc(f.value)}" /></label>` : ""}
+        <button class="btn-sm btn-ghost-danger" data-remove="${i}" type="button">Remove</button>
+      </div>
+      ${f.kind === "exp" ? `<p class="faint">Leave types empty for every Pokémon.</p>` : ""}
+      ${can("types") ? `<h3>Types</h3>${multiCheck("types", m.types, mt.types || [])}` : ""}
+      ${can("regions") ? `<h3>Regions</h3>${multiCheck("regions", m.regions, mt.regions || [])}` : ""}
+      ${can("tiers") ? `<h3>Tiers</h3>${multiCheck("tiers", m.tiers, mt.tiers || [])}` : ""}
+      ${can("species") ? `<label>Species (comma-separated)<input data-f="species" list="leSpeciesList" value="${esc(species)}" placeholder="e.g. Pikachu, Eevee" /></label>` : ""}
+      ${f.kind === "discount" ? `<h3>Shop categories</h3>${multiCheck("categories", Object.keys(m.categories), f.categories || [], (c) => m.categories[c])}` : ""}
+      ${def.match && ["types", "regions", "tiers", "species"].filter(can).length > 1 ? `<p class="faint">Pick several kinds and a Pokémon must match all of them (Kanto + Water = Kanto Water-types).</p>` : ""}
+    </div>`;
+  }).join("") + `<datalist id="leSpeciesList">${speciesOptions(true)}</datalist>` : `<p class="muted">No effects yet.</p>`;
+}
+
+function readEditor() {
+  const ev = live.editing;
+  ev.name = $("#leName").value;
+  if (!$("#leStart").disabled) ev.startAt = fromLocalInput($("#leStart").value);
+  ev.endAt = fromLocalInput($("#leEnd").value);
+  $$("#leEffects .live-effect").forEach((row) => {
+    const f = ev.effects[Number(row.dataset.i)];
+    const v = $("[data-f=value]", row);
+    if (v) f.value = Number(v.value);
+    $$("[data-multi]", row).forEach((box) => {
+      const vals = $$("input:checked", box).map((c) => c.value);
+      if (box.dataset.multi === "categories") f.categories = vals;
+      else f.match = { ...(f.match || {}), [box.dataset.multi]: vals };
+    });
+    const sp = $("[data-f=species]", row);
+    if (sp) {
+      const ids = sp.value.split(",").map((s) => s.trim()).filter(Boolean).map((s) => speciesFromInput(s)?.id ?? NaN);
+      f.match = { ...(f.match || {}), species: ids };
+    }
+  });
+}
+
+const payload = () => {
+  const ev = live.editing;
+  return { name: ev.name, startAt: ev.startAt, endAt: ev.endAt, effects: ev.effects };
+};
+
+function queueLivePreview(delay = 350) {
+  clearTimeout(live.previewTimer);
+  live.previewTimer = setTimeout(runLivePreview, delay);
+}
+
+async function runLivePreview() {
+  const out = $("#lePreview");
+  if (!out || !live.editing) return;
+  if (state.session?.readOnly) return (out.innerHTML = `<p class="muted">Preview needs a Discord admin session.</p>`);
+  const r = await api("/api/admin/live-events/preview", { method: "POST", body: { id: live.editing.id, event: payload(), ball: $("#leBall").value } });
+  if (!r.ok) return (out.innerHTML = `<div class="error-box">${esc(r.error)}</div>`);
+  if (!r.valid) {
+    out.innerHTML = `<div class="error-box">${esc(r.error)}</div>`;
+    $("#leSave") && ($("#leSave").disabled = true);
+    return;
+  }
+  $("#leSave") && ($("#leSave").disabled = false);
+  const list = `<ul class="live-effects">${r.effects.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`;
+  if (!r.odds) return (out.innerHTML = `${list}<p class="muted">No Catch boost or limit, so catch odds don't change.</p>`);
+  const o = r.odds;
+  const tiers = Object.keys(o.normal.tiers);
+  out.innerHTML = `${list}
+    ${o.alsoRunning.length ? `<p class="muted">Also running then: ${esc(o.alsoRunning.join(", "))}. The odds include them.</p>` : ""}
+    <p class="muted">A Novice player's roll, before Rank bonuses. Paid rolls only use the event if the player turns it on.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th></th><th class="num">Species</th>${tiers.map((t) => `<th class="num">${tierChip(t)}</th>`).join("")}</tr></thead>
+      <tbody>
+        <tr><td>Normally</td><td class="num">${fmt(o.normal.species)}</td>${tiers.map((t) => `<td class="num">${pct(o.normal.tiers[t])}</td>`).join("")}</tr>
+        <tr><td><strong>During this event</strong></td><td class="num">${fmt(o.during.species)}</td>${tiers.map((t) => `<td class="num">${pct(o.during.tiers[t])}</td>`).join("")}</tr>
+      </tbody></table></div>
+    <h3 style="margin-top:12px">Most likely single Pokémon during the event</h3>
+    <div class="table-wrap"><table><thead><tr><th>Pokémon</th><th>Tier</th><th class="num">Chance</th><th class="num">Normally</th></tr></thead>
+      <tbody>${o.during.top.map((s) => `<tr><td>${esc(s.name)}</td><td>${tierChip(s.tier)}</td><td class="num">${pct(s.chance)}</td><td class="num">${pct(s.before)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+async function saveLiveEvent() {
+  readEditor();
+  const reason = $("#leReason").value.trim();
+  if (!reason) return toast("A reason is required.", true);
+  const ev = live.editing;
+  const btn = $("#leSave");
+  btn.disabled = true;
+  const r = await api(ev.id ? `/api/admin/live-events/${ev.id}/edit` : "/api/admin/live-events", { method: "POST", body: { event: payload(), reason } });
+  btn.disabled = false;
+  if (!r.ok) return toast(r.error, true);
+  toast(ev.id ? "Saved." : "Scheduled.");
+  live.meta = null;
+  location.hash = "#/live";
 }
 
 // ----------------------------------------------------------

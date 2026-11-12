@@ -28,6 +28,8 @@ import { megaBattleEligibility, megaBattleProfile } from "../megas.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
 import { toTeamObj } from "../economyRules.js";
 import { slotCopyUid } from "../../services/ownership.js";
+import { battleItems } from "../../services/heldItems.js";
+import { expMultiplierFor } from "./items.js";
 
 // Locks both players in a fixed (ascending id) order so two battles between
 // the same pair, started from either side, can't deadlock.
@@ -46,9 +48,16 @@ export function withBothLocks(lockUser, idA, idB, fn) {
 // TM system (T1): a slot naming a customized copy (`uid`, services/ownership.js)
 // fights with that copy's moves (its TM moves included); the member carries
 // `uid`. Slots without one are built exactly as before.
-export function buildTeam(user, { env = process.env, team = user.displayedPokemon, movesetTeam = "display" } = {}) {
+// Held items (equipmentTeam, default = movesetTeam): each member's item is
+// read here, inside the battle's locks, and copied onto the member. That
+// copy is the battle snapshot: later equipment changes can't touch a battle
+// that has started, and the result/replay shows what actually battled.
+// services/heldItems.battleItems re-checks every rule (ownership, Item
+// Clause, Mega slot, species, battle capability) and drops anything doubtful.
+export function buildTeam(user, { env = process.env, team = user.displayedPokemon, movesetTeam = "display", equipmentTeam = movesetTeam } = {}) {
   const mega = resolveBattleMega(user, { env, team });
   if (mega && !mega.ok && isMegaCapabilityEnabled("battle", env)) console.warn(`⚠️ Mega slot battles as its base form (${mega.reason}).`);
+  const items = battleItems(user, equipmentTeam, { env });
   const uids = new Map();
   for (const entry of Array.isArray(team) ? team : []) {
     const t = toTeamObj(entry);
@@ -68,6 +77,9 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
       if (uid) member.uid = uid;
       const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant, { uid });
       if (moves) member.moves = moves;
+      // A slot battling as a Mega never uses a regular item (its Mega Stone fills the slot).
+      const item = items.get(`${slot.id}:${slot.variant}`);
+      if (item && !(mega?.ok && mega.key === `${slot.id}:${slot.variant}`)) member.item = item;
       if (!mega?.ok || mega.key !== `${slot.id}:${slot.variant}`) return member;
       return { ...member, name: mega.profile.name, baseName: member.name, megaForm: mega.formId, battleProfile: mega.profile };
     });
@@ -97,7 +109,7 @@ export function withMegaStats(members, { env = process.env } = {}) {
  */
 export function buildBattleTeam(user, { env = process.env } = {}) {
   if (!Array.isArray(user?.battleTeam)) return [];
-  return buildTeam(user, { env, team: user.battleTeam, movesetTeam: "battle" }).map((m) => ({ ...m, realLevel: m.level, level: RANKED.level }));
+  return buildTeam(user, { env, team: user.battleTeam, movesetTeam: "battle", equipmentTeam: "battle" }).map((m) => ({ ...m, realLevel: m.level, level: RANKED.level }));
 }
 
 /** A player's fighters for this mode. */
@@ -111,12 +123,16 @@ function applyExp(user, side, result, sideIndex) {
   const knockedOut = result.knockouts
     .filter((k) => k.bySide === sideIndex)
     .map((k) => side.opponent[k.slot]);
-  const gains = teamExp({ members: atRealLevels(side.members), knockedOut: atRealLevels(knockedOut), won: result.winner === sideIndex });
-  return applyGains(user, side.members, gains);
+  const base = teamExp({ members: atRealLevels(side.members), knockedOut: atRealLevels(knockedOut), won: result.winner === sideIndex });
+  // Lucky Egg: the holder's battle EXP × 1.5, rounded down (Gen 5+). Members
+  // without an EXP item keep exactly the same gain as before.
+  const gains = base.map((g, i) => Math.floor(g * expMultiplierFor(side.members[i].item)));
+  return applyGains(user, side.members, gains, base);
 }
 
-// Adds gains[i] EXP to members[i] and reports each one's Level change and new moves.
-export function applyGains(user, members, gains) {
+// Adds gains[i] EXP to members[i] and reports each one's Level change and new
+// moves. base[i] (held items): the gain before an EXP item, reported when it differs.
+export function applyGains(user, members, gains, base = gains) {
   return members.map((m, i) => {
     const { fromLevel, toLevel } = addExp(user, m.speciesId, m.variant, gains[i]);
     return {
@@ -126,6 +142,7 @@ export function applyGains(user, members, gains) {
       toLevel,
       gained: gains[i],
       learned: movesLearned(m.speciesId, fromLevel, toLevel).map((id) => getMove(id).name),
+      ...(gains[i] !== base[i] ? { bonusFrom: m.item, baseGained: base[i] } : {}),
       // Display only (the EXP card): which Mega this member battled as. The
       // EXP itself always goes to the base line above. Absent for ordinary
       // members, so their results are byte-for-byte unchanged.

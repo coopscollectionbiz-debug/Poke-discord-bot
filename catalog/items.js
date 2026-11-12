@@ -22,6 +22,7 @@
 
 import fs from "fs";
 import { tmItemDefinitions } from "./tms.js";
+import { HELD_ITEM_DEFS, HELD_GROUPS } from "./heldItems.js";
 
 export const CATEGORIES = Object.freeze({
   capture: { label: "Capture", emoji: "🎯", order: 1 },
@@ -170,18 +171,6 @@ const ITEMS = [
     sinceRelease: "E",
   }),
   item({
-    id: "charcoal",
-    name: "Charcoal",
-    description: "Held item: Fire-type moves hit harder.",
-    category: "held",
-    rarity: "uncommon",
-    equip: { slot: "pokemon" },
-    status: "defined",
-    storage: "inventory",
-    sources: ["shop"],
-    sinceRelease: "E",
-  }),
-  item({
     id: "pokedex_scanner",
     name: "Pokédex Scanner",
     description: "Trainer gear: marks newly caught species.",
@@ -232,6 +221,18 @@ const ITEMS = [
 const MEGA_DATA = JSON.parse(fs.readFileSync(new URL("../data/pokedex/megas.json", import.meta.url), "utf8"));
 const MEGA_FORM_NAMES = Object.fromEntries(MEGA_DATA.forms.map((f) => [f.id, f.name]));
 export const MEGA_STONE_IDS = Object.freeze(MEGA_DATA.stones.map((s) => s.id));
+// Official Mega Stone icons: public/sprites/items/megastones/<id>.png (PokeAPI
+// sprites repository; see /credits). Classic stones are 30×30 pixel art; the
+// Legends: Z-A-era stones only exist as 160×160 HD icons (iconSmooth). A
+// missing file simply leaves the entry without an icon.
+function stoneIcon(id) {
+  try {
+    const b = fs.readFileSync(new URL(`../public/sprites/items/megastones/${id}.png`, import.meta.url));
+    return { icon: `items/megastones/${id}.png`, iconSmooth: b.readUInt32BE(16) > 30 };
+  } catch {
+    return { icon: null, iconSmooth: false };
+  }
+}
 for (const s of MEGA_DATA.stones) {
   const special = s.acquisition !== "random-pool";
   ITEMS.push(item({
@@ -246,6 +247,7 @@ for (const s of MEGA_DATA.stones) {
     storage: "inventory",
     sources: special ? ["milestone_voucher", "event"] : ["quest_rare", "daily_rare", "achievement", "event", "shard_exchange"],
     mega: Object.freeze({ species: s.species, forms: Object.freeze([...s.forms]), officialStatus: s.officialStatus, acquisition: s.acquisition }),
+    ...stoneIcon(s.id),
     sinceRelease: "M",
   }));
 }
@@ -292,6 +294,44 @@ ITEMS.push(
 // 156 launch TMs "active", 16 held TMs "defined" (catalog/tms.js).
 for (const def of tmItemDefinitions()) ITEMS.push(item(def));
 
+// ---------------- ACTIVE: held items (catalog/heldItems.js) ----------------
+// Permanent account-wide unlocks: 0 or 1 in user.items (maxStack 1). "active"
+// in the catalog, but every grant is also gated by the held-item feature
+// flags (services/inventory.js validateHoldableItem), so nothing is
+// obtainable until HELD_ITEMS_ENABLED is set. The old "defined" Charcoal
+// entry (Release B placeholder, never obtainable, owned by nobody) is
+// replaced by the active one with the same id.
+for (const d of HELD_ITEM_DEFS) {
+  ITEMS.push(item({
+    id: d.id,
+    name: d.name,
+    description: d.effect,
+    category: "held",
+    rarity: d.rarity,
+    stackable: false,
+    maxStack: 1,
+    equip: { slot: "pokemon" },
+    status: "active",
+    storage: "inventory",
+    shop: d.price ? { eligible: true, channel: "dashboard", price: { cc: d.price } } : null,
+    icon: d.icon,
+    sources: d.starter ? ["starter"] : ["shop", "admin"],
+    held: Object.freeze({
+      group: d.group,
+      groupLabel: HELD_GROUPS[d.group]?.label ?? d.group,
+      effect: d.effect,
+      rule: d.rule,
+      glyph: d.glyph,
+      iconSmooth: d.iconSmooth,
+      starter: d.starter,
+      combat: d.combat,
+      restrictSpecies: d.restrictSpecies ? Object.freeze([...d.restrictSpecies]) : null,
+      boostsType: d.boostsType,
+    }),
+    sinceRelease: "H",
+  }));
+}
+
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));
 
 /** Valid item id shape: lowercase snake_case, 1–64 chars. */
@@ -310,6 +350,9 @@ export function getCatalogItem(id) {
 export const isActive = (entry) => !!entry && entry.status === "active";
 
 /** Can this id be held in user.items (active, inventory-stored)? */
+/** A held item (equippable on a Pokémon in a team). */
+export const isHeldItem = (entry) => !!entry && entry.category === "held" && entry.equip?.slot === "pokemon" && !!entry.held;
+
 export function isHoldable(id) {
   const e = getCatalogItem(id);
   return !!e && e.status === "active" && e.storage === "inventory";

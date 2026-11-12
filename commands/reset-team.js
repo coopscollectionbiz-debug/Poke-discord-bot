@@ -4,6 +4,7 @@
 
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from "discord.js";
 import { safeReply } from "../utils/safeReply.js";
+import { clearTeamEquipment } from "../services/heldItems.js";
 import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 
 
@@ -65,6 +66,7 @@ export default {
         user.displayedPokemon = [];
         delete user.battleTeam;
         delete user.movesets;
+        clearTeamEquipment(user); // both teams' held-item assignments (unlocks are kept)
 
         // Save changes (user is the live record; no reassignment needed)
         const saveAck = await saveAndAck(trainerData);

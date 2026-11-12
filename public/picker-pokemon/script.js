@@ -43,6 +43,7 @@ import { showMessage, showActionError, showExpired, showBanner, toast, EXPIRED_M
 import { displaySpeciesName, nameMatches } from "/public/shared/names.js";
 import { scanFx } from "/public/shared/spriteFx.js";
 import { openDetail } from "/public/picker-pokemon/detail.js";
+import { GYM_BADGES, earnedBadgeKeys } from "/public/picker-pokemon/badges.js";
 
 const LOCK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>`;
 const SPARKLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>`;
@@ -470,6 +471,19 @@ function updateHUD() {
   if (ccEl) ccEl.textContent = Number(cc).toLocaleString("en-US");
   if (tpEl) tpEl.textContent = Number(tp).toLocaleString("en-US");
   if (rankEl) rankEl.textContent = rank;
+
+  const badgeRow = document.getElementById("badgeRow");
+  if (badgeRow) {
+    const earned = new Set(earnedBadgeKeys(userData));
+    badgeRow.replaceChildren(...GYM_BADGES.map((b) => {
+      const img = document.createElement("img");
+      img.src = b.image;
+      img.alt = b.badge;
+      img.title = b.badge;
+      img.className = earned.has(b.key) ? "earned" : "unearned";
+      return img;
+    }));
+  }
 
   updateDustTimer();
 }
@@ -1196,6 +1210,13 @@ async function init() {
     setMode(currentMode);
     startWeeklyPackCountdown();
     initMegaUI(); // no-op unless Mega Evolution is enabled server-side
+
+    // Deep link (Teams page "Open in Collection"): ?pokemon=6&variant=shiny
+    // opens that Pokémon's details on that copy.
+    const linked = Number(params.get("pokemon"));
+    if (Number.isInteger(linked) && pokemonData[linked]) {
+      openDetail(linked, detailContext(), { variant: params.get("variant") === "shiny" ? "shiny" : "normal" });
+    }
 
     // Filters
     document.getElementById("search")?.addEventListener("input", renderPokemonGrid);

@@ -16,7 +16,8 @@ import { battleBlock, buildBattleTeam, runBattle, withBothLocks } from "../utils
 import { playBattle, expSummary } from "../utils/battle/playback.js";
 import { teamPower } from "../utils/battle/power.js";
 import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/battle/wager.js";
-import { WAGER } from "../utils/battle/tuning.js";
+import { WAGER, PLAYBACK } from "../utils/battle/tuning.js";
+import { peekNotices, clearNotices, NOTICE_KINDS } from "../services/notices.js";
 import { expView, renderExpCard } from "../utils/render/expCard.js";
 import { cardImage } from "../utils/render/stage.js";
 
@@ -78,12 +79,43 @@ export async function expMessage(outcome, userId, names, user, { render = render
   }
 }
 
+// Each side's displayed trainer, for the replay's portraits.
+export const trainersOf = (trainerData, outcome) => outcome.sides.map((s) => trainerData[s.userId]?.displayedTrainer ?? null);
+
 async function sendExp(reply, outcome, userId, names, user) {
   return reply.followUp(await expMessage(outcome, userId, names, user))
     .catch((err) => console.warn("⚠️ EXP message failed:", err?.message || err));
 }
 
 export async function execute(interaction, trainerData, _saveLocal, _saveDiscord, lockUser, enqueueSave) {
+  try {
+    await executeBattle(interaction, trainerData, lockUser, enqueueSave);
+  } finally {
+    await sendPendingNotices(interaction, trainerData, lockUser, enqueueSave);
+  }
+}
+
+/**
+ * One-time Battle team notices (services/notices.js), e.g. "Dialga was
+ * removed from your Battle team" after a re-tier. Sent as an ephemeral
+ * follow-up to whatever /battle replied, then cleared. Kept if sending fails.
+ */
+export async function sendPendingNotices(interaction, trainerData, lockUser, enqueueSave, kind = NOTICE_KINDS.BATTLE_TEAM_TRIM) {
+  const id = interaction.user.id;
+  const pending = peekNotices(trainerData[id], kind);
+  if (!pending.length || !(interaction.replied || interaction.deferred)) return;
+  try {
+    await interaction.followUp({ content: pending.map((n) => `ℹ️ ${n.text}`).join("\n"), flags: MessageFlags.Ephemeral });
+  } catch (err) {
+    console.warn("⚠️ battle notice follow-up failed:", err?.message || err);
+    return;
+  }
+  await lockUser(id, async () => {
+    if (clearNotices(trainerData[id], pending.map((n) => n.id))) await enqueueSave(trainerData);
+  });
+}
+
+async function executeBattle(interaction, trainerData, lockUser, enqueueSave) {
   const opponent = interaction.options.getUser("opponent", true);
   const wager = interaction.options.getInteger("wager");
   const challengerId = interaction.user.id;
@@ -123,7 +155,7 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
 /** The replay, then the Challenger's private EXP card (only they earn EXP in casual and ranked battles). Never throws. */
 export async function replayThenExp(interaction, outcome, challengerId, names, trainerData, { play = playBattle, exp = sendExp } = {}) {
   try {
-    await play(interaction.channel, outcome, names);
+    await play(interaction.channel, outcome, names, { ...PLAYBACK, trainers: trainersOf(trainerData, outcome) });
   } catch (err) {
     console.warn("⚠️ battle post failed:", err?.message || err);
     await interaction.editReply("Your battle counted, but I couldn't post it in this channel.").catch(() => {});
@@ -242,7 +274,7 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
       winnerId: outcome.winnerId, turns: outcome.result.turns, surge: !!outcome.surge,
     });
     await closeOffer(`✅ <@${defenderId}> accepted! The battle is below.`);
-    await playBattle(interaction.channel, outcome, names).catch((err) =>
+    await playBattle(interaction.channel, outcome, names, { ...PLAYBACK, trainers: trainersOf(trainerData, outcome) }).catch((err) =>
       console.warn("⚠️ wager battle post failed:", err?.message || err));
     // The Challenger's /battle and the Defender's Accept click are the two interactions to reply on.
     await Promise.all([sendExp(interaction, outcome, challengerId, names, trainerData[challengerId]), sendExp(i, outcome, defenderId, names, trainerData[defenderId])]);

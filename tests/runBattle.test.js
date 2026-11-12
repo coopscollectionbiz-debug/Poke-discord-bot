@@ -58,6 +58,18 @@ section("Casual (open) battle: Display teams, real Levels, unrated");
   assertEqual(out.sides.map((s) => s.members.length), [3, 2], "both Teams fought");
 }
 
+section("The Underdog surge is casual-only");
+{
+  // A lone Caterpie against six legendaries is the Underdog by far, so a
+  // casual battle surges at the top chance; ranked and wager battles never do.
+  const lopsided = () => ({ A: trainer("A", [[10]]), B: trainer("B", [[150], [249], [250], [384], [483], [484]]) });
+  const seeds = Array.from({ length: 40 }, (_, i) => i + 1);
+  const surges = (mode) => seeds.filter((seed) =>
+    runBattle({ trainerData: lopsided(), challengerId: "A", defenderId: "B", mode, stake: mode === "wager" ? 1 : 0, seed, now: NOW }).surge).length;
+  assertTrue(surges("open") > 0, "the same pairing surges in casual battles");
+  assertEqual([surges("ranked"), surges("wager")], [0, 0], "and never in ranked or wager battles");
+}
+
 section("Ranked battle: Battle teams at Lv 50, rated, no surge");
 {
   const td = world();

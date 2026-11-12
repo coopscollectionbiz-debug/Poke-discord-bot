@@ -16,7 +16,7 @@ import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TEXT, tierColor } from "./tokens.js";
 import {
   rr, font, fitText, fitFont, drawBackground, drawCard, drawTypeChips, typeChipsWidth, drawTierPips,
-  drawShinyMark, drawLevel, levelWidth, drawExpBar, drawSlotBadge, drawPlatform, drawBall, drawTag,
+  drawShinyMark, drawLevel, levelWidth, drawExpBar, drawSlotBadge, drawPlatform, drawBall, drawTag, fillTextMid,
 } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, loadTrainerSprite, drawSprite } from "./sprites.js";
 import { loadAnimatedSprite, spritePlayer } from "../battle/render.js";
@@ -80,8 +80,7 @@ function drawFallbackNote(ctx, view, x, y, w) {
   ctx.fill();
   ctx.fillStyle = COLOR.gold;
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(fitText(ctx, msg, tw - 24), x + w / 2, y + 17);
+  fillTextMid(ctx, fitText(ctx, msg, tw - 24), x + w / 2, y + 16);
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
 }

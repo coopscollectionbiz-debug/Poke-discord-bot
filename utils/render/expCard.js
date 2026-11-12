@@ -1,8 +1,8 @@
 // ==========================================================
 // utils/render/expCard.js
 // The private post-battle EXP message as an image: win or loss, the
-// player's new Battle rating, and each Team member's EXP gain, Level-up
-// and newly learned moves. Reads runBattle's outcome (exp, rating, winner)
+// player's new Battle rating (none for /challenge), and each Team member's
+// EXP gain, Level-up and newly learned moves. Reads runBattle's outcome (exp, rating, winner)
 // and, for the EXP bars, the player's record after the battle was saved.
 // Pure: never mutates either.
 // ==========================================================
@@ -22,6 +22,30 @@ const W = 1000, HEADER = 126, TILE_H = 150, GAP = 12, M = 16;
 export const expCardSize = (n) => ({ w: W, h: M + HEADER + Math.ceil(Math.max(1, n) / 2) * (TILE_H + GAP) - GAP + M });
 const fmt = (n) => Number(n ?? 0).toLocaleString("en-US");
 
+/** The card's Team rows from EXP entries (runBattle's or runChallenge's); `user` is the record after the battle. */
+export function expMembers(entries, user) {
+  return (entries ?? []).map((e) => {
+    const [id, variant] = String(e.key).split(":");
+    const t = user ? getTraining(user, Number(id), variant) : null;
+    // A member that battled as a Mega (runBattle's validated participant)
+    // shows the Mega; the EXP and Level are its base line's.
+    const mega = e.megaForm && getMega(e.megaForm)?.species === Number(id) ? e.megaForm : null;
+    return {
+      id: Number(id),
+      spriteId: mega ?? Number(id),
+      mega: mega ? { formId: mega, name: e.name, shortName: megaShortName(mega) } : null,
+      variant,
+      shiny: variant === "shiny",
+      name: mega ? megaShortName(mega) : displaySpeciesName(id, e.name),
+      fromLevel: e.fromLevel,
+      toLevel: e.toLevel,
+      gained: e.gained,
+      learned: e.learned ?? [],
+      expFrac: t ? expProgress(t.exp, t.level) : null,
+    };
+  });
+}
+
 /** One player's EXP view. `user` is their record after the battle. */
 export function expView(outcome, userId, names, user) {
   const opponentId = outcome.sides.find((s) => s.userId !== userId).userId;
@@ -31,26 +55,7 @@ export function expView(outcome, userId, names, user) {
     rating: outcome.rating?.[userId] ?? null,
     surge: outcome.surge ? outcome.sides[outcome.surge.side].userId === userId : false,
     pot: outcome.mode === "wager" && outcome.winnerId === userId ? 2 * outcome.stake : 0,
-    members: (outcome.exp[userId] ?? []).map((e) => {
-      const [id, variant] = String(e.key).split(":");
-      const t = user ? getTraining(user, Number(id), variant) : null;
-      // A member that battled as a Mega (runBattle's validated participant)
-      // shows the Mega; the EXP and Level are its base line's.
-      const mega = e.megaForm && getMega(e.megaForm)?.species === Number(id) ? e.megaForm : null;
-      return {
-        id: Number(id),
-        spriteId: mega ?? Number(id),
-        mega: mega ? { formId: mega, name: e.name, shortName: megaShortName(mega) } : null,
-        variant,
-        shiny: variant === "shiny",
-        name: mega ? megaShortName(mega) : displaySpeciesName(id, e.name),
-        fromLevel: e.fromLevel,
-        toLevel: e.toLevel,
-        gained: e.gained,
-        learned: e.learned ?? [],
-        expFrac: t ? expProgress(t.exp, t.level) : null,
-      };
-    }),
+    members: expMembers(outcome.exp[userId], user),
   };
 }
 

@@ -865,7 +865,7 @@
   "55": {
     "id": 55,
     "name": "Golduck",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Kanto",
     "generation": 1,
     "types": [
@@ -927,7 +927,7 @@
   "59": {
     "id": 59,
     "name": "Arcanine",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Kanto",
     "generation": 1,
     "types": [
@@ -1151,7 +1151,7 @@
   "73": {
     "id": 73,
     "name": "Tentacruel",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Kanto",
     "generation": 1,
     "types": [
@@ -1796,7 +1796,7 @@
   "114": {
     "id": 114,
     "name": "Tangela",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Kanto",
     "generation": 1,
     "types": [
@@ -3326,7 +3326,7 @@
   "211": {
     "id": 211,
     "name": "Qwilfish",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Johto",
     "generation": 2,
     "types": [
@@ -3680,7 +3680,7 @@
   "234": {
     "id": 234,
     "name": "Stantler",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Johto",
     "generation": 2,
     "types": [
@@ -5623,7 +5623,7 @@
   "358": {
     "id": 358,
     "name": "Chimecho",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Hoenn",
     "generation": 3,
     "types": [
@@ -6870,7 +6870,7 @@
   "437": {
     "id": 437,
     "name": "Bronzong",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Sinnoh",
     "generation": 4,
     "types": [
@@ -7601,7 +7601,7 @@
   "483": {
     "id": 483,
     "name": "Dialga",
-    "tier": "legendary",
+    "tier": "mythic",
     "region": "Sinnoh",
     "generation": 4,
     "types": [
@@ -7618,7 +7618,7 @@
   "484": {
     "id": 484,
     "name": "Palkia",
-    "tier": "legendary",
+    "tier": "mythic",
     "region": "Sinnoh",
     "generation": 4,
     "types": [
@@ -7668,7 +7668,7 @@
   "487": {
     "id": 487,
     "name": "Giratina-altered",
-    "tier": "legendary",
+    "tier": "mythic",
     "region": "Sinnoh",
     "generation": 4,
     "types": [
@@ -8659,7 +8659,7 @@
   "550": {
     "id": 550,
     "name": "Basculin-red-striped",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Unova",
     "generation": 5,
     "types": [
@@ -8748,7 +8748,7 @@
   "556": {
     "id": 556,
     "name": "Maractus",
-    "tier": "common",
+    "tier": "uncommon",
     "region": "Unova",
     "generation": 5,
     "types": [
@@ -9181,7 +9181,7 @@
   "584": {
     "id": 584,
     "name": "Vanilluxe",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Unova",
     "generation": 5,
     "types": [
@@ -10152,7 +10152,7 @@
   "646": {
     "id": 646,
     "name": "Kyurem",
-    "tier": "legendary",
+    "tier": "mythic",
     "region": "Unova",
     "generation": 5,
     "types": [
@@ -14100,7 +14100,7 @@
   "863": {
     "id": 863,
     "name": "Perrserker",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -14176,7 +14176,7 @@
   "867": {
     "id": 867,
     "name": "Runerigus",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -14443,7 +14443,7 @@
   "884": {
     "id": 884,
     "name": "Duraludon",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -14519,7 +14519,7 @@
   "888": {
     "id": 888,
     "name": "Zacian",
-    "tier": "legendary",
+    "tier": "mythic",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -14535,7 +14535,7 @@
   "889": {
     "id": 889,
     "name": "Zamazenta",
-    "tier": "legendary",
+    "tier": "mythic",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -14708,7 +14708,7 @@
   "899": {
     "id": 899,
     "name": "Wyrdeer",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -14730,7 +14730,7 @@
   "900": {
     "id": 900,
     "name": "Kleavor",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -14751,7 +14751,7 @@
   "901": {
     "id": 901,
     "name": "Ursaluna",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -14773,7 +14773,7 @@
   "902": {
     "id": 902,
     "name": "Basculegion",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -14794,7 +14794,7 @@
   "903": {
     "id": 903,
     "name": "Sneasler",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -14815,7 +14815,7 @@
   "904": {
     "id": 904,
     "name": "Overqwil",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Galar",
     "generation": 8,
     "types": [
@@ -15971,7 +15971,7 @@
   "967": {
     "id": 967,
     "name": "Cyclizar",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16134,7 +16134,7 @@
   "977": {
     "id": 977,
     "name": "Dondozo",
-    "tier": "rare",
+    "tier": "epic",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16183,7 +16183,7 @@
   "980": {
     "id": 980,
     "name": "Clodsire",
-    "tier": "uncommon",
+    "tier": "rare",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16632,7 +16632,7 @@
   "1005": {
     "id": 1005,
     "name": "Roaring Moon",
-    "tier": "epic",
+    "tier": "legendary",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16649,7 +16649,7 @@
   "1006": {
     "id": 1006,
     "name": "Iron Valiant",
-    "tier": "epic",
+    "tier": "legendary",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16700,7 +16700,7 @@
   "1009": {
     "id": 1009,
     "name": "Walking Wake",
-    "tier": "epic",
+    "tier": "legendary",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16717,7 +16717,7 @@
   "1010": {
     "id": 1010,
     "name": "Iron Leaves",
-    "tier": "epic",
+    "tier": "legendary",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16734,7 +16734,7 @@
   "1011": {
     "id": 1011,
     "name": "Dipplin",
-    "tier": "epic",
+    "tier": "rare",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16861,7 +16861,7 @@
   "1018": {
     "id": 1018,
     "name": "Archaludon",
-    "tier": "epic",
+    "tier": "legendary",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16903,7 +16903,7 @@
   "1020": {
     "id": 1020,
     "name": "Gouging Fire",
-    "tier": "epic",
+    "tier": "legendary",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16920,7 +16920,7 @@
   "1021": {
     "id": 1021,
     "name": "Raging Bolt",
-    "tier": "epic",
+    "tier": "legendary",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16937,7 +16937,7 @@
   "1022": {
     "id": 1022,
     "name": "Iron Boulder",
-    "tier": "epic",
+    "tier": "legendary",
     "region": "Paldea",
     "generation": 9,
     "types": [
@@ -16954,7 +16954,7 @@
   "1023": {
     "id": 1023,
     "name": "Iron Crown",
-    "tier": "epic",
+    "tier": "legendary",
     "region": "Paldea",
     "generation": 9,
     "types": [

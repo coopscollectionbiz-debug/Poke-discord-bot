@@ -541,13 +541,24 @@ function createTrainerModal({
   document.body.appendChild(overlay);
 
   modal.querySelector(".cancel").onclick = () => overlay.remove();
-  modal.querySelector(".confirm").onclick = async () => {
-    if (!confirmDisabled && onConfirm) await onConfirm();
+  let busy = false;
+  modal.querySelector(".confirm").onclick = async (e) => {
+    if (busy) return;
+    if (!confirmDisabled && onConfirm) {
+      // Pending state until the server answers: no second click, no early close.
+      busy = true;
+      const confirm = e.currentTarget;
+      confirm.disabled = true;
+      modal.querySelector(".cancel").disabled = true;
+      confirm.textContent = "Saving…";
+      modal.setAttribute("aria-busy", "true");
+      try { await onConfirm(); } finally { busy = false; }
+    }
     overlay.remove();
   };
 
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) overlay.remove();
+    if (e.target === overlay && !busy) overlay.remove();
   });
 }
 

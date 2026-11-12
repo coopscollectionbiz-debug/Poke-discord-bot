@@ -27,9 +27,11 @@ for (const [name, fx] of Object.entries(CATCH_FIXTURES)) {
   imgs.push([fx, await loadImage(png)]);
 }
 
-// Discord context: the ping line, then the card at desktop (550) and phone (310) width.
+// Discord context: the ping line, then the card as Discord shows it: its own
+// size, capped at desktop (550) or phone (310) width. Discord never upscales.
 for (const [label, w, cw] of [["desktop", 550, 700], ["phone", 310, 390]]) {
-  const rowH = imgs.map(([, im]) => Math.round((im.height * w) / im.width) + 78);
+  const dw = (im) => Math.min(w, im.width);
+  const rowH = imgs.map(([, im]) => Math.round((im.height * dw(im)) / im.width) + 78);
   const c = createCanvas(cw, rowH.reduce((a, b) => a + b, 24));
   const ctx = c.getContext("2d");
   ctx.fillStyle = "#313338";
@@ -49,12 +51,12 @@ for (const [label, w, cw] of [["desktop", 550, 700], ["phone", 310, 390]]) {
     const shiny = fx.variant === "shiny" ? "a shiny " : "a wild ";
     ctx.fillText(`@${fx.trainerName.slice(0, 12)} caught ${shiny}${i === 1 ? "Dragonite" : i === 0 ? "Cubchoo" : "Giratina"}!`, x, y + 40);
     ctx.save();
-    const h = Math.round((im.height * w) / im.width);
+    const iw = dw(im), h = Math.round((im.height * iw) / im.width);
     ctx.beginPath();
-    ctx.roundRect(x, y + 52, w, h, 8);
+    ctx.roundRect(x, y + 52, iw, h, 8);
     ctx.clip();
     ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(im, x, y + 52, w, h);
+    ctx.drawImage(im, x, y + 52, iw, h);
     ctx.restore();
     y += rowH[i];
   });

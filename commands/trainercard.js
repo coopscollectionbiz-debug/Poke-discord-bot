@@ -40,6 +40,9 @@ import { enqueueSave } from "../utils/saveQueue.js";
 import { lockUser } from "../utils/userLocks.js";
 import { saveAndAck, SAVE_DELAYED_NOTE } from "../utils/saveManager.js";
 import { grantTrainer } from "../services/assets.js";
+import { badgeLine } from "../utils/challenge/badgeImages.js";
+import { sendPendingNotices } from "./battle.js";
+import { NOTICE_KINDS } from "../services/notices.js";
 
 // Load trainer sprite data
 const __filename = fileURLToPath(import.meta.url);
@@ -194,7 +197,10 @@ export default {
       }
     }
 
-    return showTrainerCard(interaction, user, trainerData, saveDataToDiscord);
+    const shown = await showTrainerCard(interaction, user, trainerData, saveDataToDiscord);
+    // One-time "your trainers were consolidated" note (services/trainerConsolidation.js), as a private follow-up.
+    await sendPendingNotices(interaction, trainerData, lockUser, enqueueSave, NOTICE_KINDS.TRAINER_CONSOLIDATION);
+    return shown;
   },
 };
 
@@ -539,7 +545,8 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
           `🧍 **Trainer:** ${trainerInfo.name} — ${trainerInfo.rarityLabel} ${trainerInfo.emoji}\n\n` +
           `📊 **Pokémon Owned:** ${pokemonOwned}\n` +
           `✨ **Shiny Pokémon:** ${shinyCount}\n` +
-          `🧍 **Trainers:** ${trainerCount}\n\n` +
+          `🧍 **Trainers:** ${trainerCount}\n` +
+          `${badgeLine(user)}\n\n` +
           `🌀 **Team:**`
       )
       .setFooter({ text: "Coop's Collection • /trainercard" });

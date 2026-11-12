@@ -33,9 +33,11 @@ const TRAINER_COSTS = {
 let allTrainers = {};
 // Breathing idle GIFs: { "file.png": "file.gif" } (tools/generate-trainer-idles.mjs)
 let trainerIdles = {};
-// A trainer image: the breathing idle when `animated` and one exists, else the PNG.
-const trainerImg = (file, animated) =>
-  animated && trainerIdles[file] ? `/public/sprites/trainers_idle/${trainerIdles[file]}` : `${TRAINER_SPRITE_PATH}${file}`;
+// A trainer image: its idle animation (a real animation or the generated
+// breathing) when one exists, else the PNG. Owned or not: unowned cards are
+// grayed by CSS, so they animate too.
+const trainerImg = (file) =>
+  trainerIdles[file] ? `/public/sprites/trainers_idle/${trainerIdles[file]}` : `${TRAINER_SPRITE_PATH}${file}`;
 let ownedTrainers = [];
 let userId = null;
 
@@ -222,9 +224,9 @@ function render(filter = "") {
       if (showOwnedOnly && !owns) return;
       if (showUnownedOnly && owns) return;
 
-      // Owned trainers breathe (idle GIF); unowned stay static (CSS grays them).
+      // Every trainer plays its idle animation; CSS grays the unowned ones.
       const staticPath = `${TRAINER_SPRITE_PATH}${fileName}`;
-      const imgPath = trainerImg(fileName, owns);
+      const imgPath = trainerImg(fileName);
 
       const card = document.createElement("div");
       card.className = `trainer-card ${owns ? "owned" : "unowned"}`;
@@ -360,7 +362,7 @@ function askToEquipTrainer(name, file) {
   createTrainerModal({
     title: "Equip This Trainer?",
     message: `Would you like to equip <strong>${name}</strong>?`,
-    sprite: trainerImg(file, true),
+    sprite: trainerImg(file),
     confirmText: "Equip",
     onConfirm: () => selectTrainer(name, file),
   });
@@ -380,7 +382,7 @@ async function selectTrainer(name, file) {
       return createTrainerModal({
         title: "Equip Failed",
         message: data?.error || "Could not equip trainer.",
-        sprite: trainerImg(file, true),
+        sprite: trainerImg(file),
         confirmText: "OK",
       });
     }
@@ -394,7 +396,7 @@ async function selectTrainer(name, file) {
     createTrainerModal({
       title: "Trainer Equipped!",
       message: `${name} is now your active trainer.`,
-      sprite: trainerImg(file, true),
+      sprite: trainerImg(file),
       confirmText: "OK",
     });
   } catch (err) {
@@ -408,7 +410,7 @@ async function selectTrainer(name, file) {
     createTrainerModal({
       title: "Equip Failed",
       message: "Network error. Please try again.",
-      sprite: trainerImg(file, true),
+      sprite: trainerImg(file),
       confirmText: "OK",
     });
   } finally {
@@ -425,7 +427,7 @@ function askToBuyTrainer(name, file, rarity, price) {
 
   createTrainerModal({
     title: "Unlock Trainer?",
-    sprite: trainerImg(file, false),
+    sprite: trainerImg(file),
     price,
     message: canAfford
       ? `Purchase <strong>${name}</strong>?`
@@ -453,7 +455,7 @@ async function purchaseTrainer(file) {
       return createTrainerModal({
         title: "Purchase Failed",
         message: data?.error || "Could not purchase trainer.",
-        sprite: trainerImg(file, false),
+        sprite: trainerImg(file),
         confirmText: "OK",
       });
     }
@@ -470,7 +472,7 @@ async function purchaseTrainer(file) {
     createTrainerModal({
       title: "Trainer Unlocked!",
       message: "You can now equip this trainer.",
-      sprite: trainerImg(file, true),
+      sprite: trainerImg(file),
       confirmText: "OK",
     });
   } catch (err) {
@@ -484,7 +486,7 @@ async function purchaseTrainer(file) {
     createTrainerModal({
       title: "Purchase Failed",
       message: "Network error. Please try again.",
-      sprite: trainerImg(file, false),
+      sprite: trainerImg(file),
       confirmText: "OK",
     });
   } finally {
@@ -541,13 +543,24 @@ function createTrainerModal({
   document.body.appendChild(overlay);
 
   modal.querySelector(".cancel").onclick = () => overlay.remove();
-  modal.querySelector(".confirm").onclick = async () => {
-    if (!confirmDisabled && onConfirm) await onConfirm();
+  let busy = false;
+  modal.querySelector(".confirm").onclick = async (e) => {
+    if (busy) return;
+    if (!confirmDisabled && onConfirm) {
+      // Pending state until the server answers: no second click, no early close.
+      busy = true;
+      const confirm = e.currentTarget;
+      confirm.disabled = true;
+      modal.querySelector(".cancel").disabled = true;
+      confirm.textContent = "Saving…";
+      modal.setAttribute("aria-busy", "true");
+      try { await onConfirm(); } finally { busy = false; }
+    }
     overlay.remove();
   };
 
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) overlay.remove();
+    if (e.target === overlay && !busy) overlay.remove();
   });
 }
 

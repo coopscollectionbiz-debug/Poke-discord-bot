@@ -128,7 +128,7 @@ export default {
         // Inspect: the slot exactly as shown in this image.
         await i.deferReply({ flags: MessageFlags.Ephemeral });
         const slot = view.slots[r.slot - 1];
-        const card = await cardImage((animate) => renderInspectCard(slot, { owner: displayName, animate }), "pokemon");
+        const card = await cardImage((animate) => renderInspectCard(slot, { owner: displayName, animate }), "pokemon", { unique: true });
         await i.editReply({ files: [new AttachmentBuilder(card.buffer, { name: card.name })] });
       } catch (err) {
         console.warn("⚠️ /showteam component failed:", err?.message || err);

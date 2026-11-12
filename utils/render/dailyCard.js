@@ -10,7 +10,7 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { fileURLToPath } from "url";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, drawTag, dexNo } from "./primitives.js";
+import { rr, font, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, drawTag, dexNo, fillTextMid } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 import { drawDexProgress } from "./dexProgress.js";
@@ -67,18 +67,14 @@ async function tile(ctx, p, x, w, stage) {
   ctx.strokeStyle = `${tierColor(p.tier)}aa`;
   ctx.stroke();
   ctx.fillStyle = TIER[p.tier] ?? tierColor(p.tier);
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, x + w - 14 - pw + 14, y + 29);
-  ctx.textBaseline = "alphabetic";
+  fillTextMid(ctx, label, x + w - 14 - pw + 14, y + 28);
   const tw = p.isNew
     ? drawTag(ctx, "NEW", x + 14, y + 14, { fill: COLOR.blue, color: "#ffffff", h: 28, size: 15 })
     : drawTag(ctx, `+${fmt(p.expGained)} EXP`, x + 14, y + 14, { fill: "#16314f", color: COLOR.exp, h: 28, size: 15 });
   // National Pokédex number after the NEW / +EXP tag.
   ctx.font = font(17, 800);
   ctx.fillStyle = COLOR.textMuted;
-  ctx.textBaseline = "middle";
-  ctx.fillText(dexNo(p.id), x + 14 + tw + 12, y + 29);
-  ctx.textBaseline = "alphabetic";
+  fillTextMid(ctx, dexNo(p.id), x + 14 + tw + 12, y + 28); // level with the tag beside it
 
   // Name, then Level + types.
   const nm = fitFont(ctx, p.name, w - 40 - (p.shiny ? 30 : 0), 36, 24, 800);

@@ -1,0 +1,39 @@
+{
+ "note": "Blink eyes for static Pokémon sprites (utils/spriteBreathing.js blinkEyes, the trainer closed-lid blink). Eye pixels read from exact pixel maps (or a detector proposal), then every one checked open vs closed and against the whole sprite. Rects are [x0,y0,x1,y1] in sprite pixels, one per eye; the same rects serve normal and shiny. Sprites in noBlink only breathe, with the reason.",
+ "blinks": {
+  "mega:mega-audino": [[38,35,40,39],[48,35,50,39]],
+  "mega:mega-tatsugiri-droopy": [[11,48,13,51],[18,49,20,53]],
+  "mega:mega-tatsugiri-stretchy": [[49,50,52,53],[57,50,59,54]],
+  "species:921": [[33,59,36,62],[41,60,44,63]],
+  "species:922": [[41,38,43,41],[48,39,51,42]],
+  "species:923": [[38,38,40,40],[47,38,49,40]],
+  "species:964": [[39,45,42,48]],
+  "species:985": [[34,43,40,50],[48,42,57,49]]
+ },
+ "noBlink": {
+  "mega:mega-houndoom": "dark head",
+  "mega:mega-metagross": "no clear eyes",
+  "mega:mega-sceptile": "tiny eyes",
+  "mega:mega-sharpedo": "no clear eyes",
+  "mega:mega-tatsugiri-curly": "tiny eyes",
+  "species:710": "glowing eyes on dark body",
+  "species:758": "dark head",
+  "species:827": "dark mask round the eye, no light lid",
+  "species:828": "masked face",
+  "species:916": "dark head",
+  "species:931": "eye under hat brim",
+  "species:941": "dark head",
+  "species:950": "stalk eyes",
+  "species:951": "eyes drawn as slanted shapes",
+  "species:952": "no clear eyes",
+  "species:953": "tiny eyes",
+  "species:954": "no eyes",
+  "species:960": "no eyes",
+  "species:970": "no clear eyes",
+  "species:986": "eyes hidden",
+  "species:988": "eyes hidden",
+  "species:1005": "no clear eyes",
+  "species:1007": "no clear eyes",
+  "species:1013": "no clear eyes"
+ }
+}

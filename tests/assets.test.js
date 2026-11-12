@@ -68,9 +68,10 @@ section("New and repaired records use an array");
 section("trainerFileHandler wrappers keep arrays (D1)");
 {
   const u = { trainers: [] };
-  addTrainer(u, { filename: "lass-gen4.png" });
-  assertEqual(roundTrip(u).trainers, ["lass-gen4.png"], "addTrainer writes into the array");
-  assertTrue(isTrainerOwned(u, { filename: "LASS-gen4" }), "isTrainerOwned ignores .png and case");
+  // (lass-gen4 folds into lass since the generation consolidation; steven-masters is an outfit and stays.)
+  addTrainer(u, { filename: "steven-masters.png" });
+  assertEqual(roundTrip(u).trainers, ["steven-masters.png"], "addTrainer writes into the array");
+  assertTrue(isTrainerOwned(u, { filename: "STEVEN-Masters" }), "isTrainerOwned ignores .png and case");
   assertEqual(getOwnedTrainerCount(u), 1, "count");
 }
 

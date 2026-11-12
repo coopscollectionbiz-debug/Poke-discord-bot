@@ -87,7 +87,7 @@ const shown = await lookup("sylveon");
 // /pokedex now sends a rendered entry card (utils/render/pokedexCard.js) with
 // the sprite drawn in from local files and the credit printed on the card.
 const { pokedexView } = await import("../utils/render/pokedexCard.js");
-assertTrue(/^pokedex\.(gif|png)$/.test(shown?.files?.[0]?.name ?? "") && !(shown?.embeds?.length), "released: the Sylveon entry card is sent");
+assertTrue(/^pokedex-[a-z0-9]+\.(gif|png)$/.test(shown?.files?.[0]?.name ?? "") && !(shown?.embeds?.length), "released: the Sylveon entry card is sent");
 const card = shown.files[0].attachment;
 assertTrue((card.subarray(0, 3).toString() === "GIF" ? card.readUInt16LE(6) : card.readUInt32BE(16)) === 1000, "the sprite is drawn into the card, not hot-linked");
 const credit = pokedexView(700, {}).credit ?? "";

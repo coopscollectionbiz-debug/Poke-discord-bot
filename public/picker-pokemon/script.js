@@ -34,16 +34,18 @@ let regions = []; // [{ name, ids }], built once from pokemonData in init()
 // pageshow handler below resets it on a back/forward cache restore.
 let multiSelectOn = false;
 const multiSelected = new Set(); // Pokémon IDs
+// The box tile the player tapped (docs/adr/0001): preselected in "Which one?".
+let pendingCopyUid = null;
 
 import { rarityEmojis } from "/public/spriteconfig.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
-import { getRegions, countOwned } from "/public/picker-pokemon/regions.js";
+import { getRegions, countOwned, countRegistered } from "/public/picker-pokemon/regions.js";
 import * as bulkRules from "/public/picker-pokemon/bulkRules.js";
 import { showMessage, showActionError, showExpired, showBanner, toast, EXPIRED_MESSAGE } from "/public/shared/shell.js";
 import { displaySpeciesName, nameMatches } from "/public/shared/names.js";
 import { scanFx } from "/public/shared/spriteFx.js";
 import { openDetail } from "/public/picker-pokemon/detail.js";
-import { mountCopyChoice } from "/public/picker-pokemon/copyChoice.js";
+import { mountCopyChoice, copiesOf, teamNames } from "/public/picker-pokemon/copyChoice.js";
 import { GYM_BADGES, earnedBadgeKeys } from "/public/picker-pokemon/badges.js";
 
 const LOCK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>`;
@@ -402,8 +404,9 @@ function newRequestId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
-// copy (TM system T5): { uid, rev, confirmTrained } of a chosen trained copy, or null.
-const copyFields = (copy) => (copy?.uid ? { uid: copy.uid, rev: copy.rev, ...(copy.confirmTrained ? { confirmTrained: true } : {}) } : {});
+// copy: { uid, rev, confirmTrained } of the chosen copy (docs/adr/0001), or null.
+// rev is sent only for a trained copy (the server checks it).
+const copyFields = (copy) => (copy?.uid ? { uid: copy.uid, ...(copy.rev != null ? { rev: copy.rev } : {}), ...(copy.confirmTrained ? { confirmTrained: true } : {}) } : {});
 
 async function evolvePokemon(baseId, targetId, variant, requestId, copy = null) {
   const body = { id: userId, baseId, targetId, variant: normVariant(variant), requestId, ...copyFields(copy) };
@@ -543,7 +546,7 @@ function setMode(mode) {
 
   // Owned / missing toggles only make sense in Browse (other modes show owned only).
   const tg = document.querySelector(".toggle-group");
-  if (tg) tg.style.display = mode === "browse" || mode === "team" ? "flex" : "none";
+  if (tg) tg.style.display = "flex"; // only "✨ Shiny only" is left; it filters the box in every mode
 
   // Show dust cap only in donate mode
   const dustEl = document.getElementById("dustStatus");
@@ -567,7 +570,7 @@ function initCollectionFilters() {
     const chip = (value, label, count) =>
       `<button type="button" class="region-chip" data-region="${value}" aria-pressed="${regionFilter === value}">${label}${count ? ` <small>${count}</small>` : ""}</button>`;
     const draw = () => {
-      host.innerHTML = chip("", "All", "") + regions.map((r) => chip(r.name, r.name, `${countOwned(r, userData.pokemon)}/${r.ids.length}`)).join("");
+      host.innerHTML = chip("", "All", "") + regions.map((r) => chip(r.name, r.name, `${countRegistered(r, userData.pokedex)}/${r.ids.length}`)).join("");
     };
     draw();
     host.addEventListener("click", (e) => {
@@ -745,10 +748,200 @@ function renderPokemonGrid() {
   if (grid) scanFx(grid);
 }
 
+// ===========================================================
+// 📦 The box (docs/adr/0001): one tile per copy you own right now. Every
+// copy is its own Pokémon with its own Level. Tapping a tile opens the
+// current mode's action with that copy preselected in "Which one?".
+// ===========================================================
+const boxRows = () => (Array.isArray(userData.copies) ? userData.copies : []);
+
+function boxTileLocked(c, tier) {
+  if (currentMode === "evolve") return !isEvolutionEligibleAnyVariant(c.id);
+  if (currentMode === "donate") return c.teams > 0;
+  if (currentMode === "convert") {
+    const cost = dustCostForTier(tier);
+    // Converting needs Dust, a normal copy, and no shiny of it owned yet (same rule as before).
+    return c.shiny || cost <= 0 || (userData.items?.shiny_dust ?? 0) < cost || ownedCounts(c.id).shiny > 0;
+  }
+  if (currentMode === "feed") return boxRows().filter((r) => r[1] === c.id && r[2] === (c.shiny ? 1 : 0)).length < 2;
+  return false;
+}
+
+function renderBoxTiles(container) {
+  const search = (document.getElementById("search")?.value || "").toLowerCase().trim();
+  const rarityFilter = (document.getElementById("rarityFilter")?.value || "").toLowerCase();
+  const typeFilter = (document.getElementById("typeFilter")?.value || "").toLowerCase();
+  const sortOrder = document.getElementById("sortOrder")?.value || "dex";
+
+  const tiles = [];
+  for (const [uid, id, shiny, level, at, trained, teams] of boxRows()) {
+    const p = pokemonData[id];
+    if (!p) continue;
+    const tier = tierOf(p);
+    if (search && !nameMatches(search, id, p.storedName ?? p.name)) continue;
+    if (rarityFilter && tier !== rarityFilter) continue;
+    if (typeFilter && !(p.types ?? []).map((t) => TYPE_MAP[t]).includes(typeFilter)) continue;
+    if (regionFilter && p.region !== regionFilter) continue;
+    if (shinyOnly && !shiny) continue;
+    tiles.push({ uid, id, shiny: !!shiny, level, at, trained: !!trained, teams, p, tier });
+  }
+
+  const byDex = (a, b) => a.id - b.id || b.level - a.level || a.uid.localeCompare(b.uid);
+  const sorts = {
+    "level-desc": (a, b) => b.level - a.level || byDex(a, b),
+    "level-asc": (a, b) => a.level - b.level || byDex(a, b),
+    newest: (a, b) => (b.at || 0) - (a.at || 0) || byDex(a, b),
+    name: (a, b) => String(a.p.name).localeCompare(String(b.p.name)) || byDex(a, b),
+    "power-desc": (a, b) => (bestPower(b.id) ?? 0) - (bestPower(a.id) ?? 0) || byDex(a, b),
+    "power-asc": (a, b) => (bestPower(a.id) ?? 0) - (bestPower(b.id) ?? 0) || byDex(a, b),
+  };
+  tiles.sort(sorts[sortOrder] ?? byDex);
+
+  const tile = (c) => {
+    const locked = boxTileLocked(c, c.tier);
+    const name = c.p.name || `#${c.id}`;
+    const onTeams = teamNames(c.teams);
+    const el = document.createElement("div");
+    el.className = `pokemon-card owned box-tile${c.shiny ? " shiny-view" : ""}${locked ? " locked" : ""}`;
+    el.dataset.id = c.id;
+    el.dataset.uid = c.uid;
+    const stone = (src, n) => `<div class="evolve-cost" style="bottom:6px;right:6px;"><img src="${src}" style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;" alt="">${n}</div>`;
+    let badge = "";
+    if (currentMode === "donate") badge = `<div class="donate-value" title="Donation value in CC"><img src="/public/sprites/items/cc_coin.png" alt="">${fmtCC(getDonationValue(c.tier, c.shiny))}</div>`;
+    if (currentMode === "convert" && dustCostForTier(c.tier) > 0) badge = stone("/public/sprites/items/shiny_dust.png", dustCostForTier(c.tier));
+    if (currentMode === "evolve" && minEvolutionCostFor(c.id) > 0) badge = stone("/public/sprites/items/evolution_stone.png", minEvolutionCostFor(c.id));
+    const teamBadge = onTeams.length
+      ? `<div class="team-badges">${onTeams.map((t) => `<span class="mem mem-${t[0].toLowerCase()}" title="On your ${t} team">${t[0]}</span>`).join("")}</div>`
+      : "";
+    el.innerHTML = `
+      <div class="sprite-wrapper"${c.shiny ? ` data-fx="shiny" data-fx-seed="${c.id}"` : ""}>
+        <img src="${spriteFor(c.id, c.shiny ? "shiny" : "normal")}" class="poke-sprite" alt="" loading="lazy">
+        ${teamBadge}
+        ${c.trained ? `<div class="count-label bottom-left" title="Has TM-trained moves">★ TM</div>` : ""}
+        ${locked ? `<div class="lock-overlay">${LOCK_ICON}</div>` : ""}
+        ${badge}
+      </div>
+      <div class="dex-no">#${String(c.id).padStart(4, "0")}</div>
+      <div class="pokemon-name">${c.shiny ? "✨ " : ""}${name}</div>
+      <div class="poke-levels"><span class="poke-level${c.shiny ? " shiny" : ""}">Lv ${c.level}</span></div>
+      <div class="pokemon-tier"><span class="cc-tier" data-tier="${c.tier}">${capitalize(c.tier)}</span></div>`;
+    const states = [`Level ${c.level}`];
+    if (c.shiny) states.push("shiny");
+    if (c.trained) states.push("TM-trained");
+    if (onTeams.length) states.push(`on ${onTeams.join(" and ")} team`);
+    if (locked) states.push("unavailable in this mode");
+    el.tabIndex = 0;
+    el.setAttribute("role", "button");
+    el.dataset.ccActivate = "1";
+    el.setAttribute("aria-label", `#${c.id} ${name}, ${states.join(", ")}`);
+    if (locked) el.setAttribute("aria-disabled", "true");
+    el.addEventListener("click", () => onBoxTileClick(c, locked));
+    el.querySelector(".poke-sprite").addEventListener("error", (e) => { e.currentTarget.src = "/public/sprites/items/pokeball.png"; }, { once: true });
+    return el;
+  };
+
+  container.innerHTML = "";
+  if (!tiles.length) {
+    container.innerHTML = boxRows().length
+      ? `<p class="empty-msg">No Pokémon match your filters.</p>`
+      : `<p class="empty-msg">Your box is empty. Pokémon you catch land here, and everything you have ever caught stays in your <a href="/public/pokedex/?id=${encodeURIComponent(userId)}">Pokédex</a>.</p>`;
+    return;
+  }
+  if (sortOrder !== "dex") { container.append(...tiles.map(tile)); return; }
+  const byRegion = new Map();
+  for (const c of tiles) {
+    if (!byRegion.has(c.p.region)) byRegion.set(c.p.region, []);
+    byRegion.get(c.p.region).push(c);
+  }
+  for (const region of regions) {
+    const list = byRegion.get(region.name);
+    if (!list) continue;
+    const header = document.createElement("h2");
+    header.className = "region-header";
+    header.innerHTML = `${region.name} <span class="region-count">${list.length}<span class="sr-only"> Pokémon</span></span>`;
+    container.append(header, ...list.map(tile));
+  }
+}
+
+function onBoxTileClick(c, locked) {
+  pendingCopyUid = c.uid;
+  viewVariant.set(c.id, c.shiny ? "shiny" : "normal");
+  if (locked) {
+    if (currentMode === "donate" || currentMode === "feed") {
+      const msg = currentMode === "feed" && !c.teams
+        ? `You need another ${c.shiny ? "shiny " : ""}${c.p.name} to feed this one.`
+        : `This ${c.p.name} is on your ${teamNames(c.teams).join(" and ")} team. Take it off the team on the Teams page first.`;
+      return showMessage({ title: "Not available", message: msg });
+    }
+    return showBlockedActionModal(c.id);
+  }
+  if (currentMode === "browse") return openDetail(c.id, detailContext());
+  if (currentMode === "evolve") return openEvolutionModal(c.id);
+  if (currentMode === "donate") return openDonationConfirmModal(c.id, c.shiny ? "shiny" : "normal");
+  if (currentMode === "convert") return openConvertModal(c.id);
+  if (currentMode === "feed") return openFeedModal(c);
+}
+
+// 🍖 Feed: another copy of the same Pokémon + Variant gives this one EXP
+// and is used up (POST /api/pokemon/feed). The fed copy can't be on a team.
+function openFeedModal(target) {
+  const overlay = createOverlay();
+  const modal = document.createElement("div");
+  modal.style.cssText = "background:var(--card);border:2px solid var(--cc-blue);border-radius:14px;padding:1.5rem;text-align:center;max-width:460px;width:92%;";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-label", `Feed ${target.p.name}`);
+  modal.innerHTML = `
+    <h2 style="margin:0 0 6px;">Feed ${target.shiny ? "✨ " : ""}${target.p.name} (Lv ${target.level})</h2>
+    <p style="margin:0;color:var(--cc-text-muted);">Give it another ${target.p.name}. The one you feed is used up and this one gains EXP. Your Pokédex keeps ${target.p.name} either way.</p>
+    <div class="cc-copyslot"></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
+      <button class="cancel-btn cc-btn" type="button">Cancel</button>
+      <button class="confirm-btn cc-btn cc-btn--primary" type="button">Feed</button>
+    </div>`;
+  overlay.append(modal);
+  const confirmEl = modal.querySelector(".confirm-btn");
+  modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
+  let picker = null;
+  const sync = () => { confirmEl.disabled = !picker?.get().ok; };
+  picker = mountCopyChoice(modal.querySelector(".cc-copyslot"), {
+    userData, pokeId: target.id, variant: target.shiny ? "shiny" : "normal", name: target.p.name, mode: "feed", exclude: target.uid, onChange: sync,
+  });
+  sync();
+  const requestId = newRequestId();
+  confirmEl.addEventListener("click", () => {
+    const from = picker.get();
+    if (!from.ok) return;
+    withActionLock(async () => {
+      confirmEl.disabled = true;
+      try {
+        const res = await apiJSON("/api/pokemon/feed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: userId, from: from.uid, to: target.uid, requestId, ...(from.rev != null ? { rev: from.rev } : {}) }),
+        });
+        closeOverlay(overlay);
+        const prev = userData;
+        await fetchUserData();
+        refreshStats(userData, prev);
+        renderPokemonGrid();
+        const f = res?.fed;
+        toast(f && f.toLevel > f.fromLevel ? `${target.p.name} grew to Lv ${f.toLevel}!` : `${target.p.name} gained ${Number(f?.gained ?? 0).toLocaleString("en-US")} EXP.`);
+      } catch (err) {
+        confirmEl.disabled = false;
+        showActionError(err, "Couldn’t feed");
+      }
+    });
+  });
+}
+
 function renderPokemonGridCards() {
   const container = document.getElementById("pokemonGrid");
   if (!container) return;
   container.innerHTML = "";
+
+  // Every mode but the old team picker and Donate's multi-select is the box.
+  if (currentMode !== "team" && !(currentMode === "donate" && multiSelectOn)) return renderBoxTiles(container);
 
   // Drop picks that stopped being selectable after a refresh.
   for (const pid of multiSelected) if (multiSelectBlock(pid)) multiSelected.delete(pid);
@@ -1010,7 +1203,7 @@ function renderPokemonGridCards() {
     if (!cards) continue;
     const header = document.createElement("h2");
     header.className = "region-header";
-    header.innerHTML = `${region.name} <span class="region-count">${countOwned(region, userData.pokemon)}/${region.ids.length}<span class="sr-only"> owned</span></span>`;
+    header.innerHTML = `${region.name} <span class="region-count">${countRegistered(region, userData.pokedex)}/${region.ids.length}<span class="sr-only"> caught</span></span>`;
     container.append(header, ...cards);
   }
 
@@ -1601,7 +1794,7 @@ function openConvertModal(pokeId) {
   const idFor = requestIds();
   const confirmEl = modal.querySelector(".confirm-btn");
   const picker = mountCopyChoice(modal.querySelector(".cc-copyslot"), {
-    userData, pokeId, variant: "normal", name: p.name, owned: owned.normal, mode: "convert",
+    userData, pokeId, variant: "normal", name: p.name, mode: "convert", preselect: pendingCopyUid,
     onChange: () => { confirmEl.disabled = !picker.get().ok; },
   });
   confirmEl.disabled = !picker.get().ok;
@@ -1865,8 +2058,8 @@ function openEvolutionModal(baseId) {
       confirmBtn.parentElement.before(slot);
     }
     picker = ownsVariant(baseId, chosenVariant)
-      ? mountCopyChoice(slot, { userData, pokeId: baseId, variant: chosenVariant, name: base.name, owned: owned[chosenVariant], mode: "evolve" })
-      : mountCopyChoice(slot, { userData, pokeId: baseId, variant: chosenVariant, name: base.name, owned: 0, mode: "evolve" });
+      ? mountCopyChoice(slot, { userData, pokeId: baseId, variant: chosenVariant, name: base.name, mode: "evolve", preselect: pendingCopyUid })
+      : mountCopyChoice(slot, { userData, pokeId: -1, variant: chosenVariant, name: base.name, mode: "evolve" });
   }
 
   if (btnNormal) {
@@ -2020,11 +2213,11 @@ function openDonationConfirmModal(pokeId, variant) {
     const c = picker.get();
     confirmEl.disabled = !c.ok;
     confirmEl.style.opacity = c.ok ? "1" : "0.5";
-    confirmEl.textContent = c.copy ? `Donate trained ${p.name}` : "Confirm";
-    cancelEl.textContent = c.copy ? "Keep it" : "Cancel";
+    confirmEl.textContent = c.copy?.trained ? `Donate trained ${p.name}` : "Confirm";
+    cancelEl.textContent = c.copy?.trained ? "Keep it" : "Cancel";
   };
   const picker = mountCopyChoice(modal.querySelector(".cc-copyslot"), {
-    userData, pokeId, variant: v, name: p.name, owned: ownedCounts(pokeId)[v], mode: "donate", onChange: syncButtons,
+    userData, pokeId, variant: v, name: p.name, mode: "donate", onChange: syncButtons, preselect: pendingCopyUid,
   });
   syncButtons();
   confirmEl.addEventListener("click", () => {

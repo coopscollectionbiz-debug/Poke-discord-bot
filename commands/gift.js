@@ -19,6 +19,7 @@ import { getTrainerKey, findTrainerByQuery } from "../utils/trainerFileHandler.j
 import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { plainCount, removeCopies } from "../services/ownership.js";
+import { adoptCopy } from "../services/box.js";
 import { lockUsers } from "../utils/userLocks.js";
 import { ownsTrainer, grantTrainer, revokeTrainer, trainerCount } from "../services/assets.js";
 import { trackProgress } from "../progression/achievements.js";
@@ -39,8 +40,10 @@ export function giftPokemon(sender, recipient, key, name, amount) {
 
   const removed = removeCopies(sender, { id: key, variant: "normal", n: amount });
   if (!removed.ok) return `❌ ${removed.error}`;
-  if (!recipient.pokemon[key]) recipient.pokemon[key] = { normal: 0, shiny: 0 };
-  recipient.pokemon[key].normal = (recipient.pokemon[key].normal || 0) + amount;
+  // Each gifted copy arrives as the same Pokémon: its Level/EXP, caught-on
+  // time and TM moves (services/box.js; docs/adr/0001). It registers in the
+  // recipient's Pokédex.
+  for (const moved of removed.removed) adoptCopy(recipient, moved);
   return null;
 }
 

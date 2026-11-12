@@ -37,7 +37,7 @@ function cardRect(view, i) {
   };
 }
 // Shiny gold, then lead blue, then a Mega's own colour (only a slot that battles as a Mega).
-const accentOf = (slot) => (slot.shiny ? COLOR.gold : slot.slot === 1 ? COLOR.blue : slot.mega ? COLOR.mega : null);
+const accentOf = (slot) => (slot.shiny ? COLOR.gold : slot.slot === 1 && !slot.noLead ? COLOR.blue : slot.mega ? COLOR.mega : null);
 
 // ---------- base layer ----------
 
@@ -71,8 +71,9 @@ function drawHeader(ctx, view) {
   ctx.fillText(fitText(ctx, `${view.rank}  ·  ${fmt(view.tp)} TP`, 600), M + 8, y + 76);
 
   // Right: up to three stat blocks, right-aligned, divided by hairlines.
-  const stats = [["TEAM POWER", fmt(view.power), COLOR.gold]];
-  if (view.battle) {
+  // A Showcase (buildShowcaseView) brings its own blocks: it never fights.
+  const stats = view.stats ? view.stats.map(([label, value], k) => [label, value, k === 0 ? COLOR.gold : COLOR.text]) : [["TEAM POWER", fmt(view.power), COLOR.gold]];
+  if (!view.stats && view.battle) {
     stats.push(["RATING", fmt(view.battle.rating), COLOR.text]);
     stats.push(["RECORD", `${view.battle.wins}–${view.battle.losses}`, COLOR.text]);
   }
@@ -99,9 +100,9 @@ function drawHeader(ctx, view) {
   ctx.textAlign = "left";
 
   if (hasNote(view)) {
-    const msg = view.slots.length
+    const msg = view.emptyNote ?? (view.slots.length
       ? "No Team set: showing your first Pokémon. Pick your Team on /dashboard."
-      : "No Pokémon yet. Catch some by chatting, then pick your Team on /dashboard.";
+      : "No Pokémon yet. Catch some by chatting, then pick your Team on /dashboard.");
     ctx.font = font(19, 700);
     const tw = ctx.measureText(msg).width + 36;
     ctx.fillStyle = "#f5c84c1f";
@@ -263,7 +264,7 @@ function drawTierPill(ctx, tier, right, y) {
 function drawTop(ctx, view) {
   view.slots.forEach((slot, i) => {
     const r = cardRect(view, i);
-    const lead = i === 0;
+    const lead = i === 0 && view.kind !== "showcase"; // the Showcase never fights: no lead
     // Slot number; the lead also gets a LEAD tag (it fights first).
     const bx = r.x + 30, by = r.y + 30;
     ctx.fillStyle = lead ? COLOR.blue : "#101626e6";

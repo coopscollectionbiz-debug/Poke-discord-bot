@@ -17,7 +17,11 @@ const { createNewUser } = await import("../utils/userSchema.js");
 const { allMegas, getMega, megaSpriteRecord } = await import("../utils/megas.js");
 const { spriteFileFor, loadStaticSprite } = await import("../utils/render/sprites.js");
 const { loadAnimatedSprite, renderBattleFrame } = await import("../utils/battle/render.js");
-const { buildTeamView, slotView } = await import("../utils/render/teamView.js");
+const { buildTeamView, buildShowcaseView, slotView } = await import("../utils/render/teamView.js");
+const { normalizeBox } = await import("../services/box.js");
+const { normalizeShowcase } = await import("../services/showcaseTeam.js");
+// Live records get their Showcase at load (filled once from the Casual team).
+const launched = (u) => { normalizeBox(u); normalizeShowcase(u); return u; };
 const { renderShowteam } = await import("../utils/render/showteam.js");
 const { renderInspectCard } = await import("../utils/render/inspectCard.js");
 const { trainerCardView, renderTrainerCard, TRAINER_CARD_SIZE } = await import("../utils/render/trainerCard.js");
@@ -130,8 +134,9 @@ assertTrue(texts.every((t) => t.endsWith(".") && t.length < 90), "each reason is
 
 // ----------------------------------------------------------
 section("Same form on every surface");
+launched(ash); // the trainer card strip is the Showcase (three-teams split)
 const tc = trainerCardView(ash, { displayName: "Ash", trainer: null });
-assertTrue(JSON.stringify(tc.team) === JSON.stringify(buildTeamView(ash, { displayName: "Ash" }).slots), "the trainer card's Team is exactly /showteam's (process flags)");
+assertTrue(JSON.stringify(tc.team) === JSON.stringify(buildShowcaseView(ash, { displayName: "Ash" }).slots), "the trainer card's strip is exactly /showcase's (process flags)");
 process.env.MEGA_EVOLUTION_ENABLED = "1";
 process.env.MEGA_BATTLES_ENABLED = "1";
 const tcOn = trainerCardView(ash, { displayName: "Ash", trainer: null });

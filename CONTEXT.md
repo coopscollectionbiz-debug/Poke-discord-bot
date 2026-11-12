@@ -23,11 +23,11 @@ A species' position in its evolution line — 1 for a base form, 2 and 3 for eac
 _Avoid_: evolution tier, evolution level, form
 
 **Variant**:
-Whether a Pokémon is normal or shiny. Each species + **Variant** pair is counted, collected, leveled, and placed on a **Team** separately.
+Whether a Pokémon is normal or shiny. The **Pokédex** records each species + **Variant** pair separately.
 _Avoid_: form, version, shiny status
 
 **Copy**:
-One owned unit of a Pokémon in a specific variant.
+One individual Pokémon a player owns: a species in a specific **Variant**, with its own **Level**, **EXP** and moves. Two copies of the same species are two different Pokémon.
 _Avoid_: instance, unit
 
 **TM**:
@@ -35,24 +35,40 @@ A consumable item that teaches one specific move to one compatible **Copy**, and
 _Avoid_: technical machine (in UI text), move disc
 
 **Trained copy**:
-A **Copy** that has learned at least one move from a **TM**. It keeps those moves for good, through evolution and shiny crafting, and is never picked automatically when copies are removed. Every other copy is an untrained copy, and all untrained copies of the same Pokémon and **Variant** are interchangeable.
+A **Copy** that has learned at least one move from a **TM**. It keeps those moves for good, through evolution, shiny crafting and **Gifts**, and is never picked automatically when copies are removed. Every other copy is an untrained copy.
 _Avoid_: custom copy, customized copy, instance, TM copy
 
+**Collection**:
+Every **Copy** a player owns right now, one box slot per copy, like a PC box in the games. It shrinks when a copy is donated, gifted, fed or evolved away.
+_Avoid_: Pokédex (that is what the player has ever caught), box (as the term), inventory
+
+**Pokédex**:
+The permanent record of every species a player has ever caught, and separately whether they have ever caught its shiny. A species enters it the first time the player gets a copy by any route (catch, pack, reward, **Gift**, evolution, **Grant**) and never leaves, even after the last copy is gone. Only a full account reset clears it.
+_Avoid_: dex (alone), collection, seen (the game has no "seen" state)
+
+**Registered**:
+Recorded in a player's **Pokédex**. A species can be registered without being in the **Collection**.
+_Avoid_: owned, discovered, unlocked
+
 **Duplicate**:
-Any copy beyond the first of the same Pokémon *and* variant. Pidgey x4 · ✨x2 has 3 normal duplicates and 1 shiny duplicate. One normal plus one shiny of the same Pokémon is not a duplicate.
+Any copy beyond the first of the same Pokémon *and* variant. Pidgey x4 · ✨x2 has 3 normal duplicates and 1 shiny duplicate. One normal plus one shiny of the same Pokémon is not a duplicate. Duplicates are still individual Pokémon with their own **Levels**; which one counts as "the first" doesn't matter.
 _Avoid_: extra, spare
 
 **Level**:
-A player's strength with one species + **Variant**, from 1 to 100, shared by every copy of it they own.
-_Avoid_: instance level, per-Pokémon level
+One **Copy's** strength, from 1 to 100. Every copy has its own.
+_Avoid_: species level, shared level
 
 **EXP**:
-Progress toward a species + **Variant's** next **Level**.
+Progress toward a **Copy's** next **Level**.
 _Avoid_: XP (TP is already the chat-activity points), experience points
 
 **Catch level**:
-The **Level** rolled the first time a player catches a species + **Variant**, set by its **Stage**, with Stage 1 legendaries and mythics rolling high. For Pokémon owned before Levels existed, or after a player's last copy is gone, the next catch counts as the first.
+The **Level** a new **Copy** rolls when it is caught, set by its **Stage**, with Stage 1 legendaries and mythics rolling high. Every catch rolls one, duplicates included.
 _Avoid_: wild level, spawn level
+
+**Feed**:
+Giving up one **Copy** to add **EXP** to another copy of the same species and **Variant**. The fed copy is gone; the species stays **Registered**. A copy on a **Team** can't be fed.
+_Avoid_: merge, sacrifice, candy
 
 ### Trainer
 
@@ -61,15 +77,20 @@ A player's title on the TP ladder (Novice Trainer → Legend), earned by chattin
 _Avoid_: using "rank" for battle standing, which is the **Ranked rating**
 
 **Team**:
-Up to 6 Pokémon a player sets to fight in slot order, one slot per Pokémon, each slot a specific **Variant**. Each player has two: the **Display team** and the **Battle team**.
+Up to 6 Pokémon a player sets in slot order, each slot one specific **Copy**. The same copy can sit on several **Teams**. The **Casual team** and **Ranked team** hold each Pokémon + **Variant** once; only the **Showcase team** holds the same Pokémon more than once, one copy per slot. A copy on a **Team** can't be donated, gifted or fed until it is taken off. Each player has three: the **Showcase team**, the **Casual team** and the **Ranked team**.
 _Avoid_: party, lineup
 
-**Display team**:
-The **Team** a player shows on their trainer card; it fights **Casual battles**, **Challenges** and **Trainer encounters** at its real Levels.
-_Avoid_: displayed Pokémon
+**Showcase team**:
+The **Team** a player puts on display to show off their favorites. It never fights, so it has no rules beyond owning what's in it.
+_Avoid_: display team, favorites
 
-**Battle team**:
-The **Team** a player sets for **Ranked battles** and **Wager battles**, where every Pokémon fights at Lv 50. It holds at most one mythic-tier Pokémon.
+**Casual team**:
+The **Team** that fights **Casual battles** at its real Levels.
+_Avoid_: Display team (its old name), open team
+
+**Ranked team**:
+The **Team** that fights **Ranked battles** and **Wager battles**, where every Pokémon fights at Lv 50. It holds at most one mythic-tier Pokémon.
+_Avoid_: Battle team (its old name)
 
 **Tier backdrop**:
 The animated background an owned Epic, Legendary or Mythic trainer sprite brings to any card that shows it: the tier's sky colour with rising motes, plus a stepped glow and twinkles from Legendary up, and meteors with one bright hero meteor a loop for Mythic. It replaces the card's own background in that trainer's part of the card (their half of a VS card, their row in a battle), and nothing in it passes behind the trainer or anything else drawn there. Computer-run opponents and unowned sprites never have one. For players it is now the **Aura** shown on Auto, and the three tier backdrops are also collectible **Auras**.
@@ -84,13 +105,13 @@ A named set of Pokémon that share a home region: Kanto, Johto, Hoenn, Sinnoh, U
 _Avoid_: region group, generation, gen
 
 **Pokédex completion**:
-The number of distinct Pokémon a player owns at least one copy of, out of all the Pokémon in a region. It counts what the player owns now. It drops when a player gives up their last copy of a Pokémon, because the game keeps no record of past catches.
-_Avoid_: dex count, seen/caught
+The number of distinct Pokémon **Registered** in a player's **Pokédex**, out of all the Pokémon in a region. It never drops: giving up the last copy of a Pokémon leaves it registered.
+_Avoid_: dex count, owned count, seen/caught
 
 ### Economy
 
 **Donation**:
-Permanently giving up a copy in exchange for CC, and sometimes **Shiny Dust**.
+Permanently giving up a **Copy** in exchange for CC, and sometimes **Shiny Dust**. The species stays **Registered**.
 _Avoid_: sell, release
 
 **Bag**:
@@ -115,6 +136,10 @@ _Avoid_: last seen, last online, last login
 A change an admin makes to a player's account from the admin dashboard: adding or removing CC, TP, items, Pokémon or trainers, setting a **Level**, or resetting cooldowns. Every one is recorded permanently with who made it, when, before and after, and why.
 _Avoid_: edit, override, admin action (for player-made actions)
 
+**Gift**:
+A player sending one of their **Copies** to another player. It arrives as the same Pokémon, with its **Level**, **EXP** and moves, and registers in the recipient's **Pokédex**.
+_Avoid_: trade (nothing comes back), transfer
+
 **Grant**:
 An **Admin change** that only adds to an account or resets cooldowns. Only **Grants** can go to many players at once; removals are made one player at a time.
 _Avoid_: gift (that is player-to-player), reward, compensation (as the action's name)
@@ -134,15 +159,15 @@ The player a **Challenger** names as their opponent.
 _Avoid_: target, opponent (when the role matters)
 
 **Casual battle**:
-A **Battle** between two **Display teams** at their real **Levels** that runs immediately without the **Defender's** consent. It is unrated, no CC changes hands, and only the **Challenger** can earn EXP.
+A **Battle** between two **Casual teams** at their real **Levels** that runs immediately without the **Defender's** consent. It is unrated, no CC changes hands, and only the **Challenger** can earn EXP.
 _Avoid_: auto-battle, friendly
 
 **Ranked battle**:
-A **Battle** between two **Battle teams**, every Pokémon at Lv 50, that runs immediately and moves both players' **Ranked rating**. Only the **Challenger** can earn EXP.
+A **Battle** between two **Ranked teams**, every Pokémon at Lv 50, that runs immediately and moves both players' **Ranked rating**. Only the **Challenger** can earn EXP.
 _Avoid_: rated battle, competitive battle
 
 **Wager battle**:
-A **Battle** between two **Battle teams** at Lv 50 with a CC **Stake**, which runs only after the **Defender** accepts. It moves both players' **Ranked rating** as a **Ranked battle** does, both players can earn EXP, and the winner takes the pot.
+A **Battle** between two **Ranked teams** at Lv 50 with a CC **Stake**, which runs only after the **Defender** accepts. It moves both players' **Ranked rating** as a **Ranked battle** does, both players can earn EXP, and the winner takes the pot.
 _Avoid_: bet, stakes battle
 
 **Stake**:
@@ -184,7 +209,7 @@ _Avoid_: charm, appeal, cute score
 ### Challenges
 
 **Challenge**:
-A fight between a player's **Display team** and a fixed Kanto team: one of the 8 Gym Leaders, the **Elite Four run**, Blue, or Red. It is not a **Battle**: no other player takes part.
+A fight between a player's **Casual team** or **Ranked team** (their pick, at real **Levels**) and a fixed Kanto team: one of the 8 Gym Leaders, the **Elite Four run**, Blue, or Red. It is not a **Battle**: no other player takes part.
 _Avoid_: PvE battle, gym battle, NPC battle, raid
 
 **Badge**:
@@ -202,7 +227,7 @@ _Avoid_: heal, Max Revive (as a term), second wind
 ### Trainer encounters
 
 **Trainer encounter**:
-A computer-run Trainer spotting a player while they chat and asking for a fight the player may accept or decline. It is neither a **Battle** nor a **Challenge**: no other player takes part, and the Trainer is not one of the fixed Kanto teams.
+A computer-run Trainer spotting a player while they chat and asking for a fight the player may accept with their **Casual team** or **Ranked team**, at real **Levels**, or decline. The Trainer's Levels are set by the team the player picks. It is neither a **Battle** nor a **Challenge**: no other player takes part, and the Trainer is not one of the fixed Kanto teams.
 _Avoid_: trainer battle, random battle, wild trainer, NPC battle
 
 **Trainer class**:
@@ -230,7 +255,7 @@ _Avoid_: match history, battle history
 ### Mega Evolution
 
 **Mega form**:
-A Mega Evolution of a species, unlocked for good on one species + **Variant** a player owns. It is never a species of its own. It shares that Pokémon's **Level** and **Team** slot, doesn't count toward **Pokédex completion**, and a **Team** holds at most one.
+A Mega Evolution of a species, unlocked for good on one species + **Variant** a player owns, so any **Copy** of that species and **Variant** can use it. It is never a species of its own. It uses that copy's **Level** and **Team** slot, is never **Registered** and doesn't count toward **Pokédex completion**, and a **Team** holds at most one.
 _Avoid_: Mega species, Mega Pokémon (as something caught)
 
 **Mega Stone**:
@@ -246,14 +271,16 @@ _Avoid_: trophy, quest
 ## Flagged ambiguities
 
 - "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.
-- "Pokédex completion" is counted per Pokémon, not per variant. A player holding one normal and one shiny Pikachu has 1 toward Kanto, not 2.
+- "Pokédex completion" is counted per Pokémon, not per variant. A player who has caught one normal and one shiny Pikachu has 1 toward Kanto, not 2.
+- "Pokédex" and "Collection" are different. The **Collection** is what a player owns now; the **Pokédex** is what they have ever caught. Achievements named after the Pokédex (region Pokédex Complete, National Pokédex Complete, Prismatic Pokédex) count **Registered** species; the others that say "at the same time" (Living Pokédex, Hall of Legends) count the **Collection**.
 - "Challenge" is not what a **Challenger** does. A **Challenger** starts a **Battle** against another player. A **Challenge** has no **Challenger** or **Defender**, only the player and the Kanto team they face.
 - "Trainer" means a player everywhere except **Trainer encounters**, where it means the computer-run opponent. "Ace Trainer" is not one of the "Elite Four", which belong only to the **Elite Four run**.
 - "Casual battle" and "open battle" are the same thing. The Teams and Overview pages and the code say "open", and `/battle` and the achievements say "casual".
 - "Tier" also names a trainer sprite's price class, Common to Mythic, which is not a species' **Tier**. The 2026-11-10 re-tier changed trainer sprites, and the 2026-11-11 re-tier changed species.
 - "Ranked" has nothing to do with **Rank**. A player's **Rank** comes from chatting; their **Ranked rating** comes from **Ranked battles** and **Wager battles**.
 - Some **Achievements** list a badge as their reward, such as a region's badge for completing its Pokédex. That is not a **Badge**, which only comes from beating a Gym Leader's **Challenge**.
-- "Copy" as a noun is always a **Copy** (one owned unit). As a verb it may describe teams and moves ("Copy from Battle team"); never call the result a "team copy".
+- "Copy" as a noun is always a **Copy** (one owned unit). As a verb it may describe teams and moves ("Copy from Ranked team"); never call the result a "team copy".
+- "Showcase" is a **Team** but never fights. Rules written for "a **Team**" about battles (one Mega, moves, held items) cover only the **Casual team** and **Ranked team**.
 
 ## Example dialogue
 
@@ -265,8 +292,10 @@ _Avoid_: trophy, quest
 > **Dev:** If I challenge someone way weaker than me, do they lose anything?
 > **Domain expert:** Not in a **Casual battle**. The **Defender** never loses CC or Pokémon, and it's unrated, so nobody's **Ranked rating** moves. Your EXP shrinks when you knock out Pokémon far below your **Level**, so picking on weak teams doesn't pay.
 > **Dev:** And if I want it to count?
-> **Domain expert:** Play a **Ranked battle**. It uses both players' **Battle teams** at Lv 50, and both ratings move. Elo barely moves either rating when a much stronger **Team** wins.
+> **Domain expert:** Play a **Ranked battle**. It uses both players' **Ranked teams** at Lv 50, and both ratings move. Elo barely moves either rating when a much stronger **Team** wins.
 > **Dev:** What if I want CC on the line?
 > **Domain expert:** Then it's a **Wager battle**, which plays by the ranked rules with a **Stake** on top. They have to accept first, it uses one of each player's **Battle cap**, and both of you earn EXP.
 > **Dev:** I caught a second Charmander — does it get its own **Level**?
-> **Domain expert:** No. Your Charmanders share one **Level**; the new one adds EXP to it instead.
+> **Domain expert:** Yes. It's a separate Pokémon in your **Collection** with its own **Catch level**. If you'd rather make your first one stronger, **Feed** the new one to it.
+> **Dev:** And if I donate both Charmanders?
+> **Domain expert:** Your **Collection** has no Charmander, but it stays **Registered** in your **Pokédex**, so your Kanto **Pokédex completion** doesn't drop.

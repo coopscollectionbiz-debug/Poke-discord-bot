@@ -86,59 +86,17 @@ export function manageReply(ownerId, channelId) {
   };
 }
 
+// Three-teams split: /showteam is now an alias of /showcase (the Showcase
+// team, which never fights). Kept registered for about two weeks so old
+// habits still work; the helpers above stay for /showcase and the tests.
 export default {
   data: new SlashCommandBuilder()
     .setName("showteam")
-    .setDescription("Show your trainer + full team as a canvas card."),
+    .setDescription("Old name for /showcase: shows your Showcase team.")
+    .addUserOption((o) => o.setName("user").setDescription("See another player's Showcase (only you see it)").setRequired(false)),
 
   async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
-    await interaction.deferReply(); // public, as before
-
-    const ownerId = interaction.user.id;
-    const user = await ensureUserInitialized(ownerId, interaction.user.username, trainerData, client);
-
-    const member = interaction.guild
-      ? await interaction.guild.members.fetch(ownerId).catch(() => null)
-      : null;
-    const displayName = member?.displayName || interaction.user.username;
-
-    const view = buildTeamView(user, { displayName });
-    const image = await renderTeamImage(view);
-    const nonce = crypto.randomBytes(6).toString("hex");
-
-    await interaction.editReply({
-      // A selected Mega that can't battle right now is drawn as its base form;
-      // this one line says why (no text at all otherwise, as before).
-      ...(view.megaNotice ? { content: `🧬 ${view.megaNotice}` } : {}),
-      files: [new AttachmentBuilder(image.buffer, { name: image.name })],
-      components: buildShowteamComponents(view, { nonce }),
-    });
-    if (!view.slots.length) return;
-
-    const message = await interaction.fetchReply();
-    const collector = message.createMessageComponentCollector({ time: COLLECTOR_MS });
-    collector.on("collect", async (i) => {
-      const r = routeShowteamInteraction(
-        { customId: i.customId, userId: i.user.id, values: i.values },
-        { nonce, ownerId, ownerName: displayName, slotCount: view.slots.length },
-      );
-      if (!r) return;
-      try {
-        if (r.action === "deny") return await i.reply({ content: r.reason, flags: MessageFlags.Ephemeral });
-        if (r.action === "manage") return await i.reply(manageReply(ownerId, i.channelId));
-        // Inspect: the slot exactly as shown in this image.
-        await i.deferReply({ flags: MessageFlags.Ephemeral });
-        const slot = view.slots[r.slot - 1];
-        const card = await cardImage((animate) => threaded.inspect(slot, { owner: displayName, animate }), "pokemon", { unique: true });
-        await i.editReply({ files: [new AttachmentBuilder(card.buffer, { name: card.name })] });
-      } catch (err) {
-        console.warn("⚠️ /showteam component failed:", err?.message || err);
-        const msg = { content: "Something went wrong. Please try again.", flags: MessageFlags.Ephemeral };
-        await (i.deferred || i.replied ? i.editReply({ content: msg.content }) : i.reply(msg)).catch(() => {});
-      }
-    });
-    collector.on("end", async () => {
-      await interaction.editReply({ components: buildShowteamComponents(view, { nonce, disabled: true }) }).catch(() => {});
-    });
+    const { runShowcase } = await import("./showcase.js");
+    return runShowcase(interaction, trainerData, client);
   },
 };

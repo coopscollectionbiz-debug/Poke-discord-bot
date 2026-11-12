@@ -36,7 +36,10 @@ const BUBBLE = 64; // the 16 px "!" at 4×
 const n = (x) => x.toLocaleString("en-US");
 
 /** Everything the card shows. `team` is the card's Team ({ speciesId, variant }), the one that will fight. */
-export function encounterCardView({ trainer, team, user, displayName }) {
+// prizes: [{ label: "Casual" | "Ranked", prize }] when the player can pick
+// either team (three-teams split); the Trainer's Levels, and so the prize,
+// follow the team picked. Null or one entry: the single prize as before.
+export function encounterCardView({ trainer, team, user, displayName, prizes = null }) {
   return {
     player: {
       name: displayName,
@@ -48,11 +51,14 @@ export function encounterCardView({ trainer, team, user, displayName }) {
     heading: `${trainer.title} ${trainer.name} challenged ${displayName}!`,
     line: trainer.lines.intro,
     prize: trainer.prize,
+    prizes: Array.isArray(prizes) && prizes.length > 1 ? prizes : null,
   };
 }
 
 /** The image's description (Discord's alt text). */
-export const encounterAltText = (v) => `${v.heading} "${v.line}" Win or lose: ${n(v.prize)} CC.`;
+export const encounterAltText = (v) => `${v.heading} "${v.line}" ` + (v.prizes
+  ? `Prize: ${v.prizes.map((p) => `${n(p.prize)} CC with the ${p.label} team`).join(", ")}.`
+  : `Win or lose: ${n(v.prize)} CC.`);
 
 const trainerBox = (cx) => ({ x: cx - BOX / 2, y: FLOOR + 6 - BOX, w: BOX, h: BOX });
 
@@ -121,6 +127,24 @@ function drawStakes(ctx, v, { x, y, w, h }) {
   ctx.textBaseline = "alphabetic";
   ctx.font = font(18, 800);
   ctx.fillStyle = COLOR.textMuted;
+  if (v.prizes) {
+    // One row per team: the label, then that team's prize.
+    ctx.fillText("PRIZE · WIN OR LOSE", x + w / 2, y + 34);
+    v.prizes.forEach((p, i) => {
+      const ry = y + 70 + i * 40;
+      ctx.textAlign = "left";
+      ctx.font = font(18, 800);
+      ctx.fillStyle = COLOR.textMuted;
+      ctx.fillText(p.label.toUpperCase(), x + 20, ry);
+      ctx.textAlign = "right";
+      const amt = fitFont(ctx, `${n(p.prize)} CC`, w - 130, 28, 20, 900);
+      ctx.font = font(amt.size, 900);
+      ctx.fillStyle = COLOR.gold;
+      ctx.fillText(amt.text, x + w - 20, ry);
+    });
+    ctx.textAlign = "center";
+    return;
+  }
   ctx.fillText("WIN OR LOSE", x + w / 2, y + 44);
   const amount = fitFont(ctx, `${n(v.prize)} CC`, w - 32, 36, 26, 900);
   ctx.font = font(amount.size, 900);

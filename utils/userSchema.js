@@ -4,6 +4,8 @@ import { normalizeProgression } from "../progression/achievements.js";
 import { normalizeMegaUnlocks } from "../services/megaUnlocks.js";
 import { normalizeAuras, syncTierAuras } from "../services/auras.js";
 import { normalizeCustomPokemon } from "../services/ownership.js";
+import { normalizeBox } from "../services/box.js";
+import { normalizeShowcase } from "../services/showcaseTeam.js";
 // ==========================================================
 // utils/userSchema.js
 // Unified user data schema and initialization
@@ -155,6 +157,8 @@ export function validateUserSchema(user, userId, username) {
   normalizeProgression(out); // Release C achievement fields
   normalizeMegaUnlocks(out); // Mega Evolution: repairs megaUnlocks if present; never creates it
   normalizeCustomPokemon(out); // TM system: repairs customPokemon if present; never creates it
+  normalizeBox(out); // individual copies + Pokédex (docs/adr/0001); migrates on first run
+  normalizeShowcase(out); // Showcase team: filled once from the Casual team at launch
   normalizeAuras(out); // Auras: repairs auras if present
   syncTierAuras(out); // …and stores the tier Aura of every Epic+ trainer owned (backfill; only writes when one is missing)
 

@@ -135,7 +135,7 @@ export async function renderBattleCard(v, { animate = false } = {}) {
   const bx = M + 190;
   ctx.font = P.font(15, 800);
   ctx.fillStyle = COLOR.textFaint;
-  ctx.fillText("RANKED BATTLE CARD", bx, M + 34);
+  ctx.fillText("RANKED CARD", bx, M + 34);
   const nm = P.fitFont(ctx, v.displayName, 420, 42, 26, 800);
   ctx.font = P.font(nm.size, 800);
   ctx.fillStyle = COLOR.text;
@@ -203,7 +203,7 @@ export async function renderBattleCard(v, { animate = false } = {}) {
     ctx.textAlign = "center";
     ctx.font = P.font(22, 800);
     ctx.fillStyle = COLOR.textMuted;
-    ctx.fillText("No Battle team yet: set one on the Teams page (/dashboard)", W / 2, ty + sh / 2);
+    ctx.fillText("Set your Ranked team on the Teams page (/dashboard)", W / 2, ty + sh / 2);
     ctx.textAlign = "left";
   }
   return stage.output(canvas);

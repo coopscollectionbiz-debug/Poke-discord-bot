@@ -400,6 +400,18 @@ function tabPokemon(body, data) {
       onDone: refreshPlayer,
     });
   });
+  // Every copy is its own Pokémon (docs/adr/0001): a row opens into its copies.
+  const open = new Set();
+  const copyRows = (r, i) => (r.copies ?? []).map((c) => `<tr class="copy-row">
+      <td></td>
+      <td class="faint">↳ ${c.trained ? `<span class="chip">★ TM-trained</span> ` : ""}<code>${esc(c.uid)}</code></td>
+      <td></td>
+      <td class="num">${c.level}</td>
+      <td class="hide-sm">${c.teams.map((t) => `<span class="chip blue">${esc(t)}</span>`).join(" ")}</td>
+      <td class="actions">
+        <button class="btn-sm" data-i="${i}" data-uid="${esc(c.uid)}" data-act="copy-level">Set Lv</button>
+        <button class="btn-sm" data-i="${i}" data-uid="${esc(c.uid)}" data-act="copy-remove">Remove</button>
+      </td></tr>`).join("");
   const draw = () => {
     const q = $("#pkFilter").value.trim().toLowerCase();
     const rows = data.pokemon.filter((r) => !q || r.name.toLowerCase().includes(q) || String(r.id) === q);
@@ -415,17 +427,29 @@ function tabPokemon(body, data) {
           <td class="actions">
             <button class="step minus" data-i="${i}" data-act="remove" aria-label="Remove ${esc(r.name)}">−</button>
             <button class="step" data-i="${i}" data-act="add" aria-label="Add ${esc(r.name)}">+</button>
-            <button class="btn-sm" data-i="${i}" data-act="level">Set Lv</button>
-          </td></tr>`
+            <button class="btn-sm" data-i="${i}" data-act="level" title="Sets their best copy">Set Lv</button>
+            ${(r.copies?.length ?? 0) > 1 || r.copies?.some((c) => c.trained) ? `<button class="btn-sm" data-i="${i}" data-act="copies" aria-expanded="${open.has(`${r.id}:${r.variant}`)}">Copies (${r.copies.length})</button>` : ""}
+          </td></tr>${open.has(`${r.id}:${r.variant}`) ? copyRows(r, i) : ""}`
         )
         .join("") || `<tr><td colspan="6" class="empty">${data.pokemon.length ? "Nothing matches." : "They don't own any Pokémon."}</td></tr>`;
     $$("button[data-act]", $("#pkBody")).forEach((b) =>
       b.addEventListener("click", () => {
         const r = rows[Number(b.dataset.i)];
+        if (b.dataset.act === "copies") {
+          const k = `${r.id}:${r.variant}`;
+          if (open.has(k)) open.delete(k); else open.add(k);
+          return draw();
+        }
+        const uid = b.dataset.uid;
+        const copy = uid ? r.copies.find((c) => c.uid === uid) : null;
         const change =
           b.dataset.act === "level"
             ? { kind: "level", speciesId: r.id, variant: r.variant, level: r.level }
-            : { kind: "pokemon", op: b.dataset.act, speciesId: r.id, variant: r.variant, amount: 1 };
+            : b.dataset.act === "copy-level"
+              ? { kind: "level", speciesId: r.id, variant: r.variant, level: copy?.level, uid }
+              : b.dataset.act === "copy-remove"
+                ? { kind: "pokemon", op: "remove", speciesId: r.id, variant: r.variant, amount: 1, uid }
+                : { kind: "pokemon", op: b.dataset.act, speciesId: r.id, variant: r.variant, amount: 1 };
         openReview({ userId: p.userId, userName: p.name, change, allowUnreleased: true, onDone: refreshPlayer });
       })
     );

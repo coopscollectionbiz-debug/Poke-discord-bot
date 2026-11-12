@@ -19,7 +19,7 @@ import {
 } from "discord.js";
 import { randomInt, randomUUID } from "crypto";
 import { ENCOUNTER, PLAYBACK } from "../battle/tuning.js";
-import { buildTeam } from "../battle/runBattle.js";
+import { buildTeam, teamForPick, availablePicks } from "../battle/runBattle.js";
 import { rollTrainer } from "./generate.js";
 import { spotBlock, recordSpot, fightEncounter } from "./runEncounter.js";
 import { RAN, LOST_INTEREST, STALE_LINE, fill } from "./lines.js";
@@ -80,9 +80,14 @@ export function createEncounterService({
 
   async function cardMessage(e) {
     const user = getTrainerData()[e.userId];
-    const view = encounterCardView({ trainer: e.trainer, team: e.team, user, displayName: e.displayName });
+    const picks = e.picks ?? ["casual"];
+    const label = (p) => (p === "ranked" ? "Ranked" : "Casual");
+    const prizes = picks.map((p) => ({ label: label(p), prize: (e.byPick?.[p]?.trainer ?? e.trainer).prize }));
+    const view = encounterCardView({ trainer: e.trainer, team: e.team, user, displayName: e.displayName, prizes });
     const buttons = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`${PREFIX}${e.nonce}:battle`).setLabel("Battle!").setStyle(ButtonStyle.Danger),
+      ...(picks.length > 1
+        ? picks.map((p) => new ButtonBuilder().setCustomId(`${PREFIX}${e.nonce}:battle_${p}`).setLabel(`Battle with ${label(p)}`).setStyle(p === "ranked" ? ButtonStyle.Primary : ButtonStyle.Danger))
+        : [new ButtonBuilder().setCustomId(`${PREFIX}${e.nonce}:battle_${picks[0]}`).setLabel("Battle!").setStyle(ButtonStyle.Danger)]),
       new ButtonBuilder().setCustomId(`${PREFIX}${e.nonce}:run`).setLabel("Run").setStyle(ButtonStyle.Secondary),
     );
     const base = { content: `<@${e.userId}>`, allowedMentions: { users: [e.userId] }, components: [buttons] };
@@ -93,7 +98,7 @@ export function createEncounterService({
     } catch (err) {
       console.warn("⚠️ encounter card render failed; sending an embed:", err?.message || err);
       const embed = new EmbedBuilder().setColor(0xff5a6a).setTitle(view.heading)
-        .setDescription(`"${view.line}"\nWin or lose: **${n(view.prize)} CC**`);
+        .setDescription(`"${view.line}"\n` + (view.prizes ? view.prizes.map((p) => `${p.label} team: **${n(p.prize)} CC**`).join(" · ") : `Win or lose: **${n(view.prize)} CC**`));
       return { ...base, embeds: [embed] };
     }
   }
@@ -119,12 +124,22 @@ export function createEncounterService({
       const e = await lockUser(userId, () => {
         const user = getTrainerData()[userId];
         if (spotBlock({ user, open: [...open.values()].some((x) => x.userId === userId), now: now() })) return null;
-        const team = buildTeam(user);
+        // Three-teams split: one roll per team the player can pick, from the
+        // same seed, so class, name, size and lines match; Levels and prize
+        // follow each team. The card shows the first (Casual when set).
         const s = seed();
+        const picks = availablePicks(user);
+        const byPick = {};
+        for (const p of picks) {
+          const team = teamForPick(user, p);
+          byPick[p] = {
+            team: team.map(({ speciesId, variant, megaForm, copyUid }) => ({ speciesId, variant, ...(copyUid && { copyUid }), ...(megaForm && { megaForm }) })),
+            trainer: rollTrainer({ team, seed: s }),
+          };
+        }
         const entry = {
-          nonce: randomUUID(), userId, displayName, seed: s, channel: message.channel,
-          team: team.map(({ speciesId, variant, megaForm }) => ({ speciesId, variant, ...(megaForm && { megaForm }) })),
-          trainer: rollTrainer({ team, seed: s }),
+          nonce: randomUUID(), userId, displayName, seed: s, channel: message.channel, picks, byPick,
+          team: byPick[picks[0]].team, trainer: byPick[picks[0]].trainer,
         };
         open.set(entry.nonce, entry);
         return entry;
@@ -168,7 +183,9 @@ export function createEncounterService({
     }
   }
 
-  async function battle(i, e) {
+  async function battle(i, e, pick = "casual") {
+    // The team picked decides the Trainer's Levels and prize (rolled at spawn).
+    const chosen = e.byPick?.[pick] ?? { team: e.team, trainer: e.trainer };
     // Set before any await: a second click or the timer now leaves this to us.
     e.busy = true;
     // Acknowledged before the lock, which can wait seconds on another
@@ -177,7 +194,7 @@ export function createEncounterService({
     await i.deferUpdate().catch(() => {});
     const outcome = await lockUser(e.userId, () => {
       const trainerData = getTrainerData();
-      const result = fightEncounter({ trainerData, userId: e.userId, encounter: { team: e.team, trainer: e.trainer }, seed: e.seed + 1, now: now() });
+      const result = fightEncounter({ trainerData, userId: e.userId, encounter: { team: chosen.team, trainer: chosen.trainer, pick }, seed: e.seed + 1, now: now() });
       if (result.ok) enqueueSave(trainerData);
       return result;
     });
@@ -220,7 +237,8 @@ export function createEncounterService({
         return void (await i.reply({ content: `This Trainer has their eye on ${e.displayName}.`, flags: MessageFlags.Ephemeral }).catch(() => {}));
       }
       if (e.busy) return void (await i.deferUpdate().catch(() => {}));
-      if (action === "battle") return void (await battle(i, e));
+      // "battle" alone: a card posted before the three-teams split (Casual).
+      if (action === "battle" || action?.startsWith("battle_")) return void (await battle(i, e, action === "battle_ranked" ? "ranked" : "casual"));
       close(e);
       await i.update(shrunk(fill(pick(RAN), { player: e.displayName, trainer: trainerName(e) }))).catch(() => {});
       record(e.userId, { phase: "answered", answer: "run" });

@@ -32,6 +32,7 @@ import { logEvent } from "../utils/eventLog.js";
 import { lockUser } from "../utils/userLocks.js";
 import { grantTrainer } from "../services/assets.js";
 import { trackProgress } from "../progression/achievements.js";
+import { catchAnnouncement } from "../utils/render/catchMessage.js";
 
 
 // ==========================================================
@@ -180,7 +181,8 @@ async function recruitPokemon(i, trainerData) {
     const user = trainerData[i.user.id];
     const pick = selectRandomPokemonForUser(pool, user);
     const shiny = rollForShiny(user?.tp || 0);
-    const res = chargeAndGrant(user, (u) => grantCatch(u, pick.id, shiny ? "shiny" : "normal"));
+    let caught = null;
+    const res = chargeAndGrant(user, (u) => { caught = grantCatch(u, pick.id, shiny ? "shiny" : "normal"); });
     if (!res.ok) return safeReply(i, { content: res.reason, flags: MessageFlags.Ephemeral });
     trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: shiny ? 1 : 0 }]); // achievements: after a successful grant, before the save
 
@@ -205,7 +207,10 @@ async function recruitPokemon(i, trainerData) {
       .setThumbnail(spriteUrl)
       .setFooter({ text: `-100 CC | Balance: ${user.cc} CC` });
 
-    return safeReply(i, { embeds: [embed], flags: MessageFlags.Ephemeral });
+    // The catch card, as random catches use (three-teams split); the embed if it can't render.
+    const shown = await catchAnnouncement({ user, catcher: i.user, pokemonId: pick.id, shiny, catchResult: caught, fallback: () => ({ embeds: [embed] }) });
+    const caption = withSaveNote(`🎯 Recruited! -${RECRUIT_COST_CC} CC · Balance: ${user.cc} CC`, ack);
+    return safeReply(i, { ...shown.message, content: shown.message.embeds ? undefined : caption, flags: MessageFlags.Ephemeral });
   });
 }
 

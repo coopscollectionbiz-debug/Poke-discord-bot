@@ -41,6 +41,7 @@ import { listInventory } from "../services/inventory.js";
 import { normalizeTrainers } from "../services/assets.js";
 import { loadTrainerSprites } from "../utils/dataLoader.js";
 import { rankedRecord } from "../utils/battle/rewards.js";
+import { copiesOf, slotsHolding } from "../services/box.js";
 
 const toNumber = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const BASE_RANK = "Novice Trainer";
@@ -223,6 +224,11 @@ export function mountAdminDashboard(app, deps) {
           count,
           level: getTraining(user, n, variant).level,
           teams: teamSlotsOf(user, n, variant).map((s) => `${s.label} ${s.slot}`),
+          // Every copy (docs/adr/0001): its Level, TM training and team slots.
+          copies: copiesOf(user, n, variant).map((c) => ({
+            uid: c.uid, level: c.level, trained: c.trained,
+            teams: slotsHolding(user, c.uid).map((s) => ({ displayedPokemon: "Casual", battleTeam: "Ranked", showcaseTeam: "Showcase" }[s.field] + ` ${s.index + 1}`)),
+          })),
         });
       }
     }

@@ -12,8 +12,12 @@
 //   user.equipment = {
 //     rev: 7,                                   // +1 on every change (stale-tab guard)
 //     teams: {
-//       display: { "6:normal": "leftovers" },   // member line → item id
-//       battle:  { "143:normal": "leftovers", "94:normal": "focus_sash" },
+//       display: { "u:c_7Hk2Qm9xLp": "leftovers" },   // member → item id
+//       battle:  { "u:c_Ab3…": "leftovers", "94:normal": "focus_sash" },
+// A member is the copy in the slot ("u:<uid>", docs/adr/0001: the item goes
+// with that Pokémon when you swap which copy fills the slot); "<id>:<variant>"
+// is the older per-line key, moved onto that line's copy on load
+// (reconcileTeamEquipment).
 //     },
 //   }
 //
@@ -43,10 +47,13 @@ import { getMega } from "../utils/megas.js";
 export const TEAM_ID_PATTERN = /^(display|battle)(:[a-z0-9-]{1,32})?$/;
 export const EDITABLE_TEAMS = Object.freeze(["display", "battle"]);
 export const LINE_PATTERN = /^\d{1,5}:(normal|shiny)$/;
+/** A member key: the slot's copy, or (older data / no copy) its line. */
+export const MEMBER_PATTERN = /^(\d{1,5}:(normal|shiny)|u:c_[A-Za-z0-9]{10})$/;
 const DANGEROUS = new Set(["__proto__", "constructor", "prototype"]);
 const own = (o, k) => !!o && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
 const fail = (status, error, code, extra = {}) => ({ ok: false, status, error, code, ...extra });
 export const lineKey = (id, variant) => `${Number(id)}:${variant === "shiny" ? "shiny" : "normal"}`;
+export const memberKey = (s) => (s?.uid ? `u:${s.uid}` : lineKey(s.id, s.variant));
 const isPlainObject = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 
 // ----------------------------------------------------------
@@ -97,7 +104,7 @@ export function starterPending(user, { env = process.env } = {}) {
 // ----------------------------------------------------------
 // Teams and equipment (reads)
 // ----------------------------------------------------------
-/** The saved slots of an editable team ([{ id, variant, mega? }]) or null when the team doesn't exist. */
+/** The saved slots of an editable team ([{ id, variant, uid?, mega? }]) or null when the team doesn't exist. */
 export function teamSlots(user, teamId) {
   const raw = teamId === "display" ? user?.displayedPokemon : teamId === "battle" ? user?.battleTeam : undefined;
   if (!Array.isArray(raw)) return teamId === "display" ? [] : null;
@@ -107,11 +114,12 @@ export function teamSlots(user, teamId) {
     const id = Number(typeof t === "object" && t ? t.id : t);
     if (!Number.isInteger(id)) continue;
     const variant = t && typeof t === "object" && t.variant === "shiny" ? "shiny" : "normal";
-    const key = lineKey(id, variant);
+    const uid = t && typeof t === "object" && typeof t.uid === "string" ? t.uid : null;
+    const key = lineKey(id, variant); // each Pokémon once per team
     if (seen.has(key)) continue;
     seen.add(key);
     const mega = megaFieldOf(t);
-    out.push(mega ? { id, variant, mega } : { id, variant });
+    out.push({ id, variant, ...(uid ? { uid } : {}), ...(mega ? { mega } : {}) });
     if (out.length >= 6) break;
   }
   return out;
@@ -121,7 +129,7 @@ export function teamSlots(user, teamId) {
 export function teamEquipment(user, teamId) {
   const m = user?.equipment?.teams?.[teamId];
   if (!isPlainObject(m)) return {};
-  return Object.fromEntries(Object.entries(m).filter(([k, v]) => LINE_PATTERN.test(k) && typeof v === "string"));
+  return Object.fromEntries(Object.entries(m).filter(([k, v]) => MEMBER_PATTERN.test(k) && typeof v === "string"));
 }
 
 export const equipmentRev = (user) => (Number.isSafeInteger(user?.equipment?.rev) && user.equipment.rev >= 0 ? user.equipment.rev : 0);
@@ -156,9 +164,9 @@ export function describeLoadout(user, teamId) {
   const slots = teamSlots(user, teamId) ?? [];
   const eq = teamEquipment(user, teamId);
   return slots.map((s) => {
-    const line = lineKey(s.id, s.variant);
+    const line = memberKey(s); // "line" kept as the field name the dashboard sends back
     const item = eq[line] ?? null;
-    return { line, id: s.id, variant: s.variant, item: s.mega ? null : item, megaSlot: megaPlaceholder(s) };
+    return { line, id: s.id, variant: s.variant, ...(s.uid ? { uid: s.uid } : {}), item: s.mega ? null : item, megaSlot: megaPlaceholder(s) };
   });
 }
 
@@ -185,10 +193,10 @@ const bump = (user) => { ensureEquipment(user).rev += 1; };
  */
 export function checkEquip(user, { teamId, line, itemId, move = false }) {
   if (!EDITABLE_TEAMS.includes(teamId)) return fail(400, "Unknown team.", "bad_team");
-  if (typeof line !== "string" || !LINE_PATTERN.test(line)) return fail(400, "Unknown Pokémon.", "bad_line");
+  if (typeof line !== "string" || !MEMBER_PATTERN.test(line)) return fail(400, "Unknown Pokémon.", "bad_line");
   const slots = teamSlots(user, teamId);
   if (!slots) return fail(400, "You haven't set up that team yet.", "no_team");
-  const slot = slots.find((s) => lineKey(s.id, s.variant) === line);
+  const slot = slots.find((s) => memberKey(s) === line);
   if (!slot) return fail(409, "That Pokémon isn't on this team (save your team first).", "not_member");
   const eq = teamEquipment(user, teamId);
   const current = eq[line] ?? null;
@@ -200,7 +208,7 @@ export function checkEquip(user, { teamId, line, itemId, move = false }) {
   if (!ownsHeldItem(user, itemId)) return fail(409, `You haven't unlocked ${entry.name} yet.`, "not_owned");
   if (!fitsSpecies(entry, slot.id)) return fail(409, `${entry.name} can't be held by that Pokémon. ${entry.held.rule}`, "wrong_species");
   if (current === itemId) return { ok: true, slot, entry, from: null, replaced: null, unchanged: true };
-  const holder = Object.keys(eq).find((k) => k !== line && eq[k] === itemId && slots.some((s) => lineKey(s.id, s.variant) === k));
+  const holder = Object.keys(eq).find((k) => k !== line && eq[k] === itemId && slots.some((s) => memberKey(s) === k));
   if (holder && !move) return fail(409, `${entry.name} is already held by another Pokémon on this team. Move it instead?`, "item_clause", { holder });
   return { ok: true, slot, entry, from: holder ?? null, replaced: current };
 }
@@ -228,7 +236,13 @@ export function reconcileTeamEquipment(user, teamId) {
   const m = user?.equipment?.teams?.[teamId];
   if (!isPlainObject(m)) return [];
   const slots = teamSlots(user, teamId) ?? [];
-  const order = new Map(slots.map((s, i) => [lineKey(s.id, s.variant), { s, i }]));
+  // Older per-line keys move onto the first copy of that line on the team.
+  for (const k of Object.keys(m)) {
+    if (!LINE_PATTERN.test(k)) continue;
+    const first = slots.find((s) => s.uid && lineKey(s.id, s.variant) === k);
+    if (first && !own(m, `u:${first.uid}`)) { m[`u:${first.uid}`] = m[k]; delete m[k]; }
+  }
+  const order = new Map(slots.map((s, i) => [memberKey(s), { s, i }]));
   const removed = [];
   const drop = (line, reason) => { removed.push({ line, item: m[line], reason }); delete m[line]; };
   // Members first in slot order so the Item Clause keeps the earlier slot.
@@ -237,7 +251,7 @@ export function reconcileTeamEquipment(user, teamId) {
   for (const line of keys) {
     const item = m[line];
     const member = order.get(line)?.s;
-    if (DANGEROUS.has(line) || !LINE_PATTERN.test(line)) drop(line, "bad_line");
+    if (DANGEROUS.has(line) || !MEMBER_PATTERN.test(line)) drop(line, "bad_line");
     else if (typeof item !== "string" || !heldEntry(item)) drop(line, "unknown_item");
     else if (!member) drop(line, "not_member");
     else if (member.mega) drop(line, "mega_slot");
@@ -295,7 +309,7 @@ export function normalizeEquipment(user) {
 }
 
 /**
- * The items one team's members battle with: Map line → item id. Re-validates
+ * The items one team's members battle with: Map member key → item id. Re-validates
  * R2–R5 from scratch (fail-closed: anything doubtful battles with no item)
  * and checks the battle capability for that player. The Mega check uses the
  * stored slot's `mega` field; buildTeam additionally drops the item of the
@@ -308,13 +322,13 @@ export function battleItems(user, teamId, { env = process.env } = {}) {
   const eq = teamEquipment(user, teamId);
   const used = new Set();
   for (const s of slots) {
-    const line = lineKey(s.id, s.variant);
-    const item = eq[line];
+    const key = memberKey(s);
+    const item = eq[key] ?? (s.uid ? eq[lineKey(s.id, s.variant)] : undefined); // older per-line key, first slot only (Item Clause)
     if (!item || s.mega || used.has(item)) continue;
     const entry = heldEntry(item);
     if (!entry || !ownsHeldItem(user, item) || !fitsSpecies(entry, s.id)) continue;
     used.add(item);
-    out.set(line, item);
+    out.set(key, item);
   }
   return out;
 }

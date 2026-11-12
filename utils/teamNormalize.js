@@ -21,13 +21,17 @@ export function toTeamObj(entry) {
 
 export function normalizeTeam(rawTeam, maxSize = 6) {
   const arr = Array.isArray(rawTeam) ? rawTeam : [];
-  const mapped = arr.map(toTeamObj).filter(Boolean);
+  const kept = arr.filter((e) => toTeamObj(e));
+  const mapped = kept.map(toTeamObj);
 
   const seen = new Set();
   const out = [];
 
-  for (const slot of mapped) {
-    const clean = { id: Number(slot.id), variant: normVariant(slot.variant) };
+  for (const [i, slot] of mapped.entries()) {
+    // Each Pokémon once per team (only the Showcase takes repeats); the slot
+    // keeps the copy it names (docs/adr/0001).
+    const uid = kept[i] && typeof kept[i] === "object" && typeof kept[i].uid === "string" ? kept[i].uid : null;
+    const clean = { id: Number(slot.id), variant: normVariant(slot.variant), ...(uid ? { uid } : {}) };
     const k = `${clean.id}:${clean.variant}`;
     if (seen.has(k)) continue;
     seen.add(k);

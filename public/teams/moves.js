@@ -69,11 +69,13 @@ export async function openMovesEditor({ userId, team, s, name, onSaved, onTaught
   }
   const line = d.copies?.[s.variant];
   if (!line) { dialog.close(); return toast("You don’t own that copy any more."); }
-  // A trained copy (TM system) has its own learnable moves and selections;
-  // level, automatic moves and next moves are the line's (shared).
-  const trained = s.uid ? line.trained?.find((t) => t.uid === s.uid) : null;
-  if (s.uid && !trained) { dialog.close(); return toast("That trained copy changed. Reload the page."); }
-  const copy = trained ? { ...line, learnable: trained.learnable, movesets: trained.movesets } : line;
+  // Every copy is its own Pokémon (docs/adr/0001): the slot's copy has its
+  // own Level, learnable moves and moveset per team. A trained copy also
+  // lists its TM moves in the note below.
+  const own = s.uid ? line.each?.find((c) => c.uid === s.uid) : null;
+  if (s.uid && !own) { dialog.close(); return toast("That Pokémon changed. Reload the page."); }
+  const trained = s.uid ? line.trained?.find((t) => t.uid === s.uid) ?? null : null;
+  const copy = own ? { ...line, level: own.level, moves: own.moves, nextMoves: own.nextMoves, learnable: own.learnable, movesets: own.movesets } : line;
   copy.learnable ??= [];
   const chosen = copy.movesets?.[team];
   const other = copy.movesets?.[OTHER[team]];

@@ -26,6 +26,7 @@
 
 import { grantItem } from "../services/inventory.js";
 import { plainCount, customCopiesOf, canRemoveCopies, removeCopies } from "../services/ownership.js";
+import { spareCopies, normalizeBox } from "../services/box.js";
 
 const VARIANTS = new Set(["normal", "shiny"]);
 
@@ -41,6 +42,7 @@ const VARIANTS = new Set(["normal", "shiny"]);
  * @returns {{ error: string } | { donatedCopies, gainedCC, shinyDustGained, events }}
  */
 export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }) {
+  normalizeBox(user); // copies exist before spare counts are read (services/box.js)
   if (mode !== "duplicates" && mode !== "multiselect") return { error: "Invalid mode." };
   if (!Array.isArray(items) || items.length === 0) return { error: "Nothing to donate." };
 
@@ -76,6 +78,9 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
         }
         return { error: `You have ${owned} ${label} now, so donating ${count} would leave none.` };
       }
+      // Copies on a Team are never donated (docs/adr/0001).
+      const spare = spareCopies(user, pid, variant).length;
+      if (count > spare) return { error: `Only ${spare} of your ${label} can be donated: the others are on a team or have TM-trained moves.` };
     } else {
       if (count !== 1) return { error: "Multi-select donates one copy of each Pokémon." };
       if (owned < 1) return { error: `You no longer have a ${label}.` };
@@ -151,26 +156,33 @@ export function donateOne({ user, pokeId, variant, pokemonData, economy, isOnTea
   const p = Number.isInteger(pid) ? pokemonData[pid] : null;
   if (!p) return { error: "Invalid Pokémon ID" };
   if (!VARIANTS.has(variant)) return { error: "Invalid variant." };
-  if (isOnTeam(pid, variant)) {
-    return { error: `You can’t donate your ${variant} ${p.name} because it’s on one of your teams (Display or Battle). Remove it from that team first.` };
-  }
   if ((user.pokemon?.[pid]?.[variant] ?? 0) <= 0) {
     return { error: `You don’t own a ${variant === "shiny" ? "shiny " : ""}${p.name} to donate.` };
   }
+  // Individual copies (docs/adr/0001): a copy on a Team is never donated
+  // (canRemoveCopies refuses it with code "on_team"); other copies of the
+  // same Pokémon can be. `uid` names the copy the player tapped.
   // T5 (owner decision D-T10): a trained copy goes only when the player
   // named it, saw the TM warning and ticked its checkbox (confirmTrained),
-  // with the rev the warning showed. Without a uid, a plain copy is used.
-  if (uid != null && confirmTrained !== true) {
+  // with the rev the warning showed. Without a uid, the lowest-Level spare is used.
+  const trained = uid != null && !!user.customPokemon?.[uid] && !user.customPokemon[uid].suspended;
+  if (trained && confirmTrained !== true) {
     return { error: "Confirm that this Pokémon's TM-trained moves will be lost.", code: "confirm_required" };
   }
-  const args = uid != null
-    ? { id: pid, variant, n: 1, customUids: [uid], confirmRevs: { [uid]: rev }, exact: true }
-    : { id: pid, variant, n: 1 };
+  const args = uid == null
+    ? { id: pid, variant, n: 1 }
+    : trained
+      ? { id: pid, variant, n: 1, customUids: [uid], confirmRevs: { [uid]: rev }, exact: true }
+      : { id: pid, variant, n: 1, uids: [uid], exact: true };
   const can = canRemoveCopies(user, args);
-  if (!can.ok) return { error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
+  if (!can.ok) {
+    if (can.code === "on_team") return { error: `That ${p.name} is on one of your teams. Take it off the team first.`, code: "on_team" };
+    return { error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
+  }
+  void isOnTeam;
 
   const event = copyReward(user, pid, p, variant, economy);
-  if (uid != null) event.trainedUid = uid;
+  if (trained) event.trainedUid = uid;
   const removed = removeCopies(user, args);
   if (!removed.ok) throw new Error(`donateOne: removal refused after validation (${removed.code})`);
   user.cc = (user.cc ?? 0) + event.ccGained;

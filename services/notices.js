@@ -9,7 +9,7 @@
 
 import { randomUUID } from "crypto";
 
-export const NOTICE_KINDS = Object.freeze({ BATTLE_TEAM_TRIM: "battle_team_trim" });
+export const NOTICE_KINDS = Object.freeze({ BATTLE_TEAM_TRIM: "battle_team_trim", TRAINER_CONSOLIDATION: "trainer_consolidation" });
 const MAX_NOTICES = 20;
 
 /** IN PLACE: drop malformed entries; never creates the field. */

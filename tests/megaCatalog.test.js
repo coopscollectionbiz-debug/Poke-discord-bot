@@ -99,7 +99,8 @@ assertEqual(new Set(items.listCatalog().map((i) => i.id)).size, items.listCatalo
 assertTrue(items.listCatalog().every((i) => items.ITEM_ID_PATTERN.test(i.id)), "every item id matches the id pattern");
 assertTrue(stoneItems.every((i) => i.status === "defined" && !i.shop && !i.tradable && i.consumable && i.storage === "inventory"), "stones: defined, no shop entry, not tradable, consumable inventory items");
 assertTrue(stoneItems.every((i) => i.category === "evolution" && items.CATEGORIES[i.category]), "stones use an existing category (inventory menus unchanged)");
-assertEqual(Object.keys(items.CATEGORIES).length, 8, "no new inventory category");
+// Mega Stones added no inventory category (the 9th, "tm", belongs to the TM system).
+assertEqual(Object.keys(items.CATEGORIES).filter((c) => c !== "tm"), ["capture", "evolution", "consumable", "held", "trainer_equipment", "cosmetic", "quest", "special"], "no new inventory category for Mega items");
 assertTrue(["mega_shard", "mega_stone_voucher", "mega_stone_voucher_legendary"].every((id) => items.getCatalogItem(id)?.status === "defined"), "Mega Shard and vouchers defined (not obtainable)");
 assertTrue([...stoneItems, items.getCatalogItem("mega_shard")].every((i) => !inv.grantItem({ items: {} }, i.id, 1).ok), "grantItem refuses every stone and the shard");
 assertTrue(stoneItems.every((i) => !items.isHoldable(i.id)), "no stone is holdable yet");

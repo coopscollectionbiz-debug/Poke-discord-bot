@@ -20,10 +20,12 @@ import { unlockedForms, megaLineKey } from "./megaUnlocks.js";
 import { isMegaCapabilityEnabled } from "../config/features.js";
 import { toTeamObj } from "../utils/economyRules.js";
 import { learnableMoves, chosenMoves, moveInfo as movesetMoveInfo } from "./movesets.js";
+import { customCopiesOf, plainCount } from "./ownership.js";
+import { isTmEnabled } from "../config/tmFeatures.js";
 
 const sum = (s) => (s ? s.hp + s.atk + s.def + s.spa + s.spd + s.spe : null);
 const nameOf = (id) => displaySpeciesName(id, getSpeciesEntry(id)?.name);
-const moveInfo = (m) => { const x = getMove(m); return x ? { id: m, name: x.name, type: x.type ?? null, power: x.power ?? null } : { id: m, name: String(m), type: null, power: null }; };
+const moveInfo = (m) => { const x = getMove(m); return x ? { id: m, name: x.name, type: x.type ?? null, power: x.power ?? null, category: x.category ?? null } : { id: m, name: String(m), type: null, power: null, category: null }; };
 
 /** Where this copy sits on each team: { display: 2, battle: null } (1-based slots). */
 function teamSlots(user, id, variant) {
@@ -32,6 +34,35 @@ function teamSlots(user, id, variant) {
     return i < 0 ? null : i + 1;
   };
   return { display: at(user?.displayedPokemon), battle: at(user?.battleTeam) };
+}
+
+/** Team slots that hold this exact customized copy (TM system): { display: 3, battle: null }. */
+function copySlots(user, uid) {
+  const at = (raw) => {
+    const i = (Array.isArray(raw) ? raw : []).findIndex((t) => t && typeof t === "object" && t.uid === uid);
+    return i < 0 ? null : i + 1;
+  };
+  return { display: at(user?.displayedPokemon), battle: at(user?.battleTeam) };
+}
+
+/**
+ * The customized (TM-trained) copies of one line, for the dashboard. Every
+ * field is server-derived; the uid and rev are what a later confirmation
+ * (teach, donate, evolve) must send back.
+ */
+function trainedCopies(user, id, variant, level) {
+  return customCopiesOf(user, id, variant).map((c) => ({
+    uid: c.uid,
+    rev: c.rev ?? 0,
+    tmMoves: c.tmMoves.map(movesetMoveInfo),
+    movesets: {
+      display: chosenMoves(user, "display", id, variant, { uid: c.uid })?.map(movesetMoveInfo) ?? null,
+      battle: chosenMoves(user, "battle", id, variant, { uid: c.uid })?.map(movesetMoveInfo) ?? null,
+    },
+    learnable: learnableMoves(user, id, variant, { level, uid: c.uid }).map((m) => ({ ...movesetMoveInfo(m.id), learnedAt: m.learnedAt, source: m.source })),
+    teams: copySlots(user, c.uid),
+    history: (c.history ?? []).slice(-20),
+  }));
 }
 
 /**
@@ -72,6 +103,10 @@ export function pokemonDetail(user, speciesId, { env = process.env } = {}) {
       learnable: species ? learnableMoves(user, id, variant, { level }).map((m) => ({ ...movesetMoveInfo(m.id), learnedAt: m.learnedAt, source: m.source })) : [],
       nextMoves: species ? movesLearned(id, level, Math.min(100, level + 20)).map(moveInfo) : [],
       teams: teamSlots(user, id, variant),
+      // TM system (T1): untrained copies vs. customized copies of this line.
+      // Both fields are always present; without trained copies, plain = count.
+      plain: plainCount(user, id, variant),
+      trained: species ? trainedCopies(user, id, variant, level) : [],
     };
   }
 
@@ -102,6 +137,8 @@ export function pokemonDetail(user, speciesId, { env = process.env } = {}) {
       owned: counts,
       copies,
       megaForms,
+      // TM system (T4): whether "Teach a TM" is offered (TM_ENABLED).
+      tm: { enabled: isTmEnabled(env) },
     },
   };
 }

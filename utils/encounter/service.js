@@ -22,10 +22,12 @@ import { buildTeam } from "../battle/runBattle.js";
 import { rollTrainer } from "./generate.js";
 import { spotBlock, recordSpot, fightEncounter } from "./runEncounter.js";
 import { RAN, LOST_INTEREST, STALE_LINE, fill } from "./lines.js";
-import { encounterCardView, encounterAltText, renderEncounterCard } from "../render/encounterCard.js";
+import { encounterCardView, encounterAltText } from "../render/encounterCard.js";
 import { encounterNames, encounterSummary, playEncounter, challengeExpText } from "../battle/playback.js";
-import { expMembers, renderExpCard } from "../render/expCard.js";
+import { expMembers } from "../render/expCard.js";
 import { logEvent } from "../eventLog.js";
+import { threaded } from "../render/renderers.js";
+import { cardImage } from "../render/stage.js";
 
 const PREFIX = "encounter:";
 export const isEncounterButton = (customId) => typeof customId === "string" && customId.startsWith(PREFIX);
@@ -54,8 +56,8 @@ export function createEncounterService({
   seed = () => randomInt(2 ** 31),
   setTimer = setTimeout,
   clearTimer = clearTimeout,
-  render = renderEncounterCard,
-  renderExp = renderExpCard,
+  render = threaded.encounter,
+  renderExp = threaded.exp,
   play = playEncounter,
   log = logEvent,
 }) {
@@ -82,8 +84,9 @@ export function createEncounterService({
     );
     const base = { content: `<@${e.userId}>`, allowedMentions: { users: [e.userId] }, components: [buttons] };
     try {
-      const png = await render(view);
-      return { ...base, files: [new AttachmentBuilder(png, { name: "encounter.png", description: encounterAltText(view) })] };
+      // Animated when the render threads have room, else the still PNG.
+      const card = await cardImage((animate) => render(view, { animate }), "encounter");
+      return { ...base, files: [new AttachmentBuilder(card.buffer, { name: card.name, description: encounterAltText(view) })] };
     } catch (err) {
       console.warn("⚠️ encounter card render failed; sending an embed:", err?.message || err);
       const embed = new EmbedBuilder().setColor(0xff5a6a).setTitle(view.heading)

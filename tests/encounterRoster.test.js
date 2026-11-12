@@ -32,7 +32,7 @@ const challengeKeys = new Set(Object.values(CHALLENGES).flatMap((c) => c.opponen
 assertTrue(Object.values(TRAINER_CLASSES).every((c) => !challengeKeys.has(c.spriteKey)), "never a /challenge opponent");
 assertTrue(Object.keys(TRAINER_CLASSES).every((k) => fs.existsSync(new URL(`../public/sprites/trainers_2/${classSprite(k)}`, import.meta.url))),
   "every sprite file exists");
-assertEqual(classSprite("youngster"), "youngster-gen3.png", "the first enabled sprite, like the leaders");
+assertEqual(classSprite("youngster"), "youngster.png", "the first enabled sprite, like the leaders");
 assertEqual(["gentleman", "lady", "richboy", "beauty"].map((k) => TRAINER_CLASSES[k].base), [40, 40, 40, 40], "wealthy classes pay 40");
 assertEqual([TRAINER_CLASSES.acetrainer.base, TRAINER_CLASSES.acetrainerf.base, TRAINER_CLASSES.youngster.base], [30, 30, 10], "Ace Trainers 30, the rest 10");
 assertEqual(Object.values(TRAINER_CLASSES).filter((c) => c.base === 10).length, 29, "29 classes at 10");

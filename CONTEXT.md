@@ -26,6 +26,14 @@ _Avoid_: form, version, shiny status
 One owned unit of a Pokémon in a specific variant.
 _Avoid_: instance, unit
 
+**TM**:
+A consumable item that teaches one specific move to one compatible **Copy**, and is used up when it does.
+_Avoid_: technical machine (in UI text), move disc
+
+**Trained copy**:
+A **Copy** that has learned at least one move from a **TM**. It keeps those moves for good, through evolution and shiny crafting, and is never picked automatically when copies are removed. Every other copy is an untrained copy, and all untrained copies of the same Pokémon and **Variant** are interchangeable.
+_Avoid_: custom copy, customized copy, instance, TM copy
+
 **Duplicate**:
 Any copy beyond the first of the same Pokémon *and* variant. Pidgey x4 · ✨x2 has 3 normal duplicates and 1 shiny duplicate. One normal plus one shiny of the same Pokémon is not a duplicate.
 _Avoid_: extra, spare
@@ -59,6 +67,10 @@ _Avoid_: displayed Pokémon
 **Battle team**:
 The **Team** a player sets for **Ranked battles** and **Wager battles**, where every Pokémon fights at Lv 50. It holds at most one mythic-tier Pokémon.
 
+**Tier backdrop**:
+The animated background an owned Epic, Legendary or Mythic trainer sprite brings to any card that shows it: a tinted glow with motes, plus twinkles from Legendary up and a meteor shower for Mythic. It replaces the card's own background in that trainer's part of the card (their half of a VS card, their row in a battle), and nothing in it passes behind the trainer or anything else drawn there. Computer-run opponents and unowned sprites never have one.
+_Avoid_: aura, glow, trainer background
+
 **Moveset**:
 The up to 4 moves a player picks for one Pokémon on one **Team**, from the moves it has learned by its real **Level**. A Pokémon with none picked uses the last four moves it learned.
 _Avoid_: move set, loadout
@@ -88,6 +100,20 @@ _Avoid_: evo stone, stone (alone, now that **Mega Stones** exist)
 **Shiny Dust**:
 The item earned by **Donation** and as a **Challenge** prize, and spent on shinies, to convert a normal copy into a shiny one or to evolve a shiny.
 _Avoid_: dust (alone), stardust
+
+### Administration
+
+**Last active**:
+The last time a player earned TP from chat or used a slash command. Players who have done neither since it started being recorded count from their latest daily, quest, recruit or weekly pack claim.
+_Avoid_: last seen, last online, last login
+
+**Admin change**:
+A change an admin makes to a player's account from the admin dashboard: adding or removing CC, TP, items, Pokémon or trainers, setting a **Level**, or resetting cooldowns. Every one is recorded permanently with who made it, when, before and after, and why.
+_Avoid_: edit, override, admin action (for player-made actions)
+
+**Grant**:
+An **Admin change** that only adds to an account or resets cooldowns. Only **Grants** can go to many players at once; removals are made one player at a time.
+_Avoid_: gift (that is player-to-player), reward, compensation (as the action's name)
 
 ### Battles
 
@@ -213,6 +239,7 @@ _Avoid_: trophy, quest
 - "Tier" also names a trainer sprite's price class, Common to Mythic, which is not a species' **Tier**. The 2026-11-10 re-tier changed trainer sprites, and the 2026-11-11 re-tier changed species.
 - "Ranked" has nothing to do with **Rank**. A player's **Rank** comes from chatting; their **Ranked rating** comes from **Ranked battles** and **Wager battles**.
 - Some **Achievements** list a badge as their reward, such as a region's badge for completing its Pokédex. That is not a **Badge**, which only comes from beating a Gym Leader's **Challenge**.
+- "Copy" as a noun is always a **Copy** (one owned unit). As a verb it may describe teams and moves ("Copy from Battle team"); never call the result a "team copy".
 
 ## Example dialogue
 

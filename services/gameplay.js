@@ -25,7 +25,8 @@ import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getPokemonDataCached } from "../utils/pokemonDataCache.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
-import { grantCatch, carryLevel, resetLevelIfGone } from "../utils/training.js";
+import { grantCatch } from "../utils/training.js";
+import { canTransformCopy, transformCopy } from "./ownership.js";
 import { spritePaths } from "../spriteconfig.js";
 import { normVariant, isDisplayedVariant, tierKey, shinyEvolveDustCost, SHINY_CRAFT_COST_BY_TIER, ensureWeeklyReset } from "../utils/economyRules.js";
 import { getQuantity, grantItem, consumeItems, runInventoryTransaction, REQUEST_ID_PATTERN } from "./inventory.js";
@@ -168,7 +169,7 @@ export function createGameplayHandlers(deps) {
   async function evolve({ body, isAuthorized }) {
     const stop = guard(body, isAuthorized, (b) => (b.baseId == null || b.targetId == null ? reply(400, { error: "Missing baseId/targetId" }) : null));
     if (stop) return stop;
-    const { id, baseId, targetId, shiny, variant, requestId = null } = body;
+    const { id, baseId, targetId, shiny, variant, requestId = null, uid = null, rev = null } = body;
 
     const pokemonData = await loadPokemonData();
     const bId = Number(baseId);
@@ -200,7 +201,7 @@ export function createGameplayHandlers(deps) {
       lock: lockUser,
       save,
       requestId,
-      payloadKey: `evolve:${bId}>${tId}:${chosenVariant}`,
+      payloadKey: `evolve:${bId}>${tId}:${chosenVariant}:${uid ?? "untrained"}`,
       mutate: (user) => {
         normalizeUserSchema(id, user);
         if (getQuantity(user, "evolution_stone") < cost) return { ok: false, error: "Not enough Evolution Stones." };
@@ -216,16 +217,18 @@ export function createGameplayHandlers(deps) {
         if (dustCost > 0 && getQuantity(user, "shiny_dust") < dustCost) {
           return { ok: false, error: `Not enough Shiny Dust. Requires ${dustCost}.`, dustRequired: dustCost, dustAvailable: getQuantity(user, "shiny_dust") };
         }
+        // TM safety (services/ownership.js): a plain copy evolves; a copy with
+        // TM-trained moves is never picked automatically. Checked BEFORE spending.
+        // uid (T5): the player picked this trained copy; its moves follow it.
+        const move = { from: { id: bId, variant: chosenVariant }, to: { id: tId, variant: chosenVariant }, ...(uid != null && { uid: String(uid), confirmRev: rev }) };
+        const can = canTransformCopy(user, move);
+        if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
         // All checks passed: everything below is applied together.
         const spent = consumeItems(user, { evolution_stone: cost, shiny_dust: dustCost });
         if (!spent.ok) return { ok: false, error: spent.error };
 
-        user.pokemon[bId][chosenVariant] -= 1;
-        if ((user.pokemon[bId].normal ?? 0) <= 0 && (user.pokemon[bId].shiny ?? 0) <= 0) delete user.pokemon[bId];
-        user.pokemon[tId] ??= { normal: 0, shiny: 0 };
-        user.pokemon[tId][chosenVariant] = (user.pokemon[tId][chosenVariant] ?? 0) + 1;
-        carryLevel(user, { id: bId, variant: chosenVariant }, { id: tId, variant: chosenVariant });
-        resetLevelIfGone(user, bId, chosenVariant);
+        const moved = transformCopy(user, move); // counts, Level carry, empty-line cleanup
+        if (!moved.ok) throw new Error(`evolve: transform refused after validation (${moved.code})`);
         trackProgress(user, [{ type: "evolved", species: tId, shiny: chosenVariant === "shiny" }]);
 
         return {
@@ -255,7 +258,7 @@ export function createGameplayHandlers(deps) {
   async function convertToShiny({ body, isAuthorized }) {
     const stop = guard(body, isAuthorized, (b) => (b.pokeId == null ? reply(400, { error: "Missing pokeId" }) : null));
     if (stop) return stop;
-    const { id, pokeId, requestId = null } = body;
+    const { id, pokeId, requestId = null, uid = null, rev = null } = body;
 
     const pokemonData = await loadPokemonData();
     const pid = Number(pokeId);
@@ -270,7 +273,7 @@ export function createGameplayHandlers(deps) {
       lock: lockUser,
       save,
       requestId,
-      payloadKey: `convert:${pid}`,
+      payloadKey: `convert:${pid}:${uid ?? "untrained"}`,
       mutate: (user) => {
         normalizeUserSchema(id, user);
         if (isDisplayedVariant(user, pid, "normal")) {
@@ -282,16 +285,17 @@ export function createGameplayHandlers(deps) {
         if (getQuantity(user, "shiny_dust") < dustCost) {
           return { ok: false, error: `Not enough Shiny Dust. Requires ${dustCost}.`, dustRequired: dustCost, dustAvailable: getQuantity(user, "shiny_dust") };
         }
+        // TM safety (services/ownership.js): checked BEFORE spending Dust.
+        const move = { from: { id: pid, variant: "normal" }, to: { id: pid, variant: "shiny" }, ...(uid != null && { uid: String(uid), confirmRev: rev }) };
+        const can = canTransformCopy(user, move);
+        if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
         const spent = consumeItems(user, { shiny_dust: dustCost });
         if (!spent.ok) return { ok: false, error: "Not enough Shiny Dust." };
 
-        user.pokemon[pid].normal -= 1;
-        user.pokemon[pid].shiny = (user.pokemon[pid].shiny ?? 0) + 1;
-        carryLevel(user, { id: pid, variant: "normal" }, { id: pid, variant: "shiny" });
-        resetLevelIfGone(user, pid, "normal");
+        const moved = transformCopy(user, move); // counts, Level carry, empty-line cleanup
+        if (!moved.ok) throw new Error(`convert: transform refused after validation (${moved.code})`);
         // Shiny crafting counts toward the shiny counter (design §3.2).
         trackProgress(user, [{ type: "shiny" }, { type: "pokemon" }]);
-        if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) delete user.pokemon[pid];
 
         return {
           ok: true,

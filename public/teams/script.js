@@ -9,7 +9,9 @@
 // Reads  GET  /api/user-pokemon   (pokemon, levels, powers, currentTeam, battleTeam)
 //        GET  /api/mega           (only to know whether Mega sprites show)
 //        GET  /public/pokemonData.json
+//        GET  /api/held-items     (held-item unlocks + each team's equipment, when on)
 // Writes POST /api/set-pokemon-team { id, team, teamType: "display" | "battle" }
+//        POST /api/held-items/*   (items.js: equip/move/remove save at once)
 //
 // The server is the authority for every rule (ownership, 1–6 slots, one
 // Mega per team, one mythic-tier Pokémon on the Battle team). The checks here
@@ -20,6 +22,9 @@ import { playerId, showBanner, showExpired, toast, showActionError, confirmDialo
 import { displaySpeciesName } from "/public/shared/names.js";
 import { scanFx } from "/public/shared/spriteFx.js";
 import { openMovesEditor } from "/public/teams/moves.js";
+import { chooseCopy } from "/public/teams/copyPicker.js";
+import { openItemPicker, itemIcon, claimStarter } from "/public/teams/items.js";
+import { openDetail } from "/public/picker-pokemon/detail.js";
 
 const TEAMS = ["display", "battle"];
 const LABEL = { display: "Display team", battle: "Battle team" };
@@ -30,6 +35,9 @@ const TYPE_NAMES = [null, "normal", "fighting", "flying", "poison", "ground", "r
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const keyOf = (s) => `${s.id}:${s.variant}`;
+// A stored slot as the page keeps it. `uid` names a trained copy (TM system);
+// it must survive every edit, or saving would drop the copy from its slot.
+const slotFromServer = (s) => ({ id: Number(s.id), variant: s.variant === "shiny" ? "shiny" : "normal", ...(s.mega ? { mega: s.mega } : {}), ...(s.uid ? { uid: s.uid } : {}) });
 const clone = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
@@ -43,6 +51,7 @@ const state = {
   pokemon: {},           // owned counts
   levels: {},            // "6:normal" → Level
   powers: {},            // "6:normal" → Power
+  trained: {},           // "6:normal" → [trained copies] (TM system)
   megaOn: false,
   megaCards: [], // GET /api/mega cards (only while Mega Evolution is on)
   saved: { display: [], battle: null },
@@ -52,6 +61,11 @@ const state = {
   error: { display: null, battle: null },
   filter: { q: "", show: "all", sort: "power" },
   saving: false,
+  // Held items (GET /api/held-items). enabled false = no item UI at all.
+  held: { enabled: false, items: [], groups: [], rev: 0, teams: { display: null, battle: null } },
+  // A whole-team copy waiting for Save: { source: "display"|"battle", keys: ["6:normal", …] }.
+  // Save sends it as copyFrom so the server copies those Pokémon's moves too.
+  copied: { display: null, battle: null },
 };
 
 // ---------- helpers ----------
@@ -71,6 +85,63 @@ function spriteOf(s) {
   return `/public/sprites/pokemon/${s.variant === "shiny" ? "shiny" : "normal"}/${s.id}.gif`;
 }
 const team = (t) => state.draft[t] ?? [];
+// ---------- held items ----------
+const heldItem = (id) => state.held.items.find((i) => i.id === id) ?? null;
+/** This member's saved loadout entry on team t ({ item, megaSlot }) or null when it isn't saved on t yet. */
+const loadoutOf = (t, s) => (state.held.teams[t] ?? []).find((m) => m.line === keyOf(s)) ?? null;
+const savedOn = (t, s) => (state.saved[t] ?? []).some((m) => keyOf(m) === keyOf(s));
+function applyHeld(data) {
+  if (!data) return;
+  if (Array.isArray(data.items)) state.held.items = data.items;
+  if (data.teams) state.held.teams = data.teams;
+  if (Number.isSafeInteger(data.rev)) state.held.rev = data.rev;
+}
+async function refreshHeld() {
+  try {
+    const r = await fetch(`/api/held-items?id=${encodeURIComponent(userId)}`, { credentials: "same-origin" });
+    const d = r.ok ? await r.json() : null;
+    if (!d?.enabled) { state.held.enabled = false; return; }
+    state.held = { enabled: true, items: d.items ?? [], groups: d.groups ?? [], rev: d.rev ?? 0, teams: d.teams ?? {}, starterPending: !!d.starterPending };
+  } catch { state.held.enabled = false; }
+}
+/** The item area of a slot card: badge on the stage + an Item button. */
+function itemControls(t, s, i, name) {
+  if (!state.held.enabled) return { badge: "", button: "" };
+  const megaDraft = !!(s.mega && state.megaOn);
+  const entry = loadoutOf(t, s);
+  if (megaDraft || entry?.megaSlot) {
+    const stone = entry?.megaSlot?.stoneName ?? "Mega Stone";
+    return {
+      badge: `<span class="hi-badge" title="${esc(stone)}: Mega Evolution uses this item slot">${itemIcon(null, { size: "sm", mega: entry?.megaSlot ?? true })}</span>`,
+      button: `<span class="hi-slotbtn is-mega" title="Mega Evolution uses the item slot on this team">${itemIcon(null, { size: "xs", mega: entry?.megaSlot ?? true })} ${esc(stone)}</span>`,
+    };
+  }
+  if (!savedOn(t, s)) {
+    return { badge: "", button: `<button type="button" class="hi-slotbtn" disabled title="Save your team first">Item: save team first</button>` };
+  }
+  const it = heldItem(entry?.item);
+  return {
+    // Inside the stage, which is itself a button (details): an indicator only.
+    // The slot's item button below changes the item.
+    badge: it ? `<span class="hi-badge" title="${esc(name)} holds ${esc(it.name)}">${itemIcon(it, { size: "sm" })}</span>` : "",
+    button: `<button type="button" class="hi-slotbtn${it ? " is-set" : ""}" data-act="item" data-team="${t}" data-i="${i}" aria-label="${esc(name)}’s item on your ${LABEL[t]}: ${it ? esc(it.name) : "none"}. Change">${it ? `${itemIcon(it, { size: "xs" })} ${esc(it.name)}` : "＋ Add item"}</button>`,
+  };
+}
+/** The team's equipment at a glance (saved loadout). */
+function loadoutSummary(t) {
+  if (!state.held.enabled || !(state.saved[t] ?? []).length) return "";
+  const lo = state.held.teams[t] ?? [];
+  const held = lo.filter((m) => m.item).length;
+  const mega = lo.filter((m) => m.megaSlot).length;
+  const open = lo.length - held - mega;
+  const ids = lo.map((m) => m.item).filter(Boolean);
+  const valid = new Set(ids).size === ids.length;
+  return `<div class="hi-summary" role="status">
+    <div class="hi-summary-icons" aria-hidden="true">${lo.map((m) => itemIcon(heldItem(m.item), { size: "sm", mega: m.megaSlot ?? false })).join("")}</div>
+    <p><b>Items ${held}/${lo.length}</b>${mega ? ` · ${mega} Mega Stone` : ""}${open ? ` · ${open} empty` : " · every slot equipped"} · ${valid ? "✓ all different" : "⚠ duplicate item"}</p>
+    <p class="hi-summary-note">Items are permanent unlocks: one unlock works on every team, but only one Pokémon per team can hold it.</p>
+  </div>`;
+}
 const isDirty = (t) => !same(state.draft[t], state.saved[t]);
 const anyDirty = () => TEAMS.some(isDirty);
 
@@ -114,10 +185,18 @@ let focusAfter = null;
  * replace: swap out the Pokémon at that slot (drag onto a filled slot of a
  * full team). Same rules as the server.
  */
+const trainedOf = (s) => state.trained[keyOf(s)] ?? [];
+
 function add(t, s, { at = null, replace = false } = {}) {
   const list = [...team(t)];
   const existing = list.findIndex((m) => m.id === s.id && m.variant === s.variant);
   if (existing >= 0 && at != null) return moveTo(t, existing, Math.min(at, list.length - 1)); // already on it: just move
+  // TM system (T5): a Pokémon with trained copies asks which copy first.
+  if (existing < 0 && s.uid === undefined && trainedOf(s).length) {
+    chooseCopy({ userData: state, pokeId: s.id, variant: s.variant, name: species(s.id).name, owned: state.pokemon?.[s.id]?.[s.variant] ?? 0 })
+      .then((uid) => { if (uid !== undefined) add(t, { ...s, uid }, { at, replace }); });
+    return;
+  }
   const replaceAt = replace && at != null && at < list.length ? at : -1;
   const why = blockReason(t, s, { replaceAt });
   if (why) {
@@ -127,7 +206,9 @@ function add(t, s, { at = null, replace = false } = {}) {
     return;
   }
   state.error[t] = null;
-  const slot = { id: s.id, variant: s.variant };
+  // uid: a trained copy; null = explicitly an untrained copy (only sent for
+  // Pokémon that have trained copies, so the server doesn't keep the old one).
+  const slot = { id: s.id, variant: s.variant, ...(s.uid ? { uid: s.uid } : s.uid === null && trainedOf(s).length ? { uid: null } : {}) };
   let pos;
   if (replaceAt >= 0) {
     const [out] = list.splice(replaceAt, 1, slot);
@@ -199,26 +280,52 @@ function cycleMega(t, i) {
   render();
 }
 
-function copyDisplay() {
+const OTHER = { display: "battle", battle: "display" };
+
+/**
+ * Copy the other team onto team `target`, after a confirmation: the same
+ * Pokémon in the same order with their Mega choices; on Save the server
+ * also copies each copied Pokémon's moves (copyFrom). Into the Battle team,
+ * only the first mythic-tier Pokémon comes along. Nothing is saved here.
+ */
+async function copyFrom(target) {
+  const source = OTHER[target];
+  const from = team(source);
+  if (!from.length) return toast(`Your ${LABEL[source]} is empty.`);
   const kept = [];
   const dropped = [];
   let mythics = 0;
-  for (const s of team("display")) {
-    if (isMythic(s.id) && mythics++ >= 1) { dropped.push(s); continue; }
+  for (const s of from) {
+    if (target === "battle" && isMythic(s.id) && mythics++ >= 1) { dropped.push(s); continue; }
     kept.push(clone(s));
   }
-  state.draft.battle = kept;
-  state.error.battle = null;
-  const msg = dropped.length
-    ? `Copied your Display team. ${dropped.map((s) => species(s.id).name).join(", ")} left out: one mythic-tier Pokémon per Battle team.`
-    : "Copied your Display team.";
-  announce(msg);
-  toast(msg);
+  const current = state.draft[target];
+  const lines = [
+    current?.length
+      ? `This replaces your ${LABEL[target]} (${current.length} Pokémon). Each Pokémon brings its ${LABEL[source]} moves.`
+      : `This fills your ${LABEL[target]}. Each Pokémon brings its ${LABEL[source]} moves.`,
+    isDirty(target) ? `Your unsaved changes to the ${LABEL[target]} will be replaced.` : "",
+    dropped.length ? `${dropped.map((s) => species(s.id).name).join(", ")} ${dropped.length > 1 ? "stay" : "stays"} behind: one mythic-tier Pokémon per Battle team.` : "",
+    "Nothing changes until you press Save.",
+  ].filter(Boolean);
+  const ok = await confirmDialog({
+    title: `Copy your ${LABEL[source]} onto your ${LABEL[target]}?`,
+    message: lines.join("\n"),
+    okText: "Copy team",
+    cancelText: "Cancel",
+  });
+  if (!ok) return;
+  state.draft[target] = kept;
+  state.copied[target] = { source, keys: kept.map(keyOf) };
+  state.error[target] = null;
+  state.active = target;
+  announce(`Copied your ${LABEL[source]} onto your ${LABEL[target]}. Press Save to keep it.`);
   render();
 }
 
 function discard() {
   state.draft = clone(state.saved);
+  state.copied = { display: null, battle: null };
   state.error = { display: null, battle: null };
   announce("Changes discarded.");
   render();
@@ -243,7 +350,7 @@ async function save() {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: userId, team: team(t), teamType: t }),
+        body: JSON.stringify({ id: userId, team: team(t), teamType: t, ...copyPayload(t) }),
       });
       let body = {};
       try { body = await res.json(); } catch { /* non-JSON */ }
@@ -257,8 +364,14 @@ async function save() {
       state.saved.display = clone(body.currentTeam ?? state.saved.display);
       state.saved.battle = clone(body.battleTeam ?? state.saved.battle);
       state.draft[t] = clone(t === "display" ? state.saved.display : state.saved.battle);
+      state.copied[t] = null;
       if (body.saveDelayed || body.saved === false) toast(body.notice || "Saved with a delay. Your change is kept and will be written shortly.");
+      if (Array.isArray(body.itemsCleared) && body.itemsCleared.length) {
+        const why = body.itemsCleared.some((c) => c.reason === "mega_slot") ? " (Mega Evolution uses the item slot)" : "";
+        toast(`${body.itemsCleared.length} item${body.itemsCleared.length > 1 ? "s" : ""} came off your ${LABEL[t]}${why}. Your unlocks are kept.`);
+      }
     }
+    await refreshHeld();
     toast(dirty.length > 1 ? "Both teams saved." : `${LABEL[dirty[0]]} saved.`, { tone: "success" });
   } catch (err) {
     if (err.team) {
@@ -270,6 +383,15 @@ async function save() {
     state.saving = false;
     render();
   }
+}
+
+/** copyFrom + the copied Pokémon still on the team, when this team holds a pending copy. */
+function copyPayload(t) {
+  const c = state.copied[t];
+  if (!c) return {};
+  const onTeam = new Set(team(t).map(keyOf));
+  const copiedKeys = c.keys.filter((k) => onTeam.has(k));
+  return copiedKeys.length ? { copyFrom: c.source, copiedKeys } : {};
 }
 
 /** Hide the Battle team notices and tell the server they were seen. */
@@ -308,20 +430,25 @@ function slotCard(t, s, i) {
     s.mega && state.megaOn ? `<span class="tm-tag tm-tag--mega">Mega</span>` : "",
     isMythic(s.id) ? `<span class="cc-tier" data-tier="mythic">Mythic</span>` : "",
     change ? `<span class="tm-tag tm-tag--change">${change}</span>` : "",
+    s.uid ? `<span class="tm-tag tm-tag--trained" title="This copy learned moves from TMs">★ Trained</span>` : "",
   ].join("");
   const shiny = s.variant === "shiny";
+  const ic = itemControls(t, s, i, name);
   return `<li class="tm-slot tm-slot--lg${i === 0 ? " is-lead" : ""}${shiny ? " is-shiny" : ""}${s.mega && state.megaOn ? " is-mega" : ""}${change ? " is-changed" : ""}" draggable="true" data-team="${t}" data-i="${i}">
-    <div class="tm-stage"${shiny ? ` data-fx="shiny" data-fx-seed="${s.id}"` : ""}>
+    <button type="button" class="tm-stage" data-act="details" data-team="${t}" data-i="${i}" aria-label="${esc(name)}: details"${shiny ? ` data-fx="shiny" data-fx-seed="${s.id}"` : ""}>
       <span class="tm-no">${i + 1}<span class="sr-only">: </span></span>
       ${shiny ? `<span class="tm-shiny" title="Shiny"><svg class="tm-ic" aria-hidden="true"><use href="#tm-sparkle"/></svg><span class="sr-only">Shiny</span></span>` : ""}
       <img class="cc-sprite" src="${spriteOf(s)}" alt="" onerror="this.onerror=null;this.src='/public/sprites/items/pokeball.png'">
-    </div>
+      ${ic.badge}
+    </button>
     <div class="tm-slot-body">
-      <div class="tm-slot-name">${esc(name)}</div>
+      <div class="tm-slot-name" data-act="details" data-team="${t}" data-i="${i}">${esc(name)}</div>
       <div class="tm-slot-meta">${lvl}</div>
       ${typeChips(s.id)}
       <div class="tm-slot-tags">${tags}</div>
       <button type="button" class="tm-movesbtn" data-act="moves" data-team="${t}" data-i="${i}" aria-label="${esc(species(s.id).name)}’s moves on your ${LABEL[t]}">Moves</button>
+      ${trainedOf(s).length ? `<button type="button" class="tm-movesbtn" data-act="pickcopy" data-team="${t}" data-i="${i}" aria-label="Change which ${esc(species(s.id).name)} is on your ${LABEL[t]}">Change copy</button>` : ""}
+      ${ic.button}
       ${state.megaOn && megaFormsFor(s).length ? `<button type="button" class="tm-megabtn${s.mega ? " is-on" : ""}" data-act="mega" data-team="${t}" data-i="${i}" aria-label="Mega form for ${esc(species(s.id).name)}: ${s.mega ? esc(megaCard(s.mega)?.name ?? s.mega) : "off"}. Change">${s.mega ? `Mega: ${esc((megaCard(s.mega)?.name ?? s.mega).replace(/^Mega /, ""))}` : "Mega: off"}</button>` : ""}
     </div>
     <div class="tm-slot-ctl">
@@ -358,11 +485,11 @@ function teamPanel() {
   let body;
   if (isB && state.draft.battle == null) {
     body = `<div class="tm-empty"><p><strong>No Battle team yet.</strong><br>Ranked and wager battles will use it.</p>
-      <button type="button" class="cc-btn cc-btn--primary" data-act="copy"${team("display").length ? "" : " disabled"}>Copy my Display team</button>
+      <button type="button" class="cc-btn cc-btn--primary" data-act="copy" data-team="battle"${team("display").length ? "" : " disabled"}>Copy from Display team</button>
       <p class="tm-sub" style="margin-top:12px">Or pick Pokémon from your box. One mythic-tier Pokémon at most.</p></div>`;
   } else if (!list.length) {
     body = `<div class="tm-empty"><p><strong>This team is empty.</strong> Pick up to six Pokémon from your box.</p>
-      ${isB && team("display").length ? `<button type="button" class="cc-btn" data-act="copy">Copy my Display team</button>` : ""}</div>`;
+      ${team(OTHER[t]).length ? `<button type="button" class="cc-btn" data-act="copy" data-team="${t}">Copy from ${LABEL[OTHER[t]]}</button>` : ""}</div>`;
   } else {
     body = `<ol class="tm-slots">${Array.from({ length: MAX }, (_, i) => slotCard(t, list[i] ?? null, i)).join("")}</ol>`;
   }
@@ -371,8 +498,12 @@ function teamPanel() {
     : "";
   const e = state.error[t];
   const err = e ? `<div class="tm-error" role="alert"><svg class="tm-ic" aria-hidden="true"><use href="#tm-lock"/></svg><p><strong>${esc(e.title ?? "Can’t add that Pokémon")}</strong>${esc(e.text)}</p></div>` : "";
+  const other = OTHER[t];
+  const copyBtn = team(other).length && list.length
+    ? `<button type="button" class="cc-btn tm-copyteam" data-act="copy" data-team="${t}">Copy from ${LABEL[other]}</button>`
+    : "";
   return `<section id="teamPanel" class="tm-panel tm-panel--${t} tm-team" role="tabpanel" aria-labelledby="tab-${t}">
-    <div class="tm-panel-head">${head}</div>${note}${body}${err}
+    <div class="tm-panel-head">${head}${copyBtn}</div>${note}${loadoutSummary(t)}${body}${err}
     <button type="button" class="cc-btn tm-addbtn" data-act="openbox"><svg class="tm-ic" aria-hidden="true"><use href="#tm-plus"/></svg>Add from your box</button>
   </section>`;
 }
@@ -432,7 +563,8 @@ function boxTile(s) {
       <span class="tm-tile-name">${esc(sp.name)}</span>
       ${typeChips(s.id)}
       <span class="tm-tile-lv">Lv ${levelOf(s)}${isMythic(s.id) && !blocked ? ` · <b class="tier-text mythic">Mythic</b>` : ""}</span>
-    </button></li>`;
+    </button>
+    <button type="button" class="tm-tile-info" data-act="details-box" data-id="${s.id}" data-variant="${s.variant}" aria-label="${esc(sp.name)}${shiny ? " (shiny)" : ""}: details">i</button></li>`;
 }
 
 function boxPanel(where) {
@@ -515,11 +647,44 @@ function onClick(e) {
   else if (act === "move") move(t, i, Number(el.dataset.dir));
   else if (act === "remove") remove(t, i);
   else if (act === "add") add(state.active, { id: Number(el.dataset.id), variant: el.dataset.variant });
-  else if (act === "copy") copyDisplay();
+  else if (act === "copy") copyFrom(t || state.active);
+  else if (act === "details") openTeamDetails(t, i);
+  else if (act === "details-box") openBoxDetails({ id: Number(el.dataset.id), variant: el.dataset.variant });
   else if (act === "mega") cycleMega(t, i);
+  else if (act === "pickcopy") {
+    const s = team(t)[i];
+    if (s) {
+      chooseCopy({ userData: state, pokeId: s.id, variant: s.variant, name: species(s.id).name, owned: state.pokemon?.[s.id]?.[s.variant] ?? 0, current: s.uid ?? null })
+        .then((uid) => {
+          if (uid === undefined) return;
+          const list = [...team(t)];
+          const { uid: _old, ...base } = list[i];
+          list[i] = uid ? { ...base, uid } : { ...base, uid: null };
+          state.draft[t] = list;
+          render();
+        });
+    }
+  }
+  else if (act === "item") {
+    const s = team(t)[i];
+    if (s) {
+      openItemPicker({
+        userId, team: t, s, name: species(s.id).name, nameOf: (id) => species(id).name,
+        getHeld: () => state.held,
+        // Allowed but unwise picks, said plainly (the server allows them, as the games do).
+        warningFor: (itemId) => {
+          const sp = species(s.id);
+          if (itemId === "eviolite" && !(sp.evolvesTo ?? []).length) return `No effect: ${sp.name} can’t evolve.`;
+          if (itemId === "black_sludge" && !(sp.types ?? []).includes(4)) return `Hurts ${sp.name} every turn: only Poison types are healed.`;
+          return null;
+        },
+        onChange: (data) => { applyHeld(data); render(); },
+      });
+    }
+  }
   else if (act === "moves") {
     const s = team(t)[i];
-    if (s) openMovesEditor({ userId, team: t, s, name: species(s.id).name, onSaved: () => render() });
+    if (s) openMovesEditor({ userId, team: t, s, name: species(s.id).name, onSaved: () => render(), onTaught: () => refreshCopies() });
   }
   else if (act === "discard") discard();
   else if (act === "save") save();
@@ -571,6 +736,16 @@ sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.close(); 
 let drag = null; // { kind: "slot", t, i } | { kind: "box", s }
 const clearDrop = () => document.querySelectorAll(".is-dropover, .is-dropbad, .is-dropremove").forEach((x) => x.classList.remove("is-dropover", "is-dropbad", "is-dropremove"));
 
+// Every way a drag can finish lands here. A drop re-renders the team, which
+// detaches the dragged element, so its dragend never bubbles to document:
+// without this the body keeps tm-dragging-* and the "Drop here" overlay sticks.
+function endDrag() {
+  drag = null;
+  clearDrop();
+  document.body.classList.remove("tm-dragging-slot", "tm-dragging-box");
+  document.querySelectorAll(".is-dragging").forEach((x) => x.classList.remove("is-dragging"));
+}
+
 app.addEventListener("dragstart", (e) => {
   const li = e.target.closest?.(".tm-slot[draggable]");
   const tile = e.target.closest?.(".tm-tile-btn[draggable]");
@@ -585,6 +760,8 @@ app.addEventListener("dragstart", (e) => {
   } else return;
   e.dataTransfer.setData("text/plain", drag.kind);
   document.body.classList.add(`tm-dragging-${drag.kind}`);
+  // dragend still reaches the source element after a re-render detaches it.
+  e.target.addEventListener("dragend", endDrag, { once: true });
 });
 
 /** Where a drop at this element would go, or null. */
@@ -626,20 +803,14 @@ document.addEventListener("dragover", (e) => {
 document.addEventListener("drop", (e) => {
   const d = dropTarget(e.target);
   const from = drag;
-  clearDrop();
-  if (!d || !from) return;
+  if (!d || !from) { clearDrop(); return; }
   e.preventDefault();
-  drag = null;
+  endDrag();
   if (d.type === "move") moveTo(from.t, from.i, d.to);
   else if (d.type === "remove") remove(from.t, from.i);
   else if (d.type === "add") add(state.active, from.s, { at: d.at, replace: d.replace });
 });
-document.addEventListener("dragend", () => {
-  drag = null;
-  clearDrop();
-  document.body.classList.remove("tm-dragging-slot", "tm-dragging-box");
-  document.querySelectorAll(".is-dragging").forEach((x) => x.classList.remove("is-dragging"));
-});
+document.addEventListener("dragend", endDrag);
 
 // Unsaved changes: the browser's own prompt on close/reload, and an in-page
 // dialog for the dashboard's own links.
@@ -648,22 +819,110 @@ window.addEventListener("beforeunload", (e) => {
   e.preventDefault();
   e.returnValue = "";
 });
-document.addEventListener("click", async (e) => {
+/** Go to another dashboard page, asking first when team changes are unsaved. */
+async function leaveTo(href) {
+  if (anyDirty()) {
+    const leave = await confirmDialog({
+      title: "Leave without saving?",
+      message: "Your team changes aren’t saved yet.",
+      okText: "Leave",
+      cancelText: "Stay",
+      tone: "error",
+    });
+    if (!leave) return;
+    state.draft = clone(state.saved); // so beforeunload doesn't ask again
+  }
+  window.location.assign(href);
+}
+document.addEventListener("click", (e) => {
   const a = e.target.closest?.("a.cc-nav-link");
   if (!a || !anyDirty() || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;
   e.preventDefault();
-  const leave = await confirmDialog({
-    title: "Leave without saving?",
-    message: "Your team changes aren’t saved yet.",
-    okText: "Leave",
-    cancelText: "Stay",
-    tone: "error",
-  });
-  if (leave) {
-    state.draft = clone(state.saved); // so beforeunload doesn't ask again
-    window.location.assign(a.href);
-  }
+  leaveTo(a.href);
 });
+
+// After teaching a TM the server may have moved slots onto a new trained copy
+// (every untrained slot of that Pokémon). Take the stored uids without
+// touching unsaved drafts of other slots.
+async function refreshCopies() {
+  try {
+    const res = await fetch(`/api/user-pokemon?id=${encodeURIComponent(userId)}`, { credentials: "same-origin" });
+    if (res.status === 403) return showExpired();
+    if (!res.ok) return;
+    const u = await res.json();
+    state.trained = u.trained ?? {};
+    const stored = { display: (u.currentTeam ?? []).map(slotFromServer), battle: Array.isArray(u.battleTeam) ? u.battleTeam.map(slotFromServer) : null };
+    for (const t of TEAMS) {
+      const uidOf = new Map((stored[t] ?? []).filter((s) => s.uid).map((s) => [keyOf(s), s.uid]));
+      for (const list of [state.saved[t], state.draft[t]]) {
+        for (const s of list ?? []) {
+          const uid = uidOf.get(keyOf(s));
+          if (uid) s.uid = uid;
+        }
+      }
+    }
+    render();
+  } catch { /* the next save still keeps trained copies (server rule) */ }
+}
+
+// ---------- Pokémon details (the Collection's drawer) ----------
+const collectionHref = (id, variant) => `/public/picker-pokemon/?${new URLSearchParams({ id: userId, pokemon: id, variant })}`;
+const apiJSON = async (url) => {
+  const res = await fetch(url, { credentials: "same-origin" });
+  let body = {};
+  try { body = await res.json(); } catch { /* non-JSON */ }
+  if (res.status === 403) { showExpired(); throw new Error("Your dashboard link expired."); }
+  if (!res.ok) throw new Error(body.error || `Couldn’t load this Pokémon (${res.status}).`);
+  return body;
+};
+/** Where each copy of a species sits on screen right now (maybe unsaved). */
+const slotsOnScreen = (id) => (variant) => {
+  const at = (t) => { const i = team(t).findIndex((m) => m.id === id && m.variant === variant); return i < 0 ? null : i + 1; };
+  const savedAt = (t) => { const i = (state.saved[t] ?? []).findIndex((m) => m.id === id && m.variant === variant); return i < 0 ? null : i + 1; };
+  const display = at("display"), battle = at("battle");
+  return { display, battle, unsaved: display !== savedAt("display") || battle !== savedAt("battle") };
+};
+
+/** From a team card: stats (Lv 50 first on the Battle team), Edit moves, Open in Collection. */
+function openTeamDetails(t, i) {
+  const s = team(t)[i];
+  if (!s) return;
+  openDetail(s.id, {
+    userId,
+    apiJSON,
+    actionsHTML: () => `<button type="button" class="cc-btn" data-act="moves">Edit moves</button>
+      <button type="button" class="cc-btn" data-act="collection">Open in Collection</button>`,
+    onAction: (act, d, variant) => {
+      // The slot's own copy (TM system): its trained copy when the variant matches the slot.
+      if (act === "moves") openMovesEditor({ userId, team: t, s: { id: d.id, variant, ...(variant === s.variant && s.uid ? { uid: s.uid } : {}) }, name: species(d.id).name, onSaved: () => render(), onTaught: () => refreshCopies() });
+      else if (act === "collection") leaveTo(collectionHref(d.id, variant));
+    },
+  }, {
+    variant: s.variant,
+    level: t === "battle" ? "50" : "real",
+    slotsFor: slotsOnScreen(s.id),
+    megaName: s.mega && state.megaOn ? slotName(s) : null,
+  });
+}
+
+/** From a box tile: Add to the team on screen (greyed with the reason when blocked), Open in Collection. */
+function openBoxDetails(s) {
+  const t = state.active;
+  openDetail(s.id, {
+    userId,
+    apiJSON,
+    actionsHTML: (d, variant) => {
+      const why = state.draft[t] == null && t === "battle" ? null : blockReason(t, { id: d.id, variant });
+      return `<button type="button" class="cc-btn cc-btn--primary" data-act="add"${why ? ' aria-disabled="true"' : ""}>Add to ${LABEL[t]}</button>
+        <button type="button" class="cc-btn" data-act="collection">Open in Collection</button>
+        ${why ? `<p class="dt-reason">${esc(why.text)}</p>` : ""}`;
+    },
+    onAction: (act, d, variant) => {
+      if (act === "add") add(t, { id: d.id, variant });
+      else if (act === "collection") leaveTo(collectionHref(d.id, variant));
+    },
+  }, { variant: s.variant, level: t === "battle" ? "50" : "real", slotsFor: slotsOnScreen(s.id) });
+}
 
 // ---------- load ----------
 async function load() {
@@ -685,7 +944,8 @@ async function load() {
     state.pokemon = u.pokemon ?? {};
     state.levels = u.levels ?? {};
     state.powers = u.powers ?? {};
-    const norm = (list) => (Array.isArray(list) ? list.map((s) => ({ id: Number(s.id), variant: s.variant === "shiny" ? "shiny" : "normal", ...(s.mega ? { mega: s.mega } : {}) })) : null);
+    state.trained = u.trained ?? {};
+    const norm = (list) => (Array.isArray(list) ? list.map(slotFromServer) : null);
     state.saved = { display: norm(u.currentTeam) ?? [], battle: norm(u.battleTeam) };
     state.notices = Array.isArray(u.notices) ? u.notices.filter((n) => n.kind === "battle_team_trim") : [];
     state.draft = clone(state.saved);
@@ -703,6 +963,16 @@ async function load() {
     state.megaOn = !!md?.enabled;
     state.megaCards = state.megaOn && Array.isArray(md.cards) ? md.cards : [];
   } catch { state.megaOn = false; }
+  // Held items (only while switched on server-side). The eight free starter
+  // unlocks are claimed on the first visit (idempotent on the server).
+  await refreshHeld();
+  if (state.held.enabled && state.held.starterPending) {
+    try {
+      const r = await claimStarter(userId);
+      applyHeld(r);
+      if (r.granted?.length) toast(`You unlocked ${r.granted.length} free held items! Equip them with the Item button on each Pokémon.`, { tone: "success" });
+    } catch (err) { if (!err.silent) showActionError(err, "Couldn’t unlock your starter items"); }
+  }
   render();
 }
 

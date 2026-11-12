@@ -130,8 +130,11 @@ section("Trainer portraits and the challenge theme");
   assertEqual([0, 1].map((s) => changed(bare, missing, portraitBox(s))), [0, 0], "a missing or unset trainer leaves an empty portrait, not a broken frame");
   // A spot of the opponent's row with nothing drawn on it: the row's tint.
   const spot = [FRAME_WIDTH - 20, portraitBox(1).y + portraitBox(1).h - 4];
-  assertEqual(at(battle, ...spot), at(bare, ...spot), "/battle keeps the opponent's red row");
-  assertTrue(at(challenge, ...spot)[1] > at(battle, ...spot)[1], `/challenge tints it with the type (green ${at(challenge, ...spot)[1]} vs ${at(battle, ...spot)[1]})`);
+  // (Within a few levels: the GIF encoder dithers the row's gradient.)
+  const near = (a, b, d = 4) => a.every((v, i) => Math.abs(v - b[i]) <= d);
+  assertTrue(near(at(battle, ...spot), at(bare, ...spot)), "/battle keeps the opponent's neutral row (no tiers given)");
+  const diff = at(challenge, ...spot).reduce((s, v, i) => s + Math.abs(v - at(battle, ...spot)[i]), 0);
+  assertTrue(diff > 6, `/challenge tints it with the type (${at(challenge, ...spot)} vs ${at(battle, ...spot)})`);
   const whiteInPill = (px) => {
     let n = 0;
     for (let y = LAYOUT.pillY; y < LAYOUT.pillY + 34; y++) for (let x = FRAME_WIDTH / 2 - 120; x < FRAME_WIDTH / 2 + 120; x++) if (bright(px, x, y) > 700) n++;

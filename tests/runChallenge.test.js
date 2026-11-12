@@ -100,10 +100,10 @@ section("First win");
   assertTrue(out.ok && out.cleared, "STRONG beats Brock");
   assertEqual(td.A.cc, 12345 + 2500, "prize CC");
   assertEqual([td.A.items.evolution_stone, td.A.items.shiny_dust], [1, 5], "1 stone and 5 Dust");
-  assertTrue(td.A.trainers.includes("brock-gen3.png"), "Brock's first enabled sprite unlocked");
+  assertTrue(td.A.trainers.includes("brock.png"), "Brock's first enabled sprite unlocked");
   assertEqual(td.A.challenge.won.brock, "2026-11-09", "won records the UTC day");
   assertEqual([out.badge, out.unlocked, out.ccLost], ["brock", null, 0], "badge, nothing unlocked, nothing lost");
-  assertEqual(out.prize, { cc: 2500, stones: 1, dust: 5, sprites: [{ trainerKey: "brock", file: "brock-gen3.png" }] }, "the Outcome lists the prize");
+  assertEqual(out.prize, { cc: 2500, stones: 1, dust: 5, sprites: [{ trainerKey: "brock", file: "brock.png" }] }, "the Outcome lists the prize");
   const again = run(td, "brock", 2);
   assertTrue(again.cleared, "rematch won");
   assertEqual([again.prize, again.badge, td.A.cc, td.A.items.evolution_stone], [null, null, 12345 + 2500, 1], "a rematch pays no prize");
@@ -113,31 +113,31 @@ section("First win");
 section("Sprite fallback");
 {
   const td = world();
-  td.A.trainers = ["BROCK-GEN3.png", "brock-lgpe.png", "brock.png"];
+  td.A.trainers = ["BROCK.png"];
   assertEqual(prizeSprite(td.A, "brock"), { trainerKey: "brock", cc: 7500 }, "owning every enabled sprite (any case) pays half the Rare price");
-  assertEqual(prizeSprite({ trainers: ["brock-gen3.png"] }, "brock"), { trainerKey: "brock", file: "brock-lgpe.png" }, "otherwise the next unowned sprite");
-  assertEqual(prizeSprite({ trainers: { "brock-gen3.png": 1 } }, "brock"), { trainerKey: "brock", file: "brock-lgpe.png" }, "a legacy trainers object counts too");
+  assertEqual(prizeSprite({ trainers: ["blue-masters.png"] }, "blue"), { trainerKey: "blue", file: "blue-masters2.png" }, "otherwise the next unowned sprite");
+  assertEqual(prizeSprite({ trainers: { "blue-masters.png": 1 } }, "blue"), { trainerKey: "blue", file: "blue-masters2.png" }, "a legacy trainers object counts too");
   const out = run(td, "brock");
   assertEqual(out.prize.sprites[0], { trainerKey: "brock", cc: 7500 }, "the Outcome shows the CC instead of a sprite");
   assertEqual(td.A.cc, 12345 + 2500 + 7500, "CC rises by the prize plus the fallback");
-  assertEqual(td.A.trainers.length, 3, "no sprite added");
+  assertEqual(td.A.trainers.length, 1, "no sprite added");
 
   const legacy = world();
   legacy.A.trainers = { "x.png": 1 };
   run(legacy, "brock");
-  assertTrue(Array.isArray(legacy.A.trainers) && legacy.A.trainers.includes("x.png") && legacy.A.trainers.includes("brock-gen3.png"),
+  assertTrue(Array.isArray(legacy.A.trainers) && legacy.A.trainers.includes("x.png") && legacy.A.trainers.includes("brock.png"),
     "a legacy trainers object becomes an array with the new sprite");
 
   // Older code wrote trainers onto the array as properties (services/assets.js, D1).
   const owned = ["x.png"];
-  owned["brock-gen3.png"] = 1;
-  assertEqual(prizeSprite({ trainers: owned }, "brock"), { trainerKey: "brock", file: "brock-lgpe.png" },
+  owned["blue-masters.png"] = 1;
+  assertEqual(prizeSprite({ trainers: owned }, "blue"), { trainerKey: "blue", file: "blue-masters2.png" },
     "a trainer stored as an array property counts as owned");
   const stray = world();
   stray.A.trainers = ["x.png"];
   stray.A.trainers["y.png"] = 1;
   run(stray, "brock");
-  assertEqual([...stray.A.trainers], ["x.png", "y.png", "brock-gen3.png"], "the prize keeps a trainer stored as an array property");
+  assertEqual([...stray.A.trainers], ["x.png", "y.png", "brock.png"], "the prize keeps a trainer stored as an array property");
 }
 
 section("Achievements");
@@ -586,7 +586,7 @@ section("Preview");
   const td = world();
   const p = previewChallenge(td.A, "brock");
   assertEqual([p.firstWin, p.prize.cc, p.loss], [true, 2500, 1234], "first win, prize, and loss");
-  assertEqual(p.prize.sprites, [{ trainerKey: "brock", file: "brock-gen3.png" }], "the prize sprite");
+  assertEqual(p.prize.sprites, [{ trainerKey: "brock", file: "brock.png" }], "the prize sprite");
   assertEqual(td.A.challenge, undefined, "a preview changes nothing");
   run(td, "brock");
   const after = previewChallenge(td.A, "brock");

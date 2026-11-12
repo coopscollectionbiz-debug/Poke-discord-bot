@@ -24,7 +24,7 @@ import {
   AttachmentBuilder,
 } from "discord.js";
 import { cardImage } from "../utils/render/stage.js";
-import { trainerCardView, renderTrainerCard } from "../utils/render/trainerCard.js";
+import { trainerCardView } from "../utils/render/trainerCard.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -38,9 +38,12 @@ import { getRank } from "../utils/rankSystem.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { enqueueSave } from "../utils/saveQueue.js";
 import { lockUser } from "../utils/userLocks.js";
-import { saveAndAck, SAVE_DELAYED_NOTE } from "../utils/saveManager.js";
+import { saveAndAck, SAVE_DELAYED_NOTE, promptSave } from "../utils/saveManager.js";
 import { grantTrainer } from "../services/assets.js";
 import { badgeLine } from "../utils/challenge/badgeImages.js";
+import { sendPendingNotices } from "./battle.js";
+import { NOTICE_KINDS } from "../services/notices.js";
+import { threaded } from "../utils/render/renderers.js";
 
 // Load trainer sprite data
 const __filename = fileURLToPath(import.meta.url);
@@ -195,7 +198,10 @@ export default {
       }
     }
 
-    return showTrainerCard(interaction, user, trainerData, saveDataToDiscord);
+    const shown = await showTrainerCard(interaction, user, trainerData, saveDataToDiscord);
+    // One-time "your trainers were consolidated" note (services/trainerConsolidation.js), as a private follow-up.
+    await sendPendingNotices(interaction, trainerData, lockUser, enqueueSave, NOTICE_KINDS.TRAINER_CONSOLIDATION);
+    return shown;
   },
 };
 
@@ -427,7 +433,7 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
     if (!Array.isArray(user.displayedPokemon) || user.displayedPokemon.length === 0) {
       user.displayedPokemon = team;
       // `user` is the live record (never replace trainerData[id], D2).
-      if (trainerData) await enqueueSave(trainerData);
+      if (trainerData) await promptSave(trainerData);
     }
 
     const leadSlot = team[0] || null;
@@ -563,7 +569,7 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
         displayName: username,
         trainer: user.displayedTrainer ? { name: trainerInfo.name, tier: trainerInfo.rarityKey } : null,
       });
-      const card = await cardImage((animate) => renderTrainerCard(tcView, { animate }), "trainercard");
+      const card = await cardImage((animate) => threaded.trainerCard(tcView, { animate }), "trainercard", { unique: true });
       return await interaction.editReply({ embeds: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })], components: [] });
     } catch (err) {
       console.warn("⚠️ trainer card render failed; sending embed:", err?.message || err);

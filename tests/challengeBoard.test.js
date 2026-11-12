@@ -30,7 +30,7 @@ section("What the board shows");
   const v = view(fresh);
   assertEqual([v.name, v.badges, v.left, v.perDay], ["Ash", 0, 5, 5], "the player, their Badge count, and challenges left today");
   assertEqual(v.gyms.map((g) => g.leader), ["Brock", "Misty", "Lt. Surge", "Erika", "Koga", "Sabrina", "Blaine", "Giovanni"], "the 8 Gyms in order");
-  assertEqual([v.gyms[0].type, v.gyms[0].trainerFile, v.gyms[0].badgeFile, v.gyms[0].earned], ["Rock", "brock-gen3.png", "boulder.png", false],
+  assertEqual([v.gyms[0].type, v.gyms[0].trainerFile, v.gyms[0].badgeFile, v.gyms[0].earned], ["Rock", "brock.png", "boulder.png", false],
     "each with its type, leader sprite, and Badge");
   assertEqual([v.elite4.state, v.elite4.missing, v.blue.state, v.red.state], ["locked", 8, "locked", "open"], "the League locked, Red open");
   assertEqual(v.elite4.members.map((m) => m.name), ["Lorelei", "Bruno", "Agatha", "Lance"], "the four members");

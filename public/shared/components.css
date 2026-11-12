@@ -444,3 +444,59 @@ dialog.cc-dialog .cc-dialog-actions { display: flex; gap: 10px; justify-content:
   color: var(--cc-textbox-ink) !important;
   border: 3px solid var(--cc-textbox-border) !important;
 }
+
+/* -----------------------------------------------------------
+   Move details line (public/shared/moveMeta.js): type chip,
+   Physical / Special / Status badge, power and accuracy — the
+   same bottom line under every move name.
+----------------------------------------------------------- */
+.cc-movemeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cc-text-muted);
+  line-height: 1.2;
+}
+.cc-movemeta .cc-type { font-size: 9.5px; padding: 2px 6px; }
+.cc-movemeta-nums { white-space: nowrap; }
+.cc-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px 2px 4px;
+  border-radius: var(--cc-r-chip);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 #ffffff40;
+}
+.cc-cat svg { width: 12px; height: 12px; flex: none; }
+.cc-cat[data-cat="physical"] { background: #c9532e; color: #fff; --cc-cat-core: #f6c35b; }
+.cc-cat[data-cat="special"] { background: #3d5fb8; color: #fff; }
+.cc-cat[data-cat="status"] { background: #8b8f9c; color: #fff; }
+
+/* Held-item icons (Teams, Shop, Bag): an emoji glyph on a tinted disc. */
+.hi-icon { display: inline-grid; place-items: center; flex: none; border-radius: 50%; background: var(--cc-surface-raised); border: 1.5px solid var(--cc-line); line-height: 1; }
+.hi-icon--sm { width: 28px; height: 28px; font-size: 15px; }
+.hi-icon--md { width: 40px; height: 40px; font-size: 21px; }
+.hi-icon--lg { width: 52px; height: 52px; font-size: 27px; }
+.hi-icon--empty { border-style: dashed; color: var(--cc-text-faint); font-weight: 800; background: transparent; }
+.hi-icon--mega { border-color: var(--cc-mega); background: #c084fc26; }
+.hi-icon[data-group="offense"] { border-color: #ff8a5b; }
+.hi-icon[data-group="defense"] { border-color: #4f8cff; }
+.hi-icon[data-group="recovery"] { border-color: var(--cc-green); }
+.hi-icon[data-group="utility"] { border-color: var(--cc-gold); }
+.hi-icon[data-group="type"] { border-color: #9ca3af; }
+.hi-icon[data-group="species"] { border-color: #f472b6; }
+/* Official bag icons (30×30 pixel art) inside the disc. */
+.hi-icon { overflow: hidden; }
+.hi-icon--xs { width: 22px; height: 22px; font-size: 12px; border-width: 1px; }
+.hi-icon-img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; padding: 8%; box-sizing: border-box; }
+.hi-icon-img.is-smooth { image-rendering: auto; padding: 14%; }

@@ -16,7 +16,7 @@
 // SHINY_FX=0 turns the backdrop off everywhere.
 // ==========================================================
 
-import { spriteScale } from "./sprites.js";
+import { spriteScale, spritePlacement } from "./sprites.js";
 
 export const SHINY_GOLD = [250, 204, 21]; // #facc15, the Legendary tier colour
 const CELL = 2; // backdrop pixel = 2×2 card px (the sprites' own pixel size at 2×)
@@ -74,9 +74,10 @@ function staticAlpha(sprite) {
  */
 export function shinyBackdrop({ sprite, anim = null, cx, floorY, boxW, boxH, scale = 2, seed = 1 }) {
   if (!sprite || sprite.placeholder || boxW < 24 || boxH < 24) return null;
-  const s = spriteScale(sprite.width, sprite.height, boxW, boxH, scale);
+  const at = spritePlacement(sprite, cx, floorY, boxW, boxH, scale); // union-box anchor, as drawSprite
+  const s = at ? at.s : spriteScale(sprite.width, sprite.height, boxW, boxH, scale);
   const w = Math.round(sprite.width * s), h = Math.round(sprite.height * s);
-  const sx = Math.round(cx - w / 2), sy = Math.round(floorY - h);
+  const sx = at ? at.x : Math.round(cx - w / 2), sy = at ? at.y : Math.round(floorY - h);
   const box = { x: Math.round(cx - boxW / 2), y: Math.round(floorY - boxH) };
   const LW = Math.floor(boxW / CELL), LH = Math.floor(boxH / CELL);
 

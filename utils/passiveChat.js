@@ -60,6 +60,7 @@ export function createMessageHandler({
 
     // 🪙 Give base TP for chatting
     userObj.tp += config.tpGain;
+    userObj.lastActiveAt = t; // Last active (saved with the TP below)
 
     // 💰 Chance to earn CC
     if (random() < config.ccChance) {

@@ -38,7 +38,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
-import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid, carryCopyUids, trainedSummary } from "./services/ownership.js";
+import { pruneEmptyLine, normalizeCustomPokemon, carryCopyUids, trainedSummary } from "./services/ownership.js";
 import { normalizeBox, allCopies, slotsHolding, mergeDex } from "./services/box.js";
 import { normalizeShowcase, prepareShowcaseSelection } from "./services/showcaseTeam.js";
 
@@ -89,7 +89,7 @@ import { pokemonDetail } from "./services/pokemonDetail.js";
 import { parseTeamCopy, applyTeamCopy } from "./services/teamCopy.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
 import { rankedRecord } from "./utils/battle/rewards.js";
-import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
+import { saveMoveset, TEAM_TYPES } from "./services/movesets.js";
 import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, adminSessionOf, activateAdminSession, ADMIN_MAX_MS, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
@@ -2424,17 +2424,11 @@ app.post("/api/pokemon/moveset", express.json({ limit: "4kb" }), async (req, res
     await lockUser(id, async () => {
       const u = trainerData[id];
       if (!u) return res.status(404).json({ success: false, error: "User not found" });
-      const v = variant === "shiny" ? "shiny" : "normal";
-      // uid (TM system): one customized copy's own moves; absent = the line's plain copies.
-      const copy = uid == null ? null : slotCopyUid(u, { id: Number(pokeId), variant: v, uid });
-      if (uid != null && !copy) return res.status(400).json({ success: false, error: "That Pokémon copy no longer exists. Reload and try again.", code: "unknown_copy" });
-      if (moves !== null) {
-        const check = validateMoveset(u, pokeId, v, moves, { uid: copy });
-        if (!check.ok) return res.status(check.status).json({ success: false, error: check.error, code: check.code });
-        setMoveset(u, team, pokeId, v, check.moves, { uid: copy });
-      } else setMoveset(u, team, pokeId, v, null, { uid: copy });
+      // uid: the slot's copy (box copy or TM copy); absent = the line's plain copies.
+      const r = saveMoveset(u, { team, pokeId, variant, moves, uid });
+      if (!r.ok) return res.status(r.status ?? 400).json({ success: false, error: r.error, code: r.code });
       const saveAck = await saveAndAck(trainerData);
-      return res.json({ ...saveAckFields(saveAck), success: true, team, ...(copy && { uid: copy }), moves: chosenMoves(u, team, pokeId, v, { uid: copy }) });
+      return res.json({ ...saveAckFields(saveAck), success: true, team, ...(r.uid && { uid: r.uid }), moves: r.moves });
     });
   } catch (err) {
     console.error("❌ /api/pokemon/moveset:", err?.message || err);

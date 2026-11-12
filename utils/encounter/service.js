@@ -13,6 +13,7 @@
 // them, and their cards shrink on the next click.
 // ==========================================================
 
+import { auraLook } from "../../services/auras.js";
 import {
   ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, EmbedBuilder, MessageFlags, PermissionFlagsBits,
 } from "discord.js";
@@ -195,7 +196,7 @@ export function createEncounterService({
     const user = getTrainerData()[e.userId];
     let note = null;
     try {
-      await play(e.channel, e.message, outcome, names, { ...PLAYBACK, trainers: [user?.displayedTrainer ?? null, e.trainer.spriteFile] });
+      await play(e.channel, e.message, outcome, names, { ...PLAYBACK, trainers: [user?.displayedTrainer ?? null, e.trainer.spriteFile], aura: auraLook(user) });
     } catch (err) {
       console.warn("⚠️ encounter replay couldn't post:", err?.message || err);
       note = "The battle counted, but I couldn't post it here.";

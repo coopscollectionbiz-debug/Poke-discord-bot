@@ -760,7 +760,7 @@ async function renderGrants() {
       <div class="field-row">
         <label>Grant<select id="gKind">
           <option value="cc">CC</option><option value="tp">TP</option><option value="item">Item</option>
-          <option value="pokemon">Pokémon</option><option value="trainer">Trainer</option><option value="cooldown">Cooldown reset</option>
+          <option value="pokemon">Pokémon</option><option value="trainer">Trainer</option><option value="aura">Aura</option><option value="cooldown">Cooldown reset</option>
         </select></label>
         <div id="gFields" style="display:contents"></div>
       </div>
@@ -829,6 +829,9 @@ function drawGrantFields() {
   else if (kind === "trainer")
     f.innerHTML = `<label style="flex:2 1 260px">Trainer<input id="gTrainer" list="gTrainerList" autocomplete="off" placeholder="Start typing a name" /></label><datalist id="gTrainerList">${trainerOptions()}</datalist>
       <p class="faint" style="flex-basis:100%">Players who already own it are skipped.</p>`;
+  else if (kind === "aura")
+    f.innerHTML = `<label style="flex:2 1 260px">Aura<select id="gAura">${(state.catalog.auras ?? []).map((a) => `<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.kind)})</option>`).join("")}</select></label>
+      <p class="faint" style="flex-basis:100%">For event Auras. Players who already own it are skipped.</p>`;
   else
     f.innerHTML = state.catalog.cooldowns.map((c) => `<label class="inline"><input type="checkbox" name="gCooldown" value="${esc(c.key)}" /> ${esc(c.label)}</label>`).join("");
   $("#gUnreleased")?.addEventListener("change", (e) => ($("#gSpeciesList").innerHTML = speciesOptions(e.target.checked)));
@@ -848,6 +851,7 @@ function grantChange() {
     const t = trainerFromInput($("#gTrainer").value);
     return t ? { kind, op: "add", key: t.key } : { error: "Pick a trainer from the list." };
   }
+  if (kind === "aura") return $("#gAura")?.value ? { kind, op: "add", auraId: $("#gAura").value } : { error: "Pick an Aura." };
   const cds = $$("input[name=gCooldown]:checked").map((c) => c.value);
   return cds.length ? { kind: "cooldown", cooldowns: cds } : { error: "Choose at least one cooldown." };
 }

@@ -27,6 +27,7 @@
 // Design: docs/design/admin-dashboard-overhaul.md.
 // ==========================================================
 
+import { AURAS } from "../catalog/auras.js";
 import express from "express";
 import { getRank } from "../utils/rankSystem.js";
 import { readEvents } from "../utils/eventLog.js";
@@ -273,6 +274,7 @@ export function mountAdminDashboard(app, deps) {
       items,
       trainers: t.list,
       cooldowns: Object.entries(COOLDOWNS).map(([key, label]) => ({ key, label })),
+      auras: AURAS.filter((a) => !(a.kind === "event" && a.retired)).map((a) => ({ id: a.id, name: a.name, kind: a.kind })),
     });
   });
 

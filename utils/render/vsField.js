@@ -18,7 +18,7 @@
 import { createCanvas } from "@napi-rs/canvas";
 import { drawBackground, drawSoftPlatform } from "./primitives.js";
 import { drawSprite, loadTrimmedTrainerSprite, loadTrimmedTrainerPoses } from "./sprites.js";
-import { regionBackdrop, backdropTint } from "./trainerBackdrop.js";
+import { regionBackdrop, backdropTint, hasBackdrop } from "./trainerBackdrop.js";
 import { FRAMES } from "./stage.js";
 
 /** The diagonal seam's x at height y. */
@@ -91,12 +91,12 @@ export function occupancy(W, H, fg, trainers = [], rects = []) {
  * runs diagonally from the half's outer bottom corner toward the seam.
  */
 export function halfBackdrop(ctx, { side, tier, field, W, H, occupied, floor }) {
-  if (!backdropTint(tier)) return null;
+  if (!hasBackdrop(tier)) return null;
   const left = side === "left";
   const x0 = left ? 0 : Math.floor(field.bottom / 4) * 4;
   const rect = { x: x0, y: 0, w: (left ? field.top : W) - x0, h: field.h };
   const bd = regionBackdrop({
-    tier, rect, u: 4, occupied, floor, frames: FRAMES,
+    tier, rect, u: 4, occupied, floor, frames: FRAMES, variant: "vs", // an art Aura's vs.png, if it has one
     from: left ? [0, field.h] : [W, field.h],
     to: left ? [field.top * 0.95, -field.h * 0.3] : [x0 + (W - x0) * 0.05, -field.h * 0.3],
     clip: (c) => halfPath(c, side, field, W),

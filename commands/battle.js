@@ -12,6 +12,7 @@ import {
 } from "discord.js";
 import { randomInt, randomUUID } from "crypto";
 import { logEvent } from "../utils/eventLog.js";
+import { recordFight, battleRecord } from "../utils/fightRecordBuild.js";
 import { battleBlock, buildBattleTeam, runBattle, withBothLocks, teamFor } from "../utils/battle/runBattle.js";
 import { rankedRecord } from "../utils/battle/rewards.js";
 import { vsSide, battleVsAltText } from "../utils/render/battleVsCard.js";
@@ -188,8 +189,9 @@ async function executeBattle(interaction, trainerData, lockUser, enqueueSave) {
   logEvent("battle", challengerId, {
     defenderId: opponent.id, mode, seed, winnerId: outcome.winnerId, turns: outcome.result.turns, surge: !!outcome.surge,
   });
-  await interaction.editReply("⚔️ Your battle is starting below.");
   const names = displayNames(interaction, opponent);
+  recordFight(() => battleRecord(outcome, names, trainerData)); // Battle Records; never throws
+  await interaction.editReply("⚔️ Your battle is starting below.");
   // The replay (up to PLAYBACK.maxUpdates images, PLAYBACK.delayMs apart) runs
   // after the command returns, as wager battles' do, so a long battle never
   // trips the command timeout. The EXP card still follows the replay.
@@ -339,6 +341,7 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
       defenderId, mode: "wager", stake: outcome.stake, seed: outcome.seed,
       winnerId: outcome.winnerId, turns: outcome.result.turns, surge: !!outcome.surge,
     });
+    recordFight(() => battleRecord(outcome, names, trainerData)); // Battle Records; never throws
     await closeOffer(`✅ <@${defenderId}> accepted! The battle is below.`);
     await playBattle(interaction.channel, outcome, names, { ...PLAYBACK, trainers: trainersOf(trainerData, outcome), vs: vsOf(outcome, names, trainerData) }).catch((err) =>
       console.warn("⚠️ wager battle post failed:", err?.message || err));

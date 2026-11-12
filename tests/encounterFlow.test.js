@@ -171,7 +171,7 @@ section("Spotting");
   assertEqual(card.opts.content, "<@A>", "and @mentions the player");
   assertEqual(card.opts.allowedMentions, { users: ["A"] }, "pinging only them");
   const file = card.opts.files[0];
-  assertTrue(file.name === "encounter.png" && file.description.includes("challenged Ash!") && file.description.includes("Win or lose:"), "the card image, with alt text");
+  assertTrue(/^encounter\.(png|gif)$/.test(file.name) && file.description.includes("challenged Ash!") && file.description.includes("Win or lose:"), "the card image, with alt text");
   const [battle, run] = w.ids(card);
   assertTrue(/^encounter:[\w-]+:battle$/.test(battle) && run === battle.replace(":battle", ":run"), "Battle! and Run");
   assertTrue(isEncounterButton(battle) && !isEncounterButton("confirm_x"), "encounter buttons are recognizable");

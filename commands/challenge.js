@@ -32,6 +32,7 @@ import { utcDay } from "../utils/battle/rewards.js";
 import { CHALLENGE, PLAYBACK } from "../utils/battle/tuning.js";
 import { spritePaths } from "../spriteconfig.js";
 import { threaded } from "../utils/render/renderers.js";
+import { cardImage } from "../utils/render/stage.js";
 
 export const data = new SlashCommandBuilder()
   .setName("challenge")
@@ -146,13 +147,15 @@ export function cardView(key, preview, user, displayName) {
 // can't be built or rendered. `view` is challengeCardView(), built before the fight is
 // saved so the intro shows the Badge still on the line. Only the private
 // preview (exactLoss) says the amount, in text: the card itself goes public.
+// Animated (idle trainers, the player's tier backdrop) when the render
+// threads have room, else the still PNG (utils/render/stage.js cardImage).
 export async function previewMessage(key, preview, view, { exactLoss = false, render = threaded.challengeCard } = {}) {
   try {
     if (!view) throw new Error("no card view");
-    const png = await render(view);
+    const card = await cardImage((animate) => render(view, { animate }), "challenge");
     return {
       ...(exactLoss && { content: `A loss costs you **${n(preview.loss)} CC**.` }),
-      files: [new AttachmentBuilder(png, { name: "challenge.png", description: cardAltText(view) })],
+      files: [new AttachmentBuilder(card.buffer, { name: card.name, description: cardAltText(view) })],
     };
   } catch (err) {
     console.warn("⚠️ challenge card render failed; sending the embed:", err?.message || err);

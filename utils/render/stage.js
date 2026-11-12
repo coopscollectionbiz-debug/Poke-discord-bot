@@ -62,9 +62,10 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
     },
     /**
      * The finished card: PNG, or GIF when anything placed animates (a Pokémon
-     * sprite, a shiny backdrop, a layer, or a breathing trainer).
+     * sprite, a shiny backdrop, a layer, or a breathing trainer). `overlay`:
+     * static content a layer draws over its animation (see above).
      */
-    async output(canvas) {
+    async output(canvas, { overlay = null } = {}) {
       const ctx = canvas.getContext("2d");
       const drawAll = (frameOf) => placed.forEach((p, i) => drawSprite(ctx, p.sprite, p.cx, p.floorY, p.boxW, p.boxH, { ...p.opts, frame: frameOf(i) }));
       const drawPosed = (f) => posed.forEach((p) => drawSprite(ctx, p.poses[p.poseAt(f, FRAMES)] ?? p.poses[0], p.cx, p.floorY, p.boxW, p.boxH, p.opts));
@@ -81,13 +82,19 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
       }
       const base = createCanvas(canvas.width, canvas.height);
       base.getContext("2d").drawImage(canvas, 0, 0);
+      // The static layer the GIF encoder dithers (utils/render/gif.js): the
+      // card as drawn, plus `overlay`, static content a layer redraws each
+      // frame over an animated backdrop.
+      const still = createCanvas(canvas.width, canvas.height);
+      still.getContext("2d").drawImage(base, 0, 0);
+      if (overlay) still.getContext("2d").drawImage(overlay, 0, 0);
       return encodeGif(canvas, (f) => {
         ctx.drawImage(base, 0, 0);
         layers.forEach((draw) => draw(ctx, f));
         backdrops.forEach((b) => b?.draw(ctx, f, FRAMES));
         drawPosed(f);
         drawAll((i) => (players[i] ? players[i](f * DELAY_MS) : null));
-      }, FRAMES, DELAY_MS);
+      }, FRAMES, DELAY_MS, { background: still.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data });
     },
   };
 }

@@ -1,0 +1,2904 @@
+{
+ "note": "Real (artist-made) trainer animations. They replace the generated breathing idle for these sprites. Import with tools/import-trainer-animations.mjs, then run tools/generate-trainer-idles.mjs. Credits must stay with the artist.",
+ "files": {
+  "larry.png": {
+   "from": "hayate_larry.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    83
+   ],
+   "offset": [
+    22,
+    0
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "grusha.png": {
+   "from": "hayate_grusha.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    14,
+    2
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "ryme.png": {
+   "from": "hayate_ryme.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    5,
+    4
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "tulip.png": {
+   "from": "hayate_tulip.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    9,
+    4
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "brassius.png": {
+   "from": "hayate_brassius.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    86
+   ],
+   "offset": [
+    8,
+    0
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "katy.png": {
+   "from": "hayate_katy.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    15,
+    5
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "kofu.png": {
+   "from": "hayate_kofu.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    13,
+    0
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "iono.png": {
+   "from": "hayate_iono.gif",
+   "artist": "京雲寺ハヤテ (Kyōunji Hayate, @Roncally_Hayate)",
+   "source": "https://www.pixiv.net/artworks/105795129",
+   "permission": "granted to the bot owner (2026-11-11)",
+   "canvas": [
+    87,
+    89
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 32,
+   "ms": 100
+  },
+  "acetrainer.png": {
+   "from": "Spr_B2W2_Ace_Trainer_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Ace_Trainer_M.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    89
+   ],
+   "offset": [
+    -1,
+    0
+   ],
+   "frames": 31,
+   "ms": 117
+  },
+  "alder.png": {
+   "from": "Spr_B2W2_Alder.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Alder.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 42,
+   "ms": 108
+  },
+  "argenta.png": {
+   "from": "Spr_Pt_Argenta.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Argenta.png",
+   "match": "close match",
+   "still": 1,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 7,
+   "ms": 470
+  },
+  "artist.png": {
+   "from": "Spr_B2W2_Artist.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Artist.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 39,
+   "ms": 108
+  },
+  "backers.png": {
+   "from": "Spr_B2W2_Backers_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Backers_M.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    93,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 28,
+   "ms": 115
+  },
+  "backersf.png": {
+   "from": "Spr_B2W2_Backers_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Backers_F.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    87,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 30,
+   "ms": 121
+  },
+  "backpacker.png": {
+   "from": "Spr_B2W2_Backpacker_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Backpacker_M.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 37,
+   "ms": 106
+  },
+  "backpackerf.png": {
+   "from": "Spr_B2W2_Backpacker_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Backpacker_F.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 26,
+   "ms": 133
+  },
+  "baker.png": {
+   "from": "Spr_B2W2_Baker.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Baker.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 21,
+   "ms": 153
+  },
+  "barry.png": {
+   "from": "Spr_Pt_Barry.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Barry.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    0
+   ],
+   "frames": 17,
+   "ms": 195
+  },
+  "battlegirl.png": {
+   "from": "Spr_B2W2_Battle_Girl.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Battle_Girl.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    4,
+    0
+   ],
+   "frames": 22,
+   "ms": 174
+  },
+  "benga.png": {
+   "from": "Spr_B2W2_Benga.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Benga.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    6,
+    0
+   ],
+   "frames": 37,
+   "ms": 113
+  },
+  "bertha.png": {
+   "from": "Spr_Pt_Bertha.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Bertha.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 4,
+   "ms": 680
+  },
+  "bianca-pwt.png": {
+   "from": "Spr_B2W2_Bianca.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Bianca.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    89
+   ],
+   "offset": [
+    -10,
+    0
+   ],
+   "frames": 53,
+   "ms": 95
+  },
+  "biker.png": {
+   "from": "Spr_B2W2_Biker.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Biker.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    84
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 40,
+   "ms": 101
+  },
+  "blackbelt.png": {
+   "from": "Spr_B2W2_Black_Belt.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Black_Belt.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -4,
+    -1
+   ],
+   "frames": 28,
+   "ms": 126
+  },
+  "blaine.png": {
+   "from": "Spr_B2W2_Blaine.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Blaine.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    82
+   ],
+   "offset": [
+    -6,
+    0
+   ],
+   "frames": 18,
+   "ms": 193
+  },
+  "blue.png": {
+   "from": "Spr_B2W2_Blue.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Blue.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    4,
+    1
+   ],
+   "frames": 36,
+   "ms": 110
+  },
+  "brawly.png": {
+   "from": "Spr_B2W2_Brawly.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Brawly.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    86,
+    80
+   ],
+   "offset": [
+    15,
+    -1
+   ],
+   "frames": 25,
+   "ms": 149
+  },
+  "bruno.png": {
+   "from": "Spr_HGSS_Bruno.gif",
+   "game": "Pokémon HeartGold and SoulSilver",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_HGSS_Bruno.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -2,
+    -5
+   ],
+   "frames": 19,
+   "ms": 167
+  },
+  "brycen.png": {
+   "from": "Spr_B2W2_Brycen.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Brycen.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    88
+   ],
+   "offset": [
+    3,
+    0
+   ],
+   "frames": 43,
+   "ms": 103
+  },
+  "brycenman.png": {
+   "from": "Spr_B2W2_Brycen-Man.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Brycen-Man.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    115,
+    84
+   ],
+   "offset": [
+    -1,
+    -2
+   ],
+   "frames": 38,
+   "ms": 119
+  },
+  "buck.png": {
+   "from": "Spr_Pt_Buck.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Buck.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -9,
+    -2
+   ],
+   "frames": 12,
+   "ms": 758
+  },
+  "burgh.png": {
+   "from": "Spr_B2W2_Burgh.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Burgh.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    100,
+    81
+   ],
+   "offset": [
+    9,
+    1
+   ],
+   "frames": 36,
+   "ms": 128
+  },
+  "byron.png": {
+   "from": "Spr_B2W2_Byron.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Byron.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    6,
+    0
+   ],
+   "frames": 31,
+   "ms": 120
+  },
+  "caitlin.png": {
+   "from": "Spr_B2W2_Caitlin.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Caitlin.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    85,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 60,
+   "ms": 84
+  },
+  "cheren-gen5bw2.png": {
+   "from": "Spr_B2W2_Cheren.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Cheren.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    -1
+   ],
+   "frames": 30,
+   "ms": 134
+  },
+  "cheryl.png": {
+   "from": "Spr_Pt_Cheryl.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Cheryl.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    5,
+    0
+   ],
+   "frames": 9,
+   "ms": 421
+  },
+  "chili.png": {
+   "from": "Spr_B2W2_Chili.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Chili.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    3,
+    0
+   ],
+   "frames": 31,
+   "ms": 123
+  },
+  "chuck.png": {
+   "from": "Spr_B2W2_Chuck.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Chuck.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -2,
+    0
+   ],
+   "frames": 21,
+   "ms": 187
+  },
+  "cilan.png": {
+   "from": "Spr_B2W2_Cilan.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Cilan.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 21,
+   "ms": 158
+  },
+  "clair.png": {
+   "from": "Spr_B2W2_Clair.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Clair.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 25,
+   "ms": 143
+  },
+  "clay.png": {
+   "from": "Spr_B2W2_Clay.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Clay.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 38,
+   "ms": 132
+  },
+  "clerk-boss.png": {
+   "from": "Spr_B2W2_Clerk_M_B.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Clerk_M_B.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    -1
+   ],
+   "frames": 27,
+   "ms": 134
+  },
+  "clerk.png": {
+   "from": "Spr_B2W2_Clerk_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Clerk_M.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -6,
+    -1
+   ],
+   "frames": 30,
+   "ms": 124
+  },
+  "colress.png": {
+   "from": "Spr_B2W2_Colress.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Colress.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 39,
+   "ms": 163
+  },
+  "crasherwake.png": {
+   "from": "Spr_B2W2_Crasher_Wake.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Crasher_Wake.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 34,
+   "ms": 118
+  },
+  "cress.png": {
+   "from": "Spr_B2W2_Cress.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Cress.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    2,
+    -1
+   ],
+   "frames": 23,
+   "ms": 149
+  },
+  "cyclist.png": {
+   "from": "Spr_B2W2_Cyclist_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Cyclist_M.png",
+   "match": "close match",
+   "still": 10,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 13,
+   "ms": 248
+  },
+  "dancer.png": {
+   "from": "Spr_B2W2_Dancer.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Dancer.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    86,
+    86
+   ],
+   "offset": [
+    2,
+    6
+   ],
+   "frames": 27,
+   "ms": 130
+  },
+  "darach-caitlin.png": {
+   "from": "Spr_Pt_Darach_Caitlin.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Darach_Caitlin.png",
+   "match": "close match",
+   "still": 5,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 10,
+   "ms": 572
+  },
+  "doctor.png": {
+   "from": "Spr_B2W2_Doctor.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Doctor.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -3,
+    0
+   ],
+   "frames": 26,
+   "ms": 132
+  },
+  "elesa-gen5bw2.png": {
+   "from": "Spr_B2W2_Elesa.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Elesa.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    96,
+    81
+   ],
+   "offset": [
+    3,
+    1
+   ],
+   "frames": 29,
+   "ms": 151
+  },
+  "emmet.png": {
+   "from": "Spr_B2W2_Emmet.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Emmet.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    82
+   ],
+   "offset": [
+    -4,
+    0
+   ],
+   "frames": 27,
+   "ms": 86
+  },
+  "erika.png": {
+   "from": "Spr_B2W2_Erika.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Erika.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    -1
+   ],
+   "frames": 23,
+   "ms": 162
+  },
+  "fantina.png": {
+   "from": "Spr_B2W2_Fantina.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Fantina.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    89
+   ],
+   "offset": [
+    3,
+    0
+   ],
+   "frames": 36,
+   "ms": 109
+  },
+  "fisherman.png": {
+   "from": "Spr_B2W2_Fisherman.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Fisherman.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    86,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 30,
+   "ms": 119
+  },
+  "flannery.png": {
+   "from": "Spr_B2W2_Flannery.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Flannery.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    87
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 30,
+   "ms": 126
+  },
+  "flint.png": {
+   "from": "Spr_Pt_Flint.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Flint.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 11,
+   "ms": 351
+  },
+  "gentleman.png": {
+   "from": "Spr_B2W2_Gentleman.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Gentleman.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    0
+   ],
+   "frames": 37,
+   "ms": 107
+  },
+  "ghetsis.png": {
+   "from": "Spr_B2W2_Ghetsis.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Ghetsis.png",
+   "match": "close match",
+   "still": 1,
+   "canvas": [
+    80,
+    86
+   ],
+   "offset": [
+    7,
+    0
+   ],
+   "frames": 95,
+   "ms": 90
+  },
+  "guitarist.png": {
+   "from": "Spr_B2W2_Guitarist.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Guitarist.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    9,
+    -4
+   ],
+   "frames": 31,
+   "ms": 128
+  },
+  "harlequin.png": {
+   "from": "Spr_B2W2_Harlequin.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Harlequin.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    92
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 39,
+   "ms": 108
+  },
+  "hiker.png": {
+   "from": "Spr_B2W2_Hiker.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Hiker.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    0,
+    1
+   ],
+   "frames": 24,
+   "ms": 151
+  },
+  "hilbert-wonderlauncher.png": {
+   "from": "Spr_B2W2_Hilbert_2.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Hilbert_2.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -2,
+    -1
+   ],
+   "frames": 25,
+   "ms": 173
+  },
+  "hilbert.png": {
+   "from": "Spr_B2W2_Hilbert.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Hilbert.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -3,
+    -1
+   ],
+   "frames": 33,
+   "ms": 131
+  },
+  "hilda-wonderlauncher.png": {
+   "from": "Spr_B2W2_Hilda_2.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Hilda_2.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -9,
+    -1
+   ],
+   "frames": 27,
+   "ms": 149
+  },
+  "hilda.png": {
+   "from": "Spr_B2W2_Hilda.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Hilda.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 26,
+   "ms": 153
+  },
+  "hooligans.png": {
+   "from": "Spr_B2W2_Hooligans.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Hooligans.png",
+   "match": "close match",
+   "still": 35,
+   "canvas": [
+    83,
+    84
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 40,
+   "ms": 101
+  },
+  "hoopster.png": {
+   "from": "Spr_B2W2_Hoopster.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Hoopster.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    0
+   ],
+   "frames": 22,
+   "ms": 151
+  },
+  "hugh.png": {
+   "from": "Spr_B2W2_Hugh.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Hugh.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    -6
+   ],
+   "frames": 25,
+   "ms": 153
+  },
+  "infielder.png": {
+   "from": "Spr_B2W2_Infielder.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Infielder.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 30,
+   "ms": 121
+  },
+  "ingo.png": {
+   "from": "Spr_B2W2_Ingo.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Ingo.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    82
+   ],
+   "offset": [
+    6,
+    0
+   ],
+   "frames": 27,
+   "ms": 86
+  },
+  "iris-gen5bw2.png": {
+   "from": "Spr_B2W2_Iris.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Iris.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    83
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 63,
+   "ms": 86
+  },
+  "janine.png": {
+   "from": "Spr_B2W2_Janine.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Janine.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    93,
+    80
+   ],
+   "offset": [
+    0,
+    -6
+   ],
+   "frames": 24,
+   "ms": 145
+  },
+  "janitor.png": {
+   "from": "Spr_B2W2_Janitor.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Janitor.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    1,
+    1
+   ],
+   "frames": 24,
+   "ms": 138
+  },
+  "juan.png": {
+   "from": "Spr_B2W2_Juan.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Juan.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    -2
+   ],
+   "frames": 31,
+   "ms": 135
+  },
+  "koga.png": {
+   "from": "Spr_HGSS_Koga.gif",
+   "game": "Pokémon HeartGold and SoulSilver",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_HGSS_Koga.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    86,
+    80
+   ],
+   "offset": [
+    0,
+    -8
+   ],
+   "frames": 9,
+   "ms": 302
+  },
+  "lady.png": {
+   "from": "Spr_B2W2_Lady.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Lady.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    4,
+    -1
+   ],
+   "frames": 34,
+   "ms": 118
+  },
+  "lance.png": {
+   "from": "Spr_B2W2_Lance.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Lance.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    3,
+    -1
+   ],
+   "frames": 22,
+   "ms": 169
+  },
+  "lass.png": {
+   "from": "Spr_B2W2_Lass.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Lass.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -4,
+    -1
+   ],
+   "frames": 26,
+   "ms": 139
+  },
+  "lenora.png": {
+   "from": "Spr_B2W2_Lenora.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Lenora.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    -1
+   ],
+   "frames": 32,
+   "ms": 116
+  },
+  "linebacker.png": {
+   "from": "Spr_B2W2_Linebacker.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Linebacker.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -4,
+    -1
+   ],
+   "frames": 15,
+   "ms": 218
+  },
+  "liza.png": {
+   "from": "Spr_B2W2_Liza.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Liza.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    3,
+    -5
+   ],
+   "frames": 33,
+   "ms": 114
+  },
+  "ltsurge.png": {
+   "from": "Spr_B2W2_Lt_Surge.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Lt_Surge.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    2,
+    0
+   ],
+   "frames": 33,
+   "ms": 116
+  },
+  "madame.png": {
+   "from": "Spr_B2W2_Socialite.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Socialite.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    0,
+    1
+   ],
+   "frames": 25,
+   "ms": 161
+  },
+  "maid.png": {
+   "from": "Spr_B2W2_Maid.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Maid.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    2,
+    0
+   ],
+   "frames": 32,
+   "ms": 119
+  },
+  "marley.png": {
+   "from": "Spr_Pt_Marley.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Marley.png",
+   "match": "close match",
+   "still": 2,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -7,
+    -1
+   ],
+   "frames": 4,
+   "ms": 798
+  },
+  "marlon.png": {
+   "from": "Spr_B2W2_Marlon.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Marlon.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    105,
+    104
+   ],
+   "offset": [
+    8,
+    0
+   ],
+   "frames": 25,
+   "ms": 133
+  },
+  "marshal.png": {
+   "from": "Spr_B2W2_Marshal.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Marshal.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    90
+   ],
+   "offset": [
+    -1,
+    0
+   ],
+   "frames": 32,
+   "ms": 119
+  },
+  "maylene.png": {
+   "from": "Spr_B2W2_Maylene.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Maylene.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    3,
+    -1
+   ],
+   "frames": 31,
+   "ms": 117
+  },
+  "mira.png": {
+   "from": "Spr_Pt_Mira.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Mira.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -7,
+    -1
+   ],
+   "frames": 22,
+   "ms": 155
+  },
+  "misty.png": {
+   "from": "Spr_B2W2_Misty.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Misty.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    86
+   ],
+   "offset": [
+    2,
+    0
+   ],
+   "frames": 26,
+   "ms": 147
+  },
+  "musician.png": {
+   "from": "Spr_B2W2_Musician.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Musician.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    -1
+   ],
+   "frames": 33,
+   "ms": 122
+  },
+  "n.png": {
+   "from": "Spr_B2W2_N.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_N.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    -2
+   ],
+   "frames": 19,
+   "ms": 175
+  },
+  "nate-wonderlauncher.png": {
+   "from": "Spr_B2W2_Nate_2.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Nate_2.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    -5
+   ],
+   "frames": 14,
+   "ms": 230
+  },
+  "nate.png": {
+   "from": "Spr_B2W2_Nate.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Nate.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    -4
+   ],
+   "frames": 28,
+   "ms": 144
+  },
+  "norman.png": {
+   "from": "Spr_B2W2_Norman.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Norman.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -2,
+    -2
+   ],
+   "frames": 20,
+   "ms": 186
+  },
+  "nurse.png": {
+   "from": "Spr_B2W2_Nurse.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Nurse.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    -1
+   ],
+   "frames": 33,
+   "ms": 113
+  },
+  "nurseryaide.png": {
+   "from": "Spr_B2W2_Nursery_Aide.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Nursery_Aide.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -2,
+    -1
+   ],
+   "frames": 24,
+   "ms": 159
+  },
+  "palmer.png": {
+   "from": "Spr_Pt_Palmer.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Palmer.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -7,
+    0
+   ],
+   "frames": 20,
+   "ms": 226
+  },
+  "parasollady.png": {
+   "from": "Spr_B2W2_Parasol_Lady.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Parasol_Lady.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    83
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 29,
+   "ms": 132
+  },
+  "pilot.png": {
+   "from": "Spr_B2W2_Pilot.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Pilot.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 15,
+   "ms": 208
+  },
+  "plasmagrunt.png": {
+   "from": "Spr_B2W2_Plasma_Grunt_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Plasma_Grunt_M.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    3,
+    -3
+   ],
+   "frames": 26,
+   "ms": 193
+  },
+  "plasmagruntf.png": {
+   "from": "Spr_B2W2_Plasma_Grunt_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Plasma_Grunt_F.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    7,
+    -13
+   ],
+   "frames": 19,
+   "ms": 243
+  },
+  "pokefan.png": {
+   "from": "Spr_B2W2_Pokéfan_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Pokéfan_M.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    83
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 36,
+   "ms": 106
+  },
+  "pokefanf.png": {
+   "from": "Spr_B2W2_Pokéfan_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Pokéfan_F.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    2,
+    1
+   ],
+   "frames": 40,
+   "ms": 111
+  },
+  "pokemonbreeder.png": {
+   "from": "Spr_B2W2_Pokémon_Breeder_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Pokémon_Breeder_M.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 31,
+   "ms": 115
+  },
+  "pokemonbreederf.png": {
+   "from": "Spr_B2W2_Pokémon_Breeder_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Pokémon_Breeder_F.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    6,
+    0
+   ],
+   "frames": 28,
+   "ms": 133
+  },
+  "pokemonranger.png": {
+   "from": "Spr_B2W2_Pokémon_Ranger_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Pokémon_Ranger_M.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    -1
+   ],
+   "frames": 40,
+   "ms": 101
+  },
+  "pokemonrangerf.png": {
+   "from": "Spr_B2W2_Pokémon_Ranger_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Pokémon_Ranger_F.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    3,
+    0
+   ],
+   "frames": 22,
+   "ms": 160
+  },
+  "policeman.png": {
+   "from": "Spr_B2W2_Policeman.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Policeman.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -2,
+    0
+   ],
+   "frames": 32,
+   "ms": 123
+  },
+  "preschooler.png": {
+   "from": "Spr_B2W2_Preschooler_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Preschooler_M.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    3,
+    0
+   ],
+   "frames": 34,
+   "ms": 109
+  },
+  "preschoolerf.png": {
+   "from": "Spr_B2W2_Preschooler_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Preschooler_F.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 18,
+   "ms": 173
+  },
+  "pryce.png": {
+   "from": "Spr_B2W2_Pryce.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Pryce.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    8,
+    -1
+   ],
+   "frames": 32,
+   "ms": 129
+  },
+  "psychic.png": {
+   "from": "Spr_B2W2_Psychic_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Psychic_M.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    -1
+   ],
+   "frames": 38,
+   "ms": 106
+  },
+  "psychicf.png": {
+   "from": "Spr_B2W2_Psychic_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Psychic_F.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    82
+   ],
+   "offset": [
+    -1,
+    0
+   ],
+   "frames": 33,
+   "ms": 114
+  },
+  "red.png": {
+   "from": "Spr_B2W2_Red.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Red.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    -3
+   ],
+   "frames": 16,
+   "ms": 211
+  },
+  "richboy.png": {
+   "from": "Spr_B2W2_Rich_Boy.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Rich_Boy.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 16,
+   "ms": 233
+  },
+  "roark.png": {
+   "from": "Spr_B2W2_Roark.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Roark.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    -1
+   ],
+   "frames": 27,
+   "ms": 140
+  },
+  "rood.png": {
+   "from": "Spr_B2W2_Rood.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Rood.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    2,
+    -1
+   ],
+   "frames": 28,
+   "ms": 169
+  },
+  "rosa-wonderlauncher.png": {
+   "from": "Spr_B2W2_Rosa_2.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Rosa_2.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    2,
+    -5
+   ],
+   "frames": 23,
+   "ms": 173
+  },
+  "rosa.png": {
+   "from": "Spr_B2W2_Rosa.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Rosa.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -3,
+    -3
+   ],
+   "frames": 31,
+   "ms": 128
+  },
+  "roughneck.png": {
+   "from": "Spr_B2W2_Roughneck.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Roughneck.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    2,
+    -1
+   ],
+   "frames": 31,
+   "ms": 130
+  },
+  "roxanne.png": {
+   "from": "Spr_B2W2_Roxanne.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Roxanne.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    -3
+   ],
+   "frames": 26,
+   "ms": 145
+  },
+  "roxie.png": {
+   "from": "Spr_B2W2_Roxie.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Roxie.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    98
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 40,
+   "ms": 108
+  },
+  "sabrina.png": {
+   "from": "Spr_B2W2_Sabrina.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Sabrina.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    85
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 44,
+   "ms": 96
+  },
+  "schoolkid.png": {
+   "from": "Spr_B2W2_School_Kid_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_School_Kid_M.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 20,
+   "ms": 171
+  },
+  "schoolkidf.png": {
+   "from": "Spr_B2W2_School_Kid_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_School_Kid_F.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 25,
+   "ms": 151
+  },
+  "scientist.png": {
+   "from": "Spr_B2W2_Scientist_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Scientist_M.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 26,
+   "ms": 147
+  },
+  "scientistf.png": {
+   "from": "Spr_B2W2_Scientist_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Scientist_F.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    0
+   ],
+   "frames": 26,
+   "ms": 132
+  },
+  "shadowtriad.png": {
+   "from": "Spr_B2W2_Shadow_Triad.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Shadow_Triad.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    -1
+   ],
+   "frames": 21,
+   "ms": 208
+  },
+  "shauntal.png": {
+   "from": "Spr_B2W2_Shauntal.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Shauntal.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -2,
+    -1
+   ],
+   "frames": 39,
+   "ms": 113
+  },
+  "skyla.png": {
+   "from": "Spr_B2W2_Skyla.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Skyla.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 40,
+   "ms": 106
+  },
+  "smasher.png": {
+   "from": "Spr_B2W2_Smasher.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Smasher.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    84,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 29,
+   "ms": 125
+  },
+  "striker.png": {
+   "from": "Spr_B2W2_Striker.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Striker.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 37,
+   "ms": 109
+  },
+  "swimmer.png": {
+   "from": "Spr_B2W2_Swimmer_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Swimmer_M.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    -2
+   ],
+   "frames": 37,
+   "ms": 109
+  },
+  "swimmerf.png": {
+   "from": "Spr_B2W2_Swimmer_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Swimmer_F.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 36,
+   "ms": 112
+  },
+  "tate.png": {
+   "from": "Spr_B2W2_Tate.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Tate.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    2,
+    -6
+   ],
+   "frames": 31,
+   "ms": 122
+  },
+  "thorton.png": {
+   "from": "Spr_Pt_Thorton.gif",
+   "game": "Pokémon Platinum",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_Pt_Thorton.png",
+   "match": "close match",
+   "still": 1,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 6,
+   "ms": 457
+  },
+  "twins.png": {
+   "from": "Spr_B2W2_Twins.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Twins.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    2,
+    -1
+   ],
+   "frames": 34,
+   "ms": 112
+  },
+  "veteran.png": {
+   "from": "Spr_B2W2_Veteran_M.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Veteran_M.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    5,
+    0
+   ],
+   "frames": 37,
+   "ms": 107
+  },
+  "veteranf.png": {
+   "from": "Spr_B2W2_Veteran_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Veteran_F.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 24,
+   "ms": 134
+  },
+  "volkner.png": {
+   "from": "Spr_B2W2_Volkner.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Volkner.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -5,
+    -1
+   ],
+   "frames": 20,
+   "ms": 166
+  },
+  "waiter.png": {
+   "from": "Spr_B2W2_Waiter.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Waiter.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -4,
+    -1
+   ],
+   "frames": 20,
+   "ms": 186
+  },
+  "waitress.png": {
+   "from": "Spr_B2W2_Waitress.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Waitress.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 15,
+   "ms": 235
+  },
+  "wallace.png": {
+   "from": "Spr_B2W2_Wallace.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Wallace.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    82,
+    80
+   ],
+   "offset": [
+    5,
+    -1
+   ],
+   "frames": 28,
+   "ms": 133
+  },
+  "wattson.png": {
+   "from": "Spr_B2W2_Wattson.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Wattson.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    3,
+    -3
+   ],
+   "frames": 38,
+   "ms": 104
+  },
+  "weirdlight.png": {
+   "from": "Spr_B2W2_Weird_Light.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Weird_Light.png",
+   "match": "B2W2 art (#88)",
+   "still": 0,
+   "canvas": [
+    80,
+    86
+   ],
+   "offset": [
+    4,
+    6
+   ],
+   "frames": 22,
+   "ms": 153
+  },
+  "winona.png": {
+   "from": "Spr_B2W2_Winona.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Winona.png",
+   "match": "close match",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    -2
+   ],
+   "frames": 37,
+   "ms": 107
+  },
+  "worker.png": {
+   "from": "Spr_B2W2_Worker.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Worker.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    -1
+   ],
+   "frames": 28,
+   "ms": 129
+  },
+  "workerice.png": {
+   "from": "Spr_B2W2_WorkerIce.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_WorkerIce.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    3,
+    -1
+   ],
+   "frames": 27,
+   "ms": 141
+  },
+  "youngster.png": {
+   "from": "Spr_B2W2_Youngster.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Youngster.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    1,
+    -1
+   ],
+   "frames": 22,
+   "ms": 142
+  },
+  "zinzolin.png": {
+   "from": "Spr_B2W2_Zinzolin.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Zinzolin.png",
+   "match": "drop-in",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    -1
+   ],
+   "frames": 23,
+   "ms": 216
+  },
+  "acetrainerf.png": {
+   "from": "Spr_B2W2_Ace_Trainer_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Ace_Trainer_F.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -1,
+    0
+   ],
+   "frames": 29,
+   "ms": 121
+  },
+  "beauty-gen5bw2.png": {
+   "from": "Spr_B2W2_Beauty.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Beauty.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    9,
+    0
+   ],
+   "frames": 19,
+   "ms": 175
+  },
+  "bianca.png": {
+   "from": "Spr_BW_Bianca.gif",
+   "game": "Pokémon Black and White",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_BW_Bianca.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    99,
+    80
+   ],
+   "offset": [
+    25,
+    1
+   ],
+   "frames": 162,
+   "ms": 30
+  },
+  "brock.png": {
+   "from": "Spr_B2W2_Brock.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Brock.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -8,
+    -15
+   ],
+   "frames": 17,
+   "ms": 175
+  },
+  "bugsy.png": {
+   "from": "Spr_B2W2_Bugsy.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Bugsy.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    88
+   ],
+   "offset": [
+    1,
+    0
+   ],
+   "frames": 17,
+   "ms": 201
+  },
+  "candice.png": {
+   "from": "Spr_B2W2_Candice.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Candice.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    91
+   ],
+   "offset": [
+    8,
+    0
+   ],
+   "frames": 20,
+   "ms": 186
+  },
+  "clerkf.png": {
+   "from": "Spr_B2W2_Clerk_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Clerk_F.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    -6,
+    1
+   ],
+   "frames": 38,
+   "ms": 106
+  },
+  "cyclistf.png": {
+   "from": "Spr_B2W2_Cyclist_F.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Cyclist_F.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -2,
+    -1
+   ],
+   "frames": 15,
+   "ms": 181
+  },
+  "cynthia.png": {
+   "from": "Spr_B2W2_Cynthia.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Cynthia.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    8,
+    1
+   ],
+   "frames": 44,
+   "ms": 66
+  },
+  "depotagent.png": {
+   "from": "Spr_B2W2_Depot_Agent.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Depot_Agent.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    81
+   ],
+   "offset": [
+    2,
+    1
+   ],
+   "frames": 33,
+   "ms": 120
+  },
+  "drayden.png": {
+   "from": "Spr_B2W2_Drayden.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Drayden.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    0,
+    0
+   ],
+   "frames": 35,
+   "ms": 125
+  },
+  "falkner.png": {
+   "from": "Spr_B2W2_Falkner.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Falkner.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -4,
+    -10
+   ],
+   "frames": 14,
+   "ms": 230
+  },
+  "gardenia.png": {
+   "from": "Spr_B2W2_Gardenia.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Gardenia.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    81,
+    80
+   ],
+   "offset": [
+    9,
+    -1
+   ],
+   "frames": 30,
+   "ms": 126
+  },
+  "giovanni.png": {
+   "from": "Spr_B2W2_Giovanni.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Giovanni.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    2,
+    0
+   ],
+   "frames": 14,
+   "ms": 250
+  },
+  "grimsley.png": {
+   "from": "Spr_B2W2_Grimsley.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Grimsley.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    86
+   ],
+   "offset": [
+    -1,
+    0
+   ],
+   "frames": 44,
+   "ms": 100
+  },
+  "jasmine.png": {
+   "from": "Spr_B2W2_Jasmine.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Jasmine.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -5,
+    -1
+   ],
+   "frames": 35,
+   "ms": 112
+  },
+  "morty.png": {
+   "from": "Spr_B2W2_Morty.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Morty.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -4,
+    0
+   ],
+   "frames": 23,
+   "ms": 164
+  },
+  "steven.png": {
+   "from": "Spr_B2W2_Steven.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Steven.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    80
+   ],
+   "offset": [
+    -5,
+    -3
+   ],
+   "frames": 26,
+   "ms": 145
+  },
+  "whitney.png": {
+   "from": "Spr_B2W2_Whitney.gif",
+   "game": "Pokémon Black 2 and White 2",
+   "source": "https://archives.bulbagarden.net/wiki/File:Spr_B2W2_Whitney.png",
+   "match": "B2W2 preferred",
+   "still": 0,
+   "canvas": [
+    80,
+    94
+   ],
+   "offset": [
+    -4,
+    0
+   ],
+   "frames": 23,
+   "ms": 130
+  }
+ }
+}

@@ -1,6 +1,8 @@
 // ==========================================================
 // tools/lib/tierRules.mjs — rarity tier rule for species added after
 // Gen 5. Gen 1–5 tiers were hand-assigned and are never recomputed.
+// Owner-approved changes to either (data/pokedex/tier-overrides.json,
+// docs/audits/pokemon-tiers/DECISIONS.md) go through applyTierOverrides.
 //
 // The rule restates the patterns in the hand-assigned Gen 1–5 data
 // (see docs/gen6-9/BALANCE.md for the agreement measurement):
@@ -14,6 +16,33 @@
 // ==========================================================
 
 export const TIER_ORDER = Object.freeze(["common", "uncommon", "rare", "epic", "legendary", "mythic"]);
+
+/**
+ * Apply owner-approved tier changes (data/pokedex/tier-overrides.json) on
+ * top of the baseline and rule tiers. Each entry names the tier it replaces
+ * (`from`), so a baseline or rule change underneath it fails loudly instead
+ * of being silently overwritten. Afterwards every evolution must still be
+ * non-decreasing. Mutates `out` and returns the list of applied ids.
+ */
+export function applyTierOverrides(out, overrides) {
+  const applied = [];
+  for (const [id, o] of Object.entries(overrides)) {
+    const e = out[id];
+    if (!e) throw new Error(`tier override #${id}: no such species`);
+    if (!TIER_ORDER.includes(o.tier)) throw new Error(`tier override #${id}: unknown tier ${o.tier}`);
+    if (e.tier !== o.from) throw new Error(`tier override #${id} ${e.name}: expected ${o.from} underneath, found ${e.tier}`);
+    e.tier = o.tier;
+    applied.push(Number(id));
+  }
+  for (const e of Object.values(out)) {
+    for (const t of e.evolvesTo) {
+      if (TIER_ORDER.indexOf(out[t].tier) < TIER_ORDER.indexOf(e.tier)) {
+        throw new Error(`tier overrides make #${e.id} ${e.name} (${e.tier}) → #${t} ${out[t].name} (${out[t].tier}) go down a tier`);
+      }
+    }
+  }
+  return applied;
+}
 
 /**
  * @param {{bst:number, capture:number, tags:string[], hasPre:boolean, hasEvo:boolean,

@@ -1,8 +1,10 @@
 // ==========================================================
 // utils/trainerAssets.js
 // One place that decides which image a trainer sprite is shown as:
-//   • the breathing idle GIF (public/sprites/trainers_idle/<name>.gif) when
-//     data/sprites/trainer-idles.json lists the file as "ok", or
+//   • the idle GIF (public/sprites/trainers_idle/<name>.gif) when
+//     data/sprites/trainer-idles.json lists the file as "ok": generated
+//     breathing, or a real animation (animation: "real",
+//     data/sprites/trainer-animations.json), or
 //   • the static PNG (trainers_2/) otherwise, and always for grayscale
 //     (unowned) views.
 // TRAINERS_ANIMATED=0 turns every trainer back to the static PNG.

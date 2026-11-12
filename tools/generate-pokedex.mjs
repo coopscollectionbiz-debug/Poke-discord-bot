@@ -27,7 +27,7 @@ import fs from "fs";
 import path from "path";
 import { Dex } from "@pkmn/dex";
 import { readCsv } from "./lib/csv.mjs";
-import { classifyTier, TIER_ORDER } from "./lib/tierRules.mjs";
+import { classifyTier, applyTierOverrides, TIER_ORDER } from "./lib/tierRules.mjs";
 
 export const POKEAPI_SHA = "e2710d30d14b3f4dc6a02a4a71e8619cd835b7ff";
 const ROOT = new URL("..", import.meta.url);
@@ -244,6 +244,10 @@ async function main() {
     }
   }
 
+  // Owner-approved tier changes (any generation), applied last.
+  const tierOverrides = JSON.parse(fs.readFileSync(P("data/pokedex/tier-overrides.json"), "utf8")).overrides;
+  const overridden = applyTierOverrides(out, tierOverrides);
+
   // Forms (architecture data; every form is disabled for gameplay).
   const formsOut = buildForms(typeIds);
 
@@ -252,7 +256,7 @@ async function main() {
   fs.writeFileSync(P("public/pokemonData.json"), json);
   fs.writeFileSync(P("data/pokedex/forms.json"), JSON.stringify(formsOut, null, 1) + "\n");
   const meta = { generatedBy: "tools/generate-pokedex.mjs", pokeapiCommit: POKEAPI_SHA, pkmnDex: "@pkmn/dex@0.10.12",
-    species: Object.keys(out).length, retyped, crossGenerationEvolutions: crossGen, formGatedEvolutions: gated,
+    species: Object.keys(out).length, tierOverrides: overridden.length, retyped, crossGenerationEvolutions: crossGen, formGatedEvolutions: gated,
     tiers: Object.fromEntries(TIER_ORDER.map((t) => [t, Object.values(out).filter((e) => e.id >= 650 && e.tier === t).length])) };
   fs.writeFileSync(P("data/pokedex/build-report.json"), JSON.stringify(meta, null, 1) + "\n");
   console.log(`species ${meta.species}; retyped ${retyped.length}; cross-gen ${crossGen.length}; gated ${gated.length}; forms ${formsOut.forms.length}`);

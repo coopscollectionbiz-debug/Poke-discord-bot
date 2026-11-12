@@ -24,6 +24,7 @@ import { teamExp, eloUpdate, utcDay, getBattleRecord, getCasualRecord, capBlock,
 import { RANKED } from "./tuning.js";
 import { chosenMoves } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
+import { megaBattleEligibility, megaBattleProfile } from "../megas.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
 import { toTeamObj } from "../economyRules.js";
 import { slotCopyUid } from "../../services/ownership.js";
@@ -72,6 +73,23 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
     });
 }
 
+// A built Team without its Mega battle stats, for saving on the player's
+// record, which never holds them (tests/megaBattle.test.js). A Mega slot keeps
+// its megaForm id; withMegaStats puts the stats back before a fight.
+export const withoutMegaStats = (team) => team.map(({ battleProfile, ...m }) => m);
+
+// Saved fighters made ready to fight: each Mega slot gets its battle profile
+// again. A form no longer battle-ready (Mega battles switched off since it was
+// saved, say) fights as its base form, failing closed like buildTeam.
+export function withMegaStats(members, { env = process.env } = {}) {
+  return members.map((m) => {
+    if (!m.megaForm) return m;
+    if (megaBattleEligibility(m.megaForm, { env }).battleReady) return { ...m, battleProfile: megaBattleProfile(m.megaForm) };
+    const { megaForm, baseName, battleProfile, ...base } = m;
+    return { ...base, name: baseName ?? base.name };
+  });
+}
+
 /**
  * The Battle team (user.battleTeam) as fighters: every member at
  * RANKED.level for the battle, its real Level kept as realLevel (EXP and
@@ -94,7 +112,12 @@ function applyExp(user, side, result, sideIndex) {
     .filter((k) => k.bySide === sideIndex)
     .map((k) => side.opponent[k.slot]);
   const gains = teamExp({ members: atRealLevels(side.members), knockedOut: atRealLevels(knockedOut), won: result.winner === sideIndex });
-  return side.members.map((m, i) => {
+  return applyGains(user, side.members, gains);
+}
+
+// Adds gains[i] EXP to members[i] and reports each one's Level change and new moves.
+export function applyGains(user, members, gains) {
+  return members.map((m, i) => {
     const { fromLevel, toLevel } = addExp(user, m.speciesId, m.variant, gains[i]);
     return {
       key: trainingKey(m.speciesId, m.variant),

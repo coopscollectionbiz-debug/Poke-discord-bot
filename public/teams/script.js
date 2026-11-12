@@ -20,6 +20,7 @@ import { playerId, showBanner, showExpired, toast, showActionError, confirmDialo
 import { displaySpeciesName } from "/public/shared/names.js";
 import { scanFx } from "/public/shared/spriteFx.js";
 import { openMovesEditor } from "/public/teams/moves.js";
+import { openDetail } from "/public/picker-pokemon/detail.js";
 
 const TEAMS = ["display", "battle"];
 const LABEL = { display: "Display team", battle: "Battle team" };
@@ -49,11 +50,15 @@ const state = {
   megaOn: false,
   megaCards: [], // GET /api/mega cards (only while Mega Evolution is on)
   saved: { display: [], battle: null },
+  notices: [],           // one-time Battle team notices (GET /api/user-pokemon)
   draft: { display: [], battle: null },
   active: "display",
   error: { display: null, battle: null },
   filter: { q: "", show: "all", sort: "power" },
   saving: false,
+  // A whole-team copy waiting for Save: { source: "display"|"battle", keys: ["6:normal", …] }.
+  // Save sends it as copyFrom so the server copies those Pokémon's moves too.
+  copied: { display: null, battle: null },
 };
 
 // ---------- helpers ----------
@@ -201,26 +206,52 @@ function cycleMega(t, i) {
   render();
 }
 
-function copyDisplay() {
+const OTHER = { display: "battle", battle: "display" };
+
+/**
+ * Copy the other team onto team `target`, after a confirmation: the same
+ * Pokémon in the same order with their Mega choices; on Save the server
+ * also copies each copied Pokémon's moves (copyFrom). Into the Battle team,
+ * only the first mythic-tier Pokémon comes along. Nothing is saved here.
+ */
+async function copyFrom(target) {
+  const source = OTHER[target];
+  const from = team(source);
+  if (!from.length) return toast(`Your ${LABEL[source]} is empty.`);
   const kept = [];
   const dropped = [];
   let mythics = 0;
-  for (const s of team("display")) {
-    if (isMythic(s.id) && mythics++ >= 1) { dropped.push(s); continue; }
+  for (const s of from) {
+    if (target === "battle" && isMythic(s.id) && mythics++ >= 1) { dropped.push(s); continue; }
     kept.push(clone(s));
   }
-  state.draft.battle = kept;
-  state.error.battle = null;
-  const msg = dropped.length
-    ? `Copied your Display team. ${dropped.map((s) => species(s.id).name).join(", ")} left out: one mythic-tier Pokémon per Battle team.`
-    : "Copied your Display team.";
-  announce(msg);
-  toast(msg);
+  const current = state.draft[target];
+  const lines = [
+    current?.length
+      ? `This replaces your ${LABEL[target]} (${current.length} Pokémon). Each Pokémon brings its ${LABEL[source]} moves.`
+      : `This fills your ${LABEL[target]}. Each Pokémon brings its ${LABEL[source]} moves.`,
+    isDirty(target) ? `Your unsaved changes to the ${LABEL[target]} will be replaced.` : "",
+    dropped.length ? `${dropped.map((s) => species(s.id).name).join(", ")} ${dropped.length > 1 ? "stay" : "stays"} behind: one mythic-tier Pokémon per Battle team.` : "",
+    "Nothing changes until you press Save.",
+  ].filter(Boolean);
+  const ok = await confirmDialog({
+    title: `Copy your ${LABEL[source]} onto your ${LABEL[target]}?`,
+    message: lines.join("\n"),
+    okText: "Copy team",
+    cancelText: "Cancel",
+  });
+  if (!ok) return;
+  state.draft[target] = kept;
+  state.copied[target] = { source, keys: kept.map(keyOf) };
+  state.error[target] = null;
+  state.active = target;
+  announce(`Copied your ${LABEL[source]} onto your ${LABEL[target]}. Press Save to keep it.`);
   render();
 }
 
 function discard() {
   state.draft = clone(state.saved);
+  state.copied = { display: null, battle: null };
   state.error = { display: null, battle: null };
   announce("Changes discarded.");
   render();
@@ -245,7 +276,7 @@ async function save() {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: userId, team: team(t), teamType: t }),
+        body: JSON.stringify({ id: userId, team: team(t), teamType: t, ...copyPayload(t) }),
       });
       let body = {};
       try { body = await res.json(); } catch { /* non-JSON */ }
@@ -259,6 +290,7 @@ async function save() {
       state.saved.display = clone(body.currentTeam ?? state.saved.display);
       state.saved.battle = clone(body.battleTeam ?? state.saved.battle);
       state.draft[t] = clone(t === "display" ? state.saved.display : state.saved.battle);
+      state.copied[t] = null;
       if (body.saveDelayed || body.saved === false) toast(body.notice || "Saved with a delay. Your change is kept and will be written shortly.");
     }
     toast(dirty.length > 1 ? "Both teams saved." : `${LABEL[dirty[0]]} saved.`, { tone: "success" });
@@ -272,6 +304,31 @@ async function save() {
     state.saving = false;
     render();
   }
+}
+
+/** copyFrom + the copied Pokémon still on the team, when this team holds a pending copy. */
+function copyPayload(t) {
+  const c = state.copied[t];
+  if (!c) return {};
+  const onTeam = new Set(team(t).map(keyOf));
+  const copiedKeys = c.keys.filter((k) => onTeam.has(k));
+  return copiedKeys.length ? { copyFrom: c.source, copiedKeys } : {};
+}
+
+/** Hide the Battle team notices and tell the server they were seen. */
+async function dismissNotices() {
+  const ids = state.notices.map((n) => n.id);
+  state.notices = [];
+  render();
+  try {
+    const res = await fetch("/api/dismiss-notices", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: userId, ids }),
+    });
+    if (res.status === 403) showExpired();
+  } catch { /* shown again next visit; harmless */ }
 }
 
 // ---------- rendering ----------
@@ -298,13 +355,13 @@ function slotCard(t, s, i) {
   ].join("");
   const shiny = s.variant === "shiny";
   return `<li class="tm-slot tm-slot--lg${i === 0 ? " is-lead" : ""}${shiny ? " is-shiny" : ""}${s.mega && state.megaOn ? " is-mega" : ""}${change ? " is-changed" : ""}" draggable="true" data-team="${t}" data-i="${i}">
-    <div class="tm-stage"${shiny ? ` data-fx="shiny" data-fx-seed="${s.id}"` : ""}>
+    <button type="button" class="tm-stage" data-act="details" data-team="${t}" data-i="${i}" aria-label="${esc(name)}: details"${shiny ? ` data-fx="shiny" data-fx-seed="${s.id}"` : ""}>
       <span class="tm-no">${i + 1}<span class="sr-only">: </span></span>
       ${shiny ? `<span class="tm-shiny" title="Shiny"><svg class="tm-ic" aria-hidden="true"><use href="#tm-sparkle"/></svg><span class="sr-only">Shiny</span></span>` : ""}
       <img class="cc-sprite" src="${spriteOf(s)}" alt="" onerror="this.onerror=null;this.src='/public/sprites/items/pokeball.png'">
-    </div>
+    </button>
     <div class="tm-slot-body">
-      <div class="tm-slot-name">${esc(name)}</div>
+      <div class="tm-slot-name" data-act="details" data-team="${t}" data-i="${i}">${esc(name)}</div>
       <div class="tm-slot-meta">${lvl}</div>
       ${typeChips(s.id)}
       <div class="tm-slot-tags">${tags}</div>
@@ -345,18 +402,25 @@ function teamPanel() {
   let body;
   if (isB && state.draft.battle == null) {
     body = `<div class="tm-empty"><p><strong>No Battle team yet.</strong><br>Ranked and wager battles will use it.</p>
-      <button type="button" class="cc-btn cc-btn--primary" data-act="copy"${team("display").length ? "" : " disabled"}>Copy my Display team</button>
+      <button type="button" class="cc-btn cc-btn--primary" data-act="copy" data-team="battle"${team("display").length ? "" : " disabled"}>Copy from Display team</button>
       <p class="tm-sub" style="margin-top:12px">Or pick Pokémon from your box. One mythic-tier Pokémon at most.</p></div>`;
   } else if (!list.length) {
     body = `<div class="tm-empty"><p><strong>This team is empty.</strong> Pick up to six Pokémon from your box.</p>
-      ${isB && team("display").length ? `<button type="button" class="cc-btn" data-act="copy">Copy my Display team</button>` : ""}</div>`;
+      ${team(OTHER[t]).length ? `<button type="button" class="cc-btn" data-act="copy" data-team="${t}">Copy from ${LABEL[OTHER[t]]}</button>` : ""}</div>`;
   } else {
     body = `<ol class="tm-slots">${Array.from({ length: MAX }, (_, i) => slotCard(t, list[i] ?? null, i)).join("")}</ol>`;
   }
+  const note = isB && state.notices.length
+    ? `<div class="tm-notice" role="status"><p>${state.notices.map((n) => esc(n.text)).join("<br>")}</p><button type="button" class="cc-btn" data-act="dismiss">Got it</button></div>`
+    : "";
   const e = state.error[t];
   const err = e ? `<div class="tm-error" role="alert"><svg class="tm-ic" aria-hidden="true"><use href="#tm-lock"/></svg><p><strong>${esc(e.title ?? "Can’t add that Pokémon")}</strong>${esc(e.text)}</p></div>` : "";
+  const other = OTHER[t];
+  const copyBtn = team(other).length && list.length
+    ? `<button type="button" class="cc-btn tm-copyteam" data-act="copy" data-team="${t}">Copy from ${LABEL[other]}</button>`
+    : "";
   return `<section id="teamPanel" class="tm-panel tm-panel--${t} tm-team" role="tabpanel" aria-labelledby="tab-${t}">
-    <div class="tm-panel-head">${head}</div>${body}${err}
+    <div class="tm-panel-head">${head}${copyBtn}</div>${note}${body}${err}
     <button type="button" class="cc-btn tm-addbtn" data-act="openbox"><svg class="tm-ic" aria-hidden="true"><use href="#tm-plus"/></svg>Add from your box</button>
   </section>`;
 }
@@ -416,7 +480,8 @@ function boxTile(s) {
       <span class="tm-tile-name">${esc(sp.name)}</span>
       ${typeChips(s.id)}
       <span class="tm-tile-lv">Lv ${levelOf(s)}${isMythic(s.id) && !blocked ? ` · <b class="tier-text mythic">Mythic</b>` : ""}</span>
-    </button></li>`;
+    </button>
+    <button type="button" class="tm-tile-info" data-act="details-box" data-id="${s.id}" data-variant="${s.variant}" aria-label="${esc(sp.name)}${shiny ? " (shiny)" : ""}: details">i</button></li>`;
 }
 
 function boxPanel(where) {
@@ -499,7 +564,9 @@ function onClick(e) {
   else if (act === "move") move(t, i, Number(el.dataset.dir));
   else if (act === "remove") remove(t, i);
   else if (act === "add") add(state.active, { id: Number(el.dataset.id), variant: el.dataset.variant });
-  else if (act === "copy") copyDisplay();
+  else if (act === "copy") copyFrom(t || state.active);
+  else if (act === "details") openTeamDetails(t, i);
+  else if (act === "details-box") openBoxDetails({ id: Number(el.dataset.id), variant: el.dataset.variant });
   else if (act === "mega") cycleMega(t, i);
   else if (act === "moves") {
     const s = team(t)[i];
@@ -509,6 +576,7 @@ function onClick(e) {
   else if (act === "save") save();
   else if (act === "show") { state.filter.show = el.dataset.show; render(); }
   else if (act === "openbox") openSheet();
+  else if (act === "dismiss") dismissNotices();
 }
 function onInput(e) {
   const el = e.target;
@@ -554,6 +622,16 @@ sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.close(); 
 let drag = null; // { kind: "slot", t, i } | { kind: "box", s }
 const clearDrop = () => document.querySelectorAll(".is-dropover, .is-dropbad, .is-dropremove").forEach((x) => x.classList.remove("is-dropover", "is-dropbad", "is-dropremove"));
 
+// Every way a drag can finish lands here. A drop re-renders the team, which
+// detaches the dragged element, so its dragend never bubbles to document:
+// without this the body keeps tm-dragging-* and the "Drop here" overlay sticks.
+function endDrag() {
+  drag = null;
+  clearDrop();
+  document.body.classList.remove("tm-dragging-slot", "tm-dragging-box");
+  document.querySelectorAll(".is-dragging").forEach((x) => x.classList.remove("is-dragging"));
+}
+
 app.addEventListener("dragstart", (e) => {
   const li = e.target.closest?.(".tm-slot[draggable]");
   const tile = e.target.closest?.(".tm-tile-btn[draggable]");
@@ -568,6 +646,8 @@ app.addEventListener("dragstart", (e) => {
   } else return;
   e.dataTransfer.setData("text/plain", drag.kind);
   document.body.classList.add(`tm-dragging-${drag.kind}`);
+  // dragend still reaches the source element after a re-render detaches it.
+  e.target.addEventListener("dragend", endDrag, { once: true });
 });
 
 /** Where a drop at this element would go, or null. */
@@ -609,20 +689,14 @@ document.addEventListener("dragover", (e) => {
 document.addEventListener("drop", (e) => {
   const d = dropTarget(e.target);
   const from = drag;
-  clearDrop();
-  if (!d || !from) return;
+  if (!d || !from) { clearDrop(); return; }
   e.preventDefault();
-  drag = null;
+  endDrag();
   if (d.type === "move") moveTo(from.t, from.i, d.to);
   else if (d.type === "remove") remove(from.t, from.i);
   else if (d.type === "add") add(state.active, from.s, { at: d.at, replace: d.replace });
 });
-document.addEventListener("dragend", () => {
-  drag = null;
-  clearDrop();
-  document.body.classList.remove("tm-dragging-slot", "tm-dragging-box");
-  document.querySelectorAll(".is-dragging").forEach((x) => x.classList.remove("is-dragging"));
-});
+document.addEventListener("dragend", endDrag);
 
 // Unsaved changes: the browser's own prompt on close/reload, and an in-page
 // dialog for the dashboard's own links.
@@ -631,21 +705,26 @@ window.addEventListener("beforeunload", (e) => {
   e.preventDefault();
   e.returnValue = "";
 });
-document.addEventListener("click", async (e) => {
+/** Go to another dashboard page, asking first when team changes are unsaved. */
+async function leaveTo(href) {
+  if (anyDirty()) {
+    const leave = await confirmDialog({
+      title: "Leave without saving?",
+      message: "Your team changes aren’t saved yet.",
+      okText: "Leave",
+      cancelText: "Stay",
+      tone: "error",
+    });
+    if (!leave) return;
+    state.draft = clone(state.saved); // so beforeunload doesn't ask again
+  }
+  window.location.assign(href);
+}
+document.addEventListener("click", (e) => {
   const a = e.target.closest?.("a.cc-nav-link");
   if (!a || !anyDirty() || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;
   e.preventDefault();
-  const leave = await confirmDialog({
-    title: "Leave without saving?",
-    message: "Your team changes aren’t saved yet.",
-    okText: "Leave",
-    cancelText: "Stay",
-    tone: "error",
-  });
-  if (leave) {
-    state.draft = clone(state.saved); // so beforeunload doesn't ask again
-    window.location.assign(a.href);
-  }
+  leaveTo(a.href);
 });
 
 // After teaching a TM the server may have moved slots onto a new trained copy
@@ -671,6 +750,65 @@ async function refreshCopies() {
   } catch { /* the next save still keeps trained copies (server rule) */ }
 }
 
+// ---------- Pokémon details (the Collection's drawer) ----------
+const collectionHref = (id, variant) => `/public/picker-pokemon/?${new URLSearchParams({ id: userId, pokemon: id, variant })}`;
+const apiJSON = async (url) => {
+  const res = await fetch(url, { credentials: "same-origin" });
+  let body = {};
+  try { body = await res.json(); } catch { /* non-JSON */ }
+  if (res.status === 403) { showExpired(); throw new Error("Your dashboard link expired."); }
+  if (!res.ok) throw new Error(body.error || `Couldn’t load this Pokémon (${res.status}).`);
+  return body;
+};
+/** Where each copy of a species sits on screen right now (maybe unsaved). */
+const slotsOnScreen = (id) => (variant) => {
+  const at = (t) => { const i = team(t).findIndex((m) => m.id === id && m.variant === variant); return i < 0 ? null : i + 1; };
+  const savedAt = (t) => { const i = (state.saved[t] ?? []).findIndex((m) => m.id === id && m.variant === variant); return i < 0 ? null : i + 1; };
+  const display = at("display"), battle = at("battle");
+  return { display, battle, unsaved: display !== savedAt("display") || battle !== savedAt("battle") };
+};
+
+/** From a team card: stats (Lv 50 first on the Battle team), Edit moves, Open in Collection. */
+function openTeamDetails(t, i) {
+  const s = team(t)[i];
+  if (!s) return;
+  openDetail(s.id, {
+    userId,
+    apiJSON,
+    actionsHTML: () => `<button type="button" class="cc-btn" data-act="moves">Edit moves</button>
+      <button type="button" class="cc-btn" data-act="collection">Open in Collection</button>`,
+    onAction: (act, d, variant) => {
+      // The slot's own copy (TM system): its trained copy when the variant matches the slot.
+      if (act === "moves") openMovesEditor({ userId, team: t, s: { id: d.id, variant, ...(variant === s.variant && s.uid ? { uid: s.uid } : {}) }, name: species(d.id).name, onSaved: () => render(), onTaught: () => refreshCopies() });
+      else if (act === "collection") leaveTo(collectionHref(d.id, variant));
+    },
+  }, {
+    variant: s.variant,
+    level: t === "battle" ? "50" : "real",
+    slotsFor: slotsOnScreen(s.id),
+    megaName: s.mega && state.megaOn ? slotName(s) : null,
+  });
+}
+
+/** From a box tile: Add to the team on screen (greyed with the reason when blocked), Open in Collection. */
+function openBoxDetails(s) {
+  const t = state.active;
+  openDetail(s.id, {
+    userId,
+    apiJSON,
+    actionsHTML: (d, variant) => {
+      const why = state.draft[t] == null && t === "battle" ? null : blockReason(t, { id: d.id, variant });
+      return `<button type="button" class="cc-btn cc-btn--primary" data-act="add"${why ? ' aria-disabled="true"' : ""}>Add to ${LABEL[t]}</button>
+        <button type="button" class="cc-btn" data-act="collection">Open in Collection</button>
+        ${why ? `<p class="dt-reason">${esc(why.text)}</p>` : ""}`;
+    },
+    onAction: (act, d, variant) => {
+      if (act === "add") add(t, { id: d.id, variant });
+      else if (act === "collection") leaveTo(collectionHref(d.id, variant));
+    },
+  }, { variant: s.variant, level: t === "battle" ? "50" : "real", slotsFor: slotsOnScreen(s.id) });
+}
+
 // ---------- load ----------
 async function load() {
   if (!userId) { app.innerHTML = ""; return; }
@@ -693,9 +831,10 @@ async function load() {
     state.powers = u.powers ?? {};
     const norm = (list) => (Array.isArray(list) ? list.map(slotFromServer) : null);
     state.saved = { display: norm(u.currentTeam) ?? [], battle: norm(u.battleTeam) };
+    state.notices = Array.isArray(u.notices) ? u.notices.filter((n) => n.kind === "battle_team_trim") : [];
     state.draft = clone(state.saved);
     const want = new URLSearchParams(location.search).get("team");
-    state.active = want === "battle" || want === "display" ? want : "display";
+    state.active = want === "battle" || want === "display" ? want : state.notices.length ? "battle" : "display";
   } catch (err) {
     app.innerHTML = "";
     showBanner(err?.message || "Couldn’t load your teams. Please try again.", { title: "Couldn’t load your teams" });

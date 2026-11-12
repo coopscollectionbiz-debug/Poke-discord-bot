@@ -17,10 +17,11 @@
 // ==========================================================
 
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
-import { renderBattleFrame, pickFrameTurns } from "./render.js";
+import { pickFrameTurns } from "./render.js";
 import { PLAYBACK } from "./tuning.js";
 import { trainingKey } from "../training.js";
 import { CHALLENGES, opponentName, displaySprite } from "../challenge/roster.js";
+import { threaded } from "../render/renderers.js";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const list = (items) => new Intl.ListFormat("en", { type: "conjunction" }).format(items);
@@ -152,7 +153,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
   // "battle.gif", a desktop client whose first load failed kept showing the
   // broken image for every later edit, result included.
   const image = async (step, opts) => new AttachmentBuilder(
-    await renderBattleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, theme, ...opts }),
+    await threaded.battleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, theme, ...opts }),
     { name: namePrefix + battleImageName(step) },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.

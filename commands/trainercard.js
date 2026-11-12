@@ -24,7 +24,7 @@ import {
   AttachmentBuilder,
 } from "discord.js";
 import { cardImage } from "../utils/render/stage.js";
-import { trainerCardView, renderTrainerCard } from "../utils/render/trainerCard.js";
+import { trainerCardView } from "../utils/render/trainerCard.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -43,6 +43,7 @@ import { grantTrainer } from "../services/assets.js";
 import { badgeLine } from "../utils/challenge/badgeImages.js";
 import { sendPendingNotices } from "./battle.js";
 import { NOTICE_KINDS } from "../services/notices.js";
+import { threaded } from "../utils/render/renderers.js";
 
 // Load trainer sprite data
 const __filename = fileURLToPath(import.meta.url);
@@ -568,7 +569,7 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
         displayName: username,
         trainer: user.displayedTrainer ? { name: trainerInfo.name, tier: trainerInfo.rarityKey } : null,
       });
-      const card = await cardImage((animate) => renderTrainerCard(tcView, { animate }), "trainercard", { unique: true });
+      const card = await cardImage((animate) => threaded.trainerCard(tcView, { animate }), "trainercard", { unique: true });
       return await interaction.editReply({ embeds: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })], components: [] });
     } catch (err) {
       console.warn("⚠️ trainer card render failed; sending embed:", err?.message || err);

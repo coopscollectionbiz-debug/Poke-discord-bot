@@ -18,8 +18,9 @@ import { teamPower } from "../utils/battle/power.js";
 import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/battle/wager.js";
 import { WAGER, PLAYBACK } from "../utils/battle/tuning.js";
 import { peekNotices, clearNotices, NOTICE_KINDS } from "../services/notices.js";
-import { expView, renderExpCard } from "../utils/render/expCard.js";
+import { expView } from "../utils/render/expCard.js";
 import { cardImage } from "../utils/render/stage.js";
+import { threaded } from "../utils/render/renderers.js";
 
 export const data = new SlashCommandBuilder()
   .setName("battle")
@@ -67,7 +68,7 @@ export function displayNames(interaction, opponent) {
 // near the end of the offer window can miss theirs; the EXP still counts.
 // The message is a rendered EXP card (utils/render/expCard.js) under a
 // one-line caption; if rendering fails, the plain-text summary goes instead.
-export async function expMessage(outcome, userId, names, user, { render = renderExpCard } = {}) {
+export async function expMessage(outcome, userId, names, user, { render = threaded.exp } = {}) {
   const text = expSummary(outcome, userId, names);
   try {
     const view = expView(outcome, userId, names, user);

@@ -37,6 +37,8 @@ Since A2, `TRAINERDATA_DIR=/data` is a Fly volume (`trainerdata`, see `fly.toml`
 | `localSave.pendingChanges` | Changes not yet on disk |
 | `discordBackup.lastVerified`, `lastVerifiedAt` | Last off-machine backup confirmed by sha256 |
 | `superseded` | See "Superseded" below |
+| `loopLag` | Main-thread stalls over the last 5 min: `p50Ms` (median minute), `p99Ms` and `maxMs` (worst minute). Also logged each minute as `⏱️ loop lag 1m: …`. A high max means commands and buttons waited. |
+| `renderThreads` | Render threads (see "Render threads" below): `threads`, `alive`, `busy`, `queued`, `completed`, `queueTimeouts` (cards sent as PNG because every thread was busy for 2 s), `crashes`, `down`. `null` with `RENDER_THREADS=0`. |
 
 ### Writer epochs and fencing (A2)
 - Every process that loads player data takes an **epoch** higher than any it has seen, and stamps it on every snapshot and backup.
@@ -137,6 +139,11 @@ Production is moving from Fly to the VPS that also runs the WoW server (`ssh ubu
 
 ### Overrides and restores
 The Fly `flyctl secrets set X=1` steps above become: add `X=1` to `/etc/pokebot.env` (`sudo nano /etc/pokebot.env`), `sudo systemctl restart pokebot`, and remove the line once the bot is ready. A file restore uses `RESTORE_FROM=file:/srv/pokebot/data/snapshots/trainerData-YYYY-MM-DD.json` with a matching `CONFIRM_RESTORE`.
+
+### Render threads
+Cards and battle images are drawn on background threads (`utils/render/renderPool.js`), so a 0.3–1 s GIF never holds up other commands. `RENDER_THREADS` in `/etc/pokebot.env` sets the count: unset means 3, sized so the WoW server keeps its share of the 8 cores (`node tools/bench-render-threads.mjs` measures it). An animated card waits up to 2 s for a free thread, then the still PNG goes instead (`(threads busy)` in its `🖼️ card` log line). Battles always wait.
+- **Turn them off:** `RENDER_THREADS=0` in `/etc/pokebot.env`, then `sudo systemctl restart pokebot`. Images render on the main thread as before (at most 2 GIFs at once, the rest PNG).
+- **Threads that can't start** (3 failures in a row) switch off on their own; the log says `rendering on the main thread from now on` and `/readyz` shows `renderThreads.down`.
 
 ### Superseded
 There must be exactly one bot process: `systemctl status pokebot` on the VPS, and the Fly machine stopped (`flyctl machines list -a poke-discord-bot-49shta`). Nobody runs the bot locally with the production `BOT_TOKEN`. Then `sudo systemctl restart pokebot`.

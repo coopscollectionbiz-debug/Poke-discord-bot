@@ -8,12 +8,13 @@
 // ==========================================================
 
 import { AttachmentBuilder, escapeMarkdown } from "discord.js";
-import { renderCatchCard, catchView } from "./catchCard.js";
+import { catchView } from "./catchCard.js";
 import { cardImage, cardGifGate } from "./stage.js";
+import { threaded } from "./renderers.js";
 
 /** { buffer, name } — the animated card when a slot is free, else a PNG. */
-export function renderCatchImage(view, { gate = cardGifGate, env = process.env, render = renderCatchCard } = {}) {
-  return cardImage((animate) => render(view, { animate }), "catch", { gate, env, flag: "CATCH_ANIMATED" });
+export function renderCatchImage(view, { gate = cardGifGate, pool, env = process.env, render = threaded.catch } = {}) {
+  return cardImage((animate) => render(view, { animate }), "catch", { gate, pool, env, flag: "CATCH_ANIMATED" });
 }
 
 const what = (view) => (view.shiny ? `a ✨ shiny **${view.name}**` : view.sighting ? `**${view.name}**` : `a wild **${view.name}**`);

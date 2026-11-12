@@ -22,12 +22,13 @@ import {
   AttachmentBuilder,
 } from "discord.js";
 import { cardImage } from "../utils/render/stage.js";
-import { pokedexView, renderPokedexCard } from "../utils/render/pokedexCard.js";
+import { pokedexView } from "../utils/render/pokedexCard.js";
 
 import { safeReply } from "../utils/safeReply.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { spritePaths, rarityEmojis, rarityColors } from "../spriteconfig.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
+import { threaded } from "../utils/render/renderers.js";
 
 // ----------------------------------------------------------
 // Type ID -> Name (Gen 1-5 style mapping)
@@ -219,7 +220,7 @@ export default {
       const entry = async () => {
         try {
           const view = pokedexView(poke.id, user);
-          const card = await cardImage((animate) => renderPokedexCard(view, { shiny: viewingShiny, animate }), "pokedex", { unique: true });
+          const card = await cardImage((animate) => threaded.pokedex(view, { shiny: viewingShiny, animate }), "pokedex", { unique: true });
           return { embeds: [], attachments: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })] };
         } catch (err) {
           console.warn("⚠️ pokedex card render failed; sending embed:", err?.message || err);

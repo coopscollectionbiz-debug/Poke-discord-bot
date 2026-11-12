@@ -18,6 +18,7 @@ import { drawSprite } from "./sprites.js";
 import { loadAnimatedSprite, spritePlayer } from "../battle/render.js";
 import { encodeGif } from "./gif.js";
 import { createRenderGate } from "./renderGate.js";
+import { getRenderPool, renderOptions } from "./renderPool.js";
 import { shinyBackdrop, shinyFxEnabled } from "./shinyBackdrop.js";
 
 export const FRAMES = 24, DELAY_MS = 100;
@@ -94,10 +95,16 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
 /** True when a rendered buffer is a GIF. */
 export const isGif = (buf) => buf?.subarray?.(0, 3)?.toString() === "GIF";
 
-// One gate for every card's GIF encode, so at most two run at once across
-// the bot (each adds tens of MB at peak on the 512 MB machine); anyone else
-// gets the still PNG straight away.
+// With RENDER_THREADS=0 (no render threads), one gate for every card's GIF
+// encode, so at most two run at once on the main thread; anyone else gets
+// the still PNG straight away. With render threads, the pool's line is the
+// limit instead (CARD_QUEUE_WAIT_MS).
 export const cardGifGate = createRenderGate(2);
+
+// How long an animated card waits for a free render thread before the
+// still PNG goes instead. Every card command has already deferred its
+// reply, so this is about the player's wait, not Discord's 3 s deadline.
+export const CARD_QUEUE_WAIT_MS = 2000;
 
 /**
  * A short random suffix for a card that replaces an earlier image in the same
@@ -108,14 +115,18 @@ export const cardGifGate = createRenderGate(2);
 export const uniqueSuffix = () => Math.random().toString(36).slice(2, 8);
 
 /**
- * Renders a card animated when allowed and a slot is free, else still.
+ * Renders a card animated when allowed, else still.
  * `render(animate)` returns a Buffer. → { buffer, name: `${base}.gif|png` }
  * CARDS_ANIMATED=0 (or the per-surface `flag`=0) forces still images.
  * `unique: true` names it `${base}-<random>.gif|png` (see uniqueSuffix).
+ * With render threads (`pool`), the GIF waits up to CARD_QUEUE_WAIT_MS for
+ * a thread, then the PNG goes to the front of the line instead. Without
+ * them, the GIF needs a slot in `gate`, else the PNG is sent.
  * Logs one timing line per card: `🖼️ card <base> gif|png <KB> KB <ms> ms`,
- * plus "(gate full)" when it wanted to animate but had to send the PNG.
+ * plus "(gate full)" or "(threads busy)" when it wanted to animate but had
+ * to send the PNG.
  */
-export async function cardImage(render, base, { gate = cardGifGate, env = process.env, flag = null, unique = false, log = console.log } = {}) {
+export async function cardImage(render, base, { gate = cardGifGate, pool = getRenderPool(), env = process.env, flag = null, unique = false, log = console.log, waitMs = CARD_QUEUE_WAIT_MS } = {}) {
   const started = performance.now();
   const name = unique ? `${base}-${uniqueSuffix()}` : base;
   const done = (buffer, note = "") => {
@@ -124,7 +135,21 @@ export async function cardImage(render, base, { gate = cardGifGate, env = proces
     return { buffer, name: `${name}.${kind}` };
   };
   const off = env.CARDS_ANIMATED === "0" || (flag && env[flag] === "0");
-  const release = off ? null : gate.tryAcquire();
+  if (off) return done(await renderOptions.run({}, () => render(false)));
+
+  if (pool) {
+    try {
+      return done(await renderOptions.run({ waitMs }, () => render(true)));
+    } catch (err) {
+      if (err?.code === "RENDER_QUEUE_TIMEOUT") {
+        return done(await renderOptions.run({ priority: true }, () => render(false)), " (threads busy)");
+      }
+      console.warn(`⚠️ animated ${base} render failed; sending PNG:`, err?.message || err);
+      return done(await renderOptions.run({ priority: true }, () => render(false)));
+    }
+  }
+
+  const release = gate.tryAcquire();
   if (release) {
     try {
       return done(await render(true));
@@ -133,6 +158,7 @@ export async function cardImage(render, base, { gate = cardGifGate, env = proces
     } finally {
       release();
     }
+    return done(await render(false));
   }
-  return done(await render(false), !off && !release ? " (gate full)" : "");
+  return done(await render(false), " (gate full)");
 }

@@ -25,8 +25,9 @@ import { logEvent } from "../utils/eventLog.js";
 import { getRank } from "../utils/rankSystem.js";
 import { cardImage } from "../utils/render/stage.js";
 import { catchView } from "../utils/render/catchCard.js";
-import { renderDailyCard } from "../utils/render/dailyCard.js";
+
 import { dexProgress } from "../utils/render/dexProgress.js";
+import { threaded } from "../utils/render/renderers.js";
 
 // ==========================================================
 // Constants
@@ -52,7 +53,6 @@ function getUTCDateString() {
 export const data = new SlashCommandBuilder()
   .setName("daily")
   .setDescription("Claim your daily reward (2 Pokémon + CC + TP + stone chance)");
-
 
 // ==========================================================
 // EXECUTION
@@ -265,7 +265,7 @@ export async function execute(
           rankUp: rankAfter && rankAfter !== rankBefore ? rankAfter : null,
           dex: dexProgress(user, [pick1.id, pick2.id]), // today's regions + national, after both catches
         };
-        const card = await cardImage((animate) => renderDailyCard(dailyView, { animate }), "daily");
+        const card = await cardImage((animate) => threaded.daily(dailyView, { animate }), "daily");
         return safeReply(interaction, {
           ...(saveAck.note ? { content: saveAck.note } : {}),
           files: [new AttachmentBuilder(card.buffer, { name: card.name })],

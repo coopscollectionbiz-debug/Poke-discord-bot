@@ -619,6 +619,8 @@ import {
   shutdown as shutdownEventLog,
 } from "./utils/eventLog.js";
 import { mountAdminDashboard } from "./routes/admindashboard.js";
+import { startLoopLagMonitor } from "./utils/loopLag.js";
+import { getRenderPool, renderPoolStatus } from "./utils/render/renderPool.js";
 
 // ==========================================================
 // ⚙️ Global Constants
@@ -809,6 +811,12 @@ function supersede(reason) {
   console.error(`⛔ SUPERSEDED: ${reason}. Not ready; no further writes from this process.`);
 }
 
+// Main-thread stalls, logged each minute and summed up on /readyz. The
+// render threads start now rather than on the first image, so the first
+// card after a restart doesn't also wait for them to load.
+const loopLag = startLoopLagMonitor();
+getRenderPool();
+
 app.get("/readyz", (_, res) => {
   const save = getSaveHealth();
   const body = {
@@ -822,6 +830,8 @@ app.get("/readyz", (_, res) => {
     durableVolume: process.env.LOCAL_IS_DURABLE === "1",
     localSave: { degraded: save.degraded, consecutiveFailures: save.consecutiveFailures, lastWriteAt: save.lastWriteAt, pendingChanges: save.pendingChanges },
     discordBackup: backupStatus,
+    loopLag: loopLag.status(),
+    renderThreads: renderPoolStatus(),
   };
   res.status(isReady ? 200 : 503).json(body);
 });

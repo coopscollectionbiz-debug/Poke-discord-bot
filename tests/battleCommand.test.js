@@ -19,6 +19,16 @@ import { GifReader } from "omggif";
 import { portraitBox, FRAME_WIDTH } from "../utils/battle/render.js";
 
 PLAYBACK.delayMs = 0;
+
+// An open or ranked battle's replay and EXP card run after /battle returns,
+// so tests wait for them to land.
+async function until(done, ms = 60_000) {
+  const end = Date.now() + ms;
+  while (!done()) {
+    if (Date.now() > end) throw new Error("timed out waiting for the background replay");
+    await new Promise((r) => setTimeout(r, 5));
+  }
+}
 const quiet = console.log;
 console.log = (...a) => { if (!String(a[0]).includes("loaded from memory")) quiet(...a); };
 
@@ -203,6 +213,8 @@ section("Private EXP messages");
 {
   const t = harness();
   await t.run("A", "B");
+  assertEqual(t.log.followUps.length, 0, "/battle returns before the replay ends, so it never hits the command timeout");
+  await until(() => t.log.followUps.length);
   assertEqual(t.log.followUps.map((f) => f.userId), ["A"], "Open battle: only the Challenger gets an EXP message");
   const [a] = t.log.followUps;
   assertEqual(a.flags, MessageFlags.Ephemeral, "only they can see it");
@@ -233,6 +245,7 @@ section("Each player's trainer in the replay");
     const t = harness();
     t.trainerData.A.displayedTrainer = trainerA;
     await t.run("A", "B");
+    await until(() => t.log.messages[0]?.opts?.files?.length); // the replay posts after /battle returns
     const r = new GifReader(t.log.messages[0].opts.files[0].attachment);
     const px = new Uint8Array(r.width * r.height * 4);
     r.decodeAndBlitFrameRGBA(0, px);

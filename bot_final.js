@@ -1711,10 +1711,11 @@ if (interaction.isChatInputCommand()) {
     // If the command timed out, we already handled messaging
     if (timedOut) return;
 
+    // Every command's total time, so card load times can be read from the
+    // logs next to each card's "🖼️ card" render line (utils/render/stage.js).
     const ms = Date.now() - startedAt;
-    if (ms > 2500) {
-      console.warn(`⏱️ Slow slash command: ${interaction.commandName} took ${ms}ms`);
-    }
+    if (ms > 2500) console.warn(`⏱️ Slow slash command: ${interaction.commandName} took ${ms}ms`);
+    else console.log(`⏱️ ${interaction.commandName} took ${ms}ms`);
 
     // If command finished but never replied, close it cleanly
     if (interaction.deferred && !interaction.replied) {

@@ -561,7 +561,7 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
         displayName: username,
         trainer: user.displayedTrainer ? { name: trainerInfo.name, tier: trainerInfo.rarityKey } : null,
       });
-      const card = await cardImage((animate) => renderTrainerCard(tcView, { animate }), "trainercard");
+      const card = await cardImage((animate) => renderTrainerCard(tcView, { animate }), "trainercard", { unique: true });
       return await interaction.editReply({ embeds: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })], components: [] });
     } catch (err) {
       console.warn("⚠️ trainer card render failed; sending embed:", err?.message || err);

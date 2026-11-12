@@ -114,13 +114,21 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
   });
   await interaction.editReply("⚔️ Your battle is starting below.");
   const names = displayNames(interaction, opponent);
+  // The replay (up to PLAYBACK.maxUpdates images, PLAYBACK.delayMs apart) runs
+  // after the command returns, as wager battles' do, so a long battle never
+  // trips the command timeout. The EXP card still follows the replay.
+  replayThenExp(interaction, outcome, challengerId, names, trainerData);
+}
+
+/** The replay, then the Challenger's private EXP card (only they earn EXP in casual and ranked battles). Never throws. */
+export async function replayThenExp(interaction, outcome, challengerId, names, trainerData, { play = playBattle, exp = sendExp } = {}) {
   try {
-    await playBattle(interaction.channel, outcome, names);
+    await play(interaction.channel, outcome, names);
   } catch (err) {
     console.warn("⚠️ battle post failed:", err?.message || err);
     await interaction.editReply("Your battle counted, but I couldn't post it in this channel.").catch(() => {});
   }
-  await sendExp(interaction, outcome, challengerId, names, trainerData[challengerId]); // only the Challenger earns EXP in casual and ranked battles
+  await exp(interaction, outcome, challengerId, names, trainerData[challengerId]);
 }
 
 // ----------------------------------------------------------

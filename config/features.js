@@ -54,13 +54,15 @@ export function isMegaFormAllowedByFlags(formId, env = process.env) {
 //   MEGA_BATTLES_ENABLED    Mega transformation in battle (Phase M2). OPT-IN:
 //                           off unless explicitly "1"/"true"/"yes"/"on", even
 //                           when the master switch is on
-//   (rewards)               Mega Stone / Shard acquisition: Phase M4 (not built)
+//   MEGA_REWARDS_ENABLED    Mega Shards (daily and battle-win chances, CC
+//                           purchase) and the shard shop for Mega Stones
+//                           (config/megaRewards.js). OPT-IN like battles
 // ----------------------------------------------------------
 
 export const MEGA_CAPABILITIES = Object.freeze(["dashboard", "unlock", "team", "battle", "rewards"]);
-const BUILT = Object.freeze({ dashboard: true, unlock: true, team: true, battle: true, rewards: false });
-const SUB_FLAG = Object.freeze({ dashboard: "MEGA_DASHBOARD_ENABLED", unlock: "MEGA_UNLOCKS_ENABLED", team: "MEGA_TEAMS_ENABLED", battle: "MEGA_BATTLES_ENABLED" });
-const OPT_IN = new Set(["battle"]); // these sub-switches default OFF
+const BUILT = Object.freeze({ dashboard: true, unlock: true, team: true, battle: true, rewards: true });
+const SUB_FLAG = Object.freeze({ dashboard: "MEGA_DASHBOARD_ENABLED", unlock: "MEGA_UNLOCKS_ENABLED", team: "MEGA_TEAMS_ENABLED", battle: "MEGA_BATTLES_ENABLED", rewards: "MEGA_REWARDS_ENABLED" });
+const OPT_IN = new Set(["battle", "rewards"]); // these sub-switches default OFF
 const OFF = new Set(["0", "false", "no", "off"]);
 
 /** Is one Mega capability available? Unknown capabilities are always off. */

@@ -29,6 +29,10 @@
         <img src="/public/sprites/items/evolution_stone.png" class="stat-icon" alt="" />
         <span id="stoneCount">0</span> <span class="stat-label">Stones</span>
       </div>
+      <div class="stat-item" id="megaShardStat" hidden>
+        <span class="stat-icon mega-shard-glyph" aria-hidden="true">💠</span>
+        <span id="shardCount">0</span> <span class="stat-label">Mega Shards</span>
+      </div>
     </div>
 
     <!-- Live events: banner, filled by script.js (public/shared/liveEvents.js) -->
@@ -79,6 +83,18 @@
       </div>
     </section>
 
+    <!-- Mega Evolution: shown only while the server's Mega rewards switch is on (mega.js) -->
+    <section class="shop-section mega-shop" id="megaShop" aria-labelledby="megaHeading" hidden>
+      <h2 id="megaHeading">Mega Evolution</h2>
+      <p class="subtitle">Collect Mega Shards from /daily, battle wins, or here with CC. Spend them on any Mega Stone whose Mega can battle.</p>
+      <h3 class="mega-subhead">Mega Shards</h3>
+      <p class="subtitle" id="megaWeekly" aria-live="polite"></p>
+      <div class="shop-grid" id="megaShardPacks"></div>
+      <h3 class="mega-subhead">Mega Stones</h3>
+      <p class="subtitle" id="megaStonesEmpty" hidden>No Mega Stones are for sale right now.</p>
+      <div class="shop-grid" id="megaStones"></div>
+    </section>
+
     <section class="shop-section" aria-labelledby="weeklyHeading">
       <h2 id="weeklyHeading">Weekly Pack</h2>
       <p class="subtitle">Claim a free bundle once per week.</p>
@@ -104,6 +120,7 @@
 
   <script type="module" src="/public/shared/shell.js"></script>
   <script type="module" src="/public/dashboardshop/script.js"></script>
+  <script type="module" src="/public/dashboardshop/mega.js"></script>
   <script type="module" src="/public/dashboardshop/tms.js"></script>
   <script type="module" src="/public/dashboardshop/heldItems.js"></script>
 

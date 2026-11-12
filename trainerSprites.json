@@ -39,14 +39,46 @@
         "file": "acetrainer-gen2.png",
         "disabled": true
       },
-      "acetrainer-gen3.png",
-      "acetrainer-gen3jp.png",
-      "acetrainer-gen3rs.png",
-      "acetrainer-gen4.png",
-      "acetrainer-gen4dp.png",
-      "acetrainer-gen6.png",
-      "acetrainer-gen6xy.png",
-      "acetrainer-gen7.png",
+      {
+        "file": "acetrainer-gen3.png",
+        "disabled": true,
+        "mergedInto": "acetrainer.png"
+      },
+      {
+        "file": "acetrainer-gen3jp.png",
+        "disabled": true,
+        "mergedInto": "acetrainer.png"
+      },
+      {
+        "file": "acetrainer-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "acetrainer.png"
+      },
+      {
+        "file": "acetrainer-gen4.png",
+        "disabled": true,
+        "mergedInto": "acetrainer.png"
+      },
+      {
+        "file": "acetrainer-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "acetrainer.png"
+      },
+      {
+        "file": "acetrainer-gen6.png",
+        "disabled": true,
+        "mergedInto": "acetrainer.png"
+      },
+      {
+        "file": "acetrainer-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "acetrainer.png"
+      },
+      {
+        "file": "acetrainer-gen7.png",
+        "disabled": true,
+        "mergedInto": "acetrainer.png"
+      },
       "acetrainer.png",
       "acetrainerf.png"
     ],
@@ -54,7 +86,11 @@
   },
   "acetrainercouple": {
     "sprites": [
-      "acetrainercouple-gen3.png",
+      {
+        "file": "acetrainercouple-gen3.png",
+        "disabled": true,
+        "mergedInto": "acetrainercouple.png"
+      },
       "acetrainercouple.png"
     ],
     "tier": "Uncommon"
@@ -73,12 +109,36 @@
         "file": "acetrainerf-gen2.png",
         "disabled": true
       },
-      "acetrainerf-gen3.png",
-      "acetrainerf-gen3rs.png",
-      "acetrainerf-gen4.png",
-      "acetrainerf-gen4dp.png",
-      "acetrainerf-gen6.png",
-      "acetrainerf-gen6xy.png",
+      {
+        "file": "acetrainerf-gen3.png",
+        "disabled": true,
+        "mergedInto": "acetrainerf-gen7.png"
+      },
+      {
+        "file": "acetrainerf-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "acetrainerf-gen7.png"
+      },
+      {
+        "file": "acetrainerf-gen4.png",
+        "disabled": true,
+        "mergedInto": "acetrainerf-gen7.png"
+      },
+      {
+        "file": "acetrainerf-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "acetrainerf-gen7.png"
+      },
+      {
+        "file": "acetrainerf-gen6.png",
+        "disabled": true,
+        "mergedInto": "acetrainerf-gen7.png"
+      },
+      {
+        "file": "acetrainerf-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "acetrainerf-gen7.png"
+      },
       "acetrainerf-gen7.png"
     ],
     "tier": "Uncommon"
@@ -96,7 +156,7 @@
     ],
     "tier": "Rare"
   },
-"adamanmasters": {
+  "adamanmasters": {
     "sprites": [
       "adaman-masters.png"
     ],
@@ -127,7 +187,11 @@
         "file": "agatha-gen1rb.png",
         "disabled": true
       },
-      "agatha-gen3.png",
+      {
+        "file": "agatha-gen3.png",
+        "disabled": true,
+        "mergedInto": "agatha-lgpe.png"
+      },
       "agatha-lgpe.png"
     ],
     "tier": "Epic"
@@ -189,8 +253,16 @@
   },
   "anabel": {
     "sprites": [
-      "anabel-gen3.png",
-      "anabel-gen7.png",
+      {
+        "file": "anabel-gen3.png",
+        "disabled": true,
+        "mergedInto": "anabel.png"
+      },
+      {
+        "file": "anabel-gen7.png",
+        "disabled": true,
+        "mergedInto": "anabel.png"
+      },
       "anabel.png"
     ],
     "tier": "Epic"
@@ -246,8 +318,16 @@
   },
   "archie": {
     "sprites": [
-      "archie-gen3.png",
-      "archie-gen6.png",
+      {
+        "file": "archie-gen3.png",
+        "disabled": true,
+        "mergedInto": "archie-usum.png"
+      },
+      {
+        "file": "archie-gen6.png",
+        "disabled": true,
+        "mergedInto": "archie-usum.png"
+      },
       "archie-usum.png"
     ],
     "tier": "Epic"
@@ -278,19 +358,47 @@
   },
   "aromalady": {
     "sprites": [
-      "aromalady-gen3.png",
-      "aromalady-gen3rs.png",
-      "aromalady-gen6.png",
+      {
+        "file": "aromalady-gen3.png",
+        "disabled": true,
+        "mergedInto": "aromalady.png"
+      },
+      {
+        "file": "aromalady-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "aromalady.png"
+      },
+      {
+        "file": "aromalady-gen6.png",
+        "disabled": true,
+        "mergedInto": "aromalady.png"
+      },
       "aromalady.png"
     ],
     "tier": "Uncommon"
   },
   "artist": {
     "sprites": [
-      "artist-gen4.png",
-      "artist-gen6.png",
-      "artist-gen8.png",
-      "artist-gen9.png",
+      {
+        "file": "artist-gen4.png",
+        "disabled": true,
+        "mergedInto": "artist.png"
+      },
+      {
+        "file": "artist-gen6.png",
+        "disabled": true,
+        "mergedInto": "artist.png"
+      },
+      {
+        "file": "artist-gen8.png",
+        "disabled": true,
+        "mergedInto": "artist.png"
+      },
+      {
+        "file": "artist-gen9.png",
+        "disabled": true,
+        "mergedInto": "artist.png"
+      },
       "artist.png"
     ],
     "tier": "Uncommon"
@@ -389,9 +497,21 @@
   },
   "backpacker": {
     "sprites": [
-      "backpacker-gen6.png",
-      "backpacker-gen8.png",
-      "backpacker-gen9.png",
+      {
+        "file": "backpacker-gen6.png",
+        "disabled": true,
+        "mergedInto": "backpacker.png"
+      },
+      {
+        "file": "backpacker-gen8.png",
+        "disabled": true,
+        "mergedInto": "backpacker.png"
+      },
+      {
+        "file": "backpacker-gen9.png",
+        "disabled": true,
+        "mergedInto": "backpacker.png"
+      },
       "backpacker.png",
       "backpackerf.png"
     ],
@@ -429,10 +549,26 @@
   },
   "battlegirl": {
     "sprites": [
-      "battlegirl-gen3.png",
-      "battlegirl-gen4.png",
-      "battlegirl-gen6.png",
-      "battlegirl-gen6xy.png",
+      {
+        "file": "battlegirl-gen3.png",
+        "disabled": true,
+        "mergedInto": "battlegirl.png"
+      },
+      {
+        "file": "battlegirl-gen4.png",
+        "disabled": true,
+        "mergedInto": "battlegirl.png"
+      },
+      {
+        "file": "battlegirl-gen6.png",
+        "disabled": true,
+        "mergedInto": "battlegirl.png"
+      },
+      {
+        "file": "battlegirl-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "battlegirl.png"
+      },
       "battlegirl.png"
     ],
     "tier": "Common"
@@ -443,7 +579,7 @@
     ],
     "tier": "Rare"
   },
- "beamasters": {
+  "beamasters": {
     "sprites": [
       "bea-masters.png"
     ],
@@ -451,19 +587,55 @@
   },
   "beauty": {
     "sprites": [
-      {"file":"beauty-gen1.png","disabled":true},
-      {"file":"beauty-gen1rb.png","disabled":true},
-      {"file":"beauty-gen2.png","disabled":true},
-      {"file":"beauty-gen2jp.png","disabled":true},
-      "beauty-gen3.png",
-      "beauty-gen3rs.png",
+      {
+        "file": "beauty-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "beauty-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "beauty-gen2.png",
+        "disabled": true
+      },
+      {
+        "file": "beauty-gen2jp.png",
+        "disabled": true
+      },
+      {
+        "file": "beauty-gen3.png",
+        "disabled": true,
+        "mergedInto": "beauty.png"
+      },
+      {
+        "file": "beauty-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "beauty.png"
+      },
       "beauty-gen4dp.png",
       "beauty-gen5bw2.png",
-      "beauty-gen6.png",
-      "beauty-gen6xy.png",
-      "beauty-gen7.png",
+      {
+        "file": "beauty-gen6.png",
+        "disabled": true,
+        "mergedInto": "beauty.png"
+      },
+      {
+        "file": "beauty-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "beauty.png"
+      },
+      {
+        "file": "beauty-gen7.png",
+        "disabled": true,
+        "mergedInto": "beauty.png"
+      },
       "beauty-gen8.png",
-      "beauty-gen9.png",
+      {
+        "file": "beauty-gen9.png",
+        "disabled": true,
+        "mergedInto": "beauty.png"
+      },
       "beauty.png"
     ],
     "tier": "Uncommon"
@@ -480,7 +652,7 @@
     ],
     "tier": "Epic"
   },
- "bedemasters": {
+  "bedemasters": {
     "sprites": [
       "bede-masters.png"
     ],
@@ -552,7 +724,7 @@
     ],
     "tier": "Legendary"
   },
- "biancamasters": {
+  "biancamasters": {
     "sprites": [
       "bianca-masters.png"
     ],
@@ -572,22 +744,38 @@
         "file": "biker-gen2.png",
         "disabled": true
       },
-      "biker-gen3.png",
-      "biker-gen4.png",
+      {
+        "file": "biker-gen3.png",
+        "disabled": true,
+        "mergedInto": "biker.png"
+      },
+      {
+        "file": "biker-gen4.png",
+        "disabled": true,
+        "mergedInto": "biker.png"
+      },
       "biker.png"
     ],
     "tier": "Common"
   },
   "bill": {
     "sprites": [
-      "bill-gen3.png",
+      {
+        "file": "bill-gen3.png",
+        "disabled": true,
+        "mergedInto": "bill.png"
+      },
       "bill.png"
     ],
     "tier": "Rare"
   },
   "birch": {
     "sprites": [
-      "birch-gen3.png",
+      {
+        "file": "birch-gen3.png",
+        "disabled": true,
+        "mergedInto": "birch.png"
+      },
       "birch.png"
     ],
     "tier": "Rare"
@@ -606,10 +794,26 @@
         "file": "birdkeeper-gen2.png",
         "disabled": true
       },
-      "birdkeeper-gen3.png",
-      "birdkeeper-gen3rs.png",
-      "birdkeeper-gen4dp.png",
-      "birdkeeper-gen6.png",
+      {
+        "file": "birdkeeper-gen3.png",
+        "disabled": true,
+        "mergedInto": "birdkeeper.png"
+      },
+      {
+        "file": "birdkeeper-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "birdkeeper.png"
+      },
+      {
+        "file": "birdkeeper-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "birdkeeper.png"
+      },
+      {
+        "file": "birdkeeper-gen6.png",
+        "disabled": true,
+        "mergedInto": "birdkeeper.png"
+      },
       "birdkeeper.png"
     ],
     "tier": "Common"
@@ -628,14 +832,46 @@
         "file": "blackbelt-gen2.png",
         "disabled": true
       },
-      "blackbelt-gen3.png",
-      "blackbelt-gen3rs.png",
-      "blackbelt-gen4.png",
-      "blackbelt-gen4dp.png",
-      "blackbelt-gen6.png",
-      "blackbelt-gen7.png",
-      "blackbelt-gen8.png",
-      "blackbelt-gen9.png",
+      {
+        "file": "blackbelt-gen3.png",
+        "disabled": true,
+        "mergedInto": "blackbelt.png"
+      },
+      {
+        "file": "blackbelt-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "blackbelt.png"
+      },
+      {
+        "file": "blackbelt-gen4.png",
+        "disabled": true,
+        "mergedInto": "blackbelt.png"
+      },
+      {
+        "file": "blackbelt-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "blackbelt.png"
+      },
+      {
+        "file": "blackbelt-gen6.png",
+        "disabled": true,
+        "mergedInto": "blackbelt.png"
+      },
+      {
+        "file": "blackbelt-gen7.png",
+        "disabled": true,
+        "mergedInto": "blackbelt.png"
+      },
+      {
+        "file": "blackbelt-gen8.png",
+        "disabled": true,
+        "mergedInto": "blackbelt.png"
+      },
+      {
+        "file": "blackbelt-gen9.png",
+        "disabled": true,
+        "mergedInto": "blackbelt.png"
+      },
       "blackbelt.png"
     ],
     "tier": "Uncommon"
@@ -654,8 +890,16 @@
         "file": "blaine-gen2.png",
         "disabled": true
       },
-      "blaine-gen3.png",
-      "blaine-lgpe.png",
+      {
+        "file": "blaine-gen3.png",
+        "disabled": true,
+        "mergedInto": "blaine.png"
+      },
+      {
+        "file": "blaine-lgpe.png",
+        "disabled": true,
+        "mergedInto": "blaine.png"
+      },
       "blaine.png"
     ],
     "tier": "Rare"
@@ -702,11 +946,23 @@
         "file": "blue-gen2.png",
         "disabled": true
       },
-      "blue-gen3.png",
+      {
+        "file": "blue-gen3.png",
+        "disabled": true,
+        "mergedInto": "blue.png"
+      },
       "blue-gen3champion.png",
       "blue-gen3two.png",
-      "blue-gen7.png",
-      "blue-lgpe.png",
+      {
+        "file": "blue-gen7.png",
+        "disabled": true,
+        "mergedInto": "blue.png"
+      },
+      {
+        "file": "blue-lgpe.png",
+        "disabled": true,
+        "mergedInto": "blue.png"
+      },
       "blue-masters.png",
       "blue-masters2.png",
       "blue.png"
@@ -737,7 +993,11 @@
   },
   "brandon": {
     "sprites": [
-      "brandon-gen3.png",
+      {
+        "file": "brandon-gen3.png",
+        "disabled": true,
+        "mergedInto": "brandon.png"
+      },
       "brandon.png"
     ],
     "tier": "Epic"
@@ -750,8 +1010,16 @@
   },
   "brawly": {
     "sprites": [
-      "brawly-gen3.png",
-      "brawly-gen6.png",
+      {
+        "file": "brawly-gen3.png",
+        "disabled": true,
+        "mergedInto": "brawly.png"
+      },
+      {
+        "file": "brawly-gen6.png",
+        "disabled": true,
+        "mergedInto": "brawly.png"
+      },
       "brawly.png"
     ],
     "tier": "Rare"
@@ -814,13 +1082,20 @@
         "file": "brock-gen2.png",
         "disabled": true
       },
-      "brock-gen3.png",
-      "brock-lgpe.png",
-      
+      {
+        "file": "brock-gen3.png",
+        "disabled": true,
+        "mergedInto": "brock.png"
+      },
+      {
+        "file": "brock-lgpe.png",
+        "disabled": true,
+        "mergedInto": "brock.png"
+      },
       "brock.png"
     ],
     "tier": "Rare"
-},
+  },
   "brock-masters": {
     "sprites": [
       "brock-masters.png"
@@ -841,7 +1116,11 @@
         "file": "bruno-gen2.png",
         "disabled": true
       },
-      "bruno-gen3.png",
+      {
+        "file": "bruno-gen3.png",
+        "disabled": true,
+        "mergedInto": "bruno.png"
+      },
       "bruno.png"
     ],
     "tier": "Epic"
@@ -884,24 +1163,47 @@
         "file": "bugcatcher-gen2.png",
         "disabled": true
       },
-      "bugcatcher-gen3.png",
-      "bugcatcher-gen3rs.png",
-      "bugcatcher-gen4dp.png",
-      "bugcatcher-gen6.png",
+      {
+        "file": "bugcatcher-gen3.png",
+        "disabled": true,
+        "mergedInto": "bugcatcher.png"
+      },
+      {
+        "file": "bugcatcher-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "bugcatcher.png"
+      },
+      {
+        "file": "bugcatcher-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "bugcatcher.png"
+      },
+      {
+        "file": "bugcatcher-gen6.png",
+        "disabled": true,
+        "mergedInto": "bugcatcher.png"
+      },
       "bugcatcher.png"
     ],
     "tier": "Common"
   },
   "bugmaniac": {
     "sprites": [
-      "bugmaniac-gen3.png",
+      {
+        "file": "bugmaniac-gen3.png",
+        "disabled": true,
+        "mergedInto": "bugmaniac-gen6.png"
+      },
       "bugmaniac-gen6.png"
     ],
     "tier": "Common"
   },
   "bugsy": {
     "sprites": [
-      {"file":"bugsy-gen2.png","disabled":true},
+      {
+        "file": "bugsy-gen2.png",
+        "disabled": true
+      },
       "bugsy.png"
     ],
     "tier": "Rare"
@@ -918,13 +1220,12 @@
     ],
     "tier": "Rare"
   },
-"burghmasters": {
+  "burghmasters": {
     "sprites": [
       "burgh-masters.png"
     ],
     "tier": "Epic"
   },
-
   "burglar": {
     "sprites": [
       {
@@ -939,8 +1240,16 @@
         "file": "burglar-gen2.png",
         "disabled": true
       },
-      "burglar-gen3.png",
-      "burglar-lgpe.png",
+      {
+        "file": "burglar-gen3.png",
+        "disabled": true,
+        "mergedInto": "burglar.png"
+      },
+      {
+        "file": "burglar-lgpe.png",
+        "disabled": true,
+        "mergedInto": "burglar.png"
+      },
       "burglar.png"
     ],
     "tier": "Uncommon"
@@ -971,7 +1280,11 @@
   },
   "cabbie": {
     "sprites": [
-      "cabbie-gen9.png",
+      {
+        "file": "cabbie-gen9.png",
+        "disabled": true,
+        "mergedInto": "cabbie.png"
+      },
       "cabbie.png"
     ],
     "tier": "Common"
@@ -984,19 +1297,21 @@
   },
   "caitlin": {
     "sprites": [
-      "caitlin-gen4.png",
+      {
+        "file": "caitlin-gen4.png",
+        "disabled": true,
+        "mergedInto": "caitlin.png"
+      },
       "caitlin.png"
     ],
     "tier": "Epic"
   },
-
   "caitlin-masters": {
     "sprites": [
-     "caitlin-masters.png"
+      "caitlin-masters.png"
     ],
     "tier": "Legendary"
   },
-
   "calaba": {
     "sprites": [
       "calaba.png"
@@ -1017,8 +1332,16 @@
   },
   "cameraman": {
     "sprites": [
-      "cameraman-gen6.png",
-      "cameraman-gen8.png",
+      {
+        "file": "cameraman-gen6.png",
+        "disabled": true,
+        "mergedInto": "cameraman.png"
+      },
+      {
+        "file": "cameraman-gen8.png",
+        "disabled": true,
+        "mergedInto": "cameraman.png"
+      },
       "cameraman.png"
     ],
     "tier": "Common"
@@ -1029,16 +1352,28 @@
         "file": "camper-gen2.png",
         "disabled": true
       },
-      "camper-gen3.png",
-      "camper-gen3rs.png",
-      "camper-gen6.png",
+      {
+        "file": "camper-gen3.png",
+        "disabled": true,
+        "mergedInto": "camper.png"
+      },
+      {
+        "file": "camper-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "camper.png"
+      },
+      {
+        "file": "camper-gen6.png",
+        "disabled": true,
+        "mergedInto": "camper.png"
+      },
       "camper.png"
     ],
     "tier": "Common"
   },
   "candela": {
     "sprites": [
-	"candela.png"
+      "candela.png"
     ],
     "tier": "Rare"
   },
@@ -1054,14 +1389,12 @@
     ],
     "tier": "Rare"
   },
-
-"candice-masters": {
+  "candice-masters": {
     "sprites": [
       "candice-masters.png"
     ],
     "tier": "Epic"
   },
-
   "caraliss": {
     "sprites": [
       "caraliss.png"
@@ -1080,14 +1413,12 @@
     ],
     "tier": "Rare"
   },
-
- "carmine-festival": {
+  "carmine-festival": {
     "sprites": [
       "carmine-festival.png"
     ],
     "tier": "Epic"
   },
-
   "cedricjuniper": {
     "sprites": [
       "cedricjuniper.png"
@@ -1110,7 +1441,11 @@
         "file": "channeler-gen1rb.png",
         "disabled": true
       },
-      "channeler-gen3.png",
+      {
+        "file": "channeler-gen3.png",
+        "disabled": true,
+        "mergedInto": "channeler-lgpe.png"
+      },
       "channeler-lgpe.png"
     ],
     "tier": "Common"
@@ -1142,12 +1477,15 @@
   "cheren": {
     "sprites": [
       "cheren-gen5bw2.png",
-      "cheren.png"
+      {
+        "file": "cheren.png",
+        "disabled": true,
+        "mergedInto": "cheren-gen5bw2.png"
+      }
     ],
     "tier": "Epic"
   },
-
- "cheren-masters": {
+  "cheren-masters": {
     "sprites": [
       "cheren-masters.png"
     ],
@@ -1203,14 +1541,12 @@
     ],
     "tier": "Rare"
   },
-
-"clair-masters": {
+  "clair-masters": {
     "sprites": [
       "clair-masters.png"
     ],
     "tier": "Epic"
   },
-
   "clavell": {
     "sprites": [
       "clavell-s.png"
@@ -1231,7 +1567,11 @@
   },
   "clerk": {
     "sprites": [
-      "clerk-gen8.png",
+      {
+        "file": "clerk-gen8.png",
+        "disabled": true,
+        "mergedInto": "clerk.png"
+      },
       "clerk.png",
       "clerkf.png"
     ],
@@ -1293,9 +1633,21 @@
   },
   "collector": {
     "sprites": [
-      "collector-gen3.png",
-      "collector-gen6.png",
-      "collector-gen7.png",
+      {
+        "file": "collector-gen3.png",
+        "disabled": true,
+        "mergedInto": "collector.png"
+      },
+      {
+        "file": "collector-gen6.png",
+        "disabled": true,
+        "mergedInto": "collector.png"
+      },
+      {
+        "file": "collector-gen7.png",
+        "disabled": true,
+        "mergedInto": "collector.png"
+      },
       "collector.png"
     ],
     "tier": "Uncommon"
@@ -1308,7 +1660,11 @@
   },
   "colress": {
     "sprites": [
-      "colress-gen7.png",
+      {
+        "file": "colress-gen7.png",
+        "disabled": true,
+        "mergedInto": "colress.png"
+      },
       "colress.png"
     ],
     "tier": "Rare"
@@ -1327,8 +1683,16 @@
   },
   "cook": {
     "sprites": [
-      "cook-gen7.png",
-      "cook-gen9.png",
+      {
+        "file": "cook-gen7.png",
+        "disabled": true,
+        "mergedInto": "cook.png"
+      },
+      {
+        "file": "cook-gen9.png",
+        "disabled": true,
+        "mergedInto": "cook.png"
+      },
       "cook.png"
     ],
     "tier": "Common"
@@ -1345,14 +1709,12 @@
     ],
     "tier": "Rare"
   },
-
-"courtney": {
+  "courtney": {
     "sprites": [
       "courtney.png"
     ],
     "tier": "Rare"
   },
-
   "cowgirl": {
     "sprites": [
       "cowgirl.png"
@@ -1411,7 +1773,11 @@
   },
   "cyclist": {
     "sprites": [
-      "cyclist-gen4.png",
+      {
+        "file": "cyclist-gen4.png",
+        "disabled": true,
+        "mergedInto": "cyclist.png"
+      },
       "cyclist.png",
       "cyclistf.png"
     ],
@@ -1431,14 +1797,21 @@
   },
   "cynthia": {
     "sprites": [
-      "cynthia-gen4.png",
-      "cynthia-gen7.png",
+      {
+        "file": "cynthia-gen4.png",
+        "disabled": true,
+        "mergedInto": "cynthia.png"
+      },
+      {
+        "file": "cynthia-gen7.png",
+        "disabled": true,
+        "mergedInto": "cynthia.png"
+      },
       "cynthia.png"
     ],
     "tier": "Legendary"
   },
-
-"cynthia-alt": {
+  "cynthia-alt": {
     "sprites": [
       "cynthia-anime.png",
       "cynthia-anime2.png",
@@ -1449,7 +1822,6 @@
     ],
     "tier": "Mythic"
   },
-
   "cyrano": {
     "sprites": [
       "cyrano.png"
@@ -1462,14 +1834,12 @@
     ],
     "tier": "Epic"
   },
-
-"cyrus-masters": {
+  "cyrus-masters": {
     "sprites": [
       "cyrus-masters.png"
     ],
     "tier": "Legendary"
   },
-
   "dagero": {
     "sprites": [
       "dagero.png"
@@ -1484,7 +1854,11 @@
   },
   "daisy": {
     "sprites": [
-      "daisy-gen3.png",
+      {
+        "file": "daisy-gen3.png",
+        "disabled": true,
+        "mergedInto": "daisy.png"
+      },
       "daisy.png"
     ],
     "tier": "Rare"
@@ -1497,8 +1871,16 @@
   },
   "dancer": {
     "sprites": [
-      "dancer-gen7.png",
-      "dancer-gen8.png",
+      {
+        "file": "dancer-gen7.png",
+        "disabled": true,
+        "mergedInto": "dancer.png"
+      },
+      {
+        "file": "dancer-gen8.png",
+        "disabled": true,
+        "mergedInto": "dancer.png"
+      },
       "dancer.png"
     ],
     "tier": "Common"
@@ -1517,12 +1899,15 @@
   },
   "dawn": {
     "sprites": [
-      "dawn-gen4pt.png",
+      {
+        "file": "dawn-gen4pt.png",
+        "disabled": true,
+        "mergedInto": "dawn.png"
+      },
       "dawn.png"
     ],
     "tier": "Legendary"
   },
-
   "dawn-masters": {
     "sprites": [
       "dawn-masters.png",
@@ -1531,7 +1916,6 @@
     ],
     "tier": "Mythic"
   },
-
   "dawn-contest": {
     "sprites": [
       "dawn-contest.png"
@@ -1540,7 +1924,11 @@
   },
   "delinquent": {
     "sprites": [
-      "delinquent-gen9.png",
+      {
+        "file": "delinquent-gen9.png",
+        "disabled": true,
+        "mergedInto": "delinquent.png"
+      },
       "delinquent.png"
     ],
     "tier": "Uncommon"
@@ -1571,7 +1959,11 @@
   },
   "dexio": {
     "sprites": [
-      "dexio-gen6.png",
+      {
+        "file": "dexio-gen6.png",
+        "disabled": true,
+        "mergedInto": "dexio.png"
+      },
       "dexio.png"
     ],
     "tier": "Rare"
@@ -1588,18 +1980,20 @@
     ],
     "tier": "Legendary"
   },
-
-"diantha-masters": {
+  "diantha-masters": {
     "sprites": [
       "diantha-masters.png",
       "diantha-masters2.png"
     ],
     "tier": "Mythic"
   },
-
   "doctor": {
     "sprites": [
-      "doctor-gen8.png",
+      {
+        "file": "doctor-gen8.png",
+        "disabled": true,
+        "mergedInto": "doctor.png"
+      },
       "doctor.png"
     ],
     "tier": "Uncommon"
@@ -1618,9 +2012,21 @@
   },
   "dragontamer": {
     "sprites": [
-      "dragontamer-gen3.png",
-      "dragontamer-gen6.png",
-      "dragontamer-gen9.png",
+      {
+        "file": "dragontamer-gen3.png",
+        "disabled": true,
+        "mergedInto": "dragontamer.png"
+      },
+      {
+        "file": "dragontamer-gen6.png",
+        "disabled": true,
+        "mergedInto": "dragontamer.png"
+      },
+      {
+        "file": "dragontamer-gen9.png",
+        "disabled": true,
+        "mergedInto": "dragontamer.png"
+      },
       "dragontamer.png"
     ],
     "tier": "Uncommon"
@@ -1664,12 +2070,15 @@
   "elesa": {
     "sprites": [
       "elesa-gen5bw2.png",
-      "elesa.png"
+      {
+        "file": "elesa.png",
+        "disabled": true,
+        "mergedInto": "elesa-gen5bw2.png"
+      }
     ],
     "tier": "Rare"
   },
-
-"elesa-masters": {
+  "elesa-masters": {
     "sprites": [
       "elesa-masters.png",
       "elesa-masters2.png",
@@ -1677,7 +2086,6 @@
     ],
     "tier": "Epic"
   },
-
   "elio": {
     "sprites": [
       "elio-usum.png",
@@ -1749,13 +2157,20 @@
   },
   "erika": {
     "sprites": [
-      "erika-gen3.png",
-      "erika-lgpe.png",
+      {
+        "file": "erika-gen3.png",
+        "disabled": true,
+        "mergedInto": "erika.png"
+      },
+      {
+        "file": "erika-lgpe.png",
+        "disabled": true,
+        "mergedInto": "erika.png"
+      },
       "erika.png"
     ],
     "tier": "Rare"
   },
-
   "erika-masters": {
     "sprites": [
       "erika-masters.png",
@@ -1764,7 +2179,6 @@
     ],
     "tier": "Epic"
   },
-
   "essentia": {
     "sprites": [
       "essentia.png"
@@ -1773,8 +2187,14 @@
   },
   "ethan": {
     "sprites": [
-      {"file":"ethan-gen2.png","disabled":true},
-      {"file":"ethan-gen2c.png","disabled":true},
+      {
+        "file": "ethan-gen2.png",
+        "disabled": true
+      },
+      {
+        "file": "ethan-gen2c.png",
+        "disabled": true
+      },
       "ethan.png"
     ],
     "tier": "Legendary"
@@ -1809,14 +2229,22 @@
   },
   "expert": {
     "sprites": [
-      "expert-gen3.png",
+      {
+        "file": "expert-gen3.png",
+        "disabled": true,
+        "mergedInto": "expert-gen6.png"
+      },
       "expert-gen6.png"
     ],
     "tier": "Common"
   },
   "expertf": {
     "sprites": [
-      "expertf-gen3.png",
+      {
+        "file": "expertf-gen3.png",
+        "disabled": true,
+        "mergedInto": "expertf-gen6.png"
+      },
       "expertf-gen6.png"
     ],
     "tier": "Common"
@@ -1891,20 +2319,52 @@
         "file": "fisherman-gen2jp.png",
         "disabled": true
       },
-      "fisherman-gen3.png",
-      "fisherman-gen3rs.png",
-      "fisherman-gen4.png",
-      "fisherman-gen6.png",
-      "fisherman-gen6xy.png",
-      "fisherman-gen7.png",
+      {
+        "file": "fisherman-gen3.png",
+        "disabled": true,
+        "mergedInto": "fisherman.png"
+      },
+      {
+        "file": "fisherman-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "fisherman.png"
+      },
+      {
+        "file": "fisherman-gen4.png",
+        "disabled": true,
+        "mergedInto": "fisherman.png"
+      },
+      {
+        "file": "fisherman-gen6.png",
+        "disabled": true,
+        "mergedInto": "fisherman.png"
+      },
+      {
+        "file": "fisherman-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "fisherman.png"
+      },
+      {
+        "file": "fisherman-gen7.png",
+        "disabled": true,
+        "mergedInto": "fisherman.png"
+      },
       "fisherman.png"
     ],
     "tier": "Common"
   },
   "flannery": {
     "sprites": [
-      "flannery-gen3.png",
-      "flannery-gen6.png",
+      {
+        "file": "flannery-gen3.png",
+        "disabled": true,
+        "mergedInto": "flannery.png"
+      },
+      {
+        "file": "flannery-gen6.png",
+        "disabled": true,
+        "mergedInto": "flannery.png"
+      },
       "flannery.png"
     ],
     "tier": "Rare"
@@ -2021,7 +2481,7 @@
     ],
     "tier": "Rare"
   },
- "gardeniamasters": {
+  "gardeniamasters": {
     "sprites": [
       "gardenia-masters.png"
     ],
@@ -2047,22 +2507,62 @@
         "file": "gentleman-gen2.png",
         "disabled": true
       },
-      "gentleman-gen3.png",
-      "gentleman-gen3rs.png",
-      "gentleman-gen4.png",
-      "gentleman-gen4dp.png",
-      "gentleman-gen6.png",
-      "gentleman-gen6xy.png",
-      "gentleman-gen7.png",
-      "gentleman-gen8.png",
-      "gentleman-lgpe.png",
+      {
+        "file": "gentleman-gen3.png",
+        "disabled": true,
+        "mergedInto": "gentleman.png"
+      },
+      {
+        "file": "gentleman-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "gentleman.png"
+      },
+      {
+        "file": "gentleman-gen4.png",
+        "disabled": true,
+        "mergedInto": "gentleman.png"
+      },
+      {
+        "file": "gentleman-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "gentleman.png"
+      },
+      {
+        "file": "gentleman-gen6.png",
+        "disabled": true,
+        "mergedInto": "gentleman.png"
+      },
+      {
+        "file": "gentleman-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "gentleman.png"
+      },
+      {
+        "file": "gentleman-gen7.png",
+        "disabled": true,
+        "mergedInto": "gentleman.png"
+      },
+      {
+        "file": "gentleman-gen8.png",
+        "disabled": true,
+        "mergedInto": "gentleman.png"
+      },
+      {
+        "file": "gentleman-lgpe.png",
+        "disabled": true,
+        "mergedInto": "gentleman.png"
+      },
       "gentleman.png"
     ],
     "tier": "Uncommon"
   },
   "ghetsis": {
     "sprites": [
-      "ghetsis-gen5bw.png",
+      {
+        "file": "ghetsis-gen5bw.png",
+        "disabled": true,
+        "mergedInto": "ghetsis.png"
+      },
       "ghetsis.png"
     ],
     "tier": "Epic"
@@ -2095,13 +2595,21 @@
         "file": "giovanni-gen1rb.png",
         "disabled": true
       },
-      "giovanni-gen3.png",
-      "giovanni-lgpe.png",
+      {
+        "file": "giovanni-gen3.png",
+        "disabled": true,
+        "mergedInto": "giovanni.png"
+      },
+      {
+        "file": "giovanni-lgpe.png",
+        "disabled": true,
+        "mergedInto": "giovanni.png"
+      },
       "giovanni.png"
     ],
     "tier": "Legendary"
   },
-"giovannimasters": {
+  "giovannimasters": {
     "sprites": [
       "giovanni-masters.png"
     ],
@@ -2109,7 +2617,11 @@
   },
   "glacia": {
     "sprites": [
-      "glacia-gen3.png",
+      {
+        "file": "glacia-gen3.png",
+        "disabled": true,
+        "mergedInto": "glacia.png"
+      },
       "glacia.png"
     ],
     "tier": "Epic"
@@ -2147,7 +2659,6 @@
     ],
     "tier": "Mythic"
   },
-
   "golfer": {
     "sprites": [
       "golfer.png"
@@ -2180,14 +2691,22 @@
   },
   "greta": {
     "sprites": [
-      "greta-gen3.png",
+      {
+        "file": "greta-gen3.png",
+        "disabled": true,
+        "mergedInto": "greta.png"
+      },
       "greta.png"
     ],
     "tier": "Epic"
   },
   "grimsley": {
     "sprites": [
-      "grimsley-gen7.png",
+      {
+        "file": "grimsley-gen7.png",
+        "disabled": true,
+        "mergedInto": "grimsley.png"
+      },
       "grimsley.png"
     ],
     "tier": "Epic"
@@ -2210,9 +2729,21 @@
         "file": "guitarist-gen2.png",
         "disabled": true
       },
-      "guitarist-gen3.png",
-      "guitarist-gen4.png",
-      "guitarist-gen6.png",
+      {
+        "file": "guitarist-gen3.png",
+        "disabled": true,
+        "mergedInto": "guitarist.png"
+      },
+      {
+        "file": "guitarist-gen4.png",
+        "disabled": true,
+        "mergedInto": "guitarist.png"
+      },
+      {
+        "file": "guitarist-gen6.png",
+        "disabled": true,
+        "mergedInto": "guitarist.png"
+      },
       "guitarist.png"
     ],
     "tier": "Common"
@@ -2229,7 +2760,7 @@
     ],
     "tier": "Epic"
   },
- "guzmamasters": {
+  "guzmamasters": {
     "sprites": [
       "guzma-masters.png"
     ],
@@ -2277,7 +2808,7 @@
     ],
     "tier": "Epic"
   },
- "haumasters": {
+  "haumasters": {
     "sprites": [
       "hau-masters.png"
     ],
@@ -2327,8 +2858,16 @@
   },
   "hexmaniac": {
     "sprites": [
-      "hexmaniac-gen3.png",
-      "hexmaniac-gen3jp.png",
+      {
+        "file": "hexmaniac-gen3.png",
+        "disabled": true,
+        "mergedInto": "hexmaniac-gen6.png"
+      },
+      {
+        "file": "hexmaniac-gen3jp.png",
+        "disabled": true,
+        "mergedInto": "hexmaniac-gen6.png"
+      },
       "hexmaniac-gen6.png"
     ],
     "tier": "Common"
@@ -2347,13 +2886,41 @@
         "file": "hiker-gen2.png",
         "disabled": true
       },
-      "hiker-gen3.png",
-      "hiker-gen3rs.png",
-      "hiker-gen4.png",
-      "hiker-gen6.png",
-      "hiker-gen7.png",
-      "hiker-gen8.png",
-      "hiker-gen9.png",
+      {
+        "file": "hiker-gen3.png",
+        "disabled": true,
+        "mergedInto": "hiker.png"
+      },
+      {
+        "file": "hiker-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "hiker.png"
+      },
+      {
+        "file": "hiker-gen4.png",
+        "disabled": true,
+        "mergedInto": "hiker.png"
+      },
+      {
+        "file": "hiker-gen6.png",
+        "disabled": true,
+        "mergedInto": "hiker.png"
+      },
+      {
+        "file": "hiker-gen7.png",
+        "disabled": true,
+        "mergedInto": "hiker.png"
+      },
+      {
+        "file": "hiker-gen8.png",
+        "disabled": true,
+        "mergedInto": "hiker.png"
+      },
+      {
+        "file": "hiker-gen9.png",
+        "disabled": true,
+        "mergedInto": "hiker.png"
+      },
       "hiker.png"
     ],
     "tier": "Uncommon"
@@ -2461,8 +3028,16 @@
   },
   "interviewers": {
     "sprites": [
-      "interviewers-gen3.png",
-      "interviewers-gen6.png",
+      {
+        "file": "interviewers-gen3.png",
+        "disabled": true,
+        "mergedInto": "interviewers.png"
+      },
+      {
+        "file": "interviewers-gen6.png",
+        "disabled": true,
+        "mergedInto": "interviewers.png"
+      },
       "interviewers.png"
     ],
     "tier": "Common"
@@ -2495,7 +3070,11 @@
   "iris": {
     "sprites": [
       "iris-gen5bw2.png",
-      "iris.png"
+      {
+        "file": "iris.png",
+        "disabled": true,
+        "mergedInto": "iris-gen5bw2.png"
+      }
     ],
     "tier": "Legendary"
   },
@@ -2535,8 +3114,16 @@
   },
   "janitor": {
     "sprites": [
-      "janitor-gen7.png",
-      "janitor-gen9.png",
+      {
+        "file": "janitor-gen7.png",
+        "disabled": true,
+        "mergedInto": "janitor.png"
+      },
+      {
+        "file": "janitor-gen9.png",
+        "disabled": true,
+        "mergedInto": "janitor.png"
+      },
       "janitor.png"
     ],
     "tier": "Common"
@@ -2551,14 +3138,13 @@
     ],
     "tier": "Rare"
   },
-    "jasminealt": {
+  "jasminealt": {
     "sprites": [
       "jasmine-masters.png",
       "jasmine-masters2.png"
     ],
     "tier": "Epic"
   },
-
   "jasmine-contest": {
     "sprites": [
       "jasmine-contest.png"
@@ -2620,7 +3206,11 @@
   },
   "juan": {
     "sprites": [
-      "juan-gen3.png",
+      {
+        "file": "juan-gen3.png",
+        "disabled": true,
+        "mergedInto": "juan.png"
+      },
       "juan.png"
     ],
     "tier": "Rare"
@@ -2639,7 +3229,11 @@
         "file": "juggler-gen2.png",
         "disabled": true
       },
-      "juggler-gen3.png",
+      {
+        "file": "juggler-gen3.png",
+        "disabled": true,
+        "mergedInto": "juggler.png"
+      },
       "juggler.png"
     ],
     "tier": "Common"
@@ -2750,7 +3344,11 @@
   },
   "kindler": {
     "sprites": [
-      "kindler-gen3.png",
+      {
+        "file": "kindler-gen3.png",
+        "disabled": true,
+        "mergedInto": "kindler-gen6.png"
+      },
       "kindler-gen6.png"
     ],
     "tier": "Common"
@@ -2781,8 +3379,16 @@
         "file": "koga-gen2.png",
         "disabled": true
       },
-      "koga-gen3.png",
-      "koga-lgpe.png",
+      {
+        "file": "koga-gen3.png",
+        "disabled": true,
+        "mergedInto": "koga.png"
+      },
+      {
+        "file": "koga-lgpe.png",
+        "disabled": true,
+        "mergedInto": "koga.png"
+      },
       "koga.png"
     ],
     "tier": "Epic"
@@ -2805,18 +3411,16 @@
         "file": "kris-gen2.png",
         "disabled": true
       },
-      
       "kris.png"
     ],
     "tier": "Legendary"
-},
-"kris-masters": {
+  },
+  "kris-masters": {
     "sprites": [
       "kris-masters.png"
     ],
     "tier": "Mythic"
   },
-
   "kukui": {
     "sprites": [
       "kukui.png"
@@ -2855,11 +3459,31 @@
   },
   "lady": {
     "sprites": [
-      "lady-gen3.png",
-      "lady-gen3rs.png",
-      "lady-gen4.png",
-      "lady-gen6.png",
-      "lady-gen6oras.png",
+      {
+        "file": "lady-gen3.png",
+        "disabled": true,
+        "mergedInto": "lady.png"
+      },
+      {
+        "file": "lady-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "lady.png"
+      },
+      {
+        "file": "lady-gen4.png",
+        "disabled": true,
+        "mergedInto": "lady.png"
+      },
+      {
+        "file": "lady-gen6.png",
+        "disabled": true,
+        "mergedInto": "lady.png"
+      },
+      {
+        "file": "lady-gen6oras.png",
+        "disabled": true,
+        "mergedInto": "lady.png"
+      },
       "lady.png"
     ],
     "tier": "Uncommon"
@@ -2890,8 +3514,16 @@
         "file": "lance-gen2.png",
         "disabled": true
       },
-      "lance-gen3.png",
-      "lance-lgpe.png",
+      {
+        "file": "lance-gen3.png",
+        "disabled": true,
+        "mergedInto": "lance.png"
+      },
+      {
+        "file": "lance-lgpe.png",
+        "disabled": true,
+        "mergedInto": "lance.png"
+      },
       "lance.png"
     ],
     "tier": "Legendary"
@@ -2929,14 +3561,46 @@
         "file": "lass-gen2.png",
         "disabled": true
       },
-      "lass-gen3.png",
-      "lass-gen3rs.png",
-      "lass-gen4.png",
-      "lass-gen4dp.png",
-      "lass-gen6.png",
-      "lass-gen6oras.png",
-      "lass-gen7.png",
-      "lass-gen8.png",
+      {
+        "file": "lass-gen3.png",
+        "disabled": true,
+        "mergedInto": "lass.png"
+      },
+      {
+        "file": "lass-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "lass.png"
+      },
+      {
+        "file": "lass-gen4.png",
+        "disabled": true,
+        "mergedInto": "lass.png"
+      },
+      {
+        "file": "lass-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "lass.png"
+      },
+      {
+        "file": "lass-gen6.png",
+        "disabled": true,
+        "mergedInto": "lass.png"
+      },
+      {
+        "file": "lass-gen6oras.png",
+        "disabled": true,
+        "mergedInto": "lass.png"
+      },
+      {
+        "file": "lass-gen7.png",
+        "disabled": true,
+        "mergedInto": "lass.png"
+      },
+      {
+        "file": "lass-gen8.png",
+        "disabled": true,
+        "mergedInto": "lass.png"
+      },
       "lass.png"
     ],
     "tier": "Common"
@@ -2954,7 +3618,7 @@
     ],
     "tier": "Legendary"
   },
-"leafalt": {
+  "leafalt": {
     "sprites": [
       "leaf-masters.png",
       "leaf-masters2.png"
@@ -3062,7 +3726,11 @@
   },
   "liza": {
     "sprites": [
-      "liza-gen6.png",
+      {
+        "file": "liza-gen6.png",
+        "disabled": true,
+        "mergedInto": "liza.png"
+      },
       "liza.png"
     ],
     "tier": "Rare"
@@ -3083,7 +3751,11 @@
         "file": "lorelei-gen1rb.png",
         "disabled": true
       },
-      "lorelei-gen3.png",
+      {
+        "file": "lorelei-gen3.png",
+        "disabled": true,
+        "mergedInto": "lorelei-lgpe.png"
+      },
       "lorelei-lgpe.png"
     ],
     "tier": "Epic"
@@ -3102,7 +3774,11 @@
         "file": "ltsurge-gen2.png",
         "disabled": true
       },
-      "ltsurge-gen3.png",
+      {
+        "file": "ltsurge-gen3.png",
+        "disabled": true,
+        "mergedInto": "ltsurge.png"
+      },
       "ltsurge.png"
     ],
     "tier": "Rare"
@@ -3110,7 +3786,11 @@
   "lucas": {
     "sprites": [
       "lucas-gen4pt.png",
-      "lucas.png"
+      {
+        "file": "lucas.png",
+        "disabled": true,
+        "mergedInto": "lucas-gen4pt.png"
+      }
     ],
     "tier": "Legendary"
   },
@@ -3128,7 +3808,11 @@
   },
   "lucy": {
     "sprites": [
-      "lucy-gen3.png",
+      {
+        "file": "lucy-gen3.png",
+        "disabled": true,
+        "mergedInto": "lucy.png"
+      },
       "lucy.png"
     ],
     "tier": "Epic"
@@ -3190,11 +3874,31 @@
   },
   "madame": {
     "sprites": [
-      "madame-gen4.png",
-      "madame-gen4dp.png",
-      "madame-gen6.png",
-      "madame-gen7.png",
-      "madame-gen8.png",
+      {
+        "file": "madame-gen4.png",
+        "disabled": true,
+        "mergedInto": "madame.png"
+      },
+      {
+        "file": "madame-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "madame.png"
+      },
+      {
+        "file": "madame-gen6.png",
+        "disabled": true,
+        "mergedInto": "madame.png"
+      },
+      {
+        "file": "madame-gen7.png",
+        "disabled": true,
+        "mergedInto": "madame.png"
+      },
+      {
+        "file": "madame-gen8.png",
+        "disabled": true,
+        "mergedInto": "madame.png"
+      },
       "madame.png"
     ],
     "tier": "Common"
@@ -3244,8 +3948,16 @@
   },
   "maid": {
     "sprites": [
-      "maid-gen4.png",
-      "maid-gen6.png",
+      {
+        "file": "maid-gen4.png",
+        "disabled": true,
+        "mergedInto": "maid.png"
+      },
+      {
+        "file": "maid-gen6.png",
+        "disabled": true,
+        "mergedInto": "maid.png"
+      },
       "maid.png"
     ],
     "tier": "Uncommon"
@@ -3332,27 +4044,43 @@
   },
   "matt": {
     "sprites": [
-      "matt-gen3.png",
+      {
+        "file": "matt-gen3.png",
+        "disabled": true,
+        "mergedInto": "matt.png"
+      },
       "matt.png"
     ],
     "tier": "Rare"
   },
   "maxie": {
     "sprites": [
-      "maxie-gen3.png",
+      {
+        "file": "maxie-gen3.png",
+        "disabled": true,
+        "mergedInto": "maxie-gen6.png"
+      },
       "maxie-gen6.png"
     ],
     "tier": "Epic"
   },
   "may": {
     "sprites": [
-      "may-gen3.png",
-      "may-gen3rs.png",
+      {
+        "file": "may-gen3.png",
+        "disabled": true,
+        "mergedInto": "may.png"
+      },
+      {
+        "file": "may-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "may.png"
+      },
       "may.png"
     ],
     "tier": "Legendary"
   },
- "maymasters": {
+  "maymasters": {
     "sprites": [
       "may-masters.png",
       "may-masters2.png",
@@ -3475,7 +4203,11 @@
   },
   "mina": {
     "sprites": [
-      "mina-lgpe.png",
+      {
+        "file": "mina-lgpe.png",
+        "disabled": true,
+        "mergedInto": "mina.png"
+      },
       "mina.png"
     ],
     "tier": "Rare"
@@ -3518,8 +4250,16 @@
         "file": "misty-gen2.png",
         "disabled": true
       },
-      "misty-gen3.png",
-      "misty-lgpe.png",
+      {
+        "file": "misty-gen3.png",
+        "disabled": true,
+        "mergedInto": "misty.png"
+      },
+      {
+        "file": "misty-lgpe.png",
+        "disabled": true,
+        "mergedInto": "misty.png"
+      },
       "misty.png"
     ],
     "tier": "Rare"
@@ -3601,7 +4341,7 @@
     ],
     "tier": "Rare"
   },
- "mortymasters": {
+  "mortymasters": {
     "sprites": [
       "morty-masters.png",
       "morty-masters2.png",
@@ -3629,8 +4369,16 @@
   },
   "musician": {
     "sprites": [
-      "musician-gen8.png",
-      "musician-gen9.png",
+      {
+        "file": "musician-gen8.png",
+        "disabled": true,
+        "mergedInto": "musician.png"
+      },
+      {
+        "file": "musician-gen9.png",
+        "disabled": true,
+        "mergedInto": "musician.png"
+      },
       "musician.png"
     ],
     "tier": "Common"
@@ -3685,7 +4433,7 @@
     ],
     "tier": "Legendary"
   },
- "natealt": {
+  "natealt": {
     "sprites": [
       "nate-masters.png",
       "nate-pokestar.png",
@@ -3733,8 +4481,16 @@
   },
   "ninjaboy": {
     "sprites": [
-      "ninjaboy-gen3.png",
-      "ninjaboy-gen6.png",
+      {
+        "file": "ninjaboy-gen3.png",
+        "disabled": true,
+        "mergedInto": "ninjaboy.png"
+      },
+      {
+        "file": "ninjaboy-gen6.png",
+        "disabled": true,
+        "mergedInto": "ninjaboy.png"
+      },
       "ninjaboy.png"
     ],
     "tier": "Common"
@@ -3753,15 +4509,27 @@
   },
   "noland": {
     "sprites": [
-      "noland-gen3.png",
+      {
+        "file": "noland-gen3.png",
+        "disabled": true,
+        "mergedInto": "noland.png"
+      },
       "noland.png"
     ],
     "tier": "Epic"
   },
   "norman": {
     "sprites": [
-      "norman-gen3.png",
-      "norman-gen6.png",
+      {
+        "file": "norman-gen3.png",
+        "disabled": true,
+        "mergedInto": "norman.png"
+      },
+      {
+        "file": "norman-gen6.png",
+        "disabled": true,
+        "mergedInto": "norman.png"
+      },
       "norman.png"
     ],
     "tier": "Rare"
@@ -3792,7 +4560,11 @@
         "file": "oak-gen2.png",
         "disabled": true
       },
-      "oak-gen3.png",
+      {
+        "file": "oak-gen3.png",
+        "disabled": true,
+        "mergedInto": "oak.png"
+      },
       "oak.png"
     ],
     "tier": "Rare"
@@ -3808,7 +4580,11 @@
   },
   "officeworker": {
     "sprites": [
-      "officeworker-gen9.png",
+      {
+        "file": "officeworker-gen9.png",
+        "disabled": true,
+        "mergedInto": "officeworker.png"
+      },
       "officeworker.png",
       "officeworkerf.png"
     ],
@@ -3894,9 +4670,21 @@
   },
   "parasollady": {
     "sprites": [
-      "parasollady-gen3.png",
-      "parasollady-gen4.png",
-      "parasollady-gen6.png",
+      {
+        "file": "parasollady-gen3.png",
+        "disabled": true,
+        "mergedInto": "parasollady.png"
+      },
+      {
+        "file": "parasollady-gen4.png",
+        "disabled": true,
+        "mergedInto": "parasollady.png"
+      },
+      {
+        "file": "parasollady-gen6.png",
+        "disabled": true,
+        "mergedInto": "parasollady.png"
+      },
       "parasollady.png"
     ],
     "tier": "Uncommon"
@@ -3969,7 +4757,11 @@
   },
   "phoebe": {
     "sprites": [
-      "phoebe-gen3.png",
+      {
+        "file": "phoebe-gen3.png",
+        "disabled": true,
+        "mergedInto": "phoebe-gen6.png"
+      },
       "phoebe-gen6.png"
     ],
     "tier": "Epic"
@@ -3998,9 +4790,21 @@
         "file": "picnicker-gen2.png",
         "disabled": true
       },
-      "picnicker-gen3.png",
-      "picnicker-gen3rs.png",
-      "picnicker-gen6.png",
+      {
+        "file": "picnicker-gen3.png",
+        "disabled": true,
+        "mergedInto": "picnicker.png"
+      },
+      {
+        "file": "picnicker-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "picnicker.png"
+      },
+      {
+        "file": "picnicker-gen6.png",
+        "disabled": true,
+        "mergedInto": "picnicker.png"
+      },
       "picnicker.png"
     ],
     "tier": "Common"
@@ -4026,7 +4830,11 @@
   },
   "plasmagrunt": {
     "sprites": [
-      "plasmagrunt-gen5bw.png",
+      {
+        "file": "plasmagrunt-gen5bw.png",
+        "disabled": true,
+        "mergedInto": "plasmagrunt.png"
+      },
       "plasmagrunt.png",
       "plasmagruntf.png"
     ],
@@ -4068,10 +4876,26 @@
         "file": "pokefan-gen2.png",
         "disabled": true
       },
-      "pokefan-gen3.png",
-      "pokefan-gen4.png",
-      "pokefan-gen6.png",
-      "pokefan-gen6xy.png",
+      {
+        "file": "pokefan-gen3.png",
+        "disabled": true,
+        "mergedInto": "pokefan.png"
+      },
+      {
+        "file": "pokefan-gen4.png",
+        "disabled": true,
+        "mergedInto": "pokefan.png"
+      },
+      {
+        "file": "pokefan-gen6.png",
+        "disabled": true,
+        "mergedInto": "pokefan.png"
+      },
+      {
+        "file": "pokefan-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "pokefan.png"
+      },
       "pokefan.png",
       "pokefanf.png"
     ],
@@ -4083,16 +4907,32 @@
         "file": "pokefanf-gen2.png",
         "disabled": true
       },
-      "pokefanf-gen3.png",
-      "pokefanf-gen4.png",
-      "pokefanf-gen6.png",
+      {
+        "file": "pokefanf-gen3.png",
+        "disabled": true,
+        "mergedInto": "pokefanf-gen6xy.png"
+      },
+      {
+        "file": "pokefanf-gen4.png",
+        "disabled": true,
+        "mergedInto": "pokefanf-gen6xy.png"
+      },
+      {
+        "file": "pokefanf-gen6.png",
+        "disabled": true,
+        "mergedInto": "pokefanf-gen6xy.png"
+      },
       "pokefanf-gen6xy.png"
     ],
     "tier": "Common"
   },
   "pokekid": {
     "sprites": [
-      "pokekid-gen8.png",
+      {
+        "file": "pokekid-gen8.png",
+        "disabled": true,
+        "mergedInto": "pokekid.png"
+      },
       "pokekid.png"
     ],
     "tier": "Common"
@@ -4117,22 +4957,62 @@
         "file": "pokemaniac-gen2.png",
         "disabled": true
       },
-      "pokemaniac-gen3.png",
-      "pokemaniac-gen3rs.png",
-      "pokemaniac-gen6.png",
-      "pokemaniac-gen9.png",
+      {
+        "file": "pokemaniac-gen3.png",
+        "disabled": true,
+        "mergedInto": "pokemaniac.png"
+      },
+      {
+        "file": "pokemaniac-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "pokemaniac.png"
+      },
+      {
+        "file": "pokemaniac-gen6.png",
+        "disabled": true,
+        "mergedInto": "pokemaniac.png"
+      },
+      {
+        "file": "pokemaniac-gen9.png",
+        "disabled": true,
+        "mergedInto": "pokemaniac.png"
+      },
       "pokemaniac.png"
     ],
     "tier": "Common"
   },
   "pokemonbreeder": {
     "sprites": [
-      "pokemonbreeder-gen3.png",
-      "pokemonbreeder-gen4.png",
-      "pokemonbreeder-gen6.png",
-      "pokemonbreeder-gen6xy.png",
-      "pokemonbreeder-gen7.png",
-      "pokemonbreeder-gen8.png",
+      {
+        "file": "pokemonbreeder-gen3.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreeder.png"
+      },
+      {
+        "file": "pokemonbreeder-gen4.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreeder.png"
+      },
+      {
+        "file": "pokemonbreeder-gen6.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreeder.png"
+      },
+      {
+        "file": "pokemonbreeder-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreeder.png"
+      },
+      {
+        "file": "pokemonbreeder-gen7.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreeder.png"
+      },
+      {
+        "file": "pokemonbreeder-gen8.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreeder.png"
+      },
       "pokemonbreeder.png",
       "pokemonbreederf.png"
     ],
@@ -4140,12 +5020,36 @@
   },
   "pokemonbreederf": {
     "sprites": [
-      "pokemonbreederf-gen3.png",
-      "pokemonbreederf-gen3frlg.png",
-      "pokemonbreederf-gen4.png",
-      "pokemonbreederf-gen6.png",
-      "pokemonbreederf-gen6xy.png",
-      "pokemonbreederf-gen7.png",
+      {
+        "file": "pokemonbreederf-gen3.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreederf-gen8.png"
+      },
+      {
+        "file": "pokemonbreederf-gen3frlg.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreederf-gen8.png"
+      },
+      {
+        "file": "pokemonbreederf-gen4.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreederf-gen8.png"
+      },
+      {
+        "file": "pokemonbreederf-gen6.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreederf-gen8.png"
+      },
+      {
+        "file": "pokemonbreederf-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreederf-gen8.png"
+      },
+      {
+        "file": "pokemonbreederf-gen7.png",
+        "disabled": true,
+        "mergedInto": "pokemonbreederf-gen8.png"
+      },
       "pokemonbreederf-gen8.png"
     ],
     "tier": "Uncommon"
@@ -4158,11 +5062,31 @@
   },
   "pokemonranger": {
     "sprites": [
-      "pokemonranger-gen3.png",
-      "pokemonranger-gen3rs.png",
-      "pokemonranger-gen4.png",
-      "pokemonranger-gen6.png",
-      "pokemonranger-gen6xy.png",
+      {
+        "file": "pokemonranger-gen3.png",
+        "disabled": true,
+        "mergedInto": "pokemonranger.png"
+      },
+      {
+        "file": "pokemonranger-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "pokemonranger.png"
+      },
+      {
+        "file": "pokemonranger-gen4.png",
+        "disabled": true,
+        "mergedInto": "pokemonranger.png"
+      },
+      {
+        "file": "pokemonranger-gen6.png",
+        "disabled": true,
+        "mergedInto": "pokemonranger.png"
+      },
+      {
+        "file": "pokemonranger-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "pokemonranger.png"
+      },
       "pokemonranger.png",
       "pokemonrangerf.png"
     ],
@@ -4170,19 +5094,47 @@
   },
   "pokemonrangerf": {
     "sprites": [
-      "pokemonrangerf-gen3.png",
-      "pokemonrangerf-gen3rs.png",
-      "pokemonrangerf-gen4.png",
-      "pokemonrangerf-gen6.png",
+      {
+        "file": "pokemonrangerf-gen3.png",
+        "disabled": true,
+        "mergedInto": "pokemonrangerf-gen6xy.png"
+      },
+      {
+        "file": "pokemonrangerf-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "pokemonrangerf-gen6xy.png"
+      },
+      {
+        "file": "pokemonrangerf-gen4.png",
+        "disabled": true,
+        "mergedInto": "pokemonrangerf-gen6xy.png"
+      },
+      {
+        "file": "pokemonrangerf-gen6.png",
+        "disabled": true,
+        "mergedInto": "pokemonrangerf-gen6xy.png"
+      },
       "pokemonrangerf-gen6xy.png"
     ],
     "tier": "Uncommon"
   },
   "policeman": {
     "sprites": [
-      "policeman-gen4.png",
-      "policeman-gen7.png",
-      "policeman-gen8.png",
+      {
+        "file": "policeman-gen4.png",
+        "disabled": true,
+        "mergedInto": "policeman.png"
+      },
+      {
+        "file": "policeman-gen7.png",
+        "disabled": true,
+        "mergedInto": "policeman.png"
+      },
+      {
+        "file": "policeman-gen8.png",
+        "disabled": true,
+        "mergedInto": "policeman.png"
+      },
       "policeman.png"
     ],
     "tier": "Uncommon"
@@ -4201,8 +5153,16 @@
   },
   "preschooler": {
     "sprites": [
-      "preschooler-gen6.png",
-      "preschooler-gen7.png",
+      {
+        "file": "preschooler-gen6.png",
+        "disabled": true,
+        "mergedInto": "preschooler.png"
+      },
+      {
+        "file": "preschooler-gen7.png",
+        "disabled": true,
+        "mergedInto": "preschooler.png"
+      },
       "preschooler.png",
       "preschoolerf.png"
     ],
@@ -4210,7 +5170,11 @@
   },
   "preschoolerf": {
     "sprites": [
-      "preschoolerf-gen6.png",
+      {
+        "file": "preschoolerf-gen6.png",
+        "disabled": true,
+        "mergedInto": "preschoolerf-gen7.png"
+      },
       "preschoolerf-gen7.png"
     ],
     "tier": "Common"
@@ -4251,11 +5215,31 @@
         "file": "psychic-gen2.png",
         "disabled": true
       },
-      "psychic-gen3.png",
-      "psychic-gen3rs.png",
-      "psychic-gen4.png",
-      "psychic-gen6.png",
-      "psychic-lgpe.png",
+      {
+        "file": "psychic-gen3.png",
+        "disabled": true,
+        "mergedInto": "psychic.png"
+      },
+      {
+        "file": "psychic-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "psychic.png"
+      },
+      {
+        "file": "psychic-gen4.png",
+        "disabled": true,
+        "mergedInto": "psychic.png"
+      },
+      {
+        "file": "psychic-gen6.png",
+        "disabled": true,
+        "mergedInto": "psychic.png"
+      },
+      {
+        "file": "psychic-lgpe.png",
+        "disabled": true,
+        "mergedInto": "psychic.png"
+      },
       "psychic.png",
       "psychicf.png"
     ],
@@ -4263,8 +5247,16 @@
   },
   "psychicf": {
     "sprites": [
-      "psychicf-gen3.png",
-      "psychicf-gen3rs.png",
+      {
+        "file": "psychicf-gen3.png",
+        "disabled": true,
+        "mergedInto": "psychicf-gen4.png"
+      },
+      {
+        "file": "psychicf-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "psychicf-gen4.png"
+      },
       "psychicf-gen4.png"
     ],
     "tier": "Uncommon"
@@ -4277,7 +5269,11 @@
   },
   "punkgirl": {
     "sprites": [
-      "punkgirl-gen7.png",
+      {
+        "file": "punkgirl-gen7.png",
+        "disabled": true,
+        "mergedInto": "punkgirl.png"
+      },
       "punkgirl.png"
     ],
     "tier": "Common"
@@ -4290,7 +5286,11 @@
   },
   "punkguy": {
     "sprites": [
-      "punkguy-gen7.png",
+      {
+        "file": "punkguy-gen7.png",
+        "disabled": true,
+        "mergedInto": "punkguy.png"
+      },
       "punkguy.png"
     ],
     "tier": "Common"
@@ -4359,9 +5359,21 @@
         "file": "red-gen2.png",
         "disabled": true
       },
-      "red-gen3.png",
-      "red-gen7.png",
-      "red-lgpe.png",
+      {
+        "file": "red-gen3.png",
+        "disabled": true,
+        "mergedInto": "red.png"
+      },
+      {
+        "file": "red-gen7.png",
+        "disabled": true,
+        "mergedInto": "red.png"
+      },
+      {
+        "file": "red-lgpe.png",
+        "disabled": true,
+        "mergedInto": "red.png"
+      },
       "red-masters.png",
       "red-masters2.png",
       "red-masters3.png",
@@ -4383,8 +5395,16 @@
   },
   "reporter": {
     "sprites": [
-      "reporter-gen6.png",
-      "reporter-gen8.png",
+      {
+        "file": "reporter-gen6.png",
+        "disabled": true,
+        "mergedInto": "reporter.png"
+      },
+      {
+        "file": "reporter-gen8.png",
+        "disabled": true,
+        "mergedInto": "reporter.png"
+      },
       "reporter.png"
     ],
     "tier": "Common"
@@ -4397,10 +5417,26 @@
   },
   "richboy": {
     "sprites": [
-      "richboy-gen3.png",
-      "richboy-gen4.png",
-      "richboy-gen6.png",
-      "richboy-gen6xy.png",
+      {
+        "file": "richboy-gen3.png",
+        "disabled": true,
+        "mergedInto": "richboy.png"
+      },
+      {
+        "file": "richboy-gen4.png",
+        "disabled": true,
+        "mergedInto": "richboy.png"
+      },
+      {
+        "file": "richboy-gen6.png",
+        "disabled": true,
+        "mergedInto": "richboy.png"
+      },
+      {
+        "file": "richboy-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "richboy.png"
+      },
       "richboy.png"
     ],
     "tier": "Common"
@@ -4419,7 +5455,11 @@
   },
   "risingstar": {
     "sprites": [
-      "risingstar-gen6.png",
+      {
+        "file": "risingstar-gen6.png",
+        "disabled": true,
+        "mergedInto": "risingstar.png"
+      },
       "risingstar.png",
       "risingstarf.png"
     ],
@@ -4559,7 +5599,11 @@
   },
   "roughneck": {
     "sprites": [
-      "roughneck-gen4.png",
+      {
+        "file": "roughneck-gen4.png",
+        "disabled": true,
+        "mergedInto": "roughneck.png"
+      },
       "roughneck.png"
     ],
     "tier": "Common"
@@ -4572,8 +5616,16 @@
   },
   "roxanne": {
     "sprites": [
-      "roxanne-gen3.png",
-      "roxanne-gen6.png",
+      {
+        "file": "roxanne-gen3.png",
+        "disabled": true,
+        "mergedInto": "roxanne.png"
+      },
+      {
+        "file": "roxanne-gen6.png",
+        "disabled": true,
+        "mergedInto": "roxanne.png"
+      },
       "roxanne.png"
     ],
     "tier": "Rare"
@@ -4610,9 +5662,21 @@
   },
   "ruinmaniac": {
     "sprites": [
-      "ruinmaniac-gen3.png",
-      "ruinmaniac-gen3rs.png",
-      "ruinmaniac-gen6.png",
+      {
+        "file": "ruinmaniac-gen3.png",
+        "disabled": true,
+        "mergedInto": "ruinmaniac.png"
+      },
+      {
+        "file": "ruinmaniac-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "ruinmaniac.png"
+      },
+      {
+        "file": "ruinmaniac-gen6.png",
+        "disabled": true,
+        "mergedInto": "ruinmaniac.png"
+      },
       "ruinmaniac.png"
     ],
     "tier": "Common"
@@ -4643,12 +5707,33 @@
   },
   "sabrina": {
     "sprites": [
-      "sabrina-frlg.png",
-      {"file":"sabrina-gen1.png","disabled":true},
-      {"file":"sabrina-gen1rb.png","disabled":true},
-      {"file":"sabrina-gen2.png","disabled":true},
-      "sabrina-gen3.png",
-      "sabrina-lgpe.png",
+      {
+        "file": "sabrina-frlg.png",
+        "disabled": true,
+        "mergedInto": "sabrina.png"
+      },
+      {
+        "file": "sabrina-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "sabrina-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "sabrina-gen2.png",
+        "disabled": true
+      },
+      {
+        "file": "sabrina-gen3.png",
+        "disabled": true,
+        "mergedInto": "sabrina.png"
+      },
+      {
+        "file": "sabrina-lgpe.png",
+        "disabled": true,
+        "mergedInto": "sabrina.png"
+      },
       "sabrina.png"
     ],
     "tier": "Rare"
@@ -4705,10 +5790,26 @@
         "file": "sailor-gen2.png",
         "disabled": true
       },
-      "sailor-gen3.png",
-      "sailor-gen3jp.png",
-      "sailor-gen3rs.png",
-      "sailor-gen6.png",
+      {
+        "file": "sailor-gen3.png",
+        "disabled": true,
+        "mergedInto": "sailor.png"
+      },
+      {
+        "file": "sailor-gen3jp.png",
+        "disabled": true,
+        "mergedInto": "sailor.png"
+      },
+      {
+        "file": "sailor-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "sailor.png"
+      },
+      {
+        "file": "sailor-gen6.png",
+        "disabled": true,
+        "mergedInto": "sailor.png"
+      },
       "sailor.png"
     ],
     "tier": "Uncommon"
@@ -4755,11 +5856,31 @@
   },
   "schoolkid": {
     "sprites": [
-      "schoolkid-gen3.png",
-      "schoolkid-gen4.png",
-      "schoolkid-gen4dp.png",
-      "schoolkid-gen6.png",
-      "schoolkid-gen8.png",
+      {
+        "file": "schoolkid-gen3.png",
+        "disabled": true,
+        "mergedInto": "schoolkid.png"
+      },
+      {
+        "file": "schoolkid-gen4.png",
+        "disabled": true,
+        "mergedInto": "schoolkid.png"
+      },
+      {
+        "file": "schoolkid-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "schoolkid.png"
+      },
+      {
+        "file": "schoolkid-gen6.png",
+        "disabled": true,
+        "mergedInto": "schoolkid.png"
+      },
+      {
+        "file": "schoolkid-gen8.png",
+        "disabled": true,
+        "mergedInto": "schoolkid.png"
+      },
       "schoolkid.png",
       "schoolkidf.png"
     ],
@@ -4767,9 +5888,21 @@
   },
   "schoolkidf": {
     "sprites": [
-      "schoolkidf-gen3.png",
-      "schoolkidf-gen4.png",
-      "schoolkidf-gen6.png",
+      {
+        "file": "schoolkidf-gen3.png",
+        "disabled": true,
+        "mergedInto": "schoolkidf-gen8.png"
+      },
+      {
+        "file": "schoolkidf-gen4.png",
+        "disabled": true,
+        "mergedInto": "schoolkidf-gen8.png"
+      },
+      {
+        "file": "schoolkidf-gen6.png",
+        "disabled": true,
+        "mergedInto": "schoolkidf-gen8.png"
+      },
       "schoolkidf-gen8.png"
     ],
     "tier": "Common"
@@ -4788,12 +5921,36 @@
         "file": "scientist-gen2.png",
         "disabled": true
       },
-      "scientist-gen3.png",
-      "scientist-gen4.png",
-      "scientist-gen4dp.png",
-      "scientist-gen6.png",
-      "scientist-gen7.png",
-      "scientist-gen9.png",
+      {
+        "file": "scientist-gen3.png",
+        "disabled": true,
+        "mergedInto": "scientist.png"
+      },
+      {
+        "file": "scientist-gen4.png",
+        "disabled": true,
+        "mergedInto": "scientist.png"
+      },
+      {
+        "file": "scientist-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "scientist.png"
+      },
+      {
+        "file": "scientist-gen6.png",
+        "disabled": true,
+        "mergedInto": "scientist.png"
+      },
+      {
+        "file": "scientist-gen7.png",
+        "disabled": true,
+        "mergedInto": "scientist.png"
+      },
+      {
+        "file": "scientist-gen9.png",
+        "disabled": true,
+        "mergedInto": "scientist.png"
+      },
       "scientist.png",
       "scientistf.png"
     ],
@@ -4896,7 +6053,11 @@
   },
   "shelly": {
     "sprites": [
-      "shelly-gen3.png",
+      {
+        "file": "shelly-gen3.png",
+        "disabled": true,
+        "mergedInto": "shelly.png"
+      },
       "shelly.png"
     ],
     "tier": "Rare"
@@ -4909,7 +6070,11 @@
   },
   "sidney": {
     "sprites": [
-      "sidney-gen3.png",
+      {
+        "file": "sidney-gen3.png",
+        "disabled": true,
+        "mergedInto": "sidney.png"
+      },
       "sidney.png"
     ],
     "tier": "Epic"
@@ -4941,8 +6106,14 @@
   },
   "silver": {
     "sprites": [
-      {"file":"silver-gen2.png","disabled":true},
-      {"file":"silver-gen2kanto.png","disabled":true},
+      {
+        "file": "silver-gen2.png",
+        "disabled": true
+      },
+      {
+        "file": "silver-gen2kanto.png",
+        "disabled": true
+      },
       "silver.png"
     ],
     "tier": "Legendary"
@@ -4955,15 +6126,27 @@
   },
   "sina": {
     "sprites": [
-      "sina-gen6.png",
+      {
+        "file": "sina-gen6.png",
+        "disabled": true,
+        "mergedInto": "sina.png"
+      },
       "sina.png"
     ],
     "tier": "Rare"
   },
   "sisandbro": {
     "sprites": [
-      "sisandbro-gen3.png",
-      "sisandbro-gen3rs.png",
+      {
+        "file": "sisandbro-gen3.png",
+        "disabled": true,
+        "mergedInto": "sisandbro.png"
+      },
+      {
+        "file": "sisandbro-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "sisandbro.png"
+      },
       "sisandbro.png"
     ],
     "tier": "Common"
@@ -5074,7 +6257,11 @@
   },
   "spenser": {
     "sprites": [
-      "spenser-gen3.png",
+      {
+        "file": "spenser-gen3.png",
+        "disabled": true,
+        "mergedInto": "spenser.png"
+      },
       "spenser.png"
     ],
     "tier": "Epic"
@@ -5101,8 +6288,16 @@
   },
   "steven": {
     "sprites": [
-      "steven-gen3.png",
-      "steven-gen6.png",
+      {
+        "file": "steven-gen3.png",
+        "disabled": true,
+        "mergedInto": "steven.png"
+      },
+      {
+        "file": "steven-gen6.png",
+        "disabled": true,
+        "mergedInto": "steven.png"
+      },
       "steven.png"
     ],
     "tier": "Legendary"
@@ -5148,7 +6343,11 @@
         "file": "supernerd-gen2.png",
         "disabled": true
       },
-      "supernerd-gen3.png",
+      {
+        "file": "supernerd-gen3.png",
+        "disabled": true,
+        "mergedInto": "supernerd.png"
+      },
       "supernerd.png"
     ],
     "tier": "Common"
@@ -5161,14 +6360,44 @@
   },
   "swimmer": {
     "sprites": [
-      {"file":"swimmer-gen1.png","disabled":true},
-      {"file":"swimmer-gen1rb.png","disabled":true},
-      "swimmer-gen4.png",
-      "swimmer-gen4dp.png",
-      "swimmer-gen4jp.png",
-      "swimmer-gen6.png",
-      "swimmer-gen7.png",
-      "swimmer-gen8.png",
+      {
+        "file": "swimmer-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "swimmer-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "swimmer-gen4.png",
+        "disabled": true,
+        "mergedInto": "swimmer.png"
+      },
+      {
+        "file": "swimmer-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "swimmer.png"
+      },
+      {
+        "file": "swimmer-gen4jp.png",
+        "disabled": true,
+        "mergedInto": "swimmer.png"
+      },
+      {
+        "file": "swimmer-gen6.png",
+        "disabled": true,
+        "mergedInto": "swimmer.png"
+      },
+      {
+        "file": "swimmer-gen7.png",
+        "disabled": true,
+        "mergedInto": "swimmer.png"
+      },
+      {
+        "file": "swimmer-gen8.png",
+        "disabled": true,
+        "mergedInto": "swimmer.png"
+      },
       "swimmer.png",
       "swimmerf.png"
     ],
@@ -5186,19 +6415,47 @@
         "file": "swimmerf-gen2.png",
         "disabled": true
       },
-      "swimmerf-gen3.png",
-      "swimmerf-gen3rs.png",
-      "swimmerf-gen4.png",
-      "swimmerf-gen4dp.png",
-      "swimmerf-gen6.png",
-      "swimmerf-gen7.png",
+      {
+        "file": "swimmerf-gen3.png",
+        "disabled": true,
+        "mergedInto": "swimmerf-gen8.png"
+      },
+      {
+        "file": "swimmerf-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "swimmerf-gen8.png"
+      },
+      {
+        "file": "swimmerf-gen4.png",
+        "disabled": true,
+        "mergedInto": "swimmerf-gen8.png"
+      },
+      {
+        "file": "swimmerf-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "swimmerf-gen8.png"
+      },
+      {
+        "file": "swimmerf-gen6.png",
+        "disabled": true,
+        "mergedInto": "swimmerf-gen8.png"
+      },
+      {
+        "file": "swimmerf-gen7.png",
+        "disabled": true,
+        "mergedInto": "swimmerf-gen8.png"
+      },
       "swimmerf-gen8.png"
     ],
     "tier": "Common"
   },
   "swimmerf2": {
     "sprites": [
-      "swimmerf2-gen6.png",
+      {
+        "file": "swimmerf2-gen6.png",
+        "disabled": true,
+        "mergedInto": "swimmerf2-gen7.png"
+      },
       "swimmerf2-gen7.png"
     ],
     "tier": "Common"
@@ -5218,7 +6475,11 @@
         "file": "swimmerm-gen2.png",
         "disabled": true
       },
-      "swimmerm-gen3.png",
+      {
+        "file": "swimmerm-gen3.png",
+        "disabled": true,
+        "mergedInto": "swimmerm-gen3rs.png"
+      },
       "swimmerm-gen3rs.png"
     ],
     "tier": "Common"
@@ -5237,7 +6498,11 @@
   },
   "tabitha": {
     "sprites": [
-      "tabitha-gen3.png",
+      {
+        "file": "tabitha-gen3.png",
+        "disabled": true,
+        "mergedInto": "tabitha.png"
+      },
       "tabitha.png"
     ],
     "tier": "Rare"
@@ -5264,7 +6529,11 @@
   },
   "tate": {
     "sprites": [
-      "tate-gen6.png",
+      {
+        "file": "tate-gen6.png",
+        "disabled": true,
+        "mergedInto": "tate.png"
+      },
       "tate.png"
     ],
     "tier": "Rare"
@@ -5277,7 +6546,11 @@
   },
   "tateandliza": {
     "sprites": [
-      "tateandliza-gen3.png",
+      {
+        "file": "tateandliza-gen3.png",
+        "disabled": true,
+        "mergedInto": "tateandliza-gen6.png"
+      },
       "tateandliza-gen6.png"
     ],
     "tier": "Rare"
@@ -5288,7 +6561,11 @@
         "file": "teacher-gen2.png",
         "disabled": true
       },
-      "teacher-gen7.png",
+      {
+        "file": "teacher-gen7.png",
+        "disabled": true,
+        "mergedInto": "teacher.png"
+      },
       "teacher.png"
     ],
     "tier": "Uncommon"
@@ -5466,8 +6743,16 @@
   },
   "tuber": {
     "sprites": [
-      "tuber-gen3.png",
-      "tuber-gen6.png",
+      {
+        "file": "tuber-gen3.png",
+        "disabled": true,
+        "mergedInto": "tuber.png"
+      },
+      {
+        "file": "tuber-gen6.png",
+        "disabled": true,
+        "mergedInto": "tuber.png"
+      },
       "tuber.png",
       "tuberf.png"
     ],
@@ -5475,15 +6760,27 @@
   },
   "tuberf": {
     "sprites": [
-      "tuberf-gen3.png",
-      "tuberf-gen3rs.png",
+      {
+        "file": "tuberf-gen3.png",
+        "disabled": true,
+        "mergedInto": "tuberf-gen6.png"
+      },
+      {
+        "file": "tuberf-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "tuberf-gen6.png"
+      },
       "tuberf-gen6.png"
     ],
     "tier": "Common"
   },
   "tucker": {
     "sprites": [
-      "tucker-gen3.png",
+      {
+        "file": "tucker-gen3.png",
+        "disabled": true,
+        "mergedInto": "tucker.png"
+      },
       "tucker.png"
     ],
     "tier": "Epic"
@@ -5518,11 +6815,31 @@
         "file": "twins-gen2.png",
         "disabled": true
       },
-      "twins-gen3.png",
-      "twins-gen3rs.png",
-      "twins-gen4.png",
-      "twins-gen4dp.png",
-      "twins-gen6.png",
+      {
+        "file": "twins-gen3.png",
+        "disabled": true,
+        "mergedInto": "twins.png"
+      },
+      {
+        "file": "twins-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "twins.png"
+      },
+      {
+        "file": "twins-gen4.png",
+        "disabled": true,
+        "mergedInto": "twins.png"
+      },
+      {
+        "file": "twins-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "twins.png"
+      },
+      {
+        "file": "twins-gen6.png",
+        "disabled": true,
+        "mergedInto": "twins.png"
+      },
       "twins.png"
     ],
     "tier": "Common"
@@ -5560,9 +6877,21 @@
   },
   "veteran": {
     "sprites": [
-      "veteran-gen4.png",
-      "veteran-gen6.png",
-      "veteran-gen7.png",
+      {
+        "file": "veteran-gen4.png",
+        "disabled": true,
+        "mergedInto": "veteran.png"
+      },
+      {
+        "file": "veteran-gen6.png",
+        "disabled": true,
+        "mergedInto": "veteran.png"
+      },
+      {
+        "file": "veteran-gen7.png",
+        "disabled": true,
+        "mergedInto": "veteran.png"
+      },
       "veteran.png",
       "veteranf.png"
     ],
@@ -5570,7 +6899,11 @@
   },
   "veteranf": {
     "sprites": [
-      "veteranf-gen6.png",
+      {
+        "file": "veteranf-gen6.png",
+        "disabled": true,
+        "mergedInto": "veteranf-gen7.png"
+      },
       "veteranf-gen7.png"
     ],
     "tier": "Uncommon"
@@ -5634,27 +6967,63 @@
   },
   "waiter": {
     "sprites": [
-      "waiter-gen4.png",
-      "waiter-gen4dp.png",
-      "waiter-gen9.png",
+      {
+        "file": "waiter-gen4.png",
+        "disabled": true,
+        "mergedInto": "waiter.png"
+      },
+      {
+        "file": "waiter-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "waiter.png"
+      },
+      {
+        "file": "waiter-gen9.png",
+        "disabled": true,
+        "mergedInto": "waiter.png"
+      },
       "waiter.png"
     ],
     "tier": "Uncommon"
   },
   "waitress": {
     "sprites": [
-      "waitress-gen4.png",
-      "waitress-gen6.png",
-      "waitress-gen9.png",
+      {
+        "file": "waitress-gen4.png",
+        "disabled": true,
+        "mergedInto": "waitress.png"
+      },
+      {
+        "file": "waitress-gen6.png",
+        "disabled": true,
+        "mergedInto": "waitress.png"
+      },
+      {
+        "file": "waitress-gen9.png",
+        "disabled": true,
+        "mergedInto": "waitress.png"
+      },
       "waitress.png"
     ],
     "tier": "Uncommon"
   },
   "wallace": {
     "sprites": [
-      "wallace-gen3.png",
-      "wallace-gen3rs.png",
-      "wallace-gen6.png",
+      {
+        "file": "wallace-gen3.png",
+        "disabled": true,
+        "mergedInto": "wallace.png"
+      },
+      {
+        "file": "wallace-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "wallace.png"
+      },
+      {
+        "file": "wallace-gen6.png",
+        "disabled": true,
+        "mergedInto": "wallace.png"
+      },
       "wallace.png"
     ],
     "tier": "Legendary"
@@ -5668,7 +7037,11 @@
   "wally": {
     "sprites": [
       "wally-gen3.png",
-      "wally.png"
+      {
+        "file": "wally.png",
+        "disabled": true,
+        "mergedInto": "wally-gen3.png"
+      }
     ],
     "tier": "Epic"
   },
@@ -5686,10 +7059,20 @@
   },
   "wattson": {
     "sprites": [
-      "wattson-gen3.png",
+      {
+        "file": "wattson-gen3.png",
+        "disabled": true,
+        "mergedInto": "wattson.png"
+      },
       "wattson.png"
     ],
     "tier": "Rare"
+  },
+  "weirdlight": {
+    "sprites": [
+      "weirdlight.png"
+    ],
+    "tier": "Uncommon"
   },
   "whitney": {
     "sprites": [
@@ -5703,7 +7086,7 @@
   },
   "whitneymasters": {
     "sprites": [
-    "whitney-masters.png"
+      "whitney-masters.png"
     ],
     "tier": "Epic"
   },
@@ -5743,20 +7126,52 @@
   },
   "winona": {
     "sprites": [
-      "winona-gen3.png",
-      "winona-gen6.png",
+      {
+        "file": "winona-gen3.png",
+        "disabled": true,
+        "mergedInto": "winona.png"
+      },
+      {
+        "file": "winona-gen6.png",
+        "disabled": true,
+        "mergedInto": "winona.png"
+      },
       "winona.png"
     ],
     "tier": "Rare"
   },
   "worker": {
     "sprites": [
-      "worker-gen4.png",
-      "worker-gen6.png",
-      "worker-gen7.png",
-      "worker-gen8.png",
-      "worker-gen9.png",
-      "worker-lgpe.png",
+      {
+        "file": "worker-gen4.png",
+        "disabled": true,
+        "mergedInto": "worker.png"
+      },
+      {
+        "file": "worker-gen6.png",
+        "disabled": true,
+        "mergedInto": "worker.png"
+      },
+      {
+        "file": "worker-gen7.png",
+        "disabled": true,
+        "mergedInto": "worker.png"
+      },
+      {
+        "file": "worker-gen8.png",
+        "disabled": true,
+        "mergedInto": "worker.png"
+      },
+      {
+        "file": "worker-gen9.png",
+        "disabled": true,
+        "mergedInto": "worker.png"
+      },
+      {
+        "file": "worker-lgpe.png",
+        "disabled": true,
+        "mergedInto": "worker.png"
+      },
       "worker.png"
     ],
     "tier": "Uncommon"
@@ -5819,10 +7234,26 @@
   },
   "youngcouple": {
     "sprites": [
-      "youngcouple-gen3.png",
-      "youngcouple-gen3rs.png",
-      "youngcouple-gen4dp.png",
-      "youngcouple-gen6.png",
+      {
+        "file": "youngcouple-gen3.png",
+        "disabled": true,
+        "mergedInto": "youngcouple.png"
+      },
+      {
+        "file": "youngcouple-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "youngcouple.png"
+      },
+      {
+        "file": "youngcouple-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "youngcouple.png"
+      },
+      {
+        "file": "youngcouple-gen6.png",
+        "disabled": true,
+        "mergedInto": "youngcouple.png"
+      },
       "youngcouple.png"
     ],
     "tier": "Common"
@@ -5835,18 +7266,63 @@
   },
   "youngster": {
     "sprites": [
-      {"file":"youngster-gen1.png","disabled":true},
-      {"file":"youngster-gen1rb.png","disabled":true},
-      {"file":"youngster-gen2.png","disabled":true},
-      "youngster-gen3.png",
-      "youngster-gen3rs.png",
-      "youngster-gen4.png",
-      "youngster-gen4dp.png",
-      "youngster-gen6.png",
-      "youngster-gen6xy.png",
-      "youngster-gen7.png",
-      "youngster-gen8.png",
-      "youngster-gen9.png",
+      {
+        "file": "youngster-gen1.png",
+        "disabled": true
+      },
+      {
+        "file": "youngster-gen1rb.png",
+        "disabled": true
+      },
+      {
+        "file": "youngster-gen2.png",
+        "disabled": true
+      },
+      {
+        "file": "youngster-gen3.png",
+        "disabled": true,
+        "mergedInto": "youngster.png"
+      },
+      {
+        "file": "youngster-gen3rs.png",
+        "disabled": true,
+        "mergedInto": "youngster.png"
+      },
+      {
+        "file": "youngster-gen4.png",
+        "disabled": true,
+        "mergedInto": "youngster.png"
+      },
+      {
+        "file": "youngster-gen4dp.png",
+        "disabled": true,
+        "mergedInto": "youngster.png"
+      },
+      {
+        "file": "youngster-gen6.png",
+        "disabled": true,
+        "mergedInto": "youngster.png"
+      },
+      {
+        "file": "youngster-gen6xy.png",
+        "disabled": true,
+        "mergedInto": "youngster.png"
+      },
+      {
+        "file": "youngster-gen7.png",
+        "disabled": true,
+        "mergedInto": "youngster.png"
+      },
+      {
+        "file": "youngster-gen8.png",
+        "disabled": true,
+        "mergedInto": "youngster.png"
+      },
+      {
+        "file": "youngster-gen9.png",
+        "disabled": true,
+        "mergedInto": "youngster.png"
+      },
       "youngster.png"
     ],
     "tier": "Common"

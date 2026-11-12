@@ -65,6 +65,7 @@ import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
 import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
 import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
 import { normalizeNotices, peekNotices, clearNotices, NOTICE_KINDS } from "./services/notices.js";
+import { consolidateUserTrainers } from "./services/trainerConsolidation.js";
 import { pokemonDetail } from "./services/pokemonDetail.js";
 import { parseTeamCopy, applyTeamCopy } from "./services/teamCopy.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
@@ -307,6 +308,10 @@ function normalizeUserSchema(id, user) {
   // Shared with utils/userSchema.js so every path produces the same shape:
   // strings only, trimmed, de-duplicated; legacy object maps become arrays.
   normalizeTrainers(user);
+  // Generation consolidation: folded game versions (twins-gen3…) become their
+  // group's sprite (twins.png), granted if not already owned; displayed
+  // trainer follows; one notice (services/trainerConsolidation.js). No-op once done.
+  consolidateUserTrainers(user);
 
   // ==========================================================
 // 4️⃣ DISPLAYED TEAM (canonical)
@@ -887,7 +892,13 @@ async function loadTrainerData() {
   console.log(`🔑 Writer epoch ${getEpoch()}${result.localOnly ? " (booted from the local volume; Discord unreachable)" : ""}`);
   const data = chosen.data;
   const trimmedBefore = new Map(Object.entries(data).map(([id, u]) => [id, peekNotices(u, NOTICE_KINDS.BATTLE_TEAM_TRIM).length]));
+  const consolidatedBefore = new Map(Object.entries(data).map(([id, u]) => [id, peekNotices(u, NOTICE_KINDS.TRAINER_CONSOLIDATION).length]));
   for (const [id, user] of Object.entries(data)) normalizeUserSchema(id, user);
+  {
+    // Generation consolidation (normalizeUserSchema → consolidateUserTrainers): count players changed this boot.
+    const n = Object.entries(data).filter(([id, u]) => peekNotices(u, NOTICE_KINDS.TRAINER_CONSOLIDATION).length > (consolidatedBefore.get(id) || 0)).length;
+    console.log(`🧩 Trainer collections consolidated (folded game versions → one sprite): ${n}`);
+  }
   {
     // Battle teams over the one-mythic limit after a re-tier are trimmed by
     // normalizeUserSchema → normalizeBattleTeam; count them for the boot log.

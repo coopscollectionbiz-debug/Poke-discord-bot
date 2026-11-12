@@ -245,8 +245,12 @@ section("Each player's trainer in the replay");
     const t = harness();
     t.trainerData.A.displayedTrainer = trainerA;
     await t.run("A", "B");
-    await until(() => t.log.messages[0]?.opts?.files?.length); // the replay posts after /battle returns
-    const r = new GifReader(t.log.messages[0].opts.files[0].attachment);
+    // The replay posts after /battle returns, opening on the VS card; the
+    // portraits are in the playback frames that follow it.
+    const firstFrame = () => [t.log.messages[0]?.opts, ...(t.log.messages[0]?.edits ?? [])]
+      .flatMap((o) => o?.files ?? []).find((f) => /^battle-(start|t\d+|final)\.gif$/.test(f.name));
+    await until(firstFrame, 20000);
+    const r = new GifReader(firstFrame().attachment);
     const px = new Uint8Array(r.width * r.height * 4);
     r.decodeAndBlitFrameRGBA(0, px);
     return px;

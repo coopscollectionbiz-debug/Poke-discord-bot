@@ -25,26 +25,29 @@ const entryOf = {}; for (const [k, e] of Object.entries(reg)) for (const s of e.
 section("Consolidation map and registry");
 {
   const folded = Object.keys(into), targets = [...new Set(Object.values(into))];
-  assertEqual(folded.length, 362, "362 game/generation versions fold (Beauty gen4dp, gen5bw2 and gen8 stay their own, owner exception)");
-  assertEqual(targets.length, 148, "into 148 kept sprites");
+  assertEqual(folded.length, 367, "367 game/generation versions fold (Beauty gen4dp, gen5bw2 and gen8 stay their own, owner exception)");
+  assertEqual(targets.length, 149, "into 149 kept sprites");
   assertEqual(targets.filter((t) => into[t]), [], "no target is itself folded (no chains)");
-  assertEqual(folded.filter((f) => entryOf[f]?.key !== entryOf[into[f]]?.key), [], "every file folds within its own registry entry");
+  // Owner decision (2026-11-11): Brendan's Ruby/Sapphire and Emerald sprites are their own registry entries but game versions, so they fold into brendan.png.
+  const CROSS = new Set(["brendan-rs.png", "brendan-e.png"]);
+  assertEqual(folded.filter((f) => !CROSS.has(f) && entryOf[f]?.key !== entryOf[into[f]]?.key), [], "every other file folds within its own registry entry");
   assertEqual(folded.filter((f) => base(f) !== base(into[f])), [], "female variants never fold into male ones, or the reverse (same base name)");
   const GEN = /^(gen\d.*|rse|frlg|usum|lgpe)$/;
-  assertEqual(folded.filter((f) => suffix(f) && !GEN.test(suffix(f))), [], "only game/generation suffixes fold, never outfits");
+  assertEqual(folded.filter((f) => !CROSS.has(f) && suffix(f) && !GEN.test(suffix(f))), [], "only game/generation suffixes fold, never outfits");
   assertEqual(folded.filter((f) => !(typeof entryOf[f].s === "object" && entryOf[f].s.disabled && entryOf[f].s.mergedInto === into[f])), [], "every folded file is disabled with mergedInto in the registry");
   assertEqual(targets.filter((t) => typeof entryOf[t]?.s !== "string" && entryOf[t]?.s?.disabled), [], "every kept sprite is still offered");
-  for (const f of ["steven-masters.png", "red-masters.png", "blue-masters.png", "acetrainerf.png", "beauty-gen4dp.png", "beauty-gen5bw2.png", "beauty-gen8.png", "brendan-gen3.png", "brendan.png", "elio-usum.png", "selene-usum.png"]) assertTrue(!into[f], `${f} does not fold (outfit, female variant or owner keeps every version)`);
+  for (const f of ["steven-masters.png", "red-masters.png", "blue-masters.png", "acetrainerf.png", "beauty-gen4dp.png", "beauty-gen5bw2.png", "beauty-gen8.png", "brendan.png", "brendan-masters.png", "brendan-masters2.png", "brendan-contest.png", "elio-usum.png", "selene-usum.png"]) assertTrue(!into[f], `${f} does not fold (outfit, female variant or owner keeps every version)`);
   // Owner decisions for protagonists and rivals.
-  const want = { "red-gen3.png": "red.png", "red-lgpe.png": "red.png", "blue-gen3.png": "blue.png", "blue-lgpe.png": "blue.png", "cheren.png": "cheren-gen5bw2.png", "dawn-gen4pt.png": "dawn.png", "lucas.png": "lucas-gen4pt.png", "may-gen3rs.png": "may.png", "wally.png": "wally-gen3.png" };
+  const want = { "red-gen3.png": "red.png", "red-lgpe.png": "red.png", "blue-gen3.png": "blue.png", "blue-lgpe.png": "blue.png", "cheren.png": "cheren-gen5bw2.png", "dawn-gen4pt.png": "dawn.png", "lucas.png": "lucas-gen4pt.png", "may-gen3rs.png": "may.png", "wally.png": "wally-gen3.png", "blue-gen3champion.png": "blue.png", "blue-gen3two.png": "blue.png", "brendan-gen3.png": "brendan.png", "brendan-rs.png": "brendan.png", "brendan-e.png": "brendan.png" };
   assertEqual(Object.keys(want).filter((f) => into[f] !== want[f]), [], "protagonist/rival groups fold the way the owner chose");
   // New sprite and B2W2 art (frame 0 of the B2W2 animation, same 80×80 canvas).
   const pngSize = (rel) => { const b = fs.readFileSync(new URL(rel, ROOT)); return `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}`; };
   assertTrue(reg.weirdlight?.tier === "Uncommon" && reg.weirdlight.sprites.includes("weirdlight.png"), "Weird Light (B2W2 Pokéstar Studios) is a new Uncommon trainer");
-  assertEqual(["weirdlight", "blue", "red", "lance", "misty"].map((n) => `${pngSize(`public/sprites/trainers_2/${n}.png`)}/${pngSize(`public/sprites/trainers_2/grayscale/${n}.png`)}`), Array(5).fill("80x80/80x80"), "new and B2W2-swapped sprites are 80×80, with grayscale copies");
+  // Their animations (data/sprites/trainer-animations.json) may need a slightly larger canvas.
+  assertTrue(["weirdlight", "blue", "red", "lance", "misty"].every((n) => { const c = pngSize(`public/sprites/trainers_2/${n}.png`), [w, h] = c.split("x").map(Number); return w >= 80 && h >= 80 && w <= 96 && h <= 96 && pngSize(`public/sprites/trainers_2/grayscale/${n}.png`) === c; }), "new and B2W2-swapped sprites are 80×80 or a little larger, with matching grayscale copies");
   assertTrue(fs.existsSync(new URL("public/sprites/trainers_2/twins-gen3.png", ROOT)), "folded PNGs stay on disk, so old links still load");
   let selectable = 0; for (const e of Object.values(reg)) for (const s of e.sprites) if (typeof s === "string" || !s.disabled) selectable++;
-  assertEqual(selectable, 910, "910 trainer sprites are offered (1,271 before: −362 folded, +1 Weird Light)");
+  assertEqual(selectable, 905, "905 trainer sprites are offered (1,271 before: −367 folded, +1 Weird Light)");
   assertTrue(fs.readFileSync(new URL("trainerSprites.json", ROOT), "utf8").replace(/\r\n/g, "\n") === fs.readFileSync(new URL("public/trainerSprites.json", ROOT), "utf8").replace(/\r\n/g, "\n"), "the public registry copy matches");
   let check = "";
   try { check = execFileSync(process.execPath, [fileURLToPath(new URL("tools/apply-trainer-consolidation.mjs", ROOT)), "--check"], { encoding: "utf8" }); } catch (err) { check = String(err.stdout || err.message); }

@@ -123,7 +123,8 @@ export async function renderBattleCard(v, { animate = false } = {}) {
     const box = { w: 150, h: 160, floor: tfloor, scale: 2 };
     if (hasBackdrop(tier)) trainerBackdrop(ctx, stage, { tier, sprite: t, cx: tcx, box, panel: { x: M + 8, y: M + 8, w: 164 }, floor: tfloor - 6 });
     const idle = await loadTrainerPoses(v.trainerFile);
-    stage.placePosed(ctx, idle?.poses ?? [t], poseAtFrame, tcx, box.floor, box.w, box.h, { scale: box.scale });
+    // Breathing trainers share one schedule here; a real animation plays its own frames.
+    stage.placePosed(ctx, idle?.poses ?? [t], idle?.real ? idle.poseAt : poseAtFrame, tcx, box.floor, box.w, box.h, { scale: box.scale });
   } else { ctx.globalAlpha = 0.35; P.drawBall(ctx, tcx, M + 110, 34, false); ctx.globalAlpha = 1; }
 
   const bx = M + 190;

@@ -115,8 +115,8 @@ section("Sprite fallback");
   const td = world();
   td.A.trainers = ["BROCK.png"];
   assertEqual(prizeSprite(td.A, "brock"), { trainerKey: "brock", cc: 7500 }, "owning every enabled sprite (any case) pays half the Rare price");
-  assertEqual(prizeSprite({ trainers: ["blue-gen3champion.png"] }, "blue"), { trainerKey: "blue", file: "blue-gen3two.png" }, "otherwise the next unowned sprite");
-  assertEqual(prizeSprite({ trainers: { "blue-gen3champion.png": 1 } }, "blue"), { trainerKey: "blue", file: "blue-gen3two.png" }, "a legacy trainers object counts too");
+  assertEqual(prizeSprite({ trainers: ["blue-masters.png"] }, "blue"), { trainerKey: "blue", file: "blue-masters2.png" }, "otherwise the next unowned sprite");
+  assertEqual(prizeSprite({ trainers: { "blue-masters.png": 1 } }, "blue"), { trainerKey: "blue", file: "blue-masters2.png" }, "a legacy trainers object counts too");
   const out = run(td, "brock");
   assertEqual(out.prize.sprites[0], { trainerKey: "brock", cc: 7500 }, "the Outcome shows the CC instead of a sprite");
   assertEqual(td.A.cc, 12345 + 2500 + 7500, "CC rises by the prize plus the fallback");
@@ -130,8 +130,8 @@ section("Sprite fallback");
 
   // Older code wrote trainers onto the array as properties (services/assets.js, D1).
   const owned = ["x.png"];
-  owned["blue-gen3champion.png"] = 1;
-  assertEqual(prizeSprite({ trainers: owned }, "blue"), { trainerKey: "blue", file: "blue-gen3two.png" },
+  owned["blue-masters.png"] = 1;
+  assertEqual(prizeSprite({ trainers: owned }, "blue"), { trainerKey: "blue", file: "blue-masters2.png" },
     "a trainer stored as an array property counts as owned");
   const stray = world();
   stray.A.trainers = ["x.png"];

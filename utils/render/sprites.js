@@ -127,7 +127,8 @@ const CARD_FRAMES = 24;
 export function loadTrainerPoses(fileName, { env = process.env } = {}) {
   if (!fileName || !trainersAnimated(env) || !trainerIdle(fileName)) return Promise.resolve(null);
   if (poseCache.has(fileName)) return poseCache.get(fileName);
-  const p = (async () => {
+  const rec = trainerIdle(fileName);
+  const p = (rec.animation === "real" ? loadRealAnimation(fileName, rec) : (async () => {
     const t = await loadTrainerSprite(fileName);
     if (!t) return null;
     const c = createCanvas(t.width, t.height);
@@ -157,10 +158,47 @@ export function loadTrainerPoses(fileName, { env = process.env } = {}) {
     };
     scheduleFor(CARD_FRAMES); // so `poses` is complete before the stage sees it
     return { poses, poseAt: (f, n) => scheduleFor(n)[((f % n) + n) % n], rgba, width: t.width, height: t.height };
-  })().catch(() => null);
+  })()).catch(() => null);
   poseCache.set(fileName, p);
   if (poseCache.size > POSE_CACHE_LIMIT) poseCache.delete(poseCache.keys().next().value);
   return p;
+}
+
+/**
+ * A real animation (artist-made or from the games;
+ * data/sprites/trainer-animations.json) as poses: its GIF frames, with
+ * poses[0] the still the PNG shows (`still`, default the last frame). poseAt(f, n) plays the whole animation once per card loop of n
+ * frames, so it loops cleanly (a 3.2 s animation runs a little faster in a
+ * 2.4 s card). `real: true` tells callers to use poseAt rather than the
+ * shared breathing schedule.
+ */
+async function loadRealAnimation(fileName, rec) {
+  const t = await loadTrainerSprite(fileName);
+  if (!t) return null;
+  const gif = new GifReader(await readFile(fileURLToPath(new URL(`sprites/trainers_idle/${rec.gif}`, PUBLIC))));
+  const W = gif.width, H = gif.height, N = gif.numFrames(), frames = [];
+  for (let i = 0; i < N; i++) {
+    const px = new Uint8ClampedArray(W * H * 4); // each frame is complete (dispose 2 over a clear canvas)
+    gif.decodeAndBlitFrameRGBA(i, px);
+    const c = createCanvas(W, H);
+    c.getContext("2d").putImageData(new ImageData(px, W, H), 0, 0);
+    frames.push({ image: c, width: W, height: H });
+  }
+  // poses[0] is the still (rec.still, default the last frame), then the rest in order.
+  const still = Number.isInteger(rec.still) && rec.still < N ? rec.still : N - 1;
+  const poses = [frames[still], ...frames.filter((_, i) => i !== still)];
+  const poseOfFrame = (k) => (k === still ? 0 : k < still ? k + 1 : k);
+  const c = createCanvas(t.width, t.height);
+  c.getContext("2d").drawImage(t.image, 0, 0);
+  return {
+    real: true,
+    poses,
+    // Card frames spread from the first frame to the last (the held pose), like the GIF loop.
+    poseAt: (f, n) => poseOfFrame(n > 1 ? Math.round(((((f % n) + n) % n) * (N - 1)) / (n - 1)) : still),
+    rgba: c.getContext("2d").getImageData(0, 0, t.width, t.height).data,
+    width: W,
+    height: H,
+  };
 }
 
 /**

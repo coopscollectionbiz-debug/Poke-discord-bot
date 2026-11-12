@@ -10,6 +10,9 @@
 //                              data/sprites/trainer-idle-review.json
 //   listed as excluded, or no cut lines (too short / no rows) → excluded
 // Only "ok" sprites get a GIF; everything else stays a static PNG.
+// Sprites in data/sprites/trainer-animations.json have a real, artist-made
+// animation instead (tools/import-trainer-animations.mjs): listed as
+// { status: "ok", animation: "real" } and their GIF is never rewritten here.
 //
 // Run: node tools/generate-trainer-idles.mjs [--check]
 //   --check  verify GIFs and manifests are up to date, write nothing
@@ -43,6 +46,9 @@ const approved = new Set(review.approved ?? []);
 const PARTS = path.join(ROOT, "data/sprites/trainer-parts.json");
 const parts = fs.existsSync(PARTS) ? JSON.parse(fs.readFileSync(PARTS, "utf8")).sprites ?? {} : {};
 const excluded = review.excluded ?? {};
+// Real animations (data/sprites/trainer-animations.json): their GIF is kept as is.
+const ANIMATIONS = path.join(ROOT, "data/sprites/trainer-animations.json");
+const animations = fs.existsSync(ANIMATIONS) ? JSON.parse(fs.readFileSync(ANIMATIONS, "utf8")).files ?? {} : {};
 
 // Selectable sprite files (disabled entries are never shown to players).
 const files = new Set();
@@ -121,13 +127,22 @@ async function rgbaOf(file) {
 
 const manifest = {};
 const web = {};
-const counts = { ok: 0, review: 0, excluded: 0 };
+const counts = { ok: 0, review: 0, excluded: 0, real: 0 };
 const stale = [];
+const missing = []; // real-animation GIFs listed but not on disk
 for (const file of [...files].sort()) {
   if (!fs.existsSync(path.join(SRC, file))) continue;
   const base = file.replace(/\.png$/i, "");
   let rec;
-  if (excluded[file]) rec = { status: "excluded", reason: excluded[file] };
+  if (animations[file]) {
+    // A real (artist-made) animation replaces the generated breathing. Its GIF
+    // is the source file (tools/import-trainer-animations.mjs); never rewritten here.
+    const a = animations[file];
+    rec = { status: "ok", animation: "real", gif: `${base}.gif`, frames: a.frames, ms: a.ms, ...(a.still != null && a.still !== a.frames - 1 ? { still: a.still } : {}) };
+    if (!fs.existsSync(path.join(OUT, rec.gif))) missing.push(rec.gif);
+    web[file] = rec.gif;
+    counts.real++;
+  } else if (excluded[file]) rec = { status: "excluded", reason: excluded[file] };
   else {
     const { px, W, H } = await rgbaOf(file);
     const b = breathingPoses(px, W, H);
@@ -167,6 +182,7 @@ if (CHECK) {
   const read = (f) => (fs.existsSync(f) ? fs.readFileSync(f, "utf8").replace(/\r\n/g, "\n") : "");
   const problems = [
     ...stale.map((f) => `stale GIF ${f}`),
+    ...missing.map((f) => `missing real animation ${f} (tools/import-trainer-animations.mjs)`),
     ...orphans.map((f) => `orphan GIF ${f}`),
     ...(read(MANIFEST) !== manifestText ? ["data/sprites/trainer-idles.json is out of date"] : []),
     ...(read(WEB_MANIFEST) !== webText ? ["public/sprites/trainers_idle/manifest.json is out of date"] : []),
@@ -174,9 +190,10 @@ if (CHECK) {
   console.log(problems.length ? problems.join("\n") : "trainer idles up to date");
   process.exit(problems.length ? 1 : 0);
 }
+if (missing.length) throw new Error(`missing real animation GIFs: ${missing.join(", ")} — run tools/import-trainer-animations.mjs`);
 for (const f of orphans) fs.unlinkSync(path.join(OUT, f));
 fs.writeFileSync(MANIFEST, manifestText);
 fs.mkdirSync(OUT, { recursive: true });
 fs.writeFileSync(WEB_MANIFEST, webText);
-console.log(`trainer idles: ${counts.ok} ok, ${counts.review} awaiting review, ${counts.excluded} excluded (${files.size} selectable files); removed ${orphans.length} orphan GIFs; ${quantised} quantised (> 255 colours)`);
+console.log(`trainer idles: ${counts.ok} ok (${counts.real} of them real animations), ${counts.review} awaiting review, ${counts.excluded} excluded (${files.size} selectable files); removed ${orphans.length} orphan GIFs; ${quantised} quantised (> 255 colours)`);
 if (counts.review) console.log("review:", Object.entries(manifest).filter(([, r]) => r.status === "review").map(([f, r]) => `${f}(${r.seam})`).join(" "));

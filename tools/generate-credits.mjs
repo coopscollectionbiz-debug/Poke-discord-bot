@@ -36,15 +36,23 @@ const importRows = animatedImports.entries.map((e) => {
 // Trainer sprites: artists of the community-drawn ones (data/sprites/trainer-credits.json,
 // built by tools/import-trainer-credits.mjs from Pokémon Showdown's credits).
 const trainerCredits = JSON.parse(fs.readFileSync(new URL("data/sprites/trainer-credits.json", ROOT), "utf8"));
+// Real animations (data/sprites/trainer-animations.json) replace the art of
+// their sprite, so their artist takes over that sprite's credit.
+const animations = JSON.parse(fs.readFileSync(new URL("data/sprites/trainer-animations.json", ROOT), "utf8")).files;
+const credited = { ...trainerCredits.credited };
+for (const [file, a] of Object.entries(animations)) {
+  if (a.artist) credited[file] = `${a.artist} (animated)`;
+  else delete credited[file]; // a game animation: the sprite is game art now
+}
 const byArtist = new Map();
-for (const [file, artist] of Object.entries(trainerCredits.credited)) {
+for (const [file, artist] of Object.entries(credited)) {
   if (!byArtist.has(artist)) byArtist.set(artist, []);
   byArtist.get(artist).push(file.replace(/\.png$/, ""));
 }
 const trainerRows = [...byArtist.entries()]
   .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
   .map(([artist, files]) => `<tr><td>${esc(artist)}</td><td>${files.length}</td><td><details><summary>Show sprites</summary><span class="muted">${files.map(esc).join(", ")}</span></details></td></tr>`);
-const trainerCount = Object.keys(trainerCredits.credited).length;
+const trainerCount = Object.keys(credited).length;
 
 const rows = [];
 for (const [id, rec] of Object.entries(manifest)) {
@@ -115,7 +123,7 @@ ${importRows.join("\n")}
 ${trainerRows.join("\n")}
       </tbody>
     </table></div>
-    <p class="muted">Community sprites with no artist listed by Showdown: ${trainerCredits.uncreditedCommunity.map((f) => esc(f.replace(/\.png$/, ""))).join(", ")}.</p>
+    <p class="muted">Community sprites with no artist listed by Showdown: ${trainerCredits.uncreditedCommunity.filter((f) => !animations[f] || animations[f].artist).map((f) => esc(f.replace(/\.png$/, ""))).join(", ")}.</p>
   </section>
 </main>
 </body>

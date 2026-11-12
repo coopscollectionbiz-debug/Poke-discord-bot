@@ -138,7 +138,7 @@ for (const file of [...files].sort()) {
     // A real (artist-made) animation replaces the generated breathing. Its GIF
     // is the source file (tools/import-trainer-animations.mjs); never rewritten here.
     const a = animations[file];
-    rec = { status: "ok", animation: "real", gif: `${base}.gif`, frames: a.frames, ms: a.ms };
+    rec = { status: "ok", animation: "real", gif: `${base}.gif`, frames: a.frames, ms: a.ms, ...(a.still != null && a.still !== a.frames - 1 ? { still: a.still } : {}) };
     if (!fs.existsSync(path.join(OUT, rec.gif))) missing.push(rec.gif);
     web[file] = rec.gif;
     counts.real++;

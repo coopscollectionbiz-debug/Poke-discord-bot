@@ -165,9 +165,9 @@ export function loadTrainerPoses(fileName, { env = process.env } = {}) {
 }
 
 /**
- * A real (artist-made) animation (data/sprites/trainer-animations.json) as
- * poses: its GIF frames, with poses[0] the still the PNG shows (the last
- * frame). poseAt(f, n) plays the whole animation once per card loop of n
+ * A real animation (artist-made or from the games;
+ * data/sprites/trainer-animations.json) as poses: its GIF frames, with
+ * poses[0] the still the PNG shows (`still`, default the last frame). poseAt(f, n) plays the whole animation once per card loop of n
  * frames, so it loops cleanly (a 3.2 s animation runs a little faster in a
  * 2.4 s card). `real: true` tells callers to use poseAt rather than the
  * shared breathing schedule.
@@ -184,14 +184,17 @@ async function loadRealAnimation(fileName, rec) {
     c.getContext("2d").putImageData(new ImageData(px, W, H), 0, 0);
     frames.push({ image: c, width: W, height: H });
   }
-  const still = N - 1, poses = [frames[still], ...frames.slice(0, still)];
+  // poses[0] is the still (rec.still, default the last frame), then the rest in order.
+  const still = Number.isInteger(rec.still) && rec.still < N ? rec.still : N - 1;
+  const poses = [frames[still], ...frames.filter((_, i) => i !== still)];
+  const poseOfFrame = (k) => (k === still ? 0 : k < still ? k + 1 : k);
   const c = createCanvas(t.width, t.height);
   c.getContext("2d").drawImage(t.image, 0, 0);
   return {
     real: true,
     poses,
     // Card frames spread from the first frame to the last (the held pose), like the GIF loop.
-    poseAt: (f, n) => { const k = n > 1 ? Math.round(((((f % n) + n) % n) * (N - 1)) / (n - 1)) : still; return k === still ? 0 : k + 1; },
+    poseAt: (f, n) => poseOfFrame(n > 1 ? Math.round(((((f % n) + n) % n) * (N - 1)) / (n - 1)) : still),
     rgba: c.getContext("2d").getImageData(0, 0, t.width, t.height).data,
     width: W,
     height: H,

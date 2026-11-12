@@ -40,7 +40,10 @@ const trainerCredits = JSON.parse(fs.readFileSync(new URL("data/sprites/trainer-
 // their sprite, so their artist takes over that sprite's credit.
 const animations = JSON.parse(fs.readFileSync(new URL("data/sprites/trainer-animations.json", ROOT), "utf8")).files;
 const credited = { ...trainerCredits.credited };
-for (const [file, a] of Object.entries(animations)) credited[file] = `${a.artist} (animated)`;
+for (const [file, a] of Object.entries(animations)) {
+  if (a.artist) credited[file] = `${a.artist} (animated)`;
+  else delete credited[file]; // a game animation: the sprite is game art now
+}
 const byArtist = new Map();
 for (const [file, artist] of Object.entries(credited)) {
   if (!byArtist.has(artist)) byArtist.set(artist, []);
@@ -120,7 +123,7 @@ ${importRows.join("\n")}
 ${trainerRows.join("\n")}
       </tbody>
     </table></div>
-    <p class="muted">Community sprites with no artist listed by Showdown: ${trainerCredits.uncreditedCommunity.map((f) => esc(f.replace(/\.png$/, ""))).join(", ")}.</p>
+    <p class="muted">Community sprites with no artist listed by Showdown: ${trainerCredits.uncreditedCommunity.filter((f) => !animations[f] || animations[f].artist).map((f) => esc(f.replace(/\.png$/, ""))).join(", ")}.</p>
   </section>
 </main>
 </body>

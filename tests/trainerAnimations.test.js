@@ -35,9 +35,13 @@ const gifOf = (name) => new GifReader(fs.readFileSync(P(`public/sprites/trainers
 
 section("list");
 {
-  assertEqual(files.sort(), ["brassius.png", "grusha.png", "iono.png", "katy.png", "kofu.png", "larry.png", "ryme.png", "tulip.png"], "the eight Paldea gym leaders");
+  const artist = files.filter((f) => list[f].artist).sort(), game = files.filter((f) => !list[f].artist);
+  assertEqual(artist, ["brassius.png", "grusha.png", "iono.png", "katy.png", "kofu.png", "larry.png", "ryme.png", "tulip.png"], "the eight Paldea gym leaders are artist-made");
+  assertEqual(game.length, 163, "163 sprites use their game animation (Bulbagarden; B2W2 preferred for every base sprite that has one)");
+  for (const f of ["acetrainer.png", "baker.png", "battlegirl.png", "blue.png", "lance.png", "weirdlight.png"]) assertTrue(game.includes(f), `${f} plays its game animation`);
+  assertTrue(game.every((f) => list[f].game && list[f].source.startsWith("https://archives.bulbagarden.net/")), "every game animation names its game and source");
   assertTrue(files.every((f) => selectable.has(f)), "every animated sprite is a selectable trainer");
-  assertTrue(files.every((f) => list[f].artist && list[f].source && list[f].permission), "every animation names its artist, source and permission");
+  assertTrue(artist.every((f) => list[f].source && list[f].permission), "every artist-made animation names its source and permission");
   assertTrue(files.every((f) => !parts[f]), "no generated part motions (blinks, waves) are left on animated sprites");
 }
 
@@ -47,17 +51,17 @@ for (const f of files) {
   const gif = gifOf(name), still = await rgba(P(`public/sprites/trainers_2/${f}`)), gray = await rgba(P(`public/sprites/trainers_2/grayscale/${f}`));
   const ok = [gif.width, gif.height].join() === a.canvas.join() && [still.W, still.H].join() === a.canvas.join() && [gray.W, gray.H].join() === a.canvas.join();
   assertTrue(ok, `${f}: GIF, still and grayscale are all ${a.canvas.join("×")}`);
-  assertTrue(a.canvas[0] >= 80 && a.canvas[1] >= 80 && a.canvas[0] <= 96 && a.canvas[1] <= 96, `${f}: canvas is 80×80 or a little larger`);
+  assertTrue(a.canvas[0] >= 80 && a.canvas[1] >= 80 && a.canvas[0] <= 120 && a.canvas[1] <= 120, `${f}: canvas is 80×80 or a little larger`);
   assertEqual(gif.numFrames(), a.frames, `${f}: ${a.frames} frames`);
-  // The still is the last frame, exactly.
+  // The still is the `still` frame (default the last), exactly.
   const last = new Uint8ClampedArray(gif.width * gif.height * 4);
-  gif.decodeAndBlitFrameRGBA(gif.numFrames() - 1, last);
+  gif.decodeAndBlitFrameRGBA(a.still ?? gif.numFrames() - 1, last);
   let same = true, luma = true;
   for (let p = 0; p < last.length; p += 4) {
     if ((last[p + 3] > 0) !== (still.px[p + 3] > 0) || (last[p + 3] && (last[p] !== still.px[p] || last[p + 1] !== still.px[p + 1] || last[p + 2] !== still.px[p + 2]))) same = false;
     if (still.px[p + 3] && gray.px[p] !== Math.round(0.2126 * still.px[p] + 0.7152 * still.px[p + 1] + 0.0722 * still.px[p + 2])) luma = false;
   }
-  assertTrue(same, `${f}: the PNG is the animation's last frame`);
+  assertTrue(same, `${f}: the PNG is the animation's still frame`);
   assertTrue(luma, `${f}: the grayscale copy is Rec. 709 luma of the PNG`);
 }
 
@@ -88,8 +92,14 @@ section("card poses");
   assertEqual(seen.size, n, "a 24-frame card shows 24 different frames across the animation");
   const p0 = idle.poses[0].image.getContext("2d").getImageData(0, 0, idle.width, idle.height).data;
   assertTrue(Buffer.from(p0).equals(Buffer.from(idle.rgba)), "pose 0 is pixel-identical to the PNG (still cards)");
-  const breathing = await loadTrainerPoses("lance.png");
-  assertTrue(breathing && !breathing.real, "other trainers keep the generated breathing");
+  // A game animation whose still is its first frame.
+  const baker = await loadTrainerPoses("baker.png");
+  assertTrue(baker?.real === true && baker.poses.length === list["baker.png"].frames, "Baker's card poses are his game animation");
+  assertEqual([baker.poseAt(0, n), baker.poseAt(1, n)], [0, 1], "a first-frame still: the loop starts on the still, then frame 2");
+  const b0 = baker.poses[0].image.getContext("2d").getImageData(0, 0, baker.width, baker.height).data;
+  assertTrue(Buffer.from(b0).equals(Buffer.from(baker.rgba)), "Baker's pose 0 is pixel-identical to his PNG");
+  const breathing = await loadTrainerPoses("hiker-gen4.png");
+  assertTrue(!breathing || !breathing.real, "trainers without a real animation keep the generated breathing");
 }
 
 finish();

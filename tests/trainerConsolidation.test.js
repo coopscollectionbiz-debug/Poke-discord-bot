@@ -43,7 +43,8 @@ section("Consolidation map and registry");
   // New sprite and B2W2 art (frame 0 of the B2W2 animation, same 80×80 canvas).
   const pngSize = (rel) => { const b = fs.readFileSync(new URL(rel, ROOT)); return `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}`; };
   assertTrue(reg.weirdlight?.tier === "Uncommon" && reg.weirdlight.sprites.includes("weirdlight.png"), "Weird Light (B2W2 Pokéstar Studios) is a new Uncommon trainer");
-  assertEqual(["weirdlight", "blue", "red", "lance", "misty"].map((n) => `${pngSize(`public/sprites/trainers_2/${n}.png`)}/${pngSize(`public/sprites/trainers_2/grayscale/${n}.png`)}`), Array(5).fill("80x80/80x80"), "new and B2W2-swapped sprites are 80×80, with grayscale copies");
+  // Their animations (data/sprites/trainer-animations.json) may need a slightly larger canvas.
+  assertTrue(["weirdlight", "blue", "red", "lance", "misty"].every((n) => { const c = pngSize(`public/sprites/trainers_2/${n}.png`), [w, h] = c.split("x").map(Number); return w >= 80 && h >= 80 && w <= 96 && h <= 96 && pngSize(`public/sprites/trainers_2/grayscale/${n}.png`) === c; }), "new and B2W2-swapped sprites are 80×80 or a little larger, with matching grayscale copies");
   assertTrue(fs.existsSync(new URL("public/sprites/trainers_2/twins-gen3.png", ROOT)), "folded PNGs stay on disk, so old links still load");
   let selectable = 0; for (const e of Object.values(reg)) for (const s of e.sprites) if (typeof s === "string" || !s.disabled) selectable++;
   assertEqual(selectable, 905, "905 trainer sprites are offered (1,271 before: −367 folded, +1 Weird Light)");

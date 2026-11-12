@@ -152,13 +152,17 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
   // Each update gets its own file name (battleImageName). With one shared
   // "battle.gif", a desktop client whose first load failed kept showing the
   // broken image for every later edit, result included.
+  // The replay's clock: how long it has been showing when the next image
+  // goes up, so each image's sprites carry on where the last left off.
+  let clockMs = 0;
   const image = async (step, opts) => new AttachmentBuilder(
-    await threaded.battleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, theme, ...opts }),
+    await threaded.battleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, theme, clockMs, ...opts }),
     { name: namePrefix + battleImageName(step) },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.
   const paced = async (render) => {
     const started = Date.now();
+    clockMs += delayMs; // this image goes up one delay after the last
     const file = await render();
     await sleep(Math.max(0, delayMs - (Date.now() - started)));
     return file;

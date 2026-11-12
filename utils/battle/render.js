@@ -20,6 +20,7 @@ import { drawSparkle, drawTypeChip } from "../render/primitives.js";
 import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
 import { encodeFrames } from "../render/gif.js";
+import { unionBox, pokemonLoopFit } from "../render/spriteLoops.js";
 
 const FONT = "system-ui, 'DejaVu Sans', 'Noto Sans', Arial, sans-serif";
 const SPRITES = new URL("../../public/sprites/pokemon/", import.meta.url);
@@ -345,11 +346,17 @@ function frameState(f, { hpBefore, events }) {
  * - a member with levelUp: true shows its Level in green (the result image)
  * - sprites: a Map of loaded sprite GIFs to share between one battle's images
  * - trainers: each side's displayed trainer file (null: an empty portrait)
+ * - clockMs: how far into the replay this image starts (playback passes the
+ *   time already shown), so sprites carry on where the last image left them
+ *   instead of every update restarting their animations. 0 with
+ *   POKEMON_LOOP_FIT=0.
  * - theme (/challenge only): { type (the opponent's, or null), badgeFile (in
  *   the center pill, or null), award: { screen, badgeFile, title } on the
  *   text screen at index `screen`, or null }
  */
-export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], theme = null }) {
+export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], theme = null, clockMs = 0, env = process.env }) {
+  const fitted = pokemonLoopFit(env);
+  const clock = fitted ? clockMs : 0;
   const load = (s, i, folder) => {
     const m = sides[s].members[i];
     // A Mega battles with its own sprite (loadAnimatedSprite: mega/<variant|grayscale>/<form>.gif).
@@ -431,7 +438,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 
   const draw = (f) => {
     const state = frameState(f, { hpBefore, events });
-    const ms = f * ANIMATION.delayMs;
+    const ms = clock + f * ANIMATION.delayMs;
     ctx.drawImage(base, 0, 0);
 
     for (let s = 0; s < 2; s++) {
@@ -476,7 +483,12 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
           const img = play(sprite, frac <= 0 ? 0 : ms);
           const dy = state.lunge?.side === s && state.lunge.slot === i ? state.lunge.dy : 0;
           ctx.globalAlpha = frac <= 0 ? 0.45 : fighting || active[s] === -1 ? 1 : 0.7;
-          ctx.drawImage(img, Math.round(cx - sprite.width / 2), Math.round(floor + 6 - sprite.height + dy));
+          // Anchored on the box every frame fits in, so a flyer rests above
+          // the floor and never sinks through it (POKEMON_LOOP_FIT=0: the GIF's own frame).
+          if (fitted) {
+            const ub = unionBox(sprite);
+            ctx.drawImage(img, Math.round(cx - (ub.x + ub.w / 2)), Math.round(floor + 4 - (ub.y + ub.h) + dy));
+          } else ctx.drawImage(img, Math.round(cx - sprite.width / 2), Math.round(floor + 6 - sprite.height + dy));
           ctx.globalAlpha = 1;
         }
 

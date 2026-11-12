@@ -9,8 +9,9 @@ import { GifReader } from "omggif";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import {
   pickFrameTurns, renderBattleFrame, tileCenter, turnText, wrapLines, loadSprite, spritePlayer, ANIMATION, FRAME_WIDTH,
-  LAYOUT, portraitBox, AWARD,
+  LAYOUT, portraitBox, AWARD, idleLoops,
 } from "../utils/battle/render.js";
+import { STEP_MS, TRAINER_LOOP_MS } from "../utils/render/spriteLoops.js";
 
 section("Frame turns");
 assertEqual(pickFrameTurns(20, 4), [5, 10, 15, 20], "evenly spaced, last is the final turn");
@@ -75,11 +76,45 @@ const playedMs = (r) => Array.from({ length: r.numFrames() - 1 }, (_, i) => r.fr
 assertTrue(playedMs(reader) >= ANIMATION.turnMs - ANIMATION.delayMs, "a one-attack turn plays for the full turn length");
 const twoHits = new GifReader(await renderBattleFrame({ sides, hpBefore: [[1, 0.5, 0, 0.1, 1, 1], [0.9]], events: [hit({ side: 1, slot: 0, targetSlot: 0, hpAfter: 0.8 }), hit({ hpAfter: 0.4 })], badge: "TURN 3" }));
 assertTrue(playedMs(twoHits) >= ANIMATION.turnMs - ANIMATION.delayMs, "a two-attack turn plays for the full turn length");
+// Start and result images loop. POKEMON_LOOP_FIT=0: idleFrames of 100 ms per text screen.
+const OFF = { POKEMON_LOOP_FIT: "0" };
+const resultOpts = { sides, hpBefore: [[1, 1, 1, 1, 1, 1], [0]], screens: [["Ash defeated Gary!", ""], ["Charizard grew to Lv37!", ""]], winnerSide: 0, badge: "FINAL" };
+const idleOff = new GifReader(await renderBattleFrame({ sides, hpBefore: [[1, 1, 1, 1, 1, 1], [1]], screens: [["The battle begins!", ""]], env: OFF }));
+assertEqual([idleOff.numFrames(), idleOff.frameInfo(0).delay * 10], [ANIMATION.idleFrames, ANIMATION.delayMs], "POKEMON_LOOP_FIT=0: a start image is idleFrames of 100 ms");
+const twoOff = new GifReader(await renderBattleFrame({ ...resultOpts, env: OFF }));
+assertEqual(twoOff.numFrames(), 2 * ANIMATION.idleFrames, "POKEMON_LOOP_FIT=0: each text screen gets idleFrames");
+// Fitted (the default): 50 ms steps over whole loops of the sprites, so the
+// GIF's end meets its start with no jump; the screens split it evenly.
 const idleGif = await renderBattleFrame({ sides, hpBefore: [[1, 1, 1, 1, 1, 1], [1]], screens: [["The battle begins!", ""]] });
 const idle = new GifReader(idleGif);
-assertEqual(idle.numFrames(), ANIMATION.idleFrames, "with no attacks it loops the idle animation");
-const twoScreens = new GifReader(await renderBattleFrame({ sides, hpBefore: [[1, 1, 1, 1, 1, 1], [0]], screens: [["Ash defeated Gary!", ""], ["Charizard grew to Lv37!", ""]], winnerSide: 0 }));
-assertEqual(twoScreens.numFrames(), 2 * ANIMATION.idleFrames, "each text screen gets its own stretch of the loop");
+const loopMs = (r) => { let t = 0; for (let i = 0; i < r.numFrames(); i++) t += r.frameInfo(i).delay * 10; return t; };
+assertTrue(Array.from({ length: idle.numFrames() }, (_, i) => idle.frameInfo(i).delay * 10).every((d) => d === STEP_MS), "a fitted start image steps every 50 ms");
+assertTrue(loopMs(idle) >= 2000 && loopMs(idle) <= 8000, `and loops its sprites' fitted loop, 2–8 s (${loopMs(idle)} ms)`);
+const twoScreens = new GifReader(await renderBattleFrame(resultOpts));
+assertTrue(loopMs(twoScreens) / 2 >= 1500, `a fitted result image gives each text screen at least 1.5 s (${loopMs(twoScreens) / 2} ms each)`);
+assertEqual(twoScreens.frameInfo(0).delay * 10, STEP_MS, "and steps every 50 ms");
+assertEqual(idleLoops(6000, 2), { loops: 1, total: 120 }, "two screens over a 6 s loop: 3 s each");
+assertEqual(idleLoops(2400, 3), { loops: 3, total: 144 }, "three screens over a 2.4 s loop: three loops, 2.4 s each");
+assertEqual(idleLoops(700, 1), { loops: 3, total: 42 }, "a short loop repeats until its screen has 1.5 s");
+assertEqual(idleLoops(8000, 4).loops, 1, "a long loop splits four screens 2 s each");
+// No seam: an image whose clock starts one GIF length later shows exactly the
+// same first frame, so where the GIF wraps, every sprite, trainer and
+// backdrop carries on as if it hadn't.
+{
+  const pk = (speciesId) => ({ speciesId, name: `#${speciesId}`, level: 50, variant: "normal" });
+  const lone = [{ name: "A", members: [pk(193)] }, { name: "B", members: [pk(0)] }];
+  const r = new GifReader(await renderBattleFrame({ sides: lone, hpBefore: [[1], [0]], winnerSide: 0, badge: "FINAL", screens: [["A won!", ""]] }));
+  const yanma = await loadSprite("normal", 193);
+  assertEqual(loopMs(r), Math.round(yanma.duration / STEP_MS) * STEP_MS * idleLoops(Math.round(yanma.duration / STEP_MS) * STEP_MS, 1).loops,
+    "a lone sprite's result image plays whole cycles of it");
+  const trained = new GifReader(await renderBattleFrame({ sides: lone, hpBefore: [[1], [0]], winnerSide: 0, badge: "FINAL", screens: [["A won!", ""]], trainers: ["cynthia-anime.png", null], tiers: ["mythic", null] }));
+  assertEqual(loopMs(trained) % TRAINER_LOOP_MS, 0, `with an idling trainer and a tier backdrop, a whole number of 2.4 s loops (${loopMs(trained)} ms)`);
+  const team = { sides: [{ name: "A", members: [494, 445, 134].map((id) => pk(id)) }, { name: "B", members: [pk(6), pk(150)] }], hpBefore: [[1, 0.5, 1], [1, 0]], winnerSide: 0, badge: "FINAL", screens: [["A won!", ""], ["#6 grew!", ""]], trainers: ["cynthia-anime.png", "alain.png"], tiers: ["mythic", "legendary"] };
+  const first = await renderBattleFrame(team);
+  const n = loopMs(new GifReader(first));
+  assertTrue(Buffer.from(decodeFrame(new GifReader(first), 0)).equals(Buffer.from(decodeFrame(new GifReader(await renderBattleFrame({ ...team, clockMs: n })), 0))),
+    `a result image with trainers, backdrops and sprites that all fit 7.2 s loops with no seam (${n} ms)`);
+}
 assertTrue(!Buffer.from(decodeFrame(idle, 0)).equals(Buffer.from(decodeFrame(idle, 10))), "sprites animate between frames");
 // Frames after the first store only what changed (the rest is transparent and
 // the previous frame shows through). Smaller files load faster, which shortens
@@ -147,12 +182,14 @@ section("Trainer portraits and the challenge theme");
   const award = new GifReader(await renderBattleFrame({
     sides: six, hpBefore: [full[0], [0, 0, 0, 0, 0, 0]], badge: "FINAL", winnerSide: 0, screens, trainers, theme: { ...brock, award: { screen: 1, badgeFile: "boulder.png", title: "BOULDER BADGE" } },
   }));
-  assertEqual(award.numFrames(), 2 * ANIMATION.idleFrames, "the award is its own text screen");
-  const before = composite(award, 5), during = composite(award, ANIMATION.idleFrames + 5);
+  // Its screen starts halfway through (fitted: the frames split evenly).
+  const awardAt = Math.ceil(award.numFrames() / 2);
+  assertTrue(loopMs(award) / 2 >= 1500, `the award is its own text screen (${loopMs(award) / 2} ms)`);
+  const before = composite(award, 5), during = composite(award, awardAt + 5);
   assertTrue(bright(during, AWARD.cx, AWARD.cy) > 600 && bright(before, AWARD.cx, AWARD.cy) < 600, "the Badge appears, large, only on its screen");
   assertTrue(bright(during, tileCenter(6, 0), 120) < bright(before, tileCenter(6, 0), 120),
     "the field dims behind it");
-  const later = composite(award, ANIMATION.idleFrames + 10);
+  const later = composite(award, awardAt + 10);
   assertTrue(changed(during, later, { x: AWARD.cx - AWARD.r - 30, y: AWARD.cy - AWARD.r - 30, w: 2 * AWARD.r + 60, h: 2 * AWARD.r + 60 }) > 20,
     "its sparkles twinkle");
 
@@ -168,7 +205,13 @@ section("Trainer portraits and the challenge theme");
     }
     return n;
   };
-  const [goldDuring, goldBefore] = [gold(composite(titled, ANIMATION.idleFrames + 5)), gold(composite(titled, 5))];
+  const [goldDuring, goldBefore] = [gold(composite(titled, Math.ceil(titled.numFrames() / 2) + 5)), gold(composite(titled, 5))];
+  // POKEMON_LOOP_FIT=0: the award still gets the second idleFrames.
+  const awardOff = new GifReader(await renderBattleFrame({
+    sides: six, hpBefore: [full[0], [0, 0, 0, 0, 0, 0]], badge: "FINAL", winnerSide: 0, screens, trainers, env: { POKEMON_LOOP_FIT: "0" }, theme: { ...brock, award: { screen: 1, badgeFile: "boulder.png", title: "BOULDER BADGE" } },
+  }));
+  assertEqual(awardOff.numFrames(), 2 * ANIMATION.idleFrames, "POKEMON_LOOP_FIT=0: the award screen is the second 2 s");
+  assertTrue(bright(composite(awardOff, ANIMATION.idleFrames + 5), AWARD.cx, AWARD.cy) > 600 && bright(composite(awardOff, 5), AWARD.cx, AWARD.cy) < 600, "POKEMON_LOOP_FIT=0: the Badge shows only on its screen");
   assertTrue(goldDuring > goldBefore + 1500, `a gold title on the award screen (${goldDuring} gold pixels vs ${goldBefore})`);
   if (process.env.BATTLE_FRAME_OUT) {
     fs.writeFileSync(process.env.BATTLE_FRAME_OUT.replace(/\.gif$/, "-challenge-start.gif"), await renderBattleFrame({ sides: six, hpBefore: full, screens: [["The battle begins!", "#6 and #74 lead off."]], trainers, theme: brock }));

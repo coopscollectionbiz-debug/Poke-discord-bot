@@ -21,13 +21,13 @@ const gifDims = (b) => [b.readUInt16LE(6), b.readUInt16LE(8)];
 
 section("Compact card, animated for every catch");
 {
-  assertEqual([CATCH_SIZE.w, CATCH_SIZE.h], [900, 200], "900 × 200 (about 550 × 122 in Discord)");
+  assertEqual([CATCH_SIZE.w, CATCH_SIZE.h], [320, 96], "320 × 96, the old embed's width, drawn at the size Discord shows it");
   for (const v of [common, shinyDup, legendary]) {
     const gif = await renderCatchCard(v, { animate: true });
-    assertTrue(gif.subarray(0, 3).toString() === "GIF" && gifDims(gif).join("×") === "900×200", `${v.name}: animated`);
+    assertTrue(gif.subarray(0, 3).toString() === "GIF" && gifDims(gif).join("×") === "320×96", `${v.name}: animated`);
   }
   const png = await renderCatchCard(common);
-  assertEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [900, 200], "still version is a 900 × 200 PNG");
+  assertEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [320, 96], "still version is a 320 × 96 PNG");
 }
 
 section("Image: shared gate and switches");
@@ -57,7 +57,7 @@ section("Sighting card (broadcasts without a catch result)");
   assertEqual([s.name, s.tier, s.level, s.isNew, s.dex, s.sighting], ["Mandibuzz", "rare", null, null, null, true], "species facts only");
   assertTrue(sightingView({ id: 25, shiny: true }).shiny, "shiny sightings");
   const gif = await renderCatchCard(s, { animate: true });
-  assertEqual(gifDims(gif), [900, 200], "renders the same compact card");
+  assertEqual(gifDims(gif), [320, 96], "renders the same compact card");
 }
 
 section("catchAnnouncement");

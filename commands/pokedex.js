@@ -219,7 +219,7 @@ export default {
       const entry = async () => {
         try {
           const view = pokedexView(poke.id, user);
-          const card = await cardImage((animate) => renderPokedexCard(view, { shiny: viewingShiny, animate }), "pokedex");
+          const card = await cardImage((animate) => renderPokedexCard(view, { shiny: viewingShiny, animate }), "pokedex", { unique: true });
           return { embeds: [], attachments: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })] };
         } catch (err) {
           console.warn("⚠️ pokedex card render failed; sending embed:", err?.message || err);

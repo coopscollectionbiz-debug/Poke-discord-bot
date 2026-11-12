@@ -36,11 +36,14 @@ const MULTIHIT_ODDS = [2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 5, 5, 
 export const memberMoves = (member) =>
   (Array.isArray(member.moves) && member.moves.length ? member.moves : autoMoveset(member.speciesId, member.realLevel ?? member.level));
 
+// member.statMult raises every stat, HP included, without changing the
+// Level: challenge opponents fight with CHALLENGE.statBoost.
 export function buildMon(member, levelMult = 1) {
   const species = getSpecies(member.speciesId);
   const profile = member.battleProfile ?? null;
   const level = Math.min(100, Math.round(member.level * levelMult));
-  const s = computeStats((profile ?? species).baseStats, level);
+  const k = member.statMult ?? 1;
+  const s = Object.fromEntries(Object.entries(computeStats((profile ?? species).baseStats, level)).map(([stat, v]) => [stat, Math.round(v * k)]));
   const maxHp = member.speciesId === SHEDINJA ? 1 : s.hp;
   return {
     speciesId: member.speciesId,
@@ -48,7 +51,11 @@ export function buildMon(member, levelMult = 1) {
     types: profile ? [...profile.types] : species.types,
     atk: s.atk, def: s.def, spa: s.spa, spd: s.spd, spe: s.spe,
     maxHp,
-    hp: maxHp,
+    // hpFraction carries damage between Elite Four fights: absent is full HP,
+    // 0 is fainted, and any sliver above 0 keeps at least 1 HP.
+    hp: member.hpFraction === undefined ? maxHp
+      : member.hpFraction <= 0 ? 0
+      : Math.max(1, Math.round(maxHp * member.hpFraction)),
     moves: memberMoves(member).map(getMove),
     ...(profile && { ability: profile.ability, megaForm: profile.formId, name: profile.name }),
     // Held item (validated in runBattle.buildTeam). Absent for members
@@ -167,6 +174,11 @@ export function simulateBattle({ sides, seed, surge }) {
   const knockouts = [];
   const log = []; // per turn, the hits in order
   let lastFaintSide = null;
+
+  // A side can start with nobody able to battle: an Elite Four run can win a
+  // fight on a double knockout and reach the next one with every Pokémon fainted.
+  const outAtStart = [0, 1].filter((i) => activeSlot(i) === -1);
+  if (outAtStart.length) return { winner: outAtStart.includes(0) ? 1 : 0, turns: 0, endedBy: "knockout", snapshots, knockouts, log };
 
   for (let turn = 1; turn <= TURN_CAP; turn++) {
     const slots = [activeSlot(0), activeSlot(1)];

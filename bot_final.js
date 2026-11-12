@@ -67,11 +67,13 @@ import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
 import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
 import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
 import { normalizeNotices, peekNotices, clearNotices, NOTICE_KINDS } from "./services/notices.js";
+import { consolidateUserTrainers } from "./services/trainerConsolidation.js";
 import { pokemonDetail } from "./services/pokemonDetail.js";
+import { parseTeamCopy, applyTeamCopy } from "./services/teamCopy.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
 import { rankedRecord } from "./utils/battle/rewards.js";
 import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
-import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
+import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, adminSessionOf, activateAdminSession, ADMIN_MAX_MS, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
 import {
@@ -308,6 +310,10 @@ function normalizeUserSchema(id, user) {
   // Shared with utils/userSchema.js so every path produces the same shape:
   // strings only, trimmed, de-duplicated; legacy object maps become arrays.
   normalizeTrainers(user);
+  // Generation consolidation: folded game versions (twins-gen3…) become their
+  // group's sprite (twins.png), granted if not already owned; displayed
+  // trainer follows; one notice (services/trainerConsolidation.js). No-op once done.
+  consolidateUserTrainers(user);
 
   // ==========================================================
 // 4️⃣ DISPLAYED TEAM (canonical)
@@ -420,8 +426,11 @@ ensureWeeklyReset(user);
 
 import { lockUser } from "./utils/userLocks.js";
 import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
+import { createEncounterService, isEncounterButton } from "./utils/encounter/service.js";
 import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
+import { finishAllOpenRuns, challengeLogEntry, hideOpenRun, challengeProgress } from "./utils/challenge/runChallenge.js";
+import { showRunResult, challengeNames } from "./utils/battle/playback.js";
 import { powersFromLevels } from "./utils/battle/power.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -466,29 +475,25 @@ app.get("/auth/admin", (req, res) => {
 
   if (!id || !code) return res.status(400).send("Missing id/code");
   if (!validateToken(id, code, "admin")) return res.status(403).send("Invalid or expired admin link.");
+  // From here the session slides (30 min after each use, 4 h at most).
+  activateAdminSession(code);
 
   res.cookie("admin_session", code, {
     httpOnly: true,
     secure: isProd,
     sameSite: "Lax",
     path: "/",
-    maxAge: 10 * 60 * 1000,
+    maxAge: ADMIN_MAX_MS,
   });
 
   res.redirect("/public/admindashboard");
 });
 
 // ==========================================================
-// 🎯 Trainer Tier Costs
+// 🎯 Trainer Tier Costs (in utils/trainerCosts.js, which /challenge shares)
 // ==========================================================
-export const TRAINER_COSTS = {
-  common: 2500,
-  uncommon: 7500,
-  rare: 15000,
-  epic: 35000,
-  legendary: 75000,
-  mythic: 150000,
-};
+import { TRAINER_COSTS } from "./utils/trainerCosts.js";
+export { TRAINER_COSTS };
 
 
 // ✅ Serve all /public assets with correct MIME headers
@@ -559,7 +564,29 @@ app.get("/public/admindashboard", (_, res) =>
 mountAdminDashboard(app, {
   getTrainerData: () => trainerData,
   requireAdminSession,
+  adminSessionOf,
+  lockUser,
+  save: saveAndAck,
+  // Same gate as the player /api writes below (D8 + A2 circuit breaker).
+  writeBlocked: () =>
+    !isReady
+      ? "The bot is starting up or restarting. Try again in a moment."
+      : getSaveHealth().degraded
+        ? "Saving is temporarily unavailable. Try again shortly."
+        : null,
+  syncRole: syncRankRole,
 });
+
+// Rank role after an admin TP change. Uses the bot's server (GUILD_ID).
+async function syncRankRole(userId, tp) {
+  const guild = client.guilds.cache.get(process.env.GUILD_ID) ?? client.guilds.cache.first();
+  if (!guild) return { ok: false, reason: "The bot isn't in a server." };
+  const member = await guild.members.fetch(userId).catch(() => null);
+  if (!member) return { ok: false, reason: "They aren't in the server." };
+  if (!member.manageable) return { ok: false, reason: "The bot's role is below theirs." };
+  await updateUserRole(member, tp);
+  return { ok: true };
+}
 
 
 
@@ -868,7 +895,13 @@ async function loadTrainerData() {
   console.log(`🔑 Writer epoch ${getEpoch()}${result.localOnly ? " (booted from the local volume; Discord unreachable)" : ""}`);
   const data = chosen.data;
   const trimmedBefore = new Map(Object.entries(data).map(([id, u]) => [id, peekNotices(u, NOTICE_KINDS.BATTLE_TEAM_TRIM).length]));
+  const consolidatedBefore = new Map(Object.entries(data).map(([id, u]) => [id, peekNotices(u, NOTICE_KINDS.TRAINER_CONSOLIDATION).length]));
   for (const [id, user] of Object.entries(data)) normalizeUserSchema(id, user);
+  {
+    // Generation consolidation (normalizeUserSchema → consolidateUserTrainers): count players changed this boot.
+    const n = Object.entries(data).filter(([id, u]) => peekNotices(u, NOTICE_KINDS.TRAINER_CONSOLIDATION).length > (consolidatedBefore.get(id) || 0)).length;
+    console.log(`🧩 Trainer collections consolidated (folded game versions → one sprite): ${n}`);
+  }
   {
     // Battle teams over the one-mythic limit after a re-tier are trimmed by
     // normalizeUserSchema → normalizeBattleTeam; count them for the boot log.
@@ -984,10 +1017,12 @@ async function saveDataToDiscord(data, { force = false } = {}) {
 // ==========================================================
 // 🎁 DETERMINISTIC RANDOM REWARD SYSTEM (ATOMIC PER-USER LOCK)
 // ==========================================================
+// Resolves to "cooldown", "missed" (a Trainer encounter may roll next), or
+// "caught"; undefined when the reward couldn't be picked.
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   const userId = interactionUser.id;
 
-  await lockUser(userId, async () => {
+  return lockUser(userId, async () => {
     console.log("⚙️ tryGiveRandomReward executed for", interactionUser.username);
 
     // =============================
@@ -995,7 +1030,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // =============================
     const now = Date.now();
     const last = rewardCooldowns.get(userId) || 0;
-    if (now - last < REWARD_COOLDOWN) return;
+    if (now - last < REWARD_COOLDOWN) return "cooldown";
     rewardCooldowns.set(userId, now);
 
     // =============================
@@ -1015,7 +1050,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
     // Reward fails → keep pity meter, exit
     if (Math.random() >= finalChance) {
-      return;
+      return "missed";
     }
 
     // Reward occurred → reset pity meter
@@ -1095,8 +1130,13 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     }).catch(err => console.error("❌ broadcastReward failed:", err.message));
 
     console.log(`✅ Reward granted to ${interactionUser.username}`);
+    return "caught";
   });
 }
+
+// Trainer encounters (utils/encounter/service.js): open encounters live in
+// memory; their buttons come through interactionCreate below.
+const encounters = createEncounterService({ getTrainerData: () => trainerData, lockUser, enqueueSave });
 
 
 // ==========================================================
@@ -1241,6 +1281,7 @@ client.on(
     enqueueSave,
     queueRoleUpdate,
     giveRandomReward: tryGiveRandomReward,
+    spot: (message) => encounters.maybeSpot(message),
   })
 );
 
@@ -1269,7 +1310,7 @@ app.get("/api/user", (req, res) => {
   trainerData[id] = normalizeUserSchema(id, user);
   trainerData[id].rank = getRank(trainerData[id].tp);
 
-  return res.json(trainerData[id]);
+  return res.json(hideOpenRun(trainerData[id]));
 });
 
 // ==========================================================
@@ -1652,6 +1693,9 @@ if (interaction.isChatInputCommand()) {
       return;
     }
 
+    // Last active: any slash command counts. Rides along with the next save.
+    if (trainerData[interaction.user.id]) trainerData[interaction.user.id].lastActiveAt = Date.now();
+
     const command = client.commands.get(interaction.commandName);
     if (!command) {
       console.warn(
@@ -1696,10 +1740,11 @@ if (interaction.isChatInputCommand()) {
     // If the command timed out, we already handled messaging
     if (timedOut) return;
 
+    // Every command's total time, so card load times can be read from the
+    // logs next to each card's "🖼️ card" render line (utils/render/stage.js).
     const ms = Date.now() - startedAt;
-    if (ms > 2500) {
-      console.warn(`⏱️ Slow slash command: ${interaction.commandName} took ${ms}ms`);
-    }
+    if (ms > 2500) console.warn(`⏱️ Slow slash command: ${interaction.commandName} took ${ms}ms`);
+    else console.log(`⏱️ ${interaction.commandName} took ${ms}ms`);
 
     // If command finished but never replied, close it cleanly
     if (interaction.deferred && !interaction.replied) {
@@ -1719,6 +1764,19 @@ if (interaction.isChatInputCommand()) {
   // ----------------------------------------------------------
   if (interaction.isButton()) {
     const id = interaction.customId ?? "";
+
+    // Trainer encounter cards are plain channel messages with no collector, so
+    // their clicks (even on a card from before a restart) are answered here.
+    if (isEncounterButton(id)) {
+      if (!isReady) {
+        await interaction
+          .reply({ content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.", flags: 64 })
+          .catch(() => {});
+        return;
+      }
+      await encounters.handleButton(interaction);
+      return;
+    }
 
     const noopButton =
       id.startsWith("confirm_") ||
@@ -2052,6 +2110,7 @@ app.get("/api/user-pokemon", (req, res) => {
       return { ...r, position: board.you?.position ?? null, players: board.total, streak: r.wins + r.losses > 0 ? Number(u.stats?.winStreak) || 0 : 0 };
     })(),
     casual: { wins: u.casual?.wins ?? 0, losses: u.casual?.losses ?? 0, streak: u.casual?.streak ?? 0, bestStreak: u.casual?.bestStreak ?? 0 },
+    challenge: challengeProgress(u), // the Badge row (/challenge)
     // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
     levels,
     powers: powersFromLevels(levels), // { "6:normal": 410 }
@@ -2146,12 +2205,15 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
     if (teamType !== "display" && teamType !== "battle") {
       return res.status(400).json({ success: false, error: "Unknown team type" });
     }
-
     if (!requireDashboardSession(req, id)) {
       return res
         .status(403)
         .json({ success: false, error: "Invalid or expired session" });
     }
+    // Optional: this team was copied from the other one (Teams page "Copy
+    // from …"); the copied Pokémon's moves come along in the same write.
+    const copy = parseTeamCopy(req.body, teamType);
+    if (!copy.ok) return res.status(copy.status).json({ success: false, error: copy.error, code: copy.code });
 
     await lockUser(id, async () => {
       const user = trainerData[id];
@@ -2183,6 +2245,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       // 5) Save
       if (teamType === "battle") u.battleTeam = normalized;
       else u.displayedPokemon = normalized;
+      const copiedMoves = copy.copy ? applyTeamCopy(u, { ...copy.copy, to: teamType }, normalized) : [];
       trainerData[id] = u;
       // Held items on this team follow it: a Pokémon that left the team, or
       // is now set to Mega Evolve, drops its assignment on THIS team only
@@ -2198,6 +2261,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
         currentTeam: u.displayedPokemon,
         battleTeam: hasBattleTeam(u) ? u.battleTeam : null,
         ...(itemsCleared.length ? { itemsCleared, equipmentRev: equipmentRev(u) } : {}),
+        ...(copy.copy ? { copiedMoves } : {}),
       });
     });
   } catch (err) {
@@ -2452,6 +2516,28 @@ async function refundPendingWagersOnStartup() {
   }
 }
 
+// ==========================================================
+// An Elite Four run waits on the player's record between fights, and the
+// command playing it dies with the old process, so every open run is
+// finished at startup with no Revives, and its replay message gets the result.
+// ==========================================================
+async function finishOpenRunsOnStartup() {
+  const finished = finishAllOpenRuns(trainerData, new Date());
+  if (!finished.length) return;
+  await enqueueSave(trainerData, { force: true });
+  console.log(`⚔️ Finished ${finished.length} open Elite Four run(s) after restart`);
+  for (const { userId, outcome, channelId, messageId } of finished) {
+    logEvent("challenge", userId, { ...challengeLogEntry(outcome), finished: "restart" });
+    if (!channelId || !messageId) continue;
+    try {
+      const channel = await client.channels.fetch(channelId);
+      const message = await channel.messages.fetch(messageId);
+      await showRunResult(message, outcome, challengeNames(outcome, trainerData[userId]?.name || "Trainer"),
+        `⚔️ The bot restarted, so <@${userId}>'s Elite Four run finished without Revives.`);
+    } catch {}
+  }
+}
+
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
@@ -2546,6 +2632,7 @@ async function retryLoadLoop() {
 
   if (ok2) {
     await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
+    await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
     return;
@@ -2562,6 +2649,7 @@ setTimeout(retryLoadLoop, retryMs);
   }
 
   await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
+  await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });

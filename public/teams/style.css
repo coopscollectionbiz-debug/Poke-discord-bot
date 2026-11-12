@@ -347,3 +347,19 @@ dialog.hi-dialog { width: min(640px, calc(100vw - 24px)); }
 @media (max-width: 820px) { .tm-stage .hi-badge { display: none; } }
 .hi-note--warn { color: var(--cc-gold); font-weight: 700; }
 @media (max-width: 820px) { .hi-slotbtn { white-space: normal; text-align: left; line-height: 1.2; padding: 6px 12px; } }
+
+/* ---------- Pokémon details (the Collection's drawer) ---------- */
+/* The picture is a button: tap it (or the name) for the details. */
+button.tm-stage { width: 100%; padding: 0; border: 0; font: inherit; color: inherit; cursor: pointer; }
+button.tm-stage:focus-visible { outline: 2px solid var(--cc-blue); outline-offset: 2px; }
+.tm-slot-name[data-act="details"] { cursor: pointer; }
+.tm-slot-name[data-act="details"]:hover { text-decoration: underline; }
+/* Box tiles: a small info button beside the tile (tapping the tile still adds it). */
+.tm-tile { position: relative; }
+.tm-tile-info { position: absolute; right: 4px; bottom: 4px; z-index: 3; width: 28px; height: 28px; min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text-muted); font: 800 13px/1 var(--cc-font); font-style: italic; }
+.tm-tile-info::before { content: ""; position: absolute; inset: -8px; } /* 44 px target */
+.tm-tile-info:hover { color: var(--cc-text); border-color: var(--cc-blue); }
+.tm-tile-info:focus-visible { outline: 2px solid var(--cc-blue); outline-offset: 2px; }
+.tm-tile .tm-tile-btn { padding-bottom: 36px; } /* own row for the info button: it never covers the Level / Mythic line */
+/* Copy a whole team from the other one */
+.tm-copyteam { padding: 0 14px; font-size: 13px; }

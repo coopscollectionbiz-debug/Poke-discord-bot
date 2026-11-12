@@ -425,6 +425,11 @@ export function simulateBattleFx({ teams, rng }) {
   const turnNotes = [];
   let lastFaintSide = null;
   const seen = [-1, -1];
+  // A side can start with everyone fainted (an Elite Four fight after a win
+  // in which the player's last Pokémon fainted too, with no Revive). It loses
+  // at turn 0, as in sim.js's legacy loop.
+  const outAtStart = [0, 1].filter((i) => activeSlot(i) === -1);
+  if (outAtStart.length) return { winner: outAtStart.includes(0) ? 1 : 0, turns: 0, endedBy: "knockout", snapshots, knockouts, log, turnNotes };
 
   const recordFaints = (turn, slots, byMove) => {
     for (const { mon, by } of fx.fainted.splice(0)) {

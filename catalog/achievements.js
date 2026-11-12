@@ -32,8 +32,12 @@ import { isGenerationLive } from "../utils/speciesCatalog.js";
  * Every revision-1/2 id, target and AP is unchanged; the "complete the
  * Gen 1–5 set" entries are pinned to Gen 1–5 species/types so new
  * species can never move or shortcut their goalposts.
+ * 4 = Pokémon re-tier (2026-11-11, docs/audits/pokemon-tiers/DECISIONS.md):
+ * Hall of Legends now needs 44 Legendaries and Mythic Archive 25 Mythics
+ * (Dialga, Palkia, Giratina, Kyurem moved). The retro pass re-runs once so
+ * tier-based achievements reflect the new tiers; unlocks are never removed.
  */
-export const CATALOG_REVISION = 3;
+export const CATALOG_REVISION = 4;
 
 export const CATEGORIES = Object.freeze({
   collection: { label: "Pokémon Collection", emoji: "📚", order: 1 },
@@ -49,8 +53,9 @@ export const CATEGORIES = Object.freeze({
 
 /** The original (Gen 1–5) Pokédex, national dex 1–649 — fixed targets of Release C entries. */
 export const SUPPORTED_SPECIES = 649;
-/** Legendary / Mythic species in Gen 1–5 (tier field). */
-export const TIER_SPECIES = Object.freeze({ legendary: 48, mythic: 21 });
+/** Legendary / Mythic species in Gen 1–5 (tier field). Was 48 / 21 until the
+ * 2026-11-11 re-tier moved Dialga, Palkia, Giratina and Kyurem to mythic. */
+export const TIER_SPECIES = Object.freeze({ legendary: 44, mythic: 25 });
 /** Gen 1–5 evolution families with 2+ members (components of the Gen 1–5 evolution graph). */
 export const MULTI_MEMBER_FAMILIES = 225;
 /** The full National Pokédex once every generation is released. */

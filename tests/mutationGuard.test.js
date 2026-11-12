@@ -126,6 +126,11 @@ section("TM T0: Pokémon ownership is only lowered through services/ownership.js
       /\.(normal|shiny)\s*=(?!=)[^;]*\s-\s/.test(l.text)
   );
   assertEqual(where(decrements), [], "no direct decrements of Pokémon counts");
+  // Every removal resets the Level when the last copy goes, so a removal
+  // path written outside the service shows up as a resetLevelIfGone call
+  // (catches "pokemon[id][v] = after" style decrements the patterns above miss).
+  const levelResets = others.filter((l) => l.f !== "utils/training.js" && /resetLevelIfGone\s*\(/.test(l.text));
+  assertEqual(where(levelResets), [], "resetLevelIfGone is only called by services/ownership.js");
   const deletes = others.filter((l) => /delete\s+[\w.?$[\]]*\bpokemon\s*\[/.test(l.text));
   assertEqual(where(deletes), [], "no direct deletes of user.pokemon entries");
   // The only allowed wholesale replacements repair a NON-object pokemon field.

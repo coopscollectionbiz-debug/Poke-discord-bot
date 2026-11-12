@@ -24,9 +24,15 @@ const recs = Object.values(MANIFEST.forms);
 
 section("Coverage");
 assertEqual(recs.length, 95, "95 forms have sprites (97 records − Mega Zygarde − Mega Magearna Original)");
-assertEqual(recs.filter((r) => r.normal.kind === "animated").length, 24, "24 animated normal");
-assertEqual(recs.filter((r) => r.shiny.kind === "animated").length, 24, "24 animated shiny");
-assertEqual(recs.filter((r) => r.normal.kind === "static").length, 71, "71 static pixel-art fallbacks");
+// Community animations that replaced static forms (data/sprites/animated-imports.json, tools/import-animated-sprites.mjs)
+const IMPORTS = new Map(read("../data/sprites/animated-imports.json").entries.filter((e) => e.target.startsWith("mega:")).map((e) => [e.megaId, e]));
+const isImport = (r) => r.normal.origin === "animated-import" && IMPORTS.has(r.id);
+const audited = recs.filter((r) => !isImport(r));
+assertEqual(audited.filter((r) => r.normal.kind === "animated").length, 24, "24 audited animated normal (Showdown gen5ani / PokéAPI)");
+assertEqual(audited.filter((r) => r.shiny.kind === "animated").length, 24, "24 audited animated shiny");
+assertEqual(IMPORTS.size, 63, "63 static forms replaced by reviewed community animations");
+assertTrue(recs.filter(isImport).length === IMPORTS.size && recs.filter(isImport).every((r) => r.normal.kind === "animated" && r.shiny.kind === "animated"), "every imported form is animated, normal and shiny");
+assertEqual(recs.filter((r) => r.normal.kind === "static").length, 71 - IMPORTS.size, "the remaining static pixel-art fallbacks (71 − imports)");
 assertTrue(recs.every((r) => r.normal.kind === r.shiny.kind), "normal and shiny are the same kind for every form");
 assertTrue(!MANIFEST.forms["mega-zygarde"] && !MANIFEST.forms["mega-magearna-original"], "no sprite for Mega Zygarde (none acceptable) or Mega Magearna Original (D-8)");
 assertTrue(MEGAS.every((f) => !!MANIFEST.forms[f.id] === !!f.sprite.normal), "catalogue sprite references match the manifest");
@@ -60,11 +66,13 @@ assertTrue(recs.every((r) => r.normal.fileSha1 !== r.shiny.fileSha1 && r.normal.
 section("Provenance: audited 2D sources only");
 const probed = new Map(PROBE.flatMap((p) => Object.values(p.files).filter((f) => f.sha1).map((f) => [`${f.url} ${f.sha1}`, f])));
 const probeOf = (x) => probed.get(`${x.sourceUrl} ${x.sourceSha1}`);
-assertTrue(recs.every((r) => ["normal", "shiny"].every((v) => probeOf(r[v]))), "every source file is the exact file the audit probed (URL + SHA-1)");
-assertTrue(recs.every((r) => ["normal", "shiny"].every((v) => probeOf(r[v]).colours <= 64 && probeOf(r[v]).alphaLevels <= 2)), "every source passed the 2D pixel-art test (≤ 64 colours, hard alpha)");
+assertTrue(audited.every((r) => ["normal", "shiny"].every((v) => probeOf(r[v]))), "every audited source file is the exact file the audit probed (URL + SHA-1)");
+assertTrue(audited.every((r) => ["normal", "shiny"].every((v) => probeOf(r[v]).colours <= 64 && probeOf(r[v]).alphaLevels <= 2)), "every audited source passed the 2D pixel-art test (≤ 64 colours, hard alpha)");
+assertTrue(recs.filter(isImport).every((r) => { const e = IMPORTS.get(r.id); return r.normal.fileSha1 === e.sha1.normal && r.shiny.fileSha1 === e.sha1.shiny && r.normal.sourceSha1 === e.sourceSha1.normal && r.shiny.sourceSha1 === e.sourceSha1.shiny; }), "every imported animation is the reviewed file recorded in animated-imports.json (output and source SHA-1)");
+assertTrue(recs.filter(isImport).every((r) => /animation by /.test(r.credit) && r.animationCredit?.animator && r.animationCredit?.licence && r.animationCredit?.shiny), "every imported animation credits its animator, terms and shiny method");
 assertTrue(recs.every((r) => ["normal", "shiny"].every((v) => !/\/sprites\/(ani|ani-shiny|dex|home|gen6)\//.test(r[v].sourceUrl))), "no 3D source (Showdown ani/dex/home/gen6)");
-assertTrue(recs.every((r) => r.normal.kind !== "animated" || /gen5ani|black-white\/animated/.test(r.normal.sourceUrl)), "animations are BW-style gen5ani (or its PokéAPI mirror)");
-assertTrue(SOURCE.every((e) => MANIFEST.forms[e.id]?.normal.sourceSha1 === e.normal.sha1 && MANIFEST.forms[e.id]?.shiny.sourceSha1 === e.shiny.sha1), "imported files match data/sprites/mega-source-manifest.json");
+assertTrue(audited.every((r) => r.normal.kind !== "animated" || /gen5ani|black-white\/animated/.test(r.normal.sourceUrl)), "audited animations are BW-style gen5ani (or its PokéAPI mirror)");
+assertTrue(SOURCE.filter((e) => !IMPORTS.has(e.id)).every((e) => MANIFEST.forms[e.id]?.normal.sourceSha1 === e.normal.sha1 && MANIFEST.forms[e.id]?.shiny.sourceSha1 === e.shiny.sha1), "audited files match data/sprites/mega-source-manifest.json");
 assertTrue(recs.every((r) => typeof r.credit === "string" && /Smogon/.test(r.credit) && !/Official artwork/.test(r.credit)), "every form carries a sprite-project credit (never an artwork credit)");
 assertEqual(recs.filter((r) => r.creditVerified === false).map((r) => r.id).sort(), ["mega-meowstic-f", "mega-meowstic-m"], "only Mega Meowstic M/F lack a tracker-verified artist (flagged, not invented)");
 
@@ -75,7 +83,8 @@ assertEqual(megaSpritePath("mega-charizard-x", true), "/public/sprites/pokemon/m
 
 section("Species sprite manifest pinned");
 const norm = (rel) => sha("sha256", fs.readFileSync(new URL(rel, import.meta.url), "utf8").replace(/\r\n/g, "\n"));
-// Pinned after the breathing idle for static sprites (tools/generate-pokemon-idles.mjs); only that tool changes it.
-assertEqual(norm("../data/sprites/sprites.json"), "de22fb9b1e91b667faaf6e3e1842e76e68a8f9514d8a76f11c59f6f235a2ca82", "data/sprites/sprites.json unchanged since the breathing-idle build");
+// Pinned after the community animation import (tools/import-animated-sprites.mjs) and the rig idle for the
+// remaining static sprites (tools/generate-pokemon-idles.mjs); only those tools change it.
+assertEqual(norm("../data/sprites/sprites.json"), "e08846cb8f80d2f75ee0df43f2c50ad8cd0c0cbe57fd4d83c12d78366271926f", "data/sprites/sprites.json unchanged since the animation import + rig idle build");
 
 finish();

@@ -18,6 +18,9 @@ kill_timeout = 30
   # Discord is unreachable (persistence/loader.js).
   TRAINERDATA_DIR = '/data'
   LOCAL_IS_DURABLE = '1'
+  # /challenge works only in this channel; unset, it works anywhere. Set it
+  # to the challenge channel's ID when feat/challenges merges.
+  # CHALLENGE_CHANNEL_ID = ''
 
 # A2: persistent volume for trainerData snapshots and the event log.
 # Create it BEFORE deploying this config (see RUNBOOK "A2 volume migration").

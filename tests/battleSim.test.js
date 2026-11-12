@@ -16,6 +16,19 @@ const battle = (a, b, seed) => simulateBattle({ sides: [side(...a), side(...b)],
 section("Stats");
 assertEqual(computeStats(getSpecies(25).baseStats, 50), { hp: 102, atk: 67, def: 42, spa: 62, spd: 52, spe: 102 }, "Pikachu Lv 50 stats (IV 15, EV 0)");
 
+section("Stat boost");
+{
+  // Challenge opponents fight with every stat raised (statMult), shown at their own Level.
+  const plain = buildMon({ speciesId: 25, level: 50 });
+  const boosted = buildMon({ speciesId: 25, level: 50, statMult: 1.1 });
+  const stats = (m) => [m.maxHp, m.atk, m.def, m.spa, m.spd, m.spe];
+  assertEqual(stats(plain), [102, 67, 42, 62, 52, 102], "Pikachu Lv 50 without a boost");
+  assertEqual(stats(boosted), [112, 74, 46, 68, 57, 112], "every stat, HP included, ×1.1 and rounded");
+  assertEqual([boosted.level, boosted.hp], [50, 112], "the same Level, starting at its boosted full HP");
+  assertEqual(buildMon({ speciesId: 25, level: 50, statMult: 1.1, hpFraction: 0.5 }).hp, 56, "carried HP is a share of the boosted HP");
+  assertEqual(buildMon({ speciesId: 292, level: 50, statMult: 1.1 }).maxHp, 1, "Shedinja keeps its 1 HP");
+}
+
 section("Auto movesets");
 const lastFour = (id, level) => {
   const out = [];
@@ -231,6 +244,32 @@ section("Drain in battles");
   const drains = Array.from({ length: 50 }, (_, i) => battle([[47, 50]], [[62, 50]], i + 1));
   assertTrue(drains.some((b) => b.log.flat().some((e) => e.drain > 0)), "Parasect heals during battles");
   assertTrue(drains.every(replays), "battles with drain replay to their snapshots");
+}
+
+section("Starting HP");
+{
+  const vsBlastoise = (members, seed = 1) =>
+    simulateBattle({ sides: [{ members }, { members: [{ speciesId: 9, level: 50 }] }], seed });
+  const maxHp = buildMon({ speciesId: 6, level: 50 }).maxHp;
+  const half = vsBlastoise([{ speciesId: 6, level: 50, hpFraction: 0.5 }]);
+  assertTrue(Math.abs(half.snapshots[0][0][0] - 0.5) <= 1 / maxHp, `hpFraction 0.5 starts at half HP (got ${half.snapshots[0][0][0]})`);
+
+  const fainted = vsBlastoise([{ speciesId: 6, level: 50, hpFraction: 0 }, { speciesId: 9, level: 50 }], 4);
+  assertEqual(fainted.snapshots[0][0][0], 0, "hpFraction 0 starts fainted");
+  assertTrue(!fainted.log.flat().some((e) => e.side === 0 && e.slot === 0), "a fainted member never acts");
+  assertTrue(!fainted.knockouts.some((k) => k.side === 0 && k.slot === 0), "a fainted member is never counted as knocked out");
+
+  const sliver = vsBlastoise([{ speciesId: 6, level: 50, hpFraction: 0.0001 }]);
+  assertEqual(sliver.snapshots[0][0][0], 1 / maxHp, "a sliver of HP rounds up to 1");
+
+  const carried = [{ speciesId: 6, level: 50, hpFraction: 0.3 }, { speciesId: 25, level: 40, hpFraction: 0.8 }];
+  assertEqual(JSON.stringify(vsBlastoise(carried, 9)), JSON.stringify(vsBlastoise(carried, 9)), "carried HP is deterministic");
+  assertTrue(vsBlastoise(carried, 9).snapshots[0][0][1] < 1, "a carried member's first snapshot shows its damage");
+
+  // An Elite Four run can win a fight on a double knockout (recoil) and reach the next with nobody standing.
+  const nobody = vsBlastoise([{ speciesId: 6, level: 50, hpFraction: 0 }, { speciesId: 25, level: 50, hpFraction: 0 }]);
+  assertEqual([nobody.winner, nobody.turns, nobody.endedBy, nobody.log, nobody.knockouts, nobody.snapshots.length],
+    [1, 0, "knockout", [], [], 1], "a side with nobody able to battle loses at once");
 }
 
 finish();

@@ -3,7 +3,7 @@
 // ==========================================================
 //
 // Provides per-user async locking so commands never overlap.
-// Used by /daily, /resetdaily, /addinventory, etc.
+// Used by /daily, /gift, the admin dashboard, etc.
 //
 // Usage:
 //   await lockUser(userId, async () => {

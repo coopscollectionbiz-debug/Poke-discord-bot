@@ -14,7 +14,8 @@ import { leaderboardView, leaderboardSize } from "../utils/render/leaderboardCar
 import { catchView } from "../utils/render/catchCard.js";
 import { renderDailyCard, DAILY_SIZE, dailySize } from "../utils/render/dailyCard.js";
 import { dexProgress, nationalCompletion } from "../utils/render/dexProgress.js";
-import { trainerCardView, renderTrainerCard, TRAINER_CARD_SIZE } from "../utils/render/trainerCard.js";
+import { trainerCardView, renderTrainerCard, TRAINER_CARD_SIZE, badgeSlot } from "../utils/render/trainerCard.js";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { pokedexView, renderPokedexCard, POKEDEX_SIZE } from "../utils/render/pokedexCard.js";
 import { inspectSlots, battleInfo } from "../commands/inspectpokemon.js";
 import { renderInspectCard, INSPECT_SIZE } from "../utils/render/inspectCard.js";
@@ -86,6 +87,25 @@ section("Trainer card");
   assertEqual(dims(await renderTrainerCard(v)), [TRAINER_CARD_SIZE.w, TRAINER_CARD_SIZE.h], "renders");
   const none = trainerCardView({ tp: 0, pokemon: {} }, { displayName: "New", trainer: null });
   assertEqual(dims(await renderTrainerCard(none)), [TRAINER_CARD_SIZE.w, TRAINER_CARD_SIZE.h], "renders for a brand-new player");
+
+  // Badges from /challenge: a Gym key in challenge.won. Elite Four, Blue and Red wins aren't Badges.
+  const badged = { ...clone(user), challenge: { won: { brock: "2026-11-01", misty: "2026-11-02", elite4: "2026-11-03" } } };
+  const bv = trainerCardView(badged, { displayName: "coop13", trainer: null });
+  assertEqual((bv.badges ?? []).map((b) => (b.earned ? b.key : "-")), ["brock", "misty", "-", "-", "-", "-", "-", "-"],
+    "the 8 Badges in Gym order, earned ones marked");
+  const at = async (png, x, y) => {
+    const img = await loadImage(png);
+    const ctx = createCanvas(img.width, img.height).getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    return [...ctx.getImageData(x, y, 1, 1).data].slice(0, 3).reduce((a, b) => a + b, 0);
+  };
+  const slot = badgeSlot(0); // Boulder: its center pixel is white
+  const [cx, cy] = [slot.x + slot.size / 2, slot.y + slot.size / 2];
+  const earned = await at(await renderTrainerCard(bv), cx, cy);
+  const unearned = await at(await renderTrainerCard(v), cx, cy);
+  const background = await at(await renderTrainerCard(v), slot.x - 4, cy); // the gap before the first slot
+  assertTrue(earned > 600, "an earned Badge is drawn in full color");
+  assertTrue(unearned < earned - 300 && unearned > background + 30, "an unearned Badge is drawn dimmed");
 }
 
 section("/pokedex card");

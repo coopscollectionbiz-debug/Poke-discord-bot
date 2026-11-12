@@ -1,121 +1,165 @@
 {
- "note": "Breathing idles whose seam exceeds SEAM_OK (11). Reviewed 2026-11-10 on rest/exhale sheets at 3x and 6x crops of the cut rows (seams 12-30, the trainer calibration approved 9-28): every listed sprite shifts cleanly, with no tears or detached parts. Add a key to excluded with a reason to keep a sprite still.",
+ "note": "Whole-body breathing idles whose low-cut seam exceeds SEAM_OK (11). Each listed sprite was reviewed rest vs exhale (and the in-between steps) at 3x with 6x crops of the cut rows. The earlier approvals (trainer-style neck/waist cuts) were cleared when the cuts moved to the lower body on 2026-11-10.",
  "reviewedAt": "2026-11-10",
  "approved": [
-  "mega:mega-absol-z",
-  "mega:mega-aerodactyl",
-  "mega:mega-altaria",
-  "mega:mega-barbaracle",
-  "mega:mega-blastoise",
-  "mega:mega-camerupt",
-  "mega:mega-charizard-y",
-  "mega:mega-chesnaught",
-  "mega:mega-chimecho",
-  "mega:mega-crabominable",
-  "mega:mega-darkrai",
-  "mega:mega-delphox",
-  "mega:mega-diancie",
-  "mega:mega-dragonite",
-  "mega:mega-eelektross",
-  "mega:mega-emboar",
-  "mega:mega-excadrill",
-  "mega:mega-falinks",
-  "mega:mega-feraligatr",
-  "mega:mega-floette",
-  "mega:mega-garchomp-z",
-  "mega:mega-glimmora",
-  "mega:mega-golisopod",
-  "mega:mega-golurk",
-  "mega:mega-greninja",
-  "mega:mega-gyarados",
-  "mega:mega-hawlucha",
-  "mega:mega-heatran",
-  "mega:mega-kangaskhan",
-  "mega:mega-lopunny",
-  "mega:mega-lucario-z",
-  "mega:mega-malamar",
-  "mega:mega-meganium",
   "mega:mega-metagross",
-  "mega:mega-pidgeot",
-  "mega:mega-pinsir",
-  "mega:mega-pyroar",
-  "mega:mega-raichu-x",
-  "mega:mega-raichu-y",
   "mega:mega-sceptile",
-  "mega:mega-scolipede",
-  "mega:mega-scovillain",
-  "mega:mega-sharpedo",
-  "mega:mega-skarmory",
-  "mega:mega-staraptor",
-  "mega:mega-swampert",
   "mega:mega-tatsugiri-curly",
   "mega:mega-tatsugiri-droopy",
   "mega:mega-tatsugiri-stretchy",
-  "mega:mega-venusaur",
-  "mega:mega-zeraora",
   "species:1005",
-  "species:1007",
-  "species:1009",
-  "species:1012",
-  "species:1013",
-  "species:1014",
-  "species:1018",
-  "species:1022",
-  "species:1023",
-  "species:1025",
-  "species:652",
-  "species:657",
-  "species:660",
-  "species:673",
-  "species:680",
-  "species:689",
-  "species:701",
-  "species:715",
-  "species:726",
-  "species:768",
-  "species:788",
-  "species:799",
-  "species:812",
-  "species:850",
-  "species:851",
-  "species:854",
-  "species:855",
-  "species:870",
-  "species:891",
-  "species:892",
-  "species:893",
-  "species:900",
-  "species:907",
-  "species:911",
-  "species:918",
-  "species:926",
-  "species:927",
-  "species:933",
-  "species:936",
-  "species:937",
-  "species:942",
-  "species:943",
-  "species:945",
-  "species:946",
-  "species:947",
+  "species:758",
+  "species:827",
+  "species:921",
+  "species:941",
   "species:950",
-  "species:952",
   "species:953",
-  "species:956",
-  "species:958",
-  "species:959",
-  "species:965",
-  "species:966",
-  "species:970",
-  "species:975",
-  "species:976",
-  "species:977",
-  "species:979",
-  "species:982",
-  "species:983",
-  "species:989",
-  "species:990",
-  "species:993"
+  "species:954",
+  "species:988"
  ],
- "excluded": {}
+ "excluded": {},
+ "facesNote": "Faces: [firstRow, lastRow] or [firstRow, lastRow, firstCol, lastCol]. Breath and rig cuts never cross the rows; the columns say where the head is, so the rig can lean it and drag its ears (eyes do this for blinking sprites). Read off 3x grids; every head mover reviewed on what-moves sheets.",
+ "faces": {
+  "mega:mega-houndoom": [
+   28,
+   40,
+   14,
+   34
+  ],
+  "mega:mega-sceptile": [
+   12,
+   26,
+   44,
+   62
+  ],
+  "mega:mega-tatsugiri-curly": [
+   52,
+   68,
+   34,
+   56
+  ],
+  "species:710": [
+   40,
+   50,
+   36,
+   56
+  ],
+  "species:758": [
+   24,
+   36,
+   20,
+   40
+  ],
+  "species:827": [
+   44,
+   58,
+   18,
+   40
+  ],
+  "species:828": [
+   24,
+   38,
+   8,
+   30
+  ],
+  "species:916": [
+   38,
+   54,
+   22,
+   42
+  ],
+  "species:921": [
+   54,
+   66
+  ],
+  "species:931": [
+   30,
+   44,
+   32,
+   56
+  ],
+  "species:941": [
+   36,
+   48,
+   30,
+   52
+  ],
+  "species:951": [
+   36,
+   50,
+   34,
+   56
+  ],
+  "species:952": [
+   32,
+   50,
+   44,
+   72
+  ],
+  "species:953": [
+   47,
+   58,
+   50,
+   70
+  ],
+  "species:960": [
+   36,
+   48,
+   30,
+   52
+  ],
+  "species:970": [
+   44,
+   56,
+   24,
+   42
+  ],
+  "species:985": [
+   40,
+   57
+  ],
+  "species:986": [
+   44,
+   56,
+   42,
+   60
+  ],
+  "species:988": [
+   66,
+   82,
+   14,
+   40
+  ],
+  "species:1005": [
+   42,
+   58,
+   18,
+   46
+  ],
+  "species:1007": [
+   30,
+   44,
+   12,
+   40
+  ],
+  "species:1013": [
+   42,
+   54,
+   34,
+   54
+  ]
+ },
+ "rigOffNote": "Rig moves switched off for a sprite after review: {key: {head?: reason, ears?: reason}}.",
+ "rigOff": {
+  "species:916": {
+   "ears": "the band runs along the back"
+  }
+ },
+ "noHead": {
+  "mega:mega-metagross": "the head is the whole body",
+  "mega:mega-sharpedo": "the head is the whole body",
+  "species:950": "the head is the whole body",
+  "species:954": "tiny face under the ball"
+ },
+ "noHeadNote": "Static sprites with no separate head to lean (the rig squashes them only)."
 }

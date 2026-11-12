@@ -16,6 +16,12 @@
 // • Load gate: once requireLoadBeforeWrite() is called (bot startup),
 //   nothing is written until markLoaded(), so a half-started process can
 //   never overwrite good snapshots.
+// • Prompt saves (enqueueSave(data, { prompt: true })): for callers a
+//   player is waiting on (dashboard writes, slash-command replies, through
+//   utils/saveManager.js saveAndAck). They use a short debounce and a short
+//   minimum interval instead of the background 1.5 s / 5 s timers, and still
+//   coalesce, wait out the retry backoff, and obey the load gate, fencing and
+//   empty-data refusal. Background saves (chat TP, rewards) are unchanged.
 // ==========================================================
 
 import { writeSnapshot } from "../persistence/localStore.js";
@@ -27,6 +33,8 @@ const DEFAULT_TIMING = {
   maxWaitMs: 15000,      // guarantee a write within this window
   retryBaseMs: 1000,     // first retry after a failed write
   retryMaxMs: 30_000,    // retries never wait longer than this
+  promptDebounceMs: 10,  // prompt saves: gather requests that arrive together
+  promptMinIntervalMs: 150, // prompt saves: at most ~6–7 writes per second
 };
 let timing = { ...DEFAULT_TIMING };
 
@@ -46,6 +54,20 @@ let flushing = null; // Promise of the in-progress write, or null
 // Retry state after failed writes
 let consecutiveFailures = 0;
 let retryNotBefore = 0;
+
+// Prompt saves: the newest version a player is waiting on, and the earliest
+// time its flush may start (null = no prompt save pending).
+let promptVersion = 0;
+let promptDueAt = null;
+
+function clearPrompt() {
+  promptDueAt = null;
+}
+
+/** Earliest time a pending prompt save may be written (debounce + prompt min interval). */
+function promptReadyAt() {
+  return Math.max(promptDueAt, lastWriteAt + timing.promptMinIntervalMs);
+}
 
 // Promise that resolves when the requested version has been flushed
 const waiters = new Map(); // version -> [resolve,...]
@@ -93,6 +115,7 @@ export function fenceWrites(reason) {
   console.error(`⛔ Writes FENCED: ${fencedReason}. This process will not save again.`);
   latestData = null;
   clearTimers();
+  clearPrompt();
   resolveWaitersUpTo(Infinity, false);
 }
 export const isFenced = () => fencedReason !== null;
@@ -165,9 +188,15 @@ function flushNow({ force = false } = {}) {
     return Promise.resolve();
   }
 
-  // Rate limit disk writes unless forced
+  // Rate limit disk writes unless forced. A pending prompt save (a player is
+  // waiting) uses the short prompt interval instead of the background one.
   const sinceLast = now - lastWriteAt;
-  if (!force && sinceLast < timing.minIntervalMs) {
+  if (!force && promptDueAt !== null) {
+    if (sinceLast < timing.promptMinIntervalMs) {
+      scheduleFlush(timing.promptMinIntervalMs - sinceLast);
+      return Promise.resolve();
+    }
+  } else if (!force && sinceLast < timing.minIntervalMs) {
     scheduleFlush(Math.max(250, timing.minIntervalMs - sinceLast));
     return Promise.resolve();
   }
@@ -181,6 +210,7 @@ function flushNow({ force = false } = {}) {
     // Nothing is written; callers are told the save did not happen.
     latestData = null;
     clearTimers();
+    clearPrompt();
     resolveWaitersUpTo(startVersion, false);
     return Promise.resolve();
   }
@@ -197,6 +227,7 @@ function flushNow({ force = false } = {}) {
       flushedVersion = startVersion;
       consecutiveFailures = 0;
       retryNotBefore = 0;
+      if (promptVersion <= startVersion) clearPrompt();
       console.log("💾 Saved trainerData.json");
 
       // Resolve anyone waiting for <= flushedVersion
@@ -211,6 +242,7 @@ function flushNow({ force = false } = {}) {
         // Fenced: never retry.
         resolveWaitersUpTo(Infinity, false);
         latestData = null;
+        clearPrompt();
       } else if (failed) {
         // Release callers (the change is still in memory and still dirty),
         // keep latestData, and retry with backoff until a write succeeds.
@@ -224,7 +256,8 @@ function flushNow({ force = false } = {}) {
         // ✅ Only clear latestData if NOTHING changed during flush
         latestData = null;
       } else {
-        // Changes arrived during the flush: write them soon.
+        // Changes arrived during the flush: write them soon (sooner when a
+        // prompt save is waiting; scheduleFlush applies the prompt timing).
         scheduleFlush(250);
       }
     }
@@ -237,8 +270,11 @@ function flushNow({ force = false } = {}) {
 // 🕒 Scheduler (debounce + max-wait)
 // ----------------------------------------------------------
 function scheduleFlush(delayMs = timing.debounceMs) {
+  const now = Date.now();
+  // A pending prompt save pulls the flush in (never later than requested).
+  if (promptDueAt !== null) delayMs = Math.min(delayMs, Math.max(0, promptReadyAt() - now));
   // While backing off, nothing may fire earlier than the retry time.
-  const minDelay = Math.max(0, retryNotBefore - Date.now());
+  const minDelay = Math.max(0, retryNotBefore - now);
   const delay = Math.max(delayMs, minDelay);
 
   try { clearTimeout(flushTimer); } catch {}
@@ -284,7 +320,14 @@ export function enqueueSave(trainerData, opts = {}) {
     waiters.set(myVersion, arr);
   });
 
-  // Debounce
+  // Prompt: a player is waiting on this change. Keep the first deadline (new
+  // prompt saves join it rather than pushing it back).
+  if (opts?.prompt) {
+    promptVersion = myVersion;
+    if (promptDueAt === null) promptDueAt = Date.now() + timing.promptDebounceMs;
+  }
+
+  // Debounce (pulled in by a pending prompt save)
   scheduleFlush(timing.debounceMs);
 
   // Force immediate flush (ignores the min interval and retry backoff)
@@ -345,6 +388,8 @@ export function __resetSaveQueueForTests() {
   consecutiveFailures = 0;
   retryNotBefore = 0;
   fencedReason = null;
+  promptVersion = 0;
+  promptDueAt = null;
   resolveWaitersUpTo(Infinity, false);
 }
 
@@ -354,6 +399,7 @@ export function __saveQueueState() {
     flushedVersion,
     consecutiveFailures,
     retryNotBefore,
+    promptPending: promptDueAt !== null,
     flushing: !!flushing,
     pendingWaiters: [...waiters.values()].reduce((n, a) => n + a.length, 0),
   };

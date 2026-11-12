@@ -1,8 +1,10 @@
 // ==========================================================
 // utils/battle/render.js
-// One animated GIF per playback update: both Teams in centered rows, the
-// fighting pair spotlit, game-style HP bars, and a text box narrating the
-// turn. Sprites play their own GIF animation.
+// One animated GIF per playback update: each player's trainer at the left
+// of their row, both Teams beside them, the fighting pair spotlit,
+// game-style HP bars, and a text box narrating the turn. Sprites play their
+// own GIF animation. /challenge adds a theme: the opponent's type, the
+// Badge, and the award screen.
 //
 // Memory: frames are encoded as they're drawn and sprite frames are decoded
 // as an image reaches them, so a 6v6 battle adds about 60 MB rather than 270
@@ -14,8 +16,10 @@ import { GifReader } from "omggif";
 import gifenc from "gifenc"; // CommonJS without named-export hints, so Node needs the default import
 import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
+import { loadTrimmedTrainerSprite, loadBadgeSprite } from "../render/sprites.js";
+import { drawSparkle, drawTypeChip } from "../render/primitives.js";
+import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
-import { COLOR as TOKENS } from "../render/tokens.js";
 
 const { GIFEncoder, quantize, nearestColorIndex } = gifenc;
 
@@ -29,7 +33,6 @@ const GAP = 18; // between the rows, where the turn badge sits
 const TEXT_H = 64;
 const H = PAD + ROW_H * 2 + GAP + PAD + TEXT_H + PAD;
 const ROW_TOP = [PAD, PAD + ROW_H + GAP];
-const TILE_W = 144;
 const SIDE_COLOR = ["#4f8cff", "#ff5a6a"];
 const GOLD = "#f5c84c";
 const INK = "#0e1120";
@@ -49,9 +52,19 @@ export function pickFrameTurns(totalTurns, frames) {
   return [...new Set(turns)];
 }
 
-// Every row is centered on the same line, so a short Team sits under the
-// middle of a full one.
-export const tileCenter = (count, i) => (W - count * TILE_W) / 2 + TILE_W * (i + 0.5);
+// Each row's trainer stands in a portrait at its left, so the tiles are 124
+// px (144 before portraits) and the frame stays 900 wide: GIF memory scales
+// with its area. 124 still holds the 116 px HP bar, and 97% of battle
+// sprites are 104 px wide or less.
+const PORTRAIT_W = 116;
+export const portraitBox = (s) => ({ x: PAD + 6, y: ROW_TOP[s] + 4, w: PORTRAIT_W, h: ROW_H - 8 });
+export const LAYOUT = { left: PAD + 6 + PORTRAIT_W + 4, right: W - PAD, tileW: 124, pillY: ROW_TOP[1] - GAP / 2 - 17 };
+// The award screen's medallion, centered on the field. 96 px is the 16 px Badge art at 6×.
+export const AWARD = { cx: W / 2, cy: (ROW_TOP[0] + ROW_TOP[1] + ROW_H) / 2, r: 66, size: 96 };
+
+// Every row is centered on the same line beside the portraits, so a short
+// Team sits under the middle of a full one.
+export const tileCenter = (count, i) => LAYOUT.left + (LAYOUT.right - LAYOUT.left - count * LAYOUT.tileW) / 2 + LAYOUT.tileW * (i + 0.5);
 
 // The game-style text box for one hit.
 export function turnText(event, sides) {
@@ -230,6 +243,72 @@ function drawTag(ctx, text, right, y, color) {
   ctx.fillText(text, right - w / 2, y + 9.5);
 }
 
+// A trainer standing on a lit platform at the left of their row. Pixel art
+// stays crisp at 2× (90% of trimmed trainers fit); wider ones shrink to fit.
+function drawPortrait(ctx, s, sprite, color) {
+  const box = portraitBox(s);
+  const cx = box.x + box.w / 2, floor = box.y + box.h - 12;
+  ctx.fillStyle = `${color}14`;
+  pill(ctx, box.x, box.y, box.w, box.h, 12);
+  ctx.fill();
+  ctx.fillStyle = `${color}66`;
+  ctx.beginPath();
+  ctx.ellipse(cx, floor, 46, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  if (!sprite) return;
+  const k = Math.min(2, (box.w - 4) / sprite.width, (box.h - 10) / sprite.height);
+  const [w, h] = [Math.round(sprite.width * k), Math.round(sprite.height * k)];
+  ctx.imageSmoothingEnabled = k < 1;
+  ctx.drawImage(sprite.image, Math.round(cx - w / 2), Math.round(floor + 4 - h), w, h);
+  ctx.imageSmoothingEnabled = true;
+}
+
+// The award screen: the field dims and the Badge (or, with no Badge, a
+// title) is presented in gold, with sparkles that twinkle over `k` frames.
+function drawAward(ctx, award, icon, k) {
+  ctx.fillStyle = "#0e1120c4";
+  ctx.fillRect(0, 0, W, ROW_TOP[1] + ROW_H + PAD / 2);
+  const { cx, cy, r, size } = AWARD;
+  const glow = ctx.createRadialGradient(cx, cy, 10, cx, cy, r * 2.4);
+  glow.addColorStop(0, `${GOLD}55`);
+  glow.addColorStop(1, `${GOLD}00`);
+  ctx.fillStyle = glow;
+  ctx.fillRect(cx - r * 2.4, cy - r * 2.4, r * 4.8, r * 4.8);
+  let spots;
+  if (icon) {
+    ctx.fillStyle = "#121729";
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = GOLD;
+    ctx.stroke();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(icon.image, cx - size / 2, cy - size / 2, size, size);
+    ctx.imageSmoothingEnabled = true;
+    ctx.font = `800 18px ${FONT}`;
+    ctx.fillStyle = GOLD;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillText(award.title, cx, cy + r + 30);
+    spots = [[0.78, -0.78], [-0.92, -0.35], [0.95, 0.42], [-0.6, 0.85]].map(([x, y]) => [cx + x * (r + 16), cy + y * (r + 16)]);
+  } else {
+    ctx.font = `900 52px ${FONT}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = INK;
+    ctx.strokeText(award.title, cx, cy);
+    ctx.fillStyle = GOLD;
+    ctx.fillText(award.title, cx, cy);
+    const half = ctx.measureText(award.title).width / 2;
+    spots = [[-half - 26, -18], [half + 26, 14], [-half * 0.45, -46], [half * 0.55, 44]].map(([x, y]) => [cx + x, cy + y]);
+  }
+  // Each sparkle grows and shrinks on its own beat (a 1.2 s cycle).
+  spots.forEach(([x, y], j) => drawSparkle(ctx, x, y, 4 + 10 * Math.abs(Math.sin(((k + 3 * j) * Math.PI) / 12)), GOLD));
+}
+
 // What one GIF frame shows: everyone's HP, who is mid-attack, and the text.
 function frameState(f, { hpBefore, events }) {
   const hp = hpBefore.map((row) => [...row]);
@@ -267,8 +346,12 @@ function frameState(f, { hpBefore, events }) {
  *   are no events, like the games' end-of-battle messages
  * - a member with levelUp: true shows its Level in green (the result image)
  * - sprites: a Map of loaded sprite GIFs to share between one battle's images
+ * - trainers: each side's displayed trainer file (null: an empty portrait)
+ * - theme (/challenge only): { type (the opponent's, or null), badgeFile (in
+ *   the center pill, or null), award: { screen, badgeFile, title } on the
+ *   text screen at index `screen`, or null }
  */
-export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map() }) {
+export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], theme = null }) {
   const load = (s, i, folder) => {
     const m = sides[s].members[i];
     // A Mega battles with its own sprite (loadAnimatedSprite: mega/<variant|grayscale>/<form>.gif).
@@ -285,6 +368,17 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     (hpBefore[s][i] > 0 && faints(s, i) ? load(s, i, "grayscale") : null)))));
   // The fighting pair: each side's first Pokémon still standing (as in the sim).
   const active = winnerSide === null ? hpBefore.map((row) => row.findIndex((f) => f > 0)) : [-1, -1];
+  const cached = (key, load) => {
+    if (!sprites.has(key)) sprites.set(key, load());
+    return sprites.get(key);
+  };
+  const portraits = await Promise.all(trainers.map((f) => (f ? cached(`trainer/${f}`, () => loadTrimmedTrainerSprite(f)) : null)));
+  const badgeIcon = (f) => (f ? cached(`badge/${f}`, () => loadBadgeSprite(f)) : null);
+  const pillIcon = await badgeIcon(theme?.badgeFile);
+  const awardIcon = await badgeIcon(theme?.award?.badgeFile);
+  // The opponent's color stays red (the design system's opponent color); a
+  // type only tints their row and platform.
+  const typeFill = theme?.type ? typeStyle(theme.type).fill : null;
 
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
@@ -309,21 +403,28 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     for (let s = 0; s < 2; s++) {
       const top = ROW_TOP[s];
       const members = sides[s].members;
-      ctx.fillStyle = `${SIDE_COLOR[s]}14`;
+      ctx.fillStyle = s === 1 && typeFill ? `${typeFill}1f` : `${SIDE_COLOR[s]}14`;
       pill(ctx, PAD, top, W - 2 * PAD, ROW_H, 16);
       ctx.fill();
       ctx.lineWidth = winnerSide === s || surgeSide === s ? 3 : 2;
       ctx.strokeStyle = winnerSide === s ? GOLD : surgeSide === s ? "#ff9800" : `${SIDE_COLOR[s]}66`;
       ctx.stroke();
 
-      // Nameplate: trainer name and a ball per Team member.
+      drawPortrait(ctx, s, portraits[s], s === 1 && typeFill ? typeFill : SIDE_COLOR[s]);
+
+      // Nameplate: trainer name, the opponent's type (challenges), and a ball per Team member.
+      const nameX = LAYOUT.left + 8;
       ctx.font = `700 16px ${FONT}`;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "#ffffff";
       const name = fitText(ctx, sides[s].name, 320);
-      ctx.fillText(name, PAD + 16, top + 20);
-      const ballsX = PAD + 16 + ctx.measureText(name).width + 16;
+      ctx.fillText(name, nameX, top + 20);
+      let ballsX = nameX + ctx.measureText(name).width + 16;
+      if (s === 1 && typeFill) {
+        ballsX += drawTypeChip(ctx, theme.type, ballsX - 6, top + 11, { h: 18, size: 11 }) + 8;
+        ctx.textBaseline = "middle"; // drawTypeChip leaves textAlign at left, the baseline at middle
+      }
       members.forEach((_, i) => drawBall(ctx, ballsX + i * 16, top + 20, state.hp[s][i] > 0));
       if (winnerSide === s) drawTag(ctx, "WINNER", W - PAD - 14, top + 11, GOLD);
       else if (surgeSide === s) drawTag(ctx, "UNDERDOG SURGE", W - PAD - 14, top + 11, "#ff9800");
@@ -369,9 +470,10 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
         // Name, Level, and HP.
         ctx.textBaseline = "alphabetic";
         ctx.font = `700 13px ${FONT}`;
-        // A Mega shows its base name (+ X/Y/Z) and a MEGA tag, so it fits the tile.
+        // A Mega shows its base name (+ X/Y/Z) and a MEGA tag, so it fits the
+        // tile: 80 px leaves room for the Level in a 124 px tile.
         const megaSuffix = m.megaForm ? (m.name?.match(/ ([XYZ])$/)?.[1] ?? "") : "";
-        const label = fitText(ctx, m.megaForm ? `${m.baseName ?? m.name}${megaSuffix ? ` ${megaSuffix}` : ""}` : (m.name ?? `#${m.speciesId}`), m.megaForm ? 92 : 80);
+        const label = fitText(ctx, m.megaForm ? `${m.baseName ?? m.name}${megaSuffix ? ` ${megaSuffix}` : ""}` : (m.name ?? `#${m.speciesId}`), 80);
         const level = `Lv${m.level}`;
         const nameW = ctx.measureText(label).width;
         ctx.font = `600 12px ${FONT}`;
@@ -385,24 +487,34 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
         ctx.fillStyle = m.levelUp ? "#5ee08a" : frac <= 0 ? "#7d8396" : "#c9cfe0";
         ctx.fillText(level, startX + nameW + 6, top + 152);
         drawHpBar(ctx, cx, top + 158, frac);
-        if (m.megaForm) drawTag(ctx, "MEGA", Math.round(cx + TILE_W / 2 - 8), top + 30, frac <= 0 ? "#7d8396" : MEGA_TAG);
+        if (m.megaForm) drawTag(ctx, "MEGA", Math.round(cx + LAYOUT.tileW / 2 - 8), top + 30, frac <= 0 ? "#7d8396" : MEGA_TAG);
       }
     }
 
-    // Turn badge between the rows.
+    // Turn badge between the rows; a Gym's Badge sits at its left (2×, 32 px).
     ctx.font = `800 13px ${FONT}`;
-    const bw = ctx.measureText(badge).width + 28;
-    const by = ROW_TOP[1] - GAP / 2 - 13;
+    const textW = ctx.measureText(badge).width;
+    const [bh, icon] = pillIcon ? [34, 38] : [26, 0];
+    const bw = textW + 28 + icon;
+    const bx = W / 2 - bw / 2, by = pillIcon ? LAYOUT.pillY : ROW_TOP[1] - GAP / 2 - 13;
     ctx.fillStyle = INK;
-    pill(ctx, W / 2 - bw / 2, by, bw, 26);
+    pill(ctx, bx, by, bw, bh);
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = GOLD;
     ctx.stroke();
+    if (pillIcon) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(pillIcon.image, bx + 8, by + 1, 32, 32);
+      ctx.imageSmoothingEnabled = true;
+    }
     ctx.fillStyle = GOLD;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(badge, W / 2, by + 13.5);
+    ctx.fillText(badge, bx + icon + (bw - icon) / 2, by + bh / 2 + 0.5);
+
+    const screen = Math.floor(f / ANIMATION.idleFrames);
+    if (theme?.award && !events.length && screen === theme.award.screen) drawAward(ctx, theme.award, awardIcon, f % ANIMATION.idleFrames);
 
     // Text box, like the games'.
     const ty = ROW_TOP[1] + ROW_H + PAD;
@@ -427,14 +539,16 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
   const pause = () => new Promise((resolve) => setImmediate(resolve)); // lets other commands run
 
   // One palette for the whole image, from its first and last frames, so a
-  // color that only shows up later (a red HP bar, a fainted gray) is in it.
-  // canvas.data() is the canvas's own pixels, not a copy; frames are opaque,
-  // so its premultiplied alpha changes nothing.
-  draw(total - 1);
-  const sample = new Uint8Array(W * H * 8);
-  sample.set(canvas.data(), W * H * 4);
-  draw(0);
-  sample.set(canvas.data(), 0);
+  // color that only shows up later (a red HP bar, a fainted gray) is in it,
+  // plus the award screen's first frame when there is one (its gold and the
+  // dimmed field). canvas.data() is the canvas's own pixels, not a copy;
+  // frames are opaque, so its premultiplied alpha changes nothing.
+  const sampled = [total - 1, ...(theme?.award && !events.length ? [theme.award.screen * ANIMATION.idleFrames] : []), 0];
+  const sample = new Uint8Array(W * H * 4 * sampled.length);
+  sampled.forEach((f, i) => {
+    draw(f);
+    sample.set(canvas.data(), W * H * 4 * (sampled.length - 1 - i));
+  });
   const palette = quantize(sample, 255);
   const clear = palette.length; // the transparent index: "same as the last frame"
   await pause();

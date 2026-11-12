@@ -13,6 +13,7 @@
 // ==========================================================
 
 import { createCanvas } from "@napi-rs/canvas";
+import { performance } from "perf_hooks";
 import { drawSprite } from "./sprites.js";
 import { loadAnimatedSprite, spritePlayer } from "../battle/render.js";
 import { encodeGif } from "./gif.js";
@@ -99,22 +100,39 @@ export const isGif = (buf) => buf?.subarray?.(0, 3)?.toString() === "GIF";
 export const cardGifGate = createRenderGate(2);
 
 /**
+ * A short random suffix for a card that replaces an earlier image in the same
+ * message (paging, a menu pick). With one fixed name per edit, a desktop
+ * client whose first load failed kept showing the broken image for every
+ * later edit; a new name each time makes it load fresh.
+ */
+export const uniqueSuffix = () => Math.random().toString(36).slice(2, 8);
+
+/**
  * Renders a card animated when allowed and a slot is free, else still.
  * `render(animate)` returns a Buffer. → { buffer, name: `${base}.gif|png` }
  * CARDS_ANIMATED=0 (or the per-surface `flag`=0) forces still images.
+ * `unique: true` names it `${base}-<random>.gif|png` (see uniqueSuffix).
+ * Logs one timing line per card: `🖼️ card <base> gif|png <KB> KB <ms> ms`,
+ * plus "(gate full)" when it wanted to animate but had to send the PNG.
  */
-export async function cardImage(render, base, { gate = cardGifGate, env = process.env, flag = null } = {}) {
+export async function cardImage(render, base, { gate = cardGifGate, env = process.env, flag = null, unique = false, log = console.log } = {}) {
+  const started = performance.now();
+  const name = unique ? `${base}-${uniqueSuffix()}` : base;
+  const done = (buffer, note = "") => {
+    const kind = isGif(buffer) ? "gif" : "png";
+    log(`🖼️ card ${base} ${kind} ${Math.round(buffer.length / 1024)} KB ${Math.round(performance.now() - started)} ms${note}`);
+    return { buffer, name: `${name}.${kind}` };
+  };
   const off = env.CARDS_ANIMATED === "0" || (flag && env[flag] === "0");
   const release = off ? null : gate.tryAcquire();
   if (release) {
     try {
-      const buffer = await render(true);
-      return { buffer, name: `${base}.${isGif(buffer) ? "gif" : "png"}` };
+      return done(await render(true));
     } catch (err) {
       console.warn(`⚠️ animated ${base} render failed; sending PNG:`, err?.message || err);
     } finally {
       release();
     }
   }
-  return { buffer: await render(false), name: `${base}.png` };
+  return done(await render(false), !off && !release ? " (gate full)" : "");
 }

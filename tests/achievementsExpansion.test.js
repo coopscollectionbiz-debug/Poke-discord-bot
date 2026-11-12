@@ -52,7 +52,7 @@ section("Catalog integrity (revision 2)");
 {
   const all = cat.listAchievements();
   const ids = all.map((a) => a.id);
-  assertEqual(cat.CATALOG_REVISION, 3, "catalog revision is 3 (Generations 6–9)");
+  assertEqual(cat.CATALOG_REVISION, 4, "catalog revision is 4 (Pokémon re-tier after Generations 6–9)");
   assertEqual(all.length, 165, "165 achievements (141 + 16 for Generations 6–9 + 8 casual battle)");
   assertEqual(new Set(ids).size, ids.length, "ids unique");
   // Every revision-1 entry is unchanged (ids, targets, metrics, AP, tiers).
@@ -382,7 +382,7 @@ section("Revision 1 → 2 upgrade: conservative and idempotent");
   assertTrue(Object.entries(before.ach).every(([id, d]) => u.ach[id] === d), "existing unlock days preserved");
   assertEqual(u.achClaimed, before.achClaimed, "claims untouched");
   assertEqual(u.stats.evolutions, 3, "existing counters untouched");
-  assertEqual(u.progression.rev, 3, "stamped with revision 3");
+  assertEqual(u.progression.rev, 4, "stamped with revision 4");
   assertEqual(u.progression.day, DAY - 30, "original tracking start day kept");
   assertEqual(u.ap, Object.keys(u.ach).reduce((s, id) => s + cat.getAchievement(id).ap, 0), "AP recalculated from all unlocks");
   const snap = clone(u);

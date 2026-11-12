@@ -2,24 +2,33 @@
 // utils/render/trainerCard.js
 // /trainercard and /showcard as one image: the equipped trainer on a
 // tier-lit platform, rank with progress to the next one, TP / CC, the
-// collection numbers, battle record, and the Team strip (the battle Team,
-// from buildTeamView, same as /showteam). Read-only.
+// collection numbers, battle record, the 8 Badges from /challenge, and the
+// Team strip (the battle Team, from buildTeamView, same as /showteam). Read-only.
 // ==========================================================
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag, fillTextMid } from "./primitives.js";
 import { createCanvas as makeCanvas } from "@napi-rs/canvas";
-import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadPlaceholder, spriteScale } from "./sprites.js";
+import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadBadgeSprite, loadPlaceholder, spriteScale } from "./sprites.js";
 import { spriteStage, FRAMES } from "./stage.js";
 import { createBackdrop, hasBackdrop } from "./trainerBackdrop.js";
 import { poseAtFrame } from "../trainerIdle.js";
 import { trainersAnimated } from "../trainerAssets.js";
 import { buildTeamView } from "./teamView.js";
 import { getRankProgress } from "../rankSystem.js";
+import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.js";
 
-export const TRAINER_CARD_SIZE = Object.freeze({ w: 1200, h: 640 });
+export const TRAINER_CARD_SIZE = Object.freeze({ w: 1200, h: 708 });
 const M = 20, LEFT_W = 360;
+// The Badge row sits under the two rows of stat tiles. Badges are 16 px art
+// stored at 8×, so 48 px is an exact 3× with smoothing off.
+const BADGE = 48, BADGE_GAP = 14, BADGE_LABEL_W = 120, BADGE_ROW_Y = M + 166 + 2 * 86 + 12 + 20;
+
+/** Where Badge i (Gym order) is drawn. */
+export function badgeSlot(i) {
+  return { x: M + LEFT_W + 24 + BADGE_LABEL_W + i * (BADGE + BADGE_GAP), y: BADGE_ROW_Y, size: BADGE };
+}
 const TIER_NAME = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", mythic: "Mythic" };
 const fmt = (n) => Number(n ?? 0).toLocaleString("en-US");
 
@@ -30,6 +39,7 @@ export function trainerCardView(user, { displayName, trainer }) {
   const owned = Object.entries(user?.pokemon ?? {}).filter(([k, v]) => /^\d+$/.test(k) && (v?.normal ?? 0) + (v?.shiny ?? 0) > 0);
   const trainers = Array.isArray(user?.trainers) ? user.trainers.length : Object.keys(user?.trainers ?? {}).length;
   const team = buildTeamView(user, { displayName });
+  const earned = earnedBadgeKeys(user);
   return {
     displayName,
     trainerFile: user?.displayedTrainer ?? null,
@@ -40,6 +50,7 @@ export function trainerCardView(user, { displayName, trainer }) {
     owned: owned.length,
     shinies: owned.filter(([, v]) => (v?.shiny ?? 0) > 0).length,
     trainers,
+    badges: GYM_BADGES.map((b) => ({ key: b.key, file: b.image.split("/").pop(), earned: earned.includes(b.key) })),
     battle: team.battle,
     team: team.slots,
     fallbackTeam: team.fallback,
@@ -162,9 +173,7 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
     ctx.strokeStyle = `${accent}aa`;
     ctx.stroke();
     ctx.fillStyle = TIER[tier] ?? accent;
-    ctx.textBaseline = "middle";
-    ctx.fillText(label, cx, floor + 129);
-    ctx.textBaseline = "alphabetic";
+    fillTextMid(ctx, label, cx, floor + 128);
   }
   ctx.textAlign = "left";
 
@@ -205,8 +214,26 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
   stat(ctx, "BATTLE RATING", v.battle ? fmt(v.battle.rating) : "—", rx + (sw + gap), sy2, sw);
   stat(ctx, "RECORD", v.battle ? `${v.battle.wins}W–${v.battle.losses}L` : "—", rx + 2 * (sw + gap), sy2, 2 * sw + gap);
 
-  // Team strip.
-  const ty = sy2 + 86 + 20;
+  // Badges from /challenge: earned ones in color, the rest dimmed.
+  ctx.font = font(15, 800);
+  ctx.fillStyle = COLOR.textFaint;
+  ctx.fillText("BADGES", rx, BADGE_ROW_Y + 18);
+  ctx.font = font(24, 800);
+  ctx.fillStyle = COLOR.text;
+  ctx.fillText(`${v.badges.filter((b) => b.earned).length}/${v.badges.length}`, rx, BADGE_ROW_Y + 46);
+  ctx.imageSmoothingEnabled = false;
+  for (const [i, b] of v.badges.entries()) {
+    const sprite = await loadBadgeSprite(b.file);
+    if (!sprite) continue;
+    const { x, y, size } = badgeSlot(i);
+    ctx.globalAlpha = b.earned ? 1 : 0.22;
+    ctx.drawImage(sprite.image, x, y, size, size);
+  }
+  ctx.globalAlpha = 1;
+  ctx.imageSmoothingEnabled = true;
+
+  // Team strip, under the Badge row.
+  const ty = BADGE_ROW_Y + BADGE + 20;
   ctx.font = font(15, 800);
   ctx.fillStyle = COLOR.textFaint;
   ctx.fillText(v.fallbackTeam ? "TEAM  (none set: first Pokémon owned)" : "TEAM", rx, ty + 14);

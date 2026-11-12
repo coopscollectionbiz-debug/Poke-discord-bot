@@ -124,4 +124,50 @@ await onMessage(msg("N"));
 await settle();
 assertTrue(trainerData.N && trainerData.N.tp === 2, "a brand-new chatter gets a record once ready");
 
+// ---------- Trainer encounters ----------
+section("Trainer encounters roll only after a miss");
+{
+  const spotted = [];
+  let reward = "missed";
+  let readyNow = false;
+  let spotFails = false;
+  const handler = createMessageHandler({
+    isReady: () => readyNow,
+    getTrainerData: () => trainerData,
+    normalizeUserSchema,
+    cooldowns: new Map(),
+    config: { cooldownMs: 7000, tpGain: 2, ccChance: 0.02, ccGain: 100 },
+    enqueueSave: () => {},
+    queueRoleUpdate: () => {},
+    giveRandomReward: async () => reward,
+    spot: async (m) => {
+      if (spotFails) throw new Error("boom");
+      spotted.push(m.author.id);
+    },
+    random: () => 1,
+    now: () => (tick += 10_000),
+    defer: (fn) => fn(),
+  });
+  const say = async () => { await handler(msg("S")); await settle(); };
+  await say();
+  assertEqual(spotted, [], "never before player data loads");
+  readyNow = true;
+  await say();
+  assertEqual(spotted, ["S"], "a message whose catch roll missed can be spotted");
+  reward = "caught";
+  await say();
+  assertEqual(spotted, ["S"], "never in the same message as a catch");
+  reward = "cooldown";
+  await say();
+  assertEqual(spotted, ["S"], "or on the reward cooldown");
+  reward = "missed";
+  spotFails = true;
+  const warn = console.warn;
+  const warned = [];
+  console.warn = (...a) => warned.push(a.join(" "));
+  await say();
+  console.warn = warn;
+  assertTrue(warned.some((w) => w.includes("encounter")), "a failed spot is logged, not thrown");
+}
+
 finish();

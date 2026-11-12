@@ -7,7 +7,7 @@ import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { buildTeam, buildBattleTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
 import { RANKED } from "../utils/battle/tuning.js";
 import { rankedRecord, lifetimeRanked } from "../utils/battle/rewards.js";
-import { buildResultEmbed, createQueue, expSummary, playBattle, resultScreens } from "../utils/battle/playback.js";
+import { battleImageName, buildResultEmbed, createQueue, expSummary, playBattle, resultScreens } from "../utils/battle/playback.js";
 import { pickFrameTurns } from "../utils/battle/render.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
@@ -56,6 +56,18 @@ section("Casual (open) battle: Display teams, real Levels, unrated");
   assertEqual(Object.keys(out.exp), ["A"], "EXP report covers the Challenger only");
   assertTrue(out.exp.A.every((e) => e.toLevel >= e.fromLevel && Array.isArray(e.learned)), "EXP report has Level changes and learned moves");
   assertEqual(out.sides.map((s) => s.members.length), [3, 2], "both Teams fought");
+}
+
+section("The Underdog surge is casual-only");
+{
+  // A lone Caterpie against six legendaries is the Underdog by far, so a
+  // casual battle surges at the top chance; ranked and wager battles never do.
+  const lopsided = () => ({ A: trainer("A", [[10]]), B: trainer("B", [[150], [249], [250], [384], [483], [484]]) });
+  const seeds = Array.from({ length: 40 }, (_, i) => i + 1);
+  const surges = (mode) => seeds.filter((seed) =>
+    runBattle({ trainerData: lopsided(), challengerId: "A", defenderId: "B", mode, stake: mode === "wager" ? 1 : 0, seed, now: NOW }).surge).length;
+  assertTrue(surges("open") > 0, "the same pairing surges in casual battles");
+  assertEqual([surges("ranked"), surges("wager")], [0, 0], "and never in ranked or wager battles");
 }
 
 section("Ranked battle: Battle teams at Lv 50, rated, no surge");
@@ -228,7 +240,11 @@ section("Playback");
   await playBattle(channel, out, { A: "Ash", B: "Gary" }, { maxUpdates: 12, delayMs: 0 });
   assertEqual(sent.length, 1, "one new channel message (so mentions notify)");
   assertTrue(sent[0].content.includes("<@A> challenged <@B>!") && sent[0].files.length === 1, "first message mentions both players with the start frame");
-  assertEqual(sent[0].files[0].name, "battle.gif", "frames are animated GIFs");
+  assertEqual(sent[0].files[0].name, "battle-start.gif", "frames are animated GIFs");
+  const names = [sent[0], ...edits].map((m) => m.files[0].name);
+  assertEqual(new Set(names).size, names.length, "every update has its own file name, so a failed load can't stick");
+  assertEqual(names.at(-1), "battle-final.gif", "the result image is battle-final.gif");
+  assertEqual(names[1], battleImageName(pickFrameTurns(out.result.turns, 12)[0]), "turn images are named by turn");
   assertEqual(edits.length, pickFrameTurns(out.result.turns, 12).length + 1, "one edit per turn (up to 12), then the result");
   assertTrue(edits.at(-1).embeds?.length === 1 && edits.slice(0, -1).every((e) => !e.embeds), "result embed arrives with the final image");
   const failing = { send: async () => ({ edit: async () => { throw new Error("Unknown Message"); } }) };

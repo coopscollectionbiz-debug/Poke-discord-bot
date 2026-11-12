@@ -26,6 +26,9 @@ const TIERS = {
   mythic: { halo: RED, haloK: (0.7 * 0.96) / 0.6, accent: RED, alt: PINK, motes: 12, twinkles: 8, meteors: true },
 };
 export const hasBackdrop = (tier) => Boolean(TIERS[String(tier ?? "").toLowerCase()]);
+/** Each backdrop tier's colour (its halo), for things that match it: floors, borders, records. */
+export const BACKDROP_TINT = Object.freeze({ epic: "#a855f7", legendary: "#f59e0b", mythic: "#ef4444" });
+export const backdropTint = (tier) => BACKDROP_TINT[String(tier ?? "").toLowerCase()] ?? null;
 
 const BAYER = [[0, 2], [3, 1]];
 const LEVELS = [0, 0.07, 0.13, 0.2, 0.3, 0.45, 0.7, 0.85];
@@ -46,12 +49,18 @@ function rand(seed) {
  * @param tier     trainer tier ("epic" | "legendary" | "mythic"; others → null)
  * @param gridW/H  grid size in sprite pixels
  * @param mask     Uint8Array(gridW*gridH), 1 where the (dilated) trainer is
- * @param halo     { cx, cy, rx, ry } halo ellipse in grid units
+ * @param halo     { cx, cy, rx, ry } halo ellipse in grid units, or
+ *                 { from: [x, y], to: [x, y] }: a diagonal gradient, brightest
+ *                 at `from` and gone by `to` (grid units): the background of
+ *                 a whole region (a card half, a playback row)
  * @param floorRow grid row of the trainer's feet; elements stay above it
  * @param frames   loop length in frames
+ * @param spread   wide regions: 8 meteors per loop, each in its own column
+ *                 (interleaved order), and 3× the motes and twinkles, spaced
+ *                 evenly across the width
  * @returns { frame(f) → canvas (gridW×gridH, RGBA, transparent where empty) } or null
  */
-export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frames }) {
+export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frames, spread = false }) {
   const recipe = TIERS[String(tier ?? "").toLowerCase()];
   if (!recipe) return null;
   const W = gridW, H = gridH, N = frames;
@@ -74,11 +83,22 @@ export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frame
 
   // Fixed placements, computed once.
   const twinkles = [];
-  for (let i = 0; i < (recipe.twinkles ?? 0); i++) {
-    const s = openSpot(i + 11, 2);
+  const dense = spread ? 3 : 1;
+  const nTw = (recipe.twinkles ?? 0) * dense;
+  for (let i = 0; i < nTw; i++) {
+    let s = openSpot(i + 11, 2);
+    if (spread) { // each in its own slice of the width
+      const x0 = inner.x0 + ((inner.x1 - inner.x0) * i) / nTw, w = (inner.x1 - inner.x0) / nTw;
+      s = null;
+      for (let t = 0; t < 200 && !s; t++) {
+        const x = Math.round(x0 + rand(i * 97 + t * 13 + 1) * w), y = Math.round(inner.y0 + rand(i * 61 + t * 7 + 3) * (inner.y1 - inner.y0));
+        if (isOpen(x, y, 2)) s = [x, y];
+      }
+    }
     if (s) twinkles.push({ x: s[0], y: s[1], phase: rand(i * 5 + 2), alt: recipe.alt && i % 2 === 1 });
   }
-  const motes = Array.from({ length: recipe.motes }, (_, i) => ({ r: rand(i * 7 + 1), x: rand(i * 13 + 5), alt: recipe.alt && i % 3 === 0 }));
+  const nMotes = recipe.motes * dense;
+  const motes = Array.from({ length: nMotes }, (_, i) => ({ r: rand(i * 7 + 1), x: spread ? (i + 0.2 + 0.6 * rand(i * 13 + 5)) / nMotes : rand(i * 13 + 5), alt: recipe.alt && i % 3 === 0 }));
   const meteors = recipe.meteors ? meteorPaths() : [];
 
   // All meteors fall down-left at 40°; heights rotate through four bands,
@@ -86,7 +106,11 @@ export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frame
   function meteorPaths() {
     const ang = (40 * Math.PI) / 180, dx = -Math.cos(ang), dy = Math.sin(ang);
     const bands = [[0.06, 0.24, 30, 13], [0.25, 0.49, 18, 9], [0.5, 0.74, 18, 9], [0.75, 0.92, 14, 8]];
-    const n = Math.max(1, Math.round((N * 5) / 40)); // the approved rate: 5 per 4 s
+    const n = spread ? 8 : Math.max(1, Math.round((N * 5) / 40)); // the approved rate: 5 per 4 s
+    // spread: column k of n, interleaved (0, n/2, 1, n/2+1, ...) so back-to-back meteors are far apart.
+    const half = Math.ceil(n / 2);
+    const column = (k) => (k % 2 ? half + (k - 1) / 2 : k / 2);
+    const colW = (inner.x1 - inner.x0) / n;
     const starts = [2, 10, 17, 25, 33, 6, 14, 21].slice(0, n).map((s) => Math.round((s * N) / 40) % N);
     const order = [0, 2, 1, 3, 0, 2, 3, 1];
     const fits = (x0, y0, travel, tail) => {
@@ -100,7 +124,9 @@ export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frame
       for (const bi of [order[k], ...[0, 1, 2, 3].filter((i) => i !== order[k])]) {
         const [lo, hi, travel, tail] = bands[bi];
         const cands = [];
-        for (let y = Math.round(inner.y1 * lo); y <= Math.round(inner.y1 * hi); y++) for (let x = inner.x0; x <= inner.x1; x++) {
+        const xa = spread ? Math.round(inner.x0 + colW * column(k)) : inner.x0;
+        const xb = spread ? Math.round(inner.x0 + colW * (column(k) + 1)) : inner.x1;
+        for (let y = Math.round(inner.y1 * lo); y <= Math.round(inner.y1 * hi); y++) for (let x = xa; x <= xb; x++) {
           if (fits(x, y, travel, tail)) cands.push([x, y]);
         }
         if (!cands.length) continue;
@@ -134,7 +160,13 @@ export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frame
       col.fill(null);
       // Halo: a soft, still glow in the tier's halo colour.
       const k = 0.6 * recipe.haloK;
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (halo.from) {
+        const [x0, y0] = halo.from, ddx = halo.to[0] - x0, ddy = halo.to[1] - y0, len2 = ddx * ddx + ddy * ddy;
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const t = ((x - x0) * ddx + (y - y0) * ddy) / len2;
+          if (t < 1) { const i = y * W + x; tint[i] = 0.3 * (1 - Math.max(0, t)) * k; col[i] = recipe.halo; }
+        }
+      } else for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const d = Math.hypot((x - halo.cx) / halo.rx, (y - halo.cy) / halo.ry);
         if (d < 1) { const i = y * W + x; tint[i] = 0.24 * (1 - d) * k; col[i] = recipe.halo; }
       }
@@ -178,5 +210,66 @@ export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frame
     /** For tests: the meteor paths (Mythic only). */
     meteors,
     twinkles,
+  };
+}
+
+/**
+ * A tier backdrop filling a whole region of a card (a card half, a playback
+ * row) rather than the panel behind one trainer: a flat wash in the tier
+ * colour, a diagonal glow from the trainer's corner (`from`, `to` in card
+ * pixels), and the denser, spread-out effects. `occupied(x, y)` is true on
+ * card pixels holding content; effects stay clear of them (dilated by `dil`
+ * grid cells), so nothing passes behind a trainer, a Pokémon or text.
+ * `clip(ctx)` traces the region's shape (a path) when it isn't a rectangle.
+ * Returns { drawWash(ctx), draw(ctx, frame) } or null below Epic.
+ */
+export function regionBackdrop({ tier, rect, u = 4, occupied, from, to, floor, frames, dil = 2, clip = null }) {
+  const t = String(tier ?? "").toLowerCase();
+  if (!TIERS[t]) return null;
+  const gridW = Math.floor(rect.w / u), gridH = Math.floor(rect.h / u);
+  const raw = new Uint8Array(gridW * gridH), mask = new Uint8Array(gridW * gridH);
+  for (let gy = 0; gy < gridH; gy++) for (let gx = 0; gx < gridW; gx++) {
+    outer: for (let dy = 0; dy < u; dy++) for (let dx = 0; dx < u; dx++) {
+      if (occupied(rect.x + gx * u + dx, rect.y + gy * u + dy)) { raw[gy * gridW + gx] = 1; break outer; }
+    }
+  }
+  for (let gy = 0; gy < gridH; gy++) for (let gx = 0; gx < gridW; gx++) {
+    if (!raw[gy * gridW + gx]) continue;
+    for (let dy = -dil; dy <= dil; dy++) for (let dx = -dil; dx <= dil; dx++) {
+      const X = gx + dx, Y = gy + dy;
+      if (X >= 0 && Y >= 0 && X < gridW && Y < gridH) mask[Y * gridW + X] = 1;
+    }
+  }
+  const g = (p) => [(p[0] - rect.x) / u, (p[1] - rect.y) / u];
+  const bd = createBackdrop({
+    tier: t, gridW, gridH, mask, frames, spread: true,
+    halo: { from: g(from), to: g(to) },
+    floorRow: Math.min(gridH - 2, Math.floor((floor - rect.y) / u)),
+  });
+  const shape = (ctx) => {
+    if (clip) clip(ctx);
+    else { ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); }
+  };
+  return {
+    tint: BACKDROP_TINT[t],
+    /** The flat tier wash: static, so cards draw it once under everything. */
+    drawWash(ctx) {
+      ctx.save();
+      shape(ctx);
+      ctx.clip();
+      ctx.fillStyle = `${BACKDROP_TINT[t]}12`;
+      ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+      ctx.restore();
+    },
+    /** One frame of the glow and effects. */
+    draw(ctx, f) {
+      ctx.save();
+      shape(ctx);
+      ctx.clip();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(bd.frame(((f % frames) + frames) % frames), rect.x, rect.y, gridW * u, gridH * u);
+      ctx.imageSmoothingEnabled = true;
+      ctx.restore();
+    },
   };
 }

@@ -15,8 +15,10 @@ import { createCanvas, ImageData } from "@napi-rs/canvas";
 import { GifReader } from "omggif";
 import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
-import { loadTrimmedTrainerSprite, loadBadgeSprite } from "../render/sprites.js";
-import { drawSparkle, drawTypeChip } from "../render/primitives.js";
+import { loadTrimmedTrainerSprite, loadTrimmedTrainerPoses, loadBadgeSprite } from "../render/sprites.js";
+import { drawSparkle, drawTypeChip, drawSoftPlatform } from "../render/primitives.js";
+import { regionBackdrop, backdropTint } from "../render/trainerBackdrop.js";
+import { cardTrainerFx } from "../render/trainerTier.js";
 import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
 import { encodeFrames } from "../render/gif.js";
@@ -31,7 +33,6 @@ const GAP = 18; // between the rows, where the turn badge sits
 const TEXT_H = 64;
 const H = PAD + ROW_H * 2 + GAP + PAD + TEXT_H + PAD;
 const ROW_TOP = [PAD, PAD + ROW_H + GAP];
-const SIDE_COLOR = ["#4f8cff", "#ff5a6a"];
 const GOLD = "#f5c84c";
 const INK = "#0e1120";
 const MEGA_TAG = TOKENS.mega; // the shared Mega colour (dashboard --cc-mega)
@@ -241,24 +242,67 @@ function drawTag(ctx, text, right, y, color) {
   ctx.fillText(text, right - w / 2, y + 9.5);
 }
 
-// A trainer standing on a lit platform at the left of their row. Pixel art
-// stays crisp at 2× (90% of trimmed trainers fit); wider ones shrink to fit.
-function drawPortrait(ctx, s, sprite, color) {
+// The neutral colour of a row with no tier backdrop (a player below Epic, a
+// computer-run opponent other than a Gym Leader, or CARD_TRAINER_FX=0).
+const GRAY = "#9aa3b5";
+
+// A trainer at the left of their row, on a soft floor (`tint`: their tier
+// colour, else neutral); the pill behind them only on a row without a
+// backdrop. Pixel art stays crisp at 2× (90% of trimmed trainers fit); wider
+// ones shrink to fit. `sprite` is the still or the current idle pose.
+function portraitPlace(s, sprite) {
   const box = portraitBox(s);
   const cx = box.x + box.w / 2, floor = box.y + box.h - 12;
-  ctx.fillStyle = `${color}14`;
-  pill(ctx, box.x, box.y, box.w, box.h, 12);
-  ctx.fill();
-  ctx.fillStyle = `${color}66`;
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 46, 9, 0, 0, Math.PI * 2);
-  ctx.fill();
-  if (!sprite) return;
+  if (!sprite) return { box, cx, floor };
   const k = Math.min(2, (box.w - 4) / sprite.width, (box.h - 10) / sprite.height);
   const [w, h] = [Math.round(sprite.width * k), Math.round(sprite.height * k)];
-  ctx.imageSmoothingEnabled = k < 1;
-  ctx.drawImage(sprite.image, Math.round(cx - w / 2), Math.round(floor + 4 - h), w, h);
+  return { box, cx, floor, k, x: Math.round(cx - w / 2), y: Math.round(floor + 4 - h), w, h };
+}
+function drawPortraitBack(ctx, s, color, tint, lit) {
+  const { box, cx, floor } = portraitPlace(s, null);
+  if (!lit) {
+    ctx.fillStyle = `${color}14`;
+    pill(ctx, box.x, box.y, box.w, box.h, 12);
+    ctx.fill();
+  }
+  drawSoftPlatform(ctx, cx, floor, 46, 9, tint, { u: 2 });
+}
+function drawPortraitSprite(ctx, s, sprite) {
+  if (!sprite) return;
+  const p = portraitPlace(s, sprite);
+  ctx.imageSmoothingEnabled = p.k < 1;
+  ctx.drawImage(sprite.image, p.x, p.y, p.w, p.h);
   ctx.imageSmoothingEnabled = true;
+}
+
+/**
+ * The fighting Pokémon's ring: a fixed pixel ring on the ground whose glow
+ * breathes in and out once every PULSE_MS (1 s divides every playback
+ * image's length, so start and result images loop without a jump). A solid
+ * core line plus a fainter band either side that widens as it brightens, in
+ * the trainer's tier colour lightened 35% toward white (light gray without
+ * a backdrop), so it reads on its own row.
+ */
+const PULSE_MS = 1000;
+function drawRing(ctx, cx, cy, ms, color) {
+  const [r, g, b] = [1, 3, 5].map((i) => Math.round(parseInt(color.slice(i, i + 2), 16) * 0.65 + 255 * 0.35));
+  const glow = 0.5 - 0.5 * Math.cos(((ms % PULSE_MS) / PULSE_MS) * Math.PI * 2); // 0 → 1 → 0
+  const ring = (rx, alpha) => {
+    if (alpha <= 0.02) return;
+    ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+    const ry = rx / 4, n = Math.round(rx * 1.6), seen = new Set();
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * Math.PI * 2;
+      const x = Math.round((cx + Math.cos(a) * rx) / 2) * 2, y = Math.round((cy + Math.sin(a) * ry) / 2) * 2;
+      if (seen.has(x * 4096 + y)) continue; // no double-plotted (brighter) pixels
+      seen.add(x * 4096 + y);
+      ctx.fillRect(x - 1, y - 1, 2, 2);
+    }
+  };
+  ring(56, 0.45 + 0.5 * glow);
+  ring(59, 0.35 * glow);
+  ring(53, 0.35 * glow);
+  ring(62, 0.15 * glow * glow);
 }
 
 // The award screen: the field dims and the Badge (or, with no Badge, a
@@ -345,11 +389,15 @@ function frameState(f, { hpBefore, events }) {
  * - a member with levelUp: true shows its Level in green (the result image)
  * - sprites: a Map of loaded sprite GIFs to share between one battle's images
  * - trainers: each side's displayed trainer file (null: an empty portrait)
+ * - tiers: each side's trainer tier, for players only (a computer-run
+ *   opponent is null): an Epic+ tier fills that row with its backdrop and
+ *   colours its border, floors and ring; anything else is a neutral row
  * - theme (/challenge only): { type (the opponent's, or null), badgeFile (in
  *   the center pill, or null), award: { screen, badgeFile, title } on the
  *   text screen at index `screen`, or null }
  */
-export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], theme = null }) {
+export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], tiers = [null, null], theme = null, env = process.env }) {
+  const fx = cardTrainerFx(env);
   const load = (s, i, folder) => {
     const m = sides[s].members[i];
     // A Mega battles with its own sprite (loadAnimatedSprite: mega/<variant|grayscale>/<form>.gif).
@@ -371,6 +419,9 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     return sprites.get(key);
   };
   const portraits = await Promise.all(trainers.map((f) => (f ? cached(`trainer/${f}`, () => loadTrimmedTrainerSprite(f)) : null)));
+  // The trainers idle (trimmed to the box all their poses fit, like the still).
+  const idles = await Promise.all(trainers.map((f) => (f && fx ? cached(`trainer-idle/${f}`, () => loadTrimmedTrainerPoses(f, { env })) : null)));
+  const tints = tiers.map((t) => (fx ? backdropTint(t) : null));
   const badgeIcon = (f) => (f ? cached(`badge/${f}`, () => loadBadgeSprite(f)) : null);
   const pillIcon = await badgeIcon(theme?.badgeFile);
   const awardIcon = await badgeIcon(theme?.award?.badgeFile);
@@ -395,6 +446,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
   // sprites, labels and HP bars end above row 1's panel).
   const base = createCanvas(W, H);
   const ballsAt = [0, 0];
+  const rowColor = (s) => (s === 1 && typeFill ? typeFill : GRAY);
   {
     const ctx = base.getContext("2d");
     const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -405,14 +457,17 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 
     for (let s = 0; s < 2; s++) {
       const top = ROW_TOP[s];
-      ctx.fillStyle = s === 1 && typeFill ? `${typeFill}1f` : `${SIDE_COLOR[s]}14`;
+      // The row: the trainer's tier wash (its backdrop animates per frame), or
+      // neutral gray; a /challenge Gym Leader's row keeps its type colour.
+      ctx.fillStyle = tints[s] ? `${tints[s]}12` : s === 1 && typeFill ? `${typeFill}1f` : `${GRAY}1c`;
       pill(ctx, PAD, top, W - 2 * PAD, ROW_H, 16);
       ctx.fill();
       ctx.lineWidth = winnerSide === s || surgeSide === s ? 3 : 2;
-      ctx.strokeStyle = winnerSide === s ? GOLD : surgeSide === s ? "#ff9800" : `${SIDE_COLOR[s]}66`;
+      ctx.strokeStyle = winnerSide === s ? GOLD : surgeSide === s ? "#ff9800" : tints[s] ? `${tints[s]}99` : `${rowColor(s)}66`;
       ctx.stroke();
 
-      drawPortrait(ctx, s, portraits[s], s === 1 && typeFill ? typeFill : SIDE_COLOR[s]);
+      drawPortraitBack(ctx, s, rowColor(s), tints[s], Boolean(tints[s]));
+      if (!(idles[s]?.poses?.length > 1)) drawPortraitSprite(ctx, s, portraits[s]);
 
       // Nameplate: trainer name and the opponent's type (challenges); the
       // balls after them change, so they are drawn per frame.
@@ -429,10 +484,57 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     }
   }
 
+  // Each Epic+ player's backdrop fills their row. Its effects stay clear of
+  // everything drawn on the row (the trainer in every pose, each Pokémon's
+  // sprite box with room for a lunge, its floor and ring, its name and HP,
+  // the nameplate, tags and the turn badge).
+  const rowBackdrops = [0, 1].map((s) => {
+    if (!tints[s]) return null;
+    const top = ROW_TOP[s], rect = { x: PAD, y: top, w: W - 2 * PAD, h: ROW_H };
+    const occ = new Uint8Array(rect.w * rect.h);
+    const fill = (x, y, w, h) => {
+      for (let yy = Math.max(top, Math.floor(y)); yy < Math.min(top + ROW_H, y + h); yy++) {
+        occ.fill(1, (yy - top) * rect.w + Math.max(0, Math.floor(x) - PAD), (yy - top) * rect.w + Math.min(rect.w, Math.ceil(x + w) - PAD));
+      }
+    };
+    for (const pose of idles[s]?.poses ?? (portraits[s] ? [portraits[s]] : [])) {
+      const p = portraitPlace(s, pose);
+      const c = createCanvas(p.w, p.h), cc = c.getContext("2d");
+      cc.drawImage(pose.image, 0, 0, p.w, p.h);
+      const d = cc.getImageData(0, 0, p.w, p.h).data;
+      for (let y = 0; y < p.h; y++) for (let x = 0; x < p.w; x++) if (d[(y * p.w + x) * 4 + 3] > 8) fill(p.x + x, p.y + y, 1, 1);
+    }
+    const pf = portraitPlace(s, null);
+    fill(pf.cx - 48, pf.floor - 10, 96, 20); // the trainer's floor
+    fill(LAYOUT.left, top + 6, 8 + 330 + 16 + 6 * 16 + 90, 28); // name, type chip, balls
+    fill(W - PAD - 190, top + 8, 180, 24); // WINNER / UNDERDOG SURGE
+    const n = sides[s].members.length;
+    sides[s].members.forEach((_, i) => {
+      const cx = tileCenter(n, i), floor = top + 126;
+      fill(cx - 66, floor - 20, 132, 40); // floor + ring
+      fill(cx - 62, top + 136, 124, 40); // name, Level, HP
+      fill(cx + LAYOUT.tileW / 2 - 70, top + 28, 64, 22); // MEGA tag
+      for (const sp of [live[s][i], gray[s][i]]) if (sp) fill(cx - sp.width / 2, floor + 6 - sp.height - 8, sp.width, sp.height + 16);
+    });
+    fill(W / 2 - 110, LAYOUT.pillY - 4, 220, 44); // the turn badge
+    const pc = portraitPlace(s, null);
+    return regionBackdrop({
+      tier: tiers[s], rect, u: 2, occupied: (x, y) => occ[(y - top) * rect.w + (x - PAD)] === 1,
+      from: [PAD, top + ROW_H], to: [PAD + rect.w * 0.85, top - ROW_H * 0.6],
+      floor: pc.floor + 8, frames: 24, dil: 2,
+      clip: (c) => pill(c, rect.x, rect.y, rect.w, rect.h, 16),
+    });
+  });
+
   const draw = (f) => {
     const state = frameState(f, { hpBefore, events });
     const ms = f * ANIMATION.delayMs;
     ctx.drawImage(base, 0, 0);
+    for (let s = 0; s < 2; s++) {
+      rowBackdrops[s]?.draw(ctx, f);
+      const idle = idles[s];
+      if (idle?.poses?.length > 1) drawPortraitSprite(ctx, s, idle.poses[idle.poseAt(f % 24, 24)] ?? idle.poses[0]);
+    }
 
     for (let s = 0; s < 2; s++) {
       const top = ROW_TOP[s];
@@ -449,25 +551,10 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
         const frac = state.hp[s][i];
         const fighting = active[s] === i;
 
-        // Platform, lit for the fighting pair.
-        if (fighting) {
-          const glow = ctx.createRadialGradient(cx, floor - 30, 10, cx, floor - 30, 70);
-          glow.addColorStop(0, `${SIDE_COLOR[s]}55`);
-          glow.addColorStop(1, `${SIDE_COLOR[s]}00`);
-          ctx.fillStyle = glow;
-          ctx.beginPath();
-          ctx.arc(cx, floor - 30, 70, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = fighting ? `${SIDE_COLOR[s]}88` : "#ffffff12";
-        ctx.beginPath();
-        ctx.ellipse(cx, floor, 52, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-        if (fighting) {
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = "#ffffffcc";
-          ctx.stroke();
-        }
+        // A soft floor in the trainer's tier colour (neutral without one),
+        // stronger under the fighting Pokémon, which also stands in the ring.
+        drawSoftPlatform(ctx, cx, floor, fighting ? 56 : 52, fighting ? 14 : 12, tints[s], { u: 2, peak: fighting ? 0.9 : 0.4 });
+        if (fighting && frac > 0) drawRing(ctx, cx, floor, ms, tints[s] ?? "#c9cfe0");
 
         // Sprite: animated while standing, grayscale once fainted.
         const hidden = state.hidden?.side === s && state.hidden.slot === i;
@@ -556,6 +643,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
   // changes nothing. utils/render/gif.js writes only what changed per frame.
   const award = theme?.award && !events.length ? [theme.award.screen * ANIMATION.idleFrames] : [];
   return encodeFrames(canvas, draw, total, {
+    background: base.getContext("2d").getImageData(0, 0, W, H).data,
     sample: [0, ...award, total - 1],
     delay: (f) => (events.length && f === total - 1 ? ANIMATION.freezeMs : ANIMATION.delayMs),
   });

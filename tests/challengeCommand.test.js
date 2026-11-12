@@ -67,8 +67,9 @@ const embedJson = (e) => (e?.toJSON ? e.toJSON() : e);
 // Everything a message says, including its images' alt text.
 const textOf = (o) => (typeof o === "string" ? o
   : [o?.content ?? "", ...(o?.embeds ?? []).map((e) => JSON.stringify(embedJson(e))), ...(o?.files ?? []).map((f) => f.description ?? "")].join("\n"));
-const card = (o) => o?.files?.find((f) => f.name === "challenge.png");
-const dims = (png) => [png.readUInt32BE(16), png.readUInt32BE(20)];
+// The card is a GIF when it animates (idle trainers), else a PNG.
+const card = (o) => o?.files?.find((f) => /^challenge\.(png|gif)$/.test(f.name));
+const dims = (img) => (img.subarray(0, 3).toString() === "GIF" ? [img.readUInt16LE(6), img.readUInt16LE(8)] : [img.readUInt32BE(16), img.readUInt32BE(20)]);
 const brightnessAt = async (png, x, y) => {
   const img = await loadImage(png);
   const ctx = createCanvas(img.width, img.height).getContext("2d");

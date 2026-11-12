@@ -5,16 +5,25 @@
 // the line for a Gym, and the prize. Sent as the private preview and again
 // as the public intro, so it never shows the exact CC loss (10× it is the
 // balance); the private preview says that amount in text. Read-only.
+//
+// Animated (renderChallengeCard(v, { animate: true })): both trainers idle,
+// the Team plays its sprites, and a player with an Epic+ trainer gets their
+// tier backdrop across their whole half (utils/render/vsField.js). The Gym
+// Leader keeps the type-tinted half: computer-run opponents never get one.
 // ==========================================================
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, typeStyle } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBackground, drawCard, drawTypeChip, typeChipsWidth, drawBall, drawPlatform, drawShinyMark, drawSparkle } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawBackground, drawCard, drawTypeChip, typeChipsWidth, drawBall, drawSoftPlatform, drawShinyMark, drawSparkle } from "./primitives.js";
 import { loadStaticSprite, loadTrainerSprite, loadTrimmedTrainerSprite, loadBadgeSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { buildTeamView } from "./teamView.js";
 import { CHALLENGES, displaySprite } from "../challenge/roster.js";
 import { prizeText } from "../battle/playback.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.js";
+import { spriteStage } from "./stage.js";
+import { trainerTier, cardTrainerFx } from "./trainerTier.js";
+import { backdropTint } from "./trainerBackdrop.js";
+import { placeTrainer, occupancy, halfBackdrop } from "./vsField.js";
 
 export const CHALLENGE_CARD_SIZE = Object.freeze({ w: 1200, h: 640 });
 const { w: W, h: H } = CHALLENGE_CARD_SIZE;
@@ -50,6 +59,8 @@ export function challengeCardView(key, preview, user, { displayName }) {
     player: {
       name: displayName,
       trainerFile: user?.displayedTrainer ?? null,
+      // The displayed trainer is always one the player owns.
+      tier: trainerTier(user?.displayedTrainer),
       team: buildTeamView(user, { displayName }).slots.map((s) => ({ id: s.id, variant: s.variant, shiny: s.shiny })),
       badges: GYM_BADGES.map((b) => ({ file: badgeFile(b), earned: earned.includes(b.key) })),
     },
@@ -147,8 +158,9 @@ function eyebrowAndTitle(ctx, eyebrow, title, x, align, maxW) {
   ctx.fillText(t.text, x, M + 76);
 }
 
-export async function drawTrainer(ctx, file, cx, floor, accent, { scale = 4, box = TRAINER_BOX, trimmed = false } = {}) {
-  drawPlatform(ctx, cx, floor, scale === 4 ? 118 : 52, scale === 4 ? 20 : 10, accent);
+/** A still trainer on a soft platform (`tint`: an owned Epic+ trainer's tier colour, or null). */
+export async function drawTrainer(ctx, file, cx, floor, tint = null, { scale = 4, box = TRAINER_BOX, trimmed = false } = {}) {
+  drawSoftPlatform(ctx, cx, floor, scale === 4 ? 118 : 52, scale === 4 ? 20 : 10, tint, { u: scale === 4 ? 4 : 2 });
   const t = trimmed ? await loadTrimmedTrainerSprite(file) : await loadTrainerSprite(file);
   if (t) {
     drawSprite(ctx, t, cx, floor + 6, typeof box === "number" ? box : box.w, typeof box === "number" ? box : box.h, { scale });
@@ -159,7 +171,14 @@ export async function drawTrainer(ctx, file, cx, floor, accent, { scale = 4, box
   }
 }
 
-async function drawPlayer(ctx, v, { player: slot, badges }) {
+/** The empty-slot ball where a trainer would stand (no sprite file, or it failed to load). */
+function noTrainer(ctx, cx, floor, scale = 4) {
+  ctx.globalAlpha = 0.35;
+  drawBall(ctx, cx, floor - (scale === 4 ? 90 : 50), scale === 4 ? 44 : 24, false);
+  ctx.globalAlpha = 1;
+}
+
+async function drawPlayer(ctx, v, { player: slot, badges }, stage, fx) {
   eyebrowAndTitle(ctx, "CHALLENGER", v.player.name, M + 16, "left", 520);
   ctx.imageSmoothingEnabled = false;
   for (const [i, b] of v.player.badges.entries()) {
@@ -170,13 +189,17 @@ async function drawPlayer(ctx, v, { player: slot, badges }) {
   }
   ctx.globalAlpha = 1;
   ctx.imageSmoothingEnabled = true;
-  await drawTrainer(ctx, v.player.trainerFile, slot.cx, slot.floor, COLOR.blue);
-  await drawTeamGrid(ctx, v.player.team, 348, 176); // clear of the VS on the seam
+  const tint = fx ? backdropTint(v.player.tier) : null;
+  const placed = await placeTrainer(ctx, stage, { file: v.player.trainerFile, cx: slot.cx, floor: slot.floor, box: TRAINER_BOX, tint, idle: fx });
+  if (!placed) noTrainer(ctx, slot.cx, slot.floor);
+  await drawTeamGrid(ctx, v.player.team, 348, 176, stage); // clear of the VS on the seam
+  return placed;
 }
 
 // The battle Team ({ id, variant, shiny } per slot), 2 × 3, at 1×, under a
-// TEAM label; (gx, gy) is the first cell's top left.
-export async function drawTeamGrid(ctx, team, gx, gy) {
+// TEAM label; (gx, gy) is the first cell's top left. With a `stage`, the
+// sprites go through it (animated on an animated card).
+export async function drawTeamGrid(ctx, team, gx, gy, stage = null) {
   const cell = 74, gap = 8;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
@@ -194,7 +217,9 @@ export async function drawTeamGrid(ctx, team, gx, gy) {
     ctx.strokeStyle = !s ? "#2a3350" : s.shiny ? COLOR.gold : i === 0 ? COLOR.blue : "#323c5c";
     ctx.stroke();
     if (!s) continue;
-    drawSprite(ctx, (await loadStaticSprite(s.id, s.variant)) ?? ph, x + cell / 2, y + cell - 6, cell - 8, cell - 10, { scale: 1 });
+    const sprite = (await loadStaticSprite(s.id, s.variant)) ?? ph;
+    if (stage) stage.place(ctx, sprite, x + cell / 2, y + cell - 6, cell - 8, cell - 10, { scale: 1 }, { id: s.id, variant: s.variant });
+    else drawSprite(ctx, sprite, x + cell / 2, y + cell - 6, cell - 8, cell - 10, { scale: 1 });
     if (s.shiny) drawShinyMark(ctx, x + cell - 13, y + 13, 7);
   }
 }
@@ -243,15 +268,18 @@ async function drawMedallion(ctx, v, m) {
   ctx.fillText(fitText(ctx, v.badge.name.toUpperCase(), 230), m.cx, m.cy + m.r + 32);
 }
 
-async function drawOpponents(ctx, v, slots) {
+async function drawOpponents(ctx, v, slots, stage, fx) {
+  const placed = [];
   const right = W - M - 16;
   eyebrowAndTitle(ctx, v.eyebrow, v.title, right, "right", 480);
   if (v.kind !== "elite4") {
     drawPartyLine(ctx, v, right, M + 92);
     const o = slots.opponents[0];
-    await drawTrainer(ctx, v.opponents[0].trainerFile, o.cx, o.floor, v.accent);
+    const t = await placeTrainer(ctx, stage, { file: v.opponents[0].trainerFile, cx: o.cx, floor: o.floor, box: TRAINER_BOX, idle: fx });
+    if (!t) noTrainer(ctx, o.cx, o.floor);
+    placed.push(t);
     if (slots.medallion) await drawMedallion(ctx, v, slots.medallion);
-    return;
+    return placed;
   }
   // A rule the player can't see anywhere else before Fight!: 22 px, the
   // design system's floor for text a player must read, on two lines to stay
@@ -263,8 +291,9 @@ async function drawOpponents(ctx, v, slots) {
   ctx.fillText("Revive one Pokémon between them.", right, M + 140);
   for (const [i, o] of v.opponents.entries()) {
     const s = slots.opponents[i];
-    const accent = typeStyle(o.type).fill;
-    await drawTrainer(ctx, o.trainerFile, s.cx, s.floor, accent, { scale: 2, box: { w: s.box.w - 4, h: 190 }, trimmed: true });
+    const t = await placeTrainer(ctx, stage, { file: o.trainerFile, cx: s.cx, floor: s.floor, scale: 2, box: { w: s.box.w - 4, h: 190 }, idle: fx });
+    if (!t) noTrainer(ctx, s.cx, s.floor, 2);
+    placed.push(t);
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic"; // drawTypeChip leaves it at middle
     ctx.font = font(22, 800);
@@ -273,6 +302,7 @@ async function drawOpponents(ctx, v, slots) {
     const w = typeChipsWidth(ctx, [o.type], { h: 30, size: 17 });
     drawTypeChip(ctx, o.type, s.cx - w / 2, s.floor + 52, { h: 30, size: 17 });
   }
+  return placed;
 }
 
 // The prize on one line at up to 26 px, or (the Elite Four's four sprites)
@@ -316,15 +346,32 @@ function drawPrizeBar(ctx, v) {
   block("LOSE", COLOR.red, "10% of CC", split + 24, W - M - split - 48);
 }
 
-export async function renderChallengeCard(v) {
+/**
+ * The card as a PNG, or with `animate` a GIF (idle trainers, playing Team,
+ * the player's tier backdrop); a GIF only when something moves.
+ */
+export async function renderChallengeCard(v, { animate = false, env = process.env } = {}) {
+  const fx = cardTrainerFx(env);
+  const stage = spriteStage({ animate, env });
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
   drawBackground(ctx, W, H);
   drawHalves(ctx, v.accent);
+  // Content goes on its own layer, so a backdrop can sit between it and the halves.
+  const fg = createCanvas(W, H);
+  const f = fg.getContext("2d");
   const slots = cardSlots(v);
-  await drawPlayer(ctx, v, slots);
-  await drawOpponents(ctx, v, slots);
-  drawVs(ctx);
-  drawPrizeBar(ctx, v);
-  return canvas.toBuffer("image/png");
+  const player = await drawPlayer(f, v, slots, stage, fx);
+  const opponents = await drawOpponents(f, v, slots, stage, fx);
+  drawVs(f);
+  drawPrizeBar(f, v);
+  const backdrop = fx && backdropTint(v.player.tier)
+    ? halfBackdrop(ctx, {
+      side: "left", tier: v.player.tier, field: FIELD, W, H, floor: FLOOR + 12,
+      occupied: occupancy(W, H, fg, [player, ...opponents]),
+    })
+    : null;
+  if (backdrop) stage.layer(ctx, (c, frame) => { backdrop.draw(c, frame); c.drawImage(fg, 0, 0); });
+  else ctx.drawImage(fg, 0, 0);
+  return stage.output(canvas, { overlay: backdrop ? fg : null });
 }

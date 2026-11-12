@@ -8,13 +8,22 @@
 // whom and the Trainer's line, beside the Prize money at stake. It never
 // shows a Level, though the Prize money (class base × the last Pokémon's
 // Level) hints at a strong Trainer to players who know the bases. Read-only.
+//
+// Animated (renderEncounterCard(v, { animate: true })): both trainers idle,
+// the Team plays, and a player with an Epic+ trainer gets their tier
+// backdrop across their half (utils/render/vsField.js). The Trainer, run by
+// the computer, never gets one.
 // ==========================================================
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBackground, drawCard, drawBall, drawPlatform, drawAlertBubble } from "./primitives.js";
-import { loadTrimmedTrainerSprite, drawSprite } from "./sprites.js";
-import { drawHalves, drawVs, drawTrainer, drawTeamGrid } from "./challengeCard.js";
+import { rr, font, fitText, fitFont, drawBackground, drawCard, drawBall, drawAlertBubble } from "./primitives.js";
+import { loadTrimmedTrainerSprite } from "./sprites.js";
+import { drawHalves, drawVs, drawTeamGrid } from "./challengeCard.js";
+import { spriteStage } from "./stage.js";
+import { trainerTier, cardTrainerFx } from "./trainerTier.js";
+import { backdropTint } from "./trainerBackdrop.js";
+import { placeTrainer, occupancy, halfBackdrop } from "./vsField.js";
 
 export const ENCOUNTER_CARD_SIZE = Object.freeze({ w: 1200, h: 600 });
 const { w: W, h: H } = ENCOUNTER_CARD_SIZE;
@@ -31,6 +40,7 @@ export function encounterCardView({ trainer, team, user, displayName }) {
     player: {
       name: displayName,
       trainerFile: user?.displayedTrainer ?? null,
+      tier: trainerTier(user?.displayedTrainer), // the displayed trainer is always one the player owns
       team: team.map((m) => ({ id: m.speciesId, variant: m.variant, shiny: m.variant === "shiny" })),
     },
     trainer: { title: trainer.title, name: trainer.name, trainerFile: trainer.spriteFile, partySize: trainer.party.length },
@@ -63,12 +73,16 @@ export async function encounterSlots(v) {
   };
 }
 
-async function drawEncounterTrainer(ctx, v, slots) {
+function noTrainer(ctx, cx, floor) {
+  ctx.globalAlpha = 0.35;
+  drawBall(ctx, cx, floor - 90, 44, false);
+  ctx.globalAlpha = 1;
+}
+
+async function drawEncounterTrainer(ctx, v, slots, stage, fx) {
   const { cx, floor } = slots.trainer;
-  drawPlatform(ctx, cx, floor, 118, 20, COLOR.red);
-  const sprite = await loadTrimmedTrainerSprite(v.trainer.trainerFile);
-  if (sprite) drawSprite(ctx, sprite, cx, floor + 6, BOX, BOX, { scale: 4 });
-  else {
+  const placed = await placeTrainer(ctx, stage, { file: v.trainer.trainerFile, cx, floor, box: BOX, idle: fx });
+  if (!placed) {
     ctx.globalAlpha = 0.35;
     drawBall(ctx, cx, floor - 90, 44, false);
     ctx.globalAlpha = 1;
@@ -79,6 +93,7 @@ async function drawEncounterTrainer(ctx, v, slots) {
   // The party: a Poké Ball per Pokémon, top right, as on the battle nameplates.
   const r = 11, step = 30;
   for (let i = 0; i < v.trainer.partySize; i++) drawBall(ctx, W - M - 16 - r - i * step, M + 24, r, true);
+  return placed;
 }
 
 function drawTextBox(ctx, v, { x, y, w, h }) {
@@ -112,17 +127,30 @@ function drawStakes(ctx, v, { x, y, w, h }) {
   ctx.fillText(amount.text, x + w / 2, y + 94);
 }
 
-export async function renderEncounterCard(v) {
+/** The card as a PNG, or with `animate` a GIF when something moves (see the header). */
+export async function renderEncounterCard(v, { animate = false, env = process.env } = {}) {
+  const fx = cardTrainerFx(env);
+  const stage = spriteStage({ animate, env });
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
   drawBackground(ctx, W, H);
   drawHalves(ctx, COLOR.red, FIELD);
+  // Content on its own layer, so a backdrop can sit between it and the halves.
+  const fg = createCanvas(W, H);
+  const f = fg.getContext("2d");
   const slots = await encounterSlots(v);
-  await drawTrainer(ctx, v.player.trainerFile, slots.player.cx, slots.player.floor, COLOR.blue);
-  await drawTeamGrid(ctx, v.player.team, 348, 96);
-  await drawEncounterTrainer(ctx, v, slots);
-  drawVs(ctx, FIELD);
-  drawTextBox(ctx, v, slots.textBox);
-  drawStakes(ctx, v, slots.stakes);
-  return canvas.toBuffer("image/png");
+  const tint = fx ? backdropTint(v.player.tier) : null;
+  const player = await placeTrainer(f, stage, { file: v.player.trainerFile, cx: slots.player.cx, floor: slots.player.floor, box: BOX, tint, idle: fx });
+  if (!player) noTrainer(f, slots.player.cx, slots.player.floor);
+  await drawTeamGrid(f, v.player.team, 348, 96, stage);
+  const trainer = await drawEncounterTrainer(f, v, slots, stage, fx);
+  drawVs(f, FIELD);
+  drawTextBox(f, v, slots.textBox);
+  drawStakes(f, v, slots.stakes);
+  const backdrop = tint
+    ? halfBackdrop(ctx, { side: "left", tier: v.player.tier, field: FIELD, W, H, floor: FLOOR + 12, occupied: occupancy(W, H, fg, [player, trainer]) })
+    : null;
+  if (backdrop) stage.layer(ctx, (c, frame) => { backdrop.draw(c, frame); c.drawImage(fg, 0, 0); });
+  else ctx.drawImage(fg, 0, 0);
+  return stage.output(canvas, { overlay: backdrop ? fg : null });
 }

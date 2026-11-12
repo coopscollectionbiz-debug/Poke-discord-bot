@@ -23,9 +23,14 @@ import {
   ButtonStyle,
   MessageFlags,
   PermissionFlagsBits, // ✅ Added import
+  AttachmentBuilder,
 } from "discord.js";
 import { spritePaths } from "../spriteconfig.js";
 import { trainerImageUrl } from "../utils/trainerAssets.js";
+import { threaded } from "../utils/render/renderers.js";
+import { cardImage } from "../utils/render/stage.js";
+import { hasBackdrop } from "../utils/render/trainerBackdrop.js";
+import { cardTrainerFx } from "../utils/render/trainerTier.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
 import { createPaginationButtons } from "../utils/pagination.js";
 import { safeReply } from "../utils/safeReply.js";
@@ -250,13 +255,28 @@ export default {
 
     // ==========================================================
     // 🧩 Render specific trainer sprite
+    // An owned Epic+ trainer is rendered now on their tier backdrop (an
+    // animated card, utils/render/trainerShowcase.js); everyone else, or a
+    // render that fails, keeps the image from its URL.
     // ==========================================================
-    const renderSprite = (spriteFile, className) => {
+    const showcase = async (t) => {
+      const tier = String(t.rarity ?? "").toLowerCase();
+      if (!owned[t.sprite] || !hasBackdrop(tier) || !cardTrainerFx()) return null;
+      try {
+        const card = await cardImage((animate) => threaded.trainerShowcase({ file: t.sprite, tier }, { animate }), "trainer", { unique: true, waitMs: 1000 });
+        return card.buffer ? new AttachmentBuilder(card.buffer, { name: card.name }) : null;
+      } catch (err) {
+        console.warn("⚠️ trainer showcase render failed; using the sprite URL:", err?.message || err);
+        return null;
+      }
+    };
+    const renderSprite = async (spriteFile, className) => {
       const t = flatTrainers.find((x) => x.sprite === spriteFile);
       if (!t) return null;
 
       const isOwned = !!owned[t.sprite];
-      const fullURL = trainerImageUrl(t.sprite);
+      const file = await showcase(t);
+      const fullURL = file ? `attachment://${file.name}` : trainerImageUrl(t.sprite);
 
       const embed = new EmbedBuilder()
         .setTitle(`🎓 ${t.name} — ${t.sprite.replace(".png", "")}`)
@@ -281,7 +301,7 @@ export default {
           .setStyle(ButtonStyle.Secondary)
       );
 
-      return { embed, row };
+      return { embed, row, files: file ? [file] : [] };
     };
 
     // ==========================================================
@@ -327,12 +347,13 @@ export default {
         const spriteFile = i.customId.replace("inspect_variant_", "");
         const variant = flatTrainers.find((x) => x.sprite === spriteFile);
         const className = variant?.name;
-        const rendered = renderSprite(spriteFile, className);
+        const rendered = await renderSprite(spriteFile, className);
         if (!rendered)
           return safeReply(i, { content: "❌ Sprite not found.", flags: MessageFlags.Ephemeral });
         return safeReply(i, {
           embeds: [rendered.embed],
           components: [rendered.row],
+          files: rendered.files,
         });
       }
 

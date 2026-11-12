@@ -224,6 +224,28 @@ export function drawPlatform(ctx, cx, cy, rx, ry, accent = null) {
   ctx.stroke();
 }
 
+const BAYER4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+
+/**
+ * A soft floor shadow under a trainer or Pokémon (replaces the hard platform
+ * ellipse under trainers): pixel art on a `u`-px grid, no stroke or glow,
+ * fading out from the centre in a few ordered-dithered steps so it can't
+ * band in a GIF. `tint` (#rrggbb) colours it, for an owned Epic+ trainer's
+ * tier; null is a neutral shadow. `peak` is the centre's opacity.
+ */
+export function drawSoftPlatform(ctx, cx, cy, rx, ry, tint = null, { u = 4, peak = tint ? 0.5 : 0.55 } = {}) {
+  const [r, g, b] = tint ? [1, 3, 5].map((i) => parseInt(tint.slice(i, i + 2), 16)) : [3, 5, 12];
+  const nx = Math.ceil(rx / u), ny = Math.ceil(ry / u);
+  for (let gy = -ny; gy <= ny; gy++) for (let gx = -nx; gx <= nx; gx++) {
+    const d = Math.hypot((gx * u) / rx, (gy * u) / ry);
+    if (d >= 1) continue;
+    const lv = Math.max(0, Math.min(4, Math.floor((1 - d) * 4 + BAYER4[(gy + 64) & 3][(gx + 64) & 3] / 16 - 0.5)));
+    if (!lv) continue;
+    ctx.fillStyle = `rgba(${r},${g},${b},${((peak * lv) / 4).toFixed(3)})`;
+    ctx.fillRect(Math.round(cx + gx * u - u / 2), Math.round(cy + gy * u - u / 2), u, u);
+  }
+}
+
 /** Poké Ball icon (battle nameplate style): filled when the slot is used. */
 export function drawBall(ctx, cx, cy, r, filled) {
   ctx.lineWidth = Math.max(1.5, r / 4);

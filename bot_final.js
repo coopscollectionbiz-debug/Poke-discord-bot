@@ -38,7 +38,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
-import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid, carryCopyUids, trainedSummary } from "./services/ownership.js";
+import { pruneEmptyLine, normalizeCustomPokemon, carryCopyUids, trainedSummary } from "./services/ownership.js";
 import { normalizeBox, allCopies, slotsHolding, mergeDex } from "./services/box.js";
 import { normalizeShowcase, prepareShowcaseSelection } from "./services/showcaseTeam.js";
 
@@ -89,7 +89,7 @@ import { pokemonDetail } from "./services/pokemonDetail.js";
 import { parseTeamCopy, applyTeamCopy } from "./services/teamCopy.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
 import { rankedRecord } from "./utils/battle/rewards.js";
-import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
+import { saveMoveset, TEAM_TYPES } from "./services/movesets.js";
 import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, adminSessionOf, activateAdminSession, ADMIN_MAX_MS, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
@@ -109,6 +109,9 @@ import {
 } from "./utils/economyRules.js";
 
 import { saveAndAck, SAVE_DELAYED_NOTE, saveAckFields, promptSave } from "./utils/saveManager.js";
+import { liveEffects, loadLiveEvents } from "./services/liveEvents.js";
+import { playerView, createOptInHandler, postDueAnnouncements } from "./services/liveEventsPlayer.js";
+import { discountedPrice, scaleChance, hasCatchEffects } from "./utils/liveEventRules.js";
 
 // Nothing may be written to disk until player data has been loaded.
 requireLoadBeforeWrite();
@@ -1125,8 +1128,9 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // Increase pity every call
     userObj.luck = Math.min(MAX_CHANCE, userObj.luck + PITY_INCREMENT);
 
-    // Final chance
-    const finalChance = Math.min(MAX_CHANCE, BASE_CHANCE + userObj.luck);
+    // Final chance (a Live event may multiply it; never above 100 %)
+    const liveFx = liveEffects();
+    const finalChance = scaleChance(Math.min(MAX_CHANCE, BASE_CHANCE + userObj.luck), liveFx.catchRate);
 
     // Reward fails → keep pity meter, exit
     if (Math.random() >= finalChance) {
@@ -1146,7 +1150,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     let caught = null;
 
     try {
-      reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball");
+      reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball", { fx: liveFx });
       isShiny = rollForShiny(userObj.tp || 0);
 
       caught = grantCatch(userObj, reward.id, isShiny ? "shiny" : "normal"); // { level, isNew, expGained } for the card
@@ -1164,11 +1168,11 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // =============================
     await promptSave(trainerData);
 
-    return { reward, isShiny, caught };
+    return { reward, isShiny, caught, eventNames: hasCatchEffects(liveFx) ? liveFx.catchEvents : [] };
   });
   // "cooldown", "missed" or undefined (reward selection failed): nothing to post.
   if (!granted || typeof granted !== "object") return granted;
-  const { reward, isShiny, caught } = granted;
+  const { reward, isShiny, caught, eventNames } = granted;
 
   // =============================
   // 🖼️ SPRITE
@@ -1185,6 +1189,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     pokemonId: reward.id,
     shiny: isShiny,
     catchResult: caught,
+    eventNames,
     fallback: () => ({
       content: `🎉 <@${userId}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`,
       embeds: [createPokemonRewardEmbed(reward, isShiny, spriteUrl)],
@@ -1666,6 +1671,31 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
   }
 });
 
+// ==========================================================
+// 🎪 Live events (services/liveEventsPlayer.js): what's on, today's prices,
+// and the player's "Use Live event" choice for Poké Balls and /recruit.
+// ==========================================================
+app.get("/api/live-events", (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ ok: false, error: "Missing id" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ ok: false, error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ ok: false, error: "User not found" });
+  return res.json({ ok: true, ...playerView(user) });
+});
+
+const liveEventOptIn = createOptInHandler({ getTrainerData: () => trainerData, lockUser, save: saveAndAck });
+app.post("/api/live-events/opt-in", express.json({ limit: "4kb" }), async (req, res) => {
+  if (!isReady) return res.status(503).json({ ok: false, error: "The bot is starting up. Try again in a moment." });
+  try {
+    const r = await liveEventOptIn({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(r.status).json(r.body);
+  } catch (err) {
+    console.error("❌ /api/live-events/opt-in:", err?.message || err);
+    return res.status(500).json({ ok: false, error: "Internal server error" });
+  }
+});
+
 
 client.on("interactionCreate", async (interaction) => {
   // Autocomplete (e.g. /pokedex name): answered at once from memory, never
@@ -2047,8 +2077,8 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
     }
 
     const tier = String(match.tier || match.rarity || "common").toLowerCase();
-    const cost = TRAINER_COSTS[tier];
-    if (!cost) return res.status(400).json({ success: false, error: `Unknown trainer tier: ${tier}` });
+    if (!TRAINER_COSTS[tier]) return res.status(400).json({ success: false, error: `Unknown trainer tier: ${tier}` });
+    const cost = discountedPrice(liveEffects(), "trainers", TRAINER_COSTS[tier]); // a Live event's discount
 
     if ((user.cc ?? 0) < cost) {
       return res.status(400).json({ success: false, error: `Requires ${cost} CC` });
@@ -2234,12 +2264,13 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
       mutate: (user) => {
         normalizeUserSchema(id, user); // in place
         user.cc ??= 0;
-        if (user.cc < COST) {
-          return { ok: false, error: `Not enough CC — requires ${COST} CC.`, cc: user.cc, status: 400 };
+        const price = discountedPrice(liveEffects(), "stones", COST); // a Live event's discount
+        if (user.cc < price) {
+          return { ok: false, error: `Not enough CC — requires ${price} CC.`, cc: user.cc, status: 400 };
         }
         const granted = grantItem(user, "evolution_stone", 1);
         if (!granted.ok) return { ok: false, error: granted.error, status: 400 };
-        user.cc -= COST;
+        user.cc -= price;
         trackProgress(user, [{ type: "purchase" }]); // Release C
         return { ok: true, cc: user.cc, stones: granted.quantity };
       },
@@ -2393,17 +2424,11 @@ app.post("/api/pokemon/moveset", express.json({ limit: "4kb" }), async (req, res
     await lockUser(id, async () => {
       const u = trainerData[id];
       if (!u) return res.status(404).json({ success: false, error: "User not found" });
-      const v = variant === "shiny" ? "shiny" : "normal";
-      // uid (TM system): one customized copy's own moves; absent = the line's plain copies.
-      const copy = uid == null ? null : slotCopyUid(u, { id: Number(pokeId), variant: v, uid });
-      if (uid != null && !copy) return res.status(400).json({ success: false, error: "That Pokémon copy no longer exists. Reload and try again.", code: "unknown_copy" });
-      if (moves !== null) {
-        const check = validateMoveset(u, pokeId, v, moves, { uid: copy });
-        if (!check.ok) return res.status(check.status).json({ success: false, error: check.error, code: check.code });
-        setMoveset(u, team, pokeId, v, check.moves, { uid: copy });
-      } else setMoveset(u, team, pokeId, v, null, { uid: copy });
+      // uid: the slot's copy (box copy or TM copy); absent = the line's plain copies.
+      const r = saveMoveset(u, { team, pokeId, variant, moves, uid });
+      if (!r.ok) return res.status(r.status ?? 400).json({ success: false, error: r.error, code: r.code });
       const saveAck = await saveAndAck(trainerData);
-      return res.json({ ...saveAckFields(saveAck), success: true, team, ...(copy && { uid: copy }), moves: chosenMoves(u, team, pokeId, v, { uid: copy }) });
+      return res.json({ ...saveAckFields(saveAck), success: true, team, ...(r.uid && { uid: r.uid }), moves: r.moves });
     });
   } catch (err) {
     console.error("❌ /api/pokemon/moveset:", err?.message || err);
@@ -2814,6 +2839,21 @@ client.once("ready", async () => {
   setInterval(() => {
     pruneEvents().catch(() => {});
   }, 24 * 60 * 60 * 1000);
+
+  // 🎪 Live events: load the schedule, then post start/end announcements
+  // every 30 s once the bot is ready (also posts boundaries passed while down).
+  await loadLiveEvents();
+  setInterval(() => {
+    if (!isReady) return;
+    postDueAnnouncements({
+      send: async (channelId, embed) => {
+        const channel = await client.channels.fetch(channelId).catch(() => null);
+        if (!channel?.isTextBased?.()) return false;
+        await channel.send({ embeds: [embed] });
+        return true;
+      },
+    }).catch((e) => console.warn("⚠️ Live event announcements failed:", e?.message || e));
+  }, 30_000);
 
   // Load local commands FIRST
   try {

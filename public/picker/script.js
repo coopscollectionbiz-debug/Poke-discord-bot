@@ -5,6 +5,10 @@
 
 import { showExpired } from "/public/shared/shell.js";
 import { scanFx, hasTrainerBackdrop } from "/public/shared/spriteFx.js";
+import { fetchLiveEvents, eventPrice } from "/public/shared/liveEvents.js";
+
+// A Live event discount on trainer sprites (the server charges the same).
+let liveEvents = null;
 
 const LOCK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>`;
 
@@ -174,6 +178,7 @@ async function refreshUserState() {
   }
 
   userCC = data?.cc ?? 0;
+  liveEvents = await fetchLiveEvents(userId);
 }
 
 // ===========================================================
@@ -199,7 +204,7 @@ function render(filter = "") {
   Object.entries(allTrainers || {}).forEach(([name, info]) => {
     const rarity = String(info?.tier || "common").toLowerCase();
     const tierDisplay = rarity.charAt(0).toUpperCase() + rarity.slice(1);
-    const price = TRAINER_COSTS[rarity] ?? 5000;
+    const price = eventPrice(liveEvents, "trainers", TRAINER_COSTS[rarity] ?? 5000);
 
     if (selectedRarity !== "all" && rarity !== selectedRarity) return;
     if (searchTerm && !String(name).toLowerCase().includes(searchTerm)) return;

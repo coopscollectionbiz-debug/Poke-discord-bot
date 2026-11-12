@@ -28,6 +28,8 @@ import { catchView } from "../utils/render/catchCard.js";
 
 import { dexProgress } from "../utils/render/dexProgress.js";
 import { threaded } from "../utils/render/renderers.js";
+import { liveEffects } from "../services/liveEvents.js";
+import { scaleEarned, applyLimits, boostedWeights, pickWeighted, hasCatchEffects } from "../utils/liveEventRules.js";
 
 // ==========================================================
 // Constants
@@ -142,7 +144,8 @@ export async function execute(
       // ======================================================
       // Apply CC + TP
       // ======================================================
-      user.cc += DAILY_CC;
+      const dailyCC = scaleEarned(DAILY_CC, liveEffects().cc); // a Live event's CC multiplier
+      user.cc += dailyCC;
       user.tp += DAILY_TP;
 
       // ======================================================
@@ -192,7 +195,7 @@ export async function execute(
       // two Pokemon and a stone roll. Track what hit so admins can see
       // per-day accrual and any shiny/stone luck.
       logEvent("daily_claim", userId, {
-        ccAwarded: DAILY_CC,
+        ccAwarded: dailyCC,
         tpAwarded: DAILY_TP,
         stoneAwarded,
         pokemon: [
@@ -236,7 +239,7 @@ export async function execute(
         .setTitle("🗓️ Daily Rewards")
         .setColor(DAILY_COLOR)
         .addFields(
-          { name: `${COIN_EMOJI} CC`, value: `+${DAILY_CC}` },
+          { name: `${COIN_EMOJI} CC`, value: `+${dailyCC}` },
           { name: `${TP_EMOJI} TP`, value: `+${DAILY_TP}` },
           { name: "📊 New Balance", value: `${COIN_EMOJI} ${user.cc}  |  ${TP_EMOJI} ${user.tp}` }
         );
@@ -258,7 +261,7 @@ export async function execute(
         const rankAfter = getRank(user.tp);
         const dailyView = {
           pokemon: [view(pick1, shiny1, caught1), view(pick2, shiny2, caught2)],
-          cc: DAILY_CC,
+          cc: dailyCC,
           tp: DAILY_TP,
           stone: stoneAwarded,
           balance: { cc: user.cc, tp: user.tp },

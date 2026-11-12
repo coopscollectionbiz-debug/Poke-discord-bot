@@ -27,6 +27,8 @@
 import { grantItem } from "../services/inventory.js";
 import { plainCount, customCopiesOf, canRemoveCopies, removeCopies } from "../services/ownership.js";
 import { spareCopies, normalizeBox } from "../services/box.js";
+import { liveEffects } from "../services/liveEvents.js";
+import { scaleEarned } from "./liveEventRules.js";
 
 const VARIANTS = new Set(["normal", "shiny"]);
 
@@ -140,7 +142,10 @@ function copyReward(user, pid, p, variant, economy) {
       user.nonShinyDustEarnedThisWeek = earned + dust;
     }
   }
-  return { pokemonId: pid, pokemonName: p.name, tier, variant, ccGained: cc, dustGained: dust };
+  // Live event multipliers on what a Donation earns. The weekly normal-dust
+  // cap counts the dust before the multiplier, so an event never eats it.
+  const fx = liveEffects();
+  return { pokemonId: pid, pokemonName: p.name, tier, variant, ccGained: scaleEarned(cc, fx.cc), dustGained: scaleEarned(dust, fx.dust) };
 }
 
 /**

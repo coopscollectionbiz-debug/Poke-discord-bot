@@ -30,6 +30,9 @@ import { isMegaCapabilityEnabled } from "../../config/features.js";
 import { toTeamObj } from "../economyRules.js";
 import { slotCopyUid, slotBoxUid } from "../../services/ownership.js";
 import { copyTraining, addCopyExp, copiesOf } from "../../services/box.js";
+import { liveEffects } from "../../services/liveEvents.js";
+import { expMultiplier } from "../liveEventRules.js";
+import { getSpeciesEntry } from "../speciesCatalog.js";
 
 const bestCopyUid = (user, id, variant) => copiesOf(user, id, variant)[0]?.uid ?? null;
 import { battleItems } from "../../services/heldItems.js";
@@ -149,20 +152,25 @@ function applyExp(user, side, result, sideIndex) {
 
 // Adds gains[i] EXP to members[i] and reports each one's Level change and new
 // moves. base[i] (held items): the gain before an EXP item, reported when it differs.
-export function applyGains(user, members, gains, base = gains) {
+// A running Live event's EXP multiplier (optionally only for some types, by
+// the type of the Pokémon gaining) applies here, on top of held items.
+export function applyGains(user, members, gains, base = gains, fx = liveEffects()) {
   return members.map((m, i) => {
+    const eventMult = expMultiplier(fx, getSpeciesEntry(m.speciesId) ?? { id: m.speciesId, types: [] });
+    const gained = eventMult === 1 ? gains[i] : Math.floor(gains[i] * eventMult);
     // EXP goes to the copy that fought (docs/adr/0001); a member saved
     // before copies existed falls back to the line's best copy.
     const target = m.copyUid && user.box?.[m.copyUid] ? m.copyUid : bestCopyUid(user, m.speciesId, m.variant);
-    const { fromLevel, toLevel } = target ? addCopyExp(user, target, gains[i]) : addExp(user, m.speciesId, m.variant, gains[i]);
+    const { fromLevel, toLevel } = target ? addCopyExp(user, target, gained) : addExp(user, m.speciesId, m.variant, gained);
     return {
       key: trainingKey(m.speciesId, m.variant),
       name: m.name,
       fromLevel,
       toLevel,
-      gained: gains[i],
+      gained,
       learned: movesLearned(m.speciesId, fromLevel, toLevel).map((id) => getMove(id).name),
       ...(gains[i] !== base[i] ? { bonusFrom: m.item, baseGained: base[i] } : {}),
+      ...(eventMult !== 1 ? { eventMult } : {}),
       // Display only (the EXP card): which Mega this member battled as. The
       // EXP itself always goes to the base line above. Absent for ordinary
       // members, so their results are byte-for-byte unchanged.

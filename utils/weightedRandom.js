@@ -5,6 +5,8 @@
 
 import { getRank } from "./rankSystem.js";
 import { acquirablePokemon } from "./speciesCatalog.js";
+import { applyLimits, boostedWeights, pickWeighted, NO_EFFECTS } from "./liveEventRules.js";
+import { catchEffectsFor } from "../services/liveEvents.js";
 
 // ==========================================================
 // 🎯 BASE WEIGHTS (Pokéball baseline)
@@ -96,11 +98,9 @@ function normalizeTier(value) {
 // ==========================================================
 // 🎲 Core function: weighted roll with Ball + Rank multipliers
 // ==========================================================
-function weightedRoll(list, baseWeights, user, ballType = "pokeball") {
-  if (!Array.isArray(list) || list.length === 0) return null;
-
+function weightFn(baseWeights, user, ballType = "pokeball") {
   // Load multipliers
-  const rank = getRank(user.tp || 0);
+  const rank = getRank(user?.tp || 0);
   let rankBuffs = RANK_WEIGHT_MULTIPLIERS[rank] || {};
   const ballBuffs = BALL_MULTIPLIERS[ballType] || BALL_MULTIPLIERS.pokeball;
 
@@ -114,32 +114,19 @@ function weightedRoll(list, baseWeights, user, ballType = "pokeball") {
     };
   }
 
-  let total = 0;
-
-  const weighted = list.map((item) => {
+  return (item) => {
     const tier = normalizeTier(item.tier || item.rarity);
     let w = baseWeights[tier] ?? 0;
+    if (rankBuffs[tier]) w *= rankBuffs[tier]; // rank buff
+    if (ballBuffs[tier]) w *= ballBuffs[tier]; // ball buff
+    return w;
+  };
+}
 
-    // Apply rank buff
-    if (rankBuffs[tier]) w *= rankBuffs[tier];
-
-    // Apply ball buff
-    if (ballBuffs[tier]) w *= ballBuffs[tier];
-
-    total += w;
-    return { item, w };
-  });
-
-  if (total <= 0) return list[Math.floor(Math.random() * list.length)];
-
-  let roll = Math.random() * total;
-
-  for (const { item, w } of weighted) {
-    roll -= w;
-    if (roll <= 0) return item;
-  }
-
-  return weighted[weighted.length - 1].item;
+function weightedRoll(list, baseWeights, user, ballType = "pokeball") {
+  if (!Array.isArray(list) || list.length === 0) return null;
+  const weightOf = weightFn(baseWeights, user, ballType);
+  return pickWeighted(list.map((item) => ({ item, w: weightOf(item) })));
 }
 
 // ==========================================================
@@ -167,7 +154,15 @@ function filterPokemonPoolByBall(list, ballType) {
 // ==========================================================
 // 🎯 Pokémon selector (tier-aware, rank-aware, ball-aware)
 // ==========================================================
-export function selectRandomPokemonForUser(pool, user, source = "pokeball") {
+/**
+ * One random catch roll. Live events (services/liveEvents.js): Catch limits
+ * narrow the pool and Catch boosts reweight it. Free rolls always follow
+ * them; paid rolls (`paid: true`: Poké Balls, /recruit) only when the player
+ * opted in. Returns null when a paid, opted-in ball has nothing it may give.
+ *
+ * @param {{ paid?: boolean, fx?: object }} [opts] fx: precomputed catch effects
+ */
+export function selectRandomPokemonForUser(pool, user, source = "pokeball", { paid = false, fx = null } = {}) {
   // 🔧 FIX: ensure pool is an array; your pokemonData is an object
   let list = Array.isArray(pool) ? pool : Object.values(pool);
   // Generation controls: never hand out a species from a disabled generation,
@@ -177,13 +172,43 @@ export function selectRandomPokemonForUser(pool, user, source = "pokeball") {
 
   const valid = ["pokeball", "greatball", "ultraball"];
   const ballType = valid.includes(source) ? source : "pokeball";
+  const effects = fx ?? catchEffectsFor(user, { paid });
+
+  if (effects.limits.length) {
+    const limited = applyLimits(list, effects);
+    const usable = filterPokemonPoolByBall(limited, ballType);
+    // Paid and opted in: the event pool or nothing (no CC is spent).
+    if (paid && !usable.length) return null;
+    // Free rolls never come up empty: the dashboard refuses limits that empty
+    // a Poké Ball's pool, and if generations change later the roll falls back.
+    if (limited.length) list = limited;
+  }
 
   const filtered = filterPokemonPoolByBall(list, ballType);
   if (filtered.length > 0) {
     list = filtered;
   }
+  if (!list.length) return null;
 
-  return weightedRoll(list, POKEMON_RARITY_WEIGHTS, user, ballType);
+  const weightOf = weightFn(POKEMON_RARITY_WEIGHTS, user, ballType);
+  return pickWeighted(boostedWeights(list, effects, weightOf));
+}
+
+/** Balls that have nothing to give under the running Catch limits (greyed out for opted-in players). */
+export function emptyBalls(pool, effects) {
+  if (!effects.limits.length) return [];
+  const limited = applyLimits(acquirablePokemon(Array.isArray(pool) ? pool : Object.values(pool)), effects);
+  return ["pokeball", "greatball", "ultraball"].filter((b) => !filterPokemonPoolByBall(limited, b).length);
+}
+
+/** The weighted rows a roll would use (the dashboard's odds preview). */
+export function rollRows(pool, user, source = "pokeball", effects = NO_EFFECTS) {
+  let list = acquirablePokemon(Array.isArray(pool) ? pool : Object.values(pool));
+  const ballType = ["pokeball", "greatball", "ultraball"].includes(source) ? source : "pokeball";
+  list = applyLimits(list, effects);
+  const filtered = filterPokemonPoolByBall(list, ballType);
+  if (effects.limits.length || filtered.length) list = filtered;
+  return boostedWeights(list, effects, weightFn(POKEMON_RARITY_WEIGHTS, user, ballType));
 }
 
 

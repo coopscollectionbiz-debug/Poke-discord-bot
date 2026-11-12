@@ -2388,12 +2388,17 @@ function toggleMultiSelected(id) {
 function openDonateDuplicatesModal() {
   const rows = duplicateRows();
   if (!rows.length) return;
-  const { copies } = bulkTotals(rows);
+  const pickable = rows.some((r) => r.copies);
   openBulkConfirmModal({
     mode: "duplicates",
     rows,
-    title: `🧹 Donate ${copies} duplicate${copies === 1 ? "" : "s"}?`,
-    subtitle: bulkRules.keptTrained(rows, userData.trained) ? `You'll keep 1 untrained of each, and every TM-trained copy (${bulkRules.keptTrained(rows, userData.trained)}).` : "You'll keep 1 of each.",
+    title: (picked) => {
+      const { copies } = bulkTotals(picked);
+      return `🧹 Donate ${copies} duplicate${copies === 1 ? "" : "s"}?`;
+    },
+    subtitle: pickable
+      ? "You'll keep your best copy of each, plus anything on a team or with TM moves. Tap a Pokémon to keep it too."
+      : "You'll keep your best copy of each, plus anything on a team or with TM moves.",
   });
 }
 
@@ -2408,8 +2413,14 @@ function openMultiSelectDonateModal() {
   });
 }
 
+// Rows that name their copies (Donate Duplicates) show one tile per copy
+// with its Level; tapping a tile keeps that copy. `title` may be a function
+// of the rows still picked.
 function openBulkConfirmModal({ mode, rows, title, subtitle }) {
-  const { cc, dust } = bulkTotals(rows);
+  const perCopy = rows.some((r) => r.copies);
+  const picked = new Set(rows.flatMap((r) => r.uids ?? []));
+  const current = () => (perCopy ? bulkRules.pickedRows(rows, picked) : rows);
+  const titleText = () => (typeof title === "function" ? title(current()) : title);
   const overlay = createOverlay();
   const modal = document.createElement("div");
   modal.style.cssText = `
@@ -2419,35 +2430,84 @@ function openBulkConfirmModal({ mode, rows, title, subtitle }) {
     display: flex; flex-direction: column;
   `;
 
+  const sprite = (r, name) =>
+    `<img src="/public/sprites/pokemon/${r.variant === "shiny" ? "shiny" : "normal"}/${r.pokeId}.gif" alt="${name}">`;
   const tiles = rows
     .map((r) => {
       const name = pokemonData[r.pokeId]?.name || `#${r.pokeId}`;
       const shiny = r.variant === "shiny";
-      return `
+      if (!r.copies) {
+        return `
         <div class="bulk-tile${shiny ? " shiny" : ""}">
-          <img src="/public/sprites/pokemon/${shiny ? "shiny" : "normal"}/${r.pokeId}.gif" alt="${name}">
+          ${sprite(r, name)}
           <div class="bulk-tile-name">${name}</div>
           <div class="bulk-tile-count">${shiny ? "✨ " : ""}−${r.count}</div>
         </div>`;
+      }
+      return r.copies
+        .map((c) => `
+        <button type="button" class="bulk-tile bulk-copy${shiny ? " shiny" : ""}" data-uid="${c.uid}" aria-pressed="true"
+          aria-label="${shiny ? "Shiny " : ""}${name}, Level ${c.level}">
+          ${sprite(r, name)}
+          <div class="bulk-tile-name">${shiny ? "✨ " : ""}${name}</div>
+          <div class="bulk-tile-level">Lv ${c.level}</div>
+          <div class="bulk-tile-count"></div>
+        </button>`)
+        .join("");
     })
     .join("");
 
   modal.innerHTML = `
-    <h2 style="color:var(--cc-gold);margin:0 0 0.25rem;">${title}</h2>
+    <h2 class="bulk-title" style="color:var(--cc-gold);margin:0 0 0.25rem;"></h2>
     <p style="color:var(--cc-text-muted);margin:0 0 0.75rem;font-weight:600;">${subtitle}</p>
     <div class="bulk-grid">${tiles}</div>
-    <p style="color:var(--cc-gold);font-weight:800;margin:0.75rem 0 0;">💰 +${fmtCC(cc)} CC</p>
-    ${dust > 0 ? `<p style="color:var(--cc-gold);font-weight:900;margin:0.25rem 0 0;">✨ +${dust} Shiny Dust</p>` : ""}
+    <p class="bulk-cc" style="color:var(--cc-gold);font-weight:800;margin:0.75rem 0 0;"></p>
+    <p class="bulk-dust" style="color:var(--cc-gold);font-weight:900;margin:0.25rem 0 0;"></p>
     <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
       <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
       <button class="confirm-btn" style="background: var(--cc-gold); color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
     </div>
   `;
 
+  const confirmBtn = modal.querySelector(".confirm-btn");
+  const update = () => {
+    const now = current();
+    const { cc, dust, copies } = bulkTotals(now);
+    modal.querySelector(".bulk-title").textContent = titleText();
+    modal.querySelector(".bulk-cc").textContent = `💰 +${fmtCC(cc)} CC`;
+    const dustEl = modal.querySelector(".bulk-dust");
+    dustEl.textContent = dust > 0 ? `✨ +${dust} Shiny Dust` : "";
+    dustEl.style.display = dust > 0 ? "" : "none";
+    confirmBtn.disabled = copies === 0;
+    confirmBtn.style.opacity = copies === 0 ? "0.45" : "";
+    modal.querySelectorAll(".bulk-copy").forEach((el) => {
+      const on = picked.has(el.dataset.uid);
+      el.setAttribute("aria-pressed", String(on));
+      el.classList.toggle("kept", !on);
+      el.querySelector(".bulk-tile-count").textContent = on ? "Donate" : "Keep";
+    });
+  };
+  modal.querySelectorAll(".bulk-copy").forEach((el) =>
+    el.addEventListener("click", () => {
+      const uid = el.dataset.uid;
+      if (picked.has(uid)) picked.delete(uid);
+      else picked.add(uid);
+      update();
+    })
+  );
+  update();
+
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
-  const requestId = newRequestId();
-  modal.querySelector(".confirm-btn").addEventListener("click", () => {
-    withActionLock(() => handleBulkDonate(mode, rows, overlay, requestId));
+  // One id per payload: unticking a copy changes the request, so it gets a
+  // new id instead of conflicting with an earlier attempt.
+  const ids = new Map();
+  confirmBtn.addEventListener("click", () => {
+    // Send only what the server reads; the copy list is for this dialog.
+    const send = current().map(({ copies, ...r }) => r);
+    if (!send.length) return;
+    const key = JSON.stringify(send);
+    if (!ids.has(key)) ids.set(key, newRequestId());
+    withActionLock(() => handleBulkDonate(mode, send, overlay, ids.get(key)));
   });
 
   overlay.appendChild(modal);

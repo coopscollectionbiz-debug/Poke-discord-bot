@@ -29,42 +29,66 @@ export function onlyVariant(pokemon, pid) {
   return countsOf(pokemon, pid).shiny === 1 ? "shiny" : "normal";
 }
 
-// Every UNTRAINED copy past the first, per variant (shinies included).
-// Trained copies are always kept.
+// What Donate Duplicates offers, per variant (shinies included).
 //
 // copies: the per-copy rows from /api/user-pokemon
-//         ([uid, id, shiny, level, at, trained, teamBits]). With them,
-//         copies on any team are left out too, matching the server
-//         (utils/bulkDonate.js): it donates at most the untrained copies
-//         on no team, and always leaves one untrained copy. Without them
-//         (older payloads), team copies can't be seen and the counts
-//         alone are used.
+//         ([uid, id, shiny, level, at, trained, teamBits, exp]). With them
+//         this is the server's rule (utils/bulkDonate.js
+//         donatableDuplicates): never a copy on a team, never a TM-trained
+//         copy, and never the best untrained copy (highest EXP, ties by
+//         uid). Each row names its copies, lowest Level first:
+//         { pokeId, variant, count, uids, copies: [{ uid, level }] }.
+//         Without copy rows (older payloads) the counts alone are used:
+//         every untrained copy past the first, with no uids.
 export function duplicateRows(pokemon, pokemonData, trained = {}, copies = null) {
+  if (Array.isArray(copies)) return duplicateRowsFromCopies(pokemonData, copies);
   const rows = [];
-  const spare = Array.isArray(copies) ? spareByLine(copies) : null;
   const ids = Object.keys(pokemon || {}).map(Number).sort((a, b) => a - b);
   for (const pid of ids) {
     if (!pokemonData[pid]) continue; // server rejects unknown IDs
     const owned = countsOf(pokemon, pid);
     for (const variant of ["normal", "shiny"]) {
       const untrained = owned[variant] - trainedCount(trained, pid, variant);
-      let count = untrained - 1;
-      if (spare) count = Math.min(count, spare.get(`${pid}:${variant}`) ?? 0);
-      if (count > 0) rows.push({ pokeId: pid, variant, count });
+      if (untrained > 1) rows.push({ pokeId: pid, variant, count: untrained - 1 });
     }
   }
   return rows;
 }
 
-// "id:variant" → untrained copies on no team.
-function spareByLine(copies) {
-  const out = new Map();
-  for (const [, id, shiny, , , isTrained, teams] of copies) {
-    if (isTrained || teams) continue;
+const byExpThenUid = (a, b) => a.exp - b.exp || (a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0);
+
+function duplicateRowsFromCopies(pokemonData, copies) {
+  const lines = new Map(); // "id:variant" → untrained copies
+  for (const [uid, id, shiny, level, , isTrained, teams, exp] of copies) {
+    if (isTrained || !pokemonData[id]) continue; // server rejects unknown IDs
     const key = `${Number(id)}:${shiny ? "shiny" : "normal"}`;
-    out.set(key, (out.get(key) ?? 0) + 1);
+    if (!lines.has(key)) lines.set(key, []);
+    lines.get(key).push({ uid, level, teams, exp: Number(exp ?? 0) });
   }
-  return out;
+  const rows = [];
+  for (const [key, list] of lines) {
+    list.sort(byExpThenUid);
+    const best = list.at(-1);
+    const give = list.filter((c) => !c.teams && c !== best);
+    if (!give.length) continue;
+    const [pid, variant] = key.split(":");
+    rows.push({
+      pokeId: Number(pid),
+      variant,
+      count: give.length,
+      uids: give.map((c) => c.uid),
+      copies: give.map((c) => ({ uid: c.uid, level: c.level })),
+    });
+  }
+  return rows.sort((a, b) => a.pokeId - b.pokeId || (a.variant === "normal" ? -1 : 1));
+}
+
+// Rows trimmed to the copies still ticked in the confirmation.
+export function pickedRows(rows, picked) {
+  return rows
+    .map((r) => (r.uids ? { ...r, uids: r.uids.filter((u) => picked.has(u)) } : r))
+    .map((r) => (r.uids ? { ...r, count: r.uids.length } : r))
+    .filter((r) => r.count > 0);
 }
 
 // Why a card can't be picked in Multi-select, or null if it can.
@@ -78,9 +102,13 @@ export function multiSelectBlock(pid, { pokemon, pokemonData, savedTeam, trained
     // A normal and a shiny, or a Team copy, stays locked.
     const left = { [pid]: { normal: Math.min(owned.normal, 1), shiny: Math.min(owned.shiny, 1) } };
     const unlocks = multiSelectBlock(pid, { pokemon: left, pokemonData, savedTeam }) === null;
+    // Donate Duplicates keeps the best copy AND any team copy, so with a
+    // team copy it may leave two: only promise "down to 1" when it unlocks.
     return {
       title: "🔒 More Than One Copy",
-      message: `You have ${have}. Use Donate Duplicates to bring it down to 1${unlocks ? ", then select it" : ""}.`,
+      message: unlocks
+        ? `You have ${have}. Use Donate Duplicates to bring it down to 1, then select it.`
+        : `You have ${have}. Multi-select only takes Pokémon you own one of. Turn it off and tap ${name} to donate a copy on its own.`,
     };
   }
   if (owned.normal === 1 && owned.shiny === 1) {

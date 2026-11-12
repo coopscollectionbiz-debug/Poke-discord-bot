@@ -53,72 +53,39 @@ export function infoLines(pokemon) {
 // ==========================================================
 // 🧩 Command definition
 // ==========================================================
+/** The "Your stats" cards (one per owned variant, or base stats): AttachmentBuilders. */
+export async function inspectFiles(user, pokemon) {
+  const files = [];
+  for (const [i, slot] of inspectSlots(user, pokemon).entries()) {
+    const eyebrow = slot.level == null ? "NOT IN YOUR COLLECTION" : slot.shiny ? "YOUR SHINY" : "YOUR POKÉMON";
+    const card = await cardImage((animate) => threaded.inspect(slot, { eyebrow, animate }), `pokemon-${i + 1}`);
+    files.push(new AttachmentBuilder(card.buffer, { name: card.name }));
+  }
+  return files;
+}
+
+/** Text fallback for "Your stats" when a card can't render. */
+export function inspectText(user, pokemon) {
+  return `**${pokemon.name}  #${pokemon.id}**
+` + infoLines(pokemon) + (getSpecies(pokemon.id) ? `
+${battleInfo(user, pokemon.id)}` : "");
+}
+
+// Three-teams split: /inspectpokemon is an alias of /pokedex that opens on
+// "Your stats" (kept for about two weeks).
 export default {
   data: new SlashCommandBuilder()
     .setName("inspectpokemon")
-    .setDescription("Inspect details about a specific Pokémon by name or ID.")
-    // Explicit null so re-registering clears the old admin-only setting;
-    // Discord's docs don't say what an omitted field does on overwrite.
+    .setDescription("Old name: opens /pokedex on Your stats.")
     .setDefaultMemberPermissions(null)
-    .addStringOption((option) =>
-      option
-        .setName("name")
-        .setDescription("Pokémon name or Pokédex ID.")
-        .setRequired(true)
-    ),
-
+    .addStringOption((option) => option.setName("name").setDescription("Pokémon name or Pokédex number").setRequired(true).setAutocomplete(true)),
+  async autocomplete(interaction, trainerData) {
+    const { autocomplete } = await import("./pokedex.js");
+    return autocomplete(interaction, trainerData);
+  },
   async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-    const input = interaction.options.getString("name").trim();
-
-    // Validate input
-    const validation = validateNameQuery(input);
-    if (!validation.valid) {
-      return safeReply(interaction, {
-        content: `❌ ${validation.error}`,
-        flags: MessageFlags.Ephemeral,
-      });
-    }
-
-    // Use helper to find Pokémon
-    const pokemon = await findPokemonByName(validation.sanitized);
-
-    if (!pokemon) {
-      return safeReply(interaction, {
-        content: `❌ Pokémon **${input}** not found.`,
-        flags: MessageFlags.Ephemeral,
-      });
-    }
-
-    // ✅ Use hosted sprite URL (supports shiny later if needed)
-    const spriteUrl = pokemonSpriteUrl(pokemon.id, false);
-
-    const embed = new EmbedBuilder()
-      .setTitle(`${pokemon.name}  #${pokemon.id}`)
-      .setDescription(
-        infoLines(pokemon) +
-          (getSpecies(pokemon.id) ? `\n${battleInfo(trainerData[interaction.user.id], pokemon.id)}` : "")
-      )
-      .setImage(spriteUrl)
-      .setColor(0x1abc9c)
-      .setFooter({ text: "Pokémon data sourced from Coop's Collection" })
-      .setTimestamp();
-
-    // Rendered cards (utils/render/inspectCard.js); the embed above is the fallback.
-    try {
-      const files = [];
-      for (const [i, slot] of inspectSlots(trainerData[interaction.user.id], pokemon).entries()) {
-        const eyebrow = slot.level == null ? "NOT IN YOUR COLLECTION" : slot.shiny ? "YOUR SHINY" : "YOUR POKÉMON";
-        const card = await cardImage((animate) => threaded.inspect(slot, { eyebrow, animate }), `pokemon-${i + 1}`);
-        files.push(new AttachmentBuilder(card.buffer, { name: card.name }));
-      }
-      return await safeReply(interaction, { files, flags: MessageFlags.Ephemeral });
-    } catch (err) {
-      console.warn("⚠️ inspect card render failed; sending embed:", err?.message || err);
-    }
-
-    await safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
+    const { runPokedex } = await import("./pokedex.js");
+    return runPokedex(interaction, trainerData, client, { startOn: "stats" });
   },
 };
 

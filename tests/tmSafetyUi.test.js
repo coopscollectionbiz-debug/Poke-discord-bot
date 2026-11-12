@@ -8,6 +8,10 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
+import { normalizeBox } from "../services/box.js";
+// Live users are migrated to individual copies at load (docs/adr/0001);
+// fixtures are too, before any "nothing changed" snapshot is taken.
+const migrated = (u) => { normalizeBox(u); return u; };
 
 const dir = await fs.mkdtemp(path.join(os.tmpdir(), "tm-t5-"));
 process.env.TRAINERDATA_DIR = dir;
@@ -46,7 +50,7 @@ section("donate: a trained copy only with the TM warning confirmed");
 {
   const u = player();
   const base = { user: u, pokeId: 6, variant: "normal", pokemonData, economy, isOnTeam: notOnTeam };
-  const before = clone(u);
+  const before = clone(migrated(u));
   assertEqual(donateOne({ ...base, uid: B, rev: 1 }).code, "confirm_required", "no confirmation → refused");
   assertEqual(donateOne({ ...base, uid: B, rev: 0, confirmTrained: true }).code, "stale_confirmation", "old rev → refused");
   assertEqual(donateOne({ ...base, uid: "c_ZZZZZZZZZZ", rev: 1, confirmTrained: true }).code, "unknown_copy", "unknown copy → refused");
@@ -92,7 +96,7 @@ section("evolve: the chosen trained copy evolves with its moves");
 section("evolve: only trained copies left and no choice → refused before spending");
 {
   const { state, h } = setup({ [U]: { ...player(), pokemon: { 5: { normal: 1, shiny: 0 } }, customPokemon: { [B]: rec(B, 5, "normal", ["dragonclaw"]) } } });
-  const before = clone(state.td[U]);
+  const before = clone(migrated(state.td[U]));
   const r = await h.evolve({ body: { id: U, baseId: 5, targetId: 6, variant: "normal" }, isAuthorized: auth });
   assertEqual([r.status, r.body.code], [400, "choose_copy"], "choose_copy");
   assertEqual(state.td[U], before, "no Stones spent, nothing changed");

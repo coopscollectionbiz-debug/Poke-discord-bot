@@ -175,7 +175,7 @@ function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail
   // Clicks Fight! on the newest preview and answers each Revive menu with
   // answer(menu, index) until the run ends. Resolves to the Fight! click.
   const fightRun = async (answer) => {
-    const fight = button(`challenge_fight:${nonce()}`);
+    const fight = button(`challenge_fight_casual:${nonce()}`);
     let done = false;
     const playing = collectors.at(-1).h.collect(fight).then(() => { done = true; });
     for (let seen = 0; !done;) {
@@ -256,7 +256,7 @@ section("Refusals");
   const user = WEAK();
   assertEqual(
     ["no_team", "locked_elite4", "locked_blue", "cap", "pending_wager", "no_perms", "settled"].map((r) => refusal(r, user)),
-    ["Challenges use your Display team. Set it on the Teams page: run /dashboard.", "Earn all 8 Badges first. You have 0.", "Clear the Elite Four to challenge Blue.",
+    ["Challenges use your Casual or Ranked team. Set one on the Teams page: run /dashboard.", "Earn all 8 Badges first. You have 0.", "Clear the Elite Four to challenge Blue.",
       "You've used all 5 challenges today. They reset at midnight UTC.", "Finish your pending wager first.",
       "I can't post challenges in this channel. Try another one.", "This challenge already happened."],
     "exact copy");
@@ -295,7 +295,7 @@ section("The challenge channel");
   process.env.CHALLENGE_CHANNEL_ID = "C1";
   const home = harness();
   await home.run("brock");
-  assertEqual(embedJson(home.log.replies[0].components[0]).components.map((b) => b.label), ["Fight!", "Not now"], "in the challenge channel, the preview opens");
+  assertEqual(embedJson(home.log.replies[0].components[0]).components.map((b) => b.label), ["Fight with Casual", "Not now"], "in the challenge channel, the preview opens");
   delete process.env.CHALLENGE_CHANNEL_ID;
 }
 
@@ -354,7 +354,7 @@ section("Preview");
   assertTrue(!r.embeds?.length, "no embed");
   assertTrue(!textOf(r).includes("Lv"), "no Levels");
   const buttons = embedJson(r.components[0]).components;
-  assertEqual(buttons.map((b) => b.label), ["Fight!", "Not now"], "Fight! and Not now");
+  assertEqual(buttons.map((b) => b.label), ["Fight with Casual", "Not now"], "Fight! and Not now");
   assertEqual(t.collectors[0].opts.time, 120000, "buttons work for 2 minutes");
   assertEqual(t.trainerData.A.challenge, undefined, "a preview holds nothing");
 
@@ -387,7 +387,7 @@ section("The private EXP message");
 
   const fails = harness(STRONG());
   await fails.run("brock");
-  const b = fails.button(`challenge_fight:${fails.nonce()}`);
+  const b = fails.button(`challenge_fight_casual:${fails.nonce()}`);
   b.followUp = async () => { throw new Error("Invalid Webhook Token"); };
   let threw = false;
   await fails.collectors.at(-1).h.collect(b).catch(() => { threw = true; });
@@ -473,7 +473,7 @@ section("Clicks while a Fight! is saving");
   const t = harness(WEAK(), { save: () => new Promise((r) => { finishSave = r; }) });
   await t.run(LOSES);
   const nonce = t.log.replies[0].components[0].toJSON().components[0].custom_id.split(":")[1];
-  const fight = { user: { id: "A" }, customId: `challenge_fight:${nonce}`, updates: [], edits: [], replies: [], followUps: [],
+  const fight = { user: { id: "A" }, customId: `challenge_fight_casual:${nonce}`, updates: [], edits: [], replies: [], followUps: [],
     update: async (o) => { fight.updates.push(o); }, deferUpdate: async () => {}, editReply: async (o) => { fight.edits.push(o); },
     reply: async (o) => { fight.replies.push(o); }, followUp: async (o) => { fight.followUps.push(o); } };
   const fighting = t.collectors[0].h.collect(fight);
@@ -541,7 +541,7 @@ section("Review Focus: changes between preview and Fight!");
   await empty.run("brock");
   empty.trainerData.A.displayedPokemon = [];
   const b = await empty.click("fight");
-  assertEqual(textOf(b.edits[0]), "Challenges use your Display team. Set it on the Teams page: run /dashboard.", "an emptied Team is refused at the click");
+  assertEqual(textOf(b.edits[0]), "Challenges use your Casual or Ranked team. Set one on the Teams page: run /dashboard.", "an emptied Team is refused at the click");
   assertEqual([empty.log.channel.length, empty.trainerData.A.challenge], [0, undefined], "nothing posts or counts");
 
   const wager = harness();
@@ -657,14 +657,14 @@ section("Elite Four run: a Revive menu that can't be sent");
 {
   const t = harness(runner(), { menusFail: true });
   await t.run("elite4");
-  const fight = t.button(`challenge_fight:${t.nonce()}`);
+  const fight = t.button(`challenge_fight_casual:${t.nonce()}`);
   await t.collectors.at(-1).h.collect(fight);
   assertTrue(fight.followUps.length >= 1 && t.publicText().includes("Bruno (2 of 4)\n💊 No Pokémon was revived."), "counts as no pick, and the run goes on");
   assertEqual(t.trainerData.A.challenge.run, undefined, "to its end");
 
   const expired = harness(runner(), { menusFail: "silent" });
   await expired.run("elite4");
-  const late = expired.button(`challenge_fight:${expired.nonce()}`);
+  const late = expired.button(`challenge_fight_casual:${expired.nonce()}`);
   await expired.collectors.at(-1).h.collect(late);
   assertEqual(expired.trainerData.A.challenge.run, undefined, "a menu the bot's wrapper drops (an expired reply window) counts as no pick too");
 }
@@ -695,7 +695,7 @@ section("While a run is open");
   assertEqual(t.log.replies.at(-1), { content: "Finish your Elite Four run first.", flags: 64 }, "/challenge with an opponent refuses");
   await t.run(null);
   assertEqual(t.log.replies.at(-1).files?.[0]?.name, "board.png", "the board still works");
-  const old = t.button(`challenge_fight:${olderNonce}`);
+  const old = t.button(`challenge_fight_casual:${olderNonce}`);
   await olderCollector.h.collect(old);
   assertEqual(textOf(old.edits.at(-1)), "Finish your Elite Four run first.", "Fight! on an older preview refuses the same way");
   await playing;

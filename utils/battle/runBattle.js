@@ -28,7 +28,10 @@ import { resolveBattleMega } from "../../services/megaTeam.js";
 import { megaBattleEligibility, megaBattleProfile } from "../megas.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
 import { toTeamObj } from "../economyRules.js";
-import { slotCopyUid } from "../../services/ownership.js";
+import { slotCopyUid, slotBoxUid } from "../../services/ownership.js";
+import { copyTraining, addCopyExp, copiesOf } from "../../services/box.js";
+
+const bestCopyUid = (user, id, variant) => copiesOf(user, id, variant)[0]?.uid ?? null;
 import { battleItems } from "../../services/heldItems.js";
 import { expMultiplierFor } from "./items.js";
 
@@ -59,29 +62,28 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
   const mega = resolveBattleMega(user, { env, team });
   if (mega && !mega.ok && isMegaCapabilityEnabled("battle", env)) console.warn(`⚠️ Mega slot battles as its base form (${mega.reason}).`);
   const items = battleItems(user, equipmentTeam, { env });
-  const uids = new Map();
-  for (const entry of Array.isArray(team) ? team : []) {
-    const t = toTeamObj(entry);
-    if (!t || uids.has(`${t.id}:${t.variant}`)) continue;
-    uids.set(`${t.id}:${t.variant}`, slotCopyUid(user, { ...t, uid: entry?.uid }));
-  }
+  // Each slot is one copy (docs/adr/0001); normalizeTeam keeps its uid.
   return normalizeTeam(team, 6)
     .filter((slot) => (user.pokemon?.[slot.id]?.[slot.variant] ?? 0) > 0)
     .map((slot) => {
+      const copyUid = slotBoxUid(user, slot) ?? null;
+      const key = copyUid ? `u:${copyUid}` : `${slot.id}:${slot.variant}`; // held items + Mega slot
       const member = {
         speciesId: slot.id,
         variant: slot.variant,
         name: speciesName(slot.id),
-        level: getTraining(user, slot.id, slot.variant).level,
+        level: (copyUid && copyTraining(user, copyUid)?.level) ?? getTraining(user, slot.id, slot.variant).level,
       };
-      const uid = uids.get(`${slot.id}:${slot.variant}`) ?? null;
+      if (copyUid) member.copyUid = copyUid;
+      const uid = slotCopyUid(user, slot) ?? null; // a trained copy (TM moves)
       if (uid) member.uid = uid;
-      const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant, { uid });
+      // The slot's own copy's moves (any copy, docs/adr/0001), else the line's.
+      const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant, { uid: copyUid ?? uid });
       if (moves) member.moves = moves;
       // A slot battling as a Mega never uses a regular item (its Mega Stone fills the slot).
-      const item = items.get(`${slot.id}:${slot.variant}`);
-      if (item && !(mega?.ok && mega.key === `${slot.id}:${slot.variant}`)) member.item = item;
-      if (!mega?.ok || mega.key !== `${slot.id}:${slot.variant}`) return member;
+      const item = items.get(key) ?? (copyUid ? items.get(`${slot.id}:${slot.variant}`) : undefined);
+      if (item && !(mega?.ok && mega.key === key)) member.item = item;
+      if (!mega?.ok || mega.key !== key) return member;
       return { ...member, name: mega.profile.name, baseName: member.name, megaForm: mega.formId, battleProfile: mega.profile };
     });
 }
@@ -114,6 +116,16 @@ export function buildBattleTeam(user, { env = process.env } = {}) {
 }
 
 /** A player's fighters for this mode. */
+// /challenge and Trainer encounters (three-teams split): the player picks
+// their Casual or Ranked team; both fight at their REAL Levels there.
+export const TEAM_PICKS = ["casual", "ranked"];
+export function teamForPick(user, pick = "casual", opts = {}) {
+  if (pick === "ranked") return Array.isArray(user?.battleTeam) ? buildTeam(user ?? {}, { ...opts, team: user.battleTeam, movesetTeam: "battle", equipmentTeam: "battle" }) : [];
+  return buildTeam(user ?? {}, opts);
+}
+/** The picks this player can make right now (teams with at least one Pokémon). */
+export const availablePicks = (user, opts = {}) => TEAM_PICKS.filter((p) => teamForPick(user, p, opts).length > 0);
+
 export const teamFor = (user, mode, opts = {}) => (mode === "open" ? buildTeam(user ?? {}, opts) : buildBattleTeam(user ?? {}, opts));
 
 // EXP uses real Levels in every mode: the fighters' battle Levels are swapped
@@ -139,7 +151,10 @@ function applyExp(user, side, result, sideIndex) {
 // moves. base[i] (held items): the gain before an EXP item, reported when it differs.
 export function applyGains(user, members, gains, base = gains) {
   return members.map((m, i) => {
-    const { fromLevel, toLevel } = addExp(user, m.speciesId, m.variant, gains[i]);
+    // EXP goes to the copy that fought (docs/adr/0001); a member saved
+    // before copies existed falls back to the line's best copy.
+    const target = m.copyUid && user.box?.[m.copyUid] ? m.copyUid : bestCopyUid(user, m.speciesId, m.variant);
+    const { fromLevel, toLevel } = target ? addCopyExp(user, target, gains[i]) : addExp(user, m.speciesId, m.variant, gains[i]);
     return {
       key: trainingKey(m.speciesId, m.variant),
       name: m.name,

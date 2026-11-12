@@ -15,7 +15,8 @@ export const MISSING_ID_MESSAGE = "This page needs your dashboard link — run /
 
 export const NAV_ITEMS = Object.freeze([
   { key: "overview", label: "Overview", short: "Home", href: "/public/overview/", icon: "home" },
-  { key: "pokemon", label: "Collection", short: "Pokédex", href: "/public/picker-pokemon/", icon: "box" },
+  { key: "pokemon", label: "Collection", short: "Box", href: "/public/picker-pokemon/", icon: "box" },
+  { key: "pokedex", label: "Pokédex", short: "Dex", href: "/public/pokedex/", icon: "dex" },
   { key: "teams", label: "Teams", href: "/public/teams/", icon: "teams" },
   { key: "records", label: "Battle Records", short: "Records", href: "/public/battlerecords/", icon: "swords" },
   { key: "trainers", label: "Trainers", href: "/public/picker/", icon: "person" },
@@ -27,6 +28,7 @@ export const NAV_ITEMS = Object.freeze([
 const ICONS = `
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="cc-i-box" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="cc-i-dex" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" d="M8 17h8"/></symbol>
   <symbol id="cc-i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></symbol>
   <symbol id="cc-i-teams" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" d="M3 12h6m6 0h6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
   <symbol id="cc-i-swords" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 4l10 10M4 4h4M4 4v4M20 4 10 14M20 4h-4M20 4v4M7 17l3-3M14 14l3 3M5 19l2-2M19 19l-2-2"/></symbol>

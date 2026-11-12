@@ -9,6 +9,7 @@
 
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { memberCuteness, teamCuteness, cuteFactor } from "../utils/battle/cuteness.js";
 import { teamPower, surgeChance, rollSurge, cuteSurgeBoost } from "../utils/battle/power.js";
@@ -20,7 +21,7 @@ import { playBattle, createQueue } from "../utils/battle/playback.js";
 import { allMegas } from "../utils/megas.js";
 import { createNewUser } from "../utils/userSchema.js";
 
-const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
+const ROOT = fileURLToPath(new URL("..", import.meta.url)); // works on Windows too (URL.pathname gives "/E:/…")
 const DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data/battle/cuteness.json"), "utf8"));
 const NOW = new Date("2026-11-11T12:00:00Z");
 const CUTE_IDS = [25, 39, 133, 35, 175, 300]; // Pikachu, Jigglypuff, Eevee, Clefairy, Togepi, Skitty

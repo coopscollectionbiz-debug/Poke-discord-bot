@@ -26,7 +26,8 @@ import { autoMoveset } from "../utils/battle/moveset.js";
 import { getTraining } from "../utils/training.js";
 import { isTmEnabled } from "../config/tmFeatures.js";
 import { learnableMoves, chosenMoves, setMoveset, moveInfo, MAX_MOVES, TEAM_TYPES } from "./movesets.js";
-import { plainCount, customCopiesOf, slotCopyUid, createTrainedCopy, learnTmMove, assignLineSlotsToCopy } from "./ownership.js";
+import { plainCount, customCopiesOf, slotCopyUid, slotBoxUid, createTrainedCopy, learnTmMove, assignLineSlotsToCopy } from "./ownership.js";
+import { copyTraining } from "./box.js";
 
 const TEAM_FIELD = { display: "displayedPokemon", battle: "battleTeam" };
 const fail = (status, error, code, extra = {}) => ({ ok: false, status, error, code, ...extra });
@@ -35,13 +36,14 @@ const normV = (v) => (v === "shiny" ? "shiny" : "normal");
 /** 1-based slot of the target copy on one team, or null. uid null = an untrained slot of the line. */
 function slotOf(user, team, id, variant, uid) {
   const list = Array.isArray(user?.[TEAM_FIELD[team]]) ? user[TEAM_FIELD[team]] : [];
-  const i = list.findIndex((s) => s && typeof s === "object" && Number(s.id) === id && normV(s.variant) === variant && (slotCopyUid(user, s) ?? null) === uid);
+  // Every slot names its copy (docs/adr/0001): a named copy is matched by uid.
+  const i = list.findIndex((s) => s && typeof s === "object" && Number(s.id) === id && normV(s.variant) === variant && (uid ? s.uid === uid : (slotCopyUid(user, s) ?? null) === null));
   return i < 0 ? null : i + 1;
 }
 
 /** The moves this copy battles with on `team` now (its selection, else automatic). */
 function effectiveMoves(user, team, id, variant, uid) {
-  return chosenMoves(user, team, id, variant, { uid }) ?? autoMoveset(id, getTraining(user, id, variant).level);
+  return chosenMoves(user, team, id, variant, { uid }) ?? autoMoveset(id, (uid && copyTraining(user, uid)?.level) ?? getTraining(user, id, variant).level);
 }
 
 /** Teams the target copy is on → { team: { slot, moves } }. */
@@ -113,20 +115,23 @@ export function teachTm(user, req = {}, { env = process.env, now = Date.now(), r
 
   // Target copy: a named trained copy (with the rev the dialog showed) or an untrained one.
   let uid = null;
+  let plainUid = null; // a named untrained copy (docs/adr/0001): it becomes the trained one
   if (req.uid != null) {
     uid = slotCopyUid(user, { id, variant: v, uid: req.uid });
-    if (!uid) return fail(409, "That Pokémon changed since you opened this. Check and try again.", "stale_copy");
-    if (req.rev !== (user.customPokemon[uid].rev ?? 0)) return fail(409, "That Pokémon changed since you opened this. Check and try again.", "stale_copy");
+    if (!uid) {
+      plainUid = slotBoxUid(user, { id, variant: v, uid: req.uid });
+      if (!plainUid) return fail(409, "That Pokémon changed since you opened this. Check and try again.", "stale_copy");
+    } else if (req.rev !== (user.customPokemon[uid].rev ?? 0)) return fail(409, "That Pokémon changed since you opened this. Check and try again.", "stale_copy");
   } else if (plainCount(user, id, v) < 1) {
     return fail(409, "You have no untrained copy left. Check and try again.", "stale_copy");
   }
-  if (learnableMoves(user, id, v, { uid }).some((m) => m.id === move)) {
+  if (learnableMoves(user, id, v, { uid: uid ?? plainUid }).some((m) => m.id === move)) {
     return fail(400, `It already knows ${moveInfo(move).name}.`, "already_known");
   }
 
   // Teams this copy is on: the dialog's view must still be current, and each
   // needs an explicit choice.
-  const teams = teamsOf(user, id, v, uid);
+  const teams = teamsOf(user, id, v, uid ?? plainUid);
   const expect = req.expect && typeof req.expect === "object" ? req.expect : {};
   const equip = req.equip && typeof req.equip === "object" ? req.equip : {};
   for (const team of TEAM_TYPES) {
@@ -156,7 +161,7 @@ export function teachTm(user, req = {}, { env = process.env, now = Date.now(), r
   if (!spent.ok) return fail(400, spent.error ?? "Couldn't use the TM.", "no_tm");
   let created = false;
   if (!uid) {
-    const made = createTrainedCopy(user, id, v, now);
+    const made = createTrainedCopy(user, id, v, now, plainUid);
     if (!made.ok) throw new Error(`teachTm: ${made.code} after validation`);
     uid = made.uid;
     created = true;

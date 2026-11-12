@@ -364,3 +364,13 @@ button.tm-stage:focus-visible { outline: 2px solid var(--cc-blue); outline-offse
 .tm-tile .tm-tile-btn { padding-bottom: 36px; } /* own row for the info button: it never covers the Level / Mythic line */
 /* Copy a whole team from the other one */
 .tm-copyteam { padding: 0 14px; font-size: 13px; }
+
+/* Three-teams split: Showcase · Casual · Ranked. */
+.tm-switch--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tm-copyteams { display: flex; flex-wrap: wrap; gap: 6px; }
+.tm-mem--showcase { background: var(--cc-mega, #b45cf0); color: #fff; }
+@media (max-width: 480px) {
+  .tm-switch--3 .tm-mini { display: none; }
+  .tm-switch--3 .tm-tab-title { font-size: 13px; }
+  .tm-switch--3 .tm-tab-title small { display: none; } /* counts don't fit three tabs on a phone */
+}

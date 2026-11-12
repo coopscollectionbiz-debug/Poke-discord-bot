@@ -89,7 +89,8 @@ export async function buyHeldItem(userId, itemId) {
 export function openItemPicker({ userId, team, s, name, getHeld, onChange, nameOf, warningFor = null }) {
   lastFocus = document.activeElement;
   const d = ensureDialog();
-  const line = `${s.id}:${s.variant}`;
+  // The slot's copy (the item belongs to that Pokémon on this team), else its line.
+  const line = s.uid ? `u:${s.uid}` : `${s.id}:${s.variant}`;
   const ui = { q: "", group: "all", ownedOnly: true, busy: false, confirmMove: null };
 
   const loadout = () => getHeld().teams?.[team] ?? [];
@@ -190,7 +191,7 @@ export function openItemPicker({ userId, team, s, name, getHeld, onChange, nameO
     const before = current();
     try {
       const { res, data } = await postJson("/api/held-items/equip", {
-        id: userId, requestId: newRequestId(), team, pokeId: s.id, variant: s.variant, itemId, move, expectedRev: getHeld().rev,
+        id: userId, requestId: newRequestId(), team, pokeId: s.id, variant: s.variant, ...(s.uid ? { uid: s.uid } : {}), itemId, move, expectedRev: getHeld().rev,
       });
       if (data.rev != null || data.teams) onChange(data);
       if (res.status === 409 && data.code === "stale") { toast(data.error, { tone: "error" }); return; }

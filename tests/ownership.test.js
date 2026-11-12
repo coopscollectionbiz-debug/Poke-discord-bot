@@ -11,10 +11,14 @@
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
 import {
   plainCount, customCopiesOf, removeCopies, canRemoveCopies, transformCopy, canTransformCopy,
-  pruneEmptyLine, wipeCollection, ownershipProblems,
+  pruneEmptyLine, wipeCollection, ownershipProblems, createTrainedCopy,
 } from "../services/ownership.js";
 import { bulkDonate, donateOne } from "../utils/bulkDonate.js";
 import { giftPokemon } from "../commands/gift.js";
+import { normalizeBox, addCopy } from "../services/box.js";
+// Live users are migrated to individual copies at load (docs/adr/0001);
+// fixtures are too, before any "nothing changed" snapshot is taken.
+const migrated = (u) => { normalizeBox(u); return u; };
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const rec = (uid, speciesId, variant, extra = {}) => ({ uid, speciesId, variant, rev: 1, tmMoves: ["dragonclaw"], history: [], createdAt: 1, ...extra });
@@ -58,7 +62,7 @@ section("DS-1/DS-2: removal uses plain copies first and fails closed");
   assertEqual(Object.keys(u.customPokemon).sort(), ["c_BBBBBBBBBB", "c_CCCCCCCCCC"], "both trained copies remain");
 
   const v = charizards();
-  const before = clone(v);
+  const before = clone(migrated(v));
   const r2 = removeCopies(v, { id: 6, variant: "normal", n: 2 });
   assertEqual(r2.code, "custom_copies_protected", "donating 2 without naming a trained copy is refused");
   assertEqual(r2.protected.map((c) => c.tmMoves[0]).sort(), ["solarbeam", "thunderpunch"], "the refusal lists the trained copies and their TM moves");
@@ -77,7 +81,7 @@ section("DS-3/DS-4: an explicitly named trained copy with the confirmed rev");
   assertEqual(u.displayedPokemon[0].uid, undefined, "team slots no longer reference it");
 
   const s = charizards();
-  const before = clone(s);
+  const before = clone(migrated(s));
   const stale = removeCopies(s, { id: 6, variant: "normal", n: 2, customUids: ["c_BBBBBBBBBB"], confirmRevs: { c_BBBBBBBBBB: 0 } });
   assertEqual(stale.code, "stale_confirmation", "an old rev is refused");
   assertEqual(s, before, "nothing changed");
@@ -106,7 +110,7 @@ section("removing the last copies");
 section("DS-5/DS-6: bulk donation never includes trained copies");
 {
   const u = charizards();
-  const before = clone(u);
+  const before = clone(migrated(u));
   const r = bulkDonate({ user: u, mode: "duplicates", items: [{ pokeId: 6, variant: "normal", count: 1 }], pokemonData, economy, isOnTeam: notOnTeam });
   assertTrue(!!r.error && /TM-trained/.test(r.error), "duplicates: 1 plain Charizard can't be donated (keeps 1 plain + trained)");
   assertEqual(u, before, "refused bulk changes nothing");
@@ -128,12 +132,16 @@ section("single donation (donateOne)");
   const r = donateOne({ user: u, pokeId: 6, variant: "normal", pokemonData, economy, isOnTeam: notOnTeam });
   assertTrue(!r.error && r.gainedCC === 1000, "the plain Charizard is donated for its usual 1,000 CC");
   assertEqual([u.pokemon[6].normal, u.cc, Object.keys(u.customPokemon).length], [2, 1000, 2], "trained copies untouched");
-  const before = clone(u);
+  const before = clone(migrated(u));
   const r2 = donateOne({ user: u, pokeId: 6, variant: "normal", pokemonData, economy, isOnTeam: notOnTeam });
   assertEqual(r2.code, "custom_copies_protected", "only trained copies left → refused, never auto-picked");
   assertEqual(u, before, "no CC, Dust or copies change on refusal");
-  const team = donateOne({ user: charizards(), pokeId: 6, variant: "normal", pokemonData, economy, isOnTeam: () => true });
-  assertTrue(/teams/.test(team.error), "team rule unchanged");
+  // Individual copies: the copy on a team is locked, not the whole line.
+  const t = migrated(charizards());
+  const plainUid = Object.keys(t.box).find((k) => t.box[k].id === 6 && !t.customPokemon[k]);
+  t.displayedPokemon = [{ id: 6, variant: "normal", uid: plainUid }];
+  const team = donateOne({ user: t, pokeId: 6, variant: "normal", pokemonData, economy, isOnTeam: () => true, uid: plainUid });
+  assertTrue(/teams/.test(team.error) && team.code === "on_team", "the team copy can't be donated");
 }
 
 section("DS-10: a repeated donate request id donates once");
@@ -161,7 +169,7 @@ section("D4: gift moves plain copies only");
 {
   const u = charizards();
   const rcpt = { pokemon: {} };
-  const before = clone(u);
+  const before = clone(migrated(u));
   const r = giftPokemon(u, rcpt, "6", "Charizard", 2);
   assertTrue(/TM-trained/.test(r), "gifting 2 when only 1 is plain is refused");
   assertEqual([u, rcpt], [before, { pokemon: {} }], "nothing moved");
@@ -178,7 +186,7 @@ section("EV/SH: evolution and shiny craft");
   assertTrue(r.ok && r.movedCustom === null, "EV-2: without a uid the plain Charmeleon evolves");
   assertEqual([u.pokemon[5].normal, u.pokemon[6].normal, u.customPokemon.c_MMMMMMMMMM.speciesId], [1, 4, 5], "the trained Charmeleon stays a Charmeleon");
 
-  const before = clone(u);
+  const before = clone(migrated(u));
   const r2 = transformCopy(u, { from: { id: 5, variant: "normal" }, to: { id: 6, variant: "normal" } });
   assertEqual(r2.code, "choose_copy", "EV-3: only a trained copy left and no uid → refused");
   assertEqual(u, before, "nothing changed");
@@ -222,11 +230,13 @@ section("DS-12/PS-7: random operations keep invariant I-1 and conserve copies");
       const snap = JSON.stringify(u);
       const op = rnd(5);
       let r = { ok: true }, delta = 0;
-      if (op === 0) { u.pokemon[id] ??= { normal: 0, shiny: 0 }; u.pokemon[id][variant] += 1; delta = 1; }
+      // Catches and TM teaching go through the real write paths (services/box.js).
+      if (op === 0) { addCopy(u, id, variant, { exp: 1000 }); delta = 1; }
       else if (op === 1 && plainCount(u, id, variant) > 0) {
-        // simulate teaching: promote a plain copy (records are created only by T4 later)
-        const uid = `c_${String(uidN++).padStart(10, "0")}`;
-        (u.customPokemon ??= {})[uid] = rec(uid, id, variant); // the service drops an empty map
+        const made = createTrainedCopy(u, id, variant);
+        u.customPokemon[made.uid].tmMoves = ["dragonclaw"];
+        u.customPokemon[made.uid].rev = 1;
+        uidN++;
       } else if (op === 2) { const n = 1 + rnd(3); r = removeCopies(u, { id, variant, n }); delta = r.ok ? -n : 0; }
       else if (op === 3) {
         const named = customCopiesOf(u, id, variant)[0];

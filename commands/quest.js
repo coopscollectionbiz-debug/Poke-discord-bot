@@ -20,6 +20,7 @@ import { lockUser } from "../utils/userLocks.js";
 import { grantTrainer } from "../services/assets.js";
 import { trackProgress } from "../progression/achievements.js";
 import { recruitPool } from "./recruit.js";
+import { catchAnnouncement } from "../utils/render/catchMessage.js";
 
 // ==========================================================
 // ⏱️ Constants
@@ -67,7 +68,7 @@ export default {
 
       if (rewardType === "pokemon") {
         const shiny = rollForShiny(user.tp || 0);
-        grantCatch(user, pick.id, shiny ? "shiny" : "normal");
+        const caught = grantCatch(user, pick.id, shiny ? "shiny" : "normal");
         user.cc = (user.cc || 0) + QUEST_CC_REWARD;
         user.lastQuest = Date.now();
 
@@ -89,6 +90,10 @@ export default {
           .setDescription(withSaveNote(shiny ? `✨ You discovered a **Shiny ${pick.name}!**` : `You found a **${pick.name}!**`, ack))
           .setThumbnail(pokemonSpriteUrl(pick.id, shiny))
           .setFooter({ text: `+${QUEST_CC_REWARD} CC | Balance: ${user.cc} CC` });
+        // The catch card, as random catches use (three-teams split); the embed if it can't render.
+        const shown = await catchAnnouncement({ user, catcher: interaction.user, pokemonId: pick.id, shiny, catchResult: caught, fallback: () => ({ embeds: [embed] }) });
+        const caption = withSaveNote(`🏆 Quest complete! +${QUEST_CC_REWARD} CC · Balance: ${user.cc} CC`, ack);
+        return safeReply(interaction, { ...shown.message, content: shown.message.embeds ? undefined : caption, flags: MessageFlags.Ephemeral });
       } else {
         const file = getTrainerKey(pick);
         grantTrainer(user, file);

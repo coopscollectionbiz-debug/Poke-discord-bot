@@ -39,6 +39,17 @@ import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
 import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid, carryCopyUids, trainedSummary } from "./services/ownership.js";
+import { normalizeBox, allCopies, slotsHolding, mergeDex } from "./services/box.js";
+import { normalizeShowcase, prepareShowcaseSelection } from "./services/showcaseTeam.js";
+
+// Compact per-copy rows for the dashboard (see the /api/user payload).
+const TEAM_BIT = { displayedPokemon: 1, battleTeam: 2, showcaseTeam: 4 };
+function copyRows(u) {
+  return allCopies(u).map((c) => [
+    c.uid, c.id, c.variant === "shiny" ? 1 : 0, c.level, c.at ?? 0, c.trained ? 1 : 0,
+    slotsHolding(u, c.uid).reduce((m, s) => m | (TEAM_BIT[s.field] ?? 0), 0),
+  ]);
+}
 
 // Local saver — writes trainerData.json (in TRAINERDATA_DIR) & marks dirty
 import {
@@ -53,7 +64,8 @@ import {
   getSaveHealth,
 } from "./utils/saveQueue.js";
 import { readLocalCandidates, readFileCandidate, setSeqAtLeast, nextSeq, dataDir, getEpoch, setEpoch, getSeq } from "./persistence/localStore.js";
-import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup, verifyUpload, newestChannelEpoch } from "./persistence/discordBackups.js";
+import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup, verifyUpload, newestChannelEpoch, listBackupPage } from "./persistence/discordBackups.js";
+import { runDexBackfill, readState as readDexScanState, writeState as writeDexScanState } from "./services/dexBackfill.js";
 import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/loader.js";
 import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
@@ -346,6 +358,13 @@ normalizeDisplayedTeam(user);
 // stores a one-time notice (services/battleTeam.js trimBattleTeamMythics).
 normalizeNotices(user);
 normalizeBattleTeam(user);
+// Individual copies + Pokédex (services/box.js, docs/adr/0001): migrates
+// counts into copies on first run, reconciles after a rollback, and points
+// every team slot at one specific copy.
+normalizeBox(user);
+// Showcase team (services/showcaseTeam.js): filled once from the Casual team
+// at launch; afterwards each slot keeps its own copy.
+normalizeShowcase(user);
 // Held items: team equipment follows the cleaned teams (assignments of
 // Pokémon no longer on a team, Mega slots and unowned items are dropped;
 // unlocks are never touched). Never creates the field.
@@ -540,6 +559,9 @@ app.get("/public/picker", (_, res) =>
 );
 app.get("/public/picker-pokemon", (_, res) =>
   res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
+);
+app.get("/public/pokedex", (_, res) =>
+  res.sendFile(path.join(staticPath, "pokedex", "index.html"))
 );
 app.get("/public/overview", (_, res) =>
   res.sendFile(path.join(staticPath, "overview", "index.html"))
@@ -936,6 +958,24 @@ async function loadTrainerData() {
     // normalizeUserSchema → normalizeBattleTeam; count them for the boot log.
     const trimmed = Object.entries(data).filter(([id, u]) => peekNotices(u, NOTICE_KINDS.BATTLE_TEAM_TRIM).length > (trimmedBefore.get(id) || 0)).length;
     console.log(`⚔️ Battle teams trimmed to one mythic-tier Pokémon: ${trimmed}`);
+  }
+  // Pokédex backfill (docs/adr/0001): species from historical snapshots,
+  // built offline by tools/build-pokedex-backfill.mjs. Union only, so it is
+  // safe to leave set or to run again. The file holds player ids: it lives
+  // on the data volume, never in the repository.
+  if (process.env.POKEDEX_BACKFILL_FILE) {
+    try {
+      const raw = JSON.parse(fsSync.readFileSync(process.env.POKEDEX_BACKFILL_FILE, "utf8"));
+      let players = 0, entries = 0;
+      for (const [id, masks] of Object.entries(raw?.users ?? {})) {
+        if (!data[id]) continue;
+        const n = mergeDex(data[id], masks);
+        if (n) { players++; entries += n; }
+      }
+      console.log(`📖 Pokédex backfill: ${entries} species added for ${players} player(s)`);
+    } catch (err) {
+      console.error("⚠️ Pokédex backfill not applied:", err?.message || err);
+    }
   }
   // Release C: retroactive achievement recognition (idempotent, once per
   // catalog revision per player; recognition only, no rewards).
@@ -1621,6 +1661,19 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
 
 
 client.on("interactionCreate", async (interaction) => {
+  // Autocomplete (e.g. /pokedex name): answered at once from memory, never
+  // logged per keystroke. A command without a handler answers nothing.
+  if (interaction.isAutocomplete?.()) {
+    const cmd = client.commands.get(interaction.commandName);
+    try {
+      if (cmd?.autocomplete) await cmd.autocomplete(interaction, trainerData ?? {});
+      else await interaction.respond([]);
+    } catch (e) {
+      await interaction.respond([]).catch(() => {});
+    }
+    return;
+  }
+
   // ✅ TELEMETRY (consolidated)
   lastInteractionAtMs = Date.now();
 
@@ -2212,6 +2265,12 @@ app.get("/api/user-pokemon", (req, res) => {
     // TM system (T5): trained copies per line, for the copy choosers in
     // donate / evolve / shiny craft / Teams. { "6:normal": [{ uid, rev, tmMoves, teams }] }
     trained: trainedSummary(u),
+    showcaseTeam: Array.isArray(u.showcaseTeam) ? u.showcaseTeam : [], // three-teams split
+    // Pokédex (ever caught; never drops): { id: 1 normal | 2 shiny | 3 both }.
+    pokedex: u.pokedex ?? {},
+    // Collection: every copy, one entry each (docs/adr/0001), for the box grid.
+    // [uid, id, shiny 0|1, level, caughtAt|0, trained 0|1, teams bitmask (1 casual, 2 ranked, 4 showcase)]
+    copies: copyRows(u),
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
     // One-time notices (services/notices.js); the Teams page shows the
     // Battle team ones and dismisses them via /api/dismiss-notices.
@@ -2350,13 +2409,27 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
     if (!id || !Array.isArray(team)) {
       return res.status(400).json({ success: false, error: "Missing id/team" });
     }
-    if (teamType !== "display" && teamType !== "battle") {
+    if (teamType !== "display" && teamType !== "battle" && teamType !== "showcase") {
       return res.status(400).json({ success: false, error: "Unknown team type" });
     }
     if (!requireDashboardSession(req, id)) {
       return res
         .status(403)
         .json({ success: false, error: "Invalid or expired session" });
+    }
+    // Showcase team (three-teams split): its own rules (repeats as separate
+    // copies, any unlocked Megas, no moves or items), so its own short path.
+    if (teamType === "showcase") {
+      return await lockUser(id, async () => {
+        const user = trainerData[id];
+        if (!user) return res.status(404).json({ success: false, error: "User not found" });
+        const u = normalizeUserSchema(id, user);
+        const prepared = prepareShowcaseSelection(u, team);
+        if (!prepared.ok) return res.status(prepared.status).json({ success: false, error: prepared.error, code: prepared.code });
+        u.showcaseTeam = prepared.team;
+        const saveAck = await saveAndAck(trainerData);
+        return res.json({ ...saveAckFields(saveAck), success: true, teamType, showcaseTeam: u.showcaseTeam, currentTeam: u.displayedPokemon, battleTeam: hasBattleTeam(u) ? u.battleTeam : null });
+      });
     }
     // Optional: this team was copied from the other one (Teams page "Copy
     // from …"); the copied Pokémon's moves come along in the same write.
@@ -2596,6 +2669,16 @@ app.post("/api/pokemon/donate-bulk", express.json({ limit: "100kb" }), async (re
 // Costs dust by tier of the Pokémon being converted.
 // Blocks converting if the NORMAL variant is currently displayed.
 // ==========================================================
+app.post("/api/pokemon/feed", express.json(), async (req, res) => {
+  try {
+    const r = await gameplay.feed({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(r.status).json(r.body);
+  } catch (err) {
+    console.error("❌ /api/pokemon/feed:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
   try {
     const r = await gameplay.convertToShiny({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
@@ -2749,6 +2832,7 @@ async function retryLoadLoop() {
     await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
+    startDexBackfill();
     return;
   }
 
@@ -2766,7 +2850,49 @@ setTimeout(retryLoadLoop, retryMs);
   await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
+  startDexBackfill();
 });
+
+// ==========================================================
+// 📖 Pokédex backfill from the bot's own backup history (docs/adr/0001,
+// services/dexBackfill.js). Runs once, in the background, after the bot is
+// ready: reads the storage channel slowly (read-only) and adds every species
+// a player ever had in a backup to their Pokédex. Resumes after a restart;
+// POKEDEX_SCAN=off skips it.
+// ==========================================================
+let dexScanRunning = false;
+function startDexBackfill() {
+  if (dexScanRunning || process.env.POKEDEX_SCAN === "off" || !process.env.STORAGE_CHANNEL_ID) return;
+  const dir = dataDir();
+  const state = readDexScanState(dir);
+  if (state?.done) return console.log(`📖 Pokédex scan: done earlier (${state.backups} backups, ${state.added} species for ${state.players} players)`);
+  dexScanRunning = true;
+  console.log(state?.cursor ? `📖 Pokédex scan: resuming (${state.backups} backups read so far)` : "📖 Pokédex scan: starting (reads the backup history in the background)");
+  let lastLog = state?.backups ?? 0;
+  runDexBackfill({
+    listPage: (before) => listBackupPage(client, process.env.STORAGE_CHANNEL_ID, before),
+    download: async (url) => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.text();
+    },
+    trainerData,
+    state,
+    saveState: (st) => {
+      try { writeDexScanState(dir, st); } catch (e) { console.warn("⚠️ Pokédex scan state not saved:", e?.message || e); }
+      if (st.backups - lastLog >= 100) { lastLog = st.backups; console.log(`📖 Pokédex scan: ${st.backups} backups read, ${st.added} species added for ${st.players} players`); }
+    },
+    onChanged: () => { enqueueSave(trainerData); },
+    shouldStop: () => shuttingDown,
+    pauseMs: 1000,
+    log: (m) => console.warn(`📖 Pokédex scan: ${m}`),
+  })
+    .then((st) => console.log(st.done
+      ? `📖 Pokédex scan finished: ${st.backups} backups read, ${st.skipped} skipped, ${st.added} species added for ${st.players} players, ${st.unlocks} achievements unlocked`
+      : `📖 Pokédex scan paused at ${st.backups} backups; resumes next boot`))
+    .catch((e) => console.warn("⚠️ Pokédex scan stopped (resumes next boot):", e?.message || e))
+    .finally(() => { dexScanRunning = false; });
+}
 
 // ==========================================================
 // 🚀 LAUNCH WEB SERVER

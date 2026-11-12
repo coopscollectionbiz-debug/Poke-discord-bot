@@ -11,7 +11,7 @@
 import { randomUUID } from "crypto";
 import { CHALLENGES, enabledSprites } from "./roster.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.js";
-import { buildTeam, applyGains, withoutMegaStats, withMegaStats } from "../battle/runBattle.js";
+import { buildTeam, teamForPick, availablePicks, applyGains, withoutMegaStats, withMegaStats } from "../battle/runBattle.js";
 import { simulateBattle } from "../battle/sim.js";
 import { teamPower } from "../battle/power.js";
 import { teamExp, utcDay } from "../battle/rewards.js";
@@ -43,10 +43,11 @@ export function isUnlocked(user, key) {
 
 // Read-only: why this challenge can't happen right now, or null. /challenge
 // runs it before the preview, and runChallenge re-runs it under the lock.
-export function challengeBlock({ trainerData, userId, key, now = new Date() }) {
+export function challengeBlock({ trainerData, userId, key, now = new Date(), pick = null }) {
   const user = trainerData[userId];
   if (user?.challenge?.run) return "run_open";
-  if (!user || !buildTeam(user).length) return "no_team";
+  // pick null: either team will do (the preview); else that team must be set.
+  if (!user || (pick ? !teamForPick(user, pick).length : !availablePicks(user).length)) return "no_team";
   if (!isUnlocked(user, key)) return key === "elite4" ? "locked_elite4" : "locked_blue";
   const attempts = user.challenge?.day === utcDay(now) ? user.challenge.attempts : 0;
   if (attempts >= CHALLENGE.perDay) return "cap";
@@ -175,11 +176,11 @@ function settle({ user, userId, key, team, totals, cleared, day, maxLoss, now })
   return { exp, prize, badge, unlocked, ccLost };
 }
 
-export function runChallenge({ trainerData, userId, key, seed, maxLoss = Infinity, now = new Date() }) {
-  const reason = challengeBlock({ trainerData, userId, key, now });
+export function runChallenge({ trainerData, userId, key, seed, maxLoss = Infinity, now = new Date(), pick = "casual" }) {
+  const reason = challengeBlock({ trainerData, userId, key, now, pick });
   if (reason) return { ok: false, reason };
   const user = trainerData[userId];
-  const team = buildTeam(user);
+  const team = teamForPick(user, pick); // Casual or Ranked, real Levels
   const { fights, cleared } = simulateChallenge({ team, opponents: CHALLENGES[key].opponents, seed });
   const totals = team.map((_, i) => fights.reduce((t, f) => t + f.gains[i], 0));
   const day = utcDay(now);
@@ -245,11 +246,11 @@ function breakThenPlay(user, userId, slot, now) {
   return playStep(user, userId, carried.members, now);
 }
 
-export function startRun({ trainerData, userId, seed, maxLoss = Infinity, channelId = null, now = new Date() }) {
-  const reason = challengeBlock({ trainerData, userId, key: "elite4", now });
+export function startRun({ trainerData, userId, seed, maxLoss = Infinity, channelId = null, now = new Date(), pick = "casual" }) {
+  const reason = challengeBlock({ trainerData, userId, key: "elite4", now, pick });
   if (reason) return { ok: false, reason };
   const user = trainerData[userId];
-  const team = buildTeam(user);
+  const team = teamForPick(user, pick); // frozen for the whole run, so the pick holds
   const day = utcDay(now);
   const record = getChallengeRecord(user, day);
   record.attempts++;

@@ -98,6 +98,9 @@ const MEGA_USERS = [
   // hold a regular item (read-only Mega checks), and the held-item feature
   // flags live in the shared config/features.js. No Mega acquisition here.
   "services/heldItems.js", "services/heldItemsApi.js",
+  // Showcase team (three-teams split): shows any number of unlocked Megas
+  // (read-only display checks: unlocked on the line, allowed on teams).
+  "services/showcaseTeam.js", "utils/render/teamView.js",
 ];
 const megaModule = /megaUnlocks\.js|megas\.js|config\/features\.js|megaRewards\.js|megaApi\.js|megaTeam\.js|\/mega\.js|"\.\/mega\.js"/;
 const users = live.filter((f) => megaModule.test(fs.readFileSync(path.join(ROOT, f), "utf8")));

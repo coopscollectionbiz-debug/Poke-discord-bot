@@ -22,6 +22,7 @@ import { toTeamObj } from "../utils/economyRules.js";
 import { learnableMoves, chosenMoves, moveInfo as movesetMoveInfo } from "./movesets.js";
 import { customCopiesOf, plainCount } from "./ownership.js";
 import { isTmEnabled } from "../config/tmFeatures.js";
+import { copiesOf } from "./box.js";
 
 const sum = (s) => (s ? s.hp + s.atk + s.def + s.spa + s.spd + s.spe : null);
 const nameOf = (id) => displaySpeciesName(id, getSpeciesEntry(id)?.name);
@@ -107,6 +108,20 @@ export function pokemonDetail(user, speciesId, { env = process.env } = {}) {
       // Both fields are always present; without trained copies, plain = count.
       plain: plainCount(user, id, variant),
       trained: species ? trainedCopies(user, id, variant, level) : [],
+      // Every copy is its own Pokémon (docs/adr/0001): its Level, the moves
+      // it may equip there, and its own moveset on each team.
+      each: species ? copiesOf(user, id, variant).map((c) => ({
+        uid: c.uid,
+        level: c.level,
+        trained: c.trained,
+        moves: autoMoveset(id, c.level).map(moveInfo),
+        nextMoves: movesLearned(id, c.level, Math.min(100, c.level + 20)).map(moveInfo),
+        learnable: learnableMoves(user, id, variant, { uid: c.uid }).map((m) => ({ ...movesetMoveInfo(m.id), learnedAt: m.learnedAt, source: m.source })),
+        movesets: {
+          display: chosenMoves(user, "display", id, variant, { uid: c.uid })?.map(movesetMoveInfo) ?? null,
+          battle: chosenMoves(user, "battle", id, variant, { uid: c.uid })?.map(movesetMoveInfo) ?? null,
+        },
+      })) : [],
     };
   }
 

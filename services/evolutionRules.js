@@ -22,6 +22,7 @@
 // never changes shiny status, and carries the Level (carryLevel).
 // ==========================================================
 
+import { copyTraining } from "./box.js";
 import { isAcquirable } from "../utils/speciesCatalog.js";
 import { getTraining } from "../utils/training.js";
 
@@ -79,13 +80,13 @@ export function officialMethodText(target, nameOf = (id) => `#${id}`) {
  * Bot-side requirement check, run inside the user's lock.
  * @returns {{ok:true} | {ok:false, error:string, status?:number}}
  */
-export function checkEvolutionRequirements(user, base, target, variant) {
+export function checkEvolutionRequirements(user, base, target, variant, { uid = null } = {}) {
   if (!isAcquirable(target.id)) {
     return { ok: false, error: `${target.name} isn't available yet — Generation ${target.generation} hasn't been released.` };
   }
   const lvl = requiredLevel(base, target);
   if (lvl) {
-    const have = getTraining(user, base.id, variant).level;
+    const have = (uid && copyTraining(user, uid)?.level) ?? getTraining(user, base.id, variant).level;
     if (have < lvl) return { ok: false, error: `${base.name} must be Level ${lvl} to evolve into ${target.name} (yours is Level ${have}).`, requiredLevel: lvl, level: have };
   }
   return { ok: true };

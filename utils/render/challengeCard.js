@@ -39,7 +39,7 @@ const badgeFile = (b) => b.image.split("/").pop();
  * Everything the card shows. `preview` is previewChallenge(user, key); its
  * loss is deliberately left out.
  */
-export function challengeCardView(key, preview, user, { displayName }) {
+export function challengeCardView(key, preview, user, { displayName, pick = "casual" }) {
   const challenge = CHALLENGES[key];
   const earned = earnedBadgeKeys(user);
   const gymType = challenge.kind === "gym" ? challenge.opponents[0].type : null;
@@ -61,7 +61,7 @@ export function challengeCardView(key, preview, user, { displayName }) {
       trainerFile: user?.displayedTrainer ?? null,
       // The displayed trainer is always one the player owns.
       tier: trainerTier(user?.displayedTrainer),
-      team: buildTeamView(user, { displayName }).slots.map((s) => ({ id: s.id, variant: s.variant, shiny: s.shiny })),
+      team: buildTeamView(user, { displayName, pick }).slots.map((s) => ({ id: s.id, variant: s.variant, shiny: s.shiny })),
       badges: GYM_BADGES.map((b) => ({ file: badgeFile(b), earned: earned.includes(b.key) })),
     },
   };

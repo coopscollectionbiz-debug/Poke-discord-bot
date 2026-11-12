@@ -25,6 +25,7 @@
 import { getSpeciesEntry, isAcquirable } from "../utils/speciesCatalog.js";
 import { trainingKey, getTraining, expForLevel, rollCatchLevel } from "../utils/training.js";
 import { canRemoveCopies, removeCopies, plainCount } from "./ownership.js";
+import { addCopy, copiesOf, syncLine, normalizeBox } from "./box.js";
 import { LEVEL_CAP } from "../utils/battle/tuning.js";
 import { getCatalogItem, isHoldable } from "../catalog/items.js";
 import { grantItem, consumeItem, getQuantity, MAX_QUANTITY_PER_OP } from "./inventory.js";
@@ -80,6 +81,7 @@ function parseSpecies(v) {
  * @param {object} raw
  * @param {{ trainerKeys?: Map<string,string>|Set<string> }} [ctx] - known trainer sprite keys (lower-case → key)
  */
+const COPY_UID = /^c_[A-Za-z0-9]{10}$/;
 export function parseChange(raw, ctx = {}) {
   if (!raw || typeof raw !== "object") return fail("Missing change.");
   const kind = String(raw.kind ?? "");
@@ -106,6 +108,11 @@ export function parseChange(raw, ctx = {}) {
     const a = parseAmount(raw.amount);
     if (!a.ok) return a;
     const change = { kind, op, speciesId: s.value, variant: variantOf(raw.variant), amount: a.value };
+    // Remove one named copy (docs/adr/0001): uid, amount 1.
+    if (op === "remove" && raw.uid != null) {
+      if (!COPY_UID.test(String(raw.uid)) || a.value !== 1) return fail("Unknown copy.");
+      change.uid = String(raw.uid);
+    }
     if (op === "add" && raw.level != null && raw.level !== "") {
       const l = parseLevel(raw.level);
       if (!l.ok) return l;
@@ -131,7 +138,8 @@ export function parseChange(raw, ctx = {}) {
     if (!s.ok) return s;
     const l = parseLevel(raw.level);
     if (!l.ok) return l;
-    return { ok: true, change: { kind, speciesId: s.value, variant: variantOf(raw.variant), level: l.value } };
+    if (raw.uid != null && !COPY_UID.test(String(raw.uid))) return fail("Unknown copy.");
+    return { ok: true, change: { kind, speciesId: s.value, variant: variantOf(raw.variant), level: l.value, ...(raw.uid != null ? { uid: String(raw.uid) } : {}) } };
   }
   if (kind === "cooldown") {
     const list = Array.isArray(raw.cooldowns) ? [...new Set(raw.cooldowns.map(String))] : [];
@@ -251,27 +259,29 @@ export function applyChange(user, change, ctx = {}) {
         if (!isAcquirable(id)) warnings.push(`${speciesLabel(id)} isn't released yet.`);
         const after = before + amount;
         if (!Number.isSafeInteger(after)) return fail("Count would overflow.");
-        user.pokemon ??= {};
-        user.pokemon[id] ??= { normal: 0, shiny: 0 };
-        const key = trainingKey(id, variant);
         const result = { ok: true, summary: `Add ${fmt(amount)} × ${name}`, before, after, warnings };
-        // First copy (no copies and no Level record): give it a Catch level.
-        if (before === 0 && !user.training?.[key]) {
-          const level = change.level ?? rollCatchLevel(id, ctx.rand ?? Math.random);
-          user.training ??= {};
-          user.training[key] = { exp: expForLevel(level) };
-          result.level = level;
-          result.levelRolled = change.level == null;
-        } else {
-          result.level = getTraining(user, id, variant).level;
+        // Each granted copy is its own Pokémon (docs/adr/0001): it rolls a
+        // Catch level unless the admin set one, and registers in the Pokédex.
+        const rand = ctx.rand ?? Math.random;
+        let best = 0;
+        for (let i = 0; i < amount; i++) {
+          const made = addCopy(user, id, variant, { exp: change.level != null ? expForLevel(change.level) : null, rand });
+          best = Math.max(best, made.level);
         }
-        user.pokemon[id][variant] = after;
+        result.level = change.level ?? best;
+        result.levelRolled = change.level == null;
         return result;
       }
       if (amount > before) return fail(`They have ${fmt(before)} × ${name}.`, { current: before });
       // TM system (services/ownership.js): admin removals take untrained copies
       // only; a copy with TM-trained moves is never removed this way (fail closed).
-      const can = canRemoveCopies(user, { id, variant, n: amount });
+      // A named copy (admin picked it): exactly that one, trained or not.
+      const named = change.uid ? copiesOf(user, id, variant).find((c) => c.uid === change.uid) : null;
+      if (change.uid && !named) return fail("That copy no longer exists.");
+      const removeArgs = !named ? { id, variant, n: amount, allowTeam: true }
+        : named.trained ? { id, variant, n: 1, customUids: [named.uid], confirmRevs: { [named.uid]: user.customPokemon[named.uid].rev ?? 0 }, exact: true, allowTeam: true }
+        : { id, variant, n: 1, uids: [named.uid], exact: true, allowTeam: true };
+      const can = canRemoveCopies(user, removeArgs);
       if (!can.ok) {
         const untrained = plainCount(user, id, variant);
         return fail(`${fmt(before - untrained)} of their ${fmt(before)} × ${name} have TM-trained moves and can't be removed here. At most ${fmt(untrained)} can be removed.`, { current: before, untrained });
@@ -285,7 +295,7 @@ export function applyChange(user, change, ctx = {}) {
         result.levelReset = level;
         clearTeamSlots(user, id, variant);
       }
-      const removed = removeCopies(user, { id, variant, n: amount }); // counts, Level reset, empty entry
+      const removed = removeCopies(user, removeArgs); // named copy, else lowest Level first; the Pokédex keeps the species
       if (!removed.ok) return fail(removed.error ?? "Couldn't remove those copies.");
       return result;
     }
@@ -310,10 +320,14 @@ export function applyChange(user, change, ctx = {}) {
       const { speciesId: id, variant, level } = change;
       const name = `${variantLabel(variant)}${speciesLabel(id)}`;
       if (count(user, id, variant) <= 0) return fail(`They don't own ${name}.`);
-      const before = getTraining(user, id, variant).level;
+      // One copy: the one named by uid, else their best (the Level shown for the line).
+      normalizeBox(user);
+      const copy = change.uid ? copiesOf(user, id, variant).find((c) => c.uid === change.uid) : copiesOf(user, id, variant)[0];
+      if (!copy) return fail(`That ${name} no longer exists.`);
+      const before = copy.level;
       if (before === level) return fail(`${name} is already Lv ${level}.`);
-      user.training ??= {};
-      user.training[trainingKey(id, variant)] = { exp: expForLevel(level) };
+      user.box[copy.uid].exp = expForLevel(level);
+      syncLine(user, id, variant);
       return { ok: true, summary: `Set ${name} to Lv ${level}`, before: `Lv ${before}`, after: `Lv ${level}`, warnings };
     }
 

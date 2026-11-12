@@ -34,6 +34,7 @@ import { CHALLENGE, PLAYBACK } from "../utils/battle/tuning.js";
 import { spritePaths } from "../spriteconfig.js";
 import { threaded } from "../utils/render/renderers.js";
 import { cardImage } from "../utils/render/stage.js";
+import { availablePicks } from "../utils/battle/runBattle.js";
 
 export const data = new SlashCommandBuilder()
   .setName("challenge")
@@ -56,7 +57,7 @@ const challengeChannelId = () => process.env.CHALLENGE_CHANNEL_ID || null;
 
 export function refusal(reason, user) {
   return {
-    no_team: "Challenges use your Display team. Set it on the Teams page: run /dashboard.",
+    no_team: "Challenges use your Casual or Ranked team. Set one on the Teams page: run /dashboard.",
     locked_elite4: `Earn all 8 Badges first. You have ${earnedBadgeKeys(user).length}.`,
     locked_blue: "Clear the Elite Four to challenge Blue.",
     cap: `You've used all ${CHALLENGE.perDay} challenges today. They reset at midnight UTC.`,
@@ -135,9 +136,9 @@ export function previewEmbed(key, preview, { exactLoss = false } = {}) {
 
 // The VS card's facts, or null when they can't be built. It runs under the
 // lock before the fight is saved, so it must never throw there.
-export function cardView(key, preview, user, displayName) {
+export function cardView(key, preview, user, displayName, pick = "casual") {
   try {
-    return challengeCardView(key, preview, user, { displayName });
+    return challengeCardView(key, preview, user, { displayName, pick });
   } catch (err) {
     console.warn("⚠️ challenge card view failed; sending the embed:", err?.message || err);
     return null;
@@ -375,7 +376,10 @@ async function openPreview(interaction, key, { trainerData, lockUser, enqueueSav
   // A loss never costs more than this preview shows, even if the balance grows before Fight!.
   const shown = previewChallenge(trainerData[userId], key);
   const nonce = randomUUID();
-  const view = cardView(key, shown, trainerData[userId], playerName);
+  // Three-teams split: one button per team the player has set. The preview
+  // card shows the Casual team (or Ranked when that's the only one).
+  const picks = availablePicks(trainerData[userId]);
+  const view = cardView(key, shown, trainerData[userId], playerName, picks[0]);
   // The collector goes on the preview message itself. One made from the
   // reply's InteractionResponse listens on the message a dropdown pick came
   // from (the board), so Fight! would go unanswered (discord.js 14.28,
@@ -383,7 +387,7 @@ async function openPreview(interaction, key, { trainerData, lockUser, enqueueSav
   const reply = await interaction.reply({
     ...(await previewMessage(key, shown, view, { exactLoss: true })),
     components: [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`challenge_fight:${nonce}`).setLabel("Fight!").setStyle(ButtonStyle.Success),
+      ...picks.map((p) => new ButtonBuilder().setCustomId(`challenge_fight_${p}:${nonce}`).setLabel(`Fight with ${p === "ranked" ? "Ranked" : "Casual"}`).setStyle(p === "ranked" ? ButtonStyle.Primary : ButtonStyle.Success)),
       new ButtonBuilder().setCustomId(`challenge_cancel:${nonce}`).setLabel("Not now").setStyle(ButtonStyle.Secondary),
     )],
     flags: MessageFlags.Ephemeral,
@@ -413,16 +417,17 @@ async function openPreview(interaction, key, { trainerData, lockUser, enqueueSav
     // Drop the buttons right away: the save below can wait behind another one.
     await i.update({ content: "⚔️ Your challenge is starting below.", embeds: [], components: [], attachments: [] });
     const isRun = key === "elite4";
+    const pick = i.customId.startsWith("challenge_fight_ranked") ? "ranked" : "casual";
     const first = await lockUser(userId, async () => {
       // Read the live record now: the dashboard or another command may have replaced it since the preview.
       const live = trainerData[userId];
       const atStake = live && previewChallenge(live, key);
       // Built before the fight changes the record, so the intro shows the Badge still on the line.
-      const card = live && cardView(key, atStake, live, playerName);
+      const card = live && cardView(key, atStake, live, playerName, pick);
       const seed = randomInt(0, 2 ** 31 - 1);
       const out = isRun
-        ? startRun({ trainerData, userId, seed, maxLoss: shown.loss, channelId: interaction.channelId })
-        : runChallenge({ trainerData, userId, key, seed, maxLoss: shown.loss });
+        ? startRun({ trainerData, userId, seed, maxLoss: shown.loss, channelId: interaction.channelId, pick })
+        : runChallenge({ trainerData, userId, key, seed, maxLoss: shown.loss, pick });
       // Saved before the replay, so a failed or slow replay never changes the result.
       if (out.ok) await enqueueSave(trainerData, { force: true });
       return { ...out, atStake, card };

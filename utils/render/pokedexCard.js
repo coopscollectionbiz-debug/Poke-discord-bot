@@ -16,6 +16,7 @@ import { displaySpeciesName } from "./names.js";
 import { dexProgress, drawDexProgress } from "./dexProgress.js";
 import { spriteRecord } from "../sprites.js";
 import { getSpecies, TYPE_ID_TO_NAME } from "../battle/data.js";
+import { registeredMask, copiesOf } from "../../services/box.js";
 
 const POKEMON = JSON.parse(fs.readFileSync(new URL("../../pokemonData.json", import.meta.url), "utf8"));
 export const POKEDEX_SIZE = Object.freeze({ w: 1000, h: 560 });
@@ -41,6 +42,11 @@ export function pokedexView(id, user) {
     to: names(p.evolvesTo),
     normal: Number(owned.normal ?? 0),
     shiny: Number(owned.shiny ?? 0),
+    // Pokédex (docs/adr/0001): ever caught, per variant, and the best copy's Level now.
+    caughtNormal: user ? (registeredMask(user, id) & 1) !== 0 : false,
+    caughtShiny: user ? (registeredMask(user, id) & 2) !== 0 : false,
+    bestNormal: user ? copiesOf(user, id, "normal")[0]?.level ?? null : null,
+    bestShiny: user ? copiesOf(user, id, "shiny")[0]?.level ?? null : null,
     dex: user ? dexProgress(user, [id]) : null, // the viewer's own progress: this region + national
     credit: credit ? `Sprite: ${credit.artist ? `${credit.artist}, ` : ""}${String(credit.project ?? "").replace(/ \(.*$/, "")} · /credits` : null,
   };
@@ -162,8 +168,8 @@ export async function renderPokedexCard(v, { shiny = false, animate = false } = 
     ctx.fillText("Does not evolve", ex + 14, 353);
   }
 
-  // Ownership.
-  const own = (lab, n, ox, color) => {
+  // Ownership now, and whether the Pokédex has it (caught before, none now).
+  const own = (lab, n, ox, color, caught = n > 0, best = null) => {
     const ok = n > 0;
     ctx.fillStyle = ok ? `${color}1f` : "#ffffff08";
     rr(ctx, ox, 392, (right - x - 12) / 2, 72, 12);
@@ -176,10 +182,10 @@ export async function renderPokedexCard(v, { shiny = false, animate = false } = 
     ctx.fillText(lab, ox + 16, 418);
     ctx.font = font(22, 800);
     ctx.fillStyle = ok ? color : COLOR.textFaint;
-    ctx.fillText(ok ? `Owned ×${n}` : "Not caught", ox + 16, 450);
+    ctx.fillText(ok ? `×${n}${best ? ` · Lv ${best}` : ""}` : caught ? "Caught · none now" : "Not caught", ox + 16, 450);
   };
-  own("NORMAL", v.normal, x, "#3fd46c");
-  own("SHINY", v.shiny, x + (right - x - 12) / 2 + 12, COLOR.gold);
+  own("NORMAL", v.normal, x, "#3fd46c", v.caughtNormal, v.bestNormal);
+  own("SHINY", v.shiny, x + (right - x - 12) / 2 + 12, COLOR.gold, v.caughtShiny, v.bestShiny);
 
   // The viewer's Pokédex progress (this reply is only visible to them).
   if (v.dex?.length) {

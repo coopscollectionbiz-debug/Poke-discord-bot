@@ -108,8 +108,10 @@ section("Pokémon");
   assertTrue(partial.ok && t.pokemon[16].shiny === 1 && getTraining(t, 16, "shiny").level === 20 && t.displayedPokemon.length === 3, "removing a non-last copy keeps Level and team slots");
   const last = C.applyChange(t, change({ kind: "pokemon", op: "remove", speciesId: 16, variant: "normal", amount: 1 }));
   assertTrue(last.ok && t.pokemon[16].normal === 0 && !t.training[trainingKey(16, "normal")], "removing the last copy resets its Level");
-  assertEqual(t.displayedPokemon, [25, { id: 16, variant: "shiny" }], "the Team slot is cleared; the shiny and the legacy slot stay");
-  assertEqual(t.battleTeam, [{ id: 25, variant: "normal" }], "the Battle team slot is cleared");
+  // Slots now also name their copy (uid, docs/adr/0001); compare the Pokémon only.
+  const noUid = (team) => team.map((s) => (s && typeof s === "object" ? { id: s.id, variant: s.variant } : s));
+  assertEqual(noUid(t.displayedPokemon), [25, { id: 16, variant: "shiny" }], "the Team slot is cleared; the shiny and the legacy slot stay");
+  assertEqual(noUid(t.battleTeam), [{ id: 25, variant: "normal" }], "the Battle team slot is cleared");
   assertTrue(last.warnings.some((w) => w === "Clears Team slot 2.") && last.warnings.some((w) => w === "Clears Battle team slot 1.") && last.warnings.some((w) => w.includes("Resets Lv 34")), "the review warns about both slots and the Level");
   const over = C.applyChange(t, change({ kind: "pokemon", op: "remove", speciesId: 25, variant: "normal", amount: 2 }));
   assertTrue(!over.ok && over.error === "They have 1 × Pikachu.", "over-removing Pokémon is rejected with the count");

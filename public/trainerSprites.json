@@ -951,8 +951,16 @@
         "disabled": true,
         "mergedInto": "blue.png"
       },
-      "blue-gen3champion.png",
-      "blue-gen3two.png",
+      {
+        "file": "blue-gen3champion.png",
+        "disabled": true,
+        "mergedInto": "blue.png"
+      },
+      {
+        "file": "blue-gen3two.png",
+        "disabled": true,
+        "mergedInto": "blue.png"
+      },
       {
         "file": "blue-gen7.png",
         "disabled": true,
@@ -1026,7 +1034,11 @@
   },
   "brendan": {
     "sprites": [
-      "brendan-gen3.png",
+      {
+        "file": "brendan-gen3.png",
+        "disabled": true,
+        "mergedInto": "brendan.png"
+      },
       "brendan.png"
     ],
     "tier": "Legendary"
@@ -1046,13 +1058,21 @@
   },
   "brendan-e": {
     "sprites": [
-      "brendan-e.png"
+      {
+        "file": "brendan-e.png",
+        "disabled": true,
+        "mergedInto": "brendan.png"
+      }
     ],
     "tier": "Legendary"
   },
   "brendan-rs": {
     "sprites": [
-      "brendan-rs.png"
+      {
+        "file": "brendan-rs.png",
+        "disabled": true,
+        "mergedInto": "brendan.png"
+      }
     ],
     "tier": "Legendary"
   },

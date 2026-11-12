@@ -1,4 +1,4 @@
-{"note":"Generation consolidation (owner-approved 2026-11-11). Game and generation redraws of the same outfit fold into one sprite per group; outfits never fold, and female variants are their own groups. Protagonists and rivals follow the owner’s per-character decisions (Blue and Red: the animated B2W2 sprite is the only one; Cheren: the B2W2 version; Dawn: her static; Lucas: gen4pt; May: may.png; Wally: gen3; Brendan, Elio and Selene keep every version). Owner exceptions: beauty-gen4dp, beauty-gen5bw2 and beauty-gen8 stay their own collectibles. Each key is a file that is no longer offered; its value is the sprite it folds into. Players who owned a folded file get its target if they do not already own it (services/trainerConsolidation.js).","into":{
+{"note":"Generation consolidation (owner-approved 2026-11-11). Game and generation redraws of the same outfit fold into one sprite per group; outfits never fold, and female variants are their own groups. Protagonists and rivals follow the owner’s per-character decisions (Blue and Red: the animated B2W2 sprite is the only game version (Blue’s FireRed/LeafGreen champion and second-battle sprites fold too, 2026-11-11); Brendan: brendan.png, with his Ruby/Sapphire, Emerald and gen3 versions folded, Contest and Masters kept as outfits (2026-11-11); Cheren: the B2W2 version; Dawn: her static; Lucas: gen4pt; May: may.png; Wally: gen3; Elio and Selene keep every version). Owner exceptions: beauty-gen4dp, beauty-gen5bw2 and beauty-gen8 stay their own collectibles. Each key is a file that is no longer offered; its value is the sprite it folds into. Players who owned a folded file get its target if they do not already own it (services/trainerConsolidation.js).","into":{
 "acetrainer-gen3.png":"acetrainer.png",
 "acetrainer-gen3jp.png":"acetrainer.png",
 "acetrainer-gen3rs.png":"acetrainer.png",
@@ -58,11 +58,16 @@
 "blaine-gen3.png":"blaine.png",
 "blaine-lgpe.png":"blaine.png",
 "blue-gen3.png":"blue.png",
+"blue-gen3champion.png":"blue.png",
+"blue-gen3two.png":"blue.png",
 "blue-gen7.png":"blue.png",
 "blue-lgpe.png":"blue.png",
 "brandon-gen3.png":"brandon.png",
 "brawly-gen3.png":"brawly.png",
 "brawly-gen6.png":"brawly.png",
+"brendan-e.png":"brendan.png",
+"brendan-gen3.png":"brendan.png",
+"brendan-rs.png":"brendan.png",
 "brock-gen3.png":"brock.png",
 "brock-lgpe.png":"brock.png",
 "bruno-gen3.png":"bruno.png",

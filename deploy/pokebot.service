@@ -1,0 +1,45 @@
+# Coop's Collection bot on the production VPS.
+# Installed as /etc/systemd/system/pokebot.service (see RUNBOOK.md "Production host").
+# Secrets (BOT_TOKEN, CLIENT_ID, GUILD_ID, STORAGE_CHANNEL_ID, ADMIN_DASH_TOKEN, ...)
+# live in /etc/pokebot.env (root:root, 0600). Values in that file override the
+# Environment= lines below, so keep host settings out of it.
+
+[Unit]
+Description=Coop's Collection Discord bot
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=pokebot
+Group=pokebot
+WorkingDirectory=/opt/pokebot/current
+EnvironmentFile=/etc/pokebot.env
+Environment=NODE_ENV=production
+Environment=PORT=8080
+Environment=PUBLIC_URL=https://bot.coopscollection.com
+# Player data: snapshots, daily copies and the event log (persistence/, utils/eventLog.js).
+Environment=TRAINERDATA_DIR=/srv/pokebot/data
+Environment=LOCAL_IS_DURABLE=1
+ExecStart=/usr/bin/node bot_final.js
+Restart=always
+RestartSec=5
+
+# gracefulShutdown (bot_final.js) flushes the local save (<=8s), uploads the
+# final Discord backup (<=8s) and destroys the client, with a 25s hard exit.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# A leak kills only the bot; systemd restarts it. Shares the box with the WoW server.
+MemoryMax=4G
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/srv/pokebot/data
+
+[Install]
+WantedBy=multi-user.target

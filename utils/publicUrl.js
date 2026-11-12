@@ -8,10 +8,10 @@
 //                             an onrender.com address (the Render hosts are
 //                             retired and return 503/404)
 //   3. FLY_APP_NAME         — injected by Fly.io → https://<app>.fly.dev
-//   4. the production Fly app's URL (fly.toml)
+//   4. the production host (the VPS behind nginx; see RUNBOOK.md)
 // ==========================================================
 
-export const DEFAULT_PUBLIC_URL = "https://poke-discord-bot-49shta.fly.dev";
+export const DEFAULT_PUBLIC_URL = "https://bot.coopscollection.com";
 
 export function publicBaseUrl(env = process.env) {
   const legacy = env.RENDER_EXTERNAL_URL && !/\.onrender\.com/i.test(env.RENDER_EXTERNAL_URL) ? env.RENDER_EXTERNAL_URL : "";

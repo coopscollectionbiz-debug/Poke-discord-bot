@@ -33,6 +33,7 @@
 .tm-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; line-height: 1.4; white-space: nowrap; }
 .tm-tag--lead { background: var(--cc-blue); color: #fff; }
 .tm-tag--mega { background: var(--cc-mega); color: var(--cc-ink); }
+.tm-tag--trained { background: var(--cc-gold); color: var(--cc-ink); }
 .tm-tag--change { background: transparent; color: var(--cc-blue); border: 1.5px dashed var(--cc-blue); }
 .tm-mem { display: inline-grid; place-items: center; min-width: 24px; height: 20px; padding: 0 5px; border-radius: 6px; font-size: 10.5px; font-weight: 800; }
 .tm-mem--display { background: var(--cc-surface-raised); color: var(--cc-gold); border: 1px solid #f5c84c66; }

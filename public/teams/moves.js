@@ -2,11 +2,14 @@
 // public/teams/moves.js — the Teams page's moveset editor (owner decision:
 // each team keeps its own moveset for the same Pokémon copy, with a copy
 // from the other team). Up to 4 distinct moves the copy has learned by its
-// real Level (TMs later). Saves at once through POST /api/pokemon/moveset;
+// real Level, plus the TM moves of the slot's copy when it is a trained copy
+// (`s.uid`, TM system). Saves at once through POST /api/pokemon/moveset;
 // "Use automatic moves" clears the choice. The server re-checks every rule.
 // ==========================================================
 
 import { toast, showActionError, showExpired } from "/public/shared/shell.js";
+import { openTeachDialog } from "/public/shared/teachTm.js";
+import { moveMeta } from "/public/shared/moveMeta.js";
 
 const MAX = 4;
 const LABEL = { display: "Display team", battle: "Battle team" };
@@ -34,7 +37,7 @@ async function postMoveset(userId, team, s, moves) {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: userId, team, pokeId: s.id, variant: s.variant, moves }),
+    body: JSON.stringify({ id: userId, team, pokeId: s.id, variant: s.variant, moves, ...(s.uid ? { uid: s.uid } : {}) }),
   });
   let body = {};
   try { body = await res.json(); } catch { /* non-JSON */ }
@@ -47,7 +50,7 @@ async function postMoveset(userId, team, s, moves) {
  * Open the editor for copy `s` ({ id, variant, name }) on team `team`.
  * onSaved(): called after a successful save (the page re-renders).
  */
-export async function openMovesEditor({ userId, team, s, name, onSaved }) {
+export async function openMovesEditor({ userId, team, s, name, onSaved, onTaught }) {
   lastFocus = document.activeElement;
   saving = false;
   ensureDialog();
@@ -64,8 +67,13 @@ export async function openMovesEditor({ userId, team, s, name, onSaved }) {
     dialog.querySelector("[data-close]").onclick = () => dialog.close();
     return;
   }
-  const copy = d.copies?.[s.variant];
-  if (!copy) { dialog.close(); return toast("You don’t own that copy any more."); }
+  const line = d.copies?.[s.variant];
+  if (!line) { dialog.close(); return toast("You don’t own that copy any more."); }
+  // A trained copy (TM system) has its own learnable moves and selections;
+  // level, automatic moves and next moves are the line's (shared).
+  const trained = s.uid ? line.trained?.find((t) => t.uid === s.uid) : null;
+  if (s.uid && !trained) { dialog.close(); return toast("That trained copy changed. Reload the page."); }
+  const copy = trained ? { ...line, learnable: trained.learnable, movesets: trained.movesets } : line;
   copy.learnable ??= [];
   const chosen = copy.movesets?.[team];
   const other = copy.movesets?.[OTHER[team]];
@@ -82,6 +90,7 @@ export async function openMovesEditor({ userId, team, s, name, onSaved }) {
       </div>
       <div class="tm-moves-picked" aria-live="polite"><b>${picked.length}/${MAX}</b> ${picked.map((id) => `<span class="tm-movechip">${esc(copy.learnable.find((l) => l.id === id)?.name ?? id)}</span>`).join("") || "<span class=\"tm-sub\">No moves picked</span>"}</div>
       <div class="tm-moves-tools">
+        ${d.tm?.enabled ? `<button type="button" class="cc-btn" data-teach>Teach a TM</button>` : ""}
         ${other ? `<button type="button" class="cc-btn" data-copy>Copy from ${esc(LABEL[OTHER[team]])}</button>` : ""}
         <button type="button" class="cc-btn" data-auto>Use automatic moves</button>
       </div>
@@ -90,13 +99,11 @@ export async function openMovesEditor({ userId, team, s, name, onSaved }) {
           const on = picked.includes(m.id);
           return `<li><label class="tm-move${on ? " is-on" : ""}${!on && full ? " is-full" : ""}">
             <input type="checkbox" value="${esc(m.id)}"${on ? " checked" : ""}${!on && full ? " disabled" : ""}>
-            <span class="tm-move-name">${esc(m.name)}</span>
-            ${m.type ? `<span class="cc-type" data-type="${esc(m.type.toLowerCase())}">${esc(m.type)}</span>` : ""}
-            <span class="tm-move-meta">${m.power ? `${m.power} pow` : m.category ? esc(m.category) : ""}${m.source === "tm" ? " · TM" : m.learnedAt ? ` · Lv ${m.learnedAt}` : ""}</span>
+            <span class="tm-move-name">${esc(m.name)}${moveMeta(m, { extra: [m.source === "tm" ? "TM" : m.learnedAt ? `Lv ${m.learnedAt}` : ""] })}</span>
           </label></li>`;
         }).join("")}
       </ul>
-      <p class="tm-sub tm-moves-note">${copy.nextMoves?.length ? `Learns next: ${copy.nextMoves.map((m) => esc(m.name)).join(", ")}. ` : ""}TMs will add more moves here.</p>
+      <p class="tm-sub tm-moves-note">${copy.nextMoves?.length ? `Learns next: ${copy.nextMoves.map((m) => esc(m.name)).join(", ")}. ` : ""}${trained ? `★ Trained copy: ${trained.tmMoves.map((m) => esc(m.name)).join(", ")} learned from TMs.` : ""}</p>
       <div class="tm-moves-actions"><button type="button" class="cc-btn" data-close>Cancel</button><button type="button" class="cc-btn cc-btn--primary" data-save${picked.length ? "" : " disabled"}>Save moves</button></div>`;
   };
   draw();
@@ -113,6 +120,11 @@ export async function openMovesEditor({ userId, team, s, name, onSaved }) {
   dialog.onclick = async (e) => {
     if (saving) return; // controls are disabled; ignore stray clicks until the server answers
     if (e.target === dialog || e.target.closest("[data-close]")) return dialog.close();
+    if (e.target.closest("[data-teach]")) {
+      dialog.close();
+      // This slot's copy: its trained copy, or an untrained one (uid null).
+      return openTeachDialog({ userId, speciesId: s.id, variant: s.variant, name, uid: s.uid ?? null, onDone: () => onTaught?.() });
+    }
     if (e.target.closest("[data-copy]")) {
       picked = other.map((m) => m.id).filter((id) => copy.learnable.some((l) => l.id === id)).slice(0, MAX);
       draw();

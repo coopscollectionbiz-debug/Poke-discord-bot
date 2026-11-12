@@ -24,6 +24,7 @@
 //   • Pure + synchronous: call inside the caller's user lock/transaction.
 // ==========================================================
 
+import { randomBytes } from "crypto";
 import { carryLevel, resetLevelIfGone } from "../utils/training.js";
 import { getSpeciesEntry } from "../utils/speciesCatalog.js";
 
@@ -329,4 +330,96 @@ export function normalizeCustomPokemon(user) {
     }
   }
   return res;
+}
+
+// ==========================================================
+// Phase T4: creating trained copies and keeping them on their team slots
+// ==========================================================
+
+const UID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+export const COPY_HISTORY_MAX = 20;
+
+/** A fresh, unused trained-copy id ("c_" + 10 base62 chars from crypto). */
+export function newCopyUid(user) {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const bytes = randomBytes(10);
+    let uid = "c_";
+    for (const b of bytes) uid += UID_ALPHABET[b % UID_ALPHABET.length];
+    if (!user?.customPokemon?.[uid]) return uid;
+  }
+  throw new Error("newCopyUid: could not find a free id");
+}
+
+/**
+ * Turn ONE untrained copy of id:variant into a trained copy (record with no
+ * moves yet). Counts don't change: the copy just stops being untrained.
+ * Caller (TM teaching) has validated everything and adds the move next.
+ */
+export function createTrainedCopy(user, id, variant, now = Date.now()) {
+  if (plainCount(user, id, variant) < 1) return fail("choose_copy", "You have no untrained copy of that Pokémon left.");
+  const uid = newCopyUid(user);
+  user.customPokemon ??= {};
+  user.customPokemon[uid] = { uid, speciesId: Number(id), variant, tmMoves: [], rev: 0, history: [], createdAt: now };
+  return { ok: true, uid };
+}
+
+/** Add a TM-learned move to a trained copy (deduplicated), bump rev, record history. */
+export function learnTmMove(user, uid, moveId, { item = null, requestId = null, now = Date.now() } = {}) {
+  const c = user?.customPokemon?.[uid];
+  if (!c || c.suspended) return fail("unknown_copy", "That Pokémon copy no longer exists.");
+  if (!c.tmMoves.includes(moveId)) c.tmMoves.push(moveId);
+  c.rev = (c.rev ?? 0) + 1;
+  c.history.push({ type: "tm", move: moveId, ...(item && { item }), at: now, ...(requestId && { req: requestId }) });
+  if (c.history.length > COPY_HISTORY_MAX) c.history.splice(0, c.history.length - COPY_HISTORY_MAX);
+  return { ok: true, rev: c.rev };
+}
+
+/**
+ * Point every UNTRAINED slot of this line (both teams) at trained copy `uid`
+ * (owner decision, T4). Slots already holding another trained copy stay.
+ * @returns {string[]} the teams changed ("display" / "battle")
+ */
+export function assignLineSlotsToCopy(user, id, variant, uid) {
+  const changed = [];
+  for (const [field, team] of [["displayedPokemon", "display"], ["battleTeam", "battle"]]) {
+    if (!Array.isArray(user?.[field])) continue;
+    for (const slot of user[field]) {
+      if (slot && typeof slot === "object" && Number(slot.id) === Number(id) && (slot.variant === "shiny" ? "shiny" : "normal") === variant && !slotCopyUid(user, slot)) {
+        slot.uid = uid;
+        changed.push(team);
+      }
+    }
+  }
+  return changed;
+}
+
+/**
+ * Team saves from clients that don't know about trained copies (older pages,
+ * /api/updateUser) send slots without `uid`. For each slot of `next`: a uid
+ * the client sent is used when valid; an explicit `uid: null` means an
+ * untrained copy; NO uid field keeps the trained copy that line's slot held
+ * in `previous`. Returns a new array; never invents a copy.
+ */
+export function carryCopyUids(user, previous, next, raw = []) {
+  const prevUid = new Map();
+  for (const s of Array.isArray(previous) ? previous : []) {
+    const uid = s && typeof s === "object" ? slotCopyUid(user, s) : null;
+    const key = s && typeof s === "object" ? `${Number(s.id)}:${s.variant === "shiny" ? "shiny" : "normal"}` : null;
+    if (uid && key && !prevUid.has(key)) prevUid.set(key, uid);
+  }
+  const rawByKey = new Map();
+  for (const r of Array.isArray(raw) ? raw : []) {
+    if (!r || typeof r !== "object" || Array.isArray(r)) continue;
+    const key = `${Number(r.id)}:${r.variant === "shiny" || (r.variant == null && (r.shiny === true || r.isShiny === true)) ? "shiny" : "normal"}`;
+    if (!rawByKey.has(key)) rawByKey.set(key, r);
+  }
+  return (Array.isArray(next) ? next : []).map((slot) => {
+    const key = `${Number(slot.id)}:${slot.variant === "shiny" ? "shiny" : "normal"}`;
+    const r = rawByKey.get(key);
+    const { uid: _drop, ...base } = slot;
+    let uid;
+    if (r && Object.prototype.hasOwnProperty.call(r, "uid")) uid = r.uid == null ? null : slotCopyUid(user, { ...base, uid: r.uid });
+    else uid = slot.uid ? slotCopyUid(user, slot) : prevUid.get(key) ?? null;
+    return uid ? { ...base, uid } : base;
+  });
 }

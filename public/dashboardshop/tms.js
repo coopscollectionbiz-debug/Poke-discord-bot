@@ -6,11 +6,12 @@
 //
 // Everything shown comes from the server (prices, compatibility, owned
 // counts); the client only filters the list. The section stays hidden while
-// the shop is switched off (TM_SHOP_ENABLED). One request id per confirmation
+// the shop is switched off (TM_ENABLED). One request id per confirmation
 // dialog, so a double click or retry never charges twice.
 // ======================================================================
 
 import { showMessage, isExpired, showExpired } from "/public/shared/shell.js";
+import { moveMeta } from "/public/shared/moveMeta.js";
 
 const TYPES = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"];
 const TIER_LABEL = { basic: "Basic", standard: "Standard", power: "Power", premium: "Premium", elite: "Elite" };
@@ -78,12 +79,11 @@ function visible() {
 }
 
 function card(t) {
-  const acc = t.accuracy === true ? "never misses" : `${t.accuracy}%`;
   const affordable = (state.data.cc ?? 0) >= t.price;
   return `<div class="shop-item tmx-item" data-tier="${esc(t.tier)}">
-    <div class="tmx-top"><span class="cc-type" data-type="${esc(t.type)}">${esc(t.type)}</span><span class="tmx-tier">${esc(TIER_LABEL[t.tier] ?? t.tier)}</span></div>
+    <div class="tmx-top"><span class="tmx-tier">${esc(TIER_LABEL[t.tier] ?? t.tier)}</span></div>
     <h3>${esc(t.name)}</h3>
-    <p class="desc">${esc(t.category)} · ${esc(t.power)} power · ${esc(acc)}</p>
+    <p class="desc">${moveMeta(t)}</p>
     <p class="tmx-meta">${t.teaches > 0 ? `Teaches ${fmt(t.teaches)} of your Pokémon` : "None of your Pokémon can learn it"}${t.owned ? ` · <b>You have ${fmt(t.owned)}</b>` : ""}</p>
     <p class="price">${fmt(t.price)} CC</p>
     <button type="button" class="buy-btn" data-tm="${esc(t.item)}"${affordable ? "" : " disabled"} aria-label="Buy ${esc(t.name)} for ${fmt(t.price)} CC">${affordable ? "Buy" : "Not enough CC"}</button>

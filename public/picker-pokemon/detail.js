@@ -21,6 +21,8 @@
 
 import { scanFx } from "/public/shared/spriteFx.js";
 import { pageHref } from "/public/shared/shell.js";
+import { openTeachDialog } from "/public/shared/teachTm.js";
+import { moveMeta } from "/public/shared/moveMeta.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const dex = (id) => `#${String(id).padStart(4, "0")}`;
@@ -57,6 +59,20 @@ const typeChips = (types) => types.map((t) => `<span class="cc-type" data-type="
 function statBars(stats) {
   const max = 220;
   return STAT_LABELS.map(([k, label]) => `<div class="dt-stat"><span>${label}</span><b>${stats[k]}</b><span class="dt-bar" aria-hidden="true"><i style="width:${Math.min(100, (stats[k] / max) * 100)}%"></i></span></div>`).join("");
+}
+
+// Trained copies (TM system): untrained count + one row per trained copy with its TM moves.
+function trainedRows(copies) {
+  const rows = [];
+  for (const [v, c] of Object.entries(copies)) {
+    if (!c.trained?.length) continue;
+    rows.push(`<p class="dt-muted" style="margin:6px 0 2px">${v === "shiny" ? "✨ Shiny" : "Normal"}: untrained ×${c.plain} · trained ×${c.trained.length}</p>`);
+    for (const t of c.trained) {
+      const where = [t.teams.display ? `Display slot ${t.teams.display}` : "", t.teams.battle ? `Battle slot ${t.teams.battle}` : ""].filter(Boolean).join(" · ") || "Not on a team";
+      rows.push(`<div class="dt-move"><span>★ Trained · ${t.tmMoves.map((m) => esc(m.name)).join(", ")}</span><small class="dt-muted">${where}</small></div>`);
+    }
+  }
+  return rows.join("");
 }
 
 /** "Display slot 3 · Battle slot 1 (unsaved)" for one copy. */
@@ -118,13 +134,15 @@ function render(d, ctx, opts) {
     ${d.flavor ? `<p class="dt-flavor">${esc(d.flavor)}</p>` : ""}
     <section class="dt-sec"><h3>Your copies</h3>
       ${owned.length ? owned.map((v) => `<div class="dt-copy"><img src="${sprite(d.id, v)}" alt=""><span>${v === "shiny" ? "✨ Shiny" : "Normal"} ×${copies[v].count} · <b>Lv ${copies[v].level}</b><br><small>${slotLine(copies[v], v, opts)}</small></span></div>`).join("") : `<p class="dt-muted">Not caught yet.</p>`}
+      ${trainedRows(copies)}
+      ${d.tm?.enabled && c ? `<button type="button" class="cc-btn" data-act="teach">Teach a TM${owned.length > 1 ? ` (${shownVariant === "shiny" ? "shiny" : "normal"})` : ""}</button>` : ""}
     </section>
     ${d.megaForms?.length ? `<section class="dt-sec"><h3>Mega forms</h3><div class="dt-forms">${d.megaForms.map((f) => `<div class="dt-form"><img src="/public/sprites/pokemon/mega/${shownVariant === "shiny" ? "shiny" : "normal"}/${esc(f.id)}.gif" alt=""><b>${esc(f.name)}</b><small>${f.unlocked[shownVariant] ? "Unlocked" : "Locked"}</small></div>`).join("")}</div><p class="dt-muted">Forms of ${esc(d.name)}: they never count as Pokédex entries.</p></section>` : ""}
     ${c ? `${statsSection(c)}
       ${["display", "battle"].map((team) => {
         const set = c.movesets?.[team];
         const list = set ?? c.moves;
-        return `<section class="dt-sec"><h3>${team === "battle" ? "Battle team moves" : "Display team moves"}${set ? "" : " · automatic"}</h3><div class="dt-moves">${list.map((m) => `<div class="dt-move"><span>${esc(m.name)}</span>${m.type ? `<span class="cc-type" data-type="${esc(m.type.toLowerCase())}">${esc(m.type)}</span>` : ""}</div>`).join("")}</div></section>`;
+        return `<section class="dt-sec"><h3>${team === "battle" ? "Battle team moves" : "Display team moves"}${set ? "" : " · automatic"}</h3><div class="dt-moves">${list.map((m) => `<div class="dt-move"><span>${esc(m.name)}${moveMeta(m)}</span></div>`).join("")}</div></section>`;
       }).join("")}
       <section class="dt-sec"><p class="dt-muted" style="margin:0">${c.nextMoves.length ? `Learns next: ${c.nextMoves.map((m) => esc(m.name)).join(", ")}. ` : ""}${ctx.actionsHTML ? "Each team keeps its own moves." : `Change moves on the <a href="${pageHref("/public/teams/", ctx.userId)}">Teams page</a> (each team keeps its own).`}</p></section>`
     : d.baseStats ? `<section class="dt-sec"><h3>Base stats</h3>${statBars(d.baseStats)}<p class="dt-muted">Total ${d.baseTotal}</p></section>` : ""}
@@ -156,6 +174,7 @@ async function load(id, ctx, opts) {
       if (!act || b.disabled || b.getAttribute("aria-disabled") === "true") return;
       if (b.tagName === "A") return; // plain links navigate (pages guard unsaved changes themselves)
       dialog.close();
+      if (act === "teach") return openTeachDialog({ userId: ctx.userId, speciesId: d.id, variant: shownVariant, name: d.name, onDone: () => load(d.id, ctx, opts) });
       if (ctx.onAction) return ctx.onAction(act, d, shownVariant);
       if (act === "evolve") ctx.evolve(d.id);
       else if (act === "donate") ctx.donate(d.id, shownVariant);

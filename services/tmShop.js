@@ -9,7 +9,7 @@
 //   buyTms(user, {item,qty}) → spend CC, grant TMs (all-or-nothing)
 //
 // Rules:
-//   • Shop switched off (TM_SHOP_ENABLED unset) → nothing listed, purchases
+//   • Shop switched off (TM_ENABLED unset) → nothing listed, purchases
 //     refused. Owned TMs always stay in the bag.
 //   • Only "active" TM items are sold (156 launch TMs); held TMs never.
 //   • Price comes from the catalog (owner decision D-T6), never the client.
@@ -23,7 +23,7 @@ import { listCatalog, getCatalogItem } from "../catalog/items.js";
 import { getQuantity, grantItem } from "./inventory.js";
 import { canLearnByTm } from "../utils/battle/tmData.js";
 import { getISOWeekKeyUTC } from "../utils/economyRules.js";
-import { isTmShopEnabled, tmWeeklyCap } from "../config/tmFeatures.js";
+import { isTmEnabled, tmWeeklyCap } from "../config/tmFeatures.js";
 import { trackProgress } from "../progression/achievements.js";
 
 export const MAX_TMS_PER_PURCHASE = 10;
@@ -50,7 +50,7 @@ function ownedSpecies(user) {
  * species can learn the move (computed here, never trusted from a client).
  */
 export function tmShopView(user, { env = process.env, now = new Date() } = {}) {
-  const enabled = isTmShopEnabled(env);
+  const enabled = isTmEnabled(env);
   const cap = tmWeeklyCap(env);
   const bought = tmBoughtThisWeek(user, now);
   const base = { enabled, cc: Number(user?.cc) || 0, weekly: { bought, cap, remaining: cap == null ? null : Math.max(0, cap - bought) }, maxPerPurchase: MAX_TMS_PER_PURCHASE };
@@ -79,7 +79,7 @@ export function tmShopView(user, { env = process.env, now = new Date() } = {}) {
  * @returns {{ok:true, item, qty, cost, cc, quantity, weekly} | {ok:false, status, error, code}}
  */
 export function buyTms(user, { item, qty = 1 } = {}, { env = process.env, now = new Date() } = {}) {
-  if (!isTmShopEnabled(env)) return fail(403, "The TM shop isn't open yet.", "disabled");
+  if (!isTmEnabled(env)) return fail(403, "The TM shop isn't open yet.", "disabled");
   const entry = getCatalogItem(item);
   if (!entry || entry.category !== "tm") return fail(400, "Unknown TM.", "unknown_tm");
   if (entry.status !== "active" || !entry.shop?.eligible) return fail(400, `${entry.name} isn't for sale.`, "not_for_sale");

@@ -1211,6 +1211,13 @@ async function init() {
     startWeeklyPackCountdown();
     initMegaUI(); // no-op unless Mega Evolution is enabled server-side
 
+    // Deep link (Teams page "Open in Collection"): ?pokemon=6&variant=shiny
+    // opens that Pokémon's details on that copy.
+    const linked = Number(params.get("pokemon"));
+    if (Number.isInteger(linked) && pokemonData[linked]) {
+      openDetail(linked, detailContext(), { variant: params.get("variant") === "shiny" ? "shiny" : "normal" });
+    }
+
     // Filters
     document.getElementById("search")?.addEventListener("input", renderPokemonGrid);
     document.getElementById("rarityFilter")?.addEventListener("change", renderPokemonGrid);

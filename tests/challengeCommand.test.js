@@ -406,7 +406,7 @@ section("Preview: the embed when the card can't render");
   const e = embedJson(fallback.embeds[0]);
   assertTrue(!fallback.files?.length && !fallback.content, "no image, and no loss line above the embed (the embed has it)");
   assertEqual(e.title, "Gym Leader Brock", "titled with the opponent");
-  assertTrue(e.thumbnail.url.endsWith("/trainers_2/brock-gen3.png"), "Brock's sprite");
+  assertTrue(e.thumbnail.url.endsWith("/trainers_2/brock.png"), "Brock's sprite");
   assertEqual([e.author?.name, e.author?.icon_url, e.description], ["Boulder Badge", badgeUrl("brock"), "Rock"], "the Badge with its image, and the type");
   const field = (name) => e.fields.find((f) => f.name === name)?.value;
   assertEqual(field("Win"), "Brock sprite, 2,500 CC, 1 stone, and 5 Dust", "the prize");

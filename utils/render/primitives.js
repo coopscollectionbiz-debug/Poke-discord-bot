@@ -88,8 +88,7 @@ export function drawTypeChip(ctx, type, x, y, { h = 30, size = 17 } = {}) {
   ctx.fill();
   ctx.fillStyle = st.text;
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, x + w / 2, y + h / 2 + 1);
+  fillTextMid(ctx, label, x + w / 2, y + h / 2);
   ctx.textAlign = "left";
   return w;
 }
@@ -178,6 +177,17 @@ export function drawExpBar(ctx, x, y, w, frac, { h = 8 } = {}) {
   }
 }
 
+/**
+ * Fills text with its capitals centred on cy: pill, chip and badge labels.
+ * (textBaseline "middle" centres the em box, which leaves capitals sitting
+ * low.) Keeps textAlign; leaves textBaseline "alphabetic".
+ */
+export function fillTextMid(ctx, text, x, cy) {
+  ctx.textBaseline = "alphabetic";
+  const cap = ctx.measureText("H").actualBoundingBoxAscent;
+  ctx.fillText(text, x, cy + cap / 2);
+}
+
 /** A round slot badge with the slot number (1–6). */
 export function drawSlotBadge(ctx, n, cx, cy, { r = 17, lead = false } = {}) {
   ctx.fillStyle = lead ? COLOR.blue : COLOR.surfaceSunken;
@@ -190,8 +200,7 @@ export function drawSlotBadge(ctx, n, cx, cy, { r = 17, lead = false } = {}) {
   ctx.fillStyle = lead ? "#ffffff" : COLOR.textMuted;
   ctx.font = font(Math.round(r * 1.05), 800);
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(String(n), cx, cy + 1);
+  fillTextMid(ctx, String(n), cx, cy);
   ctx.textAlign = "left";
 }
 
@@ -252,8 +261,7 @@ export function drawTag(ctx, text, x, y, { fill = COLOR.gold, color = COLOR.ink,
   ctx.fill();
   ctx.fillStyle = color;
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, x + w / 2, y + h / 2 + 1);
+  fillTextMid(ctx, text, x + w / 2, y + h / 2);
   ctx.textAlign = "left";
   return w;
 }

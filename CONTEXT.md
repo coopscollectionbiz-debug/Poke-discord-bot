@@ -89,6 +89,20 @@ _Avoid_: evo stone, stone (alone, now that **Mega Stones** exist)
 The item earned by **Donation** and as a **Challenge** prize, and spent on shinies, to convert a normal copy into a shiny one or to evolve a shiny.
 _Avoid_: dust (alone), stardust
 
+### Administration
+
+**Last active**:
+The last time a player earned TP from chat or used a slash command. Players who have done neither since it started being recorded count from their latest daily, quest, recruit or weekly pack claim.
+_Avoid_: last seen, last online, last login
+
+**Admin change**:
+A change an admin makes to a player's account from the admin dashboard: adding or removing CC, TP, items, Pokémon or trainers, setting a **Level**, or resetting cooldowns. Every one is recorded permanently with who made it, when, before and after, and why.
+_Avoid_: edit, override, admin action (for player-made actions)
+
+**Grant**:
+An **Admin change** that only adds to an account or resets cooldowns. Only **Grants** can go to many players at once; removals are made one player at a time.
+_Avoid_: gift (that is player-to-player), reward, compensation (as the action's name)
+
 ### Battles
 
 **Battle**:
@@ -209,6 +223,7 @@ _Avoid_: trophy, quest
 - "Tier" also names a trainer sprite's price class, Common to Mythic, which is not a species' **Tier**. The 2026-11-10 re-tier changed trainer sprites, and the 2026-11-11 re-tier changed species.
 - "Ranked" has nothing to do with **Rank**. A player's **Rank** comes from chatting; their **Ranked rating** comes from **Ranked battles** and **Wager battles**.
 - Some **Achievements** list a badge as their reward, such as a region's badge for completing its Pokédex. That is not a **Badge**, which only comes from beating a Gym Leader's **Challenge**.
+- "Copy" as a noun is always a **Copy** (one owned unit). As a verb it may describe teams and moves ("Copy from Battle team"); never call the result a "team copy".
 
 ## Example dialogue
 

@@ -55,7 +55,7 @@ section("A Gym");
   const before = clone(user);
   const v = view("surge", user);
   assertEqual([v.kind, v.eyebrow, v.title, v.type], ["gym", "GYM LEADER", "Lt. Surge", "Electric"], "who and what type");
-  assertEqual(v.opponents.map((o) => o.trainerFile), ["ltsurge-gen3.png"], "the leader's sprite");
+  assertEqual(v.opponents.map((o) => o.trainerFile), ["ltsurge.png"], "the leader's sprite");
   assertEqual(v.badge, { file: "thunder.png", name: "Thunder Badge", earned: false }, "the Badge on the line");
   assertEqual(v.partySize, 6, "the leader's party size (Poké Balls, not the Team)");
   assertEqual(v.win, "Lt. Surge sprite, 4,000 CC, 1 stone, and 10 Dust", "the prize");

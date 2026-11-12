@@ -100,9 +100,9 @@ export async function execute(interaction, trainerData, _saveLocal, _saveDiscord
  * removed from your Battle team" after a re-tier. Sent as an ephemeral
  * follow-up to whatever /battle replied, then cleared. Kept if sending fails.
  */
-export async function sendPendingNotices(interaction, trainerData, lockUser, enqueueSave) {
+export async function sendPendingNotices(interaction, trainerData, lockUser, enqueueSave, kind = NOTICE_KINDS.BATTLE_TEAM_TRIM) {
   const id = interaction.user.id;
-  const pending = peekNotices(trainerData[id], NOTICE_KINDS.BATTLE_TEAM_TRIM);
+  const pending = peekNotices(trainerData[id], kind);
   if (!pending.length || !(interaction.replied || interaction.deferred)) return;
   try {
     await interaction.followUp({ content: pending.map((n) => `ℹ️ ${n.text}`).join("\n"), flags: MessageFlags.Ephemeral });

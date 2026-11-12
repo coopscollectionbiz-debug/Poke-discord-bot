@@ -321,7 +321,7 @@ The player data and safety tests cover:
 - `commandContract` and `commandsDiff`: every command takes the arguments `bot_final.js` passes, and a dry run of slash-command registration.
 - `testRunnerGuard`: `run-tests.js` refuses to run unless `TRAINERDATA_DIR` is a writable folder outside the repo.
 
-`tests/addInventory.test.js` checks that `/addinventory` adds Shiny Dust to `items.shiny_dust`, where the dashboard and shiny evolutions read it.
+`tests/adminDashboard.test.js` covers the admin dashboard: every Admin change (CC, TP, items, Pokémon, trainers, Levels, cooldowns, reset), rejected over-removals, clearing Team slots when a last copy goes, bulk grants (filters, partial failure, retries), the audit file, sliding admin sessions, and the write guards on the admin API.
 
 `tests/gift.test.js` covers gifting Pokémon: only normal copies move, the sender's last copy can't be gifted, no gift creates or destroys copies, and the sender's Level resets when their last normal goes.
 

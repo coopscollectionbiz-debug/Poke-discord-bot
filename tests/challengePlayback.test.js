@@ -105,8 +105,8 @@ section("Result embed");
 section("Theme and award");
 {
   assertEqual(challengeTheme(brockWin, 0, "acerola-masters.png"),
-    { trainers: ["acerola-masters.png", "brock-gen3.png"], type: "Rock", badgeFile: "boulder.png" }, "a Gym: both trainers, the type, the Badge");
-  assertEqual(challengeTheme(runOut, 1, null), { trainers: [null, "bruno-gen3.png"], type: "Fighting", badgeFile: null },
+    { trainers: ["acerola-masters.png", "brock.png"], type: "Rock", badgeFile: "boulder.png" }, "a Gym: both trainers, the type, the Badge");
+  assertEqual(challengeTheme(runOut, 1, null), { trainers: [null, "bruno.png"], type: "Fighting", badgeFile: null },
     "an Elite Four fight: that member, no Badge, and an empty portrait for a player with no trainer");
 
   assertEqual(challengeAward(brockWin, "A"), { badgeFile: "boulder.png", title: "BOULDER BADGE", lines: ["A received the Boulder Badge!", ""] },

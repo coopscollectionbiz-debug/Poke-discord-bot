@@ -66,9 +66,9 @@ assertEqual([sum("cc"), sum("stones"), sum("dust")], [229000, 28, 325], "totals 
 
 section("Sprites");
 assertTrue(all.every((o) => enabledSprites(o.trainerKey).files.length > 0), "every opponent has an enabled sprite");
-assertEqual(enabledSprites("brock"), { files: ["brock-gen3.png", "brock-lgpe.png", "brock.png"], tier: "rare" }, "enabledSprites skips disabled files and lowercases the tier");
-assertEqual(displaySprite(CHALLENGES.brock.opponents[0]), "brock-gen3.png", "Brock's display sprite");
-assertEqual(displaySprite(CHALLENGES.sabrina.opponents[0]), "sabrina-frlg.png", "Sabrina's display sprite");
+assertEqual(enabledSprites("brock"), { files: ["brock.png"], tier: "rare" }, "enabledSprites skips disabled files and lowercases the tier");
+assertEqual(displaySprite(CHALLENGES.brock.opponents[0]), "brock.png", "Brock's display sprite");
+assertEqual(displaySprite(CHALLENGES.sabrina.opponents[0]), "sabrina.png", "Sabrina's display sprite");
 
 section("Badges");
 assertEqual(GYM_BADGES.map((b) => b.key), GYMS, "8 Badges in Gym order");

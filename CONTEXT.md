@@ -209,6 +209,16 @@ _Avoid_: elite trainer, boss trainer
 The CC at stake in a **Trainer encounter**, set by the **Trainer class** and the Level of the Trainer's last Pokémon. The Trainer pays it to a player who wins, and a player who loses pays the same amount, or all their CC if they hold less.
 _Avoid_: reward, bounty, payout (as a noun)
 
+### Battle Records
+
+**Fight record**:
+The saved account of one finished **Battle**, **Challenge** or **Trainer encounter**: who fought, both teams as they were when it ran, the result, and every turn, so it can be replayed later. A player keeps their newest 50 of each kind, and a **Battle's** record appears in both players' histories.
+_Avoid_: match, match history entry, battle record (that is a player's W/L and rating totals), replay (that is watching a record)
+
+**Battle Records**:
+The dashboard page where a player sees their own **Fight records** and replays them. Only its owner can see it.
+_Avoid_: match history, battle history
+
 ### Mega Evolution
 
 **Mega form**:

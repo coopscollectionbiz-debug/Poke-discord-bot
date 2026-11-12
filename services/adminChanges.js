@@ -25,6 +25,7 @@
 import { getSpeciesEntry, isAcquirable } from "../utils/speciesCatalog.js";
 import { trainingKey, getTraining, expForLevel, rollCatchLevel } from "../utils/training.js";
 import { canRemoveCopies, removeCopies, plainCount } from "./ownership.js";
+import { addCopy, copiesOf, syncLine, normalizeBox } from "./box.js";
 import { LEVEL_CAP } from "../utils/battle/tuning.js";
 import { getCatalogItem, isHoldable } from "../catalog/items.js";
 import { grantItem, consumeItem, getQuantity, MAX_QUANTITY_PER_OP } from "./inventory.js";
@@ -251,27 +252,23 @@ export function applyChange(user, change, ctx = {}) {
         if (!isAcquirable(id)) warnings.push(`${speciesLabel(id)} isn't released yet.`);
         const after = before + amount;
         if (!Number.isSafeInteger(after)) return fail("Count would overflow.");
-        user.pokemon ??= {};
-        user.pokemon[id] ??= { normal: 0, shiny: 0 };
-        const key = trainingKey(id, variant);
         const result = { ok: true, summary: `Add ${fmt(amount)} × ${name}`, before, after, warnings };
-        // First copy (no copies and no Level record): give it a Catch level.
-        if (before === 0 && !user.training?.[key]) {
-          const level = change.level ?? rollCatchLevel(id, ctx.rand ?? Math.random);
-          user.training ??= {};
-          user.training[key] = { exp: expForLevel(level) };
-          result.level = level;
-          result.levelRolled = change.level == null;
-        } else {
-          result.level = getTraining(user, id, variant).level;
+        // Each granted copy is its own Pokémon (docs/adr/0001): it rolls a
+        // Catch level unless the admin set one, and registers in the Pokédex.
+        const rand = ctx.rand ?? Math.random;
+        let best = 0;
+        for (let i = 0; i < amount; i++) {
+          const made = addCopy(user, id, variant, { exp: change.level != null ? expForLevel(change.level) : null, rand });
+          best = Math.max(best, made.level);
         }
-        user.pokemon[id][variant] = after;
+        result.level = change.level ?? best;
+        result.levelRolled = change.level == null;
         return result;
       }
       if (amount > before) return fail(`They have ${fmt(before)} × ${name}.`, { current: before });
       // TM system (services/ownership.js): admin removals take untrained copies
       // only; a copy with TM-trained moves is never removed this way (fail closed).
-      const can = canRemoveCopies(user, { id, variant, n: amount });
+      const can = canRemoveCopies(user, { id, variant, n: amount, allowTeam: true });
       if (!can.ok) {
         const untrained = plainCount(user, id, variant);
         return fail(`${fmt(before - untrained)} of their ${fmt(before)} × ${name} have TM-trained moves and can't be removed here. At most ${fmt(untrained)} can be removed.`, { current: before, untrained });
@@ -285,7 +282,7 @@ export function applyChange(user, change, ctx = {}) {
         result.levelReset = level;
         clearTeamSlots(user, id, variant);
       }
-      const removed = removeCopies(user, { id, variant, n: amount }); // counts, Level reset, empty entry
+      const removed = removeCopies(user, { id, variant, n: amount, allowTeam: true }); // lowest Level first; the Pokédex keeps the species
       if (!removed.ok) return fail(removed.error ?? "Couldn't remove those copies.");
       return result;
     }
@@ -310,10 +307,14 @@ export function applyChange(user, change, ctx = {}) {
       const { speciesId: id, variant, level } = change;
       const name = `${variantLabel(variant)}${speciesLabel(id)}`;
       if (count(user, id, variant) <= 0) return fail(`They don't own ${name}.`);
-      const before = getTraining(user, id, variant).level;
+      // One copy: the one named by uid, else their best (the Level shown for the line).
+      normalizeBox(user);
+      const copy = change.uid ? copiesOf(user, id, variant).find((c) => c.uid === change.uid) : copiesOf(user, id, variant)[0];
+      if (!copy) return fail(`That ${name} no longer exists.`);
+      const before = copy.level;
       if (before === level) return fail(`${name} is already Lv ${level}.`);
-      user.training ??= {};
-      user.training[trainingKey(id, variant)] = { exp: expForLevel(level) };
+      user.box[copy.uid].exp = expForLevel(level);
+      syncLine(user, id, variant);
       return { ok: true, summary: `Set ${name} to Lv ${level}`, before: `Lv ${before}`, after: `Lv ${level}`, warnings };
     }
 

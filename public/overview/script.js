@@ -14,7 +14,7 @@
 import { playerId, pageHref, showBanner, showExpired } from "/public/shared/shell.js";
 import { displaySpeciesName } from "/public/shared/names.js";
 import { scanFx } from "/public/shared/spriteFx.js";
-import { getRegions, countOwned } from "/public/picker-pokemon/regions.js";
+import { getRegions, countRegistered } from "/public/picker-pokemon/regions.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
 
 const app = document.getElementById("ovApp");
@@ -74,7 +74,7 @@ async function load() {
   const liveSet = new Set(live.liveGenerations ?? [1, 2, 3, 4, 5]);
   const liveData = Object.fromEntries(Object.entries(data).filter(([, p]) => liveSet.has(p.generation)));
   const regions = getRegions(liveData);
-  const ownedTotal = regions.reduce((s, r) => s + countOwned(r, up.pokemon), 0);
+  const ownedTotal = regions.reduce((s, r) => s + countRegistered(r, up.pokedex), 0);
   const total = regions.reduce((s, r) => s + r.ids.length, 0);
 
   const r = up.ranked ?? { rating: 1000, wins: 0, losses: 0 };
@@ -109,7 +109,7 @@ async function load() {
     <section class="ov-card ov-dex" aria-labelledby="ovDex">
       <h2 id="ovDex">Pokédex</h2>
       <p class="ov-note">${ownedTotal} of ${total} owned · Mega forms don’t count as entries</p>
-      ${regions.map((g) => { const n = countOwned(g, up.pokemon); return `<div class="ov-reg"><span>${esc(g.name)}</span><span class="ov-bar" role="img" aria-label="${esc(g.name)}: ${n} of ${g.ids.length}"><i style="width:${Math.round((n / g.ids.length) * 100)}%"></i></span><span>${n}/${g.ids.length}</span></div>`; }).join("")}
+      ${regions.map((g) => { const n = countRegistered(g, up.pokedex); return `<div class="ov-reg"><span>${esc(g.name)}</span><span class="ov-bar" role="img" aria-label="${esc(g.name)}: ${n} of ${g.ids.length}"><i style="width:${Math.round((n / g.ids.length) * 100)}%"></i></span><span>${n}/${g.ids.length}</span></div>`; }).join("")}
       <a class="ov-link" href="${pageHref("/public/picker-pokemon/")}">Open the Collection</a>
     </section>
   </div>`;

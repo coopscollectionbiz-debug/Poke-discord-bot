@@ -10,6 +10,8 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
+// A copy of species `id` (and shiny 0/1 when given) in the player's box (services/box.js).
+const uidOf = (u, id, shiny = null) => Object.keys(u.box ?? {}).find((k) => u.box[k].id === id && (shiny == null || (u.box[k].shiny ? 1 : 0) === shiny));
 
 const dir = await fs.mkdtemp(path.join(os.tmpdir(), "gameplay-"));
 process.env.TRAINERDATA_DIR = dir;
@@ -146,17 +148,19 @@ section("Evolve: stones and shiny dust");
   assertEqual((await ev({ baseId: 99999, targetId: 1 })).status, 400, "unknown species: 400");
   assertEqual((await ev({ baseId: 10 })).status, 400, "missing target: 400");
   u.items.evolution_stone = 1;
-  u.displayedPokemon = [{ id: 10, variant: "normal" }];
+  // Individual copies (docs/adr/0001): a Team copy is never picked
+  // automatically; named, it may evolve and its slot follows (below).
+  u.displayedPokemon = [{ id: 10, variant: "normal", uid: uidOf(u, 10) }];
   snap = clone(state.td);
   const shown = await ev({ baseId: 10, targetId: 11 });
-  assertTrue(shown.status === 400 && /on one of your teams/.test(shown.body.error) && JSON.stringify(state.td) === JSON.stringify(snap), "a Pokémon on the Team can't evolve; nothing changed");
+  assertTrue(shown.status === 400 && /Choose which/.test(shown.body.error) && JSON.stringify(state.td) === JSON.stringify(snap), "a Pokémon on the Team is never evolved unless named; nothing changed");
   u.displayedPokemon = [];
   const notOwned = await ev({ baseId: 11, targetId: 12 });
   assertTrue(notOwned.status === 400 && /do not own/.test(notOwned.body.error) && u.items.evolution_stone === 1, "not owned: refused, stone kept");
 
   // Level carries over (existing behavior).
   // carryLevel: the target keeps the higher of its own floor and the source's EXP.
-  u.training = { "10:normal": { exp: 50000 } };
+  u.box[uidOf(u, 10)].exp = 50000; // the copy's own EXP (user.training is derived)
   await ev({ baseId: 10, targetId: 11 });
   assertEqual(getTraining(u, 11, "normal").exp, 50000, "EXP above the target's floor carries to the evolved form");
   assertTrue(!u.training["10:normal"], "the base's level entry is removed when its last copy evolves");
@@ -246,16 +250,20 @@ section("Shiny conversion");
   assertTrue(ok.body.success && ok.body.dustCost === 15 && ok.body.saved === true, "common conversion costs exactly 15 dust");
   assertEqual([u.items.shiny_dust, u.pokemon[10].normal, u.pokemon[10].shiny, ok.body.counts.shiny], [0, 1, 1, 1], "one normal became shiny");
 
-  u.displayedPokemon = [{ id: 10, variant: "normal" }];
+  const teamUid = uidOf(u, 10, 0);
+  u.displayedPokemon = [{ id: 10, variant: "normal", uid: teamUid }];
   u.items.shiny_dust = 15;
   snap = clone(state.td);
-  assertTrue((await cv({ pokeId: 10 })).status === 400 && JSON.stringify(state.td) === JSON.stringify(snap), "normal copy on the Team: refused");
+  assertTrue((await cv({ pokeId: 10 })).status === 400 && JSON.stringify(state.td) === JSON.stringify(snap), "normal copy on the Team: never converted unless named");
+  const named = await cv({ pokeId: 10, uid: teamUid });
+  assertTrue(named.body.success && u.displayedPokemon[0].variant === "shiny" && u.displayedPokemon[0].uid === teamUid, "named, the Team copy converts and its slot follows");
   u.displayedPokemon = [];
+  u.items.shiny_dust = 15; // the named conversion spent it; the concurrency check below needs one conversion's worth
 
   // Concurrency: dust for one conversion, 3 parallel requests.
   u.pokemon[10].normal = 3;
   const par = await Promise.all(Array.from({ length: 3 }, () => cv({ pokeId: 10 })));
-  assertEqual([par.filter((r) => r.body.success).length, u.items.shiny_dust, u.pokemon[10].normal, u.pokemon[10].shiny], [1, 0, 2, 2], "parallel conversions can't double-spend dust");
+  assertEqual([par.filter((r) => r.body.success).length, u.items.shiny_dust, u.pokemon[10].normal, u.pokemon[10].shiny], [1, 0, 2, 3], "parallel conversions can't double-spend dust");
 
   state.saveOk = false;
   u.items.shiny_dust = 15;

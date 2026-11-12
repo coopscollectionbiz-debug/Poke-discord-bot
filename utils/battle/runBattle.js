@@ -27,7 +27,10 @@ import { resolveBattleMega } from "../../services/megaTeam.js";
 import { megaBattleEligibility, megaBattleProfile } from "../megas.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
 import { toTeamObj } from "../economyRules.js";
-import { slotCopyUid } from "../../services/ownership.js";
+import { slotCopyUid, slotBoxUid } from "../../services/ownership.js";
+import { copyTraining, addCopyExp, copiesOf } from "../../services/box.js";
+
+const bestCopyUid = (user, id, variant) => copiesOf(user, id, variant)[0]?.uid ?? null;
 import { battleItems } from "../../services/heldItems.js";
 import { expMultiplierFor } from "./items.js";
 
@@ -59,20 +62,24 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
   if (mega && !mega.ok && isMegaCapabilityEnabled("battle", env)) console.warn(`⚠️ Mega slot battles as its base form (${mega.reason}).`);
   const items = battleItems(user, equipmentTeam, { env });
   const uids = new Map();
+  const copies = new Map(); // the specific copy in each slot (Level, EXP)
   for (const entry of Array.isArray(team) ? team : []) {
     const t = toTeamObj(entry);
     if (!t || uids.has(`${t.id}:${t.variant}`)) continue;
     uids.set(`${t.id}:${t.variant}`, slotCopyUid(user, { ...t, uid: entry?.uid }));
+    copies.set(`${t.id}:${t.variant}`, slotBoxUid(user, { ...t, uid: entry?.uid }));
   }
   return normalizeTeam(team, 6)
     .filter((slot) => (user.pokemon?.[slot.id]?.[slot.variant] ?? 0) > 0)
     .map((slot) => {
+      const copyUid = copies.get(`${slot.id}:${slot.variant}`) ?? null;
       const member = {
         speciesId: slot.id,
         variant: slot.variant,
         name: speciesName(slot.id),
-        level: getTraining(user, slot.id, slot.variant).level,
+        level: (copyUid && copyTraining(user, copyUid)?.level) ?? getTraining(user, slot.id, slot.variant).level,
       };
+      if (copyUid) member.copyUid = copyUid;
       const uid = uids.get(`${slot.id}:${slot.variant}`) ?? null;
       if (uid) member.uid = uid;
       const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant, { uid });
@@ -134,7 +141,10 @@ function applyExp(user, side, result, sideIndex) {
 // moves. base[i] (held items): the gain before an EXP item, reported when it differs.
 export function applyGains(user, members, gains, base = gains) {
   return members.map((m, i) => {
-    const { fromLevel, toLevel } = addExp(user, m.speciesId, m.variant, gains[i]);
+    // EXP goes to the copy that fought (docs/adr/0001); a member saved
+    // before copies existed falls back to the line's best copy.
+    const target = m.copyUid && user.box?.[m.copyUid] ? m.copyUid : bestCopyUid(user, m.speciesId, m.variant);
+    const { fromLevel, toLevel } = target ? addCopyExp(user, target, gains[i]) : addExp(user, m.speciesId, m.variant, gains[i]);
     return {
       key: trainingKey(m.speciesId, m.variant),
       name: m.name,

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Pokédex · Coop’s Collection</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/public/shared/tokens.css" />
+    <link rel="stylesheet" href="/public/shared/components.css" />
+    <link rel="stylesheet" href="/public/pokedex/style.css" />
+  </head>
+
+  <body data-page="pokedex">
+    <header class="cc-page-head">
+      <p class="cc-eyebrow">Pokédex</p>
+      <h1>Pokédex</h1>
+      <p id="dxSub">Every Pokémon you have ever caught. It never shrinks, even after you donate or gift.</p>
+    </header>
+
+    <main id="ccMain" tabindex="-1">
+      <dl class="dx-summary" id="dxSummary"></dl>
+
+      <div class="dx-controls">
+        <label class="dx-search">
+          <span class="sr-only">Search</span>
+          <input id="dxSearch" type="search" placeholder="Search name or #" autocomplete="off" />
+        </label>
+        <div class="dx-seg" role="group" aria-label="Show">
+          <button type="button" class="dx-segbtn" data-show="all" aria-pressed="true">All</button>
+          <button type="button" class="dx-segbtn" data-show="caught" aria-pressed="false">Caught</button>
+          <button type="button" class="dx-segbtn" data-show="missing" aria-pressed="false">Missing</button>
+          <button type="button" class="dx-segbtn" data-show="shiny" aria-pressed="false">✨ Shiny</button>
+        </div>
+      </div>
+      <nav class="dx-regions" id="dxRegions" aria-label="Regions"></nav>
+
+      <div id="dxApp"><p class="dx-loading">Loading…</p></div>
+    </main>
+
+    <script type="module" src="/public/shared/shell.js"></script>
+    <script type="module" src="/public/pokedex/script.js"></script>
+  </body>
+</html>

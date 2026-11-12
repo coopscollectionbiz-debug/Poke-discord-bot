@@ -39,6 +39,16 @@ import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
 import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid, carryCopyUids, trainedSummary } from "./services/ownership.js";
+import { normalizeBox, allCopies, slotsHolding, mergeDex } from "./services/box.js";
+
+// Compact per-copy rows for the dashboard (see the /api/user payload).
+const TEAM_BIT = { displayedPokemon: 1, battleTeam: 2, showcaseTeam: 4 };
+function copyRows(u) {
+  return allCopies(u).map((c) => [
+    c.uid, c.id, c.variant === "shiny" ? 1 : 0, c.level, c.at ?? 0, c.trained ? 1 : 0,
+    slotsHolding(u, c.uid).reduce((m, s) => m | (TEAM_BIT[s.field] ?? 0), 0),
+  ]);
+}
 
 // Local saver — writes trainerData.json (in TRAINERDATA_DIR) & marks dirty
 import {
@@ -346,6 +356,10 @@ normalizeDisplayedTeam(user);
 // stores a one-time notice (services/battleTeam.js trimBattleTeamMythics).
 normalizeNotices(user);
 normalizeBattleTeam(user);
+// Individual copies + Pokédex (services/box.js, docs/adr/0001): migrates
+// counts into copies on first run, reconciles after a rollback, and points
+// every team slot at one specific copy.
+normalizeBox(user);
 // Held items: team equipment follows the cleaned teams (assignments of
 // Pokémon no longer on a team, Mega slots and unowned items are dropped;
 // unlocks are never touched). Never creates the field.
@@ -537,6 +551,9 @@ app.get("/public/picker", (_, res) =>
 );
 app.get("/public/picker-pokemon", (_, res) =>
   res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
+);
+app.get("/public/pokedex", (_, res) =>
+  res.sendFile(path.join(staticPath, "pokedex", "index.html"))
 );
 app.get("/public/overview", (_, res) =>
   res.sendFile(path.join(staticPath, "overview", "index.html"))
@@ -933,6 +950,24 @@ async function loadTrainerData() {
     // normalizeUserSchema → normalizeBattleTeam; count them for the boot log.
     const trimmed = Object.entries(data).filter(([id, u]) => peekNotices(u, NOTICE_KINDS.BATTLE_TEAM_TRIM).length > (trimmedBefore.get(id) || 0)).length;
     console.log(`⚔️ Battle teams trimmed to one mythic-tier Pokémon: ${trimmed}`);
+  }
+  // Pokédex backfill (docs/adr/0001): species from historical snapshots,
+  // built offline by tools/build-pokedex-backfill.mjs. Union only, so it is
+  // safe to leave set or to run again. The file holds player ids: it lives
+  // on the data volume, never in the repository.
+  if (process.env.POKEDEX_BACKFILL_FILE) {
+    try {
+      const raw = JSON.parse(fsSync.readFileSync(process.env.POKEDEX_BACKFILL_FILE, "utf8"));
+      let players = 0, entries = 0;
+      for (const [id, masks] of Object.entries(raw?.users ?? {})) {
+        if (!data[id]) continue;
+        const n = mergeDex(data[id], masks);
+        if (n) { players++; entries += n; }
+      }
+      console.log(`📖 Pokédex backfill: ${entries} species added for ${players} player(s)`);
+    } catch (err) {
+      console.error("⚠️ Pokédex backfill not applied:", err?.message || err);
+    }
   }
   // Release C: retroactive achievement recognition (idempotent, once per
   // catalog revision per player; recognition only, no rewards).
@@ -2204,6 +2239,11 @@ app.get("/api/user-pokemon", (req, res) => {
     // TM system (T5): trained copies per line, for the copy choosers in
     // donate / evolve / shiny craft / Teams. { "6:normal": [{ uid, rev, tmMoves, teams }] }
     trained: trainedSummary(u),
+    // Pokédex (ever caught; never drops): { id: 1 normal | 2 shiny | 3 both }.
+    pokedex: u.pokedex ?? {},
+    // Collection: every copy, one entry each (docs/adr/0001), for the box grid.
+    // [uid, id, shiny 0|1, level, caughtAt|0, trained 0|1, teams bitmask (1 casual, 2 ranked, 4 showcase)]
+    copies: copyRows(u),
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
     // One-time notices (services/notices.js); the Teams page shows the
     // Battle team ones and dismisses them via /api/dismiss-notices.
@@ -2588,6 +2628,16 @@ app.post("/api/pokemon/donate-bulk", express.json({ limit: "100kb" }), async (re
 // Costs dust by tier of the Pokémon being converted.
 // Blocks converting if the NORMAL variant is currently displayed.
 // ==========================================================
+app.post("/api/pokemon/feed", express.json(), async (req, res) => {
+  try {
+    const r = await gameplay.feed({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(r.status).json(r.body);
+  } catch (err) {
+    console.error("❌ /api/pokemon/feed:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
   try {
     const r = await gameplay.convertToShiny({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });

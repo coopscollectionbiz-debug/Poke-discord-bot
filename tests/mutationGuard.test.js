@@ -118,7 +118,9 @@ section("TM T0: Pokémon ownership is only lowered through services/ownership.js
 {
   // Removing copies anywhere else could destroy a TM-trained copy
   // (user.customPokemon) by picking "any copy" (docs/tm-system).
-  const others = lines.filter((l) => l.f !== "services/ownership.js");
+  // services/box.js (individual copies, docs/adr/0001) is part of the same
+  // ownership service: it holds the copies the counts are derived from.
+  const others = lines.filter((l) => l.f !== "services/ownership.js" && l.f !== "services/box.js");
   const decrements = others.filter(
     (l) =>
       /\bpokemon\s*\[[^\]]+\]\s*(\.(normal|shiny)|\[[^\]]+\])\s*(-=|--)/.test(l.text) ||

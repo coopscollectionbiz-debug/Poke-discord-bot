@@ -24,14 +24,24 @@
 //   • Pure + synchronous: call inside the caller's user lock/transaction.
 // ==========================================================
 
-import { randomBytes } from "crypto";
-import { carryLevel, resetLevelIfGone } from "../utils/training.js";
 import { getSpeciesEntry } from "../utils/speciesCatalog.js";
 import { getMove } from "../utils/battle/data.js";
+import { expForLevel, floorLevel } from "../utils/training.js";
+import {
+  COPY_UID_PATTERN, copyOf, copiesOf, spareCopies, isOnTeam, slotsHolding, takeCopy,
+  syncLine, registerDex, newCopyUid as newBoxUid, TEAM_FIELDS, normalizeBox,
+} from "./box.js";
+
+// Users built or changed outside the normal load path (tests, older code
+// that still writes counts) are reconciled before any ownership decision.
+const ensureBox = (user) => { if (user && typeof user === "object") normalizeBox(user); };
+
+// Individual copies (docs/adr/0001): every copy lives in user.box; the counts
+// in user.pokemon are derived from it (services/box.js syncLine).
 
 const VARIANTS = new Set(["normal", "shiny"]);
-/** Server-generated customized-copy ids: "c_" + 10 base62 characters. */
-export const CUSTOM_UID_PATTERN = /^c_[A-Za-z0-9]{10}$/;
+/** Server-generated copy ids: "c_" + 10 base62 characters (box and trained records). */
+export const CUSTOM_UID_PATTERN = COPY_UID_PATTERN;
 const fail = (code, error, extra = {}) => ({ ok: false, code, error, ...extra });
 
 const countOf = (user, id, variant) => {
@@ -48,7 +58,7 @@ export function customCopiesOf(user, id, variant) {
   );
 }
 
-/** Copies of id:variant that carry no customization (interchangeable). */
+/** Copies of id:variant with no TM moves. */
 export function plainCount(user, id, variant) {
   return Math.max(0, countOf(user, id, variant) - customCopiesOf(user, id, variant).length);
 }
@@ -74,19 +84,6 @@ export function pruneEmptyLine(user, id) {
   }
 }
 
-// Remove a customized record and everything that points at it.
-function dropCustom(user, uid) {
-  delete user.customPokemon[uid];
-  for (const team of Object.values(user.movesets ?? {})) {
-    if (team && typeof team === "object") delete team[`u:${uid}`];
-  }
-  for (const field of ["displayedPokemon", "battleTeam"]) {
-    if (!Array.isArray(user[field])) continue;
-    for (const slot of user[field]) if (slot && typeof slot === "object" && slot.uid === uid) delete slot.uid;
-  }
-  if (user.customPokemon && Object.keys(user.customPokemon).length === 0) delete user.customPokemon;
-}
-
 // Validate that `uids` name customized copies of this line with confirmed revs.
 function checkNamedCustoms(user, id, variant, uids, confirmRevs) {
   if (!Array.isArray(uids)) return fail("bad_request", "Invalid copy list.");
@@ -103,89 +100,119 @@ function checkNamedCustoms(user, id, variant, uids, confirmRevs) {
   return null;
 }
 
+// Validate player-picked untrained copies (`uids`) of this line.
+function checkNamedPlain(user, id, variant, uids, allowTeam) {
+  if (!Array.isArray(uids)) return fail("bad_request", "Invalid copy list.");
+  if (new Set(uids).size !== uids.length) return fail("bad_request", "A copy is listed twice.");
+  for (const uid of uids) {
+    const rec = copyOf(user, uid);
+    if (!rec || Number(rec.id) !== Number(id) || (rec.shiny ? "shiny" : "normal") !== variant) return fail("unknown_copy", "That Pokémon copy no longer exists.");
+    if (user?.customPokemon?.[uid] && !user.customPokemon[uid].suspended) return fail("bad_request", "Confirm TM-trained Pokémon individually.");
+    if (!allowTeam && isOnTeam(user, uid)) return fail("on_team", "That Pokémon is on a team. Take it off the team first.");
+  }
+  return null;
+}
+
 /**
  * Check (without changing anything) whether `n` copies of id:variant can be
  * removed. Same result as removeCopies, minus the mutation.
+ *   uids        untrained copies the player picked (used first)
+ *   customUids  trained copies the player confirmed (with confirmRevs)
+ *   exact       remove exactly the named trained copies, untrained for the rest
+ *   allowTeam   admin only: copies on a Team may be taken (their slots empty)
+ * Untrained copies are otherwise taken lowest Level first, never from a Team.
  */
-export function canRemoveCopies(user, { id, variant, n, customUids = [], confirmRevs = {}, exact = false }) {
+export function canRemoveCopies(user, { id, variant, n, uids = [], customUids = [], confirmRevs = {}, exact = false, allowTeam = false }) {
+  ensureBox(user);
   if (!VARIANTS.has(variant)) return fail("bad_request", "Invalid variant.");
   if (!Number.isInteger(n) || n < 1) return fail("bad_request", "Invalid count.");
   const owned = countOf(user, id, variant);
   if (owned < n) return fail("not_owned", "You don't own enough of that Pokémon.", { owned });
-  const named = checkNamedCustoms(user, id, variant, customUids, confirmRevs);
+  const named = checkNamedCustoms(user, id, variant, customUids, confirmRevs) ?? checkNamedPlain(user, id, variant, uids, allowTeam);
   if (named) return named;
-  const plain = plainCount(user, id, variant);
-  // exact (T5): remove precisely the named trained copies, plus plain copies
-  // for the rest. Used when the player picked one specific trained copy.
+  if (uids.length > n) return fail("bad_request", "Too many copies listed.");
+  const picked = new Set(uids);
+  const teamPlain = copiesOf(user, id, variant).filter((c) => !c.trained && isOnTeam(user, c.uid)).sort((a, b) => a.exp - b.exp);
+  const auto = [...spareCopies(user, id, variant), ...(allowTeam ? teamPlain : [])]
+    .filter((c) => !picked.has(c.uid))
+    .map((c) => c.uid);
+  const plain = uids.length + auto.length;
+  const short = (need) => (customCopiesOf(user, id, variant).length > 0
+    ? fail("custom_copies_protected", "Some of these Pokémon have TM-trained moves. Choose them individually to confirm.", { plain, protected: customCopiesOf(user, id, variant).map(copySummary) })
+    : fail("on_team", teamPlain.length ? "Some of these Pokémon are on a team. Take them off the team first." : "You don't own enough of that Pokémon.", { plain, need }));
   if (exact) {
-    if (customUids.length > n) return fail("bad_request", "Too many copies listed.");
-    if (n - customUids.length > plain) {
-      return fail("custom_copies_protected", "Some of these Pokémon have TM-trained moves. Choose them individually to confirm.", { plain, protected: customCopiesOf(user, id, variant).map(copySummary) });
-    }
-    return { ok: true, plain, useCustom: [...customUids] };
+    if (customUids.length + uids.length > n) return fail("bad_request", "Too many copies listed.");
+    const rest = n - customUids.length - uids.length;
+    if (rest > auto.length) return short(rest);
+    return { ok: true, plain, usePlain: [...uids, ...auto.slice(0, rest)], useCustom: [...customUids] };
   }
   const needCustom = Math.max(0, n - plain);
-  if (needCustom > customUids.length) {
-    return fail("custom_copies_protected", "Some of these Pokémon have TM-trained moves. Choose them individually to confirm.", {
-      plain,
-      protected: customCopiesOf(user, id, variant).map(copySummary),
-    });
-  }
-  return { ok: true, plain, useCustom: customUids.slice(0, needCustom) };
+  if (needCustom > customUids.length) return short(needCustom);
+  return { ok: true, plain, usePlain: [...uids, ...auto].slice(0, n - needCustom), useCustom: customUids.slice(0, needCustom) };
 }
 
 /**
- * Remove `n` copies of id:variant (plain copies first). IN PLACE on success
- * only. Prunes an empty species entry and resets the Level when the last
- * copy of the variant is gone.
- * @returns {{ok:true, removedCustom:string[]} | {ok:false, code, error, ...}}
+ * Remove `n` copies of id:variant. IN PLACE on success only.
+ * @returns {{ok:true, removedCustom:string[], removed:{uid, rec, custom}[]} | {ok:false, code, error, ...}}
  */
 export function removeCopies(user, args) {
   const check = canRemoveCopies(user, args);
   if (!check.ok) return check;
-  const { id, variant, n } = args;
-  user.pokemon[id][variant] = countOf(user, id, variant) - n;
-  for (const uid of check.useCustom) dropCustom(user, uid);
-  resetLevelIfGone(user, id, variant);
-  pruneEmptyLine(user, id);
-  return { ok: true, removedCustom: check.useCustom };
+  const removed = [];
+  for (const uid of [...check.usePlain, ...check.useCustom]) {
+    const taken = takeCopy(user, uid);
+    if (taken) removed.push({ uid, ...taken });
+  }
+  pruneEmptyLine(user, args.id);
+  return { ok: true, removedCustom: check.useCustom, removed };
 }
 
 /**
  * Move ONE copy from one line to another (evolution: species changes;
- * shiny craft: variant changes). The target keeps the higher Level
- * (carryLevel). With `uid`, that customized copy's record moves with it
- * and keeps its uid; without one, a plain copy is used, and the request is
- * refused if only customized copies remain.
+ * shiny craft: variant changes). The copy keeps its uid, its Level (raised
+ * to the new species' floor if lower), its TM moves and its Team slots.
+ * `uid` names the copy (a trained one needs confirmRev); without one, the
+ * highest-Level spare (untrained, on no Team) is used.
  */
 export function canTransformCopy(user, { from, to, uid = null, confirmRev = undefined }) {
+  ensureBox(user);
   if (!VARIANTS.has(from?.variant) || !VARIANTS.has(to?.variant)) return fail("bad_request", "Invalid variant.");
   if (!Number.isInteger(Number(from.id)) || !Number.isInteger(Number(to.id))) return fail("bad_request", "Invalid Pokémon.");
   if (Number(from.id) === Number(to.id) && from.variant === to.variant) return fail("bad_request", "Nothing to change.");
   if (countOf(user, from.id, from.variant) < 1) return fail("not_owned", "You don't own that Pokémon.");
   if (uid != null) {
-    const named = checkNamedCustoms(user, from.id, from.variant, [uid], { [uid]: confirmRev });
+    const custom = user?.customPokemon?.[uid];
+    if (custom && !custom.suspended) {
+      const named = checkNamedCustoms(user, from.id, from.variant, [uid], { [uid]: confirmRev });
+      if (named) return named;
+      return { ok: true, uid, record: custom };
+    }
+    const named = checkNamedPlain(user, from.id, from.variant, [uid], true);
     if (named) return named;
-    return { ok: true, record: user.customPokemon[uid] };
+    return { ok: true, uid, record: null };
   }
-  if (plainCount(user, from.id, from.variant) < 1) {
-    return fail("choose_copy", "These Pokémon have TM-trained moves. Choose which one to use.", {
+  const spares = spareCopies(user, from.id, from.variant);
+  if (spares.length < 1) {
+    return fail("choose_copy", "Choose which of these Pokémon to use.", {
       protected: customCopiesOf(user, from.id, from.variant).map(copySummary),
     });
   }
-  return { ok: true, record: null };
+  return { ok: true, uid: spares[spares.length - 1].uid, record: null };
 }
 
 export function transformCopy(user, args) {
   const check = canTransformCopy(user, args);
   if (!check.ok) return check;
   const { from, to } = args;
-  const { record } = check;
-
-  user.pokemon[from.id][from.variant] = countOf(user, from.id, from.variant) - 1;
-  user.pokemon[to.id] ??= { normal: 0, shiny: 0 };
-  user.pokemon[to.id][to.variant] = countOf(user, to.id, to.variant) + 1;
-  carryLevel(user, { id: from.id, variant: from.variant }, { id: to.id, variant: to.variant });
+  const { record, uid } = check;
+  const rec = copyOf(user, uid);
+  rec.id = Number(to.id);
+  if (to.variant === "shiny") rec.shiny = true; else delete rec.shiny;
+  rec.exp = Math.max(Number(rec.exp) || 0, expForLevel(floorLevel(Number(to.id))));
+  for (const { field, index } of slotsHolding(user, uid)) {
+    user[field][index].id = Number(to.id);
+    user[field][index].variant = to.variant;
+  }
   if (record) {
     record.speciesId = Number(to.id);
     record.variant = to.variant;
@@ -194,15 +221,28 @@ export function transformCopy(user, args) {
       record.history.push({ type: Number(from.id) !== Number(to.id) ? "evolve" : "shiny", from: `${from.id}:${from.variant}`, to: `${to.id}:${to.variant}`, at: Date.now() });
     }
   }
-  resetLevelIfGone(user, from.id, from.variant);
+  syncLine(user, from.id, from.variant);
+  syncLine(user, to.id, to.variant);
+  const dex = registerDex(user, to.id, to.variant);
   pruneEmptyLine(user, from.id);
-  return { ok: true, movedCustom: record ? record.uid : null };
+  return { ok: true, uid, movedCustom: record ? record.uid : null, ...dex };
 }
 
-/** Admin full wipe (/resetuser): every copy and every customized record. */
+/** Admin full wipe (/resetuser): every copy, every trained record and the Pokédex. */
 export function wipeCollection(user) {
   user.pokemon = {};
+  user.box = {};
   delete user.customPokemon;
+  delete user.training;
+  delete user.pokedex;
+}
+
+/** The copy a team slot stands for (any copy of the slot's line), or null. */
+export function slotBoxUid(user, slot) {
+  const uid = slot && typeof slot === "object" ? slot.uid : undefined;
+  const rec = copyOf(user, uid);
+  if (!rec) return null;
+  return Number(rec.id) === Number(slot.id) && (rec.shiny ? "shiny" : "normal") === (slot.variant === "shiny" ? "shiny" : "normal") ? uid : null;
 }
 
 /**
@@ -322,11 +362,12 @@ export function normalizeCustomPokemon(user) {
     }
   }
 
-  // 4. team slots: keep a uid only when it is valid for that slot.
-  for (const field of ["displayedPokemon", "battleTeam"]) {
+  // 4. team slots: keep a uid only when it names a copy of that slot's line
+  // (services/box.js normalizeBox fills in the rest).
+  for (const field of TEAM_FIELDS) {
     if (!Array.isArray(user[field])) continue;
     for (const slot of user[field]) {
-      if (slot && typeof slot === "object" && "uid" in slot && !slotCopyUid(user, slot)) {
+      if (slot && typeof slot === "object" && "uid" in slot && !slotCopyUid(user, slot) && !slotBoxUid(user, slot)) {
         delete slot.uid;
         res.changed = true;
       }
@@ -346,28 +387,24 @@ export function normalizeCustomPokemon(user) {
 // Phase T4: creating trained copies and keeping them on their team slots
 // ==========================================================
 
-const UID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 export const COPY_HISTORY_MAX = 20;
 
-/** A fresh, unused trained-copy id ("c_" + 10 base62 chars from crypto). */
-export function newCopyUid(user) {
-  for (let attempt = 0; attempt < 20; attempt++) {
-    const bytes = randomBytes(10);
-    let uid = "c_";
-    for (const b of bytes) uid += UID_ALPHABET[b % UID_ALPHABET.length];
-    if (!user?.customPokemon?.[uid]) return uid;
-  }
-  throw new Error("newCopyUid: could not find a free id");
-}
+/** A fresh, unused copy id ("c_" + 10 base62 chars from crypto). */
+export const newCopyUid = newBoxUid;
 
 /**
  * Turn ONE untrained copy of id:variant into a trained copy (record with no
  * moves yet). Counts don't change: the copy just stops being untrained.
- * Caller (TM teaching) has validated everything and adds the move next.
+ * `uid` names the copy; otherwise the best untrained copy on a Team is used,
+ * then the best untrained copy. Caller (TM teaching) has validated
+ * everything and adds the move next.
  */
-export function createTrainedCopy(user, id, variant, now = Date.now()) {
-  if (plainCount(user, id, variant) < 1) return fail("choose_copy", "You have no untrained copy of that Pokémon left.");
-  const uid = newCopyUid(user);
+export function createTrainedCopy(user, id, variant, now = Date.now(), uid = null) {
+  ensureBox(user);
+  const untrained = copiesOf(user, id, variant).filter((c) => !c.trained);
+  if (untrained.length < 1) return fail("choose_copy", "You have no untrained copy of that Pokémon left.");
+  if (uid != null && !untrained.some((c) => c.uid === uid)) return fail("choose_copy", "That Pokémon already has TM-trained moves or no longer exists.");
+  uid ??= (untrained.find((c) => isOnTeam(user, c.uid)) ?? untrained[0]).uid;
   user.customPokemon ??= {};
   user.customPokemon[uid] = { uid, speciesId: Number(id), variant, tmMoves: [], rev: 0, history: [], createdAt: now };
   return { ok: true, uid };
@@ -385,22 +422,13 @@ export function learnTmMove(user, uid, moveId, { item = null, requestId = null, 
 }
 
 /**
- * Point every UNTRAINED slot of this line (both teams) at trained copy `uid`
- * (owner decision, T4). Slots already holding another trained copy stay.
- * @returns {string[]} the teams changed ("display" / "battle")
+ * Teams whose slots hold copy `uid` (it is a specific Pokémon now, so it
+ * already sits in its own slots; nothing is repointed).
+ * @returns {string[]} ("display" / "battle" / "showcase")
  */
 export function assignLineSlotsToCopy(user, id, variant, uid) {
-  const changed = [];
-  for (const [field, team] of [["displayedPokemon", "display"], ["battleTeam", "battle"]]) {
-    if (!Array.isArray(user?.[field])) continue;
-    for (const slot of user[field]) {
-      if (slot && typeof slot === "object" && Number(slot.id) === Number(id) && (slot.variant === "shiny" ? "shiny" : "normal") === variant && !slotCopyUid(user, slot)) {
-        slot.uid = uid;
-        changed.push(team);
-      }
-    }
-  }
-  return changed;
+  const name = { displayedPokemon: "display", battleTeam: "battle", showcaseTeam: "showcase" };
+  return slotsHolding(user, uid).map((s) => name[s.field]);
 }
 
 /**
@@ -411,25 +439,33 @@ export function assignLineSlotsToCopy(user, id, variant, uid) {
  * in `previous`. Returns a new array; never invents a copy.
  */
 export function carryCopyUids(user, previous, next, raw = []) {
-  const prevUid = new Map();
+  // Per line, the copies that line's slots held before (in slot order).
+  const lineKey = (s) => `${Number(s.id)}:${s.variant === "shiny" ? "shiny" : "normal"}`;
+  const prevUids = new Map();
   for (const s of Array.isArray(previous) ? previous : []) {
-    const uid = s && typeof s === "object" ? slotCopyUid(user, s) : null;
-    const key = s && typeof s === "object" ? `${Number(s.id)}:${s.variant === "shiny" ? "shiny" : "normal"}` : null;
-    if (uid && key && !prevUid.has(key)) prevUid.set(key, uid);
+    const uid = s && typeof s === "object" ? slotBoxUid(user, s) ?? slotCopyUid(user, s) : null;
+    if (uid) (prevUids.get(lineKey(s)) ?? prevUids.set(lineKey(s), []).get(lineKey(s))).push(uid);
   }
   const rawByKey = new Map();
   for (const r of Array.isArray(raw) ? raw : []) {
     if (!r || typeof r !== "object" || Array.isArray(r)) continue;
     const key = `${Number(r.id)}:${r.variant === "shiny" || (r.variant == null && (r.shiny === true || r.isShiny === true)) ? "shiny" : "normal"}`;
-    if (!rawByKey.has(key)) rawByKey.set(key, r);
+    (rawByKey.get(key) ?? rawByKey.set(key, []).get(key)).push(r);
   }
+  const used = new Set();
+  const valid = (base, uid) => (uid && !used.has(uid) && (slotBoxUid(user, { ...base, uid }) || slotCopyUid(user, { ...base, uid })) ? uid : null);
   return (Array.isArray(next) ? next : []).map((slot) => {
-    const key = `${Number(slot.id)}:${slot.variant === "shiny" ? "shiny" : "normal"}`;
-    const r = rawByKey.get(key);
+    const key = lineKey(slot);
+    const r = rawByKey.get(key)?.shift();
     const { uid: _drop, ...base } = slot;
-    let uid;
-    if (r && Object.prototype.hasOwnProperty.call(r, "uid")) uid = r.uid == null ? null : slotCopyUid(user, { ...base, uid: r.uid });
-    else uid = slot.uid ? slotCopyUid(user, slot) : prevUid.get(key) ?? null;
+    let uid = null;
+    if (r && Object.prototype.hasOwnProperty.call(r, "uid")) {
+      // explicit null: an untrained copy (services/box.js normalizeBox picks one)
+      uid = r.uid == null ? null : valid(base, r.uid);
+    } else {
+      uid = valid(base, slot.uid) ?? (prevUids.get(key) ?? []).map((u) => valid(base, u)).find(Boolean) ?? null;
+    }
+    if (uid) used.add(uid);
     return uid ? { ...base, uid } : base;
   });
 }

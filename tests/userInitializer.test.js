@@ -123,10 +123,13 @@ section("Battle, wager and training data");
 assertTrue(modernOut === modern, "identity kept for a modern record");
 const after = clone(modern);
 const changed = Object.keys(modernBefore).filter((k) => JSON.stringify(after[k]) !== JSON.stringify(modernBefore[k]));
-assertEqual(changed, [], "every existing field (battle, pendingWager, training, team, luck, CC, TP) is unchanged");
+// Individual copies (docs/adr/0001): team slots gain the uid of their copy and
+// training is rewritten from the copies (same Levels); nothing else changes.
+assertEqual(changed.filter((k) => k !== "displayedPokemon" && k !== "training"), [], "every other existing field (battle, pendingWager, luck, CC, TP) is unchanged");
+assertEqual((after.displayedPokemon ?? []).map((s) => (s && typeof s === "object" ? `${s.id}:${s.variant}` : s)), (modernBefore.displayedPokemon ?? []).map((s) => (s && typeof s === "object" ? `${s.id}:${s.variant}` : s)), "the team keeps the same Pokémon in the same slots");
 const added = Object.keys(after).filter((k) => !(k in modernBefore)).sort();
 // Pre-existing behavior (unchanged by the in-place fix): absent fields get defaults.
-assertEqual(added, ["lastWeeklyPack", "onboardingDate", "onboardingStage", "rank", "starterPokemon", "weeklyPackClaimed"],
+assertEqual(added, ["box", "lastWeeklyPack", "onboardingDate", "onboardingStage", "pokedex", "rank", "starterPokemon", "weeklyPackClaimed"],
   "only missing fields are filled with defaults");
 assertEqual(getTraining(modern, 6, "shiny").level, getTraining(modernBefore, 6, "shiny").level, "training level unchanged");
 assertEqual(modern.pendingWager?.stake, 500, "pending wager stake kept");

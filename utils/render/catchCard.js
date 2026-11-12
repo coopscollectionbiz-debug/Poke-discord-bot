@@ -12,6 +12,7 @@
 // rewards): sprite, name, types and rarity only. Both are pure.
 // ==========================================================
 
+import { registeredSpecies } from "../../services/box.js";
 import fs from "fs";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
@@ -27,15 +28,16 @@ export const CATCH_SIZE = Object.freeze({ w: 320, h: 96 });
 const TIER_NAME = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", mythic: "Mythic" };
 const fmt = (n) => Number(n ?? 0).toLocaleString("en-US");
 
-/** Distinct species owned now in a region (CONTEXT.md "Pokédex completion"). */
+/**
+ * Species of a region registered in the player's Pokédex (CONTEXT.md
+ * "Pokédex completion"; never drops). `owned` keeps its old name for the
+ * renderers: it is the registered count.
+ */
 export function regionCompletion(user, region) {
   const total = ALL_REGIONS[region];
   if (!total) return null;
   let owned = 0;
-  for (const [key, v] of Object.entries(user?.pokemon ?? {})) {
-    if (!/^\d+$/.test(key) || POKEMON[key]?.region !== region) continue;
-    if ((v?.normal ?? 0) + (v?.shiny ?? 0) > 0) owned++;
-  }
+  for (const id of registeredSpecies(user)) if (POKEMON[id]?.region === region) owned++;
   return { region, owned, total };
 }
 
@@ -63,6 +65,7 @@ export function catchView(user, { id, variant, catchResult, trainerName }) {
     trainerName,
     level: catchResult.level,
     isNew: catchResult.isNew,
+    isNewShiny: catchResult.isNewShiny === true,
     expGained: catchResult.expGained,
     copies: user?.pokemon?.[id]?.[variant] ?? 1,
     dex: f.region ? regionCompletion(user, f.region) : null,
@@ -134,7 +137,9 @@ export async function renderCatchCard(v, { animate = false } = {}) {
   drawPill(ctx, (TIER_NAME[v.tier] ?? "Common").toUpperCase(), right, 11, TIER[v.tier] ?? tierColor(v.tier));
 
   // Name, shiny sparkle, then NEW or +EXP right beside the name.
+  // NEW = first time in the Pokédex; NEW SHINY = its first shiny ever.
   const tag = v.isNew === true ? { text: "NEW", fill: COLOR.blue, color: "#ffffff" }
+    : v.isNewShiny === true ? { text: "NEW SHINY", fill: COLOR.blue, color: "#ffffff" }
     : v.isNew === false && v.expGained > 0 ? { text: `+${fmt(v.expGained)} EXP`, fill: "#16314f", color: COLOR.exp }
     : null;
   const nameY = 56;

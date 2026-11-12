@@ -20,6 +20,7 @@ import { createNewUser } from "../utils/userSchema.js";
 import { grantCatch, getTraining, expForLevel } from "../utils/training.js";
 import { teamExp } from "../utils/battle/rewards.js";
 import { LEVEL_CAP } from "../utils/battle/tuning.js";
+import { normalizeBox } from "../services/box.js";
 
 const draws = (...values) => {
   const next = () => {
@@ -320,6 +321,7 @@ section("runBattle: snapshot, team isolation, Power, EXP (Lucky Egg)");
   // Max Level: EXP is still capped.
   const D = trainer("10004", [6]);
   D.training["6:normal"] = { exp: expForLevel(LEVEL_CAP) };
+  normalizeBox(D); // a raised shared Level lands on the copy (services/box.js; copies hold EXP now)
   D.equipment = { rev: 1, teams: { display: { "6:normal": "lucky_egg" } } };
   runBattle({ trainerData: { 10004: D, 10002: B }, challengerId: "10004", defenderId: "10002", mode: "open", seed: 3, now: NOW, env: ON });
   assertEqual(getTraining(D, 6, "normal").level, LEVEL_CAP, "a max-Level holder stays at the Level cap");

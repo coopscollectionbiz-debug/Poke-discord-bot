@@ -1,0 +1,483 @@
+<title>Three Teams and Card Cleanup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a long review sheet; each proposal sits in a Discord-style message so the card is judged at Discord size (~550px). Single dark look on purpose: the cards and Discord are dark. */
+:root{
+  color-scheme:dark;
+  --page:#10131d; --chat:#313338; --chat-2:#2b2d31; --ink:#0e1120;
+  --card-top:#141a2c; --card-bot:#1d1530; --surface:#1b2236; --raised:#232b44; --sunken:#121729; --line:#2e3756;
+  --text:#f4f6fb; --muted:#aab2c8; --faint:#6f7891;
+  --gold:#f5c84c; --blue:#4f8cff; --red:#ff5a6a; --green:#3ecf72; --mega:#c084fc; --exp:#5ab4ff;
+  --t-common:#9ca3af; --t-uncommon:#10b981; --t-rare:#3b82f6; --t-epic:#a855f7; --t-legendary:#facc15; --t-mythic:#ef4444;
+  --btn:#4e5058; --btn-primary:#5865f2; --btn-green:#248046; --btn-red:#da373c;
+  --display:"Rubik",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--page);color:var(--text);font:15px/1.55 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4vw,40px);font-weight:800}
+h2{font-size:24px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0;max-width:68ch}
+code{font:13px var(--mono);background:var(--raised);padding:1px 5px;border-radius:4px}
+.lede{color:var(--muted);font-size:16px}
+.sec{display:flex;flex-direction:column;gap:18px}
+.sec-head{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:20px}
+.eyebrow{font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+ul.notes{margin:0;padding-left:20px;max-width:72ch;display:flex;flex-direction:column;gap:4px;color:var(--muted)}
+ul.notes b{color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:24px;align-items:start}
+.opt{display:flex;flex-direction:column;gap:10px;min-width:0}
+.opt-title{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.tag{font:600 11px var(--body);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.tag.rec{color:var(--ink);background:var(--gold);border-color:var(--gold)}
+.tag.opt2{color:var(--faint)}
+.small{font-size:13px;color:var(--muted)}
+
+/* Discord message chrome */
+.msg{background:var(--chat);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:40px 1fr;gap:12px;min-width:0}
+.msg.private{background:var(--chat-2)}
+.av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--mega));display:grid;place-items:center;font:800 15px var(--display);color:var(--text)}
+.mbody{display:flex;flex-direction:column;gap:6px;min-width:0}
+.mhead{display:flex;gap:6px;align-items:center;font-size:14px;flex-wrap:wrap}
+.mhead b{font-weight:600}
+.app{background:var(--btn-primary);color:#fff;font:700 10px var(--body);padding:1px 4px;border-radius:3px}
+.cmd{color:var(--faint);font-size:12px}
+.only{color:var(--faint);font-size:12px;display:flex;gap:6px;align-items:center}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.b{font:500 14px var(--body);color:#fff;background:var(--btn);border-radius:4px;padding:6px 14px;border:0}
+.b.p{background:var(--btn-primary)}.b.g{background:var(--btn-green)}.b.r{background:var(--btn-red)}
+.b.link::after{content:" ↗";opacity:.7}
+.select{background:var(--chat-2);border:1px solid #1e1f22;border-radius:4px;padding:8px 12px;color:var(--muted);font-size:14px;max-width:420px;display:flex;justify-content:space-between}
+.msg.private .select{background:var(--chat)}
+
+/* Rendered card look (matches utils/render/tokens.js) */
+.card{background:linear-gradient(180deg,var(--card-top),var(--card-bot));border:1px solid var(--line);border-radius:12px;padding:14px;max-width:560px;width:100%;display:flex;flex-direction:column;gap:10px;font-family:var(--display)}
+.chead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.cname{font-size:22px;font-weight:800}
+.csub{font:500 12px var(--display);color:var(--muted)}
+.label{font:700 9px var(--display);letter-spacing:.1em;color:var(--faint);text-transform:uppercase}
+.slots{display:grid;gap:8px}
+.s3{grid-template-columns:repeat(3,1fr)}.s6{grid-template-columns:repeat(6,1fr)}
+.slot{position:relative;background:var(--surface);border:1.5px solid var(--line);border-radius:9px;display:flex;flex-direction:column;align-items:center;padding:20px 4px 6px;min-width:0}
+.slot.lead{border-color:var(--blue)}.slot.shiny{border-color:var(--gold)}.slot.megaB{border-color:var(--mega)}
+.slot img{height:62px;width:auto;image-rendering:pixelated;object-fit:contain;max-width:100%}
+.s6 .slot img{height:46px}
+.slot .ped{width:70%;height:7px;border-radius:50%;background:radial-gradient(var(--line),transparent 70%);margin-top:-4px}
+.slot .n{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.s6 .slot .n{font-size:11px}
+.slot .lv{font-size:11px;color:var(--muted)}
+.slot .lv b{color:var(--text);font-size:13px}
+.num{position:absolute;top:5px;left:6px;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:var(--sunken);color:var(--muted)}
+.slot.lead .num{background:var(--blue);color:#fff}
+.pill{position:absolute;top:5px;right:5px;font:700 8px var(--display);letter-spacing:.04em;padding:1px 6px;border-radius:99px;border:1px solid currentColor;text-transform:uppercase}
+.spark{position:absolute;top:3px;right:6px;color:var(--gold);font-size:12px}
+.megatag{font:800 8px var(--display);color:var(--ink);background:var(--mega);border-radius:3px;padding:0 4px}
+.types{display:flex;gap:3px;flex-wrap:wrap;justify-content:center}
+.ty{font:700 8px var(--display);padding:1px 6px;border-radius:99px;text-transform:uppercase;color:var(--ink)}
+.c-common{color:var(--t-common)}.c-uncommon{color:var(--t-uncommon)}.c-rare{color:var(--t-rare)}.c-epic{color:var(--t-epic)}.c-legendary{color:var(--t-legendary)}.c-mythic{color:var(--t-mythic)}
+.empty{border-style:dashed;min-height:118px;justify-content:center;color:var(--faint);font-size:22px}
+.trainer{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
+.trainer img{height:120px;image-rendering:pixelated}
+.split{display:grid;grid-template-columns:150px 1fr;gap:10px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 8px;min-width:0}
+.stat .v{font-size:16px;font-weight:800}
+.bar{height:6px;border-radius:3px;background:var(--sunken);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold)}
+.newbox{outline:2px dashed var(--green);outline-offset:3px;border-radius:7px}
+.newnote{font:600 11px var(--body);color:var(--green)}
+.shot{max-width:560px;width:100%;border-radius:8px;border:1px solid #1e1f22;display:block}
+.cap{font-size:12px;color:var(--faint)}
+
+/* Encounter */
+.field{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;background:linear-gradient(90deg,#1c2d55,#141a2c 45%,#2a1830);border-radius:8px;padding:10px}
+.field img{height:90px;image-rendering:pixelated}
+.balls{display:flex;gap:4px;justify-content:center}
+.balls i{width:12px;height:12px;border-radius:50%;background:linear-gradient(var(--red) 45%,var(--ink) 45% 55%,#f4f6fb 55%)}
+.bang{font:800 30px var(--display);color:var(--red)}
+.textbox{background:#f8f8f0;color:var(--ink);border:3px solid #3a4256;border-radius:6px;padding:8px 10px;font:500 13px var(--body)}
+.prizes{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.prize{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 10px}
+.prize .v{color:var(--gold);font-size:18px;font-weight:800}
+
+/* Autocomplete */
+.ac{background:var(--chat-2);border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:2px;max-width:440px}
+.ac div{display:flex;justify-content:space-between;padding:5px 10px;border-radius:4px;font-size:14px}
+.ac div:first-child{background:#404249}
+.ac span{color:var(--faint);font-size:12px}
+.input{background:#383a40;border-radius:8px;padding:10px 14px;font-size:14px;max-width:440px}
+.input b{background:#2b2d31;padding:1px 6px;border-radius:4px;font-weight:500}
+.tabs{display:flex;gap:0;border:1px solid var(--line);border-radius:7px;overflow:hidden;width:max-content;max-width:100%}
+.tabs span{font:600 12px var(--display);padding:6px 14px;color:var(--muted);border-left:1px solid var(--line)}
+.tabs span:first-child{border-left:0}
+.tabs .on{background:var(--blue);color:#fff}
+
+/* Dashboard mock */
+.dash{background:#151a28;border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;font-family:var(--body);max-width:760px}
+.rule{font-size:13px;color:var(--muted);background:var(--sunken);border-radius:6px;padding:8px 10px}
+.dialog{background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;max-width:440px}
+.dialog li{color:var(--muted)}
+
+/* Teams table + inventory */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:760px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);background:var(--sunken)}
+tr:last-child td{border-bottom:0}
+td code{white-space:nowrap}
+.v{font:700 11px var(--body);padding:2px 8px;border-radius:99px;white-space:nowrap;display:inline-block}
+.v-keep{background:#24304d;color:var(--muted)}
+.v-new{background:var(--green);color:var(--ink)}
+.v-change{background:var(--blue);color:#fff}
+.v-merge{background:var(--mega);color:var(--ink)}
+.v-retire{background:var(--red);color:var(--ink)}
+.v-rename{background:var(--gold);color:var(--ink)}
+.group td{background:var(--sunken);font:700 12px var(--display);color:var(--gold);letter-spacing:.05em}
+.locked{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.lk{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.lk ul{margin:0;padding-left:18px;color:var(--muted);font-size:14px;display:flex;flex-direction:column;gap:3px}
+.lk ul b{color:var(--text)}
+@media (max-width:620px){
+  .s6{grid-template-columns:repeat(3,1fr)}
+  .split{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .msg{grid-template-columns:1fr}.av{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="sec">
+  <span class="eyebrow">Design review · branch design/three-teams-cards · 2026-11-12</span>
+  <h1>Three Teams and Card Cleanup</h1>
+  <p class="lede">The fighting team splits into a <b>Showcase team</b> (favorites, never fights), a <b>Casual team</b> (old Display team) and a <b>Ranked team</b> (old Battle team). This page has the decisions so far, mockups for every card that changes, and the full list of display commands with what happens to each.</p>
+  <p class="small">The mockups are HTML drawings that follow the card tokens in <code>utils/render/tokens.js</code>, not real renders. Screenshots marked “today” are real previews from <code>docs/design/previews</code>.</p>
+</header>
+
+<section class="sec">
+  <div class="sec-head"><span class="eyebrow">Locked in the interview</span><h2>The three teams</h2></div>
+  <div class="tw"><table>
+    <tr><th></th><th>Showcase team</th><th>Casual team</th><th>Ranked team</th></tr>
+    <tr><td>Was</td><td>New</td><td>Display team (<code>displayedPokemon</code>, unchanged field)</td><td>Battle team (<code>battleTeam</code>)</td></tr>
+    <tr><td>Fights</td><td>Never</td><td>Casual battles (<code>/battle</code>); <code>/challenge</code> and Trainer encounters by default</td><td>Ranked and Wager battles; <code>/challenge</code> and Trainer encounters if picked</td></tr>
+    <tr><td>Levels</td><td>Real (shown only)</td><td>Real</td><td>Lv 50 in Ranked/Wager; real Levels in <code>/challenge</code> and encounters</td></tr>
+    <tr><td>Repeats</td><td>Allowed: one owned copy per slot (6 Caterpie needs 6 Caterpie)</td><td>One slot per Pokémon + Variant</td><td>One slot per Pokémon + Variant</td></tr>
+    <tr><td>Megas</td><td>Any number of unlocked Megas</td><td>At most 1</td><td>At most 1</td></tr>
+    <tr><td>Mythic tier</td><td>No limit</td><td>No limit</td><td>At most 1</td></tr>
+    <tr><td>Moves, held items</td><td>None</td><td>Yes</td><td>Yes</td></tr>
+    <tr><td>Copies protected</td><td>Yes, by count: you can donate extras, not below what's showcased</td><td>Yes (as today)</td><td>Yes (as today)</td></tr>
+    <tr><td>Shown on</td><td><code>/showcase</code>, trainer card strip</td><td>Battles, dashboard</td><td><code>/rankedcard</code>, leaderboard leads, battles</td></tr>
+    <tr><td>At launch</td><td>Filled once with a copy of each player's current team</td><td>Unchanged</td><td>Unchanged</td></tr>
+  </table></div>
+</section>
+
+<section class="sec">
+  <div class="sec-head"><span class="eyebrow">New command · replaces /showteam</span><h2>/showcase: three layouts</h2>
+  <p class="small">All three are drawn with the same rule-breaking example: two Caterpie, three Megas, a shiny. No Team power, rating or record, because the Showcase never fights. The Inspect menu from <code>/showteam</code> stays.</p></div>
+  <div class="grid">
+
+    <div class="opt">
+      <div class="opt-title"><h3>A · Refined grid</h3><span class="tag rec">Chosen</span></div>
+      <p class="small">Today's <code>/showteam</code> layout with a Showcase header. Players already know it, and the big tiles suit favorites.</p>
+      <div class="msg"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span><span class="cmd">Coop used /showcase</span></div>
+        <div class="card">
+          <div class="chead"><div><div class="cname">Coop</div><div class="csub">Veteran Trainer · 12,480 TP</div></div><div style="text-align:right"><div class="label">Showcase</div><div class="csub">6 favorites · 3 Megas · 1 shiny</div></div></div>
+          <div class="slots s3" id="showA"></div>
+        </div>
+        <div class="select"><span>Inspect a Pokémon…</span><span>▾</span></div>
+      </div></div>
+    </div>
+
+    <div class="opt">
+      <div class="opt-title"><h3>B · Trainer and shelf</h3><span class="tag opt2">Option</span></div>
+      <p class="small">The equipped trainer on the left like the trainer card, Pokémon on a 3×2 shelf. More “profile”, smaller sprites.</p>
+      <div class="msg"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span><span class="cmd">Coop used /showcase</span></div>
+        <div class="card">
+          <div class="split">
+            <div class="trainer"><img src="a/acerola.gif" alt="Acerola"><div style="font-weight:800">Coop</div><span class="csub">Acerola · <span class="c-mythic">MYTHIC</span></span></div>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><div class="label">Showcase</div><div class="slots s3" id="showB"></div></div>
+          </div>
+        </div>
+        <div class="select"><span>Inspect a Pokémon…</span><span>▾</span></div>
+      </div></div>
+    </div>
+
+    <div class="opt">
+      <div class="opt-title"><h3>C · Display case banner</h3><span class="tag opt2">Option</span></div>
+      <p class="small">One row of six on pedestals, the <code>/rankedcard</code> shape. Shortest in chat, but each Pokémon is small on phones.</p>
+      <div class="msg"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span><span class="cmd">Coop used /showcase</span></div>
+        <div class="card">
+          <div class="chead"><div><div class="label">Showcase</div><div class="cname">Coop</div></div><div class="csub" style="text-align:right">Veteran Trainer<br>Acerola · Mythic</div></div>
+          <div class="slots s6" id="showC"></div>
+        </div>
+        <div class="select"><span>Inspect a Pokémon…</span><span>▾</span></div>
+      </div></div>
+    </div>
+
+    <div class="opt">
+      <div class="opt-title"><h3>Empty Showcase</h3><span class="tag rec">Locked</span></div>
+      <p class="small">Six empty pedestals and a link to the Teams page. Existing players won't see it at launch, because their Showcase is filled from their current team.</p>
+      <div class="msg"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span><span class="cmd">Misty used /showcase</span></div>
+        <div class="card">
+          <div class="chead"><div><div class="cname">Misty</div><div class="csub">Novice Trainer · 120 TP</div></div><div class="label">Showcase</div></div>
+          <div class="slots s3"><div class="slot empty">+</div><div class="slot empty">+</div><div class="slot empty">+</div><div class="slot empty">+</div><div class="slot empty">+</div><div class="slot empty">+</div></div>
+          <div class="csub" style="text-align:center">No favorites picked yet</div>
+        </div>
+        <div class="btns"><span class="b link">Pick favorites</span></div>
+      </div></div>
+    </div>
+
+    <div class="opt">
+      <div class="opt-title"><h3>Someone else's Showcase</h3><span class="tag rec">Locked</span></div>
+      <p class="small"><code>/showcase user:@Ash</code> answers privately. Your own <code>/showcase</code> posts publicly. Same for <code>/rankedcard user:</code>.</p>
+      <div class="msg private"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span></div>
+        <div class="small">Ash's Showcase</div>
+        <div class="card" style="max-width:420px"><div class="chead"><div class="cname" style="font-size:18px">Ash</div><div class="label">Showcase</div></div><div class="slots s3" id="showD"></div></div>
+        <div class="only">👁 Only you can see this · Dismiss message</div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="sec-head"><span class="eyebrow">Changes · absorbs /showcard and /luck</span><h2>/trainercard</h2>
+  <ul class="notes"><li><b>Share to channel</b> posts the same card publicly, replacing <code>/showcard</code> (one letter from <code>/showcase</code>).</li><li>The strip shows the <b>Showcase</b>, with empty pedestals when it is empty.</li><li>The <b>Luck</b> row (today's <code>/luck</code> pity meter) shows only on the private copy and is left off when shared.</li><li>“Battle rating” becomes <b>Ranked rating</b>.</li></ul></div>
+  <div class="grid">
+    <div class="opt">
+      <div class="opt-title"><h3>Proposed (private)</h3></div>
+      <div class="msg private"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span><span class="cmd">Coop used /trainercard</span></div>
+        <div class="card">
+          <div class="split">
+            <div class="trainer"><img src="a/acerola.gif" alt="Acerola"><div style="font-weight:800">Acerola</div><span class="pill c-mythic" style="position:static">Mythic</span></div>
+            <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+              <div class="label">Trainer card</div><div class="cname">coop13</div>
+              <div class="csub" style="color:var(--gold)">Expert Trainer · 1,692 TP to Veteran</div><div class="bar"><i style="width:31%"></i></div>
+              <div class="stats">
+                <div class="stat"><div class="label">TP</div><div class="v">8,308</div></div>
+                <div class="stat"><div class="label">CC</div><div class="v" style="color:var(--gold)">5,400</div></div>
+                <div class="stat"><div class="label">Pokémon</div><div class="v">214</div></div>
+                <div class="stat"><div class="label">Shiny</div><div class="v" style="color:var(--gold)">9</div></div>
+                <div class="stat"><div class="label">Trainers</div><div class="v">13</div></div>
+                <div class="stat newbox"><div class="label">Ranked rating</div><div class="v">1,184</div></div>
+                <div class="stat" style="grid-column:span 2"><div class="label">Ranked record</div><div class="v">23W–9L</div></div>
+              </div>
+              <div class="newbox" style="display:flex;flex-direction:column;gap:4px;padding:4px"><div style="display:flex;justify-content:space-between"><span class="label">Luck · private</span><span class="csub">62 / 100 to a guaranteed Rare+</span></div><div class="bar"><i style="width:62%;background:var(--green)"></i></div></div>
+            </div>
+          </div>
+          <div class="label">Showcase</div>
+          <div class="slots s6 newbox" id="tcStrip"></div>
+        </div>
+        <div class="btns"><span class="b p">Share to channel</span><span class="b link">Dashboard</span></div>
+        <div class="only">👁 Only you can see this</div>
+        <div class="newnote">Green dashed = new or changed</div>
+      </div></div>
+    </div>
+    <div class="opt">
+      <div class="opt-title"><h3>Today</h3></div>
+      <img class="shot" src="a/trainercard-full.png" alt="Current trainer card">
+      <p class="cap">trainercard-full.png: Team strip is the fighting team; separate <code>/showcard</code> posts it publicly.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="sec-head"><span class="eyebrow">Rename · /showbattlecard → /rankedcard</span><h2>/rankedcard</h2>
+  <ul class="notes"><li>Layout unchanged (owner picked option 2 on 2026-11-10). Header reads <b>RANKED CARD</b>; the empty state says “Set your Ranked team”.</li><li>New optional <code>user:</code>, answered privately. <code>/showbattlecard</code> stays as an alias for about two weeks.</li></ul></div>
+  <img class="shot" src="a/battlecard-live.png" alt="Current ranked battle card" style="max-width:720px">
+  <p class="cap">Today: battlecard-live.png.</p>
+</section>
+
+<section class="sec">
+  <div class="sec-head"><span class="eyebrow">Team pick · Casual or Ranked</span><h2>Trainer encounters and /challenge</h2>
+  <ul class="notes"><li><b>Encounter:</b> the card shows both prizes. One click picks the team and starts the fight, and the Trainer's Levels come from the team picked. Class, name, party size and lines are rolled at spawn as today.</li><li><b>/challenge:</b> the private preview shows your Casual team; the buttons pick the team. The pick holds for a whole Elite Four run.</li><li>Both teams fight at real Levels here. A player with only one team set sees only that button and prize.</li></ul></div>
+  <div class="grid">
+    <div class="opt">
+      <div class="opt-title"><h3>Encounter card</h3></div>
+      <div class="msg"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span></div>
+        <div class="card">
+          <div class="field"><div style="text-align:center"><img src="a/acerola.gif" alt="Coop's trainer"></div><div class="bang">!</div><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="a/lass.png" alt="Lass"><div class="balls"><i></i><i></i><i></i><i></i></div></div></div>
+          <div class="textbox">Lass Ana challenged Coop!<br>“My Pokémon are cute AND strong!”</div>
+          <div class="prizes newbox"><div class="prize"><div class="label">Prize · Casual team</div><div class="v">1,240 CC</div></div><div class="prize"><div class="label">Prize · Ranked team</div><div class="v">2,180 CC</div></div></div>
+        </div>
+        <div class="btns newbox"><span class="b r">Battle with Casual</span><span class="b r">Battle with Ranked</span><span class="b">Run</span></div>
+      </div></div>
+      <p class="cap">Losing pays the prize of the team you picked (or all your CC if less). Today: encounter-card.png, one prize and one Battle! button.</p>
+    </div>
+    <div class="opt">
+      <div class="opt-title"><h3>/challenge preview</h3></div>
+      <div class="msg private"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span><span class="cmd">Coop used /challenge</span></div>
+        <img class="shot" src="a/challenge-vs-gym.png" alt="Challenge VS card">
+        <div class="small">If you lose: 10% of your CC (412 CC).</div>
+        <div class="btns newbox"><span class="b g">Fight with Casual</span><span class="b g">Fight with Ranked</span><span class="b">Not now</span></div>
+        <div class="only">👁 Only you can see this</div>
+      </div></div>
+      <p class="cap">VS card unchanged (challenge-vs-gym.png); it shows the Casual team. Picking Ranked swaps the lineup in the public intro and the replay.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="sec-head"><span class="eyebrow">Merge · /inspectpokemon → /pokedex</span><h2>/pokedex with search that forgives typos</h2>
+  <ul class="notes"><li><b>Autocomplete</b> while typing: up to 25 matches by name prefix, then by any part of the name, plus dex numbers. Pokémon you own come first.</li><li><b>Typo match</b> when a misspelled name is sent anyway: a clear winner opens directly, otherwise three “Did you mean” buttons.</li><li>One card, three buttons: <b>Entry</b> (today's <code>/pokedex</code>), <b>Your stats</b> (today's <code>/inspectpokemon</code>), <b>Shiny</b>. <code>/inspectpokemon</code> stays as an alias opening on Your stats for about two weeks.</li></ul></div>
+  <div class="grid">
+    <div class="opt">
+      <div class="opt-title"><h3>Typing</h3></div>
+      <div class="ac"><div>Feraligatr <span>#0160 · owned</span></div><div>Ferrothorn <span>#0598</span></div><div>Ferroseed <span>#0597</span></div></div>
+      <div class="input">/pokedex <b>name</b> fer</div>
+      <div class="opt-title" style="margin-top:12px"><h3>Sent with a typo</h3></div>
+      <div class="msg private"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span></div>
+        <div>No Pokémon is called “Charmelon”. Did you mean:</div>
+        <div class="btns"><span class="b p">Charmeleon</span><span class="b">Charmander</span><span class="b">Chimchar</span></div>
+        <div class="only">👁 Only you can see this</div>
+      </div></div>
+    </div>
+    <div class="opt">
+      <div class="opt-title"><h3>Merged card</h3></div>
+      <div class="msg private"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span><span class="cmd">Coop used /pokedex</span></div>
+        <img class="shot" src="a/pokedex-charmeleon.png" alt="Pokédex entry card">
+        <div class="btns newbox"><span class="b p">Entry</span><span class="b">Your stats</span><span class="b">✨ Shiny</span><span class="b">Close</span></div>
+      </div></div>
+      <p class="cap">“Your stats” swaps the image for the inspect card (inspectpokemon-owned.png) in the same message.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="sec-head"><span class="eyebrow">Rework · /showtrainers retired</span><h2>/inspecttrainer for everyone</h2>
+  <ul class="notes"><li><code>user:</code> shows the trainer that player has equipped; <code>name:</code> (autocomplete) looks up any trainer. Both private.</li><li>The trainer data has only sprite and tier, so the card shows name, tier, sprite and whether you own it. It also shows how many players own that trainer.</li><li>Browsing your whole collection moves to the dashboard Trainers page.</li></ul></div>
+  <div class="grid">
+    <div class="opt">
+      <div class="msg private"><div class="av">C</div><div class="mbody">
+        <div class="mhead"><b>Coop's Collection</b><span class="app">APP</span><span class="cmd">Coop used /inspecttrainer user:@Ash</span></div>
+        <div class="card" style="max-width:440px">
+          <div class="split" style="grid-template-columns:160px 1fr">
+            <div class="trainer"><img src="a/cynthia-masters.gif" alt="Cynthia"></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="label">Equipped by Ash</div><div class="cname">Cynthia (Masters)</div>
+              <span class="pill c-legendary" style="position:static;width:max-content">Legendary</span>
+              <div class="stat"><div class="label">You</div><div class="v" style="font-size:14px">Not owned</div></div>
+              <div class="stat"><div class="label">Owned by</div><div class="v" style="font-size:14px">37 players</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="only">👁 Only you can see this</div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="sec-head"><span class="eyebrow">Dashboard · Teams page</span><h2>Three tabs and Copy from</h2>
+  <ul class="notes"><li>Tabs read <b>Showcase · Casual · Ranked</b>; each tab states its own rules under the tabs.</li><li>Copying the Showcase into Casual or Ranked keeps what fits and lists what was left out before you Save.</li></ul></div>
+  <div class="grid">
+    <div class="dash">
+      <div class="tabs"><span class="on">Showcase</span><span>Casual</span><span>Ranked</span></div>
+      <div class="rule">Your favorites, shown on <code>/showcase</code> and your trainer card. Never fights. Any Pokémon you own, repeats and Megas included. Each slot uses one copy.</div>
+      <div class="slots s6" id="dashStrip"></div>
+      <div class="btns"><span class="b">Copy from Casual</span><span class="b">Copy from Ranked</span><span class="b g">Save</span></div>
+    </div>
+    <div class="dialog">
+      <h3>Copy Showcase into Ranked team?</h3>
+      <div class="small">Ranked teams allow each Pokémon once, one Mega and one mythic-tier Pokémon. These won't be copied:</div>
+      <ul><li>Caterpie (slot 5): already on the team</li><li>Mega Gengar and Mega Lucario come over as Gengar and Lucario (Mega Charizard X keeps the one Mega)</li></ul>
+      <div class="small">Mewtwo is the only mythic-tier Pokémon, so it fits. Moves and held items aren't copied; the Showcase has none.</div>
+      <div class="btns"><span class="b g">Copy 5 Pokémon</span><span class="b">Cancel</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="sec-head"><span class="eyebrow">Every display command</span><h2>Inventory and verdicts</h2>
+  <p class="small">From <code>commands/*.js</code> on master 0e2fa553. “Card” means a rendered image; “embed” means Discord's text box. Aliases keep an old name working for about two weeks, then it is unregistered.</p></div>
+  <div class="tw"><table>
+    <tr><th>Command</th><th>Shows</th><th>Who sees it</th><th>Verdict</th><th>Change</th></tr>
+    <tr class="group"><td colspan="5">Teams and profile</td></tr>
+    <tr><td><code>/showcase</code></td><td>—</td><td>Public (own) · private (other user)</td><td><span class="v v-new">New</span></td><td>Showcase card, Inspect menu, optional <code>user:</code></td></tr>
+    <tr><td><code>/showteam</code></td><td>Card: fighting team, Team power, rating, record, Inspect menu</td><td>Public</td><td><span class="v v-retire">Retire</span></td><td>Into <code>/showcase</code>; alias</td></tr>
+    <tr><td><code>/trainercard</code></td><td>Card: trainer, rank, TP, CC, counts, rating, record, Badges, team strip; first-time setup</td><td>Private</td><td><span class="v v-change">Change</span></td><td>Showcase strip, Share button, Luck row, “Ranked rating”</td></tr>
+    <tr><td><code>/showcard</code></td><td>Same card as <code>/trainercard</code></td><td>Public</td><td><span class="v v-retire">Retire</span></td><td>Share button on <code>/trainercard</code>; alias</td></tr>
+    <tr><td><code>/showbattlecard</code></td><td>Card: Battle team at Lv 50, rating, record, position, streak</td><td>Public</td><td><span class="v v-rename">Rename</span></td><td><code>/rankedcard</code>, optional <code>user:</code> (private); alias</td></tr>
+    <tr><td><code>/luck</code></td><td>Embed: random-reward pity meter</td><td>Private</td><td><span class="v v-merge">Merge</span></td><td>Row on private <code>/trainercard</code>; alias</td></tr>
+    <tr class="group"><td colspan="5">Pokémon and trainers</td></tr>
+    <tr><td><code>/pokedex</code></td><td>Card: dex entry, flavor, evolution line, owned counts, shiny toggle</td><td>Private</td><td><span class="v v-change">Change</span></td><td>Autocomplete, typo match, Entry / Your stats / Shiny</td></tr>
+    <tr><td><code>/inspectpokemon</code></td><td>Card: stats at your Level and moves, or base stats</td><td>Private</td><td><span class="v v-merge">Merge</span></td><td>“Your stats” in <code>/pokedex</code>; alias</td></tr>
+    <tr><td><code>/showtrainers</code></td><td>Embeds: your trainer collection (admin-only today)</td><td>Private</td><td><span class="v v-retire">Retire</span></td><td>Dashboard Trainers page</td></tr>
+    <tr><td><code>/inspecttrainer</code></td><td>Embeds: a player's collection (admin-only today)</td><td>Private</td><td><span class="v v-change">Change</span></td><td>Everyone; <code>user:</code> or <code>name:</code>; trainer detail card</td></tr>
+    <tr><td><code>/swapicon</code></td><td>Embed: rank role icon swapped</td><td>Private</td><td><span class="v v-keep">Keep</span></td><td>—</td></tr>
+    <tr class="group"><td colspan="5">Battles and play</td></tr>
+    <tr><td><code>/battle</code></td><td>Replay frames, public result, private EXP card</td><td>Both</td><td><span class="v v-keep">Keep</span></td><td>Wording: Casual team / Ranked team</td></tr>
+    <tr><td><code>/challenge</code></td><td>Board card, VS preview, replay, award screen, EXP card</td><td>Both</td><td><span class="v v-change">Change</span></td><td>Fight with Casual / Fight with Ranked</td></tr>
+    <tr><td>Trainer encounter</td><td>Encounter card, replay, EXP card (passive, from chat)</td><td>Public + private EXP</td><td><span class="v v-change">Change</span></td><td>Two prizes, two Battle buttons, Levels rolled on pick</td></tr>
+    <tr><td><code>/leaderboard</code></td><td>Card: podium, top 10, Ranked team leads, your row</td><td>Public</td><td><span class="v v-keep">Keep</span></td><td>Already uses Ranked team leads</td></tr>
+    <tr><td><code>/achievements</code></td><td>Embed: achievements, progress, rewards</td><td>Private</td><td><span class="v v-keep">Keep</span></td><td>—</td></tr>
+    <tr class="group"><td colspan="5">Rewards and economy</td></tr>
+    <tr><td><code>/daily</code></td><td>Card: 2 Pokémon, CC, TP, stone, rank up, Pokédex strip</td><td>Private + broadcast</td><td><span class="v v-keep">Keep</span></td><td>—</td></tr>
+    <tr><td>Random catch / sighting</td><td>Catch card, sighting card (passive)</td><td>Public</td><td><span class="v v-keep">Keep</span></td><td>—</td></tr>
+    <tr><td><code>/quest</code></td><td>Embed: random reward</td><td>Private</td><td><span class="v v-change">Change</span></td><td>Pokémon rewards use the catch card</td></tr>
+    <tr><td><code>/recruit</code></td><td>Embeds: recruit flow and result</td><td>Private</td><td><span class="v v-change">Change</span></td><td>Pokémon rewards use the catch card</td></tr>
+    <tr><td><code>/inventory</code></td><td>Embed: Bag</td><td>Private</td><td><span class="v v-keep">Keep</span></td><td>—</td></tr>
+    <tr><td><code>/gift</code></td><td>Text replies</td><td>Private</td><td><span class="v v-keep">Keep</span></td><td>—</td></tr>
+    <tr><td><code>/dashboard</code></td><td>Embed: dashboard link</td><td>Private</td><td><span class="v v-keep">Keep</span></td><td>—</td></tr>
+    <tr class="group"><td colspan="5">Admin (out of scope here)</td></tr>
+    <tr><td><code>/admindashboard</code> <code>/adminsave</code> <code>/fixroles</code> <code>/viewuser</code> <code>/resetstarterpack</code> <code>/shop</code></td><td>Admin embeds</td><td>Private</td><td><span class="v v-keep">Keep</span></td><td>The admin overhaul branch already retires some of these</td></tr>
+    <tr><td><code>/resetteam</code></td><td>Resets a player's teams</td><td>Private</td><td><span class="v v-change">Change</span></td><td>Covers all three teams</td></tr>
+  </table></div>
+  <p class="small">Result: 18 player commands become 16. <code>/showcase</code> is added and <code>/inspecttrainer</code> opens to players; <code>/showteam</code>, <code>/showcard</code>, <code>/luck</code> and <code>/inspectpokemon</code> retire; <code>/showbattlecard</code> is renamed; admin-only <code>/showtrainers</code> goes away.</p>
+</section>
+
+<section class="sec">
+  <div class="sec-head"><span class="eyebrow">Decided 2026-11-12</span><h2>Final picks</h2></div>
+  <div class="locked">
+    <div class="lk"><h3>/showcase layout</h3><ul><li><b>A</b>, the refined grid.</li></ul></div>
+    <div class="lk"><h3>Optional extras</h3><ul><li>“Owned by N players” on <code>/inspecttrainer</code>: included.</li></ul></div>
+    <div class="lk"><h3>Order of work</h3><ul><li>Draft PR #82 is re-pointed to Casual/Ranked wording first.</li><li>The TM stack (#77, #85, #86) writes into team slots; whichever lands second adapts.</li></ul></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+const T={Fire:"#f08030",Flying:"#98a8f0",Ghost:"#705898",Poison:"#a04aa0",Bug:"#a8b820",Dragon:"#7038f8",Ground:"#dcbc68",Normal:"#a8a77a",Fighting:"#c8423a",Steel:"#b8b8d0",Electric:"#f8d030",Psychic:"#f85888",Grass:"#6cc04a",Water:"#6890f0"};
+const light=new Set(["Ghost","Poison","Dragon","Fighting","Psychic","Water"]);
+const P={
+  mcx:{n:"Charizard",img:"mega-charizard-x.gif",lv:62,tier:"legendary",ty:["Fire","Dragon"],mega:1,dex:6},
+  cat:{n:"Caterpie",img:"10.gif",lv:12,tier:"common",ty:["Bug"],dex:10},
+  mgen:{n:"Gengar",img:"mega-gengar.gif",lv:48,tier:"epic",ty:["Ghost","Poison"],mega:1,dex:94},
+  pika:{n:"Pikachu",img:"25s.gif",lv:33,tier:"uncommon",ty:["Electric"],shiny:1,dex:25},
+  mluc:{n:"Lucario",img:"mega-lucario.gif",lv:51,tier:"epic",ty:["Fighting","Steel"],mega:1,dex:448},
+  mew:{n:"Mewtwo",img:"150.gif",lv:70,tier:"mythic",ty:["Psychic"],dex:150},
+  eev:{n:"Eevee",img:"133.gif",lv:22,tier:"uncommon",ty:["Normal"],dex:133},
+  dra:{n:"Dragonite",img:"149.gif",lv:58,tier:"legendary",ty:["Dragon","Flying"],dex:149},
+  gar:{n:"Garchomp",img:"445.gif",lv:55,tier:"legendary",ty:["Dragon","Ground"],dex:445},
+  gya:{n:"Gyarados",img:"130.gif",lv:41,tier:"epic",ty:["Water","Flying"],dex:130},
+};
+function slot(k,i,{types=true,pill=true}={}){
+  const p=P[k];const cls=["slot",i===0?"lead":"",p.shiny?"shiny":"",p.mega?"megaB":""].join(" ");
+  const ty=types?`<div class="types">${p.ty.map(t=>`<span class="ty" style="background:${T[t]};color:${light.has(t)?"#fff":"var(--ink)"}">${t}</span>`).join("")}</div>`:"";
+  const right=p.shiny?`<span class="spark">✦</span>`:(pill?`<span class="pill c-${p.tier}">${p.tier}</span>`:"");
+  return `<div class="${cls}"><span class="num">${i+1}</span>${right}<img src="a/${p.img}" alt="${p.mega?"Mega ":""}${p.n}"><div class="ped"></div><div class="n">${p.mega?'<span class="megatag">MEGA</span> ':""}${p.n}</div><div class="lv">Lv <b>${p.lv}</b></div>${ty}</div>`;
+}
+const fill=(id,keys,o)=>{const el=document.getElementById(id);if(el)el.innerHTML=keys.map((k,i)=>slot(k,i,o)).join("")};
+const show=["mcx","cat","mgen","pika","cat","mluc"];
+fill("showA",show);
+fill("showB",show,{types:false});
+fill("showC",show,{types:false,pill:false});
+fill("showD",["dra","eev","gya"],{types:false});
+fill("tcStrip",show,{types:false,pill:false});
+fill("dashStrip",["mcx","cat","mgen","mew","cat","mluc"],{types:false,pill:false});
+</script>

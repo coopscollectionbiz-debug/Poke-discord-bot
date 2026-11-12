@@ -27,6 +27,7 @@ import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
 import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
 import { canTransformCopy, transformCopy } from "./ownership.js";
+import { canFeed, feedCopy } from "./box.js";
 import { spritePaths } from "../spriteconfig.js";
 import { normVariant, isDisplayedVariant, tierKey, shinyEvolveDustCost, SHINY_CRAFT_COST_BY_TIER, ensureWeeklyReset } from "../utils/economyRules.js";
 import { getQuantity, grantItem, consumeItems, runInventoryTransaction, REQUEST_ID_PATTERN } from "./inventory.js";
@@ -205,24 +206,24 @@ export function createGameplayHandlers(deps) {
       mutate: (user) => {
         normalizeUserSchema(id, user);
         if (getQuantity(user, "evolution_stone") < cost) return { ok: false, error: "Not enough Evolution Stones." };
-        if (isDisplayedVariant(user, bId, chosenVariant)) {
-          return { ok: false, error: `You can’t evolve your ${chosenVariant} ${base.name} because it’s on one of your teams (Display or Battle). Remove it from that team first.` };
-        }
         if ((user.pokemon?.[bId]?.[chosenVariant] || 0) <= 0) {
           return { ok: false, error: `You do not own a ${chosenVariant === "shiny" ? "shiny " : ""}${base.name}.` };
         }
-        // Gen 6–9: generation must be live; official level requirement (services/evolutionRules.js).
-        const req = checkEvolutionRequirements(user, { ...base, id: bId }, { ...target, id: tId }, chosenVariant);
+        // Individual copies (docs/adr/0001): uid names the copy the player
+        // tapped (a trained one needs the confirmed rev). Without one, the
+        // highest-Level spare evolves. A copy on a Team may evolve; its slots
+        // follow it. Checked BEFORE spending.
+        const move = { from: { id: bId, variant: chosenVariant }, to: { id: tId, variant: chosenVariant }, ...(uid != null && { uid: String(uid), confirmRev: rev }) };
+        const can = canTransformCopy(user, move);
+        if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
+        move.uid = can.uid;
+        if (can.record) move.confirmRev = can.record.rev ?? 0;
+        // Gen 6–9: generation must be live; official level requirement, checked on this copy (services/evolutionRules.js).
+        const req = checkEvolutionRequirements(user, { ...base, id: bId }, { ...target, id: tId }, chosenVariant, { uid: can.uid });
         if (!req.ok) return { ok: false, error: req.error };
         if (dustCost > 0 && getQuantity(user, "shiny_dust") < dustCost) {
           return { ok: false, error: `Not enough Shiny Dust. Requires ${dustCost}.`, dustRequired: dustCost, dustAvailable: getQuantity(user, "shiny_dust") };
         }
-        // TM safety (services/ownership.js): a plain copy evolves; a copy with
-        // TM-trained moves is never picked automatically. Checked BEFORE spending.
-        // uid (T5): the player picked this trained copy; its moves follow it.
-        const move = { from: { id: bId, variant: chosenVariant }, to: { id: tId, variant: chosenVariant }, ...(uid != null && { uid: String(uid), confirmRev: rev }) };
-        const can = canTransformCopy(user, move);
-        if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
         // All checks passed: everything below is applied together.
         const spent = consumeItems(user, { evolution_stone: cost, shiny_dust: dustCost });
         if (!spent.ok) return { ok: false, error: spent.error };
@@ -276,9 +277,6 @@ export function createGameplayHandlers(deps) {
       payloadKey: `convert:${pid}:${uid ?? "untrained"}`,
       mutate: (user) => {
         normalizeUserSchema(id, user);
-        if (isDisplayedVariant(user, pid, "normal")) {
-          return { ok: false, error: `You can’t convert ${p.name} to shiny because its normal variant is on one of your teams (Display or Battle). Remove it from that team first.` };
-        }
         // Check ownership BEFORE touching user.pokemon (a refused conversion
         // used to leave an empty {normal:0, shiny:0} entry behind).
         if ((user.pokemon?.[pid]?.normal ?? 0) <= 0) return { ok: false, error: `You do not own a normal ${p.name} to convert.` };
@@ -311,6 +309,37 @@ export function createGameplayHandlers(deps) {
 
     if (!tx.replayed) logEvent("convert", id, { pokemonId: pid, pokemonName: p.name, tier, dustCost });
     return reply(200, { ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...tx.result, ok: undefined });
+  }
+
+  // ======================================================
+  // 🍖 Feed one copy to another (docs/adr/0001): the fed copy is used up
+  // and the target gains today's duplicate share of one Level.
+  // body: { id, from, to, rev? (trained `from`), requestId? }
+  // ======================================================
+  async function feed({ body, isAuthorized }) {
+    const stop = guard(body, isAuthorized, (b) => (typeof b.from !== "string" || typeof b.to !== "string" ? reply(400, { error: "Missing from/to" }) : null));
+    if (stop) return stop;
+    const { id, from, to, requestId = null, rev = undefined } = body;
+    const tx = await runInventoryTransaction({
+      trainerData: getTrainerData(),
+      userId: id,
+      lock: lockUser,
+      save,
+      requestId,
+      payloadKey: `feed:${from}>${to}`,
+      mutate: (user) => {
+        normalizeUserSchema(id, user);
+        const can = canFeed(user, { from, to, confirmRev: rev });
+        if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
+        const species = user.box[to].id;
+        const done = feedCopy(user, { from, to, confirmRev: rev });
+        if (!done.ok) throw new Error(`feed: refused after validation (${done.code})`);
+        return { ok: true, fed: { speciesId: species, to, gained: done.gained, fromLevel: done.fromLevel, toLevel: done.toLevel } };
+      },
+    });
+    if (!tx.ok) return refusal(tx);
+    if (!tx.replayed) logEvent("feed", id, { pokemonId: tx.result.fed.speciesId, gained: tx.result.fed.gained, toLevel: tx.result.fed.toLevel });
+    return reply(200, { ...saveAckFields(tx), success: true, replayed: !!tx.replayed, fed: tx.result.fed });
   }
 
   // ======================================================
@@ -379,7 +408,7 @@ export function createGameplayHandlers(deps) {
     return reply(200, { ...saveAckFields(tx), success: true, rewards: tx.result.rewards });
   }
 
-  return { rewardPokemon, evolve, convertToShiny, weeklyPack };
+  return { rewardPokemon, evolve, convertToShiny, feed, weeklyPack };
 }
 
 // Re-exported for the Bag/shop code paths that grant items directly.

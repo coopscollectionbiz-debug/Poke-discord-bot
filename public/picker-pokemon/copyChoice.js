@@ -1,18 +1,20 @@
 // ==========================================================
-// public/picker-pokemon/copyChoice.js — "Which copy?" for Donate, Evolve
-// and Convert to shiny (TM system phase T5).
+// public/picker-pokemon/copyChoice.js — "Which one?" for Donate, Evolve,
+// Convert to shiny and Feed.
 //
-// Shown only when the Pokémon + Variant has trained copies (copies that
-// learned TM moves). Untrained copies are interchangeable and offered as one
-// option ("Untrained ×N", the default when there is one). A trained copy is
-// never chosen automatically.
+// Every copy is its own Pokémon (docs/adr/0001), so the chooser lists each
+// copy of the Pokémon + Variant with its Level, its Teams and any TM moves.
+// The tile the player tapped in the box is preselected. Shown only when
+// there is more than one copy, or a trained one.
 //
+// A copy on a Team can't be donated or fed (the server refuses it too).
 // Donate mode adds the TM warning (owner decision D-T10): a trained copy
 // can be donated only after the player ticks "I understand…". The server
 // re-checks the copy, its revision and the confirmation.
 //
-// data: userData.trained from GET /api/user-pokemon
-//   { "6:normal": [{ uid, rev, tmMoves: [{ id, name, type, category, power }], teams }] }
+// data (GET /api/user-pokemon):
+//   userData.copies  [[uid, id, shiny 0|1, level, caughtAt, trained 0|1, teams bitmask]]
+//   userData.trained { "6:normal": [{ uid, rev, tmMoves: [{ id, name, … }], teams }] }
 // ==========================================================
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -21,8 +23,10 @@ const list = (names) => (names.length <= 1 ? names.join("") : `${names.slice(0, 
 const STYLE = `
 .cc-copychoice{margin:12px 0;text-align:left}
 .cc-copychoice p.cc-cc-title{margin:0 0 6px;font-weight:800;color:var(--cc-text)}
+.cc-copychoice .cc-cc-list{max-height:260px;overflow:auto;padding-right:2px}
 .cc-copychoice label.cc-cc-opt{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 10px;margin:4px 0;border:1.5px solid var(--cc-line);border-radius:10px;cursor:pointer;color:var(--cc-text)}
 .cc-copychoice label.cc-cc-opt:has(input:checked){border-color:var(--cc-blue)}
+.cc-copychoice label.cc-cc-opt.is-off{opacity:.55;cursor:not-allowed}
 .cc-copychoice label.cc-cc-opt small{margin-left:auto;color:var(--cc-text-muted);text-align:right}
 .cc-copychoice .cc-tmwarn{margin-top:10px;padding:10px 12px;border:1.5px solid var(--cc-red,#e5534b);border-radius:10px;background:color-mix(in srgb,var(--cc-red,#e5534b) 10%,transparent)}
 .cc-copychoice .cc-tmwarn b{display:block;margin-bottom:4px;color:var(--cc-text)}
@@ -39,42 +43,71 @@ function ensureCss() {
   document.head.append(st);
 }
 
+const TEAM_NAMES = [[1, "Casual"], [2, "Ranked"], [4, "Showcase"]];
+export const teamNames = (mask) => TEAM_NAMES.filter(([b]) => (mask & b) !== 0).map(([, n]) => n);
+
 /** Trained copies of one Pokémon + Variant (from /api/user-pokemon). */
 export function trainedCopies(userData, pokeId, variant) {
   return userData?.trained?.[`${Number(pokeId)}:${variant === "shiny" ? "shiny" : "normal"}`] ?? [];
 }
 
+/** Every copy of one Pokémon + Variant, best Level first: [{ uid, level, at, trained, teams, rev, tmMoves }]. */
+export function copiesOf(userData, pokeId, variant) {
+  const shiny = variant === "shiny" ? 1 : 0;
+  const trained = new Map(trainedCopies(userData, pokeId, variant).map((t) => [t.uid, t]));
+  return (Array.isArray(userData?.copies) ? userData.copies : [])
+    .filter((r) => r[1] === Number(pokeId) && r[2] === shiny)
+    .map(([uid, , , level, at, isTrained, teams]) => ({
+      uid, level, at, teams, trained: !!isTrained,
+      rev: trained.get(uid)?.rev ?? null,
+      tmMoves: trained.get(uid)?.tmMoves ?? [],
+    }))
+    .sort((a, b) => b.level - a.level || a.uid.localeCompare(b.uid));
+}
+
 /**
  * Mount the chooser into `container` (replacing its content).
- * mode: "donate" | "evolve" | "convert". onChange(): called after any change.
+ * mode: "donate" | "evolve" | "convert" | "feed". onChange(): after any change.
+ * preselect: the uid of the tile the player tapped. exclude: a uid not to offer (Feed target).
  * Returns { needed, get(): { ok, uid, rev, confirmTrained, copy } }.
- *   needed=false → no trained copies; get() is always { ok:true, uid:null }.
  */
-export function mountCopyChoice(container, { userData, pokeId, variant, name, owned, mode, onChange = () => {} }) {
-  const trained = trainedCopies(userData, pokeId, variant);
+export function mountCopyChoice(container, { userData, pokeId, variant, name, mode, onChange = () => {}, preselect = null, exclude = null }) {
+  const copies = copiesOf(userData, pokeId, variant).filter((c) => c.uid !== exclude);
   container.innerHTML = "";
-  if (!trained.length) return { needed: false, get: () => ({ ok: true, uid: null, rev: null, confirmTrained: false, copy: null }) };
+  const lockedOut = (c) => (mode === "donate" || mode === "feed") && c.teams > 0;
+  if (mode !== "feed" && copies.length <= 1 && !copies.some((c) => c.trained)) {
+    const only = copies[0] ?? null;
+    return { needed: false, get: () => ({ ok: true, uid: only?.uid ?? null, rev: null, confirmTrained: false, copy: only }) };
+  }
   ensureCss();
-  const plain = Math.max(0, Number(owned) - trained.length);
   const group = `cc-copy-${Math.random().toString(36).slice(2, 8)}`;
-  const where = (t) => [t.teams?.display ? `Display slot ${t.teams.display}` : "", t.teams?.battle ? `Battle slot ${t.teams.battle}` : ""].filter(Boolean).join(" · ") || "Not on a team";
-  let choice = plain > 0 ? "" : null; // "" = untrained; uid = trained; null = not chosen yet
+  const usable = copies.filter((c) => !lockedOut(c));
+  let choice = copies.find((c) => c.uid === preselect && !lockedOut(c))?.uid
+    ?? (mode === "donate" || mode === "feed" ? [...usable].reverse().find((c) => !c.trained)?.uid : usable[0]?.uid)
+    ?? null;
   let ack = false;
 
+  const where = (c) => {
+    const t = teamNames(c.teams);
+    return t.length ? `On ${t.join(" + ")} team` : "Not on a team";
+  };
   const draw = () => {
-    const t = trained.find((x) => x.uid === choice) ?? null;
-    const moves = t ? list(t.tmMoves.map((m) => m.name)) : "";
+    const c = copies.find((x) => x.uid === choice) ?? null;
+    const moves = c?.trained ? list(c.tmMoves.map((m) => m.name)) : "";
     container.innerHTML = `<div class="cc-copychoice">
-      <p class="cc-cc-title">Which ${esc(name)}?</p>
-      ${plain > 0 ? `<label class="cc-cc-opt"><input type="radio" name="${group}" value=""${choice === "" ? " checked" : ""}><span>Untrained ×${plain}</span></label>` : ""}
-      ${trained.map((x) => `<label class="cc-cc-opt"><input type="radio" name="${group}" value="${esc(x.uid)}"${choice === x.uid ? " checked" : ""}>
-        <span>★ Trained · ${esc(x.tmMoves.map((m) => m.name).join(", "))}</span><small>${esc(where(x))}</small></label>`).join("")}
-      ${t && mode === "donate" ? `<div class="cc-tmwarn" role="alert">
+      <p class="cc-cc-title">${mode === "feed" ? `Feed which ${esc(name)}?` : `Which ${esc(name)}?`}</p>
+      <div class="cc-cc-list" role="radiogroup" aria-label="Which ${esc(name)}">
+      ${copies.length ? copies.map((x) => `<label class="cc-cc-opt${lockedOut(x) ? " is-off" : ""}"><input type="radio" name="${group}" value="${esc(x.uid)}"${choice === x.uid ? " checked" : ""}${lockedOut(x) ? " disabled" : ""}>
+        <span><b>Lv ${x.level}</b>${x.trained ? ` · ★ ${esc(x.tmMoves.map((m) => m.name).join(", ") || "TM-trained")}` : ""}</span><small>${esc(where(x))}${lockedOut(x) ? " · take it off first" : ""}</small></label>`).join("")
+        : `<p class="cc-tmnote">You have no other ${esc(name)} to use.</p>`}
+      </div>
+      ${c?.trained && (mode === "donate" || mode === "feed") ? `<div class="cc-tmwarn" role="alert">
           <b>⚠️ This ${esc(name)} has TM-trained moves</b>
-          <p>It learned ${esc(moves)} from TMs. Donating it permanently removes those trained moves. The TMs are not refunded.</p>
+          <p>It learned ${esc(moves)} from TMs. ${mode === "feed" ? "Feeding" : "Donating"} it permanently removes those trained moves. The TMs are not refunded.</p>
           <label><input type="checkbox" data-ack${ack ? " checked" : ""}><span>I understand this trained ${esc(name)} and its TM moves will be gone.</span></label>
         </div>` : ""}
-      ${t && (mode === "evolve" || mode === "convert") ? `<p class="cc-tmnote">Its TM moves (${esc(moves)}) stay with it.</p>` : ""}
+      ${c?.trained && (mode === "evolve" || mode === "convert") ? `<p class="cc-tmnote">Its TM moves (${esc(moves)}) stay with it.</p>` : ""}
+      ${c && c.teams > 0 && (mode === "evolve" || mode === "convert") ? `<p class="cc-tmnote">It stays in its team slots.</p>` : ""}
     </div>`;
   };
   container.onchange = (e) => {
@@ -90,12 +123,11 @@ export function mountCopyChoice(container, { userData, pokeId, variant, name, ow
   return {
     needed: true,
     get() {
-      if (choice === null) return { ok: false, reason: `Choose which ${name}.` };
-      if (choice === "") return { ok: true, uid: null, rev: null, confirmTrained: false, copy: null };
-      const t = trained.find((x) => x.uid === choice);
-      if (!t) return { ok: false, reason: "That copy changed. Close and try again." };
-      if (mode === "donate" && !ack) return { ok: false, reason: "Tick the box to confirm.", copy: t };
-      return { ok: true, uid: t.uid, rev: t.rev, confirmTrained: mode === "donate", copy: t };
+      if (choice === null) return { ok: false, reason: copies.length ? `Choose which ${name}.` : `You have no other ${name} to use.` };
+      const c = copies.find((x) => x.uid === choice);
+      if (!c) return { ok: false, reason: "That Pokémon changed. Close and try again." };
+      if ((mode === "donate" || mode === "feed") && c.trained && !ack) return { ok: false, reason: "Tick the box to confirm.", copy: c };
+      return { ok: true, uid: c.uid, rev: c.trained ? c.rev : null, confirmTrained: mode === "donate" && c.trained, copy: c };
     },
   };
 }

@@ -29,6 +29,7 @@ import { getAllPokemon } from "../utils/dataLoader.js";
 import { spritePaths, rarityEmojis, rarityColors } from "../spriteconfig.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { threaded } from "../utils/render/renderers.js";
+import { registeredMask, copiesOf } from "../services/box.js";
 
 // ----------------------------------------------------------
 // Type ID -> Name (Gen 1-5 style mapping)
@@ -176,13 +177,14 @@ export default {
         const rarityEmoji = rarityEmojis[rarityKey] || "";
         const color = rarityColors?.[rarityKey] || "#3b82f6";
 
-        const ownedLineNormal =
-          `**Owned (Normal):** ${ownsNormal ? "✅ Yes" : "❌ No"}` +
-          (ownsNormal ? `  *(x${normalCount})*` : "");
-
-        const ownedLineShiny =
-          `**Owned (Shiny):** ${ownsShiny ? "✨ ✅ Yes" : "❌ No"}` +
-          (ownsShiny ? `  *(x${shinyCount})*` : "");
+        // Pokédex (ever caught) vs Collection (owned now), docs/adr/0001.
+        const mask = registeredMask(user, poke.id);
+        const line = (label, owns, n, bit, variant) => {
+          const best = copiesOf(user, poke.id, variant)[0]?.level;
+          return `**${label}:** ` + (owns ? `✅ ×${n}${best ? ` · best Lv ${best}` : ""}` : (mask & bit) ? "Caught before · none now" : "❌ Not caught");
+        };
+        const ownedLineNormal = line("Normal", ownsNormal, normalCount, 1, "normal");
+        const ownedLineShiny = line("✨ Shiny", ownsShiny, shinyCount, 2, "shiny");
 
         return new EmbedBuilder()
           .setTitle(`#${poke.id} — ${poke.name}`)

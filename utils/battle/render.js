@@ -13,15 +13,13 @@
 
 import { createCanvas, ImageData } from "@napi-rs/canvas";
 import { GifReader } from "omggif";
-import gifenc from "gifenc"; // CommonJS without named-export hints, so Node needs the default import
 import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import { loadTrimmedTrainerSprite, loadBadgeSprite } from "../render/sprites.js";
 import { drawSparkle, drawTypeChip } from "../render/primitives.js";
 import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
-
-const { GIFEncoder, quantize, nearestColorIndex } = gifenc;
+import { encodeFrames } from "../render/gif.js";
 
 const FONT = "system-ui, 'DejaVu Sans', 'Noto Sans', Arial, sans-serif";
 const SPRITES = new URL("../../public/sprites/pokemon/", import.meta.url);
@@ -390,10 +388,15 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
   const total = events.length
     ? Math.max(events.length * ANIMATION.eventFrames + ANIMATION.holdFrames, ANIMATION.turnMs / ANIMATION.delayMs)
     : ANIMATION.idleFrames * screens.length;
-  const draw = (f) => {
-    const state = frameState(f, { hpBefore, events });
-    const ms = f * ANIMATION.delayMs;
-
+  // What stays the same in every frame is drawn once on `base` and copied
+  // in first: the background, each row's panel and portrait, and its trainer
+  // name and type chip. Everything else in a row is drawn after its panel, so
+  // the order on screen is the same as drawing it all per frame (row 0's
+  // sprites, labels and HP bars end above row 1's panel).
+  const base = createCanvas(W, H);
+  const ballsAt = [0, 0];
+  {
+    const ctx = base.getContext("2d");
     const bg = ctx.createLinearGradient(0, 0, 0, H);
     bg.addColorStop(0, "#141a2c");
     bg.addColorStop(1, "#1d1530");
@@ -402,7 +405,6 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 
     for (let s = 0; s < 2; s++) {
       const top = ROW_TOP[s];
-      const members = sides[s].members;
       ctx.fillStyle = s === 1 && typeFill ? `${typeFill}1f` : `${SIDE_COLOR[s]}14`;
       pill(ctx, PAD, top, W - 2 * PAD, ROW_H, 16);
       ctx.fill();
@@ -412,7 +414,8 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 
       drawPortrait(ctx, s, portraits[s], s === 1 && typeFill ? typeFill : SIDE_COLOR[s]);
 
-      // Nameplate: trainer name, the opponent's type (challenges), and a ball per Team member.
+      // Nameplate: trainer name and the opponent's type (challenges); the
+      // balls after them change, so they are drawn per frame.
       const nameX = LAYOUT.left + 8;
       ctx.font = `700 16px ${FONT}`;
       ctx.textAlign = "left";
@@ -421,10 +424,20 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
       const name = fitText(ctx, sides[s].name, 320);
       ctx.fillText(name, nameX, top + 20);
       let ballsX = nameX + ctx.measureText(name).width + 16;
-      if (s === 1 && typeFill) {
-        ballsX += drawTypeChip(ctx, theme.type, ballsX - 6, top + 11, { h: 18, size: 11 }) + 8;
-        ctx.textBaseline = "middle"; // drawTypeChip leaves textAlign at left, the baseline at middle
-      }
+      if (s === 1 && typeFill) ballsX += drawTypeChip(ctx, theme.type, ballsX - 6, top + 11, { h: 18, size: 11 }) + 8;
+      ballsAt[s] = ballsX;
+    }
+  }
+
+  const draw = (f) => {
+    const state = frameState(f, { hpBefore, events });
+    const ms = f * ANIMATION.delayMs;
+    ctx.drawImage(base, 0, 0);
+
+    for (let s = 0; s < 2; s++) {
+      const top = ROW_TOP[s];
+      const members = sides[s].members;
+      const ballsX = ballsAt[s];
       members.forEach((_, i) => drawBall(ctx, ballsX + i * 16, top + 20, state.hp[s][i] > 0));
       if (winnerSide === s) drawTag(ctx, "WINNER", W - PAD - 14, top + 11, GOLD);
       else if (surgeSide === s) drawTag(ctx, "UNDERDOG SURGE", W - PAD - 14, top + 11, "#ff9800");
@@ -536,51 +549,14 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     ctx.fillText(fitText(ctx, line2 ?? "", lineW), PAD + 18, ty + 51);
 
   };
-  const pause = () => new Promise((resolve) => setImmediate(resolve)); // lets other commands run
-
   // One palette for the whole image, from its first and last frames, so a
   // color that only shows up later (a red HP bar, a fainted gray) is in it,
   // plus the award screen's first frame when there is one (its gold and the
-  // dimmed field). canvas.data() is the canvas's own pixels, not a copy;
-  // frames are opaque, so its premultiplied alpha changes nothing.
-  const sampled = [total - 1, ...(theme?.award && !events.length ? [theme.award.screen * ANIMATION.idleFrames] : []), 0];
-  const sample = new Uint8Array(W * H * 4 * sampled.length);
-  sampled.forEach((f, i) => {
-    draw(f);
-    sample.set(canvas.data(), W * H * 4 * (sampled.length - 1 - i));
+  // dimmed field). Frames are opaque, so the canvas's premultiplied alpha
+  // changes nothing. utils/render/gif.js writes only what changed per frame.
+  const award = theme?.award && !events.length ? [theme.award.screen * ANIMATION.idleFrames] : [];
+  return encodeFrames(canvas, draw, total, {
+    sample: [0, ...award, total - 1],
+    delay: (f) => (events.length && f === total - 1 ? ANIMATION.freezeMs : ANIMATION.delayMs),
   });
-  const palette = quantize(sample, 255);
-  const clear = palette.length; // the transparent index: "same as the last frame"
-  await pause();
-
-  // Each frame is mapped to the palette and written as soon as it's drawn, into
-  // reused buffers. Pixels that match the previous frame are written as `clear`,
-  // so later frames store only what changed and the file stays small.
-  const nearest = new Int16Array(1 << 16).fill(-1); // RGB565 color -> palette index
-  let cur = new Uint8Array(W * H), prev = new Uint8Array(W * H);
-  const changes = new Uint8Array(W * H);
-  const gif = GIFEncoder();
-  for (let f = 0; f < total; f++) {
-    if (f > 0) draw(f);
-    const px = canvas.data();
-    for (let i = 0, p = 0; i < cur.length; i++, p += 4) {
-      const key = ((px[p] >> 3) << 11) | ((px[p + 1] >> 2) << 5) | (px[p + 2] >> 3);
-      let idx = nearest[key];
-      if (idx < 0) idx = nearest[key] = nearestColorIndex(palette, [px[p], px[p + 1], px[p + 2]]);
-      cur[i] = idx;
-    }
-    const delay = events.length && f === total - 1 ? ANIMATION.freezeMs : ANIMATION.delayMs;
-    if (f === 0) gif.writeFrame(cur, W, H, { palette: [...palette, [0, 0, 0]], delay });
-    else {
-      for (let i = 0; i < cur.length; i++) changes[i] = cur[i] === prev[i] ? clear : cur[i];
-      // dispose 1 keeps each frame under the next; gifenc's default for a
-      // transparent frame clears it, which would blank the unchanged pixels.
-      gif.writeFrame(changes, W, H, { delay, transparent: true, transparentIndex: clear, dispose: 1 });
-    }
-    [cur, prev] = [prev, cur];
-    await pause();
-  }
-  gif.finish();
-  const bytes = gif.bytesView();
-  return Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 }

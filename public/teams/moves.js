@@ -15,13 +15,15 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 
 let dialog = null;
 let lastFocus = null;
+let saving = false; // a save is in flight: keep the dialog open and its controls disabled
 
 function ensureDialog() {
   if (dialog) return dialog;
   dialog = document.createElement("dialog");
   dialog.className = "tm-moves";
   dialog.setAttribute("aria-labelledby", "movesTitle");
-  dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });
+  dialog.addEventListener("click", (e) => { if (e.target === dialog && !saving) dialog.close(); });
+  dialog.addEventListener("cancel", (e) => { if (saving) e.preventDefault(); }); // Esc while saving
   dialog.addEventListener("close", () => lastFocus?.focus?.({ preventScroll: true }));
   document.body.append(dialog);
   return dialog;
@@ -38,7 +40,7 @@ async function postMoveset(userId, team, s, moves) {
   try { body = await res.json(); } catch { /* non-JSON */ }
   if (res.status === 403) { showExpired(); throw Object.assign(new Error("expired"), { silent: true }); }
   if (!res.ok || !body.success) throw new Error(body.error || `Couldn’t save the moves (${res.status}).`);
-  return body.moves ?? null;
+  return body;
 }
 
 /**
@@ -47,6 +49,7 @@ async function postMoveset(userId, team, s, moves) {
  */
 export async function openMovesEditor({ userId, team, s, name, onSaved }) {
   lastFocus = document.activeElement;
+  saving = false;
   ensureDialog();
   dialog.innerHTML = `<p class="tm-sub" style="padding:24px">Loading moves…</p>`;
   if (!dialog.open) dialog.showModal();
@@ -101,13 +104,14 @@ export async function openMovesEditor({ userId, team, s, name, onSaved }) {
 
   dialog.onchange = (e) => {
     const box = e.target.closest('input[type="checkbox"]');
-    if (!box) return;
+    if (!box || saving) return;
     if (box.checked && picked.length < MAX && !picked.includes(box.value)) picked.push(box.value);
     if (!box.checked) picked = picked.filter((x) => x !== box.value);
     draw();
     dialog.querySelector(`input[value="${CSS.escape(box.value)}"]`)?.focus();
   };
   dialog.onclick = async (e) => {
+    if (saving) return; // controls are disabled; ignore stray clicks until the server answers
     if (e.target === dialog || e.target.closest("[data-close]")) return dialog.close();
     if (e.target.closest("[data-copy]")) {
       picked = other.map((m) => m.id).filter((id) => copy.learnable.some((l) => l.id === id)).slice(0, MAX);
@@ -116,15 +120,33 @@ export async function openMovesEditor({ userId, team, s, name, onSaved }) {
       return;
     }
     if (e.target.closest("[data-auto]") || e.target.closest("[data-save]")) {
+      if (saving) return;
       const clearing = !!e.target.closest("[data-auto]");
+      setBusy(true, clearing);
       try {
-        await postMoveset(userId, team, s, clearing ? null : picked);
+        const body = await postMoveset(userId, team, s, clearing ? null : picked);
+        saving = false;
         dialog.close();
-        toast(clearing ? `${name} uses its automatic moves on your ${LABEL[team]}.` : `${name}’s moves saved for your ${LABEL[team]}.`, { tone: "success" });
+        // Success only after the server confirmed; "saved with a delay" when
+        // the change is kept in memory but not on disk yet.
+        if (body.saved === false) toast(body.saveNotice || "Saved with a delay. Your change is kept and will be written shortly.");
+        else toast(clearing ? `${name} uses its automatic moves on your ${LABEL[team]}.` : `${name}’s moves saved for your ${LABEL[team]}.`, { tone: "success" });
         onSaved?.();
       } catch (err) {
+        setBusy(false);
         if (!err.silent) showActionError(err, "Couldn’t save the moves");
       }
     }
   };
+
+  // While saving: every control is disabled, the pressed button says
+  // "Saving…", and the dialog can't be dismissed (the result is still coming).
+  function setBusy(on, clearing = false) {
+    saving = on;
+    dialog.setAttribute("aria-busy", on ? "true" : "false");
+    if (!on) { draw(); return; }
+    for (const el of dialog.querySelectorAll("button, input")) el.disabled = true;
+    const pressed = dialog.querySelector(clearing ? "[data-auto]" : "[data-save]");
+    if (pressed) pressed.textContent = "Saving…";
+  }
 }

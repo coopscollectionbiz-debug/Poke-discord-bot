@@ -38,7 +38,7 @@ import { getRank } from "../utils/rankSystem.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { enqueueSave } from "../utils/saveQueue.js";
 import { lockUser } from "../utils/userLocks.js";
-import { saveAndAck, SAVE_DELAYED_NOTE } from "../utils/saveManager.js";
+import { saveAndAck, SAVE_DELAYED_NOTE, promptSave } from "../utils/saveManager.js";
 import { grantTrainer } from "../services/assets.js";
 import { badgeLine } from "../utils/challenge/badgeImages.js";
 import { sendPendingNotices } from "./battle.js";
@@ -432,7 +432,7 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
     if (!Array.isArray(user.displayedPokemon) || user.displayedPokemon.length === 0) {
       user.displayedPokemon = team;
       // `user` is the live record (never replace trainerData[id], D2).
-      if (trainerData) await enqueueSave(trainerData);
+      if (trainerData) await promptSave(trainerData);
     }
 
     const leadSlot = team[0] || null;

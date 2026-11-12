@@ -265,6 +265,7 @@ const TABS = [
   ["pokemon", "Pokémon"],
   ["items", "Items"],
   ["trainers", "Trainers"],
+  ["auras", "Auras"],
   ["cooldowns", "Cooldowns"],
   ["history", "History"],
 ];
@@ -306,7 +307,7 @@ async function renderPlayer(id, tab) {
     }
   });
   const body = $("#tabBody");
-  const views = { summary: tabSummary, pokemon: tabPokemon, items: tabItems, trainers: tabTrainers, cooldowns: tabCooldowns, history: tabHistory };
+  const views = { summary: tabSummary, pokemon: tabPokemon, items: tabItems, trainers: tabTrainers, auras: tabAuras, cooldowns: tabCooldowns, history: tabHistory };
   await (views[tab] || tabSummary)(body, data);
 }
 
@@ -459,6 +460,14 @@ function tabPokemon(body, data) {
   draw();
 }
 
+// Item <select> options grouped by category; items players can't get yet say so.
+function itemOptions(items) {
+  const groups = new Map();
+  for (const i of items) (groups.get(i.category) ?? groups.set(i.category, []).get(i.category)).push(i);
+  return [...groups].map(([cat, list]) => `<optgroup label="${esc(cat)}">${list
+    .map((i) => `<option value="${esc(i.id)}">${esc(i.name)}${i.live === false ? " · not live" : ""}</option>`).join("")}</optgroup>`).join("");
+}
+
 function tabItems(body, data) {
   const p = data.player;
   const items = state.catalog.items;
@@ -466,11 +475,11 @@ function tabItems(body, data) {
     <section class="panel">
       <div class="panel-head"><h2>Add item</h2></div>
       ${items.length ? `<div class="field-row">
-        <label style="flex:2 1 220px">Item<select id="itAdd">${items.map((i) => `<option value="${esc(i.id)}">${esc(i.name)}</option>`).join("")}</select></label>
+        <label style="flex:2 1 220px">Item<select id="itAdd">${itemOptions(items)}</select></label>
         <label>Amount<input id="itAmount" type="number" min="1" step="1" value="1" /></label>
         <button class="btn-primary" id="itReview" type="button">Review</button>
       </div>
-      <p class="faint">Only items the game currently lets players hold are listed.</p>` : `<p class="muted">No items can be granted right now.</p>`}
+      <p class="faint">Every item that can sit in a bag, including TMs, Mega Stones and Mega Shards. Items marked “not live” wait in the bag until players can use them.</p>` : `<p class="muted">No items can be granted right now.</p>`}
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Bag</h2></div>
@@ -554,6 +563,56 @@ function tabTrainers(body, data) {
   };
   $("#trFilter").addEventListener("input", draw);
   draw();
+}
+
+// Aura <select> options: every Aura; ones without art or retired say so.
+const AURA_KIND = { tier: "Tier", gym: "Gym", elite4: "Elite Four", champion: "Champion", milestone: "Milestone", shop: "Shop", event: "Event" };
+function auraOptions(auras) {
+  const groups = new Map();
+  for (const a of auras) { const k = AURA_KIND[a.kind] ?? a.kind; (groups.get(k) ?? groups.set(k, []).get(k)).push(a); }
+  return [...groups].map(([k, list]) => `<optgroup label="${esc(k)}">${list
+    .map((a) => `<option value="${esc(a.id)}">${esc(a.name)}${a.retired ? " · retired" : ""}${a.live === false ? " · not live" : ""}</option>`).join("")}</optgroup>`).join("");
+}
+
+function tabAuras(body, data) {
+  const p = data.player;
+  const owned = data.auras ?? [];
+  const ownedIds = new Set(owned.map((a) => a.id));
+  const addable = (state.catalog.auras ?? []).filter((a) => !ownedIds.has(a.id));
+  const lockNote = { record: "from their record", trainer: "from a trainer they own" };
+  body.innerHTML = `
+    <section class="panel">
+      <div class="panel-head"><h2>Add Aura</h2></div>
+      ${addable.length ? `<div class="field-row">
+        <label style="flex:2 1 260px">Aura<select id="auAdd">${auraOptions(addable)}</select></label>
+        <button class="btn-primary" id="auReview" type="button">Review</button>
+      </div>
+      <p class="faint">Any Aura, including retired event Auras. One marked “not live” has no art yet: it’s owned now and shows once its art ships.</p>` : `<p class="muted">They own every Aura.</p>`}
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Owned (${fmt(owned.length)})</h2></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Aura</th><th class="hide-sm">Kind</th><th></th></tr></thead>
+        <tbody>${
+          owned.map((a, i) => `<tr>
+            <td>${esc(a.name)}${a.equipped ? ` <span class="chip blue">Equipped</span>` : ""}${a.live ? "" : ` <span class="chip">not live</span>`}</td>
+            <td class="hide-sm">${esc(AURA_KIND[a.kind] ?? a.kind)}</td>
+            <td class="actions">${a.lockedBy
+              ? `<span class="faint">${esc(lockNote[a.lockedBy] ?? "locked")}</span>`
+              : `<button class="btn-sm btn-ghost-danger" data-i="${i}" type="button">Remove</button>`}</td></tr>`).join("")
+          || `<tr><td colspan="3" class="empty">They don't own any Auras.</td></tr>`
+        }</tbody>
+      </table></div>
+    </section>`;
+  $("#auReview")?.addEventListener("click", () =>
+    openReview({ userId: p.userId, userName: p.name, change: { kind: "aura", op: "add", auraId: $("#auAdd").value }, onDone: refreshPlayer })
+  );
+  $$("button[data-i]", body).forEach((b) =>
+    b.addEventListener("click", () => {
+      const a = owned[Number(b.dataset.i)];
+      openReview({ userId: p.userId, userName: p.name, change: { kind: "aura", op: "remove", auraId: a.id }, onDone: refreshPlayer });
+    })
+  );
 }
 
 function tabCooldowns(body, data) {
@@ -842,7 +901,7 @@ function drawGrantFields() {
   if (kind === "cc" || kind === "tp") f.innerHTML = `<label>Amount<input id="gAmount" type="number" min="1" step="1" placeholder="500" /></label>`;
   else if (kind === "item")
     f.innerHTML = state.catalog.items.length
-      ? `<label style="flex:2 1 200px">Item<select id="gItem">${state.catalog.items.map((i) => `<option value="${esc(i.id)}">${esc(i.name)}</option>`).join("")}</select></label><label>Amount<input id="gAmount" type="number" min="1" step="1" value="1" /></label>`
+      ? `<label style="flex:2 1 200px">Item<select id="gItem">${itemOptions(state.catalog.items)}</select></label><label>Amount<input id="gAmount" type="number" min="1" step="1" value="1" /></label>`
       : `<p class="muted">No items can be granted right now.</p>`;
   else if (kind === "pokemon")
     f.innerHTML = `<label style="flex:2 1 220px">Pokémon<input id="gSpecies" list="gSpeciesList" autocomplete="off" placeholder="Start typing a name" /></label>
@@ -855,8 +914,8 @@ function drawGrantFields() {
     f.innerHTML = `<label style="flex:2 1 260px">Trainer<input id="gTrainer" list="gTrainerList" autocomplete="off" placeholder="Start typing a name" /></label><datalist id="gTrainerList">${trainerOptions()}</datalist>
       <p class="faint" style="flex-basis:100%">Players who already own it are skipped.</p>`;
   else if (kind === "aura")
-    f.innerHTML = `<label style="flex:2 1 260px">Aura<select id="gAura">${(state.catalog.auras ?? []).map((a) => `<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.kind)})</option>`).join("")}</select></label>
-      <p class="faint" style="flex-basis:100%">For event Auras. Players who already own it are skipped.</p>`;
+    f.innerHTML = `<label style="flex:2 1 260px">Aura<select id="gAura">${auraOptions(state.catalog.auras ?? [])}</select></label>
+      <p class="faint" style="flex-basis:100%">Any Aura, including retired event Auras and ones without art yet. Players who already own it are skipped.</p>`;
   else
     f.innerHTML = state.catalog.cooldowns.map((c) => `<label class="inline"><input type="checkbox" name="gCooldown" value="${esc(c.key)}" /> ${esc(c.label)}</label>`).join("");
   $("#gUnreleased")?.addEventListener("change", (e) => ($("#gSpeciesList").innerHTML = speciesOptions(e.target.checked)));

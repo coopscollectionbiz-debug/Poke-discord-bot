@@ -19,7 +19,9 @@
 //   • A first grant of a species + Variant gets a Catch level (rolled unless
 //     the admin passes one); extra copies add count only.
 //   • Pokémon that aren't acquirable (unreleased generation) need
-//     allowUnreleased. Items must be holdable (catalog active + inventory).
+//     allowUnreleased. Items: any catalog item kept in the bag, live or not
+//     (TMs, Mega Stones, Mega Shards, held items); a warning says when
+//     players can't use it yet.
 // ==========================================================
 
 import { getSpeciesEntry, isAcquirable } from "../utils/speciesCatalog.js";
@@ -27,11 +29,11 @@ import { trainingKey, getTraining, expForLevel, rollCatchLevel } from "../utils/
 import { canRemoveCopies, removeCopies, plainCount } from "./ownership.js";
 import { addCopy, copiesOf, syncLine, normalizeBox } from "./box.js";
 import { LEVEL_CAP } from "../utils/battle/tuning.js";
-import { getCatalogItem, isHoldable } from "../catalog/items.js";
-import { grantItem, consumeItem, getQuantity, MAX_QUANTITY_PER_OP } from "./inventory.js";
+import { getCatalogItem, isAdminGrantable } from "../catalog/items.js";
+import { adminGrantItem, consumeItem, getQuantity, MAX_QUANTITY_PER_OP } from "./inventory.js";
 import { ownsTrainer, grantTrainer, revokeTrainer, normalizeTrainers, MAX_CURRENCY_GRANT } from "./assets.js";
 import { getAura } from "../catalog/auras.js";
-import { grantAura, ownsAura, revokeAura } from "./auras.js";
+import { adminGrantAura, ownsAura, revokeAura, auraLockedBy, auraReady } from "./auras.js";
 import { toTeamObj } from "../utils/teamNormalize.js";
 import { getRank } from "../utils/rankSystem.js";
 import { createNewUser } from "../utils/userSchema.js";
@@ -135,11 +137,10 @@ export function parseChange(raw, ctx = {}) {
     }
     return { ok: true, change: { kind, op, key } };
   }
-  if (kind === "aura") { // event Auras are handed out this way (a bulk grant to everyone who took part)
+  if (kind === "aura") { // any Aura, retired event Auras and ones without art yet included
     if (!op) return fail("Choose add or remove.");
     const a = getAura(raw.auraId);
     if (!a) return fail("Unknown Aura.");
-    if (op === "add" && a.kind === "event" && a.retired) return fail("That event Aura is retired.");
     return { ok: true, change: { kind, op, auraId: a.id } };
   }
   if (kind === "level") {
@@ -246,9 +247,10 @@ export function applyChange(user, change, ctx = {}) {
       const name = entry?.name ?? change.itemId;
       const before = getQuantity(user, change.itemId);
       if (change.op === "add") {
-        if (!isHoldable(change.itemId)) return fail(`${name} can't be granted.`);
-        const r = grantItem(user, change.itemId, change.amount);
-        if (!r.ok) return fail(r.error.replace(/^You can't hold/, "They can't hold"));
+        if (!isAdminGrantable(change.itemId)) return fail(`${name} can't be granted.`);
+        const r = adminGrantItem(user, change.itemId, change.amount, { env: ctx.env ?? process.env });
+        if (!r.ok) return fail(r.error);
+        if (!r.live) warnings.push(`${name} isn't live for players yet; it waits in their bag.`);
         return { ok: true, summary: `Add ${fmt(change.amount)} × ${name}`, before, after: r.quantity, warnings };
       }
       if (change.amount > before) return fail(`They have ${fmt(before)} × ${name}.`, { current: before });
@@ -330,11 +332,15 @@ export function applyChange(user, change, ctx = {}) {
       const owned = ownsAura(user, a.id);
       if (change.op === "add") {
         if (owned) return fail(`They already own ${a.name}.`);
-        grantAura(user, a.id);
+        adminGrantAura(user, a.id);
+        if (a.kind === "event" && a.retired) warnings.push(`${a.name} is a retired event Aura.`);
+        if (!auraReady(a.id, ctx.env ?? process.env)) warnings.push(`${a.name} isn't live yet (no art); it shows once its art ships.`);
         return { ok: true, summary: `Add Aura ${a.name}`, before: "not owned", after: "owned", warnings };
       }
       if (!owned) return fail(`They don't own ${a.name}.`);
-      if (!revokeAura(user, a.id)) return fail(`${a.name} comes from their record (a challenge win or achievement), so it can't be removed.`);
+      const locked = auraLockedBy(user, a.id);
+      if (locked === "trainer") return fail(`${a.name} comes with a trainer they own; remove that trainer first.`);
+      if (locked || !revokeAura(user, a.id)) return fail(`${a.name} comes from their record (a challenge win or achievement), so it can't be removed.`);
       return { ok: true, summary: `Remove Aura ${a.name}`, before: "owned", after: "not owned", warnings };
     }
 

@@ -104,6 +104,31 @@ export function grantItem(user, id, qty, { env = process.env } = {}) {
 }
 
 /**
+ * Admin grant (admin dashboard only): any catalog item kept in the bag, live
+ * or not, ignoring release status and feature flags (Mega Stones, Mega
+ * Shards, unreleased TMs, held items before launch). Quantity and stack
+ * limits still apply. Players can't reach this.
+ * @returns {{ok:true, quantity:number, live:boolean} | {ok:false, error:string}}
+ */
+export function adminGrantItem(user, id, qty, { env = process.env } = {}) {
+  if (!user || typeof user !== "object") return fail("No player record.");
+  const entry = getCatalogItem(id);
+  if (!entry) return fail("Unknown item.");
+  if (entry.storage !== "inventory") return fail(`${entry.name} can't be kept in the bag.`);
+  const q = validateQuantity(qty);
+  if (!q.ok) return q;
+  const max = Math.min(entry.maxStack ?? ABSOLUTE_MAX_STACK, ABSOLUTE_MAX_STACK);
+  const next = getQuantity(user, id) + q.value;
+  if (next > max) {
+    if (entry.category === "held") return fail(`They already own ${entry.name}.`, { max, code: "already_owned" });
+    return fail(`They can't hold more than ${max.toLocaleString()} ${entry.name}.`, { max });
+  }
+  ensureItems(user)[id] = next;
+  // live: could a player get it through the game today (same rule as grantItem)?
+  return { ok: true, quantity: next, live: validateHoldableItem(id, { env, userId: user.id ?? null }).ok };
+}
+
+/**
  * Remove `qty`. Works for any id the player holds (including legacy ids not
  * in the catalog), but never goes below zero.
  * @returns {{ok:true, quantity:number} | {ok:false, error:string}}

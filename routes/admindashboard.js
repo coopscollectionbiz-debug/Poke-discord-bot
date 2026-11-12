@@ -29,6 +29,7 @@
 // ==========================================================
 
 import { AURAS } from "../catalog/auras.js";
+import { ownedAuraIds, auraLockedBy, auraReady, equippedAura } from "../services/auras.js";
 import express from "express";
 import { getRank } from "../utils/rankSystem.js";
 import { readEvents } from "../utils/eventLog.js";
@@ -37,8 +38,8 @@ import { createAdminHandlers } from "../services/adminApi.js";
 import { COOLDOWNS, cooldownState, lastActiveOf, teamSlotsOf, speciesLabel } from "../services/adminChanges.js";
 import { getSpeciesEntry, allSpeciesIds, isAcquirable } from "../utils/speciesCatalog.js";
 import { getTraining } from "../utils/training.js";
-import { listCatalog, isHoldable, CATEGORIES } from "../catalog/items.js";
-import { listInventory } from "../services/inventory.js";
+import { listCatalog, isAdminGrantable, CATEGORIES } from "../catalog/items.js";
+import { listInventory, validateHoldableItem } from "../services/inventory.js";
 import { normalizeTrainers } from "../services/assets.js";
 import { loadTrainerSprites } from "../utils/dataLoader.js";
 import { rankedRecord } from "../utils/battle/rewards.js";
@@ -245,6 +246,11 @@ export function mountAdminDashboard(app, deps) {
     const now = Date.now();
     const cooldowns = Object.entries(COOLDOWNS).map(([key, label]) => ({ key, label, state: cooldownState(user, key, now) }));
     const ranked = rankedRecord(user);
+    const ownedAuras = ownedAuraIds(user);
+    const equipped = equippedAura(user);
+    const auras = AURAS.filter((a) => ownedAuras.has(a.id)).map((a) => ({
+      id: a.id, name: a.name, kind: a.kind, live: auraReady(a.id), equipped: equipped === a.id, lockedBy: auraLockedBy(user, a.id),
+    }));
 
     res.json({
       ok: true,
@@ -267,6 +273,7 @@ export function mountAdminDashboard(app, deps) {
       pokemon,
       items,
       trainers,
+      auras,
       cooldowns,
     });
   });
@@ -274,15 +281,15 @@ export function mountAdminDashboard(app, deps) {
   router.get("/api/admin/catalog", requireRead, async (req, res) => {
     const t = await getTrainerCatalog();
     const items = listCatalog()
-      .filter((e) => isHoldable(e.id))
-      .map((e) => ({ id: e.id, name: e.name, category: CATEGORIES[e.category]?.label ?? e.category, rarity: e.rarity, maxStack: e.maxStack ?? null, icon: e.icon ?? null }));
+      .filter((e) => isAdminGrantable(e.id))
+      .map((e) => ({ id: e.id, name: e.name, category: CATEGORIES[e.category]?.label ?? e.category, rarity: e.rarity, maxStack: e.maxStack ?? null, icon: e.icon ?? null, live: validateHoldableItem(e.id).ok }));
     res.json({
       ok: true,
       species: getSpeciesCatalog(),
       items,
       trainers: t.list,
       cooldowns: Object.entries(COOLDOWNS).map(([key, label]) => ({ key, label })),
-      auras: AURAS.filter((a) => !(a.kind === "event" && a.retired)).map((a) => ({ id: a.id, name: a.name, kind: a.kind })),
+      auras: AURAS.map((a) => ({ id: a.id, name: a.name, kind: a.kind, retired: !!a.retired, live: auraReady(a.id) })),
     });
   });
 

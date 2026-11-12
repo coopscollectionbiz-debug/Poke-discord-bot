@@ -88,11 +88,35 @@ export function grantAura(user, id, now = Date.now()) {
 }
 
 /**
+ * Admin grant (admin dashboard only): any Aura, retired event Auras and
+ * Auras whose art isn't live yet included (it shows once its art exists;
+ * until then equipping falls back to Auto). False if already owned.
+ */
+export function adminGrantAura(user, id, now = Date.now()) {
+  const a = getAura(id);
+  if (!user || !a || ownsAura(user, a.id)) return false;
+  record(user).owned[a.id] = dayOf(now);
+  return true;
+}
+
+/**
+ * Why an owned Aura can't be removed by an admin, or null if it can:
+ * "record" (a challenge win or achievement proves it) or "trainer" (a tier
+ * Aura of a trainer they still own; it would come back on the next load).
+ */
+export function auraLockedBy(user, id) {
+  if (derivedIds(user).has(id)) return "record";
+  const list = Array.isArray(user?.trainers) ? user.trainers : [];
+  if (list.some((f) => TIER_AURA[trainerTier(f) ?? ""] === id)) return "trainer";
+  return null;
+}
+
+/**
  * Admin removal of a stored Aura. False when it isn't stored, or the record
  * still proves it (a challenge win or achievement). Unequips it.
  */
 export function revokeAura(user, id) {
-  if (user?.auras?.owned?.[id] === undefined || derivedIds(user).has(id)) return false;
+  if (user?.auras?.owned?.[id] === undefined || auraLockedBy(user, id)) return false;
   delete user.auras.owned[id];
   if (user.auras.equipped === id) user.auras.equipped = AURA_AUTO;
   return true;

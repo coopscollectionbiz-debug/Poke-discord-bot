@@ -266,6 +266,39 @@ export function drawTag(ctx, text, x, y, { fill = COLOR.gold, color = COLOR.ink,
   return w;
 }
 
+// The games' "!" over a Trainer who has spotted the player, as 16 × 16 pixel
+// art: o outline, w bubble, x mark, . clear. Drawn at a whole scale with hard
+// edges, like the Badges.
+export const ALERT_BUBBLE = [
+  "................",
+  "..oooooooooooo..",
+  ".owwwwwwwwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwwwwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwwwwwwwwo.",
+  "..ooooowwooooo..",
+  "......owwo......",
+  ".......oo.......",
+];
+const ALERT_COLORS = { o: COLOR.ink, w: "#ffffff", x: COLOR.ink };
+
+export function drawAlertBubble(ctx, x, y, scale) {
+  for (const [row, line] of ALERT_BUBBLE.entries()) {
+    for (const [col, ch] of [...line].entries()) {
+      if (ch === ".") continue;
+      ctx.fillStyle = ALERT_COLORS[ch];
+      ctx.fillRect(x + col * scale, y + row * scale, scale, scale);
+    }
+  }
+}
+
 /**
  * The MEGA indicator, one look on every image (Mega colour, ink text). Drawn
  * only for a slot that really is a Mega (teamView/megaDisplay decide).

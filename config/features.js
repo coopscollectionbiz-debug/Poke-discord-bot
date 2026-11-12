@@ -76,3 +76,54 @@ export function isMegaCapabilityEnabled(capability, env = process.env) {
 /** Every capability's state, for status endpoints and tests. */
 export const megaCapabilities = (env = process.env) =>
   Object.freeze(Object.fromEntries(MEGA_CAPABILITIES.map((c) => [c, isMegaCapabilityEnabled(c, env)])));
+
+// ==========================================================
+// Held items (docs/held-items/HELD-ITEM-AMENDMENT.md). Same shape as Mega:
+// a master switch plus one switch per subsystem.
+//
+//   HELD_ITEMS_ENABLED          master switch. Unset = OFF for everyone.
+//   HELD_ITEMS_TESTERS          optional comma-separated Discord ids. When set,
+//                               the feature is on ONLY for those players (a
+//                               staged audience for owner verification).
+//   HELD_ITEMS_DASHBOARD_ENABLED  item views + equipping on the Teams page
+//   HELD_ITEMS_STARTER_ENABLED    the eight free starter unlocks
+//   HELD_ITEMS_SHOP_ENABLED       buying unlocks in the dashboard shop
+//   HELD_ITEMS_BATTLES_ENABLED    item effects in battle + Lucky Egg EXP.
+//                                 OPT-IN: off unless explicitly on.
+//
+// Switching anything off never deletes unlocks or equipment: battles just
+// ignore items and the dashboard hides the controls.
+// ==========================================================
+export const HELD_ITEM_CAPABILITIES = Object.freeze(["dashboard", "starter", "shop", "battles"]);
+const HELD_SUB_FLAG = Object.freeze({
+  dashboard: "HELD_ITEMS_DASHBOARD_ENABLED",
+  starter: "HELD_ITEMS_STARTER_ENABLED",
+  shop: "HELD_ITEMS_SHOP_ENABLED",
+  battles: "HELD_ITEMS_BATTLES_ENABLED",
+});
+const HELD_OPT_IN = new Set(["battles"]);
+
+/** The tester allowlist: null = everyone (when the master switch is on). */
+export function heldItemTesters(env = process.env) {
+  const raw = String(env.HELD_ITEMS_TESTERS ?? "").trim();
+  if (!raw) return null;
+  return Object.freeze(new Set(raw.split(",").map((s) => s.trim()).filter((s) => /^\d{5,25}$/.test(s))));
+}
+
+/**
+ * Is one held-item capability on for this player? `userId` null asks about
+ * the feature in general (e.g. a status line); with a tester allowlist set,
+ * only listed players get true.
+ */
+export function isHeldItemCapabilityEnabled(capability, env = process.env, userId = null) {
+  if (!HELD_ITEM_CAPABILITIES.includes(capability)) return false;
+  if (!TRUE.has(String(env.HELD_ITEMS_ENABLED ?? "").trim().toLowerCase())) return false;
+  const testers = heldItemTesters(env);
+  if (testers && !(userId != null && testers.has(String(userId)))) return false;
+  const value = String(env[HELD_SUB_FLAG[capability]] ?? "").trim().toLowerCase();
+  if (HELD_OPT_IN.has(capability)) return TRUE.has(value);
+  return !OFF.has(value);
+}
+
+export const heldItemCapabilities = (env = process.env, userId = null) =>
+  Object.freeze(Object.fromEntries(HELD_ITEM_CAPABILITIES.map((c) => [c, isHeldItemCapabilityEnabled(c, env, userId)])));

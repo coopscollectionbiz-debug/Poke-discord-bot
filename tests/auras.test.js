@@ -127,7 +127,23 @@ section("Events and admin grants");
   ev.retired = true; // simulate the event ending (catalog objects are frozen per array, not per entry)
   assertEqual(A.grantAura(player(), "eventSpooky"), false, "a retired event Aura is never granted again");
   assertTrue(!A.auraView(player()).auras.some((a) => a.id === "eventSpooky"), "…nor listed to those without it");
+  // Admin dashboard (2026-11-12): any Aura, retired ones included, with a warning.
+  const late = player();
+  const lateGrant = applyChange(late, parseChange({ kind: "aura", op: "add", auraId: "eventSpooky" }).change);
+  assertTrue(lateGrant.ok && A.ownsAura(late, "eventSpooky") && lateGrant.warnings.some((w) => /retired/.test(w)), "an admin can still grant a retired event Aura, with a warning");
+  assertTrue(applyChange(late, parseChange({ kind: "aura", op: "remove", auraId: "eventSpooky" }).change).ok && !A.ownsAura(late, "eventSpooky"), "…and remove it again");
   ev.retired = false;
+  const noArt = AURAS.find((a) => !A.auraReady(a.id));
+  if (noArt) {
+    const r = applyChange(player(), parseChange({ kind: "aura", op: "add", auraId: noArt.id }).change);
+    assertTrue(r.ok && r.warnings.some((w) => /isn't live yet/.test(w)), "an Aura without art can be granted ahead of its art, with a warning");
+  }
+  const withTrainer = player();
+  grantTrainer(withTrainer, "acerola.png");
+  const tierRm = applyChange(withTrainer, parseChange({ kind: "aura", op: "remove", auraId: "tierEpic" }).change);
+  assertTrue(!tierRm.ok && /remove that trainer first/.test(tierRm.error) && A.ownsAura(withTrainer, "tierEpic"), "a tier Aura from a trainer they still own can't be removed (it would come back on load)");
+  revokeTrainer(withTrainer, "acerola.png");
+  assertTrue(applyChange(withTrainer, parseChange({ kind: "aura", op: "remove", auraId: "tierEpic" }).change).ok && !A.ownsAura(withTrainer, "tierEpic"), "…once the trainer is gone it can be");
 }
 
 section("Art: PNG decode, backdrop, card");

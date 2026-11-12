@@ -357,3 +357,13 @@ export function isHoldable(id) {
   const e = getCatalogItem(id);
   return !!e && e.status === "active" && e.storage === "inventory";
 }
+
+/**
+ * Can an admin grant this id? Any item kept in the bag, live or not (TMs not
+ * in the shop yet, Mega Stones, Mega Shards, held items before launch).
+ * Instant items (Poké Balls) and purchase flags are never stored, so no.
+ */
+export function isAdminGrantable(id) {
+  const e = getCatalogItem(id);
+  return !!e && e.storage === "inventory";
+}

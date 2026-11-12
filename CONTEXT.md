@@ -144,8 +144,12 @@ The player whose **Team** has the lower **Power rating** going into a **Battle**
 _Avoid_: weaker player, loser
 
 **Underdog surge**:
-A rare, announced boost to the **Underdog's** whole **Team** for one **Casual battle**, likelier the wider the **Power rating** gap. **Ranked battles**, **Wager battles**, **Challenges** and **Trainer encounters** have none.
+A rare, announced boost to the **Underdog's** whole **Team** for one **Casual battle**, likelier the wider the **Power rating** gap, and likelier and stronger for an **Underdog** with high **Cuteness**. **Ranked battles**, **Wager battles**, **Challenges** and **Trainer encounters** have none.
 _Avoid_: comeback mechanic, rubber-banding, luck boost
+
+**Cuteness**:
+How cute a species or **Mega form** looks, scored 0 to 10, and strictly: Pokémon that aren't cute score 0 to 2, most cute ones score 6 or 7, and only a handful score 10. A **Team's** **Cuteness** is its members' average. Players never see it.
+_Avoid_: charm, appeal, cute score
 
 ### Challenges
 

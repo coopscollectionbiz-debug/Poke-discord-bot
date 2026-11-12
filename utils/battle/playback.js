@@ -17,7 +17,8 @@
 
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { renderBattleFrame, pickFrameTurns } from "./render.js";
-import { PLAYBACK } from "./tuning.js";
+import { PLAYBACK, CUTE } from "./tuning.js";
+import { teamCuteness } from "./cuteness.js";
 import { trainingKey } from "../training.js";
 import { CHALLENGES, opponentName, displaySprite } from "../challenge/roster.js";
 
@@ -95,7 +96,10 @@ function header(outcome) {
       ? `⚔️ ${c} challenged ${d} to a ranked battle! Battle teams at Lv 50.`
       : `⚔️ ${c} challenged ${d}!`;
   if (!outcome.surge) return intro;
-  return `${intro}\n🔥 The crowd is behind <@${outcome.sides[outcome.surge.side].userId}>! Underdog surge!`;
+  const underdog = `<@${outcome.sides[outcome.surge.side].userId}>`;
+  // Any surge by a cute Team, by either roll, gets its own line. It never says how cute, or how much the Team was lifted.
+  if (teamCuteness(outcome.sides[outcome.surge.side].members) > CUTE.threshold) return `${intro}\n💖 The crowd can't resist ${underdog}'s team! Underdog surge!`;
+  return `${intro}\n🔥 The crowd is behind ${underdog}! Underdog surge!`;
 }
 
 // First come, first served: at most `limit` holders at once. acquire()

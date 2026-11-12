@@ -27,6 +27,7 @@
 import { randomBytes } from "crypto";
 import { carryLevel, resetLevelIfGone } from "../utils/training.js";
 import { getSpeciesEntry } from "../utils/speciesCatalog.js";
+import { getMove } from "../utils/battle/data.js";
 
 const VARIANTS = new Set(["normal", "shiny"]);
 /** Server-generated customized-copy ids: "c_" + 10 base62 characters. */
@@ -106,7 +107,7 @@ function checkNamedCustoms(user, id, variant, uids, confirmRevs) {
  * Check (without changing anything) whether `n` copies of id:variant can be
  * removed. Same result as removeCopies, minus the mutation.
  */
-export function canRemoveCopies(user, { id, variant, n, customUids = [], confirmRevs = {} }) {
+export function canRemoveCopies(user, { id, variant, n, customUids = [], confirmRevs = {}, exact = false }) {
   if (!VARIANTS.has(variant)) return fail("bad_request", "Invalid variant.");
   if (!Number.isInteger(n) || n < 1) return fail("bad_request", "Invalid count.");
   const owned = countOf(user, id, variant);
@@ -114,6 +115,15 @@ export function canRemoveCopies(user, { id, variant, n, customUids = [], confirm
   const named = checkNamedCustoms(user, id, variant, customUids, confirmRevs);
   if (named) return named;
   const plain = plainCount(user, id, variant);
+  // exact (T5): remove precisely the named trained copies, plus plain copies
+  // for the rest. Used when the player picked one specific trained copy.
+  if (exact) {
+    if (customUids.length > n) return fail("bad_request", "Too many copies listed.");
+    if (n - customUids.length > plain) {
+      return fail("custom_copies_protected", "Some of these Pokémon have TM-trained moves. Choose them individually to confirm.", { plain, protected: customCopiesOf(user, id, variant).map(copySummary) });
+    }
+    return { ok: true, plain, useCustom: [...customUids] };
+  }
   const needCustom = Math.max(0, n - plain);
   if (needCustom > customUids.length) {
     return fail("custom_copies_protected", "Some of these Pokémon have TM-trained moves. Choose them individually to confirm.", {
@@ -422,4 +432,34 @@ export function carryCopyUids(user, previous, next, raw = []) {
     else uid = slot.uid ? slotCopyUid(user, slot) : prevUid.get(key) ?? null;
     return uid ? { ...base, uid } : base;
   });
+}
+
+/**
+ * Read-only (T5): every line's trained copies for dashboard choosers.
+ * { "6:normal": [{ uid, rev, tmMoves: [{id,name,type,category,power}], teams: {display, battle} }] }
+ * Move names come from battle data; unknown ids are shown as their id.
+ */
+export function trainedSummary(user, moveName = defaultMoveInfo) {
+  const out = {};
+  const slotIn = (field, uid) => {
+    const list = Array.isArray(user?.[field]) ? user[field] : [];
+    const i = list.findIndex((s) => s && typeof s === "object" && s.uid === uid);
+    return i < 0 ? null : i + 1;
+  };
+  for (const c of Object.values(user?.customPokemon ?? {})) {
+    if (!c || c.suspended) continue;
+    const k = `${Number(c.speciesId)}:${c.variant}`;
+    (out[k] ??= []).push({
+      uid: c.uid,
+      rev: c.rev ?? 0,
+      tmMoves: (c.tmMoves ?? []).map(moveName),
+      teams: { display: slotIn("displayedPokemon", c.uid), battle: slotIn("battleTeam", c.uid) },
+    });
+  }
+  return out;
+}
+
+function defaultMoveInfo(id) {
+  const m = getMove(id);
+  return m ? { id, name: m.name, type: m.type ?? null, category: m.category ?? null, power: m.power ?? null } : { id, name: String(id), type: null, category: null, power: null };
 }

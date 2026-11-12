@@ -20,7 +20,7 @@ const newRequestId = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID() 
 // Standard move row: name on top, type · category · power · accuracy below.
 const moveRow = (m, prefix = "") => `<span class="tt-move"><b>${prefix}${esc(m.name)}</b>${moveMeta(m)}</span>`;
 
-const CSS = `
+const STYLE = `
 .tmx-teach{width:min(560px,calc(100vw - 32px));max-height:min(88vh,88dvh);padding:0;border:1.5px solid var(--cc-line);border-radius:var(--cc-r-md,14px);background:var(--cc-surface);color:var(--cc-text);}
 .tmx-teach::backdrop{background:#0009}
 .tmx-teach form{display:flex;flex-direction:column;max-height:min(88vh,88dvh)}
@@ -47,7 +47,7 @@ function ensureDialog() {
   if (!document.getElementById("tmxTeachCss")) {
     const st = document.createElement("style");
     st.id = "tmxTeachCss";
-    st.textContent = CSS;
+    st.textContent = STYLE;
     document.head.append(st);
   }
   dialog = document.createElement("dialog");

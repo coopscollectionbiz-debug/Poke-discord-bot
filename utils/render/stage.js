@@ -10,6 +10,11 @@
 //   • shiny Pokémon get the Legendary-tier backdrop (rising gold motes and
 //     twinkling stars, utils/render/shinyBackdrop.js) behind them; on an
 //     animated card it moves, so a shiny alone makes the card a GIF.
+//   • the loop: one length for every sprite on the card, fitted so their
+//     animations don't cut mid-motion (utils/render/spriteLoops.js), at 50 ms
+//     steps. Trainers and backdrops keep their 2.4 s, 100 ms-a-step schedule
+//     inside it. A GIF over MAX_GIF_BYTES falls back to the old 2.4 s loop,
+//     then to the still PNG.
 // ==========================================================
 
 import { createCanvas } from "@napi-rs/canvas";
@@ -20,8 +25,11 @@ import { encodeGif } from "./gif.js";
 import { createRenderGate } from "./renderGate.js";
 import { getRenderPool, renderOptions } from "./renderPool.js";
 import { shinyBackdrop, shinyFxEnabled } from "./shinyBackdrop.js";
+import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS } from "./spriteLoops.js";
 
 export const FRAMES = 24, DELAY_MS = 100;
+// Discord takes up to 10 MB a file; past this, the card falls back (see above).
+export const MAX_GIF_BYTES = 8 * 1024 * 1024;
 
 /** Stable layout seed per Pokémon, so a shiny's stars sit in the same places every time. */
 export const backdropSeed = (id) => [...String(id)].reduce((s, c) => (s * 31 + c.charCodeAt(0)) % 9973, 7);
@@ -88,13 +96,38 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
       const still = createCanvas(canvas.width, canvas.height);
       still.getContext("2d").drawImage(base, 0, 0);
       if (overlay) still.getContext("2d").drawImage(overlay, 0, 0);
-      return encodeGif(canvas, (f) => {
+      const background = still.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+      // The old loop: 2.4 s at 100 ms, each sprite from its start (also the size fallback).
+      const fixed = () => encodeGif(canvas, (f) => {
         ctx.drawImage(base, 0, 0);
         layers.forEach((draw) => draw(ctx, f));
         backdrops.forEach((b) => b?.draw(ctx, f, FRAMES));
         drawPosed(f);
         drawAll((i) => (players[i] ? players[i](f * DELAY_MS) : null));
-      }, FRAMES, DELAY_MS, { background: still.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data });
+      }, FRAMES, DELAY_MS, { background });
+      if (!pokemonLoopFit(env)) return fixed();
+      // The fitted loop. Anything on the trainers' clock keeps it whole.
+      const plans = players.map((p, i) => (p ? loopPlan(anims[i]) : null));
+      const trainerClock = layers.length > 0 || posed.length > 0 || backdrops.some(Boolean);
+      const { L, fit } = fitLoop(plans.map((p) => p?.period ?? null), { trainerClock });
+      const total = Math.max(1, Math.round(L / STEP_MS));
+      const gif = await encodeGif(canvas, (f) => {
+        const t = f * STEP_MS, f100 = Math.floor(t / DELAY_MS) % FRAMES;
+        ctx.drawImage(base, 0, 0);
+        layers.forEach((draw) => draw(ctx, f100));
+        backdrops.forEach((b) => b?.draw(ctx, f100, FRAMES));
+        drawPosed(f100);
+        drawAll((i) => (players[i] ? players[i](spriteTime(plans[i], fit[i], t)) : null));
+      }, total, STEP_MS, { background });
+      if (gif.length <= MAX_GIF_BYTES) return gif;
+      const short = await fixed();
+      if (short.length <= MAX_GIF_BYTES) return short;
+      ctx.drawImage(base, 0, 0);
+      layers.forEach((draw) => draw(ctx, 0));
+      backdrops.forEach((b) => b?.draw(ctx, 0, FRAMES));
+      drawPosed(0);
+      drawAll(() => null);
+      return canvas.toBuffer("image/png");
     },
   };
 }

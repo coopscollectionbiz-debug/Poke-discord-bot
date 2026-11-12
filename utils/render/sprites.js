@@ -41,6 +41,25 @@ export function opaqueBounds(data, width, height) {
   return x1 < 0 ? null : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
 }
 
+/** POKEMON_LOOP_FIT=0 turns off the loop fitting and union-box anchor (utils/render/spriteLoops.js). */
+export const pokemonLoopFit = (env = process.env) => env.POKEMON_LOOP_FIT !== "0";
+
+// The box covering every frame's opaque pixels (the union box), so a sprite
+// that flies or bobs is placed by its whole motion: anchored on its first
+// frame alone, Yanma dipped almost out of the bottom of its box.
+function unionOfFrames(gif, first) {
+  const W = gif.width, H = gif.height, px = new Uint8ClampedArray(W * H * 4);
+  let u = { x0: first.x, y0: first.y, x1: first.x + first.w, y1: first.y + first.h };
+  for (let i = 0; i < gif.numFrames(); i++) {
+    const prev = i > 0 ? gif.frameInfo(i - 1) : null;
+    if (prev?.disposal === 2) for (let y = prev.y; y < prev.y + prev.height; y++) px.fill(0, (y * W + prev.x) * 4, (y * W + prev.x + prev.width) * 4);
+    gif.decodeAndBlitFrameRGBA(i, px);
+    const b = opaqueBounds(px, W, H);
+    if (b) u = { x0: Math.min(u.x0, b.x), y0: Math.min(u.y0, b.y), x1: Math.max(u.x1, b.x + b.w), y1: Math.max(u.y1, b.y + b.h) };
+  }
+  return { x: u.x0, y: u.y0, w: u.x1 - u.x0, h: u.y1 - u.y0 };
+}
+
 async function decodeFirstFrame(file) {
   const gif = new GifReader(await readFile(file));
   const pixels = new Uint8ClampedArray(gif.width * gif.height * 4);
@@ -51,7 +70,8 @@ async function decodeFirstFrame(file) {
   full.getContext("2d").putImageData(new ImageData(pixels, gif.width, gif.height), 0, 0);
   const trimmed = createCanvas(box.w, box.h);
   trimmed.getContext("2d").drawImage(full, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
-  return { image: trimmed, width: box.w, height: box.h, frames: gif.numFrames(), box, fullW: gif.width, fullH: gif.height };
+  const ubox = gif.numFrames() > 1 ? unionOfFrames(gif, box) : box;
+  return { image: trimmed, width: box.w, height: box.h, frames: gif.numFrames(), box, ubox, fullW: gif.width, fullH: gif.height };
 }
 
 /**
@@ -283,8 +303,37 @@ export function spriteScale(w, h, boxW, boxH, scale = 2) {
  * Draws a sprite standing on (cx, floorY) at `scale` (see spriteScale).
  * Pixel art keeps hard edges (no smoothing) unless it must shrink below 1×.
  */
+/**
+ * Where a Pokémon sprite goes when anchored on its union box: scaled so the
+ * whole motion fits the box, the union's bottom on the floor and its centre
+ * on cx. → { s, gx, gy (the GIF canvas's top left), x, y, w, h (the still
+ * first frame's rect) }, or null for sprites without one (trainers, the
+ * placeholder) or with POKEMON_LOOP_FIT=0.
+ */
+export function spritePlacement(sprite, cx, floorY, boxW, boxH, scale = 2, env = process.env) {
+  if (!sprite?.ubox || sprite.placeholder || !pokemonLoopFit(env)) return null;
+  const u = sprite.ubox;
+  const s = spriteScale(u.w, u.h, boxW, boxH, scale);
+  const gx = cx - (u.x + u.w / 2) * s, gy = floorY - (u.y + u.h) * s;
+  return {
+    s, gx, gy,
+    x: Math.round(gx + sprite.box.x * s), y: Math.round(gy + sprite.box.y * s),
+    w: Math.round(sprite.box.w * s), h: Math.round(sprite.box.h * s),
+  };
+}
+
 export function drawSprite(ctx, sprite, cx, floorY, boxW, boxH, { scale = 2, alpha = 1, frame = null } = {}) {
   if (!sprite) return null;
+  const at = spritePlacement(sprite, cx, floorY, boxW, boxH, scale);
+  if (at) {
+    ctx.imageSmoothingEnabled = at.s < 1;
+    ctx.globalAlpha = alpha;
+    if (frame) ctx.drawImage(frame, Math.round(at.gx), Math.round(at.gy), Math.round(sprite.fullW * at.s), Math.round(sprite.fullH * at.s));
+    else ctx.drawImage(sprite.image, at.x, at.y, at.w, at.h);
+    ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true;
+    return { x: at.x, y: at.y, w: at.w, h: at.h };
+  }
   const s = spriteScale(sprite.width, sprite.height, boxW, boxH, sprite.placeholder ? Math.min(scale, 1.5) : scale);
   const [w, h] = [Math.round(sprite.width * s), Math.round(sprite.height * s)];
   ctx.imageSmoothingEnabled = s < 1;

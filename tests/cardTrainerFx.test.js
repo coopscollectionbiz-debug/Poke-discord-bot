@@ -9,7 +9,7 @@ import { renderChallengeCard } from "../utils/render/challengeCard.js";
 import { renderTrainerShowcase } from "../utils/render/trainerShowcase.js";
 import { renderBattleFrame } from "../utils/battle/render.js";
 import { vsRecord, vsRecords, vsView } from "../commands/battle.js";
-import { playBattle, vsHoldMs } from "../utils/battle/playback.js";
+import { playBattle, vsHoldMs, gifLoopMs } from "../utils/battle/playback.js";
 import { runBattle } from "../utils/battle/runBattle.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { grantCatch } from "../utils/training.js";
@@ -139,8 +139,9 @@ section("The VS card opens playback");
   await playBattle(channel, out, names, { maxUpdates: 2, delayMs: 0, trainers: [td.A.displayedTrainer, td.B.displayedTrainer], vs });
   assertTrue(/^battle-vs\.(gif|png)$/.test(sent[0].files[0].name), `the first image is the VS card (${sent[0].files[0].name})`);
   assertTrue(edits.length >= 1 && !edits.some((e) => e.files?.[0]?.name?.startsWith("battle-start")), "then the turns, with no start image");
-  assertTrue(Date.now() - t0 >= vsHoldMs(isGif(sent[0].files[0].attachment)) - 50, "it stays up for the hold before turn 1");
-  assertEqual([vsHoldMs(true), vsHoldMs(false)], [4800, 4000], "the hold: at least 4 s, whole 2.4 s loops for a GIF");
+  const hold = vsHoldMs(gifLoopMs(sent[0].files[0].attachment));
+  assertTrue(Date.now() - t0 >= hold - 50, `it stays up for the hold before turn 1 (${hold} ms)`);
+  assertEqual([vsHoldMs(2400), vsHoldMs(4800), vsHoldMs(7200), vsHoldMs(0)], [4800, 4800, 7200, 4000], "the hold: at least 4 s, in whole loops of the GIF");
 }
 
 finish();

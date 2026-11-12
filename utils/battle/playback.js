@@ -17,6 +17,7 @@
 // ==========================================================
 
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
+import { GifReader } from "omggif";
 import { pickFrameTurns } from "./render.js";
 import { PLAYBACK } from "./tuning.js";
 import { trainingKey } from "../training.js";
@@ -27,10 +28,22 @@ import { battleVsAltText } from "../render/battleVsCard.js";
 import { isGif } from "../render/stage.js";
 
 // The /battle VS card's minimum time on screen, before playback edits it
-// into turn 1. A GIF stays up a whole number of its loops (2.4 s each).
+// into turn 1. A GIF stays up a whole number of its loops (its length is
+// fitted to its sprites: 2.4, 4.8 or 7.2 s with trainers on it).
 export const VS_HOLD_MS = 4000;
-const VS_LOOP_MS = 2400;
-export const vsHoldMs = (gif) => (gif ? Math.ceil(VS_HOLD_MS / VS_LOOP_MS) * VS_LOOP_MS : VS_HOLD_MS);
+export const vsHoldMs = (loopMs) => (loopMs > 0 ? Math.ceil(VS_HOLD_MS / loopMs) * loopMs : VS_HOLD_MS);
+/** A GIF's loop length in ms (the sum of its frame delays), or 0 for anything else. */
+export function gifLoopMs(buf) {
+  if (!isGif(buf)) return 0;
+  try {
+    const g = new GifReader(buf);
+    let ms = 0;
+    for (let i = 0; i < g.numFrames(); i++) ms += (g.frameInfo(i).delay || 10) * 10;
+    return ms;
+  } catch {
+    return 0;
+  }
+}
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const list = (items) => new Intl.ListFormat("en", { type: "conjunction" }).format(items);
@@ -165,13 +178,17 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
   // Each update gets its own file name (battleImageName). With one shared
   // "battle.gif", a desktop client whose first load failed kept showing the
   // broken image for every later edit, result included.
+  // The replay's clock: how long it has been showing when the next image
+  // goes up, so each image's sprites carry on where the last left off.
+  let clockMs = 0;
   const image = async (step, opts) => new AttachmentBuilder(
-    await threaded.battleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, tiers, theme, ...opts }),
+    await threaded.battleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, tiers, theme, clockMs, ...opts }),
     { name: namePrefix + battleImageName(step) },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.
   const paced = async (render, wait = delayMs) => {
     const started = Date.now();
+    clockMs += wait; // this image goes up `wait` after the last (the VS card's hold before turn 1)
     const file = await render();
     await sleep(Math.max(0, wait - (Date.now() - started)));
     return file;
@@ -181,7 +198,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
     if (!vs || !cardTrainerFx()) return null;
     try {
       const buffer = await threaded.battleVs(vs, { animate: true });
-      return { gif: isGif(buffer), file: new AttachmentBuilder(buffer, { name: `${namePrefix}battle-vs.${isGif(buffer) ? "gif" : "png"}`, description: battleVsAltText(vs) }) };
+      return { loopMs: gifLoopMs(buffer), file: new AttachmentBuilder(buffer, { name: `${namePrefix}battle-vs.${isGif(buffer) ? "gif" : "png"}`, description: battleVsAltText(vs) }) };
     } catch (err) {
       console.warn("⚠️ battle VS card failed; opening on the start image:", err?.message || err);
       return null;
@@ -196,7 +213,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
   if (message) await message.edit(start);
   else message = await channel.send(start);
   // The VS card stays up longer than an update, so both Teams can be read.
-  let wait = opening ? vsHoldMs(opening.gif) : delayMs;
+  let wait = opening ? vsHoldMs(opening.loopMs) : delayMs;
   try {
     let shown = 0;
     // A fight lost before anyone moves (0 turns) goes straight to the result.

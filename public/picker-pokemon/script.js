@@ -2316,7 +2316,7 @@ function onlyVariant(pid) {
 }
 
 function duplicateRows() {
-  return bulkRules.duplicateRows(userData.pokemon, pokemonData, userData.trained);
+  return bulkRules.duplicateRows(userData.pokemon, pokemonData, userData.trained, userData.copies);
 }
 
 function multiSelectRows() {

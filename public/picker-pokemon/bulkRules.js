@@ -31,18 +31,40 @@ export function onlyVariant(pokemon, pid) {
 
 // Every UNTRAINED copy past the first, per variant (shinies included).
 // Trained copies are always kept.
-export function duplicateRows(pokemon, pokemonData, trained = {}) {
+//
+// copies: the per-copy rows from /api/user-pokemon
+//         ([uid, id, shiny, level, at, trained, teamBits]). With them,
+//         copies on any team are left out too, matching the server
+//         (utils/bulkDonate.js): it donates at most the untrained copies
+//         on no team, and always leaves one untrained copy. Without them
+//         (older payloads), team copies can't be seen and the counts
+//         alone are used.
+export function duplicateRows(pokemon, pokemonData, trained = {}, copies = null) {
   const rows = [];
+  const spare = Array.isArray(copies) ? spareByLine(copies) : null;
   const ids = Object.keys(pokemon || {}).map(Number).sort((a, b) => a - b);
   for (const pid of ids) {
     if (!pokemonData[pid]) continue; // server rejects unknown IDs
     const owned = countsOf(pokemon, pid);
     for (const variant of ["normal", "shiny"]) {
       const untrained = owned[variant] - trainedCount(trained, pid, variant);
-      if (untrained > 1) rows.push({ pokeId: pid, variant, count: untrained - 1 });
+      let count = untrained - 1;
+      if (spare) count = Math.min(count, spare.get(`${pid}:${variant}`) ?? 0);
+      if (count > 0) rows.push({ pokeId: pid, variant, count });
     }
   }
   return rows;
+}
+
+// "id:variant" → untrained copies on no team.
+function spareByLine(copies) {
+  const out = new Map();
+  for (const [, id, shiny, , , isTrained, teams] of copies) {
+    if (isTrained || teams) continue;
+    const key = `${Number(id)}:${shiny ? "shiny" : "normal"}`;
+    out.set(key, (out.get(key) ?? 0) + 1);
+  }
+  return out;
 }
 
 // Why a card can't be picked in Multi-select, or null if it can.

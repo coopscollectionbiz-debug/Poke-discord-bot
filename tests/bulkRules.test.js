@@ -146,6 +146,53 @@ test("the server accepts every duplicate row and leaves 1 of each variant", () =
   assertEqual(duplicateRows(user.pokemon, pokemonData), [], "no duplicates left afterward");
 });
 
+// Individual copies (#107): two copies of one Pokémon can sit on teams
+// (Showcase repeats, or different copies on Casual and Ranked). The counts
+// alone offered those, and the all-or-nothing server refused the batch.
+test("duplicateRows leaves out copies on any team, and the server accepts the rows", () => {
+  const box = {
+    "c_p1aaaaaaaa": { id: 25, exp: 900 }, "c_p2aaaaaaaa": { id: 25, exp: 500 }, "c_p3aaaaaaaa": { id: 25, exp: 40 }, "c_p4aaaaaaaa": { id: 25, exp: 10 },
+    "c_r1aaaaaaaa": { id: 19, exp: 300 }, "c_r2aaaaaaaa": { id: 19, exp: 5 }, "c_r3aaaaaaaa": { id: 19, exp: 1 },
+    "c_g1aaaaaaaa": { id: 92, shiny: true, exp: 0 }, "c_g2aaaaaaaa": { id: 92, shiny: true, exp: 0 },
+  };
+  const user = {
+    cc: 0, items: {}, nonShinyDustEarnedThisWeek: 0,
+    pokemon: { 25: { normal: 4, shiny: 0 }, 19: { normal: 3, shiny: 0 }, 92: { normal: 0, shiny: 2 } },
+    box,
+    showcaseTeam: [{ id: 25, variant: "normal", uid: "c_p1aaaaaaaa" }, { id: 25, variant: "normal", uid: "c_p2aaaaaaaa" }],
+    battleTeam: [{ id: 92, variant: "shiny", uid: "c_g1aaaaaaaa" }, null],
+    displayedPokemon: [{ id: 92, variant: "shiny", uid: "c_g2aaaaaaaa" }],
+  };
+  const TEAM_BIT = { displayedPokemon: 1, battleTeam: 2, showcaseTeam: 4 };
+  const copies = Object.entries(box).map(([uid, c]) => [
+    uid, c.id, c.shiny ? 1 : 0, 1, 0, 0,
+    Object.entries(TEAM_BIT).reduce((m, [f, bit]) => ((user[f] || []).some((s) => s?.uid === uid) ? m | bit : m), 0),
+  ]);
+
+  const rows = duplicateRows(user.pokemon, pokemonData, {}, copies);
+  assertEqual(
+    rows,
+    [{ pokeId: 19, variant: "normal", count: 2 }, { pokeId: 25, variant: "normal", count: 2 }],
+    "Rattata keeps 1; Pikachu offers only its 2 off-team copies; shiny Gastly (both on teams) not offered"
+  );
+  assertEqual(duplicateRows(user.pokemon, pokemonData, {}), [
+    { pokeId: 19, variant: "normal", count: 2 },
+    { pokeId: 25, variant: "normal", count: 3 },
+    { pokeId: 92, variant: "shiny", count: 1 },
+  ], "without copy rows, the counts alone are used (old payloads)");
+
+  const result = bulkDonate({
+    user, mode: "duplicates", items: rows, pokemonData,
+    economy: {
+      ccByTier: { common: 250, uncommon: 500, rare: 1000 }, shinyDustByTier: {},
+      normalDustChanceByTier: {}, normalDustWeeklyCap: 8, rollDust: () => 0,
+    },
+  });
+  assertEqual(result.error, undefined, "server accepts the whole list");
+  assertEqual(result.donatedCopies, 4, "2 Rattata + 2 Pikachu");
+  assertEqual(Object.keys(user.box).sort(), ["c_g1aaaaaaaa", "c_g2aaaaaaaa", "c_p1aaaaaaaa", "c_p2aaaaaaaa", "c_r1aaaaaaaa"], "team copies and the highest-EXP Rattata stay");
+});
+
 // ==========================================================
 // Multi-select
 // ==========================================================

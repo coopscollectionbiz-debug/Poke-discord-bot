@@ -1,0 +1,178 @@
+<!doctype html><meta charset="utf-8"><title>Pokémon tier review</title>
+<style>
+body{background:#1b2130;color:#e7eaf2;font:14px system-ui;margin:16px}
+h1{font-size:20px;margin:0 0 6px}
+h2{font-size:15px;color:#fde047;margin:22px 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+h2 .n{color:#aab;font-weight:400;font-size:13px}
+p,li{max-width:900px;line-height:1.45;color:#cdd2df}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.chip{background:#252c3d;border:1px solid #333c52;border-radius:8px;padding:6px 10px}
+.chip b{font-size:16px;display:block}
+.chip span{font-size:12px;color:#aab}
+.dist{margin:6px 0 2px;display:flex;align-items:center;gap:10px}
+.dist .lbl{width:110px;color:#aab;font-size:12px}
+.bar{display:flex;height:22px;border-radius:6px;overflow:hidden;flex:1;max-width:900px}
+.bar div{display:flex;align-items:center;justify-content:center;font-size:11px;color:#111;font-weight:600;min-width:0;overflow:hidden;white-space:nowrap}
+table.mx{border-collapse:collapse;margin:8px 0;font-size:12px}
+.mx th,.mx td{border:1px solid #333c52;padding:4px 8px;text-align:center}
+.mx th{background:#252c3d;font-weight:600}
+.mx td.l{text-align:left}
+.mx td.c{cursor:pointer}
+.mx td.c:hover{outline:2px solid #fde047}
+.mx td.diag{color:#778}
+.mx td.sel{outline:2px solid #fde047}
+.cols{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.dec{background:#20273a;border:1px solid #2e3648;border-radius:8px;padding:10px 14px;margin:8px 0;max-width:900px;line-height:1.45;color:#cdd2df}
+.dec h3{margin:0 0 6px;font-size:13px;color:#e7eaf2}
+.dec.open{border-color:#f8717188}
+.tag{display:inline-block;font-size:11px;border-radius:4px;padding:0 5px;margin-right:6px;background:#333c52;color:#cdd2df}
+.tag.o{background:#f87171;color:#111}
+.controls{position:sticky;top:0;background:#1b2130ee;padding:10px 0;z-index:5;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #333c52}
+.tab{background:#252c3d;border:1px solid #333c52;color:#e7eaf2;border-radius:6px;padding:6px 10px;cursor:pointer;font:inherit}
+.tab.on{background:#fde047;color:#1b2130;border-color:#fde047;font-weight:600}
+input,select{background:#252c3d;border:1px solid #333c52;color:#e7eaf2;border-radius:6px;padding:6px 8px;font:inherit}
+label{color:#cdd2df;font-size:13px;display:flex;gap:4px;align-items:center}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+figure{margin:0;width:160px;background:#232a3a;border:1px solid #2e3648;border-radius:8px;padding:8px;box-sizing:border-box}
+figure.owned{border-color:#fde04788}
+.img{height:96px;display:flex;align-items:flex-end;justify-content:center}
+img{image-rendering:pixelated;display:block;max-height:96px;max-width:134px}
+figcaption{font-size:12px;color:#aab;margin-top:6px;line-height:1.35}
+figcaption .name{color:#e7eaf2;font-weight:600}
+.pill{display:inline-block;border-radius:4px;padding:0 5px;font-size:11px;font-weight:600;color:#111}
+.arrow{color:#aab;margin:0 3px}
+.up{color:#4ade80}.down{color:#f87171}
+.own{color:#fde047}
+.grp{font-size:11px;color:#8890a4}
+.why{font-size:11px;color:#cdd2df;margin-top:4px}
+.bst{display:inline-block;font-size:11px;color:#e7eaf2;background:#333c52;border-radius:4px;padding:0 5px}
+.empty{color:#aab;padding:20px 0}
+.more{margin:10px 0}
+code{color:#fde68a}
+</style>
+<h1>Pokémon tier review: Gens 1–9</h1>
+<p><b>Rule:</b> a tier measures <b>collectible prestige</b> (scarcity, role in the games, popularity). <b>Base stat total</b> (BST) is the whole of a Pokémon's battle strength (ordinary Pokémon have no abilities in battle; ranked battles run at Lv 50), so BST acts as a <b>guardrail</b>: it moves a species only when its stats are far outside its tier. <b>Mythic</b> = an official Mythical, or a cover legendary with BST ≥ 660. Every species, from today's tier (live; only Gens 1–5 can drop) to the proposed tier on branch <code>audit/pokemon-tiers</code>. A <span class="own">gold border</span> means at least one player owns it (Nov 9 snapshot, seq 604). Nobody loses a Pokémon; owners see the new tier label, and future donations, evolutions and drop odds use the new tier. Hover a card for the decision behind its move.</p>
+<div class="chips" id="chips"></div>
+<div id="dist"></div>
+
+<h2>Decisions <span class="n">locked in the grilling session, 2026-11-11</span></h2>
+<div id="decisions"></div>
+
+<div class="cols">
+ <div><h2>Where species move <span class="n">rows = today, columns = after; click a number</span></h2><div id="matrix"></div></div>
+ <div><h2>Power check <span class="n">BST by tier, all 1,025 species: today → after</span></h2><div id="bands"></div></div>
+</div>
+<div class="cols">
+ <div><h2>Drop odds, live pool <span class="n">Gens 1–5, Poké Ball, no rank bonus; per draw</span></h2><div id="odds"></div></div>
+ <div><h2>Evolution Stone cost changes <span class="n">EVOLVE_STONE_COST</span></h2><div id="stones"></div></div>
+</div>
+
+<div class="controls">
+  <button class="tab" data-v="up">Moved up</button>
+  <button class="tab" data-v="down">Moved down</button>
+  <button class="tab" data-v="flag">Power flags left</button>
+  <button class="tab" data-v="same">Unchanged</button>
+  <button class="tab" data-v="all">All</button>
+  <input id="q" placeholder="Search name or dex #…" size="20">
+  <select id="gen"><option value="">All gens</option></select>
+  <select id="status"><option value="">All statuses</option></select>
+  <label><input type="checkbox" id="live"> Live only</label>
+  <label><input type="checkbox" id="owned"> Owned only</label>
+  <select id="sort"><option value="size">Sort: biggest move</option><option value="owners">Sort: most owners</option><option value="bst">Sort: BST</option><option value="dex">Sort: dex #</option></select>
+</div>
+<div id="out"></div>
+<script>
+/*ROWS*/
+/*SUMMARY*/
+</script>
+<script>
+const T=["common","uncommon","rare","epic","legendary","mythic"];
+const COL={common:"#9ca3af",uncommon:"#10b981",rare:"#3b82f6",epic:"#a855f7",legendary:"#facc15",mythic:"#ef4444"};
+const DON={common:250,uncommon:500,rare:1000,epic:2500,legendary:5000,mythic:10000};
+const FLAG={common:420,uncommon:500,rare:530,epic:580,legendary:670}; // guardrail: BST at or above this is a power outlier for the tier
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const pill=t=>`<span class="pill" style="background:${COL[t]}">${cap(t)}</span>`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>n.toLocaleString();
+const S=SUMMARY;
+const isFlag=r=>FLAG[r.ta]!==undefined&&r.b>=FLAG[r.ta];
+
+document.getElementById("chips").innerHTML=[
+ [S.species,"species, Gens 1–9"],[S.up,"move up"],[S.down,"move down"],[S.same,"unchanged"],
+ [S.liveMoved,"live (Gen 1–5) species move"],[S.ownedRecords,"owner records relabelled ("+S.ownedCopies+" copies)"],
+ [S.mythicBefore+" → "+S.mythicAfter,"mythic species (ranked cap: 1 per team)"],[fmt(S.pureBstMoves),"would move under a pure-BST re-tier (rejected)"]
+].map(([b,s])=>`<div class="chip"><b>${b}</b><span>${s}</span></div>`).join("");
+const bar=(lbl,c)=>`<div class="dist"><span class="lbl">${lbl}</span><div class="bar">${T.map(t=>`<div style="background:${COL[t]};flex:${c[t]}" title="${cap(t)}: ${c[t]}">${cap(t)} ${c[t]}</div>`).join("")}</div></div>`;
+document.getElementById("dist").innerHTML=bar("All 9 gens, today",S.before)+bar("All 9 gens, after",S.after)+bar("Live 1–5, today",S.liveBefore)+bar("Live 1–5, after",S.liveAfter);
+
+const DEC=[
+ ["D1","Power is a guardrail, not the tier","Tier stays collectible prestige. A pure-BST re-tier would move "+fmt(S.pureBstMoves)+" of 1,025 species (starters → common, Arcanine → legendary), so BST only overrides large outliers. Battle balance otherwise lives in battle rules."],
+ ["D2","Mythic = official Mythical, or cover legendary with BST ≥ 660","Dialga, Palkia, Giratina (680), Kyurem (660; all four live) and Zacian/Zamazenta (660, Gen 8) → mythic, joining Mewtwo, Lugia, Ho-Oh, Kyogre, Groudon, Rayquaza, Reshiram, Zekrom, Xerneas… Zygarde, Necrozma, Calyrex and Terapagos are cover legendaries too, but their base forms are 450–600 BST, so they stay legendary. Regigigas (670) is not a cover legendary and stays legendary."],
+ ["D3","Paradox Pokémon at BST 590 → legendary","Roaring Moon, Iron Valiant, Walking Wake, Iron Leaves, Gouging Fire, Raging Bolt, Iron Boulder, Iron Crown. The other Paradox Pokémon (570) and the Ultra Beasts (540–570) stay epic, level with epic's top 10%."],
+ ["D4","Archaludon → legendary; Slaking stays epic","Archaludon has 600 BST and no drawback. Slaking (670) is a regular three-stage final, and its in-game drawback Truant isn't modelled because ordinary Pokémon have no battle abilities. The fix belongs in battles: model Truant and Regigigas's Slow Start (follow-up)."],
+ ["D5","New evolutions of older species → epic (BST-guarded)","Gen 4 made 21 of 22 of these epic (Ambipom stayed uncommon). Wyrdeer, Kleavor, Ursaluna, Basculegion, Sneasler, Overqwil and Runerigus → epic; Perrserker (440) and Clodsire (430) → rare."],
+ ["D6","Power outliers +1 tier","Commons ≥ 425 BST → uncommon (Stantler, Maractus, Basculin, Tangela, Qwilfish, Chimecho); uncommons ≥ 500 → rare (Tentacruel, Golduck, Bronzong, Cyclizar); rares ≥ 530 → epic (Arcanine, Vanilluxe, Dondozo, Duraludon)."],
+ ["D7","Over-cap Battle teams are auto-trimmed on boot","When the re-tier ships, a boot migration keeps the first mythic-tier Pokémon in slot order on each Battle team and removes the others from that team (they stay in the collection). Today the cap is only checked when a team is saved (services/battleTeam.js:72). Open check: how many saved Battle teams hold two or more mythics after the change. The Nov 9 snapshot predates Battle teams, so this needs a read of current production data."],
+ ["D8","Affected players get a stored one-time notice","The migration writes a notice on the player's record. It shows on the dashboard Battle team tab and in their next /battle reply, then clears. No DMs. The bot has no notice system yet, so this is new code."],
+ ["D9","Defaults (not discussed — confirm or flip)","Dipplin epic → rare, to match its siblings Flapple and Appletun (same 485 BST). The uneven Gen 1–5 sibling branches (Vileplume/Bellossom, Slowbro/Slowking, Glalie/Froslass, Ninjask/Shedinja) stay as they are. Low-BST legendaries and Mythicals (Cosmog 200, Meltan 300, Kubfu 385, Terapagos 450, Phione 480) keep their tier, because official status sets the floor. The Gen 6–9 sub-legendaries (Tapus, Treasures of Ruin, Loyal Three…) stay legendary, like all 23 in Gens 1–5. No popularity bumps (e.g. Mimikyu), because there is no source to tier popularity by."],
+ ["Open","Battle rules (outside tiers)","Battles are refused only when a team is empty (utils/battle/runBattle.js:106), so a Battle team of 1–5 Pokémon can fight a full 6. Decide separately whether ranked needs a full team. Also open: model Truant and Slow Start (D4)."],
+];
+document.getElementById("decisions").innerHTML=DEC.map(([id,h,b])=>{const o=id==="Open"||id==="D9";return `<div class="dec ${o?"open":""}"><h3><span class="tag ${o?"o":""}">${id}</span>${esc(h)}</h3><div>${esc(b)}</div></div>`}).join("");
+
+document.getElementById("bands").innerHTML=(()=>{let h=`<table class="mx"><tr><th>tier</th><th>n</th><th>min</th><th>p10</th><th>median</th><th>p90</th><th>max</th><th>flag at</th></tr>`;
+ for(const t of T){const a=S.bandsBefore[t],b=S.bandsAfter[t];const c=k=>a[k]===b[k]?a[k]:`${a[k]} → <b>${b[k]}</b>`;
+ h+=`<tr><th>${pill(t)}</th><td>${c("n")}</td><td>${c("min")}</td><td>${c("p10")}</td><td>${c("med")}</td><td>${c("p90")}</td><td>${c("max")}</td><td>${FLAG[t]?"≥ "+FLAG[t]:"—"}</td></tr>`}
+ return h+`</table><p class="grp" style="max-width:520px">"Flag at" is the guardrail used in this review: a BST at or above it is a power outlier for the tier. For what is still flagged after the re-tier, see the "Power flags left" tab.</p>`})();
+document.getElementById("odds").innerHTML=(()=>{let h=`<table class="mx"><tr><th>tier</th><th>share of draws</th><th>one specific species</th></tr>`;
+ for(const t of T){const a=S.shareBefore[t],b=S.shareAfter[t];h+=`<tr><th>${pill(t)}</th><td>${a.pct.toFixed(2)}% → ${b.pct.toFixed(2)}%</td><td>1 in ${fmt(a.oneIn)} → ${fmt(b.oneIn)}</td></tr>`}
+ return h+`</table><p class="grp" style="max-width:460px">Weights are per species, so a tier's share follows its species count. The mythic share rises because four live species join it, but each of those four becomes about 3× rarer (1 in 10,391 → 30,777).</p>`})();
+document.getElementById("stones").innerHTML=`<table class="mx"><tr><th>evolution</th><th>tiers</th><th>Stones</th></tr>${S.stoneChanges.map(s=>`<tr><td class="l">${esc(s.from)} → ${esc(s.to)}${s.live?"":" <span class=grp>(off)</span>"}</td><td class="l">${esc(s.before)} → ${esc(s.after)}</td><td>${s.c0} → <b class="${s.c1>s.c0?"down":"up"}">${s.c1}</b></td></tr>`).join("")}</table><p class="grp">Every evolution keeps a supported Stone cost, and none goes down a tier (checked by the build script).</p>`;
+
+let view="up",cell=null;
+function matrix(){
+  let h=`<table class="mx"><tr><th>today ↓ / after →</th>${T.map(t=>`<th>${pill(t)}</th>`).join("")}</tr>`;
+  for(const a of T){h+=`<tr><th>${pill(a)}</th>`;for(const b of T){const n=(MATRIX[a]||{})[b]||0;const sel=cell&&cell[0]===a&&cell[1]===b;h+=`<td class="${n?"c":""} ${a===b?"diag":""} ${sel?"sel":""}" data-a="${a}" data-b="${b}">${n||""}</td>`}h+="</tr>"}
+  document.getElementById("matrix").innerHTML=h+"</table>";
+  document.querySelectorAll("#matrix td.c").forEach(td=>td.onclick=()=>{const k=[td.dataset.a,td.dataset.b];cell=cell&&cell[0]===k[0]&&cell[1]===k[1]?null:k;view="all";render()});
+}
+[...new Set(ROWS.map(r=>r.g))].sort((a,b)=>a-b).forEach(g=>document.getElementById("gen").innerHTML+=`<option value="${g}">Gen ${g}</option>`);
+[...new Set(ROWS.map(r=>r.s))].sort().forEach(s=>document.getElementById("status").innerHTML+=`<option>${esc(s)}</option>`);
+function card(r){
+  const mv=r.d>0?`<span class="up">▲ ${r.d}</span>`:r.d<0?`<span class="down">▼ ${-r.d}</span>`:"";
+  const don=r.d?`${fmt(DON[r.tb])} → ${fmt(DON[r.ta])} CC`:`${fmt(DON[r.ta])} CC`;
+  const tip=[r.dec,r.why].filter(Boolean).join(" — ")||(isFlag(r)?"Power flag left: see D4":"Unchanged");
+  return `<figure class="${r.o?"owned":""}" title="${esc(tip)}"><div class="img"><img loading="lazy" src="public/sprites/pokemon/normal/${r.id}.gif" alt=""></div><figcaption><div class="name">#${r.id} ${esc(r.n)}</div>${pill(r.tb)}${r.d?`<span class="arrow">→</span>${pill(r.ta)} ${mv}`:""}<br><span class="bst">BST ${r.b}</span> <span class="grp">donate ${don}</span>${r.o?`<br><span class="own">${r.o} owner${r.o>1?"s":""}</span>`:""}<br><span class="grp">Gen ${r.g}${r.live?" · live":" · off"} · ${esc(r.s)}</span>${r.why?`<div class="why">${esc(r.dec)}: ${esc(r.why)}</div>`:""}</figcaption></figure>`;
+}
+function filtered(){
+  const q=document.getElementById("q").value.trim().toLowerCase(),g=document.getElementById("gen").value,st=document.getElementById("status").value,lv=document.getElementById("live").checked,ow=document.getElementById("owned").checked;
+  return ROWS.filter(r=>{
+    if(cell&&(r.tb!==cell[0]||r.ta!==cell[1]))return false;
+    if(!cell){if(view==="down"&&r.d>=0)return false;if(view==="up"&&r.d<=0)return false;if(view==="same"&&r.d!==0)return false;if(view==="flag"&&!isFlag(r))return false}
+    if(g&&String(r.g)!==g)return false;if(st&&r.s!==st)return false;if(lv&&!r.live)return false;if(ow&&!r.o)return false;
+    if(q&&!(r.n.toLowerCase().includes(q)||String(r.id)===q))return false;
+    return true});
+}
+function sorted(list){const s=document.getElementById("sort").value;return list.slice().sort((a,b)=>s==="owners"?b.o-a.o||a.id-b.id:s==="bst"?b.b-a.b||a.id-b.id:s==="dex"?a.id-b.id:Math.abs(b.d)-Math.abs(a.d)||b.o-a.o||a.id-b.id)}
+let limit=300;
+function render(){
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",!cell&&b.dataset.v===view));
+  matrix();
+  const list=filtered(),out=document.getElementById("out");
+  if(!list.length){out.innerHTML=`<div class="empty">Nothing matches.</div>`;return}
+  let h="";
+  const by={};for(const r of sorted(list)){const k=r.tb===r.ta?r.ta:r.tb+"→"+r.ta;(by[k]??=[]).push(r)}
+  const keys=Object.keys(by).sort((x,y)=>{const f=k=>k.split("→");const [a1,b1]=f(x),[a2,b2]=f(y);return T.indexOf(b1||a1)-T.indexOf(b2||a2)||T.indexOf(a1)-T.indexOf(a2)}).reverse();
+  let shown=0;
+  for(const k of keys){
+    if(shown>=limit)break;
+    const [a,b]=k.split("→");const rs=by[k].slice(0,limit-shown);shown+=rs.length;
+    h+=`<h2>${pill(a)}${b?`<span class="arrow">→</span>${pill(b)}`:""} <span class="n">${by[k].length} species${by[k].some(r=>r.o)?` · ${by[k].reduce((s,r)=>s+r.o,0)} owner records`:""}</span></h2><div class="row">${rs.map(card).join("")}</div>`;
+  }
+  if(list.length>limit)h+=`<div class="more"><button class="tab" id="more">Show all ${list.length}</button></div>`;
+  out.innerHTML=h;
+  const m=document.getElementById("more");if(m)m.onclick=()=>{limit=1e9;render()};
+}
+document.querySelectorAll(".tab[data-v]").forEach(b=>b.onclick=()=>{view=b.dataset.v;cell=null;limit=300;render()});
+["q","gen","status","live","owned","sort"].forEach(id=>document.getElementById(id).addEventListener("input",()=>{limit=300;render()}));
+render();
+</script>

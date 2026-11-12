@@ -89,7 +89,7 @@ function mountShell() {
   brand.innerHTML = `<i aria-hidden="true"></i><span>Coop’s Collection</span>`;
   const foot = document.createElement("p");
   foot.className = "cc-sidebar-foot";
-  foot.textContent = "Opened from /dashboard in Discord. Links last 10 minutes. ";
+  foot.textContent = "Opened from /dashboard in Discord. Sessions last 30 minutes after your last action, up to 4 hours. ";
   const credits = document.createElement("a");
   credits.href = "/credits";
   credits.target = "_blank";

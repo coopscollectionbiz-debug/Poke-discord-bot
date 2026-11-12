@@ -91,7 +91,7 @@ import { parseTeamCopy, applyTeamCopy } from "./services/teamCopy.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
 import { rankedRecord } from "./utils/battle/rewards.js";
 import { saveMoveset, TEAM_TYPES } from "./services/movesets.js";
-import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, adminSessionOf, activateAdminSession, ADMIN_MAX_MS, pruneExpiredTokens } from "./utils/dashboardAuth.js";
+import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, adminSessionOf, activateAdminSession, activateDashboardSession, ADMIN_MAX_MS, DASHBOARD_MAX_MS, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
 import {
@@ -497,13 +497,15 @@ app.get("/auth/dashboard", (req, res) => {
   // expectedType "dashboard" prevents admin tokens from being burned
   // on the player flow, and vice versa below.
   if (!validateToken(id, code, "dashboard")) return res.status(403).send("Invalid or expired link.");
+  // From here the session slides (30 min after each use, 4 h at most).
+  activateDashboardSession(code);
 
   res.cookie("dashboard_session", code, {
     httpOnly: true,
     secure: isProd,
     sameSite: "Lax",
     path: "/",
-    maxAge: 10 * 60 * 1000,
+    maxAge: DASHBOARD_MAX_MS,
   });
 
   res.redirect(`/public/overview?id=${encodeURIComponent(id)}`); // the dashboard home

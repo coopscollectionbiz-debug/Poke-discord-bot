@@ -10,7 +10,7 @@
 
 import { COLOR, TIER, tierColor } from "./tokens.js";
 import {
-  rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth, drawBall, dexNo, drawMegaTag,
+  rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth, drawBall, dexNo, drawMegaTag, fillTextMid,
 } from "./primitives.js";
 import { drawSprite } from "./sprites.js";
 import { shinyBackdrop } from "./shinyBackdrop.js";
@@ -108,8 +108,7 @@ function drawHeader(ctx, view) {
     ctx.fill();
     ctx.fillStyle = COLOR.gold;
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(msg, W / 2, y + HEADER + 18);
+    fillTextMid(ctx, msg, W / 2, y + HEADER + 17);
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
   }
@@ -272,9 +271,7 @@ function drawTierPill(ctx, tier, right, y) {
   ctx.strokeStyle = `${color}aa`;
   ctx.stroke();
   ctx.fillStyle = color;
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, x + 15, y + h / 2 + 1);
-  ctx.textBaseline = "alphabetic";
+  fillTextMid(ctx, label, x + 15, y + h / 2);
 }
 
 function drawTop(ctx, view) {
@@ -293,8 +290,7 @@ function drawTop(ctx, view) {
     ctx.font = font(19, 800);
     ctx.fillStyle = lead ? "#ffffff" : COLOR.textMuted;
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(String(i + 1), bx, by + 1);
+    fillTextMid(ctx, String(i + 1), bx, by);
     let nx = bx + 24;
     if (lead) {
       ctx.font = font(15, 800);
@@ -303,7 +299,7 @@ function drawTop(ctx, view) {
       rr(ctx, nx, by - 13, tw, 26, 13);
       ctx.fill();
       ctx.fillStyle = "#ffffff";
-      ctx.fillText("LEAD", nx + tw / 2, by + 1);
+      fillTextMid(ctx, "LEAD", nx + tw / 2, by);
       nx += tw + 8;
     }
     // National Pokédex number, on a dark backing so it reads over a sprite.
@@ -313,7 +309,7 @@ function drawTop(ctx, view) {
     rr(ctx, nx, by - 13, dw, 26, 13);
     ctx.fill();
     ctx.fillStyle = COLOR.textMuted;
-    ctx.fillText(dexNo(slot.id), nx + dw / 2, by + 1);
+    fillTextMid(ctx, dexNo(slot.id), nx + dw / 2, by);
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
     drawTierPill(ctx, slot.tier, r.x + r.w - 14, r.y + 15);

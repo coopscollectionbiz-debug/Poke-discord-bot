@@ -18,7 +18,20 @@ const PROJECTS = [
   ["Smogon Sprite Project (Generation 8 onward)", "https://www.smogon.com/forums/threads/smogon-sprite-project.3647722/", "Generation 8 and 9 Black/White-style sprites and animations. Led by G.E.Z.; leParagon."],
   ["Pokémon Showdown", "https://play.pokemonshowdown.com/sprites/", "Hosts the Smogon project sprites (gen5ani / gen5) and the type icons; credits at pokemonshowdown.com/credits."],
   ["PokéAPI sprites", "https://github.com/PokeAPI/sprites", "Official Black/White sprites for #1–649, and a mirror of the Smogon project sprites."],
+  ["Ghasty001 — animated sprites", "https://github.com/Ghasty001/Animated_sprites_by_Ghasty001", "Black/White-style animations and shinies for Pokémon missing from the Smogon projects; free to use with credit to Ghasty001 and the base-sprite artists."],
+  ["PokéRogue", "https://github.com/pagefaultgames/pokerogue-assets", "Animated sprites and shinies from the PokéRogue fan game (Pagefault Games and its credited artists), CC BY-NC-SA 4.0."],
+  ["DeviantArt animators", "https://www.deviantart.com/", "Community Gen 5-style animations, credited per sprite below with a link to each original post."],
 ];
+
+// Community animations that replaced static sprites (data/sprites/animated-imports.json,
+// built by tools/import-animated-sprites.mjs), species and Megas alike.
+const animatedImports = JSON.parse(fs.readFileSync(new URL("data/sprites/animated-imports.json", ROOT), "utf8"));
+const importRows = animatedImports.entries.map((e) => {
+  const base = (e.terms ?? "").match(/(?:original sprite|sprite|base sprite)s?\s*(?:by|:)\s*([A-Za-z0-9_.\- ]{2,40}?)(?:[.\n,(]|\s{2}|animated|$)/i)?.[1]?.trim();
+  const who = esc(e.author) + (base && base.toLowerCase() !== (e.author ?? "").toLowerCase() ? ` <span class="muted">(base sprite: ${esc(base)})</span>` : "");
+  const src = e.sourceUrl ? `<a href="${esc(e.sourceUrl)}" rel="noopener">${esc(e.source)}</a>` : esc(e.source);
+  return `<tr><td>${e.target.startsWith("mega:") ? "" : `#${e.dex}`}</td><td>${esc(e.name)}</td><td>${who}</td><td>${src}</td><td class="muted">${esc(e.licence)}</td><td class="muted">${esc(e.shinyMethod)}</td></tr>`;
+});
 
 // Trainer sprites: artists of the community-drawn ones (data/sprites/trainer-credits.json,
 // built by tools/import-trainer-credits.mjs from Pokémon Showdown's credits).
@@ -89,6 +102,16 @@ ${rows.join("\n")}
     </table></div>
   </section>
   <section>
+    <h2>Animated sprites</h2>
+    <p class="muted">${importRows.length} Pokémon and Megas animate thanks to these community animators. Where an artist made no shiny, the shiny is the same animation recoloured with the colours of the existing shiny sprite; the last column says which.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>#</th><th>Pokémon</th><th>Animation by</th><th>Source</th><th>Terms</th><th>Shiny</th></tr></thead>
+      <tbody>
+${importRows.join("\n")}
+      </tbody>
+    </table></div>
+  </section>
+  <section>
     <h2>Trainer sprites</h2>
     <p class="muted">Trainer sprites come from <a href="${esc(trainerCredits.hostedAt)}" rel="noopener">Pokémon Showdown</a>. Most older sprites are taken from the games. The ${trainerCount} sprites below are fan-made pixel art by community artists, credited here as Showdown asks (<a href="${esc(trainerCredits.source)}" rel="noopener">source</a>).</p>
     <div class="scroll"><table>
@@ -105,4 +128,4 @@ ${trainerRows.join("\n")}
 `;
 fs.mkdirSync(new URL("public/credits/", ROOT), { recursive: true });
 fs.writeFileSync(new URL("public/credits/index.html", ROOT), html);
-console.log(`credits page: ${rows.length} Gen 6–9 species; ${trainerCount} credited trainer sprites by ${byArtist.size} artists`);
+console.log(`credits page: ${rows.length} Gen 6–9 species; ${importRows.length} imported animations; ${trainerCount} credited trainer sprites by ${byArtist.size} artists`);

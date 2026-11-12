@@ -67,10 +67,11 @@ import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "
 import { normalizeNotices, peekNotices, clearNotices, NOTICE_KINDS } from "./services/notices.js";
 import { consolidateUserTrainers } from "./services/trainerConsolidation.js";
 import { pokemonDetail } from "./services/pokemonDetail.js";
+import { parseTeamCopy, applyTeamCopy } from "./services/teamCopy.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
 import { rankedRecord } from "./utils/battle/rewards.js";
 import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
-import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
+import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, adminSessionOf, activateAdminSession, ADMIN_MAX_MS, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
 import {
@@ -465,13 +466,15 @@ app.get("/auth/admin", (req, res) => {
 
   if (!id || !code) return res.status(400).send("Missing id/code");
   if (!validateToken(id, code, "admin")) return res.status(403).send("Invalid or expired admin link.");
+  // From here the session slides (30 min after each use, 4 h at most).
+  activateAdminSession(code);
 
   res.cookie("admin_session", code, {
     httpOnly: true,
     secure: isProd,
     sameSite: "Lax",
     path: "/",
-    maxAge: 10 * 60 * 1000,
+    maxAge: ADMIN_MAX_MS,
   });
 
   res.redirect("/public/admindashboard");
@@ -558,7 +561,29 @@ app.get("/public/admindashboard", (_, res) =>
 mountAdminDashboard(app, {
   getTrainerData: () => trainerData,
   requireAdminSession,
+  adminSessionOf,
+  lockUser,
+  save: saveAndAck,
+  // Same gate as the player /api writes below (D8 + A2 circuit breaker).
+  writeBlocked: () =>
+    !isReady
+      ? "The bot is starting up or restarting. Try again in a moment."
+      : getSaveHealth().degraded
+        ? "Saving is temporarily unavailable. Try again shortly."
+        : null,
+  syncRole: syncRankRole,
 });
+
+// Rank role after an admin TP change. Uses the bot's server (GUILD_ID).
+async function syncRankRole(userId, tp) {
+  const guild = client.guilds.cache.get(process.env.GUILD_ID) ?? client.guilds.cache.first();
+  if (!guild) return { ok: false, reason: "The bot isn't in a server." };
+  const member = await guild.members.fetch(userId).catch(() => null);
+  if (!member) return { ok: false, reason: "They aren't in the server." };
+  if (!member.manageable) return { ok: false, reason: "The bot's role is below theirs." };
+  await updateUserRole(member, tp);
+  return { ok: true };
+}
 
 
 
@@ -1634,6 +1659,9 @@ if (interaction.isChatInputCommand()) {
       return;
     }
 
+    // Last active: any slash command counts. Rides along with the next save.
+    if (trainerData[interaction.user.id]) trainerData[interaction.user.id].lastActiveAt = Date.now();
+
     const command = client.commands.get(interaction.commandName);
     if (!command) {
       console.warn(
@@ -2128,12 +2156,15 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
     if (teamType !== "display" && teamType !== "battle") {
       return res.status(400).json({ success: false, error: "Unknown team type" });
     }
-
     if (!requireDashboardSession(req, id)) {
       return res
         .status(403)
         .json({ success: false, error: "Invalid or expired session" });
     }
+    // Optional: this team was copied from the other one (Teams page "Copy
+    // from …"); the copied Pokémon's moves come along in the same write.
+    const copy = parseTeamCopy(req.body, teamType);
+    if (!copy.ok) return res.status(copy.status).json({ success: false, error: copy.error, code: copy.code });
 
     await lockUser(id, async () => {
       const user = trainerData[id];
@@ -2165,6 +2196,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       // 5) Save
       if (teamType === "battle") u.battleTeam = normalized;
       else u.displayedPokemon = normalized;
+      const copiedMoves = copy.copy ? applyTeamCopy(u, { ...copy.copy, to: teamType }, normalized) : [];
       trainerData[id] = u;
 
       const saveAck = await saveAndAck(trainerData);
@@ -2175,6 +2207,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
         teamType,
         currentTeam: u.displayedPokemon,
         battleTeam: hasBattleTeam(u) ? u.battleTeam : null,
+        ...(copy.copy ? { copiedMoves } : {}),
       });
     });
   } catch (err) {

@@ -66,6 +66,20 @@ _Avoid_: dex count, seen/caught
 Permanently giving up a copy in exchange for CC, and sometimes Shiny Dust.
 _Avoid_: sell, release
 
+### Administration
+
+**Last active**:
+The last time a player earned TP from chat or used a slash command. Players who have done neither since it started being recorded count from their latest daily, quest, recruit or weekly pack claim.
+_Avoid_: last seen, last online, last login
+
+**Admin change**:
+A change an admin makes to a player's account from the admin dashboard: adding or removing CC, TP, items, Pokémon or trainers, setting a **Level**, or resetting cooldowns. Every one is recorded permanently with who made it, when, before and after, and why.
+_Avoid_: edit, override, admin action (for player-made actions)
+
+**Grant**:
+An **Admin change** that only adds to an account or resets cooldowns. Only **Grants** can go to many players at once; removals are made one player at a time.
+_Avoid_: gift (that is player-to-player), reward, compensation (as the action's name)
+
 ### Battles
 
 **Battle**:
@@ -120,6 +134,7 @@ _Avoid_: comeback mechanic, rubber-banding, luck boost
 
 - "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.
 - "Pokédex completion" is counted per Pokémon, not per variant. A player holding one normal and one shiny Pikachu has 1 toward Kanto, not 2.
+- "Copy" as a noun is always a **Copy** (one owned unit). As a verb it may describe teams and moves ("Copy from Battle team"); never call the result a "team copy".
 
 ## Example dialogue
 

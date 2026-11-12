@@ -84,8 +84,13 @@ export async function megaProblems() {
   // ---- sprites ----
   const spriteForms = Object.keys(sprites.forms);
   if (spriteForms.length !== EXPECTED.spriteForms) out.push(`sprite forms ${spriteForms.length}`);
-  const animated = Object.values(sprites.forms).filter((r) => r.normal.kind === "animated").length;
+  // audited animations (Showdown gen5ani / PokéAPI) stay at EXPECTED.animated; community animations that replaced
+  // static forms come from data/sprites/animated-imports.json (tools/import-animated-sprites.mjs) and are checked there
+  const imports = new Map(read("data/sprites/animated-imports.json").entries.filter((e) => e.target.startsWith("mega:")).map((e) => [e.megaId, e]));
+  const isImport = (id, r) => r.normal.origin === "animated-import" && imports.has(id);
+  const animated = Object.entries(sprites.forms).filter(([id, r]) => r.normal.kind === "animated" && !isImport(id, r)).length;
   if (animated !== EXPECTED.animated) out.push(`animated forms ${animated}`);
+  for (const [id, e] of imports) { const r = sprites.forms[id]; if (!r || !isImport(id, r) || r.normal.fileSha1 !== e.sha1.normal || r.shiny.fileSha1 !== e.sha1.shiny) out.push(`${id}: animated import not applied (run tools/import-animated-sprites.mjs)`); }
   for (const f of forms) {
     const rec = sprites.forms[f.id];
     const wanted = !!f.sprite.normal;
@@ -100,7 +105,7 @@ export async function megaProblems() {
       if (buf.subarray(0, 6).toString("latin1") !== "GIF89a") out.push(`${f.id}: ${v} is not a GIF89a`);
     }
     if (rec.normal.fileSha1 === rec.shiny.fileSha1 || rec.normal.firstFrameSha1 === rec.shiny.firstFrameSha1) out.push(`${f.id}: shiny equals normal`);
-    if (!/^https:\/\/(play\.pokemonshowdown\.com|raw\.githubusercontent\.com\/PokeAPI)\//.test(rec.normal.sourceUrl)) out.push(`${f.id}: unexpected sprite source`);
+    if (!isImport(f.id, rec) && !/^https:\/\/(play\.pokemonshowdown\.com|raw\.githubusercontent\.com\/PokeAPI)\//.test(rec.normal.sourceUrl)) out.push(`${f.id}: unexpected sprite source`);
     if (/\/sprites\/(ani|dex|home|gen6)\//.test(rec.normal.sourceUrl + rec.shiny.sourceUrl)) out.push(`${f.id}: 3D source`);
     if (!rec.credit) out.push(`${f.id}: no credit`);
   }

@@ -126,20 +126,29 @@ for (const n of NEW) {
   counts[r.normal.kind]++;
   for (const v of ["normal", "shiny"]) {
     const g = new omggif.GifReader(fs.readFileSync(new URL(`../public/sprites/pokemon/${r[v].file}`, import.meta.url)));
-    // Animated art, or static art with the 4-frame breathing idle (tools/generate-pokemon-idles.mjs).
-    const moving = r[v].kind === "animated" || r[v].motion === "breathing";
-    if (g.numFrames() < 1 || moving !== (g.numFrames() > 1) || (r[v].motion === "breathing" && g.numFrames() !== 4)) gifOk = false;
+    // Animated art, or static art with the rig idle (tools/generate-pokemon-idles.mjs: up to ~50 frames, per-Pokémon performance).
+    const moving = r[v].kind === "animated" || r[v].motion === "rig";
+    if (g.numFrames() < 1 || moving !== (g.numFrames() > 1) || (r[v].motion === "rig" && (g.numFrames() < 4 || g.numFrames() > 60))) gifOk = false;
   }
 }
 assertTrue(fileOk, "every shipped file matches the manifest SHA-1");
 assertTrue(distinct, "every new species has a shiny distinct from its normal sprite");
-assertTrue(gifOk, "every sprite is a valid GIF; animated or breathing ↔ multi-frame (breathing = 4 frames)");
-assertEqual(counts, { animated: 220, static: 156 }, "220 animated + 156 static normal sprites (audited coverage)");
-const byGen = {};
-for (const n of NEW) { const g = DEX[n].generation; byGen[g] ??= [0, 0]; byGen[g][SPRITES[n].normal.kind === "animated" ? 0 : 1]++; }
-assertEqual(byGen, { 6: [54, 18], 7: [74, 14], 8: [67, 29], 9: [25, 95] }, "per-generation animated/static split matches the audit");
+assertTrue(gifOk, "every sprite is a valid GIF; animated or breathing ↔ multi-frame (rig idle = 4–60 frames)");
+// Community animations that replaced audited static sprites (data/sprites/animated-imports.json via
+// tools/import-animated-sprites.mjs) are counted by the audit's kind here and checked against their own record below.
 const src = new Map(SOURCE.filter((e) => e.kind === "species").map((e) => [e.dex, e]));
-assertTrue(NEW.every((n) => SPRITES[n].normal.sourceSha1 === src.get(n).normal.sha1 && SPRITES[n].shiny.sourceSha1 === src.get(n).shiny.sha1), "every sprite came from the audited source file");
+const IMPORTED = new Map(read("../data/sprites/animated-imports.json").entries.filter((e) => e.target.startsWith("species:")).map((e) => [e.dex, e]));
+const isImport = (n) => SPRITES[n].normal.origin === "animated-import" && IMPORTED.has(n);
+const auditKind = (n) => (isImport(n) ? src.get(n).normal.kind : SPRITES[n].normal.kind);
+const auditCounts = { animated: 0, static: 0 }; for (const n of NEW) auditCounts[auditKind(n)]++;
+assertEqual(auditCounts, { animated: 220, static: 156 }, "220 animated + 156 static normal sprites (audited coverage)");
+const byGen = {};
+for (const n of NEW) { const g = DEX[n].generation; byGen[g] ??= [0, 0]; byGen[g][auditKind(n) === "animated" ? 0 : 1]++; }
+assertEqual(byGen, { 6: [54, 18], 7: [74, 14], 8: [67, 29], 9: [25, 95] }, "per-generation animated/static split matches the audit");
+assertEqual(counts, { animated: 220 + NEW.filter((n) => isImport(n) && src.get(n).normal.kind === "static").length, static: 156 - NEW.filter((n) => isImport(n) && src.get(n).normal.kind === "static").length }, "shipped: the audit's animations plus the imported community animations; the rest stay static (rig idle)");
+assertEqual(IMPORTED.size, 139, "139 species use a reviewed community animation");
+assertTrue(NEW.filter((n) => !isImport(n)).every((n) => SPRITES[n].normal.sourceSha1 === src.get(n).normal.sha1 && SPRITES[n].shiny.sourceSha1 === src.get(n).shiny.sha1), "every non-imported sprite came from the audited source file");
+assertTrue([...IMPORTED.values()].every((e) => { const r = SPRITES[e.dex]; return isImport(e.dex) && r.normal.kind === "animated" && r.shiny.kind === "animated" && r.normal.fileSha1 === e.sha1.normal && r.shiny.fileSha1 === e.sha1.shiny && r.normal.sourceSha1 === e.sourceSha1.normal && r.shiny.sourceSha1 === e.sourceSha1.shiny && !r.normal.motion && !r.grayscale.motion && r.animationCredit?.animator; }), "every imported species is the reviewed animated pair (output and source SHA-1), credited, with no rig idle");
 assertTrue(SOURCE.every((e) => ["normal", "shiny"].every((v) => !e[v] || (e[v].alphaLevels <= 2 && e[v].maxColors <= 128) || e[v].maxColors <= 64)), "no 3D/render source: every source passed the 2D pixel-art check");
 assertTrue(NEW.every((n) => !/\/sprites\/(ani|ani-shiny|ani-back|ani-back-shiny|dex|dex-shiny|home|home-shiny|gen6)\/|other\/(showdown|home|official-artwork)\//.test(SPRITES[n].normal.sourceUrl + SPRITES[n].shiny.sourceUrl)), "no source URL points at a 3D/render collection");
 assertEqual(pokemonSpritePath(700, "shiny"), "/public/sprites/pokemon/shiny/700.gif", "resolver: Sylveon shiny path");

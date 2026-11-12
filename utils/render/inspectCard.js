@@ -7,7 +7,7 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, drawLevel, dexNo, drawMegaTag } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, drawLevel, dexNo, drawMegaTag, fillTextMid } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 
@@ -70,9 +70,7 @@ export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = nu
   ctx.strokeStyle = `${tierColor(slot.tier)}aa`;
   ctx.stroke();
   ctx.fillStyle = TIER[slot.tier] ?? tierColor(slot.tier);
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, right - pw + 17, 44);
-  ctx.textBaseline = "alphabetic";
+  fillTextMid(ctx, label, right - pw + 17, 43);
   if (slot.mega) drawMegaTag(ctx, right - pw - 10, 26, { h: 34, size: 18, align: "right" });
 
   // Name, Level, types.

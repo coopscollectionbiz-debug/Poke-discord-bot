@@ -206,23 +206,11 @@ export function drawSlotBadge(ctx, n, cx, cy, { r = 17, lead = false } = {}) {
 
 /** The battle platform ellipse, optionally lit in an accent color. */
 export function drawPlatform(ctx, cx, cy, rx, ry, accent = null) {
-  if (accent) {
-    const glow = ctx.createRadialGradient(cx, cy - ry * 3, 4, cx, cy - ry * 3, rx * 1.3);
-    glow.addColorStop(0, `${accent}44`);
-    glow.addColorStop(1, `${accent}00`);
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(cx, cy - ry * 3, rx * 1.3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.fillStyle = accent ? `${accent}66` : "#ffffff14";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = accent ? `${accent}cc` : "#ffffff22";
-  ctx.stroke();
+  // the pixel floor everywhere; an unlit one is light slate so it still reads on the dark cards
+  return drawSoftPlatform(ctx, cx, cy, rx, ry, accent ?? FLOOR_NEUTRAL, { u: rx >= 90 ? 4 : 2, peak: accent ? 0.5 : 0.22 });
 }
+
+export const FLOOR_NEUTRAL = "#94a3b8";
 
 const BAYER4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
 

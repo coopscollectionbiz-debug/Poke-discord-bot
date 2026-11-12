@@ -68,7 +68,7 @@ _Avoid_: displayed Pokémon
 The **Team** a player sets for **Ranked battles** and **Wager battles**, where every Pokémon fights at Lv 50. It holds at most one mythic-tier Pokémon.
 
 **Tier backdrop**:
-The animated background an owned Epic, Legendary or Mythic trainer sprite brings to any card that shows it: a tinted glow with motes, plus twinkles from Legendary up and a meteor shower for Mythic. It replaces the card's own background in that trainer's part of the card (their half of a VS card, their row in a battle), and nothing in it passes behind the trainer or anything else drawn there. Computer-run opponents and unowned sprites never have one.
+The animated background an owned Epic, Legendary or Mythic trainer sprite brings to any card that shows it: the tier's sky colour with rising motes, plus a stepped glow and twinkles from Legendary up, and meteors with one bright hero meteor a loop for Mythic. It replaces the card's own background in that trainer's part of the card (their half of a VS card, their row in a battle), and nothing in it passes behind the trainer or anything else drawn there. Computer-run opponents and unowned sprites never have one.
 _Avoid_: aura, glow, trainer background
 
 **Moveset**:

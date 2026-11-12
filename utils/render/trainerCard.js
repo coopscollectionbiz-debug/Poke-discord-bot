@@ -8,11 +8,11 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag, fillTextMid } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag, fillTextMid, drawSoftPlatform } from "./primitives.js";
 import { createCanvas as makeCanvas } from "@napi-rs/canvas";
 import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadBadgeSprite, loadPlaceholder, spriteScale } from "./sprites.js";
 import { spriteStage, FRAMES } from "./stage.js";
-import { createBackdrop, hasBackdrop } from "./trainerBackdrop.js";
+import { createBackdrop, hasBackdrop, drawTierSky } from "./trainerBackdrop.js";
 import { poseAtFrame } from "../trainerIdle.js";
 import { trainersAnimated } from "../trainerAssets.js";
 import { buildTeamView } from "./teamView.js";
@@ -141,13 +141,15 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
   // panel. (The old smooth spotlight banded into rings once the breathing
   // trainer made every card a GIF.) The tier-lit platform below stays for all.
   const fancy = Boolean(t && hasBackdrop(tier));
-  ctx.fillStyle = `${accent}3a`;
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 120, 22, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = `${accent}aa`;
-  ctx.stroke();
+  if (fancy) { // the tier's sky fills the panel, under the platform and the trainer
+    drawTierSky(ctx, tier, { x: M, y: M, w: LEFT_W, h: H - 2 * M }, { u: 4, clip: (c) => rr(c, M, M, LEFT_W, H - 2 * M, 18) });
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = `${accent}88`;
+    rr(ctx, M, M, LEFT_W, H - 2 * M, 18);
+    ctx.stroke();
+  }
+  // The floor: a dithered pixel platform in the tier colour, like the floors under Pokémon in battle.
+  drawSoftPlatform(ctx, cx, floor, 120, 22, accent, { u: 4, peak: 0.6 });
   if (t) {
     const idle = await loadTrainerPoses(v.trainerFile);
     const box = { w: LEFT_W - 40, h: 330, floor: floor + 6, scale: 4 };

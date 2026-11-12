@@ -7,7 +7,7 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, drawLevel, dexNo, drawMegaTag, fillTextMid } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, drawLevel, dexNo, drawMegaTag, fillTextMid, drawSoftPlatform } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 
@@ -37,13 +37,8 @@ export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = nu
   spot.addColorStop(1, `${accent}00`);
   ctx.fillStyle = spot;
   ctx.fillRect(0, 0, sw, H);
-  ctx.fillStyle = `${accent}3a`;
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 120, 22, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = `${accent}aa`;
-  ctx.stroke();
+  // The floor: a dithered pixel platform, like the floors under Pokémon in battle.
+  drawSoftPlatform(ctx, cx, floor, 120, 22, accent, { u: 4, peak: 0.6 });
   const sprite = (await loadStaticSprite(spriteId, slot.variant)) ?? (await loadPlaceholder());
   stage.place(ctx, sprite, cx, floor + 8, sw - 30, floor - 20, { scale: 3 }, { id: spriteId, variant: slot.variant });
 

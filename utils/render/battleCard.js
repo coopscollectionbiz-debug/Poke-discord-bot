@@ -16,7 +16,7 @@ import * as P from "./primitives.js";
 import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadPlaceholder } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 import { poseAtFrame } from "../trainerIdle.js";
-import { hasBackdrop } from "./trainerBackdrop.js";
+import { hasBackdrop, drawTierSky } from "./trainerBackdrop.js";
 import { trainerBackdrop } from "./trainerCard.js";
 import { slotView } from "./teamView.js";
 import { buildBattleTeam } from "../battle/runBattle.js";
@@ -121,6 +121,7 @@ export async function renderBattleCard(v, { animate = false } = {}) {
   P.drawPlatform(ctx, tcx, M + 168, 62, 12, COLOR.blue);
   if (t) {
     const box = { w: 150, h: 160, floor: tfloor, scale: 2 };
+    if (hasBackdrop(tier)) drawTierSky(ctx, tier, { x: M + 8, y: M + 8, w: 164, h: 174 }, { u: 2, clip: (c) => P.rr(c, M + 8, M + 8, 164, 174, 12) });
     if (hasBackdrop(tier)) trainerBackdrop(ctx, stage, { tier, sprite: t, cx: tcx, box, panel: { x: M + 8, y: M + 8, w: 164 }, floor: tfloor - 6 });
     const idle = await loadTrainerPoses(v.trainerFile);
     // Breathing trainers share one schedule here; a real animation plays its own frames.

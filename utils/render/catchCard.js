@@ -15,7 +15,7 @@
 import fs from "fs";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitFont, drawTypeChips, drawShinyMark, drawLevel, dexNo, fillTextMid } from "./primitives.js";
+import { rr, font, fitFont, drawTypeChips, drawShinyMark, drawLevel, dexNo, fillTextMid, drawSoftPlatform } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 import { displaySpeciesName } from "./names.js";
@@ -113,13 +113,8 @@ export async function renderCatchCard(v, { animate = false } = {}) {
   spot.addColorStop(1, `${accent}00`);
   ctx.fillStyle = spot;
   ctx.fillRect(4, 0, sw, H);
-  ctx.fillStyle = `${accent}3a`;
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 36, 6, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = `${accent}aa`;
-  ctx.stroke();
+  // The floor: a dithered pixel platform, like the floors under Pokémon in battle.
+  drawSoftPlatform(ctx, cx, floor, 36, 6, accent, { u: 2, peak: 0.6 });
   const sprite = (await loadStaticSprite(v.id, v.variant)) ?? (await loadPlaceholder());
   stage.place(ctx, sprite, cx, floor + 3, sw - 4, floor - 2, { scale: 1 }, { id: v.id, variant: v.variant });
 

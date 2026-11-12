@@ -10,7 +10,7 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { fileURLToPath } from "url";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, drawTag, dexNo, fillTextMid } from "./primitives.js";
+import { rr, font, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, drawTag, dexNo, fillTextMid, drawSoftPlatform } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 import { drawDexProgress } from "./dexProgress.js";
@@ -44,13 +44,8 @@ async function tile(ctx, p, x, w, stage) {
   ctx.fillStyle = spot;
   ctx.fillRect(x, y, w, TILE_H);
   ctx.restore();
-  ctx.fillStyle = `${accent}3a`;
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 100, 18, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = `${accent}aa`;
-  ctx.stroke();
+  // The floor: a dithered pixel platform, like the floors under Pokémon in battle.
+  drawSoftPlatform(ctx, cx, floor, 100, 18, accent, { u: 4, peak: 0.6 });
   const sprite = (await loadStaticSprite(p.id, p.variant)) ?? (await loadPlaceholder());
   stage.place(ctx, sprite, cx, floor + 6, w - 40, 150, { scale: 3 }, { id: p.id, variant: p.variant });
 

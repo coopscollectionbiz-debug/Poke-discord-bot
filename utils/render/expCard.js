@@ -9,7 +9,7 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawShinyMark, drawTag, dexNo, drawMegaTag } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawShinyMark, drawTag, dexNo, drawMegaTag, drawPlatform } from "./primitives.js";
 import { getMega } from "../megas.js";
 import { megaShortName } from "../megaDisplay.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
@@ -103,10 +103,7 @@ function drawTile(ctx, m, x, y, w, sprite, stage) {
 
   // Sprite on a small platform.
   const sx = x + 82, floor = y + TILE_H - 26;
-  ctx.fillStyle = m.shiny ? "#f5c84c40" : "#ffffff12";
-  ctx.beginPath();
-  ctx.ellipse(sx, floor, 58, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawPlatform(ctx, sx, floor, 58, 12, m.shiny ? "#f5c84c" : null);
   stage.place(ctx, sprite, sx, floor + 6, 150, TILE_H - 36, { scale: 2 }, { id: m.spriteId ?? m.id, variant: m.variant });
 
   const tx = x + 168, tw = w - 168 - 18;

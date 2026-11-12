@@ -9,7 +9,7 @@
 import fs from "fs";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, dexNo, fillTextMid } from "./primitives.js";
+import { rr, font, fitText, fitFont, drawTypeChips, drawShinyMark, dexNo, fillTextMid, drawSoftPlatform } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 import { displaySpeciesName } from "./names.js";
@@ -86,13 +86,8 @@ export async function renderPokedexCard(v, { shiny = false, animate = false } = 
   ctx.font = font(22, 800);
   ctx.fillStyle = COLOR.textFaint;
   ctx.fillText(dexNo(v.id), 28, 44);
-  ctx.fillStyle = `${accent}3a`;
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 124, 22, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = `${accent}aa`;
-  ctx.stroke();
+  // The floor: a dithered pixel platform, like the floors under Pokémon in battle.
+  drawSoftPlatform(ctx, cx, floor, 124, 22, accent, { u: 4, peak: 0.6 });
   const sprite = (await loadStaticSprite(v.id, shiny ? "shiny" : "normal")) ?? (await loadPlaceholder());
   stage.place(ctx, sprite, cx, floor + 8, sw - 30, floor - 70, { scale: 3 }, { id: v.id, variant: shiny ? "shiny" : "normal" });
   ctx.textAlign = "center";

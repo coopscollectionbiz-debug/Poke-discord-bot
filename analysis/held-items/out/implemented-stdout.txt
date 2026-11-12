@@ -1,0 +1,85 @@
+Production copy: 2884 records; 203 Display teams; 161 full legal Lv 50 teams.
+
+## 0. No-item parity with master's engine: 0 differences in 3000 battles (full result objects compared)
+
+## 1. One holder (slot 1), ranked production mirrors (Lv 50). 2000 battles per row.
+| leftovers | 66.3% (64.2%–68.3%) |
+| sitrus_berry | 64.1% (62.0%–66.2%) |
+| focus_sash | 49.7% (47.5%–51.9%) |
+| quick_claw | 53.2% (51.0%–55.4%) |
+| expert_belt | 52.8% (50.7%–55.0%) |
+| bright_powder | 58.7% (56.5%–60.8%) |
+| focus_band | 53.5% (51.4%–55.7%) |
+| eviolite | 53.1% (50.9%–55.3%) |
+| shell_bell | 56.2% (54.0%–58.4%) |
+| black_sludge | 35.2% (33.1%–37.3%) |
+| muscle_band | 53.6% (51.5%–55.8%) |
+| wise_glasses | 52.9% (50.8%–55.1%) |
+| charcoal | 49.6% (47.5%–51.8%) |
+| mystic_water | 50.9% (48.7%–53.1%) |
+| miracle_seed | 50.3% (48.1%–52.5%) |
+| magnet | 49.8% (47.6%–52.0%) |
+| never_melt_ice | 50.1% (47.9%–52.3%) |
+| black_belt | 47.3% (45.2%–49.5%) |
+| poison_barb | 50.9% (48.8%–53.1%) |
+| soft_sand | 50.1% (48.0%–52.3%) |
+| sharp_beak | 49.3% (47.1%–51.5%) |
+| twisted_spoon | 49.6% (47.4%–51.8%) |
+| silver_powder | 49.6% (47.5%–51.8%) |
+| hard_stone | 50.4% (48.3%–52.6%) |
+| spell_tag | 50.2% (48.0%–52.4%) |
+| dragon_fang | 48.9% (46.8%–51.1%) |
+| black_glasses | 52.9% (50.8%–55.1%) |
+| metal_coat | 49.1% (46.9%–51.3%) |
+| silk_scarf | 55.7% (53.5%–57.9%) |
+| fairy_feather | 51.8% (49.7%–54.0%) |
+
+## 2. Full loadouts vs the same team without items (ranked mirrors). 2000 battles per row.
+| starter loadout (6 of the 7 combat starters) | 76.2% (74.3%–78.0%) | turns 29.1 | turn cap 0.0% |
+| optimized 6-item loadout (all 33) | 78.6% (76.8%–80.4%) | turns 29.5 | turn cap 0.0% |
+| optimized vs starter loadout (same team) | 54.4% (52.2%–56.6%) |
+
+## 3. Lower vs higher tier at Lv 50 (lower tier's win rate). 2000 per cell.
+| common vs uncommon | none 4.9% | both optimized 5.3% | both starter 5.7% | only common 10.8% | only uncommon 1.9% |
+| uncommon vs rare | none 30.9% | both optimized 28.9% | both starter 30.1% | only uncommon 43.7% | only rare 17.8% |
+| rare vs epic | none 27.2% | both optimized 28.8% | both starter 29.3% | only rare 39.8% | only epic 16.1% |
+| epic vs legendary | none 7.3% | both optimized 10.4% | both starter 9.5% | only epic 15.2% | only legendary 4.8% |
+| rare vs legendary | none 1.9% | both optimized 3.4% | both starter 2.5% | only rare 5.2% | only legendary 1.2% |
+
+## 4. Ranked (Lv 50): underdog win rate by Power ratio (optimized loadouts, Item Clause)
+| Power ratio | pairs | no items | both | only favourite | only underdog |
+| 1–1.1× | 1000 | 25.7% | 27.5% | 17.0% | 42.4% |
+| 1.1–1.25× | 1000 | 4.5% | 5.8% | 1.9% | 10.6% |
+| 1.25–1.5× | 1000 | 0.0% | 0.2% | 0.1% | 0.6% |
+| 1.5–2× | 592 | 0.0% | 0.0% | 0.0% | 0.0% |
+
+## 4. Casual (real Levels, surge on): underdog win rate by Power ratio (optimized loadouts, Item Clause)
+| Power ratio | pairs | no items | both | only favourite | only underdog |
+| 1–1.1× | 1000 | 37.6% | 49.8% | 16.6% | 65.7% |
+| 1.1–1.25× | 396 | 28.3% | 28.8% | 22.0% | 34.6% |
+| 1.25–1.5× | 504 | 17.7% | 20.0% | 14.3% | 23.4% |
+| 1.5–2× | 805 | 8.8% | 10.1% | 8.4% | 12.8% |
+| 2–3× | 1000 | 9.4% | 11.5% | 10.4% | 13.7% |
+| 3–∞× | 1000 | 3.2% | 3.1% | 1.6% | 3.0% |
+
+## 5. RNG-heavy items: activation frequency and outcome change (ranked mirrors; side A holds the items shown, side B the same team without items). 2000 per row.
+| Bright Powder on slot 1 | holder side wins 54.6% (52.5%–56.8%) | Focus Band saves/battle 0.000 | Quick Claw/battle 0.000 | misses/battle 1.61 (no items 1.09) |
+| Focus Band on slot 1 | holder side wins 51.1% (49.0%–53.3%) | Focus Band saves/battle 0.102 | Quick Claw/battle 0.000 | misses/battle 1.08 (no items 1.02) |
+| Quick Claw on slot 1 | holder side wins 51.7% (49.6%–53.9%) | Focus Band saves/battle 0.000 | Quick Claw/battle 2.764 | misses/battle 1.08 (no items 0.98) |
+| Bright Powder + Focus Band + Quick Claw (slots 1–3) | holder side wins 60.2% (58.0%–62.3%) | Focus Band saves/battle 0.098 | Quick Claw/battle 2.124 | misses/battle 1.77 (no items 1.06) |
+
+## 6. Species items: holder vs the same Pokémon without it (1v1 at Lv 50 against random fully evolved rare/epic foes). 2000 per row.
+| light_ball (#25) | with 29.0% | without 10.0% |
+| thick_club (#105) | with 68.8% | without 38.0% |
+
+## 7. Mega + abilities (48 verified Mega profiles): a Mega in slot 1 (no regular item, as buildTeam enforces); team-mates itemized vs not. 2000 per row.
+| Mega lead, team-mates itemized vs same team without items | 65.6% (63.5%–67.7%) | control (no items) 52.5% | turn cap 0.0% |
+
+## 8. Defensive stall (both sides the same configuration). 2000 per row.
+| no items (production pairs) | mean turns 18.2 | turn cap 0.0% | Leftovers heals/battle 0.0 |
+| optimized (production pairs) | mean turns 20.6 | turn cap 0.3% | Leftovers heals/battle 19.0 |
+| walls: Leftovers / Sitrus / Shell Bell / Bright Powder / Focus Band / Eviolite | mean turns 38.2 | turn cap 0.0% | Leftovers heals/battle 27.2 |
+
+## 9. Seeded replays with items: 500/500 identical (full result + log)
+
+## 10. Lucky Egg: slot-1 battle EXP per casual battle (production pairs) 133.4 → 199.9 with the egg (×1.499; floor rounding). Combat unchanged (it is not a combat item).

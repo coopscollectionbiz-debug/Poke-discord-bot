@@ -61,6 +61,8 @@ import { createGameplayHandlers } from "./services/gameplay.js";
 import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
 import { createAchievementHandlers } from "./services/achievementsApi.js";
 import { createMegaHandlers } from "./services/megaApi.js";
+import { createHeldItemHandlers } from "./services/heldItemsApi.js";
+import { normalizeEquipment, reconcileTeamEquipment, equipmentRev } from "./services/heldItems.js";
 import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
 import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
 import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
@@ -328,6 +330,10 @@ normalizeDisplayedTeam(user);
 // stores a one-time notice (services/battleTeam.js trimBattleTeamMythics).
 normalizeNotices(user);
 normalizeBattleTeam(user);
+// Held items: team equipment follows the cleaned teams (assignments of
+// Pokémon no longer on a team, Mega slots and unowned items are dropped;
+// unlocks are never touched). Never creates the field.
+normalizeEquipment(user);
 
 
   // ==========================================================
@@ -1394,6 +1400,29 @@ app.post("/api/mega/preferred", express.json({ limit: "4kb" }), async (req, res)
   }
 });
 
+// ==========================================================
+// 🧿 Held items (services/heldItemsApi.js). Dashboard-only management: no
+// Discord command can equip or buy items. Gated by HELD_ITEMS_* flags
+// (config/features.js); unset in production = the view says
+// { enabled: false } and every write refuses with 403.
+// ==========================================================
+const heldItems = createHeldItemHandlers({ getTrainerData: () => trainerData, lockUser, save: saveAndAck, logEvent });
+app.get("/api/held-items", (req, res) => {
+  const { status, body } = heldItems.view({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
+  return res.status(status).json(body);
+});
+for (const [route, fn] of [["claim-starter", heldItems.claimStarter], ["equip", heldItems.equip], ["buy", heldItems.buy]]) {
+  app.post(`/api/held-items/${route}`, express.json({ limit: "4kb" }), async (req, res) => {
+    try {
+      const { status, body } = await fn({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+      return res.status(status).json(body);
+    } catch (err) {
+      console.error(`❌ /api/held-items/${route}:`, err?.message || err);
+      return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  });
+}
+
 // D14: dashboard replies say whether the change reached disk. On a failed
 // write the change stays in memory and is retried; the reply carries a
 // "saved with a delay" notice instead of an unqualified success.
@@ -2227,6 +2256,10 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       else u.displayedPokemon = normalized;
       const copiedMoves = copy.copy ? applyTeamCopy(u, { ...copy.copy, to: teamType }, normalized) : [];
       trainerData[id] = u;
+      // Held items on this team follow it: a Pokémon that left the team, or
+      // is now set to Mega Evolve, drops its assignment on THIS team only
+      // (the unlock and every other team are untouched).
+      const itemsCleared = reconcileTeamEquipment(u, teamType);
 
       const saveAck = await saveAndAck(trainerData);
 
@@ -2236,6 +2269,7 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
         teamType,
         currentTeam: u.displayedPokemon,
         battleTeam: hasBattleTeam(u) ? u.battleTeam : null,
+        ...(itemsCleared.length ? { itemsCleared, equipmentRev: equipmentRev(u) } : {}),
         ...(copy.copy ? { copiedMoves } : {}),
       });
     });

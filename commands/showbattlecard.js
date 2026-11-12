@@ -10,8 +10,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { SlashCommandBuilder, AttachmentBuilder, MessageFlags } from "discord.js";
 import { cardImage } from "../utils/render/stage.js";
-import { battleCardView, renderBattleCard } from "../utils/render/battleCard.js";
+import { battleCardView } from "../utils/render/battleCard.js";
 import { rankBattleRatings } from "./leaderboard.js";
+import { threaded } from "../utils/render/renderers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const trainerSprites = JSON.parse(fs.readFileSync(path.join(__dirname, "../trainerSprites.json"), "utf8"));
@@ -34,7 +35,7 @@ export function equippedTrainer(file) {
 }
 
 /** The message: the rendered card, or a short text fallback if rendering fails. */
-export async function battleCardMessage(trainerData, userId, displayName, { render = renderBattleCard } = {}) {
+export async function battleCardMessage(trainerData, userId, displayName, { render = threaded.battleCard } = {}) {
   const user = trainerData[userId];
   const view = battleCardView(user, { displayName, trainer: equippedTrainer(user?.displayedTrainer), board: rankBattleRatings(trainerData, userId) });
   try {

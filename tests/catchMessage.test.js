@@ -34,14 +34,14 @@ section("Image: shared gate and switches");
 {
   const fake = async (_v, o) => Buffer.from(o?.animate ? "GIF89a" : "PNG");
   const gate = createRenderGate(1);
-  assertEqual((await renderCatchImage(common, { gate, env: {}, render: fake })).name, "catch.gif", "a Common catch animates too");
+  assertEqual((await renderCatchImage(common, { gate, pool: null, env: {}, render: fake })).name, "catch.gif", "a Common catch animates too");
   const held = gate.tryAcquire();
-  assertEqual((await renderCatchImage(legendary, { gate, env: {}, render: fake })).name, "catch.png", "gate busy → PNG");
+  assertEqual((await renderCatchImage(legendary, { gate, pool: null, env: {}, render: fake })).name, "catch.png", "gate busy → PNG");
   held();
-  assertEqual((await renderCatchImage(legendary, { gate, env: { CATCH_ANIMATED: "0" }, render: fake })).name, "catch.png", "CATCH_ANIMATED=0 → PNG");
-  assertEqual((await renderCatchImage(legendary, { gate, env: { CARDS_ANIMATED: "0" }, render: fake })).name, "catch.png", "CARDS_ANIMATED=0 → PNG");
+  assertEqual((await renderCatchImage(legendary, { gate, pool: null, env: { CATCH_ANIMATED: "0" }, render: fake })).name, "catch.png", "CATCH_ANIMATED=0 → PNG");
+  assertEqual((await renderCatchImage(legendary, { gate, pool: null, env: { CARDS_ANIMATED: "0" }, render: fake })).name, "catch.png", "CARDS_ANIMATED=0 → PNG");
   const failing = async (_v, o) => { if (o?.animate) throw new Error("boom"); return Buffer.from("PNG"); };
-  const r = await renderCatchImage(shinyDup, { gate, env: {}, render: failing });
+  const r = await renderCatchImage(shinyDup, { gate, pool: null, env: {}, render: failing });
   assertTrue(r.name === "catch.png" && gate.active === 0, "GIF failure → PNG, slot freed");
 }
 

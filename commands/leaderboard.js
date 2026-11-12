@@ -6,7 +6,8 @@
 import { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } from "discord.js";
 import { rankedRecord } from "../utils/battle/rewards.js";
 import { cardImage } from "../utils/render/stage.js";
-import { leaderboardView, renderLeaderboard } from "../utils/render/leaderboardCard.js";
+import { leaderboardView } from "../utils/render/leaderboardCard.js";
+import { threaded } from "../utils/render/renderers.js";
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard")
@@ -32,7 +33,7 @@ export function buildLeaderboardEmbed({ top, you }) {
 }
 
 // The podium image (utils/render/leaderboardCard.js); text embed on failure.
-export async function leaderboardMessage(trainerData, userId, { render = renderLeaderboard } = {}) {
+export async function leaderboardMessage(trainerData, userId, { render = threaded.leaderboard } = {}) {
   const board = rankBattleRatings(trainerData, userId);
   try {
     const view = leaderboardView(board, trainerData, userId);

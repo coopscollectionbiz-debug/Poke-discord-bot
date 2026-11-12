@@ -7,7 +7,7 @@ import { pokemonSpriteUrl } from "../utils/sprites.js";
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags, AttachmentBuilder } from "discord.js";
 import { cardImage } from "../utils/render/stage.js";
 import { slotView } from "../utils/render/teamView.js";
-import { renderInspectCard } from "../utils/render/inspectCard.js";
+
 import { spritePaths } from "../spriteconfig.js";
 import { findPokemonByName } from "../utils/dataLoader.js";
 import { validateNameQuery } from "../utils/validators.js";
@@ -18,6 +18,7 @@ import { computeStats } from "../utils/battle/stats.js";
 import { autoMoveset } from "../utils/battle/moveset.js";
 import { chosenMoves } from "../services/movesets.js";
 import { formatTypesLine } from "./pokedex.js";
+import { threaded } from "../utils/render/renderers.js";
 
 const statLine = (s) => `HP ${s.hp} · Atk ${s.atk} · Def ${s.def} · SpA ${s.spa} · SpD ${s.spd} · Spe ${s.spe}`;
 
@@ -109,7 +110,7 @@ export default {
       const files = [];
       for (const [i, slot] of inspectSlots(trainerData[interaction.user.id], pokemon).entries()) {
         const eyebrow = slot.level == null ? "NOT IN YOUR COLLECTION" : slot.shiny ? "YOUR SHINY" : "YOUR POKÉMON";
-        const card = await cardImage((animate) => renderInspectCard(slot, { eyebrow, animate }), `pokemon-${i + 1}`);
+        const card = await cardImage((animate) => threaded.inspect(slot, { eyebrow, animate }), `pokemon-${i + 1}`);
         files.push(new AttachmentBuilder(card.buffer, { name: card.name }));
       }
       return await safeReply(interaction, { files, flags: MessageFlags.Ephemeral });

@@ -17,22 +17,23 @@ import {
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { cardImage, cardGifGate } from "../utils/render/stage.js";
 import { buildTeamView } from "../utils/render/teamView.js";
-import { renderShowteam } from "../utils/render/showteam.js";
-import { renderInspectCard } from "../utils/render/inspectCard.js";
 import { generateToken } from "../utils/dashboardAuth.js";
 import { publicBaseUrl } from "../utils/publicUrl.js";
+import { threaded } from "../utils/render/renderers.js";
 
 export const LAYOUT = "refined";
 export const COLLECTOR_MS = 10 * 60 * 1000;
 const TIER_NAME = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", mythic: "Mythic" };
 
 /**
- * The Team image: an animated GIF when a slot on the shared card gate is
- * free (and neither SHOWTEAM_ANIMATED nor CARDS_ANIMATED is "0"), otherwise
- * a PNG. A failed GIF falls back to the PNG. `render` is injectable for tests.
+ * The Team image: an animated GIF (unless SHOWTEAM_ANIMATED or
+ * CARDS_ANIMATED is "0") when a render thread frees up within 2 s, or, with
+ * RENDER_THREADS=0, when a slot on the shared card gate is free; otherwise
+ * a PNG. A failed GIF falls back to the PNG. `render`, `gate` and `pool`
+ * are injectable for tests (cardImage in utils/render/stage.js).
  */
-export function renderTeamImage(view, { gate = cardGifGate, env = process.env, render = renderShowteam } = {}) {
-  return cardImage((animate) => render(view, { layout: LAYOUT, animate }), "team", { gate, env, flag: "SHOWTEAM_ANIMATED" });
+export function renderTeamImage(view, { gate = cardGifGate, pool, env = process.env, render = threaded.showteam } = {}) {
+  return cardImage((animate) => render(view, { layout: LAYOUT, animate }), "team", { gate, pool, env, flag: "SHOWTEAM_ANIMATED" });
 }
 
 /** The select menu + button under the image (none for an empty Team). */
@@ -128,7 +129,7 @@ export default {
         // Inspect: the slot exactly as shown in this image.
         await i.deferReply({ flags: MessageFlags.Ephemeral });
         const slot = view.slots[r.slot - 1];
-        const card = await cardImage((animate) => renderInspectCard(slot, { owner: displayName, animate }), "pokemon", { unique: true });
+        const card = await cardImage((animate) => threaded.inspect(slot, { owner: displayName, animate }), "pokemon", { unique: true });
         await i.editReply({ files: [new AttachmentBuilder(card.buffer, { name: card.name })] });
       } catch (err) {
         console.warn("⚠️ /showteam component failed:", err?.message || err);

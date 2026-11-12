@@ -21,16 +21,17 @@ import {
   startRun, continueRun, finishOpenRun, isRunStale, attachRunMessage, challengeLogEntry,
 } from "../utils/challenge/runChallenge.js";
 import { badgeUrl } from "../utils/challenge/badgeImages.js";
-import { challengeCardView, renderChallengeCard, cardAltText } from "../utils/render/challengeCard.js";
-import { boardView, renderBoard, boardAltText } from "../utils/render/challengeBoard.js";
+import { challengeCardView, cardAltText } from "../utils/render/challengeCard.js";
+import { boardView, boardAltText } from "../utils/render/challengeBoard.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../public/picker-pokemon/badges.js";
 import {
   playChallenge, playChallengeFight, showChoosing, showRunResult, challengeNames, prizeText, challengeExpText,
 } from "../utils/battle/playback.js";
-import { expMembers, renderExpCard } from "../utils/render/expCard.js";
+import { expMembers } from "../utils/render/expCard.js";
 import { utcDay } from "../utils/battle/rewards.js";
 import { CHALLENGE, PLAYBACK } from "../utils/battle/tuning.js";
 import { spritePaths } from "../spriteconfig.js";
+import { threaded } from "../utils/render/renderers.js";
 
 export const data = new SlashCommandBuilder()
   .setName("challenge")
@@ -87,7 +88,7 @@ export function boardEmbed(user, now = new Date()) {
 
 // The board as an image (utils/render/challengeBoard.js), or boardEmbed when
 // it can't render. `user` may be null (no record yet).
-export async function boardMessage(user, displayName, now = new Date(), { render = renderBoard } = {}) {
+export async function boardMessage(user, displayName, now = new Date(), { render = threaded.challengeBoard } = {}) {
   try {
     const view = boardView(user, { displayName, now });
     return { files: [new AttachmentBuilder(await render(view), { name: "board.png", description: boardAltText(view) })] };
@@ -145,7 +146,7 @@ export function cardView(key, preview, user, displayName) {
 // can't be built or rendered. `view` is challengeCardView(), built before the fight is
 // saved so the intro shows the Badge still on the line. Only the private
 // preview (exactLoss) says the amount, in text: the card itself goes public.
-export async function previewMessage(key, preview, view, { exactLoss = false, render = renderChallengeCard } = {}) {
+export async function previewMessage(key, preview, view, { exactLoss = false, render = threaded.challengeCard } = {}) {
   try {
     if (!view) throw new Error("no card view");
     const png = await render(view);
@@ -167,7 +168,7 @@ const privateResult = (outcome) => {
 // After the replay the player gets /battle's private EXP card, captioned
 // with the result (the exact CC lost, or the prize); text if it can't render.
 // `user` is their record after the challenge.
-export async function challengeExpMessage(outcome, names, user, { render = renderExpCard } = {}) {
+export async function challengeExpMessage(outcome, names, user, { render = threaded.exp } = {}) {
   const caption = privateResult(outcome);
   try {
     const png = await render({

@@ -164,6 +164,35 @@ export function loadTrainerPoses(fileName, { env = process.env } = {}) {
 }
 
 /**
+ * A trainer sprite trimmed to its opaque pixels, or null. Trainer PNGs are
+ * 80 × 80 with transparent margins (trimmed: median 39 × 71 px), so trimming
+ * lets them stand side by side and on a shared floor.
+ */
+export async function loadTrimmedTrainerSprite(fileName) {
+  const t = await loadTrainerSprite(fileName);
+  if (!t) return null;
+  const c = createCanvas(t.width, t.height);
+  const ctx = c.getContext("2d");
+  ctx.drawImage(t.image, 0, 0);
+  const box = opaqueBounds(ctx.getImageData(0, 0, t.width, t.height).data, t.width, t.height);
+  if (!box) return null;
+  const out = createCanvas(box.w, box.h);
+  out.getContext("2d").drawImage(c, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
+  return { image: out, width: box.w, height: box.h };
+}
+
+/** A Badge PNG (public/sprites/badges, from tools/tint-badges.mjs) by file name, or null. */
+export async function loadBadgeSprite(fileName) {
+  if (!fileName || !/^[a-z0-9._-]+\.png$/i.test(fileName)) return null;
+  try {
+    const image = await loadImage(fileURLToPath(new URL(`sprites/badges/${fileName}`, PUBLIC)));
+    return { image, width: image.width, height: image.height };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The scale for one sprite: the image's shared `scale` (every Pokémon in an
  * image at the same pixel size, as in the games, so Pikachu stays smaller
  * than Gyarados), unless that overflows the box; then the largest scale that

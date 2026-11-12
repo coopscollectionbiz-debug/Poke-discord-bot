@@ -420,8 +420,11 @@ ensureWeeklyReset(user);
 
 import { lockUser } from "./utils/userLocks.js";
 import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
+import { createEncounterService, isEncounterButton } from "./utils/encounter/service.js";
 import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
+import { finishAllOpenRuns, challengeLogEntry, hideOpenRun, challengeProgress } from "./utils/challenge/runChallenge.js";
+import { showRunResult, challengeNames } from "./utils/battle/playback.js";
 import { powersFromLevels } from "./utils/battle/power.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -481,16 +484,10 @@ app.get("/auth/admin", (req, res) => {
 });
 
 // ==========================================================
-// 🎯 Trainer Tier Costs
+// 🎯 Trainer Tier Costs (in utils/trainerCosts.js, which /challenge shares)
 // ==========================================================
-export const TRAINER_COSTS = {
-  common: 2500,
-  uncommon: 7500,
-  rare: 15000,
-  epic: 35000,
-  legendary: 75000,
-  mythic: 150000,
-};
+import { TRAINER_COSTS } from "./utils/trainerCosts.js";
+export { TRAINER_COSTS };
 
 
 // ✅ Serve all /public assets with correct MIME headers
@@ -1014,10 +1011,12 @@ async function saveDataToDiscord(data, { force = false } = {}) {
 // ==========================================================
 // 🎁 DETERMINISTIC RANDOM REWARD SYSTEM (ATOMIC PER-USER LOCK)
 // ==========================================================
+// Resolves to "cooldown", "missed" (a Trainer encounter may roll next), or
+// "caught"; undefined when the reward couldn't be picked.
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   const userId = interactionUser.id;
 
-  await lockUser(userId, async () => {
+  return lockUser(userId, async () => {
     console.log("⚙️ tryGiveRandomReward executed for", interactionUser.username);
 
     // =============================
@@ -1025,7 +1024,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // =============================
     const now = Date.now();
     const last = rewardCooldowns.get(userId) || 0;
-    if (now - last < REWARD_COOLDOWN) return;
+    if (now - last < REWARD_COOLDOWN) return "cooldown";
     rewardCooldowns.set(userId, now);
 
     // =============================
@@ -1045,7 +1044,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
 
     // Reward fails → keep pity meter, exit
     if (Math.random() >= finalChance) {
-      return;
+      return "missed";
     }
 
     // Reward occurred → reset pity meter
@@ -1125,8 +1124,13 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     }).catch(err => console.error("❌ broadcastReward failed:", err.message));
 
     console.log(`✅ Reward granted to ${interactionUser.username}`);
+    return "caught";
   });
 }
+
+// Trainer encounters (utils/encounter/service.js): open encounters live in
+// memory; their buttons come through interactionCreate below.
+const encounters = createEncounterService({ getTrainerData: () => trainerData, lockUser, enqueueSave });
 
 
 // ==========================================================
@@ -1271,6 +1275,7 @@ client.on(
     enqueueSave,
     queueRoleUpdate,
     giveRandomReward: tryGiveRandomReward,
+    spot: (message) => encounters.maybeSpot(message),
   })
 );
 
@@ -1299,7 +1304,7 @@ app.get("/api/user", (req, res) => {
   trainerData[id] = normalizeUserSchema(id, user);
   trainerData[id].rank = getRank(trainerData[id].tp);
 
-  return res.json(trainerData[id]);
+  return res.json(hideOpenRun(trainerData[id]));
 });
 
 // ==========================================================
@@ -1730,6 +1735,19 @@ if (interaction.isChatInputCommand()) {
   if (interaction.isButton()) {
     const id = interaction.customId ?? "";
 
+    // Trainer encounter cards are plain channel messages with no collector, so
+    // their clicks (even on a card from before a restart) are answered here.
+    if (isEncounterButton(id)) {
+      if (!isReady) {
+        await interaction
+          .reply({ content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.", flags: 64 })
+          .catch(() => {});
+        return;
+      }
+      await encounters.handleButton(interaction);
+      return;
+    }
+
     const noopButton =
       id.startsWith("confirm_") ||
       id.startsWith("cancel_") ||
@@ -2062,6 +2080,7 @@ app.get("/api/user-pokemon", (req, res) => {
       return { ...r, position: board.you?.position ?? null, players: board.total, streak: r.wins + r.losses > 0 ? Number(u.stats?.winStreak) || 0 : 0 };
     })(),
     casual: { wins: u.casual?.wins ?? 0, losses: u.casual?.losses ?? 0, streak: u.casual?.streak ?? 0, bestStreak: u.casual?.bestStreak ?? 0 },
+    challenge: challengeProgress(u), // the Badge row (/challenge)
     // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
     levels,
     powers: powersFromLevels(levels), // { "6:normal": 410 }
@@ -2462,6 +2481,28 @@ async function refundPendingWagersOnStartup() {
   }
 }
 
+// ==========================================================
+// An Elite Four run waits on the player's record between fights, and the
+// command playing it dies with the old process, so every open run is
+// finished at startup with no Revives, and its replay message gets the result.
+// ==========================================================
+async function finishOpenRunsOnStartup() {
+  const finished = finishAllOpenRuns(trainerData, new Date());
+  if (!finished.length) return;
+  await enqueueSave(trainerData, { force: true });
+  console.log(`⚔️ Finished ${finished.length} open Elite Four run(s) after restart`);
+  for (const { userId, outcome, channelId, messageId } of finished) {
+    logEvent("challenge", userId, { ...challengeLogEntry(outcome), finished: "restart" });
+    if (!channelId || !messageId) continue;
+    try {
+      const channel = await client.channels.fetch(channelId);
+      const message = await channel.messages.fetch(messageId);
+      await showRunResult(message, outcome, challengeNames(outcome, trainerData[userId]?.name || "Trainer"),
+        `⚔️ The bot restarted, so <@${userId}>'s Elite Four run finished without Revives.`);
+    } catch {}
+  }
+}
+
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
@@ -2556,6 +2597,7 @@ async function retryLoadLoop() {
 
   if (ok2) {
     await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
+    await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
     return;
@@ -2572,6 +2614,7 @@ setTimeout(retryLoadLoop, retryMs);
   }
 
   await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
+  await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
 });

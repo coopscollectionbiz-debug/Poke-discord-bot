@@ -58,6 +58,7 @@ import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/lo
 import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
 import { handleInventoryRequest } from "./services/inventoryApi.js";
+import { tmShopView, buyTms } from "./services/tmShop.js";
 import { createGameplayHandlers } from "./services/gameplay.js";
 import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
 import { createAchievementHandlers } from "./services/achievementsApi.js";
@@ -1988,6 +1989,54 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
 // ==========================================================
 // 🛍️ TRAINER SHOP — LIST ALL BUYABLE TRAINERS
 // ==========================================================
+// ==========================================================
+// 💿 TM shop (TM system phase T3; services/tmShop.js). Off unless
+// TM_SHOP_ENABLED is set. Prices come from the catalog, never the client.
+// ==========================================================
+app.get("/api/tms", (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  return res.json(tmShopView(user));
+});
+
+// Body: { id, item: "tm_<move>", qty: 1–10, requestId? } — a repeated
+// requestId returns the first result and never charges twice.
+app.post("/api/shop/buy-tm", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { id, item, qty = 1, requestId = null } = req.body || {};
+    if (!id) return res.status(400).json({ success: false, error: "Missing id" });
+    if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    if (!trainerData[id]) return res.status(404).json({ success: false, error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId))) return res.status(400).json({ success: false, error: "Invalid request id" });
+
+    const tx = await runInventoryTransaction({
+      trainerData,
+      userId: id,
+      lock: lockUser,
+      save: saveAndAck,
+      requestId,
+      payloadKey: `buy-tm:${String(item).slice(0, 64)}:${Number(qty)}`,
+      mutate: (user) => {
+        normalizeUserSchema(id, user); // in place
+        return buyTms(user, { item, qty: Number(qty) });
+      },
+    });
+    if (!tx.ok) {
+      const { ok, status = 400, ...rest } = tx;
+      return res.status(status).json({ success: false, ...rest });
+    }
+    if (!tx.replayed) logEvent("tm_purchase", id, { item: tx.result.item, qty: tx.result.qty, cost: tx.result.cost, ccAfter: tx.result.cc });
+    const { ok, ...result } = tx.result;
+    return res.json({ ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...result });
+  } catch (err) {
+    console.error("❌ /api/shop/buy-tm:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 app.get("/api/shop-trainers", async (req, res) => {
   try {
     const { getFlattenedTrainers } = await import("./utils/dataLoader.js");

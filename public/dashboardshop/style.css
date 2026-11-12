@@ -138,3 +138,36 @@ main:focus { outline: none; }
   .shop-item { min-height: 0; padding: 14px; }
   .item-icon { width: 60px; height: 60px; }
 }
+
+/* ===========================================================
+   Technical Machines (TM system phase T3) — tms.js
+=========================================================== */
+.tmx-filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 0 0 8px; }
+.tmx-field input, .tmx-field select {
+  min-height: var(--cc-touch);
+  padding: 0 12px;
+  border: 1.5px solid var(--cc-line);
+  border-radius: 10px;
+  background: var(--cc-surface);
+  color: var(--cc-text);
+  font: inherit;
+}
+.tmx-search { flex: 1 1 220px; }
+.tmx-search input { width: 100%; }
+.tmx-check { display: inline-flex; align-items: center; gap: 8px; min-height: var(--cc-touch); color: var(--cc-text-muted); font-size: 14px; }
+.tmx-count { margin: 0 0 10px; font-size: 13px; color: var(--cc-text-muted); }
+.tmx-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.tmx-item { min-height: 0; text-align: left; }
+.tmx-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+.tmx-tier { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--cc-text-muted); }
+.tmx-item[data-tier="premium"] .tmx-tier, .tmx-item[data-tier="elite"] .tmx-tier { color: var(--cc-gold); }
+.tmx-meta { margin: 0 0 8px; font-size: 13px; color: var(--cc-text-muted); }
+.tmx-meta b { color: var(--cc-text); }
+.tmx-empty { grid-column: 1 / -1; color: var(--cc-text-muted); }
+.tmx-qty { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; color: var(--cc-text); }
+.tmx-qty input { width: 80px; min-height: var(--cc-touch); padding: 0 10px; border: 1.5px solid var(--cc-line); border-radius: 10px; background: var(--cc-surface); color: var(--cc-text); font: inherit; }
+.tmx-total { margin: 10px 0 0; font-weight: 800; color: var(--cc-text) !important; }
+@media (max-width: 520px) {
+  .tmx-grid { grid-template-columns: 1fr; }
+  .tmx-field, .tmx-field select { flex: 1 1 140px; width: 100%; }
+}

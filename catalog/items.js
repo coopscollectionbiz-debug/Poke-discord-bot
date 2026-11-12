@@ -21,6 +21,7 @@
 // ==========================================================
 
 import fs from "fs";
+import { tmItemDefinitions } from "./tms.js";
 import { HELD_ITEM_DEFS, HELD_GROUPS } from "./heldItems.js";
 
 export const CATEGORIES = Object.freeze({
@@ -32,6 +33,7 @@ export const CATEGORIES = Object.freeze({
   cosmetic: { label: "Cosmetics", emoji: "🖼️", order: 6 },
   quest: { label: "Quest items", emoji: "📜", order: 7 },
   special: { label: "Special", emoji: "🎁", order: 8 },
+  tm: { label: "Technical Machines", emoji: "💿", order: 9 },
 });
 
 export const RARITIES = Object.freeze(["common", "uncommon", "rare", "epic", "legendary", "mythic"]);
@@ -287,6 +289,10 @@ ITEMS.push(
     sinceRelease: "M",
   }),
 );
+
+// ---------------- Technical Machines (TM system phase T3) ----------------
+// 156 launch TMs "active", 16 held TMs "defined" (catalog/tms.js).
+for (const def of tmItemDefinitions()) ITEMS.push(item(def));
 
 // ---------------- ACTIVE: held items (catalog/heldItems.js) ----------------
 // Permanent account-wide unlocks: 0 or 1 in user.items (maxStack 1). "active"

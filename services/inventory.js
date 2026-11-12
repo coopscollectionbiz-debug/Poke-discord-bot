@@ -245,6 +245,7 @@ function usageText(entry, env = process.env) {
   if (entry.status !== "active") return "Not usable yet.";
   if (entry.id === "evolution_stone") return "Used when evolving a Pokémon on the dashboard.";
   if (entry.id === "shiny_dust") return "Used on the dashboard to make a Pokémon shiny, or to evolve a shiny one.";
+  if (entry.category === "tm") return "Teaches its move to one compatible Pokémon. Used up when taught.";
   if (entry.category === "held") return "A permanent unlock: equip it on the dashboard Teams page (one Pokémon per team).";
   return "No direct use.";
 }

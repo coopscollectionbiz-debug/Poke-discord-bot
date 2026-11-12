@@ -17,7 +17,7 @@ import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import { loadTrimmedTrainerSprite, loadTrimmedTrainerPoses, loadBadgeSprite } from "../render/sprites.js";
 import { drawSparkle, drawTypeChip, drawSoftPlatform } from "../render/primitives.js";
-import { regionBackdrop, backdropTint } from "../render/trainerBackdrop.js";
+import { regionBackdrop, backdropTint, drawTierSky } from "../render/trainerBackdrop.js";
 import { cardTrainerFx } from "../render/trainerTier.js";
 import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
@@ -466,9 +466,13 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
       const top = ROW_TOP[s];
       // The row: the trainer's tier wash (its backdrop animates per frame), or
       // neutral gray; a /challenge Gym Leader's row keeps its type colour.
-      ctx.fillStyle = tints[s] ? `${tints[s]}12` : s === 1 && typeFill ? `${typeFill}1f` : `${GRAY}1c`;
-      pill(ctx, PAD, top, W - 2 * PAD, ROW_H, 16);
-      ctx.fill();
+      if (tints[s]) drawTierSky(ctx, tiers[s], { x: PAD, y: top, w: W - 2 * PAD, h: ROW_H }, { u: 2, clip: (c) => pill(c, PAD, top, W - 2 * PAD, ROW_H, 16) });
+      else {
+        ctx.fillStyle = s === 1 && typeFill ? `${typeFill}1f` : `${GRAY}1c`;
+        pill(ctx, PAD, top, W - 2 * PAD, ROW_H, 16);
+        ctx.fill();
+      }
+      pill(ctx, PAD, top, W - 2 * PAD, ROW_H, 16); // the row's outline is stroked on this path below
       ctx.lineWidth = winnerSide === s || surgeSide === s ? 3 : 2;
       ctx.strokeStyle = winnerSide === s ? GOLD : surgeSide === s ? "#ff9800" : tints[s] ? `${tints[s]}99` : `${rowColor(s)}66`;
       ctx.stroke();

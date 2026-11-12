@@ -16,7 +16,7 @@ import { assertTrue, assertEqual, section, finish } from "./harness.js";
 import { breathingPoses, idleCuts, poseAtFrame, IDLE_LOOP, breathLoop } from "../utils/trainerIdle.js";
 import { nameHash, breathTiming, rectMask, movePart, blinkEyes, applyEvent, idleTimeline, cardSchedule } from "../utils/trainerMotion.js";
 import { trainerImageUrl, trainerIdle } from "../utils/trainerAssets.js";
-import { createBackdrop, hasBackdrop } from "../utils/render/trainerBackdrop.js";
+import { createBackdrop, hasBackdrop, drawTierSky } from "../utils/render/trainerBackdrop.js";
 import { renderTrainerCard } from "../utils/render/trainerCard.js";
 import { renderLeaderboard, leaderboardView } from "../utils/render/leaderboardCard.js";
 import { rankBattleRatings } from "../commands/leaderboard.js";
@@ -183,6 +183,26 @@ section("Tier backdrop");
   }), "no meteor path or tail crosses the trainer");
   const f0 = bd.frame(0), ctx = f0.getContext("2d");
   assertTrue(f0.width === W && f0.height === H && ctx.getImageData(0, 0, W, H).data.some((v, i) => i % 4 === 3 && v > 0), "draws a non-empty frame");
+
+  // The 2026-11-12 ladder: Epic = sky + motes; Legendary adds a stepped glow and twinkles; Mythic adds meteors and a hero.
+  const tierBd = (tier) => createBackdrop({ tier, gridW: W, gridH: H, mask, halo, floorRow: 99, frames: 24 });
+  const lit = (b, f) => { const d = b.frame(f).getContext("2d").getImageData(0, 0, W, H).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n; };
+  const epic = tierBd("epic"), legendary = tierBd("legendary");
+  assertTrue(lit(epic, 0) < 60, `Epic: no glow, just motes on the sky (${lit(epic, 0)} lit cells)`);
+  assertTrue(lit(legendary, 0) > 1000, `Legendary: the stepped glow fills around the trainer (${lit(legendary, 0)} lit cells)`);
+  assertEqual([epic.twinkles.length > 0, legendary.twinkles.length > 0], [false, true], "twinkles from Legendary up");
+  assertEqual([epic.hero, legendary.hero], [null, null], "only Mythic has a hero meteor");
+  assertTrue(bd.hero && bd.hero.travel === 30 && bd.hero.start === 20, "Mythic: one hero meteor a loop, starting 4 frames before the loop ends");
+  const h = bd.hero, step0 = (0 - h.start + 24) % 24;
+  assertTrue(step0 > 0 && step0 < h.life, "the hero is mid-flight on frame 0 (the still used for PNG cards)");
+  assertTrue((() => { for (let s = 0; s <= h.travel; s++) for (let t = 0; t <= h.tail; t++) if (!clear(Math.round(h.x0 + h.dx * (s - t)), Math.round(h.y0 + h.dy * (s - t)))) return false; return true; })(), "the hero's path and tail stay clear of the trainer");
+  // The sky: Epic and above only, painted into the region.
+  const sky = createCanvas(40, 60), sc = sky.getContext("2d");
+  assertEqual(drawTierSky(sc, "rare", { x: 0, y: 0, w: 40, h: 60 }), false, "no sky below Epic");
+  assertEqual(drawTierSky(sc, "mythic", { x: 0, y: 0, w: 40, h: 60 }, { u: 4 }), true, "Mythic paints its sky");
+  const px = (y) => [...sc.getImageData(20, y, 1, 1).data];
+  assertTrue(px(1)[3] === 255 && px(58)[3] === 255, "the sky is opaque");
+  assertTrue(px(58)[0] > px(1)[0], "and lighter toward the bottom, in the tier's colour");
 }
 
 section("Rendered cards");

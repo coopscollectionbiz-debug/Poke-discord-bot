@@ -26,6 +26,7 @@ import { teamPower, rollSurge, cuteSurgeBoost } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, getCasualRecord, capBlock, recordStart } from "./rewards.js";
 import { RANKED, CUTE, CAPS } from "./tuning.js";
 import { liftRematchBlock } from "./rematch.js";
+import { wagerEligibility } from "./wager.js";
 import { teamCuteness } from "./cuteness.js";
 import { chosenMoves, keepMovesOnLevelUp } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
@@ -204,6 +205,13 @@ export function battleBlock({ trainerData, challengerId, defenderId, mode, remat
   if (mode !== "open") {
     if (teamFor(trainerData[challengerId], mode, { env }).length < RANKED_TEAM_SIZE) return "short_battle_team_challenger";
     if (teamFor(trainerData[defenderId], mode, { env }).length < RANKED_TEAM_SIZE) return "short_battle_team_defender";
+  }
+  // Wager battles: both players must pass the account age and Pokédex gate.
+  if (mode === "wager") {
+    const mine = wagerEligibility(trainerData[challengerId], challengerId, now.getTime());
+    if (mine) return `wager_${mine}_challenger`;
+    const theirs = wagerEligibility(trainerData[defenderId], defenderId, now.getTime());
+    if (theirs) return `wager_${theirs}_defender`;
   }
   const day = utcDay(now);
   const blockFor = (user, opponentId) => (user?.battle?.day === day ? capBlock(user.battle, opponentId) : null);

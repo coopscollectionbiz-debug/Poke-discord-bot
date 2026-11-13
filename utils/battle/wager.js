@@ -7,6 +7,29 @@
 // ==========================================================
 
 import { WAGER } from "./tuning.js";
+import { registeredSpecies } from "../../services/box.js";
+
+const DISCORD_EPOCH = 1_420_070_400_000;
+const DAY_MS = 86_400_000;
+
+/** When a Discord account was made, from its id (a snowflake); null for an id that isn't one. */
+export function accountCreatedAt(userId) {
+  if (!/^\d{15,21}$/.test(String(userId ?? ""))) return null;
+  return Number(BigInt(userId) >> 22n) + DISCORD_EPOCH;
+}
+
+/**
+ * Why this player can't take part in a Wager battle yet, or null.
+ * "new_account": their Discord account is under WAGER.minAccountDays old.
+ * "dex": fewer than WAGER.minDex species registered.
+ * An id that isn't a Discord snowflake (test fixtures) skips the age check.
+ */
+export function wagerEligibility(user, userId, now = Date.now()) {
+  const created = accountCreatedAt(userId);
+  if (created != null && now - created < WAGER.minAccountDays * DAY_MS) return "new_account";
+  if (registeredSpecies(user ?? {}).length < WAGER.minDex) return "dex";
+  return null;
+}
 
 export function offerWager(challenger, { defenderId, stake, channelId, nonce, now }) {
   if (!Number.isInteger(stake) || stake < WAGER.minStake) return { ok: false, reason: "invalid_stake" };

@@ -41,6 +41,8 @@ const trainer = (id) => {
   for (const id of FULL) grantCatch(u, id, "normal", () => 0.5);
   u.displayedPokemon = [{ id: 25, variant: "normal" }];
   u.battleTeam = FULL.map((id) => ({ id, variant: "normal" })); // wagers use the Battle team (full: 6)
+  // 25 registered species: the Wager Pokédex gate (economy audit 2026-11, D4).
+  for (let n = 1; n <= 25; n++) u.pokedex[n] ??= 1;
   return u;
 };
 

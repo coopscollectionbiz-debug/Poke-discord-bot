@@ -187,7 +187,7 @@ A **Battle** between two **Ranked teams**, every Pokémon at Lv 50, that runs im
 _Avoid_: rated battle, competitive battle
 
 **Wager battle**:
-A **Battle** between two **Ranked teams** at Lv 50 with a CC **Stake**, which runs only after the **Defender** accepts. It moves both players' **Ranked rating** as a **Ranked battle** does, both players can earn EXP, and the winner takes the pot.
+A **Battle** between two **Ranked teams** at Lv 50 with a CC **Stake**, which runs only after the **Defender** accepts. It moves both players' **Ranked rating** as a **Ranked battle** does, both players can earn EXP, and the winner takes the pot. Both players need a Discord account at least 7 days old and 25 species **Registered**, since a Wager is the only way CC moves between players.
 _Avoid_: bet, stakes battle
 
 **Stake**:
@@ -299,7 +299,7 @@ _Avoid_: trophy, quest
 - "Tier" also names a trainer sprite's price class, Common to Mythic, which is not a species' **Tier**. The 2026-11-10 re-tier changed trainer sprites, and the 2026-11-11 re-tier changed species.
 - "Ranked" has nothing to do with **Rank**. A player's **Rank** comes from chatting; their **Ranked rating** comes from **Ranked battles** and **Wager battles**.
 - Some **Achievements** list a badge as their reward, such as a region's badge for completing its Pokédex. That is not a **Badge**, which only comes from beating a Gym Leader's **Challenge**.
-- A random catch is any Pokémon rolled at random: the chat catch, `/daily`, Poké Balls, `/recruit`, quests and the weekly pack. **Catch boosts** and **Catch limits** reach all of them, and never reach a **Grant**, a gift or an evolution. On the ones paid for in CC (Poké Balls and `/recruit`) the player chooses whether they apply; the free ones always follow them.
+- A random catch is any Pokémon rolled at random: the chat catch, `/daily`, Poké Balls and the weekly pack. **Catch boosts** and **Catch limits** reach all of them, and never reach a **Grant**, a gift or an evolution. On the ones paid for in CC (Poké Balls) the player chooses whether they apply; the free ones always follow them. The old `/recruit` and `/quest` commands were removed in November 2026.
 - "Copy" as a noun is always a **Copy** (one owned unit). As a verb it may describe teams and moves ("Copy from Ranked team"); never call the result a "team copy".
 - "Showcase" is a **Team** but never fights. Rules written for "a **Team**" about battles (one Mega, moves, held items) cover only the **Casual team** and **Ranked team**.
 

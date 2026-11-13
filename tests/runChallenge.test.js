@@ -570,7 +570,10 @@ section("The dashboard never sees an open run");
 section("Event log entry");
 {
   const single = run(world(), "brock");
-  assertEqual(challengeLogEntry(single), { key: "brock", seed: 1, reached: 1, cleared: true, prize: true, ccLost: 0 }, "a single fight");
+  assertEqual(challengeLogEntry(single), { key: "brock", seed: 1, reached: 1, cleared: true, prize: true, ccLost: 0, prizePaid: { cc: 2500, stones: 1, dust: 5, sprites: 1 } }, "a single fight, with what the first win paid");
+  const owned = { ...single, prize: { ...single.prize, sprites: [{ trainerKey: "brock", cc: 1250 }] } };
+  assertEqual(challengeLogEntry(owned).prizePaid, { cc: 3750, stones: 1, dust: 5, sprites: 0 }, "an owned prize sprite is logged as its half-price CC");
+  assertEqual(challengeLogEntry({ ...single, prize: null }).prizePaid, undefined, "no first win: no prizePaid");
   const breaks = [{ offered: true, slot: 0 }, { offered: false, slot: null }, { offered: true, slot: null }];
   assertEqual(challengeLogEntry({ ...single, key: "elite4", breaks }).revives, [0, "none", null],
     "a run lists each break's Revive: the slot, \"none\" when nothing fainted, or null for no pick");

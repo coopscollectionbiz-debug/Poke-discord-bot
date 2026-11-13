@@ -76,7 +76,7 @@ export function eventsEmbed(user, now = Date.now()) {
     embed.addFields({ name: `Coming up: ${u.name}`, value: `${effectLines(byId.get(u.id))}\nStarts ${discordTime(u.startAt, "R")} (${discordTime(u.startAt)}), ends ${discordTime(u.endAt)}`.slice(0, 1024) });
   }
   if (v.paidChoice) {
-    embed.setFooter({ text: `Poké Balls and /recruit ${v.paidChoice.on ? "use" : "don't use"} ${v.catchEvents.join(" + ")}. Chat catches, /daily, quests and the weekly pack always do.` });
+    embed.setFooter({ text: `Poké Balls ${v.paidChoice.on ? "use" : "don't use"} ${v.catchEvents.join(" + ")}. Chat catches, /daily and the weekly pack always do.` });
   }
   return embed;
 }

@@ -1372,6 +1372,7 @@ client.on(
       ccChance: MESSAGE_CC_CHANCE,
       ccGain: MESSAGE_CC_GAIN,
     },
+    log: logEvent,
     enqueueSave,
     queueRoleUpdate,
     giveRandomReward: tryGiveRandomReward,
@@ -1695,7 +1696,7 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
 
 // ==========================================================
 // 🎪 Live events (services/liveEventsPlayer.js): what's on, today's prices,
-// and the player's "Use Live event" choice for Poké Balls and /recruit.
+// and the player's "Use Live event" choice for Poké Balls.
 // ==========================================================
 app.get("/api/live-events", (req, res) => {
   const { id } = req.query;
@@ -2110,6 +2111,7 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
     grantTrainer(user, canonicalFile); // also unlocks the tier's Aura
 
     const saveAck = await saveAndAck(trainerData);
+    logEvent("trainer_purchase", id, { file: canonicalFile, tier, cost }); // economy audit 2026-11, D10
 
     return res.json({ ...saveAckFields(saveAck),
       success: true,

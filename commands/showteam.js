@@ -80,7 +80,7 @@ export function manageReply(ownerId, channelId) {
   const token = generateToken(ownerId, channelId);
   const url = `${publicBaseUrl()}/auth/dashboard?id=${encodeURIComponent(ownerId)}&code=${token}`;
   return {
-    content: "Change your Team on the dashboard. This link is just for you and expires in **10 minutes**.",
+    content: "Change your Showcase team on the dashboard. This link is just for you and expires in **10 minutes**.",
     components: [new ActionRowBuilder().addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("Open dashboard").setURL(url))],
     flags: MessageFlags.Ephemeral,
   };

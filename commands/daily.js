@@ -1,5 +1,5 @@
 // ==========================================================
-// /daily — Coop’s Collection (Race-Safe v18.0)
+// /daily — Coop's Collection (Race-Safe v18.0)
 // ==========================================================
 
 import { pokemonSpriteUrl } from "../utils/sprites.js";
@@ -120,7 +120,7 @@ export async function execute(
 
       if (!pick1 || !pick2) {
         return safeReply(interaction, {
-          content: "❌ Daily failed — no Pokémon could be selected.",
+          content: "Daily failed: no Pokémon could be picked. Your daily wasn't used.",
           flags: MessageFlags.Ephemeral
         });
       }

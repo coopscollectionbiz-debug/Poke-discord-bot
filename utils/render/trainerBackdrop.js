@@ -21,6 +21,7 @@
 
 import { createCanvas, ImageData } from "@napi-rs/canvas";
 import { loadAuraArt } from "./auraArt.js";
+import { sheetFrame, BACK_FEET_FROM_BOTTOM } from "../../public/shared/auraArt.js";
 
 // A look is a tier key ("epic" …) or an Aura's art ("art:<id>", ids are case-sensitive). See catalog/auras.js.
 const lookKey = (k) => { const s = String(k ?? ""); return s.startsWith("art:") ? s : s.toLowerCase(); };
@@ -66,15 +67,19 @@ function rand(seed) {
  *                 at `from` and gone by `to` (grid units): the background of
  *                 a whole region (a card half, a playback row)
  * @param floorRow grid row of the trainer's feet; elements stay above it
+ * @param feetRow  art Auras only: grid row of the bottom edge of the trainer's
+ *                 feet, where back.png's feet row goes (public/shared/auraArt.js);
+ *                 omitted: the sheet's bottom sits on floorRow + 2 (older callers)
+ * @param mirror   art Auras only: draw the art mirrored (the opponent's VS half)
  * @param frames   loop length in frames
  * @param spread   wide regions: 8 meteors per loop, each in its own column
  *                 (interleaved order), and 3× the motes and twinkles, spaced
  *                 evenly across the width
  * @returns { frame(f) → canvas (gridW×gridH, RGBA, transparent where empty) } or null
  */
-export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frames, spread = false, variant = null }) {
+export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frames, spread = false, variant = null, feetRow = null, mirror = false }) {
   const art = artOf(lookKey(tier));
-  if (art) return artBackdrop(art, { gridW, gridH, halo, floorRow, frames, variant });
+  if (art) return artBackdrop(art, { gridW, gridH, halo, floorRow, frames, variant, feetRow, mirror });
   const recipe = TIERS[lookKey(tier)];
   if (!recipe) return null;
   const W = gridW, H = gridH, N = frames;
@@ -293,7 +298,7 @@ export function drawTierSky(ctx, tier, rect, { u = 4, clip = null, bands = 6 } =
  * `clip(ctx)` traces the region's shape (a path) when it isn't a rectangle.
  * Returns { drawWash(ctx), draw(ctx, frame) } or null below Epic.
  */
-export function regionBackdrop({ tier, rect, u = 4, occupied, from, to, floor, frames, dil = 2, clip = null, variant = null }) {
+export function regionBackdrop({ tier, rect, u = 4, occupied, from, to, floor, frames, dil = 2, clip = null, variant = null, mirror = false }) {
   const t = lookKey(tier);
   if (!hasBackdrop(t)) return null;
   const gridW = Math.floor(rect.w / u), gridH = Math.floor(rect.h / u);
@@ -312,7 +317,7 @@ export function regionBackdrop({ tier, rect, u = 4, occupied, from, to, floor, f
   }
   const g = (p) => [(p[0] - rect.x) / u, (p[1] - rect.y) / u];
   const bd = createBackdrop({
-    tier: t, gridW, gridH, mask, frames, spread: true, variant,
+    tier: t, gridW, gridH, mask, frames, spread: true, variant, mirror,
     halo: { from: g(from), to: g(to) },
     floorRow: Math.min(gridH - 2, Math.floor((floor - rect.y) / u)),
   });
@@ -340,25 +345,32 @@ export function regionBackdrop({ tier, rect, u = 4, occupied, from, to, floor, f
 }
 
 /**
- * An Aura's art as a backdrop (same shape as the tier backdrops): one frame
- * of its spritesheet per card frame, retimed when the sheet has a different
- * count. The panel art (back) is centred on the trainer with its bottom on
- * the floor; a region's own variant ("row", "vs") fills the region from its
- * bottom-left. Art is drawn behind the trainer, so it ignores the mask.
+ * An Aura's art as a backdrop (same shape as the tier backdrops): aura frame f
+ * (0–23, the 2.4 s card loop) shows sheet frame sheetFrame(f, n), so every
+ * sheet plays once per loop whatever its frame count. The panel art (back) is
+ * centred on the trainer with the trainer's feet on its feet row (`feetRow`;
+ * older callers: its bottom on floorRow + 2); a region's own variant ("row",
+ * "vs") fills the region from its bottom-left. `mirror` flips the art (the
+ * opponent's VS half), placement and motion together, once. Art is drawn
+ * behind the trainer, so it ignores the mask.
  */
-function artBackdrop(art, { gridW, gridH, halo, floorRow, frames, variant }) {
+function artBackdrop(art, { gridW, gridH, halo, floorRow, frames, variant, feetRow = null, mirror = false }) {
   const own = variant && art.layers[variant];
   const layer = own || art.layers.back;
   const cx = halo?.cx ?? gridW / 2;
-  const x = own ? 0 : Math.round(cx - layer.fw / 2);
-  const y = own ? gridH - layer.fh : Math.min(gridH, floorRow + 2) - layer.fh;
+  let x = own ? 0 : Math.round(cx - layer.fw / 2);
+  const y = own ? gridH - layer.fh
+    : Number.isFinite(feetRow) ? Math.round(feetRow) - (layer.fh - BACK_FEET_FROM_BOTTOM)
+      : Math.min(gridH, floorRow + 2) - layer.fh;
+  if (mirror) x = gridW - layer.fw - x; // the mirror image of the same placement
   const made = new Map();
   return {
     frame(f) {
-      const i = Math.floor(((((f % frames) + frames) % frames) * layer.n) / frames);
+      const i = frames === 24 ? sheetFrame(f, layer.n) : Math.floor(((((f % frames) + frames) % frames) * layer.n) / frames);
       if (!made.has(i)) {
-        const c = createCanvas(gridW, gridH);
-        c.getContext("2d").drawImage(layer.sheet, i * layer.fw, 0, layer.fw, layer.fh, x, y, layer.fw, layer.fh);
+        const c = createCanvas(gridW, gridH), g = c.getContext("2d");
+        if (mirror) { g.translate(gridW, 0); g.scale(-1, 1); }
+        g.drawImage(layer.sheet, i * layer.fw, 0, layer.fw, layer.fh, mirror ? gridW - x - layer.fw : x, y, layer.fw, layer.fh);
         made.set(i, c);
       }
       return made.get(i);

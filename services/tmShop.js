@@ -27,8 +27,61 @@ import { isTmEnabled, tmWeeklyCap } from "../config/tmFeatures.js";
 import { trackProgress } from "../progression/achievements.js";
 import { liveEffects } from "./liveEvents.js";
 import { discountedPrice } from "../utils/liveEventRules.js";
+import { getSpecies } from "../utils/battle/data.js";
+import { getTraining } from "../utils/training.js";
+import { learnableMoves } from "./movesets.js";
+import { customCopiesOf, plainCount } from "./ownership.js";
 
 export const MAX_TMS_PER_PURCHASE = 10;
+
+// Team fields → the names players see. Casual and Ranked sort to the top of
+// the learner list; Showcase is shown but not prioritised (owner, 2026-11-13).
+const TEAMS = [["casual", "displayedPokemon"], ["ranked", "battleTeam"], ["showcase", "showcaseTeam"]];
+const PRIORITY_TEAMS = new Set(["casual", "ranked"]);
+
+/**
+ * The player's Pokémon that can learn one TM, for the shop's buy dialog.
+ * One row per species + Variant owned. Rows on the Casual or Ranked team
+ * come first (Casual slot order, then Ranked), then everything else by
+ * Level, then name. `known` = every copy already knows the move.
+ */
+export function tmLearners(user, itemId, { env = process.env } = {}) {
+  if (!isTmEnabled(env)) return fail(403, "TMs aren't available yet.", "disabled");
+  const entry = getCatalogItem(itemId);
+  if (!entry || entry.category !== "tm" || entry.status !== "active") return fail(404, "Unknown TM.", "bad_item");
+  const move = entry.tm.move;
+
+  // First team slot of each species:variant → [teamOrder, slotIndex].
+  const onTeams = new Map();
+  TEAMS.forEach(([team, field], order) => {
+    (Array.isArray(user?.[field]) ? user[field] : []).forEach((s, i) => {
+      const id = Number(typeof s === "object" && s ? s.id : s);
+      if (!Number.isInteger(id)) return;
+      const key = `${id}:${s?.variant === "shiny" ? "shiny" : "normal"}`;
+      const e = onTeams.get(key) ?? { teams: [], rank: null };
+      if (!e.teams.includes(team)) e.teams.push(team);
+      if (PRIORITY_TEAMS.has(team) && e.rank == null) e.rank = order * 100 + i;
+      onTeams.set(key, e);
+    });
+  });
+
+  const rows = [];
+  for (const [sid, counts] of Object.entries(user?.pokemon ?? {})) {
+    const id = Number(sid);
+    if (!canLearnByTm(id, move)) continue;
+    const species = getSpecies(id);
+    if (!species) continue;
+    for (const variant of ["normal", "shiny"]) {
+      if (!(Number(counts?.[variant]) > 0)) continue;
+      const copies = [...(plainCount(user, id, variant) > 0 ? [null] : []), ...customCopiesOf(user, id, variant).map((c) => c.uid)];
+      const known = copies.length > 0 && copies.every((uid) => learnableMoves(user, id, variant, { uid }).some((m) => m.id === move));
+      const t = onTeams.get(`${id}:${variant}`);
+      rows.push({ speciesId: id, name: species.name, variant, level: getTraining(user, id, variant).level, teams: t?.teams ?? [], known, rank: t?.rank ?? null });
+    }
+  }
+  rows.sort((a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity) || b.level - a.level || a.name.localeCompare(b.name) || (a.variant === "shiny") - (b.variant === "shiny"));
+  return { ok: true, item: itemId, learners: rows.map(({ rank, ...r }) => ({ ...r, priority: rank != null })) };
+}
 const fail = (status, error, code, extra = {}) => ({ ok: false, status, error, code, ...extra });
 
 /** Sold TM catalog entries (status active, shop eligible). */
@@ -95,7 +148,7 @@ export function buyTms(user, { item, qty = 1 } = {}, { env = process.env, now = 
   const price = discountedPrice(liveEffects(now.getTime()), "tms", entry.shop.price.cc); // a Live event's discount
   const cost = price * qty;
   const cc = Number(user.cc) || 0;
-  if (cc < cost) return fail(400, `Not enough CC — ${qty > 1 ? `${qty} × ` : ""}${entry.name} costs ${cost.toLocaleString("en-US")} CC.`, "insufficient_cc", { cc });
+  if (cc < cost) return fail(400, `Not enough CC. ${qty > 1 ? `${qty} × ` : ""}${entry.name} costs ${cost.toLocaleString("en-US")} CC.`, "insufficient_cc", { cc });
 
   const granted = grantItem(user, entry.id, qty);
   if (!granted.ok) return fail(400, granted.error ?? "Couldn't add the TM to your bag.", granted.code ?? "grant_refused");

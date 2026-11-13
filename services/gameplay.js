@@ -136,7 +136,7 @@ export function createGameplayHandlers(deps) {
       requestId,
       payloadKey: `capture:${source}`,
       mutate: (user) => {
-        if ((user.cc ?? 0) < cost) return { ok: false, status: 200, success: false, error: `Not enough CC — requires ${cost} CC.` };
+        if ((user.cc ?? 0) < cost) return { ok: false, status: 200, success: false, error: `Not enough CC. This costs ${cost} CC.` };
         // Paid roll: Catch boosts and limits only if the player chose "Use Live event".
         const fx = catchEffectsFor(user, { paid: true, fx: fxNow });
         const reward = selectRandomPokemonForUser(allPokemon, user, source, { paid: true, fx });

@@ -19,7 +19,6 @@ const G = await import("../config/generations.js");
 const C = await import("../utils/speciesCatalog.js");
 const { getAllPokemon, getAcquirablePokemon } = await import("../utils/dataLoader.js");
 const { selectRandomPokemonForUser } = await import("../utils/weightedRandom.js");
-const { recruitPool } = await import("../commands/recruit.js");
 const { createGameplayHandlers } = await import("../services/gameplay.js");
 const { lockUser } = await import("../utils/userLocks.js");
 const { saveAndAck } = await import("../utils/saveManager.js");
@@ -45,7 +44,6 @@ assertTrue(!C.isAcquirable(700) && C.isAcquirable(133) && !C.isAcquirable("52:ga
 section("Every acquisition pool excludes disabled generations (default)");
 const acq = await getAcquirablePokemon();
 assertEqual(acq.length, 649, "getAcquirablePokemon(): 649 species");
-assertTrue(recruitPool(all).every((p) => p.id <= 649) && recruitPool(all).length === 649, "/recruit and /quest pool");
 let leaked = 0;
 for (const ball of ["pokeball", "greatball", "ultraball"]) {
   for (let i = 0; i < 4000; i++) if (selectRandomPokemonForUser(all, { tp: 500000 }, ball).id > 649) leaked++;
@@ -58,8 +56,6 @@ const SITES = [
   ["bot_final.js", /const allPokemon = await getAcquirablePokemon\(\);[\s\S]{0,200}selectRandomPokemonForUser\(allPokemon/, "chat catch"],
   ["commands/daily.js", /const allPokemon = await getAcquirablePokemon\(\);/, "/daily"],
   ["commands/shop.js", /const allPokemon = await getAcquirablePokemon\(\);[\s\S]{0,600}pickPokemon/, "shop starter pack"],
-  ["commands/recruit.js", /recruitPool = \(allPokemon\) => acquirablePokemon\(allPokemon\)/, "/recruit"],
-  ["commands/quest.js", /recruitPool\(await getPokemonCached\(\)\)/, "/quest"],
   ["services/gameplay.js", /acquirablePokemon\(await loadAllPokemon\(\)\)/, "dashboard capture"],
   ["services/gameplay.js", /acquirablePokemon\(await loadPokemonCached\(\)\)/, "weekly pack"],
   ["services/gameplay.js", /checkEvolutionRequirements\(/, "evolution"],
@@ -67,7 +63,7 @@ const SITES = [
   ["commands/trainercard.js", /filter\(\(g\) => !g\.gen \|\| isGenerationLive\(g\.gen\)\)/, "starter selection"],
 ];
 for (const [file, re, label] of SITES) assertTrue(re.test(src(file)), `${label} (${file}) draws from the generation-gated pool`);
-const callers = ["bot_final.js", "commands/daily.js", "commands/shop.js", "commands/recruit.js", "commands/quest.js", "services/gameplay.js", "utils/broadcastReward.js", "commands/trainercard.js"]
+const callers = ["bot_final.js", "commands/daily.js", "commands/shop.js", "services/gameplay.js", "utils/broadcastReward.js", "commands/trainercard.js"]
   .filter((f) => /selectRandomPokemonForUser\(\s*(await\s+)?getAllPokemon/.test(src(f)));
 assertEqual(callers, [], "no call site feeds the raw catalogue straight into the selector");
 
@@ -132,7 +128,6 @@ assertTrue(alola.length === 88 && alola.every((p) => p.generation === 7), "all 8
 let sawAlola = false;
 for (let i = 0; i < 6000 && !sawAlola; i++) if (selectRandomPokemonForUser(all, { tp: 0 }).generation === 7) sawAlola = true;
 assertTrue(sawAlola, "Alola species appear in weighted draws once enabled");
-assertTrue(recruitPool(all).length === 649 + 88, "/recruit pool grows by 88");
 
 section("Disabling never removes owned Pokémon");
 {

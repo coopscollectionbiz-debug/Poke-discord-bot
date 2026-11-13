@@ -18,6 +18,8 @@ import { fightEncounter } from "../utils/encounter/runEncounter.js";
 import { rollTrainer } from "../utils/encounter/generate.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
 import { createNewUser } from "../utils/userSchema.js";
+// Wager battles need 25 registered species on both sides (economy audit 2026-11, D4).
+const dex25 = (u) => { u.pokedex = { ...Object.fromEntries(Array.from({ length: 25 }, (_, i) => [i + 1, 1])), ...(u.pokedex ?? {}) }; return u; };
 
 const ROOT = process.env.TRAINERDATA_DIR || ".";
 let dirN = 0;
@@ -140,6 +142,7 @@ section("Builders: Battles");
   assertEqual(rr.fights[0].members[0][0].level, 50, "ranked members recorded at the Lv 50 they fought at");
 
   td.A.pendingWager = null;
+  dex25(td.A); dex25(td.B);
   const wager = runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "wager", stake: 300, seed: 9, now: D });
   const wr = battleRecord(wager, {}, td, { now: D });
   const win = wager.winnerId, lose = wager.loserId;

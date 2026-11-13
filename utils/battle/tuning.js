@@ -54,7 +54,13 @@ export const ELO = { start: 1000, k: 32 };
 // record when it changes (owner decision: all ratings reset at launch).
 export const RANKED = { level: 50, season: 1 };
 export const CAPS = { perDay: 10, perOpponent: 3 };
-export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000 };
+// minAccountDays / minDex (economy audit 2026-11, D4): both players' Discord
+// accounts must be this old, and both must have this many species
+// registered, since a Wager is the only way CC moves between players.
+export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000, minAccountDays: 7, minDex: 25 };
+// Rematch requests (utils/battle/rematch.js): how long the Defender has to
+// answer (owner decision 2026-11-12).
+export const REMATCH = { windowMs: 5 * 60 * 1000 };
 // Challenges (/challenge): attempts per UTC day, share of CC lost on a loss,
 // and how long the private preview's buttons work.
 // pickMs: how long a Revive pick stays open. staleRunMs: an Elite Four run

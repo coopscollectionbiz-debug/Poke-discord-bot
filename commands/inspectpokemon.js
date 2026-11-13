@@ -28,7 +28,7 @@ const statLine = (s) => `HP ${s.hp} · Atk ${s.atk} · Def ${s.def} · SpA ${s.s
 const planAbility = (user, speciesId) => (isFullSimEnabled() ? pickAbility(speciesId, getPlan(user, "display")) ?? null : null);
 
 // Level, stats at that Level, and moves for each variant the player owns
-// (the Display team's chosen moveset, else the automatic one; the Battle
+// (the Casual team's chosen moveset, else the automatic one; the Ranked
 // team's too when it has its own); base stats when they own none.
 export function battleInfo(user, speciesId) {
   const species = getSpecies(speciesId);
@@ -41,7 +41,7 @@ export function battleInfo(user, speciesId) {
     const battle = chosenMoves(user, "battle", speciesId, variant);
     const moves = names(display ?? defaultMoves(user, { id: speciesId, variant }, level));
     const label = variant === "shiny" ? `✨ shiny Lv ${level}` : `Lv ${level}`;
-    const battleLine = battle ? `\nBattle team moves: ${names(battle)}` : "";
+    const battleLine = battle ? `\nRanked team moves: ${names(battle)}` : "";
     const ability = planAbility(user, speciesId);
     return `**Your ${label}** · ${statLine(computeStats(species.baseStats, level))}\nMoves: ${moves}${battleLine}${ability ? `\nAbility: ${ability}` : ""}`;
   }).join("\n\n");
@@ -50,7 +50,7 @@ export function battleInfo(user, speciesId) {
 // Rarity, type, and region, with the field names pokemonData uses.
 export function infoLines(pokemon) {
   return (
-    `**Rarity:** ${String(pokemon.tier ?? "unknown").toUpperCase()}\n` +
+    `**Tier:** ${String(pokemon.tier ?? "unknown").toUpperCase()}\n` +
     `**Type:** ${formatTypesLine(pokemon.types)}\n` +
     `**Region:** ${pokemon.region ?? "Unknown"}\n`
   );
@@ -103,7 +103,7 @@ export function inspectSlots(user, pokemon) {
   const id = Number(pokemon.id);
   const owned = ["normal", "shiny"].filter((v) => (user?.pokemon?.[id]?.[v] ?? 0) > 0);
   if (owned.length) {
-    // The card shows the Display team's chosen moves (displays use the Display team), else the automatic ones.
+    // The card shows the Casual team's chosen moves, else the automatic ones.
     return owned.map((variant) => {
       const member = { speciesId: id, variant, level: getTraining(user, id, variant).level };
       // Full sim: with none picked, the moves recorded at cutover (the same as automatic with it off).

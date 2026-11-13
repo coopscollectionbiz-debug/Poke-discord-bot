@@ -25,7 +25,7 @@ import { encodeGif } from "./gif.js";
 import { createRenderGate } from "./renderGate.js";
 import { getRenderPool, renderOptions } from "./renderPool.js";
 import { shinyBackdrop, shinyFxEnabled } from "./shinyBackdrop.js";
-import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS, MAX_GIF_BYTES } from "./spriteLoops.js";
+import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS, MAX_GIF_BYTES, SINGLE_CLOCK_CAP_MS } from "./spriteLoops.js";
 
 export const FRAMES = 24, DELAY_MS = 100;
 // Discord takes up to 10 MB a file; past this, the card falls back (see above).
@@ -61,11 +61,14 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
     /**
      * A sprite with pose frames (sprite-like objects of the same size) and
      * `poseAt(frame, totalFrames)` → pose index. Still cards draw pose 0.
+     * `opts.light(sprite, frame)`: the Aura's trainer lighting
+     * (utils/render/auraArt.js trainerLight), applied to the current pose.
      */
     placePosed(ctx, poses, poseAt, cx, floorY, boxW, boxH, opts = {}) {
-      // One pose (no idle, or TRAINERS_ANIMATED=0) is just a static sprite.
-      if (!animate || !(poses?.length > 1)) return drawSprite(ctx, poses?.[0], cx, floorY, boxW, boxH, opts);
-      posed.push({ poses, poseAt, cx, floorY, boxW, boxH, opts });
+      const { light = null, ...draw } = opts;
+      // One pose (no idle, or TRAINERS_ANIMATED=0) is just a static sprite, unless its lighting animates.
+      if (!animate || !(poses?.length > 1 || light)) return drawSprite(ctx, light && poses?.[0] ? light(poses[0], 0) : poses?.[0], cx, floorY, boxW, boxH, draw);
+      posed.push({ poses, poseAt: poses.length > 1 ? poseAt : () => 0, cx, floorY, boxW, boxH, opts: draw, light });
       return null;
     },
     /**
@@ -76,7 +79,10 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
     async output(canvas, { overlay = null } = {}) {
       const ctx = canvas.getContext("2d");
       const drawAll = (frameOf) => placed.forEach((p, i) => drawSprite(ctx, p.sprite, p.cx, p.floorY, p.boxW, p.boxH, { ...p.opts, frame: frameOf(i) }));
-      const drawPosed = (f) => posed.forEach((p) => drawSprite(ctx, p.poses[p.poseAt(f, FRAMES)] ?? p.poses[0], p.cx, p.floorY, p.boxW, p.boxH, p.opts));
+      const drawPosed = (f) => posed.forEach((p) => {
+        const pose = p.poses[p.poseAt(f, FRAMES)] ?? p.poses[0];
+        drawSprite(ctx, p.light ? p.light(pose, f) : pose, p.cx, p.floorY, p.boxW, p.boxH, p.opts);
+      });
       if (!placed.length && !layers.length && !posed.length) return canvas.toBuffer("image/png");
       const anims = await Promise.all(placed.map((p) => loadAnimatedSprite(p.who.id, p.who.variant)));
       const players = anims.map((a) => (a && a.gif.numFrames() > 1 ? spritePlayer(a) : null));
@@ -109,7 +115,7 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
       // The fitted loop. Anything on the trainers' clock keeps it whole.
       const plans = players.map((p, i) => (p ? loopPlan(anims[i]) : null));
       const trainerClock = layers.length > 0 || posed.length > 0 || backdrops.some(Boolean);
-      const { L, fit } = fitLoop(plans.map((p) => p?.period ?? null), { trainerClock });
+      const { L, fit } = fitLoop(plans.map((p) => p?.period ?? null), { trainerClock, singleCapMs: SINGLE_CLOCK_CAP_MS });
       const total = Math.max(1, Math.round(L / STEP_MS));
       const gif = await encodeGif(canvas, (f) => {
         const t = f * STEP_MS, f100 = Math.floor(t / DELAY_MS) % FRAMES;

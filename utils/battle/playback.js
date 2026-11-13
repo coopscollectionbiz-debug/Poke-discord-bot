@@ -118,9 +118,9 @@ export const battleImageName = (step) => (typeof step === "number" ? `battle-t${
 function header(outcome) {
   const [c, d] = outcome.sides.map((s) => `<@${s.userId}>`);
   const intro = outcome.mode === "wager"
-    ? `⚔️ ${c} vs ${d} — Wager battle for ${outcome.stake} CC each! Battle teams at Lv 50.`
+    ? `⚔️ ${c} vs ${d}: Wager battle for ${outcome.stake} CC each! Ranked teams at Lv 50.`
     : outcome.mode === "ranked"
-      ? `⚔️ ${c} challenged ${d} to a ranked battle! Battle teams at Lv 50.`
+      ? `⚔️ ${c} challenged ${d} to a ranked battle! Ranked teams at Lv 50.`
       : `⚔️ ${c} challenged ${d}!`;
   if (!outcome.surge) return intro;
   const underdog = `<@${outcome.sides[outcome.surge.side].userId}>`;

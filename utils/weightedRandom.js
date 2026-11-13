@@ -1,5 +1,5 @@
 // ==========================================================
-// weightedRandom.js — Coop’s Collection (Gacha-Aligned Version)
+// weightedRandom.js — Coop's Collection (Gacha-Aligned Version)
 // Tier-First · Rank-Aware · Ball-Aware · Fractional Safe
 // ==========================================================
 
@@ -157,7 +157,7 @@ function filterPokemonPoolByBall(list, ballType) {
 /**
  * One random catch roll. Live events (services/liveEvents.js): Catch limits
  * narrow the pool and Catch boosts reweight it. Free rolls always follow
- * them; paid rolls (`paid: true`: Poké Balls, /recruit) only when the player
+ * them; paid rolls (`paid: true`: Poké Balls) only when the player
  * opted in. Returns null when a paid, opted-in ball has nothing it may give.
  *
  * @param {{ paid?: boolean, fx?: object }} [opts] fx: precomputed catch effects

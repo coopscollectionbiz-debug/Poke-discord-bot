@@ -11,7 +11,7 @@
 
 import { toast, showActionError, showExpired, pageHref } from "/public/shared/shell.js";
 
-const LABEL = { display: "Display team", battle: "Battle team" };
+const LABEL = { display: "Casual team", battle: "Ranked team" };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const fold = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const newRequestId = () => (crypto.randomUUID ? crypto.randomUUID() : `r${Date.now()}${Math.random().toString(16).slice(2, 10)}`);
@@ -63,14 +63,14 @@ async function postJson(url, body) {
 /** Claim the eight free starter unlocks (idempotent server-side). */
 export async function claimStarter(userId) {
   const { res, data } = await postJson("/api/held-items/claim-starter", { id: userId, requestId: newRequestId() });
-  if (!res.ok || !data.success) throw new Error(data.error || `Couldn’t unlock your starter items (${res.status}).`);
+  if (!res.ok || !data.success) throw new Error(data.error || `Couldn't unlock your starter items (${res.status}).`);
   return data;
 }
 
 /** Buy one unlock (used by the shop page too). */
 export async function buyHeldItem(userId, itemId) {
   const { res, data } = await postJson("/api/held-items/buy", { id: userId, itemId, requestId: newRequestId() });
-  if (!res.ok || !data.success) throw Object.assign(new Error(data.error || `Couldn’t buy that item (${res.status}).`), { code: data.code });
+  if (!res.ok || !data.success) throw Object.assign(new Error(data.error || `Couldn't buy that item (${res.status}).`), { code: data.code });
   return data;
 }
 
@@ -116,7 +116,7 @@ export function openItemPicker({ userId, team, s, name, getHeld, onChange, nameO
         : `<button type="button" class="cc-btn hi-act" data-hi="askmove" data-item="${esc(it.id)}"${ui.busy ? " disabled" : ""}>Move here…</button>`)
       : st.kind === "here" ? `<span class="hi-state hi-state--here">✓ Equipped</span>`
       : st.kind === "shop" ? `<a class="cc-btn hi-act" href="${pageHref("/public/dashboardshop")}#held-items">Shop</a>`
-      : `<span class="hi-state hi-state--locked">🔒 Can’t hold</span>`;
+      : `<span class="hi-state hi-state--locked">🔒 Can't hold</span>`;
     const confirm = ui.confirmMove === it.id && st.holder
       ? `<p class="hi-note">${esc(nameOf(st.holder.id))} will hold nothing on your ${LABEL[team]}. Your other team is not changed.</p>` : "";
     const warn = warningFor?.(it.id);
@@ -144,7 +144,7 @@ export function openItemPicker({ userId, team, s, name, getHeld, onChange, nameO
         const rank = (it) => ({ here: 0, free: 1, move: 2, shop: 3, locked: 4 })[statusOf(it).kind];
         return rank(a) - rank(b) || a.name.localeCompare(b.name);
       });
-    return list.length ? list.map(row).join("") : `<li class="hi-empty">No items match. ${ui.ownedOnly ? "Turn off “Only my unlocks” to see every item." : ""}</li>`;
+    return list.length ? list.map(row).join("") : `<li class="hi-empty">No items match. ${ui.ownedOnly ? "Turn off \"Only my unlocks\" to see every item." : ""}</li>`;
   }
   // Searching only refreshes the list, so the search box keeps its text,
   // caret and on-screen keyboard.
@@ -160,7 +160,7 @@ export function openItemPicker({ userId, team, s, name, getHeld, onChange, nameO
     const ownedCount = held.items.filter((i) => i.owned).length;
     const keepScroll = d.scrollTop; // a re-render (busy state, confirm step) must not jump to the top
     d.innerHTML = `<div class="tm-moves-head">
-        <h2 class="tm-h2" id="hiTitle">${esc(name)}’s item <small class="hi-sub">${LABEL[team]}</small></h2>
+        <h2 class="tm-h2" id="hiTitle">${esc(name)}'s item <small class="hi-sub">${LABEL[team]}</small></h2>
         <button type="button" class="tm-ib" data-hi="close" aria-label="Close">✕</button>
       </div>
       <div class="hi-current">
@@ -196,11 +196,11 @@ export function openItemPicker({ userId, team, s, name, getHeld, onChange, nameO
       if (data.rev != null || data.teams) onChange(data);
       if (res.status === 409 && data.code === "stale") { toast(data.error, { tone: "error" }); return; }
       if (res.status === 409 && data.code === "item_clause") { ui.confirmMove = itemId; toast(data.error, { tone: "error" }); return; }
-      if (!res.ok || !data.success) throw new Error(data.error || `Couldn’t change the item (${res.status}).`);
+      if (!res.ok || !data.success) throw new Error(data.error || `Couldn't change the item (${res.status}).`);
       const it = itemById(itemId);
       const old = itemById(before);
       const c = data.change ?? {};
-      if (!itemId) toast(`${name} isn’t holding anything now.`, { tone: "success" });
+      if (!itemId) toast(`${name} isn't holding anything now.`, { tone: "success" });
       else {
         const extra = c.from ? ` ${nameOf(Number(c.from.split(":")[0]))} no longer holds it on this team.` : old && old.id !== itemId ? ` ${old.name} is free again.` : "";
         toast(`${name} is holding ${it?.name ?? itemId} on your ${LABEL[team]}.${extra}`, { tone: "success" });
@@ -208,7 +208,7 @@ export function openItemPicker({ userId, team, s, name, getHeld, onChange, nameO
       if (data.saveDelayed || data.saved === false) toast(data.notice || "Saved with a delay. Your change is kept and will be written shortly.");
       ui.confirmMove = null;
     } catch (err) {
-      if (!err.silent) showActionError(err, "Couldn’t change the item");
+      if (!err.silent) showActionError(err, "Couldn't change the item");
     } finally {
       ui.busy = false;
       if (d.open) render();

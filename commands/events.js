@@ -1,6 +1,6 @@
 // ==========================================================
 // /events — what Live events are on and coming up, and the player's
-// "Use Live event" choice for Poké Balls and /recruit while a Catch boost
+// "Use Live event" choice for Poké Balls while a Catch boost
 // or Catch limit runs (docs/design/live-events.md).
 // ==========================================================
 
@@ -18,7 +18,7 @@ const buttons = (choice) =>
     ? [new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(TOGGLE)
-          .setLabel(choice.on ? "Stop using it for Poké Balls and /recruit" : "Use it for Poké Balls and /recruit")
+          .setLabel(choice.on ? "Stop using it for Poké Balls" : "Use it for Poké Balls")
           .setStyle(choice.on ? ButtonStyle.Secondary : ButtonStyle.Primary),
       )]
     : [];

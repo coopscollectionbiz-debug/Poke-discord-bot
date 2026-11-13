@@ -72,7 +72,7 @@ function showSessionExpired() {
   const grid = document.getElementById("trainerGrid");
   if (grid) grid.innerHTML = "";
 
-  // Disable controls so they don’t spam calls
+  // Disable controls so they don't spam calls
   const search = document.getElementById("search");
   const ownedToggle = document.getElementById("ownedToggle");
   const unownedToggle = document.getElementById("unownedToggle");
@@ -155,7 +155,7 @@ async function loadData() {
     const grid = document.getElementById("trainerGrid");
     if (grid) {
       grid.innerHTML =
-        "<p class='error'>Couldn’t load your Trainers. Refresh the page, or run /dashboard in Discord for a new link.</p>";
+        "<p class='error'>Couldn't load your Trainers. Refresh the page, or run /dashboard in Discord for a new link.</p>";
     }
   }
 }

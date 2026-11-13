@@ -82,7 +82,7 @@ export default {
           `[Open the admin dashboard](${dashboardUrl})\n\nThe link works for 10 minutes. Once open, the session lasts 30 minutes after your last action, up to 4 hours.`
         )
         .setColor(0xef4444)
-        .setFooter({ text: "Coop's Collection — Admin Access" })
+        .setFooter({ text: "Coop's Collection · Admin access" })
         .setTimestamp();
 
       await interaction.reply({

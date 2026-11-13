@@ -67,7 +67,7 @@ export function officialMethodText(target, nameOf = (id) => `#${id}`) {
  */
 export function checkEvolutionRequirements(user, base, target, variant, { uid = null } = {}) {
   if (!isAcquirable(target.id)) {
-    return { ok: false, error: `${target.name} isn't available yet — Generation ${target.generation} hasn't been released.` };
+    return { ok: false, error: `${target.name} isn't available yet. Generation ${target.generation} hasn't been released.` };
   }
   return { ok: true };
 }

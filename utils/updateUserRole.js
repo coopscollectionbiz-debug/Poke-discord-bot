@@ -83,7 +83,7 @@ export async function updateUserRole(member, tp, contextChannel = null) {
 
     // Quick permission/managed checks (prevents pointless REST)
     if (!member.manageable) {
-      // Bot can’t edit this member (role hierarchy)
+      // Bot can't edit this member (role hierarchy)
       return;
     }
     const me = guild.members.me;
@@ -112,7 +112,7 @@ export async function updateUserRole(member, tp, contextChannel = null) {
           `⚠️ Missing rank role for "${baseRank}" (${hasFemale ? "female" : "male"}). ` +
           `Check role names exactly match: "${baseRank}" and/or "${baseRank} (F)".`
         );
-        // Don’t keep trying every flush — wait 10 minutes before reattempting
+        // Don't keep trying every flush — wait 10 minutes before reattempting
         roleSetCooldown.set(cdKey, now + 10 * 60_000);
         return;
       }
@@ -134,7 +134,7 @@ export async function updateUserRole(member, tp, contextChannel = null) {
       const code = e?.code;
       const status = e?.status;
 
-      // If we’re rate limited, back off for retry_after (or 2 minutes fallback)
+      // If we're rate limited, back off for retry_after (or 2 minutes fallback)
       if (status === 429 || code === 429) {
         const raMs = extractRetryAfterMs(e) ?? 120_000;
         console.warn(`⏳ Rate limited on roles.set for ${member.id}. Backing off ${Math.round(raMs / 1000)}s.`);
@@ -189,7 +189,7 @@ export async function updateUserRole(member, tp, contextChannel = null) {
         .setTimestamp();
 
       await contextChannel.send({ embeds: [embed] }).catch((e) => {
-        // Don’t treat send failures as fatal
+        // Don't treat send failures as fatal
         console.warn("⚠️ promotion embed send failed:", e?.message || e);
       });
     }

@@ -12,7 +12,7 @@ import { openTeachDialog } from "/public/shared/teachTm.js";
 import { moveMeta } from "/public/shared/moveMeta.js";
 
 const MAX = 4;
-const LABEL = { display: "Display team", battle: "Battle team" };
+const LABEL = { display: "Casual team", battle: "Ranked team" };
 const OTHER = { display: "battle", battle: "display" };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
@@ -42,7 +42,7 @@ async function postMoveset(userId, team, s, moves) {
   let body = {};
   try { body = await res.json(); } catch { /* non-JSON */ }
   if (res.status === 403) { showExpired(); throw Object.assign(new Error("expired"), { silent: true }); }
-  if (!res.ok || !body.success) throw new Error(body.error || `Couldn’t save the moves (${res.status}).`);
+  if (!res.ok || !body.success) throw new Error(body.error || `Couldn't save the moves (${res.status}).`);
   return body;
 }
 
@@ -61,14 +61,14 @@ export async function openMovesEditor({ userId, team, s, name, suggested = [], o
     const res = await fetch(`/api/pokemon/detail?${new URLSearchParams({ id: userId, species: s.id })}`, { credentials: "same-origin" });
     if (res.status === 403) { dialog.close(); return showExpired(); }
     d = await res.json();
-    if (!res.ok) throw new Error(d.error || "Couldn’t load the moves.");
+    if (!res.ok) throw new Error(d.error || "Couldn't load the moves.");
   } catch (err) {
-    dialog.innerHTML = `<div class="tm-moves-head"><h2 id="movesTitle">Couldn’t load the moves</h2><button type="button" class="tm-ib" data-close aria-label="Close">✕</button></div><p class="tm-sub" style="padding:0 16px 16px">${esc(err.message)}</p>`;
+    dialog.innerHTML = `<div class="tm-moves-head"><h2 id="movesTitle">Couldn't load the moves</h2><button type="button" class="tm-ib" data-close aria-label="Close">✕</button></div><p class="tm-sub" style="padding:0 16px 16px">${esc(err.message)}</p>`;
     dialog.querySelector("[data-close]").onclick = () => dialog.close();
     return;
   }
   const line = d.copies?.[s.variant];
-  if (!line) { dialog.close(); return toast("You don’t own that copy any more."); }
+  if (!line) { dialog.close(); return toast("You don't own that copy any more."); }
   // Every copy is its own Pokémon (docs/adr/0001): the slot's copy has its
   // own Level, learnable moves and moveset per team. A trained copy also
   // lists its TM moves in the note below.
@@ -89,7 +89,7 @@ export async function openMovesEditor({ userId, team, s, name, suggested = [], o
     const full = picked.length >= MAX;
     dialog.innerHTML = `
       <div class="tm-moves-head">
-        <div><p class="cc-eyebrow">${esc(LABEL[team])} · Lv ${copy.level}</p><h2 id="movesTitle">${esc(name)}’s moves</h2>
+        <div><p class="cc-eyebrow">${esc(LABEL[team])} · Lv ${copy.level}</p><h2 id="movesTitle">${esc(name)}'s moves</h2>
           <p class="tm-sub">Pick up to 4 moves it has learned. ${team === "battle" ? "Ranked battles are at Lv 50, but it only knows moves learned by its real Level." : "Used in casual (open) battles."}</p></div>
         <button type="button" class="tm-ib" data-close aria-label="Close">✕</button>
       </div>
@@ -134,7 +134,7 @@ export async function openMovesEditor({ userId, team, s, name, suggested = [], o
     if (e.target.closest("[data-copy]")) {
       picked = other.map((m) => m.id).filter((id) => copy.learnable.some((l) => l.id === id)).slice(0, MAX);
       draw();
-      toast(`Copied the ${LABEL[OTHER[team]]}’s moves. Save to keep them.`);
+      toast(`Copied the ${LABEL[OTHER[team]]}'s moves. Save to keep them.`);
       return;
     }
     if (e.target.closest("[data-auto]") || e.target.closest("[data-save]")) {
@@ -148,11 +148,11 @@ export async function openMovesEditor({ userId, team, s, name, suggested = [], o
         // Success only after the server confirmed; "saved with a delay" when
         // the change is kept in memory but not on disk yet.
         if (body.saved === false) toast(body.saveNotice || "Saved with a delay. Your change is kept and will be written shortly.");
-        else toast(clearing ? `${name} uses its automatic moves on your ${LABEL[team]}.` : `${name}’s moves saved for your ${LABEL[team]}.`, { tone: "success" });
+        else toast(clearing ? `${name} uses its automatic moves on your ${LABEL[team]}.` : `${name}'s moves saved for your ${LABEL[team]}.`, { tone: "success" });
         onSaved?.();
       } catch (err) {
         setBusy(false);
-        if (!err.silent) showActionError(err, "Couldn’t save the moves");
+        if (!err.silent) showActionError(err, "Couldn't save the moves");
       }
     }
   };

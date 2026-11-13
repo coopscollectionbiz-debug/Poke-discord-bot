@@ -128,7 +128,7 @@ export default {
       );
 
       const embed = createSuccessEmbed(
-        "🏪 Coop’s Collection PokéMart (Admin)",
+        "🏪 Coop's Collection PokéMart (Admin)",
         "Select an item to grant or test."
       )
         .setThumbnail(POKEMART_IMG)
@@ -166,7 +166,7 @@ export default {
 
       collector.on("collect", async (i) => {
         if (i.user.id !== userId)
-          return safeInteractionReply(i, { content: "❌ This shop isn’t yours.", flags: MessageFlags.Ephemeral });
+          return safeInteractionReply(i, { content: "❌ This shop isn't yours.", flags: MessageFlags.Ephemeral });
 
         const item = SHOP_ITEMS.find((x) => x.id === i.values[0]);
         if (!item)

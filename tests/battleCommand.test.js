@@ -8,12 +8,14 @@
 
 import { MessageFlags } from "discord.js";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { execute } from "../commands/battle.js";
+import { execute, replayThenExp } from "../commands/battle.js";
+import { getBattleRecord, utcDay } from "../utils/battle/rewards.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { grantCatch } from "../utils/training.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { refundAllPending } from "../utils/battle/wager.js";
+import { blockRematch, isRematchBlocked } from "../utils/battle/rematch.js";
 import { PLAYBACK } from "../utils/battle/tuning.js";
 import { GifReader } from "omggif";
 import { portraitBox, FRAME_WIDTH } from "../utils/battle/render.js";
@@ -40,6 +42,8 @@ const trainer = (id) => {
   for (const id of FULL) grantCatch(u, id, "normal", () => 0.5);
   u.displayedPokemon = [{ id: 25, variant: "normal" }];
   u.battleTeam = FULL.map((id) => ({ id, variant: "normal" })); // wagers use the Battle team (full: 6)
+  // 25 registered species: the Wager Pokédex gate (economy audit 2026-11, D4).
+  for (let n = 1; n <= 25; n++) u.pokedex[n] ??= 1;
   return u;
 };
 
@@ -107,6 +111,24 @@ function harness({ sendFails = false, perms = true, offeredReplyFails = false, f
 }
 
 const replaceRecord = (t, id) => ensureUserInitialized(id, id, t.trainerData, null); // e.g. /daily or a dashboard save
+
+section("The battle channel");
+{
+  // CASUAL_BATTLE_CHANNEL_ID keeps casual /battle in one channel; unset, it works anywhere (every other section).
+  process.env.CASUAL_BATTLE_CHANNEL_ID = "elsewhere";
+  const t = harness();
+  await t.run("A", "B");
+  assertEqual(t.log.replies, ["Casual battles happen in <#elsewhere>. Ranked and wager battles work anywhere."], "a casual battle outside it is refused privately");
+  assertEqual([t.log.messages.length, t.log.edits.length, t.trainerData.A.battles], [0, 0, undefined], "nothing posted or counted");
+  const w = harness();
+  await w.run("A", "B", 50);
+  assertTrue(w.log.replies.length === 0 && w.log.messages.length === 1, "a wager offer still posts anywhere");
+  process.env.CASUAL_BATTLE_CHANNEL_ID = "chan";
+  const home = harness();
+  await home.run("A", "B");
+  assertTrue(home.log.edits[0]?.startsWith("⚔️ Your battle is starting below."), "in the battle channel, the battle runs");
+  delete process.env.CASUAL_BATTLE_CHANNEL_ID;
+}
 
 section("Accept after the Challenger's record was replaced");
 {
@@ -241,6 +263,145 @@ section("Private EXP messages");
   assertEqual(late.log.followUps.map((f) => f.userId), ["B"], "the Defender still gets theirs");
 }
 
+section("Casual battle past the Battle cap");
+{
+  const t = harness();
+  getBattleRecord(t.trainerData.A, utcDay(new Date())).started = 10;
+  await t.run("A", "B");
+  assertEqual(t.log.replies, [], "it isn't refused");
+  assertEqual(t.log.edits, ["⚔️ Your battle is starting below. You've used all 10 battles for today, so this one earns no EXP."],
+    "the Challenger is told it earns no EXP, and why");
+  await until(() => t.log.messages[0]?.edits.at(-1)?.embeds);
+  assertEqual(t.trainerData.A.battle.started, 10, "it uses no battle");
+
+  // The EXP card would index outcome.exp[challengerId]; past the cap there is none to send.
+  const sent = [];
+  const interaction = { channel: {}, editReply: async () => {} };
+  const outcome = { overCap: "daily", exp: {}, sides: [{ userId: "A" }, { userId: "B" }] };
+  await replayThenExp(interaction, outcome, "A", {}, t.trainerData, { play: async () => {}, exp: async (...a) => { sent.push(a); } });
+  assertEqual(sent.length, 0, "no EXP card is sent");
+}
+
+// A's 4th casual battle against B today needs B to accept a Rematch request.
+const today = () => utcDay(new Date());
+const atLimit = (t, n = 3) => { getBattleRecord(t.trainerData.A, today()).vs.B = n; };
+const requestNonce = (t) => t.trainerData.A.rematchRequests?.B?.nonce;
+const SENT = "Rematch request sent. If <@B> declines or doesn't answer in 5 minutes, you can't ask again until midnight UTC or until they challenge you.";
+const BLOCKED = "<@B> didn't accept your last rematch request. You can ask again after midnight UTC, or once they challenge you.";
+
+section("Rematch request: posted, then accepted");
+{
+  const t = harness();
+  atLimit(t);
+  await t.run("A", "B");
+  assertEqual([t.log.replies, t.log.edits], [[], [SENT]], "the Challenger hears what a decline or no answer means");
+  const [request] = t.log.messages;
+  assertEqual(request.opts.content, "⚔️ <@A> asks <@B> for a rematch! They've battled you 3 times today, so no more EXP for them. The request expires in 5 minutes.",
+    "a channel message mentions the Defender");
+  const nonce = requestNonce(t);
+  assertEqual(request.opts.components[0].components.map((b) => b.data.custom_id), [`rematch_accept:${nonce}`, `rematch_decline:${nonce}`],
+    "Accept and Decline carry the request's nonce");
+  assertEqual(t.trainerData.A.rematchRequests.B.messageId, "m0", "the message is saved for restart cleanup");
+
+  const stranger = t.button("A", `rematch_accept:${nonce}`);
+  await t.collectors[0].h.collect(stranger);
+  assertEqual([stranger.replies, t.log.messages.length], [["This rematch request isn't for you."], 1], "only the Defender can answer");
+
+  await replaceRecord(t, "A"); // e.g. /daily or a dashboard save
+  await t.collectors[0].h.collect(t.button("B", `rematch_accept:${nonce}`));
+  assertEqual(request.edits.at(-1), { content: "✅ <@B> accepted! The battle is below.", components: [] }, "the request says it was accepted");
+  assertTrue(t.log.messages[1]?.edits.at(-1)?.embeds, "the replay plays below it");
+  assertEqual([t.trainerData.A.rematchRequests, t.trainerData.A.battle.vs.B], [undefined, 4], "the live record's request is settled and the battle counts vs B");
+  assertEqual(t.log.followUps, [], "it earns no EXP, so no EXP card");
+  assertTrue(!isRematchBlocked(t.trainerData.A, "B", today()), "accepting blocks nobody");
+
+  const late = t.button("B", `rematch_decline:${nonce}`);
+  await t.collectors[0].h.collect(late);
+  assertEqual(late.replies, ["This rematch request is no longer open."], "a second click gets a private note");
+  assertTrue(!isRematchBlocked(t.trainerData.A, "B", today()) && request.edits.length === 1, "…and changes nothing");
+}
+
+section("Rematch request: declined, then lifted by the Defender's /battle");
+{
+  const t = harness();
+  atLimit(t);
+  await t.run("A", "B");
+  await replaceRecord(t, "A");
+  await t.collectors[0].h.collect(t.button("B", `rematch_decline:${requestNonce(t)}`));
+  assertEqual(t.log.messages[0].edits.at(-1), { content: "<@B> declined the rematch.", components: [] }, "the request says it was declined");
+  assertEqual([t.log.messages.length, t.trainerData.A.rematchRequests], [1, undefined], "no battle runs and the request is settled");
+  assertTrue(isRematchBlocked(t.trainerData.A, "B", today()), "A can't ask B again today");
+
+  await t.run("A", "B");
+  assertEqual([t.log.edits.at(-1), t.log.messages.length], [BLOCKED, 1], "asking again is refused, and nothing is posted");
+
+  await t.run("B", "A");
+  await until(() => t.log.messages[1]?.edits.at(-1)?.embeds);
+  assertTrue(!isRematchBlocked(t.trainerData.A, "B", today()), "B's casual battle at A lifts the block");
+  await t.run("A", "B");
+  assertEqual(t.log.edits.at(-1), SENT, "so A can ask again");
+
+  const w = harness();
+  blockRematch(w.trainerData.A, "B", today());
+  await w.run("B", "A", 10);
+  assertTrue(!isRematchBlocked(w.trainerData.A, "B", today()), "a Wager offer from B lifts it too");
+
+  const r = harness();
+  atLimit(r);
+  blockRematch(r.trainerData.B, "A", today()); // B's own request to A was declined earlier
+  await r.run("A", "B");
+  assertTrue(!isRematchBlocked(r.trainerData.B, "A", today()), "a Rematch request from A lifts B's block on A");
+}
+
+section("Rematch request: expiry, deletion, failures");
+{
+  const t = harness();
+  atLimit(t);
+  await t.run("A", "B");
+  await replaceRecord(t, "A");
+  t.collectors[0].stop("time");
+  await t.collectors[0].ended;
+  assertEqual(t.log.messages[0].edits.at(-1), { content: "Rematch request expired.", components: [] }, "the request says it expired");
+  assertTrue(t.trainerData.A.rematchRequests === undefined && isRematchBlocked(t.trainerData.A, "B", today()), "an expired request blocks like a decline");
+
+  const g = harness();
+  atLimit(g);
+  await g.run("A", "B");
+  g.collectors[0].stop("messageDelete");
+  await g.collectors[0].ended;
+  assertTrue(g.trainerData.A.rematchRequests === undefined && !isRematchBlocked(g.trainerData.A, "B", today()), "a deleted request closes without a block");
+
+  const f = harness({ sendFails: true });
+  atLimit(f);
+  await f.run("A", "B");
+  assertEqual(f.log.edits, ["I couldn't post the rematch request here. Try another channel."], "a failed post says so");
+  assertTrue(f.trainerData.A.rematchRequests === undefined && !isRematchBlocked(f.trainerData.A, "B", today()), "…and leaves nothing open or blocked");
+
+  const e = harness();
+  atLimit(e);
+  await e.run("A", "B");
+  e.trainerData.B.displayedPokemon = [];
+  await e.collectors[0].h.collect(e.button("B", `rematch_accept:${requestNonce(e)}`));
+  assertEqual(e.log.messages[0].edits.at(-1), { content: "Rematch canceled. <@B> has no Team set.", components: [] }, "a Team emptied since the request cancels it");
+  assertTrue(e.log.messages.length === 1 && !isRematchBlocked(e.trainerData.A, "B", today()), "no battle runs and nobody is blocked");
+}
+
+section("Rematch request: one open per Defender, and no race at 2 of 3");
+{
+  const t = harness();
+  atLimit(t);
+  await Promise.all([t.run("A", "B"), t.run("A", "B")]);
+  assertEqual(t.log.messages.length, 1, "one request is posted");
+  assertTrue(t.log.edits.includes("You already asked <@B> for a rematch. Wait for their answer."), "the second is refused");
+
+  const r = harness();
+  atLimit(r, 2);
+  await Promise.all([r.run("A", "B"), r.run("A", "B")]);
+  await until(() => r.log.messages.some((m) => m.edits.at(-1)?.embeds));
+  assertEqual(r.trainerData.A.battle.vs.B, 3, "only one of two quick /battles at 2 of 3 runs");
+  assertTrue(requestNonce(r) && r.log.edits.includes(SENT), "the other becomes a Rematch request");
+}
+
 section("Each player's trainer in the replay");
 {
   const startFrame = async (trainerA) => {
@@ -303,6 +464,30 @@ section("A wager fight that fails returns both Stakes (review I4)");
     assertEqual([t.trainerData.A.cc, t.trainerData.B.cc, t.trainerData.A.pendingWager], [100, 100, null], "both players get their Stake back");
     assertEqual(t.log.messages.length, 1, "no battle is posted");
     assertTrue(t.log.messages[0].edits.at(-1)?.content.includes("couldn't run"), "the offer says the fight couldn't run");
+  } finally {
+    console.warn = warn;
+    delete process.env.FULL_SIM_ENABLED;
+    delete process.env.SIM_THREADS;
+  }
+}
+
+section("A Rematch fight that fails closes the request and counts nothing");
+{
+  // The same always-failing sim as above (the hook stays registered).
+  process.env.FULL_SIM_ENABLED = "1";
+  process.env.SIM_THREADS = "0";
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const t = harness();
+    atLimit(t);
+    await t.run("A", "B");
+    const [request] = t.log.messages;
+    await t.collectors[0].h.collect(t.button("B", `rematch_accept:${requestNonce(t)}`));
+    assertEqual(request.edits.at(-1), { content: "Rematch canceled. The fight couldn't run.", components: [] }, "the request says the fight couldn't run");
+    assertEqual(t.log.messages.length, 1, "no battle is posted");
+    assertEqual([t.trainerData.A.rematchRequests, t.trainerData.A.battle.vs.B], [undefined, 3], "the request is settled and no battle is counted");
+    assertTrue(!isRematchBlocked(t.trainerData.A, "B", today()), "nobody is blocked from asking again");
   } finally {
     console.warn = warn;
     delete process.env.FULL_SIM_ENABLED;

@@ -383,6 +383,16 @@ export const challengeProgress = (user) => ({ won: { ...(user?.challenge?.won ??
 // Revive: the slot, "none" when nothing had fainted, or null for no pick.
 export const challengeLogEntry = (outcome) => ({
   key: outcome.key, seed: outcome.seed, reached: outcome.fights.length, cleared: outcome.cleared, prize: !!outcome.prize, ccLost: outcome.ccLost,
+  // What a first win paid (economy audit 2026-11, D10): CC includes half-price
+  // CC for prize sprites already owned; sprites counts the ones granted.
+  ...(outcome.prize && {
+    prizePaid: {
+      cc: outcome.prize.cc + outcome.prize.sprites.reduce((t, s) => t + (s.cc ?? 0), 0),
+      stones: outcome.prize.stones,
+      dust: outcome.prize.dust,
+      sprites: outcome.prize.sprites.filter((s) => s.file).length,
+    },
+  }),
   ...(outcome.breaks && { revives: outcome.breaks.map((b) => (b.offered ? b.slot : "none")) }),
 });
 

@@ -8,9 +8,14 @@ Glossary: `CONTEXT.md`.
 - `/battle @user wager:N` = **Wager battle**: Defender must accept; both earn EXP; winner takes the pot.
 - Fight = the existing **Team** (displayedPokemon, ≤6) in slot order, 6v6 singles, next mon on faint.
 - Blocked: Defender with no Team; Challenger with no Team; self; bots.
-- Any channel. Defender is @mentioned. No opt-out.
+- Any channel. When `CASUAL_BATTLE_CHANNEL_ID` is set, casual battles (and Rematch requests) only run in that channel; a casual `/battle` elsewhere is refused privately. Ranked and wager stay in any channel. Defender is @mentioned. No opt-out.
 - **Battle cap**: 10 battles started per UTC day (same reset as /daily, `commands/daily.js:35-36`), max 3 per opponent per day (your call).
   - Open battle: counts for Challenger only.
+  - Open battle past either cap (changed 2026-11-12): ranked and wager battles stay refused.
+    - Past the daily cap, an open battle still runs, but earns no EXP or Mega Shards and doesn't count toward the 10. It still counts toward the 3 against that Defender.
+    - Past 3 against one Defender, the next open battle is a Rematch request (`utils/battle/rematch.js`): a channel message with Accept and Decline that only the Defender can answer, open for `REMATCH.windowMs` (5 minutes, owner decision). An accepted rematch earns no EXP or Mega Shards.
+    - A decline or expiry blocks the Challenger from asking that Defender again until midnight UTC, or until the Defender sends the Challenger a `/battle` that isn't refused (a battle that runs, a Rematch request or a Wager offer). A restart, a deleted message or a failed post closes the request without a block. An admin Battle cap reset clears blocks.
+    - One open request per Defender, saved on the Challenger so a restart can close its message. The count is the Challenger's own battles against the Defender, so the Defender can still battle them.
   - Wager battle: counts for **both** players, and toward the pair's 3/day in either direction. Defender at cap → Accept cancels the offer and refunds the Stake.
   - Declined/expired wagers count for nothing.
 

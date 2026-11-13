@@ -28,6 +28,7 @@ import { scaleEarned } from "./liveEventRules.js";
  * @param {() => number} [deps.now]
  * @param {(fn: () => void) => void} [deps.defer]
  * @param {(now: number) => object} [deps.effects] - running Live event effects
+ * @param {(type: string, userId: string, data: object) => any} [deps.log] - the event log (chat CC is logged)
  */
 export function createMessageHandler({
   isReady,
@@ -43,6 +44,7 @@ export function createMessageHandler({
   now = Date.now,
   defer = setImmediate,
   effects = liveEffects,
+  log = () => {},
 }) {
   return async function onMessage(message) {
     if (message.author.bot || !message.guild) return;
@@ -73,7 +75,9 @@ export function createMessageHandler({
     // 💰 Chance to earn CC
     if (random() < config.ccChance) {
       userObj.cc ??= 0;
-      userObj.cc += scaleEarned(config.ccGain, fx.cc);
+      const gained = scaleEarned(config.ccGain, fx.cc);
+      userObj.cc += gained;
+      try { log("chat_cc", userId, { cc: gained }); } catch {}
 
       try {
         await message.react("💰").catch(() => {});

@@ -108,7 +108,7 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
       if (total > 1) return { error: `You have more than one ${p.name} now.` };
       if (plain < 1) return { error: `Your ${label} has TM-trained moves. Donate it on its own to confirm.` };
       if (isOnTeam(pid, variant)) {
-        return { error: `${p.name} is on one of your teams (Display or Battle). Remove it from that team first.` };
+        return { error: `${p.name} is on one of your teams. Take it off that team first.` };
       }
     }
 
@@ -188,10 +188,11 @@ function copyReward(user, pid, p, variant, economy) {
       user.nonShinyDustEarnedThisWeek = earned + dust;
     }
   }
-  // Live event multipliers on what a Donation earns. The weekly normal-dust
-  // cap counts the dust before the multiplier, so an event never eats it.
+  // A Live event's Shiny Dust multiplier applies; its CC multiplier does not
+  // (economy audit 2026-11, D2: with it, throw-and-donate could pay for itself).
+  // The weekly normal-dust cap counts the dust before the multiplier.
   const fx = liveEffects();
-  return { pokemonId: pid, pokemonName: p.name, tier, variant, ccGained: scaleEarned(cc, fx.cc), dustGained: scaleEarned(dust, fx.dust) };
+  return { pokemonId: pid, pokemonName: p.name, tier, variant, ccGained: cc, dustGained: scaleEarned(dust, fx.dust) };
 }
 
 /**
@@ -208,7 +209,7 @@ export function donateOne({ user, pokeId, variant, pokemonData, economy, isOnTea
   if (!p) return { error: "Invalid Pokémon ID" };
   if (!VARIANTS.has(variant)) return { error: "Invalid variant." };
   if ((user.pokemon?.[pid]?.[variant] ?? 0) <= 0) {
-    return { error: `You don’t own a ${variant === "shiny" ? "shiny " : ""}${p.name} to donate.` };
+    return { error: `You don't own a ${variant === "shiny" ? "shiny " : ""}${p.name} to donate.` };
   }
   // Individual copies (docs/adr/0001): a copy on a Team is never donated
   // (canRemoveCopies refuses it with code "on_team"); other copies of the

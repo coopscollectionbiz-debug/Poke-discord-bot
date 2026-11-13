@@ -134,13 +134,25 @@ section("Overlapping limits that leave nothing are refused");
 section("Discounts, EXP and words");
 {
   const fx = R.combine([
-    ev({ effects: [{ kind: "discount", value: 50, categories: ["balls", "tms"] }] }),
-    ev({ effects: [{ kind: "discount", value: 50, categories: ["balls"] }] }),
+    ev({ effects: [{ kind: "discount", value: 50, categories: ["tms", "stones"] }] }),
+    ev({ effects: [{ kind: "discount", value: 50, categories: ["tms"] }] }),
     ev({ effects: [{ kind: "exp", value: 2 }, { kind: "exp", value: 3, match: { types: ["Fire"] } }] }),
   ], NOW);
-  assertEqual(R.discountedPrice(fx, "balls", 1000), 250, "two 50 % discounts: pay 25 %");
-  assertEqual(R.discountedPrice(fx, "tms", 1000), 500, "a category only one covers: 50 %");
-  assertEqual(R.discountedPrice(fx, "stones", 1000), 1000, "uncovered category: full price");
+  assertEqual(R.discountedPrice(fx, "tms", 1000), 250, "two 50 % discounts: pay 25 %");
+  assertEqual(R.discountedPrice(fx, "stones", 1000), 500, "a category only one covers: 50 %");
+  assertEqual(R.discountedPrice(fx, "balls", 1000), 1000, "uncovered category: full price");
+
+  // Economy audit 2026-11, D2: Poké Balls are never more than 30 % off.
+  assertTrue(/at most 30%/.test(R.cleanEvent(ev({ effects: [{ kind: "discount", value: 31, categories: ["balls", "tms"] }] })).error ?? ""), "a Poké Ball discount over 30 % is refused");
+  assertTrue(!!R.cleanEvent(ev({ effects: [{ kind: "discount", value: 30, categories: ["balls"] }] })).event, "a 30 % Poké Ball discount is allowed");
+  assertTrue(!!R.cleanEvent(ev({ effects: [{ kind: "discount", value: 80, categories: ["tms"] }] })).event, "other categories keep the 1 to 100 % range");
+  const stacked = R.combine([
+    ev({ effects: [{ kind: "discount", value: 25, categories: ["balls"] }] }),
+    ev({ effects: [{ kind: "discount", value: 25, categories: ["balls"] }] }),
+  ], NOW);
+  assertEqual(R.discountedPrice(stacked, "balls", 1000), 700, "two 25 % ball discounts stack to the 30 % cap, not 43.75 %");
+  const legacy = { ...R.NO_EFFECTS, discounts: [{ kind: "discount", value: 90, categories: ["balls"] }] };
+  assertEqual(R.discountedPrice(legacy, "balls", 4000), 2800, "an event saved before the cap is still held to 30 %");
   assertEqual(R.expMultiplier(fx, pokemonData[4]), 6, "Charmander (Fire): ×2 × ×3");
   assertEqual(R.expMultiplier(fx, pokemonData[7]), 2, "Squirtle: ×2 only");
   assertEqual(effectText({ kind: "catchLimit", match: { regions: ["Kanto"] } }), "Only Kanto Pokémon can be caught", "limit in words");
@@ -219,7 +231,7 @@ section("Start and end posts");
 // ----------------------------------------------------------
 section("Dashboard Poké Ball: discount and the paid choice");
 {
-  S.setLiveEventsForTesting([ev({ name: "Ball sale", effects: [{ kind: "discount", value: 40, categories: ["balls"] }, { kind: "catchLimit", match: { species: [16] } }] })]);
+  S.setLiveEventsForTesting([ev({ name: "Ball sale", effects: [{ kind: "discount", value: 25, categories: ["balls"] }, { kind: "catchLimit", match: { species: [16] } }] })]);
   const td = { u1: { cc: 10_000, tp: 0, pokemon: {}, items: { evolution_stone: 0 }, displayedPokemon: [], training: {} } };
   const h = createGameplayHandlers({
     getTrainerData: () => td, lockUser, save: (d) => saveAndAck(d, { save: async () => true }),
@@ -227,7 +239,7 @@ section("Dashboard Poké Ball: discount and the paid choice");
   });
   const buy = (source) => h.rewardPokemon({ body: { id: "u1", source }, isAuthorized: () => true });
   const r1 = await buy("ultraball");
-  assertTrue(r1.body.success && td.u1.cc === 10_000 - BALL_COST.ultraball * 0.6, "charged 60 % of the Ultra Ball price");
+  assertTrue(r1.body.success && td.u1.cc === 10_000 - BALL_COST.ultraball * 0.75, "charged 75 % of the Ultra Ball price");
   assertTrue(r1.body.eventNames.length === 0, "choice off: the roll ignored the event");
   S.setOptIn(td.u1, true);
   const before = td.u1.cc;
@@ -236,8 +248,25 @@ section("Dashboard Poké Ball: discount and the paid choice");
   const r3 = await buy("pokeball");
   assertTrue(r3.body.success && r3.body.pokemon.id === 16 && r3.body.eventNames[0] === "Ball sale", "choice on, Poké Ball: Pidgey, tagged with the event");
   const view = P.playerView(td.u1);
-  assertEqual(view.discounts.balls, 0.6, "player view: balls cost 60 %");
+  assertEqual(view.discounts.balls, 0.75, "player view: balls cost 75 %");
   assertTrue(view.paidChoice.on && view.paidChoice.emptyBalls.includes("ultraball"), "player view: choice on, Ultra Ball greyed out");
+}
+
+// ----------------------------------------------------------
+section("Donations ignore the CC multiplier (economy audit 2026-11, D2)");
+{
+  const { bulkDonate } = await import("../utils/bulkDonate.js");
+  S.setLiveEventsForTesting([ev({ name: "Double everything", effects: [{ kind: "cc", value: 2 }, { kind: "dust", value: 2 }] })]);
+  const economy = {
+    ccByTier: { common: 250, uncommon: 500, rare: 1000, epic: 2500, legendary: 5000, mythic: 10000 },
+    shinyDustByTier: { common: 4, uncommon: 7, rare: 12, epic: 18, legendary: 22, mythic: 30 },
+    normalDustChanceByTier: {}, normalDustWeeklyCap: 8, rollDust: () => 0,
+  };
+  const user = { cc: 0, items: { shiny_dust: 0 }, nonShinyDustEarnedThisWeek: 0, pokemon: { 16: { normal: 3, shiny: 2 } }, displayedPokemon: [] };
+  const r = bulkDonate({ user, mode: "duplicates", items: [{ pokeId: 16, variant: "normal", count: 1 }, { pokeId: 16, variant: "shiny", count: 1 }], pokemonData, economy, isOnTeam: () => false });
+  const tier = String(pokemonData[16].tier).toLowerCase();
+  assertEqual(r.gainedCC, economy.ccByTier[tier] * 6, "CC is the list amount (1 normal + 1 shiny at 5x), not doubled");
+  assertEqual(r.shinyDustGained, economy.shinyDustByTier[tier] * 2, "the Shiny Dust multiplier still applies");
 }
 
 S.setLiveEventsForTesting([]);

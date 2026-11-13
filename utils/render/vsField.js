@@ -48,7 +48,7 @@ export function halfPath(ctx, side, field, W, inset = 9) {
  * false draws the still even on an animated card (CARD_TRAINER_FX=0).
  * Returns the sprites it may draw (every pose), for the backdrop's mask.
  */
-export async function placeTrainer(fg, stage, { file, cx, floor, box, scale = 4, tint = null, idle = true, platform = null, env = process.env }) {
+export async function placeTrainer(fg, stage, { file, cx, floor, box, scale = 4, tint = null, idle = true, platform = null, light = null, env = process.env }) {
   const [rx, ry] = platform ?? (scale === 4 ? [118, 20] : [52, 10]);
   drawSoftPlatform(fg, cx, floor, rx, ry, tint, { u: scale === 4 ? 4 : 2 });
   // Trimmed to the opaque pixels (every pose's), so the feet land on the floor: real
@@ -58,10 +58,11 @@ export async function placeTrainer(fg, stage, { file, cx, floor, box, scale = 4,
   const poses = idle ? await loadTrimmedTrainerPoses(file, { env }) : null;
   const bw = typeof box === "number" ? box : box.w, bh = typeof box === "number" ? box : box.h;
   if (poses?.poses?.length > 1) {
-    stage.placePosed(fg, poses.poses, poses.poseAt, cx, floor + 6, bw, bh, { scale });
+    stage.placePosed(fg, poses.poses, poses.poseAt, cx, floor + 6, bw, bh, { scale, light });
     return { sprites: poses.poses, cx, floorY: floor + 6, bw, bh, scale };
   }
-  drawSprite(fg, still, cx, floor + 6, bw, bh, { scale });
+  if (light) stage.placePosed(fg, [still], () => 0, cx, floor + 6, bw, bh, { scale, light });
+  else drawSprite(fg, still, cx, floor + 6, bw, bh, { scale });
   return { sprites: [still], cx, floorY: floor + 6, bw, bh, scale };
 }
 
@@ -88,7 +89,10 @@ export function occupancy(W, H, fg, trainers = [], rects = []) {
  * A player's tier backdrop over their half: the half's own colour replaced
  * by the plain background plus the tier wash (drawn now, on `ctx`), and
  * { draw(ctx, f) } for the glow and effects, or null below Epic. The glow
- * runs diagonally from the half's outer bottom corner toward the seam.
+ * runs diagonally from the half's outer bottom corner toward the seam. An art
+ * Aura's vs.png is drawn mirrored on the right half, so it sits around that
+ * half's trainer (at the mirror of the left trainer's place) and moves the
+ * mirrored way; text and trainers are drawn elsewhere and never flip.
  */
 export function halfBackdrop(ctx, { side, tier, field, W, H, occupied, floor }) {
   if (!hasBackdrop(tier)) return null;
@@ -96,7 +100,7 @@ export function halfBackdrop(ctx, { side, tier, field, W, H, occupied, floor }) 
   const x0 = left ? 0 : Math.floor(field.bottom / 4) * 4;
   const rect = { x: x0, y: 0, w: (left ? field.top : W) - x0, h: field.h };
   const bd = regionBackdrop({
-    tier, rect, u: 4, occupied, floor, frames: FRAMES, variant: "vs", // an art Aura's vs.png, if it has one
+    tier, rect, u: 4, occupied, floor, frames: FRAMES, variant: "vs", mirror: !left, // an art Aura's vs.png, if it has one
     from: left ? [0, field.h] : [W, field.h],
     to: left ? [field.top * 0.95, -field.h * 0.3] : [x0 + (W - x0) * 0.05, -field.h * 0.3],
     clip: (c) => halfPath(c, side, field, W),

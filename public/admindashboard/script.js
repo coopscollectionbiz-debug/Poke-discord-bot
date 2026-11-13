@@ -331,8 +331,8 @@ function tabSummary(body, data) {
         <dt>Onboarding</dt><dd>${p.onboardingComplete ? "Complete" : "Not finished"}</dd>
         <dt>Pokémon</dt><dd>${fmt(p.copies)} copies, ${fmt(data.pokemon.length)} species + Variant rows</dd>
         <dt>Team</dt><dd>${p.teamSize} of 6</dd>
-        <dt>Battle team</dt><dd>${p.battleTeamSize == null ? "Not set" : `${p.battleTeamSize} of 6`}</dd>
-        <dt>Battle rating</dt><dd>${fmt(p.battleRating)} (${p.rankedWins}–${p.rankedLosses} this season)</dd>
+        <dt>Ranked team</dt><dd>${p.battleTeamSize == null ? "Not set" : `${p.battleTeamSize} of 6`}</dd>
+        <dt>Ranked rating</dt><dd>${fmt(p.battleRating)} (${p.rankedWins}–${p.rankedLosses} this season)</dd>
         <dt>Open wager</dt><dd>${p.pendingWager ? `${fmt(p.pendingWager.stake)} CC held until ${when(p.pendingWager.expiresAt)}` : "None"}</dd>
       </dl>
     </section>
@@ -479,7 +479,7 @@ function tabItems(body, data) {
         <label>Amount<input id="itAmount" type="number" min="1" step="1" value="1" /></label>
         <button class="btn-primary" id="itReview" type="button">Review</button>
       </div>
-      <p class="faint">Every item that can sit in a bag, including TMs, Mega Stones and Mega Shards. Items marked “not live” wait in the bag until players can use them.</p>` : `<p class="muted">No items can be granted right now.</p>`}
+      <p class="faint">Every item that can sit in a bag, including TMs, Mega Stones and Mega Shards. Items marked "not live" wait in the bag until players can use them.</p>` : `<p class="muted">No items can be granted right now.</p>`}
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Bag</h2></div>
@@ -587,7 +587,7 @@ function tabAuras(body, data) {
         <label style="flex:2 1 260px">Aura<select id="auAdd">${auraOptions(addable)}</select></label>
         <button class="btn-primary" id="auReview" type="button">Review</button>
       </div>
-      <p class="faint">Any Aura, including retired event Auras. One marked “not live” has no art yet: it’s owned now and shows once its art ships.</p>` : `<p class="muted">They own every Aura.</p>`}
+      <p class="faint">Any Aura, including retired event Auras. One marked "not live" has no art yet: it's owned now and shows once its art ships.</p>` : `<p class="muted">They own every Aura.</p>`}
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Owned (${fmt(owned.length)})</h2></div>
@@ -623,7 +623,7 @@ function tabCooldowns(body, data) {
       ${data.cooldowns
         .map((c) => `<div class="cooldown-row"><label class="inline"><input type="checkbox" value="${esc(c.key)}" /> ${esc(c.label)}</label><span class="muted">${esc(c.state)}</span></div>`)
         .join("")}
-      <p class="faint">Resetting Daily keeps the daily streak. Resetting the Battle cap lets them start Battles again today; their Battle rating is untouched.</p>
+      <p class="faint">Resetting Daily keeps the daily streak. Resetting the Battle cap lets them earn battle EXP, start ranked and wager battles, and send Rematch requests again today; their Ranked rating is untouched.</p>
       <div class="sheet-actions"><button class="btn-primary" id="cdReview" type="button" disabled>Review reset</button></div>
     </section>`;
   const boxes = $$("input[type=checkbox]", body);
@@ -1089,7 +1089,7 @@ function pager(total, offset, limit, href) {
 // ----------------------------------------------------------
 // Activity log (the 30-day event log; "Live events" are something else)
 // ----------------------------------------------------------
-const EVENT_TYPES = ["roll", "donate", "evolve", "convert", "daily_claim", "weekly_claim", "quest_claim", "recruit", "stone_purchase"];
+const EVENT_TYPES = ["roll", "donate", "evolve", "convert", "daily_claim", "weekly_claim", "quest_claim", "recruit", "stone_purchase", "trainer_purchase"];
 
 async function renderEvents(query) {
   const type = query.get("type") || "";

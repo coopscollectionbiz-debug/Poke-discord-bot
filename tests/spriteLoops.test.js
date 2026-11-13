@@ -2,7 +2,7 @@
 // speed-up), fitting one loop to several sprites, the union-box anchor, the
 // stage's fitted GIFs and size fallback, and playback's continuing clock.
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { loopPlan, fitLoop, spriteTime, unionBox, LOOP_CAP_MS, STEP_MS, NUDGE } from "../utils/render/spriteLoops.js";
+import { loopPlan, fitLoop, spriteTime, unionBox, LOOP_CAP_MS, STEP_MS, NUDGE, SINGLE_CLOCK_CAP_MS } from "../utils/render/spriteLoops.js";
 import { loadAnimatedSprite, renderBattleFrame } from "../utils/battle/render.js";
 import { loadStaticSprite, spritePlacement } from "../utils/render/sprites.js";
 import { spriteStage, MAX_GIF_BYTES } from "../utils/render/stage.js";
@@ -43,6 +43,12 @@ section("Fitting one loop to several sprites");
   assertTrue(pair.fit.every(Boolean) && pair.fit.every((f) => Math.abs(f.s - 1) <= NUDGE), `two sprites both fit (L ${pair.L})`);
   assertTrue([2400, 4800, 7200].includes(fitLoop([1300, 900], { trainerClock: true }).L), "with a trainer on the card: a multiple of 2.4 s");
   assertEqual(fitLoop([null, null]).L, 2400, "no animated sprites: the trainers' 2.4 s");
+  // A lone sprite on the 2.4 s clock (a shiny's sparkles): cards allow up to
+  // 12 s so it always plays whole cycles; battle images keep the 7.2 s cap.
+  const lone = fitLoop([8600], { trainerClock: true, singleCapMs: SINGLE_CLOCK_CAP_MS });
+  assertTrue(lone.fit[0] && lone.L % 2400 === 0 && lone.L <= 12000, `a lone 8.6 s shiny fits on a card (${lone.L} ms)`);
+  assertEqual(fitLoop([8600], { trainerClock: true }).fit[0], null, "battle images (default cap 7.2 s): unchanged");
+  assertTrue([2400, 4800, 7200].includes(fitLoop([1300, 900], { trainerClock: true, singleCapMs: SINGLE_CLOCK_CAP_MS }).L), "two sprites: still at most 7.2 s");
   const odd = fitLoop([2000, 2000 * 1.5 * 1.29]);
   assertTrue(odd.fit.filter(Boolean).length >= 1, "a sprite that can't fit plays unnudged (seams once a loop)");
   const p = { loopEnd: 3000, speed: 1 };

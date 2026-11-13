@@ -35,7 +35,7 @@ export default {
           `Manage your Pokémon team and Trainer from the dashboard:\n\n🔗 [Open Dashboard](${pickerUrl})\n\nThe link works for 10 minutes. Once open, the session lasts 30 minutes after your last action, up to 4 hours.`
         )
         .setColor(0x00ff9d)
-        .setFooter({ text: "Coop’s Collection — Dashboard Access" })
+        .setFooter({ text: "Coop's Collection · Dashboard access" })
         .setTimestamp();
 
       await interaction.reply({

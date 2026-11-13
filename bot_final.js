@@ -1,5 +1,5 @@
 // ==========================================================
-// 🤖 Coop’s Collection Discord Bot
+// 🤖 Coop's Collection Discord Bot
 // ==========================================================
 // Includes:
 //  • Rank Buffs & Weighted Acquisition
@@ -71,7 +71,7 @@ import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/lo
 import { normalizeTrainers, auditTrainerData, grantTrainer } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
 import { handleInventoryRequest } from "./services/inventoryApi.js";
-import { tmShopView, buyTms } from "./services/tmShop.js";
+import { tmShopView, buyTms, tmLearners } from "./services/tmShop.js";
 import { auraView, equipAura, buyAura, auraArtDir, normalizeAuras, syncTierAuras } from "./services/auras.js";
 import { trainerTier } from "./utils/render/trainerTier.js";
 import { teachOptions, teachTm } from "./services/tmTeaching.js";
@@ -472,6 +472,7 @@ import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
 import { createEncounterService, isEncounterButton } from "./utils/encounter/service.js";
 import { grantCatch, levelsForUser } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
+import { closeAllRematches } from "./utils/battle/rematch.js";
 import { finishAllOpenRuns, challengeLogEntry, hideOpenRun, challengeProgress } from "./utils/challenge/runChallenge.js";
 import { recordFight, challengeRecord } from "./utils/fightRecordBuild.js";
 import { fightRecords } from "./utils/fightRecords.js";
@@ -1374,6 +1375,7 @@ client.on(
       ccChance: MESSAGE_CC_CHANCE,
       ccGain: MESSAGE_CC_GAIN,
     },
+    log: logEvent,
     enqueueSave,
     queueRoleUpdate,
     giveRandomReward: tryGiveRandomReward,
@@ -1711,7 +1713,7 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
 
 // ==========================================================
 // 🎪 Live events (services/liveEventsPlayer.js): what's on, today's prices,
-// and the player's "Use Live event" choice for Poké Balls and /recruit.
+// and the player's "Use Live event" choice for Poké Balls.
 // ==========================================================
 app.get("/api/live-events", (req, res) => {
   const { id } = req.query;
@@ -2126,6 +2128,7 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
     grantTrainer(user, canonicalFile); // also unlocks the tier's Aura
 
     const saveAck = await saveAndAck(trainerData);
+    logEvent("trainer_purchase", id, { file: canonicalFile, tier, cost }); // economy audit 2026-11, D10
 
     return res.json({ ...saveAckFields(saveAck),
       success: true,
@@ -2214,6 +2217,20 @@ app.get(["/api/tm-shop", "/api/tms"], (req, res) => {
   const user = trainerData[id];
   if (!user) return res.status(404).json({ error: "User not found" });
   return res.json(tmShopView(user));
+});
+
+// The player's Pokémon that can learn one TM (the shop's buy dialog), Casual
+// and Ranked team members first. Under /api/tm-shop/ for the blocklist reason above.
+app.get("/api/tm-shop/learners", (req, res) => {
+  const { id, item } = req.query;
+  if (!id || !item) return res.status(400).json({ error: "Missing id/item" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  const r = tmLearners(user, String(item));
+  if (!r.ok) { const { ok, status = 400, ...rest } = r; return res.status(status).json(rest); }
+  const { ok, ...body } = r;
+  return res.json(body);
 });
 
 // Body: { id, item: "tm_<move>", qty: 1–10, requestId? } — a repeated
@@ -2308,7 +2325,7 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
         user.cc ??= 0;
         const price = discountedPrice(liveEffects(), "stones", COST); // a Live event's discount
         if (user.cc < price) {
-          return { ok: false, error: `Not enough CC — requires ${price} CC.`, cc: user.cc, status: 400 };
+          return { ok: false, error: `Not enough CC. This costs ${price} CC.`, cc: user.cc, status: 400 };
         }
         const granted = grantItem(user, "evolution_stone", 1);
         if (!granted.ok) return { ok: false, error: granted.error, status: 400 };
@@ -2846,6 +2863,26 @@ async function refundPendingWagersOnStartup() {
 }
 
 // ==========================================================
+// ⚔️ Rematch requests: close requests left open by a restart
+// Their buttons die with the old process, so every open request is closed
+// (blocking nobody) and its message edited.
+// ==========================================================
+async function closeRematchRequestsOnStartup() {
+  const closed = closeAllRematches(trainerData);
+  if (!closed.length) return;
+  await enqueueSave(trainerData, { force: true });
+  console.log(`⚔️ Closed ${closed.length} open rematch request(s) after restart`);
+  for (const { channelId, messageId } of closed) {
+    if (!channelId || !messageId) continue;
+    try {
+      const channel = await client.channels.fetch(channelId);
+      const message = await channel.messages.fetch(messageId);
+      await message.edit({ content: "Rematch request expired because the bot restarted.", components: [] });
+    } catch {}
+  }
+}
+
+// ==========================================================
 // An Elite Four run waits on the player's record between fights, and the
 // command playing it dies with the old process, so every open run is
 // finished at startup with no Revives, and its replay message gets the result.
@@ -2989,8 +3026,8 @@ async function retryLoadLoop() {
   if (ok2) {
     await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
     await fullSimCutoverOnStartup().catch((e) => console.warn("⚠️ full-sim cutover failed:", e?.message || e));
-    await fullSimCutoverOnStartup().catch((e) => console.warn("⚠️ full-sim cutover failed:", e?.message || e));
-  await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
+    await closeRematchRequestsOnStartup().catch((e) => console.warn("⚠️ closing rematch requests failed:", e?.message || e));
+    await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
     startDexBackfill();
@@ -3009,6 +3046,7 @@ setTimeout(retryLoadLoop, retryMs);
 
   await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
   await fullSimCutoverOnStartup().catch((e) => console.warn("⚠️ full-sim cutover failed:", e?.message || e));
+  await closeRematchRequestsOnStartup().catch((e) => console.warn("⚠️ closing rematch requests failed:", e?.message || e));
   await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");

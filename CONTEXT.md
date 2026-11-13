@@ -100,6 +100,10 @@ _Avoid_: glow, trainer background
 The up to 4 moves a player picks for one Pokémon on one **Team**, from the moves it has learned by its real **Level** or from a **TM**. A Pokémon with none picked uses the last four attacks it learned.
 _Avoid_: move set, loadout
 
+**Held item**:
+An item a player unlocks for good and gives one Pokémon on the **Casual team** or **Ranked team** to hold in battle. Holding it uses nothing up, and one unlock can be held by one Pokémon per **Team**.
+_Avoid_: equipment, gear, battle item
+
 **Battle plan**:
 The strategy a player sets for the **Casual team** or **Ranked team**, such as All-out attack or Trick Room, that decides how that **Team** plays its moves once a fight starts. It suggests **Moveset** changes that suit it but never makes them; only the player does. Computer-run opponents have one too, and theirs does pick their moves. The **Showcase team** has none.
 _Avoid_: strategy, tactic, game plan, playstyle, AI mode
@@ -289,6 +293,10 @@ _Avoid_: Mega species, Mega Pokémon (as something caught)
 **Mega Stone**:
 The item that unlocks one **Mega form** on one species + **Variant**, used up when it does.
 _Avoid_: Key Stone, mega item
+
+**Mega Shard**:
+The item a player collects and trades in, many at a time, for a **Mega Stone** of their choice.
+_Avoid_: Mega fragment, stone shard
 
 ### Achievements
 

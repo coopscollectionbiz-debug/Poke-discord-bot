@@ -18,12 +18,14 @@
 // ==========================================================
 
 import { pokemonSpriteUrl, pokemonSpritePath } from "../utils/sprites.js";
-import { acquirablePokemon } from "../utils/speciesCatalog.js";
+import { acquirablePokemon, liveGenerations } from "../utils/speciesCatalog.js";
+import { GENERATIONS } from "../config/generations.js";
 import { checkEvolutionRequirements } from "./evolutionRules.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getPokemonDataCached } from "../utils/pokemonDataCache.js";
-import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
+import { selectRandomPokemonForUser, selectFocusedPokemon } from "../utils/weightedRandom.js";
+import { TYPE_ID_TO_NAME } from "../utils/battle/data.js";
 import { liveEffects, catchEffectsFor } from "./liveEvents.js";
 import { applyLimits, boostedWeights, pickWeighted, discountedPrice, hasCatchEffects } from "../utils/liveEventRules.js";
 import { rollForShiny } from "../shinyOdds.js";
@@ -39,6 +41,28 @@ import { trackProgress } from "../progression/achievements.js";
 
 /** Poké Ball prices (CC). Unchanged. */
 export const BALL_COST = Object.freeze({ pokeball: 1000, greatball: 2000, ultraball: 4000 });
+
+// Focus (economy audit 2026-11, replaces /recruit): an optional type OR Region
+// on a Poké Ball throw (one per throw), for half the ball's list price on top.
+// A Live event's ball discount applies to the ball, not the surcharge. The
+// ball's Tier odds stay the same and the Focus applies at every Tier, Mythic
+// included (utils/weightedRandom.js selectFocusedPokemon). Behind
+// FOCUS_TYPE_ENABLED.
+const TRUE_FLAGS = new Set(["1", "true", "yes", "on"]);
+export const focusTypeEnabled = (env = process.env) => TRUE_FLAGS.has(String(env.FOCUS_TYPE_ENABLED ?? "").trim().toLowerCase());
+export const FOCUS_SURCHARGE_SHARE = 0.5;
+export const focusSurcharge = (ball) => Math.round((BALL_COST[ball] ?? 0) * FOCUS_SURCHARGE_SHARE);
+const TYPE_ID_BY_NAME = Object.freeze(Object.fromEntries(Object.entries(TYPE_ID_TO_NAME).map(([id, name]) => [name.toLowerCase(), Number(id)])));
+/** Regions a throw can focus on: those of the live generations. */
+export const focusRegions = () => liveGenerations().map((g) => GENERATIONS[g]?.region).filter(Boolean);
+/** "Fire" → { type: 10, label: "Fire" }; "Kanto" → { region: "Kanto", label: "Kanto" }; else null. */
+export function parseFocus(raw) {
+  const s = String(raw ?? "").trim().toLowerCase();
+  if (!s) return null;
+  if (TYPE_ID_BY_NAME[s]) return { type: TYPE_ID_BY_NAME[s], label: TYPE_ID_TO_NAME[TYPE_ID_BY_NAME[s]], kind: "type" };
+  const region = focusRegions().find((r) => r.toLowerCase() === s);
+  return region ? { region, label: region, kind: "region" } : null;
+}
 
 /** Evolution Stone cost by "<fromTier>-<toTier>". Unchanged. */
 export const EVOLVE_STONE_COST = Object.freeze({
@@ -94,6 +118,7 @@ export function createGameplayHandlers(deps) {
     onRareCatch = () => {},
     // Real catalog loaders by default; tests may inject an empty pool.
     loaders = {},
+    env = process.env,
   } = deps;
   const loadAllPokemon = loaders.getAllPokemon ?? getAllPokemon;
   const loadPokemonCached = loaders.getPokemonCached ?? getPokemonCached;
@@ -116,12 +141,20 @@ export function createGameplayHandlers(deps) {
   async function rewardPokemon({ body, isAuthorized }) {
     const stop = guard(body, isAuthorized);
     if (stop) return stop;
-    const { id, source, requestId = null } = body;
+    const { id, source, requestId = null, focus = null } = body;
 
     const listPrice = Object.prototype.hasOwnProperty.call(BALL_COST, source) ? BALL_COST[source] : 0;
     if (!listPrice) return reply(200, { success: false, error: `Invalid Poké Ball type: ${source}` });
+    let chosen = null;
+    if (focus != null && focus !== "") {
+      if (!focusTypeEnabled(env)) return reply(200, { success: false, error: "Focused Throws aren't available yet." });
+      chosen = parseFocus(focus);
+      if (!chosen) return reply(200, { success: false, error: "Unknown type or Region." });
+    }
     const fxNow = liveEffects();
-    const cost = discountedPrice(fxNow, "balls", listPrice); // a Live event's ball discount
+    const ballPrice = discountedPrice(fxNow, "balls", listPrice); // a Live event's ball discount
+    const surcharge = chosen ? focusSurcharge(source) : 0;
+    const cost = ballPrice + surcharge;
 
     const allPokemon = acquirablePokemon(await loadAllPokemon()); // live generations only
     if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
@@ -134,30 +167,40 @@ export function createGameplayHandlers(deps) {
       lock: lockUser,
       save,
       requestId,
-      payloadKey: `capture:${source}`,
+      payloadKey: `capture:${source}${chosen ? `:${chosen.label}` : ""}`,
       mutate: (user) => {
         if ((user.cc ?? 0) < cost) return { ok: false, status: 200, success: false, error: `Not enough CC. This costs ${cost} CC.` };
         // Paid roll: Catch boosts and limits only if the player chose "Use Live event".
         const fx = catchEffectsFor(user, { paid: true, fx: fxNow });
-        const reward = selectRandomPokemonForUser(allPokemon, user, source, { paid: true, fx });
+        let reward;
+        if (chosen) {
+          const r = selectFocusedPokemon(allPokemon, user, source, chosen, { paid: true, fx });
+          const what = chosen.kind === "type" ? `${chosen.label}-type Pokémon` : `Pokémon from ${chosen.label}`;
+          if (!r) return { ok: false, status: 200, success: false, error: `This ball has no ${what} to give${fx.limits.length ? ` during ${fx.catchEvents.join(" + ")}` : ""}. No CC was spent.` };
+          reward = r.pick;
+        } else {
+          reward = selectRandomPokemonForUser(allPokemon, user, source, { paid: true, fx });
+        }
         if (!reward && fx.limits.length) {
           return { ok: false, status: 200, success: false, error: `This ball has nothing it can catch during ${fx.catchEvents.join(" + ")}. Turn off "Use Live event" or pick another ball. No CC was spent.` };
         }
         if (!reward) return { ok: false, status: 200, success: false, error: "No Pokémon could be selected." };
         const shiny = rollForShiny(user.tp || 0);
-        user.cc -= cost;
+        const charged = cost;
+        user.cc -= charged;
         grantCatch(user, reward.id, shiny ? "shiny" : "normal");
         // Release C: achievement progress (same block, same save).
         trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: shiny ? 1 : 0 }, { type: "purchase" }]);
         const rarity = reward.tier || reward.rarity || "common";
-        return { ok: true, pokemon: { id: reward.id, name: reward.name, rarity, shiny }, cc: user.cc, cost, eventNames: hasCatchEffects(fx) ? fx.catchEvents : [] };
+        const focusInfo = chosen ? { kind: chosen.kind, name: chosen.label } : null;
+        return { ok: true, pokemon: { id: reward.id, name: reward.name, rarity, shiny }, cc: user.cc, cost: charged, focus: focusInfo, eventNames: hasCatchEffects(fx) ? fx.catchEvents : [] };
       },
     });
     if (!tx.ok) return refusal(tx);
 
-    const { pokemon, cc, eventNames } = tx.result;
+    const { pokemon, cc, eventNames, focus: focusResult = null, cost: charged = cost } = tx.result;
     if (!tx.replayed) {
-      logEvent("roll", id, { ball: source, cost, pokemonId: pokemon.id, pokemonName: pokemon.name, tier: pokemon.rarity, shiny: pokemon.shiny });
+      logEvent("roll", id, { ball: source, cost: charged, pokemonId: pokemon.id, pokemonName: pokemon.name, tier: pokemon.rarity, shiny: pokemon.shiny, ...(focusResult && { focus: focusResult.name, focusKind: focusResult.kind }) });
       if (pokemon.shiny || ["rare", "epic", "legendary", "mythic"].includes(String(pokemon.rarity).toLowerCase())) {
         try { onRareCatch({ userId: id, pokemon, source }); } catch {}
       }
@@ -171,6 +214,8 @@ export function createGameplayHandlers(deps) {
         sprite: pokemonSpriteUrl(pokemon.id, pokemon.shiny),
       },
       cc,
+      cost: charged,
+      focus: focusResult,
       eventNames: eventNames ?? [],
     });
   }

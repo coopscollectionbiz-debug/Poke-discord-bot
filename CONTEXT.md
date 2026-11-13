@@ -39,7 +39,7 @@ A **Copy** that has learned at least one move from a **TM**. It keeps those move
 _Avoid_: custom copy, customized copy, instance, TM copy
 
 **Collection**:
-Every **Copy** a player owns right now, one box slot per copy, like a PC box in the games. It shrinks when a copy is donated, gifted, fed or evolved away.
+Every **Copy** a player owns right now, one box slot per copy, like a PC box in the games. It shrinks when a copy is donated, gifted, fed or evolved away, and while a copy is out on an **Expedition**: a sent copy leaves every **Team** and the Collection, and comes back unchanged (plus EXP) when the Expedition is claimed.
 _Avoid_: Pokédex (that is what the player has ever caught), box (as the term), inventory
 
 **Pokédex**:
@@ -109,6 +109,10 @@ The number of distinct Pokémon **Registered** in a player's **Pokédex**, out o
 _Avoid_: dex count, owned count, seen/caught
 
 ### Economy
+
+**Focused Throw**:
+A Poké Ball throw limited to one type or one **Region** (its Focus), for half the ball's list price on top. The ball's **Tier** odds stay the same: the Tier is rolled first, then the Pokémon is picked from that Tier's species in the Focus, Legendary and Mythic included.
+_Avoid_: recruit, targeted ball, Focus type (the older name)
 
 **Donation**:
 Permanently giving up a **Copy** in exchange for CC, and sometimes **Shiny Dust**. The species stays **Registered**.
@@ -288,6 +292,24 @@ _Avoid_: Key Stone, mega item
 A goal reached through play, such as a catch count or a win streak, that earns Achievement Points (AP), a score with no other use, and may list a reward.
 _Avoid_: trophy, quest
 
+### Quests
+
+**Quests**:
+Repeatable things to do each day: the **Daily board** and **Expeditions**. Built behind switches, not yet released.
+_Avoid_: missions (for the whole system), achievements
+
+**Daily board**:
+Three tasks a player can finish each day, each one free or paying for itself (chat, battles, `/daily`, donating), never a chance roll. Each claimed task pays CC, all three open a chest, and enough in a week earn a weekly bonus. It resets at 00:00 UTC.
+_Avoid_: dailies (that is `/daily`), challenges
+
+**Mission**:
+One trip on the day's mission board, the same for every player: a length, a **Level**, and one to three threat types. A player can take each Mission once a day.
+_Avoid_: quest, expedition (that is the trip in progress)
+
+**Expedition**:
+A party of up to three **Copies** sent on a **Mission**. Sending a copy takes it off every **Team**; until the Expedition is claimed it shows in the **Collection** marked On Expedition and can't be fed, evolved, donated, gifted, taught a **TM** or put on a **Team**. Copies whose types beat its threats raise the chance of success. Success pays loot and **EXP**; failure pays a little of each.
+_Avoid_: venture, dispatch, run (that is the **Elite Four run**)
+
 ## Flagged ambiguities
 
 - "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.
@@ -299,7 +321,7 @@ _Avoid_: trophy, quest
 - "Tier" also names a trainer sprite's price class, Common to Mythic, which is not a species' **Tier**. The 2026-11-10 re-tier changed trainer sprites, and the 2026-11-11 re-tier changed species.
 - "Ranked" has nothing to do with **Rank**. A player's **Rank** comes from chatting; their **Ranked rating** comes from **Ranked battles** and **Wager battles**.
 - Some **Achievements** list a badge as their reward, such as a region's badge for completing its Pokédex. That is not a **Badge**, which only comes from beating a Gym Leader's **Challenge**.
-- A random catch is any Pokémon rolled at random: the chat catch, `/daily`, Poké Balls and the weekly pack. **Catch boosts** and **Catch limits** reach all of them, and never reach a **Grant**, a gift or an evolution. On the ones paid for in CC (Poké Balls) the player chooses whether they apply; the free ones always follow them. The old `/recruit` and `/quest` commands were removed in November 2026.
+- A random catch is any Pokémon rolled at random: the chat catch, `/daily`, Poké Balls, the weekly pack, and the Daily board's chest and weekly bonus. **Catch boosts** and **Catch limits** reach all of them, and never reach a **Grant**, a gift or an evolution. On the ones paid for in CC (Poké Balls) the player chooses whether they apply; the free ones always follow them. The old `/recruit` was removed in November 2026; `/quest` is now the Daily board.
 - "Copy" as a noun is always a **Copy** (one owned unit). As a verb it may describe teams and moves ("Copy from Ranked team"); never call the result a "team copy".
 - "Showcase" is a **Team** but never fights. Rules written for "a **Team**" about battles (one Mega, moves, held items) cover only the **Casual team** and **Ranked team**.
 

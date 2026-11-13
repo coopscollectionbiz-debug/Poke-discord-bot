@@ -22,6 +22,8 @@ export const NAV_ITEMS = Object.freeze([
   { key: "trainers", label: "Trainers", href: "/public/picker/", icon: "person" },
   { key: "bag", label: "Bag", href: "/public/bag/", icon: "bag" },
   { key: "achievements", label: "Achievements", short: "Awards", href: "/public/achievements/", icon: "star" },
+  // Hidden until GET /api/quests/status says Quests are on (QUESTS_ENABLED).
+  { key: "quests", label: "Quests", href: "/public/quests/", icon: "flag", flag: "quests" },
   { key: "shop", label: "Shop", href: "/public/dashboardshop/", icon: "shop" },
 ]);
 
@@ -35,6 +37,7 @@ const ICONS = `
   <symbol id="cc-i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2"/></symbol>
   <symbol id="cc-i-star" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
   <symbol id="cc-i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" d="M4 21c1-4 4-6 8-6s7 2 8 6"/></symbol>
+  <symbol id="cc-i-flag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M5 21V4m0 0h11l-2 4 2 4H5"/></symbol>
   <symbol id="cc-i-shop" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M4 9h16l-1-5H5zM5 9v11h14V9M9 20v-6h6v6"/></symbol>
 </svg>`;
 
@@ -61,6 +64,7 @@ function navList(active, id, { short = false } = {}) {
     if (short && item.short) a.setAttribute("aria-label", item.label);
     a.append(label);
     li.append(a);
+    if (item.flag && item.key !== active) { li.hidden = true; li.dataset.flag = item.flag; }
     ul.append(li);
   }
   return ul;
@@ -122,6 +126,20 @@ function mountShell() {
   body.append(toasts);
 
   if (!id) showBanner(MISSING_ID_MESSAGE, { tone: "error", key: "missing-id" });
+  revealFlaggedNav();
+}
+
+// Nav links for features behind a server switch stay hidden until the server
+// says they're on. One small public request; failures leave them hidden.
+function revealFlaggedNav() {
+  if (!document.querySelector('[data-flag="quests"]')) return;
+  fetch("/api/quests/status", { credentials: "same-origin" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((s) => {
+      if (!s?.enabled) return;
+      for (const li of document.querySelectorAll('[data-flag="quests"]')) li.hidden = false;
+    })
+    .catch(() => {});
 }
 
 // ----------------------------------------------------------

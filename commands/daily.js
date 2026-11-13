@@ -4,6 +4,7 @@
 
 import { pokemonSpriteUrl } from "../utils/sprites.js";
 import { trackProgress } from "../progression/achievements.js";
+import { questProgress } from "../services/quests.js";
 import { grantItem, normalizeInventory } from "../services/inventory.js";
 import { rollDailyShards, shardDropLine } from "../services/megaShards.js";
 import {
@@ -165,6 +166,7 @@ export async function execute(
       user.lastDaily = today;
       // Release C: achievement progress (Pokémon, shinies, TP/rank).
       trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: (shiny1 ? 1 : 0) + (shiny2 ? 1 : 0) }, { type: "tp" }, { type: "daily", day: Math.floor(Date.parse(today) / 86_400_000) }]);
+      questProgress(user, userId, "daily"); // Daily board
 
       // ======================================================
       // Rare & shiny broadcast system

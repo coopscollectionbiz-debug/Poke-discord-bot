@@ -39,6 +39,100 @@ const PRICE_CATEGORY = { pokeball: "balls", greatball: "balls", ultraball: "ball
 // 🎪 Live events: banner, discounted prices, and the "Use Live event"
 // choice for Poké Balls (the server charges and rolls; this only shows it).
 // ======================================================
+// Focused Throw (GET /api/focus-type): under each ball, a throw focused on a
+// type or a Region, for the ball's price plus a surcharge. Its popup shows the
+// 18 types as colored pills and the live Regions; the server prices and rolls.
+const FOCUS_TYPES = ["Normal", "Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Ghost", "Steel", "Fire", "Water", "Grass", "Electric", "Psychic", "Ice", "Dragon", "Dark", "Fairy"];
+const BALL_NAME = { pokeball: "Poké Ball", greatball: "Great Ball", ultraball: "Ultra Ball" };
+let focus = { enabled: false, surcharge: {}, regions: [] };
+const focusedCost = (ball) => Number(window.ITEM_COSTS?.[ball] ?? LIST_COSTS[ball]) + Number(focus.surcharge[ball] || 0);
+
+async function loadFocusUI() {
+  try {
+    const r = await fetch("/api/focus-type", { credentials: "same-origin" });
+    if (r.ok) focus = await r.json();
+  } catch {}
+  if (!focus.enabled) return;
+  for (const ball of ["pokeball", "greatball", "ultraball"]) {
+    const buy = document.querySelector(`[data-item='${ball}']`);
+    if (!buy || buy.parentElement.querySelector(".focus-btn")) continue;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "buy-btn focus-btn";
+    b.dataset.focusBall = ball;
+    b.onclick = () => openFocusPicker(ball);
+    buy.after(b);
+  }
+  renderBallPrices();
+}
+
+function renderBallPrices() {
+  if (!focus.enabled) return;
+  for (const b of document.querySelectorAll("[data-focus-ball]")) {
+    const ball = b.dataset.focusBall;
+    const buy = document.querySelector(`[data-item='${ball}']`);
+    b.disabled = !!buy?.disabled; // e.g. nothing to catch during a Live event
+    b.textContent = `🎯 Focused Throw · ${focusedCost(ball).toLocaleString()} CC`;
+    b.setAttribute("aria-label", `Focused Throw with a ${BALL_NAME[ball]}, ${focusedCost(ball).toLocaleString()} CC`);
+  }
+}
+
+function openFocusPicker(ball) {
+  if (isExpired()) return;
+  const d = document.createElement("dialog");
+  d.className = "cc-dialog focus-dialog";
+  d.setAttribute("aria-labelledby", "focusTitle");
+  const cost = focusedCost(ball);
+  d.innerHTML = `
+    <h2 id="focusTitle"><img src="/public/sprites/items/${ball}.png" alt="" class="focus-ball"> Focused Throw: ${BALL_NAME[ball]}</h2>
+    <p class="focus-note">Pick a type or a Region. The throw only catches Pokémon from it, at the ${BALL_NAME[ball]}'s usual Tier odds, Legendary and Mythic included.</p>
+    <div class="focus-tabs" role="tablist" aria-label="Focus on">
+      <button type="button" role="tab" data-tab="type" aria-selected="true">Types</button>
+      <button type="button" role="tab" data-tab="region" aria-selected="false">Regions</button>
+    </div>
+    <div class="focus-pills" data-panel="type" role="radiogroup" aria-label="Type"></div>
+    <div class="focus-pills" data-panel="region" role="radiogroup" aria-label="Region" hidden></div>
+    <div class="cc-dialog-actions">
+      <button type="button" class="cc-btn" data-act="cancel">Cancel</button>
+      <button type="button" class="cc-btn cc-btn--primary" data-act="throw" disabled>Pick a type or Region</button>
+    </div>`;
+  const go = d.querySelector('[data-act="throw"]');
+  let picked = null;
+  const allPills = () => d.querySelectorAll(".focus-pill");
+  const addPill = (panel, name, cls, dataType) => {
+    const p = document.createElement("button");
+    p.type = "button";
+    p.className = cls;
+    if (dataType) p.dataset.type = dataType;
+    p.setAttribute("role", "radio");
+    p.setAttribute("aria-checked", "false");
+    p.textContent = name;
+    p.onclick = () => {
+      picked = name;
+      for (const q of allPills()) q.setAttribute("aria-checked", String(q === p));
+      go.disabled = (user?.cc ?? 0) < cost;
+      go.textContent = go.disabled ? `Not enough CC (${cost.toLocaleString()})` : `Throw for ${cost.toLocaleString()} CC`;
+    };
+    panel.append(p);
+  };
+  const typePanel = d.querySelector('[data-panel="type"]');
+  const regionPanel = d.querySelector('[data-panel="region"]');
+  for (const t of FOCUS_TYPES) addPill(typePanel, t, "cc-type focus-pill", t.toLowerCase());
+  for (const r of focus.regions ?? []) addPill(regionPanel, r, "cc-type focus-pill focus-region", null);
+  for (const tab of d.querySelectorAll("[data-tab]")) {
+    tab.onclick = () => {
+      for (const t of d.querySelectorAll("[data-tab]")) t.setAttribute("aria-selected", String(t === tab));
+      typePanel.hidden = tab.dataset.tab !== "type";
+      regionPanel.hidden = tab.dataset.tab !== "region";
+    };
+  }
+  d.querySelector('[data-act="cancel"]').onclick = () => d.close();
+  go.onclick = () => { d.close(); if (picked) throwBall(ball, picked); };
+  d.addEventListener("close", () => d.remove());
+  document.body.append(d);
+  d.showModal();
+}
+
 let liveEvents = null;
 async function loadLiveEventsUI(fresh = false) {
   liveEvents = await fetchLiveEvents(userId, { fresh });
@@ -48,6 +142,7 @@ async function loadLiveEventsUI(fresh = false) {
     const el = document.querySelector(`[data-price="${key}"]`);
     if (el) el.innerHTML = priceHTML(liveEvents, cat, LIST_COSTS[key]);
   }
+  renderBallPrices(); // the Focused Throw prices follow the ball's
   const choice = liveEvents?.paidChoice;
   const box = document.getElementById("liveEventChoice");
   box.innerHTML = choice
@@ -107,7 +202,7 @@ async function loadUser() {
 
   user = await res.json();
   updateUI();
-  loadLiveEventsUI();
+  loadLiveEventsUI().then(loadFocusUI);
 }
 
 // ======================================================
@@ -348,59 +443,57 @@ function newRequestId() {
 // BUY POKEBALL (server authoritative)
 // ======================================================
 async function buyPokeball(type, cost) {
-  const ballSprite = `/public/sprites/items/${type}.png`;
-
   showShopModal({
     title: "Confirm Purchase?",
     message: `Buy a ${type.replace("ball", " Ball")} for ${cost} CC?`,
-    sprites: [ballSprite],
-    onConfirm: async () => {
-      const reward = await fetch("/api/rewardPokemon", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: userId, source: type }),
-      }).then((r) => r.json());
-
-      if (!reward.success) {
-        showShopModal({
-          title: "Error",
-          message: reward.error || "Reward could not be generated.",
-          onConfirm: () => {},
-        });
-        return;
-      }
-
-      if (typeof reward.cc === "number") {
-        user.cc = reward.cc;
-        updateUI();
-      }
-
-      const rarityHTML = tierPill(reward.pokemon.rarity);
-
-      showShopModal({
-        title: "You caught a Pokémon!",
-        message: `${rarityHTML}<br><strong class="reward-line">${escapeHtml(displayNameFromStored(reward.pokemon.name))}</strong>`,
-        sprites: [reward.pokemon.sprite],
-        onConfirm: () => {},
-      });
-
-      setTimeout(() => {
-        const overlay = document.getElementById("shopModalOverlay");
-        if (!overlay) return;
-
-        const cancelBtn = overlay.querySelector(".modal-btn.cancel");
-        if (cancelBtn) {
-          cancelBtn.disabled = true;
-          cancelBtn.textContent = "Reward Locked";
-          cancelBtn.style.opacity = "0.5";
-
-          const clone = cancelBtn.cloneNode(true);
-          cancelBtn.parentNode.replaceChild(clone, cancelBtn);
-        }
-      }, 50);
-    },
+    sprites: [`/public/sprites/items/${type}.png`],
+    onConfirm: () => throwBall(type, null),
   });
+}
+
+// One throw, plain or focused (the server prices and rolls it). Shows the
+// catch, or the error.
+async function throwBall(type, focusType) {
+  const reward = await fetch("/api/rewardPokemon", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: userId, source: type, ...(focusType && { focus: focusType }) }),
+  }).then((r) => r.json()).catch(() => ({ success: false, error: "Network error. Please try again." }));
+
+  if (!reward.success) {
+    showShopModal({ title: "Error", message: escapeHtml(reward.error || "Reward could not be generated."), onConfirm: () => {} });
+    return;
+  }
+
+  if (typeof reward.cc === "number") {
+    user.cc = reward.cc;
+    updateUI();
+  }
+
+  const rarityHTML = tierPill(reward.pokemon.rarity);
+  const f = reward.focus;
+  const focusLine = f ? `<br><small>Focused on ${escapeHtml(f.name)}</small>` : "";
+
+  showShopModal({
+    title: "You caught a Pokémon!",
+    message: `${rarityHTML}<br><strong class="reward-line">${escapeHtml(displayNameFromStored(reward.pokemon.name))}</strong>${focusLine}`,
+    sprites: [reward.pokemon.sprite],
+    onConfirm: () => {},
+  });
+
+  setTimeout(() => {
+    const overlay = document.getElementById("shopModalOverlay");
+    if (!overlay) return;
+    const cancelBtn = overlay.querySelector(".modal-btn.cancel");
+    if (cancelBtn) {
+      cancelBtn.disabled = true;
+      cancelBtn.textContent = "Reward Locked";
+      cancelBtn.style.opacity = "0.5";
+      const clone = cancelBtn.cloneNode(true);
+      cancelBtn.parentNode.replaceChild(clone, cancelBtn);
+    }
+  }, 50);
 }
 
 // ======================================================

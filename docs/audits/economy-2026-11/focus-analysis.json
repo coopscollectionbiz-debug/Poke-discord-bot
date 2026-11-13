@@ -1,0 +1,4931 @@
+{
+  "generatedAt": "2026-11-13T17:45:47.926Z",
+  "cap": 4,
+  "summary": {
+    "chaseWithMythicFocus": [
+      {
+        "tier": "legendary",
+        "species": 49,
+        "cheapest": [
+          {
+            "focus": "Poison",
+            "kind": "type",
+            "species": "Venusaur",
+            "tier": "legendary",
+            "chanceX": 49.56,
+            "ccFocused": 119159,
+            "ccPlain": 3937167,
+            "daysOfIncome": 32
+          },
+          {
+            "focus": "Normal",
+            "kind": "type",
+            "species": "Regigigas",
+            "tier": "legendary",
+            "chanceX": 49,
+            "ccFocused": 120526,
+            "ccPlain": 3937167,
+            "daysOfIncome": 32
+          },
+          {
+            "focus": "Ice",
+            "kind": "type",
+            "species": "Articuno",
+            "tier": "legendary",
+            "chanceX": 24.5,
+            "ccFocused": 241051,
+            "ccPlain": 3937167,
+            "daysOfIncome": 64
+          },
+          {
+            "focus": "Ice",
+            "kind": "type",
+            "species": "Regice",
+            "tier": "legendary",
+            "chanceX": 24.5,
+            "ccFocused": 241051,
+            "ccPlain": 3937167,
+            "daysOfIncome": 64
+          },
+          {
+            "focus": "Rock",
+            "kind": "type",
+            "species": "Terrakion",
+            "tier": "legendary",
+            "chanceX": 16.33,
+            "ccFocused": 361577,
+            "ccPlain": 3937167,
+            "daysOfIncome": 96
+          }
+        ],
+        "median": {
+          "focus": "Kalos",
+          "kind": "region",
+          "species": "Goodra",
+          "tier": "legendary",
+          "chanceX": 9.8,
+          "ccFocused": 602628,
+          "ccPlain": 3937167,
+          "daysOfIncome": 160
+        },
+        "priciest": {
+          "focus": "Flying",
+          "kind": "type",
+          "species": "Tornadus-incarnate",
+          "tier": "legendary",
+          "chanceX": 5.44,
+          "ccFocused": 1084730,
+          "ccPlain": 3937167,
+          "daysOfIncome": 288
+        }
+      },
+      {
+        "tier": "mythic",
+        "species": 30,
+        "cheapest": [
+          {
+            "focus": "Bug",
+            "kind": "type",
+            "species": "Genesect",
+            "tier": "mythic",
+            "chanceX": 31.57,
+            "ccFocused": 502719,
+            "ccPlain": 10581136,
+            "daysOfIncome": 134
+          },
+          {
+            "focus": "Fighting",
+            "kind": "type",
+            "species": "Keldeo-ordinary",
+            "tier": "mythic",
+            "chanceX": 30,
+            "ccFocused": 529057,
+            "ccPlain": 10581136,
+            "daysOfIncome": 141
+          },
+          {
+            "focus": "Ground",
+            "kind": "type",
+            "species": "Groudon",
+            "tier": "mythic",
+            "chanceX": 30,
+            "ccFocused": 529057,
+            "ccPlain": 10581136,
+            "daysOfIncome": 141
+          },
+          {
+            "focus": "Rock",
+            "kind": "type",
+            "species": "Diancie",
+            "tier": "mythic",
+            "chanceX": 30,
+            "ccFocused": 529057,
+            "ccPlain": 10581136,
+            "daysOfIncome": 141
+          },
+          {
+            "focus": "Electric",
+            "kind": "type",
+            "species": "Zekrom",
+            "tier": "mythic",
+            "chanceX": 30,
+            "ccFocused": 529057,
+            "ccPlain": 10581136,
+            "daysOfIncome": 141
+          }
+        ],
+        "median": {
+          "focus": "Kanto",
+          "kind": "region",
+          "species": "Mew",
+          "tier": "mythic",
+          "chanceX": 15,
+          "ccFocused": 1058114,
+          "ccPlain": 10581136,
+          "daysOfIncome": 281
+        },
+        "priciest": {
+          "focus": "Water",
+          "kind": "type",
+          "species": "Manaphy",
+          "tier": "mythic",
+          "chanceX": 5,
+          "ccFocused": 3174341,
+          "ccPlain": 10581136,
+          "daysOfIncome": 844
+        }
+      }
+    ],
+    "worstProfit": [
+      {
+        "rank": "Legend",
+        "ball": "pokeball",
+        "focus": "Normal",
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      {
+        "rank": "Legend",
+        "ball": "pokeball",
+        "focus": "Fighting",
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      {
+        "rank": "Legend",
+        "ball": "pokeball",
+        "focus": "Flying",
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      {
+        "rank": "Legend",
+        "ball": "pokeball",
+        "focus": "Poison",
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      {
+        "rank": "Legend",
+        "ball": "pokeball",
+        "focus": "Ground",
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      }
+    ],
+    "worstLegendaryChase": [
+      {
+        "rank": "Master",
+        "ball": "pokeball",
+        "focus": "Normal",
+        "adv": 32.67,
+        "species": "Regigigas",
+        "chanceX": 49,
+        "ccToGetFocused": 270379,
+        "ccToGetPlain": 8832381,
+        "capShare": 11.25,
+        "boostedChanceX": 17
+      },
+      {
+        "rank": "Master",
+        "ball": "pokeball",
+        "focus": "Poison",
+        "adv": 32.67,
+        "species": "Venusaur",
+        "chanceX": 49,
+        "ccToGetFocused": 270379,
+        "ccToGetPlain": 8832381,
+        "capShare": 11.25,
+        "boostedChanceX": 17
+      },
+      {
+        "rank": "Master",
+        "ball": "greatball",
+        "focus": "Normal",
+        "adv": 32.67,
+        "species": "Regigigas",
+        "chanceX": 49,
+        "ccToGetFocused": 151145,
+        "ccToGetPlain": 4937402,
+        "capShare": 11.25,
+        "boostedChanceX": 17
+      },
+      {
+        "rank": "Master",
+        "ball": "greatball",
+        "focus": "Poison",
+        "adv": 32.67,
+        "species": "Venusaur",
+        "chanceX": 49,
+        "ccToGetFocused": 151145,
+        "ccToGetPlain": 4937402,
+        "capShare": 11.25,
+        "boostedChanceX": 17
+      },
+      {
+        "rank": "Master",
+        "ball": "ultraball",
+        "focus": "Normal",
+        "adv": 32.67,
+        "species": "Regigigas",
+        "chanceX": 49,
+        "ccToGetFocused": 120526,
+        "ccToGetPlain": 3937167,
+        "capShare": 11.25,
+        "boostedChanceX": 17
+      },
+      {
+        "rank": "Master",
+        "ball": "ultraball",
+        "focus": "Poison",
+        "adv": 32.67,
+        "species": "Venusaur",
+        "chanceX": 49,
+        "ccToGetFocused": 120526,
+        "ccToGetPlain": 3937167,
+        "capShare": 11.25,
+        "boostedChanceX": 17
+      },
+      {
+        "rank": "Legend",
+        "ball": "pokeball",
+        "focus": "Normal",
+        "adv": 32.67,
+        "species": "Regigigas",
+        "chanceX": 49,
+        "ccToGetFocused": 230710,
+        "ccToGetPlain": 7536543,
+        "capShare": 11.25,
+        "boostedChanceX": 17
+      },
+      {
+        "rank": "Legend",
+        "ball": "pokeball",
+        "focus": "Poison",
+        "adv": 32.67,
+        "species": "Venusaur",
+        "chanceX": 49,
+        "ccToGetFocused": 230710,
+        "ccToGetPlain": 7536543,
+        "capShare": 11.25,
+        "boostedChanceX": 17
+      },
+      {
+        "rank": "Legend",
+        "ball": "greatball",
+        "focus": "Normal",
+        "adv": 32.67,
+        "species": "Regigigas",
+        "chanceX": 49,
+        "ccToGetFocused": 128123,
+        "ccToGetPlain": 4185343,
+        "capShare": 11.25,
+        "boostedChanceX": 17
+      },
+      {
+        "rank": "Legend",
+        "ball": "greatball",
+        "focus": "Poison",
+        "adv": 32.67,
+        "species": "Venusaur",
+        "chanceX": 49,
+        "ccToGetFocused": 128123,
+        "ccToGetPlain": 4185343,
+        "capShare": 11.25,
+        "boostedChanceX": 17
+      }
+    ]
+  },
+  "dex": [
+    {
+      "region": "Kanto",
+      "ball": "pokeball",
+      "species": 149,
+      "plainCC": 23122288,
+      "focusCC": 5193477,
+      "speedup": 4.45
+    },
+    {
+      "region": "Kanto",
+      "ball": "greatball",
+      "species": 101,
+      "plainCC": 13406673,
+      "focusCC": 3302371,
+      "speedup": 4.06
+    },
+    {
+      "region": "Kanto",
+      "ball": "ultraball",
+      "species": 72,
+      "plainCC": 10911336,
+      "focusCC": 2782345,
+      "speedup": 3.92
+    },
+    {
+      "region": "Johto",
+      "ball": "pokeball",
+      "species": 97,
+      "plainCC": 23042971,
+      "focusCC": 4931285,
+      "speedup": 4.67
+    },
+    {
+      "region": "Johto",
+      "ball": "greatball",
+      "species": 74,
+      "plainCC": 13209113,
+      "focusCC": 2819902,
+      "speedup": 4.68
+    },
+    {
+      "region": "Johto",
+      "ball": "ultraball",
+      "species": 54,
+      "plainCC": 10695706,
+      "focusCC": 2289005,
+      "speedup": 4.67
+    },
+    {
+      "region": "Hoenn",
+      "ball": "pokeball",
+      "species": 130,
+      "plainCC": 25927815,
+      "focusCC": 7921811,
+      "speedup": 3.27
+    },
+    {
+      "region": "Hoenn",
+      "ball": "greatball",
+      "species": 100,
+      "plainCC": 14688613,
+      "focusCC": 4442596,
+      "speedup": 3.31
+    },
+    {
+      "region": "Hoenn",
+      "ball": "ultraball",
+      "species": 63,
+      "plainCC": 11822202,
+      "focusCC": 3555860,
+      "speedup": 3.32
+    },
+    {
+      "region": "Sinnoh",
+      "ball": "pokeball",
+      "species": 99,
+      "plainCC": 25966885,
+      "focusCC": 8004204,
+      "speedup": 3.24
+    },
+    {
+      "region": "Sinnoh",
+      "ball": "greatball",
+      "species": 75,
+      "plainCC": 14819123,
+      "focusCC": 4680431,
+      "speedup": 3.17
+    },
+    {
+      "region": "Sinnoh",
+      "ball": "ultraball",
+      "species": 56,
+      "plainCC": 11967268,
+      "focusCC": 3820649,
+      "speedup": 3.13
+    },
+    {
+      "region": "Unova",
+      "ball": "pokeball",
+      "species": 149,
+      "plainCC": 25921464,
+      "focusCC": 7921252,
+      "speedup": 3.27
+    },
+    {
+      "region": "Unova",
+      "ball": "greatball",
+      "species": 114,
+      "plainCC": 14666807,
+      "focusCC": 4442779,
+      "speedup": 3.3
+    },
+    {
+      "region": "Unova",
+      "ball": "ultraball",
+      "species": 64,
+      "plainCC": 11797947,
+      "focusCC": 3557547,
+      "speedup": 3.32
+    },
+    {
+      "region": "Kalos",
+      "ball": "pokeball",
+      "species": 67,
+      "plainCC": 20474590,
+      "focusCC": 3196289,
+      "speedup": 6.41
+    },
+    {
+      "region": "Kalos",
+      "ball": "greatball",
+      "species": 47,
+      "plainCC": 11949118,
+      "focusCC": 1934799,
+      "speedup": 6.18
+    },
+    {
+      "region": "Kalos",
+      "ball": "ultraball",
+      "species": 39,
+      "plainCC": 9742988,
+      "focusCC": 1597685,
+      "speedup": 6.1
+    }
+  ],
+  "results": [
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Normal",
+      "kind": "type",
+      "poolSpecies": 95,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "chanceX": 49,
+          "ccToGetFocused": 270379,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Fighting",
+      "kind": "type",
+      "poolSpecies": 43,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.11,
+          "species": "Sawk",
+          "tier": "uncommon",
+          "chanceX": 27.17
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blaziken",
+          "chanceX": 7,
+          "ccToGetFocused": 1892653,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Flying",
+      "kind": "type",
+      "poolSpecies": 86,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 8.52,
+          "species": "Gyarados",
+          "tier": "epic",
+          "chanceX": 12.78
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 2433411,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Poison",
+      "kind": "type",
+      "poolSpecies": 59,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "chanceX": 49,
+          "ccToGetFocused": 270379,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Ground",
+      "kind": "type",
+      "poolSpecies": 59,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 9.06,
+          "species": "Sandslash",
+          "tier": "uncommon",
+          "chanceX": 13.58
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 1351895,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Rock",
+      "kind": "type",
+      "poolSpecies": 54,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 17.14,
+          "species": "Binacle",
+          "tier": "common",
+          "chanceX": 25.71
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 811137,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Bug",
+      "kind": "type",
+      "poolSpecies": 65,
+      "donateEV": 556,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.37,
+        "profitAtSale": 0.46
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.42,
+          "species": "Scizor",
+          "tier": "epic",
+          "chanceX": 23.13
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Ghost",
+      "kind": "type",
+      "poolSpecies": 33,
+      "donateEV": 556,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.37,
+        "profitAtSale": 0.46
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.21,
+          "species": "Doublade",
+          "tier": "uncommon",
+          "chanceX": 27.32
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Steel",
+      "kind": "type",
+      "poolSpecies": 38,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 21.73,
+          "species": "Doublade",
+          "tier": "uncommon",
+          "chanceX": 32.6
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Cobalion",
+          "chanceX": 9.8,
+          "ccToGetFocused": 1351895,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Fire",
+      "kind": "type",
+      "poolSpecies": 52,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 27.17,
+          "species": "Houndour",
+          "tier": "uncommon",
+          "chanceX": 40.75
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 2433411,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Water",
+      "kind": "type",
+      "poolSpecies": 112,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.72,
+          "species": "Squirtle",
+          "tier": "rare",
+          "chanceX": 7.08
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blastoise",
+          "chanceX": 7,
+          "ccToGetFocused": 1892653,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Grass",
+      "kind": "type",
+      "poolSpecies": 82,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 6.81,
+          "species": "Gourgeist",
+          "tier": "rare",
+          "chanceX": 10.22
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 1892653,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Electric",
+      "kind": "type",
+      "poolSpecies": 41,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.33,
+          "species": "Heliolisk",
+          "tier": "rare",
+          "chanceX": 23
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Zapdos",
+          "chanceX": 16.33,
+          "ccToGetFocused": 811137,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Psychic",
+      "kind": "type",
+      "poolSpecies": 65,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 10.95,
+          "species": "Reuniclus",
+          "tier": "epic",
+          "chanceX": 16.43
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Delphox",
+          "chanceX": 6.12,
+          "ccToGetFocused": 2163032,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Ice",
+      "kind": "type",
+      "poolSpecies": 32,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.11,
+          "species": "Cryogonal",
+          "tier": "uncommon",
+          "chanceX": 27.17
+        },
+        "worstLegendary": {
+          "adv": 16.33,
+          "species": "Regice",
+          "chanceX": 24.5,
+          "ccToGetFocused": 540758,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 5.13,
+      "boostedLegendaryChanceX": 12.75
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Dragon",
+      "kind": "type",
+      "poolSpecies": 31,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 120,
+          "species": "Noibat",
+          "tier": "common",
+          "chanceX": 180
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Zygarde",
+          "chanceX": 6.12,
+          "ccToGetFocused": 2163032,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Dark",
+      "kind": "type",
+      "poolSpecies": 42,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 20,
+          "species": "Poochyena",
+          "tier": "common",
+          "chanceX": 30
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 811137,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Fairy",
+      "kind": "type",
+      "poolSpecies": 33,
+      "donateEV": 556,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.37,
+        "profitAtSale": 0.46
+      },
+      "chase": {
+        "worst": {
+          "adv": 19.27,
+          "species": "Sylveon",
+          "tier": "epic",
+          "chanceX": 28.91
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Kanto",
+      "kind": "region",
+      "poolSpecies": 149,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 7
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 1892653,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Johto",
+      "kind": "region",
+      "poolSpecies": 97,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.43,
+          "species": "Miltank",
+          "tier": "uncommon",
+          "chanceX": 8.15
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Meganium",
+          "chanceX": 7,
+          "ccToGetFocused": 1892653,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Hoenn",
+      "kind": "region",
+      "poolSpecies": 130,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.79,
+          "species": "Metang",
+          "tier": "epic",
+          "chanceX": 7.19
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Sceptile",
+          "chanceX": 4.9,
+          "ccToGetFocused": 2703790,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Sinnoh",
+      "kind": "region",
+      "poolSpecies": 99,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 7.22,
+          "species": "Turtwig",
+          "tier": "rare",
+          "chanceX": 10.82
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Torterra",
+          "chanceX": 4.9,
+          "ccToGetFocused": 2703790,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Unova",
+      "kind": "region",
+      "poolSpecies": 149,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.48,
+          "species": "Servine",
+          "tier": "epic",
+          "chanceX": 8.21
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Serperior",
+          "chanceX": 4.9,
+          "ccToGetFocused": 2703790,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Master",
+      "ball": "pokeball",
+      "focus": "Kalos",
+      "kind": "region",
+      "poolSpecies": 67,
+      "donateEV": 581,
+      "plainDonateEV": 581,
+      "pMythic": 0.11,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.39,
+        "profitAtSale": 0.48
+      },
+      "chase": {
+        "worst": {
+          "adv": 13.58,
+          "species": "Dedenne",
+          "tier": "uncommon",
+          "chanceX": 20.38
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 1351895,
+          "ccToGetPlain": 8832381
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Normal",
+      "kind": "type",
+      "poolSpecies": 65,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "chanceX": 49,
+          "ccToGetFocused": 151145,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Fighting",
+      "kind": "type",
+      "poolSpecies": 34,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.11,
+          "species": "Sawk",
+          "tier": "uncommon",
+          "chanceX": 27.17
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blaziken",
+          "chanceX": 7,
+          "ccToGetFocused": 1058015,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Flying",
+      "kind": "type",
+      "poolSpecies": 67,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 8.52,
+          "species": "Gyarados",
+          "tier": "epic",
+          "chanceX": 12.78
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 1360305,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Poison",
+      "kind": "type",
+      "poolSpecies": 36,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "chanceX": 49,
+          "ccToGetFocused": 151145,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Ground",
+      "kind": "type",
+      "poolSpecies": 45,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 9.06,
+          "species": "Sandslash",
+          "tier": "uncommon",
+          "chanceX": 13.58
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 755725,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Rock",
+      "kind": "type",
+      "poolSpecies": 47,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.52,
+          "species": "Crustle",
+          "tier": "uncommon",
+          "chanceX": 23.29
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 453435,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Bug",
+      "kind": "type",
+      "poolSpecies": 45,
+      "donateEV": 947,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.32,
+        "profitAtSale": 0.4
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.65,
+          "species": "Scizor",
+          "tier": "epic",
+          "chanceX": 23.47
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Ghost",
+      "kind": "type",
+      "poolSpecies": 24,
+      "donateEV": 947,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.32,
+        "profitAtSale": 0.4
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.48,
+          "species": "Shuppet",
+          "tier": "uncommon",
+          "chanceX": 27.72
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Steel",
+      "kind": "type",
+      "poolSpecies": 32,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 21.73,
+          "species": "Doublade",
+          "tier": "uncommon",
+          "chanceX": 32.6
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Cobalion",
+          "chanceX": 9.8,
+          "ccToGetFocused": 755725,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Fire",
+      "kind": "type",
+      "poolSpecies": 43,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 27.17,
+          "species": "Houndour",
+          "tier": "uncommon",
+          "chanceX": 40.75
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 1360305,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Water",
+      "kind": "type",
+      "poolSpecies": 80,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.72,
+          "species": "Squirtle",
+          "tier": "rare",
+          "chanceX": 7.08
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blastoise",
+          "chanceX": 7,
+          "ccToGetFocused": 1058015,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Grass",
+      "kind": "type",
+      "poolSpecies": 59,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 6.81,
+          "species": "Gourgeist",
+          "tier": "rare",
+          "chanceX": 10.22
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 1058015,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Electric",
+      "kind": "type",
+      "poolSpecies": 30,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.33,
+          "species": "Heliolisk",
+          "tier": "rare",
+          "chanceX": 23
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Zapdos",
+          "chanceX": 16.33,
+          "ccToGetFocused": 453435,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Psychic",
+      "kind": "type",
+      "poolSpecies": 46,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 10.95,
+          "species": "Reuniclus",
+          "tier": "epic",
+          "chanceX": 16.43
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Delphox",
+          "chanceX": 6.13,
+          "ccToGetFocused": 1209160,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Ice",
+      "kind": "type",
+      "poolSpecies": 25,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.11,
+          "species": "Cryogonal",
+          "tier": "uncommon",
+          "chanceX": 27.17
+        },
+        "worstLegendary": {
+          "adv": 16.33,
+          "species": "Regice",
+          "chanceX": 24.5,
+          "ccToGetFocused": 302290,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 5.13,
+      "boostedLegendaryChanceX": 12.75
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Dragon",
+      "kind": "type",
+      "poolSpecies": 30,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 54.33,
+          "species": "Axew",
+          "tier": "uncommon",
+          "chanceX": 81.5
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Zygarde",
+          "chanceX": 6.13,
+          "ccToGetFocused": 1209160,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Dark",
+      "kind": "type",
+      "poolSpecies": 36,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 12.78,
+          "species": "Umbreon",
+          "tier": "epic",
+          "chanceX": 19.17
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 453435,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Fairy",
+      "kind": "type",
+      "poolSpecies": 20,
+      "donateEV": 947,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.32,
+        "profitAtSale": 0.4
+      },
+      "chase": {
+        "worst": {
+          "adv": 19.56,
+          "species": "Gardevoir",
+          "tier": "epic",
+          "chanceX": 29.33
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Kanto",
+      "kind": "region",
+      "poolSpecies": 101,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 7
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 1058015,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Johto",
+      "kind": "region",
+      "poolSpecies": 74,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.43,
+          "species": "Miltank",
+          "tier": "uncommon",
+          "chanceX": 8.15
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Meganium",
+          "chanceX": 7,
+          "ccToGetFocused": 1058015,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Hoenn",
+      "kind": "region",
+      "poolSpecies": 100,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.79,
+          "species": "Metang",
+          "tier": "epic",
+          "chanceX": 7.19
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Sceptile",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1511450,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Sinnoh",
+      "kind": "region",
+      "poolSpecies": 75,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 7.22,
+          "species": "Turtwig",
+          "tier": "rare",
+          "chanceX": 10.82
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Torterra",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1511450,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Unova",
+      "kind": "region",
+      "poolSpecies": 114,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.48,
+          "species": "Servine",
+          "tier": "epic",
+          "chanceX": 8.21
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Serperior",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1511450,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Master",
+      "ball": "greatball",
+      "focus": "Kalos",
+      "kind": "region",
+      "poolSpecies": 47,
+      "donateEV": 1030,
+      "plainDonateEV": 1030,
+      "pMythic": 0.39,
+      "flat50": {
+        "cost": 2996,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 13.58,
+          "species": "Dedenne",
+          "tier": "uncommon",
+          "chanceX": 20.38
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 755725,
+          "ccToGetPlain": 4937402
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Normal",
+      "kind": "type",
+      "poolSpecies": 29,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "chanceX": 49,
+          "ccToGetFocused": 120526,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Fighting",
+      "kind": "type",
+      "poolSpecies": 28,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 11.15,
+          "species": "Hawlucha",
+          "tier": "rare",
+          "chanceX": 16.73
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blaziken",
+          "chanceX": 7,
+          "ccToGetFocused": 843679,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Flying",
+      "kind": "type",
+      "poolSpecies": 42,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 8.52,
+          "species": "Gyarados",
+          "tier": "epic",
+          "chanceX": 12.78
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 1084730,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Poison",
+      "kind": "type",
+      "poolSpecies": 23,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "chanceX": 49,
+          "ccToGetFocused": 120526,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Ground",
+      "kind": "type",
+      "poolSpecies": 33,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 7.67,
+          "species": "Dugtrio",
+          "tier": "rare",
+          "chanceX": 11.5
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 602628,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Rock",
+      "kind": "type",
+      "poolSpecies": 40,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "tier": "legendary",
+          "chanceX": 16.33
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 361577,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Bug",
+      "kind": "type",
+      "poolSpecies": 24,
+      "donateEV": 1527,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.26,
+        "profitAtSale": 0.32
+      },
+      "chase": {
+        "worst": {
+          "adv": 16.15,
+          "species": "Scizor",
+          "tier": "epic",
+          "chanceX": 24.22
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Ghost",
+      "kind": "type",
+      "poolSpecies": 18,
+      "donateEV": 1527,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.26,
+        "profitAtSale": 0.32
+      },
+      "chase": {
+        "worst": {
+          "adv": 11.74,
+          "species": "Gourgeist",
+          "tier": "rare",
+          "chanceX": 17.61
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Steel",
+      "kind": "type",
+      "poolSpecies": 27,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 9.44,
+          "species": "Magneton",
+          "tier": "rare",
+          "chanceX": 14.15
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Cobalion",
+          "chanceX": 9.8,
+          "ccToGetFocused": 602628,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Fire",
+      "kind": "type",
+      "poolSpecies": 39,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 6.81,
+          "species": "Talonflame",
+          "tier": "rare",
+          "chanceX": 10.22
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 1084730,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Water",
+      "kind": "type",
+      "poolSpecies": 54,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.72,
+          "species": "Squirtle",
+          "tier": "rare",
+          "chanceX": 7.08
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blastoise",
+          "chanceX": 7,
+          "ccToGetFocused": 843679,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Grass",
+      "kind": "type",
+      "poolSpecies": 38,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 6.81,
+          "species": "Gourgeist",
+          "tier": "rare",
+          "chanceX": 10.22
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 843679,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Electric",
+      "kind": "type",
+      "poolSpecies": 18,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.33,
+          "species": "Heliolisk",
+          "tier": "rare",
+          "chanceX": 23
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Zapdos",
+          "chanceX": 16.33,
+          "ccToGetFocused": 361577,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Psychic",
+      "kind": "type",
+      "poolSpecies": 34,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 10.95,
+          "species": "Reuniclus",
+          "tier": "epic",
+          "chanceX": 16.43
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Delphox",
+          "chanceX": 6.13,
+          "ccToGetFocused": 964204,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Ice",
+      "kind": "type",
+      "poolSpecies": 19,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 16.33,
+          "species": "Regice",
+          "tier": "legendary",
+          "chanceX": 24.5
+        },
+        "worstLegendary": {
+          "adv": 16.33,
+          "species": "Regice",
+          "chanceX": 24.5,
+          "ccToGetFocused": 241051,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 5.13,
+      "boostedLegendaryChanceX": 12.75
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Dragon",
+      "kind": "type",
+      "poolSpecies": 28,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 12.27,
+          "species": "Dratini",
+          "tier": "rare",
+          "chanceX": 18.4
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Zygarde",
+          "chanceX": 6.13,
+          "ccToGetFocused": 964204,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Dark",
+      "kind": "type",
+      "poolSpecies": 26,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 12.78,
+          "species": "Umbreon",
+          "tier": "epic",
+          "chanceX": 19.17
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 361577,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Fairy",
+      "kind": "type",
+      "poolSpecies": 14,
+      "donateEV": 1527,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.26,
+        "profitAtSale": 0.32
+      },
+      "chase": {
+        "worst": {
+          "adv": 20.18,
+          "species": "Sylveon",
+          "tier": "epic",
+          "chanceX": 30.27
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Kanto",
+      "kind": "region",
+      "poolSpecies": 72,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 7
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 843679,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Johto",
+      "kind": "region",
+      "poolSpecies": 54,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.11,
+          "species": "Pupitar",
+          "tier": "epic",
+          "chanceX": 7.67
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Meganium",
+          "chanceX": 7,
+          "ccToGetFocused": 843679,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Hoenn",
+      "kind": "region",
+      "poolSpecies": 63,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.79,
+          "species": "Metang",
+          "tier": "epic",
+          "chanceX": 7.19
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Sceptile",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1205255,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Sinnoh",
+      "kind": "region",
+      "poolSpecies": 56,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 7.22,
+          "species": "Turtwig",
+          "tier": "rare",
+          "chanceX": 10.82
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Torterra",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1205255,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Unova",
+      "kind": "region",
+      "poolSpecies": 64,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.48,
+          "species": "Servine",
+          "tier": "epic",
+          "chanceX": 8.21
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Serperior",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1205255,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Master",
+      "ball": "ultraball",
+      "focus": "Kalos",
+      "kind": "region",
+      "poolSpecies": 39,
+      "donateEV": 1708,
+      "plainDonateEV": 1708,
+      "pMythic": 1.13,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "tier": "legendary",
+          "chanceX": 9.8
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 602628,
+          "ccToGetPlain": 3937167
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Normal",
+      "kind": "type",
+      "poolSpecies": 95,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "chanceX": 49,
+          "ccToGetFocused": 230710,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Fighting",
+      "kind": "type",
+      "poolSpecies": 43,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.11,
+          "species": "Sawk",
+          "tier": "uncommon",
+          "chanceX": 27.17
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blaziken",
+          "chanceX": 7,
+          "ccToGetFocused": 1614973,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Flying",
+      "kind": "type",
+      "poolSpecies": 86,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 8.52,
+          "species": "Gyarados",
+          "tier": "epic",
+          "chanceX": 12.78
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 2076394,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Poison",
+      "kind": "type",
+      "poolSpecies": 59,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "chanceX": 49,
+          "ccToGetFocused": 230710,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Ground",
+      "kind": "type",
+      "poolSpecies": 59,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 9.06,
+          "species": "Sandslash",
+          "tier": "uncommon",
+          "chanceX": 13.58
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 1153552,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Rock",
+      "kind": "type",
+      "poolSpecies": 54,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 17.14,
+          "species": "Binacle",
+          "tier": "common",
+          "chanceX": 25.71
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 692131,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Bug",
+      "kind": "type",
+      "poolSpecies": 65,
+      "donateEV": 614,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.41,
+        "profitAtSale": 0.51
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.43,
+          "species": "Volcarona",
+          "tier": "epic",
+          "chanceX": 23.15
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Ghost",
+      "kind": "type",
+      "poolSpecies": 33,
+      "donateEV": 614,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.41,
+        "profitAtSale": 0.51
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.23,
+          "species": "Shuppet",
+          "tier": "uncommon",
+          "chanceX": 27.34
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Steel",
+      "kind": "type",
+      "poolSpecies": 38,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 21.73,
+          "species": "Doublade",
+          "tier": "uncommon",
+          "chanceX": 32.6
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Cobalion",
+          "chanceX": 9.8,
+          "ccToGetFocused": 1153552,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Fire",
+      "kind": "type",
+      "poolSpecies": 52,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 27.17,
+          "species": "Houndour",
+          "tier": "uncommon",
+          "chanceX": 40.75
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 2076394,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Water",
+      "kind": "type",
+      "poolSpecies": 112,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.72,
+          "species": "Squirtle",
+          "tier": "rare",
+          "chanceX": 7.08
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blastoise",
+          "chanceX": 7,
+          "ccToGetFocused": 1614973,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Grass",
+      "kind": "type",
+      "poolSpecies": 82,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 6.81,
+          "species": "Gourgeist",
+          "tier": "rare",
+          "chanceX": 10.22
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 1614973,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Electric",
+      "kind": "type",
+      "poolSpecies": 41,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.33,
+          "species": "Heliolisk",
+          "tier": "rare",
+          "chanceX": 23
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Zapdos",
+          "chanceX": 16.33,
+          "ccToGetFocused": 692131,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Psychic",
+      "kind": "type",
+      "poolSpecies": 65,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 10.95,
+          "species": "Reuniclus",
+          "tier": "epic",
+          "chanceX": 16.43
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Delphox",
+          "chanceX": 6.13,
+          "ccToGetFocused": 1845684,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Ice",
+      "kind": "type",
+      "poolSpecies": 32,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.11,
+          "species": "Cryogonal",
+          "tier": "uncommon",
+          "chanceX": 27.17
+        },
+        "worstLegendary": {
+          "adv": 16.33,
+          "species": "Regice",
+          "chanceX": 24.5,
+          "ccToGetFocused": 461421,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 5.13,
+      "boostedLegendaryChanceX": 12.75
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Dragon",
+      "kind": "type",
+      "poolSpecies": 31,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 120,
+          "species": "Noibat",
+          "tier": "common",
+          "chanceX": 180
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Zygarde",
+          "chanceX": 6.13,
+          "ccToGetFocused": 1845684,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Dark",
+      "kind": "type",
+      "poolSpecies": 42,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 20,
+          "species": "Poochyena",
+          "tier": "common",
+          "chanceX": 30
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 692131,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Fairy",
+      "kind": "type",
+      "poolSpecies": 33,
+      "donateEV": 614,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.41,
+        "profitAtSale": 0.51
+      },
+      "chase": {
+        "worst": {
+          "adv": 19.29,
+          "species": "Sylveon",
+          "tier": "epic",
+          "chanceX": 28.94
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Kanto",
+      "kind": "region",
+      "poolSpecies": 149,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 7
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 1614973,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Johto",
+      "kind": "region",
+      "poolSpecies": 97,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.43,
+          "species": "Miltank",
+          "tier": "uncommon",
+          "chanceX": 8.15
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Meganium",
+          "chanceX": 7,
+          "ccToGetFocused": 1614973,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Hoenn",
+      "kind": "region",
+      "poolSpecies": 130,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.79,
+          "species": "Metang",
+          "tier": "epic",
+          "chanceX": 7.19
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Sceptile",
+          "chanceX": 4.9,
+          "ccToGetFocused": 2307105,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Sinnoh",
+      "kind": "region",
+      "poolSpecies": 99,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 7.22,
+          "species": "Turtwig",
+          "tier": "rare",
+          "chanceX": 10.82
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Torterra",
+          "chanceX": 4.9,
+          "ccToGetFocused": 2307105,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Unova",
+      "kind": "region",
+      "poolSpecies": 149,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.48,
+          "species": "Servine",
+          "tier": "epic",
+          "chanceX": 8.21
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Serperior",
+          "chanceX": 4.9,
+          "ccToGetFocused": 2307105,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Legend",
+      "ball": "pokeball",
+      "focus": "Kalos",
+      "kind": "region",
+      "poolSpecies": 67,
+      "donateEV": 643,
+      "plainDonateEV": 643,
+      "pMythic": 0.12,
+      "flat50": {
+        "cost": 1499,
+        "profit": 0.43,
+        "profitAtSale": 0.54
+      },
+      "chase": {
+        "worst": {
+          "adv": 13.58,
+          "species": "Dedenne",
+          "tier": "uncommon",
+          "chanceX": 20.38
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 1153552,
+          "ccToGetPlain": 7536543
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Normal",
+      "kind": "type",
+      "poolSpecies": 65,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "chanceX": 49,
+          "ccToGetFocused": 128123,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Fighting",
+      "kind": "type",
+      "poolSpecies": 34,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.11,
+          "species": "Sawk",
+          "tier": "uncommon",
+          "chanceX": 27.17
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blaziken",
+          "chanceX": 7,
+          "ccToGetFocused": 896859,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Flying",
+      "kind": "type",
+      "poolSpecies": 67,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 8.52,
+          "species": "Gyarados",
+          "tier": "epic",
+          "chanceX": 12.78
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 1153105,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Poison",
+      "kind": "type",
+      "poolSpecies": 36,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "chanceX": 49,
+          "ccToGetFocused": 128123,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Ground",
+      "kind": "type",
+      "poolSpecies": 45,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 9.06,
+          "species": "Sandslash",
+          "tier": "uncommon",
+          "chanceX": 13.58
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 640614,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Rock",
+      "kind": "type",
+      "poolSpecies": 47,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.52,
+          "species": "Crustle",
+          "tier": "uncommon",
+          "chanceX": 23.29
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 384368,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Bug",
+      "kind": "type",
+      "poolSpecies": 45,
+      "donateEV": 1028,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.7,
+          "species": "Volcarona",
+          "tier": "epic",
+          "chanceX": 23.55
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Ghost",
+      "kind": "type",
+      "poolSpecies": 24,
+      "donateEV": 1028,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.55,
+          "species": "Shuppet",
+          "tier": "uncommon",
+          "chanceX": 27.82
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Steel",
+      "kind": "type",
+      "poolSpecies": 32,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 21.73,
+          "species": "Doublade",
+          "tier": "uncommon",
+          "chanceX": 32.6
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Cobalion",
+          "chanceX": 9.8,
+          "ccToGetFocused": 640614,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Fire",
+      "kind": "type",
+      "poolSpecies": 43,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 27.17,
+          "species": "Houndour",
+          "tier": "uncommon",
+          "chanceX": 40.75
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 1153105,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Water",
+      "kind": "type",
+      "poolSpecies": 80,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.72,
+          "species": "Squirtle",
+          "tier": "rare",
+          "chanceX": 7.08
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blastoise",
+          "chanceX": 7,
+          "ccToGetFocused": 896859,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Grass",
+      "kind": "type",
+      "poolSpecies": 59,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 6.81,
+          "species": "Gourgeist",
+          "tier": "rare",
+          "chanceX": 10.22
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 896859,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Electric",
+      "kind": "type",
+      "poolSpecies": 30,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.33,
+          "species": "Heliolisk",
+          "tier": "rare",
+          "chanceX": 23
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Zapdos",
+          "chanceX": 16.33,
+          "ccToGetFocused": 384368,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Psychic",
+      "kind": "type",
+      "poolSpecies": 46,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 10.95,
+          "species": "Reuniclus",
+          "tier": "epic",
+          "chanceX": 16.43
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Delphox",
+          "chanceX": 6.13,
+          "ccToGetFocused": 1024982,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Ice",
+      "kind": "type",
+      "poolSpecies": 25,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 18.11,
+          "species": "Cryogonal",
+          "tier": "uncommon",
+          "chanceX": 27.17
+        },
+        "worstLegendary": {
+          "adv": 16.33,
+          "species": "Regice",
+          "chanceX": 24.5,
+          "ccToGetFocused": 256245,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 5.13,
+      "boostedLegendaryChanceX": 12.75
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Dragon",
+      "kind": "type",
+      "poolSpecies": 30,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 54.33,
+          "species": "Axew",
+          "tier": "uncommon",
+          "chanceX": 81.5
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Zygarde",
+          "chanceX": 6.13,
+          "ccToGetFocused": 1024982,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Dark",
+      "kind": "type",
+      "poolSpecies": 36,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 12.78,
+          "species": "Umbreon",
+          "tier": "epic",
+          "chanceX": 19.17
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 384368,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Fairy",
+      "kind": "type",
+      "poolSpecies": 20,
+      "donateEV": 1028,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.34,
+        "profitAtSale": 0.43
+      },
+      "chase": {
+        "worst": {
+          "adv": 19.63,
+          "species": "Gardevoir",
+          "tier": "epic",
+          "chanceX": 29.44
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Kanto",
+      "kind": "region",
+      "poolSpecies": 101,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 7
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 896859,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Johto",
+      "kind": "region",
+      "poolSpecies": 74,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.43,
+          "species": "Miltank",
+          "tier": "uncommon",
+          "chanceX": 8.15
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Meganium",
+          "chanceX": 7,
+          "ccToGetFocused": 896859,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Hoenn",
+      "kind": "region",
+      "poolSpecies": 100,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.79,
+          "species": "Metang",
+          "tier": "epic",
+          "chanceX": 7.19
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Sceptile",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1281227,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Sinnoh",
+      "kind": "region",
+      "poolSpecies": 75,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 7.22,
+          "species": "Turtwig",
+          "tier": "rare",
+          "chanceX": 10.82
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Torterra",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1281227,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Unova",
+      "kind": "region",
+      "poolSpecies": 114,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.48,
+          "species": "Servine",
+          "tier": "epic",
+          "chanceX": 8.21
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Serperior",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1281227,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Legend",
+      "ball": "greatball",
+      "focus": "Kalos",
+      "kind": "region",
+      "poolSpecies": 47,
+      "donateEV": 1123,
+      "plainDonateEV": 1123,
+      "pMythic": 0.46,
+      "flat50": {
+        "cost": 2995,
+        "profit": 0.38,
+        "profitAtSale": 0.47
+      },
+      "chase": {
+        "worst": {
+          "adv": 13.58,
+          "species": "Dedenne",
+          "tier": "uncommon",
+          "chanceX": 20.38
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 640614,
+          "ccToGetPlain": 4185343
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Normal",
+      "kind": "type",
+      "poolSpecies": 29,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Regigigas",
+          "chanceX": 49,
+          "ccToGetFocused": 118421,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Fighting",
+      "kind": "type",
+      "poolSpecies": 28,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 11.15,
+          "species": "Hawlucha",
+          "tier": "rare",
+          "chanceX": 16.73
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blaziken",
+          "chanceX": 7,
+          "ccToGetFocused": 828948,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Flying",
+      "kind": "type",
+      "poolSpecies": 42,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 8.52,
+          "species": "Gyarados",
+          "tier": "epic",
+          "chanceX": 12.78
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 1065790,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Poison",
+      "kind": "type",
+      "poolSpecies": 23,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 49
+        },
+        "worstLegendary": {
+          "adv": 32.67,
+          "species": "Venusaur",
+          "chanceX": 49,
+          "ccToGetFocused": 118421,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 11.25,
+      "boostedLegendaryChanceX": 17
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Ground",
+      "kind": "type",
+      "poolSpecies": 33,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 7.67,
+          "species": "Dugtrio",
+          "tier": "rare",
+          "chanceX": 11.5
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 592106,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Rock",
+      "kind": "type",
+      "poolSpecies": 40,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "tier": "legendary",
+          "chanceX": 16.33
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 355263,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Bug",
+      "kind": "type",
+      "poolSpecies": 24,
+      "donateEV": 1543,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.26,
+        "profitAtSale": 0.32
+      },
+      "chase": {
+        "worst": {
+          "adv": 16.16,
+          "species": "Volcarona",
+          "tier": "epic",
+          "chanceX": 24.24
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Ghost",
+      "kind": "type",
+      "poolSpecies": 18,
+      "donateEV": 1543,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.26,
+        "profitAtSale": 0.32
+      },
+      "chase": {
+        "worst": {
+          "adv": 11.75,
+          "species": "Gourgeist",
+          "tier": "rare",
+          "chanceX": 17.63
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Steel",
+      "kind": "type",
+      "poolSpecies": 27,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 9.44,
+          "species": "Magneton",
+          "tier": "rare",
+          "chanceX": 14.15
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Cobalion",
+          "chanceX": 9.8,
+          "ccToGetFocused": 592106,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Fire",
+      "kind": "type",
+      "poolSpecies": 39,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 6.81,
+          "species": "Talonflame",
+          "tier": "rare",
+          "chanceX": 10.22
+        },
+        "worstLegendary": {
+          "adv": 3.63,
+          "species": "Charizard",
+          "chanceX": 5.44,
+          "ccToGetFocused": 1065790,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.36,
+      "boostedLegendaryChanceX": 4.64
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Water",
+      "kind": "type",
+      "poolSpecies": 54,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.72,
+          "species": "Squirtle",
+          "tier": "rare",
+          "chanceX": 7.08
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Blastoise",
+          "chanceX": 7,
+          "ccToGetFocused": 828948,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Grass",
+      "kind": "type",
+      "poolSpecies": 38,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 6.81,
+          "species": "Gourgeist",
+          "tier": "rare",
+          "chanceX": 10.22
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 828948,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Electric",
+      "kind": "type",
+      "poolSpecies": 18,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 15.33,
+          "species": "Heliolisk",
+          "tier": "rare",
+          "chanceX": 23
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Zapdos",
+          "chanceX": 16.33,
+          "ccToGetFocused": 355263,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Psychic",
+      "kind": "type",
+      "poolSpecies": 34,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 10.95,
+          "species": "Reuniclus",
+          "tier": "epic",
+          "chanceX": 16.43
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Delphox",
+          "chanceX": 6.12,
+          "ccToGetFocused": 947369,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Ice",
+      "kind": "type",
+      "poolSpecies": 19,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 16.33,
+          "species": "Regice",
+          "tier": "legendary",
+          "chanceX": 24.5
+        },
+        "worstLegendary": {
+          "adv": 16.33,
+          "species": "Regice",
+          "chanceX": 24.5,
+          "ccToGetFocused": 236842,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 5.13,
+      "boostedLegendaryChanceX": 12.75
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Dragon",
+      "kind": "type",
+      "poolSpecies": 28,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 12.27,
+          "species": "Dratini",
+          "tier": "rare",
+          "chanceX": 18.4
+        },
+        "worstLegendary": {
+          "adv": 4.08,
+          "species": "Zygarde",
+          "chanceX": 6.12,
+          "ccToGetFocused": 947369,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.53,
+      "boostedLegendaryChanceX": 5.1
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Dark",
+      "kind": "type",
+      "poolSpecies": 26,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 12.78,
+          "species": "Umbreon",
+          "tier": "epic",
+          "chanceX": 19.17
+        },
+        "worstLegendary": {
+          "adv": 10.89,
+          "species": "Tyranitar",
+          "chanceX": 16.33,
+          "ccToGetFocused": 355263,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 3.08,
+      "boostedLegendaryChanceX": 10.2
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Fairy",
+      "kind": "type",
+      "poolSpecies": 14,
+      "donateEV": 1543,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.26,
+        "profitAtSale": 0.32
+      },
+      "chase": {
+        "worst": {
+          "adv": 20.2,
+          "species": "Sylveon",
+          "tier": "epic",
+          "chanceX": 30.3
+        },
+        "worstLegendary": null
+      }
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Kanto",
+      "kind": "region",
+      "poolSpecies": 72,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "tier": "legendary",
+          "chanceX": 7
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Venusaur",
+          "chanceX": 7,
+          "ccToGetFocused": 828948,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Johto",
+      "kind": "region",
+      "poolSpecies": 54,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.11,
+          "species": "Pupitar",
+          "tier": "epic",
+          "chanceX": 7.67
+        },
+        "worstLegendary": {
+          "adv": 4.67,
+          "species": "Meganium",
+          "chanceX": 7,
+          "ccToGetFocused": 828948,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.75,
+      "boostedLegendaryChanceX": 5.67
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Hoenn",
+      "kind": "region",
+      "poolSpecies": 63,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 4.79,
+          "species": "Metang",
+          "tier": "epic",
+          "chanceX": 7.19
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Sceptile",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1184212,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Sinnoh",
+      "kind": "region",
+      "poolSpecies": 56,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 7.22,
+          "species": "Turtwig",
+          "tier": "rare",
+          "chanceX": 10.82
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Torterra",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1184212,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Unova",
+      "kind": "region",
+      "poolSpecies": 64,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 5.48,
+          "species": "Servine",
+          "tier": "epic",
+          "chanceX": 8.21
+        },
+        "worstLegendary": {
+          "adv": 3.27,
+          "species": "Serperior",
+          "chanceX": 4.9,
+          "ccToGetFocused": 1184212,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 0.23,
+      "boostedLegendaryChanceX": 4.25
+    },
+    {
+      "rank": "Legend",
+      "ball": "ultraball",
+      "focus": "Kalos",
+      "kind": "region",
+      "poolSpecies": 39,
+      "donateEV": 1728,
+      "plainDonateEV": 1728,
+      "pMythic": 1.15,
+      "flat50": {
+        "cost": 5977,
+        "profit": 0.29,
+        "profitAtSale": 0.36
+      },
+      "chase": {
+        "worst": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "tier": "legendary",
+          "chanceX": 9.8
+        },
+        "worstLegendary": {
+          "adv": 6.53,
+          "species": "Zygarde",
+          "chanceX": 9.8,
+          "ccToGetFocused": 592106,
+          "ccToGetPlain": 3868425
+        }
+      },
+      "capShare": 1.45,
+      "boostedLegendaryChanceX": 7.29
+    }
+  ]
+}

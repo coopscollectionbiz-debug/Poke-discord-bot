@@ -63,7 +63,7 @@ async function getJSON(url) {
   const res = await fetch(url, { credentials: "same-origin" });
   const body = await res.json().catch(() => ({}));
   if (res.status === 403) { showExpired(); throw Object.assign(new Error("expired"), { silent: true }); }
-  if (!res.ok) throw new Error(body.error || `Couldn’t load your TMs (${res.status}).`);
+  if (!res.ok) throw new Error(body.error || `Couldn't load your TMs (${res.status}).`);
   return body;
 }
 
@@ -92,10 +92,10 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
       data = await getJSON(`/api/pokemon/tm-options?${new URLSearchParams({ id: userId, species: speciesId, variant })}`);
     } catch (err) {
       if (err.silent) return dialog.close();
-      dialog.innerHTML = `<form method="dialog"><div class="tt-head"><h2 id="ttTitle">Couldn’t load your TMs</h2></div><p class="tt-muted" style="padding:0 16px">${esc(err.message)}</p><div class="tt-foot"><button class="cc-btn" value="close">Close</button></div></form>`;
+      dialog.innerHTML = `<form method="dialog"><div class="tt-head"><h2 id="ttTitle">Couldn't load your TMs</h2></div><p class="tt-muted" style="padding:0 16px">${esc(err.message)}</p><div class="tt-foot"><button class="cc-btn" value="close">Close</button></div></form>`;
       return;
     }
-    if (!data.enabled) { dialog.close(); return toast("TMs aren’t available yet."); }
+    if (!data.enabled) { dialog.close(); return toast("TMs aren't available yet."); }
     if (sel.target && !data.targets.some((t) => t.key === sel.target)) sel.target = null;
     if (!sel.target && data.targets.length === 1) sel.target = data.targets[0].key;
     if (sel.item && !data.tms.some((t) => t.item === sel.item)) sel.item = null;
@@ -119,11 +119,11 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
         <span>${x.uid ? `★ Trained · ${x.tmMoves.map((m) => esc(m.name)).join(", ")}` : `Untrained ×${x.count}`}</span>
         <small>${Object.entries(x.teams).map(([team, on]) => `${LABEL[team]} slot ${on.slot}`).join(" · ") || "Not on a team"}</small></label>`).join("")}</fieldset>` : "";
     const tmStep = !t ? "" : data.tms.length === 0
-      ? `<p class="tt-note">You don’t have any TMs. <a href="${pageHref("/public/dashboardshop/", userId)}">Buy TMs in the Shop</a>.</p>`
+      ? `<p class="tt-note">You don't have any TMs. <a href="${pageHref("/public/dashboardshop/", userId)}">Buy TMs in the Shop</a>.</p>`
       : `<fieldset><legend>Which TM?</legend>${data.tms.map((x) => {
           const st = x.status[sel.target];
           const later = st === "teachable" ? x.learnsAt?.[sel.target] : null;
-          const why = st === "known" ? "Already knows it" : st === "incompatible" ? `${esc(name)} can’t learn it` : `You have ${x.owned}${later ? `<br><span class="tt-later">Learns it at Lv ${Number(later)}</span>` : ""}`;
+          const why = st === "known" ? "Already knows it" : st === "incompatible" ? `${esc(name)} can't learn it` : `You have ${x.owned}${later ? `<br><span class="tt-later">Learns it at Lv ${Number(later)}</span>` : ""}`;
           return `<label class="tt-opt${st === "teachable" ? "" : " is-off"}"><input type="radio" name="tt-tm" value="${esc(x.item)}"${sel.item === x.item ? " checked" : ""}${st === "teachable" ? "" : " disabled"}>
             ${tmDisc(x.type)}${moveRow(x)}<small>${why}</small></label>`;
         }).join("")}</fieldset>`;
@@ -131,10 +131,10 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
     // Warn before spending a TM on a move this copy gets by level-up later (owner, 2026-11-13).
     const laterAt = t && m && m.status[sel.target] === "teachable" ? m.learnsAt?.[sel.target] : null;
     const laterNote = laterAt
-      ? `<p class="tt-note is-warn" role="status"><b>${esc(name)} learns ${esc(m.name)} on its own at Lv ${Number(laterAt)}</b>${Number.isFinite(t.level) ? ` (it’s Lv ${Number(t.level)} now)` : ""}. Teaching it now uses up the TM for a move it will get for free.</p>`
+      ? `<p class="tt-note is-warn" role="status"><b>${esc(name)} learns ${esc(m.name)} on its own at Lv ${Number(laterAt)}</b>${Number.isFinite(t.level) ? ` (it's Lv ${Number(t.level)} now)` : ""}. Teaching it now uses up the TM for a move it will get for free.</p>`
       : "";
     const equipStep =!t || !m || m.status[sel.target] !== "teachable" ? "" : teamsOn().length === 0
-      ? `<p class="tt-muted">This ${esc(name)} isn’t on a team. ${esc(m.name)} will be learned, and you can pick it in a team’s moves later.</p>`
+      ? `<p class="tt-muted">This ${esc(name)} isn't on a team. ${esc(m.name)} will be learned, and you can pick it in a team's moves later.</p>`
       : teamsOn().map(([team, on]) => on.moves.length < data.maxMoves
           ? `<fieldset><legend>${LABEL[team]} (slot ${on.slot})</legend><p class="tt-muted">Now: ${on.moves.map((x) => esc(x.name)).join(", ")}</p>
               <label class="tt-opt"><input type="checkbox" data-team="${team}" data-add${sel.equip[team] === "add" ? " checked" : ""}><span>Add ${esc(m.name)} to these moves</span></label></fieldset>`
@@ -191,13 +191,13 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
       busy = false;
       if (res.status === 403 && /session/i.test(body.error ?? "")) { dialog.close(); return showExpired(); }
       if (res.status === 409) { note = body.error || "Something changed. Check and confirm again."; return load(); }
-      if (!res.ok || !body.success) { note = body.error || `Couldn’t teach the move (${res.status}).`; return draw(); }
+      if (!res.ok || !body.success) { note = body.error || `Couldn't teach the move (${res.status}).`; return draw(); }
       dialog.close();
       toast(`${name} learned ${body.move?.name ?? m.name}!${body.saveNotice ? ` ${body.saveNotice}` : ""}`, { tone: "success" });
       onDone?.(body);
     } catch {
       busy = false;
-      note = "Couldn’t reach the server. Check your Bag before trying again.";
+      note = "Couldn't reach the server. Check your Bag before trying again.";
       draw();
     }
   };

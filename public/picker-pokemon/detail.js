@@ -182,7 +182,7 @@ async function load(id, ctx, opts) {
     };
     dialog.querySelector(".dt-close")?.focus();
   } catch (err) {
-    dialog.innerHTML = `<div class="dt-head"><h2 id="detailTitle">Couldn’t load this Pokémon</h2><button type="button" class="dt-close" aria-label="Close">✕</button></div><p class="dt-muted" style="padding:0 16px 16px">${esc(err?.message || "Please try again.")}</p>`;
+    dialog.innerHTML = `<div class="dt-head"><h2 id="detailTitle">Couldn't load this Pokémon</h2><button type="button" class="dt-close" aria-label="Close">✕</button></div><p class="dt-muted" style="padding:0 16px 16px">${esc(err?.message || "Please try again.")}</p>`;
     dialog.onclick = (e) => { if (e.target === dialog || e.target.closest(".dt-close")) dialog.close(); };
   }
 }

@@ -27,7 +27,7 @@ const pct = (w, l) => (w + l ? Math.round((100 * w) / (w + l)) : 0);
 async function getJSON(url) {
   const res = await fetch(url, { credentials: "same-origin" });
   if (res.status === 403) { const e = new Error("expired"); e.expired = true; throw e; }
-  if (!res.ok) throw new Error(`Couldn’t load the overview (${res.status}).`);
+  if (!res.ok) throw new Error(`Couldn't load the overview (${res.status}).`);
   return res.json();
 }
 
@@ -99,7 +99,7 @@ async function load() {
   } catch (err) {
     app.innerHTML = "";
     if (err.expired) return showExpired();
-    return showBanner(err.message, { title: "Couldn’t load the overview" });
+    return showBanner(err.message, { title: "Couldn't load the overview" });
   }
   for (const [k, p] of Object.entries(data)) p.name = displaySpeciesName(k, p.name);
 
@@ -127,7 +127,7 @@ async function load() {
       <div class="ov-rating"><span class="ov-big">${fmt(r.rating)}</span>${r.position ? `<span class="ov-pos">#${r.position} <small>of ${fmt(r.players)}</small></span>` : `<span class="ov-pos"><small>Not ranked yet</small></span>`}</div>
       <dl class="ov-kv"><div><dt>Record</dt><dd>${r.wins}W–${r.losses}L</dd></div><div><dt>Win rate</dt><dd>${pct(r.wins, r.losses)}%</dd></div><div><dt>Streak</dt><dd class="good">${r.streak ? `W${r.streak}` : "—"}</dd></div></dl>
       <div class="ov-wl${r.wins + r.losses ? "" : " is-empty"}" role="img" aria-label="${r.wins} wins, ${r.losses} losses"><i style="width:${pct(r.wins, r.losses)}%"></i></div>
-      <p class="ov-note">${r.wins + r.losses ? "This season’s ranked and wager battles." : "Play a ranked battle in Discord: /battle ranked:True"}</p>
+      <p class="ov-note">${r.wins + r.losses ? "This season's ranked and wager battles." : "Play a ranked battle in Discord: /battle ranked:True"}</p>
     </section>
     <section class="ov-card ov-casual" aria-labelledby="ovCasual">
       <h2 id="ovCasual">Casual</h2>
@@ -145,7 +145,7 @@ async function load() {
     </section>
     <section class="ov-card ov-dex" aria-labelledby="ovDex">
       <h2 id="ovDex">Pokédex</h2>
-      <p class="ov-note">${ownedTotal} of ${total} owned · Mega forms don’t count as entries</p>
+      <p class="ov-note">${ownedTotal} of ${total} owned · Mega forms don't count as entries</p>
       ${regions.map((g) => { const n = countRegistered(g, up.pokedex); return `<div class="ov-reg"><span>${esc(g.name)}</span><span class="ov-bar" role="img" aria-label="${esc(g.name)}: ${n} of ${g.ids.length}"><i style="width:${Math.round((n / g.ids.length) * 100)}%"></i></span><span>${n}/${g.ids.length}</span></div>`; }).join("")}
       <a class="ov-link" href="${pageHref("/public/picker-pokemon/")}">Open the Collection</a>
     </section>

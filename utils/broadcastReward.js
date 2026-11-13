@@ -178,7 +178,7 @@ const embed = new EmbedBuilder()
   )
   .setThumbnail(spriteUrl)
   .setFooter({
-    text: `🌟 Coop’s Collection Broadcast${isBypassSource ? " (Bypass)" : ""}`,
+    text: `🌟 Coop's Collection Broadcast${isBypassSource ? " (Bypass)" : ""}`,
   })
   .setTimestamp();
 

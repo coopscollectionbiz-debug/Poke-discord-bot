@@ -209,7 +209,7 @@ export function donateOne({ user, pokeId, variant, pokemonData, economy, isOnTea
   if (!p) return { error: "Invalid Pokémon ID" };
   if (!VARIANTS.has(variant)) return { error: "Invalid variant." };
   if ((user.pokemon?.[pid]?.[variant] ?? 0) <= 0) {
-    return { error: `You don’t own a ${variant === "shiny" ? "shiny " : ""}${p.name} to donate.` };
+    return { error: `You don't own a ${variant === "shiny" ? "shiny " : ""}${p.name} to donate.` };
   }
   // Individual copies (docs/adr/0001): a copy on a Team is never donated
   // (canRemoveCopies refuses it with code "on_team"); other copies of the

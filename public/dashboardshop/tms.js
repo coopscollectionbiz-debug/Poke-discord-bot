@@ -131,7 +131,7 @@ async function loadLearners(item, list) {
         ].join("")
       : `<li class="tmx-lr-note">None of your Pokémon can learn it yet.</li>`;
   } catch {
-    if (list.isConnected) list.innerHTML = `<li class="tmx-lr-note">Couldn’t load your Pokémon. Close this and try again.</li>`;
+    if (list.isConnected) list.innerHTML = `<li class="tmx-lr-note">Couldn't load your Pokémon. Close this and try again.</li>`;
   }
 }
 
@@ -191,7 +191,7 @@ function confirmBuy(itemId) {
       showMessage({ title: "TM bought", message: `${body.qty > 1 ? `${body.qty} × ` : ""}${body.name} added to your bag (${fmt(body.cost)} CC).${body.saveNotice ? ` ${body.saveNotice}` : ""}`, tone: "success" });
     } catch (err) {
       close();
-      showMessage({ title: "Couldn’t buy the TM", message: err.server ? err.message : "Couldn’t reach the server. Check your CC before trying again.", tone: "error" });
+      showMessage({ title: "Couldn't buy the TM", message: err.server ? err.message : "Couldn't reach the server. Check your CC before trying again.", tone: "error" });
     }
   };
 }

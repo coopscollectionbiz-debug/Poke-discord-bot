@@ -376,7 +376,7 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     if (outcome.canceled) {
       const why = outcome.canceled === "team_changed" ? `<@${challengerId}>'s Team got stronger since the offer`
         : outcome.canceled.startsWith("no_team") ? "a Team is empty" : "one of you is out of battles";
-      return closeOffer(`Wager canceled — ${why}. Stake refunded.`);
+      return closeOffer(`Wager canceled because ${why}. Stakes refunded.`);
     }
     logEvent("battle", challengerId, {
       defenderId, mode: "wager", stake: outcome.stake, seed: outcome.seed,

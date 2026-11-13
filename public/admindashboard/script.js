@@ -479,7 +479,7 @@ function tabItems(body, data) {
         <label>Amount<input id="itAmount" type="number" min="1" step="1" value="1" /></label>
         <button class="btn-primary" id="itReview" type="button">Review</button>
       </div>
-      <p class="faint">Every item that can sit in a bag, including TMs, Mega Stones and Mega Shards. Items marked “not live” wait in the bag until players can use them.</p>` : `<p class="muted">No items can be granted right now.</p>`}
+      <p class="faint">Every item that can sit in a bag, including TMs, Mega Stones and Mega Shards. Items marked "not live" wait in the bag until players can use them.</p>` : `<p class="muted">No items can be granted right now.</p>`}
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Bag</h2></div>
@@ -587,7 +587,7 @@ function tabAuras(body, data) {
         <label style="flex:2 1 260px">Aura<select id="auAdd">${auraOptions(addable)}</select></label>
         <button class="btn-primary" id="auReview" type="button">Review</button>
       </div>
-      <p class="faint">Any Aura, including retired event Auras. One marked “not live” has no art yet: it’s owned now and shows once its art ships.</p>` : `<p class="muted">They own every Aura.</p>`}
+      <p class="faint">Any Aura, including retired event Auras. One marked "not live" has no art yet: it's owned now and shows once its art ships.</p>` : `<p class="muted">They own every Aura.</p>`}
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Owned (${fmt(owned.length)})</h2></div>

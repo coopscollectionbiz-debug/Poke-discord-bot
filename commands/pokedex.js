@@ -161,10 +161,10 @@ async function runPokedex(interaction, trainerData, client, { startOn = "entry" 
     if (found.poke) return showEntry(interaction, found.poke, user, all, { startOn });
 
     // Not found: up to three "Did you mean" buttons, private.
-    if (!found.suggestions.length) return safeReply(interaction, { content: `No Pokémon is called “${name}”.`, flags: MessageFlags.Ephemeral });
+    if (!found.suggestions.length) return safeReply(interaction, { content: `No Pokémon is called "${name}".`, flags: MessageFlags.Ephemeral });
     const nonce = randomBytes(5).toString("hex");
     const msg = await interaction.editReply({
-      content: `No Pokémon is called “${name}”. Did you mean:`,
+      content: `No Pokémon is called "${name}". Did you mean:`,
       components: [new ActionRowBuilder().addComponents(found.suggestions.map((p) =>
         new ButtonBuilder().setCustomId(`pdx_pick:${nonce}:${p.id}`).setLabel(p.name).setStyle(ButtonStyle.Primary)))],
     });
@@ -212,7 +212,7 @@ async function showEntry(interaction, poke, user, all, { startOn = "entry" } = {
           `**Evolves To:** ${idsToNames(poke.evolvesTo, idToName)}\n**Evolves From:** ${idsToNames(poke.evolvesFrom, idToName)}\n\n` +
           `${line("Normal", normalCount, 1, "normal")}\n${line("✨ Shiny", shinyCount, 2, "shiny")}`)
       .setImage(getSprite(viewingShiny))
-      .setFooter({ text: Number(poke.id) >= 650 ? `Coop's Collection — /pokedex · Sprite: ${spriteRecord(poke.id)?.credit?.project?.replace(/ \(.*$/, "") ?? "Smogon sprite project"} · /credits` : "Coop's Collection — /pokedex" });
+      .setFooter({ text: Number(poke.id) >= 650 ? `Coop's Collection · /pokedex · Sprite: ${spriteRecord(poke.id)?.credit?.project?.replace(/ \(.*$/, "") ?? "Smogon sprite project"} · /credits` : "Coop's Collection · /pokedex" });
   };
 
   const buildRow = (disabled = false) => new ActionRowBuilder().addComponents(

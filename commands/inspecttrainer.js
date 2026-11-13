@@ -67,7 +67,7 @@ export default {
     if (name) {
       const k = searchKey(name);
       group = groups.find((g) => searchKey(g.id) === k) ?? groups.find((g) => searchKey(g.id).startsWith(k)) ?? null;
-      if (!group) return safeReply(interaction, { content: `No trainer is called “${name}”.`, flags: MessageFlags.Ephemeral });
+      if (!group) return safeReply(interaction, { content: `No trainer is called "${name}".`, flags: MessageFlags.Ephemeral });
       sprite = group.sprites[0];
       heading = pretty(group.id);
     } else {

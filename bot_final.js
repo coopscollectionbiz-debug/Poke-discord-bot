@@ -1,5 +1,5 @@
 // ==========================================================
-// 🤖 Coop’s Collection Discord Bot
+// 🤖 Coop's Collection Discord Bot
 // ==========================================================
 // Includes:
 //  • Rank Buffs & Weighted Acquisition
@@ -2308,7 +2308,7 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
         user.cc ??= 0;
         const price = discountedPrice(liveEffects(), "stones", COST); // a Live event's discount
         if (user.cc < price) {
-          return { ok: false, error: `Not enough CC — requires ${price} CC.`, cc: user.cc, status: 400 };
+          return { ok: false, error: `Not enough CC. This costs ${price} CC.`, cc: user.cc, status: 400 };
         }
         const granted = grantItem(user, "evolution_stone", 1);
         if (!granted.ok) return { ok: false, error: granted.error, status: 400 };

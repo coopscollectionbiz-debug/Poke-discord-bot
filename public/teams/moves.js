@@ -4,7 +4,9 @@
 // from the other team). Up to 4 distinct moves the copy has learned by its
 // real Level, plus the TM moves of the slot's copy when it is a trained copy
 // (`s.uid`, TM system). Saves at once through POST /api/pokemon/moveset;
-// "Use automatic moves" clears the choice. The server re-checks every rule.
+// "Use recommended moves" (full sim) fills in the picks for the Team's
+// Battle plan (services/battlePlans.js recommendMoves) for the player to
+// save; "Use automatic moves" clears the choice. The server re-checks every rule.
 // ==========================================================
 
 import { toast, showActionError, showExpired } from "/public/shared/shell.js";
@@ -50,7 +52,7 @@ async function postMoveset(userId, team, s, moves) {
  * Open the editor for copy `s` ({ id, variant, name }) on team `team`.
  * onSaved(): called after a successful save (the page re-renders).
  */
-export async function openMovesEditor({ userId, team, s, name, suggested = [], onSaved, onTaught }) {
+export async function openMovesEditor({ userId, team, s, name, suggested = [], recommended = null, onSaved, onTaught }) {
   lastFocus = document.activeElement;
   saving = false;
   ensureDialog();
@@ -84,6 +86,8 @@ export async function openMovesEditor({ userId, team, s, name, suggested = [], o
   // Full sim: moves picked before the switch that its learnset no longer
   // teaches still fight until this Moveset is saved again.
   const kept = (chosen ?? []).filter((m) => !copy.learnable.some((l) => l.id === m.id));
+  // Only moves it can pick now (the plan view may predate a TM teach).
+  const rec = (recommended?.moves ?? []).filter((id) => copy.learnable.some((l) => l.id === id)).slice(0, MAX);
 
   const draw = () => {
     const full = picked.length >= MAX;
@@ -98,6 +102,7 @@ export async function openMovesEditor({ userId, team, s, name, suggested = [], o
       <div class="tm-moves-tools">
         ${d.tm?.enabled ? `<button type="button" class="cc-btn" data-teach>Teach a TM</button>` : ""}
         ${other ? `<button type="button" class="cc-btn" data-copy>Copy from ${esc(LABEL[OTHER[team]])}</button>` : ""}
+        ${rec.length ? `<button type="button" class="cc-btn" data-recommended>Use recommended moves</button>` : ""}
         <button type="button" class="cc-btn" data-auto>Use automatic moves</button>
       </div>
       <ul class="tm-movelist" aria-label="Learned moves">
@@ -135,6 +140,12 @@ export async function openMovesEditor({ userId, team, s, name, suggested = [], o
       picked = other.map((m) => m.id).filter((id) => copy.learnable.some((l) => l.id === id)).slice(0, MAX);
       draw();
       toast(`Copied the ${LABEL[OTHER[team]]}'s moves. Save to keep them.`);
+      return;
+    }
+    if (e.target.closest("[data-recommended]")) {
+      picked = [...rec];
+      draw();
+      toast(`Picked for ${recommended.planName}. Save to keep them.`);
       return;
     }
     if (e.target.closest("[data-auto]") || e.target.closest("[data-save]")) {

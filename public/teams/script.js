@@ -27,7 +27,7 @@ import { playerId, showBanner, showExpired, toast, showActionError, confirmDialo
 import { displaySpeciesName } from "/public/shared/names.js";
 import { scanFx } from "/public/shared/spriteFx.js";
 import { openMovesEditor } from "/public/teams/moves.js";
-import { loadPlans, planRowHtml, savePlan, suggestedFor } from "/public/teams/plans.js";
+import { loadPlans, planRowHtml, savePlan, suggestedFor, recommendedFor } from "/public/teams/plans.js";
 import { chooseCopy } from "/public/teams/copyPicker.js";
 import { openItemPicker, itemIcon, claimStarter } from "/public/teams/items.js";
 import { openDetail } from "/public/picker-pokemon/detail.js";
@@ -740,7 +740,7 @@ function onClick(e) {
   }
   else if (act === "moves") {
     const s = team(t)[i];
-    if (s) openMovesEditor({ userId, team: t, s, name: species(s.id).name, suggested: suggestedFor(state.plans, t, s), onSaved: () => refreshPlans(), onTaught: () => refreshCopies() });
+    if (s) openMovesEditor({ userId, team: t, s, name: species(s.id).name, suggested: suggestedFor(state.plans, t, s), recommended: recommendedFor(state.plans, t, s), onSaved: () => refreshPlans(), onTaught: () => { refreshCopies(); refreshPlans(); } });
   }
   else if (act === "discard") discard();
   else if (act === "save") save();
@@ -971,7 +971,7 @@ function openTeamDetails(t, i) {
       // The slot's own copy (TM system): its trained copy when the variant matches the slot.
       if (act === "moves") {
         const slot = { id: d.id, variant, ...(variant === s.variant && s.uid ? { uid: s.uid } : {}) };
-        openMovesEditor({ userId, team: t, s: slot, name: species(d.id).name, suggested: suggestedFor(state.plans, t, slot), onSaved: () => refreshPlans(), onTaught: () => refreshCopies() });
+        openMovesEditor({ userId, team: t, s: slot, name: species(d.id).name, suggested: suggestedFor(state.plans, t, slot), recommended: recommendedFor(state.plans, t, slot), onSaved: () => refreshPlans(), onTaught: () => { refreshCopies(); refreshPlans(); } });
       }
       else if (act === "collection") leaveTo(collectionHref(d.id, variant));
     },

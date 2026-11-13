@@ -20,6 +20,7 @@ import { Battle, PRNG } from "@pkmn/sim";
 import { moveRoles, DEFAULT_PLAN } from "../../../catalog/battlePlans.js";
 import { installOverrides, nextSlotChoice, seedFor } from "../showdown/engine.js";
 import { estimateDamage, speedOf, typeFactor } from "./estimate.js";
+import { WEATHER_OF, weatherFor } from "./weather.js";
 import { createRng } from "../rng.js";
 import { MOVE_RANDOM_CHANCE } from "../tuning.js";
 
@@ -34,25 +35,13 @@ export const SKILLS = Object.freeze({
 const PLAN_BONUS = 0.6;
 const KO_BONUS = 0.5;
 const STATUS_IMMUNE = { par: ["Electric"], brn: ["Fire"], psn: ["Poison", "Steel"], tox: ["Poison", "Steel"], frz: ["Ice"] };
-const WEATHER_OF = { raindance: "rain", sunnyday: "sun", sandstorm: "sand", snowscape: "snow", hail: "snow" };
-const WEATHER_FANS = {
-  rain: { types: ["Water"], abilities: ["swiftswim", "raindish", "hydration", "dryskin", "drizzle"] },
-  sun: { types: ["Fire"], abilities: ["chlorophyll", "solarpower", "flowergift", "leafguard", "harvest", "protosynthesis", "drought"] },
-  sand: { types: ["Rock", "Ground", "Steel"], abilities: ["sandrush", "sandforce", "sandveil", "sandstream"] },
-  snow: { types: ["Ice"], abilities: ["slushrush", "icebody", "snowcloak", "snowwarning"] },
-};
 
 const alive = (side) => side.pokemon.filter((p) => !p.fainted);
 const usable = (req) => req.active[0].moves.map((m, k) => ({ k, id: m.id, disabled: m.disabled })).filter((m) => !m.disabled);
 
 /** The weather that helps this side's living Pokémon most (types and abilities), or null. */
 export function teamWeather(side) {
-  let best = null, bestCount = 0;
-  for (const [weather, fans] of Object.entries(WEATHER_FANS)) {
-    const count = alive(side).filter((p) => fans.abilities.includes(p.ability) || p.getTypes().some((t) => fans.types.includes(t))).length;
-    if (count > bestCount) { best = weather; bestCount = count; }
-  }
-  return best;
+  return weatherFor(alive(side).map((p) => ({ types: p.getTypes(), ability: p.ability })));
 }
 
 const meanSpeed = (side) => { const ps = alive(side); return ps.reduce((t, p) => t + p.storedStats.spe, 0) / Math.max(1, ps.length); };

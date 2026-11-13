@@ -48,6 +48,9 @@ section("Reading");
   assertEqual(Object.keys(res.body.teams), ["display", "battle"], "and both fighting Teams");
   assertEqual(res.body.teams.display.plan, "allout", "each with its plan");
   assertTrue(Array.isArray(res.body.teams.display.slots) && res.body.teams.display.slots.length === 2, "and one row per Team member for suggestions");
+  const pika = res.body.teams.display.slots[0];
+  assertTrue(pika.recommended.moves.length >= 1 && pika.recommended.moves.length <= 4 && pika.recommended.helper === null,
+    "each row carries its recommended moves (All-out attack: no plan move)");
   const denied = response();
   await api.get({ query: { id: "A" }, session: "B" }, denied);
   assertEqual(denied.code, 403, "another player's session is refused");

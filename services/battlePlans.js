@@ -8,15 +8,18 @@
 // never fights, so it has no plan. Unset = All-out attack.
 //
 // Readiness counts only the moves each member really brings (its picked
-// Moveset, else its default moves), and suggestions only ever suggest:
-// nothing here changes a Moveset.
+// Moveset, else its default moves), and suggestions and recommended moves
+// only ever suggest: nothing here changes a Moveset.
 // ==========================================================
 
 import { BATTLE_PLANS, DEFAULT_PLAN, isPlanId, moveRoles, planById, planReadiness } from "../catalog/battlePlans.js";
-import { TEAM_TYPES, learnableMoves } from "./movesets.js";
+import { TEAM_TYPES, MAX_MOVES, learnableMoves } from "./movesets.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
 import { autoMoveset } from "../utils/battle/moveset.js";
 import { getMove, getSpecies } from "../utils/battle/data.js";
+import { boosted } from "../utils/battle/ai/estimate.js";
+import { WEATHER_OF, WEATHER_FANS, weatherFor } from "../utils/battle/ai/weather.js";
+import { WEATHER_SETTER_ABILITIES, abilityId, pickAbility } from "../utils/battle/ai/abilities.js";
 
 export { BATTLE_PLANS, DEFAULT_PLAN };
 export const PLAN_TEAMS = TEAM_TYPES; // ["display", "battle"]
@@ -92,11 +95,135 @@ export function planMoves(speciesId, level, planId, env) {
 export function suggestions(user, team, speciesId, variant, { uid = null } = {}) {
   const plan = planById(getPlan(user, team));
   if (!plan?.roles.length) return [];
-  const member = teamMembers(user, team).find((m) => m.speciesId === Number(speciesId) && m.variant === variant && (uid == null || m.copyUid === uid || m.uid === uid));
+  const member = teamMembers(user, team).find(isSlot(speciesId, variant, uid));
   const brought = new Set(member?.moves ?? []);
   return learnableMoves(user, speciesId, variant, { uid })
     .filter((m) => !brought.has(m.id) && getMove(m.id) && moveRoles(m.id).some((r) => plan.roles.includes(r)))
     .sort((a, b) => (b.learnedAt ?? 0) - (a.learnedAt ?? 0))
     .slice(0, MAX_SUGGESTIONS)
     .map((m) => m.id);
+}
+
+const isSlot = (speciesId, variant, uid) => (m) => m.speciesId === Number(speciesId) && m.variant === variant && (uid == null || m.copyUid === uid || m.uid === uid);
+
+/**
+ * What the Moves editor's "Use recommended moves" fills in for this Team
+ * slot: recommendMoves over every move the copy has learned, with its
+ * teammates as they fight now. → { moves, helper }. Saving is the player's call.
+ */
+export function recommended(user, team, speciesId, variant, { uid = null } = {}) {
+  const members = teamMembers(user, team);
+  const self = members.find(isSlot(speciesId, variant, uid));
+  const mates = members.filter((m) => m !== self).map((m) => ({ speciesId: m.speciesId, moves: m.moves }));
+  const ids = learnableMoves(user, speciesId, variant, { uid }).map((m) => m.id).filter((id) => getMove(id));
+  return recommendMoves(Number(speciesId), ids, getPlan(user, team), { mates });
+}
+
+// Recommended moves' scoring. Like utils/battle/ai/estimate.js, a move whose
+// power varies or is fixed counts as a middling hit and a 2–5 hit move as 3
+// hits. A move that recharges or charges first takes two turns, so it counts
+// half; one that faints its user or usually fails is left out.
+const VARIABLE_POWER = 60;
+const MULTI_HIT_AVERAGE = 3;
+const TWO_TURN = new Set(["recharge", "charge"]);
+const LEFT_OUT = new Set(["selfKO", "conditional"]);
+// A new type is picked before a second attack of a type already picked, as
+// long as it's at least this share of the best attack's score.
+const NEW_TYPE_SHARE = 0.5;
+
+const newest = (ids) => ids.at(-1) ?? null; // learned order: the last is the newest
+const averageSpeeds = new WeakMap();
+// The average base Speed of every species, what "a slow Team" is measured against.
+function averageSpeed(env) {
+  const table = getSpecies(1, env);
+  if (!averageSpeeds.has(table)) {
+    let total = 0, n = 0;
+    for (let id = 1; getSpecies(id, env); id++, n++) total += getSpecies(id, env).baseStats.spe;
+    averageSpeeds.set(table, total / n);
+  }
+  return averageSpeeds.get(table);
+}
+
+// The one move for the plan, as the AI would use it (utils/battle/ai/choose.js),
+// or null. ids are in learned order; mates: [{ speciesId, moves }].
+function planHelper(speciesId, ids, plan, mates, env) {
+  const helping = ids.filter((id) => moveRoles(id).some((r) => plan.roles.includes(r)));
+  if (!helping.length) return null;
+  const notBrought = (id) => !mates.some((m) => m.moves.includes(id));
+  switch (plan.id) {
+    case "setup": {
+      // A move that raises the attacking stat it's better at (either, when even),
+      // else one that raises Speed. Calm Mind on a physical attacker raises
+      // nothing it hits with, so it's none.
+      const { atk, spa } = getSpecies(speciesId, env).baseStats;
+      const stats = atk > spa ? ["atk"] : spa > atk ? ["spa"] : ["atk", "spa"];
+      const raises = (id, list) => list.some((s) => getMove(id, env).boosts?.[s] > 0);
+      return newest(helping.filter((id) => raises(id, stats))) ?? newest(helping.filter((id) => raises(id, ["spe"])));
+    }
+    case "hazards": {
+      // Different hazards and screens stack, so only the same move is doubled up.
+      const open = helping.filter(notBrought);
+      return newest(open.filter((id) => moveRoles(id).includes("hazard"))) ?? newest(open);
+    }
+    case "weather": {
+      // The Team's weather, unless a teammate's move or anyone's ability sets it.
+      const team = [{ speciesId, moves: [] }, ...mates];
+      const ability = (m) => abilityId(pickAbility(m.speciesId, "weather") ?? "");
+      const weather = weatherFor(team.map((m) => ({ types: getSpecies(m.speciesId, env).types, ability: ability(m) })));
+      if (!weather) return null;
+      const setsIt = (m) => m.moves.some((id) => WEATHER_OF[id] === weather)
+        || (WEATHER_SETTER_ABILITIES.has(ability(m)) && WEATHER_FANS[weather].abilities.includes(ability(m)));
+      return team.some(setsIt) ? null : newest(helping.filter((id) => WEATHER_OF[id] === weather));
+    }
+    case "speed": {
+      // One setter is enough: Trick Room for a Team slower than the average Pokémon, else Tailwind.
+      if (mates.some((m) => m.moves.some((id) => moveRoles(id).includes("speed")))) return null;
+      const team = [speciesId, ...mates.map((m) => m.speciesId)];
+      const slow = team.reduce((t, id) => t + getSpecies(id, env).baseStats.spe, 0) / team.length < averageSpeed(env);
+      const wanted = slow ? "trickroom" : "tailwind";
+      return helping.includes(wanted) ? wanted : newest(helping);
+    }
+    default:
+      return newest(helping);
+  }
+}
+
+/**
+ * Recommended moves from `ids` (moves it has learned, in learned order) for
+ * plan `planId`: the plan's move first when it has one the plan would use,
+ * then its strongest attacks, new types first. Its own types, the attacking
+ * stat it's better at (raised by the plan's move), accuracy, hits and
+ * drawbacks count. mates: its teammates as [{ speciesId, moves }].
+ * → { moves: 1–4 ids, helper: id | null }
+ */
+export function recommendMoves(speciesId, ids, planId, { mates = [], env = process.env } = {}) {
+  const plan = planById(planId) ?? planById(DEFAULT_PLAN);
+  const species = getSpecies(speciesId, env);
+  const known = ids.filter((id) => getMove(id, env));
+  const helper = plan.roles.length ? planHelper(speciesId, known, plan, mates, env) : null;
+  const boosts = helper ? getMove(helper, env).boosts ?? {} : {};
+  const score = (id) => {
+    const m = getMove(id, env);
+    const stat = m.category === "Physical" ? "atk" : "spa";
+    const stab = species.types.includes(m.type) ? 1.5 : 1;
+    const accuracy = m.accuracy === true ? 1 : m.accuracy / 100;
+    const hits = Array.isArray(m.multihit) ? MULTI_HIT_AVERAGE : m.multihit ?? 1;
+    const stage = Math.max(-6, Math.min(6, boosts[stat] ?? 0));
+    return (m.power || VARIABLE_POWER) * stab * accuracy * hits * boosted(species.baseStats[stat], stage) * (TWO_TURN.has(m.drawback) ? 0.5 : 1);
+  };
+  const byScore = (list) => list.map((id) => ({ id, score: score(id), type: getMove(id, env).type }))
+    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+  const attacks = known.filter((id) => getMove(id, env).category !== "Status");
+  const ranked = byScore(attacks.filter((id) => !LEFT_OUT.has(getMove(id, env).drawback)));
+  const slots = MAX_MOVES - (helper ? 1 : 0);
+  const picked = [];
+  const best = ranked[0]?.score ?? 0;
+  for (const a of ranked) {
+    if (picked.length < slots && a.score >= best * NEW_TYPE_SHARE && !picked.some((p) => p.type === a.type)) picked.push(a);
+  }
+  for (const a of ranked) if (picked.length < slots && !picked.includes(a)) picked.push(a);
+  // Its only attacks are ones usually left out: the best of them beats none.
+  if (!picked.length && attacks.length) picked.push(byScore(attacks)[0]);
+  const moves = [...(helper ? [helper] : []), ...picked.map((a) => a.id)];
+  return { moves: moves.length ? moves : known.slice(-MAX_MOVES), helper };
 }

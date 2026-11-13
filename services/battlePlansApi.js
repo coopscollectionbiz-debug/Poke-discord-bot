@@ -2,7 +2,8 @@
 // services/battlePlansApi.js — the dashboard's Battle plan endpoints
 // (Teams page). Wired in bot_final.js:
 //   GET  /api/battle-plans?id=…   plans, and each fighting Team's plan,
-//                                 readiness and per-member suggestions
+//                                 readiness, and per-member suggestions and
+//                                 recommended moves (the Moves editor's fill)
 //   POST /api/battle-plan         { id, team: "display"|"battle", plan }
 // Session-checked like every dashboard route. A plan is only ever set
 // here, validated under the player's lock, never through the dashboard
@@ -11,7 +12,7 @@
 // ==========================================================
 
 import { isFullSimEnabled } from "../config/fullSim.js";
-import { BATTLE_PLANS, PLAN_TEAMS, setPlan, teamPlanView, suggestions } from "./battlePlans.js";
+import { BATTLE_PLANS, PLAN_TEAMS, setPlan, teamPlanView, suggestions, recommended } from "./battlePlans.js";
 import { normalizeTeam } from "../utils/teamNormalize.js";
 import { getMove } from "../utils/battle/data.js";
 
@@ -30,6 +31,7 @@ export function createBattlePlanHandlers({ getTrainerData, isAuthorized, lockUse
     const slots = normalizeTeam(user[field] ?? [], 6).map((slot) => ({
       speciesId: slot.id, variant: slot.variant, ...(slot.uid && { uid: slot.uid }),
       suggestions: suggestions(user, team, slot.id, slot.variant, { uid: slot.uid ?? null }),
+      recommended: recommended(user, team, slot.id, slot.variant, { uid: slot.uid ?? null }),
     }));
     const view = teamPlanView(user, team);
     const missingNames = view.readiness.missing.map((id) => getMove(id)?.name ?? id);

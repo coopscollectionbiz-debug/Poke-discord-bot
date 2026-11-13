@@ -9,7 +9,10 @@
 //   • moves: every real move the engine knows (no Z-, Max- or CAP moves),
 //     status moves included, in battleData.json's record shape; a status
 //     move also gets `roles`, what it does for the Battle plans
-//     (catalog/battlePlans.js moveRoles)
+//     (catalog/battlePlans.js moveRoles), and a move that raises its user's
+//     stats its `boosts`; an attack with a catch gets `drawback` (recharge,
+//     charge, selfKO, conditional). Recommended moves read both
+//     (services/battlePlans.js recommendMoves).
 //   • abilityRatings: Showdown's 0–5 rating for every regular ability, which
 //     utils/battle/ai/abilities.js picks from
 //   • typeChart and fallbackByType: copied from battleData.json (already
@@ -53,6 +56,23 @@ function statusRoles(m) {
   return roles;
 }
 
+// An attack's catch, for recommended moves: it must recharge, charges a turn
+// first, faints its user, or fails unless something else is true. The engine
+// flags the first three. The last is kept by hand: the engine's hooks that
+// make these fail also sit on ordinary moves (Sucker Punch, Round, Pursuit).
+const CONDITIONAL = new Set([
+  "belch", "bide", "burnup", "comeuppance", "counter", "doomdesire", "doubleshock", "dreameater", "endeavor", "fakeout",
+  "firstimpression", "fling", "focuspunch", "futuresight", "hyperspacefury", "lastresort", "metalburst", "mirrorcoat",
+  "naturalgift", "poltergeist", "shelltrap", "snore", "spitup", "steelroller", "synchronoise",
+]);
+function drawback(m) {
+  if (m.category === "Status") return null;
+  if (m.flags.recharge) return "recharge";
+  if (m.flags.charge) return "charge";
+  if (m.selfdestruct) return "selfKO";
+  return CONDITIONAL.has(m.id) ? "conditional" : null;
+}
+
 function moveRecord(m) {
   return {
     name: m.name,
@@ -68,6 +88,8 @@ function moveRecord(m) {
     ...(m.multihit && { multihit: m.multihit }),
     ...(m.priority && { priority: m.priority }),
     ...(m.category === "Status" && { roles: statusRoles(m) }),
+    ...(m.category === "Status" && m.target === "self" && m.boosts && { boosts: m.boosts }),
+    ...(drawback(m) && { drawback: drawback(m) }),
   };
 }
 

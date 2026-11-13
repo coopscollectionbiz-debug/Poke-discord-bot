@@ -50,6 +50,12 @@ section("What the bot's main thread reads instead of the engine");
   const status = Object.entries(full.moves).filter(([, m]) => m.category === "Status");
   assertTrue(status.every(([, m]) => Array.isArray(m.roles)), `all ${status.length} status moves carry their plan roles`);
   assertEqual([full.moves.trickroom.roles, full.moves.stealthrock.roles, full.moves.swordsdance.roles], [["speed"], ["hazard"], ["setup"]], "Trick Room is speed control, Stealth Rock a hazard, Swords Dance setup");
+  // Recommended moves (services/battlePlans.js recommendMoves) read these.
+  assertEqual([full.moves.dragondance.boosts, full.moves.swordsdance.boosts, full.moves.calmmind.boosts], [{ atk: 1, spe: 1 }, { atk: 2 }, { spa: 1, spd: 1 }], "a move that raises its user's stats says which");
+  assertEqual(["hyperbeam", "solarbeam", "fly", "explosion", "dreameater", "focuspunch", "lastresort", "metalburst", "fling"].map((id) => full.moves[id].drawback),
+    ["recharge", "charge", "charge", "selfKO", "conditional", "conditional", "conditional", "conditional", "conditional"], "an attack that must recharge, charges first, faints its user, or fails without a condition (a hit taken, a held item) says so");
+  assertEqual(["flamethrower", "bravebird", "closecombat", "outrage", "suckerpunch", "tackle"].map((id) => full.moves[id].drawback), Array(6).fill(undefined),
+    "ordinary attacks have no drawback, recoil and stat drops included");
   const named = [...new Set(Object.values(full.species).flatMap((s) => s.abilities))];
   assertTrue(named.every((n) => Dex.abilities.get(n).rating === full.abilityRatings[Dex.abilities.get(n).id]), `all ${named.length} regular abilities carry Showdown's rating`);
 }

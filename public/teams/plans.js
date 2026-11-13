@@ -2,7 +2,7 @@
 // public/teams/plans.js — the Teams page's Battle plan row (full sim).
 // The Casual and Ranked tabs show the Team's plan, what it does, and
 // whether the Team can run it yet; the Moveset editor marks the moves the
-// plan suggests. The row is absent while the full sim is off, and on the
+// plan suggests and can fill in its recommended moves. The row is absent while the full sim is off, and on the
 // Showcase team, which never fights. GET /api/battle-plans and POST
 // /api/battle-plan (services/battlePlansApi.js); the server checks every rule.
 // The render helpers are pure, so tests/teamsPlans.test.js runs them in Node.
@@ -37,12 +37,24 @@ export function planRowHtml(team, plans) {
   </div>`;
 }
 
+// This slot's row in the Team's plan view: its copy's, else its line's.
+function slotRow(plans, team, s) {
+  const slots = plans?.teams?.[team]?.slots ?? [];
+  return slots.find((x) => x.speciesId === Number(s.id) && x.variant === s.variant && (x.uid ?? null) === (s.uid ?? null))
+    ?? slots.find((x) => x.speciesId === Number(s.id) && x.variant === s.variant);
+}
+
 /** Move ids the Moveset editor marks "Suggested" for this slot on this Team. */
 export function suggestedFor(plans, team, s) {
-  const slots = plans?.teams?.[team]?.slots ?? [];
-  const slot = slots.find((x) => x.speciesId === Number(s.id) && x.variant === s.variant && (x.uid ?? null) === (s.uid ?? null))
-    ?? slots.find((x) => x.speciesId === Number(s.id) && x.variant === s.variant);
-  return slot?.suggestions ?? [];
+  return slotRow(plans, team, s)?.suggestions ?? [];
+}
+
+/** What "Use recommended moves" fills in for this slot: { moves, planName }, or null. */
+export function recommendedFor(plans, team, s) {
+  const rec = slotRow(plans, team, s)?.recommended;
+  if (!rec?.moves?.length) return null;
+  const plan = plans.plans.find((p) => p.id === plans.teams[team].plan);
+  return { moves: rec.moves, planName: plan?.name ?? "" };
 }
 
 export async function loadPlans(userId) {

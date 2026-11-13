@@ -78,6 +78,8 @@ import { teachOptions, teachTm } from "./services/tmTeaching.js";
 import { createGameplayHandlers } from "./services/gameplay.js";
 import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
 import { createAchievementHandlers } from "./services/achievementsApi.js";
+import { createQuestHandlers } from "./services/questsApi.js";
+import { questProgress, questsEnabled } from "./services/quests.js";
 import { createMegaHandlers } from "./services/megaApi.js";
 import { createHeldItemHandlers } from "./services/heldItemsApi.js";
 import { normalizeEquipment, reconcileTeamEquipment, equipmentRev } from "./services/heldItems.js";
@@ -509,7 +511,10 @@ app.get("/auth/dashboard", (req, res) => {
     maxAge: DASHBOARD_MAX_MS,
   });
 
-  res.redirect(`/public/overview?id=${encodeURIComponent(id)}`); // the dashboard home
+  // ?page= picks the first page from a fixed list (e.g. /quest's link); anything else opens the home.
+  const START_PAGES = { quests: "/public/quests" };
+  const start = Object.prototype.hasOwnProperty.call(START_PAGES, req.query.page) ? START_PAGES[req.query.page] : "/public/overview";
+  res.redirect(`${start}?id=${encodeURIComponent(id)}`); // the dashboard home unless a known page was asked for
 });
 
 // ==========================================================
@@ -593,6 +598,9 @@ app.get("/public/bag", (_, res) =>
 );
 app.get("/public/achievements", (_, res) =>
   res.sendFile(path.join(staticPath, "achievements", "index.html"))
+);
+app.get("/public/quests", (_, res) =>
+  res.sendFile(path.join(staticPath, "quests", "index.html"))
 );
 
 // ✅ Backward compat alias
@@ -1452,6 +1460,28 @@ app.get("/api/fight-records/:fightId", (req, res) => fightRecordApi.get(req, res
 app.get("/api/achievements", (req, res) => {
   const { status, body } = achievements.view({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
   return res.status(status).json(body);
+});
+// 🗺️ QUESTS (Daily board, Phase 1; services/quests.js). Behind QUESTS_ENABLED:
+// off, the view answers { enabled: false } and claims refuse with 403.
+const quests = createQuestHandlers({ getTrainerData: () => trainerData, lockUser, save: saveAndAck, loadPool: getAcquirablePokemon, logEvent });
+app.get("/api/quests/status", (_req, res) => res.json({ enabled: questsEnabled() })); // no player data
+app.get("/api/quests", async (req, res) => {
+  try {
+    const { status, body } = await quests.view({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(status).json(body);
+  } catch (err) {
+    console.error("❌ /api/quests:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+app.post("/api/quests/claim", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { status, body } = await quests.claim({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(status).json(body);
+  } catch (err) {
+    console.error("❌ /api/quests/claim:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
 });
 app.post("/api/achievements/claim", express.json({ limit: "4kb" }), async (req, res) => {
   try {
@@ -2696,6 +2726,7 @@ app.post("/api/pokemon/donate", express.json(), async (req, res) => {
         });
         if (r.error) return { ok: false, status: 400, error: r.error, ...(r.code && { code: r.code }), ...(r.protected && { protected: r.protected }) };
         trackProgress(u, [{ type: "donated" }]); // Release C
+        questProgress(u, id, "donate"); // Daily board
         const ev = r.event;
         return {
           ok: true,
@@ -2771,6 +2802,7 @@ app.post("/api/pokemon/donate-bulk", express.json({ limit: "100kb" }), async (re
         });
         if (result.error) return { ok: false, status: 400, error: result.error };
         trackProgress(u, [{ type: "donated", n: result.donatedCopies }]); // Release C
+        questProgress(u, id, "donate", result.donatedCopies); // Daily board
         return { ok: true, ...result };
       },
     });

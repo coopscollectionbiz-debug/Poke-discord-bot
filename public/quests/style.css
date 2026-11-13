@@ -1,0 +1,28 @@
+/* Quests page: reuses Shop card styles; only these are new. */
+.quest-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.quest-head h2 { margin: 0; }
+.quest-tasks { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 16px; }
+.quest-card { align-items: stretch; text-align: left; }
+.quest-card h3 { display: flex; gap: 8px; align-items: center; }
+.quest-card.claimed { opacity: 0.7; }
+.quest-card.done { border-color: var(--cc-gold); }
+.quest-card .usage, .quest-reward .usage { margin: 0; }
+.quest-bar {
+  height: 8px;
+  margin: 8px 0 4px;
+  border-radius: var(--cc-r-chip);
+  background: var(--cc-surface-sunken);
+  overflow: hidden;
+}
+.quest-bar > span { display: block; height: 100%; background: var(--cc-gold); border-radius: inherit; }
+.quest-reward {
+  margin: 0 0 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--cc-line);
+  background: var(--cc-surface);
+}
+.quest-reward h3 { margin: 0 0 4px; }
+.quest-reward .desc { margin: 0 0 6px; color: var(--cc-text-muted); }
+.quest-claim { margin-top: 12px; background: var(--cc-gold); color: var(--cc-ink); }
+.quest-claim:hover:not(:disabled) { background: #f7d36e; }

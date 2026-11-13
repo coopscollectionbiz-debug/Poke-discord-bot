@@ -25,7 +25,7 @@ Each line has a recommendation. Nothing here is built yet.
 |---|---|---|---|
 | D1 | What happens to the old `/quest` and `/recruit` commands | **Unregister both now.** Only Discord's default Administrator permission hides them, and a server admin can open them to any role. As written, `/recruit` pays 432 CC profit per use (F3). | Leave them hidden until Quests ship |
 | D2 | Live event guard on Poké Ball discounts and the CC multiplier | **Cap a Poké Ball discount at 30%, and stop the CC multiplier from applying to donations.** At 43% off, Master Rank players profit from throw-and-donate (F2). | One check that refuses any event where a ball's price drops below its donation value; or no guard (no event has run yet) |
-| D3 | Daily chat cap (R1 from 11-10) | **Build it in Phase 0: 300 rewarded messages a day.** Chat is quiet today, but there is no ceiling (F6). The Daily board's message task depends on it. | Defer again |
+| D3 | Daily chat cap (R1 from 11-10) | **Declined by the owner (2026-11-13): no cap.** Chat activity is the main driver of the game. The 7 s cooldown stays the only limit, and the `chat_cc` log (D10) shows if a spammer appears. | Cap at 300 rewarded messages a day (the audit's first recommendation) |
 | D4 | Wager guard (R3 from 11-10) | **Build an account age gate (7 days, 25 Pokédex entries) before Quests ship.** Wagers are the only way to move CC between players, and Quests make an alt worth farming. A max stake is optional. | Defer (1 Wager battle in 334) |
 | D5 | Challenge prizes for the Elite Four, Blue and Red | **Keep them as they are.** They are one-time. A recurring net sink (F1) absorbs them over weeks. Re-check supply after the first Elite Four clears. | Halve the Elite Four, Blue and Red CC before anyone clears; or pay part in stones and dust |
 | D6 | Evolution Stone access | **Add stones to Expeditions, capped at 5 a week.** Keep the shop at 5,000 CC. | Cap 3 or 7; or cut the shop price |
@@ -90,7 +90,7 @@ Players throw mostly Ultra Balls: 112 of 130 throws (Live). Battles in the windo
 | Faucet | Code | Rate | Flow (Live or Model) | Verdict | Opportunities |
 |---|---|---|---|---|---|
 | `/daily` | `commands/daily.js:38-40` | 1,000 CC, 100 TP, 2 random catches, 25% chance of 1 stone, once per UTC day | +712 CC per active player per day (Live); 83 claims by 35 players | Healthy. It's the backbone of income. | Leave it. Quests add to it rather than changing it. |
-| Chat TP and CC | `bot_final.js:691-697`, `utils/passiveChat.js:61-74` | 2 TP and a 2% chance of 100 CC per rewarded message, 7 s apart, **no daily cap** | About +57 CC per active player per day (estimate) | Quiet in practice, unbounded in principle | D3: cap at 300 rewarded messages a day. The cap would hold a spammer to 600 TP, 600 CC and about 12 catches a day. |
+| Chat TP and CC | `bot_final.js:691-697`, `utils/passiveChat.js:61-74` | 2 TP and a 2% chance of 100 CC per rewarded message, 7 s apart, **no daily cap** | About +57 CC per active player per day (estimate) | Quiet in practice, unbounded in principle | No cap (D3 declined). Watch `chat_cc` totals per day; act only if one player's chat CC stands out. |
 | Chat catch | `bot_final.js:1127-1136` | 1% + 0.3% pity per rewarded message, up to 5%, Poké Ball odds | 1 catch per 24.6 messages (Model) | Fair | D11: no change |
 | Weekly pack | `services/gameplay.js:68` | 6 catches: 3 Common, 2 Uncommon, 1 Rare | 5 claims in the window (Live) | Healthy | None |
 | Trainer encounters | `utils/battle/tuning.js:86-104`, `utils/encounter/generate.js:63` | 1.5% per missed catch roll, 8 a day at most; prize = class base (10, 30 or 40) x the last Pokémon's Level, won or paid | 27 results, 27 wins, +18,060 CC (Live). Average prize 669. | Small. Every result in the window was a win. | Watch the win rate; Under-tier encounters (70%) may be too soft. |
@@ -153,7 +153,7 @@ Once a player has collected their Challenge prizes (28 stones and 325 dust each)
 | Live event ball discount of 43% or more, or a CC multiplier of 1.58 or more, with throw-and-donate | Open, never triggered | Unlimited: no throw cooldown and no donation CC cap | D2 |
 | `/recruit` opened to players | Hidden by Discord's Administrator default only | +432 CC per use, about +1.2M CC a day | D1 |
 | `/quest` opened to players | Hidden by Discord's Administrator default only | 72,000 CC and 1,440 free rolls a day | D1 |
-| Chat spam with no cap | Open, not seen (chat is quiet) | Up to 12,342 rewarded messages a day: 24,684 CC plus about 502 catches, worth 317,839 CC if donated (Model) | D3 |
+| Chat spam with no cap | Accepted (D3 declined), not seen (chat is quiet) | Up to 12,342 rewarded messages a day: 24,684 CC plus about 502 catches, worth 317,839 CC if donated (Model) | Monitor through the `chat_cc` log (D10) |
 | Alt accounts moving CC through Wager losses | Open, 1 Wager seen | Whatever an alt can earn | D4 |
 | Untraced CC | 3% of supply change | +5,000 in 63.6 h | D10 |
 
@@ -185,7 +185,7 @@ Once a player has collected their Challenge prizes (28 stones and 325 dust each)
 
 | Task | Counts | Why it's safe |
 |---|---|---|
-| Send 30 chat messages | Rewarded messages only (7 s apart) | Needs D3's cap to stay bounded |
+| Send 30 chat messages | Rewarded messages only (7 s apart) | The task pays once a day, so it adds no extra reason to spam |
 | Fight 2 Casual battles | Win or lose | No reason to collude; per-opponent cap of 3 a day (`utils/battle/tuning.js:56`) |
 | Throw 1 Poké Ball (any ball) | A dashboard throw | It's a sink |
 | Donate 3 duplicates | Any Tier | Already pays CC |
@@ -341,7 +341,7 @@ Each phase is its own PR behind its own flag, off by default.
 
 | Phase | Content | Flag | Done when |
 |---|---|---|---|
-| 0. Guards | D1 unregister `/quest` `/recruit`; D2 event guard; D3 chat cap; D4 Wager age gate; D10 logging | none (fixes) | Tests for each guard, and `node --check` before deploy |
+| 0. Guards | D1 unregister `/quest` `/recruit`; D2 event guard; D4 Wager age gate; D10 logging (D3 declined). Built in PR #134 | none (fixes) | Tests for each guard, and `node --check` before deploy |
 | 1. Daily board | `user.quests` schema + normalizer, task hooks, claims, dashboard Daily tab, slim `/quest` | `QUESTS_ENABLED`, `QUESTS_BOARD_ENABLED` | Board resets at 00:00 UTC; replayed claims pay once |
 | 2. Expeditions | Mission generator, `isAway` on every copy path, send and claim, loot and caps, dashboard tab, `/quest` lines | `QUESTS_EXPEDITIONS_ENABLED` | An away copy is refused by every path; caps hold over a simulated week |
 | 3. Focus type | Picker on the Poké Ball buy, pricing, odds option B, `/recruit` code removed | `FOCUS_TYPE_ENABLED` | Odds preview matches the roll; no Legendary or Mythic from Focus |

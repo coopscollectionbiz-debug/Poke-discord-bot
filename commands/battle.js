@@ -51,6 +51,8 @@ export function refusal(reason, opponentId) {
     no_team_defender: `<@${opponentId}> hasn't set a team yet.`,
     no_battle_team_challenger: "Ranked and wager battles use your Battle team. Set it on the Teams page: run /dashboard.",
     no_battle_team_defender: `<@${opponentId}> hasn't set a Battle team yet, so you can't play a ranked or wager battle with them.`,
+    short_battle_team_challenger: "Ranked and wager battles need a full Ranked team of 6. Fill it on the Teams page: run /dashboard.",
+    short_battle_team_defender: `<@${opponentId}>'s Ranked team isn't full (6 Pokémon), so you can't play a ranked or wager battle with them.`,
     cap_daily: "You've used all 10 battles for today. Battles reset at midnight UTC.",
     cap_opponent: `You've battled <@${opponentId}> 3 times today. Try someone else.`,
     defender_cap_daily: `<@${opponentId}> has no battles left today.`,

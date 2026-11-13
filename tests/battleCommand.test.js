@@ -32,12 +32,13 @@ async function until(done, ms = 60_000) {
 const quiet = console.log;
 console.log = (...a) => { if (!String(a[0]).includes("loaded from memory")) quiet(...a); };
 
+const FULL = [25, 1, 4, 7, 16, 19];
 const trainer = (id) => {
   const u = createNewUser(id, id);
   u.cc = 100;
-  grantCatch(u, 25, "normal", () => 0.5);
+  for (const id of FULL) grantCatch(u, id, "normal", () => 0.5);
   u.displayedPokemon = [{ id: 25, variant: "normal" }];
-  u.battleTeam = [{ id: 25, variant: "normal" }]; // wagers use the Battle team
+  u.battleTeam = FULL.map((id) => ({ id, variant: "normal" })); // wagers use the Battle team (full: 6)
   return u;
 };
 
@@ -126,7 +127,7 @@ section("Challenger's Team gets stronger after the offer");
   const nonce = t.trainerData.A.pendingWager.nonce;
   // B saw A's Pikachu in the offer; A swaps in a Mewtwo (Battle team) before B answers.
   grantCatch(t.trainerData.A, 150, "normal", () => 0.5);
-  t.trainerData.A.battleTeam = [{ id: 150, variant: "normal" }];
+  t.trainerData.A.battleTeam = [150, ...FULL.slice(1)].map((id) => ({ id, variant: "normal" }));
   await t.collectors[0].h.collect(t.button("B", `wager_accept:${nonce}`));
   assertEqual([t.trainerData.A.cc, t.trainerData.B.cc, t.trainerData.A.pendingWager], [100, 100, null], "the Stake is refunded");
   assertEqual(t.log.messages.length, 1, "no battle runs");

@@ -188,10 +188,11 @@ function copyReward(user, pid, p, variant, economy) {
       user.nonShinyDustEarnedThisWeek = earned + dust;
     }
   }
-  // Live event multipliers on what a Donation earns. The weekly normal-dust
-  // cap counts the dust before the multiplier, so an event never eats it.
+  // A Live event's Shiny Dust multiplier applies; its CC multiplier does not
+  // (economy audit 2026-11, D2: with it, throw-and-donate could pay for itself).
+  // The weekly normal-dust cap counts the dust before the multiplier.
   const fx = liveEffects();
-  return { pokemonId: pid, pokemonName: p.name, tier, variant, ccGained: scaleEarned(cc, fx.cc), dustGained: scaleEarned(dust, fx.dust) };
+  return { pokemonId: pid, pokemonName: p.name, tier, variant, ccGained: cc, dustGained: scaleEarned(dust, fx.dust) };
 }
 
 /**

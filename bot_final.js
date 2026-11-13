@@ -694,6 +694,8 @@ const MESSAGE_CC_CHANCE = 0.02;
 const MESSAGE_CC_GAIN = 100;
 const MESSAGE_COOLDOWN = 7000;
 const MESSAGE_REWARD_CHANCE = 0.01;
+// Rewarded chat messages per player per UTC day (economy audit 2026-11, D3).
+const MESSAGE_DAILY_CAP = 300;
 const REACTION_REWARD_CHANCE = 0.01;
 const REWARD_COOLDOWN = 7000;
 const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
@@ -1371,7 +1373,9 @@ client.on(
       tpGain: MESSAGE_TP_GAIN,
       ccChance: MESSAGE_CC_CHANCE,
       ccGain: MESSAGE_CC_GAIN,
+      dailyCap: MESSAGE_DAILY_CAP,
     },
+    log: logEvent,
     enqueueSave,
     queueRoleUpdate,
     giveRandomReward: tryGiveRandomReward,
@@ -1695,7 +1699,7 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
 
 // ==========================================================
 // 🎪 Live events (services/liveEventsPlayer.js): what's on, today's prices,
-// and the player's "Use Live event" choice for Poké Balls and /recruit.
+// and the player's "Use Live event" choice for Poké Balls.
 // ==========================================================
 app.get("/api/live-events", (req, res) => {
   const { id } = req.query;
@@ -2110,6 +2114,7 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
     grantTrainer(user, canonicalFile); // also unlocks the tier's Aura
 
     const saveAck = await saveAndAck(trainerData);
+    logEvent("trainer_purchase", id, { file: canonicalFile, tier, cost }); // economy audit 2026-11, D10
 
     return res.json({ ...saveAckFields(saveAck),
       success: true,

@@ -24,6 +24,8 @@ function trainer(id, team, battle = team) {
   for (const [speciesId] of [...team, ...battle]) if (!u.pokemon?.[speciesId]?.normal) grantCatch(u, speciesId, "normal", fixed);
   u.displayedPokemon = team.map(([speciesId]) => ({ id: speciesId, variant: "normal" }));
   u.battleTeam = battle.map(([speciesId]) => ({ id: speciesId, variant: "normal" })); // ranked/wager team
+  // 25 registered species, so Wager battles pass the Pokédex gate (economy audit 2026-11, D4).
+  u.pokedex = Object.fromEntries(Array.from({ length: 25 }, (_, i) => [i + 1, 1]));
   return u;
 }
 const FULL_A = [[6], [25], [1], [4], [7], [133]];
@@ -126,6 +128,30 @@ section("Ranked season: old records are archived and reset");
   assertEqual(td.A.battle.wins + td.A.battle.losses, 1, "and counts from zero");
   const life = lifetimeRanked(td.A);
   assertEqual([life.wins, life.bestRating >= 1450], [30 + td.A.battle.wins, true], "achievement progress keeps every season's wins and the best rating");
+}
+
+section("Wager gate: account age and Pokédex (economy audit 2026-11, D4)");
+{
+  const { accountCreatedAt, wagerEligibility } = await import("../utils/battle/wager.js");
+  const NOW_MS = NOW.getTime();
+  // A snowflake made at a given time: (ms - Discord epoch) << 22.
+  const idAt = (ms) => String((BigInt(ms) - 1_420_070_400_000n) << 22n);
+  const fresh = idAt(NOW_MS - 2 * 86_400_000), old = idAt(NOW_MS - 30 * 86_400_000);
+  assertEqual(accountCreatedAt(fresh), NOW_MS - 2 * 86_400_000, "a snowflake's creation time is read back exactly");
+  assertEqual(accountCreatedAt("A"), null, "a non-snowflake id has no creation time");
+  const dexUser = (n) => ({ pokedex: Object.fromEntries(Array.from({ length: n }, (_, i) => [i + 1, 1])) });
+  assertEqual(wagerEligibility(dexUser(25), fresh, NOW_MS), "new_account", "a 2-day-old account is refused");
+  assertEqual(wagerEligibility(dexUser(24), old, NOW_MS), "dex", "24 registered species is refused");
+  assertEqual(wagerEligibility(dexUser(25), old, NOW_MS), null, "30 days old and 25 species: allowed");
+
+  const td = world();
+  td[old] = td.A; td[fresh] = td.B; // same records under real-looking ids
+  assertEqual(battleBlock({ trainerData: td, challengerId: old, defenderId: fresh, mode: "wager", now: NOW }), "wager_new_account_defender", "a new Defender account blocks the wager");
+  assertEqual(battleBlock({ trainerData: td, challengerId: fresh, defenderId: old, mode: "wager", now: NOW }), "wager_new_account_challenger", "a new Challenger account blocks the wager");
+  assertEqual(battleBlock({ trainerData: td, challengerId: fresh, defenderId: old, mode: "ranked", now: NOW }), null, "Ranked battles have no such gate");
+  const low = world();
+  low.B.pokedex = { 1: 1 };
+  assertEqual(battleBlock({ trainerData: low, challengerId: "A", defenderId: "B", mode: "wager", now: NOW }), "wager_dex_defender", "a Defender with too few species blocks the wager");
 }
 
 section("Wager battle");

@@ -1089,7 +1089,7 @@ function pager(total, offset, limit, href) {
 // ----------------------------------------------------------
 // Activity log (the 30-day event log; "Live events" are something else)
 // ----------------------------------------------------------
-const EVENT_TYPES = ["roll", "donate", "evolve", "convert", "daily_claim", "weekly_claim", "quest_claim", "recruit", "stone_purchase"];
+const EVENT_TYPES = ["roll", "donate", "evolve", "convert", "daily_claim", "weekly_claim", "quest_claim", "recruit", "stone_purchase", "trainer_purchase"];
 
 async function renderEvents(query) {
   const type = query.get("type") || "";

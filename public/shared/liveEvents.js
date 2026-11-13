@@ -1,7 +1,7 @@
 // ==========================================================
 // public/shared/liveEvents.js — Live events on player pages.
 // GET /api/live-events?id= gives what's running, today's discount per shop
-// category, and the "Use Live event" choice for Poké Balls and /recruit.
+// category, and the "Use Live event" choice for Poké Balls.
 // The server always charges the real price; pages only show it.
 // ==========================================================
 

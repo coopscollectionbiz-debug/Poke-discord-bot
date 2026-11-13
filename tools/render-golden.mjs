@@ -2,6 +2,8 @@
 // tools/render-golden.mjs — proves a render change leaves every image the same.
 //   node tools/render-golden.mjs out.json            render the fixed set, write hashes
 //   node tools/render-golden.mjs --compare a.json b.json
+//   node tools/render-golden.mjs out.json --save <dir>   also write each image
+//     (for tools/render-diff.mjs when a change isn't meant to be identical)
 //
 // Renders a fixed set of cards and battle frames (animated), decodes each
 // GIF and hashes every composited frame (what Discord shows), plus each
@@ -12,7 +14,7 @@
 // speed and size change.
 // ==========================================================
 
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { createHash } from "crypto";
 import { performance } from "perf_hooks";
 import omggif from "omggif";
@@ -79,6 +81,10 @@ async function cases() {
   };
 }
 
+const saveAt = process.argv.indexOf("--save");
+const saveDir = saveAt > 0 ? process.argv[saveAt + 1] : null;
+if (saveDir) mkdirSync(saveDir, { recursive: true });
+
 async function run(out) {
   const result = {};
   const list = await cases();
@@ -91,6 +97,7 @@ async function run(out) {
     totalMs += ms;
     totalBytes += buf.length;
     result[name] = { ...imageDigest(buf), ms: Math.round(ms), bytes: buf.length };
+    if (saveDir) writeFileSync(`${saveDir}/${name.replace(/\s+/g, "-")}.${buf.subarray(0, 3).toString() === "GIF" ? "gif" : "png"}`, buf);
     console.log(`${name.padEnd(22)} ${String(Math.round(ms)).padStart(5)} ms ${String(Math.round(buf.length / 1024)).padStart(5)} KB  ${result[name].frames?.length ?? "png"}`);
   }
   console.log(`${"total".padEnd(22)} ${String(Math.round(totalMs)).padStart(5)} ms ${String(Math.round(totalBytes / 1024)).padStart(5)} KB`);

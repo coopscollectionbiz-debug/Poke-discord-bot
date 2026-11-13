@@ -272,6 +272,33 @@ function platformStamp(fx, fy, rx, ry, tint, u, peak) {
   return stamp;
 }
 
+/**
+ * Draws a detail that repeats across an image's frames (a Poké Ball, an HP
+ * bar, a name) from a cached stamp: `draw(stampCtx, x, y)` paints it once
+ * with its anchor at (x, y), and later calls with the same `key` and the
+ * same position inside a pixel copy that stamp. The stamp spans `left`/`top`
+ * px before the anchor and is `w` × `h`. Anti-aliased edges can differ from
+ * drawing directly by at most 1 colour level. Returns false on a scaled,
+ * rotated or fractionally translated context; the caller then draws directly.
+ */
+export function drawStamp(ctx, key, ax, ay, left, top, w, h, draw) {
+  const t = ctx.getTransform?.();
+  if (!t || t.a !== 1 || t.b !== 0 || t.c !== 0 || t.d !== 1 || !Number.isInteger(t.e) || !Number.isInteger(t.f)) return false;
+  const ox = Math.floor(ax), oy = Math.floor(ay);
+  const full = `${key}@${ax - ox},${ay - oy},${left},${top},${w},${h}`;
+  let canvas = DETAIL_STAMPS.get(full);
+  if (!canvas) {
+    canvas = createCanvas(Math.max(1, Math.ceil(w)), Math.max(1, Math.ceil(h)));
+    draw(canvas.getContext("2d"), left + (ax - ox), top + (ay - oy));
+    if (DETAIL_STAMPS.size >= DETAIL_LIMIT) DETAIL_STAMPS.delete(DETAIL_STAMPS.keys().next().value);
+    DETAIL_STAMPS.set(full, canvas);
+  }
+  ctx.drawImage(canvas, ox - left, oy - top);
+  return true;
+}
+const DETAIL_STAMPS = new Map();
+const DETAIL_LIMIT = 2048;
+
 /** Poké Ball icon (battle nameplate style): filled when the slot is used. */
 export function drawBall(ctx, cx, cy, r, filled) {
   ctx.lineWidth = Math.max(1.5, r / 4);

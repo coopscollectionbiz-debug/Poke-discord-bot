@@ -16,7 +16,7 @@ import { GifReader } from "omggif";
 import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import { loadTrimmedTrainerSprite, loadTrimmedTrainerPoses, loadBadgeSprite } from "../render/sprites.js";
-import { drawSparkle, drawTypeChip, drawSoftPlatform } from "../render/primitives.js";
+import { drawSparkle, drawTypeChip, drawSoftPlatform, drawStamp } from "../render/primitives.js";
 import { regionBackdrop, backdropTint, drawTierSky } from "../render/trainerBackdrop.js";
 import { cardTrainerFx } from "../render/trainerTier.js";
 import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
@@ -175,8 +175,16 @@ function fitText(ctx, text, maxWidth) {
 }
 
 // Game-style HP bar: an "HP" tag and a rounded bar that turns yellow below
-// half and red below a fifth.
+// half and red below a fifth. Drawn once per HP value and copied (drawStamp).
 function drawHpBar(ctx, cx, y, frac) {
+  if (!drawStamp(ctx, `hp:${frac}`, cx, y, 61, 3, 122, 20, (c, x, yy) => paintHpBar(c, x, yy, frac))) return paintHpBar(ctx, cx, y, frac);
+  ctx.font = `800 8px ${FONT}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = frac <= 0 ? "#3a4256" : frac > 0.5 ? "#9af5b4" : frac > 0.2 ? "#fde48b" : "#f9a3a3";
+}
+
+function paintHpBar(ctx, cx, y, frac) {
   const w = 116, h = 8, tag = 22, x = cx - w / 2;
   ctx.fillStyle = INK;
   pill(ctx, x, y, w, h + 6);
@@ -204,8 +212,17 @@ function drawHpBar(ctx, cx, y, frac) {
   ctx.fill();
 }
 
-// A Poké Ball per Team member: red and white while it can battle, gray once fainted.
+// A Poké Ball per Team member: red and white while it can battle, gray once
+// fainted. Drawn once per state and copied (see drawStamp).
 function drawBall(ctx, cx, cy, alive) {
+  if (!drawStamp(ctx, `ball:${alive}`, cx, cy, 9, 9, 18, 18, (c, x, y) => paintBall(c, x, y, alive))) return paintBall(ctx, cx, cy, alive);
+  // The state paintBall leaves behind, for anything drawn after it.
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = INK;
+  ctx.fillStyle = alive ? "#f4f4f4" : "#555b6e";
+}
+
+function paintBall(ctx, cx, cy, alive) {
   const r = 6;
   ctx.lineWidth = 1.5;
   ctx.strokeStyle = INK;
@@ -288,8 +305,20 @@ function drawPortraitSprite(ctx, s, sprite) {
  */
 const PULSE_MS = 1000;
 function drawRing(ctx, cx, cy, phase, color) {
-  const [r, g, b] = [1, 3, 5].map((i) => Math.round(parseInt(color.slice(i, i + 2), 16) * 0.65 + 255 * 0.35));
   const glow = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2); // 0 → 1 → 0
+  // Its pulse repeats every PULSE_MS, so each brightness is drawn once and
+  // copied (keyed by the exact opacities painted; the last ring draws below).
+  const alphas = [0.45 + 0.5 * glow, 0.35 * glow, 0.35 * glow, 0.15 * glow * glow].map((a) => (a <= 0.02 ? "-" : a.toFixed(3))).join("|");
+  // The ring snaps to an absolute 2-px grid, and its dots are placed from the
+  // real centre (shifting the centre first can flip a rounding tie), so the
+  // stamp is keyed by the centre and paints at an offset.
+  const ox = Math.floor(cx) - 66, oy = Math.floor(cy) - 20;
+  if (drawStamp(ctx, `ring:${color}:${alphas}:${cx},${cy}`, cx, cy, 66, 20, 134, 42, (c) => paintRing(c, cx, cy, glow, color, ox, oy))) return;
+  paintRing(ctx, cx, cy, glow, color);
+}
+
+function paintRing(ctx, cx, cy, glow, color, ox = 0, oy = 0) {
+  const [r, g, b] = [1, 3, 5].map((i) => Math.round(parseInt(color.slice(i, i + 2), 16) * 0.65 + 255 * 0.35));
   const ring = (rx, alpha) => {
     if (alpha <= 0.02) return;
     ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
@@ -299,7 +328,7 @@ function drawRing(ctx, cx, cy, phase, color) {
       const x = Math.round((cx + Math.cos(a) * rx) / 2) * 2, y = Math.round((cy + Math.sin(a) * ry) / 2) * 2;
       if (seen.has(x * 4096 + y)) continue; // no double-plotted (brighter) pixels
       seen.add(x * 4096 + y);
-      ctx.fillRect(x - 1, y - 1, 2, 2);
+      ctx.fillRect(x - 1 - ox, y - 1 - oy, 2, 2);
     }
   };
   ring(56, 0.45 + 0.5 * glow);
@@ -548,6 +577,26 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     timing = fittedTiming({ anims, trainerClock, screens: screens.length, clock });
   }
 
+  // Each Pokémon's label and its widths, measured on first use (the same every frame).
+  const labels = new Map();
+  const labelOf = (s, i) => {
+    const key = s * 16 + i;
+    let v = labels.get(key);
+    if (v) return v;
+    const m = sides[s].members[i];
+    ctx.font = `700 13px ${FONT}`;
+    // A Mega shows its base name (+ X/Y/Z) and a MEGA tag, so it fits the
+    // tile: 80 px leaves room for the Level in a 124 px tile.
+    const megaSuffix = m.megaForm ? (m.name?.match(/ ([XYZ])$/)?.[1] ?? "") : "";
+    const label = fitText(ctx, m.megaForm ? `${m.baseName ?? m.name}${megaSuffix ? ` ${megaSuffix}` : ""}` : (m.name ?? `#${m.speciesId}`), 80);
+    const level = `Lv${m.level}`;
+    const nameW = ctx.measureText(label).width;
+    ctx.font = `600 12px ${FONT}`;
+    v = { label, level, nameW, levelW: ctx.measureText(level).width };
+    labels.set(key, v);
+    return v;
+  };
+
   let T = timing;
   const draw = (f) => {
     const state = frameState(f, { hpBefore, events });
@@ -597,25 +646,29 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
           ctx.globalAlpha = 1;
         }
 
-        // Name, Level, and HP.
-        ctx.textBaseline = "alphabetic";
-        ctx.font = `700 13px ${FONT}`;
-        // A Mega shows its base name (+ X/Y/Z) and a MEGA tag, so it fits the
-        // tile: 80 px leaves room for the Level in a 124 px tile.
-        const megaSuffix = m.megaForm ? (m.name?.match(/ ([XYZ])$/)?.[1] ?? "") : "";
-        const label = fitText(ctx, m.megaForm ? `${m.baseName ?? m.name}${megaSuffix ? ` ${megaSuffix}` : ""}` : (m.name ?? `#${m.speciesId}`), 80);
-        const level = `Lv${m.level}`;
-        const nameW = ctx.measureText(label).width;
-        ctx.font = `600 12px ${FONT}`;
-        const levelW = ctx.measureText(level).width;
+        // Name, Level, and HP. The label and its widths are the same every
+        // frame, so they're measured once; the text is drawn once per colour
+        // and copied (drawStamp).
+        const { label, level, nameW, levelW } = labelOf(s, i);
         const startX = cx - (nameW + 6 + levelW) / 2;
-        ctx.textAlign = "left";
-        ctx.font = `700 13px ${FONT}`;
-        ctx.fillStyle = frac <= 0 ? "#7d8396" : "#ffffff";
-        ctx.fillText(label, startX, top + 152);
-        ctx.font = `600 12px ${FONT}`;
-        ctx.fillStyle = m.levelUp ? "#5ee08a" : frac <= 0 ? "#7d8396" : "#c9cfe0";
-        ctx.fillText(level, startX + nameW + 6, top + 152);
+        const nameColor = frac <= 0 ? "#7d8396" : "#ffffff";
+        const levelColor = m.levelUp ? "#5ee08a" : frac <= 0 ? "#7d8396" : "#c9cfe0";
+        const paintLabel = (c, x, y) => {
+          c.textBaseline = "alphabetic";
+          c.textAlign = "left";
+          c.font = `700 13px ${FONT}`;
+          c.fillStyle = nameColor;
+          c.fillText(label, x, y);
+          c.font = `600 12px ${FONT}`;
+          c.fillStyle = levelColor;
+          c.fillText(level, x + nameW + 6, y);
+        };
+        if (drawStamp(ctx, `label:${label}|${level}|${nameColor}|${levelColor}`, startX, top + 152, 4, 18, Math.ceil(nameW + 6 + levelW) + 10, 26, paintLabel)) {
+          ctx.textBaseline = "alphabetic";
+          ctx.textAlign = "left";
+          ctx.font = `600 12px ${FONT}`;
+          ctx.fillStyle = levelColor;
+        } else paintLabel(ctx, startX, top + 152);
         drawHpBar(ctx, cx, top + 158, frac);
         if (m.megaForm) drawTag(ctx, "MEGA", Math.round(cx + LAYOUT.tileW / 2 - 8), top + 30, frac <= 0 ? "#7d8396" : MEGA_TAG);
       }

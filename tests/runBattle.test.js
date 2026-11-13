@@ -4,10 +4,11 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { buildTeam, buildBattleTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
+import { buildTeam, buildBattleTeam, runBattle, battleBlock, withBothLocks } from "../utils/battle/runBattle.js";
 import { RANKED } from "../utils/battle/tuning.js";
-import { rankedRecord, lifetimeRanked } from "../utils/battle/rewards.js";
-import { buildResultEmbed, createQueue, expSummary, playBattle, resultScreens } from "../utils/battle/playback.js";
+import { rankedRecord, lifetimeRanked, getBattleRecord, utcDay } from "../utils/battle/rewards.js";
+import { blockRematch, isRematchBlocked } from "../utils/battle/rematch.js";
+import { battleImageName, buildResultEmbed, createQueue, expSummary, playBattle, resultScreens } from "../utils/battle/playback.js";
 import { pickFrameTurns } from "../utils/battle/render.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
@@ -16,16 +17,22 @@ import { grantCatch } from "../utils/training.js";
 const NOW = new Date("2026-11-02T12:00:00Z");
 const fixed = () => 0.5;
 
-function trainer(id, team) {
+// Ranked and wager battles need a full Ranked team (6), so `battle` defaults
+// to the Display team only where a test doesn't care about rated modes.
+function trainer(id, team, battle = team) {
   const u = createNewUser(id, `Trainer ${id}`);
-  for (const [speciesId] of team) grantCatch(u, speciesId, "normal", fixed);
+  for (const [speciesId] of [...team, ...battle]) if (!u.pokemon?.[speciesId]?.normal) grantCatch(u, speciesId, "normal", fixed);
   u.displayedPokemon = team.map(([speciesId]) => ({ id: speciesId, variant: "normal" }));
-  u.battleTeam = team.map(([speciesId]) => ({ id: speciesId, variant: "normal" })); // ranked/wager team
+  u.battleTeam = battle.map(([speciesId]) => ({ id: speciesId, variant: "normal" })); // ranked/wager team
+  // 25 registered species, so Wager battles pass the Pokédex gate (economy audit 2026-11, D4).
+  u.pokedex = Object.fromEntries(Array.from({ length: 25 }, (_, i) => [i + 1, 1]));
   return u;
 }
+const FULL_A = [[6], [25], [1], [4], [7], [133]];
+const FULL_B = [[19], [9], [16], [10], [13], [129]];
 const world = () => ({
-  A: trainer("A", [[6], [25], [1]]),
-  B: trainer("B", [[19], [9]]),
+  A: trainer("A", [[6], [25], [1]], FULL_A),
+  B: trainer("B", [[19], [9]], FULL_B),
   C: trainer("C", []),
 });
 const open = (td, seed = 1, c = "A", d = "B") =>
@@ -33,6 +40,10 @@ const open = (td, seed = 1, c = "A", d = "B") =>
 
 const ranked = (td, seed = 1, c = "A", d = "B") =>
   runBattle({ trainerData: td, challengerId: c, defenderId: d, mode: "ranked", seed, now: NOW });
+
+// A casual battle the Defender accepted as a Rematch request.
+const rematch = (td, seed = 1, c = "A", d = "B") =>
+  runBattle({ trainerData: td, challengerId: c, defenderId: d, mode: "open", rematch: true, seed, now: NOW });
 
 section("Casual (open) battle: Display teams, real Levels, unrated");
 {
@@ -58,14 +69,25 @@ section("Casual (open) battle: Display teams, real Levels, unrated");
   assertEqual(out.sides.map((s) => s.members.length), [3, 2], "both Teams fought");
 }
 
+section("The Underdog surge is casual-only");
+{
+  // A lone Caterpie against six legendaries is the Underdog by far, so a
+  // casual battle surges at the top chance; ranked and wager battles never do.
+  const lopsided = () => ({ A: trainer("A", [[10]], [[10], [13], [129], [11], [14], [16]]), B: trainer("B", [[150], [249], [250], [384], [483], [484]]) });
+  const seeds = Array.from({ length: 40 }, (_, i) => i + 1);
+  const surges = (mode) => seeds.filter((seed) =>
+    runBattle({ trainerData: lopsided(), challengerId: "A", defenderId: "B", mode, stake: mode === "wager" ? 1 : 0, seed, now: NOW }).surge).length;
+  assertTrue(surges("open") > 0, "the same pairing surges in casual battles");
+  assertEqual([surges("ranked"), surges("wager")], [0, 0], "and never in ranked or wager battles");
+}
+
 section("Ranked battle: Battle teams at Lv 50, rated, no surge");
 {
   const td = world();
-  td.A.battleTeam = [{ id: 6, variant: "normal" }]; // differs from the Display team
   const before = JSON.stringify(td.A.training);
   const out = ranked(td);
   assertTrue(out.ok && out.rated, "ranked battle runs, rated");
-  assertEqual(out.sides[0].members.map((m) => m.speciesId), [6], "the Battle team fights, not the Display team");
+  assertEqual(out.sides[0].members.map((m) => m.speciesId), FULL_A.map(([id]) => id), "the Battle team fights, not the Display team");
   assertTrue(out.sides.every((s) => s.members.every((m) => m.level === RANKED.level && Number.isInteger(m.realLevel))), "every fighter is Lv 50 and keeps its real Level");
   assertEqual(out.surge, null, "no Underdog surge");
   const dA = td.A.battle.rating - 1000, dB = td.B.battle.rating - 1000;
@@ -81,6 +103,17 @@ section("Ranked battle: Battle teams at Lv 50, rated, no surge");
   delete noBT.A.battleTeam;
   assertEqual(ranked(noBT).reason, "no_battle_team_challenger", "a Challenger needs a Battle team");
   assertTrue(open(noBT).ok, "casual battles don't need a Battle team");
+  const short = world();
+  short.B.battleTeam = short.B.battleTeam.slice(0, 5);
+  assertEqual(ranked(short).reason, "short_battle_team_defender", "a Defender with 5 of 6 can't be challenged to ranked");
+  assertEqual(runBattle({ trainerData: short, challengerId: "A", defenderId: "B", mode: "wager", stake: 1, seed: 1, now: NOW }).reason,
+    "short_battle_team_defender", "or to a wager");
+  short.A.battleTeam = short.A.battleTeam.slice(0, 1);
+  assertEqual(ranked(short).reason, "short_battle_team_challenger", "a Challenger needs a full Ranked team");
+  short.A.pokemon[133].normal = 0;
+  short.A.battleTeam = FULL_A.map(([id]) => ({ id, variant: "normal" }));
+  assertEqual(ranked(short).reason, "short_battle_team_challenger", "an unowned slot doesn't count toward the 6");
+  assertTrue(open(short).ok, "casual battles don't need a full team");
   assertEqual(buildBattleTeam(noBT.A), [], "no Battle team, no fighters");
 }
 
@@ -95,6 +128,30 @@ section("Ranked season: old records are archived and reset");
   assertEqual(td.A.battle.wins + td.A.battle.losses, 1, "and counts from zero");
   const life = lifetimeRanked(td.A);
   assertEqual([life.wins, life.bestRating >= 1450], [30 + td.A.battle.wins, true], "achievement progress keeps every season's wins and the best rating");
+}
+
+section("Wager gate: account age and Pokédex (economy audit 2026-11, D4)");
+{
+  const { accountCreatedAt, wagerEligibility } = await import("../utils/battle/wager.js");
+  const NOW_MS = NOW.getTime();
+  // A snowflake made at a given time: (ms - Discord epoch) << 22.
+  const idAt = (ms) => String((BigInt(ms) - 1_420_070_400_000n) << 22n);
+  const fresh = idAt(NOW_MS - 2 * 86_400_000), old = idAt(NOW_MS - 30 * 86_400_000);
+  assertEqual(accountCreatedAt(fresh), NOW_MS - 2 * 86_400_000, "a snowflake's creation time is read back exactly");
+  assertEqual(accountCreatedAt("A"), null, "a non-snowflake id has no creation time");
+  const dexUser = (n) => ({ pokedex: Object.fromEntries(Array.from({ length: n }, (_, i) => [i + 1, 1])) });
+  assertEqual(wagerEligibility(dexUser(25), fresh, NOW_MS), "new_account", "a 2-day-old account is refused");
+  assertEqual(wagerEligibility(dexUser(24), old, NOW_MS), "dex", "24 registered species is refused");
+  assertEqual(wagerEligibility(dexUser(25), old, NOW_MS), null, "30 days old and 25 species: allowed");
+
+  const td = world();
+  td[old] = td.A; td[fresh] = td.B; // same records under real-looking ids
+  assertEqual(battleBlock({ trainerData: td, challengerId: old, defenderId: fresh, mode: "wager", now: NOW }), "wager_new_account_defender", "a new Defender account blocks the wager");
+  assertEqual(battleBlock({ trainerData: td, challengerId: fresh, defenderId: old, mode: "wager", now: NOW }), "wager_new_account_challenger", "a new Challenger account blocks the wager");
+  assertEqual(battleBlock({ trainerData: td, challengerId: fresh, defenderId: old, mode: "ranked", now: NOW }), null, "Ranked battles have no such gate");
+  const low = world();
+  low.B.pokedex = { 1: 1 };
+  assertEqual(battleBlock({ trainerData: low, challengerId: "A", defenderId: "B", mode: "wager", now: NOW }), "wager_dex_defender", "a Defender with too few species blocks the wager");
 }
 
 section("Wager battle");
@@ -124,16 +181,81 @@ section("Refusals and caps");
   const td = world();
   assertEqual(open(td, 1, "A", "A").reason, "self", "can't battle yourself");
   for (let i = 0; i < 3; i++) open(td, i);
-  assertEqual(open(td, 9).reason, "cap_opponent", "4th battle vs the same Defender is refused");
+  assertEqual(ranked(td, 9).reason, "cap_opponent", "4th ranked battle vs the same Defender is refused");
   td.A.battle.started = 10;
-  td.C = trainer("C", [[16]]);
-  assertEqual(open(td, 9, "A", "C").reason, "cap_daily", "11th battle of the day is refused");
+  td.C = trainer("C", [[16]], FULL_B); // a full Ranked team, for ranked battles
+  assertEqual(ranked(td, 9, "A", "C").reason, "cap_daily", "11th ranked battle of the day is refused");
   td.A.battle.day = "2026-11-01";
-  assertTrue(open(td, 9, "A", "C").ok, "caps use the day of the battle, not the offer");
+  assertTrue(ranked(td, 9, "A", "C").ok, "caps use the day of the battle, not the offer");
   const w = world();
   w.B.battle = { rating: 1000, wins: 0, losses: 0, day: "2026-11-02", started: 10, vs: {} };
   assertEqual(runBattle({ trainerData: w, challengerId: "A", defenderId: "B", mode: "wager", stake: 1, seed: 1, now: NOW }).reason,
     "defender_cap_daily", "a Defender out of battles can't take a wager");
+}
+
+section("Casual battle past 3 vs one Defender: needs a Rematch request, earns no EXP");
+{
+  const leveling = (u) => JSON.stringify([u.training, u.box]);
+  const td = world();
+  for (let i = 0; i < 3; i++) assertEqual(open(td, i).overCap, null, `casual battle ${i + 1} of 3 vs B is within the cap`);
+  const untouched = JSON.stringify(td);
+  assertEqual(open(td, 9).reason, "rematch_needed", "a 4th casual battle vs B needs B to accept a Rematch request");
+  assertEqual(JSON.stringify(td), untouched, "…and the refusal changes nothing");
+  assertEqual(battleBlock({ trainerData: td, challengerId: "A", defenderId: "B", mode: "open", now: NOW }), "rematch_needed",
+    "/battle sees it before deferring");
+
+  const before = leveling(td.A);
+  const out = rematch(td, 9);
+  assertTrue(out.ok, "an accepted rematch runs");
+  assertEqual(out.overCap, "opponent", "outcome names the cap that was hit");
+  assertTrue(out.result.knockouts.some((k) => k.bySide === 0), "Challenger scores a knockout (fixture precondition)");
+  assertEqual(leveling(td.A), before, "Challenger's Team gains no EXP");
+  assertEqual(out.exp, {}, "no EXP report");
+  assertEqual([td.A.battle.started, td.A.battle.vs.B], [3, 4], "it counts against B but uses none of the day's 10");
+  assertEqual(td.A.casual.wins + td.A.casual.losses, 4, "it still counts on the casual record");
+  assertEqual(resultScreens(out, { A: "Ash", B: "Gary" }).length, 1, "result text box has no level-up screen");
+  assertEqual(open(td, 10).reason, "rematch_needed", "the next one needs another request");
+
+  td.C = trainer("C", [[16]], FULL_B); // a full Ranked team, for ranked battles
+  assertTrue(ranked(td, 10, "A", "C").ok, "rematches leave the rest of the day's battles for ranked");
+  assertEqual(ranked(td, 11).reason, "cap_opponent", "ranked vs B is still refused");
+  assertTrue(open(td, 12, "B", "A").ok, "B can still battle A: the limit counts only the Challenger's own battles");
+}
+
+section("Casual battle past the daily Battle cap: runs, earns no EXP");
+{
+  const td = world();
+  td.C = trainer("C", [[16]], FULL_B); // a full Ranked team, for ranked battles
+  getBattleRecord(td.A, utcDay(NOW)).started = 10;
+  for (let i = 0; i < 3; i++) {
+    const out = open(td, 11 + i, "A", "C");
+    assertTrue(out.ok && out.overCap === "daily" && Object.keys(out.exp).length === 0, `casual battle ${i + 1} vs C past the daily cap runs with no EXP`);
+  }
+  assertEqual([td.A.battle.started, td.A.battle.vs.C], [10, 3], "each counts against C but not toward the 10");
+  assertEqual(open(td, 14, "A", "C").reason, "rematch_needed", "so a 4th vs C still needs a Rematch request");
+  assertEqual(ranked(td, 15).reason, "cap_daily", "ranked is still refused at the cap");
+  assertEqual(runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "wager", stake: 1, seed: 16, now: NOW }).reason,
+    "cap_daily", "wager is still refused at the cap");
+
+  td.A.battle.day = "2026-11-01";
+  const nextDay = open(td, 17, "A", "C");
+  assertTrue(nextDay.overCap === null && Object.keys(nextDay.exp).length === 1, "a new UTC day earns EXP again, with no request");
+}
+
+section("A battle that runs lifts the Defender's Rematch block on the Challenger");
+{
+  const day = utcDay(NOW);
+  const td = world();
+  for (let i = 0; i < 3; i++) open(td, i);
+  blockRematch(td.B, "A", day); // B's request to A was declined
+  assertEqual(open(td, 3).reason, "rematch_needed", "A's 4th casual battle vs B is refused…");
+  assertTrue(isRematchBlocked(td.B, "A", day), "…so B is still blocked");
+  assertTrue(rematch(td, 4).ok && !isRematchBlocked(td.B, "A", day), "a battle A starts against B lifts B's block");
+  blockRematch(td.B, "A", day);
+  td.C = trainer("C", [[16]], FULL_B);
+  blockRematch(td.C, "A", day);
+  assertTrue(ranked(td, 5, "A", "C").ok && !isRematchBlocked(td.C, "A", day), "a ranked battle lifts it too");
+  assertTrue(isRematchBlocked(td.B, "A", day), "only for the player A battled");
 }
 
 section("Determinism");
@@ -161,7 +283,7 @@ section("Result embed");
   const casual = open(world(), 1);
   const ce = buildResultEmbed(casual, names).data;
   assertEqual(ce.fields.map((f) => f.name), ["Casual battle"], "Casual: says it's unrated instead of a rating");
-  assertTrue(ce.fields[0].value.includes("don't change your Ranked rating") && ce.fields[0].value.includes(names[casual.winnerId]), "Casual: names the winner");
+  assertTrue(ce.fields[0].value.includes("Unrated") && ce.fields[0].value.includes(names[casual.winnerId]), "Casual: names the winner");
   const wager = runBattle({ trainerData: world(), challengerId: "A", defenderId: "B", mode: "wager", stake: 30, seed: 3, now: NOW });
   for (const [label, outcome] of [["Ranked", out], ["Wager", wager]]) {
     const embed = buildResultEmbed(outcome, names).data;
@@ -228,7 +350,11 @@ section("Playback");
   await playBattle(channel, out, { A: "Ash", B: "Gary" }, { maxUpdates: 12, delayMs: 0 });
   assertEqual(sent.length, 1, "one new channel message (so mentions notify)");
   assertTrue(sent[0].content.includes("<@A> challenged <@B>!") && sent[0].files.length === 1, "first message mentions both players with the start frame");
-  assertEqual(sent[0].files[0].name, "battle.gif", "frames are animated GIFs");
+  assertEqual(sent[0].files[0].name, "battle-start.gif", "frames are animated GIFs");
+  const names = [sent[0], ...edits].map((m) => m.files[0].name);
+  assertEqual(new Set(names).size, names.length, "every update has its own file name, so a failed load can't stick");
+  assertEqual(names.at(-1), "battle-final.gif", "the result image is battle-final.gif");
+  assertEqual(names[1], battleImageName(pickFrameTurns(out.result.turns, 12)[0]), "turn images are named by turn");
   assertEqual(edits.length, pickFrameTurns(out.result.turns, 12).length + 1, "one edit per turn (up to 12), then the result");
   assertTrue(edits.at(-1).embeds?.length === 1 && edits.slice(0, -1).every((e) => !e.embeds), "result embed arrives with the final image");
   const failing = { send: async () => ({ edit: async () => { throw new Error("Unknown Message"); } }) };

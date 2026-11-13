@@ -24,7 +24,9 @@ import {
   AttachmentBuilder,
 } from "discord.js";
 import { cardImage } from "../utils/render/stage.js";
-import { trainerCardView, renderTrainerCard } from "../utils/render/trainerCard.js";
+import { trainerCardView } from "../utils/render/trainerCard.js";
+import { luckSummary } from "../utils/luckMeter.js";
+import { randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -38,8 +40,12 @@ import { getRank } from "../utils/rankSystem.js";
 import { ensureUserInitialized } from "../utils/userInitializer.js";
 import { enqueueSave } from "../utils/saveQueue.js";
 import { lockUser } from "../utils/userLocks.js";
-import { saveAndAck, SAVE_DELAYED_NOTE } from "../utils/saveManager.js";
+import { saveAndAck, SAVE_DELAYED_NOTE, promptSave } from "../utils/saveManager.js";
 import { grantTrainer } from "../services/assets.js";
+import { badgeLine } from "../utils/challenge/badgeImages.js";
+import { sendPendingNotices } from "./battle.js";
+import { NOTICE_KINDS } from "../services/notices.js";
+import { threaded } from "../utils/render/renderers.js";
 
 // Load trainer sprite data
 const __filename = fileURLToPath(import.meta.url);
@@ -194,7 +200,10 @@ export default {
       }
     }
 
-    return showTrainerCard(interaction, user, trainerData, saveDataToDiscord);
+    const shown = await showTrainerCard(interaction, user, trainerData, saveDataToDiscord);
+    // One-time "your trainers were consolidated" note (services/trainerConsolidation.js), as a private follow-up.
+    await sendPendingNotices(interaction, trainerData, lockUser, enqueueSave, NOTICE_KINDS.TRAINER_CONSOLIDATION);
+    return shown;
   },
 };
 
@@ -308,7 +317,7 @@ export async function starterSelection(interaction, user, trainerData, saveDataT
     });
   } catch (err) {
     console.error("starterSelection error:", err);
-    return interaction.editReply({ content: "Starter selection failed." });
+    return interaction.editReply({ content: "❌ Starter selection failed." });
   }
 }
 
@@ -408,7 +417,10 @@ export async function trainerSelection(interaction, user, trainerData, saveDataT
 // ==========================================================
 // 🧾 SHOW TRAINER CARD  — VARIANT-SAFE + CANONICAL
 // ==========================================================
-export async function showTrainerCard(interaction, user, trainerData, saveDataToDiscord) {
+// shared: true posts the public card (no Luck row, no buttons; was /showcard).
+// Otherwise the private card has the Luck row and a "Share to channel" button.
+export const SHARE_MS = 10 * 60 * 1000;
+export async function showTrainerCard(interaction, user, trainerData, saveDataToDiscord, { shared = false } = {}) {
   try {
     const username = interaction.user.username;
     const avatarURL = interaction.user.displayAvatarURL({ extension: "png", size: 128 });
@@ -426,7 +438,7 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
     if (!Array.isArray(user.displayedPokemon) || user.displayedPokemon.length === 0) {
       user.displayedPokemon = team;
       // `user` is the live record (never replace trainerData[id], D2).
-      if (trainerData) await enqueueSave(trainerData);
+      if (trainerData) await promptSave(trainerData);
     }
 
     const leadSlot = team[0] || null;
@@ -536,10 +548,11 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
       .setDescription(
         `🏆 **Rank:** ${rank}\n` +
           `${TP_EMOJI} **${user.tp ?? 0}** | ${CC_EMOJI} **${user.cc ?? 0}**\n\n` +
-          `🧍 **Trainer:** ${trainerInfo.name} · ${trainerInfo.rarityLabel} ${trainerInfo.emoji}\n\n` +
+          `🧍 **Trainer:** ${trainerInfo.name} — ${trainerInfo.rarityLabel} ${trainerInfo.emoji}\n\n` +
           `📊 **Pokémon Owned:** ${pokemonOwned}\n` +
           `✨ **Shiny Pokémon:** ${shinyCount}\n` +
-          `🧍 **Trainers:** ${trainerCount}\n\n` +
+          `🧍 **Trainers:** ${trainerCount}\n` +
+          `${badgeLine(user)}\n\n` +
           `🌀 **Team:**`
       )
       .setFooter({ text: "Coop's Collection • /trainercard" });
@@ -557,12 +570,30 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
 
     // The rendered card (utils/render/trainerCard.js); the embed above is the fallback.
     try {
-      const tcView = trainerCardView(user, {
-        displayName: username,
-        trainer: user.displayedTrainer ? { name: trainerInfo.name, tier: trainerInfo.rarityKey } : null,
+      const trainerFacts = user.displayedTrainer ? { name: trainerInfo.name, tier: trainerInfo.rarityKey } : null;
+      const render = async (luck) => {
+        const tcView = trainerCardView(user, { displayName: username, trainer: trainerFacts, luck });
+        const card = await cardImage((animate) => threaded.trainerCard(tcView, { animate }), "trainercard", { unique: true });
+        return new AttachmentBuilder(card.buffer, { name: card.name });
+      };
+      if (shared) return await interaction.editReply({ embeds: [], files: [await render(null)], components: [] });
+      const nonce = randomBytes(6).toString("hex");
+      const shareRow = (disabled) => new ActionRowBuilder().addComponents(new ButtonBuilder()
+        .setCustomId(`tc_share:${nonce}`).setLabel("Share to channel").setStyle(ButtonStyle.Primary).setDisabled(disabled));
+      const msg = await interaction.editReply({ embeds: [], files: [await render(luckSummary(user))], components: [shareRow(false)] });
+      // One share per card: the same card, publicly, without the private Luck row.
+      const collector = msg?.createMessageComponentCollector?.({ time: SHARE_MS, max: 1, filter: (i) => i.customId === `tc_share:${nonce}` && i.user.id === interaction.user.id });
+      collector?.on("collect", async (i) => {
+        try {
+          await i.deferReply();
+          await i.editReply({ files: [await render(null)] });
+        } catch (err) {
+          console.warn("⚠️ trainer card share failed:", err?.message || err);
+          await i.followUp({ content: "I couldn't share your card here.", flags: MessageFlags.Ephemeral }).catch(() => {});
+        }
       });
-      const card = await cardImage((animate) => renderTrainerCard(tcView, { animate }), "trainercard");
-      return await interaction.editReply({ embeds: [], files: [new AttachmentBuilder(card.buffer, { name: card.name })], components: [] });
+      collector?.on("end", () => interaction.editReply({ components: [shareRow(true)] }).catch(() => {}));
+      return msg;
     } catch (err) {
       console.warn("⚠️ trainer card render failed; sending embed:", err?.message || err);
     }
@@ -573,6 +604,6 @@ export async function showTrainerCard(interaction, user, trainerData, saveDataTo
     });
   } catch (err) {
     console.error("trainerCard error:", err);
-    return interaction.editReply({ content: "Failed to show Trainer Card." });
+    return interaction.editReply({ content: "❌ Failed to show Trainer Card." });
   }
 }

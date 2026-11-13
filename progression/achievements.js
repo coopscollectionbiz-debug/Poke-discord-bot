@@ -20,6 +20,7 @@ import { listAchievements, getAchievement, BY_METRIC, CATALOG_REVISION, CATEGORI
 import { speciesOfKey, isSpeciesKey } from "../utils/forms.js";
 import { TYPE_ID_TO_NAME, LEGACY_TYPE_IDS } from "../utils/battle/data.js";
 import { levelsForUser } from "../utils/training.js";
+import { registeredMask, registeredSpecies } from "../services/box.js";
 import { lifetimeRanked } from "../utils/battle/rewards.js";
 import { getQuantity, grantItem, validateHoldableItem } from "../services/inventory.js";
 import { grantCurrency } from "../services/assets.js";
@@ -159,8 +160,9 @@ function sumAp(user) {
 // ----------------------------------------------------------
 // Metrics
 // ----------------------------------------------------------
-const COLLECTION_PREFIXES = ["region:", "type:", "tier:", "classicTier:", "shinyTier:", "family:"];
-const COLLECTION_KEYS = new Set(["uniqueSpecies", "classicSpecies", "shinyCopies", "shinySpecies", "regions", "regionsAll", "shinyRegions", "familiesComplete", "typeMastery", "typeMasteryAll"]);
+const COLLECTION_PREFIXES = ["region:", "type:", "tier:", "classicTier:", "shinyTier:", "family:", "dexRegion:"];
+// dex*: the permanent Pokédex (user.pokedex, services/box.js), never drops.
+const COLLECTION_KEYS = new Set(["uniqueSpecies", "classicSpecies", "shinyCopies", "shinySpecies", "regions", "regionsAll", "shinyRegions", "familiesComplete", "typeMastery", "typeMasteryAll", "dexSpecies", "dexClassic", "dexShiny"]);
 const isCollectionKey = (k) => COLLECTION_KEYS.has(k) || COLLECTION_PREFIXES.some((p) => k.startsWith(p));
 const TYPE_IDS = Object.keys(TYPE_ID_TO_NAME);
 
@@ -182,9 +184,25 @@ function ownedBySpecies(user) {
   return owned;
 }
 
-/** One pass over the player's Pokémon (current ownership). */
+/** Registered species (user.pokedex: { id: 1 normal | 2 shiny | 3 both }). */
+function dexMetrics(user, out) {
+  out.dexSpecies = 0; out.dexClassic = 0; out.dexShiny = 0;
+  for (const id of registeredSpecies(user)) {
+    const mask = registeredMask(user, id);
+    if (!mask) continue;
+    out.dexSpecies++;
+    if (mask & 2) out.dexShiny++;
+    const sp = SPECIES.get(Number(id));
+    if (!sp) continue;
+    if (sp.classic) out.dexClassic++;
+    out[`dexRegion:${sp.region}`] = (out[`dexRegion:${sp.region}`] || 0) + 1;
+  }
+}
+
+/** One pass over the player's Pokémon (current ownership) and their Pokédex. */
 function collectionMetrics(user) {
   const out = { uniqueSpecies: 0, classicSpecies: 0, shinyCopies: 0, shinySpecies: 0 };
+  dexMetrics(user, out);
   const fam = new Map();
   const shinyRegions = new Set();
   for (const [id, e] of ownedBySpecies(user)) {

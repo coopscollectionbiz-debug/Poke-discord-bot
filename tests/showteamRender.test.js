@@ -101,6 +101,19 @@ section("Animated output");
   assertTrue(gif.length < 8 * 1024 * 1024, "well under Discord's attachment limit");
 }
 
+section("/showcase loops on whole sprite cycles");
+{
+  // The default (no `frames`): the fitted loop the other cards use, in 50 ms
+  // steps, so sprites don't jump back to their first frame every 2.4 s.
+  const view = buildTeamView(FIXTURES.full.user);
+  const fitted = new GifReader(await renderShowteam(view, { layout: "refined", animate: true }));
+  const delays = Array.from({ length: fitted.numFrames() }, (_, i) => fitted.frameInfo(i).delay * 10);
+  const loopMs = delays.reduce((a, b) => a + b, 0);
+  assertTrue(delays.every((d) => d === 50) && loopMs > 2400 && loopMs % 2400 === 0, `fitted: 50 ms frames, a whole number of 2.4 s clocks with a shiny backdrop (${loopMs} ms)`);
+  const old = new GifReader(await renderShowteam(view, { layout: "refined", animate: true, env: { ...process.env, POKEMON_LOOP_FIT: "0" } }));
+  assertTrue(old.numFrames() === 24 && old.frameInfo(0).delay === 10, "POKEMON_LOOP_FIT=0: the old 24 × 100 ms loop");
+}
+
 section("Refined layout");
 {
   const full = buildTeamView(FIXTURES.full.user);
@@ -130,7 +143,7 @@ section("Catch card");
     assertTrue(png.readUInt32BE(16) === CATCH_SIZE.w && png.readUInt32BE(20) === CATCH_SIZE.h && ms < 1000, `catch/${name}: ${CATCH_SIZE.w}×${CATCH_SIZE.h} in ${Math.round(ms)} ms`);
   }
   const gif = new GifReader(await renderCatchCard(v, { animate: true }));
-  assertTrue(gif.numFrames() > 1 && gif.width === 900, "catch card animates (900 px wide)");
+  assertTrue(gif.numFrames() > 1 && gif.width === CATCH_SIZE.w, `catch card animates (${CATCH_SIZE.w} px wide)`);
 }
 
 finish();

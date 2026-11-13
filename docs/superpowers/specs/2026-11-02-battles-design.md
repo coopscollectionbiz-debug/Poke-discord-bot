@@ -8,9 +8,14 @@ Glossary: `CONTEXT.md`.
 - `/battle @user wager:N` = **Wager battle**: Defender must accept; both earn EXP; winner takes the pot.
 - Fight = the existing **Team** (displayedPokemon, ≤6) in slot order, 6v6 singles, next mon on faint.
 - Blocked: Defender with no Team; Challenger with no Team; self; bots.
-- Any channel. Defender is @mentioned. No opt-out.
+- Any channel. When `CASUAL_BATTLE_CHANNEL_ID` is set, casual battles (and Rematch requests) only run in that channel; a casual `/battle` elsewhere is refused privately. Ranked and wager stay in any channel. Defender is @mentioned. No opt-out.
 - **Battle cap**: 10 battles started per UTC day (same reset as /daily, `commands/daily.js:35-36`), max 3 per opponent per day (your call).
   - Open battle: counts for Challenger only.
+  - Open battle past either cap (changed 2026-11-12): ranked and wager battles stay refused.
+    - Past the daily cap, an open battle still runs, but earns no EXP or Mega Shards and doesn't count toward the 10. It still counts toward the 3 against that Defender.
+    - Past 3 against one Defender, the next open battle is a Rematch request (`utils/battle/rematch.js`): a channel message with Accept and Decline that only the Defender can answer, open for `REMATCH.windowMs` (5 minutes, owner decision). An accepted rematch earns no EXP or Mega Shards.
+    - A decline or expiry blocks the Challenger from asking that Defender again until midnight UTC, or until the Defender sends the Challenger a `/battle` that isn't refused (a battle that runs, a Rematch request or a Wager offer). A restart, a deleted message or a failed post closes the request without a block. An admin Battle cap reset clears blocks.
+    - One open request per Defender, saved on the Challenger so a restart can close its message. The count is the Challenger's own battles against the Defender, so the Defender can still battle them.
   - Wager battle: counts for **both** players, and toward the pair's 3/day in either direction. Defender at cap → Accept cancels the offer and refunds the Stake.
   - Declined/expired wagers count for nothing.
 
@@ -23,7 +28,7 @@ Glossary: `CONTEXT.md`.
 
 ## Fairness & randomness
 - Levels and rarity count in full. Fairness comes from EXP scaling (Gen 5 formula pays little for beating lower-level foes), the Battle cap, Defender never losing anything in Open battles, and Elo giving little for beating weaker teams.
-- **Underdog surge**: rare, announced, gap-scaled whole-team boost for the Underdog. Mechanism (Task 7): the surge raises the Underdog's Levels until the Power rating gap is 1.3×; chance = min(20%, 15% × (ratio − 1)) above a 1.25× gap. A fixed stat boost measured only ~0.1% upsets at 5× gaps (most of a big gap is Level), so the boost scales with the gap.
+- **Underdog surge**: rare, announced, gap-scaled whole-team boost for the Underdog. Mechanism (Task 7): the surge raises the Underdog's Levels until the Power rating gap is 1.3×; chance = min(20%, 15% × (ratio − 1)) above a 1.25× gap. A fixed stat boost measured only ~0.1% upsets at 5× gaps (most of a big gap is Level), so the boost scales with the gap. Kept at 20% (decided 2026-11-10): a strong surge is fine in casual battles, and ranked and wager battles have none.
 - Plus modestly widened global variance (damage roll / crit).
 - Target underdog win-rate curve: OPEN CHECK (set in spec, verified by Monte Carlo test).
 
@@ -55,7 +60,7 @@ Glossary: `CONTEXT.md`.
 - W/L stored alongside. `/leaderboard`: top 10 + your position, only players with ≥1 battle. No roles, no seasons.
 
 ## Display
-- "Watch it happen" (revised after the first live test): an animated image of both Teams, edited once per turn about 2 s apart, up to 12 updates (longer battles spread evenly). The fighting pair is spotlit, HP drains, and a game-style text box narrates each hit ("Luxray used Spark! It's super effective!"), from a per-turn log the sim records without changing any random draw. Then a final image (its text box cycles: the win and the MVP, the winner's Pokémon with the most knockouts, then level-ups and new moves) and a result embed with each player's rating change. Once the replay ends, each player who earned EXP gets an ephemeral message with each Pokémon's EXP gain. (Revised: the embed used to repeat the winner, MVP, surge, pot, level-ups, and new moves, which the image and the message header already show.)
+- "Watch it happen" (revised after the first live test): an animated image of both Teams, edited once per turn about 2 s apart, up to 12 updates (longer battles spread evenly). Each player's displayed trainer stands at the left of their row, or an empty platform when they have none (added 2026-11-10 with `/challenge`'s replay). The fighting pair is spotlit, HP drains, and a game-style text box narrates each hit ("Luxray used Spark! It's super effective!"), from a per-turn log the sim records without changing any random draw. Then a final image (its text box cycles: the win and the MVP, the winner's Pokémon with the most knockouts, then level-ups and new moves) and a result embed with each player's rating change. Once the replay ends, each player who earned EXP gets an ephemeral message with each Pokémon's EXP gain. (Revised: the embed used to repeat the winner, MVP, surge, pot, level-ups, and new moves, which the image and the message header already show.)
 - At most 2 replays render at once (`PLAYBACK.maxAtOnce`). A battle that has to wait posts its message right away (so the mentions notify), shows its place in line, and starts in order as replays finish. Results are already saved, so only the replay waits. (Added after measuring memory and lag with several battles at once.)
 - Levels visible on: dashboard (collection cards, team picker — "Lv N", no EXP bar), /inspectpokemon (Level, stats, auto-moves), trainer card / /showteam canvas, /trainercard embed, battle frames.
 

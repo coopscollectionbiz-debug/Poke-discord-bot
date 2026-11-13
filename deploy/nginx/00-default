@@ -1,0 +1,9 @@
+# /etc/nginx/sites-available/00-default on the production VPS.
+# Requests naming no configured host (e.g. the bare IP) get a 404 instead of
+# falling through to whichever site nginx loads first.
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    return 404;
+}

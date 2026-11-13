@@ -46,3 +46,6 @@ oldTrainerBackup.json
 backup_*.json
 *.backup.json
 *.bundle
+
+# Live events schedule (TRAINERDATA_DIR; default is the repo root)
+live-events.json

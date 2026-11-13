@@ -11,6 +11,9 @@
 // silently drops, so the trainer vanished on the next restart (D1).
 // ==========================================================
 
+import { canonicalTrainerFile } from "./trainerConsolidation.js";
+import { grantTierAuraFor } from "./auras.js";
+
 const keyOf = (k) => String(k ?? "").trim();
 const sameKey = (a, b) => keyOf(a).toLowerCase() === keyOf(b).toLowerCase();
 
@@ -55,11 +58,13 @@ export function ownsTrainer(user, key) {
  * Throws on an empty key (a bug in the caller, not a player action).
  */
 export function grantTrainer(user, key) {
-  const k = keyOf(key);
+  // A folded game version (e.g. an old quest reward naming twins-gen3.png) grants its group's sprite.
+  const k = keyOf(canonicalTrainerFile(keyOf(key)));
   if (!k) throw new Error("grantTrainer: missing trainer key");
   const list = normalizeTrainers(user);
   if (list.some((t) => sameKey(t, k))) return false;
   list.push(k);
+  grantTierAuraFor(user, k); // any Epic+ trainer unlocks its tier's Aura for good
   return true;
 }
 

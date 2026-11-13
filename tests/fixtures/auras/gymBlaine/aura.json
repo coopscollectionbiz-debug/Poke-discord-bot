@@ -1,0 +1,17 @@
+{
+  "id": "gymBlaine",
+  "name": "Volcano Aura (test art)",
+  "credit": [],
+  "palette": [
+    "#f97316",
+    "#fde047"
+  ],
+  "sky": [
+    "#0c0402",
+    "#2a0d05",
+    "#4a1606"
+  ],
+  "layers": {
+    "back": "back.png"
+  }
+}

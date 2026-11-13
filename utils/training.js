@@ -1,13 +1,13 @@
 // ==========================================================
 // utils/training.js
-// Levels and EXP, stored once per species + Variant:
-//   user.training["6:normal"] = { exp }   (Level is derived from exp)
-// No record means the Pokémon sits at the bottom of its catch range, so
-// existing collections need no migration. Losing the last copy deletes the
-// record (resetLevelIfGone), so the next catch rolls a new Catch level.
+// Levels and EXP. Every copy has its own (user.box, services/box.js);
+// user.training["6:normal"] = { exp } is DERIVED: the line's best copy,
+// rewritten by syncLine. getTraining() therefore answers "the best copy of
+// this species + Variant"; team and battle code reads the slot's copy.
 // ==========================================================
 
 import fs from "fs";
+import { addCopy } from "../services/box.js";
 import {
   LEVEL_CAP, CATCH_RANGES, CATCH_SKEW, CATCH_TAIL_CHANCE, DUPLICATE_LEVEL_SHARE,
 } from "./battle/tuning.js";
@@ -70,29 +70,13 @@ export function addExp(user, id, variant, amount) {
   return { fromLevel: before.level, toLevel: getTraining(user, id, variant).level };
 }
 
-// Every catch goes through here: +1 count, then either a Catch level roll
-// (first time) or duplicate EXP (record already exists).
-// Gifts and admin grants don't use this — they add count only.
+// Every catch goes through here: a new copy (services/box.js) with its own
+// Catch level roll. isNew = the species entered the Pokédex just now;
+// isNewShiny = the first shiny of it ever. Duplicates no longer add EXP;
+// players Feed them instead.
 export function grantCatch(user, speciesId, variant, rand = Math.random) {
-  user.pokemon ??= {};
-  user.pokemon[speciesId] ??= { normal: 0, shiny: 0 };
-  // isNew is about ownership, not the training record: copies owned before
-  // Levels existed have no record, but they are not new to the player.
-  const ownedBefore = (user.pokemon[speciesId][variant] ?? 0) > 0;
-  user.pokemon[speciesId][variant] = (user.pokemon[speciesId][variant] ?? 0) + 1;
-
-  if (!user.training?.[trainingKey(speciesId, variant)]) {
-    const level = rollCatchLevel(speciesId, rand);
-    setExp(user, speciesId, variant, expForLevel(level));
-    return { level, isNew: !ownedBefore, expGained: 0 };
-  }
-
-  const { level } = getTraining(user, speciesId, variant);
-  const expGained = level >= LEVEL_CAP
-    ? 0
-    : Math.floor((expForLevel(level + 1) - expForLevel(level)) * DUPLICATE_LEVEL_SHARE);
-  const { toLevel } = addExp(user, speciesId, variant, expGained);
-  return { level: toLevel, isNew: false, expGained };
+  const made = addCopy(user, Number(speciesId), variant, { rand });
+  return { level: made.level, isNew: made.newSpecies, isNewShiny: made.newShiny, expGained: 0, uid: made.uid };
 }
 
 // Evolution and shiny craft: the target keeps the higher of its own Level

@@ -1,8 +1,8 @@
 // ==========================================================
 // utils/render/dexProgress.js
 // A player's Pokédex completion, as CONTEXT.md defines it: distinct species
-// owned NOW (at least one copy, either variant), counted per region and
-// nationally. "National" is out of the species in released generations
+// registered in their Pokédex (ever caught, either variant; never drops),
+// counted per region and nationally. "National" is out of the species in released generations
 // (isAcquirable: 649 with Generations 1–5), so it grows as generations are
 // released. Read-only. Shown privately (/daily, /pokedex), never on public
 // cards.
@@ -12,6 +12,7 @@ import fs from "fs";
 import { isAcquirable } from "../speciesCatalog.js";
 import { MAX_DEX } from "../../config/generations.js";
 import { regionCompletion } from "./catchCard.js";
+import { registeredMask } from "../../services/box.js";
 import { COLOR } from "./tokens.js";
 import { rr, font } from "./primitives.js";
 
@@ -23,8 +24,7 @@ export function nationalCompletion(user) {
   for (let id = 1; id <= MAX_DEX; id++) {
     if (!isAcquirable(id)) continue;
     total++;
-    const v = user?.pokemon?.[id];
-    if ((v?.normal ?? 0) + (v?.shiny ?? 0) > 0) owned++;
+    if (registeredMask(user, id) > 0) owned++;
   }
   return { owned, total };
 }

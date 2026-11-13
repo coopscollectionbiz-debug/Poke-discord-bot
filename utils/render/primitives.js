@@ -6,6 +6,7 @@
 // that helps layout; none reads game state.
 // ==========================================================
 
+import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, FONT, RADIUS, TIER_PIPS, tierColor, typeStyle } from "./tokens.js";
 
 export function rr(ctx, x, y, w, h, r) {
@@ -88,8 +89,7 @@ export function drawTypeChip(ctx, type, x, y, { h = 30, size = 17 } = {}) {
   ctx.fill();
   ctx.fillStyle = st.text;
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, x + w / 2, y + h / 2 + 1);
+  fillTextMid(ctx, label, x + w / 2, y + h / 2);
   ctx.textAlign = "left";
   return w;
 }
@@ -178,6 +178,17 @@ export function drawExpBar(ctx, x, y, w, frac, { h = 8 } = {}) {
   }
 }
 
+/**
+ * Fills text with its capitals centred on cy: pill, chip and badge labels.
+ * (textBaseline "middle" centres the em box, which leaves capitals sitting
+ * low.) Keeps textAlign; leaves textBaseline "alphabetic".
+ */
+export function fillTextMid(ctx, text, x, cy) {
+  ctx.textBaseline = "alphabetic";
+  const cap = ctx.measureText("H").actualBoundingBoxAscent;
+  ctx.fillText(text, x, cy + cap / 2);
+}
+
 /** A round slot badge with the slot number (1–6). */
 export function drawSlotBadge(ctx, n, cx, cy, { r = 17, lead = false } = {}) {
   ctx.fillStyle = lead ? COLOR.blue : COLOR.surfaceSunken;
@@ -190,30 +201,103 @@ export function drawSlotBadge(ctx, n, cx, cy, { r = 17, lead = false } = {}) {
   ctx.fillStyle = lead ? "#ffffff" : COLOR.textMuted;
   ctx.font = font(Math.round(r * 1.05), 800);
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(String(n), cx, cy + 1);
+  fillTextMid(ctx, String(n), cx, cy);
   ctx.textAlign = "left";
 }
 
 /** The battle platform ellipse, optionally lit in an accent color. */
 export function drawPlatform(ctx, cx, cy, rx, ry, accent = null) {
-  if (accent) {
-    const glow = ctx.createRadialGradient(cx, cy - ry * 3, 4, cx, cy - ry * 3, rx * 1.3);
-    glow.addColorStop(0, `${accent}44`);
-    glow.addColorStop(1, `${accent}00`);
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(cx, cy - ry * 3, rx * 1.3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.fillStyle = accent ? `${accent}66` : "#ffffff14";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = accent ? `${accent}cc` : "#ffffff22";
-  ctx.stroke();
+  // the pixel floor everywhere; an unlit one is light slate so it still reads on the dark cards
+  return drawSoftPlatform(ctx, cx, cy, rx, ry, accent ?? FLOOR_NEUTRAL, { u: rx >= 90 ? 4 : 2, peak: accent ? 0.5 : 0.22 });
 }
+
+export const FLOOR_NEUTRAL = "#94a3b8";
+
+const BAYER4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+
+/**
+ * A soft floor shadow under a trainer or Pokémon (replaces the hard platform
+ * ellipse under trainers): pixel art on a `u`-px grid, no stroke or glow,
+ * fading out from the centre in a few ordered-dithered steps so it can't
+ * band in a GIF. `tint` (#rrggbb) colours it, for an owned Epic+ trainer's
+ * tier; null is a neutral shadow. `peak` is the centre's opacity.
+ */
+export function drawSoftPlatform(ctx, cx, cy, rx, ry, tint = null, { u = 4, peak = tint ? 0.5 : 0.55 } = {}) {
+  // The floor only depends on its size, tint, grid, opacity and where it
+  // falls inside a pixel, so it's drawn once into a cached stamp and copied
+  // after that (it was a third of all render CPU when battle frames drew
+  // ~850 cells per Pokémon per frame). A scaled or rotated context draws the
+  // cells directly, as before, so nothing is resampled.
+  const t = ctx.getTransform?.();
+  if (!t || t.a !== 1 || t.b !== 0 || t.c !== 0 || t.d !== 1 || !Number.isInteger(t.e) || !Number.isInteger(t.f)) {
+    return drawPlatformCells(ctx, cx, cy, rx, ry, tint, u, peak);
+  }
+  const ox = Math.floor(cx), oy = Math.floor(cy);
+  const stamp = platformStamp(cx - ox, cy - oy, rx, ry, tint, u, peak);
+  if (stamp.canvas) ctx.drawImage(stamp.canvas, ox + stamp.x, oy + stamp.y);
+}
+
+function drawPlatformCells(ctx, cx, cy, rx, ry, tint, u, peak) {
+  const [r, g, b] = tint ? [1, 3, 5].map((i) => parseInt(tint.slice(i, i + 2), 16)) : [3, 5, 12];
+  const nx = Math.ceil(rx / u), ny = Math.ceil(ry / u);
+  for (let gy = -ny; gy <= ny; gy++) for (let gx = -nx; gx <= nx; gx++) {
+    const d = Math.hypot((gx * u) / rx, (gy * u) / ry);
+    if (d >= 1) continue;
+    const lv = Math.max(0, Math.min(4, Math.floor((1 - d) * 4 + BAYER4[(gy + 64) & 3][(gx + 64) & 3] / 16 - 0.5)));
+    if (!lv) continue;
+    ctx.fillStyle = `rgba(${r},${g},${b},${((peak * lv) / 4).toFixed(3)})`;
+    ctx.fillRect(Math.round(cx + gx * u - u / 2), Math.round(cy + gy * u - u / 2), u, u);
+  }
+}
+
+// Stamps by every input that changes the pixels; a few hundred at most
+// (each card or battle layout uses a handful of sizes and tints).
+const STAMPS = new Map();
+const STAMP_LIMIT = 512;
+function platformStamp(fx, fy, rx, ry, tint, u, peak) {
+  const key = `${fx},${fy},${rx},${ry},${tint},${u},${peak}`;
+  let stamp = STAMPS.get(key);
+  if (stamp) return stamp;
+  // Cells land at round(f + g·u − u/2) relative to the floored centre; the
+  // stamp spans exactly those, so copying it at the floored centre puts every
+  // cell where drawing it directly would have.
+  const nx = Math.ceil(rx / u), ny = Math.ceil(ry / u);
+  const x = Math.round(fx - nx * u - u / 2), y = Math.round(fy - ny * u - u / 2);
+  const w = Math.round(fx + nx * u - u / 2) + u - x, h = Math.round(fy + ny * u - u / 2) + u - y;
+  const canvas = w > 0 && h > 0 ? createCanvas(w, h) : null;
+  if (canvas) drawPlatformCells(canvas.getContext("2d"), fx - x, fy - y, rx, ry, tint, u, peak);
+  stamp = { canvas, x, y };
+  if (STAMPS.size >= STAMP_LIMIT) STAMPS.delete(STAMPS.keys().next().value);
+  STAMPS.set(key, stamp);
+  return stamp;
+}
+
+/**
+ * Draws a detail that repeats across an image's frames (a Poké Ball, an HP
+ * bar, a name) from a cached stamp: `draw(stampCtx, x, y)` paints it once
+ * with its anchor at (x, y), and later calls with the same `key` and the
+ * same position inside a pixel copy that stamp. The stamp spans `left`/`top`
+ * px before the anchor and is `w` × `h`. Anti-aliased edges can differ from
+ * drawing directly by at most 1 colour level. Returns false on a scaled,
+ * rotated or fractionally translated context; the caller then draws directly.
+ */
+export function drawStamp(ctx, key, ax, ay, left, top, w, h, draw) {
+  const t = ctx.getTransform?.();
+  if (!t || t.a !== 1 || t.b !== 0 || t.c !== 0 || t.d !== 1 || !Number.isInteger(t.e) || !Number.isInteger(t.f)) return false;
+  const ox = Math.floor(ax), oy = Math.floor(ay);
+  const full = `${key}@${ax - ox},${ay - oy},${left},${top},${w},${h}`;
+  let canvas = DETAIL_STAMPS.get(full);
+  if (!canvas) {
+    canvas = createCanvas(Math.max(1, Math.ceil(w)), Math.max(1, Math.ceil(h)));
+    draw(canvas.getContext("2d"), left + (ax - ox), top + (ay - oy));
+    if (DETAIL_STAMPS.size >= DETAIL_LIMIT) DETAIL_STAMPS.delete(DETAIL_STAMPS.keys().next().value);
+    DETAIL_STAMPS.set(full, canvas);
+  }
+  ctx.drawImage(canvas, ox - left, oy - top);
+  return true;
+}
+const DETAIL_STAMPS = new Map();
+const DETAIL_LIMIT = 2048;
 
 /** Poké Ball icon (battle nameplate style): filled when the slot is used. */
 export function drawBall(ctx, cx, cy, r, filled) {
@@ -252,10 +336,42 @@ export function drawTag(ctx, text, x, y, { fill = COLOR.gold, color = COLOR.ink,
   ctx.fill();
   ctx.fillStyle = color;
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, x + w / 2, y + h / 2 + 1);
+  fillTextMid(ctx, text, x + w / 2, y + h / 2);
   ctx.textAlign = "left";
   return w;
+}
+
+// The games' "!" over a Trainer who has spotted the player, as 16 × 16 pixel
+// art: o outline, w bubble, x mark, . clear. Drawn at a whole scale with hard
+// edges, like the Badges.
+export const ALERT_BUBBLE = [
+  "................",
+  "..oooooooooooo..",
+  ".owwwwwwwwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwwwwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwxxwwwwwo.",
+  ".owwwwwwwwwwwwo.",
+  "..ooooowwooooo..",
+  "......owwo......",
+  ".......oo.......",
+];
+const ALERT_COLORS = { o: COLOR.ink, w: "#ffffff", x: COLOR.ink };
+
+export function drawAlertBubble(ctx, x, y, scale) {
+  for (const [row, line] of ALERT_BUBBLE.entries()) {
+    for (const [col, ch] of [...line].entries()) {
+      if (ch === ".") continue;
+      ctx.fillStyle = ALERT_COLORS[ch];
+      ctx.fillRect(x + col * scale, y + row * scale, scale, scale);
+    }
+  }
 }
 
 /**

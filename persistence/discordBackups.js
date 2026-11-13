@@ -129,3 +129,20 @@ export async function newestChannelEpoch(client, channelId, { limit = 50 } = {})
   }
   return max;
 }
+
+/**
+ * One page of the storage channel's history for the Pokédex backfill
+ * (services/dexBackfill.js): the bot-authored backups among up to 100
+ * messages older than `beforeId` (newest first), and the id to page on from
+ * (null at the start of the channel). Read-only.
+ */
+export async function listBackupPage(client, channelId, beforeId = null, { timeoutMs = 25_000 } = {}) {
+  const channel = await getChannel(client, channelId, timeoutMs);
+  const messages = await withTimeout(channel.messages.fetch({ limit: 100, ...(beforeId ? { before: beforeId } : {}) }), timeoutMs, "fetch storage history");
+  const list = [...messages.values()].sort((a, b) => b.createdTimestamp - a.createdTimestamp);
+  const botId = client.user?.id;
+  const items = list
+    .filter((m) => m.author?.id === botId && isBackupAttachment(m.attachments.first()))
+    .map((m) => ({ id: m.id, at: m.createdTimestamp, url: m.attachments.first().url }));
+  return { items, next: list.length === 100 ? list[list.length - 1].id : null };
+}

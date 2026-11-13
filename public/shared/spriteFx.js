@@ -5,9 +5,10 @@
 // draw (same recipes, same constants, same 24-frame × 100 ms loop):
 //   • shiny Pokémon  — utils/render/shinyBackdrop.js: rising gold motes and
 //                      twinkling stars (Legendary-tier gold #facc15), no halo
-//   • Epic+ trainers — utils/render/trainerBackdrop.js: Epic purple halo +
-//                      motes; Legendary amber halo + gold motes + twinkles;
-//                      Mythic red/pink halo, motes, twinkles + meteor shower
+//   • Epic+ trainers — utils/render/trainerBackdrop.js: Epic sky + motes;
+//                      Legendary sky + stepped glow + motes + twinkles;
+//                      Mythic sky + glow + motes + twinkles + meteors with
+//                      embers and one hero meteor a loop
 // tests/spriteFx.test.js keeps the constants in step with the server files.
 //
 // Pixel art like the sprites: one backdrop cell = one sprite pixel at its
@@ -108,12 +109,13 @@ export function shinyRecipe({ LW, LH, solid, seed = 1 }) {
 
 // ---------- trainers (utils/render/trainerBackdrop.js) ----------
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-const PURPLE = hex("#a855f7"), AMBER = hex("#f59e0b"), GOLD = hex("#facc15"), RED = hex("#ef4444"), PINK = hex("#f472b6");
+const C = (...h) => h.map(hex);
 export const TRAINER_TIERS = Object.freeze({
-  epic: { halo: PURPLE, haloK: 1, accent: PURPLE, motes: 8 },
-  legendary: { halo: AMBER, haloK: 0.55 / 0.6, accent: GOLD, motes: 8, twinkles: 8 },
-  mythic: { halo: RED, haloK: (0.7 * 0.96) / 0.6, accent: RED, alt: PINK, motes: 12, twinkles: 8, meteors: true },
+  epic: { sky: C("#05030b", "#0c0618", "#160a26", "#200d33", "#2a1040"), motes: 12, mote: C("#c084fc", "#a855f7") },
+  legendary: { sky: C("#060402", "#0f0904", "#1a1006", "#26170a", "#33200c"), glow: C("#f59e0b", "#b45309"), motes: 12, mote: C("#fde047", "#f59e0b"), twinkles: 8, twinkle: C("#fde68a", "#fef3c7", "#facc15") },
+  mythic: { sky: C("#05020a", "#0c0412", "#170718", "#250a1d", "#340d22"), glow: C("#be123c", "#881337"), motes: 12, mote: C("#fb7185", "#e11d48", "#f9a8d4"), twinkles: 8, twinkle: C("#fecdd3", "#fda4af", "#f9a8d4"), meteors: true, meteor: C("#e11d48", "#fb7185"), head: hex("#fff1f2") },
 });
+const GLOW_R = [0.42, 0.68, 0.95], GLOW_A = [0.12, 0.07, 0.04], BAYER2 = [[0, 2], [3, 1]];
 export const TRAINER_LEVELS = [0, 0.07, 0.13, 0.2, 0.3, 0.45, 0.7, 0.85];
 export const hasTrainerBackdrop = (tier) => Boolean(TRAINER_TIERS[String(tier ?? "").toLowerCase()]);
 
@@ -142,10 +144,11 @@ export function trainerRecipe({ tier, W, H, mask, halo, floorRow }) {
   const twinkles = [];
   for (let i = 0; i < (recipe.twinkles ?? 0); i++) {
     const s = openSpot(i + 11, 2);
-    if (s) twinkles.push({ x: s[0], y: s[1], phase: rand(i * 5 + 2), alt: recipe.alt && i % 2 === 1 });
+    if (s) twinkles.push({ x: s[0], y: s[1], phase: rand(i * 5 + 2), c: recipe.twinkle[i % recipe.twinkle.length] });
   }
-  const motes = Array.from({ length: recipe.motes }, (_, i) => ({ r: rand(i * 7 + 1), x: rand(i * 13 + 5), alt: recipe.alt && i % 3 === 0 }));
+  const motes = Array.from({ length: recipe.motes }, (_, i) => ({ r: rand(i * 7 + 1), x: rand(i * 13 + 5), c: recipe.mote[i % recipe.mote.length] }));
   const meteors = [];
+  let hero = null;
   if (recipe.meteors) {
     const ang = (40 * Math.PI) / 180, dx = -Math.cos(ang), dy = Math.sin(ang);
     const bands = [[0.06, 0.24, 30, 13], [0.25, 0.49, 18, 9], [0.5, 0.74, 18, 9], [0.75, 0.92, 14, 8]];
@@ -167,6 +170,21 @@ export function trainerRecipe({ tier, W, H, mask, halo, floorRow }) {
         break;
       }
     }
+    { // the hero: one long, bright streak across the top a loop, mid-flight on frame 0
+      const travel = 30, tail = 13, cands = [];
+      for (let y = Math.round(inner.y1 * 0.06); y <= Math.round(inner.y1 * 0.3); y++) for (let x = inner.x0; x <= inner.x1; x++) {
+        let ok = true;
+        for (let s = 0; s <= travel && ok; s++) for (let t = -1; t <= tail; t++) if (!isOpen(Math.round(x + dx * (s - t)), Math.round(y + dy * (s - t)))) { ok = false; break; }
+        if (ok) cands.push([x, y]);
+      }
+      if (cands.length) { const [x0, y0] = cands[Math.floor(rand(911) * cands.length)]; hero = { x0, y0, travel, tail, dx, dy, start: (N - 4 + N) % N, life: 9 }; }
+    }
+  }
+  const glowT = new Float32Array(W * H), glowC = new Array(W * H).fill(null);
+  if (recipe.glow) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const d = Math.hypot((x - halo.cx) / halo.rx, (y - halo.cy) / halo.ry) + ((BAYER2[y & 1][x & 1] + 0.5) / 4) * 0.06;
+    const b = d < GLOW_R[0] ? 0 : d < GLOW_R[1] ? 1 : d < GLOW_R[2] ? 2 : -1;
+    if (b >= 0) { glowT[y * W + x] = GLOW_A[b]; glowC[y * W + x] = recipe.glow[b === 2 ? 1 : 0]; }
   }
   const tint = new Float32Array(W * H), col = new Array(W * H);
   const plot = (x, y, a, c) => {
@@ -181,39 +199,42 @@ export function trainerRecipe({ tier, W, H, mask, halo, floorRow }) {
   return {
     meteors: meteors.length,
     twinkles: twinkles.length,
+    sky: recipe.sky,
     draw(put, f) {
-      tint.fill(0);
-      col.fill(null);
-      const k = 0.6 * recipe.haloK;
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        const d = Math.hypot((x - halo.cx) / halo.rx, (y - halo.cy) / halo.ry);
-        if (d < 1) { const i = y * W + x; tint[i] = 0.24 * (1 - d) * k; col[i] = recipe.halo; }
-      }
+      tint.set(glowT);
+      for (let i = 0; i < W * H; i++) col[i] = glowC[i];
       for (const m of motes) {
         const t = (f / N + m.r) % 1;
         const y = Math.round(inner.y1 - 4 - t * (inner.y1 - inner.y0 - 6));
         const x = Math.round(inner.x0 + 4 + m.x * (inner.x1 - inner.x0 - 8) + Math.sin((t + m.r) * Math.PI * 2) * 2);
-        plot(x, y, 0.75 * (t < 0.15 ? t / 0.15 : t > 0.75 ? (1 - t) / 0.25 : 1), m.alt ? PINK : recipe.accent);
+        plot(x, y, 0.75 * (t < 0.15 ? t / 0.15 : t > 0.75 ? (1 - t) / 0.25 : 1), m.c);
       }
       for (const s of twinkles) {
         const a = 0.25 + 0.6 * Math.max(0, Math.sin(((f / N + s.phase) % 1) * Math.PI * 2));
-        sparkle(s.x, s.y, a, a > 0.6 ? 1 : 0, s.alt ? PINK : recipe.accent);
+        sparkle(s.x, s.y, a, a > 0.6 ? 1 : 0, s.c);
       }
-      for (const m of meteors) {
+      const streak = (m, bright) => {
         const step = (((f - m.start) % N) + N) % N;
-        if (step > m.life) continue;
-        const p = step / m.life;
-        const ramp = Math.min(1, (p + 0.12) / 0.4) * Math.min(1, (1 - p + 0.08) / 0.43);
-        const len = Math.max(2, Math.round(m.tail * Math.min(1, (p + 0.15) / 0.45)));
-        const hx = m.x0 + m.dx * m.travel * p, hy = m.y0 + m.dy * m.travel * p;
-        for (let t = 1; t <= len; t++) plot(Math.round(hx - m.dx * t), Math.round(hy - m.dy * t), (0.85 - (t / m.tail) * 0.7) * ramp, t % 3 === 1 ? PINK : RED);
-        sparkle(Math.round(hx), Math.round(hy), ramp, ramp > 0.6 ? 1 : 0, [255, 245, 245]);
-      }
+        if (step <= m.life) {
+          const p = step / m.life;
+          const ramp = Math.min(1, (p + 0.12) / 0.4) * Math.min(1, (1 - p + 0.08) / 0.43);
+          const len = Math.max(2, Math.round(m.tail * Math.min(1, (p + 0.15) / 0.45)));
+          const hx = m.x0 + m.dx * m.travel * p, hy = m.y0 + m.dy * m.travel * p;
+          for (let t = 1; t <= len; t++) plot(Math.round(hx - m.dx * t), Math.round(hy - m.dy * t), ((bright ? 0.95 : 0.85) - (t / m.tail) * 0.7) * ramp, t % 3 === 1 ? recipe.meteor[1] : recipe.meteor[0]);
+          sparkle(Math.round(hx), Math.round(hy), ramp, ramp > (bright ? 0.5 : 0.6) ? 1 : 0, recipe.head);
+        }
+        for (let q = 0.2; q < 1; q += bright ? 0.12 : 0.25) {
+          const age = step - q * m.life;
+          if (age > 0 && age <= 6) plot(Math.round(m.x0 + m.dx * m.travel * q), Math.round(m.y0 + m.dy * m.travel * q + age * 0.3), 0.55 * (1 - age / 6), recipe.meteor[1]);
+        }
+      };
+      for (const m of meteors) streak(m, false);
+      if (hero) streak(hero, true);
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const i = y * W + x;
         if (!tint[i]) continue;
         const a = stepped(Math.min(1, tint[i]), x, y);
-        if (a) put(x, y, col[i] ?? recipe.accent, a);
+        if (a) put(x, y, col[i] ?? recipe.mote[0], a);
       }
     },
   };
@@ -308,11 +329,24 @@ function mount(box) {
   startTimer();
 }
 
+/** The tier's sky as six solid bands, dithered 2×2 where they meet (as utils/render/trainerBackdrop.js drawTierSky). */
+function paintSky(data, W, H, stops, bands = 6) {
+  const at = (t) => { const q = t * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(q)), f = q - i; return [0, 1, 2].map((k) => Math.round(stops[i][k] + (stops[i + 1][k] - stops[i][k]) * f)); };
+  const band = Array.from({ length: bands }, (_, i) => at(i / (bands - 1)));
+  for (let y = 0; y < H; y++) {
+    const q = (y / Math.max(1, H - 1)) * (bands - 1), i = Math.min(bands - 1, Math.floor(q)), z = (q - i - 0.6) / 0.4;
+    for (let x = 0; x < W; x++) { const c = band[z > 0 && i < bands - 1 && z * 4 > BAYER2[y & 1][x & 1] + 0.5 ? i + 1 : i], o = (y * W + x) * 4; data[o] = c[0]; data[o + 1] = c[1]; data[o + 2] = c[2]; data[o + 3] = 255; }
+  }
+}
+
 function draw(fx, frame) {
   if (fx.frame === frame) return;
   fx.frame = frame;
-  const img = fx.ctx.createImageData(fx.W, fx.H);
-  fx.recipe.draw((x, y, c, a) => { const i = (y * fx.W + x) * 4; img.data[i] = c[0]; img.data[i + 1] = c[1]; img.data[i + 2] = c[2]; img.data[i + 3] = Math.round(a * 255); }, frame);
+  const img = fx.ctx.createImageData(fx.W, fx.H), d = img.data;
+  if (fx.recipe.sky) paintSky(d, fx.W, fx.H, fx.recipe.sky);
+  fx.recipe.draw((x, y, c, a) => { const i = (y * fx.W + x) * 4;
+    if (d[i + 3] === 255) { d[i] += (c[0] - d[i]) * a; d[i + 1] += (c[1] - d[i + 1]) * a; d[i + 2] += (c[2] - d[i + 2]) * a; } // over the sky
+    else { d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = Math.round(a * 255); } }, frame);
   fx.ctx.putImageData(img, 0, 0);
 }
 

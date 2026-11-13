@@ -24,6 +24,7 @@
 import { toTeamObj, normVariant } from "../utils/economyRules.js";
 import { getSpeciesEntry } from "../utils/speciesCatalog.js";
 import { megaFieldOf, megaFitsSlot, prepareTeamSelection } from "./megaTeam.js";
+import { slotCopyUid, slotBoxUid } from "./ownership.js";
 import { addNotice, NOTICE_KINDS } from "./notices.js";
 
 export const BATTLE_TEAM_MAX_MYTHIC = 1;
@@ -48,7 +49,9 @@ export function cleanStoredTeam(user, raw) {
     .map((t) => {
       const slot = { id: Number(t?.id), variant: t?.variant === "shiny" ? "shiny" : "normal" };
       const mega = megaFieldOf(t);
-      return mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
+      const uid = slotBoxUid(user, { ...slot, uid: t?.uid }) ?? slotCopyUid(user, { ...slot, uid: t?.uid }); // the slot's copy (docs/adr/0001)
+      const out = mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
+      return uid ? { ...out, uid } : out;
     })
     .filter((t) => Number.isInteger(t.id))
     .filter((t) => Number(user.pokemon?.[t.id]?.[t.variant] || 0) > 0);
@@ -76,7 +79,7 @@ export function trimBattleTeamMythics(user, now = Date.now()) {
     const names = removed.map((s) => `${s.variant === "shiny" ? "shiny " : ""}${speciesName(s.id)}`);
     const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
     addNotice(user, NOTICE_KINDS.BATTLE_TEAM_TRIM,
-      `${list} ${removed.length === 1 ? "was" : "were"} removed from your Battle team. Some Pokémon are now mythic-tier, and a Battle team can have only one (you kept ${speciesName(kept.id)}). ${removed.length === 1 ? "It's" : "They're"} still in your collection.`,
+      `${list} ${removed.length === 1 ? "was" : "were"} removed from your Ranked team. Some Pokémon are now mythic-tier, and a Ranked team can have only one (you kept ${speciesName(kept.id)}). ${removed.length === 1 ? "It's" : "They're"} still in your collection.`,
       now);
   }
   return removed;
@@ -109,7 +112,7 @@ export function prepareBattleTeamSelection(user, rawTeam, opts = {}) {
       ok: false,
       status: 400,
       code: "too_many_mythics",
-      error: `A Battle team can have only one mythic-tier Pokémon. Your team has ${mythics.length}: ${names}.`,
+      error: `A Ranked team can have only one mythic-tier Pokémon. Your team has ${mythics.length}: ${names}.`,
     };
   }
   return prepared;

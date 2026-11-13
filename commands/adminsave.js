@@ -11,7 +11,7 @@ import { atomicSave } from "../utils/saveManager.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("adminsave")
-    .setDescription("Admin: Save all trainer data to disk and the Discord backup channel now.")
+    .setDescription("Force-save all trainer data to disk AND Discord cloud backup.")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(
@@ -65,7 +65,7 @@ export default {
       await handleCommandError(err, interaction, "adminsave");
 
       await safeReply(interaction, {
-        content: "An unexpected error occurred while saving trainer data.",
+        content: "❌ An unexpected error occurred while saving trainer data.",
         flags: MessageFlags.Ephemeral
       });
     }

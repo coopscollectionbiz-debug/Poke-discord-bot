@@ -37,7 +37,20 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
-import { bulkDonate } from "./utils/bulkDonate.js";
+import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
+import { pruneEmptyLine, normalizeCustomPokemon, carryCopyUids, trainedSummary } from "./services/ownership.js";
+import { normalizeBox, allCopies, slotsHolding, mergeDex } from "./services/box.js";
+import { normalizeShowcase, prepareShowcaseSelection } from "./services/showcaseTeam.js";
+
+// Compact per-copy rows for the dashboard (see the /api/user payload).
+const TEAM_BIT = { displayedPokemon: 1, battleTeam: 2, showcaseTeam: 4 };
+function copyRows(u) {
+  return allCopies(u).map((c) => [
+    c.uid, c.id, c.variant === "shiny" ? 1 : 0, c.level, c.at ?? 0, c.trained ? 1 : 0,
+    slotsHolding(u, c.uid).reduce((m, s) => m | (TEAM_BIT[s.field] ?? 0), 0),
+    c.exp, // exact EXP: Donate Duplicates keeps the same best copy the server does
+  ]);
+}
 
 // Local saver — writes trainerData.json (in TRAINERDATA_DIR) & marks dirty
 import {
@@ -52,24 +65,33 @@ import {
   getSaveHealth,
 } from "./utils/saveQueue.js";
 import { readLocalCandidates, readFileCandidate, setSeqAtLeast, nextSeq, dataDir, getEpoch, setEpoch, getSeq } from "./persistence/localStore.js";
-import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup, verifyUpload, newestChannelEpoch } from "./persistence/discordBackups.js";
+import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup, verifyUpload, newestChannelEpoch, listBackupPage } from "./persistence/discordBackups.js";
+import { runDexBackfill, readState as readDexScanState, writeState as writeDexScanState } from "./services/dexBackfill.js";
 import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/loader.js";
-import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
+import { normalizeTrainers, auditTrainerData, grantTrainer } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
 import { handleInventoryRequest } from "./services/inventoryApi.js";
+import { tmShopView, buyTms, tmLearners } from "./services/tmShop.js";
+import { auraView, equipAura, buyAura, auraArtDir, normalizeAuras, syncTierAuras } from "./services/auras.js";
+import { trainerTier } from "./utils/render/trainerTier.js";
+import { teachOptions, teachTm } from "./services/tmTeaching.js";
 import { createGameplayHandlers } from "./services/gameplay.js";
 import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
 import { createAchievementHandlers } from "./services/achievementsApi.js";
 import { createMegaHandlers } from "./services/megaApi.js";
+import { createHeldItemHandlers } from "./services/heldItemsApi.js";
+import { normalizeEquipment, reconcileTeamEquipment, equipmentRev } from "./services/heldItems.js";
 import { normalizeMegaUnlocks } from "./services/megaUnlocks.js";
 import { normalizeDisplayedTeam, prepareTeamSelection } from "./services/megaTeam.js";
 import { normalizeBattleTeam, prepareBattleTeamSelection, hasBattleTeam } from "./services/battleTeam.js";
 import { normalizeNotices, peekNotices, clearNotices, NOTICE_KINDS } from "./services/notices.js";
+import { consolidateUserTrainers } from "./services/trainerConsolidation.js";
 import { pokemonDetail } from "./services/pokemonDetail.js";
+import { parseTeamCopy, applyTeamCopy } from "./services/teamCopy.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
 import { rankedRecord } from "./utils/battle/rewards.js";
-import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
-import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, pruneExpiredTokens } from "./utils/dashboardAuth.js";
+import { saveMoveset, TEAM_TYPES } from "./services/movesets.js";
+import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, adminSessionOf, activateAdminSession, activateDashboardSession, ADMIN_MAX_MS, DASHBOARD_MAX_MS, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
 import {
@@ -87,7 +109,10 @@ import {
   ensureWeeklyReset,
 } from "./utils/economyRules.js";
 
-import { saveAndAck, SAVE_DELAYED_NOTE, saveAckFields } from "./utils/saveManager.js";
+import { saveAndAck, SAVE_DELAYED_NOTE, saveAckFields, promptSave } from "./utils/saveManager.js";
+import { liveEffects, loadLiveEvents } from "./services/liveEvents.js";
+import { playerView, createOptInHandler, postDueAnnouncements } from "./services/liveEventsPlayer.js";
+import { discountedPrice, scaleChance, hasCatchEffects } from "./utils/liveEventRules.js";
 
 // Nothing may be written to disk until player data has been loaded.
 requireLoadBeforeWrite();
@@ -170,6 +195,17 @@ const NON_SHINY_DUST_CHANCE_BY_TIER = {
 // ==========================================================
 // 🎲 Weighted Roll Helper (used by donate API)
 // ==========================================================
+// Donation rewards (single + bulk share one table; utils/bulkDonate.js).
+function donationEconomy() {
+  return {
+    ccByTier: DONATION_CC_BY_TIER,
+    shinyDustByTier: DUST_REWARD_BY_TIER,
+    normalDustChanceByTier: NON_SHINY_DUST_CHANCE_BY_TIER,
+    normalDustWeeklyCap: NON_SHINY_DUST_WEEKLY_CAP,
+    rollDust: rollWeightedDust,
+  };
+}
+
 function rollWeightedDust(table = []) {
   let r = Math.random();
   for (const entry of table) {
@@ -293,10 +329,9 @@ function normalizeUserSchema(id, user) {
     entry.normal = Number.isFinite(entry.normal) ? entry.normal : 0;
     entry.shiny = Number.isFinite(entry.shiny) ? entry.shiny : 0;
 
-    // Auto-delete empty shells
-    if (entry.normal <= 0 && entry.shiny <= 0) {
-      delete user.pokemon[pid];
-    }
+    // Auto-delete empty shells (never a line that still has a customized
+    // copy record: services/ownership.js)
+    pruneEmptyLine(user, pid);
   }
 
   // ==========================================================
@@ -306,6 +341,10 @@ function normalizeUserSchema(id, user) {
   // Shared with utils/userSchema.js so every path produces the same shape:
   // strings only, trimmed, de-duplicated; legacy object maps become arrays.
   normalizeTrainers(user);
+  // Generation consolidation: folded game versions (twins-gen3…) become their
+  // group's sprite (twins.png), granted if not already owned; displayed
+  // trainer follows; one notice (services/trainerConsolidation.js). No-op once done.
+  consolidateUserTrainers(user);
 
   // ==========================================================
 // 4️⃣ DISPLAYED TEAM (canonical)
@@ -315,6 +354,11 @@ function normalizeUserSchema(id, user) {
 // Mega Evolution (Phase M1): repair megaUnlocks first (no-op for players
 // without it), then normalize the team. services/megaTeam.js holds the same
 // team code that used to be inline here, plus keeping a valid Mega slot.
+// TM system (T1): customized-copy records first (quarantine, invariant I-1),
+// so the team normalizers below keep only valid copy uids. No-op without them.
+normalizeAuras(user); // Auras: repairs auras if present…
+syncTierAuras(user); // …and stores the tier Aura of every Epic+ trainer owned (the launch backfill; a no-op after)
+normalizeCustomPokemon(user);
 normalizeMegaUnlocks(user);
 normalizeDisplayedTeam(user);
 // Battle team (ranked/wager): same cleaning; never created here (missing = not set).
@@ -322,6 +366,17 @@ normalizeDisplayedTeam(user);
 // stores a one-time notice (services/battleTeam.js trimBattleTeamMythics).
 normalizeNotices(user);
 normalizeBattleTeam(user);
+// Individual copies + Pokédex (services/box.js, docs/adr/0001): migrates
+// counts into copies on first run, reconciles after a rollback, and points
+// every team slot at one specific copy.
+normalizeBox(user);
+// Showcase team (services/showcaseTeam.js): filled once from the Casual team
+// at launch; afterwards each slot keeps its own copy.
+normalizeShowcase(user);
+// Held items: team equipment follows the cleaned teams (assignments of
+// Pokémon no longer on a team, Mega slots and unowned items are dropped;
+// unlocks are never touched). Never creates the field.
+normalizeEquipment(user);
 
 
   // ==========================================================
@@ -414,8 +469,15 @@ ensureWeeklyReset(user);
 
 import { lockUser } from "./utils/userLocks.js";
 import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
-import { grantCatch, carryLevel, levelsForUser, resetLevelIfGone } from "./utils/training.js";
+import { createEncounterService, isEncounterButton } from "./utils/encounter/service.js";
+import { grantCatch, levelsForUser } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
+import { closeAllRematches } from "./utils/battle/rematch.js";
+import { finishAllOpenRuns, challengeLogEntry, hideOpenRun, challengeProgress } from "./utils/challenge/runChallenge.js";
+import { recordFight, challengeRecord } from "./utils/fightRecordBuild.js";
+import { fightRecords } from "./utils/fightRecords.js";
+import { createFightRecordHandlers } from "./services/fightRecordsApi.js";
+import { showRunResult, challengeNames } from "./utils/battle/playback.js";
 import { powersFromLevels } from "./utils/battle/power.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -436,13 +498,15 @@ app.get("/auth/dashboard", (req, res) => {
   // expectedType "dashboard" prevents admin tokens from being burned
   // on the player flow, and vice versa below.
   if (!validateToken(id, code, "dashboard")) return res.status(403).send("Invalid or expired link.");
+  // From here the session slides (30 min after each use, 4 h at most).
+  activateDashboardSession(code);
 
   res.cookie("dashboard_session", code, {
     httpOnly: true,
     secure: isProd,
     sameSite: "Lax",
     path: "/",
-    maxAge: 10 * 60 * 1000,
+    maxAge: DASHBOARD_MAX_MS,
   });
 
   res.redirect(`/public/overview?id=${encodeURIComponent(id)}`); // the dashboard home
@@ -460,29 +524,25 @@ app.get("/auth/admin", (req, res) => {
 
   if (!id || !code) return res.status(400).send("Missing id/code");
   if (!validateToken(id, code, "admin")) return res.status(403).send("Invalid or expired admin link.");
+  // From here the session slides (30 min after each use, 4 h at most).
+  activateAdminSession(code);
 
   res.cookie("admin_session", code, {
     httpOnly: true,
     secure: isProd,
     sameSite: "Lax",
     path: "/",
-    maxAge: 10 * 60 * 1000,
+    maxAge: ADMIN_MAX_MS,
   });
 
   res.redirect("/public/admindashboard");
 });
 
 // ==========================================================
-// 🎯 Trainer Tier Costs
+// 🎯 Trainer Tier Costs (in utils/trainerCosts.js, which /challenge shares)
 // ==========================================================
-export const TRAINER_COSTS = {
-  common: 2500,
-  uncommon: 7500,
-  rare: 15000,
-  epic: 35000,
-  legendary: 75000,
-  mythic: 150000,
-};
+import { TRAINER_COSTS } from "./utils/trainerCosts.js";
+export { TRAINER_COSTS };
 
 
 // ✅ Serve all /public assets with correct MIME headers
@@ -499,6 +559,9 @@ app.use(
   })
 );
 
+// Aura art (assets/auras/<id>/aura.json + spritesheets), for the dashboard's Auras tab.
+app.use("/auras-art", express.static(auraArtDir(), { index: false, dotfiles: "deny", extensions: false }));
+
 // ✅ Sprite credits (generated by tools/generate-credits.mjs)
 app.get(["/credits", "/public/credits"], (_, res) =>
   res.sendFile(path.join(staticPath, "credits", "index.html"))
@@ -510,6 +573,9 @@ app.get("/public/picker", (_, res) =>
 );
 app.get("/public/picker-pokemon", (_, res) =>
   res.sendFile(path.join(staticPath, "picker-pokemon", "index.html"))
+);
+app.get("/public/pokedex", (_, res) =>
+  res.sendFile(path.join(staticPath, "pokedex", "index.html"))
 );
 app.get("/public/overview", (_, res) =>
   res.sendFile(path.join(staticPath, "overview", "index.html"))
@@ -553,7 +619,29 @@ app.get("/public/admindashboard", (_, res) =>
 mountAdminDashboard(app, {
   getTrainerData: () => trainerData,
   requireAdminSession,
+  adminSessionOf,
+  lockUser,
+  save: saveAndAck,
+  // Same gate as the player /api writes below (D8 + A2 circuit breaker).
+  writeBlocked: () =>
+    !isReady
+      ? "The bot is starting up or restarting. Try again in a moment."
+      : getSaveHealth().degraded
+        ? "Saving is temporarily unavailable. Try again shortly."
+        : null,
+  syncRole: syncRankRole,
 });
+
+// Rank role after an admin TP change. Uses the bot's server (GUILD_ID).
+async function syncRankRole(userId, tp) {
+  const guild = client.guilds.cache.get(process.env.GUILD_ID) ?? client.guilds.cache.first();
+  if (!guild) return { ok: false, reason: "The bot isn't in a server." };
+  const member = await guild.members.fetch(userId).catch(() => null);
+  if (!member) return { ok: false, reason: "They aren't in the server." };
+  if (!member.manageable) return { ok: false, reason: "The bot's role is below theirs." };
+  await updateUserRole(member, tp);
+  return { ok: true };
+}
 
 
 
@@ -592,6 +680,8 @@ import {
   shutdown as shutdownEventLog,
 } from "./utils/eventLog.js";
 import { mountAdminDashboard } from "./routes/admindashboard.js";
+import { startLoopLagMonitor } from "./utils/loopLag.js";
+import { getRenderPool, renderPoolStatus } from "./utils/render/renderPool.js";
 
 // ==========================================================
 // ⚙️ Global Constants
@@ -782,6 +872,12 @@ function supersede(reason) {
   console.error(`⛔ SUPERSEDED: ${reason}. Not ready; no further writes from this process.`);
 }
 
+// Main-thread stalls, logged each minute and summed up on /readyz. The
+// render threads start now rather than on the first image, so the first
+// card after a restart doesn't also wait for them to load.
+const loopLag = startLoopLagMonitor();
+getRenderPool();
+
 app.get("/readyz", (_, res) => {
   const save = getSaveHealth();
   const body = {
@@ -795,6 +891,8 @@ app.get("/readyz", (_, res) => {
     durableVolume: process.env.LOCAL_IS_DURABLE === "1",
     localSave: { degraded: save.degraded, consecutiveFailures: save.consecutiveFailures, lastWriteAt: save.lastWriteAt, pendingChanges: save.pendingChanges },
     discordBackup: backupStatus,
+    loopLag: loopLag.status(),
+    renderThreads: renderPoolStatus(),
   };
   res.status(isReady ? 200 : 503).json(body);
 });
@@ -862,12 +960,36 @@ async function loadTrainerData() {
   console.log(`🔑 Writer epoch ${getEpoch()}${result.localOnly ? " (booted from the local volume; Discord unreachable)" : ""}`);
   const data = chosen.data;
   const trimmedBefore = new Map(Object.entries(data).map(([id, u]) => [id, peekNotices(u, NOTICE_KINDS.BATTLE_TEAM_TRIM).length]));
+  const consolidatedBefore = new Map(Object.entries(data).map(([id, u]) => [id, peekNotices(u, NOTICE_KINDS.TRAINER_CONSOLIDATION).length]));
   for (const [id, user] of Object.entries(data)) normalizeUserSchema(id, user);
+  {
+    // Generation consolidation (normalizeUserSchema → consolidateUserTrainers): count players changed this boot.
+    const n = Object.entries(data).filter(([id, u]) => peekNotices(u, NOTICE_KINDS.TRAINER_CONSOLIDATION).length > (consolidatedBefore.get(id) || 0)).length;
+    console.log(`🧩 Trainer collections consolidated (folded game versions → one sprite): ${n}`);
+  }
   {
     // Battle teams over the one-mythic limit after a re-tier are trimmed by
     // normalizeUserSchema → normalizeBattleTeam; count them for the boot log.
     const trimmed = Object.entries(data).filter(([id, u]) => peekNotices(u, NOTICE_KINDS.BATTLE_TEAM_TRIM).length > (trimmedBefore.get(id) || 0)).length;
     console.log(`⚔️ Battle teams trimmed to one mythic-tier Pokémon: ${trimmed}`);
+  }
+  // Pokédex backfill (docs/adr/0001): species from historical snapshots,
+  // built offline by tools/build-pokedex-backfill.mjs. Union only, so it is
+  // safe to leave set or to run again. The file holds player ids: it lives
+  // on the data volume, never in the repository.
+  if (process.env.POKEDEX_BACKFILL_FILE) {
+    try {
+      const raw = JSON.parse(fsSync.readFileSync(process.env.POKEDEX_BACKFILL_FILE, "utf8"));
+      let players = 0, entries = 0;
+      for (const [id, masks] of Object.entries(raw?.users ?? {})) {
+        if (!data[id]) continue;
+        const n = mergeDex(data[id], masks);
+        if (n) { players++; entries += n; }
+      }
+      console.log(`📖 Pokédex backfill: ${entries} species added for ${players} player(s)`);
+    } catch (err) {
+      console.error("⚠️ Pokédex backfill not applied:", err?.message || err);
+    }
   }
   // Release C: retroactive achievement recognition (idempotent, once per
   // catalog revision per player; recognition only, no rewards).
@@ -978,10 +1100,16 @@ async function saveDataToDiscord(data, { force = false } = {}) {
 // ==========================================================
 // 🎁 DETERMINISTIC RANDOM REWARD SYSTEM (ATOMIC PER-USER LOCK)
 // ==========================================================
+// Resolves to "cooldown", "missed" (a Trainer encounter may roll next), or
+// "caught"; undefined when the reward couldn't be picked.
 async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
   const userId = interactionUser.id;
 
-  await lockUser(userId, async () => {
+  // The lock covers the roll, the grant and the save. The card is drawn and
+  // posted after it's released, so a slow render or Discord upload never
+  // holds up the player's next command; the save is a prompt one, so the card
+  // still appears only once the catch is on disk.
+  const granted = await lockUser(userId, async () => {
     console.log("⚙️ tryGiveRandomReward executed for", interactionUser.username);
 
     // =============================
@@ -989,7 +1117,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // =============================
     const now = Date.now();
     const last = rewardCooldowns.get(userId) || 0;
-    if (now - last < REWARD_COOLDOWN) return;
+    if (now - last < REWARD_COOLDOWN) return "cooldown";
     rewardCooldowns.set(userId, now);
 
     // =============================
@@ -1004,12 +1132,13 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // Increase pity every call
     userObj.luck = Math.min(MAX_CHANCE, userObj.luck + PITY_INCREMENT);
 
-    // Final chance
-    const finalChance = Math.min(MAX_CHANCE, BASE_CHANCE + userObj.luck);
+    // Final chance (a Live event may multiply it; never above 100 %)
+    const liveFx = liveEffects();
+    const finalChance = scaleChance(Math.min(MAX_CHANCE, BASE_CHANCE + userObj.luck), liveFx.catchRate);
 
     // Reward fails → keep pity meter, exit
     if (Math.random() >= finalChance) {
-      return;
+      return "missed";
     }
 
     // Reward occurred → reset pity meter
@@ -1025,7 +1154,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     let caught = null;
 
     try {
-      reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball");
+      reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball", { fx: liveFx });
       isShiny = rollForShiny(userObj.tp || 0);
 
       caught = grantCatch(userObj, reward.id, isShiny ? "shiny" : "normal"); // { level, isNew, expGained } for the card
@@ -1041,56 +1170,67 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // =============================
     // 💾 SAVE (atomic)
     // =============================
-    await enqueueSave(trainerData);
+    await promptSave(trainerData);
 
-    // =============================
-    // 🖼️ SPRITE
-    // =============================
-    let spriteUrl = pokemonSpriteUrl(reward.id, isShiny);
-
-    // =============================
-    // 📣 PUBLIC ANNOUNCEMENT
-    // =============================
-    // The catch card (utils/render/catchMessage.js); the old embed if it can't render.
-    const { message: announcement, broadcast } = await catchAnnouncement({
-      user: userObj,
-      catcher: interactionUser,
-      pokemonId: reward.id,
-      shiny: isShiny,
-      catchResult: caught,
-      fallback: () => ({
-        content: `🎉 <@${userId}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`,
-        embeds: [createPokemonRewardEmbed(reward, isShiny, spriteUrl)],
-      }),
-    });
-
-    try {
-      await msgOrInteraction.channel.send(announcement);
-    } catch (err) {
-      console.warn("⚠️ Public announcement failed:", err.message);
-    }
-
-    // =============================
-    // 🌐 GLOBAL BROADCAST (fire-and-forget — don't hold the lock)
-    // =============================
-    broadcastReward(client, {
-      user: interactionUser,
-      type: "pokemon",
-      item: {
-        id: reward.id,
-        name: reward.name,
-        rarity: reward.tier || "common",
-        spriteFile: `${reward.id}.gif`
-      },
-      shiny: isShiny,
-      source: "random encounter",
-      image: broadcast?.image ?? null, // the same catch card, under a no-ping caption
-      caption: broadcast?.caption ?? null,
-    }).catch(err => console.error("❌ broadcastReward failed:", err.message));
-
-    console.log(`✅ Reward granted to ${interactionUser.username}`);
+    return { reward, isShiny, caught, eventNames: hasCatchEffects(liveFx) ? liveFx.catchEvents : [] };
   });
+  // "cooldown", "missed" or undefined (reward selection failed): nothing to post.
+  if (!granted || typeof granted !== "object") return granted;
+  const { reward, isShiny, caught, eventNames } = granted;
+
+  // =============================
+  // 🖼️ SPRITE
+  // =============================
+  let spriteUrl = pokemonSpriteUrl(reward.id, isShiny);
+
+  // =============================
+  // 📣 PUBLIC ANNOUNCEMENT
+  // =============================
+  // The catch card (utils/render/catchMessage.js); the old embed if it can't render.
+  const { message: announcement, broadcast } = await catchAnnouncement({
+    user: userObj,
+    catcher: interactionUser,
+    pokemonId: reward.id,
+    shiny: isShiny,
+    catchResult: caught,
+    eventNames,
+    fallback: () => ({
+      content: `🎉 <@${userId}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`,
+      embeds: [createPokemonRewardEmbed(reward, isShiny, spriteUrl)],
+    }),
+  });
+
+  try {
+    await msgOrInteraction.channel.send(announcement);
+  } catch (err) {
+    console.warn("⚠️ Public announcement failed:", err.message);
+  }
+
+  // =============================
+  // 🌐 GLOBAL BROADCAST (fire-and-forget — don't hold the lock)
+  // =============================
+  broadcastReward(client, {
+    user: interactionUser,
+    type: "pokemon",
+    item: {
+      id: reward.id,
+      name: reward.name,
+      rarity: reward.tier || "common",
+      spriteFile: `${reward.id}.gif`
+    },
+    shiny: isShiny,
+    source: "random encounter",
+    image: broadcast?.image ?? null, // the same catch card, under a no-ping caption
+    caption: broadcast?.caption ?? null,
+  }).catch(err => console.error("❌ broadcastReward failed:", err.message));
+
+  console.log(`✅ Reward granted to ${interactionUser.username}`);
+  return "caught";
 }
+
+// Trainer encounters (utils/encounter/service.js): open encounters live in
+// memory; their buttons come through interactionCreate below.
+const encounters = createEncounterService({ getTrainerData: () => trainerData, lockUser, enqueueSave });
 
 
 // ==========================================================
@@ -1232,9 +1372,11 @@ client.on(
       ccChance: MESSAGE_CC_CHANCE,
       ccGain: MESSAGE_CC_GAIN,
     },
+    log: logEvent,
     enqueueSave,
     queueRoleUpdate,
     giveRandomReward: tryGiveRandomReward,
+    spot: (message) => encounters.maybeSpot(message),
   })
 );
 
@@ -1263,7 +1405,7 @@ app.get("/api/user", (req, res) => {
   trainerData[id] = normalizeUserSchema(id, user);
   trainerData[id].rank = getRank(trainerData[id].tp);
 
-  return res.json(trainerData[id]);
+  return res.json(hideOpenRun(trainerData[id]));
 });
 
 // ==========================================================
@@ -1302,6 +1444,11 @@ app.use("/api", (req, res, next) => {
 
 // 🏅 ACHIEVEMENTS (Release C): read-only view + the one claim path.
 const achievements = createAchievementHandlers({ getTrainerData: () => trainerData, lockUser, save: saveAndAck });
+// Battle Records (services/fightRecordsApi.js): the player's own Fight records.
+const fightRecordApi = createFightRecordHandlers({ store: fightRecords, isAuthorized: requireDashboardSession });
+app.get("/api/fight-records", (req, res) => fightRecordApi.list(req, res));
+app.get("/api/fight-records/:fightId", (req, res) => fightRecordApi.get(req, res));
+
 app.get("/api/achievements", (req, res) => {
   const { status, body } = achievements.view({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
   return res.status(status).json(body);
@@ -1343,6 +1490,47 @@ app.post("/api/mega/preferred", express.json({ limit: "4kb" }), async (req, res)
     return res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
+// Mega Shard shop: capability "rewards" (MEGA_REWARDS_ENABLED=1). Off: the
+// view says { enabled: false } and both purchases refuse with 403.
+app.get("/api/mega/shop", (req, res) => {
+  const { status, body } = mega.shop({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
+  return res.status(status).json(body);
+});
+for (const [route, handler] of [["/api/mega/shop/buy-shards", "buyShards"], ["/api/mega/shop/buy-stone", "buyStone"]]) {
+  app.post(route, express.json({ limit: "4kb" }), async (req, res) => {
+    try {
+      const { status, body } = await mega[handler]({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+      if (status === 200 && !body.replayed) logEvent(handler === "buyShards" ? "mega_shard_purchase" : "mega_stone_purchase", req.body.id, handler === "buyShards" ? { shards: body.bought, cost: body.cost } : { stoneId: body.stoneId, shards: body.price });
+      return res.status(status).json(body);
+    } catch (err) {
+      console.error(`❌ ${route}:`, err?.message || err);
+      return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  });
+}
+
+// ==========================================================
+// 🧿 Held items (services/heldItemsApi.js). Dashboard-only management: no
+// Discord command can equip or buy items. Gated by HELD_ITEMS_* flags
+// (config/features.js); unset in production = the view says
+// { enabled: false } and every write refuses with 403.
+// ==========================================================
+const heldItems = createHeldItemHandlers({ getTrainerData: () => trainerData, lockUser, save: saveAndAck, logEvent });
+app.get("/api/held-items", (req, res) => {
+  const { status, body } = heldItems.view({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
+  return res.status(status).json(body);
+});
+for (const [route, fn] of [["claim-starter", heldItems.claimStarter], ["equip", heldItems.equip], ["buy", heldItems.buy]]) {
+  app.post(`/api/held-items/${route}`, express.json({ limit: "4kb" }), async (req, res) => {
+    try {
+      const { status, body } = await fn({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+      return res.status(status).json(body);
+    } catch (err) {
+      console.error(`❌ /api/held-items/${route}:`, err?.message || err);
+      return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  });
+}
 
 // D14: dashboard replies say whether the change reached disk. On a failed
 // write the change stays in memory and is retried; the reply carries a
@@ -1395,6 +1583,10 @@ app.post("/api/updateUser", express.json({ limit: "32kb" }), async (req, res) =>
       // copy detached any reference still held elsewhere (open collectors,
       // wagers, battles), and their later CC/TP writes were lost.
       const user = normalizeUserSchema(id, trainerData[id]);
+
+      // TM system: keep trained copies on their slots (this route's clients
+      // never send `uid`); see services/ownership.js carryCopyUids.
+      if (patch.displayedPokemon) patch.displayedPokemon = carryCopyUids(user, user.displayedPokemon, patch.displayedPokemon, req.body.user.displayedPokemon);
 
       // Apply patch only (NO blind merge of arbitrary user fields)
       Object.assign(user, patch);
@@ -1502,8 +1694,46 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
   }
 });
 
+// ==========================================================
+// 🎪 Live events (services/liveEventsPlayer.js): what's on, today's prices,
+// and the player's "Use Live event" choice for Poké Balls.
+// ==========================================================
+app.get("/api/live-events", (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ ok: false, error: "Missing id" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ ok: false, error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ ok: false, error: "User not found" });
+  return res.json({ ok: true, ...playerView(user) });
+});
+
+const liveEventOptIn = createOptInHandler({ getTrainerData: () => trainerData, lockUser, save: saveAndAck });
+app.post("/api/live-events/opt-in", express.json({ limit: "4kb" }), async (req, res) => {
+  if (!isReady) return res.status(503).json({ ok: false, error: "The bot is starting up. Try again in a moment." });
+  try {
+    const r = await liveEventOptIn({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(r.status).json(r.body);
+  } catch (err) {
+    console.error("❌ /api/live-events/opt-in:", err?.message || err);
+    return res.status(500).json({ ok: false, error: "Internal server error" });
+  }
+});
+
 
 client.on("interactionCreate", async (interaction) => {
+  // Autocomplete (e.g. /pokedex name): answered at once from memory, never
+  // logged per keystroke. A command without a handler answers nothing.
+  if (interaction.isAutocomplete?.()) {
+    const cmd = client.commands.get(interaction.commandName);
+    try {
+      if (cmd?.autocomplete) await cmd.autocomplete(interaction, trainerData ?? {});
+      else await interaction.respond([]);
+    } catch (e) {
+      await interaction.respond([]).catch(() => {});
+    }
+    return;
+  }
+
   // ✅ TELEMETRY (consolidated)
   lastInteractionAtMs = Date.now();
 
@@ -1623,6 +1853,9 @@ if (interaction.isChatInputCommand()) {
       return;
     }
 
+    // Last active: any slash command counts. Rides along with the next save.
+    if (trainerData[interaction.user.id]) trainerData[interaction.user.id].lastActiveAt = Date.now();
+
     const command = client.commands.get(interaction.commandName);
     if (!command) {
       console.warn(
@@ -1667,10 +1900,11 @@ if (interaction.isChatInputCommand()) {
     // If the command timed out, we already handled messaging
     if (timedOut) return;
 
+    // Every command's total time, so card load times can be read from the
+    // logs next to each card's "🖼️ card" render line (utils/render/stage.js).
     const ms = Date.now() - startedAt;
-    if (ms > 2500) {
-      console.warn(`⏱️ Slow slash command: ${interaction.commandName} took ${ms}ms`);
-    }
+    if (ms > 2500) console.warn(`⏱️ Slow slash command: ${interaction.commandName} took ${ms}ms`);
+    else console.log(`⏱️ ${interaction.commandName} took ${ms}ms`);
 
     // If command finished but never replied, close it cleanly
     if (interaction.deferred && !interaction.replied) {
@@ -1690,6 +1924,19 @@ if (interaction.isChatInputCommand()) {
   // ----------------------------------------------------------
   if (interaction.isButton()) {
     const id = interaction.customId ?? "";
+
+    // Trainer encounter cards are plain channel messages with no collector, so
+    // their clicks (even on a card from before a restart) are answered here.
+    if (isEncounterButton(id)) {
+      if (!isReady) {
+        await interaction
+          .reply({ content: "⏳ Bot is starting up / reconnecting. Try again in ~10 seconds.", flags: 64 })
+          .catch(() => {});
+        return;
+      }
+      await encounters.handleButton(interaction);
+      return;
+    }
 
     const noopButton =
       id.startsWith("confirm_") ||
@@ -1853,17 +2100,18 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
     }
 
     const tier = String(match.tier || match.rarity || "common").toLowerCase();
-    const cost = TRAINER_COSTS[tier];
-    if (!cost) return res.status(400).json({ success: false, error: `Unknown trainer tier: ${tier}` });
+    if (!TRAINER_COSTS[tier]) return res.status(400).json({ success: false, error: `Unknown trainer tier: ${tier}` });
+    const cost = discountedPrice(liveEffects(), "trainers", TRAINER_COSTS[tier]); // a Live event's discount
 
     if ((user.cc ?? 0) < cost) {
       return res.status(400).json({ success: false, error: `Requires ${cost} CC` });
     }
 
     user.cc -= cost;
-    user.trainers.push(canonicalFile);
+    grantTrainer(user, canonicalFile); // also unlocks the tier's Aura
 
     const saveAck = await saveAndAck(trainerData);
+    logEvent("trainer_purchase", id, { file: canonicalFile, tier, cost }); // economy audit 2026-11, D10
 
     return res.json({ ...saveAckFields(saveAck),
       success: true,
@@ -1876,8 +2124,133 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
 });
 
 // ==========================================================
+// ✨ Auras (services/auras.js): the dashboard's Auras tab
+// ==========================================================
+app.get("/api/auras", (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  // Auto shows the displayed trainer's own tier backdrop (Epic+), so the tab can preview it.
+  return res.json({ ...auraView(user), trainer: user.displayedTrainer ?? null, autoTier: trainerTier(user.displayedTrainer) });
+});
+
+// Body: { id, aura: "auto" | "none" | auraId }
+app.post("/api/auras/equip", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { id, aura } = req.body || {};
+    if (!id || typeof aura !== "string") return res.status(400).json({ success: false, error: "Missing id/aura" });
+    if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    await lockUser(id, async () => {
+      const user = trainerData[id];
+      if (!user) return res.status(404).json({ success: false, error: "User not found" });
+      const r = equipAura(user, aura);
+      if (!r.ok) return res.status(r.status ?? 400).json({ success: false, error: r.error });
+      const saveAck = r.changed ? await saveAndAck(trainerData) : null;
+      return res.json({ ...(saveAck ? saveAckFields(saveAck) : {}), success: true, equipped: r.equipped });
+    });
+  } catch (err) {
+    console.error("❌ /api/auras/equip:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Server error" });
+  }
+});
+
+// Body: { id, aura, requestId? } — a repeated requestId returns the first result and never charges twice.
+app.post("/api/shop/buy-aura", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { id, aura, requestId = null } = req.body || {};
+    if (!id || typeof aura !== "string") return res.status(400).json({ success: false, error: "Missing id/aura" });
+    if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    if (!trainerData[id]) return res.status(404).json({ success: false, error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId))) return res.status(400).json({ success: false, error: "Invalid request id" });
+    const tx = await runInventoryTransaction({
+      trainerData, userId: id, lock: lockUser, save: saveAndAck, requestId,
+      payloadKey: `buy-aura:${aura.slice(0, 64)}`,
+      mutate: (user) => buyAura(user, aura),
+    });
+    if (!tx.ok) {
+      const { ok, status = 400, ...rest } = tx;
+      return res.status(status).json({ success: false, ...rest });
+    }
+    if (!tx.replayed) logEvent("aura_purchase", id, { aura: tx.result.aura, cost: tx.result.cost, ccAfter: tx.result.cc });
+    const { ok, ...result } = tx.result;
+    return res.json({ ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...result });
+  } catch (err) {
+    console.error("❌ /api/shop/buy-aura:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+// ==========================================================
 // 🛍️ TRAINER SHOP — LIST ALL BUYABLE TRAINERS
 // ==========================================================
+// ==========================================================
+// 💿 TM shop (TM system phase T3; services/tmShop.js). Off unless
+// TM_ENABLED is set. Prices come from the catalog, never the client.
+// ==========================================================
+// The TM shop list. Not "/api/tms": EasyPrivacy blocks any URL containing
+// "/tms?id=" (tracker tag-management scripts), so players with uBlock Origin
+// never saw the TM shop (tools/check-blocklists.mjs). The old path stays
+// for a tab still running the old page.
+app.get(["/api/tm-shop", "/api/tms"], (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  return res.json(tmShopView(user));
+});
+
+// The player's Pokémon that can learn one TM (the shop's buy dialog), Casual
+// and Ranked team members first. Under /api/tm-shop/ for the blocklist reason above.
+app.get("/api/tm-shop/learners", (req, res) => {
+  const { id, item } = req.query;
+  if (!id || !item) return res.status(400).json({ error: "Missing id/item" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  const r = tmLearners(user, String(item));
+  if (!r.ok) { const { ok, status = 400, ...rest } = r; return res.status(status).json(rest); }
+  const { ok, ...body } = r;
+  return res.json(body);
+});
+
+// Body: { id, item: "tm_<move>", qty: 1–10, requestId? } — a repeated
+// requestId returns the first result and never charges twice.
+app.post("/api/shop/buy-tm", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { id, item, qty = 1, requestId = null } = req.body || {};
+    if (!id) return res.status(400).json({ success: false, error: "Missing id" });
+    if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    if (!trainerData[id]) return res.status(404).json({ success: false, error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId))) return res.status(400).json({ success: false, error: "Invalid request id" });
+
+    const tx = await runInventoryTransaction({
+      trainerData,
+      userId: id,
+      lock: lockUser,
+      save: saveAndAck,
+      requestId,
+      payloadKey: `buy-tm:${String(item).slice(0, 64)}:${Number(qty)}`,
+      mutate: (user) => {
+        normalizeUserSchema(id, user); // in place
+        return buyTms(user, { item, qty: Number(qty) });
+      },
+    });
+    if (!tx.ok) {
+      const { ok, status = 400, ...rest } = tx;
+      return res.status(status).json({ success: false, ...rest });
+    }
+    if (!tx.replayed) logEvent("tm_purchase", id, { item: tx.result.item, qty: tx.result.qty, cost: tx.result.cost, ccAfter: tx.result.cc });
+    const { ok, ...result } = tx.result;
+    return res.json({ ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...result });
+  } catch (err) {
+    console.error("❌ /api/shop/buy-tm:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 app.get("/api/shop-trainers", async (req, res) => {
   try {
     const { getFlattenedTrainers } = await import("./utils/dataLoader.js");
@@ -1933,12 +2306,13 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
       mutate: (user) => {
         normalizeUserSchema(id, user); // in place
         user.cc ??= 0;
-        if (user.cc < COST) {
-          return { ok: false, error: `Not enough CC. This costs ${COST} CC.`, cc: user.cc, status: 400 };
+        const price = discountedPrice(liveEffects(), "stones", COST); // a Live event's discount
+        if (user.cc < price) {
+          return { ok: false, error: `Not enough CC — requires ${price} CC.`, cc: user.cc, status: 400 };
         }
         const granted = grantItem(user, "evolution_stone", 1);
         if (!granted.ok) return { ok: false, error: granted.error, status: 400 };
-        user.cc -= COST;
+        user.cc -= price;
         trackProgress(user, [{ type: "purchase" }]); // Release C
         return { ok: true, cc: user.cc, stones: granted.quantity };
       },
@@ -2023,9 +2397,19 @@ app.get("/api/user-pokemon", (req, res) => {
       return { ...r, position: board.you?.position ?? null, players: board.total, streak: r.wins + r.losses > 0 ? Number(u.stats?.winStreak) || 0 : 0 };
     })(),
     casual: { wins: u.casual?.wins ?? 0, losses: u.casual?.losses ?? 0, streak: u.casual?.streak ?? 0, bestStreak: u.casual?.bestStreak ?? 0 },
+    challenge: challengeProgress(u), // the Badge row (/challenge)
     // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
     levels,
     powers: powersFromLevels(levels), // { "6:normal": 410 }
+    // TM system (T5): trained copies per line, for the copy choosers in
+    // donate / evolve / shiny craft / Teams. { "6:normal": [{ uid, rev, tmMoves, teams }] }
+    trained: trainedSummary(u),
+    showcaseTeam: Array.isArray(u.showcaseTeam) ? u.showcaseTeam : [], // three-teams split
+    // Pokédex (ever caught; never drops): { id: 1 normal | 2 shiny | 3 both }.
+    pokedex: u.pokedex ?? {},
+    // Collection: every copy, one entry each (docs/adr/0001), for the box grid.
+    // [uid, id, shiny 0|1, level, caughtAt|0, trained 0|1, teams bitmask (1 casual, 2 ranked, 4 showcase), exp]
+    copies: copyRows(u),
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
     // One-time notices (services/notices.js); the Teams page shows the
     // Battle team ones and dismisses them via /api/dismiss-notices.
@@ -2075,24 +2459,68 @@ app.get("/api/pokemon/detail", (req, res) => {
 // (level-up at or below its real Level; TMs later). services/movesets.js.
 app.post("/api/pokemon/moveset", express.json({ limit: "4kb" }), async (req, res) => {
   try {
-    const { id, team, pokeId, variant, moves } = req.body || {};
+    const { id, team, pokeId, variant, moves, uid = null } = req.body || {};
     if (!id || pokeId == null) return res.status(400).json({ success: false, error: "Missing id/pokeId" });
     if (!TEAM_TYPES.includes(team)) return res.status(400).json({ success: false, error: "Unknown team type" });
     if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
     await lockUser(id, async () => {
       const u = trainerData[id];
       if (!u) return res.status(404).json({ success: false, error: "User not found" });
-      const v = variant === "shiny" ? "shiny" : "normal";
-      if (moves !== null) {
-        const check = validateMoveset(u, pokeId, v, moves);
-        if (!check.ok) return res.status(check.status).json({ success: false, error: check.error, code: check.code });
-        setMoveset(u, team, pokeId, v, check.moves);
-      } else setMoveset(u, team, pokeId, v, null);
+      // uid: the slot's copy (box copy or TM copy); absent = the line's plain copies.
+      const r = saveMoveset(u, { team, pokeId, variant, moves, uid });
+      if (!r.ok) return res.status(r.status ?? 400).json({ success: false, error: r.error, code: r.code });
       const saveAck = await saveAndAck(trainerData);
-      return res.json({ ...saveAckFields(saveAck), success: true, team, moves: chosenMoves(u, team, pokeId, v) });
+      return res.json({ ...saveAckFields(saveAck), success: true, team, ...(r.uid && { uid: r.uid }), moves: r.moves });
     });
   } catch (err) {
     console.error("❌ /api/pokemon/moveset:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+// ==========================================================
+// 💿 Teach a TM (TM system phase T4; services/tmTeaching.js). Off unless
+// TM_ENABLED is set. The client sends ids and the moves it showed; the
+// server re-checks everything and refuses (TM kept) if anything changed.
+// ==========================================================
+app.get("/api/pokemon/tm-options", (req, res) => {
+  const { id, species, variant } = req.query;
+  if (!id || species == null) return res.status(400).json({ error: "Missing id/species" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  const r = teachOptions(user, { speciesId: species, variant });
+  if (!r.ok) { const { ok, status = 400, ...rest } = r; return res.status(status).json(rest); }
+  const { ok, ...body } = r;
+  return res.json(body);
+});
+
+// Body: { id, item, pokeId, variant, uid|null, rev, expect, equip, requestId? }
+app.post("/api/pokemon/teach-tm", express.json({ limit: "8kb" }), async (req, res) => {
+  try {
+    const { id, item, pokeId, variant, uid = null, rev = null, expect = null, equip = null, requestId = null } = req.body || {};
+    if (!id || pokeId == null || !item) return res.status(400).json({ success: false, error: "Missing id/pokeId/item" });
+    if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    if (!trainerData[id]) return res.status(404).json({ success: false, error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId))) return res.status(400).json({ success: false, error: "Invalid request id" });
+    const tx = await runInventoryTransaction({
+      trainerData,
+      userId: id,
+      lock: lockUser,
+      save: saveAndAck,
+      requestId,
+      payloadKey: `teach-tm:${String(item).slice(0, 64)}:${Number(pokeId)}:${variant === "shiny" ? "shiny" : "normal"}:${uid ?? "untrained"}`,
+      mutate: (user) => {
+        normalizeUserSchema(id, user); // in place
+        return teachTm(user, { item, pokeId, variant, uid, rev, expect, equip }, { requestId });
+      },
+    });
+    if (!tx.ok) { const { ok, status = 400, ...rest } = tx; return res.status(status).json({ success: false, ...rest }); }
+    if (!tx.replayed) logEvent("tm_taught", id, { item: tx.result.item, move: tx.result.move.id, pokemonId: Number(pokeId), variant: variant === "shiny" ? "shiny" : "normal", uid: tx.result.uid, created: tx.result.created });
+    const { ok, ...result } = tx.result;
+    return res.json({ ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...result });
+  } catch (err) {
+    console.error("❌ /api/pokemon/teach-tm:", err?.message || err);
     return res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
@@ -2114,15 +2542,32 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
     if (!id || !Array.isArray(team)) {
       return res.status(400).json({ success: false, error: "Missing id/team" });
     }
-    if (teamType !== "display" && teamType !== "battle") {
+    if (teamType !== "display" && teamType !== "battle" && teamType !== "showcase") {
       return res.status(400).json({ success: false, error: "Unknown team type" });
     }
-
     if (!requireDashboardSession(req, id)) {
       return res
         .status(403)
         .json({ success: false, error: "Invalid or expired session" });
     }
+    // Showcase team (three-teams split): its own rules (repeats as separate
+    // copies, any unlocked Megas, no moves or items), so its own short path.
+    if (teamType === "showcase") {
+      return await lockUser(id, async () => {
+        const user = trainerData[id];
+        if (!user) return res.status(404).json({ success: false, error: "User not found" });
+        const u = normalizeUserSchema(id, user);
+        const prepared = prepareShowcaseSelection(u, team);
+        if (!prepared.ok) return res.status(prepared.status).json({ success: false, error: prepared.error, code: prepared.code });
+        u.showcaseTeam = prepared.team;
+        const saveAck = await saveAndAck(trainerData);
+        return res.json({ ...saveAckFields(saveAck), success: true, teamType, showcaseTeam: u.showcaseTeam, currentTeam: u.displayedPokemon, battleTeam: hasBattleTeam(u) ? u.battleTeam : null });
+      });
+    }
+    // Optional: this team was copied from the other one (Teams page "Copy
+    // from …"); the copied Pokémon's moves come along in the same write.
+    const copy = parseTeamCopy(req.body, teamType);
+    if (!copy.ok) return res.status(copy.status).json({ success: false, error: copy.error, code: copy.code });
 
     await lockUser(id, async () => {
       const user = trainerData[id];
@@ -2149,12 +2594,19 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
       if (!prepared.ok) {
         return res.status(prepared.status).json({ success: false, error: prepared.error, code: prepared.code });
       }
-      const normalized = prepared.team;
+      // TM system: a slot sent without `uid` keeps the trained copy it held
+      // (older clients don't know about trained copies); `uid: null` = untrained.
+      const normalized = carryCopyUids(u, teamType === "battle" ? u.battleTeam : u.displayedPokemon, prepared.team, team);
 
       // 5) Save
       if (teamType === "battle") u.battleTeam = normalized;
       else u.displayedPokemon = normalized;
+      const copiedMoves = copy.copy ? applyTeamCopy(u, { ...copy.copy, to: teamType }, normalized) : [];
       trainerData[id] = u;
+      // Held items on this team follow it: a Pokémon that left the team, or
+      // is now set to Mega Evolve, drops its assignment on THIS team only
+      // (the unlock and every other team are untouched).
+      const itemsCleared = reconcileTeamEquipment(u, teamType);
 
       const saveAck = await saveAndAck(trainerData);
 
@@ -2164,6 +2616,8 @@ app.post("/api/set-pokemon-team", express.json(), async (req, res) => {
         teamType,
         currentTeam: u.displayedPokemon,
         battleTeam: hasBattleTeam(u) ? u.battleTeam : null,
+        ...(itemsCleared.length ? { itemsCleared, equipmentRev: equipmentRev(u) } : {}),
+        ...(copy.copy ? { copiedMoves } : {}),
       });
     });
   } catch (err) {
@@ -2195,131 +2649,81 @@ app.post("/api/pokemon/evolve", express.json(), async (req, res) => {
 //    - shiny donation: fixed dust by tier
 //    - non-shiny donation: probability-based dust by tier
 // ==========================================================
+// TM safety (phase T0): the copy is chosen by services/ownership.js through
+// utils/bulkDonate.js donateOne(): always a plain copy; a copy with
+// TM-trained moves is never picked automatically (refused instead).
+// Optional client requestId: a repeat returns the first result and never
+// donates twice (double click / retried request).
 app.post("/api/pokemon/donate", express.json(), async (req, res) => {
-  const { id, pokeId, shiny, variant } = req.body;
+  try {
+    const { id, pokeId, shiny, variant, requestId = null, uid = null, rev = null, confirmTrained = false } = req.body || {};
 
-  if (!id) return res.status(400).json({ error: "Missing id" });
-  if (pokeId == null) return res.status(400).json({ error: "Missing pokeId" });
+    if (!id) return res.status(400).json({ error: "Missing id" });
+    if (pokeId == null) return res.status(400).json({ error: "Missing pokeId" });
 
-  if (!requireDashboardSession(req, id)) {
-    return res.status(403).json({ error: "Invalid or expired session" });
-  }
-
-  await lockUser(id, async () => {
-    const user = trainerData[id];
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    trainerData[id] = normalizeUserSchema(id, user);
-    const u = trainerData[id];
-
-    const pokemonData = await getPokemonDataCached();
-
-    const pid = Number(pokeId);
-    const p = pokemonData[pid];
-    if (!p) return res.status(400).json({ error: "Invalid Pokémon ID" });
-
-    const baseValue = DONATION_CC_BY_TIER[String(p.tier || "common").toLowerCase()] ?? 0;
-
-    const chosenVariant =
-      typeof variant === "string"
-        ? normVariant(variant)
-        : (shiny ? "shiny" : "normal");
-
-    if (isDisplayedVariant(u, pid, chosenVariant)) {
-      return res.status(400).json({
-        error: `You can't donate your ${chosenVariant} ${p.name} because it's on one of your teams (Showcase or Battle). Remove it from that team first.`,
-      });
+    if (!requireDashboardSession(req, id)) {
+      return res.status(403).json({ error: "Invalid or expired session" });
+    }
+    if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId))) {
+      return res.status(400).json({ error: "Invalid request id" });
     }
 
-    const owned = u.pokemon?.[pid]?.[chosenVariant] || 0;
-    if (owned <= 0) {
-      return res.status(400).json({
-        error: `You don't own a ${chosenVariant === "shiny" ? "shiny " : ""}${p.name} to donate.`,
-      });
+    const chosenVariant = typeof variant === "string" ? normVariant(variant) : (shiny ? "shiny" : "normal");
+    const pokemonData = await getPokemonDataCached(); // before the lock (A1 pattern)
+
+    const tx = await runInventoryTransaction({
+      trainerData,
+      userId: id,
+      lock: lockUser,
+      save: saveAndAck,
+      requestId,
+      payloadKey: `donate:${Number(pokeId)}:${chosenVariant}:${uid ?? "untrained"}`,
+      mutate: (u) => {
+        normalizeUserSchema(id, u); // in place
+        ensureWeeklyReset(u);
+        const r = donateOne({
+          user: u,
+          pokeId,
+          variant: chosenVariant,
+          pokemonData,
+          economy: donationEconomy(),
+          isOnTeam: (pid, v) => isDisplayedVariant(u, pid, v),
+          // T5: a named trained copy, with the TM warning confirmed
+          uid: uid == null ? null : String(uid),
+          rev,
+          confirmTrained: confirmTrained === true,
+        });
+        if (r.error) return { ok: false, status: 400, error: r.error, ...(r.code && { code: r.code }), ...(r.protected && { protected: r.protected }) };
+        trackProgress(u, [{ type: "donated" }]); // Release C
+        const ev = r.event;
+        return {
+          ok: true,
+          event: ev,
+          donated: { id: ev.pokemonId, name: ev.pokemonName, variant: ev.variant },
+          gainedCC: ev.ccGained,
+          totalCC: u.cc,
+          shinyDustGained: ev.dustGained,
+          shinyDustTotal: getItem(u, "shiny_dust"),
+          nonShinyDustWeeklyRemaining: ev.variant === "shiny" ? null : Math.max(0, NON_SHINY_DUST_WEEKLY_CAP - (u.nonShinyDustEarnedThisWeek ?? 0)),
+        };
+      },
+    });
+    if (!tx.ok) {
+      const { ok, status = 400, ...rest } = tx;
+      return res.status(status).json(rest);
     }
-
-    // --------------------------
-    // ✅ CC reward (unchanged)
-    // --------------------------
-    const finalValue = chosenVariant === "shiny" ? baseValue * 5 : baseValue;
-
-    // --------------------------
-    // ✅ Dust reward (NEW for non-shiny)
-    // --------------------------
-    const tier = tierKey(p.tier || "common");
-
-    let dustReward = 0;
-
-if (chosenVariant === "shiny") {
-  // fixed dust for shiny donation (NOT capped here)
-  dustReward = (DUST_REWARD_BY_TIER[tier] ?? 0);
-} else {
-  // ✅ weekly cap applies only to NON-SHINY dust
-  ensureWeeklyReset(u);
-
-  const earned = u.nonShinyDustEarnedThisWeek ?? 0;
-  const remaining = Math.max(0, NON_SHINY_DUST_WEEKLY_CAP - earned);
-
-  if (remaining > 0) {
-    const table = NON_SHINY_DUST_CHANCE_BY_TIER?.[tier] ?? [{ chance: 1, dust: 0 }];
-    const rolled = rollWeightedDust(table);
-
-    dustReward = Math.min(rolled, remaining);
-    u.nonShinyDustEarnedThisWeek = earned + dustReward;
-  } else {
-    dustReward = 0;
-  }
-}
-
-    // --------------------------
-    // Apply donation
-    // --------------------------
-    u.pokemon ??= {};
-    u.pokemon[pid] ??= { normal: 0, shiny: 0 };
-    u.pokemon[pid][chosenVariant] -= 1;
-
-    if ((u.pokemon[pid].normal ?? 0) <= 0 && (u.pokemon[pid].shiny ?? 0) <= 0) {
-      delete u.pokemon[pid];
-    }
-    resetLevelIfGone(u, pid, chosenVariant);
-
-    u.cc = (u.cc ?? 0) + finalValue;
-
-    if (dustReward > 0) {
-      addItem(u, "shiny_dust", dustReward);
-    }
-    trackProgress(u, [{ type: "donated" }]); // Release C
-
-    const saveAck = await saveAndAck(trainerData);
 
     // 📜 Event log — donations are half of the CC-flow picture (rolls
-    // being the other half). Tracks the Pokemon given up, its tier,
-    // and the CC/dust returned.
-    logEvent("donate", id, {
-      pokemonId: pid,
-      pokemonName: p.name,
-      tier: String(p.tier || "common").toLowerCase(),
-      variant: chosenVariant,
-      ccGained: finalValue,
-      dustGained: dustReward,
-    });
+    // being the other half). Never logged twice for a replayed request.
+    const { event, ok, ...body } = tx.result;
+    if (!tx.replayed) logEvent("donate", id, event);
 
-    const nonShinyDustWeeklyRemaining =
-  chosenVariant === "shiny"
-    ? null
-    : Math.max(0, NON_SHINY_DUST_WEEKLY_CAP - (u.nonShinyDustEarnedThisWeek ?? 0));
-
-return res.json({ ...saveAckFields(saveAck),
-  success: true,
-  donated: { id: pid, name: p.name, variant: chosenVariant },
-  gainedCC: finalValue,
-  totalCC: u.cc,
-  shinyDustGained: dustReward,
-  shinyDustTotal: getItem(u, "shiny_dust"),
-  nonShinyDustWeeklyRemaining,
-});
-
-  });
+    return res.json({ ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...body });
+  } catch (err) {
+    console.error("❌ /api/pokemon/donate:", err?.message || err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // ==========================================================
@@ -2330,53 +2734,66 @@ return res.json({ ...saveAckFields(saveAck),
 // stays valid. Multi-select still refuses Team members.
 // ==========================================================
 app.post("/api/pokemon/donate-bulk", express.json({ limit: "100kb" }), async (req, res) => {
-  const { id, mode, items } = req.body;
+  try {
+    const { id, mode, items, requestId = null } = req.body || {};
 
-  if (!id) return res.status(400).json({ error: "Missing id" });
+    if (!id) return res.status(400).json({ error: "Missing id" });
 
-  if (!requireDashboardSession(req, id)) {
-    return res.status(403).json({ error: "Invalid or expired session" });
-  }
+    if (!requireDashboardSession(req, id)) {
+      return res.status(403).json({ error: "Invalid or expired session" });
+    }
+    if (!trainerData[id]) return res.status(404).json({ error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId))) {
+      return res.status(400).json({ error: "Invalid request id" });
+    }
 
-  await lockUser(id, async () => {
-    const user = trainerData[id];
-    if (!user) return res.status(404).json({ error: "User not found" });
+    const pokemonData = await getPokemonDataCached(); // before the lock (A1 pattern)
+    // Same id + same list → replay; same id + different list → conflict.
+    const payloadKey = `donate-bulk:${mode}:${crypto.createHash("sha256").update(JSON.stringify(items ?? null)).digest("hex").slice(0, 32)}`;
 
-    trainerData[id] = normalizeUserSchema(id, user);
-    const u = trainerData[id];
-    ensureWeeklyReset(u); // dust cap must reflect the current week before rolling
-
-    const result = bulkDonate({
-      user: u,
-      mode,
-      items,
-      pokemonData: await getPokemonDataCached(),
-      economy: {
-        ccByTier: DONATION_CC_BY_TIER,
-        shinyDustByTier: DUST_REWARD_BY_TIER,
-        normalDustChanceByTier: NON_SHINY_DUST_CHANCE_BY_TIER,
-        normalDustWeeklyCap: NON_SHINY_DUST_WEEKLY_CAP,
-        rollDust: rollWeightedDust,
+    const tx = await runInventoryTransaction({
+      trainerData,
+      userId: id,
+      lock: lockUser,
+      save: saveAndAck,
+      requestId,
+      payloadKey,
+      mutate: (u) => {
+        normalizeUserSchema(id, u); // in place
+        ensureWeeklyReset(u); // dust cap must reflect the current week before rolling
+        const result = bulkDonate({
+          user: u,
+          mode,
+          items,
+          pokemonData,
+          economy: donationEconomy(),
+          isOnTeam: (pid, variant) => isDisplayedVariant(u, pid, variant),
+        });
+        if (result.error) return { ok: false, status: 400, error: result.error };
+        trackProgress(u, [{ type: "donated", n: result.donatedCopies }]); // Release C
+        return { ok: true, ...result };
       },
-      isOnTeam: (pid, variant) => isDisplayedVariant(u, pid, variant),
     });
-
-    if (result.error) return res.status(400).json({ error: result.error });
-    trackProgress(u, [{ type: "donated", n: result.donatedCopies }]); // Release C
-
-    const saveAck = await saveAndAck(trainerData);
+    if (!tx.ok) {
+      const { ok, status = 400, ...rest } = tx;
+      return res.status(status).json(rest);
+    }
 
     // One event per copy, same shape as single donate, so admin analytics
     // count bulk donations without special-casing. logEvent never throws.
-    for (const ev of result.events) logEvent("donate", id, { ...ev, source: mode });
+    if (!tx.replayed) for (const ev of tx.result.events) logEvent("donate", id, { ...ev, source: mode });
 
-    return res.json({ ...saveAckFields(saveAck),
+    return res.json({ ...saveAckFields(tx),
       success: true,
-      donatedCopies: result.donatedCopies,
-      gainedCC: result.gainedCC,
-      shinyDustGained: result.shinyDustGained,
+      replayed: !!tx.replayed,
+      donatedCopies: tx.result.donatedCopies,
+      gainedCC: tx.result.gainedCC,
+      shinyDustGained: tx.result.shinyDustGained,
     });
-  });
+  } catch (err) {
+    console.error("❌ /api/pokemon/donate-bulk:", err?.message || err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 
@@ -2385,6 +2802,16 @@ app.post("/api/pokemon/donate-bulk", express.json({ limit: "100kb" }), async (re
 // Costs dust by tier of the Pokémon being converted.
 // Blocks converting if the NORMAL variant is currently displayed.
 // ==========================================================
+app.post("/api/pokemon/feed", express.json(), async (req, res) => {
+  try {
+    const r = await gameplay.feed({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(r.status).json(r.body);
+  } catch (err) {
+    console.error("❌ /api/pokemon/feed:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 app.post("/api/pokemon/convert-to-shiny", express.json(), async (req, res) => {
   try {
     const r = await gameplay.convertToShiny({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
@@ -2418,6 +2845,49 @@ async function refundPendingWagersOnStartup() {
   }
 }
 
+// ==========================================================
+// ⚔️ Rematch requests: close requests left open by a restart
+// Their buttons die with the old process, so every open request is closed
+// (blocking nobody) and its message edited.
+// ==========================================================
+async function closeRematchRequestsOnStartup() {
+  const closed = closeAllRematches(trainerData);
+  if (!closed.length) return;
+  await enqueueSave(trainerData, { force: true });
+  console.log(`⚔️ Closed ${closed.length} open rematch request(s) after restart`);
+  for (const { channelId, messageId } of closed) {
+    if (!channelId || !messageId) continue;
+    try {
+      const channel = await client.channels.fetch(channelId);
+      const message = await channel.messages.fetch(messageId);
+      await message.edit({ content: "Rematch request expired because the bot restarted.", components: [] });
+    } catch {}
+  }
+}
+
+// ==========================================================
+// An Elite Four run waits on the player's record between fights, and the
+// command playing it dies with the old process, so every open run is
+// finished at startup with no Revives, and its replay message gets the result.
+// ==========================================================
+async function finishOpenRunsOnStartup() {
+  const finished = finishAllOpenRuns(trainerData, new Date());
+  if (!finished.length) return;
+  await enqueueSave(trainerData, { force: true });
+  console.log(`⚔️ Finished ${finished.length} open Elite Four run(s) after restart`);
+  for (const { userId, outcome, channelId, messageId } of finished) {
+    logEvent("challenge", userId, { ...challengeLogEntry(outcome), finished: "restart" });
+    recordFight(() => challengeRecord(outcome, trainerData[userId]?.name, trainerData));
+    if (!channelId || !messageId) continue;
+    try {
+      const channel = await client.channels.fetch(channelId);
+      const message = await channel.messages.fetch(messageId);
+      await showRunResult(message, outcome, challengeNames(outcome, trainerData[userId]?.name || "Trainer"),
+        `⚔️ The bot restarted, so <@${userId}>'s Elite Four run finished without Revives.`);
+    } catch {}
+  }
+}
+
 client.once("ready", async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
@@ -2431,6 +2901,21 @@ client.once("ready", async () => {
   setInterval(() => {
     pruneEvents().catch(() => {});
   }, 24 * 60 * 60 * 1000);
+
+  // 🎪 Live events: load the schedule, then post start/end announcements
+  // every 30 s once the bot is ready (also posts boundaries passed while down).
+  await loadLiveEvents();
+  setInterval(() => {
+    if (!isReady) return;
+    postDueAnnouncements({
+      send: async (channelId, embed) => {
+        const channel = await client.channels.fetch(channelId).catch(() => null);
+        if (!channel?.isTextBased?.()) return false;
+        await channel.send({ embeds: [embed] });
+        return true;
+      },
+    }).catch((e) => console.warn("⚠️ Live event announcements failed:", e?.message || e));
+  }, 30_000);
 
   // Load local commands FIRST
   try {
@@ -2512,8 +2997,11 @@ async function retryLoadLoop() {
 
   if (ok2) {
     await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
+    await closeRematchRequestsOnStartup().catch((e) => console.warn("⚠️ closing rematch requests failed:", e?.message || e));
+    await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
+    startDexBackfill();
     return;
   }
 
@@ -2528,9 +3016,53 @@ setTimeout(retryLoadLoop, retryMs);
   }
 
   await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
+  await closeRematchRequestsOnStartup().catch((e) => console.warn("⚠️ closing rematch requests failed:", e?.message || e));
+  await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");
+  startDexBackfill();
 });
+
+// ==========================================================
+// 📖 Pokédex backfill from the bot's own backup history (docs/adr/0001,
+// services/dexBackfill.js). Runs once, in the background, after the bot is
+// ready: reads the storage channel slowly (read-only) and adds every species
+// a player ever had in a backup to their Pokédex. Resumes after a restart;
+// POKEDEX_SCAN=off skips it.
+// ==========================================================
+let dexScanRunning = false;
+function startDexBackfill() {
+  if (dexScanRunning || process.env.POKEDEX_SCAN === "off" || !process.env.STORAGE_CHANNEL_ID) return;
+  const dir = dataDir();
+  const state = readDexScanState(dir);
+  if (state?.done) return console.log(`📖 Pokédex scan: done earlier (${state.backups} backups, ${state.added} species for ${state.players} players)`);
+  dexScanRunning = true;
+  console.log(state?.cursor ? `📖 Pokédex scan: resuming (${state.backups} backups read so far)` : "📖 Pokédex scan: starting (reads the backup history in the background)");
+  let lastLog = state?.backups ?? 0;
+  runDexBackfill({
+    listPage: (before) => listBackupPage(client, process.env.STORAGE_CHANNEL_ID, before),
+    download: async (url) => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.text();
+    },
+    trainerData,
+    state,
+    saveState: (st) => {
+      try { writeDexScanState(dir, st); } catch (e) { console.warn("⚠️ Pokédex scan state not saved:", e?.message || e); }
+      if (st.backups - lastLog >= 100) { lastLog = st.backups; console.log(`📖 Pokédex scan: ${st.backups} backups read, ${st.added} species added for ${st.players} players`); }
+    },
+    onChanged: () => { enqueueSave(trainerData); },
+    shouldStop: () => shuttingDown,
+    pauseMs: 1000,
+    log: (m) => console.warn(`📖 Pokédex scan: ${m}`),
+  })
+    .then((st) => console.log(st.done
+      ? `📖 Pokédex scan finished: ${st.backups} backups read, ${st.skipped} skipped, ${st.added} species added for ${st.players} players, ${st.unlocks} achievements unlocked`
+      : `📖 Pokédex scan paused at ${st.backups} backups; resumes next boot`))
+    .catch((e) => console.warn("⚠️ Pokédex scan stopped (resumes next boot):", e?.message || e))
+    .finally(() => { dexScanRunning = false; });
+}
 
 // ==========================================================
 // 🚀 LAUNCH WEB SERVER

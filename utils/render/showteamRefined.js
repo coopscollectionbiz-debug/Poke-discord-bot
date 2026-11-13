@@ -10,7 +10,8 @@
 
 import { COLOR, TIER, tierColor } from "./tokens.js";
 import {
-  rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth, drawBall, dexNo, drawMegaTag,
+  rr, font, fitText, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, levelWidth, drawBall, dexNo, drawMegaTag, fillTextMid,
+  drawSoftPlatform, drawPlatform,
 } from "./primitives.js";
 import { drawSprite } from "./sprites.js";
 import { shinyBackdrop } from "./shinyBackdrop.js";
@@ -36,7 +37,7 @@ function cardRect(view, i) {
   };
 }
 // Shiny gold, then lead blue, then a Mega's own colour (only a slot that battles as a Mega).
-const accentOf = (slot) => (slot.shiny ? COLOR.gold : slot.slot === 1 ? COLOR.blue : slot.mega ? COLOR.mega : null);
+const accentOf = (slot) => (slot.shiny ? COLOR.gold : slot.slot === 1 && !slot.noLead ? COLOR.blue : slot.mega ? COLOR.mega : null);
 
 // ---------- base layer ----------
 
@@ -70,8 +71,9 @@ function drawHeader(ctx, view) {
   ctx.fillText(fitText(ctx, `${view.rank}  ·  ${fmt(view.tp)} TP`, 600), M + 8, y + 76);
 
   // Right: up to three stat blocks, right-aligned, divided by hairlines.
-  const stats = [["TEAM POWER", fmt(view.power), COLOR.gold]];
-  if (view.battle) {
+  // A Showcase (buildShowcaseView) brings its own blocks: it never fights.
+  const stats = view.stats ? view.stats.map(([label, value], k) => [label, value, k === 0 ? COLOR.gold : COLOR.text]) : [["TEAM POWER", fmt(view.power), COLOR.gold]];
+  if (!view.stats && view.battle) {
     stats.push(["RATING", fmt(view.battle.rating), COLOR.text]);
     stats.push(["RECORD", `${view.battle.wins}–${view.battle.losses}`, COLOR.text]);
   }
@@ -98,9 +100,9 @@ function drawHeader(ctx, view) {
   ctx.textAlign = "left";
 
   if (hasNote(view)) {
-    const msg = view.slots.length
-      ? "No Showcase team set, so this shows your first Pokémon. Pick one on /dashboard."
-      : "No Pokémon yet. Catch some by chatting, then pick a Showcase team on /dashboard.";
+    const msg = view.emptyNote ?? (view.slots.length
+      ? "No Team set: showing your first Pokémon. Pick your Team on /dashboard."
+      : "No Pokémon yet. Catch some by chatting, then pick your Team on /dashboard.");
     ctx.font = font(19, 700);
     const tw = ctx.measureText(msg).width + 36;
     ctx.fillStyle = "#f5c84c1f";
@@ -108,8 +110,7 @@ function drawHeader(ctx, view) {
     ctx.fill();
     ctx.fillStyle = COLOR.gold;
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(msg, W / 2, y + HEADER + 18);
+    fillTextMid(ctx, msg, W / 2, y + HEADER + 17);
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
   }
@@ -127,10 +128,7 @@ function drawEmpty(ctx, r, n) {
   ctx.stroke();
   ctx.restore();
   const cx = r.x + r.w / 2, floor = r.y + r.h - INFO_H - 22;
-  ctx.fillStyle = "#ffffff0d";
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 100, 19, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawPlatform(ctx, cx, floor, 100, 19, null);
   ctx.globalAlpha = 0.3;
   drawBall(ctx, cx, floor - 46, 28, false);
   ctx.globalAlpha = 1;
@@ -171,13 +169,7 @@ function drawCardBase(ctx, slot, r) {
   ctx.fillRect(r.x, r.y + r.h - INFO_H, r.w, 1);
 
   // Platform (the battle's), lit for the lead (blue) and shiny (gold).
-  ctx.fillStyle = accent ? `${accent}40` : "#ffffff12";
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 108, 20, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = accent ? `${accent}b0` : "#ffffff26";
-  ctx.stroke();
+  drawPlatform(ctx, cx, floor, 108, 20, accent);
 
   // EXP: a flat strip along the card's bottom edge in the games' EXP blue —
   // deliberately unlike the battle HP bar (rounded pill, "HP" tag, green).
@@ -243,13 +235,7 @@ function drawSprites(ctx, view, sprites, frameFor, fx = null) {
     // Grounding shadow under the feet, sized to the sprite.
     if (sp && !sp.placeholder) {
       const sw = Math.min(r.w - 60, sp.width * SPRITE_SCALE);
-      const sh = ctx.createRadialGradient(cx, floor + 2, 2, cx, floor + 2, sw * 0.42);
-      sh.addColorStop(0, "#00000070");
-      sh.addColorStop(1, "#00000000");
-      ctx.fillStyle = sh;
-      ctx.beginPath();
-      ctx.ellipse(cx, floor + 2, sw * 0.42, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawSoftPlatform(ctx, cx, floor + 2, sw * 0.42, 12, null, { u: 4, peak: 0.4 }); // contact shadow
     }
     drawSprite(ctx, sp, cx, floor + 8, r.w - 36, floor + 8 - (r.y + 14), { scale: SPRITE_SCALE, frame: frameFor(i) });
   });
@@ -272,15 +258,13 @@ function drawTierPill(ctx, tier, right, y) {
   ctx.strokeStyle = `${color}aa`;
   ctx.stroke();
   ctx.fillStyle = color;
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, x + 15, y + h / 2 + 1);
-  ctx.textBaseline = "alphabetic";
+  fillTextMid(ctx, label, x + 15, y + h / 2);
 }
 
 function drawTop(ctx, view) {
   view.slots.forEach((slot, i) => {
     const r = cardRect(view, i);
-    const lead = i === 0;
+    const lead = i === 0 && view.kind !== "showcase"; // the Showcase never fights: no lead
     // Slot number; the lead also gets a LEAD tag (it fights first).
     const bx = r.x + 30, by = r.y + 30;
     ctx.fillStyle = lead ? COLOR.blue : "#101626e6";
@@ -293,8 +277,7 @@ function drawTop(ctx, view) {
     ctx.font = font(19, 800);
     ctx.fillStyle = lead ? "#ffffff" : COLOR.textMuted;
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(String(i + 1), bx, by + 1);
+    fillTextMid(ctx, String(i + 1), bx, by);
     let nx = bx + 24;
     if (lead) {
       ctx.font = font(15, 800);
@@ -303,7 +286,7 @@ function drawTop(ctx, view) {
       rr(ctx, nx, by - 13, tw, 26, 13);
       ctx.fill();
       ctx.fillStyle = "#ffffff";
-      ctx.fillText("LEAD", nx + tw / 2, by + 1);
+      fillTextMid(ctx, "LEAD", nx + tw / 2, by);
       nx += tw + 8;
     }
     // National Pokédex number, on a dark backing so it reads over a sprite.
@@ -313,7 +296,7 @@ function drawTop(ctx, view) {
     rr(ctx, nx, by - 13, dw, 26, 13);
     ctx.fill();
     ctx.fillStyle = COLOR.textMuted;
-    ctx.fillText(dexNo(slot.id), nx + dw / 2, by + 1);
+    fillTextMid(ctx, dexNo(slot.id), nx + dw / 2, by);
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
     drawTierPill(ctx, slot.tier, r.x + r.w - 14, r.y + 15);

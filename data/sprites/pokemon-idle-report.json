@@ -2,8 +2,405 @@
  "generatedBy": "tools/generate-pokemon-idles.mjs",
  "seamOk": 11,
  "minHeight": 20,
- "breathing": 234,
+ "breathing": 32,
+ "blinking": 8,
  "still": 0,
  "review": [],
- "excluded": []
+ "excluded": [],
+ "rigs": {
+  "species:710": {
+   "drops": [
+    62,
+    59,
+    52
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 37,
+   "earCost": 0,
+   "ms": 120,
+   "frames": 26
+  },
+  "species:758": {
+   "drops": [
+    76,
+    67,
+    51
+   ],
+   "head": 38,
+   "headCost": 2,
+   "ears": 22,
+   "earCost": 0,
+   "ms": 100,
+   "frames": 19
+  },
+  "species:827": {
+   "drops": [
+    71,
+    68,
+    60
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 40,
+   "earCost": 1,
+   "ms": 100,
+   "frames": 39
+  },
+  "species:828": {
+   "drops": [
+    71,
+    61,
+    53
+   ],
+   "head": 40,
+   "headCost": 0,
+   "ears": -1,
+   "earCost": null,
+   "ms": 120,
+   "frames": 22
+  },
+  "species:916": {
+   "drops": [
+    67,
+    58,
+    55
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
+   "ms": 100,
+   "frames": 15
+  },
+  "species:921": {
+   "drops": [
+    67
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 52,
+   "earCost": 0,
+   "ms": 100,
+   "frames": 22
+  },
+  "species:922": {
+   "drops": [
+    69,
+    59,
+    56
+   ],
+   "head": 58,
+   "headCost": 0,
+   "ears": 35,
+   "earCost": 0,
+   "ms": 110,
+   "frames": 17
+  },
+  "species:923": {
+   "drops": [
+    70,
+    63,
+    60
+   ],
+   "head": 53,
+   "headCost": 0,
+   "ears": 31,
+   "earCost": 0,
+   "ms": 80,
+   "frames": 23
+  },
+  "species:931": {
+   "drops": [
+    63,
+    54,
+    51
+   ],
+   "head": 48,
+   "headCost": 0,
+   "ears": 25,
+   "earCost": 1,
+   "ms": 90,
+   "frames": 23
+  },
+  "species:941": {
+   "drops": [
+    78,
+    62,
+    57
+   ],
+   "head": 51,
+   "headCost": 1,
+   "ears": -1,
+   "earCost": null,
+   "ms": 110,
+   "frames": 23
+  },
+  "species:950": {
+   "drops": [
+    69
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
+   "ms": 100,
+   "frames": 18
+  },
+  "species:951": {
+   "drops": [
+    64,
+    60,
+    54
+   ],
+   "head": 57,
+   "headCost": 0,
+   "ears": 34,
+   "earCost": 0,
+   "ms": 100,
+   "frames": 35
+  },
+  "species:952": {
+   "drops": [
+    71,
+    68,
+    55
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 26,
+   "earCost": 0,
+   "ms": 100,
+   "frames": 36
+  },
+  "species:953": {
+   "drops": [
+    61
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 37,
+   "earCost": 3,
+   "ms": 90,
+   "frames": 27
+  },
+  "species:954": {
+   "drops": [
+    74,
+    60,
+    53
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
+   "ms": 100,
+   "frames": 32
+  },
+  "species:960": {
+   "drops": [
+    59,
+    56,
+    53
+   ],
+   "head": 51,
+   "headCost": 4,
+   "ears": 35,
+   "earCost": 0,
+   "ms": 80,
+   "frames": 23
+  },
+  "species:964": {
+   "drops": [
+    67,
+    60
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 40,
+   "earCost": 1,
+   "ms": 100,
+   "frames": 29
+  },
+  "species:970": {
+   "drops": [
+    69,
+    64
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
+   "ms": 110,
+   "frames": 34
+  },
+  "species:985": {
+   "drops": [
+    60
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 39,
+   "earCost": 2,
+   "ms": 100,
+   "frames": 31
+  },
+  "species:986": {
+   "drops": [
+    73,
+    70
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
+   "ms": 120,
+   "frames": 22
+  },
+  "species:988": {
+   "drops": [
+    84
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
+   "ms": 110,
+   "frames": 22
+  },
+  "species:1005": {
+   "drops": [
+    87,
+    84,
+    78
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
+   "ms": 120,
+   "frames": 21
+  },
+  "species:1007": {
+   "drops": [
+    85
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
+   "ms": 100,
+   "frames": 22
+  },
+  "species:1013": {
+   "drops": [
+    80,
+    77,
+    74
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 41,
+   "earCost": 0,
+   "ms": 90,
+   "frames": 33
+  },
+  "mega:mega-houndoom": {
+   "drops": [
+    73,
+    69,
+    57
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 25,
+   "earCost": 0,
+   "ms": 120,
+   "frames": 21
+  },
+  "mega:mega-sceptile": {
+   "drops": [
+    77
+   ],
+   "head": 29,
+   "headCost": 2,
+   "ears": -1,
+   "earCost": null,
+   "ms": 90,
+   "frames": 18
+  },
+  "mega:mega-sharpedo": {
+   "drops": [
+    80,
+    76,
+    73
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
+   "ms": 100,
+   "frames": 23
+  },
+  "mega:mega-metagross": {
+   "drops": [
+    81,
+    67,
+    59
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": -1,
+   "earCost": null,
+   "ms": 120,
+   "frames": 24
+  },
+  "mega:mega-audino": {
+   "drops": [
+    74,
+    63,
+    52
+   ],
+   "head": 58,
+   "headCost": 0,
+   "ears": 32,
+   "earCost": 0,
+   "ms": 120,
+   "frames": 37
+  },
+  "mega:mega-tatsugiri-curly": {
+   "drops": [
+    69
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 36,
+   "earCost": 1,
+   "ms": 90,
+   "frames": 32
+  },
+  "mega:mega-tatsugiri-droopy": {
+   "drops": [
+    67
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 45,
+   "earCost": 0,
+   "ms": 80,
+   "frames": 25
+  },
+  "mega:mega-tatsugiri-stretchy": {
+   "drops": [
+    68,
+    63
+   ],
+   "head": -1,
+   "headCost": null,
+   "ears": 34,
+   "earCost": 0,
+   "ms": 80,
+   "frames": 32
+  }
+ }
 }

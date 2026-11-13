@@ -24,8 +24,13 @@ import { getAllPokemon } from "../utils/dataLoader.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getPokemonDataCached } from "../utils/pokemonDataCache.js";
 import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
+import { liveEffects, catchEffectsFor } from "./liveEvents.js";
+import { applyLimits, boostedWeights, pickWeighted, discountedPrice, hasCatchEffects } from "../utils/liveEventRules.js";
 import { rollForShiny } from "../shinyOdds.js";
-import { grantCatch, carryLevel, resetLevelIfGone } from "../utils/training.js";
+import { grantCatch } from "../utils/training.js";
+import { canTransformCopy, transformCopy } from "./ownership.js";
+import { canFeed, feedCopy } from "./box.js";
+import { keepMovesOnLevelUp } from "./movesets.js";
 import { spritePaths } from "../spriteconfig.js";
 import { normVariant, isDisplayedVariant, tierKey, shinyEvolveDustCost, SHINY_CRAFT_COST_BY_TIER, ensureWeeklyReset } from "../utils/economyRules.js";
 import { getQuantity, grantItem, consumeItems, runInventoryTransaction, REQUEST_ID_PATTERN } from "./inventory.js";
@@ -113,8 +118,10 @@ export function createGameplayHandlers(deps) {
     if (stop) return stop;
     const { id, source, requestId = null } = body;
 
-    const cost = Object.prototype.hasOwnProperty.call(BALL_COST, source) ? BALL_COST[source] : 0;
-    if (!cost) return reply(200, { success: false, error: `Invalid Poké Ball type: ${source}` });
+    const listPrice = Object.prototype.hasOwnProperty.call(BALL_COST, source) ? BALL_COST[source] : 0;
+    if (!listPrice) return reply(200, { success: false, error: `Invalid Poké Ball type: ${source}` });
+    const fxNow = liveEffects();
+    const cost = discountedPrice(fxNow, "balls", listPrice); // a Live event's ball discount
 
     const allPokemon = acquirablePokemon(await loadAllPokemon()); // live generations only
     if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
@@ -129,8 +136,13 @@ export function createGameplayHandlers(deps) {
       requestId,
       payloadKey: `capture:${source}`,
       mutate: (user) => {
-        if ((user.cc ?? 0) < cost) return { ok: false, status: 200, success: false, error: `Not enough CC. This costs ${cost} CC.` };
-        const reward = selectRandomPokemonForUser(allPokemon, user, source);
+        if ((user.cc ?? 0) < cost) return { ok: false, status: 200, success: false, error: `Not enough CC — requires ${cost} CC.` };
+        // Paid roll: Catch boosts and limits only if the player chose "Use Live event".
+        const fx = catchEffectsFor(user, { paid: true, fx: fxNow });
+        const reward = selectRandomPokemonForUser(allPokemon, user, source, { paid: true, fx });
+        if (!reward && fx.limits.length) {
+          return { ok: false, status: 200, success: false, error: `This ball has nothing it can catch during ${fx.catchEvents.join(" + ")}. Turn off "Use Live event" or pick another ball. No CC was spent.` };
+        }
         if (!reward) return { ok: false, status: 200, success: false, error: "No Pokémon could be selected." };
         const shiny = rollForShiny(user.tp || 0);
         user.cc -= cost;
@@ -138,12 +150,12 @@ export function createGameplayHandlers(deps) {
         // Release C: achievement progress (same block, same save).
         trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: shiny ? 1 : 0 }, { type: "purchase" }]);
         const rarity = reward.tier || reward.rarity || "common";
-        return { ok: true, pokemon: { id: reward.id, name: reward.name, rarity, shiny }, cc: user.cc };
+        return { ok: true, pokemon: { id: reward.id, name: reward.name, rarity, shiny }, cc: user.cc, cost, eventNames: hasCatchEffects(fx) ? fx.catchEvents : [] };
       },
     });
     if (!tx.ok) return refusal(tx);
 
-    const { pokemon, cc } = tx.result;
+    const { pokemon, cc, eventNames } = tx.result;
     if (!tx.replayed) {
       logEvent("roll", id, { ball: source, cost, pokemonId: pokemon.id, pokemonName: pokemon.name, tier: pokemon.rarity, shiny: pokemon.shiny });
       if (pokemon.shiny || ["rare", "epic", "legendary", "mythic"].includes(String(pokemon.rarity).toLowerCase())) {
@@ -159,6 +171,7 @@ export function createGameplayHandlers(deps) {
         sprite: pokemonSpriteUrl(pokemon.id, pokemon.shiny),
       },
       cc,
+      eventNames: eventNames ?? [],
     });
   }
 
@@ -168,7 +181,7 @@ export function createGameplayHandlers(deps) {
   async function evolve({ body, isAuthorized }) {
     const stop = guard(body, isAuthorized, (b) => (b.baseId == null || b.targetId == null ? reply(400, { error: "Missing baseId/targetId" }) : null));
     if (stop) return stop;
-    const { id, baseId, targetId, shiny, variant, requestId = null } = body;
+    const { id, baseId, targetId, shiny, variant, requestId = null, uid = null, rev = null } = body;
 
     const pokemonData = await loadPokemonData();
     const bId = Number(baseId);
@@ -200,18 +213,24 @@ export function createGameplayHandlers(deps) {
       lock: lockUser,
       save,
       requestId,
-      payloadKey: `evolve:${bId}>${tId}:${chosenVariant}`,
+      payloadKey: `evolve:${bId}>${tId}:${chosenVariant}:${uid ?? "untrained"}`,
       mutate: (user) => {
         normalizeUserSchema(id, user);
         if (getQuantity(user, "evolution_stone") < cost) return { ok: false, error: "Not enough Evolution Stones." };
-        if (isDisplayedVariant(user, bId, chosenVariant)) {
-          return { ok: false, error: `You can't evolve your ${chosenVariant} ${base.name} because it's on one of your teams (Showcase or Battle). Remove it from that team first.` };
-        }
         if ((user.pokemon?.[bId]?.[chosenVariant] || 0) <= 0) {
           return { ok: false, error: `You do not own a ${chosenVariant === "shiny" ? "shiny " : ""}${base.name}.` };
         }
-        // Gen 6–9: generation must be live; official level requirement (services/evolutionRules.js).
-        const req = checkEvolutionRequirements(user, { ...base, id: bId }, { ...target, id: tId }, chosenVariant);
+        // Individual copies (docs/adr/0001): uid names the copy the player
+        // tapped (a trained one needs the confirmed rev). Without one, the
+        // highest-Level spare evolves. A copy on a Team may evolve; its slots
+        // follow it. Checked BEFORE spending.
+        const move = { from: { id: bId, variant: chosenVariant }, to: { id: tId, variant: chosenVariant }, ...(uid != null && { uid: String(uid), confirmRev: rev }) };
+        const can = canTransformCopy(user, move);
+        if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
+        move.uid = can.uid;
+        if (can.record) move.confirmRev = can.record.rev ?? 0;
+        // The target's generation must be live (services/evolutionRules.js); no Level requirement for any generation.
+        const req = checkEvolutionRequirements(user, { ...base, id: bId }, { ...target, id: tId }, chosenVariant, { uid: can.uid });
         if (!req.ok) return { ok: false, error: req.error };
         if (dustCost > 0 && getQuantity(user, "shiny_dust") < dustCost) {
           return { ok: false, error: `Not enough Shiny Dust. Requires ${dustCost}.`, dustRequired: dustCost, dustAvailable: getQuantity(user, "shiny_dust") };
@@ -220,12 +239,8 @@ export function createGameplayHandlers(deps) {
         const spent = consumeItems(user, { evolution_stone: cost, shiny_dust: dustCost });
         if (!spent.ok) return { ok: false, error: spent.error };
 
-        user.pokemon[bId][chosenVariant] -= 1;
-        if ((user.pokemon[bId].normal ?? 0) <= 0 && (user.pokemon[bId].shiny ?? 0) <= 0) delete user.pokemon[bId];
-        user.pokemon[tId] ??= { normal: 0, shiny: 0 };
-        user.pokemon[tId][chosenVariant] = (user.pokemon[tId][chosenVariant] ?? 0) + 1;
-        carryLevel(user, { id: bId, variant: chosenVariant }, { id: tId, variant: chosenVariant });
-        resetLevelIfGone(user, bId, chosenVariant);
+        const moved = transformCopy(user, move); // counts, Level carry, empty-line cleanup
+        if (!moved.ok) throw new Error(`evolve: transform refused after validation (${moved.code})`);
         trackProgress(user, [{ type: "evolved", species: tId, shiny: chosenVariant === "shiny" }]);
 
         return {
@@ -255,7 +270,7 @@ export function createGameplayHandlers(deps) {
   async function convertToShiny({ body, isAuthorized }) {
     const stop = guard(body, isAuthorized, (b) => (b.pokeId == null ? reply(400, { error: "Missing pokeId" }) : null));
     if (stop) return stop;
-    const { id, pokeId, requestId = null } = body;
+    const { id, pokeId, requestId = null, uid = null, rev = null } = body;
 
     const pokemonData = await loadPokemonData();
     const pid = Number(pokeId);
@@ -270,28 +285,26 @@ export function createGameplayHandlers(deps) {
       lock: lockUser,
       save,
       requestId,
-      payloadKey: `convert:${pid}`,
+      payloadKey: `convert:${pid}:${uid ?? "untrained"}`,
       mutate: (user) => {
         normalizeUserSchema(id, user);
-        if (isDisplayedVariant(user, pid, "normal")) {
-          return { ok: false, error: `You can't convert ${p.name} to shiny because its normal variant is on one of your teams (Showcase or Battle). Remove it from that team first.` };
-        }
         // Check ownership BEFORE touching user.pokemon (a refused conversion
         // used to leave an empty {normal:0, shiny:0} entry behind).
         if ((user.pokemon?.[pid]?.normal ?? 0) <= 0) return { ok: false, error: `You do not own a normal ${p.name} to convert.` };
         if (getQuantity(user, "shiny_dust") < dustCost) {
           return { ok: false, error: `Not enough Shiny Dust. Requires ${dustCost}.`, dustRequired: dustCost, dustAvailable: getQuantity(user, "shiny_dust") };
         }
+        // TM safety (services/ownership.js): checked BEFORE spending Dust.
+        const move = { from: { id: pid, variant: "normal" }, to: { id: pid, variant: "shiny" }, ...(uid != null && { uid: String(uid), confirmRev: rev }) };
+        const can = canTransformCopy(user, move);
+        if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
         const spent = consumeItems(user, { shiny_dust: dustCost });
         if (!spent.ok) return { ok: false, error: "Not enough Shiny Dust." };
 
-        user.pokemon[pid].normal -= 1;
-        user.pokemon[pid].shiny = (user.pokemon[pid].shiny ?? 0) + 1;
-        carryLevel(user, { id: pid, variant: "normal" }, { id: pid, variant: "shiny" });
-        resetLevelIfGone(user, pid, "normal");
+        const moved = transformCopy(user, move); // counts, Level carry, empty-line cleanup
+        if (!moved.ok) throw new Error(`convert: transform refused after validation (${moved.code})`);
         // Shiny crafting counts toward the shiny counter (design §3.2).
         trackProgress(user, [{ type: "shiny" }, { type: "pokemon" }]);
-        if ((user.pokemon[pid].normal ?? 0) <= 0 && (user.pokemon[pid].shiny ?? 0) <= 0) delete user.pokemon[pid];
 
         return {
           ok: true,
@@ -307,6 +320,39 @@ export function createGameplayHandlers(deps) {
 
     if (!tx.replayed) logEvent("convert", id, { pokemonId: pid, pokemonName: p.name, tier, dustCost });
     return reply(200, { ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...tx.result, ok: undefined });
+  }
+
+  // ======================================================
+  // 🍖 Feed one copy to another (docs/adr/0001): the fed copy is used up
+  // and the target gains today's duplicate share of one Level.
+  // body: { id, from, to, rev? (trained `from`), requestId? }
+  // ======================================================
+  async function feed({ body, isAuthorized }) {
+    const stop = guard(body, isAuthorized, (b) => (typeof b.from !== "string" || typeof b.to !== "string" ? reply(400, { error: "Missing from/to" }) : null));
+    if (stop) return stop;
+    const { id, from, to, requestId = null, rev = undefined } = body;
+    const tx = await runInventoryTransaction({
+      trainerData: getTrainerData(),
+      userId: id,
+      lock: lockUser,
+      save,
+      requestId,
+      payloadKey: `feed:${from}>${to}`,
+      mutate: (user) => {
+        normalizeUserSchema(id, user);
+        const can = canFeed(user, { from, to, confirmRev: rev });
+        if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
+        const species = user.box[to].id;
+        const done = feedCopy(user, { from, to, confirmRev: rev });
+        if (!done.ok) throw new Error(`feed: refused after validation (${done.code})`);
+        // New moves are learned, not equipped: teams keep the moves they had.
+        keepMovesOnLevelUp(user, species, user.box[to].shiny ? "shiny" : "normal", { uid: to, fromLevel: done.fromLevel, toLevel: done.toLevel });
+        return { ok: true, fed: { speciesId: species, to, gained: done.gained, fromLevel: done.fromLevel, toLevel: done.toLevel } };
+      },
+    });
+    if (!tx.ok) return refusal(tx);
+    if (!tx.replayed) logEvent("feed", id, { pokemonId: tx.result.fed.speciesId, gained: tx.result.fed.gained, toLevel: tx.result.fed.toLevel });
+    return reply(200, { ...saveAckFields(tx), success: true, replayed: !!tx.replayed, fed: tx.result.fed });
   }
 
   // ======================================================
@@ -338,9 +384,13 @@ export function createGameplayHandlers(deps) {
         ensureWeeklyReset(user);
         if (user.weeklyPackClaimed) return { ok: false, error: "Weekly pack already claimed." };
 
+        // Free roll: Live event Catch limits and boosts apply inside each
+        // Tier; a limit that leaves a Tier empty is skipped for that slot.
+        const fx = liveEffects();
         const pick = (tier) => {
           const pool = allPokemon.filter((p) => p.tier === tier);
-          return pool[Math.floor(Math.random() * pool.length)];
+          const limited = applyLimits(pool, fx);
+          return pickWeighted(boostedWeights(limited.length ? limited : pool, fx, () => 1));
         };
         const rewards = [];
         for (const tier of WEEKLY_PACK_TIERS) {
@@ -375,7 +425,7 @@ export function createGameplayHandlers(deps) {
     return reply(200, { ...saveAckFields(tx), success: true, rewards: tx.result.rewards });
   }
 
-  return { rewardPokemon, evolve, convertToShiny, weeklyPack };
+  return { rewardPokemon, evolve, convertToShiny, feed, weeklyPack };
 }
 
 // Re-exported for the Bag/shop code paths that grant items directly.

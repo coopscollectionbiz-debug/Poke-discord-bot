@@ -37,6 +37,8 @@ Since A2, `TRAINERDATA_DIR=/data` is a Fly volume (`trainerdata`, see `fly.toml`
 | `localSave.pendingChanges` | Changes not yet on disk |
 | `discordBackup.lastVerified`, `lastVerifiedAt` | Last off-machine backup confirmed by sha256 |
 | `superseded` | See "Superseded" below |
+| `loopLag` | Main-thread stalls over the last 5 min: `p50Ms` (median minute), `p99Ms` and `maxMs` (worst minute). Also logged each minute as `⏱️ loop lag 1m: …`. A high max means commands and buttons waited. |
+| `renderThreads` | Render threads (see "Render threads" below): `threads`, `alive`, `busy`, `queued`, `completed`, `queueTimeouts` (cards sent as PNG because every thread was busy for 2 s), `crashes`, `down`. `null` with `RENDER_THREADS=0`. |
 
 ### Writer epochs and fencing (A2)
 - Every process that loads player data takes an **epoch** higher than any it has seen, and stamps it on every snapshot and backup.
@@ -108,6 +110,55 @@ flyctl secrets unset RESTORE_FROM CONFIRM_RESTORE -a poke-discord-bot-49shta
 3. Open a PR that reverts the bad merge on `master`. **Don't force-push.** Merging the revert deploys again.
 
 The player-data format is unchanged across these releases, so older code can load the newer Discord backups. It ignores the metadata in the message text and simply takes the newest attachment.
+
+## Production host (VPS)
+
+Production is moving from Fly to a VPS (Ubuntu 26.04). SSH in through the `pokebot-vps` alias: add `Host pokebot-vps` with the real `HostName` and `User` to your own `~/.ssh/config`. Keep the address and login out of the repo. Until the cutover below is done, Fly is still production and the sections above still apply.
+
+| What | Where |
+|---|---|
+| Service | `pokebot.service` (source: `deploy/pokebot.service`), runs as user `pokebot`, `MemoryMax=4G` |
+| Code | `/opt/pokebot/releases/<sha>`, live one linked at `/opt/pokebot/current` |
+| Player data | `/srv/pokebot/data` (`TRAINERDATA_DIR`, `LOCAL_IS_DURABLE=1`) |
+| Secrets | `/etc/pokebot.env` (root, 0600). Host settings stay in the unit file. |
+| Public URL | `https://bot.coopscollection.com` (nginx: `deploy/nginx/`, certificate by certbot) |
+| Logs | `journalctl -u pokebot -f` |
+
+**Merging to `master` does not deploy to the VPS.** Deploy by hand after merging.
+
+### Deploy
+1. `/adminsave` in Discord at a quiet time.
+2. `ssh pokebot-vps /opt/pokebot/deploy-vps.sh` (deploys `master`; pass a branch, tag or sha to deploy something else).
+   - The script builds `/opt/pokebot/releases/<sha>`, checks that both canvas libraries render, switches `current`, restarts `pokebot` and waits for `/readyz`.
+3. `curl -s https://bot.coopscollection.com/readyz` shows `"ready":true`, `dataDir` `/srv/pokebot/data`, `durableVolume` `true`.
+
+`/opt/pokebot/deploy-vps.sh` is a copy of `tools/deploy-vps.sh`. After changing the script in the repo, copy it over again: `scp tools/deploy-vps.sh pokebot-vps:/opt/pokebot/deploy-vps.sh`.
+
+### Roll back code
+`ssh pokebot-vps /opt/pokebot/deploy-vps.sh --rollback` points `current` at the previous release and restarts. Then revert the bad merge on `master` through a PR.
+
+### Overrides and restores
+The Fly `flyctl secrets set X=1` steps above become: add `X=1` to `/etc/pokebot.env` (`sudo nano /etc/pokebot.env`), `sudo systemctl restart pokebot`, and remove the line once the bot is ready. A file restore uses `RESTORE_FROM=file:/srv/pokebot/data/snapshots/trainerData-YYYY-MM-DD.json` with a matching `CONFIRM_RESTORE`.
+
+### Render threads
+Cards and battle images are drawn on background threads (`utils/render/renderPool.js`), so a 0.3–1 s GIF never holds up other commands. `RENDER_THREADS` in `/etc/pokebot.env` sets the count: unset means 3, sized so the WoW server keeps its share of the 8 cores (`node tools/bench-render-threads.mjs` measures it). An animated card waits up to 2 s for a free thread, then the still PNG goes instead (`(threads busy)` in its `🖼️ card` log line). Battles always wait.
+- **Turn them off:** `RENDER_THREADS=0` in `/etc/pokebot.env`, then `sudo systemctl restart pokebot`. Images render on the main thread as before (at most 2 GIFs at once, the rest PNG).
+- **Threads that can't start** (3 failures in a row) switch off on their own; the log says `rendering on the main thread from now on` and `/readyz` shows `renderThreads.down`.
+
+### Superseded
+There must be exactly one bot process: `systemctl status pokebot` on the VPS, and the Fly machine stopped (`flyctl machines list -a poke-discord-bot-49shta`). Nobody runs the bot locally with the production `BOT_TOKEN`. Then `sudo systemctl restart pokebot`.
+
+### Cutover from Fly (one-time)
+Prepared beforehand: `pokebot` user, `/srv/pokebot/data`, unit installed but **not enabled**, a release built with `deploy-vps.sh --build-only`, nginx and the certificate for `bot.coopscollection.com`.
+1. Disconnect the Fly GitHub app from the repo, and merge nothing until the cutover is done.
+2. Pipe the secrets into `/etc/pokebot.env` straight from the Fly machine (never print them), leaving out `NODE_ENV`, `PORT`, `PUBLIC_URL`, `TRAINERDATA_DIR`, `LOCAL_IS_DURABLE` and Fly's own variables.
+3. `/adminsave`; note the users, `seq` and `epoch` of the bot-posted backup.
+4. `flyctl machine update <ID> -a poke-discord-bot-49shta --autostart=false --skip-start --yes`, and wait for the final `✅ Discord backup` in `flyctl logs`.
+5. Copy the whole volume (a tar through `flyctl ssh console`, or `MSYS_NO_PATHCONV=1 flyctl ssh sftp get` per file) to `/srv/pokebot/data`, owner `pokebot`.
+6. Check `trainerData.meta.json` against the final Discord backup message: same `sha256`, `seq` and `epoch`.
+7. Switch `current` to the release to run (`deploy-vps.sh --no-restart <sha>`), then `sudo systemctl enable --now pokebot`. `/readyz` shows an epoch above Fly's, `superseded: false`, and the same user count.
+8. **Rollback for 48 h:** `sudo systemctl disable --now pokebot`, then `flyctl machine update <ID> --autostart=true` and `flyctl machine start <ID>`. Fly loads the VPS's newer backup.
+9. After 48 h: deploy the Fly app as a token-less 301 redirect to `https://bot.coopscollection.com` for 30 days, then destroy the Fly app and volume.
 
 ## Useful read-only commands
 ```bash

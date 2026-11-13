@@ -1,7 +1,7 @@
 // ==========================================================
 // utils/passiveChat.js
-// Passive chat rewards (TP / CC / random catch) and the batched
-// rank-role flush, built from injected dependencies so they can be
+// Passive chat rewards (TP / CC / random catch, then maybe a Trainer
+// encounter) and the batched rank-role flush, built from injected dependencies so they can be
 // tested offline without starting Discord or Express.
 //
 // Behavior is identical to the inline handlers this replaced in
@@ -9,6 +9,9 @@
 // data has loaded (isReady() === false) nothing is created, rewarded,
 // queued, or synced.
 // ==========================================================
+
+import { liveEffects } from "../services/liveEvents.js";
+import { scaleEarned } from "./liveEventRules.js";
 
 /**
  * @param {object} deps
@@ -19,10 +22,13 @@
  * @param {{ cooldownMs: number, tpGain: number, ccChance: number, ccGain: number }} deps.config
  * @param {(data: object) => any} deps.enqueueSave
  * @param {(job: object) => void} deps.queueRoleUpdate
- * @param {(userObj: object, author: object, message: object) => Promise<any>} deps.giveRandomReward
+ * @param {(userObj: object, author: object, message: object) => Promise<"cooldown"|"missed"|"caught"|undefined>} deps.giveRandomReward
+ * @param {(message: object) => Promise<any>} [deps.spot] - a Trainer encounter's roll, only after a catch roll that missed
  * @param {() => number} [deps.random]
  * @param {() => number} [deps.now]
  * @param {(fn: () => void) => void} [deps.defer]
+ * @param {(now: number) => object} [deps.effects] - running Live event effects
+ * @param {(type: string, userId: string, data: object) => any} [deps.log] - the event log (chat CC is logged)
  */
 export function createMessageHandler({
   isReady,
@@ -33,9 +39,12 @@ export function createMessageHandler({
   enqueueSave,
   queueRoleUpdate,
   giveRandomReward,
+  spot = null,
   random = Math.random,
   now = Date.now,
   defer = setImmediate,
+  effects = liveEffects,
+  log = () => {},
 }) {
   return async function onMessage(message) {
     if (message.author.bot || !message.guild) return;
@@ -56,13 +65,19 @@ export function createMessageHandler({
 
     const userObj = trainerData[userId];
 
+    // A running Live event may multiply chat TP and CC.
+    const fx = effects(t);
+
     // 🪙 Give base TP for chatting
-    userObj.tp += config.tpGain;
+    userObj.tp += scaleEarned(config.tpGain, fx.tp);
+    userObj.lastActiveAt = t; // Last active (saved with the TP below)
 
     // 💰 Chance to earn CC
     if (random() < config.ccChance) {
       userObj.cc ??= 0;
-      userObj.cc += config.ccGain;
+      const gained = scaleEarned(config.ccGain, fx.cc);
+      userObj.cc += gained;
+      try { log("chat_cc", userId, { cc: gained }); } catch {}
 
       try {
         await message.react("💰").catch(() => {});
@@ -80,9 +95,13 @@ export function createMessageHandler({
     });
 
     defer(() => {
-      Promise.resolve(giveRandomReward(userObj, message.author, message)).catch((e) =>
-        console.warn("⚠️ tryGiveRandomReward failed:", e?.message || e)
-      );
+      Promise.resolve(giveRandomReward(userObj, message.author, message))
+        .then((result) => {
+          // Never in the same message as a catch, and not on the reward cooldown.
+          if (result !== "missed" || !spot) return;
+          return Promise.resolve(spot(message)).catch((e) => console.warn("⚠️ Trainer encounter spot failed:", e?.message || e));
+        })
+        .catch((e) => console.warn("⚠️ tryGiveRandomReward failed:", e?.message || e));
     });
   };
 }

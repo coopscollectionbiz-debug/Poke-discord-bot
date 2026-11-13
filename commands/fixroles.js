@@ -12,7 +12,7 @@ import { getRank, getRankTiers } from "../utils/rankSystem.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("fixroles")
-    .setDescription("Admin: Sync rank roles for all users (default icons).")
+    .setDescription("Admin-only: Synchronize rank roles for all users (default, not female).")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData) {
@@ -65,7 +65,7 @@ export default {
     const embed = new EmbedBuilder()
       .setTitle("🧩 Role Synchronization Complete")
       .setDescription(
-        `Updated **${updated}** members\n⚠️ Errors: **${errors}**\n🧠 Processed: **${processed}** total`
+        `✅ Updated **${updated}** members\n⚠️ Errors: **${errors}**\n🧠 Processed: **${processed}** total`
       )
       .setColor(0x43b581)
       .setTimestamp();

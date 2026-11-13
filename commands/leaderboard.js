@@ -6,11 +6,12 @@
 import { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } from "discord.js";
 import { rankedRecord } from "../utils/battle/rewards.js";
 import { cardImage } from "../utils/render/stage.js";
-import { leaderboardView, renderLeaderboard } from "../utils/render/leaderboardCard.js";
+import { leaderboardView } from "../utils/render/leaderboardCard.js";
+import { threaded } from "../utils/render/renderers.js";
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard")
-  .setDescription("Top trainers by Ranked rating");
+  .setDescription("Top trainers by ranked rating");
 
 export function rankBattleRatings(trainerData, userId) {
   const ranked = Object.entries(trainerData)
@@ -27,12 +28,12 @@ export function buildLeaderboardEmbed({ top, you }) {
   return new EmbedBuilder()
     .setColor(0xf1c40f)
     .setTitle("🏆 Ranked leaderboard")
-    .setDescription(top.map((p, i) => `${i + 1}. ${p.name} · ${p.rating} (${p.wins}W–${p.losses}L)`).join("\n") || "No battles yet.")
-    .setFooter({ text: you ? `Your position: #${you.position} · ${you.rating}` : "Play a Ranked battle (/battle ranked:True) to join the leaderboard." });
+    .setDescription(top.map((p, i) => `${i + 1}. ${p.name} — ${p.rating} (${p.wins}W–${p.losses}L)`).join("\n") || "No battles yet.")
+    .setFooter({ text: you ? `Your position: #${you.position} · ${you.rating}` : "Play a ranked battle (/battle ranked:True) to join the leaderboard." });
 }
 
 // The podium image (utils/render/leaderboardCard.js); text embed on failure.
-export async function leaderboardMessage(trainerData, userId, { render = renderLeaderboard } = {}) {
+export async function leaderboardMessage(trainerData, userId, { render = threaded.leaderboard } = {}) {
   const board = rankBattleRatings(trainerData, userId);
   try {
     const view = leaderboardView(board, trainerData, userId);

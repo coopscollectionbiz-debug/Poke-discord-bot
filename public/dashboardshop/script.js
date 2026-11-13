@@ -12,6 +12,7 @@ import { rarityEmojis, rarityColors } from "/public/spriteconfig.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
 import { showExpired, showBanner, showMessage, isExpired } from "/public/shared/shell.js";
 import { displayNameFromStored } from "/public/shared/names.js";
+import { fetchLiveEvents, bannerHTML, priceHTML, eventPrice, setPaidChoice } from "/public/shared/liveEvents.js";
 
 // Tier pill (text + tier color) for reward lines.
 function tierPill(rarity) {
@@ -31,6 +32,44 @@ window.ITEM_COSTS = {
   ultraball: 4000,
   evo_stone: 5000,
 };
+const LIST_COSTS = { ...window.ITEM_COSTS };
+const PRICE_CATEGORY = { pokeball: "balls", greatball: "balls", ultraball: "balls", evo_stone: "stones" };
+
+// ======================================================
+// 🎪 Live events: banner, discounted prices, and the "Use Live event"
+// choice for Poké Balls (the server charges and rolls; this only shows it).
+// ======================================================
+let liveEvents = null;
+async function loadLiveEventsUI(fresh = false) {
+  liveEvents = await fetchLiveEvents(userId, { fresh });
+  document.getElementById("liveEventBanner").innerHTML = bannerHTML(liveEvents);
+  for (const [key, cat] of Object.entries(PRICE_CATEGORY)) {
+    window.ITEM_COSTS[key] = eventPrice(liveEvents, cat, LIST_COSTS[key]);
+    const el = document.querySelector(`[data-price="${key}"]`);
+    if (el) el.innerHTML = priceHTML(liveEvents, cat, LIST_COSTS[key]);
+  }
+  const choice = liveEvents?.paidChoice;
+  const box = document.getElementById("liveEventChoice");
+  box.innerHTML = choice
+    ? `<label class="cc-live-choice"><input type="checkbox" id="liveEventToggle" ${choice.on ? "checked" : ""} />
+        Use ${escapeHtml(liveEvents.catchEvents.join(" + "))} for Poké Balls
+        <small>${choice.on ? "Rolls follow the event." : "Off: normal odds."}</small></label>`
+    : "";
+  for (const ball of ["pokeball", "greatball", "ultraball"]) {
+    const btn = document.querySelector(`[data-item='${ball}']`);
+    if (!btn) continue;
+    const empty = Boolean(choice?.on && choice.emptyBalls?.includes(ball));
+    btn.disabled = empty;
+    btn.textContent = empty ? "Nothing to catch" : "Buy";
+    btn.title = empty ? `Nothing this ball can give is allowed during ${liveEvents.catchEvents.join(" + ")}. Turn the event off to use it.` : "";
+  }
+  document.getElementById("liveEventToggle")?.addEventListener("change", async (e) => {
+    e.target.disabled = true;
+    const r = await setPaidChoice(userId, e.target.checked);
+    if (!r.ok) showMessage({ title: "Couldn’t change that", message: r.error, tone: "error" });
+    await loadLiveEventsUI(true);
+  });
+}
 
 // ======================================================
 // 🔐 LOAD USER (cookie session)
@@ -51,7 +90,7 @@ async function loadUser() {
       credentials: "same-origin",
     });
   } catch {
-    showBanner("Couldn't reach the server. Check your connection and refresh.", { title: "Couldn't load the Shop", key: "load" });
+    showBanner("Couldn’t reach the server. Check your connection and refresh.", { title: "Couldn’t load the Shop", key: "load" });
     return;
   }
 
@@ -62,12 +101,13 @@ async function loadUser() {
   }
 
   if (!res.ok) {
-    showBanner("Please refresh the page in a moment.", { title: "Couldn't load the Shop", key: "load" });
+    showBanner("Please refresh the page in a moment.", { title: "Couldn’t load the Shop", key: "load" });
     return;
   }
 
   user = await res.json();
   updateUI();
+  loadLiveEventsUI();
 }
 
 // ======================================================
@@ -153,7 +193,7 @@ function showShopModal({ title, message, sprites = [], onConfirm }) {
       await onConfirm();
     } catch (err) {
       console.error("Shop action failed:", err);
-      if (!isExpired()) showMessage({ title: "Something went wrong", message: "Couldn't reach the server. Check your CC before trying again.", tone: "error" });
+      if (!isExpired()) showMessage({ title: "Something went wrong", message: "Couldn’t reach the server. Check your CC before trying again.", tone: "error" });
     } finally {
       closeLoading();
       overlay.remove();
@@ -228,7 +268,7 @@ async function buyStone(cost) {
       if (!canAfford(cost)) {
         showShopModal({
           title: "Not enough CC",
-          message: "You don't have enough CC for this purchase.",
+          message: "You don’t have enough CC for this purchase.",
           onConfirm: () => {},
         });
         return;
@@ -383,7 +423,7 @@ async function claimWeeklyPack() {
       body: JSON.stringify({ id: userId }),
     }).then((r) => r.json());
   } catch {
-    res = { success: false, error: "Couldn't reach the server. Refresh to check whether your pack was claimed." };
+    res = { success: false, error: "Couldn’t reach the server. Refresh to check whether your pack was claimed." };
   }
 
   closeLoading();
@@ -417,6 +457,13 @@ async function claimWeeklyPack() {
 // ======================================================
 // BUTTON BINDINGS
 // ======================================================
+// The TM section (tms.js) reports CC changes so the wallet stays current.
+document.addEventListener("cc:changed", (e) => {
+  if (!user || !Number.isFinite(e.detail?.cc)) return;
+  user.cc = e.detail.cc;
+  updateUI();
+});
+
 window.addEventListener("DOMContentLoaded", () => {
   loadUser();
 

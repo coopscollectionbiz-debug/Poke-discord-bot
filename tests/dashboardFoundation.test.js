@@ -98,7 +98,7 @@ test("every player page uses the shared foundation", () => {
 test("shared shell: nav targets and expiry message", () => {
   const shell = read("public/shared/shell.js");
   for (const dir of Object.values(PAGES)) assertTrue(shell.includes(`"/${dir}/"`), `nav links to /${dir}/`);
-  assertTrue(shell.includes("Your dashboard link expired. Run /dashboard in Discord for a new one."), "one expiry message");
+  assertTrue(shell.includes("Your dashboard link expired — run /dashboard in Discord."), "one expiry message");
   assertTrue(shell.includes('aria-current", "page"'), "current page marked with aria-current");
 });
 

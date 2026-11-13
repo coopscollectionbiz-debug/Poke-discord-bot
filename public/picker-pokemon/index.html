@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Collection · Coop's Collection</title>
+    <title>Collection · Coop’s Collection</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -16,7 +16,7 @@
     <header class="cc-page-head">
       <p class="cc-eyebrow">Your Pokémon</p>
       <h1>Collection</h1>
-      <p>Every Pokémon in the live regions. Tap one for details, or evolve, donate and convert. Teams are built on the Teams page.</p>
+      <p>Every Pokémon you own right now, one per box slot. Each one has its own Level. Tap one for details, or evolve, feed, donate and convert. Everything you have ever caught is in your Pokédex.</p>
     </header>
 
     <main id="ccMain" tabindex="-1">
@@ -44,10 +44,14 @@
         </div>
       </div>
 
+      <!-- Badges from /challenge; updateHUD fills it, dimming unearned ones -->
+      <div id="badgeRow" class="badge-row"></div>
+
       <div id="pokemonPanel">
         <div id="modeToggle" role="group" aria-label="Mode">
           <button class="mode-btn active" data-mode="browse" type="button">Browse</button>
           <button class="mode-btn" data-mode="evolve" type="button">Evolve</button>
+          <button class="mode-btn" data-mode="feed" type="button">Feed</button>
           <button class="mode-btn" data-mode="donate" type="button">Donate</button>
           <button class="mode-btn" data-mode="convert" type="button">Convert</button>
         </div>
@@ -64,7 +68,7 @@
           <label class="sr-only" for="search">Search Pokémon</label>
           <input type="search" id="search" placeholder="Search Pokémon…" autocomplete="off" />
 
-          <label class="sr-only" for="rarityFilter">Rarity</label>
+          <label class="sr-only" for="rarityFilter">Tier</label>
           <select id="rarityFilter">
             <option value="">All Rarities</option>
             <option value="common">Common</option>
@@ -105,13 +109,12 @@
             <option value="power-asc">Sort: Power (low → high)</option>
             <option value="level-desc">Sort: Level (high → low)</option>
             <option value="level-asc">Sort: Level (low → high)</option>
+            <option value="newest">Sort: Newest first</option>
             <option value="name">Sort: Name (A → Z)</option>
           </select>
 
-          <!-- Owned / missing filter (Browse mode). IDs must match JS. -->
+          <!-- The box shows owned Pokémon only; missing ones are on the Pokédex page. -->
           <div class="toggle-group" role="group" aria-label="Show">
-            <button id="ownedToggle" class="mode-btn" type="button">Owned</button>
-            <button id="unownedToggle" class="mode-btn" type="button">Missing</button>
             <button id="shinyOnlyToggle" class="mode-btn" type="button" aria-pressed="false">✨ Shiny only</button>
           </div>
         </div>

@@ -99,7 +99,8 @@ assertEqual(new Set(items.listCatalog().map((i) => i.id)).size, items.listCatalo
 assertTrue(items.listCatalog().every((i) => items.ITEM_ID_PATTERN.test(i.id)), "every item id matches the id pattern");
 assertTrue(stoneItems.every((i) => i.status === "defined" && !i.shop && !i.tradable && i.consumable && i.storage === "inventory"), "stones: defined, no shop entry, not tradable, consumable inventory items");
 assertTrue(stoneItems.every((i) => i.category === "evolution" && items.CATEGORIES[i.category]), "stones use an existing category (inventory menus unchanged)");
-assertEqual(Object.keys(items.CATEGORIES).length, 8, "no new inventory category");
+// Mega Stones added no inventory category (the 9th, "tm", belongs to the TM system).
+assertEqual(Object.keys(items.CATEGORIES).filter((c) => c !== "tm"), ["capture", "evolution", "consumable", "held", "trainer_equipment", "cosmetic", "quest", "special"], "no new inventory category for Mega items");
 assertTrue(["mega_shard", "mega_stone_voucher", "mega_stone_voucher_legendary"].every((id) => items.getCatalogItem(id)?.status === "defined"), "Mega Shard and vouchers defined (not obtainable)");
 assertTrue([...stoneItems, items.getCatalogItem("mega_shard")].every((i) => !inv.grantItem({ items: {} }, i.id, 1).ok), "grantItem refuses every stone and the shard");
 assertTrue(stoneItems.every((i) => !items.isHoldable(i.id)), "no stone is holdable yet");
@@ -110,6 +111,6 @@ assertEqual(M.megasForStone("megastone_meowsticite").map((f) => f.id), ["mega-me
 assertEqual(M.megasForStone("megastone_tatsugirinite").length, 3, "Tatsugirinite maps to the 3 appearances");
 assertTrue(MEGAS.stones.every((s) => s.forms.every((id) => byId[id].species === s.species)), "every stone maps only to forms of its own species");
 const { MEGA_REWARDS } = await import("../config/megaRewards.js");
-assertEqual([MEGA_REWARDS.active, MEGA_REWARDS.shards, MEGA_REWARDS.randomDrops.maxPerIsoWeek, MEGA_REWARDS.randomDrops.battleWin.enabled], [false, { perRandomDrop: 2, perDuplicateStone: 5, costPerRegularStone: 25 }, 2, false], "economy config: inactive; D-12 shards, D-13 weekly cap 2, D-14 no battle drops");
+assertEqual([MEGA_REWARDS.shardItem, MEGA_REWARDS.daily, MEGA_REWARDS.battleWin, MEGA_REWARDS.shop.ccPerShard, MEGA_REWARDS.shop.maxCcShardsPerWeek, MEGA_REWARDS.shop.stonePrice], ["mega_shard", { chance: 0.25, shards: 2 }, { chance: 0.1, shards: 1, maxPerUtcDay: 2 }, 1000, 25, { regular: 25, legendary: 50 }], "shard economy (2026-11-11): daily 25% for 2, battle win 10% for 1 (max 2/day), 1,000 CC per shard (max 25 a week), stones 25 / 50 shards");
 
 finish();

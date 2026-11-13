@@ -52,7 +52,7 @@ section("Catalog integrity (revision 2)");
 {
   const all = cat.listAchievements();
   const ids = all.map((a) => a.id);
-  assertEqual(cat.CATALOG_REVISION, 4, "catalog revision is 4 (Pokémon re-tier after Generations 6–9)");
+  assertEqual(cat.CATALOG_REVISION, 5, "catalog revision is 5 (Pokédex-named achievements count the Pokédex)");
   assertEqual(all.length, 165, "165 achievements (141 + 16 for Generations 6–9 + 8 casual battle)");
   assertEqual(new Set(ids).size, ids.length, "ids unique");
   // Every revision-1 entry is unchanged (ids, targets, metrics, AP, tiers).
@@ -150,7 +150,8 @@ section("Pokédex, regions and classifications (ownership)");
   full.pokemon = {};
   P.trackProgress(full, [{ type: "donated", n: 1 }], NOW);
   assertTrue(full.ach.col_species_649, "unlocks stay after the Pokémon are gone");
-  assertTrue(/at the same time/.test(cat.getAchievement("col_species_649").description) && /at the same time/.test(cat.getAchievement("evo_family_10").description), "ownership-based achievements say so");
+  assertTrue(/at the same time/.test(cat.getAchievement("col_legendary_all").description) && /at the same time/.test(cat.getAchievement("evo_family_10").description), "ownership-based achievements say so");
+  assertTrue(/^Catch /.test(cat.getAchievement("col_species_649").description) && cat.getAchievement("col_species_649").metric.key === "dexClassic", "Pokédex Complete counts the Pokédex (docs/adr/0001) and says Catch");
 }
 
 // ======================= Shiny =======================
@@ -242,7 +243,7 @@ section("Battle streaks through the real runBattle");
   const fixed = () => 0.5;
   const mk = (id, team) => { const u = createNewUser(id, `T${id}`); for (const s of team) grantCatch(u, s, "normal", fixed); u.displayedPokemon = team.map((s) => ({ id: s, variant: "normal" })); u.battleTeam = u.displayedPokemon.map((s) => ({ ...s })); return u; };
   // Evenly matched teams so the real simulation produces both outcomes.
-  const td = { A: mk("A", [7, 4]), B: mk("B", [4, 7]) };
+  const td = { A: mk("A", [7, 4, 1, 152, 155, 158]), B: mk("B", [4, 7, 158, 155, 152, 1]) }; // ranked needs full teams of 6
   let day = 0;
   const results = [];
   const upsets = { A: 0, B: 0 };
@@ -262,7 +263,7 @@ section("Battle streaks through the real runBattle");
   }
   const winSeeds = [];
   for (let s = 1; s < 400 && winSeeds.length < 1; s++) {
-    const t2 = { X: mk("X", [150, 249, 250]), Y: mk("Y", [10]) };
+    const t2 = { X: mk("X", [150, 249, 250, 384, 483, 484]), Y: mk("Y", [10, 13, 129, 11, 14, 16]) };
     if (runBattle({ trainerData: t2, challengerId: "X", defenderId: "Y", mode: "ranked", seed: s, now: new Date(NOW) }).winnerId === "X") winSeeds.push(s);
   }
   const opp = ["B"];
@@ -283,7 +284,7 @@ section("Battle streaks through the real runBattle");
   P.trackProgress(lost, [{ type: "battle", won: false, upset: true }], NOW);
   assertTrue(!lost.ach?.bat_upset && !lost.stats?.upsetWins, "losing never counts as an upset (no reward for losing)");
   // Upset flag from real ratings.
-  const ut = { X: mk("X", [150, 249, 250]), Y: mk("Y", [10]) };
+  const ut = { X: mk("X", [150, 249, 250, 384, 483, 484]), Y: mk("Y", [10, 13, 129, 11, 14, 16]) };
   ut.X.battle = { rating: 1000, wins: 0, losses: 0, day: "", started: 0, vs: {}, season: RANKED.season };
   ut.Y.battle = { rating: 1300, wins: 0, losses: 0, day: "", started: 0, vs: {}, season: RANKED.season };
   const o = runBattle({ trainerData: ut, challengerId: "X", defenderId: "Y", mode: "ranked", seed: winSeeds[0], now: new Date(NOW) });
@@ -382,7 +383,7 @@ section("Revision 1 → 2 upgrade: conservative and idempotent");
   assertTrue(Object.entries(before.ach).every(([id, d]) => u.ach[id] === d), "existing unlock days preserved");
   assertEqual(u.achClaimed, before.achClaimed, "claims untouched");
   assertEqual(u.stats.evolutions, 3, "existing counters untouched");
-  assertEqual(u.progression.rev, 4, "stamped with revision 4");
+  assertEqual(u.progression.rev, 5, "stamped with revision 5");
   assertEqual(u.progression.day, DAY - 30, "original tracking start day kept");
   assertEqual(u.ap, Object.keys(u.ach).reduce((s, id) => s + cat.getAchievement(id).ap, 0), "AP recalculated from all unlocks");
   const snap = clone(u);

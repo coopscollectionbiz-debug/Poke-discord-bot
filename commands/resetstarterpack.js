@@ -34,7 +34,7 @@ export default {
 
       // Permission check
       if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
-        return interaction.editReply("You do not have permission to use this command.");
+        return interaction.editReply("⛔ You do not have permission to use this command.");
       }
 
       const targetUser = interaction.options.getUser("user");
@@ -49,7 +49,7 @@ export default {
           const user = trainerData[userId];
 
           if (!user) {
-            return interaction.editReply(`No trainer data found for <@${userId}>.`);
+            return interaction.editReply(`⚠️ No trainer data found for <@${userId}>.`);
           }
 
           // Remove starter pack
@@ -65,7 +65,7 @@ export default {
           );
 
           return interaction.editReply(withSaveNote(
-            `Starter Pack reset for **${targetUser.username}**.\nThey can now claim it again.`,
+            `✅ Starter Pack reset for **${targetUser.username}**.\nThey can now claim it again.`,
             saveAck
           ));
         });
@@ -92,11 +92,11 @@ export default {
         `🔁 GLOBAL Starter Pack reset by ${interaction.user.username}. Users affected: ${count}`
       );
 
-      return interaction.editReply(withSaveNote(`Starter Pack reset for **${count}** users.`, globalAck));
+      return interaction.editReply(withSaveNote(`✅ Starter Pack reset for **${count}** users.`, globalAck));
 
     } catch (err) {
       console.error("❌ /resetstarterpack error:", err);
-      return interaction.editReply(`Error resetting Starter Pack: ${err.message}`);
+      return interaction.editReply(`❌ Error resetting Starter Pack: ${err.message}`);
     }
   }
 };

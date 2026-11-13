@@ -41,6 +41,25 @@ export function opaqueBounds(data, width, height) {
   return x1 < 0 ? null : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
 }
 
+/** POKEMON_LOOP_FIT=0 turns off the loop fitting and union-box anchor (utils/render/spriteLoops.js). */
+export const pokemonLoopFit = (env = process.env) => env.POKEMON_LOOP_FIT !== "0";
+
+// The box covering every frame's opaque pixels (the union box), so a sprite
+// that flies or bobs is placed by its whole motion: anchored on its first
+// frame alone, Yanma dipped almost out of the bottom of its box.
+function unionOfFrames(gif, first) {
+  const W = gif.width, H = gif.height, px = new Uint8ClampedArray(W * H * 4);
+  let u = { x0: first.x, y0: first.y, x1: first.x + first.w, y1: first.y + first.h };
+  for (let i = 0; i < gif.numFrames(); i++) {
+    const prev = i > 0 ? gif.frameInfo(i - 1) : null;
+    if (prev?.disposal === 2) for (let y = prev.y; y < prev.y + prev.height; y++) px.fill(0, (y * W + prev.x) * 4, (y * W + prev.x + prev.width) * 4);
+    gif.decodeAndBlitFrameRGBA(i, px);
+    const b = opaqueBounds(px, W, H);
+    if (b) u = { x0: Math.min(u.x0, b.x), y0: Math.min(u.y0, b.y), x1: Math.max(u.x1, b.x + b.w), y1: Math.max(u.y1, b.y + b.h) };
+  }
+  return { x: u.x0, y: u.y0, w: u.x1 - u.x0, h: u.y1 - u.y0 };
+}
+
 async function decodeFirstFrame(file) {
   const gif = new GifReader(await readFile(file));
   const pixels = new Uint8ClampedArray(gif.width * gif.height * 4);
@@ -51,7 +70,8 @@ async function decodeFirstFrame(file) {
   full.getContext("2d").putImageData(new ImageData(pixels, gif.width, gif.height), 0, 0);
   const trimmed = createCanvas(box.w, box.h);
   trimmed.getContext("2d").drawImage(full, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
-  return { image: trimmed, width: box.w, height: box.h, frames: gif.numFrames(), box, fullW: gif.width, fullH: gif.height };
+  const ubox = gif.numFrames() > 1 ? unionOfFrames(gif, box) : box;
+  return { image: trimmed, width: box.w, height: box.h, frames: gif.numFrames(), box, ubox, fullW: gif.width, fullH: gif.height };
 }
 
 /**
@@ -127,7 +147,8 @@ const CARD_FRAMES = 24;
 export function loadTrainerPoses(fileName, { env = process.env } = {}) {
   if (!fileName || !trainersAnimated(env) || !trainerIdle(fileName)) return Promise.resolve(null);
   if (poseCache.has(fileName)) return poseCache.get(fileName);
-  const p = (async () => {
+  const rec = trainerIdle(fileName);
+  const p = (rec.animation === "real" ? loadRealAnimation(fileName, rec) : (async () => {
     const t = await loadTrainerSprite(fileName);
     if (!t) return null;
     const c = createCanvas(t.width, t.height);
@@ -157,10 +178,114 @@ export function loadTrainerPoses(fileName, { env = process.env } = {}) {
     };
     scheduleFor(CARD_FRAMES); // so `poses` is complete before the stage sees it
     return { poses, poseAt: (f, n) => scheduleFor(n)[((f % n) + n) % n], rgba, width: t.width, height: t.height };
-  })().catch(() => null);
+  })()).catch(() => null);
   poseCache.set(fileName, p);
   if (poseCache.size > POSE_CACHE_LIMIT) poseCache.delete(poseCache.keys().next().value);
   return p;
+}
+
+/**
+ * A real animation (artist-made or from the games;
+ * data/sprites/trainer-animations.json) as poses: its GIF frames, with
+ * poses[0] the still the PNG shows (`still`, default the last frame). poseAt(f, n) plays the whole animation once per card loop of n
+ * frames, so it loops cleanly (a 3.2 s animation runs a little faster in a
+ * 2.4 s card). `real: true` tells callers to use poseAt rather than the
+ * shared breathing schedule.
+ */
+async function loadRealAnimation(fileName, rec) {
+  const t = await loadTrainerSprite(fileName);
+  if (!t) return null;
+  const gif = new GifReader(await readFile(fileURLToPath(new URL(`sprites/trainers_idle/${rec.gif}`, PUBLIC))));
+  const W = gif.width, H = gif.height, N = gif.numFrames(), frames = [];
+  for (let i = 0; i < N; i++) {
+    const px = new Uint8ClampedArray(W * H * 4); // each frame is complete (dispose 2 over a clear canvas)
+    gif.decodeAndBlitFrameRGBA(i, px);
+    const c = createCanvas(W, H);
+    c.getContext("2d").putImageData(new ImageData(px, W, H), 0, 0);
+    frames.push({ image: c, width: W, height: H });
+  }
+  // poses[0] is the still (rec.still, default the last frame), then the rest in order.
+  const still = Number.isInteger(rec.still) && rec.still < N ? rec.still : N - 1;
+  const poses = [frames[still], ...frames.filter((_, i) => i !== still)];
+  const poseOfFrame = (k) => (k === still ? 0 : k < still ? k + 1 : k);
+  const c = createCanvas(t.width, t.height);
+  c.getContext("2d").drawImage(t.image, 0, 0);
+  return {
+    real: true,
+    poses,
+    // Card frames spread from the first frame to the last (the held pose), like the GIF loop.
+    poseAt: (f, n) => poseOfFrame(n > 1 ? Math.round(((((f % n) + n) % n) * (N - 1)) / (n - 1)) : still),
+    rgba: c.getContext("2d").getImageData(0, 0, t.width, t.height).data,
+    width: W,
+    height: H,
+  };
+}
+
+/**
+ * A trainer sprite trimmed to its opaque pixels, or null. Trainer PNGs are
+ * 80 × 80 with transparent margins (trimmed: median 39 × 71 px), so trimming
+ * lets them stand side by side and on a shared floor.
+ */
+export async function loadTrimmedTrainerSprite(fileName) {
+  const t = await loadTrainerSprite(fileName);
+  if (!t) return null;
+  const c = createCanvas(t.width, t.height);
+  const ctx = c.getContext("2d");
+  ctx.drawImage(t.image, 0, 0);
+  const box = opaqueBounds(ctx.getImageData(0, 0, t.width, t.height).data, t.width, t.height);
+  if (!box) return null;
+  const out = createCanvas(box.w, box.h);
+  out.getContext("2d").drawImage(c, box.x, box.y, box.w, box.h, 0, 0, box.w, box.h);
+  return { image: out, width: box.w, height: box.h };
+}
+
+const trimmedPoseCache = new Map(); // fileName -> Promise<{ poses, poseAt } | null>
+
+/**
+ * The trainer's idle (loadTrainerPoses) cropped to the box every pose fits
+ * in, so it stands on a floor the way loadTrimmedTrainerSprite does (battle
+ * portraits, the encounter Trainer, Elite Four line-ups). { poses, poseAt }
+ * like loadTrainerPoses; null when it has no idle (callers then draw the
+ * trimmed still).
+ */
+export function loadTrimmedTrainerPoses(fileName, { env = process.env } = {}) {
+  const key = `${fileName}`;
+  if (!trainersAnimated(env)) return Promise.resolve(null);
+  if (trimmedPoseCache.has(key)) return trimmedPoseCache.get(key);
+  const p = loadTrainerPoses(fileName, { env }).then((idle) => {
+    if (!idle?.poses?.length) return null;
+    let u = null;
+    for (const pose of idle.poses) {
+      const c = createCanvas(pose.width, pose.height);
+      c.getContext("2d").drawImage(pose.image, 0, 0);
+      const b = opaqueBounds(c.getContext("2d").getImageData(0, 0, pose.width, pose.height).data, pose.width, pose.height);
+      if (!b) continue;
+      u = u ? { x0: Math.min(u.x0, b.x), y0: Math.min(u.y0, b.y), x1: Math.max(u.x1, b.x + b.w), y1: Math.max(u.y1, b.y + b.h) }
+        : { x0: b.x, y0: b.y, x1: b.x + b.w, y1: b.y + b.h };
+    }
+    if (!u) return null;
+    const w = u.x1 - u.x0, h = u.y1 - u.y0;
+    const poses = idle.poses.map((pose) => {
+      const out = createCanvas(w, h);
+      out.getContext("2d").drawImage(pose.image, u.x0, u.y0, w, h, 0, 0, w, h);
+      return { image: out, width: w, height: h };
+    });
+    return { poses, poseAt: idle.poseAt };
+  }).catch(() => null);
+  trimmedPoseCache.set(key, p);
+  if (trimmedPoseCache.size > POSE_CACHE_LIMIT) trimmedPoseCache.delete(trimmedPoseCache.keys().next().value);
+  return p;
+}
+
+/** A Badge PNG (public/sprites/badges, from tools/tint-badges.mjs) by file name, or null. */
+export async function loadBadgeSprite(fileName) {
+  if (!fileName || !/^[a-z0-9._-]+\.png$/i.test(fileName)) return null;
+  try {
+    const image = await loadImage(fileURLToPath(new URL(`sprites/badges/${fileName}`, PUBLIC)));
+    return { image, width: image.width, height: image.height };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -178,8 +303,37 @@ export function spriteScale(w, h, boxW, boxH, scale = 2) {
  * Draws a sprite standing on (cx, floorY) at `scale` (see spriteScale).
  * Pixel art keeps hard edges (no smoothing) unless it must shrink below 1×.
  */
+/**
+ * Where a Pokémon sprite goes when anchored on its union box: scaled so the
+ * whole motion fits the box, the union's bottom on the floor and its centre
+ * on cx. → { s, gx, gy (the GIF canvas's top left), x, y, w, h (the still
+ * first frame's rect) }, or null for sprites without one (trainers, the
+ * placeholder) or with POKEMON_LOOP_FIT=0.
+ */
+export function spritePlacement(sprite, cx, floorY, boxW, boxH, scale = 2, env = process.env) {
+  if (!sprite?.ubox || sprite.placeholder || !pokemonLoopFit(env)) return null;
+  const u = sprite.ubox;
+  const s = spriteScale(u.w, u.h, boxW, boxH, scale);
+  const gx = cx - (u.x + u.w / 2) * s, gy = floorY - (u.y + u.h) * s;
+  return {
+    s, gx, gy,
+    x: Math.round(gx + sprite.box.x * s), y: Math.round(gy + sprite.box.y * s),
+    w: Math.round(sprite.box.w * s), h: Math.round(sprite.box.h * s),
+  };
+}
+
 export function drawSprite(ctx, sprite, cx, floorY, boxW, boxH, { scale = 2, alpha = 1, frame = null } = {}) {
   if (!sprite) return null;
+  const at = spritePlacement(sprite, cx, floorY, boxW, boxH, scale);
+  if (at) {
+    ctx.imageSmoothingEnabled = at.s < 1;
+    ctx.globalAlpha = alpha;
+    if (frame) ctx.drawImage(frame, Math.round(at.gx), Math.round(at.gy), Math.round(sprite.fullW * at.s), Math.round(sprite.fullH * at.s));
+    else ctx.drawImage(sprite.image, at.x, at.y, at.w, at.h);
+    ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true;
+    return { x: at.x, y: at.y, w: at.w, h: at.h };
+  }
   const s = spriteScale(sprite.width, sprite.height, boxW, boxH, sprite.placeholder ? Math.min(scale, 1.5) : scale);
   const [w, h] = [Math.round(sprite.width * s), Math.round(sprite.height * s)];
   ctx.imageSmoothingEnabled = s < 1;

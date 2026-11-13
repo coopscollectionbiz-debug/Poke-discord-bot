@@ -10,13 +10,14 @@
 // Read-only.
 // ==========================================================
 
+import { auraLook } from "../../services/auras.js";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER } from "./tokens.js";
 import * as P from "./primitives.js";
 import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadPlaceholder } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 import { poseAtFrame } from "../trainerIdle.js";
-import { hasBackdrop } from "./trainerBackdrop.js";
+import { hasBackdrop, drawTierSky } from "./trainerBackdrop.js";
 import { trainerBackdrop } from "./trainerCard.js";
 import { slotView } from "./teamView.js";
 import { buildBattleTeam } from "../battle/runBattle.js";
@@ -40,6 +41,7 @@ export function battleCardView(user, { displayName = "Trainer", trainer = null, 
     displayName,
     trainerFile: user?.displayedTrainer ?? null,
     trainer,
+    aura: auraLook(user), // what's drawn behind the trainer (services/auras.js)
     rank: getRank(user?.tp ?? 0) ?? "Unranked",
     rating: record.rating,
     wins: record.wins,
@@ -116,20 +118,24 @@ export async function renderBattleCard(v, { animate = false } = {}) {
   // ---- Banner ----
   P.drawCard(ctx, M, M, W - 2 * M, 190, { fill: "#171d30", stroke: "#4f8cff88", radius: 18, shadow: false });
   const tier = String(v.trainer?.tier ?? "common").toLowerCase();
+  const look = "aura" in v ? v.aura : tier; // the equipped Aura; older views: the trainer's tier
   const t = await loadTrainerSprite(v.trainerFile);
   const tcx = M + 90, tfloor = M + 172;
+  // The Aura's sky first, so the floor sits on it.
+  if (t && hasBackdrop(look)) drawTierSky(ctx, look, { x: M + 8, y: M + 8, w: 164, h: 174 }, { u: 2, clip: (c) => P.rr(c, M + 8, M + 8, 164, 174, 12) });
   P.drawPlatform(ctx, tcx, M + 168, 62, 12, COLOR.blue);
   if (t) {
     const box = { w: 150, h: 160, floor: tfloor, scale: 2 };
-    if (hasBackdrop(tier)) trainerBackdrop(ctx, stage, { tier, sprite: t, cx: tcx, box, panel: { x: M + 8, y: M + 8, w: 164 }, floor: tfloor - 6 });
+    if (hasBackdrop(look)) trainerBackdrop(ctx, stage, { tier: look, sprite: t, cx: tcx, box, panel: { x: M + 8, y: M + 8, w: 164 }, floor: tfloor - 6 });
     const idle = await loadTrainerPoses(v.trainerFile);
-    stage.placePosed(ctx, idle?.poses ?? [t], poseAtFrame, tcx, box.floor, box.w, box.h, { scale: box.scale });
+    // Breathing trainers share one schedule here; a real animation plays its own frames.
+    stage.placePosed(ctx, idle?.poses ?? [t], idle?.real ? idle.poseAt : poseAtFrame, tcx, box.floor, box.w, box.h, { scale: box.scale });
   } else { ctx.globalAlpha = 0.35; P.drawBall(ctx, tcx, M + 110, 34, false); ctx.globalAlpha = 1; }
 
   const bx = M + 190;
   ctx.font = P.font(15, 800);
   ctx.fillStyle = COLOR.textFaint;
-  ctx.fillText("RANKED BATTLE CARD", bx, M + 34);
+  ctx.fillText("RANKED CARD", bx, M + 34);
   const nm = P.fitFont(ctx, v.displayName, 420, 42, 26, 800);
   ctx.font = P.font(nm.size, 800);
   ctx.fillStyle = COLOR.text;
@@ -197,7 +203,7 @@ export async function renderBattleCard(v, { animate = false } = {}) {
     ctx.textAlign = "center";
     ctx.font = P.font(22, 800);
     ctx.fillStyle = COLOR.textMuted;
-    ctx.fillText("No Battle team yet: set one on the Teams page (/dashboard)", W / 2, ty + sh / 2);
+    ctx.fillText("Set your Ranked team on the Teams page (/dashboard)", W / 2, ty + sh / 2);
     ctx.textAlign = "left";
   }
   return stage.output(canvas);

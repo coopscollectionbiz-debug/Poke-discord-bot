@@ -1,171 +1,97 @@
 // ==========================================================
-// inspecttrainer.js (SafeReply Refactor)
-// Coop's Collection Discord Bot
+// /inspecttrainer: look at one trainer sprite (three-teams split).
+// Open to everyone, always private:
+//   • user:@someone  the trainer that player has equipped
+//   • name:<trainer> any trainer (autocomplete)
+//   • neither        your own equipped trainer
+// Shows the name, tier, sprite, whether you own it, and how many players own
+// it. Browsing a whole collection moved to the dashboard Trainers page
+// (/showtrainers is retired). Read-only.
 // ==========================================================
 
-import {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  PermissionFlagsBits,
-  MessageFlags,
-} from "discord.js";
-import { spritePaths } from "../spriteconfig.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import { trainerImageUrl } from "../utils/trainerAssets.js";
 import { getFlattenedTrainers } from "../utils/dataLoader.js";
-import {
-  createPaginationButtons,
-  calculateTotalPages,
-  getPage,
-} from "../utils/pagination.js";
+import { ownsTrainer } from "../services/assets.js";
 import { safeReply } from "../utils/safeReply.js";
+import { searchKey } from "../utils/pokemonSearch.js";
 
-// ==========================================================
-// 🧩 Command Definition
-// ==========================================================
+const TIER_COLOR = { common: 0x9ca3af, uncommon: 0x10b981, rare: 0x3b82f6, epic: 0xa855f7, legendary: 0xfacc15, mythic: 0xef4444 };
+const pretty = (key) => String(key).replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+const bare = (file) => String(file ?? "").toLowerCase().replace(/^.*[\\/]/, "").replace(/\.(png|gif)$/i, "");
+
+/** The trainer group a sprite file belongs to, or null. */
+export function groupOfSprite(groups, file) {
+  const want = bare(file);
+  return groups.find((g) => g.sprites.some((s) => bare(s) === want)) ?? null;
+}
+
+/** How many players own at least one sprite of this group. */
+export function ownersOf(trainerData, group) {
+  let n = 0;
+  for (const user of Object.values(trainerData ?? {})) {
+    if (user && group.sprites.some((s) => ownsTrainer(user, s))) n++;
+  }
+  return n;
+}
+
+export async function autocomplete(interaction) {
+  const q = searchKey(interaction.options.getFocused() ?? "");
+  const groups = await getFlattenedTrainers();
+  const hits = groups
+    .map((g) => ({ g, k: searchKey(g.id) }))
+    .filter(({ k }) => !q || k.includes(q))
+    .sort((a, b) => (b.k.startsWith(q) - a.k.startsWith(q)) || a.k.localeCompare(b.k))
+    .slice(0, 25)
+    .map(({ g }) => ({ name: `${pretty(g.id)} · ${String(g.tier).toLowerCase()}`.slice(0, 100), value: g.id }));
+  await interaction.respond(hits);
+}
+
 export default {
   data: new SlashCommandBuilder()
     .setName("inspecttrainer")
-    .setDescription("View another user's Trainer sprite collection.")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-    .addUserOption((option) =>
-      option
-        .setName("user")
-        .setDescription("The user whose trainers you want to view.")
-        .setRequired(true)
-    )
-    .addStringOption((option) =>
-      option
-        .setName("rarity")
-        .setDescription("Filter by tier.")
-        .addChoices(
-          { name: "All", value: "all" },
-          { name: "Common", value: "common" },
-          { name: "Uncommon", value: "uncommon" },
-          { name: "Rare", value: "rare" },
-          { name: "Epic", value: "epic" },
-          { name: "Legendary", value: "legendary" },
-          { name: "Mythic", value: "mythic" }
-        )
-        .setRequired(false)
-    ),
+    .setDescription("Look at a trainer: a player's equipped one, or any trainer by name.")
+    .setDefaultMemberPermissions(null)
+    .addUserOption((o) => o.setName("user").setDescription("Show the trainer this player has equipped").setRequired(false))
+    .addStringOption((o) => o.setName("name").setDescription("Any trainer by name").setRequired(false).setAutocomplete(true)),
+  autocomplete,
 
-  // ==========================================================
-  // ⚙️ Command Execution
-  // ==========================================================
-  async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
+  async execute(interaction, trainerData) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const target = interaction.options.getUser("user");
+    const name = interaction.options.getString("name");
+    const me = trainerData[interaction.user.id];
+    const groups = await getFlattenedTrainers();
 
-    const targetUser = interaction.options.getUser("user");
-    const filterRarity = interaction.options.getString("rarity") || "all";
-
-    if (!trainerData[targetUser.id]) {
-      return safeReply(interaction, {
-        content: `${targetUser.username} doesn't have a trainer profile yet.`,
-        flags: MessageFlags.Ephemeral,
-      });
+    let group = null, sprite = null, heading = null;
+    if (name) {
+      const k = searchKey(name);
+      group = groups.find((g) => searchKey(g.id) === k) ?? groups.find((g) => searchKey(g.id).startsWith(k)) ?? null;
+      if (!group) return safeReply(interaction, { content: `No trainer is called “${name}”.`, flags: MessageFlags.Ephemeral });
+      sprite = group.sprites[0];
+      heading = pretty(group.id);
+    } else {
+      const who = target ?? interaction.user;
+      const user = trainerData[who.id];
+      if (!user) return safeReply(interaction, { content: `${who.username} hasn't started playing yet.`, flags: MessageFlags.Ephemeral });
+      if (!user.displayedTrainer) return safeReply(interaction, { content: `${target ? `${who.username} has` : "You have"} no trainer equipped.`, flags: MessageFlags.Ephemeral });
+      sprite = user.displayedTrainer;
+      group = groupOfSprite(groups, sprite);
+      heading = `Equipped by ${target ? who.username : "you"}`;
     }
 
-    const userData = trainerData[targetUser.id];
-    const ownedTrainerKeys = Object.keys(userData.trainers || {});
-
-    if (ownedTrainerKeys.length === 0) {
-      return safeReply(interaction, {
-        content: `${targetUser.username} doesn't own any trainers yet.`,
-        flags: MessageFlags.Ephemeral,
-      });
-    }
-
-    // ==========================================================
-    // 🧮 Filter trainers by ownership + rarity
-    // ==========================================================
-    const allTrainers = await getFlattenedTrainers();
-    const filtered = allTrainers.filter((t) => {
-      const key = t.filename || t.file;
-      const owned = ownedTrainerKeys.includes(key);
-      const rarityMatch =
-        filterRarity === "all" ||
-        (t.rarity && t.rarity.toLowerCase() === filterRarity.toLowerCase());
-      return owned && rarityMatch;
-    });
-
-    if (filtered.length === 0) {
-      return safeReply(interaction, {
-        content: `No trainers in the **${filterRarity}** tier.`,
-        flags: MessageFlags.Ephemeral,
-      });
-    }
-
-    // ==========================================================
-    // 📄 Pagination Setup
-    // ==========================================================
-    const trainersPerPage = 12;
-    const totalPages = calculateTotalPages(filtered, trainersPerPage);
-    let currentPage = 0;
-
-    const renderPage = (page) => {
-      const trainersToShow = getPage(filtered, page, trainersPerPage);
-
-      const embed = new EmbedBuilder()
-        .setTitle(`🎓 ${targetUser.username}'s Trainer Collection`)
-        .setDescription(
-          filterRarity !== "all"
-            ? `Showing the **${filterRarity.toUpperCase()}** tier`
-            : "Showing all owned trainers"
-        )
-        .setColor(0x5865f2)
-        .setFooter({ text: `Page ${page + 1} of ${totalPages}` })
-        .setTimestamp();
-
-      const grid = trainersToShow
-        .map((t) => {
-          const file = t.filename || t.file;
-          const spriteUrl = t.url ?? trainerImageUrl(file, { grayscale: !!t.grayscale });
-          return `**${t.name}**\n[Sprite Link](${spriteUrl})`;
-        })
-        .join("\n\n");
-
-      embed.addFields({ name: "Owned Trainers", value: grid });
-
-      const row = createPaginationButtons(page, totalPages, false);
-      return { embed, row };
-    };
-
-    const { embed, row } = renderPage(currentPage);
-    const message = await safeReply(interaction, {
-      embeds: [embed],
-      components: [row],
-    });
-
-    // ==========================================================
-    // 🎮 Pagination Collector
-    // ==========================================================
-    const collector = message.createMessageComponentCollector({
-      time: 60000,
-    });
-
-    collector.on("collect", async (i) => {
-      if (i.user.id !== interaction.user.id) {
-        return safeReply(i, {
-          content: "You can't control this menu.",
-          flags: MessageFlags.Ephemeral,
-        });
-      }
-
-      if (i.customId === "prev_page" && currentPage > 0) currentPage--;
-      if (i.customId === "next_page" && currentPage < totalPages - 1)
-        currentPage++;
-
-      const { embed, row } = renderPage(currentPage);
-      await i.update({ embeds: [embed], components: [row] });
-    });
-
-    collector.on("end", async () => {
-      try {
-        await message.edit({ components: [] });
-      } catch {}
-    });
+    const tier = String(group?.tier ?? "common").toLowerCase();
+    const youOwn = group ? group.sprites.some((s) => ownsTrainer(me, s)) : ownsTrainer(me, sprite);
+    const embed = new EmbedBuilder()
+      .setAuthor({ name: heading })
+      .setTitle(pretty(group?.id ?? bare(sprite)))
+      .setColor(TIER_COLOR[tier] ?? 0x5865f2)
+      .addFields(
+        { name: "Tier", value: tier.charAt(0).toUpperCase() + tier.slice(1), inline: true },
+        { name: "You", value: youOwn ? "Owned" : "Not owned", inline: true },
+        { name: "Owned by", value: group ? `${ownersOf(trainerData, group).toLocaleString("en-US")} players` : "—", inline: true },
+      )
+      .setImage(trainerImageUrl(sprite));
+    return safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
   },
 };

@@ -16,12 +16,13 @@ import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TEXT, tierColor } from "./tokens.js";
 import {
   rr, font, fitText, fitFont, drawBackground, drawCard, drawTypeChips, typeChipsWidth, drawTierPips,
-  drawShinyMark, drawLevel, levelWidth, drawExpBar, drawSlotBadge, drawPlatform, drawBall, drawTag,
+  drawShinyMark, drawLevel, levelWidth, drawExpBar, drawSlotBadge, drawPlatform, drawBall, drawTag, fillTextMid,
 } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, loadTrainerSprite, drawSprite } from "./sprites.js";
 import { loadAnimatedSprite, spritePlayer } from "../battle/render.js";
 import { encodeGif } from "./gif.js";
 import { shinyFxEnabled } from "./shinyBackdrop.js";
+import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS, MAX_GIF_BYTES, SINGLE_CLOCK_CAP_MS } from "./spriteLoops.js";
 import { refinedLayout } from "./showteamRefined.js";
 
 export const LAYOUTS = Object.freeze({
@@ -71,8 +72,8 @@ function drawHeader(ctx, view, x, y, w) {
 function drawFallbackNote(ctx, view, x, y, w) {
   if (!view.fallback && view.slots.length) return;
   const msg = view.slots.length
-    ? "No Showcase team set, so this shows your first Pokémon. Pick one on /dashboard."
-    : "No Pokémon yet. Catch some by chatting, then pick a Showcase team on /dashboard.";
+    ? "No Team set: showing your first Pokémon. Pick your Team on /dashboard."
+    : "No Pokémon yet. Catch some by chatting, then pick your Team on /dashboard.";
   ctx.font = font(TEXT.micro, 700);
   const tw = Math.min(w, ctx.measureText(msg).width + 32);
   ctx.fillStyle = "#f5c84c22";
@@ -80,8 +81,7 @@ function drawFallbackNote(ctx, view, x, y, w) {
   ctx.fill();
   ctx.fillStyle = COLOR.gold;
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(fitText(ctx, msg, tw - 24), x + w / 2, y + 17);
+  fillTextMid(ctx, fitText(ctx, msg, tw - 24), x + w / 2, y + 16);
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
 }
@@ -237,7 +237,7 @@ function drawRoster(ctx, view, sprites, frameFor) {
   ctx.strokeStyle = COLOR.textboxBorder;
   ctx.stroke();
   ctx.fillStyle = "#1d2233";
-  const { text, size } = fitFont(ctx, `${view.displayName}'s Showcase team`, 520, TEXT.title, 22, 800);
+  const { text, size } = fitFont(ctx, `${view.displayName}'s Team`, 520, TEXT.title, 22, 800);
   ctx.font = font(size, 800);
   ctx.fillText(text, pad + 26, ty + 40);
   ctx.font = font(TEXT.label, 600);
@@ -294,7 +294,7 @@ function drawHybrid(ctx, view, sprites, frameFor, trainer) {
   // Stat rows.
   const rows = [
     ["Team Power", fmt(view.power), COLOR.gold],
-    ["Battle Rating", view.battle ? fmt(view.battle.rating) : "—", COLOR.text],
+    ["Ranked rating", view.battle ? fmt(view.battle.rating) : "—", COLOR.text],
     ["Record", view.battle ? `${view.battle.wins}W – ${view.battle.losses}L` : "—", COLOR.text],
     ["Trainer Points", fmt(view.tp), COLOR.text],
   ];
@@ -418,9 +418,15 @@ const LAYERED = { refined: refinedLayout };
  * @param {object} opts
  *   layout: "grid" | "roster" | "hybrid"
  *   animate: false → PNG Buffer; true → GIF Buffer (sprites play)
- *   frames, delayMs: animation length (default 24 × 100 ms)
+ *   frames, delayMs: the old fixed loop (24 × 100 ms), used when `frames`
+ *     is passed, when POKEMON_LOOP_FIT=0 and as the size fallback. Otherwise the GIF runs on
+ *     the fitted loop the other cards use (utils/render/stage.js): one length
+ *     L that holds whole cycles of every sprite (fitLoop, ±15%), in 50 ms
+ *     steps, on the 2.4 s clock when a shiny backdrop plays, so sprites no
+ *     longer jump back to their first frame every 2.4 s.
  */
-export async function renderShowteam(view, { layout = "hybrid", animate = false, frames = 24, delayMs = 100, env = process.env } = {}) {
+export async function renderShowteam(view, { layout = "hybrid", animate = false, frames: framesOpt, delayMs = 100, env = process.env } = {}) {
+  const frames = framesOpt ?? 24;
   const size = LAYOUTS[layout] && sizeFor(layout, view);
   if (!size) throw new Error(`Unknown layout ${layout}`);
   const ph = await loadPlaceholder();
@@ -443,23 +449,37 @@ export async function renderShowteam(view, { layout = "hybrid", animate = false,
   // Animated: each slot's GIF plays through the battle's sprite player.
   const anim = await Promise.all(view.slots.map((s, i) => (sprites[i]?.placeholder ? null : loadAnimatedSprite(s.spriteId ?? s.id, s.variant))));
   const players = anim.map((a) => (a && a.gif.numFrames() > 1 ? spritePlayer(a) : null));
-  let ms = 0;
-  const frameFor = (i) => (players[i] ? players[i](ms) : null);
+  let spriteMs = () => 0;
+  const frameFor = (i) => (players[i] ? players[i](spriteMs(i)) : null);
   fx.anims = anim;
-  if (layered) {
-    // Everything except the sprites is drawn once and copied into each frame.
-    const base = createCanvas(size.w, size.h);
-    layered.base(base.getContext("2d"), view, size.h);
-    return encodeGif(canvas, (f) => {
-      ms = f * delayMs;
-      fx.frame = f;
+  // Everything except the sprites is drawn once and copied into each frame (layered layouts).
+  const base = layered ? createCanvas(size.w, size.h) : null;
+  if (layered) layered.base(base.getContext("2d"), view, size.h);
+  // One frame: `t` is the time on the loop, `f100` the 100 ms frame of the
+  // shiny backdrop's 2.4 s clock (fx.total frames).
+  const drawFrame = (f100) => {
+    fx.frame = f100;
+    if (layered) {
       ctx.drawImage(base, 0, 0);
       layered.sprites(ctx, view, sprites, frameFor, fx);
       layered.top(ctx, view);
-    }, frames, delayMs);
-  }
-  return encodeGif(canvas, (f) => {
-    ms = f * delayMs;
-    DRAW[layout](ctx, view, sprites, frameFor, trainer);
+    } else DRAW[layout](ctx, view, sprites, frameFor, trainer);
+  };
+  // The old loop: `frames` × `delayMs`, every sprite from its start.
+  const fixed = () => encodeGif(canvas, (f) => {
+    spriteMs = () => f * delayMs;
+    drawFrame(f);
   }, frames, delayMs);
+  if (framesOpt != null || !pokemonLoopFit(env)) return fixed();
+  const plans = players.map((pl, i) => (pl ? loopPlan(anim[i]) : null));
+  // A shiny backdrop plays on the trainers' 2.4 s clock, so it keeps L whole.
+  const trainerClock = fx.enabled && view.slots.some((s, i) => s.variant === "shiny" && !sprites[i]?.placeholder);
+  const { L, fit } = fitLoop(plans.map((pl) => pl?.period ?? null), { trainerClock, singleCapMs: SINGLE_CLOCK_CAP_MS });
+  const total = Math.max(1, Math.round(L / STEP_MS));
+  const gif = await encodeGif(canvas, (f) => {
+    const t = f * STEP_MS;
+    spriteMs = (i) => spriteTime(plans[i], fit[i], t);
+    drawFrame(Math.floor(t / delayMs) % frames);
+  }, total, STEP_MS);
+  return gif.length <= MAX_GIF_BYTES ? gif : fixed();
 }

@@ -21,7 +21,7 @@ section("/inspectpokemon header");
 // Real data, since pokemonData's field names (tier, types, region) are what broke this.
 const togekiss = await findPokemonByName("togekiss");
 const header = infoLines(togekiss);
-assertTrue(header.includes(`**Tier:** ${togekiss.tier.toUpperCase()}`), "shows the tier");
+assertTrue(header.includes(`**Tier:** ${togekiss.tier.toUpperCase()}`), "shows the Tier");
 assertTrue(header.includes("Fairy") && header.includes("Flying"), "shows the types (modern typing: Togekiss is Fairy/Flying)");
 assertTrue(header.includes(`**Region:** ${togekiss.region}`), "shows the region");
 assertTrue(!/unknown/i.test(header), "nothing reads Unknown");

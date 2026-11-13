@@ -20,6 +20,11 @@
 //
 // Rollback: production v21 rebuilds every slot as { id, variant }, so the
 // extra field simply disappears and the slot battles as the base form.
+//
+// TM system (phase T1): a slot may also carry `uid`, naming one customized
+// (TM-trained) copy of that line (services/ownership.js). It is kept only
+// when the record exists for that exact line; no uid = a plain copy, as
+// before. Lines stay unique per team, so a team holds at most one copy.
 // ==========================================================
 
 import { toTeamObj } from "../utils/economyRules.js";
@@ -27,6 +32,7 @@ import { normalizeTeam } from "../utils/teamNormalize.js";
 import { getMega, megaFormGate, megaBattleEligibility, megaBattleProfile, MEGA_ID_PATTERN } from "../utils/megas.js";
 import { unlockedForms, megaLineKey } from "./megaUnlocks.js";
 import { isMegaCapabilityEnabled } from "../config/features.js";
+import { slotCopyUid, slotBoxUid } from "./ownership.js";
 
 const fail = (status, error, code) => ({ ok: false, status, error, code });
 
@@ -62,7 +68,10 @@ export function normalizeDisplayedTeam(user) {
     .map((t) => {
       const slot = { id: Number(t?.id), variant: t?.variant === "shiny" ? "shiny" : "normal" };
       const mega = megaFieldOf(t);
-      return mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
+      // Any copy of the line (docs/adr/0001); trained copies are copies too.
+      const uid = slotBoxUid(user, { ...slot, uid: t?.uid }) ?? slotCopyUid(user, { ...slot, uid: t?.uid });
+      const out = mega && Number.isInteger(slot.id) && megaFitsSlot(user, slot, mega) ? { ...slot, mega } : slot;
+      return uid ? { ...out, uid } : out;
     })
     .filter((t) => Number.isInteger(t.id))
     .filter((t) => {
@@ -94,11 +103,20 @@ export function prepareTeamSelection(user, rawTeam, { env = process.env } = {}) 
     const slot = toTeamObj(entry);
     if (!slot) continue;
     const hasMegaKey = entry && typeof entry === "object" && !Array.isArray(entry) && entry.mega !== undefined && entry.mega !== null;
+    let out = slot;
     if (hasMegaKey) {
       const mega = megaFieldOf(entry);
       if (!mega) return fail(400, "Invalid Mega form.", "bad_mega");
-      parsed.push({ ...slot, mega });
-    } else parsed.push(slot);
+      out = { ...slot, mega };
+    }
+    // TM system: a named customized copy must exist for this exact line.
+    const hasUidKey = entry && typeof entry === "object" && !Array.isArray(entry) && entry.uid !== undefined && entry.uid !== null;
+    if (hasUidKey) {
+      const uid = slotBoxUid(user, { ...slot, uid: entry.uid }) ?? slotCopyUid(user, { ...slot, uid: entry.uid });
+      if (!uid) return fail(400, "That Pokémon copy no longer exists. Reload and try again.", "unknown_copy");
+      out = { ...out, uid };
+    }
+    parsed.push(out);
   }
 
   const megaSlots = parsed.filter((s) => s.mega);
@@ -114,7 +132,8 @@ export function prepareTeamSelection(user, rawTeam, { env = process.env } = {}) 
     if (parsed.some((s) => !s.mega && s.id === m.id && s.variant === m.variant)) return fail(400, `${f.baseSpecies} can't be on the team as both its base form and ${f.name}.`, "base_and_mega");
   }
 
-  // Unique = (id + variant) pair (unchanged rule).
+  // Unique = (id + variant) pair: Casual and Ranked hold each Pokémon once
+  // (only the Showcase takes repeats). Each slot still names its copy.
   const dedupMap = new Map();
   for (const slot of parsed) {
     const key = `${slot.id}:${slot.variant}`;
@@ -143,7 +162,7 @@ export function megaBattleBoundary(user, { env = process.env } = {}) {
   return {
     megaBattles: isMegaCapabilityEnabled("battle", env),
     requestedMega: requested[0] ?? null,
-    battlesAs: normalizeTeam(raw, 6).map((s) => ({ id: s.id, variant: s.variant, form: mega?.ok && mega.key === `${s.id}:${s.variant}` ? mega.formId : "base" })),
+    battlesAs: normalizeTeam(raw, 6).map((s) => ({ id: s.id, variant: s.variant, form: mega?.ok && mega.key === (s.uid ? `u:${s.uid}` : `${s.id}:${s.variant}`) ? mega.formId : "base" })),
     reason: mega && !mega.ok ? mega.reason : null,
   };
 }
@@ -173,5 +192,6 @@ export function resolveBattleMega(user, { env = process.env, team = user?.displa
   if (!unlockedForms(user, megaLineKey(slot.id, slot.variant)).includes(formId)) return { ok: false, reason: "not unlocked on that line", formId };
   const e = megaBattleEligibility(formId, { env });
   if (!e.battleReady) return { ok: false, reason: e.reasons[0], formId };
-  return { ok: true, key: `${slot.id}:${slot.variant}`, formId, profile: megaBattleProfile(formId) };
+  // The slot's copy when it names one (held items and the Mega slot follow the copy).
+  return { ok: true, key: typeof t.uid === "string" ? `u:${t.uid}` : `${slot.id}:${slot.variant}`, formId, profile: megaBattleProfile(formId) };
 }

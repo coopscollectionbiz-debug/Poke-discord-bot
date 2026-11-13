@@ -5,6 +5,7 @@
 import { pokemonSpriteUrl } from "../utils/sprites.js";
 import { trackProgress } from "../progression/achievements.js";
 import { grantItem, normalizeInventory } from "../services/inventory.js";
+import { rollDailyShards, shardDropLine } from "../services/megaShards.js";
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -25,8 +26,11 @@ import { logEvent } from "../utils/eventLog.js";
 import { getRank } from "../utils/rankSystem.js";
 import { cardImage } from "../utils/render/stage.js";
 import { catchView } from "../utils/render/catchCard.js";
-import { renderDailyCard } from "../utils/render/dailyCard.js";
+
 import { dexProgress } from "../utils/render/dexProgress.js";
+import { threaded } from "../utils/render/renderers.js";
+import { liveEffects } from "../services/liveEvents.js";
+import { scaleEarned, applyLimits, boostedWeights, pickWeighted, hasCatchEffects } from "../utils/liveEventRules.js";
 
 // ==========================================================
 // Constants
@@ -51,8 +55,7 @@ function getUTCDateString() {
 // ==========================================================
 export const data = new SlashCommandBuilder()
   .setName("daily")
-  .setDescription("Claim 2 Pokémon, CC, TP and a chance at an Evolution Stone, once per UTC day");
-
+  .setDescription("Claim your daily reward (2 Pokémon + CC + TP + stone chance)");
 
 // ==========================================================
 // EXECUTION
@@ -104,7 +107,7 @@ export async function execute(
       const allPokemon = await getAcquirablePokemon(); // live generations only
       if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
         return safeReply(interaction, {
-          content: "Pokémon data unavailable.",
+          content: "❌ Pokémon data unavailable.",
           flags: MessageFlags.Ephemeral
         });
       }
@@ -117,7 +120,7 @@ export async function execute(
 
       if (!pick1 || !pick2) {
         return safeReply(interaction, {
-          content: "Daily failed because no Pokémon could be picked. Try again.",
+          content: "❌ Daily failed — no Pokémon could be selected.",
           flags: MessageFlags.Ephemeral
         });
       }
@@ -142,7 +145,8 @@ export async function execute(
       // ======================================================
       // Apply CC + TP
       // ======================================================
-      user.cc += DAILY_CC;
+      const dailyCC = scaleEarned(DAILY_CC, liveEffects().cc); // a Live event's CC multiplier
+      user.cc += dailyCC;
       user.tp += DAILY_TP;
 
       // ======================================================
@@ -153,6 +157,10 @@ export async function execute(
         // Same 1-stone reward as before, through the inventory service.
         stoneAwarded = grantItem(user, "evolution_stone", 1).ok;
       }
+      // Mega Shards: a separate roll, only while the Mega rewards switch is on
+      // (returns 0 and touches nothing otherwise).
+      const shardsAwarded = rollDailyShards(user);
+      const shardLine = shardDropLine(shardsAwarded);
 
       user.lastDaily = today;
       // Release C: achievement progress (Pokémon, shinies, TP/rank).
@@ -192,9 +200,10 @@ export async function execute(
       // two Pokemon and a stone roll. Track what hit so admins can see
       // per-day accrual and any shiny/stone luck.
       logEvent("daily_claim", userId, {
-        ccAwarded: DAILY_CC,
+        ccAwarded: dailyCC,
         tpAwarded: DAILY_TP,
         stoneAwarded,
+        ...(shardsAwarded ? { megaShardsAwarded: shardsAwarded } : {}),
         pokemon: [
           {
             pokemonId: pick1.id,
@@ -236,7 +245,7 @@ export async function execute(
         .setTitle("🗓️ Daily Rewards")
         .setColor(DAILY_COLOR)
         .addFields(
-          { name: `${COIN_EMOJI} CC`, value: `+${DAILY_CC}` },
+          { name: `${COIN_EMOJI} CC`, value: `+${dailyCC}` },
           { name: `${TP_EMOJI} TP`, value: `+${DAILY_TP}` },
           { name: "📊 New Balance", value: `${COIN_EMOJI} ${user.cc}  |  ${TP_EMOJI} ${user.tp}` }
         );
@@ -248,6 +257,7 @@ export async function execute(
         });
         summary.setThumbnail(`${spritePaths.items}evolution_stone.png`);
       }
+      if (shardLine) summary.addFields({ name: "💠 Mega Shards", value: shardLine });
       if (saveAck.note) summary.setDescription(saveAck.note);
 
       // One rewards card; the three embeds above are the fallback.
@@ -258,16 +268,16 @@ export async function execute(
         const rankAfter = getRank(user.tp);
         const dailyView = {
           pokemon: [view(pick1, shiny1, caught1), view(pick2, shiny2, caught2)],
-          cc: DAILY_CC,
+          cc: dailyCC,
           tp: DAILY_TP,
           stone: stoneAwarded,
           balance: { cc: user.cc, tp: user.tp },
           rankUp: rankAfter && rankAfter !== rankBefore ? rankAfter : null,
           dex: dexProgress(user, [pick1.id, pick2.id]), // today's regions + national, after both catches
         };
-        const card = await cardImage((animate) => renderDailyCard(dailyView, { animate }), "daily");
+        const card = await cardImage((animate) => threaded.daily(dailyView, { animate }), "daily");
         return safeReply(interaction, {
-          ...(saveAck.note ? { content: saveAck.note } : {}),
+          ...(saveAck.note || shardLine ? { content: [saveAck.note, shardLine].filter(Boolean).join("\n") } : {}),
           files: [new AttachmentBuilder(card.buffer, { name: card.name })],
           flags: MessageFlags.Ephemeral
         });
@@ -285,7 +295,7 @@ export async function execute(
     console.error("❌ /daily ERROR:", err);
 
     return safeReply(interaction, {
-      content: "An error occurred processing your daily reward.",
+      content: "❌ An error occurred processing your daily reward.",
       flags: MessageFlags.Ephemeral
     });
   }

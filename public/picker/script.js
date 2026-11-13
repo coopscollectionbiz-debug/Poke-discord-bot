@@ -5,6 +5,10 @@
 
 import { showExpired } from "/public/shared/shell.js";
 import { scanFx, hasTrainerBackdrop } from "/public/shared/spriteFx.js";
+import { fetchLiveEvents, eventPrice } from "/public/shared/liveEvents.js";
+
+// A Live event discount on trainer sprites (the server charges the same).
+let liveEvents = null;
 
 const LOCK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>`;
 
@@ -33,9 +37,11 @@ const TRAINER_COSTS = {
 let allTrainers = {};
 // Breathing idle GIFs: { "file.png": "file.gif" } (tools/generate-trainer-idles.mjs)
 let trainerIdles = {};
-// A trainer image: the breathing idle when `animated` and one exists, else the PNG.
-const trainerImg = (file, animated) =>
-  animated && trainerIdles[file] ? `/public/sprites/trainers_idle/${trainerIdles[file]}` : `${TRAINER_SPRITE_PATH}${file}`;
+// A trainer image: its idle animation (a real animation or the generated
+// breathing) when one exists, else the PNG. Owned or not: unowned cards are
+// grayed by CSS, so they animate too.
+const trainerImg = (file) =>
+  trainerIdles[file] ? `/public/sprites/trainers_idle/${trainerIdles[file]}` : `${TRAINER_SPRITE_PATH}${file}`;
 let ownedTrainers = [];
 let userId = null;
 
@@ -149,7 +155,7 @@ async function loadData() {
     const grid = document.getElementById("trainerGrid");
     if (grid) {
       grid.innerHTML =
-        "<p class='error'>Couldn't load your Trainers. Refresh the page, or run /dashboard in Discord for a new link.</p>";
+        "<p class='error'>Couldn’t load your Trainers. Refresh the page, or run /dashboard in Discord for a new link.</p>";
     }
   }
 }
@@ -172,6 +178,7 @@ async function refreshUserState() {
   }
 
   userCC = data?.cc ?? 0;
+  liveEvents = await fetchLiveEvents(userId);
 }
 
 // ===========================================================
@@ -197,7 +204,7 @@ function render(filter = "") {
   Object.entries(allTrainers || {}).forEach(([name, info]) => {
     const rarity = String(info?.tier || "common").toLowerCase();
     const tierDisplay = rarity.charAt(0).toUpperCase() + rarity.slice(1);
-    const price = TRAINER_COSTS[rarity] ?? 5000;
+    const price = eventPrice(liveEvents, "trainers", TRAINER_COSTS[rarity] ?? 5000);
 
     if (selectedRarity !== "all" && rarity !== selectedRarity) return;
     if (searchTerm && !String(name).toLowerCase().includes(searchTerm)) return;
@@ -222,9 +229,9 @@ function render(filter = "") {
       if (showOwnedOnly && !owns) return;
       if (showUnownedOnly && owns) return;
 
-      // Owned trainers breathe (idle GIF); unowned stay static (CSS grays them).
+      // Every trainer plays its idle animation; CSS grays the unowned ones.
       const staticPath = `${TRAINER_SPRITE_PATH}${fileName}`;
-      const imgPath = trainerImg(fileName, owns);
+      const imgPath = trainerImg(fileName);
 
       const card = document.createElement("div");
       card.className = `trainer-card ${owns ? "owned" : "unowned"}`;
@@ -292,7 +299,7 @@ function render(filter = "") {
       card.dataset.ccActivate = "1";
       card.setAttribute(
         "aria-label",
-        `${name}, ${tierDisplay}, ${isEquipped ? "equipped" : owns ? "owned, equip" : `not owned, unlock for ${price.toLocaleString()} CC`}`
+        `${name}, ${tierDisplay}, ${isEquipped ? "equipped" : owns ? "owned — equip" : `not owned — unlock for ${price.toLocaleString()} CC`}`
       );
 
       // Click actions
@@ -360,7 +367,7 @@ function askToEquipTrainer(name, file) {
   createTrainerModal({
     title: "Equip This Trainer?",
     message: `Would you like to equip <strong>${name}</strong>?`,
-    sprite: trainerImg(file, true),
+    sprite: trainerImg(file),
     confirmText: "Equip",
     onConfirm: () => selectTrainer(name, file),
   });
@@ -380,7 +387,7 @@ async function selectTrainer(name, file) {
       return createTrainerModal({
         title: "Equip Failed",
         message: data?.error || "Could not equip trainer.",
-        sprite: trainerImg(file, true),
+        sprite: trainerImg(file),
         confirmText: "OK",
       });
     }
@@ -394,7 +401,7 @@ async function selectTrainer(name, file) {
     createTrainerModal({
       title: "Trainer Equipped!",
       message: `${name} is now your active trainer.`,
-      sprite: trainerImg(file, true),
+      sprite: trainerImg(file),
       confirmText: "OK",
     });
   } catch (err) {
@@ -408,7 +415,7 @@ async function selectTrainer(name, file) {
     createTrainerModal({
       title: "Equip Failed",
       message: "Network error. Please try again.",
-      sprite: trainerImg(file, true),
+      sprite: trainerImg(file),
       confirmText: "OK",
     });
   } finally {
@@ -425,7 +432,7 @@ function askToBuyTrainer(name, file, rarity, price) {
 
   createTrainerModal({
     title: "Unlock Trainer?",
-    sprite: trainerImg(file, false),
+    sprite: trainerImg(file),
     price,
     message: canAfford
       ? `Purchase <strong>${name}</strong>?`
@@ -453,7 +460,7 @@ async function purchaseTrainer(file) {
       return createTrainerModal({
         title: "Purchase Failed",
         message: data?.error || "Could not purchase trainer.",
-        sprite: trainerImg(file, false),
+        sprite: trainerImg(file),
         confirmText: "OK",
       });
     }
@@ -470,7 +477,7 @@ async function purchaseTrainer(file) {
     createTrainerModal({
       title: "Trainer Unlocked!",
       message: "You can now equip this trainer.",
-      sprite: trainerImg(file, true),
+      sprite: trainerImg(file),
       confirmText: "OK",
     });
   } catch (err) {
@@ -484,7 +491,7 @@ async function purchaseTrainer(file) {
     createTrainerModal({
       title: "Purchase Failed",
       message: "Network error. Please try again.",
-      sprite: trainerImg(file, false),
+      sprite: trainerImg(file),
       confirmText: "OK",
     });
   } finally {
@@ -541,13 +548,24 @@ function createTrainerModal({
   document.body.appendChild(overlay);
 
   modal.querySelector(".cancel").onclick = () => overlay.remove();
-  modal.querySelector(".confirm").onclick = async () => {
-    if (!confirmDisabled && onConfirm) await onConfirm();
+  let busy = false;
+  modal.querySelector(".confirm").onclick = async (e) => {
+    if (busy) return;
+    if (!confirmDisabled && onConfirm) {
+      // Pending state until the server answers: no second click, no early close.
+      busy = true;
+      const confirm = e.currentTarget;
+      confirm.disabled = true;
+      modal.querySelector(".cancel").disabled = true;
+      confirm.textContent = "Saving…";
+      modal.setAttribute("aria-busy", "true");
+      try { await onConfirm(); } finally { busy = false; }
+    }
     overlay.remove();
   };
 
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) overlay.remove();
+    if (e.target === overlay && !busy) overlay.remove();
   });
 }
 

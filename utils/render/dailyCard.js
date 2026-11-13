@@ -10,7 +10,7 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { fileURLToPath } from "url";
 import { COLOR, TIER, tierColor } from "./tokens.js";
-import { rr, font, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, drawTag, dexNo } from "./primitives.js";
+import { rr, font, fitFont, drawTypeChips, typeChipsWidth, drawShinyMark, drawLevel, drawTag, dexNo, fillTextMid, drawSoftPlatform } from "./primitives.js";
 import { loadStaticSprite, loadPlaceholder, drawSprite } from "./sprites.js";
 import { spriteStage } from "./stage.js";
 import { drawDexProgress } from "./dexProgress.js";
@@ -44,13 +44,8 @@ async function tile(ctx, p, x, w, stage) {
   ctx.fillStyle = spot;
   ctx.fillRect(x, y, w, TILE_H);
   ctx.restore();
-  ctx.fillStyle = `${accent}3a`;
-  ctx.beginPath();
-  ctx.ellipse(cx, floor, 100, 18, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = `${accent}aa`;
-  ctx.stroke();
+  // The floor: a dithered pixel platform, like the floors under Pokémon in battle.
+  drawSoftPlatform(ctx, cx, floor, 100, 18, accent, { u: 4, peak: 0.6 });
   const sprite = (await loadStaticSprite(p.id, p.variant)) ?? (await loadPlaceholder());
   stage.place(ctx, sprite, cx, floor + 6, w - 40, 150, { scale: 3 }, { id: p.id, variant: p.variant });
 
@@ -67,18 +62,14 @@ async function tile(ctx, p, x, w, stage) {
   ctx.strokeStyle = `${tierColor(p.tier)}aa`;
   ctx.stroke();
   ctx.fillStyle = TIER[p.tier] ?? tierColor(p.tier);
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, x + w - 14 - pw + 14, y + 29);
-  ctx.textBaseline = "alphabetic";
+  fillTextMid(ctx, label, x + w - 14 - pw + 14, y + 28);
   const tw = p.isNew
     ? drawTag(ctx, "NEW", x + 14, y + 14, { fill: COLOR.blue, color: "#ffffff", h: 28, size: 15 })
     : drawTag(ctx, `+${fmt(p.expGained)} EXP`, x + 14, y + 14, { fill: "#16314f", color: COLOR.exp, h: 28, size: 15 });
   // National Pokédex number after the NEW / +EXP tag.
   ctx.font = font(17, 800);
   ctx.fillStyle = COLOR.textMuted;
-  ctx.textBaseline = "middle";
-  ctx.fillText(dexNo(p.id), x + 14 + tw + 12, y + 29);
-  ctx.textBaseline = "alphabetic";
+  fillTextMid(ctx, dexNo(p.id), x + 14 + tw + 12, y + 28); // level with the tag beside it
 
   // Name, then Level + types.
   const nm = fitFont(ctx, p.name, w - 40 - (p.shiny ? 30 : 0), 36, 24, 800);

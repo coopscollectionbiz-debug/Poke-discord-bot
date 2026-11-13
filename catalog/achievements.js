@@ -37,7 +37,8 @@ import { isGenerationLive } from "../utils/speciesCatalog.js";
  * (Dialga, Palkia, Giratina, Kyurem moved). The retro pass re-runs once so
  * tier-based achievements reflect the new tiers; unlocks are never removed.
  */
-export const CATALOG_REVISION = 4;
+// 5: Pokédex-named achievements count the permanent Pokédex (docs/adr/0001).
+export const CATALOG_REVISION = 5;
 
 export const CATEGORIES = Object.freeze({
   collection: { label: "Pokémon Collection", emoji: "📚", order: 1 },
@@ -102,7 +103,7 @@ for (const [n, name, tier, ap, reward] of [
 for (const [region, size] of Object.entries(REGIONS)) {
   const half = Math.ceil(size / 2);
   add({ id: `col_region_${slug(region)}_half`, name: `${region} Explorer`, description: `Own ${half} of the ${size} Pokémon from ${region}.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: half, tier: 2, ap: 15, reward: { cc: 2000 }, retro: "full" });
-  add({ id: `col_region_${slug(region)}_full`, name: `${region} Pokédex Complete`, description: `Own every one of the ${size} Pokémon from ${region}.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: size, tier: 5, ap: 75, reward: { badge: `badge_${slug(region)}`, title: `${region} Master` }, retro: "full" });
+  add({ id: `col_region_${slug(region)}_full`, name: `${region} Pokédex Complete`, description: `Catch every one of the ${size} Pokémon from ${region}.`, category: "collection", metric: { kind: "state", key: `dexRegion:${region}` }, target: size, tier: 5, ap: 75, reward: { badge: `badge_${slug(region)}`, title: `${region} Master` }, retro: "full" });
 }
 for (const typeId of LEGACY_TYPE_IDS) {
   const typeName = TYPE_ID_TO_NAME[typeId];
@@ -117,7 +118,7 @@ for (const [n, roman, ap, dust, tier] of [[10, "I", 20, 10, 2], [25, "II", 40, 2
   add({ id: `shiny_${n}`, name: `Shiny Hunter ${roman}`, description: `Obtain ${n} shiny Pokémon (counted since tracking began; your current shinies count as a starting point).`, category: "shiny", metric: { kind: "counter", key: "shinyObtained" }, target: n, tier, ap, reward: n === 100 ? { items: { shiny_dust: dust }, title: "Shiny Hunter" } : { items: { shiny_dust: dust } }, retro: "baseline" });
 }
 for (const [n, roman, ap, dust, tier] of [[10, "I", 20, 10, 2], [25, "II", 40, 20, 3], [50, "III", 80, 30, 4]]) {
-  add({ id: `shiny_species_${n}`, name: `Prismatic Pokédex ${roman}`, description: `Own ${n} different shiny Pokémon.`, category: "shiny", metric: { kind: "state", key: "shinySpecies" }, target: n, tier, ap, reward: { items: { shiny_dust: dust } }, retro: "full" });
+  add({ id: `shiny_species_${n}`, name: `Prismatic Pokédex ${roman}`, description: `Catch ${n} different shiny Pokémon.`, category: "shiny", metric: { kind: "state", key: "dexShiny" }, target: n, tier, ap, reward: { items: { shiny_dust: dust } }, retro: "full" });
 }
 
 // ---------------- Evolution (counter; new tracking) ----------------
@@ -153,14 +154,16 @@ for (const [n, name, ap, reward, tier] of [[1, "Customer", 5, null, 1], [25, "Re
 }
 
 // ==========================================================
-// Revision 2 — Mastery expansion. Ownership semantics: the game keeps no
-// Pokédex discovery history, so every collection/family/shiny-species
-// achievement means "own at the same time" and says so.
+// Revision 2 — Mastery expansion. Ownership semantics: "own" achievements
+// mean "own at the same time". Since the permanent Pokédex (docs/adr/0001),
+// the achievements NAMED after the Pokédex (region/National Pokédex
+// Complete, Pokédex Complete, Prismatic Pokédex) count caught species
+// (dex* metrics) instead.
 // ==========================================================
 
 SINCE = 2;
 // ---- Pokédex mastery (state; retro full) ----
-add({ id: "col_species_649", name: "Pokédex Complete", description: `Own all ${SUPPORTED_SPECIES} Pokémon from Generations 1–5 at the same time.`, category: "collection", metric: { kind: "state", key: "classicSpecies" }, target: SUPPORTED_SPECIES, tier: 5, ap: 150, retro: "full" });
+add({ id: "col_species_649", name: "Pokédex Complete", description: `Catch all ${SUPPORTED_SPECIES} Pokémon from Generations 1–5.`, category: "collection", metric: { kind: "state", key: "dexClassic" }, target: SUPPORTED_SPECIES, tier: 5, ap: 150, retro: "full" });
 for (const [region, size] of Object.entries(REGIONS)) {
   const n = Math.ceil(size * 0.75);
   add({ id: `col_region_${slug(region)}_75`, name: `${region} Cartographer`, description: `Own ${n} of the ${size} Pokémon from ${region} at the same time.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: n, tier: 3, ap: 30, retro: "full" });
@@ -174,7 +177,7 @@ add({ id: "col_type_all", name: "Type Encyclopedia", description: `Own ${TYPE_MA
 
 // ---- Shiny mastery ----
 for (const [n, roman, ap] of [[100, "IV", 120], [150, "V", 150], [250, "VI", 200]]) {
-  add({ id: `shiny_species_${n}`, name: `Prismatic Pokédex ${roman}`, description: `Own ${n} different shiny Pokémon at the same time.`, category: "shiny", metric: { kind: "state", key: "shinySpecies" }, target: n, tier: 5, ap, retro: "full" });
+  add({ id: `shiny_species_${n}`, name: `Prismatic Pokédex ${roman}`, description: `Catch ${n} different shiny Pokémon.`, category: "shiny", metric: { kind: "state", key: "dexShiny" }, target: n, tier: 5, ap, retro: "full" });
 }
 add({ id: "shiny_legendary", name: "Gleaming Legend", description: "Own a shiny Legendary Pokémon.", category: "shiny", metric: { kind: "state", key: "shinyTier:legendary" }, target: 1, tier: 4, ap: 40, retro: "full" });
 add({ id: "shiny_mythic", name: "Mirage", description: "Own a shiny Mythic Pokémon.", category: "shiny", metric: { kind: "state", key: "shinyTier:mythic" }, target: 1, tier: 5, ap: 60, retro: "full", hidden: true });
@@ -263,10 +266,10 @@ for (const [region, size] of Object.entries(NEW_REGIONS)) {
   const half = Math.ceil(size / 2), n75 = Math.ceil(size * 0.75);
   add({ id: `col_region_${slug(region)}_half`, name: `${region} Explorer`, description: `Own ${half} of the ${size} Pokémon from ${region}.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: half, tier: 2, ap: 15, reward: { cc: 2000 }, retro: "full", generations });
   add({ id: `col_region_${slug(region)}_75`, name: `${region} Cartographer`, description: `Own ${n75} of the ${size} Pokémon from ${region} at the same time.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: n75, tier: 3, ap: 30, retro: "full", generations });
-  add({ id: `col_region_${slug(region)}_full`, name: `${region} Pokédex Complete`, description: `Own every one of the ${size} Pokémon from ${region}.`, category: "collection", metric: { kind: "state", key: `region:${region}` }, target: size, tier: 5, ap: 75, reward: { badge: `badge_${slug(region)}`, title: `${region} Master` }, retro: "full", generations });
+  add({ id: `col_region_${slug(region)}_full`, name: `${region} Pokédex Complete`, description: `Catch every one of the ${size} Pokémon from ${region}.`, category: "collection", metric: { kind: "state", key: `dexRegion:${region}` }, target: size, tier: 5, ap: 75, reward: { badge: `badge_${slug(region)}`, title: `${region} Master` }, retro: "full", generations });
 }
 add({ id: "col_world_traveler_9", name: "World Traveler II", description: `Own a Pokémon from each of the ${Object.keys(ALL_REGIONS).length} regions.`, category: "collection", metric: { kind: "state", key: "regionsAll" }, target: Object.keys(ALL_REGIONS).length, tier: 3, ap: 20, retro: "full", generations: [...OPTIONAL_GENERATIONS] });
-add({ id: "col_species_1025", name: "National Pokédex Complete", description: `Own all ${NATIONAL_DEX} Pokémon at the same time.`, category: "collection", metric: { kind: "state", key: "uniqueSpecies" }, target: NATIONAL_DEX, tier: 5, ap: 200, retro: "full", generations: [...OPTIONAL_GENERATIONS] });
+add({ id: "col_species_1025", name: "National Pokédex Complete", description: `Catch all ${NATIONAL_DEX} Pokémon.`, category: "collection", metric: { kind: "state", key: "dexSpecies" }, target: NATIONAL_DEX, tier: 5, ap: 200, retro: "full", generations: [...OPTIONAL_GENERATIONS] });
 
 const BY_ID = new Map(entries.map((e) => [e.id, e]));
 

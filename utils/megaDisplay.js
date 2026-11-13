@@ -35,7 +35,7 @@ export function megaShortName(formOrId) {
 export function playerMegaReason(reason) {
   const r = String(reason ?? "");
   if (/switched off/i.test(r)) return "Mega battles aren't available yet.";
-  if (/more than one Mega/i.test(r)) return "A team can hold only one Mega. Pick one on the Teams page.";
+  if (/more than one Mega/i.test(r)) return "Only one Mega can be on a Team. Pick one on the dashboard.";
   if (/not unlocked|doesn't belong/i.test(r)) return "This Mega isn't unlocked for that Pokémon.";
   if (/not owned/i.test(r)) return "You don't own that Pokémon any more. The unlock is kept.";
   if (/unverified/i.test(r)) return "This Mega can't battle yet: its battle data hasn't been confirmed.";
@@ -61,7 +61,7 @@ export function teamMegaStatus(user, { env = process.env } = {}) {
   const baseName = f?.baseSpecies ?? "its base form";
   if (r?.ok) return { active: true, formId, name, baseName };
   const reason = playerMegaReason(r?.reason);
-  return { active: false, formId, name, baseName, reason, message: `${name} is on this team but battles as ${baseName} for now. ${reason}` };
+  return { active: false, formId, name, baseName, reason, message: `${name} is on this Team but battles as ${baseName} for now. ${reason}` };
 }
 
 /**
@@ -75,12 +75,12 @@ export function megaBattleStatus({ formId, unlocked, owned, env = process.env })
   if (!unlocked) {
     const f = getMega(formId);
     const detail = f?.status !== "eligible" ? "This Mega isn't available."
-      : e.reasons.some((x) => /unverified/i.test(x)) ? "Once unlocked it can be shown and added to a team, but it can't battle yet."
+      : e.reasons.some((x) => /unverified/i.test(x)) ? "Once unlocked it can be shown and added to your Team, but it can't battle yet."
         : "Unlock it with its Mega Stone.";
     return { state: "locked", label: "Locked", detail };
   }
   if (!owned) return { state: "unavailable", label: "Unlocked · can't battle", detail: playerMegaReason("line not owned") };
-  if (e.battleReady) return { state: "ready", label: "Battle-ready", detail: "Battles as this Mega when it's on a team." };
+  if (e.battleReady) return { state: "ready", label: "Battle-ready", detail: "Battles as this Mega when it's on your Team." };
   return { state: "unavailable", label: "Unlocked · can't battle yet", detail: playerMegaReason(e.reasons[0]) };
 }
 

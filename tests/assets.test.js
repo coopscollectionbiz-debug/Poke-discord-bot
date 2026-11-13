@@ -1,7 +1,7 @@
 // ==========================================================
 // tests/assets.test.js
-// Trainer ownership (D1), save acknowledgment (D14), the gift and recruit
-// helpers (D3/D7/D18), and the recruit/quest pool (D11).
+// Trainer ownership (D1), save acknowledgment (D14), the gift
+// helpers (D3/D7). /recruit and /quest were removed (economy audit 2026-11, D1).
 // ==========================================================
 
 import fs from "fs";
@@ -18,7 +18,6 @@ import {
 import { saveAndAck, withSaveNote, SAVE_DELAYED_NOTE } from "../utils/saveManager.js";
 import { createNewUser, validateUserSchema } from "../utils/userSchema.js";
 import { giftTrainer, giftCoins } from "../commands/gift.js";
-import { chargeAndGrant, recruitPool } from "../commands/recruit.js";
 import { addTrainer, isTrainerOwned, getOwnedTrainerCount } from "../utils/trainerFileHandler.js";
 import { lockUsers } from "../utils/userLocks.js";
 
@@ -68,9 +67,10 @@ section("New and repaired records use an array");
 section("trainerFileHandler wrappers keep arrays (D1)");
 {
   const u = { trainers: [] };
-  addTrainer(u, { filename: "lass-gen4.png" });
-  assertEqual(roundTrip(u).trainers, ["lass-gen4.png"], "addTrainer writes into the array");
-  assertTrue(isTrainerOwned(u, { filename: "LASS-gen4" }), "isTrainerOwned ignores .png and case");
+  // (lass-gen4 folds into lass since the generation consolidation; steven-masters is an outfit and stays.)
+  addTrainer(u, { filename: "steven-masters.png" });
+  assertEqual(roundTrip(u).trainers, ["steven-masters.png"], "addTrainer writes into the array");
+  assertTrue(isTrainerOwned(u, { filename: "STEVEN-Masters" }), "isTrainerOwned ignores .png and case");
   assertEqual(getOwnedTrainerCount(u), 1, "count");
 }
 
@@ -87,26 +87,6 @@ section("Gift helpers (D1, D7)");
   assertEqual(giftCoins(a, b, 20), null, "a CC gift succeeds");
   assertEqual([a.cc, b.cc], [30, 20], "CC moves exactly");
   assertTrue(giftCoins(a, b, 31) !== null && a.cc === 30 && b.cc === 20, "an over-balance gift is refused and moves nothing");
-}
-
-section("Recruit charge-and-grant is all-or-nothing (D18)");
-{
-  const poor = { cc: 99, trainers: [] };
-  let granted = false;
-  const r1 = chargeAndGrant(poor, () => { granted = true; });
-  assertTrue(!r1.ok && !granted && poor.cc === 99, "not enough CC: nothing granted, nothing charged");
-  const rich = { cc: 150, trainers: [] };
-  const r2 = chargeAndGrant(rich, (u) => grantTrainer(u, "t.png"), 1234);
-  assertTrue(r2.ok && rich.cc === 50 && rich.lastRecruit === 1234 && ownsTrainer(rich, "t.png"), "enough CC: charged once, granted once");
-}
-
-section("Recruit/quest pool is not empty (D11)");
-{
-  const dex = JSON.parse(fs.readFileSync(new URL("../pokemonData.json", import.meta.url), "utf8"));
-  const all = Object.values(dex).map((p) => ({ ...p, id: Number(p.id) }));
-  const pool = recruitPool(all);
-  assertTrue(pool.length > 600, `pool has ${pool.length} Pokémon (filtering on a missing 'generation' field gave 0)`);
-  assertTrue(pool.every((p) => p.id >= 1 && p.id <= 649), "only released generations (default: national dex 1–649)");
 }
 
 section("Save acknowledgment (D14)");

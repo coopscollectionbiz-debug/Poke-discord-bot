@@ -114,7 +114,7 @@ const SHOP_ITEMS = [
 export default {
   data: new SlashCommandBuilder()
     .setName("shop")
-    .setDescription("Admin: Grant or test PokéMart item rewards.")
+    .setDescription("Admin: grant or test item rewards via the PokéMart.")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
@@ -128,7 +128,7 @@ export default {
       );
 
       const embed = createSuccessEmbed(
-        "🏪 Coop's Collection PokéMart (Admin)",
+        "🏪 Coop’s Collection PokéMart (Admin)",
         "Select an item to grant or test."
       )
         .setThumbnail(POKEMART_IMG)
@@ -141,7 +141,7 @@ export default {
         (item) => !(item.onceOnly && user.purchases?.includes(item.id))
       ).map((item) =>
         new StringSelectMenuOptionBuilder()
-          .setLabel(`${item.name} · ${item.cost === 0 ? "FREE" : `${item.cost} CC`}`)
+          .setLabel(`${item.name} — ${item.cost === 0 ? "FREE" : `${item.cost} CC`}`)
           .setValue(item.id)
           .setDescription(item.description.slice(0, 80))
           .setEmoji(item.emoji)
@@ -166,11 +166,11 @@ export default {
 
       collector.on("collect", async (i) => {
         if (i.user.id !== userId)
-          return safeInteractionReply(i, { content: "This shop isn't yours.", flags: MessageFlags.Ephemeral });
+          return safeInteractionReply(i, { content: "❌ This shop isn’t yours.", flags: MessageFlags.Ephemeral });
 
         const item = SHOP_ITEMS.find((x) => x.id === i.values[0]);
         if (!item)
-          return safeInteractionReply(i, { content: "Invalid item.", flags: MessageFlags.Ephemeral });
+          return safeInteractionReply(i, { content: "❌ Invalid item.", flags: MessageFlags.Ephemeral });
 
         // Build confirmation embed
         const confirmEmbed = createSuccessEmbed(
@@ -213,7 +213,7 @@ export default {
 
           const confirmedItem = SHOP_ITEMS.find((x) => x.id === itemId);
           if (!confirmedItem)
-            return safeInteractionReply(btn, { content: "Invalid item reference.", flags: MessageFlags.Ephemeral });
+            return safeInteractionReply(btn, { content: "❌ Invalid item reference.", flags: MessageFlags.Ephemeral });
 
           // ❌ Cancel pressed
           if (action === "cancel") {
@@ -237,7 +237,7 @@ export default {
               const live = trainerData[userId];
               live.purchases ??= [];
               if (live.purchases.includes("starter_pack")) {
-                await safeInteractionReply(btn, { content: "Already claimed.", flags: MessageFlags.Ephemeral });
+                await safeInteractionReply(btn, { content: "⚠️ Already claimed.", flags: MessageFlags.Ephemeral });
                 await closeShopMessage(btn, confirmCollector, collector);
                 return;
               }
@@ -303,7 +303,7 @@ ${
               const live = trainerData[userId];
               if (confirmedItem.cost > 0 && !(live.cc >= confirmedItem.cost)) {
                 await safeInteractionReply(btn, {
-                  content: `Not enough CC. Need **${confirmedItem.cost}**, have **${live.cc}**.`,
+                  content: `❌ Not enough CC. Need **${confirmedItem.cost}**, have **${live.cc}**.`,
                   flags: MessageFlags.Ephemeral,
                 });
                 await closeShopMessage(btn, confirmCollector, collector);
@@ -345,9 +345,9 @@ Now have **${live.items.evolution_stone}** total.`, ack)
     } catch (err) {
       console.error("❌ /shop failed:", err);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: `Error: ${err.message}`, flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: `❌ Error: ${err.message}`, flags: MessageFlags.Ephemeral });
       } else {
-        await interaction.editReply(`Error: ${err.message}`);
+        await interaction.editReply(`❌ Error: ${err.message}`);
       }
     }
   },

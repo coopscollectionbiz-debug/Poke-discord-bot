@@ -12,6 +12,7 @@ import { computeStats } from "./stats.js";
 import { autoMoveset } from "./moveset.js";
 import { createRng } from "./rng.js";
 import { simulateBattleFx, prepareBattler } from "./effects.js";
+import { isCombatItem } from "./items.js";
 import {
   DAMAGE_ROLL_MIN, CRIT_CHANCE, HIGH_CRIT_CHANCE, CRIT_MULT, MOVE_RANDOM_CHANCE, TURN_CAP,
 } from "./tuning.js";
@@ -35,11 +36,15 @@ const MULTIHIT_ODDS = [2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 5, 5, 
 export const memberMoves = (member) =>
   (Array.isArray(member.moves) && member.moves.length ? member.moves : autoMoveset(member.speciesId, member.realLevel ?? member.level));
 
-export function buildMon(member, levelMult = 1) {
+// member.statMult raises every stat, HP included, without changing the
+// Level: challenge opponents fight with CHALLENGE.statBoost. `statMult` does
+// the same for a cute surge, past where Lv 100 stops its `levelMult`.
+export function buildMon(member, levelMult = 1, statMult = 1) {
   const species = getSpecies(member.speciesId);
   const profile = member.battleProfile ?? null;
   const level = Math.min(100, Math.round(member.level * levelMult));
-  const s = computeStats((profile ?? species).baseStats, level);
+  const k = (member.statMult ?? 1) * statMult;
+  const s = Object.fromEntries(Object.entries(computeStats((profile ?? species).baseStats, level)).map(([stat, v]) => [stat, Math.round(v * k)]));
   const maxHp = member.speciesId === SHEDINJA ? 1 : s.hp;
   return {
     speciesId: member.speciesId,
@@ -47,9 +52,16 @@ export function buildMon(member, levelMult = 1) {
     types: profile ? [...profile.types] : species.types,
     atk: s.atk, def: s.def, spa: s.spa, spd: s.spd, spe: s.spe,
     maxHp,
-    hp: maxHp,
+    // hpFraction carries damage between Elite Four fights: absent is full HP,
+    // 0 is fainted, and any sliver above 0 keeps at least 1 HP.
+    hp: member.hpFraction === undefined ? maxHp
+      : member.hpFraction <= 0 ? 0
+      : Math.max(1, Math.round(maxHp * member.hpFraction)),
     moves: memberMoves(member).map(getMove),
     ...(profile && { ability: profile.ability, megaForm: profile.formId, name: profile.name }),
+    // Held item (validated in runBattle.buildTeam). Absent for members
+    // without one, so their battler is exactly as before.
+    ...(member.item && { item: member.item }),
   };
 }
 
@@ -142,12 +154,14 @@ export function useMove(move, attacker, target, rng) {
 export function simulateBattle({ sides, seed, surge }) {
   const rng = createRng(seed);
   const teams = sides.map((side, i) =>
-    side.members.map((m) => buildMon(m, surge && surge.side === i ? surge.levelMult : 1)));
+    side.members.map((m) => (surge && surge.side === i ? buildMon(m, surge.levelMult, surge.statMult ?? 1) : buildMon(m))));
 
-  // Battles with abilities (a Mega Evolution is present) run on the
-  // effect-aware engine (effects.js). Every other battle runs the legacy
-  // loop below, unchanged (tests/megaBattleRegression.test.js).
-  if (teams.some((t) => t.some((m) => m.ability))) {
+  // Battles with abilities (a Mega Evolution is present) or a held item
+  // that acts in combat run on the effect-aware engine (effects.js), which
+  // gives identical results when no effect is present
+  // (tests/heldItemBattle.test.js). Every other battle runs the legacy loop
+  // below, unchanged (tests/megaBattleRegression.test.js).
+  if (teams.some((t) => t.some((m) => m.ability || isCombatItem(m.item)))) {
     sides.forEach((side, i) => side.members.forEach((member, j) => {
       const mon = teams[i][j];
       if (mon.speciesId === SHEDINJA) mon.ability ??= "Wonder Guard";
@@ -161,6 +175,11 @@ export function simulateBattle({ sides, seed, surge }) {
   const knockouts = [];
   const log = []; // per turn, the hits in order
   let lastFaintSide = null;
+
+  // A side can start with nobody able to battle: an Elite Four run can win a
+  // fight on a double knockout and reach the next one with every Pokémon fainted.
+  const outAtStart = [0, 1].filter((i) => activeSlot(i) === -1);
+  if (outAtStart.length) return { winner: outAtStart.includes(0) ? 1 : 0, turns: 0, endedBy: "knockout", snapshots, knockouts, log };
 
   for (let turn = 1; turn <= TURN_CAP; turn++) {
     const slots = [activeSlot(0), activeSlot(1)];

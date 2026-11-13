@@ -4,6 +4,10 @@
 // ==========================================================
 
 import { bulkDonate } from "../utils/bulkDonate.js";
+import { normalizeBox } from "../services/box.js";
+// Live users are migrated to individual copies at load (docs/adr/0001);
+// fixtures are too, before any "nothing changed" snapshot is taken.
+const migrated = (u) => { normalizeBox(u); return u; };
 
 let testsRun = 0;
 let testsPassed = 0;
@@ -97,7 +101,7 @@ function run(user, mode, items, economy = makeEconomy()) {
 // Asserts the call was rejected with a message containing `fragment`
 // and that the user object was not touched.
 function assertRejected(user, mode, items, fragment, label) {
-  const before = structuredClone(user);
+  const before = structuredClone(migrated(user));
   const result = run(user, mode, items);
   assertTrue(
     typeof result.error === "string" && result.error.includes(fragment),
@@ -132,7 +136,8 @@ test("duplicates donates the extras of a Team variant and keeps the Team copy", 
 
   assertEqual(result.error, undefined, "no error");
   assertEqual(user.pokemon[4], { normal: 1, shiny: 0 }, "Charmander x3 becomes x1");
-  assertEqual(user.displayedPokemon[1], { id: 4, variant: "normal" }, "Charmander still on Team");
+  assertEqual({ id: user.displayedPokemon[1].id, variant: user.displayedPokemon[1].variant }, { id: 4, variant: "normal" }, "Charmander still on Team");
+  assertTrue(!!user.box?.[user.displayedPokemon[1].uid], "the slot names the copy that stayed");
 });
 
 test("duplicates rejects a row that would leave no copies (stale preview race)", () => {
@@ -219,7 +224,7 @@ test("multiselect rejects a Team member", () => {
     makeUser(),
     "multiselect",
     [{ pokeId: 1, variant: "normal", count: 1 }],
-    "Bulbasaur is on one of your teams (Showcase or Battle). Remove it from that team first.",
+    "Bulbasaur is on one of your teams. Take it off that team first.",
     "Bulbasaur on Team"
   );
 });

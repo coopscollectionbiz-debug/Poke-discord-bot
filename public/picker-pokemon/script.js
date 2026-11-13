@@ -34,15 +34,19 @@ let regions = []; // [{ name, ids }], built once from pokemonData in init()
 // pageshow handler below resets it on a back/forward cache restore.
 let multiSelectOn = false;
 const multiSelected = new Set(); // Pokémon IDs
+// The box tile the player tapped (docs/adr/0001): preselected in "Which one?".
+let pendingCopyUid = null;
 
 import { rarityEmojis } from "/public/spriteconfig.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
-import { getRegions, countOwned } from "/public/picker-pokemon/regions.js";
+import { getRegions, countOwned, countRegistered } from "/public/picker-pokemon/regions.js";
 import * as bulkRules from "/public/picker-pokemon/bulkRules.js";
 import { showMessage, showActionError, showExpired, showBanner, toast, EXPIRED_MESSAGE } from "/public/shared/shell.js";
 import { displaySpeciesName, nameMatches } from "/public/shared/names.js";
 import { scanFx } from "/public/shared/spriteFx.js";
 import { openDetail } from "/public/picker-pokemon/detail.js";
+import { mountCopyChoice, copiesOf, teamNames } from "/public/picker-pokemon/copyChoice.js";
+import { GYM_BADGES, earnedBadgeKeys } from "/public/picker-pokemon/badges.js";
 
 const LOCK_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>`;
 const SPARKLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>`;
@@ -152,13 +156,6 @@ async function limitToReleasedGenerations(data, owned) {
     if (Array.isArray(p.evolvesTo)) p.evolvesTo = p.evolvesTo.filter((t) => out[t] && releasedGenerations.has(Number(out[t].generation ?? 1)));
   }
   return out;
-}
-
-// Official level requirement for Gen 6–9 level-up evolutions (enforced by the server).
-function requiredEvolutionLevel(base, target) {
-  const e = target?.evolution;
-  if (!e || Number(target.generation) < 6 || Number(e.from) !== Number(base?.id)) return null;
-  return (e.trigger === "level-up" || e.trigger === "in-battle-level-up") && e.minLevel > 0 ? e.minLevel : null;
 }
 
 function getEvoList(p) {
@@ -387,8 +384,25 @@ async function saveTeam() {
   });
 }
 
-async function evolvePokemon(baseId, targetId, variant) {
-  const body = { id: userId, baseId, targetId, variant: normVariant(variant) };
+// One request id per confirmation dialog: a double click or a retry after a
+// network error sends the same id, and the server applies the action once.
+// One request id per dialog AND copy choice (switching the copy is a different action).
+function requestIds() {
+  const ids = new Map();
+  return (key) => { if (!ids.has(key)) ids.set(key, newRequestId()); return ids.get(key); };
+}
+
+function newRequestId() {
+  if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+// copy: { uid, rev, confirmTrained } of the chosen copy (docs/adr/0001), or null.
+// rev is sent only for a trained copy (the server checks it).
+const copyFields = (copy) => (copy?.uid ? { uid: copy.uid, ...(copy.rev != null ? { rev: copy.rev } : {}), ...(copy.confirmTrained ? { confirmTrained: true } : {}) } : {});
+
+async function evolvePokemon(baseId, targetId, variant, requestId, copy = null) {
+  const body = { id: userId, baseId, targetId, variant: normVariant(variant), requestId, ...copyFields(copy) };
   return await apiJSON("/api/pokemon/evolve", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -396,8 +410,8 @@ async function evolvePokemon(baseId, targetId, variant) {
   });
 }
 
-async function donatePokemon(pokeId, variant) {
-  const body = { id: userId, pokeId, variant: normVariant(variant) };
+async function donatePokemon(pokeId, variant, requestId, copy = null) {
+  const body = { id: userId, pokeId, variant: normVariant(variant), requestId, ...copyFields(copy) };
   return await apiJSON("/api/pokemon/donate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -405,8 +419,8 @@ async function donatePokemon(pokeId, variant) {
   });
 }
 
-async function donateBulk(mode, items) {
-  const body = { id: userId, mode, items };
+async function donateBulk(mode, items, requestId) {
+  const body = { id: userId, mode, items, requestId };
   return await apiJSON("/api/pokemon/donate-bulk", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -414,8 +428,8 @@ async function donateBulk(mode, items) {
   });
 }
 
-async function convertPokemonToShiny(pokeId) {
-  const body = { id: userId, pokeId };
+async function convertPokemonToShiny(pokeId, requestId, copy = null) {
+  const body = { id: userId, pokeId, requestId, ...copyFields(copy) };
   return await apiJSON("/api/pokemon/convert-to-shiny", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -449,7 +463,7 @@ function updateDustTimer() {
   if (!el || !userData) return;
   const earned = userData.nonShinyDustEarnedThisWeek ?? 0;
   const countdown = formatCountdown(getNextMondayUTC().getTime() - Date.now());
-  el.textContent = `${earned}/8 Shiny Dust from donations this week. Resets in ${countdown}`;
+  el.textContent = `${earned}/8 shiny dust received from donations this week — resets in ${countdown}`;
 }
 
 function updateHUD() {
@@ -470,6 +484,19 @@ function updateHUD() {
   if (ccEl) ccEl.textContent = Number(cc).toLocaleString("en-US");
   if (tpEl) tpEl.textContent = Number(tp).toLocaleString("en-US");
   if (rankEl) rankEl.textContent = rank;
+
+  const badgeRow = document.getElementById("badgeRow");
+  if (badgeRow) {
+    const earned = new Set(earnedBadgeKeys(userData));
+    badgeRow.replaceChildren(...GYM_BADGES.map((b) => {
+      const img = document.createElement("img");
+      img.src = b.image;
+      img.alt = b.badge;
+      img.title = b.badge;
+      img.className = earned.has(b.key) ? "earned" : "unearned";
+      return img;
+    }));
+  }
 
   updateDustTimer();
 }
@@ -512,7 +539,7 @@ function setMode(mode) {
 
   // Owned / missing toggles only make sense in Browse (other modes show owned only).
   const tg = document.querySelector(".toggle-group");
-  if (tg) tg.style.display = mode === "browse" || mode === "team" ? "flex" : "none";
+  if (tg) tg.style.display = "flex"; // only "✨ Shiny only" is left; it filters the box in every mode
 
   // Show dust cap only in donate mode
   const dustEl = document.getElementById("dustStatus");
@@ -536,7 +563,7 @@ function initCollectionFilters() {
     const chip = (value, label, count) =>
       `<button type="button" class="region-chip" data-region="${value}" aria-pressed="${regionFilter === value}">${label}${count ? ` <small>${count}</small>` : ""}</button>`;
     const draw = () => {
-      host.innerHTML = chip("", "All", "") + regions.map((r) => chip(r.name, r.name, `${countOwned(r, userData.pokemon)}/${r.ids.length}`)).join("");
+      host.innerHTML = chip("", "All", "") + regions.map((r) => chip(r.name, r.name, `${countRegistered(r, userData.pokedex)}/${r.ids.length}`)).join("");
     };
     draw();
     host.addEventListener("click", (e) => {
@@ -714,6 +741,193 @@ function renderPokemonGrid() {
   if (grid) scanFx(grid);
 }
 
+// ===========================================================
+// 📦 The box (docs/adr/0001): one tile per copy you own right now. Every
+// copy is its own Pokémon with its own Level. Tapping a tile opens the
+// current mode's action with that copy preselected in "Which one?".
+// ===========================================================
+const boxRows = () => (Array.isArray(userData.copies) ? userData.copies : []);
+
+function boxTileLocked(c, tier) {
+  if (currentMode === "evolve") return !isEvolutionEligibleAnyVariant(c.id);
+  if (currentMode === "donate") return c.teams > 0;
+  if (currentMode === "convert") {
+    const cost = dustCostForTier(tier);
+    // Converting needs Dust, a normal copy, and no shiny of it owned yet (same rule as before).
+    return c.shiny || cost <= 0 || (userData.items?.shiny_dust ?? 0) < cost || ownedCounts(c.id).shiny > 0;
+  }
+  if (currentMode === "feed") return boxRows().filter((r) => r[1] === c.id && r[2] === (c.shiny ? 1 : 0)).length < 2;
+  return false;
+}
+
+function renderBoxTiles(container) {
+  const search = (document.getElementById("search")?.value || "").toLowerCase().trim();
+  const rarityFilter = (document.getElementById("rarityFilter")?.value || "").toLowerCase();
+  const typeFilter = (document.getElementById("typeFilter")?.value || "").toLowerCase();
+  const sortOrder = document.getElementById("sortOrder")?.value || "dex";
+
+  const tiles = [];
+  for (const [uid, id, shiny, level, at, trained, teams] of boxRows()) {
+    const p = pokemonData[id];
+    if (!p) continue;
+    const tier = tierOf(p);
+    if (search && !nameMatches(search, id, p.storedName ?? p.name)) continue;
+    if (rarityFilter && tier !== rarityFilter) continue;
+    if (typeFilter && !(p.types ?? []).map((t) => TYPE_MAP[t]).includes(typeFilter)) continue;
+    if (regionFilter && p.region !== regionFilter) continue;
+    if (shinyOnly && !shiny) continue;
+    tiles.push({ uid, id, shiny: !!shiny, level, at, trained: !!trained, teams, p, tier });
+  }
+
+  const byDex = (a, b) => a.id - b.id || b.level - a.level || a.uid.localeCompare(b.uid);
+  const sorts = {
+    "level-desc": (a, b) => b.level - a.level || byDex(a, b),
+    "level-asc": (a, b) => a.level - b.level || byDex(a, b),
+    newest: (a, b) => (b.at || 0) - (a.at || 0) || byDex(a, b),
+    name: (a, b) => String(a.p.name).localeCompare(String(b.p.name)) || byDex(a, b),
+    "power-desc": (a, b) => (bestPower(b.id) ?? 0) - (bestPower(a.id) ?? 0) || byDex(a, b),
+    "power-asc": (a, b) => (bestPower(a.id) ?? 0) - (bestPower(b.id) ?? 0) || byDex(a, b),
+  };
+  tiles.sort(sorts[sortOrder] ?? byDex);
+
+  const tile = (c) => {
+    const locked = boxTileLocked(c, c.tier);
+    const name = c.p.name || `#${c.id}`;
+    const onTeams = teamNames(c.teams);
+    const el = document.createElement("div");
+    el.className = `pokemon-card owned box-tile${c.shiny ? " shiny-view" : ""}${locked ? " locked" : ""}`;
+    el.dataset.id = c.id;
+    el.dataset.uid = c.uid;
+    const stone = (src, n) => `<div class="evolve-cost" style="bottom:6px;right:6px;"><img src="${src}" style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;" alt="">${n}</div>`;
+    let badge = "";
+    if (currentMode === "donate") badge = `<div class="donate-value" title="Donation value in CC"><img src="/public/sprites/items/cc_coin.png" alt="">${fmtCC(getDonationValue(c.tier, c.shiny))}</div>`;
+    if (currentMode === "convert" && dustCostForTier(c.tier) > 0) badge = stone("/public/sprites/items/shiny_dust.png", dustCostForTier(c.tier));
+    if (currentMode === "evolve" && minEvolutionCostFor(c.id) > 0) badge = stone("/public/sprites/items/evolution_stone.png", minEvolutionCostFor(c.id));
+    const teamBadge = onTeams.length
+      ? `<div class="team-badges">${onTeams.map((t) => `<span class="mem mem-${t[0].toLowerCase()}" title="On your ${t} team">${t[0]}</span>`).join("")}</div>`
+      : "";
+    el.innerHTML = `
+      <div class="sprite-wrapper"${c.shiny ? ` data-fx="shiny" data-fx-seed="${c.id}"` : ""}>
+        <img src="${spriteFor(c.id, c.shiny ? "shiny" : "normal")}" class="poke-sprite" alt="" loading="lazy">
+        ${teamBadge}
+        ${c.trained ? `<div class="count-label bottom-left" title="Has TM-trained moves">★ TM</div>` : ""}
+        ${locked ? `<div class="lock-overlay">${LOCK_ICON}</div>` : ""}
+        ${badge}
+      </div>
+      <div class="dex-no">#${String(c.id).padStart(4, "0")}</div>
+      <div class="pokemon-name">${c.shiny ? "✨ " : ""}${name}</div>
+      <div class="poke-levels"><span class="poke-level${c.shiny ? " shiny" : ""}">Lv ${c.level}</span></div>
+      <div class="pokemon-tier"><span class="cc-tier" data-tier="${c.tier}">${capitalize(c.tier)}</span></div>`;
+    const states = [`Level ${c.level}`];
+    if (c.shiny) states.push("shiny");
+    if (c.trained) states.push("TM-trained");
+    if (onTeams.length) states.push(`on ${onTeams.join(" and ")} team`);
+    if (locked) states.push("unavailable in this mode");
+    el.tabIndex = 0;
+    el.setAttribute("role", "button");
+    el.dataset.ccActivate = "1";
+    el.setAttribute("aria-label", `#${c.id} ${name}, ${states.join(", ")}`);
+    if (locked) el.setAttribute("aria-disabled", "true");
+    el.addEventListener("click", () => onBoxTileClick(c, locked));
+    el.querySelector(".poke-sprite").addEventListener("error", (e) => { e.currentTarget.src = "/public/sprites/items/pokeball.png"; }, { once: true });
+    return el;
+  };
+
+  container.innerHTML = "";
+  if (!tiles.length) {
+    container.innerHTML = boxRows().length
+      ? `<p class="empty-msg">No Pokémon match your filters.</p>`
+      : `<p class="empty-msg">Your box is empty. Pokémon you catch land here, and everything you have ever caught stays in your <a href="/public/pokedex/?id=${encodeURIComponent(userId)}">Pokédex</a>.</p>`;
+    return;
+  }
+  if (sortOrder !== "dex") { container.append(...tiles.map(tile)); return; }
+  const byRegion = new Map();
+  for (const c of tiles) {
+    if (!byRegion.has(c.p.region)) byRegion.set(c.p.region, []);
+    byRegion.get(c.p.region).push(c);
+  }
+  for (const region of regions) {
+    const list = byRegion.get(region.name);
+    if (!list) continue;
+    const header = document.createElement("h2");
+    header.className = "region-header";
+    header.innerHTML = `${region.name} <span class="region-count">${list.length}<span class="sr-only"> Pokémon</span></span>`;
+    container.append(header, ...list.map(tile));
+  }
+}
+
+function onBoxTileClick(c, locked) {
+  pendingCopyUid = c.uid;
+  viewVariant.set(c.id, c.shiny ? "shiny" : "normal");
+  if (locked) {
+    if (currentMode === "donate" || currentMode === "feed") {
+      const msg = currentMode === "feed" && !c.teams
+        ? `You need another ${c.shiny ? "shiny " : ""}${c.p.name} to feed this one.`
+        : `This ${c.p.name} is on your ${teamNames(c.teams).join(" and ")} team. Take it off the team on the Teams page first.`;
+      return showMessage({ title: "Not available", message: msg });
+    }
+    return showBlockedActionModal(c.id);
+  }
+  if (currentMode === "browse") return openDetail(c.id, detailContext());
+  if (currentMode === "evolve") return openEvolutionModal(c.id);
+  if (currentMode === "donate") return openDonationConfirmModal(c.id, c.shiny ? "shiny" : "normal");
+  if (currentMode === "convert") return openConvertModal(c.id);
+  if (currentMode === "feed") return openFeedModal(c);
+}
+
+// 🍖 Feed: another copy of the same Pokémon + Variant gives this one EXP
+// and is used up (POST /api/pokemon/feed). The fed copy can't be on a team.
+function openFeedModal(target) {
+  const overlay = createOverlay();
+  const modal = document.createElement("div");
+  modal.style.cssText = "background:var(--card);border:2px solid var(--cc-blue);border-radius:14px;padding:1.5rem;text-align:center;max-width:460px;width:92%;";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-label", `Feed ${target.p.name}`);
+  modal.innerHTML = `
+    <h2 style="margin:0 0 6px;">Feed ${target.shiny ? "✨ " : ""}${target.p.name} (Lv ${target.level})</h2>
+    <p style="margin:0;color:var(--cc-text-muted);">Give it another ${target.p.name}. The one you feed is used up and this one gains EXP. Your Pokédex keeps ${target.p.name} either way.</p>
+    <div class="cc-copyslot"></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
+      <button class="cancel-btn cc-btn" type="button">Cancel</button>
+      <button class="confirm-btn cc-btn cc-btn--primary" type="button">Feed</button>
+    </div>`;
+  overlay.append(modal);
+  const confirmEl = modal.querySelector(".confirm-btn");
+  modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
+  let picker = null;
+  const sync = () => { confirmEl.disabled = !picker?.get().ok; };
+  picker = mountCopyChoice(modal.querySelector(".cc-copyslot"), {
+    userData, pokeId: target.id, variant: target.shiny ? "shiny" : "normal", name: target.p.name, mode: "feed", exclude: target.uid, onChange: sync,
+  });
+  sync();
+  const requestId = newRequestId();
+  confirmEl.addEventListener("click", () => {
+    const from = picker.get();
+    if (!from.ok) return;
+    withActionLock(async () => {
+      confirmEl.disabled = true;
+      try {
+        const res = await apiJSON("/api/pokemon/feed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: userId, from: from.uid, to: target.uid, requestId, ...(from.rev != null ? { rev: from.rev } : {}) }),
+        });
+        closeOverlay(overlay);
+        const prev = userData;
+        await fetchUserData();
+        refreshStats(userData, prev);
+        renderPokemonGrid();
+        const f = res?.fed;
+        toast(f && f.toLevel > f.fromLevel ? `${target.p.name} grew to Lv ${f.toLevel}!` : `${target.p.name} gained ${Number(f?.gained ?? 0).toLocaleString("en-US")} EXP.`);
+      } catch (err) {
+        confirmEl.disabled = false;
+        showActionError(err, "Couldn’t feed");
+      }
+    });
+  });
+}
+
 function renderPokemonGridCards() {
   const container = document.getElementById("pokemonGrid");
   if (!container) return;
@@ -721,7 +935,13 @@ function renderPokemonGridCards() {
 
   // Drop picks that stopped being selectable after a refresh.
   for (const pid of multiSelected) if (multiSelectBlock(pid)) multiSelected.delete(pid);
+  // Runs before the box view returns: it is what shows the Donate
+  // Duplicates / Multi-select row in Donate mode.
   updateBulkUI();
+
+  // Every mode but the old team picker and Donate's multi-select is the box.
+  if (currentMode !== "team" && !(currentMode === "donate" && multiSelectOn)) return renderBoxTiles(container);
+
   const inMultiSelect = currentMode === "donate" && multiSelectOn;
 
   const searchEl = document.getElementById("search");
@@ -883,11 +1103,11 @@ function renderPokemonGridCards() {
       if (power != null) levelHTML += `<div class="poke-power" title="Power: total of all six stats at its Level (highest owned copy)">Power <b>${power.toLocaleString("en-US")}</b></div>`;
     }
 
-    // Team badges: D = Display team slot, B = Battle team slot (read-only; teams are edited on the Teams page).
+    // Team badges: C = Casual team slot, R = Ranked team slot (read-only; teams are edited on the Teams page).
     const slotOf = (raw) => (Array.isArray(raw) ? raw : []).findIndex((s) => Number(s?.id) === id);
     const dIdx = slotOf(userData.currentTeam), bIdx = slotOf(userData.battleTeam);
     const teamBadgeHTML = dIdx >= 0 || bIdx >= 0
-      ? `<div class="team-badges">${dIdx >= 0 ? `<span class="mem mem-d" title="Showcase team, slot ${dIdx + 1}">S${dIdx + 1}</span>` : ""}${bIdx >= 0 ? `<span class="mem mem-b" title="Battle team, slot ${bIdx + 1}">B${bIdx + 1}</span>` : ""}</div>`
+      ? `<div class="team-badges">${dIdx >= 0 ? `<span class="mem mem-d" title="Casual team, slot ${dIdx + 1}">C${dIdx + 1}</span>` : ""}${bIdx >= 0 ? `<span class="mem mem-b" title="Ranked team, slot ${bIdx + 1}">R${bIdx + 1}</span>` : ""}</div>`
       : "";
 
     card.innerHTML = `
@@ -917,8 +1137,8 @@ function renderPokemonGridCards() {
 
     // Keyboard + screen reader: the card is the control.
     const states = [];
-    if (dIdx >= 0) states.push(`Showcase team slot ${dIdx + 1}`);
-    if (bIdx >= 0) states.push(`Battle team slot ${bIdx + 1}`);
+    if (dIdx >= 0) states.push(`Casual team slot ${dIdx + 1}`);
+    if (bIdx >= 0) states.push(`Ranked team slot ${bIdx + 1}`);
     if (multiPicked) states.push("selected");
     if (shownVariant === "shiny") states.push("shiny");
     if (!isOwnedAny) states.push("not owned");
@@ -979,7 +1199,7 @@ function renderPokemonGridCards() {
     if (!cards) continue;
     const header = document.createElement("h2");
     header.className = "region-header";
-    header.innerHTML = `${region.name} <span class="region-count">${countOwned(region, userData.pokemon)}/${region.ids.length}<span class="sr-only"> owned</span></span>`;
+    header.innerHTML = `${region.name} <span class="region-count">${countRegistered(region, userData.pokedex)}/${region.ids.length}<span class="sr-only"> caught</span></span>`;
     container.append(header, ...cards);
   }
 
@@ -1076,7 +1296,7 @@ async function initMegaUI() {
       withActionLock,
       createConfirmModal,
       getMode: () => currentMode,
-      getTeam: () => selectedTeam, // the saved Display team (read-only here)
+      getTeam: () => selectedTeam, // the saved Casual team (read-only here)
       // No setTeam: teams are edited on the Teams page, so the Mega cards link there.
       refreshUser: async () => {
         await fetchUserData();
@@ -1159,7 +1379,7 @@ async function init() {
 
     // Load Pokemon data
     const pokeRes = await fetch("/public/pokemonData.json", { credentials: "same-origin" });
-    if (!pokeRes.ok) throw new Error("Couldn't load the Pokédex. Please refresh the page.");
+    if (!pokeRes.ok) throw new Error("Couldn’t load the Pokédex. Please refresh the page.");
     pokemonData = await pokeRes.json();
     // Display names for the 24 slug-named species (display only; the
     // stored name is kept for search and is never sent to the server).
@@ -1174,7 +1394,7 @@ async function init() {
     } catch (err) {
       setGridMessage("");
       if (err?.status === 403) showExpired();
-      else showBanner(err?.message || "Couldn't load your Pokémon. Please try again.", { title: "Couldn't load your Pokémon" });
+      else showBanner(err?.message || "Couldn’t load your Pokémon. Please try again.", { title: "Couldn’t load your Pokémon" });
       return;
     }
 
@@ -1196,6 +1416,13 @@ async function init() {
     setMode(currentMode);
     startWeeklyPackCountdown();
     initMegaUI(); // no-op unless Mega Evolution is enabled server-side
+
+    // Deep link (Teams page "Open in Collection"): ?pokemon=6&variant=shiny
+    // opens that Pokémon's details on that copy.
+    const linked = Number(params.get("pokemon"));
+    if (Number.isInteger(linked) && pokemonData[linked]) {
+      openDetail(linked, detailContext(), { variant: params.get("variant") === "shiny" ? "shiny" : "normal" });
+    }
 
     // Filters
     document.getElementById("search")?.addEventListener("input", renderPokemonGrid);
@@ -1304,7 +1531,7 @@ async function init() {
                 confirmBox.querySelector("button").addEventListener("click", () => closeOverlay(modal2));
                 modal2.appendChild(confirmBox);
               } catch (err) {
-                showActionError(err, "Couldn't save your Team");
+                showActionError(err, "Couldn’t save your Team");
               } finally {
                 closeOverlay(overlay);
               }
@@ -1316,7 +1543,7 @@ async function init() {
   } catch (err) {
     console.error("Init failed:", err);
     setGridMessage("");
-    showBanner(err?.message || "Something went wrong. Please refresh the page.", { title: "Couldn't load this page" });
+    showBanner(err?.message || "Something went wrong. Please refresh the page.", { title: "Couldn’t load this page" });
   }
 }
 
@@ -1413,7 +1640,7 @@ function showBlockedActionModal(pokeId) {
   const overlay = createOverlay();
 
   let title = "⚠️ Action Unavailable";
-  let message = "You can't do that right now.";
+  let message = "You can’t do that right now.";
   let borderColor = "var(--brand)";
 
   const owned = ownedCounts(pokeId);
@@ -1421,7 +1648,7 @@ function showBlockedActionModal(pokeId) {
 
   if (currentMode === "team") {
     title = "🔒 Not Owned Yet";
-    message = `You don't own ${p.name} yet.`;
+    message = `You don’t own ${p.name} yet.`;
     borderColor = "var(--border)";
   }
 
@@ -1431,7 +1658,7 @@ function showBlockedActionModal(pokeId) {
 
     if (!evos.length) {
       title = "🧬 No Evolutions";
-      message = `${p.name} doesn't have an evolution in this bot yet.`;
+      message = `${p.name} doesn’t have an evolution in this bot yet.`;
     } else if (owned.any <= 0) {
       title = "🔒 Not Owned";
       message = `You need to own ${p.name} before evolving it.`;
@@ -1445,14 +1672,14 @@ function showBlockedActionModal(pokeId) {
         message = `You need at least ${minCost} evolution stones to evolve ${p.name}.\nYou currently have ${stones}.`;
       } else {
         title = "⚠️ Evolution Blocked";
-        message = `You can't evolve ${p.name} right now.`;
+        message = `You can’t evolve ${p.name} right now.`;
       }
     }
   }
 
   if (currentMode === "donate") {
     title = "🔒 Not Owned";
-    message = `You don't own ${p.name}, so you can't donate it.`;
+    message = `You don’t own ${p.name}, so you can’t donate it.`;
     borderColor = "var(--cc-gold)";
 
     const block = multiSelectOn ? multiSelectBlock(pokeId) : null;
@@ -1470,7 +1697,7 @@ function showBlockedActionModal(pokeId) {
     else if (owned.shiny > 0) message = `You already own a shiny ${p.name}.`;
     else if (cost <= 0) message = `Convert cost for ${tierOf(p)} is not configured.`;
     else if (dust < cost) message = `Not enough Shiny Dust.\nCost: ${cost}\nYou have: ${dust}`;
-    else message = `You can't convert ${p.name} right now.`;
+    else message = `You can’t convert ${p.name} right now.`;
   }
 
   const sprite =
@@ -1552,6 +1779,7 @@ function openConvertModal(pokeId) {
       You have: <span style="color:var(--cc-text);font-weight:900;">${dust}</span>
     </p>
 
+    <div class="cc-copyslot"></div>
     <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
       <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight:800;">Cancel</button>
       <button class="confirm-btn" style="background:var(--cc-gold);color:var(--bg);border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:900;">Confirm</button>
@@ -1559,20 +1787,29 @@ function openConvertModal(pokeId) {
   `;
 
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
-  modal.querySelector(".confirm-btn").addEventListener("click", () => {
-    withActionLock(() => handleConvertConfirm(pokeId, cost, overlay));
+  const idFor = requestIds();
+  const confirmEl = modal.querySelector(".confirm-btn");
+  const picker = mountCopyChoice(modal.querySelector(".cc-copyslot"), {
+    userData, pokeId, variant: "normal", name: p.name, mode: "convert", preselect: pendingCopyUid,
+    onChange: () => { confirmEl.disabled = !picker.get().ok; },
+  });
+  confirmEl.disabled = !picker.get().ok;
+  confirmEl.addEventListener("click", () => {
+    const copy = picker.get();
+    if (!copy.ok) return;
+    withActionLock(() => handleConvertConfirm(pokeId, cost, overlay, idFor(copy.uid ?? "untrained"), copy));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleConvertConfirm(pokeId, cost, overlay) {
+async function handleConvertConfirm(pokeId, cost, overlay, requestId, copy = null) {
   try {
     const p = pokemonData[pokeId];
 
     const prev = structuredClone(userData);
 
-    const res = await convertPokemonToShiny(pokeId);
+    const res = await convertPokemonToShiny(pokeId, requestId, copy);
     if (!res?.success) throw new Error(res?.error || "Convert failed");
 
     // If this Pokémon was on the team, keep it but flip variant to shiny (optional UX)
@@ -1618,7 +1855,7 @@ async function handleConvertConfirm(pokeId, cost, overlay) {
     closeOverlay(overlay);
   } catch (err) {
     closeOverlay(overlay);
-    showActionError(err, "Couldn't convert");
+    showActionError(err, "Couldn’t convert");
     return;
     closeOverlay(overlay);
   }
@@ -1686,6 +1923,13 @@ function openEvolutionModal(baseId) {
   const confirmBtn = modal.querySelector(".confirm-btn");
 
   let selectedTarget = null;
+  const evoRequestIds = new Map();
+  let picker = { needed: false, get: () => ({ ok: true, uid: null }) };
+  const requestIdFor = (targetId, v, uid) => {
+    const k = `${targetId}:${v}:${uid ?? "untrained"}`;
+    if (!evoRequestIds.has(k)) evoRequestIds.set(k, newRequestId());
+    return evoRequestIds.get(k);
+  };
 
   function selectTarget(card, targetId) {
     grid.querySelectorAll(".evo-card").forEach((c) => (c.style.borderColor = "var(--border)"));
@@ -1762,7 +2006,6 @@ function openEvolutionModal(baseId) {
         </div>
 
         ${dustRow}
-        ${requiredEvolutionLevel(base, target) ? `<div style="margin-top:6px;color:var(--cc-text-muted);font-weight:800;">Requires Lv. ${requiredEvolutionLevel(base, target)}</div>` : ""}
       `;
 
       if (allowed) {
@@ -1793,7 +2036,7 @@ function openEvolutionModal(baseId) {
     if (baseSpriteEl) baseSpriteEl.src = baseSpriteFor(chosenVariant);
 
     if (!ownsVariant(baseId, chosenVariant)) {
-      hintEl.textContent = `You don't own a ${chosenVariant} ${base.name}.`;
+      hintEl.textContent = `You don’t own a ${chosenVariant} ${base.name}.`;
       hintEl.style.color = "var(--cc-red)";
       confirmBtn.disabled = true;
     } else {
@@ -1802,6 +2045,16 @@ function openEvolutionModal(baseId) {
     }
 
     renderEvoTargets();
+    // TM system (T5): which copy evolves, when this variant has trained copies.
+    let slot = modal.querySelector(".cc-copyslot");
+    if (!slot) {
+      slot = document.createElement("div");
+      slot.className = "cc-copyslot";
+      confirmBtn.parentElement.before(slot);
+    }
+    picker = ownsVariant(baseId, chosenVariant)
+      ? mountCopyChoice(slot, { userData, pokeId: baseId, variant: chosenVariant, name: base.name, mode: "evolve", preselect: pendingCopyUid })
+      : mountCopyChoice(slot, { userData, pokeId: -1, variant: chosenVariant, name: base.name, mode: "evolve" });
   }
 
   if (btnNormal) {
@@ -1823,20 +2076,22 @@ function openEvolutionModal(baseId) {
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
   confirmBtn.addEventListener("click", () => {
     if (!selectedTarget) return;
-    withActionLock(() => handleEvolutionConfirm(baseId, selectedTarget, chosenVariant, overlay));
+    const copy = picker.get();
+    if (!copy.ok) { hintEl.textContent = copy.reason; hintEl.style.color = "var(--cc-red)"; return; }
+    withActionLock(() => handleEvolutionConfirm(baseId, selectedTarget, chosenVariant, overlay, requestIdFor(selectedTarget, chosenVariant, copy.uid), copy));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleEvolutionConfirm(baseId, targetId, variant, overlay) {
+async function handleEvolutionConfirm(baseId, targetId, variant, overlay, requestId, copy = null) {
   try {
     const base = pokemonData[baseId];
     const target = pokemonData[targetId];
 
     const prev = structuredClone(userData);
 
-    const res = await evolvePokemon(baseId, targetId, variant);
+    const res = await evolvePokemon(baseId, targetId, variant, requestId, copy);
     if (!res?.success) throw new Error(res?.error || "Evolution failed");
 
     // If this Pokémon was on team, remove it (UI convenience)
@@ -1880,7 +2135,7 @@ async function handleEvolutionConfirm(baseId, targetId, variant, overlay) {
     closeOverlay(overlay);
   } catch (err) {
     closeOverlay(overlay);
-    showActionError(err, "Couldn't evolve");
+    showActionError(err, "Couldn’t evolve");
     return;
     closeOverlay(overlay);
   }
@@ -1937,28 +2192,46 @@ function openDonationConfirmModal(pokeId, variant) {
         ? `<p style="color:var(--cc-gold);font-weight:900;margin-top:-6px;">✨ +${dustPreview} Shiny Dust</p>`
         : ""
     }
+    <div class="cc-copyslot"></div>
     <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
       <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
       <button class="confirm-btn" style="background: var(--cc-gold); color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
     </div>
   `;
 
-  modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
-  modal.querySelector(".confirm-btn").addEventListener("click", () => {
-    withActionLock(() => handleDonationConfirm(pokeId, v, overlay));
+  const cancelEl = modal.querySelector(".cancel-btn");
+  cancelEl.addEventListener("click", () => closeOverlay(overlay));
+  const idFor = requestIds();
+  const confirmEl = modal.querySelector(".confirm-btn");
+  // TM system (T5): which copy, and the TM warning for a trained one (D-T10).
+  const syncButtons = () => {
+    const c = picker.get();
+    confirmEl.disabled = !c.ok;
+    confirmEl.style.opacity = c.ok ? "1" : "0.5";
+    confirmEl.textContent = c.copy?.trained ? `Donate trained ${p.name}` : "Confirm";
+    cancelEl.textContent = c.copy?.trained ? "Keep it" : "Cancel";
+  };
+  const picker = mountCopyChoice(modal.querySelector(".cc-copyslot"), {
+    userData, pokeId, variant: v, name: p.name, mode: "donate", onChange: syncButtons, preselect: pendingCopyUid,
+  });
+  syncButtons();
+  confirmEl.addEventListener("click", () => {
+    const copy = picker.get();
+    if (!copy.ok) return;
+    withActionLock(() => handleDonationConfirm(pokeId, v, overlay, idFor(copy.uid ?? "untrained"), copy));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleDonationConfirm(pokeId, variant, overlay) {
+async function handleDonationConfirm(pokeId, variant, overlay, requestId, copy = null) {
   try {
     const p = pokemonData[pokeId];
     const v = normVariant(variant);
 
     const prev = structuredClone(userData);
 
-    const res = await donatePokemon(pokeId, v);
+    const res = await donatePokemon(pokeId, v, requestId, copy);
     if (!res?.success) throw new Error(res?.error || "Donation failed");
 
     // If this Pokémon is on team, remove it (since counts changed)
@@ -2018,7 +2291,7 @@ async function handleDonationConfirm(pokeId, variant, overlay) {
     closeOverlay(overlay);
   } catch (err) {
     closeOverlay(overlay);
-    showActionError(err, "Couldn't donate");
+    showActionError(err, "Couldn’t donate");
     return;
     closeOverlay(overlay);
   }
@@ -2035,7 +2308,7 @@ function onlyVariant(pid) {
 }
 
 function duplicateRows() {
-  return bulkRules.duplicateRows(userData.pokemon, pokemonData);
+  return bulkRules.duplicateRows(userData.pokemon, pokemonData, userData.trained, userData.copies);
 }
 
 function multiSelectRows() {
@@ -2046,7 +2319,7 @@ function multiSelectRows() {
 // Change Team edits, so it can't be used for these locks.
 function multiSelectBlock(pid) {
   const savedTeam = (userData.currentTeam || []).map(toTeamObj).filter(Boolean);
-  return bulkRules.multiSelectBlock(pid, { pokemon: userData.pokemon, pokemonData, savedTeam });
+  return bulkRules.multiSelectBlock(pid, { pokemon: userData.pokemon, pokemonData, savedTeam, trained: userData.trained });
 }
 
 function bulkTotals(rows) {
@@ -2107,12 +2380,17 @@ function toggleMultiSelected(id) {
 function openDonateDuplicatesModal() {
   const rows = duplicateRows();
   if (!rows.length) return;
-  const { copies } = bulkTotals(rows);
+  const pickable = rows.some((r) => r.copies);
   openBulkConfirmModal({
     mode: "duplicates",
     rows,
-    title: `🧹 Donate ${copies} duplicate${copies === 1 ? "" : "s"}?`,
-    subtitle: "You'll keep 1 of each.",
+    title: (picked) => {
+      const { copies } = bulkTotals(picked);
+      return `🧹 Donate ${copies} duplicate${copies === 1 ? "" : "s"}?`;
+    },
+    subtitle: pickable
+      ? "You'll keep your best copy of each, plus anything on a team or with TM moves. Tap a Pokémon to keep it too."
+      : "You'll keep your best copy of each, plus anything on a team or with TM moves.",
   });
 }
 
@@ -2127,8 +2405,14 @@ function openMultiSelectDonateModal() {
   });
 }
 
+// Rows that name their copies (Donate Duplicates) show one tile per copy
+// with its Level; tapping a tile keeps that copy. `title` may be a function
+// of the rows still picked.
 function openBulkConfirmModal({ mode, rows, title, subtitle }) {
-  const { cc, dust } = bulkTotals(rows);
+  const perCopy = rows.some((r) => r.copies);
+  const picked = new Set(rows.flatMap((r) => r.uids ?? []));
+  const current = () => (perCopy ? bulkRules.pickedRows(rows, picked) : rows);
+  const titleText = () => (typeof title === "function" ? title(current()) : title);
   const overlay = createOverlay();
   const modal = document.createElement("div");
   modal.style.cssText = `
@@ -2138,45 +2422,95 @@ function openBulkConfirmModal({ mode, rows, title, subtitle }) {
     display: flex; flex-direction: column;
   `;
 
+  const sprite = (r, name) =>
+    `<img src="/public/sprites/pokemon/${r.variant === "shiny" ? "shiny" : "normal"}/${r.pokeId}.gif" alt="${name}">`;
   const tiles = rows
     .map((r) => {
       const name = pokemonData[r.pokeId]?.name || `#${r.pokeId}`;
       const shiny = r.variant === "shiny";
-      return `
+      if (!r.copies) {
+        return `
         <div class="bulk-tile${shiny ? " shiny" : ""}">
-          <img src="/public/sprites/pokemon/${shiny ? "shiny" : "normal"}/${r.pokeId}.gif" alt="${name}">
+          ${sprite(r, name)}
           <div class="bulk-tile-name">${name}</div>
           <div class="bulk-tile-count">${shiny ? "✨ " : ""}−${r.count}</div>
         </div>`;
+      }
+      return r.copies
+        .map((c) => `
+        <button type="button" class="bulk-tile bulk-copy${shiny ? " shiny" : ""}" data-uid="${c.uid}" aria-pressed="true"
+          aria-label="${shiny ? "Shiny " : ""}${name}, Level ${c.level}">
+          ${sprite(r, name)}
+          <div class="bulk-tile-name">${shiny ? "✨ " : ""}${name}</div>
+          <div class="bulk-tile-level">Lv ${c.level}</div>
+          <div class="bulk-tile-count"></div>
+        </button>`)
+        .join("");
     })
     .join("");
 
   modal.innerHTML = `
-    <h2 style="color:var(--cc-gold);margin:0 0 0.25rem;">${title}</h2>
+    <h2 class="bulk-title" style="color:var(--cc-gold);margin:0 0 0.25rem;"></h2>
     <p style="color:var(--cc-text-muted);margin:0 0 0.75rem;font-weight:600;">${subtitle}</p>
     <div class="bulk-grid">${tiles}</div>
-    <p style="color:var(--cc-gold);font-weight:800;margin:0.75rem 0 0;">💰 +${fmtCC(cc)} CC</p>
-    ${dust > 0 ? `<p style="color:var(--cc-gold);font-weight:900;margin:0.25rem 0 0;">✨ +${dust} Shiny Dust</p>` : ""}
+    <p class="bulk-cc" style="color:var(--cc-gold);font-weight:800;margin:0.75rem 0 0;"></p>
+    <p class="bulk-dust" style="color:var(--cc-gold);font-weight:900;margin:0.25rem 0 0;"></p>
     <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
       <button class="cancel-btn" style="background: var(--cc-surface-raised); color: var(--cc-text); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
       <button class="confirm-btn" style="background: var(--cc-gold); color: var(--bg); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700;">Confirm</button>
     </div>
   `;
 
+  const confirmBtn = modal.querySelector(".confirm-btn");
+  const update = () => {
+    const now = current();
+    const { cc, dust, copies } = bulkTotals(now);
+    modal.querySelector(".bulk-title").textContent = titleText();
+    modal.querySelector(".bulk-cc").textContent = `💰 +${fmtCC(cc)} CC`;
+    const dustEl = modal.querySelector(".bulk-dust");
+    dustEl.textContent = dust > 0 ? `✨ +${dust} Shiny Dust` : "";
+    dustEl.style.display = dust > 0 ? "" : "none";
+    confirmBtn.disabled = copies === 0;
+    confirmBtn.style.opacity = copies === 0 ? "0.45" : "";
+    modal.querySelectorAll(".bulk-copy").forEach((el) => {
+      const on = picked.has(el.dataset.uid);
+      el.setAttribute("aria-pressed", String(on));
+      el.classList.toggle("kept", !on);
+      el.querySelector(".bulk-tile-count").textContent = on ? "Donate" : "Keep";
+    });
+  };
+  modal.querySelectorAll(".bulk-copy").forEach((el) =>
+    el.addEventListener("click", () => {
+      const uid = el.dataset.uid;
+      if (picked.has(uid)) picked.delete(uid);
+      else picked.add(uid);
+      update();
+    })
+  );
+  update();
+
   modal.querySelector(".cancel-btn").addEventListener("click", () => closeOverlay(overlay));
-  modal.querySelector(".confirm-btn").addEventListener("click", () => {
-    withActionLock(() => handleBulkDonate(mode, rows, overlay));
+  // One id per payload: unticking a copy changes the request, so it gets a
+  // new id instead of conflicting with an earlier attempt.
+  const ids = new Map();
+  confirmBtn.addEventListener("click", () => {
+    // Send only what the server reads; the copy list is for this dialog.
+    const send = current().map(({ copies, ...r }) => r);
+    if (!send.length) return;
+    const key = JSON.stringify(send);
+    if (!ids.has(key)) ids.set(key, newRequestId());
+    withActionLock(() => handleBulkDonate(mode, send, overlay, ids.get(key)));
   });
 
   overlay.appendChild(modal);
 }
 
-async function handleBulkDonate(mode, rows, overlay) {
+async function handleBulkDonate(mode, rows, overlay, requestId) {
   const prev = structuredClone(userData);
   let res;
 
   try {
-    res = await donateBulk(mode, rows);
+    res = await donateBulk(mode, rows, requestId);
     if (!res?.success) throw new Error(res?.error || "Donation failed");
   } catch (err) {
     closeOverlay(overlay);
@@ -2187,7 +2521,7 @@ async function handleBulkDonate(mode, rows, overlay) {
     return err?.status
       ? showBulkErrorModal("Nothing was donated.", err.message)
       : showBulkErrorModal(
-          "Couldn't reach the server.",
+          "Couldn’t reach the server.",
           "Your collection has been refreshed. Check it before trying again."
         );
   }

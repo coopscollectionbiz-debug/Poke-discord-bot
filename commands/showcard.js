@@ -1,8 +1,7 @@
 // ==========================================================
-// 🪪 /showcard — Public version of /trainercard
-// ==========================================================
-// Simplified: Always shows YOUR card, publicly.
-// Fully compatible with updated showTrainerCard().
+// /showcard: old name. /trainercard's "Share to channel" button replaces it
+// (three-teams split); kept as an alias for about two weeks. Posts your
+// trainer card publicly, without the private Luck row.
 // ==========================================================
 
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
@@ -14,7 +13,7 @@ import { showTrainerCard } from "./trainercard.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("showcard")
-    .setDescription("Display your Trainer Card publicly."),
+    .setDescription("Old name: shares your Trainer Card. Use /trainercard → Share to channel."),
 
   async execute(interaction, trainerData, _saveTrainerDataLocal, _saveDataToDiscord, _lockUser, _enqueueSave, client) {
     try {
@@ -28,7 +27,7 @@ export default {
       let user = trainerData[userId];
       if (!user) {
         return safeReply(interaction, {
-          content: "You don't have a Trainer Card yet! Use `/trainercard` to create one.",
+          content: "⚠️ You don’t have a Trainer Card yet! Use `/trainercard` to create one.",
           flags: MessageFlags.Ephemeral
         });
       }
@@ -42,12 +41,12 @@ export default {
       );
 
       // Render card
-      await showTrainerCard(interaction, user);
+      await showTrainerCard(interaction, user, trainerData, null, { shared: true });
 
     } catch (err) {
       console.error("❌ /showcard error:", err);
       await safeReply(interaction, {
-        content: "Failed to show Trainer Card. Please try again later.",
+        content: "❌ Failed to show Trainer Card. Please try again later.",
         flags: MessageFlags.Ephemeral
       });
     }

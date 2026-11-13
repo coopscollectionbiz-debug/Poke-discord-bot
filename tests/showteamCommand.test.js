@@ -21,7 +21,7 @@ const ctx = { nonce: "abc123", ownerId: "111", ownerName: "Coop", slotCount: vie
 section("Command definition unchanged");
 {
   const json = showteam.data.toJSON();
-  assertEqual([json.name, json.description, (json.options ?? []).length], ["showteam", "Post your Trainer and Showcase team as an image.", 0], "same name, description, no options");
+  assertEqual([json.name, json.description, (json.options ?? []).length], ["showteam", "Old name for /showcase: shows your Showcase team.", 1], "kept as an alias of /showcase (user: option)");
   assertEqual(json.default_member_permissions ?? null, null, "no permission gate (as before)");
   assertEqual(LAYOUT, "refined", "uses the approved refined layout");
   assertEqual(COLLECTOR_MS, 600_000, "controls expire after 10 minutes");
@@ -49,7 +49,7 @@ section("Routing and permissions");
   assertEqual(route({ customId: "showteam:abc123:inspect", userId: "111", values: ["7"] }), null, "out-of-range slot ignored");
   assertEqual(route({ customId: "showteam:abc123:manage", userId: "111" }), { action: "manage" }, "owner may manage");
   const deny = route({ customId: "showteam:abc123:manage", userId: "999" });
-  assertTrue(deny.action === "deny" && deny.reason.includes("Coop's Showcase team"), "others are told whose Showcase team it is");
+  assertTrue(deny.action === "deny" && deny.reason.includes("Coop's Team"), "others are told whose Team it is");
   assertEqual(route({ customId: "showteam:zzz:manage", userId: "111" }), null, "another message's nonce is not ours");
   assertEqual(route({ customId: "inv:abc123:next", userId: "111" }), null, "other commands' ids ignored");
 }
@@ -69,14 +69,14 @@ section("Image: GIF gate and fallbacks");
   const calls = [];
   const fake = async (_v, o) => { calls.push(o.animate ? "gif" : "png"); return Buffer.from(o.animate ? "GIF" : "PNG"); };
   const gate = createRenderGate(1);
-  assertEqual((await renderTeamImage(view, { gate, env: {}, render: fake })).name, "team.gif", "free slot: animated");
+  assertEqual((await renderTeamImage(view, { gate, pool: null, env: {}, render: fake })).name, "team.gif", "free slot: animated");
   assertEqual(gate.active, 0, "slot released after rendering");
   const held = gate.tryAcquire();
-  assertEqual((await renderTeamImage(view, { gate, env: {}, render: fake })).name, "team.png", "busy: PNG straight away");
+  assertEqual((await renderTeamImage(view, { gate, pool: null, env: {}, render: fake })).name, "team.png", "busy: PNG straight away");
   held();
-  assertEqual((await renderTeamImage(view, { gate, env: { SHOWTEAM_ANIMATED: "0" }, render: fake })).name, "team.png", "SHOWTEAM_ANIMATED=0: PNG");
+  assertEqual((await renderTeamImage(view, { gate, pool: null, env: { SHOWTEAM_ANIMATED: "0" }, render: fake })).name, "team.png", "SHOWTEAM_ANIMATED=0: PNG");
   const failing = async (_v, o) => { if (o.animate) throw new Error("boom"); return Buffer.from("PNG"); };
-  const r = await renderTeamImage(view, { gate, env: {}, render: failing });
+  const r = await renderTeamImage(view, { gate, pool: null, env: {}, render: failing });
   assertTrue(r.name === "team.png" && gate.active === 0, "GIF failure falls back to PNG and frees the slot");
   const real = await renderTeamImage(view, { gate: createRenderGate(1), env: { SHOWTEAM_ANIMATED: "0" } });
   assertEqual([real.buffer.readUInt32BE(16), real.buffer.readUInt32BE(20)], [1200, 920], "real render: 1200×920 PNG");

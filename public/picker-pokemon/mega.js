@@ -118,9 +118,9 @@ function teamLineHTML() {
   const c = cardForSlot(slot);
   if (!c) return "";
   if (c.battleStatus?.state === "ready") {
-    return `<p class="mega-team ready">On your Showcase team: <b>${esc(c.name)}</b> · Battle-ready</p>`;
+    return `<p class="mega-team ready">On your Team: <b>${esc(c.name)}</b> · Battle-ready</p>`;
   }
-  return `<p class="mega-team warn"><b>${esc(c.name)}</b> is on your Showcase team but battles as ${esc(c.baseSpecies)} for now. ${esc(c.battleStatus?.detail ?? "")}</p>`;
+  return `<p class="mega-team warn"><b>${esc(c.name)}</b> is on your Team but battles as ${esc(c.baseSpecies)} for now. ${esc(c.battleStatus?.detail ?? "")}</p>`;
 }
 
 function render() {
@@ -134,7 +134,7 @@ function render() {
         <h2><span class="mega-mark" aria-hidden="true">MEGA</span> Mega Evolutions</h2>
         ${progressHTML()}
       </div>
-      <p class="mega-sub">Mega forms of Pokémon you own. A Mega shares its Pokémon's Level and team slot. Each team can hold one Mega.</p>
+      <p class="mega-sub">Mega forms of Pokémon you own. A Mega shares its Pokémon's Level and Team slot, and one Mega can be on your Team.</p>
       ${teamLineHTML()}
       <p class="mega-status" role="status" aria-live="polite">${esc(statusText)}</p>
       ${state.stones.length ? `<p class="mega-stones">💎 ${state.stones.map((s) => `${esc(s.name)} ×${s.quantity}`).join(" · ")}</p>` : ""}
@@ -182,7 +182,7 @@ function cardHTML(c) {
     // Teams are edited on the Teams page; without a team editor here
     // (ctx.setTeam) the card links there instead of editing a Team.
     if (c.teamSelectable && !ctx.setTeam) buttons.push(onTeam
-      ? `<span class="mega-btn on" aria-label="On your Showcase team">✓ On Team</span>`
+      ? `<span class="mega-btn on" aria-label="On your Casual team">✓ On Team</span>`
       : `<a class="mega-btn" href="/public/teams/?id=${encodeURIComponent(ctx.userId)}">Use on a team</a>`);
     else if (c.teamSelectable) buttons.push(onTeam
       ? `<button type="button" class="mega-btn on" data-action="team-remove" data-card="${esc(c.cardId)}" aria-pressed="true">✓ On Team</button>`

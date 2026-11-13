@@ -1,0 +1,588 @@
+{
+  "parity": {
+    "battles": 6000,
+    "differences": 0
+  },
+  "mirror": [
+    {
+      "label": "none (control)",
+      "winRate": 0.491,
+      "ci": [
+        0.46912834336588444,
+        0.5129061647509248
+      ],
+      "turns": 30.6805,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: life_orb",
+      "winRate": 0.288,
+      "ci": [
+        0.2685750988910168,
+        0.3082377589716006
+      ],
+      "turns": 20.9655,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: choice_band",
+      "winRate": 0.83,
+      "ci": [
+        0.8129081428892769,
+        0.8458265594943845
+      ],
+      "turns": 25.9885,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: choice_specs",
+      "winRate": 0.6905,
+      "ci": [
+        0.6698902811472949,
+        0.7103792970469097
+      ],
+      "turns": 28.1275,
+      "capRate": 0.0005
+    },
+    {
+      "label": "all 6: choice_scarf",
+      "winRate": 0.792,
+      "ci": [
+        0.7736601100068135,
+        0.8092202933144871
+      ],
+      "turns": 31.3195,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: leftovers",
+      "winRate": 0.8865,
+      "ci": [
+        0.8718505801436812,
+        0.8996674879511223
+      ],
+      "turns": 28.5885,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: focus_sash",
+      "winRate": 0.512,
+      "ci": [
+        0.4900908376752856,
+        0.5338631515023021
+      ],
+      "turns": 30.6645,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: sitrus_berry",
+      "winRate": 0.897,
+      "ci": [
+        0.8829083499777469,
+        0.909569458647446
+      ],
+      "turns": 30.094,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: assault_vest",
+      "winRate": 0.7385,
+      "ci": [
+        0.7187959885243855,
+        0.7572895463801699
+      ],
+      "turns": 30.557,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: expert_belt",
+      "winRate": 0.5755,
+      "ci": [
+        0.5537133468718273,
+        0.5969971683704953
+      ],
+      "turns": 30.2845,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: rocky_helmet",
+      "winRate": 0.908,
+      "ci": [
+        0.8945386935076892,
+        0.9198969385302923
+      ],
+      "turns": 22.6025,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: eviolite",
+      "winRate": 0.626,
+      "ci": [
+        0.6045711453178447,
+        0.6469457410468261
+      ],
+      "turns": 31.1145,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: muscle_band",
+      "winRate": 0.622,
+      "ci": [
+        0.6005340668731788,
+        0.6429981564322961
+      ],
+      "turns": 29.704,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: wise_glasses",
+      "winRate": 0.572,
+      "ci": [
+        0.5501972470072362,
+        0.5935266880582899
+      ],
+      "turns": 30.7685,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: shell_bell",
+      "winRate": 0.68,
+      "ci": [
+        0.6592273915492388,
+        0.7000824461145767
+      ],
+      "turns": 30.2805,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: quick_claw",
+      "winRate": 0.608,
+      "ci": [
+        0.5864163049391475,
+        0.6291695976591416
+      ],
+      "turns": 30.816,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: scope_lens",
+      "winRate": 0.6105,
+      "ci": [
+        0.5889359737980575,
+        0.6316403432122293
+      ],
+      "turns": 30.0555,
+      "capRate": 0
+    },
+    {
+      "label": "all 6: STAB type booster",
+      "winRate": 0.639,
+      "ci": [
+        0.6177023584837669,
+        0.6597646828232905
+      ],
+      "turns": 28.989,
+      "capRate": 0
+    },
+    {
+      "label": "smart loadout, Item Clause",
+      "winRate": 0.774,
+      "ci": [
+        0.755154616738121,
+        0.791794802816798
+      ],
+      "turns": 26.98,
+      "capRate": 0
+    },
+    {
+      "label": "smart loadout, no clause",
+      "winRate": 0.8735,
+      "ci": [
+        0.8582117261523223,
+        0.8873561870000947
+      ],
+      "turns": 27.784,
+      "capRate": 0
+    }
+  ],
+  "tierUplift": [
+    {
+      "tier": "common",
+      "life_orb": 0.5265,
+      "leftovers": 0.6645,
+      "focus_sash": 0.6125,
+      "eviolite": 0.92,
+      "smart": 0.763,
+      "nfeShare": 0.9641666666666666
+    },
+    {
+      "tier": "uncommon",
+      "life_orb": 0.509,
+      "leftovers": 0.7215,
+      "focus_sash": 0.563,
+      "eviolite": 0.7465,
+      "smart": 0.811,
+      "nfeShare": 0.48
+    },
+    {
+      "tier": "rare",
+      "life_orb": 0.5075,
+      "leftovers": 0.7395,
+      "focus_sash": 0.6035,
+      "eviolite": 0.6505,
+      "smart": 0.7635,
+      "nfeShare": 0.31833333333333336
+    },
+    {
+      "tier": "epic",
+      "life_orb": 0.4555,
+      "leftovers": 0.7625,
+      "focus_sash": 0.6015,
+      "eviolite": 0.5835,
+      "smart": 0.772,
+      "nfeShare": 0.21083333333333334
+    },
+    {
+      "tier": "legendary",
+      "life_orb": 0.5505,
+      "leftovers": 0.738,
+      "focus_sash": 0.572,
+      "eviolite": 0.484,
+      "smart": 0.7225,
+      "nfeShare": 0
+    }
+  ],
+  "crossTier": [
+    {
+      "lo": "common",
+      "hi": "uncommon",
+      "none": 0.0445,
+      "both": 0.057,
+      "underdogOnly": 0.1135,
+      "favouriteOnly": 0.024
+    },
+    {
+      "lo": "uncommon",
+      "hi": "rare",
+      "none": 0.291,
+      "both": 0.3245,
+      "underdogOnly": 0.472,
+      "favouriteOnly": 0.1835
+    },
+    {
+      "lo": "rare",
+      "hi": "epic",
+      "none": 0.2715,
+      "both": 0.292,
+      "underdogOnly": 0.4285,
+      "favouriteOnly": 0.1515
+    },
+    {
+      "lo": "epic",
+      "hi": "legendary",
+      "none": 0.077,
+      "both": 0.1355,
+      "underdogOnly": 0.1765,
+      "favouriteOnly": 0.048
+    },
+    {
+      "lo": "common",
+      "hi": "epic",
+      "none": 0.004,
+      "both": 0.0085,
+      "underdogOnly": 0.0135,
+      "favouriteOnly": 0.0015
+    },
+    {
+      "lo": "rare",
+      "hi": "legendary",
+      "none": 0.0255,
+      "both": 0.042,
+      "underdogOnly": 0.049,
+      "favouriteOnly": 0.014
+    }
+  ],
+  "rankedBins": [
+    {
+      "bin": "1–1.1",
+      "n": 2000,
+      "none": 0.26,
+      "both": 0.2875,
+      "favOnly": 0.1835,
+      "dogOnly": 0.4065
+    },
+    {
+      "bin": "1.1–1.25",
+      "n": 2000,
+      "none": 0.0385,
+      "both": 0.063,
+      "favOnly": 0.0265,
+      "dogOnly": 0.0855
+    },
+    {
+      "bin": "1.25–1.5",
+      "n": 2000,
+      "none": 0.0015,
+      "both": 0.0045,
+      "favOnly": 0.0015,
+      "dogOnly": 0.005
+    },
+    {
+      "bin": "1.5–2",
+      "n": 428,
+      "none": 0,
+      "both": 0,
+      "favOnly": 0,
+      "dogOnly": 0
+    },
+    {
+      "bin": "2–3",
+      "n": 0,
+      "none": null,
+      "both": null,
+      "favOnly": null,
+      "dogOnly": null
+    },
+    {
+      "bin": "3–∞",
+      "n": 0,
+      "none": null,
+      "both": null,
+      "favOnly": null,
+      "dogOnly": null
+    }
+  ],
+  "casualBins": [
+    {
+      "bin": "1–1.1",
+      "n": 2000,
+      "none": 0.388,
+      "both": 0.4755,
+      "favOnly": 0.186,
+      "dogOnly": 0.696
+    },
+    {
+      "bin": "1.1–1.25",
+      "n": 323,
+      "none": 0.2848297213622291,
+      "both": 0.2631578947368421,
+      "favOnly": 0.2693498452012384,
+      "dogOnly": 0.2724458204334365
+    },
+    {
+      "bin": "1.25–1.5",
+      "n": 363,
+      "none": 0.18457300275482094,
+      "both": 0.19834710743801653,
+      "favOnly": 0.19008264462809918,
+      "dogOnly": 0.2066115702479339
+    },
+    {
+      "bin": "1.5–2",
+      "n": 601,
+      "none": 0.09484193011647254,
+      "both": 0.09650582362728785,
+      "favOnly": 0.07820299500831947,
+      "dogOnly": 0.1048252911813644
+    },
+    {
+      "bin": "2–3",
+      "n": 946,
+      "none": 0.11627906976744186,
+      "both": 0.10887949260042283,
+      "favOnly": 0.08668076109936575,
+      "dogOnly": 0.10887949260042283
+    },
+    {
+      "bin": "3–∞",
+      "n": 2000,
+      "none": 0.0285,
+      "both": 0.026,
+      "favOnly": 0.0255,
+      "dogOnly": 0.027
+    }
+  ],
+  "length": [
+    {
+      "label": "no items",
+      "turns": 18.764,
+      "capRate": 0.0005,
+      "agg": {
+        "sash": 0,
+        "berry": 0,
+        "helmet": 0,
+        "orb": 0,
+        "heal": 0,
+        "quickClaw": 0,
+        "residualHeal": 0
+      }
+    },
+    {
+      "label": "all Leftovers",
+      "turns": 21.288,
+      "capRate": 0.002,
+      "agg": {
+        "sash": 0,
+        "berry": 0,
+        "helmet": 0,
+        "orb": 0,
+        "heal": 0,
+        "quickClaw": 0,
+        "residualHeal": 580955
+      }
+    },
+    {
+      "label": "all Leftovers + Sitrus mix",
+      "turns": 21.72,
+      "capRate": 0.002,
+      "agg": {
+        "sash": 0,
+        "berry": 7766,
+        "helmet": 0,
+        "orb": 0,
+        "heal": 284154,
+        "quickClaw": 0,
+        "residualHeal": 270949
+      }
+    },
+    {
+      "label": "smart (clause)",
+      "turns": 19.4525,
+      "capRate": 0.0025,
+      "agg": {
+        "sash": 186,
+        "berry": 629,
+        "helmet": 0,
+        "orb": 90669,
+        "heal": 19589,
+        "quickClaw": 0,
+        "residualHeal": 24196
+      }
+    },
+    {
+      "label": "smart (no clause)",
+      "turns": 22.1815,
+      "capRate": 0.005,
+      "agg": {
+        "sash": 0,
+        "berry": 0,
+        "helmet": 0,
+        "orb": 0,
+        "heal": 0,
+        "quickClaw": 0,
+        "residualHeal": 388
+      }
+    },
+    {
+      "label": "all Shell Bell",
+      "turns": 18.6565,
+      "capRate": 0,
+      "agg": {
+        "sash": 0,
+        "berry": 0,
+        "helmet": 0,
+        "orb": 0,
+        "heal": 251427,
+        "quickClaw": 0,
+        "residualHeal": 0
+      }
+    },
+    {
+      "label": "walls + Leftovers",
+      "turns": 26.454,
+      "capRate": 0
+    }
+  ],
+  "rankCasual": {
+    "highN": 45,
+    "lowN": 129,
+    "no items": 0.039,
+    "both itemized": 0.044,
+    "only high rank itemized": 0.042,
+    "only low rank itemized": 0.052
+  },
+  "singleHolder": [
+    {
+      "id": "life_orb",
+      "winRate": 0.438
+    },
+    {
+      "id": "choice_band",
+      "winRate": 0.6165
+    },
+    {
+      "id": "choice_specs",
+      "winRate": 0.5765
+    },
+    {
+      "id": "choice_scarf",
+      "winRate": 0.602
+    },
+    {
+      "id": "leftovers",
+      "winRate": 0.648
+    },
+    {
+      "id": "focus_sash",
+      "winRate": 0.5135
+    },
+    {
+      "id": "sitrus_berry",
+      "winRate": 0.6205
+    },
+    {
+      "id": "assault_vest",
+      "winRate": 0.57
+    },
+    {
+      "id": "expert_belt",
+      "winRate": 0.52
+    },
+    {
+      "id": "rocky_helmet",
+      "winRate": 0.668
+    },
+    {
+      "id": "eviolite",
+      "winRate": 0.529
+    },
+    {
+      "id": "shell_bell",
+      "winRate": 0.55
+    },
+    {
+      "id": "quick_claw",
+      "winRate": 0.514
+    },
+    {
+      "id": "scope_lens",
+      "winRate": 0.511
+    },
+    {
+      "id": "muscle_band",
+      "winRate": 0.5295
+    }
+  ],
+  "levelEquivalent": [
+    {
+      "levelMult": 1,
+      "itemizedWins": 0.779
+    },
+    {
+      "levelMult": 1.03,
+      "itemizedWins": 0.3215
+    },
+    {
+      "levelMult": 1.06,
+      "itemizedWins": 0.1875
+    },
+    {
+      "levelMult": 1.1,
+      "itemizedWins": 0.0595
+    },
+    {
+      "levelMult": 1.15,
+      "itemizedWins": 0.023
+    }
+  ]
+}

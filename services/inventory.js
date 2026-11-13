@@ -19,7 +19,7 @@
 // ==========================================================
 
 import { getCatalogItem, isHoldable, CATEGORIES, RARITIES, ABSOLUTE_MAX_STACK } from "../catalog/items.js";
-import { isMegaCapabilityEnabled } from "../config/features.js";
+import { isMegaCapabilityEnabled, isHeldItemCapabilityEnabled } from "../config/features.js";
 
 /** Largest quantity a single grant/consume may move. */
 export const MAX_QUANTITY_PER_OP = 1_000_000;
@@ -40,12 +40,24 @@ export function validateQuantity(q) {
   return { ok: true, value: q };
 }
 
-/** An item that may be held in user.items today (active + inventory-stored). */
-export function validateHoldableItem(id) {
+// Mega Stones and Mega Shards stay "defined" in the catalog. They can be
+// granted only while the Mega "rewards" capability is on (config/features.js:
+// MEGA_EVOLUTION_ENABLED + MEGA_REWARDS_ENABLED=1). Vouchers stay refused.
+const isMegaRewardItem = (entry) => !!entry?.mega || entry?.id === "mega_shard";
+const megaGrantable = (entry, env) => isMegaRewardItem(entry) && isMegaCapabilityEnabled("rewards", env);
+
+/**
+ * An item that may be held in user.items today (active + inventory-stored).
+ * Held items (catalog/heldItems.js) are also gated by the held-item feature
+ * flags for that player, so they can't be granted (admin, rewards) before
+ * launch. opts: { env, userId }.
+ */
+export function validateHoldableItem(id, { env = process.env, userId = null } = {}) {
   const entry = getCatalogItem(id);
   if (!entry) return fail("Unknown item.");
-  if (entry.status !== "active") return fail(`${entry.name} isn't available yet.`);
+  if (entry.status !== "active" && !megaGrantable(entry, env)) return fail(`${entry.name} isn't available yet.`);
   if (entry.storage !== "inventory") return fail(`${entry.name} can't be kept in the bag.`);
+  if (entry.category === "held" && !isHeldItemCapabilityEnabled("dashboard", env, userId)) return fail(`${entry.name} isn't available yet.`);
   return { ok: true, entry };
 }
 
@@ -75,17 +87,45 @@ function ensureItems(user) {
  * non-inventory items, bad quantities, and anything over the stack limit.
  * @returns {{ok:true, quantity:number} | {ok:false, error:string}}
  */
-export function grantItem(user, id, qty) {
+export function grantItem(user, id, qty, { env = process.env } = {}) {
   if (!user || typeof user !== "object") return fail("No player record.");
-  const item = validateHoldableItem(id);
+  const item = validateHoldableItem(id, { env, userId: user.id ?? null });
   if (!item.ok) return item;
   const q = validateQuantity(qty);
   if (!q.ok) return q;
   const max = Math.min(item.entry.maxStack ?? ABSOLUTE_MAX_STACK, ABSOLUTE_MAX_STACK);
   const next = getQuantity(user, id) + q.value;
-  if (next > max) return fail(`You can't hold more than ${max.toLocaleString()} ${item.entry.name}.`, { max });
+  if (next > max) {
+    if (item.entry.category === "held") return fail(`You already own ${item.entry.name}.`, { max, code: "already_owned" });
+    return fail(`You can't hold more than ${max.toLocaleString()} ${item.entry.name}.`, { max });
+  }
   ensureItems(user)[id] = next;
   return { ok: true, quantity: next };
+}
+
+/**
+ * Admin grant (admin dashboard only): any catalog item kept in the bag, live
+ * or not, ignoring release status and feature flags (Mega Stones, Mega
+ * Shards, unreleased TMs, held items before launch). Quantity and stack
+ * limits still apply. Players can't reach this.
+ * @returns {{ok:true, quantity:number, live:boolean} | {ok:false, error:string}}
+ */
+export function adminGrantItem(user, id, qty, { env = process.env } = {}) {
+  if (!user || typeof user !== "object") return fail("No player record.");
+  const entry = getCatalogItem(id);
+  if (!entry) return fail("Unknown item.");
+  if (entry.storage !== "inventory") return fail(`${entry.name} can't be kept in the bag.`);
+  const q = validateQuantity(qty);
+  if (!q.ok) return q;
+  const max = Math.min(entry.maxStack ?? ABSOLUTE_MAX_STACK, ABSOLUTE_MAX_STACK);
+  const next = getQuantity(user, id) + q.value;
+  if (next > max) {
+    if (entry.category === "held") return fail(`They already own ${entry.name}.`, { max, code: "already_owned" });
+    return fail(`They can't hold more than ${max.toLocaleString()} ${entry.name}.`, { max });
+  }
+  ensureItems(user)[id] = next;
+  // live: could a player get it through the game today (same rule as grantItem)?
+  return { ok: true, quantity: next, live: validateHoldableItem(id, { env, userId: user.id ?? null }).ok };
 }
 
 /**
@@ -233,9 +273,12 @@ const isUsableMegaStone = (entry, env) => !!entry?.mega && isMegaCapabilityEnabl
 function usageText(entry, env = process.env) {
   if (!entry) return "Not recognised by this version of the bot.";
   if (isUsableMegaStone(entry, env)) return "Use it on the dashboard (Mega Evolution) to permanently unlock its Mega form for one of your Pokémon.";
+  if (entry.id === "mega_shard" && isMegaCapabilityEnabled("rewards", env)) return "Spend Mega Shards in the dashboard shop on any Mega Stone that can battle.";
   if (entry.status !== "active") return "Not usable yet.";
   if (entry.id === "evolution_stone") return "Used when evolving a Pokémon on the dashboard.";
   if (entry.id === "shiny_dust") return "Used on the dashboard to make a Pokémon shiny, or to evolve a shiny one.";
+  if (entry.category === "tm") return "Teaches its move to one compatible Pokémon. Used up when taught.";
+  if (entry.category === "held") return "A permanent unlock: equip it on the dashboard Teams page (one Pokémon per team).";
   return "No direct use.";
 }
 

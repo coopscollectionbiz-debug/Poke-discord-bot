@@ -15,12 +15,17 @@ import { assertTrue, assertEqual, section, finish } from "./harness.js";
 
 const { createNewUser } = await import("../utils/userSchema.js");
 const { allMegas, getMega, megaSpriteRecord } = await import("../utils/megas.js");
+const ZA = await import("../config/megaBattleProfiles.js");
 const { spriteFileFor, loadStaticSprite } = await import("../utils/render/sprites.js");
 const { loadAnimatedSprite, renderBattleFrame } = await import("../utils/battle/render.js");
-const { buildTeamView, slotView } = await import("../utils/render/teamView.js");
+const { buildTeamView, buildShowcaseView, slotView } = await import("../utils/render/teamView.js");
+const { normalizeBox } = await import("../services/box.js");
+const { normalizeShowcase } = await import("../services/showcaseTeam.js");
+// Live records get their Showcase at load (filled once from the Casual team).
+const launched = (u) => { normalizeBox(u); normalizeShowcase(u); return u; };
 const { renderShowteam } = await import("../utils/render/showteam.js");
 const { renderInspectCard } = await import("../utils/render/inspectCard.js");
-const { trainerCardView, renderTrainerCard } = await import("../utils/render/trainerCard.js");
+const { trainerCardView, renderTrainerCard, TRAINER_CARD_SIZE } = await import("../utils/render/trainerCard.js");
 const { expView, renderExpCard } = await import("../utils/render/expCard.js");
 const { buildShowteamComponents } = await import("../commands/showteam.js");
 const { runBattle, buildTeam } = await import("../utils/battle/runBattle.js");
@@ -98,16 +103,20 @@ section("Fail-closed display: base form everywhere, with a plain reason");
 const asBase = (env, u = ash) => buildTeamView(u, { env });
 const teamsOnly = asBase(TEAMS);
 assertEqual([teamsOnly.slots[0].name, teamsOnly.slots[0].spriteId, teamsOnly.slots[0].mega], ["Charizard", 6, null], "battles off: Charizard is shown as Charizard");
-assertEqual(teamsOnly.megaNotice, "Mega Charizard X is on this team but battles as Charizard for now. Mega battles aren't available yet.", "…and the Team says why, in plain words");
+assertEqual(teamsOnly.megaNotice, "Mega Charizard X is on this Team but battles as Charizard for now. Mega battles aren't available yet.", "…and the Team says why, in plain words");
 const allOff = asBase(OFF);
 assertEqual(JSON.stringify(allOff), JSON.stringify(buildTeamView(strip(ash), { env: OFF })), "Mega Evolution off: the view is exactly the view without any Mega (no notice, no fields)");
 const za = player("300000000000000004", [[26, "normal", 50, "mega-raichu-x"]]);
+const zaOk = asBase(ON, za);
+assertEqual([zaOk.slots[0].name, zaOk.slots[0].spriteId, zaOk.megaNotice ?? null], ["Mega Raichu X", "mega-raichu-x", null], "an unlocked Legends: Z-A Mega (owner-accepted profile) is shown as its Mega");
+ZA.setZaAcceptanceForTesting(false);
 const zav = asBase(ON, za);
-assertEqual([zav.slots[0].name, zav.slots[0].spriteId], ["Raichu", 26], "an unlocked Legends: Z-A Mega (unverified) is shown as its base form");
+ZA.setZaAcceptanceForTesting(true);
+assertEqual([zav.slots[0].name, zav.slots[0].spriteId], ["Raichu", 26], "acceptance off: an unverified Z-A Mega is shown as its base form");
 assertTrue(/battle data hasn't been confirmed/.test(zav.megaNotice), "…with the reason that it can't battle yet");
 const two = player("300000000000000005", [[6, "normal", 60, "mega-charizard-x"], [150, "normal", 70, "mega-mewtwo-x"]]);
 assertEqual(asBase(ON, two).slots.map((s) => s.name), ["Charizard", "Mewtwo"], "two Megas in a stored Team: every slot shows its base form");
-assertTrue(/only one Mega/.test(asBase(ON, two).megaNotice), "…and the notice says only one Mega can be on a Team");
+assertTrue(/Only one Mega/.test(asBase(ON, two).megaNotice), "…and the notice says only one Mega can be on a Team");
 const notUnlocked = player("300000000000000006", [[6, "normal", 60]]);
 notUnlocked.displayedPokemon[0].mega = "mega-charizard-x";
 assertEqual(asBase(ON, notUnlocked).slots[0].name, "Charizard", "a Mega that isn't unlocked on that line is never shown");
@@ -130,8 +139,9 @@ assertTrue(texts.every((t) => t.endsWith(".") && t.length < 90), "each reason is
 
 // ----------------------------------------------------------
 section("Same form on every surface");
+launched(ash); // the trainer card strip is the Showcase (three-teams split)
 const tc = trainerCardView(ash, { displayName: "Ash", trainer: null });
-assertTrue(JSON.stringify(tc.team) === JSON.stringify(buildTeamView(ash, { displayName: "Ash" }).slots), "the trainer card's Team is exactly /showteam's (process flags)");
+assertTrue(JSON.stringify(tc.team) === JSON.stringify(buildShowcaseView(ash, { displayName: "Ash" }).slots), "the trainer card's strip is exactly /showcase's (process flags)");
 process.env.MEGA_EVOLUTION_ENABLED = "1";
 process.env.MEGA_BATTLES_ENABLED = "1";
 const tcOn = trainerCardView(ash, { displayName: "Ash", trainer: null });
@@ -158,7 +168,7 @@ assertTrue(st.length < 8 * 2 ** 20, `/showteam PNG is far under Discord's attach
 const stGif = await renderShowteam(v, { layout: "refined", animate: true });
 assertTrue(stGif.subarray(0, 3).toString() === "GIF" && stGif.length < 8 * 2 ** 20, `animated /showteam with a Mega is a GIF under the limit (${Math.round(stGif.length / 1024)} KB)`);
 assertEqual(pngSize(await renderInspectCard(s1, { owner: "Ash" })), { w: 1000, h: 440 }, "inspect card with a Mega: same 1000×440 card");
-assertEqual(pngSize(await renderTrainerCard(trainerCardView(ash, { displayName: "Ash", trainer: null }))), { w: 1200, h: 640 }, "trainer card: same 1200×640 card");
+assertEqual(pngSize(await renderTrainerCard(trainerCardView(ash, { displayName: "Ash", trainer: null }))), { ...TRAINER_CARD_SIZE }, "trainer card: same size card");
 
 const foe = player("300000000000000010", [[282, "shiny", 55, "mega-gardevoir"], [65, "normal", 50]]);
 const td = { A: ash, B: foe };
@@ -188,13 +198,20 @@ const cardsOn = buildMegaCards(dash, { env: ON });
 const card = (id, env = ON) => buildMegaCards(dash, { env }).find((c) => c.formId === id && c.unlocked !== false) ?? null;
 assertEqual(card("mega-charizard-x").battleStatus.state, "ready", "unlocked + owned + verified + battles on → Battle-ready");
 assertEqual(card("mega-charizard-x", TEAMS).battleStatus, { state: "unavailable", label: "Unlocked · can't battle yet", detail: "Mega battles aren't available yet." }, "battles off → Unlocked, can't battle yet");
-assertEqual(card("mega-raichu-x").battleStatus.state, "unavailable", "a Legends: Z-A Mega is never Battle-ready, even with battles on");
+assertEqual(card("mega-raichu-x").battleStatus.state, "ready", "an owner-accepted Legends: Z-A Mega is Battle-ready with battles on");
+ZA.setZaAcceptanceForTesting(false);
+assertEqual(card("mega-raichu-x").battleStatus.state, "unavailable", "acceptance off: an unverified Z-A Mega is never Battle-ready");
+ZA.setZaAcceptanceForTesting(true);
 assertEqual(card("mega-tyranitar").battleStatus.state, "unavailable", "a dormant Mega (line not owned) can't battle");
 const lockedCard = cardsOn.find((c) => c.state === "locked" && c.formId === "mega-mewtwo-y");
 assertEqual(lockedCard?.battleStatus.state, "locked", "an unlockable preview is Locked, never shown as owned");
-const zaLocked = buildMegaCards(player("300000000000000012", [[26, "normal", 40]]), { env: ON }).find((c) => c.formId === "mega-raichu-y");
-assertTrue(/can't battle yet/.test(zaLocked?.battleStatus.detail ?? ""), "a locked Z-A preview says it won't battle yet");
-assertTrue(cardsOn.every((c) => c.battleStatus.state !== "ready" || (c.unlocked && c.state === "active" && getMega(c.formId).battleProfile.verified)), "no card claims Battle-ready unless unlocked, owned and verified");
+const zaLocked = () => buildMegaCards(player("300000000000000012", [[26, "normal", 40]]), { env: ON }).find((c) => c.formId === "mega-raichu-y");
+assertTrue(!/can't battle yet/.test(zaLocked()?.battleStatus.detail ?? "") && zaLocked()?.battleStatus.state === "locked", "a locked accepted Z-A preview is simply Locked (it will battle once unlocked)");
+ZA.setZaAcceptanceForTesting(false);
+assertTrue(/can't battle yet/.test(zaLocked()?.battleStatus.detail ?? ""), "acceptance off: a locked Z-A preview says it won't battle yet");
+ZA.setZaAcceptanceForTesting(true);
+const acceptedOrVerified = (id) => getMega(id).battleProfile.verified || ZA.isAcceptedZaProfile(getMega(id));
+assertTrue(cardsOn.every((c) => c.battleStatus.state !== "ready" || (c.unlocked && c.state === "active" && acceptedOrVerified(c.formId))), "no card claims Battle-ready unless unlocked, owned and verified or owner-accepted");
 assertTrue(cardsOn.every((c) => c.shortName === c.name.replace(/^Mega /, "")), "cards carry the short form name");
 const blockedCards = buildMegaCards(player("300000000000000013", [[384, "normal", 70, "mega-rayquaza"]]), { env: ON });
 assertTrue(blockedCards.every((c) => c.formId !== "mega-rayquaza" || (c.state === "blocked" && !c.canUnlock && !c.teamSelectable)), "a blocked form is never unlockable or selectable");

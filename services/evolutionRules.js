@@ -8,14 +8,12 @@
 //   1. Generation gate: the target's generation must be live
 //      (config/generations.js). Evolving never creates a species players
 //      can't otherwise obtain yet.
-//   2. Level requirement (Gen 6–9 targets only): where the games evolve a
-//      species by reaching a level, the bot's own Level (utils/training.js)
-//      must be at least that level. Gen 1–5 evolutions are unchanged.
-//   3. Every other official method (items, friendship/affection, trade,
-//      moves, special conditions) maps to the Stone cost alone — the
-//      documented equivalent for mechanics the bot does not have. The
-//      official method is still shown to players for flavour.
-//   4. Evolutions that need a regional form (e.g. Galarian Linoone →
+//   2. No Level requirement, for any generation (owner decision 2026-11-13):
+//      Gen 6–9 evolve on Evolution Stones alone, exactly like Gens 1–5.
+//      Every official method (levels, items, friendship/affection, trade,
+//      moves, special conditions) maps to the Stone cost; the official
+//      method is still shown to players for flavour.
+//   3. Evolutions that need a regional form (e.g. Galarian Linoone →
 //      Obstagoon) are not in `evolvesTo` at all until forms are enabled.
 //
 // Evolution never changes ownership counts beyond the one copy evolved,
@@ -23,19 +21,6 @@
 // ==========================================================
 
 import { isAcquirable } from "../utils/speciesCatalog.js";
-import { getTraining } from "../utils/training.js";
-
-/** Enforce official minimum levels for Gen 6–9 level-up evolutions. */
-export const ENFORCE_LEVEL_EVOLUTIONS = true;
-const LEVEL_TRIGGERS = new Set(["level-up", "in-battle-level-up"]);
-
-/** Official minimum level for evolving base → target, or null. */
-export function requiredLevel(base, target) {
-  const e = target?.evolution;
-  if (!ENFORCE_LEVEL_EVOLUTIONS || !e || Number(target.generation) < 6) return null;
-  if (Number(e.from) !== Number(base?.id) || !LEVEL_TRIGGERS.has(e.trigger) || !(e.minLevel > 0)) return null;
-  return e.minLevel;
-}
 
 /** Human-readable official method (for display; the bot's cost is Stones). */
 export function officialMethodText(target, nameOf = (id) => `#${id}`) {
@@ -76,17 +61,13 @@ export function officialMethodText(target, nameOf = (id) => `#${id}`) {
 }
 
 /**
- * Bot-side requirement check, run inside the user's lock.
+ * Bot-side requirement check, run inside the user's lock: only the
+ * generation gate (there is no Level requirement for any generation).
  * @returns {{ok:true} | {ok:false, error:string, status?:number}}
  */
-export function checkEvolutionRequirements(user, base, target, variant) {
+export function checkEvolutionRequirements(user, base, target, variant, { uid = null } = {}) {
   if (!isAcquirable(target.id)) {
-    return { ok: false, error: `${target.name} isn't available yet. Generation ${target.generation} hasn't been released.` };
-  }
-  const lvl = requiredLevel(base, target);
-  if (lvl) {
-    const have = getTraining(user, base.id, variant).level;
-    if (have < lvl) return { ok: false, error: `${base.name} must be Level ${lvl} to evolve into ${target.name} (yours is Level ${have}).`, requiredLevel: lvl, level: have };
+    return { ok: false, error: `${target.name} isn't available yet — Generation ${target.generation} hasn't been released.` };
   }
   return { ok: true };
 }

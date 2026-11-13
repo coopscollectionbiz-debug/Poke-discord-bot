@@ -16,7 +16,7 @@ import { assertTrue, assertEqual, section, finish } from "./harness.js";
 import { breathingPoses, idleCuts, poseAtFrame, IDLE_LOOP, breathLoop } from "../utils/trainerIdle.js";
 import { nameHash, breathTiming, rectMask, movePart, blinkEyes, applyEvent, idleTimeline, cardSchedule } from "../utils/trainerMotion.js";
 import { trainerImageUrl, trainerIdle } from "../utils/trainerAssets.js";
-import { createBackdrop, hasBackdrop } from "../utils/render/trainerBackdrop.js";
+import { createBackdrop, hasBackdrop, drawTierSky } from "../utils/render/trainerBackdrop.js";
 import { renderTrainerCard } from "../utils/render/trainerCard.js";
 import { renderLeaderboard, leaderboardView } from "../utils/render/leaderboardCard.js";
 import { rankBattleRatings } from "../commands/leaderboard.js";
@@ -87,7 +87,7 @@ section("Idle manifest and GIFs");
 
   // Each loop starts at the trainer's own phase, so the unchanged PNG (the
   // rest pose) is somewhere in the loop rather than always frame 0.
-  for (const file of ["cynthia.png", "youngster-gen4.png", "iris-gen5bw2.png", "sailor-gen3.png"]) {
+  for (const file of ["cynthia.png", "youngster.png", "iris-gen5bw2.png", "hiker.png"]) {
     const g = new GifReader(fs.readFileSync(new URL(`public/sprites/trainers_idle/${manifest[file].gif}`, ROOT)));
     const { px, W, H } = await pixels(file);
     let rest = false;
@@ -140,7 +140,7 @@ section("Offsets and part motions");
   assertTrue(leon.parts.length >= 2 && leon.parts.every((p) => p.d[0] === 1), "Leon's cape: every part sways the same way, not outward");
 
   // Timelines: no flicker slivers, each loop shows its event states.
-  for (const f of ["sailor-gen3.png", "hiker.png", "leon.png", "youngster-gen4.png", "acetrainerf.png", "cynthia.png", "wallace-gen6.png"]) {
+  for (const f of ["hiker.png", "leon.png", "youngster.png", "acetrainerf.png", "cynthia.png", "lance.png"]) {
     const { px: fp, W: fw, H: fh } = await pixels(f);
     const tl = idleTimeline(f, parts[f]?.events ?? [], Math.max(1, idleCuts(fp, fw, fh).steps.length));
     assertTrue(tl.every((s) => s.ms >= 60), `${f}: no frame shorter than 60 ms`);
@@ -183,16 +183,36 @@ section("Tier backdrop");
   }), "no meteor path or tail crosses the trainer");
   const f0 = bd.frame(0), ctx = f0.getContext("2d");
   assertTrue(f0.width === W && f0.height === H && ctx.getImageData(0, 0, W, H).data.some((v, i) => i % 4 === 3 && v > 0), "draws a non-empty frame");
+
+  // The 2026-11-12 ladder: Epic = sky + motes; Legendary adds a stepped glow and twinkles; Mythic adds meteors and a hero.
+  const tierBd = (tier) => createBackdrop({ tier, gridW: W, gridH: H, mask, halo, floorRow: 99, frames: 24 });
+  const lit = (b, f) => { const d = b.frame(f).getContext("2d").getImageData(0, 0, W, H).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n; };
+  const epic = tierBd("epic"), legendary = tierBd("legendary");
+  assertTrue(lit(epic, 0) < 60, `Epic: no glow, just motes on the sky (${lit(epic, 0)} lit cells)`);
+  assertTrue(lit(legendary, 0) > 1000, `Legendary: the stepped glow fills around the trainer (${lit(legendary, 0)} lit cells)`);
+  assertEqual([epic.twinkles.length > 0, legendary.twinkles.length > 0], [false, true], "twinkles from Legendary up");
+  assertEqual([epic.hero, legendary.hero], [null, null], "only Mythic has a hero meteor");
+  assertTrue(bd.hero && bd.hero.travel === 30 && bd.hero.start === 20, "Mythic: one hero meteor a loop, starting 4 frames before the loop ends");
+  const h = bd.hero, step0 = (0 - h.start + 24) % 24;
+  assertTrue(step0 > 0 && step0 < h.life, "the hero is mid-flight on frame 0 (the still used for PNG cards)");
+  assertTrue((() => { for (let s = 0; s <= h.travel; s++) for (let t = 0; t <= h.tail; t++) if (!clear(Math.round(h.x0 + h.dx * (s - t)), Math.round(h.y0 + h.dy * (s - t)))) return false; return true; })(), "the hero's path and tail stay clear of the trainer");
+  // The sky: Epic and above only, painted into the region.
+  const sky = createCanvas(40, 60), sc = sky.getContext("2d");
+  assertEqual(drawTierSky(sc, "rare", { x: 0, y: 0, w: 40, h: 60 }), false, "no sky below Epic");
+  assertEqual(drawTierSky(sc, "mythic", { x: 0, y: 0, w: 40, h: 60 }, { u: 4 }), true, "Mythic paints its sky");
+  const px = (y) => [...sc.getImageData(20, y, 1, 1).data];
+  assertTrue(px(1)[3] === 255 && px(58)[3] === 255, "the sky is opaque");
+  assertTrue(px(58)[0] > px(1)[0], "and lighter toward the bottom, in the tier's colour");
 }
 
 section("Rendered cards");
 {
-  const v = (file, tier) => ({ displayName: "T", trainerFile: file, trainer: { name: "T", tier }, rank: { current: "A", next: "B", remaining: 1, progress: 50 }, tp: 1, cc: 1, owned: 1, shinies: 0, trainers: 1, battle: null, team: [], fallbackTeam: false });
-  assertTrue(isGif(await renderTrainerCard(v("youngster-gen4.png", "common"), { animate: true })), "a Common trainer alone animates the card (breathing)");
+  const v = (file, tier) => ({ displayName: "T", trainerFile: file, trainer: { name: "T", tier }, rank: { current: "A", next: "B", remaining: 1, progress: 50 }, tp: 1, cc: 1, owned: 1, shinies: 0, trainers: 1, badges: [], battle: null, team: [], fallbackTeam: false });
+  assertTrue(isGif(await renderTrainerCard(v("youngster.png", "common"), { animate: true })), "a Common trainer alone animates the card (breathing)");
   assertTrue(isGif(await renderTrainerCard(v("cynthia-masters.png", "mythic"), { animate: true })), "a Mythic trainer card animates");
   assertTrue(!isGif(await renderTrainerCard(v("cynthia-masters.png", "mythic"), { animate: false })), "still mode stays a PNG");
   process.env.TRAINERS_ANIMATED = "0";
-  assertTrue(!isGif(await renderTrainerCard(v("youngster-gen4.png", "common"), { animate: true })), "TRAINERS_ANIMATED=0: a lone static trainer stays a PNG");
+  assertTrue(!isGif(await renderTrainerCard(v("youngster.png", "common"), { animate: true })), "TRAINERS_ANIMATED=0: a lone static trainer stays a PNG");
   delete process.env.TRAINERS_ANIMATED;
   const td = leaderboardWorld();
   const board = await renderLeaderboard(leaderboardView(rankBattleRatings(td, "p6"), td, "p6"), { animate: true });

@@ -33,6 +33,18 @@ const TEAM_FIELD = { display: "displayedPokemon", battle: "battleTeam" };
 const fail = (status, error, code, extra = {}) => ({ ok: false, status, error, code, ...extra });
 const normV = (v) => (v === "shiny" ? "shiny" : "normal");
 
+/**
+ * The Level above `level` at which this species learns `move` by level-up,
+ * or null. The Teach dialog warns with it: the TM would be spent on a move
+ * the Pokémon gets for free later (owner, 2026-11-13).
+ */
+export function laterLevelUpAt(speciesId, move, level) {
+  for (const [at, moveId] of getSpecies(Number(speciesId))?.levelMoves ?? []) {
+    if (moveId === move && at > level) return at;
+  }
+  return null;
+}
+
 /** 1-based slot of the target copy on one team, or null. uid null = an untrained slot of the line. */
 function slotOf(user, team, id, variant, uid) {
   const list = Array.isArray(user?.[TEAM_FIELD[team]]) ? user[TEAM_FIELD[team]] : [];
@@ -70,9 +82,9 @@ export function teachOptions(user, { speciesId, variant }, { env = process.env }
   const level = getTraining(user, id, v).level;
   const targets = [];
   const plain = plainCount(user, id, v);
-  if (plain > 0) targets.push({ key: "untrained", uid: null, rev: null, count: plain, tmMoves: [], teams: teamsOf(user, id, v, null) });
+  if (plain > 0) targets.push({ key: "untrained", uid: null, rev: null, count: plain, level, tmMoves: [], teams: teamsOf(user, id, v, null) });
   for (const c of customCopiesOf(user, id, v)) {
-    targets.push({ key: c.uid, uid: c.uid, rev: c.rev ?? 0, count: 1, tmMoves: c.tmMoves.map(moveInfo), teams: teamsOf(user, id, v, c.uid) });
+    targets.push({ key: c.uid, uid: c.uid, rev: c.rev ?? 0, count: 1, level: copyTraining(user, c.uid)?.level ?? level, tmMoves: c.tmMoves.map(moveInfo), teams: teamsOf(user, id, v, c.uid) });
   }
   for (const t of targets) for (const team of Object.keys(t.teams)) t.teams[team].moves = t.teams[team].moves.map(moveInfo);
 
@@ -83,10 +95,13 @@ export function teachOptions(user, { speciesId, variant }, { env = process.env }
     if (!entry || entry.status !== "active" || !(getQuantity(user, itemId) > 0)) continue;
     const compatible = canLearnByTm(id, move);
     const status = {};
+    const learnsAt = {}; // teachable copies that learn it by level-up later: key → Level
     for (const t of targets) {
       status[t.key] = !compatible ? "incompatible" : learnableMoves(user, id, v, { uid: t.uid }).some((m) => m.id === move) ? "known" : "teachable";
+      const at = status[t.key] === "teachable" ? laterLevelUpAt(id, move, t.level) : null;
+      if (at != null) learnsAt[t.key] = at;
     }
-    tms.push({ item: itemId, owned: getQuantity(user, itemId), ...moveInfo(move), accuracy: entry.tm.accuracy, status });
+    tms.push({ item: itemId, owned: getQuantity(user, itemId), ...moveInfo(move), accuracy: entry.tm.accuracy, status, learnsAt });
   }
   tms.sort((a, b) => a.name.localeCompare(b.name));
   return { ok: true, enabled: true, speciesId: id, variant: v, level, maxMoves: MAX_MOVES, targets, tms };

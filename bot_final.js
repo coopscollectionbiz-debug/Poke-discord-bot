@@ -71,7 +71,7 @@ import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/lo
 import { normalizeTrainers, auditTrainerData, grantTrainer } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
 import { handleInventoryRequest } from "./services/inventoryApi.js";
-import { tmShopView, buyTms } from "./services/tmShop.js";
+import { tmShopView, buyTms, tmLearners } from "./services/tmShop.js";
 import { auraView, equipAura, buyAura, auraArtDir, normalizeAuras, syncTierAuras } from "./services/auras.js";
 import { trainerTier } from "./utils/render/trainerTier.js";
 import { teachOptions, teachTm } from "./services/tmTeaching.js";
@@ -2198,6 +2198,20 @@ app.get(["/api/tm-shop", "/api/tms"], (req, res) => {
   const user = trainerData[id];
   if (!user) return res.status(404).json({ error: "User not found" });
   return res.json(tmShopView(user));
+});
+
+// The player's Pokémon that can learn one TM (the shop's buy dialog), Casual
+// and Ranked team members first. Under /api/tm-shop/ for the blocklist reason above.
+app.get("/api/tm-shop/learners", (req, res) => {
+  const { id, item } = req.query;
+  if (!id || !item) return res.status(400).json({ error: "Missing id/item" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  const r = tmLearners(user, String(item));
+  if (!r.ok) { const { ok, status = 400, ...rest } = r; return res.status(status).json(rest); }
+  const { ok, ...body } = r;
+  return res.json(body);
 });
 
 // Body: { id, item: "tm_<move>", qty: 1–10, requestId? } — a repeated

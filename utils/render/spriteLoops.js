@@ -83,12 +83,21 @@ export function loopPlan(anim) {
  * fits it: { L, fit: [{ k, s } | null] }: sprite i plays its loop k times
  * in L at speed 1/s (s within 1 ± NUDGE), or null (it seams once per loop).
  * `trainerClock`: L must be a whole multiple of 2.4 s (up to 7.2 s).
+ * `singleCapMs`: with the clock and only one animated sprite, multiples of
+ * 2.4 s up to this long (cards pass SINGLE_CLOCK_CAP_MS, 12 s): a lone shiny
+ * on a catch, Pokédex or inspect card then always plays whole cycles
+ * (tools/audit-sprite-loops.mjs: 12.5% of sprites jumped at 7.2 s, 0% at 12 s).
  */
-export function fitLoop(periods, { trainerClock = false } = {}) {
+export const SINGLE_CLOCK_CAP_MS = 12_000;
+export function fitLoop(periods, { trainerClock = false, singleCapMs = 7200 } = {}) {
   const live = periods.filter(Boolean);
   if (!live.length) return { L: TRAINER_LOOP_MS, fit: periods.map(() => null) };
   let candidates;
-  if (trainerClock) candidates = [2400, 4800, 7200];
+  if (trainerClock) {
+    const cap = live.length === 1 ? Math.max(7200, singleCapMs) : 7200;
+    candidates = [];
+    for (let L = TRAINER_LOOP_MS; L <= cap; L += TRAINER_LOOP_MS) candidates.push(L);
+  }
   else if (live.length === 1) candidates = [Math.max(STEP_MS, Math.round(live[0] / STEP_MS) * STEP_MS)]; // one sprite: its own cycle
   else {
     candidates = [];

@@ -25,7 +25,7 @@ import { encodeGif } from "./gif.js";
 import { createRenderGate } from "./renderGate.js";
 import { getRenderPool, renderOptions } from "./renderPool.js";
 import { shinyBackdrop, shinyFxEnabled } from "./shinyBackdrop.js";
-import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS, MAX_GIF_BYTES } from "./spriteLoops.js";
+import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS, MAX_GIF_BYTES, SINGLE_CLOCK_CAP_MS } from "./spriteLoops.js";
 
 export const FRAMES = 24, DELAY_MS = 100;
 // Discord takes up to 10 MB a file; past this, the card falls back (see above).
@@ -109,7 +109,7 @@ export function spriteStage({ animate = false, env = process.env } = {}) {
       // The fitted loop. Anything on the trainers' clock keeps it whole.
       const plans = players.map((p, i) => (p ? loopPlan(anims[i]) : null));
       const trainerClock = layers.length > 0 || posed.length > 0 || backdrops.some(Boolean);
-      const { L, fit } = fitLoop(plans.map((p) => p?.period ?? null), { trainerClock });
+      const { L, fit } = fitLoop(plans.map((p) => p?.period ?? null), { trainerClock, singleCapMs: SINGLE_CLOCK_CAP_MS });
       const total = Math.max(1, Math.round(L / STEP_MS));
       const gif = await encodeGif(canvas, (f) => {
         const t = f * STEP_MS, f100 = Math.floor(t / DELAY_MS) % FRAMES;

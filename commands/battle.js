@@ -1,10 +1,10 @@
 // ==========================================================
 // /battle — challenge another trainer to an automatic Battle.
-// Casual (default): Display teams at real Levels, unrated, runs immediately.
+// Casual (default): Casual teams at real Levels, unrated, runs immediately.
 // Past 3 casual battles against one Defender in a day, the next needs the
 // Defender to accept a Rematch request (the rematch flow below).
-// Ranked (ranked:True): Battle teams at Lv 50, rated, runs immediately.
-// Wager: Battle teams at Lv 50, rated; the Defender must accept first
+// Ranked (ranked:True): Ranked teams at Lv 50, rated, runs immediately.
+// Wager: Ranked teams at Lv 50, rated; the Defender must accept first
 // (see the wager flow below).
 // ==========================================================
 
@@ -36,7 +36,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Battle another trainer's Team")
   .addUserOption((o) => o.setName("opponent").setDescription("Who to battle").setRequired(true))
   .addBooleanOption((o) =>
-    o.setName("ranked").setDescription("Ranked: Battle teams at Lv 50, changes your rating"))
+    o.setName("ranked").setDescription("Ranked: Ranked teams at Lv 50, changes your Ranked rating"))
   .addIntegerOption((o) =>
     o.setName("wager").setDescription("CC each of you puts in the pot (they must accept). Always ranked").setMinValue(1));
 
@@ -58,8 +58,8 @@ export function refusal(reason, opponentId) {
     no_perms: "I can't post battles in this channel. Try another one.",
     no_team_challenger: "Set a Team on your dashboard before battling.",
     no_team_defender: `<@${opponentId}> hasn't set a team yet.`,
-    no_battle_team_challenger: "Ranked and wager battles use your Battle team. Set it on the Teams page: run /dashboard.",
-    no_battle_team_defender: `<@${opponentId}> hasn't set a Battle team yet, so you can't play a ranked or wager battle with them.`,
+    no_battle_team_challenger: "Ranked and wager battles use your Ranked team. Set it on the Teams page: run /dashboard.",
+    no_battle_team_defender: `<@${opponentId}> hasn't set a Ranked team yet, so you can't play a ranked or wager battle with them.`,
     short_battle_team_challenger: "Ranked and wager battles need a full Ranked team of 6. Fill it on the Teams page: run /dashboard.",
     short_battle_team_defender: `<@${opponentId}>'s Ranked team isn't full (6 Pokémon), so you can't play a ranked or wager battle with them.`,
     // Only ranked and wager battles are refused at the Battle cap.

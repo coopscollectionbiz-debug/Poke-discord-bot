@@ -63,7 +63,7 @@ const ITEMS = [
   item({
     id: "evolution_stone",
     name: "Evolution Stone",
-    description: "Used to evolve a Pokémon on the dashboard. The number needed depends on the rarity step.",
+    description: "Used to evolve a Pokémon on the dashboard. The number needed depends on the Tier step.",
     category: "evolution",
     rarity: "rare",
     consumable: true,

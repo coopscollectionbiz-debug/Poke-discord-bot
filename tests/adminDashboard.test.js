@@ -128,7 +128,7 @@ section("Pokémon");
   const noUid = (team) => team.map((s) => (s && typeof s === "object" ? { id: s.id, variant: s.variant } : s));
   assertEqual(noUid(t.displayedPokemon), [25, { id: 16, variant: "shiny" }], "the Team slot is cleared; the shiny and the legacy slot stay");
   assertEqual(noUid(t.battleTeam), [{ id: 25, variant: "normal" }], "the Battle team slot is cleared");
-  assertTrue(last.warnings.some((w) => w === "Clears Team slot 2.") && last.warnings.some((w) => w === "Clears Battle team slot 1.") && last.warnings.some((w) => w.includes("Resets Lv 34")), "the review warns about both slots and the Level");
+  assertTrue(last.warnings.some((w) => w === "Clears Casual team slot 2.") && last.warnings.some((w) => w === "Clears Ranked team slot 1.") && last.warnings.some((w) => w.includes("Resets Lv 34")), "the review warns about both slots and the Level");
   const over = C.applyChange(t, change({ kind: "pokemon", op: "remove", speciesId: 25, variant: "normal", amount: 2 }));
   assertTrue(!over.ok && over.error === "They have 1 × Pikachu.", "over-removing Pokémon is rejected with the count");
 }

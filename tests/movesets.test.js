@@ -96,7 +96,7 @@ section("/inspectpokemon shows the chosen moves");
   setMoveset(u, "display", 6, "normal", [ids[0], ids[1]]);
   setMoveset(u, "battle", 6, "normal", [ids[2]]);
   const text = battleInfo(u, 6);
-  assertTrue(text.includes(`Moves: ${name(ids[0])}, ${name(ids[1])}`) && text.includes(`Battle team moves: ${name(ids[2])}`), "text: Display moves, plus the Battle team's");
+  assertTrue(text.includes(`Moves: ${name(ids[0])}, ${name(ids[1])}`) && text.includes(`Ranked team moves: ${name(ids[2])}`), "text: Display moves, plus the Battle team's");
   assertEqual(inspectSlots(u, { id: 6 })[0].moves, [name(ids[0]), name(ids[1])], "card: the Display team's moves");
 }
 

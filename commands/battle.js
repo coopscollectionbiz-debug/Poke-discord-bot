@@ -442,7 +442,7 @@ async function requestRematch(interaction, trainerData, lockUser, enqueueSave, o
     const times = live().battle.vs[defenderId];
     // A new channel message (not an edited reply) so the Defender is notified.
     message = await interaction.channel.send({
-      content: `⚔️ <@${challengerId}> asks <@${defenderId}> for a rematch! They've battled you ${times} times today, so this one earns no EXP. The request expires in ${minutes} minutes.`,
+      content: `⚔️ <@${challengerId}> asks <@${defenderId}> for a rematch! They've battled you ${times} times today, so no more EXP for them. The request expires in ${minutes} minutes.`,
       components: [new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(`rematch_accept:${nonce}`).setLabel("Accept").setStyle(ButtonStyle.Success),
         new ButtonBuilder().setCustomId(`rematch_decline:${nonce}`).setLabel("Decline").setStyle(ButtonStyle.Secondary),

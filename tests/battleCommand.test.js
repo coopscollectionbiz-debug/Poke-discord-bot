@@ -275,7 +275,7 @@ section("Rematch request: posted, then accepted");
   await t.run("A", "B");
   assertEqual([t.log.replies, t.log.edits], [[], [SENT]], "the Challenger hears what a decline or no answer means");
   const [request] = t.log.messages;
-  assertEqual(request.opts.content, "⚔️ <@A> asks <@B> for a rematch! They've battled you 3 times today, so this one earns no EXP. The request expires in 5 minutes.",
+  assertEqual(request.opts.content, "⚔️ <@A> asks <@B> for a rematch! They've battled you 3 times today, so no more EXP for them. The request expires in 5 minutes.",
     "a channel message mentions the Defender");
   const nonce = requestNonce(t);
   assertEqual(request.opts.components[0].components.map((b) => b.data.custom_id), [`rematch_accept:${nonce}`, `rematch_decline:${nonce}`],

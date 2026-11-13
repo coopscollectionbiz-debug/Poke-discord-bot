@@ -135,8 +135,9 @@ function player(id, team) {
   u.battleTeam = team.map(([sp]) => ({ id: sp, variant: "normal" }));
   return u;
 }
-const strong = [[6, 90], [9, 90], [3, 90]];
-const weak = [[10, 5], [13, 5]];
+// Ranked and wager battles need full teams of 6.
+const strong = [[6, 90], [9, 90], [3, 90], [149, 90], [130, 90], [65, 90]];
+const weak = [[10, 5], [13, 5], [129, 5], [11, 5], [14, 5], [16, 5]];
 let sameBattle = true;
 let shardKeysOff = 0;
 let challengerShards = 0;

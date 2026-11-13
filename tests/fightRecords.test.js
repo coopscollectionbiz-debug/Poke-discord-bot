@@ -124,11 +124,11 @@ section("Store: forgetPlayer");
 
 section("Builders: Battles");
 {
-  const td = { A: player("A", [6, 9, 3], 60), B: player("B", [25, 133], 40) };
+  const td = { A: player("A", [6, 9, 3, 1, 4, 7], 60), B: player("B", [25, 133, 16, 19, 10, 13], 40) }; // ranked/wager need full teams of 6
   const casual = runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "open", seed: 7, now: D });
   const r = battleRecord(casual, { A: "Ash", B: "Gary" }, td, { now: D });
   assertEqual([r.kind, r.group, r.season, r.players, r.sides.map((s) => s.name), r.sides[0].trainer], ["casual", "battles", null, ["A", "B"], ["Ash", "Gary"], "youngster-gen4.png"], "casual: kind, players, names and sprite as they were");
-  assertEqual(r.fights[0].members.map((s) => s.length), [3, 2], "both teams copied");
+  assertEqual(r.fights[0].members.map((s) => s.length), [6, 6], "both teams copied");
   assertTrue(r.fights[0].members[0].every((m) => m.moves.length > 0 && typeof m.moves[0] === "string"), "each member's moves stored by name");
   assertEqual(r.fights[0].result.log.length, casual.result.log.length, "the whole turn log is kept for the replay");
   assertEqual(r.winner, casual.result.winner, "winner side");

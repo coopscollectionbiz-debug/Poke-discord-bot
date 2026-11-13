@@ -243,7 +243,7 @@ section("Battle streaks through the real runBattle");
   const fixed = () => 0.5;
   const mk = (id, team) => { const u = createNewUser(id, `T${id}`); for (const s of team) grantCatch(u, s, "normal", fixed); u.displayedPokemon = team.map((s) => ({ id: s, variant: "normal" })); u.battleTeam = u.displayedPokemon.map((s) => ({ ...s })); return u; };
   // Evenly matched teams so the real simulation produces both outcomes.
-  const td = { A: mk("A", [7, 4]), B: mk("B", [4, 7]) };
+  const td = { A: mk("A", [7, 4, 1, 152, 155, 158]), B: mk("B", [4, 7, 158, 155, 152, 1]) }; // ranked needs full teams of 6
   let day = 0;
   const results = [];
   const upsets = { A: 0, B: 0 };
@@ -263,7 +263,7 @@ section("Battle streaks through the real runBattle");
   }
   const winSeeds = [];
   for (let s = 1; s < 400 && winSeeds.length < 1; s++) {
-    const t2 = { X: mk("X", [150, 249, 250]), Y: mk("Y", [10]) };
+    const t2 = { X: mk("X", [150, 249, 250, 384, 483, 484]), Y: mk("Y", [10, 13, 129, 11, 14, 16]) };
     if (runBattle({ trainerData: t2, challengerId: "X", defenderId: "Y", mode: "ranked", seed: s, now: new Date(NOW) }).winnerId === "X") winSeeds.push(s);
   }
   const opp = ["B"];
@@ -284,7 +284,7 @@ section("Battle streaks through the real runBattle");
   P.trackProgress(lost, [{ type: "battle", won: false, upset: true }], NOW);
   assertTrue(!lost.ach?.bat_upset && !lost.stats?.upsetWins, "losing never counts as an upset (no reward for losing)");
   // Upset flag from real ratings.
-  const ut = { X: mk("X", [150, 249, 250]), Y: mk("Y", [10]) };
+  const ut = { X: mk("X", [150, 249, 250, 384, 483, 484]), Y: mk("Y", [10, 13, 129, 11, 14, 16]) };
   ut.X.battle = { rating: 1000, wins: 0, losses: 0, day: "", started: 0, vs: {}, season: RANKED.season };
   ut.Y.battle = { rating: 1300, wins: 0, losses: 0, day: "", started: 0, vs: {}, season: RANKED.season };
   const o = runBattle({ trainerData: ut, challengerId: "X", defenderId: "Y", mode: "ranked", seed: winSeeds[0], now: new Date(NOW) });

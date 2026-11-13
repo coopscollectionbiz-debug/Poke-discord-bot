@@ -181,6 +181,9 @@ export function applyGains(user, members, gains, base = gains, fx = liveEffects(
   });
 }
 
+/** Ranked and wager battles need this many Pokémon on each Ranked team. */
+export const RANKED_TEAM_SIZE = 6;
+
 // Read-only: why this battle can't happen right now, or null. /battle runs it
 // before deferring (instant ephemeral refusals) and runBattle re-runs it under lock.
 export function battleBlock({ trainerData, challengerId, defenderId, mode, now = new Date(), env = process.env }) {
@@ -188,6 +191,11 @@ export function battleBlock({ trainerData, challengerId, defenderId, mode, now =
   const prefix = mode === "open" ? "no_team" : "no_battle_team";
   if (!teamFor(trainerData[challengerId], mode, { env }).length) return `${prefix}_challenger`;
   if (!teamFor(trainerData[defenderId], mode, { env }).length) return `${prefix}_defender`;
+  // Ranked and wager battles need a full Ranked team on both sides.
+  if (mode !== "open") {
+    if (teamFor(trainerData[challengerId], mode, { env }).length < RANKED_TEAM_SIZE) return "short_battle_team_challenger";
+    if (teamFor(trainerData[defenderId], mode, { env }).length < RANKED_TEAM_SIZE) return "short_battle_team_defender";
+  }
   const day = utcDay(now);
   const blockFor = (user, opponentId) => (user?.battle?.day === day ? capBlock(user.battle, opponentId) : null);
   const block = blockFor(trainerData[challengerId], defenderId);

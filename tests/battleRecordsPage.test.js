@@ -49,7 +49,15 @@ section("Summary");
   assertEqual(s.top.length, 3, "top 3 Pokémon");
   assertEqual(s.top[0].games, 5, "each used in all 5");
   assertEqual(s.rating, null, "casual battles have no rating line");
-  const ranked = battleRecord(runBattle({ trainerData: { A: { ...td.A, battleTeam: td.A.displayedPokemon }, B: { ...td.B, battleTeam: td.B.displayedPokemon } }, challengerId: "A", defenderId: "B", mode: "ranked", seed: 9, now: day(9) }), {}, td, { now: day(9) });
+  // Ranked needs full teams of 6.
+  const full = (u, ids) => {
+    const c = structuredClone(u);
+    for (const sid of ids) c.pokemon[sid] = { normal: 1, shiny: 0 };
+    c.battleTeam = [...c.displayedPokemon, ...ids.map((sid) => ({ id: sid, variant: "normal" }))];
+    return c;
+  };
+  const rankedTd = { A: full(td.A, [1, 4]), B: full(td.B, [143, 131, 248]) };
+  const ranked = battleRecord(runBattle({ trainerData: rankedTd, challengerId: "A", defenderId: "B", mode: "ranked", seed: 9, now: day(9) }), {}, rankedTd, { now: day(9) });
   const sr = summarize([ranked, ...battles], "B");
   assertEqual([sr.rating.current, sr.rating.change], [ranked.rewards.B.rating.to, ranked.rewards.B.rating.to - ranked.rewards.B.rating.from], "rating: newest and change");
   assertEqual(summarize(Array(25).fill(battles[0]), "A").count, 20, "summary covers the newest 20");

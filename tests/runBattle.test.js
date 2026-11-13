@@ -4,9 +4,10 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { buildTeam, buildBattleTeam, runBattle, withBothLocks } from "../utils/battle/runBattle.js";
+import { buildTeam, buildBattleTeam, runBattle, battleBlock, withBothLocks } from "../utils/battle/runBattle.js";
 import { RANKED } from "../utils/battle/tuning.js";
-import { rankedRecord, lifetimeRanked } from "../utils/battle/rewards.js";
+import { rankedRecord, lifetimeRanked, getBattleRecord, utcDay } from "../utils/battle/rewards.js";
+import { blockRematch, isRematchBlocked } from "../utils/battle/rematch.js";
 import { battleImageName, buildResultEmbed, createQueue, expSummary, playBattle, resultScreens } from "../utils/battle/playback.js";
 import { pickFrameTurns } from "../utils/battle/render.js";
 import { lockUser } from "../utils/userLocks.js";
@@ -37,6 +38,10 @@ const open = (td, seed = 1, c = "A", d = "B") =>
 
 const ranked = (td, seed = 1, c = "A", d = "B") =>
   runBattle({ trainerData: td, challengerId: c, defenderId: d, mode: "ranked", seed, now: NOW });
+
+// A casual battle the Defender accepted as a Rematch request.
+const rematch = (td, seed = 1, c = "A", d = "B") =>
+  runBattle({ trainerData: td, challengerId: c, defenderId: d, mode: "open", rematch: true, seed, now: NOW });
 
 section("Casual (open) battle: Display teams, real Levels, unrated");
 {
@@ -162,37 +167,69 @@ section("Refusals and caps");
     "defender_cap_daily", "a Defender out of battles can't take a wager");
 }
 
-section("Casual battle past the Battle cap: runs, earns no EXP");
+section("Casual battle past 3 vs one Defender: needs a Rematch request, earns no EXP");
 {
   const leveling = (u) => JSON.stringify([u.training, u.box]);
   const td = world();
   for (let i = 0; i < 3; i++) assertEqual(open(td, i).overCap, null, `casual battle ${i + 1} of 3 vs B is within the cap`);
+  const untouched = JSON.stringify(td);
+  assertEqual(open(td, 9).reason, "rematch_needed", "a 4th casual battle vs B needs B to accept a Rematch request");
+  assertEqual(JSON.stringify(td), untouched, "…and the refusal changes nothing");
+  assertEqual(battleBlock({ trainerData: td, challengerId: "A", defenderId: "B", mode: "open", now: NOW }), "rematch_needed",
+    "/battle sees it before deferring");
+
   const before = leveling(td.A);
-  const out = open(td, 9);
-  assertTrue(out.ok, "4th casual battle vs the same Defender still runs");
+  const out = rematch(td, 9);
+  assertTrue(out.ok, "an accepted rematch runs");
   assertEqual(out.overCap, "opponent", "outcome names the cap that was hit");
   assertTrue(out.result.knockouts.some((k) => k.bySide === 0), "Challenger scores a knockout (fixture precondition)");
   assertEqual(leveling(td.A), before, "Challenger's Team gains no EXP");
   assertEqual(out.exp, {}, "no EXP report");
-  assertEqual([td.A.battle.started, td.A.battle.vs.B], [3, 3], "it uses no battle, overall or vs B");
+  assertEqual([td.A.battle.started, td.A.battle.vs.B], [3, 4], "it counts against B but uses none of the day's 10");
   assertEqual(td.A.casual.wins + td.A.casual.losses, 4, "it still counts on the casual record");
   assertEqual(resultScreens(out, { A: "Ash", B: "Gary" }).length, 1, "result text box has no level-up screen");
+  assertEqual(open(td, 10).reason, "rematch_needed", "the next one needs another request");
 
   td.C = trainer("C", [[16]], FULL_B); // a full Ranked team, for ranked battles
-  assertTrue(ranked(td, 10, "A", "C").ok, "over-cap casual battles leave the rest of the day's battles for ranked");
+  assertTrue(ranked(td, 10, "A", "C").ok, "rematches leave the rest of the day's battles for ranked");
+  assertEqual(ranked(td, 11).reason, "cap_opponent", "ranked vs B is still refused");
+  assertTrue(open(td, 12, "B", "A").ok, "B can still battle A: the limit counts only the Challenger's own battles");
+}
 
-  td.A.battle.started = 10;
-  const daily = open(td, 11, "A", "C");
-  assertTrue(daily.ok && daily.overCap === "daily", "11th battle of the day: a casual one runs, flagged daily");
-  assertEqual(daily.exp, {}, "…with no EXP");
-  assertEqual(td.A.battle.started, 10, "…and no battle used");
-  assertEqual(ranked(td, 12, "A", "C").reason, "cap_daily", "ranked is still refused at the cap");
-  assertEqual(runBattle({ trainerData: td, challengerId: "A", defenderId: "C", mode: "wager", stake: 1, seed: 13, now: NOW }).reason,
+section("Casual battle past the daily Battle cap: runs, earns no EXP");
+{
+  const td = world();
+  td.C = trainer("C", [[16]], FULL_B); // a full Ranked team, for ranked battles
+  getBattleRecord(td.A, utcDay(NOW)).started = 10;
+  for (let i = 0; i < 3; i++) {
+    const out = open(td, 11 + i, "A", "C");
+    assertTrue(out.ok && out.overCap === "daily" && Object.keys(out.exp).length === 0, `casual battle ${i + 1} vs C past the daily cap runs with no EXP`);
+  }
+  assertEqual([td.A.battle.started, td.A.battle.vs.C], [10, 3], "each counts against C but not toward the 10");
+  assertEqual(open(td, 14, "A", "C").reason, "rematch_needed", "so a 4th vs C still needs a Rematch request");
+  assertEqual(ranked(td, 15).reason, "cap_daily", "ranked is still refused at the cap");
+  assertEqual(runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "wager", stake: 1, seed: 16, now: NOW }).reason,
     "cap_daily", "wager is still refused at the cap");
 
   td.A.battle.day = "2026-11-01";
-  const nextDay = open(td, 14, "A", "C");
-  assertTrue(nextDay.overCap === null && Object.keys(nextDay.exp).length === 1, "a new UTC day earns EXP again");
+  const nextDay = open(td, 17, "A", "C");
+  assertTrue(nextDay.overCap === null && Object.keys(nextDay.exp).length === 1, "a new UTC day earns EXP again, with no request");
+}
+
+section("A battle that runs lifts the Defender's Rematch block on the Challenger");
+{
+  const day = utcDay(NOW);
+  const td = world();
+  for (let i = 0; i < 3; i++) open(td, i);
+  blockRematch(td.B, "A", day); // B's request to A was declined
+  assertEqual(open(td, 3).reason, "rematch_needed", "A's 4th casual battle vs B is refused…");
+  assertTrue(isRematchBlocked(td.B, "A", day), "…so B is still blocked");
+  assertTrue(rematch(td, 4).ok && !isRematchBlocked(td.B, "A", day), "a battle A starts against B lifts B's block");
+  blockRematch(td.B, "A", day);
+  td.C = trainer("C", [[16]], FULL_B);
+  blockRematch(td.C, "A", day);
+  assertTrue(ranked(td, 5, "A", "C").ok && !isRematchBlocked(td.C, "A", day), "a ranked battle lifts it too");
+  assertTrue(isRematchBlocked(td.B, "A", day), "only for the player A battled");
 }
 
 section("Determinism");

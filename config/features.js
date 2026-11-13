@@ -129,3 +129,12 @@ export function isHeldItemCapabilityEnabled(capability, env = process.env, userI
 
 export const heldItemCapabilities = (env = process.env, userId = null) =>
   Object.freeze(Object.fromEntries(HELD_ITEM_CAPABILITIES.map((c) => [c, isHeldItemCapabilityEnabled(c, env, userId)])));
+
+// ----------------------------------------------------------
+// DASHBOARD_FIGHTS_ENABLED: the dashboard's Battle page, which starts Casual
+// and Ranked battles and Challenges and posts them to Discord as the commands
+// do (services/dashboardFights.js). Off unless "1"/"true"/"yes"/"on".
+// ----------------------------------------------------------
+export function isDashboardFightsEnabled(env = process.env) {
+  return TRUE.has(String(env.DASHBOARD_FIGHTS_ENABLED ?? "").trim().toLowerCase());
+}

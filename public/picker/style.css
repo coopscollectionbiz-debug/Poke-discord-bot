@@ -263,12 +263,8 @@ main:focus { outline: none; }
 .aura-state { font-size: 0.85rem; color: var(--cc-text-muted); }
 .aura-state.is-on { color: var(--cc-blue); font-weight: 700; }
 
-/* The preview: the trainer over the Aura, pixel-sharp (art is 90×105 sprite px, shown 2×). */
-.aura-preview { position: relative; width: 180px; max-width: 100%; aspect-ratio: 90 / 105; border-radius: 12px; overflow: hidden; background: var(--cc-surface-sunken); display: grid; place-items: end center; }
-.aura-preview img { position: relative; z-index: 1; width: auto; height: 82%; margin-bottom: 6%; image-rendering: pixelated; }
-.aura-art { background: var(--sky); }
-/* Art Auras: the sheet and the trainer on one canvas (public/picker/auras.js), timed like the bot: once per 2.4 s. */
-.aura-art .aura-canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+/* The preview (trainer over Aura) is shared: components.css. Here it shows 2×. */
+.aura-preview { width: 180px; }
 @media (max-width: 560px) {
   .aura-now { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .aura-quicks { justify-content: center; }

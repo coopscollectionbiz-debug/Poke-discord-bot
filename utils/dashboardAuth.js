@@ -119,6 +119,16 @@ export function getChannelIdForToken(token) {
 }
 
 /**
+ * The channel where the player ran /dashboard for this session (the
+ * dashboard_session cookie), or null. Dashboard fights post there when no
+ * fixed channel is set. Doesn't check or slide the session.
+ */
+export function dashboardSessionChannel(req) {
+  const entry = activeTokens.get(req?.cookies?.dashboard_session);
+  return entry?.type === "dashboard" ? entry.channelId ?? null : null;
+}
+
+/**
  * Player dashboard check: the dashboard_session cookie must belong to
  * userId. A valid opened session slides (see activateDashboardSession);
  * a link that was never opened still dies 10 minutes after /dashboard.

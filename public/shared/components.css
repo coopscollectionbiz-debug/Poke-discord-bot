@@ -512,3 +512,11 @@ dialog.cc-dialog .cc-dialog-actions { display: flex; gap: 10px; justify-content:
 .cc-live-choice { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-weight: 600; }
 .cc-live-choice small { font-weight: 400; color: var(--cc-text-muted); }
 .cc-was { color: var(--cc-text-faint); font-weight: 600; margin-right: 4px; }
+
+/* ---------- A trainer over an Aura (public/shared/auraPreview.js) ----------
+   Pixel-sharp; art is 90×105 sprite px. Art Auras draw the sheet and the
+   trainer on one canvas, timed like the bot: once per 2.4 s. */
+.aura-preview { position: relative; max-width: 100%; aspect-ratio: 90 / 105; border-radius: 12px; overflow: hidden; background: var(--cc-surface-sunken); display: grid; place-items: end center; }
+.aura-preview img { position: relative; z-index: 1; width: auto; height: 82%; margin-bottom: 6%; image-rendering: pixelated; }
+.aura-art { background: var(--sky); }
+.aura-art .aura-canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }

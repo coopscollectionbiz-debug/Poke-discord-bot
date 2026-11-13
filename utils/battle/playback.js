@@ -113,6 +113,17 @@ export function buildResultEmbed(outcome, names) {
 }
 
 /** The attachment name for one playback update: "start", a turn number, or "final". */
+/**
+ * Roughly how long a fight's replay runs in a channel: the opening hold, one
+ * update per shown turn (at most maxUpdates), then the result image, each
+ * delayMs apart. Rendering time is not counted. Used when there is no channel,
+ * so a dashboard Elite Four run opens its Revive window at about the same point.
+ */
+export function replayEstimateMs(fight, { maxUpdates, delayMs } = PLAYBACK) {
+  const turns = Number(fight?.result?.turns) || 0;
+  return VS_HOLD_MS + (Math.min(turns, maxUpdates) + 1) * delayMs;
+}
+
 export const battleImageName = (step) => (typeof step === "number" ? `battle-t${step}.gif` : `battle-${step}.gif`);
 
 function header(outcome) {

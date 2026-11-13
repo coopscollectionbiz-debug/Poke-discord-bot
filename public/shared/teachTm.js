@@ -12,7 +12,7 @@
 // ==========================================================
 
 import { toast, showExpired, pageHref } from "/public/shared/shell.js";
-import { moveMeta } from "/public/shared/moveMeta.js";
+import { moveMeta, tmDisc } from "/public/shared/moveMeta.js";
 
 const LABEL = { display: "Display team", battle: "Battle team" };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -122,7 +122,7 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
           const st = x.status[sel.target];
           const why = st === "known" ? "Already knows it" : st === "incompatible" ? `${esc(name)} can’t learn it` : `You have ${x.owned}`;
           return `<label class="tt-opt${st === "teachable" ? "" : " is-off"}"><input type="radio" name="tt-tm" value="${esc(x.item)}"${sel.item === x.item ? " checked" : ""}${st === "teachable" ? "" : " disabled"}>
-            ${moveRow(x)}<small>${why}</small></label>`;
+            ${tmDisc(x.type)}${moveRow(x)}<small>${why}</small></label>`;
         }).join("")}</fieldset>`;
     const m = tm();
     const equipStep = !t || !m || m.status[sel.target] !== "teachable" ? "" : teamsOn().length === 0

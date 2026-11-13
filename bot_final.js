@@ -2187,7 +2187,11 @@ app.post("/api/shop/buy-aura", express.json({ limit: "4kb" }), async (req, res) 
 // 💿 TM shop (TM system phase T3; services/tmShop.js). Off unless
 // TM_ENABLED is set. Prices come from the catalog, never the client.
 // ==========================================================
-app.get("/api/tms", (req, res) => {
+// The TM shop list. Not "/api/tms": EasyPrivacy blocks any URL containing
+// "/tms?id=" (tracker tag-management scripts), so players with uBlock Origin
+// never saw the TM shop (tools/check-blocklists.mjs). The old path stays
+// for a tab still running the old page.
+app.get(["/api/tm-shop", "/api/tms"], (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ error: "Missing id" });
   if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });

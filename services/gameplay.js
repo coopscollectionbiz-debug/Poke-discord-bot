@@ -23,7 +23,8 @@ import { checkEvolutionRequirements } from "./evolutionRules.js";
 import { getAllPokemon } from "../utils/dataLoader.js";
 import { getPokemonCached } from "../utils/pokemonCache.js";
 import { getPokemonDataCached } from "../utils/pokemonDataCache.js";
-import { selectRandomPokemonForUser } from "../utils/weightedRandom.js";
+import { selectRandomPokemonForUser, selectFocusedPokemon } from "../utils/weightedRandom.js";
+import { TYPE_ID_TO_NAME } from "../utils/battle/data.js";
 import { liveEffects, catchEffectsFor } from "./liveEvents.js";
 import { applyLimits, boostedWeights, pickWeighted, discountedPrice, hasCatchEffects } from "../utils/liveEventRules.js";
 import { rollForShiny } from "../shinyOdds.js";
@@ -39,6 +40,17 @@ import { trackProgress } from "../progression/achievements.js";
 
 /** Poké Ball prices (CC). Unchanged. */
 export const BALL_COST = Object.freeze({ pokeball: 1000, greatball: 2000, ultraball: 4000 });
+
+// Focus type (economy audit 2026-11, replaces /recruit): an optional type on a
+// Poké Ball throw, for half the ball's list price on top. A Live event's ball
+// discount applies to the ball, not the surcharge. When the roll lands on the
+// Mythic Tier the Focus doesn't apply and the surcharge is refunded
+// (utils/weightedRandom.js selectFocusedPokemon). Behind FOCUS_TYPE_ENABLED.
+const TRUE_FLAGS = new Set(["1", "true", "yes", "on"]);
+export const focusTypeEnabled = (env = process.env) => TRUE_FLAGS.has(String(env.FOCUS_TYPE_ENABLED ?? "").trim().toLowerCase());
+export const FOCUS_SURCHARGE_SHARE = 0.5;
+export const focusSurcharge = (ball) => Math.round((BALL_COST[ball] ?? 0) * FOCUS_SURCHARGE_SHARE);
+const TYPE_ID_BY_NAME = Object.freeze(Object.fromEntries(Object.entries(TYPE_ID_TO_NAME).map(([id, name]) => [name.toLowerCase(), Number(id)])));
 
 /** Evolution Stone cost by "<fromTier>-<toTier>". Unchanged. */
 export const EVOLVE_STONE_COST = Object.freeze({
@@ -94,6 +106,7 @@ export function createGameplayHandlers(deps) {
     onRareCatch = () => {},
     // Real catalog loaders by default; tests may inject an empty pool.
     loaders = {},
+    env = process.env,
   } = deps;
   const loadAllPokemon = loaders.getAllPokemon ?? getAllPokemon;
   const loadPokemonCached = loaders.getPokemonCached ?? getPokemonCached;
@@ -116,12 +129,20 @@ export function createGameplayHandlers(deps) {
   async function rewardPokemon({ body, isAuthorized }) {
     const stop = guard(body, isAuthorized);
     if (stop) return stop;
-    const { id, source, requestId = null } = body;
+    const { id, source, requestId = null, focus = null } = body;
 
     const listPrice = Object.prototype.hasOwnProperty.call(BALL_COST, source) ? BALL_COST[source] : 0;
     if (!listPrice) return reply(200, { success: false, error: `Invalid Poké Ball type: ${source}` });
+    let focusTypeId = null;
+    if (focus != null && focus !== "") {
+      if (!focusTypeEnabled(env)) return reply(200, { success: false, error: "Focus type isn't available yet." });
+      focusTypeId = TYPE_ID_BY_NAME[String(focus).toLowerCase()] ?? null;
+      if (!focusTypeId) return reply(200, { success: false, error: "Unknown type." });
+    }
     const fxNow = liveEffects();
-    const cost = discountedPrice(fxNow, "balls", listPrice); // a Live event's ball discount
+    const ballPrice = discountedPrice(fxNow, "balls", listPrice); // a Live event's ball discount
+    const surcharge = focusTypeId ? focusSurcharge(source) : 0;
+    const cost = ballPrice + surcharge;
 
     const allPokemon = acquirablePokemon(await loadAllPokemon()); // live generations only
     if (!Array.isArray(allPokemon) || allPokemon.length === 0) {
@@ -134,30 +155,42 @@ export function createGameplayHandlers(deps) {
       lock: lockUser,
       save,
       requestId,
-      payloadKey: `capture:${source}`,
+      payloadKey: `capture:${source}${focusTypeId ? `:${focusTypeId}` : ""}`,
       mutate: (user) => {
         if ((user.cc ?? 0) < cost) return { ok: false, status: 200, success: false, error: `Not enough CC. This costs ${cost} CC.` };
         // Paid roll: Catch boosts and limits only if the player chose "Use Live event".
         const fx = catchEffectsFor(user, { paid: true, fx: fxNow });
-        const reward = selectRandomPokemonForUser(allPokemon, user, source, { paid: true, fx });
+        let reward, focusApplied = false;
+        if (focusTypeId) {
+          const r = selectFocusedPokemon(allPokemon, user, source, focusTypeId, { paid: true, fx });
+          if (!r) return { ok: false, status: 200, success: false, error: `This ball has no ${TYPE_ID_TO_NAME[focusTypeId]}-type Pokémon to give${fx.limits.length ? ` during ${fx.catchEvents.join(" + ")}` : ""}. No CC was spent.` };
+          reward = r.pick;
+          focusApplied = r.focusApplied;
+        } else {
+          reward = selectRandomPokemonForUser(allPokemon, user, source, { paid: true, fx });
+        }
         if (!reward && fx.limits.length) {
           return { ok: false, status: 200, success: false, error: `This ball has nothing it can catch during ${fx.catchEvents.join(" + ")}. Turn off "Use Live event" or pick another ball. No CC was spent.` };
         }
         if (!reward) return { ok: false, status: 200, success: false, error: "No Pokémon could be selected." };
         const shiny = rollForShiny(user.tp || 0);
-        user.cc -= cost;
+        // A Mythic roll ignores the Focus: the surcharge is never taken.
+        const refunded = focusTypeId && !focusApplied ? surcharge : 0;
+        const charged = cost - refunded;
+        user.cc -= charged;
         grantCatch(user, reward.id, shiny ? "shiny" : "normal");
         // Release C: achievement progress (same block, same save).
         trackProgress(user, [{ type: "pokemon" }, { type: "shiny", n: shiny ? 1 : 0 }, { type: "purchase" }]);
         const rarity = reward.tier || reward.rarity || "common";
-        return { ok: true, pokemon: { id: reward.id, name: reward.name, rarity, shiny }, cc: user.cc, cost, eventNames: hasCatchEffects(fx) ? fx.catchEvents : [] };
+        const focusInfo = focusTypeId ? { type: TYPE_ID_TO_NAME[focusTypeId], applied: focusApplied, refunded } : null;
+        return { ok: true, pokemon: { id: reward.id, name: reward.name, rarity, shiny }, cc: user.cc, cost: charged, focus: focusInfo, eventNames: hasCatchEffects(fx) ? fx.catchEvents : [] };
       },
     });
     if (!tx.ok) return refusal(tx);
 
-    const { pokemon, cc, eventNames } = tx.result;
+    const { pokemon, cc, eventNames, focus: focusResult = null, cost: charged = cost } = tx.result;
     if (!tx.replayed) {
-      logEvent("roll", id, { ball: source, cost, pokemonId: pokemon.id, pokemonName: pokemon.name, tier: pokemon.rarity, shiny: pokemon.shiny });
+      logEvent("roll", id, { ball: source, cost: charged, pokemonId: pokemon.id, pokemonName: pokemon.name, tier: pokemon.rarity, shiny: pokemon.shiny, ...(focusResult && { focus: focusResult.type, focusApplied: focusResult.applied }) });
       if (pokemon.shiny || ["rare", "epic", "legendary", "mythic"].includes(String(pokemon.rarity).toLowerCase())) {
         try { onRareCatch({ userId: id, pokemon, source }); } catch {}
       }
@@ -171,6 +204,8 @@ export function createGameplayHandlers(deps) {
         sprite: pokemonSpriteUrl(pokemon.id, pokemon.shiny),
       },
       cc,
+      cost: charged,
+      focus: focusResult,
       eventNames: eventNames ?? [],
     });
   }

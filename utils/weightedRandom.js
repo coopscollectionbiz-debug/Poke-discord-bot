@@ -194,6 +194,55 @@ export function selectRandomPokemonForUser(pool, user, source = "pokeball", { pa
   return pickWeighted(boostedWeights(list, effects, weightOf));
 }
 
+// ==========================================================
+// 🎯 Focus type (economy audit 2026-11, replaces /recruit)
+// ==========================================================
+// A focused throw keeps the ball's Tier odds exactly: the Tier is rolled from
+// the whole pool's weights, as a plain throw would. Then:
+//   • Mythic: Focus doesn't apply. Any Mythic is picked as usual, and the
+//     caller refunds the Focus surcharge (owner decision 2026-11-13).
+//   • Common..Legendary: the pick is made among that Tier's species of the
+//     chosen type. If the type has none at that Tier (for this ball), the
+//     Tier is re-rolled among the type's other non-Mythic Tiers.
+// Returns { pick, focusApplied } or null when the type has nothing this ball
+// can give (the caller charges nothing).
+const TIER_ORDER = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
+
+/**
+ * @param {object[]} pool  acquirable species
+ * @param {number} typeId  PokeAPI type id (pokemonData types)
+ * @param {{ paid?: boolean, fx?: object, rand?: () => number }} [opts]
+ */
+export function selectFocusedPokemon(pool, user, source, typeId, { paid = true, fx = null, rand = Math.random } = {}) {
+  let list = acquirablePokemon(Array.isArray(pool) ? pool : Object.values(pool));
+  const ballType = ["pokeball", "greatball", "ultraball"].includes(source) ? source : "pokeball";
+  const effects = fx ?? catchEffectsFor(user, { paid });
+  if (effects.limits.length) {
+    const limited = filterPokemonPoolByBall(applyLimits(list, effects), ballType);
+    if (paid && !limited.length) return null;
+    if (limited.length) list = limited;
+  }
+  list = filterPokemonPoolByBall(list, ballType);
+  if (!list.length) return null;
+
+  const rows = boostedWeights(list, effects, weightFn(POKEMON_RARITY_WEIGHTS, user, ballType));
+  const byTier = new Map(TIER_ORDER.map((t) => [t, []]));
+  for (const r of rows) byTier.get(normalizeTier(r.item.tier || r.item.rarity))?.push(r);
+  const tierWeight = (t) => byTier.get(t).reduce((s, r) => s + r.w, 0);
+  const ofType = (t) => byTier.get(t).filter((r) => (r.item.types ?? []).map(Number).includes(Number(typeId)));
+
+  // Nothing of this type outside the Mythic Tier for this ball: refuse up front.
+  const typeTiers = TIER_ORDER.filter((t) => t !== "mythic" && ofType(t).length && tierWeight(t) > 0);
+  if (!typeTiers.length) return null;
+
+  const tier = pickWeighted(TIER_ORDER.map((t) => ({ item: t, w: tierWeight(t) })), rand);
+  if (tier === "mythic") return { pick: pickWeighted(byTier.get("mythic"), rand), focusApplied: false };
+  const useTier = ofType(tier).length
+    ? tier
+    : pickWeighted(typeTiers.map((t) => ({ item: t, w: tierWeight(t) })), rand);
+  return { pick: pickWeighted(ofType(useTier), rand), focusApplied: true };
+}
+
 /** Balls that have nothing to give under the running Catch limits (greyed out for opted-in players). */
 export function emptyBalls(pool, effects) {
   if (!effects.limits.length) return [];

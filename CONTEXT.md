@@ -73,7 +73,7 @@ _Avoid_: merge, sacrifice, candy
 ### Trainer
 
 **Rank**:
-A player's title on the TP ladder (Novice Trainer → Legend), earned by chatting. Chat pays TP for at most 300 messages a day (UTC).
+A player's title on the TP ladder (Novice Trainer → Legend), earned by chatting.
 _Avoid_: using "rank" for battle standing, which is the **Ranked rating**
 
 **Team**:
@@ -129,7 +129,7 @@ _Avoid_: dust (alone), stardust
 ### Administration
 
 **Last active**:
-The last time a player sent a chat message outside the 7-second cooldown (past the daily chat cap too) or used a slash command. Players who have done neither since it started being recorded count from their latest daily, quest, recruit or weekly pack claim.
+The last time a player earned TP from chat or used a slash command. Players who have done neither since it started being recorded count from their latest daily, quest, recruit or weekly pack claim.
 _Avoid_: last seen, last online, last login
 
 **Admin change**:

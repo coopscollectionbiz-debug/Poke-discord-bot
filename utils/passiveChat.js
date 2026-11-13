@@ -19,10 +19,7 @@ import { scaleEarned } from "./liveEventRules.js";
  * @param {() => object} deps.getTrainerData - live trainerData map
  * @param {(id: string, user: object) => object} deps.normalizeUserSchema
  * @param {Map<string, number>} deps.cooldowns - per-user last-rewarded message time
- * @param {{ cooldownMs: number, tpGain: number, ccChance: number, ccGain: number, dailyCap?: number }} deps.config
- *   dailyCap: rewarded messages a player can earn from per UTC day (economy
- *   audit 2026-11, D3). Past it a message still counts as activity, but pays
- *   no TP or CC and rolls no catch or encounter. Unset = no cap.
+ * @param {{ cooldownMs: number, tpGain: number, ccChance: number, ccGain: number }} deps.config
  * @param {(data: object) => any} deps.enqueueSave
  * @param {(job: object) => void} deps.queueRoleUpdate
  * @param {(userObj: object, author: object, message: object) => Promise<"cooldown"|"missed"|"caught"|undefined>} deps.giveRandomReward
@@ -67,18 +64,6 @@ export function createMessageHandler({
     cooldowns.set(userId, t);
 
     const userObj = trainerData[userId];
-
-    // Daily cap on rewarded messages (UTC day), kept on the player record so
-    // a restart doesn't reset it.
-    if (config.dailyCap) {
-      const day = new Date(t).toISOString().slice(0, 10);
-      if (userObj.chatToday?.day !== day) userObj.chatToday = { day, count: 0 };
-      if (userObj.chatToday.count >= config.dailyCap) {
-        userObj.lastActiveAt = t; // still active; saved with the next change
-        return;
-      }
-      userObj.chatToday.count++;
-    }
 
     // A running Live event may multiply chat TP and CC.
     const fx = effects(t);

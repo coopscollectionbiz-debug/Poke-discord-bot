@@ -694,8 +694,6 @@ const MESSAGE_CC_CHANCE = 0.02;
 const MESSAGE_CC_GAIN = 100;
 const MESSAGE_COOLDOWN = 7000;
 const MESSAGE_REWARD_CHANCE = 0.01;
-// Rewarded chat messages per player per UTC day (economy audit 2026-11, D3).
-const MESSAGE_DAILY_CAP = 300;
 const REACTION_REWARD_CHANCE = 0.01;
 const REWARD_COOLDOWN = 7000;
 const RARE_TIERS = ["rare", "epic", "legendary", "mythic"];
@@ -1373,7 +1371,6 @@ client.on(
       tpGain: MESSAGE_TP_GAIN,
       ccChance: MESSAGE_CC_CHANCE,
       ccGain: MESSAGE_CC_GAIN,
-      dailyCap: MESSAGE_DAILY_CAP,
     },
     log: logEvent,
     enqueueSave,

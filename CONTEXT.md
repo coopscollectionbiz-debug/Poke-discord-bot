@@ -294,16 +294,20 @@ _Avoid_: trophy, quest
 
 ### Quests
 
+**Quests**:
+Repeatable things to do each day: the **Daily board** and **Expeditions**. Built behind switches, not yet released.
+_Avoid_: missions (for the whole system), achievements
+
 **Daily board**:
 Three tasks a player can finish each day, each one free or paying for itself (chat, battles, `/daily`, donating), never a chance roll. Each claimed task pays CC, all three open a chest, and enough in a week earn a weekly bonus. It resets at 00:00 UTC.
-_Avoid_: dailies (that is `/daily`)
+_Avoid_: dailies (that is `/daily`), challenges
 
 **Mission**:
 One trip on the day's mission board, the same for every player: a length, a **Level**, and one to three threat types. A player can take each Mission once a day.
 _Avoid_: quest, expedition (that is the trip in progress)
 
 **Expedition**:
-A party of up to three **Copies** sent on a **Mission**. Copies whose types beat its threats raise the chance of success. Success pays loot and **EXP**; failure pays a little of each.
+A party of up to three **Copies** sent on a **Mission**. Sending a copy takes it off every **Team**; until the Expedition is claimed it shows in the **Collection** marked On Expedition and can't be fed, evolved, donated, gifted, taught a **TM** or put on a **Team**. Copies whose types beat its threats raise the chance of success. Success pays loot and **EXP**; failure pays a little of each.
 _Avoid_: venture, dispatch, run (that is the **Elite Four run**)
 
 ## Flagged ambiguities

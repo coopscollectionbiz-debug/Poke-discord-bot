@@ -345,8 +345,8 @@ export function buildChallengeEmbed(outcome, names) {
     outcome.prize && `🎁 ${prizeText(outcome.key, outcome.prize)}`,
     outcome.unlocked === "elite4" && "🔓 The Elite Four is open!",
     outcome.unlocked === "blue" && "🔓 Blue is waiting.",
-    // Never the amount: 10× a public loss would reveal the player's balance.
-    !outcome.cleared && "💸 Lost 10% of their CC.",
+    // The exact amount: a balance isn't private (the public trainer card shows it). Nothing to say when it cost nothing.
+    !outcome.cleared && outcome.ccLost > 0 && `💸 Lost ${outcome.ccLost.toLocaleString("en-US")} CC.`,
   ].filter(Boolean);
   // No Badge thumbnail: the result frame's award screen presents it.
   return lines.length ? new EmbedBuilder().setColor(0xf1c40f).setDescription(lines.join("\n")) : null;

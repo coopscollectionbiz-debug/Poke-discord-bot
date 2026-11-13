@@ -3,8 +3,9 @@
 // The /challenge VS card: the challenger (trainer, Badges, battle Team) on
 // a blue half, the opponent on a half tinted with their type, the Badge on
 // the line for a Gym, and the prize. Sent as the private preview and again
-// as the public intro, so it never shows the exact CC loss (10× it is the
-// balance); the private preview says that amount in text. Read-only.
+// as the public intro, so it says 10% rather than the exact CC loss (the
+// public result gives the amount after the fight); the private preview
+// says it in text. Read-only.
 //
 // Animated (renderChallengeCard(v, { animate: true })): both trainers idle,
 // the Team plays its sprites, and a player with an Epic+ trainer gets their

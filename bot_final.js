@@ -47,8 +47,8 @@ const TEAM_BIT = { displayedPokemon: 1, battleTeam: 2, showcaseTeam: 4 };
 function copyRows(u) {
   return allCopies(u).map((c) => [
     c.uid, c.id, c.variant === "shiny" ? 1 : 0, c.level, c.at ?? 0, c.trained ? 1 : 0,
-    slotsHolding(u, c.uid).reduce((m, s) => m | (TEAM_BIT[s.field] ?? 0),
-    c.exp, // exact EXP: Donate Duplicates keeps the same best copy the server does 0),
+    slotsHolding(u, c.uid).reduce((m, s) => m | (TEAM_BIT[s.field] ?? 0), 0),
+    c.exp, // exact EXP: Donate Duplicates keeps the same best copy the server does
   ]);
 }
 

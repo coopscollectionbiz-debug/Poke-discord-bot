@@ -15,7 +15,8 @@
 // a TM (customPokemon[uid].tmMoves). TM moves belong to the copy, never to
 // the line: a plain copy never sees another copy's TM moves.
 // 1–4 distinct moves. No stored moveset → the automatic moveset (the last
-// four learned), exactly as before. A copy with no selection of its own uses
+// four learned). A level-up never changes equipped moves: keepMovesOnLevelUp
+// pins the old automatic moves before a new one could take a slot. A copy with no selection of its own uses
 // the line's selection (stored before copies had their own; its learnable
 // pool decides what survives). Every copy is its own Pokémon: its moves
 // follow ITS Level, and two copies on one team keep separate movesets.
@@ -23,6 +24,7 @@
 
 import { getSpecies, getMove } from "../utils/battle/data.js";
 import { getTraining } from "../utils/training.js";
+import { autoMoveset, movesLearned } from "../utils/battle/moveset.js";
 import { slotCopyUid, slotBoxUid } from "./ownership.js";
 import { copyTraining } from "./box.js";
 
@@ -140,6 +142,28 @@ export function saveMoveset(user, { team, pokeId, variant, moves, uid = null } =
     setMoveset(user, team, pokeId, v, check.moves, { uid: copy });
   } else setMoveset(user, team, pokeId, v, null, { uid: copy });
   return { ok: true, team, uid: copy, moves: chosenMoves(user, team, pokeId, v, { uid: copy }) };
+}
+
+/**
+ * IN PLACE. A newly learned move is never equipped by itself (owner
+ * decision, 2026-11-12). Call after a copy gains Levels: when it learned a
+ * level-up move, every team where it still used automatic moves keeps the
+ * moves it had before (pinned as a stored selection). The new move stays
+ * learned and can be equipped on the dashboard. → teams pinned
+ */
+export function keepMovesOnLevelUp(user, speciesId, variant, { uid = null, fromLevel, toLevel } = {}) {
+  if (!(toLevel > fromLevel) || !movesLearned(speciesId, fromLevel, toLevel).length) return [];
+  const u = copyUid(user, speciesId, variant, uid);
+  const allowed = new Set(learnableMoves(user, speciesId, variant, { uid: u }).map((m) => m.id));
+  const before = autoMoveset(speciesId, fromLevel).filter((m) => allowed.has(m));
+  if (!before.length) return []; // no real move yet: its first move is used
+  const pinned = [];
+  for (const team of TEAM_TYPES) {
+    if (chosenMoves(user, team, speciesId, variant, { uid: u }) != null) continue;
+    setMoveset(user, team, speciesId, variant, before, { uid: u });
+    pinned.push(team);
+  }
+  return pinned;
 }
 
 /** Display info for a move id. */

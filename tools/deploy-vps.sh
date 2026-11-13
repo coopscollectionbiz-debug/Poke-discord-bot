@@ -88,14 +88,12 @@ if [ ! -d "$RELEASES/$SHA" ]; then
   git -C "$REPO" archive "$SHA" | tar -x -C "$tmp"
   log "npm ci (production dependencies)"
   (cd "$tmp" && npm ci --omit=dev --no-audit --no-fund --loglevel=error)
-  # Both canvas libraries are native; fail here, not after the restart.
+  # The canvas library is native; fail here, not after the restart.
   (cd "$tmp" && node --input-type=module -e '
-    const { createCanvas } = await import("canvas");
     const napi = await import("@napi-rs/canvas");
-    const a = createCanvas(8, 8); a.getContext("2d").fillRect(0, 0, 4, 4);
     const b = napi.createCanvas(8, 8); b.getContext("2d").fillRect(0, 0, 4, 4);
-    if (!a.toBuffer("image/png").length || !(await b.encode("png")).length) throw new Error("empty PNG");
-    console.log("[deploy] canvas + @napi-rs/canvas render OK");')
+    if (!(await b.encode("png")).length) throw new Error("empty PNG");
+    console.log("[deploy] @napi-rs/canvas render OK");')
   echo "$SHA" > "$tmp/REVISION"
   mv -T "$tmp" "$RELEASES/$SHA"
 else

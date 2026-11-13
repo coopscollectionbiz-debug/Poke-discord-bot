@@ -6,6 +6,7 @@
 // that helps layout; none reads game state.
 // ==========================================================
 
+import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, FONT, RADIUS, TIER_PIPS, tierColor, typeStyle } from "./tokens.js";
 
 export function rr(ctx, x, y, w, h, r) {
@@ -222,6 +223,21 @@ const BAYER4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
  * tier; null is a neutral shadow. `peak` is the centre's opacity.
  */
 export function drawSoftPlatform(ctx, cx, cy, rx, ry, tint = null, { u = 4, peak = tint ? 0.5 : 0.55 } = {}) {
+  // The floor only depends on its size, tint, grid, opacity and where it
+  // falls inside a pixel, so it's drawn once into a cached stamp and copied
+  // after that (it was a third of all render CPU when battle frames drew
+  // ~850 cells per Pokémon per frame). A scaled or rotated context draws the
+  // cells directly, as before, so nothing is resampled.
+  const t = ctx.getTransform?.();
+  if (!t || t.a !== 1 || t.b !== 0 || t.c !== 0 || t.d !== 1 || !Number.isInteger(t.e) || !Number.isInteger(t.f)) {
+    return drawPlatformCells(ctx, cx, cy, rx, ry, tint, u, peak);
+  }
+  const ox = Math.floor(cx), oy = Math.floor(cy);
+  const stamp = platformStamp(cx - ox, cy - oy, rx, ry, tint, u, peak);
+  if (stamp.canvas) ctx.drawImage(stamp.canvas, ox + stamp.x, oy + stamp.y);
+}
+
+function drawPlatformCells(ctx, cx, cy, rx, ry, tint, u, peak) {
   const [r, g, b] = tint ? [1, 3, 5].map((i) => parseInt(tint.slice(i, i + 2), 16)) : [3, 5, 12];
   const nx = Math.ceil(rx / u), ny = Math.ceil(ry / u);
   for (let gy = -ny; gy <= ny; gy++) for (let gx = -nx; gx <= nx; gx++) {
@@ -233,6 +249,55 @@ export function drawSoftPlatform(ctx, cx, cy, rx, ry, tint = null, { u = 4, peak
     ctx.fillRect(Math.round(cx + gx * u - u / 2), Math.round(cy + gy * u - u / 2), u, u);
   }
 }
+
+// Stamps by every input that changes the pixels; a few hundred at most
+// (each card or battle layout uses a handful of sizes and tints).
+const STAMPS = new Map();
+const STAMP_LIMIT = 512;
+function platformStamp(fx, fy, rx, ry, tint, u, peak) {
+  const key = `${fx},${fy},${rx},${ry},${tint},${u},${peak}`;
+  let stamp = STAMPS.get(key);
+  if (stamp) return stamp;
+  // Cells land at round(f + g·u − u/2) relative to the floored centre; the
+  // stamp spans exactly those, so copying it at the floored centre puts every
+  // cell where drawing it directly would have.
+  const nx = Math.ceil(rx / u), ny = Math.ceil(ry / u);
+  const x = Math.round(fx - nx * u - u / 2), y = Math.round(fy - ny * u - u / 2);
+  const w = Math.round(fx + nx * u - u / 2) + u - x, h = Math.round(fy + ny * u - u / 2) + u - y;
+  const canvas = w > 0 && h > 0 ? createCanvas(w, h) : null;
+  if (canvas) drawPlatformCells(canvas.getContext("2d"), fx - x, fy - y, rx, ry, tint, u, peak);
+  stamp = { canvas, x, y };
+  if (STAMPS.size >= STAMP_LIMIT) STAMPS.delete(STAMPS.keys().next().value);
+  STAMPS.set(key, stamp);
+  return stamp;
+}
+
+/**
+ * Draws a detail that repeats across an image's frames (a Poké Ball, an HP
+ * bar, a name) from a cached stamp: `draw(stampCtx, x, y)` paints it once
+ * with its anchor at (x, y), and later calls with the same `key` and the
+ * same position inside a pixel copy that stamp. The stamp spans `left`/`top`
+ * px before the anchor and is `w` × `h`. Anti-aliased edges can differ from
+ * drawing directly by at most 1 colour level. Returns false on a scaled,
+ * rotated or fractionally translated context; the caller then draws directly.
+ */
+export function drawStamp(ctx, key, ax, ay, left, top, w, h, draw) {
+  const t = ctx.getTransform?.();
+  if (!t || t.a !== 1 || t.b !== 0 || t.c !== 0 || t.d !== 1 || !Number.isInteger(t.e) || !Number.isInteger(t.f)) return false;
+  const ox = Math.floor(ax), oy = Math.floor(ay);
+  const full = `${key}@${ax - ox},${ay - oy},${left},${top},${w},${h}`;
+  let canvas = DETAIL_STAMPS.get(full);
+  if (!canvas) {
+    canvas = createCanvas(Math.max(1, Math.ceil(w)), Math.max(1, Math.ceil(h)));
+    draw(canvas.getContext("2d"), left + (ax - ox), top + (ay - oy));
+    if (DETAIL_STAMPS.size >= DETAIL_LIMIT) DETAIL_STAMPS.delete(DETAIL_STAMPS.keys().next().value);
+    DETAIL_STAMPS.set(full, canvas);
+  }
+  ctx.drawImage(canvas, ox - left, oy - top);
+  return true;
+}
+const DETAIL_STAMPS = new Map();
+const DETAIL_LIMIT = 2048;
 
 /** Poké Ball icon (battle nameplate style): filled when the slot is used. */
 export function drawBall(ctx, cx, cy, r, filled) {

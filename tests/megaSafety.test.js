@@ -14,7 +14,6 @@ const G = await import("../config/generations.js");
 const C = await import("../utils/speciesCatalog.js");
 const M = await import("../utils/megas.js");
 const { selectRandomPokemonForUser } = await import("../utils/weightedRandom.js");
-const { recruitPool } = await import("../commands/recruit.js");
 const { grantItem } = await import("../services/inventory.js");
 const items = await import("../catalog/items.js");
 const { computeMetrics } = await import("../progression/achievements.js");
@@ -60,7 +59,6 @@ section("No Mega in any acquisition pool");
 assertTrue(MEGAS.every((f) => !C.isAcquirable(f.id) && !C.isAcquirable({ id: f.id }) && !C.isAcquirable(f.formKey ?? "x")), "isAcquirable rejects every Mega id and form key");
 const poisoned = [...Object.values(DEX), ...MEGAS.map((f) => ({ id: f.id, name: f.name, tier: "common", types: f.typeIds, generation: 1 }))];
 assertEqual(C.acquirablePokemon(poisoned).filter((p) => typeof p.id !== "number").length, 0, "acquirablePokemon drops Mega entries even if injected into the pool");
-assertEqual(recruitPool(poisoned).filter((p) => typeof p.id !== "number").length, 0, "/recruit and /quest pool (recruitPool) never contains a Mega");
 let leaked = 0;
 for (let i = 0; i < 3000; i++) for (const ball of ["pokeball", "greatball", "ultraball"]) if (typeof selectRandomPokemonForUser(poisoned, { tp: 500000 }, ball).id !== "number") leaked++;
 assertEqual(leaked, 0, "9,000 selector draws (chat catch, daily, packs, dashboard capture) from a pool seeded with every Mega: none drawn");
@@ -133,7 +131,7 @@ assertEqual(megaRefs.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1–
 const NEVER = live.filter((f) => /^(utils\/battle\/(rewards|playback|data|moveset|stats|tuning|wager|rng)\.js|commands\/(quest|recruit|shop|gift)\.js|progression\/|services\/gameplay\.js|utils\/weightedRandom\.js)/.test(f));
 assertEqual(NEVER.filter((f) => /mega/i.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), [], `EXP/rewards, playback, battle data and acquisition code (${NEVER.length} files) never mentions Mega`);
 assertEqual(live.filter((f) => /megaRewards/.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), ["services/megaShards.js"], "only the shard service reads the Mega reward config");
-for (const [file, call] of [["commands/daily.js", /rollDailyShards\(user\)/], ["utils/battle/runBattle.js", /rewardsOn\(env\) && \(winnerId === challengerId \|\| mode === "wager"\)/]]) {
+for (const [file, call] of [["commands/daily.js", /rollDailyShards\(user\)/], ["utils/battle/runBattle.js", /rewardsOn\(env\) && !overCap && \(winnerId === challengerId \|\| mode === "wager"\)/]]) {
   assertTrue(call.test(fs.readFileSync(path.join(ROOT, file), "utf8")), `${file}: the shard roll is the gated helper call`);
 }
 section("Routes and dashboard: gated, session-checked, nothing rendered while off");

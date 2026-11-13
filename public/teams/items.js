@@ -11,7 +11,7 @@
 
 import { toast, showActionError, showExpired, pageHref } from "/public/shared/shell.js";
 
-const LABEL = { display: "Display team", battle: "Battle team" };
+const LABEL = { display: "Casual team", battle: "Ranked team" };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const fold = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const newRequestId = () => (crypto.randomUUID ? crypto.randomUUID() : `r${Date.now()}${Math.random().toString(16).slice(2, 10)}`);

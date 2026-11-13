@@ -24,9 +24,16 @@ export const DISCOUNT_CATEGORIES = Object.freeze({
   tms: "TMs",
   heldItems: "Held items",
   trainers: "Trainer sprites",
-  recruit: "/recruit",
   auras: "Auras",
 });
+
+/**
+ * The most a category may be discounted, in %, across every running event
+ * together (economy audit 2026-11, D2). A Poké Ball donated back pays up to
+ * 63% of its price at Legend Rank, so a ball discounted past about 40% would
+ * pay for itself; 30% keeps every ball a sink for every Rank.
+ */
+export const MAX_DISCOUNT = Object.freeze({ balls: 30 });
 
 /**
  * Every effect kind: label, what its value is, and (for match effects) which
@@ -130,6 +137,9 @@ export function cleanEffect(raw, speciesExists = () => true) {
     const bad = cats.filter((c) => !DISCOUNT_CATEGORIES[c]);
     if (bad.length) errors.push(`Unknown shop categories: ${bad.join(", ")}.`);
     if (!cats.length) errors.push("Shop discount: pick at least one category.");
+    for (const c of cats) {
+      if (MAX_DISCOUNT[c] != null && Number(raw.value) > MAX_DISCOUNT[c]) errors.push(`${DISCOUNT_CATEGORIES[c]} can be discounted by at most ${MAX_DISCOUNT[c]}%.`);
+    }
     effect.categories = cats;
   }
   return errors.length ? { error: errors.join(" ") } : { effect };
@@ -224,11 +234,16 @@ export function expMultiplier(fx, p) {
   return fx.exp.reduce((m, f) => (hasTargets(f.match) && !matches(f.match, p) ? m : m * f.value), 1);
 }
 
-/** Price after every running discount on a category (each takes its % off what's left). Never below 0. */
+/**
+ * Price after every running discount on a category (each takes its % off
+ * what's left). Never below 0, and never more off than MAX_DISCOUNT allows,
+ * even when several events stack or an event was saved before the cap.
+ */
 export function discountedPrice(fx, category, price) {
-  const keep = fx.discounts
+  let keep = fx.discounts
     .filter((d) => d.categories.includes(category))
     .reduce((k, d) => k * (1 - d.value / 100), 1);
+  if (MAX_DISCOUNT[category] != null) keep = Math.max(keep, 1 - MAX_DISCOUNT[category] / 100);
   return Math.max(0, Math.round(price * keep));
 }
 

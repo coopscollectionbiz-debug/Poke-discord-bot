@@ -19,12 +19,11 @@ const G = await import("../config/generations.js");
 const C = await import("../utils/speciesCatalog.js");
 const { getAllPokemon, getAcquirablePokemon } = await import("../utils/dataLoader.js");
 const { selectRandomPokemonForUser } = await import("../utils/weightedRandom.js");
-const { recruitPool } = await import("../commands/recruit.js");
 const { createGameplayHandlers } = await import("../services/gameplay.js");
 const { lockUser } = await import("../utils/userLocks.js");
 const { saveAndAck } = await import("../utils/saveManager.js");
-const { trainingKey, expForLevel } = await import("../utils/training.js");
-const { requiredLevel, officialMethodText, checkEvolutionRequirements } = await import("../services/evolutionRules.js");
+const { trainingKey, expForLevel, floorLevel } = await import("../utils/training.js");
+const { officialMethodText, checkEvolutionRequirements } = await import("../services/evolutionRules.js");
 const { parseChange, applyChange } = await import("../services/adminChanges.js");
 const DEX = JSON.parse(fs.readFileSync(new URL("../pokemonData.json", import.meta.url), "utf8"));
 
@@ -45,7 +44,6 @@ assertTrue(!C.isAcquirable(700) && C.isAcquirable(133) && !C.isAcquirable("52:ga
 section("Every acquisition pool excludes disabled generations (default)");
 const acq = await getAcquirablePokemon();
 assertEqual(acq.length, 649, "getAcquirablePokemon(): 649 species");
-assertTrue(recruitPool(all).every((p) => p.id <= 649) && recruitPool(all).length === 649, "/recruit and /quest pool");
 let leaked = 0;
 for (const ball of ["pokeball", "greatball", "ultraball"]) {
   for (let i = 0; i < 4000; i++) if (selectRandomPokemonForUser(all, { tp: 500000 }, ball).id > 649) leaked++;
@@ -58,8 +56,6 @@ const SITES = [
   ["bot_final.js", /const allPokemon = await getAcquirablePokemon\(\);[\s\S]{0,200}selectRandomPokemonForUser\(allPokemon/, "chat catch"],
   ["commands/daily.js", /const allPokemon = await getAcquirablePokemon\(\);/, "/daily"],
   ["commands/shop.js", /const allPokemon = await getAcquirablePokemon\(\);[\s\S]{0,600}pickPokemon/, "shop starter pack"],
-  ["commands/recruit.js", /recruitPool = \(allPokemon\) => acquirablePokemon\(allPokemon\)/, "/recruit"],
-  ["commands/quest.js", /recruitPool\(await getPokemonCached\(\)\)/, "/quest"],
   ["services/gameplay.js", /acquirablePokemon\(await loadAllPokemon\(\)\)/, "dashboard capture"],
   ["services/gameplay.js", /acquirablePokemon\(await loadPokemonCached\(\)\)/, "weekly pack"],
   ["services/gameplay.js", /checkEvolutionRequirements\(/, "evolution"],
@@ -67,7 +63,7 @@ const SITES = [
   ["commands/trainercard.js", /filter\(\(g\) => !g\.gen \|\| isGenerationLive\(g\.gen\)\)/, "starter selection"],
 ];
 for (const [file, re, label] of SITES) assertTrue(re.test(src(file)), `${label} (${file}) draws from the generation-gated pool`);
-const callers = ["bot_final.js", "commands/daily.js", "commands/shop.js", "commands/recruit.js", "commands/quest.js", "services/gameplay.js", "utils/broadcastReward.js", "commands/trainercard.js"]
+const callers = ["bot_final.js", "commands/daily.js", "commands/shop.js", "services/gameplay.js", "utils/broadcastReward.js", "commands/trainercard.js"]
   .filter((f) => /selectRandomPokemonForUser\(\s*(await\s+)?getAllPokemon/.test(src(f)));
 assertEqual(callers, [], "no call site feeds the raw catalogue straight into the selector");
 
@@ -102,21 +98,20 @@ section("Evolution: generation gate and official levels");
   const ok = await h.evolve({ body: { id: "U", baseId: 133, targetId: 134 }, isAuthorized: auth("U") });
   assertTrue(ok.status === 200 && ok.body.success, "Eevee → Vaporeon unaffected");
 }
-assertEqual(requiredLevel(DEX[650], DEX[651]), 16, "Chespin → Quilladin needs Lv 16");
-assertEqual(requiredLevel(DEX[1], DEX[2]), null, "Gen 1–5 evolutions have no level requirement (unchanged)");
-assertEqual(requiredLevel(DEX[133], DEX[700]), null, "Sylveon: friendship/move method → Stone equivalent only");
 assertEqual(officialMethodText(DEX[700]), "Level up knowing a Fairy-type move with high friendship", "official method shown for flavour");
 enable([6, 7, 8, 9]);
 {
   const { state, h } = setup({ U: player({ pokemon: { 133: { normal: 1, shiny: 1 }, 650: { normal: 1, shiny: 0 } } }) });
   const syl = await h.evolve({ body: { id: "U", baseId: 133, targetId: 700, variant: "shiny" }, isAuthorized: auth("U") });
   assertTrue(syl.status === 200 && state.td.U.pokemon[700]?.shiny === 1 && state.td.U.pokemon[133].normal === 1 && !state.td.U.pokemon[700]?.normal, "with Gen 6 live: shiny Eevee → shiny Sylveon; shiny status kept; the normal Eevee untouched");
+  // No Level requirement for any generation: a low-Level Chespin evolves on Stones alone, like Gen 1–5.
+  state.td.U.training[trainingKey(650, "normal")] = { exp: expForLevel(5) };
   const low = await h.evolve({ body: { id: "U", baseId: 650, targetId: 651 }, isAuthorized: auth("U") });
-  assertTrue(low.status === 400 && /must be Level 16/.test(low.body.error) && state.td.U.pokemon[650].normal === 1, "Chespin below Lv 16 can't evolve; nothing spent");
-  state.td.U.training[trainingKey(650, "normal")] = { exp: expForLevel(16) };
-  const hi = await h.evolve({ body: { id: "U", baseId: 650, targetId: 651 }, isAuthorized: auth("U") });
-  assertTrue(hi.status === 200 && state.td.U.pokemon[651]?.normal === 1 && !state.td.U.pokemon[650], "Chespin at Lv 16 → Quilladin");
-  assertTrue((state.td.U.training[trainingKey(651, "normal")]?.exp ?? 0) >= expForLevel(16), "Level carries over on evolution");
+  assertTrue(low.status === 200 && state.td.U.pokemon[651]?.normal === 1 && !state.td.U.pokemon[650], "Chespin at Lv 5 → Quilladin (no Level requirement, Stones only)");
+  // The evolved Pokémon is raised to the evolved species' minimum Level (Quilladin: 16), as for Gen 1–5.
+  const quilladin = Object.values(state.td.U.box ?? {}).flat().find((c) => Number(c?.id) === 651);
+  const evolvedExp = quilladin?.exp ?? state.td.U.training?.[trainingKey(651, "normal")]?.exp ?? 0;
+  assertTrue(evolvedExp >= expForLevel(floorLevel(651)), "evolved Pokémon is at least Quilladin's minimum Level");
 }
 {
   const { state, h } = setup({ U: player({ pokemon: { 264: { normal: 1, shiny: 0 } }, training: { "264:normal": { exp: expForLevel(50) } } }) });
@@ -133,7 +128,6 @@ assertTrue(alola.length === 88 && alola.every((p) => p.generation === 7), "all 8
 let sawAlola = false;
 for (let i = 0; i < 6000 && !sawAlola; i++) if (selectRandomPokemonForUser(all, { tp: 0 }).generation === 7) sawAlola = true;
 assertTrue(sawAlola, "Alola species appear in weighted draws once enabled");
-assertTrue(recruitPool(all).length === 649 + 88, "/recruit pool grows by 88");
 
 section("Disabling never removes owned Pokémon");
 {

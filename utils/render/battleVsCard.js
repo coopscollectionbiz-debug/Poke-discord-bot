@@ -30,9 +30,9 @@ const BOX = 320;
 const SLOTS = [{ cx: 190, grid: [348, 176] }, { cx: 1010, grid: [696, 176] }];
 
 const MODES = {
-  open: { label: "CASUAL BATTLE", team: "Display team · real Levels", rated: false },
-  ranked: { label: "RANKED BATTLE", team: "Battle team · Lv 50", rated: true },
-  wager: { label: "WAGER BATTLE", team: "Battle team · Lv 50", rated: true },
+  open: { label: "CASUAL BATTLE", team: "Casual team · real Levels", rated: false },
+  ranked: { label: "RANKED BATTLE", team: "Ranked team · Lv 50", rated: true },
+  wager: { label: "WAGER BATTLE", team: "Ranked team · Lv 50", rated: true },
 };
 
 /**

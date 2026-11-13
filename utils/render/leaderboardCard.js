@@ -118,7 +118,7 @@ export async function renderLeaderboard(v, { animate = false } = {}) {
 
   ctx.font = font(15, 800);
   ctx.fillStyle = COLOR.textFaint;
-  ctx.fillText("BATTLE RATING", M + 4, M + 22);
+  ctx.fillText("RANKED RATING", M + 4, M + 22);
   ctx.font = font(38, 800);
   ctx.fillStyle = COLOR.text;
   ctx.fillText("Leaderboard", M + 4, M + 62);

@@ -135,8 +135,11 @@ function player(id, team) {
   u.battleTeam = team.map(([sp]) => ({ id: sp, variant: "normal" }));
   return u;
 }
-const strong = [[6, 90], [9, 90], [3, 90]];
-const weak = [[10, 5], [13, 5]];
+// Wager battles need 25 registered species on both sides (economy audit 2026-11, D4).
+const dex25 = (u) => { u.pokedex = { ...Object.fromEntries(Array.from({ length: 25 }, (_, i) => [i + 1, 1])), ...(u.pokedex ?? {}) }; return u; };
+// Ranked and wager battles need full teams of 6.
+const strong = [[6, 90], [9, 90], [3, 90], [149, 90], [130, 90], [65, 90]];
+const weak = [[10, 5], [13, 5], [129, 5], [11, 5], [14, 5], [16, 5]];
 let sameBattle = true;
 let shardKeysOff = 0;
 let challengerShards = 0;
@@ -160,6 +163,7 @@ for (let seed = 1; seed <= 300; seed++) {
   }
   const td = { A: player("A", weak), B: player("B", strong) };
   td.A.cc = 100; td.B.cc = 100;
+  dex25(td.A); dex25(td.B);
   const wg = runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "wager", stake: 10, seed, now: new Date(NOW), env: ON });
   wagerDefenderShards += wg.megaShards?.B ?? 0;
 }
@@ -168,6 +172,19 @@ assertEqual(shardKeysOff, 0, "rewards off: the battle result has no megaShards k
 assertTrue(challengerShards > 20 && challengerShards < 120, `a winning Challenger earns about 10% of the time (${challengerShards} in 600 wins)`);
 assertEqual(defenderShards, 0, "a Defender who wins a casual or ranked battle they didn't start earns nothing");
 assertTrue(wagerDefenderShards > 0, "a Defender who accepted a wager can earn by winning it");
+
+// A casual battle past the Battle cap earns no rewards (decided 2026-11-12),
+// and the drop line lives on the EXP card, which isn't sent past the cap.
+let overCapWins = 0;
+let overCapShards = 0;
+for (let seed = 1; seed <= 300; seed++) {
+  const td = { A: player("A", strong), B: player("B", weak) };
+  td.A.battle = { rating: 1000, wins: 0, losses: 0, day: "2026-11-11", started: 10, vs: {} };
+  const out = runBattle({ trainerData: td, challengerId: "A", defenderId: "B", mode: "open", seed, now: new Date(NOW), env: ON });
+  if (out.winnerId === "A") overCapWins++;
+  overCapShards += ("megaShards" in out ? 1 : 0) + getQuantity(td.A, "mega_shard");
+}
+assertEqual([overCapWins, overCapShards], [300, 0], "past the daily Battle cap, 300 casual wins roll no shards");
 
 section("The battle EXP message shows a drop");
 const etd = { A: player("A", strong), B: player("B", weak) };

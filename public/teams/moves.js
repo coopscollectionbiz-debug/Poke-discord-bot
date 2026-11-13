@@ -12,7 +12,7 @@ import { openTeachDialog } from "/public/shared/teachTm.js";
 import { moveMeta } from "/public/shared/moveMeta.js";
 
 const MAX = 4;
-const LABEL = { display: "Display team", battle: "Battle team" };
+const LABEL = { display: "Casual team", battle: "Ranked team" };
 const OTHER = { display: "battle", battle: "display" };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 

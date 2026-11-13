@@ -128,7 +128,7 @@ section("Pokémon");
   const noUid = (team) => team.map((s) => (s && typeof s === "object" ? { id: s.id, variant: s.variant } : s));
   assertEqual(noUid(t.displayedPokemon), [25, { id: 16, variant: "shiny" }], "the Team slot is cleared; the shiny and the legacy slot stay");
   assertEqual(noUid(t.battleTeam), [{ id: 25, variant: "normal" }], "the Battle team slot is cleared");
-  assertTrue(last.warnings.some((w) => w === "Clears Team slot 2.") && last.warnings.some((w) => w === "Clears Battle team slot 1.") && last.warnings.some((w) => w.includes("Resets Lv 34")), "the review warns about both slots and the Level");
+  assertTrue(last.warnings.some((w) => w === "Clears Casual team slot 2.") && last.warnings.some((w) => w === "Clears Ranked team slot 1.") && last.warnings.some((w) => w.includes("Resets Lv 34")), "the review warns about both slots and the Level");
   const over = C.applyChange(t, change({ kind: "pokemon", op: "remove", speciesId: 25, variant: "normal", amount: 2 }));
   assertTrue(!over.ok && over.error === "They have 1 × Pikachu.", "over-removing Pokémon is rejected with the count");
 }
@@ -161,10 +161,11 @@ section("Level");
 section("Cooldowns");
 {
   const now = Date.parse("2026-11-11T12:00:00Z");
-  const u = player({ lastDaily: now - 1000, daily: { streak: 7 }, weeklyPackClaimed: true, lastQuest: now - 5, lastRecruit: now - 5, battle: { day: "2026-11-11", started: 10, vs: { 2: 3 }, rating: 1100 } });
+  const u = player({ lastDaily: now - 1000, daily: { streak: 7 }, weeklyPackClaimed: true, lastQuest: now - 5, lastRecruit: now - 5, battle: { day: "2026-11-11", started: 10, vs: { 2: 3 }, rating: 1100 }, rematchBlocked: { 2: "2026-11-11" } });
   const r = C.applyChange(u, change({ kind: "cooldown", cooldowns: ["daily", "weekly", "quest", "recruit", "battle"] }), { now });
   assertTrue(r.ok && u.lastDaily === 0 && u.daily.streak === 7 && u.weeklyPackClaimed === false && u.lastQuest === 0 && u.lastRecruit === 0, "daily/weekly/quest/recruit reset; the daily streak is kept");
   assertTrue(u.battle.started === 0 && Object.keys(u.battle.vs).length === 0 && u.battle.rating === 1100, "Battle cap reset; Battle rating untouched");
+  assertEqual(u.rematchBlocked, undefined, "Rematch request blocks are cleared with the Battle cap");
   assertEqual([r.before.daily, r.after.daily, r.before.battle, r.after.battle], ["claimed today", "ready", "10 started today", "0 started today"], "before/after states are readable");
   assertTrue(!C.parseChange({ kind: "cooldown", cooldowns: [] }).ok && !C.parseChange({ kind: "cooldown", cooldowns: ["nap"] }).ok, "empty or unknown cooldowns are rejected");
 }

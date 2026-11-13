@@ -512,7 +512,7 @@ function rules() {
   const mythic = list.filter((s) => isMythic(s.id)).length;
   const mega = state.megaOn ? list.filter((s) => s.mega).length : 0;
   const err = !!state.error.battle;
-  return `<ul class="tm-rules" aria-label="Battle team rules">
+  return `<ul class="tm-rules" aria-label="Ranked team rules">
     <li class="tm-rule"><svg class="tm-ic" aria-hidden="true"><use href="#tm-swords"/></svg>Battles at <b>Lv ${BATTLE_LEVEL}</b></li>
     <li class="tm-rule${err ? " is-error" : mythic >= 1 ? " is-full" : ""}">Mythic <b>${mythic}/1</b></li>
     ${state.megaOn ? `<li class="tm-rule${mega >= 1 ? " is-full" : ""}">Mega <b>${mega}/1</b></li>` : ""}

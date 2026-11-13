@@ -5,7 +5,7 @@
 // ==========================================================
 
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
-import { teachOptions, teachTm } from "../services/tmTeaching.js";
+import { teachOptions, teachTm, laterLevelUpAt } from "../services/tmTeaching.js";
 import { carryCopyUids, transformCopy, plainCount, customCopiesOf, ownershipProblems } from "../services/ownership.js";
 import { runInventoryTransaction } from "../services/inventory.js";
 import { buildTeam, buildBattleTeam } from "../utils/battle/runBattle.js";
@@ -191,6 +191,23 @@ section("taught moves survive evolution and shiny crafting");
   assertTrue(transformCopy(u, { from: { id: 5, variant: "normal" }, to: { id: 6, variant: "normal" }, uid: r.uid, confirmRev: 1 }).ok, "it evolves");
   assertTrue(transformCopy(u, { from: { id: 6, variant: "normal" }, to: { id: 6, variant: "shiny" }, uid: r.uid, confirmRev: 2 }).ok, "then becomes shiny");
   assertEqual([u.customPokemon[r.uid].speciesId, u.customPokemon[r.uid].variant, u.customPokemon[r.uid].tmMoves], [6, "shiny", ["dragonclaw"]], "same copy: shiny Charizard with Dragon Claw");
+}
+
+section("teach dialog warns when the move comes by level-up later");
+{
+  // Charmander learns Flamethrower at Lv 37, Fire Fang at 25; never Dragon Claw.
+  assertEqual(laterLevelUpAt(4, "flamethrower", 2), 37, "Lv 2 Charmander: Flamethrower at Lv 37");
+  assertEqual(laterLevelUpAt(4, "flamethrower", 37), null, "at Lv 37 it isn't 'later' any more");
+  assertEqual(laterLevelUpAt(4, "dragonclaw", 2), null, "never by level-up: no warning");
+  const u = { pokemon: { 4: { normal: 1, shiny: 0 } }, training: { "4:normal": { exp: 20 ** 3 } }, items: { tm_flamethrower: 1, tm_dragonclaw: 1 } };
+  const o = teachOptions(u, { speciesId: 4, variant: "normal" }, { env: ON });
+  const by = (name) => o.tms.find((t) => t.name === name);
+  assertEqual(target(o, "untrained").level, 20, "each copy reports its Level");
+  assertEqual(by("Flamethrower").learnsAt, { untrained: 37 }, "Flamethrower: learns it at Lv 37");
+  assertEqual(by("Dragon Claw").learnsAt, {}, "Dragon Claw: no warning");
+  // A move it already knows is refused, not warned about.
+  const p = player();
+  assertEqual(teachOptions(p, { speciesId: 25, variant: "normal" }, { env: ON }).tms.every((t) => Object.keys(t.learnsAt).every((k) => t.status[k] === "teachable")), true, "only teachable copies carry a warning");
 }
 
 finish();

@@ -32,6 +32,9 @@ function writeArt(id, meta, { frames = 24 } = {}) {
   fs.writeFileSync(path.join(d, "aura.json"), JSON.stringify({ id, name: id, frames, layers: { back: "back.png", vs: "vs.png", row: "row.png" }, ...meta }));
 }
 writeArt("gymBlaine", {}); // no tint, no palette, no light
+// no tint, a sky, and a row sheet that's transparent except a marker, so the sky shows through
+writeArt("gymKoga", { sky: ["#123456", "#123456"] });
+fs.writeFileSync(path.join(DIR, "gymKoga", "row.png"), png(438 * 24, 89, (x) => { for (let f = 0; f < 24; f++) px(x, ROWMARK, f * 438 + 10, 40, 4, 4); }));
 writeArt("e4Lorelei", { tint: "#9ab9e4", light: { color: "#ffeec0", from: [-1, -0.6], strength: 1 } });
 // 48 frames: sheet frame k carries marker x = k (back.png row 10)
 writeArt("milestoneShiny25", { tint: "#e0c48c" }, { frames: 48 });
@@ -93,6 +96,8 @@ section("No tint: art still draws on VS cards and battle playback");
   const pk = (speciesId) => ({ speciesId, name: "P", level: 50, variant: "normal" });
   const pb = await gifFrame0(await renderBattleFrame({ sides: [{ name: "A", members: [pk(25)] }, { name: "B", members: [pk(25)] }], sprites: new Map(), hpBefore: [[1], [1]], trainers: ["lass.png", "lass.png"], tiers: ["art:gymBlaine", null], screens: [["Go!", ""]] }));
   assertTrue(find(pb.data, pb.W, ROWMARK).length > 0, "battle playback: the untinted art's row draws");
+  const pk2 = await gifFrame0(await renderBattleFrame({ sides: [{ name: "A", members: [pk(25)] }, { name: "B", members: [pk(25)] }], sprites: new Map(), hpBefore: [[1], [1]], trainers: ["lass.png", "lass.png"], tiers: ["art:gymKoga", null], screens: [["Go!", ""]] }));
+  assertTrue(find(pk2.data, pk2.W, [0x12, 0x34, 0x56]).length > 1000, "battle playback: an untinted Aura's sky still fills its row");
 }
 
 section("Anchoring: back.png's feet row on the trainer's feet");

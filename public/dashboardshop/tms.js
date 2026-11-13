@@ -1,7 +1,8 @@
 // ======================================================================
 // Shop · Technical Machines (TM system phase T3)
 //
-// GET  /api/tms?id=…          catalog, prices, owned counts, "teaches N"
+// GET  /api/tm-shop?id=…      catalog, prices, owned counts, "teaches N"
+//      (not /api/tms: blockers' EasyPrivacy list blocks "/tms?id=")
 // POST /api/shop/buy-tm       { id, item, qty, requestId }
 //
 // Everything shown comes from the server (prices, compatibility, owned
@@ -11,7 +12,7 @@
 // ======================================================================
 
 import { showMessage, isExpired, showExpired } from "/public/shared/shell.js";
-import { moveMeta } from "/public/shared/moveMeta.js";
+import { moveMeta, tmDisc } from "/public/shared/moveMeta.js";
 
 const TYPES = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"];
 const TIER_LABEL = { basic: "Basic", standard: "Standard", power: "Power", premium: "Premium", elite: "Elite" };
@@ -26,7 +27,7 @@ async function load() {
   if (!state.userId) return;
   let res;
   try {
-    res = await fetch(`/api/tms?id=${encodeURIComponent(state.userId)}`, { credentials: "same-origin" });
+    res = await fetch(`/api/tm-shop?id=${encodeURIComponent(state.userId)}`, { credentials: "same-origin" });
   } catch {
     return; // the main shop script already reports connection problems
   }
@@ -81,10 +82,10 @@ function visible() {
 function card(t) {
   const affordable = (state.data.cc ?? 0) >= t.price;
   return `<div class="shop-item tmx-item" data-tier="${esc(t.tier)}">
-    <div class="tmx-top"><span class="tmx-tier">${esc(TIER_LABEL[t.tier] ?? t.tier)}</span></div>
+    <div class="tmx-top">${tmDisc(t.type, { size: 60 })}<span class="tmx-tier">${esc(TIER_LABEL[t.tier] ?? t.tier)}</span></div>
     <h3>${esc(t.name)}</h3>
     <p class="desc">${moveMeta(t)}</p>
-    <p class="tmx-meta">${t.teaches > 0 ? `Teaches ${fmt(t.teaches)} of your Pokémon` : "None of your Pokémon can learn it"}${t.owned ? ` · <b>You have ${fmt(t.owned)}</b>` : ""}</p>
+    <p class="tmx-meta">${t.teaches > 0 ? `${fmt(t.teaches)} of your Pokémon can learn it` : "None of your Pokémon can learn it"}${t.owned ? ` · <b>You have ${fmt(t.owned)}</b>` : ""}</p>
     <p class="price">${fmt(t.price)} CC</p>
     <button type="button" class="buy-btn" data-tm="${esc(t.item)}"${affordable ? "" : " disabled"} aria-label="Buy ${esc(t.name)} for ${fmt(t.price)} CC">${affordable ? "Buy" : "Not enough CC"}</button>
   </div>`;
@@ -98,6 +99,42 @@ function render() {
   grid.innerHTML = list.length ? list.map(card).join("") : `<p class="tmx-empty">No TMs match these filters.</p>`;
 }
 
+const TEAM_LABEL = { casual: "Casual", ranked: "Ranked", showcase: "Showcase" };
+
+function learnerRow(p) {
+  const chips = p.teams.map((tm) => `<span class="tmx-lr-team" data-team="${esc(tm)}">${esc(TEAM_LABEL[tm] ?? tm)}</span>`).join("");
+  return `<li class="tmx-lr-row${p.known ? " is-known" : ""}">
+    <img src="/public/sprites/pokemon/${p.variant === "shiny" ? "shiny" : "normal"}/${Number(p.speciesId)}.gif" alt="" loading="lazy" width="40" height="40">
+    <span class="tmx-lr-name">${esc(p.name)}${p.variant === "shiny" ? " ✨" : ""} <small>Lv ${Number(p.level)}</small></span>
+    <span class="tmx-lr-tags">${chips}${p.known ? `<small>Already knows it</small>` : ""}</span>
+  </li>`;
+}
+
+// Casual and Ranked team members first (the server sorts), then the rest
+// under their own heading.
+async function loadLearners(item, list) {
+  if (!list) return;
+  try {
+    const res = await fetch(`/api/tm-shop/learners?id=${encodeURIComponent(state.userId)}&item=${encodeURIComponent(item)}`, { credentials: "same-origin" });
+    if (res.status === 403) return showExpired();
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { learners = [] } = await res.json();
+    if (!list.isConnected) return;
+    const title = list.closest(".tmx-lr")?.querySelector("h3");
+    if (title && learners.length) title.textContent = `${fmt(learners.length)} of your Pokémon can learn it`; // a shiny counts as its own row
+    const top = learners.filter((p) => p.priority);
+    const rest = learners.filter((p) => !p.priority);
+    list.innerHTML = learners.length
+      ? [
+          top.length ? `<li class="tmx-lr-head">On your teams</li>${top.map(learnerRow).join("")}` : "",
+          rest.length ? `${top.length ? `<li class="tmx-lr-head">Other Pokémon</li>` : ""}${rest.map(learnerRow).join("")}` : "",
+        ].join("")
+      : `<li class="tmx-lr-note">None of your Pokémon can learn it yet.</li>`;
+  } catch {
+    if (list.isConnected) list.innerHTML = `<li class="tmx-lr-note">Couldn’t load your Pokémon. Close this and try again.</li>`;
+  }
+}
+
 function confirmBuy(itemId) {
   if (isExpired()) return;
   const t = state.data.tms.find((x) => x.item === itemId);
@@ -109,7 +146,10 @@ function confirmBuy(itemId) {
   overlay.innerHTML = `<div id="shopModal" role="dialog" aria-modal="true" aria-labelledby="tmxDlgTitle">
     <h2 id="tmxDlgTitle">Buy ${esc(t.name)}?</h2>
     <p>${esc(t.description)}</p>
-    <p>${t.teaches > 0 ? `${fmt(t.teaches)} of your Pokémon can learn it.` : "None of your Pokémon can learn it yet."}</p>
+    <section class="tmx-lr" aria-labelledby="tmxLrTitle">
+      <h3 id="tmxLrTitle">${t.teaches > 0 ? `${fmt(t.teaches)} of your Pokémon can learn it` : "None of your Pokémon can learn it yet"}</h3>
+      ${t.teaches > 0 ? `<ul class="tmx-lr-list" id="tmxLearners"><li class="tmx-lr-note">Loading your Pokémon…</li></ul>` : ""}
+    </section>
     <label class="tmx-qty">Quantity <input type="number" id="tmxQty" min="1" max="${max}" value="1" inputmode="numeric" /></label>
     <p class="tmx-total" id="tmxTotal">${fmt(t.price)} CC</p>
     <div class="modal-buttons">
@@ -117,6 +157,7 @@ function confirmBuy(itemId) {
       <button type="button" class="modal-btn confirm">Buy</button>
     </div></div>`;
   document.body.appendChild(overlay);
+  if (t.teaches > 0) loadLearners(t.item, overlay.querySelector("#tmxLearners"));
   const qtyEl = overlay.querySelector("#tmxQty");
   const totalEl = overlay.querySelector("#tmxTotal");
   const confirm = overlay.querySelector(".confirm");

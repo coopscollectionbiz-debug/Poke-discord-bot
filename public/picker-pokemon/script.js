@@ -158,13 +158,6 @@ async function limitToReleasedGenerations(data, owned) {
   return out;
 }
 
-// Official level requirement for Gen 6–9 level-up evolutions (enforced by the server).
-function requiredEvolutionLevel(base, target) {
-  const e = target?.evolution;
-  if (!e || Number(target.generation) < 6 || Number(e.from) !== Number(base?.id)) return null;
-  return (e.trigger === "level-up" || e.trigger === "in-battle-level-up") && e.minLevel > 0 ? e.minLevel : null;
-}
-
 function getEvoList(p) {
   return p?.evolvesTo || p?.evolves_to || [];
 }
@@ -1110,11 +1103,11 @@ function renderPokemonGridCards() {
       if (power != null) levelHTML += `<div class="poke-power" title="Power: total of all six stats at its Level (highest owned copy)">Power <b>${power.toLocaleString("en-US")}</b></div>`;
     }
 
-    // Team badges: D = Display team slot, B = Battle team slot (read-only; teams are edited on the Teams page).
+    // Team badges: C = Casual team slot, R = Ranked team slot (read-only; teams are edited on the Teams page).
     const slotOf = (raw) => (Array.isArray(raw) ? raw : []).findIndex((s) => Number(s?.id) === id);
     const dIdx = slotOf(userData.currentTeam), bIdx = slotOf(userData.battleTeam);
     const teamBadgeHTML = dIdx >= 0 || bIdx >= 0
-      ? `<div class="team-badges">${dIdx >= 0 ? `<span class="mem mem-d" title="Display team, slot ${dIdx + 1}">D${dIdx + 1}</span>` : ""}${bIdx >= 0 ? `<span class="mem mem-b" title="Battle team, slot ${bIdx + 1}">B${bIdx + 1}</span>` : ""}</div>`
+      ? `<div class="team-badges">${dIdx >= 0 ? `<span class="mem mem-d" title="Casual team, slot ${dIdx + 1}">C${dIdx + 1}</span>` : ""}${bIdx >= 0 ? `<span class="mem mem-b" title="Ranked team, slot ${bIdx + 1}">R${bIdx + 1}</span>` : ""}</div>`
       : "";
 
     card.innerHTML = `
@@ -1144,8 +1137,8 @@ function renderPokemonGridCards() {
 
     // Keyboard + screen reader: the card is the control.
     const states = [];
-    if (dIdx >= 0) states.push(`Display team slot ${dIdx + 1}`);
-    if (bIdx >= 0) states.push(`Battle team slot ${bIdx + 1}`);
+    if (dIdx >= 0) states.push(`Casual team slot ${dIdx + 1}`);
+    if (bIdx >= 0) states.push(`Ranked team slot ${bIdx + 1}`);
     if (multiPicked) states.push("selected");
     if (shownVariant === "shiny") states.push("shiny");
     if (!isOwnedAny) states.push("not owned");
@@ -1303,7 +1296,7 @@ async function initMegaUI() {
       withActionLock,
       createConfirmModal,
       getMode: () => currentMode,
-      getTeam: () => selectedTeam, // the saved Display team (read-only here)
+      getTeam: () => selectedTeam, // the saved Casual team (read-only here)
       // No setTeam: teams are edited on the Teams page, so the Mega cards link there.
       refreshUser: async () => {
         await fetchUserData();
@@ -2013,7 +2006,6 @@ function openEvolutionModal(baseId) {
         </div>
 
         ${dustRow}
-        ${requiredEvolutionLevel(base, target) ? `<div style="margin-top:6px;color:var(--cc-text-muted);font-weight:800;">Requires Lv. ${requiredEvolutionLevel(base, target)}</div>` : ""}
       `;
 
       if (allowed) {

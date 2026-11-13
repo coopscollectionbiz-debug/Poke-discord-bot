@@ -3,7 +3,7 @@
 // Drives the real /challenge execute() and its preview buttons with stub
 // Discord objects. The fight must land on the live record (other commands
 // and the dashboard replace it with a copy), re-check everything at the
-// click, and never post the exact CC loss in public. Elite Four runs are
+// click, and post the exact CC loss in public only with the result. Elite Four runs are
 // driven through their private Revive menus.
 // ==========================================================
 
@@ -484,8 +484,7 @@ section("Fight! and a loss");
     "the intro is the VS card, with the prize at stake and 10%");
   assertTrue(!(intro.content ?? "").includes("<@") && !(intro.content ?? "").includes("CC"), "and no mention or amount above it");
   const pub = t.publicText();
-  assertTrue(!pub.includes("1,234") && !pub.includes("1234") && !pub.includes("11,111") && !pub.includes("11111"), "no amount or balance in public");
-  assertTrue(pub.includes("💸 Lost 10% of their CC."), "the replay ends with the loss line");
+  assertTrue(pub.includes("💸 Lost 1,234 CC."), "the replay ends with the exact CC lost");
   assertEqual(t.collectors[0].ended !== null, true, "the preview stops listening");
 
   const again = await t.click("fight");
@@ -706,7 +705,7 @@ section("Elite Four run: a loss at Lorelei");
   const fight = await t.fightRun(async () => {});
   assertEqual([t.log.menus.length, t.trainerData.A.cc, t.trainerData.A.challenge.run], [0, 11111, undefined], "no menu; 10% lost; the run is closed");
   assertEqual(t.log.results.at(-1).content, "You lost 1,234 CC.", "the private result shows the amount");
-  assertTrue(!t.publicText().includes("1,234") && !t.publicText().includes("1234"), "the public replay never does");
+  assertTrue(t.publicText().includes("💸 Lost 1,234 CC."), "and the public replay ends with the same amount");
 }
 
 section("While a run is open");

@@ -2,7 +2,7 @@
 // tests/challengePlayback.test.js
 // Replaying a Challenge: one message for a whole Elite Four run, played one
 // fight at a time with the Revive in each header, leaders shown by name
-// (never as a mention), no exact CC loss in public, and a replay slot held
+// (never as a mention), the exact CC lost in public, and a replay slot held
 // only while a fight plays.
 // ==========================================================
 
@@ -87,8 +87,11 @@ section("Result embed");
 
   const lost = outcomeOf(player([10], 5), "brock");
   const l = buildChallengeEmbed(lost, challengeNames(lost, "A"));
-  assertEqual(l.toJSON().description, "💸 Lost 10% of their CC.", "a loss: the loss line");
-  assertTrue(!embedText(l).includes("1,234") && !embedText(l).includes("1234"), "no exact amount");
+  assertEqual(l.toJSON().description, "💸 Lost 1,234 CC.", "a loss: the exact CC lost (10% of 12,345, rounded down)");
+  const broke = player([10], 5);
+  broke.A.cc = 9;
+  const b = outcomeOf(broke, "brock");
+  assertEqual([b.ccLost, buildChallengeEmbed(b, challengeNames(b, "A"))], [0, null], "a loss that costs nothing has no loss line, and no embed");
 
   const eighth = outcomeOf(player(STRONG, 100, Object.fromEntries(GYMS.slice(0, 7).map((k) => [k, "d"]))), "giovanni");
   assertTrue(buildChallengeEmbed(eighth, challengeNames(eighth, "A")).toJSON().description.includes("🔓 The Elite Four is open!"), "Elite Four unlock line");
@@ -176,7 +179,7 @@ section("Run loss");
   const e = buildChallengeEmbed(lost, challengeNames(lost, "A")).toJSON();
   const progress = CHALLENGES.elite4.opponents.slice(0, lost.fights.length).map((o, i) => `${o.name} ${i === lost.fights.length - 1 ? "✗" : "✓"}`).join(" · ");
   assertTrue(e.description.includes(progress), `run progress (${progress})`);
-  assertTrue(e.description.includes("💸 Lost 10% of their CC."), "a failed run's loss line");
+  assertTrue(e.description.includes("💸 Lost 1,234 CC."), "a failed run's loss line, with the exact CC lost");
 }
 
 section("Revive in the header");
@@ -267,8 +270,7 @@ section("Single fights in public");
   const rec = recorder();
   await playChallenge(rec.channel, lost, challengeNames(lost, "A"));
   const all = texts(rec);
-  assertTrue(all.includes("💸 Lost 10% of their CC."), "the loss line posts");
-  assertTrue(!all.includes("1,234") && !all.includes("1234"), "the exact loss never posts");
+  assertTrue(all.includes("💸 Lost 1,234 CC."), "the loss line posts the exact CC lost");
   assertTrue(!OPPONENT_KEYS.some((k) => all.includes(`<@${k}`)), "no mention of Brock");
 
   const win = recorder();
@@ -293,7 +295,7 @@ section("A fight lost before a move is made");
   const rec = recorder();
   await playChallenge(rec.channel, zero, challengeNames(zero, "A"));
   assertEqual([rec.sent.length, rec.edits.length], [1, 1], "the start frame, then straight to the result");
-  assertEqual(rec.edits[0].embeds?.[0]?.toJSON().description, "💸 Lost 10% of their CC.", "with the result embed");
+  assertEqual(rec.edits[0].embeds?.[0]?.toJSON().description, "💸 Lost 1,234 CC.", "with the result embed");
 }
 
 section("Replay slots");

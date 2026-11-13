@@ -117,7 +117,7 @@ export function boardMenu(user, nonce) {
 }
 
 // `preview` is previewChallenge(user, key). The private preview shows the
-// exact loss; the public intro card never does (10× it is the balance).
+// exact loss; the public intro card says 10% (the result after the replay gives the amount).
 // The VS card's fallback when it can't render.
 export function previewEmbed(key, preview, { exactLoss = false } = {}) {
   const challenge = CHALLENGES[key];

@@ -12,6 +12,7 @@
 // Leader keeps the type-tinted half: computer-run opponents never get one.
 // ==========================================================
 
+import { auraLook } from "../../services/auras.js";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, typeStyle } from "./tokens.js";
 import { rr, font, fitText, fitFont, drawBackground, drawCard, drawTypeChip, typeChipsWidth, drawBall, drawSoftPlatform, drawShinyMark, drawSparkle } from "./primitives.js";
@@ -59,8 +60,8 @@ export function challengeCardView(key, preview, user, { displayName, pick = "cas
     player: {
       name: displayName,
       trainerFile: user?.displayedTrainer ?? null,
-      // The displayed trainer is always one the player owns.
-      tier: trainerTier(user?.displayedTrainer),
+      // The player's equipped Aura (Auto: the displayed trainer's tier). Read as a tier by the renderer.
+      tier: auraLook(user),
       team: buildTeamView(user, { displayName, pick }).slots.map((s) => ({ id: s.id, variant: s.variant, shiny: s.shiny })),
       badges: GYM_BADGES.map((b) => ({ file: badgeFile(b), earned: earned.includes(b.key) })),
     },

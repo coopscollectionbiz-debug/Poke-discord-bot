@@ -19,6 +19,7 @@ const { createNewUser } = await import("../utils/userSchema.js");
 const { getSpecies } = await import("../utils/battle/data.js");
 const G = await import("../config/generations.js");
 const C = await import("../utils/speciesCatalog.js");
+const ZA = await import("../config/megaBattleProfiles.js");
 
 const ON = { MEGA_EVOLUTION_ENABLED: "1", MEGA_BATTLES_ENABLED: "1" };
 const NOW = new Date(Date.UTC(2026, 10, 10, 12));
@@ -72,22 +73,28 @@ const failCases = [
   ["form of another species", () => { const u = trainer("A", [[25, 60]]); u.displayedPokemon[0].mega = "mega-charizard-x"; u.megaUnlocks = { "25:normal": { forms: { "mega-charizard-x": { at: 1, stone: null } } } }; return u; }, ON],
   ["two Mega slots (corrupt stored team)", () => { const u = trainer("A", [[6, 60], [150, 70]], { mega: { species: 6, form: "mega-charizard-x" } }); u.displayedPokemon[1].mega = "mega-mewtwo-y"; u.megaUnlocks["150:normal"] = { forms: { "mega-mewtwo-y": { at: 1, stone: null } } }; return u; }, ON],
   ["blocked form (Mega Rayquaza)", () => trainer("A", [[384, 70]], { mega: { species: 384, form: "mega-rayquaza" } }), ON],
-  ["unverified Z-A profile (Mega Meganium)", () => trainer("A", [[154, 50]], { mega: { species: 154, form: "mega-meganium" } }), ON],
-  ["unverified Z-A profile (Mega Dragonite)", () => trainer("A", [[149, 60]], { mega: { species: 149, form: "mega-dragonite" } }), ON],
+  ["unverified Z-A profile, acceptance off (Mega Meganium)", () => trainer("A", [[154, 50]], { mega: { species: 154, form: "mega-meganium" } }), ON, true],
+  ["unverified Z-A profile, acceptance off (Mega Dragonite)", () => trainer("A", [[149, 60]], { mega: { species: 149, form: "mega-dragonite" } }), ON, true],
   ["MEGA_FORMS excludes it", () => trainer("A", [[6, 60]], { mega: { species: 6, form: "mega-charizard-x" } }), { ...ON, MEGA_FORMS: "mega-venusaur" }],
   ["generation not live (Mega Greninja)", () => trainer("A", [[658, 60]], { mega: { species: 658, form: "mega-greninja" } }), ON],
 ];
-for (const [label, make, env] of failCases) {
+for (const [label, make, env, zaOff] of failCases) {
   const u = make();
+  if (zaOff) ZA.setZaAcceptanceForTesting(false);
   const team = buildTeam(u, { env });
+  ZA.setZaAcceptanceForTesting(true);
   assertTrue(team.length > 0 && team.every((m) => !m.megaForm && !m.battleProfile), `fail-closed: ${label} → every slot battles as its base form`);
+}
+for (const [sp, lvl, form] of [[154, 50, "mega-meganium"], [149, 60, "mega-dragonite"]]) {
+  const m = buildTeam(trainer("A", [[sp, lvl]], { mega: { species: sp, form } }), { env: ON })[0];
+  assertTrue(m.megaForm === form && m.battleProfile?.formId === form, `accepted Z-A profile: ${form} battles as its Mega`);
 }
 assertEqual(resolveBattleMega(trainer("A", [[6, 60], [150, 70]]), { env: ON }), null, "a team without Mega slots resolves to null (nothing to check)");
 assertEqual(resolveBattleMega(failCases[2][1](), { env: ON }).reason, "not unlocked on that line", "refusals carry an internal reason (logged, never shown to players)");
 
 section("Every battle-eligible form builds a correct battler");
 const eligible = Object.values((await import("../data/pokedex/megas.json", { with: { type: "json" } })).default.forms).filter((f) => megaBattleEligibility(f.id, { env: ON }).battleReady);
-assertEqual(eligible.length, 46, "46 battle-eligible forms today: the 47 verified, unblocked X/Y/ORAS forms minus Mega Diancie (Diancie is Gen 6, not released)");
+assertEqual(eligible.length, 70, "70 battle-eligible forms today: the 46 verified X/Y/ORAS forms of Gens 1–5 plus the 24 owner-accepted Z-A forms of Gens 1–5");
 G.setGenerationsForTesting([6]); C.resetCatalogCachesForTesting();
 assertTrue(megaBattleEligibility("mega-diancie", { env: ON }).battleReady, "…and Mega Diancie becomes battle-ready once Gen 6 is released (47)");
 G.setGenerationsForTesting(null); C.resetCatalogCachesForTesting();
@@ -101,7 +108,7 @@ for (const f of eligible) {
   if (!["implemented", "no-effect"].includes(ABILITY_REGISTRY[f.ability]?.status)) bad.push(`${f.id} ability`);
 }
 assertEqual(bad, [], "each eligible form: correct form, types, stats and ability; ability modelled or explicitly no-effect");
-assertTrue(eligible.every((f) => f.battleProfile.verified && f.battleProfile.confidence === "high"), "every battle-eligible form has a verified, high-confidence profile");
+assertTrue(eligible.every((f) => (f.battleProfile.verified && f.battleProfile.confidence === "high") || (f.introducedIn.startsWith("Legends: Z-A") && megaBattleEligibility(f.id, { env: ON }).profileConfidence === "accepted")), "every battle-eligible form has a verified X/Y/ORAS profile or an owner-accepted Z-A profile");
 assertTrue(["mega-charizard-x", "mega-charizard-y", "mega-mewtwo-x", "mega-mewtwo-y"].every((id) => eligible.some((f) => f.id === id)), "Charizard X/Y and Mewtwo X/Y are distinct battle forms");
 
 section("Type changes matter: Mega Charizard X vs Charizard");
@@ -218,9 +225,35 @@ section("A side that starts with every Pokémon fainted");
 }
 
 section("Generation independence");
+assertTrue(!megaBattleEligibility("mega-greninja", { env: ON }).battleReady, "Gen 6 not live: Mega Greninja can't battle");
 G.setGenerationsForTesting([6]); C.resetCatalogCachesForTesting();
-assertTrue(!megaBattleEligibility("mega-greninja", { env: ON }).battleReady, "releasing Gen 6 doesn't make an unverified Z-A Mega (Greninja) battle-ready");
+const gren = megaBattleEligibility("mega-greninja", { env: ON });
+assertTrue(gren.battleReady && gren.profileConfidence === "accepted" && !gren.abilityVerified, "Gen 6 live: Mega Greninja battles with its owner-accepted Z-A profile (still reported as unverified data)");
+assertTrue(!megaBattleEligibility("mega-zeraora", { env: ON }).battleReady, "Gen 7 not live: Mega Zeraora still can't battle");
 G.setGenerationsForTesting(null); C.resetCatalogCachesForTesting();
+
+section("Z-A Megas (owner-accepted profiles, all generations) run in the engine");
+const allGens = { env: ON, generationLive: () => true };
+const accepted = Object.values((await import("../data/pokedex/megas.json", { with: { type: "json" } })).default.forms)
+  .filter((f) => !f.battleProfile.verified && megaBattleEligibility(f.id, allGens).battleReady);
+assertEqual([accepted.length, accepted.filter((f) => f.species >= 650).length], [46, 22], "46 Z-A forms can battle once their generations are live (22 of them Gen 6–9)");
+assertTrue(!["mega-floette", "mega-zygarde", "mega-magearna-original"].some((id) => megaBattleEligibility(id, allGens).battleReady), "Floette, Zygarde and Original Color Magearna stay blocked");
+assertTrue(["mega-dragonite", "mega-starmie", "mega-raichu-x", "mega-garchomp-z", "mega-emboar"].every((id) => megaBattleEligibility(id, allGens).battleReady), "Z-A Megas of Gen 1–5 Pokémon can battle too (owner decision)");
+ZA.setZaAcceptanceForTesting(false);
+assertTrue(!megaBattleEligibility("mega-dragonite", allGens).battleReady && !megaBattleEligibility("mega-greninja", allGens).battleReady, "with acceptance off, unverified Z-A profiles are refused again");
+ZA.setZaAcceptanceForTesting(true);
+let engineOk = true;
+for (const f of accepted) {
+  for (const foe of [143, 6, 248]) {
+    for (let seed = 1; seed <= 5; seed++) {
+      const r = simulateBattle({ sides: [{ members: [{ speciesId: f.species, level: 50, name: f.name, battleProfile: megaBattleProfile(f.id) }] }, { members: [{ speciesId: foe, level: 50, name: `#${foe}` }] }], seed, surge: null });
+      if (!(r.winner === 0 || r.winner === 1) || !(r.turns > 0)) engineOk = false;
+    }
+  }
+}
+assertTrue(engineOk, `every accepted form finishes 15 battles (3 foes × 5 seeds) with a winner (${accepted.length * 15} battles)`);
+const mirror = simulateBattle({ sides: [{ members: accepted.slice(0, 6).map((f) => ({ speciesId: f.species, level: 50, name: f.name, battleProfile: megaBattleProfile(f.id) })) }, { members: accepted.slice(6, 12).map((f) => ({ speciesId: f.species, level: 50, name: f.name, battleProfile: megaBattleProfile(f.id) })) }], seed: 9, surge: null });
+assertTrue(mirror.winner === 0 || mirror.winner === 1, "a six-against-six battle of accepted Megas finishes");
 
 console.warn = quietWarn;
 finish();

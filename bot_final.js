@@ -38,7 +38,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { getPokemonCached } from "./utils/pokemonCache.js";
 import { bulkDonate, donateOne } from "./utils/bulkDonate.js";
-import { pruneEmptyLine, normalizeCustomPokemon, slotCopyUid, carryCopyUids, trainedSummary } from "./services/ownership.js";
+import { pruneEmptyLine, normalizeCustomPokemon, carryCopyUids, trainedSummary } from "./services/ownership.js";
 import { normalizeBox, allCopies, slotsHolding, mergeDex } from "./services/box.js";
 import { normalizeShowcase, prepareShowcaseSelection } from "./services/showcaseTeam.js";
 
@@ -48,6 +48,7 @@ function copyRows(u) {
   return allCopies(u).map((c) => [
     c.uid, c.id, c.variant === "shiny" ? 1 : 0, c.level, c.at ?? 0, c.trained ? 1 : 0,
     slotsHolding(u, c.uid).reduce((m, s) => m | (TEAM_BIT[s.field] ?? 0), 0),
+    c.exp, // exact EXP: Donate Duplicates keeps the same best copy the server does
   ]);
 }
 
@@ -67,10 +68,12 @@ import { readLocalCandidates, readFileCandidate, setSeqAtLeast, nextSeq, dataDir
 import { fetchDiscordCandidates, fetchDiscordMessageCandidate, uploadBackup, verifyUpload, newestChannelEpoch, listBackupPage } from "./persistence/discordBackups.js";
 import { runDexBackfill, readState as readDexScanState, writeState as writeDexScanState } from "./services/dexBackfill.js";
 import { loadBestSnapshot, describe as describeSnapshot } from "./persistence/loader.js";
-import { normalizeTrainers, auditTrainerData } from "./services/assets.js";
+import { normalizeTrainers, auditTrainerData, grantTrainer } from "./services/assets.js";
 import { getQuantity, grantItem, consumeItem, consumeItems, normalizeInventory, runInventoryTransaction, REQUEST_ID_PATTERN } from "./services/inventory.js";
 import { handleInventoryRequest } from "./services/inventoryApi.js";
 import { tmShopView, buyTms } from "./services/tmShop.js";
+import { auraView, equipAura, buyAura, auraArtDir, normalizeAuras, syncTierAuras } from "./services/auras.js";
+import { trainerTier } from "./utils/render/trainerTier.js";
 import { teachOptions, teachTm } from "./services/tmTeaching.js";
 import { createGameplayHandlers } from "./services/gameplay.js";
 import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
@@ -87,8 +90,8 @@ import { pokemonDetail } from "./services/pokemonDetail.js";
 import { parseTeamCopy, applyTeamCopy } from "./services/teamCopy.js";
 import { rankBattleRatings } from "./commands/leaderboard.js";
 import { rankedRecord } from "./utils/battle/rewards.js";
-import { validateMoveset, setMoveset, chosenMoves, TEAM_TYPES } from "./services/movesets.js";
-import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, adminSessionOf, activateAdminSession, ADMIN_MAX_MS, pruneExpiredTokens } from "./utils/dashboardAuth.js";
+import { saveMoveset, TEAM_TYPES } from "./services/movesets.js";
+import { generateToken, validateToken, getChannelIdForToken, requireDashboardSession, requireAdminSession, adminSessionOf, activateAdminSession, activateDashboardSession, ADMIN_MAX_MS, DASHBOARD_MAX_MS, pruneExpiredTokens } from "./utils/dashboardAuth.js";
 import { rarityColors } from "./utils/rarityPalette.js";
 
 import {
@@ -107,6 +110,9 @@ import {
 } from "./utils/economyRules.js";
 
 import { saveAndAck, SAVE_DELAYED_NOTE, saveAckFields, promptSave } from "./utils/saveManager.js";
+import { liveEffects, loadLiveEvents } from "./services/liveEvents.js";
+import { playerView, createOptInHandler, postDueAnnouncements } from "./services/liveEventsPlayer.js";
+import { discountedPrice, scaleChance, hasCatchEffects } from "./utils/liveEventRules.js";
 
 // Nothing may be written to disk until player data has been loaded.
 requireLoadBeforeWrite();
@@ -350,6 +356,8 @@ function normalizeUserSchema(id, user) {
 // team code that used to be inline here, plus keeping a valid Mega slot.
 // TM system (T1): customized-copy records first (quarantine, invariant I-1),
 // so the team normalizers below keep only valid copy uids. No-op without them.
+normalizeAuras(user); // Auras: repairs auras if present…
+syncTierAuras(user); // …and stores the tier Aura of every Epic+ trainer owned (the launch backfill; a no-op after)
 normalizeCustomPokemon(user);
 normalizeMegaUnlocks(user);
 normalizeDisplayedTeam(user);
@@ -489,13 +497,15 @@ app.get("/auth/dashboard", (req, res) => {
   // expectedType "dashboard" prevents admin tokens from being burned
   // on the player flow, and vice versa below.
   if (!validateToken(id, code, "dashboard")) return res.status(403).send("Invalid or expired link.");
+  // From here the session slides (30 min after each use, 4 h at most).
+  activateDashboardSession(code);
 
   res.cookie("dashboard_session", code, {
     httpOnly: true,
     secure: isProd,
     sameSite: "Lax",
     path: "/",
-    maxAge: 10 * 60 * 1000,
+    maxAge: DASHBOARD_MAX_MS,
   });
 
   res.redirect(`/public/overview?id=${encodeURIComponent(id)}`); // the dashboard home
@@ -547,6 +557,9 @@ app.use(
     },
   })
 );
+
+// Aura art (assets/auras/<id>/aura.json + spritesheets), for the dashboard's Auras tab.
+app.use("/auras-art", express.static(auraArtDir(), { index: false, dotfiles: "deny", extensions: false }));
 
 // ✅ Sprite credits (generated by tools/generate-credits.mjs)
 app.get(["/credits", "/public/credits"], (_, res) =>
@@ -1118,8 +1131,9 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // Increase pity every call
     userObj.luck = Math.min(MAX_CHANCE, userObj.luck + PITY_INCREMENT);
 
-    // Final chance
-    const finalChance = Math.min(MAX_CHANCE, BASE_CHANCE + userObj.luck);
+    // Final chance (a Live event may multiply it; never above 100 %)
+    const liveFx = liveEffects();
+    const finalChance = scaleChance(Math.min(MAX_CHANCE, BASE_CHANCE + userObj.luck), liveFx.catchRate);
 
     // Reward fails → keep pity meter, exit
     if (Math.random() >= finalChance) {
@@ -1139,7 +1153,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     let caught = null;
 
     try {
-      reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball");
+      reward = selectRandomPokemonForUser(allPokemon, userObj, "pokeball", { fx: liveFx });
       isShiny = rollForShiny(userObj.tp || 0);
 
       caught = grantCatch(userObj, reward.id, isShiny ? "shiny" : "normal"); // { level, isNew, expGained } for the card
@@ -1157,11 +1171,11 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     // =============================
     await promptSave(trainerData);
 
-    return { reward, isShiny, caught };
+    return { reward, isShiny, caught, eventNames: hasCatchEffects(liveFx) ? liveFx.catchEvents : [] };
   });
   // "cooldown", "missed" or undefined (reward selection failed): nothing to post.
   if (!granted || typeof granted !== "object") return granted;
-  const { reward, isShiny, caught } = granted;
+  const { reward, isShiny, caught, eventNames } = granted;
 
   // =============================
   // 🖼️ SPRITE
@@ -1178,6 +1192,7 @@ async function tryGiveRandomReward(userObj, interactionUser, msgOrInteraction) {
     pokemonId: reward.id,
     shiny: isShiny,
     catchResult: caught,
+    eventNames,
     fallback: () => ({
       content: `🎉 <@${userId}> caught **${isShiny ? "✨ shiny " : ""}${reward.name}**!`,
       embeds: [createPokemonRewardEmbed(reward, isShiny, spriteUrl)],
@@ -1473,6 +1488,24 @@ app.post("/api/mega/preferred", express.json({ limit: "4kb" }), async (req, res)
     return res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
+// Mega Shard shop: capability "rewards" (MEGA_REWARDS_ENABLED=1). Off: the
+// view says { enabled: false } and both purchases refuse with 403.
+app.get("/api/mega/shop", (req, res) => {
+  const { status, body } = mega.shop({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) });
+  return res.status(status).json(body);
+});
+for (const [route, handler] of [["/api/mega/shop/buy-shards", "buyShards"], ["/api/mega/shop/buy-stone", "buyStone"]]) {
+  app.post(route, express.json({ limit: "4kb" }), async (req, res) => {
+    try {
+      const { status, body } = await mega[handler]({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+      if (status === 200 && !body.replayed) logEvent(handler === "buyShards" ? "mega_shard_purchase" : "mega_stone_purchase", req.body.id, handler === "buyShards" ? { shards: body.bought, cost: body.cost } : { stoneId: body.stoneId, shards: body.price });
+      return res.status(status).json(body);
+    } catch (err) {
+      console.error(`❌ ${route}:`, err?.message || err);
+      return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  });
+}
 
 // ==========================================================
 // 🧿 Held items (services/heldItemsApi.js). Dashboard-only management: no
@@ -1656,6 +1689,31 @@ app.post("/api/rewardPokemon", express.json(), async (req, res) => {
   } catch (err) {
     console.error("❌ /api/rewardPokemon:", err?.message || err);
     return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+// ==========================================================
+// 🎪 Live events (services/liveEventsPlayer.js): what's on, today's prices,
+// and the player's "Use Live event" choice for Poké Balls and /recruit.
+// ==========================================================
+app.get("/api/live-events", (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ ok: false, error: "Missing id" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ ok: false, error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ ok: false, error: "User not found" });
+  return res.json({ ok: true, ...playerView(user) });
+});
+
+const liveEventOptIn = createOptInHandler({ getTrainerData: () => trainerData, lockUser, save: saveAndAck });
+app.post("/api/live-events/opt-in", express.json({ limit: "4kb" }), async (req, res) => {
+  if (!isReady) return res.status(503).json({ ok: false, error: "The bot is starting up. Try again in a moment." });
+  try {
+    const r = await liveEventOptIn({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });
+    return res.status(r.status).json(r.body);
+  } catch (err) {
+    console.error("❌ /api/live-events/opt-in:", err?.message || err);
+    return res.status(500).json({ ok: false, error: "Internal server error" });
   }
 });
 
@@ -2040,15 +2098,15 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
     }
 
     const tier = String(match.tier || match.rarity || "common").toLowerCase();
-    const cost = TRAINER_COSTS[tier];
-    if (!cost) return res.status(400).json({ success: false, error: `Unknown trainer tier: ${tier}` });
+    if (!TRAINER_COSTS[tier]) return res.status(400).json({ success: false, error: `Unknown trainer tier: ${tier}` });
+    const cost = discountedPrice(liveEffects(), "trainers", TRAINER_COSTS[tier]); // a Live event's discount
 
     if ((user.cc ?? 0) < cost) {
       return res.status(400).json({ success: false, error: `Requires ${cost} CC` });
     }
 
     user.cc -= cost;
-    user.trainers.push(canonicalFile);
+    grantTrainer(user, canonicalFile); // also unlocks the tier's Aura
 
     const saveAck = await saveAndAck(trainerData);
 
@@ -2060,6 +2118,65 @@ app.post("/api/unlock-trainer", express.json({ limit: "16kb" }), async (req, res
       cc: user.cc,          // ✅ important for frontend
     });
   });
+});
+
+// ==========================================================
+// ✨ Auras (services/auras.js): the dashboard's Auras tab
+// ==========================================================
+app.get("/api/auras", (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!requireDashboardSession(req, id)) return res.status(403).json({ error: "Invalid or expired session" });
+  const user = trainerData[id];
+  if (!user) return res.status(404).json({ error: "User not found" });
+  // Auto shows the displayed trainer's own tier backdrop (Epic+), so the tab can preview it.
+  return res.json({ ...auraView(user), trainer: user.displayedTrainer ?? null, autoTier: trainerTier(user.displayedTrainer) });
+});
+
+// Body: { id, aura: "auto" | "none" | auraId }
+app.post("/api/auras/equip", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { id, aura } = req.body || {};
+    if (!id || typeof aura !== "string") return res.status(400).json({ success: false, error: "Missing id/aura" });
+    if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    await lockUser(id, async () => {
+      const user = trainerData[id];
+      if (!user) return res.status(404).json({ success: false, error: "User not found" });
+      const r = equipAura(user, aura);
+      if (!r.ok) return res.status(r.status ?? 400).json({ success: false, error: r.error });
+      const saveAck = r.changed ? await saveAndAck(trainerData) : null;
+      return res.json({ ...(saveAck ? saveAckFields(saveAck) : {}), success: true, equipped: r.equipped });
+    });
+  } catch (err) {
+    console.error("❌ /api/auras/equip:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Server error" });
+  }
+});
+
+// Body: { id, aura, requestId? } — a repeated requestId returns the first result and never charges twice.
+app.post("/api/shop/buy-aura", express.json({ limit: "4kb" }), async (req, res) => {
+  try {
+    const { id, aura, requestId = null } = req.body || {};
+    if (!id || typeof aura !== "string") return res.status(400).json({ success: false, error: "Missing id/aura" });
+    if (!requireDashboardSession(req, id)) return res.status(403).json({ success: false, error: "Invalid or expired session" });
+    if (!trainerData[id]) return res.status(404).json({ success: false, error: "User not found" });
+    if (requestId != null && !REQUEST_ID_PATTERN.test(String(requestId))) return res.status(400).json({ success: false, error: "Invalid request id" });
+    const tx = await runInventoryTransaction({
+      trainerData, userId: id, lock: lockUser, save: saveAndAck, requestId,
+      payloadKey: `buy-aura:${aura.slice(0, 64)}`,
+      mutate: (user) => buyAura(user, aura),
+    });
+    if (!tx.ok) {
+      const { ok, status = 400, ...rest } = tx;
+      return res.status(status).json({ success: false, ...rest });
+    }
+    if (!tx.replayed) logEvent("aura_purchase", id, { aura: tx.result.aura, cost: tx.result.cost, ccAfter: tx.result.cc });
+    const { ok, ...result } = tx.result;
+    return res.json({ ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...result });
+  } catch (err) {
+    console.error("❌ /api/shop/buy-aura:", err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
 });
 
 // ==========================================================
@@ -2168,12 +2285,13 @@ app.post("/api/shop/buy-stone", express.json(), async (req, res) => {
       mutate: (user) => {
         normalizeUserSchema(id, user); // in place
         user.cc ??= 0;
-        if (user.cc < COST) {
-          return { ok: false, error: `Not enough CC — requires ${COST} CC.`, cc: user.cc, status: 400 };
+        const price = discountedPrice(liveEffects(), "stones", COST); // a Live event's discount
+        if (user.cc < price) {
+          return { ok: false, error: `Not enough CC — requires ${price} CC.`, cc: user.cc, status: 400 };
         }
         const granted = grantItem(user, "evolution_stone", 1);
         if (!granted.ok) return { ok: false, error: granted.error, status: 400 };
-        user.cc -= COST;
+        user.cc -= price;
         trackProgress(user, [{ type: "purchase" }]); // Release C
         return { ok: true, cc: user.cc, stones: granted.quantity };
       },
@@ -2269,7 +2387,7 @@ app.get("/api/user-pokemon", (req, res) => {
     // Pokédex (ever caught; never drops): { id: 1 normal | 2 shiny | 3 both }.
     pokedex: u.pokedex ?? {},
     // Collection: every copy, one entry each (docs/adr/0001), for the box grid.
-    // [uid, id, shiny 0|1, level, caughtAt|0, trained 0|1, teams bitmask (1 casual, 2 ranked, 4 showcase)]
+    // [uid, id, shiny 0|1, level, caughtAt|0, trained 0|1, teams bitmask (1 casual, 2 ranked, 4 showcase), exp]
     copies: copyRows(u),
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
     // One-time notices (services/notices.js); the Teams page shows the
@@ -2327,17 +2445,11 @@ app.post("/api/pokemon/moveset", express.json({ limit: "4kb" }), async (req, res
     await lockUser(id, async () => {
       const u = trainerData[id];
       if (!u) return res.status(404).json({ success: false, error: "User not found" });
-      const v = variant === "shiny" ? "shiny" : "normal";
-      // uid (TM system): one customized copy's own moves; absent = the line's plain copies.
-      const copy = uid == null ? null : slotCopyUid(u, { id: Number(pokeId), variant: v, uid });
-      if (uid != null && !copy) return res.status(400).json({ success: false, error: "That Pokémon copy no longer exists. Reload and try again.", code: "unknown_copy" });
-      if (moves !== null) {
-        const check = validateMoveset(u, pokeId, v, moves, { uid: copy });
-        if (!check.ok) return res.status(check.status).json({ success: false, error: check.error, code: check.code });
-        setMoveset(u, team, pokeId, v, check.moves, { uid: copy });
-      } else setMoveset(u, team, pokeId, v, null, { uid: copy });
+      // uid: the slot's copy (box copy or TM copy); absent = the line's plain copies.
+      const r = saveMoveset(u, { team, pokeId, variant, moves, uid });
+      if (!r.ok) return res.status(r.status ?? 400).json({ success: false, error: r.error, code: r.code });
       const saveAck = await saveAndAck(trainerData);
-      return res.json({ ...saveAckFields(saveAck), success: true, team, ...(copy && { uid: copy }), moves: chosenMoves(u, team, pokeId, v, { uid: copy }) });
+      return res.json({ ...saveAckFields(saveAck), success: true, team, ...(r.uid && { uid: r.uid }), moves: r.moves });
     });
   } catch (err) {
     console.error("❌ /api/pokemon/moveset:", err?.message || err);
@@ -2748,6 +2860,21 @@ client.once("ready", async () => {
   setInterval(() => {
     pruneEvents().catch(() => {});
   }, 24 * 60 * 60 * 1000);
+
+  // 🎪 Live events: load the schedule, then post start/end announcements
+  // every 30 s once the bot is ready (also posts boundaries passed while down).
+  await loadLiveEvents();
+  setInterval(() => {
+    if (!isReady) return;
+    postDueAnnouncements({
+      send: async (channelId, embed) => {
+        const channel = await client.channels.fetch(channelId).catch(() => null);
+        if (!channel?.isTextBased?.()) return false;
+        await channel.send({ embeds: [embed] });
+        return true;
+      },
+    }).catch((e) => console.warn("⚠️ Live event announcements failed:", e?.message || e));
+  }, 30_000);
 
   // Load local commands FIRST
   try {

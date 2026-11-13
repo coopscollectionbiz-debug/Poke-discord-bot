@@ -15,6 +15,7 @@
 // the computer, never gets one.
 // ==========================================================
 
+import { auraLook } from "../../services/auras.js";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR } from "./tokens.js";
 import { rr, font, fitText, fitFont, drawBackground, drawCard, drawBall, drawAlertBubble } from "./primitives.js";
@@ -43,7 +44,7 @@ export function encounterCardView({ trainer, team, user, displayName, prizes = n
     player: {
       name: displayName,
       trainerFile: user?.displayedTrainer ?? null,
-      tier: trainerTier(user?.displayedTrainer), // the displayed trainer is always one the player owns
+      tier: auraLook(user), // the player's equipped Aura (Auto: the displayed trainer's tier)
       team: team.map((m) => ({ id: m.speciesId, variant: m.variant, shiny: m.variant === "shiny" })),
     },
     trainer: { title: trainer.title, name: trainer.name, trainerFile: trainer.spriteFile, partySize: trainer.party.length },

@@ -255,13 +255,13 @@ ITEMS.push(
   item({
     id: "mega_shard",
     name: "Mega Shard",
-    description: "Fragments of Mega energy. Exchange 25 for any regular Mega Stone.",
+    description: "Fragments of Mega energy. Spend them in the dashboard shop on Mega Stones.",
     category: "evolution",
     rarity: "rare",
     consumable: true,
     status: "defined",
     storage: "inventory",
-    sources: ["mega_drop", "mega_duplicate", "achievement"],
+    sources: ["daily", "battle_win", "shop"],
     sinceRelease: "M",
   }),
   item({
@@ -356,4 +356,14 @@ export const isHeldItem = (entry) => !!entry && entry.category === "held" && ent
 export function isHoldable(id) {
   const e = getCatalogItem(id);
   return !!e && e.status === "active" && e.storage === "inventory";
+}
+
+/**
+ * Can an admin grant this id? Any item kept in the bag, live or not (TMs not
+ * in the shop yet, Mega Stones, Mega Shards, held items before launch).
+ * Instant items (Poké Balls) and purchase flags are never stored, so no.
+ */
+export function isAdminGrantable(id) {
+  const e = getCatalogItem(id);
+  return !!e && e.storage === "inventory";
 }

@@ -27,6 +27,13 @@ export function typeChip(type) {
   return `<span class="cc-type" data-type="${esc(String(type).toLowerCase())}">${esc(type)}</span>`;
 }
 
+/** A TM's disc icon, coloured by the move's type (PokéAPI bag sprites, 30×30). */
+export function tmDisc(type, { size = 30 } = {}) {
+  if (!type) return "";
+  const t = String(type).toLowerCase().replace(/[^a-z]/g, "");
+  return `<img class="tm-disc" src="/public/sprites/items/tm/${t}.png" width="${size}" height="${size}" alt="" loading="lazy">`;
+}
+
 /** Physical / Special / Status badge with its icon. */
 export function categoryBadge(category) {
   const key = String(category ?? "").toLowerCase();

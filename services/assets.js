@@ -12,6 +12,7 @@
 // ==========================================================
 
 import { canonicalTrainerFile } from "./trainerConsolidation.js";
+import { grantTierAuraFor } from "./auras.js";
 
 const keyOf = (k) => String(k ?? "").trim();
 const sameKey = (a, b) => keyOf(a).toLowerCase() === keyOf(b).toLowerCase();
@@ -63,6 +64,7 @@ export function grantTrainer(user, key) {
   const list = normalizeTrainers(user);
   if (list.some((t) => sameKey(t, k))) return false;
   list.push(k);
+  grantTierAuraFor(user, k); // any Epic+ trainer unlocks its tier's Aura for good
   return true;
 }
 

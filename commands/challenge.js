@@ -284,7 +284,7 @@ async function askRevive(latest, step) {
 // A replay that fails (a deleted message) stops only the replay. Resolves to
 // { outcome, posted, latest } (latest: the newest click, whose reply window
 // is freshest), or null if the run was finished elsewhere meanwhile.
-async function playRun({ channel, fightClick, step, trainerData, userId, lockUser, enqueueSave, playerName, trainer }) {
+async function playRun({ channel, fightClick, step, trainerData, userId, lockUser, enqueueSave, playerName, trainer, aura }) {
   let message = null;
   let replaying = true;
   let posted = true;
@@ -293,7 +293,7 @@ async function playRun({ channel, fightClick, step, trainerData, userId, lockUse
     const shown = step.ended ? step.outcome : step.view;
     if (replaying) {
       const names = challengeNames(shown, playerName);
-      const played = await playChallengeFight(channel, message, shown, step.step, names, { ...PLAYBACK, last: step.ended, trainer })
+      const played = await playChallengeFight(channel, message, shown, step.step, names, { ...PLAYBACK, last: step.ended, trainer, aura })
         .catch((err) => {
           console.warn("⚠️ challenge post failed:", err?.message || err);
           posted = false;
@@ -380,20 +380,20 @@ async function openPreview(interaction, key, { trainerData, lockUser, enqueueSav
   // card shows the Casual team (or Ranked when that's the only one).
   const picks = availablePicks(trainerData[userId]);
   const view = cardView(key, shown, trainerData[userId], playerName, picks[0]);
-  // The collector goes on the preview message itself. One made from the
-  // reply's InteractionResponse listens on the message a dropdown pick came
-  // from (the board), so Fight! would go unanswered (discord.js 14.28,
-  // InteractionCollector).
-  const reply = await interaction.reply({
+  // The animated VS card takes 2–4 s to render, past Discord's 3-second
+  // answer window, so acknowledge first ("thinking…") and render after.
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  // The collector goes on the preview message itself (editReply returns it).
+  // One made from an InteractionResponse listens on the message a dropdown
+  // pick came from (the board), so Fight! would go unanswered (discord.js
+  // 14.28, InteractionCollector).
+  const response = await interaction.editReply({
     ...(await previewMessage(key, shown, view, { exactLoss: true })),
     components: [new ActionRowBuilder().addComponents(
       ...picks.map((p) => new ButtonBuilder().setCustomId(`challenge_fight_${p}:${nonce}`).setLabel(`Fight with ${p === "ranked" ? "Ranked" : "Casual"}`).setStyle(p === "ranked" ? ButtonStyle.Primary : ButtonStyle.Success)),
       new ButtonBuilder().setCustomId(`challenge_cancel:${nonce}`).setLabel("Not now").setStyle(ButtonStyle.Secondary),
     )],
-    flags: MessageFlags.Ephemeral,
-    withResponse: true,
   });
-  const response = reply?.resource?.message;
   if (!response) return; // bot_final's wrapper swallowed an expired interaction
 
   // Fight! runs here, after execute() has returned, so the bot's 25-second
@@ -443,6 +443,7 @@ async function openPreview(interaction, key, { trainerData, lockUser, enqueueSav
     let outcome = first;
     let reply = i; // where the private result goes
     const trainer = first.card?.player.trainerFile ?? null; // the replay's portrait, as on the intro card
+    const aura = first.card?.player.tier; // and its Aura, as on the intro card
     try {
       await interaction.channel.send(await previewMessage(key, first.atStake, first.card));
     } catch (err) {
@@ -453,7 +454,7 @@ async function openPreview(interaction, key, { trainerData, lockUser, enqueueSav
       // Played even when the intro card failed: the run is open and resolves through its Revives.
       playing.add(first.nonce);
       const played = await playRun({
-        channel: interaction.channel, fightClick: i, step: first, trainerData, userId, lockUser, enqueueSave, playerName, trainer,
+        channel: interaction.channel, fightClick: i, step: first, trainerData, userId, lockUser, enqueueSave, playerName, trainer, aura,
       }).finally(() => playing.delete(first.nonce));
       if (!played) return; // a stale finish closed it and shows the result
       outcome = played.outcome;
@@ -461,7 +462,7 @@ async function openPreview(interaction, key, { trainerData, lockUser, enqueueSav
       reply = played.latest;
       logChallenge(userId, outcome, {}, { playerName, trainerData });
     } else if (posted) {
-      await playChallenge(interaction.channel, outcome, challengeNames(outcome, playerName), { ...PLAYBACK, trainer }).catch((err) => {
+      await playChallenge(interaction.channel, outcome, challengeNames(outcome, playerName), { ...PLAYBACK, trainer, aura }).catch((err) => {
         console.warn("⚠️ challenge post failed:", err?.message || err);
         posted = false;
       });

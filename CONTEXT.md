@@ -6,6 +6,10 @@ A Discord-native Pokémon collector game: players catch Pokémon while chatting,
 
 ### Collection
 
+**Aura**:
+The effect a player shows behind their trainer on their own cards and battle images. Auras are collected and kept for good: each **Tier backdrop** from owning a trainer of that tier, one per Gym Leader, Elite Four member, Blue and Red from beating them, milestone Auras from achievements, shop Auras bought with CC, and event Auras handed out during an event. A player equips one on the dashboard, or Auto (their trainer's own **Tier backdrop**, the default) or None. An Aura is not tied to the trainer it came from. Computer-run opponents never wear one.
+_Avoid_: background, backdrop (for the collectible), effect
+
 **Tier**:
 A species' rarity class: common, uncommon, rare, epic, legendary, or mythic. It measures collectible prestige (scarcity, role in the games, popularity), not battle strength; **Base stat total** only overrides it for large outliers. Mythic means an official Mythical, or a cover legendary with a **Base stat total** of 660 or more.
 _Avoid_: rarity (as a separate concept), evolution tier
@@ -89,8 +93,8 @@ The **Team** that fights **Ranked battles** and **Wager battles**, where every P
 _Avoid_: Battle team (its old name)
 
 **Tier backdrop**:
-The animated background an owned Epic, Legendary or Mythic trainer sprite brings to any card that shows it: the tier's sky colour with rising motes, plus a stepped glow and twinkles from Legendary up, and meteors with one bright hero meteor a loop for Mythic. It replaces the card's own background in that trainer's part of the card (their half of a VS card, their row in a battle), and nothing in it passes behind the trainer or anything else drawn there. Computer-run opponents and unowned sprites never have one.
-_Avoid_: aura, glow, trainer background
+The animated background an owned Epic, Legendary or Mythic trainer sprite brings to any card that shows it: the tier's sky colour with rising motes, plus a stepped glow and twinkles from Legendary up, and meteors with one bright hero meteor a loop for Mythic. It replaces the card's own background in that trainer's part of the card (their half of a VS card, their row in a battle), and nothing in it passes behind the trainer or anything else drawn there. Computer-run opponents and unowned sprites never have one. For players it is now the **Aura** shown on Auto, and the three tier backdrops are also collectible **Auras**.
+_Avoid_: glow, trainer background
 
 **Moveset**:
 The up to 4 moves a player picks for one Pokémon on one **Team**, from the moves it has learned by its real **Level**. A Pokémon with none picked uses the last four moves it learned.
@@ -139,6 +143,22 @@ _Avoid_: trade (nothing comes back), transfer
 **Grant**:
 An **Admin change** that only adds to an account or resets cooldowns. Only **Grants** can go to many players at once; removals are made one player at a time.
 _Avoid_: gift (that is player-to-player), reward, compensation (as the action's name)
+
+**Live event**:
+A named period, set by an admin with a start and an end, during which one or more **Event effects** change the game for every player. Several can run at once.
+_Avoid_: event (alone, which is the activity log), surge (that is the **Underdog surge**), promotion, boost (for the whole thing)
+
+**Event effect**:
+One change a **Live event** makes while it runs, such as a **Catch boost**, a **Catch limit**, or a multiplier on EXP, TP, CC, Shiny Dust, Prize money or the shiny chance. Multipliers of the same kind from **Live events** that overlap multiply together.
+_Avoid_: modifier, buff, perk
+
+**Catch boost**:
+An **Event effect** that makes chosen types, **Regions**, **Tiers** or species come up more often in random catches. A boost on a type, **Region** or species keeps each **Tier's** overall chance as it was; only a boost on a **Tier** changes it.
+_Avoid_: spawn boost, rate up
+
+**Catch limit**:
+An **Event effect** that lets random catches give only chosen types, **Regions** or species. When **Live events** overlap, a Pokémon must pass every **Catch limit** to be caught.
+_Avoid_: filter, restriction, lockout
 
 ### Battles
 
@@ -275,6 +295,7 @@ _Avoid_: trophy, quest
 - "Tier" also names a trainer sprite's price class, Common to Mythic, which is not a species' **Tier**. The 2026-11-10 re-tier changed trainer sprites, and the 2026-11-11 re-tier changed species.
 - "Ranked" has nothing to do with **Rank**. A player's **Rank** comes from chatting; their **Ranked rating** comes from **Ranked battles** and **Wager battles**.
 - Some **Achievements** list a badge as their reward, such as a region's badge for completing its Pokédex. That is not a **Badge**, which only comes from beating a Gym Leader's **Challenge**.
+- A random catch is any Pokémon rolled at random: the chat catch, `/daily`, Poké Balls, `/recruit`, quests and the weekly pack. **Catch boosts** and **Catch limits** reach all of them, and never reach a **Grant**, a gift or an evolution. On the ones paid for in CC (Poké Balls and `/recruit`) the player chooses whether they apply; the free ones always follow them.
 - "Copy" as a noun is always a **Copy** (one owned unit). As a verb it may describe teams and moves ("Copy from Ranked team"); never call the result a "team copy".
 - "Showcase" is a **Team** but never fights. Rules written for "a **Team**" about battles (one Mega, moves, held items) cover only the **Casual team** and **Ranked team**.
 

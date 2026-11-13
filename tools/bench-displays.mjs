@@ -7,8 +7,12 @@
 // Cards: every slash-command card (the full late-game Team, an Epic trainer
 // equipped so the trainer breathes), as PNG and as GIF.
 // Peak RSS is for the whole process (one fresh Node).
+// --out <dir> also writes every image there (input for
+// tools/probe-discord-media.mjs).
 // ==========================================================
 
+import fs from "fs";
+import path from "path";
 import { performance } from "perf_hooks";
 import { GifReader } from "omggif";
 import { simulateBattle } from "../utils/battle/sim.js";
@@ -27,7 +31,16 @@ import { renderDailyCard } from "../utils/render/dailyCard.js";
 import { expView, renderExpCard } from "../utils/render/expCard.js";
 import { leaderboardView, renderLeaderboard } from "../utils/render/leaderboardCard.js";
 import { rankBattleRatings } from "../commands/leaderboard.js";
+import { renderBattleVsCard, vsSide } from "../utils/render/battleVsCard.js";
 
+const outAt = process.argv.indexOf("--out");
+const OUT = outAt > 0 ? path.resolve(process.argv[outAt + 1]) : null;
+if (OUT) fs.mkdirSync(OUT, { recursive: true });
+const save = (label, buf) => {
+  if (!OUT) return;
+  const ext = buf.subarray(0, 3).toString() === "GIF" ? "gif" : "png";
+  fs.writeFileSync(path.join(OUT, `${label.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")}.${ext}`), buf);
+};
 const kb = (b) => Math.round(b.length / 1024);
 const frames = (b) => (b.subarray(0, 3).toString() === "GIF" ? new GifReader(b).numFrames() : 1);
 const time = async (fn) => { const t = performance.now(); const out = await fn(); return [out, Math.round(performance.now() - t)]; };
@@ -43,19 +56,24 @@ const sprites = new Map();
 const rows = [];
 const [start, startMs] = await time(() => renderBattleFrame({ sides: battleSides, hpBefore: snapshots[0], sprites, screens: [["The battle begins!", "Charizard and Blastoise lead off."]] }));
 rows.push({ image: "battle start", kb: kb(start), ms: startMs, frames: frames(start) });
+save(rows.at(-1).image, start);
 for (const turn of pickFrameTurns(turns, PLAYBACK.maxUpdates)) {
   const [buf, ms] = await time(() => renderBattleFrame({ sides: battleSides, hpBefore: snapshots[turn - 1], events: log[turn - 1], badge: `TURN ${turn}`, sprites }));
   rows.push({ image: `battle turn ${turn}`, kb: kb(buf), ms, frames: frames(buf) });
+  save(rows.at(-1).image, buf);
 }
 const [fin, finMs] = await time(() => renderBattleFrame({ sides: battleSides, hpBefore: snapshots[turns], badge: "FINAL", winnerSide: 0, sprites, screens: [["Ash defeated Gary!", ""], ["Charizard grew to Lv51!", ""]] }));
 rows.push({ image: "battle result", kb: kb(fin), ms: finMs, frames: frames(fin) });
+save(rows.at(-1).image, fin);
 
 for (const [name, fx] of Object.entries(CATCH_FIXTURES)) {
   const v = catchView(fx.user, fx);
   const [png, pngMs] = await time(() => renderCatchCard(v));
   rows.push({ image: `catch ${name} png`, kb: kb(png), ms: pngMs, frames: 1 });
+  save(rows.at(-1).image, png);
   const [gif, gifMs] = await time(() => renderCatchCard(v, { animate: true }));
   rows.push({ image: `catch ${name} gif`, kb: kb(gif), ms: gifMs, frames: frames(gif) });
+  save(rows.at(-1).image, gif);
 }
 const TRAINER = "acerola.png"; // Epic: breathes and blinks on animated cards
 const player = { ...JSON.parse(JSON.stringify(FIXTURES.full.user)), tp: 8308, cc: 5400, displayedTrainer: TRAINER };
@@ -75,8 +93,36 @@ const cards = {
 for (const [name, render] of Object.entries(cards)) {
   const [png, pngMs] = await time(() => render(false));
   rows.push({ image: `${name} png`, kb: kb(png), ms: pngMs, frames: 1, size: `${png.readUInt32BE(16)}x${png.readUInt32BE(20)}` });
+  save(rows.at(-1).image, png);
   const [gif, gifMs] = await time(() => render(true));
   rows.push({ image: `${name} gif`, kb: kb(gif), ms: gifMs, frames: frames(gif) });
+  save(rows.at(-1).image, gif);
+}
+// With trainers: the /battle VS card and playback rows, as players see them
+// (two Epic+ trainers that idle, tier backdrops). TRAINERS_ANIMATED=0 or
+// CARD_TRAINER_FX=0 show what the trainer animation costs.
+const TRAINERS = ["cynthia-anime.png", "alain.png"];
+const TIERS = ["mythic", "rare"];
+const vs = {
+  mode: "ranked",
+  sides: battleSides.map((s, i) => vsSide({ name: s.name, trainerFile: TRAINERS[i], tier: TIERS[i], members: s.members, record: { rating: 1500, wins: 9, losses: 4, streak: 2 } })),
+};
+{
+  const [buf, ms] = await time(() => renderBattleVsCard(vs, { animate: true }));
+  rows.push({ image: "trainers: VS card", kb: kb(buf), ms, frames: frames(buf) });
+  save(rows.at(-1).image, buf);
+  const tsprites = new Map();
+  const withT = { sides: battleSides, sprites: tsprites, trainers: TRAINERS, tiers: TIERS };
+  const [st, stMs] = await time(() => renderBattleFrame({ ...withT, hpBefore: snapshots[0], screens: [["The battle begins!", "Charizard and Blastoise lead off."]] }));
+  rows.push({ image: "trainers: battle start", kb: kb(st), ms: stMs, frames: frames(st) });
+  save(rows.at(-1).image, st);
+  const t1 = pickFrameTurns(turns, PLAYBACK.maxUpdates)[0];
+  const [tb, tMs] = await time(() => renderBattleFrame({ ...withT, hpBefore: snapshots[t1 - 1], events: log[t1 - 1], badge: `TURN ${t1}` }));
+  rows.push({ image: `trainers: battle turn ${t1}`, kb: kb(tb), ms: tMs, frames: frames(tb) });
+  save(rows.at(-1).image, tb);
+  const [rb, rMs] = await time(() => renderBattleFrame({ ...withT, hpBefore: snapshots[turns], badge: "FINAL", winnerSide: 0, screens: [["Ash defeated Gary!", ""]] }));
+  rows.push({ image: "trainers: battle result", kb: kb(rb), ms: rMs, frames: frames(rb) });
+  save(rows.at(-1).image, rb);
 }
 console.table(rows);
 const battle = rows.filter((r) => r.image.startsWith("battle"));

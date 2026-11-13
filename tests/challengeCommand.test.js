@@ -81,7 +81,7 @@ const brightnessAt = async (png, x, y) => {
 // controllable collector. log.seq records public and private writes in order.
 function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail = false } = {}) {
   const trainerData = { A: user };
-  const log = { replies: [], replyIds: [], replyEdits: [], channel: [], menus: [], seq: [], results: [] };
+  const log = { replies: [], replyIds: [], replyEdits: [], defers: [], channel: [], menus: [], seq: [], results: [] };
   const collectors = [];
   let ids = 0;
   const collectorStub = (opts) => ({ opts, h: {}, stopped: null, on(e, f) { this.h[e] = f; }, stop(reason) { this.stopped ??= reason; } });
@@ -103,6 +103,7 @@ function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail
   // means its reply but for a component interaction (a dropdown pick) means
   // the message the component sits on (InteractionCollector, discord.js 14.28).
   const interaction = (opponent, { onMessage = null } = {}) => ({
+    deferred: false,
     user: { id: "A", username: "A" },
     member: { displayName: "Ash" },
     channel,
@@ -113,16 +114,28 @@ function harness(user = WEAK(), { perms = true, save = async () => {}, menusFail
       const id = `R${++ids}`;
       log.replies.push(o);
       log.replyIds.push(id);
-      const collectOn = (target) => (opts) => {
-        const c = { opts, target, h: {}, ended: null, on(e, f) { this.h[e] = f; }, stop(reason) { this.ended ??= this.h.end?.([], reason); } };
-        collectors.push(c);
-        return c;
-      };
       if (o.withResponse) return { resource: { message: { id, createMessageComponentCollector: collectOn(id) } } };
       return { createMessageComponentCollector: collectOn(onMessage ?? id) };
     },
-    editReply: async (o) => { log.replyEdits.push(o); },
+    // Deferred: the first editReply delivers the response (as a message, like
+    // discord.js); later ones edit it.
+    deferReply: async function (o) { log.onDefer?.(); log.defers.push(o); this.deferred = true; this.awaitingFirstEdit = true; },
+    editReply: async function (o) {
+      if (!this.awaitingFirstEdit) { log.replyEdits.push(o); return; }
+      this.awaitingFirstEdit = false;
+      const id = `R${++ids}`;
+      log.replies.push(o);
+      log.replyIds.push(id);
+      return { id, createMessageComponentCollector: collectOn(id) };
+    },
   });
+  function collectOn(target) {
+    return (opts) => {
+      const c = { opts, target, h: {}, ended: null, on(e, f) { this.h[e] = f; }, stop(reason) { this.ended ??= this.h.end?.([], reason); } };
+      collectors.push(c);
+      return c;
+    };
+  }
   const button = (customId) => {
     const b = {
       user: { id: "A" },
@@ -274,10 +287,25 @@ section("Refusals");
     const r = t.log.replies[0];
     assertTrue(r.content === refusal(reason, t.trainerData.A) && r.flags === 64 && !r.components, `${reason} is refused privately`);
     assertEqual(t.log.channel.length, 0, `${reason}: nothing public`);
+    assertEqual(t.log.defers.length, 0, `${reason}: answered at once, not deferred`);
   }
   const noPerms = harness(WEAK(), { perms: false });
   await noPerms.run("brock");
   assertEqual(noPerms.log.replies[0].content, refusal("no_perms"), "missing channel permissions are refused");
+}
+
+section("Preview is acknowledged before the card renders");
+{
+  // The animated VS card takes 2–4 s; Discord drops a command not answered within 3 s.
+  const t = harness(WEAK());
+  let rendered = false;
+  t.log.onDefer = () => assertTrue(!rendered && t.log.replies.length === 0, "deferred before the card is rendered or sent");
+  const origPush = t.log.replies.push.bind(t.log.replies);
+  t.log.replies.push = (...r) => { rendered = true; return origPush(...r); };
+  await t.run("brock");
+  assertEqual(t.log.defers, [{ flags: 64 }], "deferred once, privately");
+  assertTrue(t.log.replies[0].files?.length === 1 && t.log.replies[0].components?.length === 1, "the card and buttons arrive in the first edit");
+  assertEqual(t.collectors.at(-1).target, t.log.replyIds[0], "Fight! listens on the preview message");
 }
 
 section("The challenge channel");
@@ -319,7 +347,7 @@ section("The board's dropdown");
 
   await t.choose("brock");
   const preview = t.log.replies.at(-1);
-  assertEqual([preview.flags, preview.content], [64, "A loss costs you **1,234 CC**."], "picking Brock opens the private preview");
+  assertEqual([t.log.defers.at(-1)?.flags, preview.content], [64, "A loss costs you **1,234 CC**."], "picking Brock opens the private preview");
   assertTrue(preview.files[0].description.startsWith("Ash vs Gym Leader Brock"), "with Brock's VS card");
   const fight = await t.click("fight");
   assertEqual([t.trainerData.A.challenge?.attempts, t.log.channel.length], [1, 2], "and Fight! from it plays the challenge");
@@ -344,7 +372,7 @@ section("Preview");
   const t = harness();
   await t.run("brock");
   const r = t.log.replies[0];
-  assertEqual(r.flags, 64, "private");
+  assertEqual(t.log.defers[0]?.flags, 64, "private");
   const png = card(r);
   assertTrue(!!png && dims(png.attachment).join("x") === `${CHALLENGE_CARD_SIZE.w}x${CHALLENGE_CARD_SIZE.h}`, "the VS card");
   assertEqual(png.description, cardAltText(challengeCardView("brock", previewChallenge(t.trainerData.A, "brock"), t.trainerData.A, { displayName: "Ash" })),

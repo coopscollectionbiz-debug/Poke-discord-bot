@@ -18,6 +18,7 @@ import { generationOfDex } from "../config/generations.js";
 import { isGenerationLive } from "./speciesCatalog.js";
 import { PLACEHOLDER_PATH } from "./sprites.js";
 import { getAbility } from "./battle/abilities.js";
+import { isAcceptedZaProfile } from "../config/megaBattleProfiles.js";
 
 const read = (rel) => JSON.parse(fs.readFileSync(new URL(rel, import.meta.url), "utf8"));
 const DATA = read("../data/pokedex/megas.json");
@@ -103,7 +104,9 @@ export function megaBattleEligibility(id, { env = process.env, generationLive = 
   const allow = megaFormAllowlist(env);
   if (allow !== null && !allow.has(id)) reasons.push("not in MEGA_FORMS");
   if (f.status !== "eligible") reasons.push(...f.blockReasons);
-  if (!f.battleProfile?.verified) reasons.push("battle profile unverified (Legends: Z-A has no abilities in play)");
+  // Owner-accepted Z-A profiles (Gen 6–9 Pokémon) may battle; see config/megaBattleProfiles.js.
+  const accepted = isAcceptedZaProfile(f);
+  if (!f.battleProfile?.verified && !accepted) reasons.push("battle profile unverified (Legends: Z-A has no abilities in play)");
   const status = getAbility(f.ability)?.status;
   if (status !== "implemented" && status !== "no-effect") reasons.push(`ability ${f.ability} is not modelled`);
   if (!megaSpriteRecord(id)) reasons.push("no sprite");
@@ -113,7 +116,7 @@ export function megaBattleEligibility(id, { env = process.env, generationLive = 
     reasons,
     abilityStatus: status ?? "missing",
     abilityVerified: !!f.battleProfile?.verified,
-    profileConfidence: f.battleProfile?.confidence ?? "unverified",
+    profileConfidence: accepted ? "accepted" : f.battleProfile?.confidence ?? "unverified",
   };
 }
 

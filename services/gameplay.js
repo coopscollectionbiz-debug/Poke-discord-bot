@@ -229,7 +229,7 @@ export function createGameplayHandlers(deps) {
         if (!can.ok) return { ok: false, error: can.error, code: can.code, ...(can.protected && { protected: can.protected }) };
         move.uid = can.uid;
         if (can.record) move.confirmRev = can.record.rev ?? 0;
-        // Gen 6–9: generation must be live; official level requirement, checked on this copy (services/evolutionRules.js).
+        // The target's generation must be live (services/evolutionRules.js); no Level requirement for any generation.
         const req = checkEvolutionRequirements(user, { ...base, id: bId }, { ...target, id: tId }, chosenVariant, { uid: can.uid });
         if (!req.ok) return { ok: false, error: req.error };
         if (dustCost > 0 && getQuantity(user, "shiny_dust") < dustCost) {

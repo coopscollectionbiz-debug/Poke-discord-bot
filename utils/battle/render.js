@@ -24,6 +24,7 @@ import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
 import { encodeFrames } from "../render/gif.js";
 import { unionBox, pokemonLoopFit, loopPlan, fitLoop, spriteTime, STEP_MS, MAX_GIF_BYTES } from "../render/spriteLoops.js";
+import { ANIMATION } from "./timeline.js";
 
 const FONT = "system-ui, 'DejaVu Sans', 'Noto Sans', Arial, sans-serif";
 const SPRITES = new URL("../../public/sprites/pokemon/", import.meta.url);
@@ -39,16 +40,8 @@ const GOLD = "#f5c84c";
 const INK = "#0e1120";
 const MEGA_TAG = TOKENS.mega; // the shared Mega colour (dashboard --cc-mega)
 
-// GIF timing: 100 ms frames; an attack takes 7 of them, then the scene holds
-// with sprites still moving. Discord ignores a long last-frame delay and loops
-// a GIF once its regular frames run out, replaying the turn (HP jumps back
-// up), so each turn runs turnMs on regular frames: longer than the ~2.5-2.8 s
-// a screen recording measured between playback updates. The final frame
-// still asks for the GIF maximum (~11 min) for viewers that honor it.
-// Start and result images loop: with POKEMON_LOOP_FIT on, over one fitted
-// loop of their sprites at 50 ms steps (idleTiming); else idleFrames per
-// text screen.
-export const ANIMATION = { delayMs: 100, eventFrames: 7, holdFrames: 10, idleFrames: 20, turnMs: 4000, freezeMs: 655_350 };
+// GIF timing (ANIMATION) lives with the replay's timeline, which paces by it.
+export { ANIMATION };
 
 export function pickFrameTurns(totalTurns, frames) {
   const turns = Array.from({ length: frames }, (_, i) => Math.max(1, Math.round((totalTurns * (i + 1)) / frames)));

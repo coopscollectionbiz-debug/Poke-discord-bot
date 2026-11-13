@@ -19,6 +19,7 @@
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { GifReader } from "omggif";
 import { pickFrameTurns } from "./render.js";
+import { activeAt } from "./timeline.js";
 import { PLAYBACK, CUTE, FULL_SIM } from "./tuning.js";
 import { teamCuteness } from "./cuteness.js";
 import { trainingKey } from "../training.js";
@@ -132,20 +133,8 @@ function header(outcome) {
 /** How many updates a replay gets: more for a full-sim (v2) result. */
 export const updatesFor = (result) => (result?.v === 2 ? FULL_SIM.maxUpdates : PLAYBACK.maxUpdates);
 
-/**
- * The slot in front on each side as turn `turn` starts. A full-sim result
- * says so in its switch steps (U-turn, drags, replacements); in today's
- * results the first Pokémon with HP left is always in front.
- */
-export function activeAt(result, turn) {
-  const firstUp = (row) => row.findIndex((h) => h > 0);
-  if (!result.steps) return result.snapshots[turn - 1].map(firstUp);
-  const active = result.snapshots[0].map(firstUp);
-  const before = [...result.steps.slice(0, turn - 1).flat()];
-  for (const s of result.steps[turn - 1] ?? []) { if (s.kind === "move") break; before.push(s); }
-  for (const s of before) if (s.kind === "switch") active[s.side] = s.slot;
-  return active;
-}
+// Who is in front as a turn starts (moved to the timeline, which tracks it through the turn).
+export { activeAt };
 
 // First come, first served: at most `limit` holders at once. acquire()
 // resolves to a release function; while waiting, onPlace(n) hears the

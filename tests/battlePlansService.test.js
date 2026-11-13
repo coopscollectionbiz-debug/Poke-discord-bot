@@ -1,13 +1,13 @@
 // ==========================================================
 // tests/battlePlansService.test.js
 // A player's Battle plans (services/battlePlans.js): stored per fighting
-// Team, readiness from the moves the Team really brings, and suggestions
-// that never change a Moveset. The cutover (services/fullSimCutover.js):
+// Team, and readiness from the moves the Team really brings: who helps
+// with what, or how to get ready. The cutover (services/fullSimCutover.js):
 // nobody's moves change when the full sim turns on.
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { getPlan, setPlan, teamPlanView, suggestions } from "../services/battlePlans.js";
+import { getPlan, setPlan, teamPlanView } from "../services/battlePlans.js";
 import { runCutover, cutoverMoves } from "../services/fullSimCutover.js";
 import { chosenMoves, setMoveset, keepMovesOnLevelUp } from "../services/movesets.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
@@ -49,7 +49,7 @@ section("Plans per Team");
   assertEqual(back.battlePlans, { display: "speed" }, "plans survive a save and load");
 }
 
-section("Readiness and suggestions");
+section("Readiness");
 withSwitch(true, () => {
   const u = player("A", [25, 143], 50);
   const view = teamPlanView(u, "display");
@@ -57,11 +57,9 @@ withSwitch(true, () => {
   setPlan(u, "display", "status");
   const before = teamPlanView(u, "display");
   assertEqual(before.readiness.ready, false, "Status & stall isn't ready while nobody brings a status move");
-  const pika = suggestions(u, "display", 25, "normal");
-  assertTrue(pika.includes("thunderwave"), "Pikachu is offered Thunder Wave, a status move it has learned");
-  assertEqual(chosenMoves(u, "display", 25, "normal"), null, "suggesting changes nothing");
   setMoveset(u, "display", 25, "normal", ["thunderwave", ...autoMoveset(25, 50).slice(0, 3)]);
-  assertEqual(teamPlanView(u, "display").readiness.ready, true, "once the player takes it, the plan is ready");
+  const after = teamPlanView(u, "display").readiness;
+  assertEqual([after.ready, after.helpers.map((h) => [h.name, h.moves])], [true, [["Pikachu", ["thunderwave"]]]], "once the player takes it, the plan is ready, and says who brings what");
 });
 
 // A species whose last 4 attacks at Lv 40 differ between today's learnsets and the full sim's.
@@ -84,6 +82,21 @@ withSwitch(true, () => {
   assertEqual(teamPlanView(none, "display").readiness.howTo, null, "and a Team where nobody learns one has no way to name");
   setPlan(young, "display", "allout");
   assertEqual(teamPlanView(young, "display").readiness.howTo, undefined, "a ready plan needs none");
+  // Entei learns Calm Mind at Lv 18, but with only physical attacks the AI never plays it.
+  const entei = player("E", [244], 50);
+  setMoveset(entei, "display", 244, "normal", ["sacredfire", "crunch", "extremespeed", "firefang"]);
+  setPlan(entei, "display", "setup");
+  assertEqual(teamPlanView(entei, "display").readiness.howTo, null, "it never names a move the AI wouldn't play (Calm Mind on a physical Entei)");
+  // With Lava Plume, the AI would play Calm Mind, but Entei hits harder with
+  // Attack: what to add follows the Recommended tag (the stat it's better at).
+  const plume = player("F", [244], 60); // Entei learns Lava Plume at Lv 54
+  setMoveset(plume, "display", 244, "normal", ["sacredfire", "crunch", "extremespeed", "lavaplume"]);
+  setPlan(plume, "display", "setup");
+  assertEqual(teamPlanView(plume, "display").readiness.howTo, null, "nor one that raises the attacking stat it's worse at");
+  const keldeo = player("K", [244, 647], 60);
+  setMoveset(keldeo, "display", 244, "normal", ["sacredfire", "crunch", "extremespeed", "lavaplume"]);
+  setPlan(keldeo, "display", "setup");
+  assertEqual(teamPlanView(keldeo, "display").readiness.howTo?.move, "workup", "a Keldeo's Work Up, which raises its Special Attack, is named instead");
 });
 
 section("/inspectpokemon shows the ability its Team's plan picks (review I6)");

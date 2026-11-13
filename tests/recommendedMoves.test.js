@@ -55,7 +55,11 @@ section("The stat a setup move raises");
   assertEqual(pick(68, both, "setup").helper, "swordsdance", "Machamp, better at Attack, raises that");
   // Entei is better at Attack: Calm Mind would spend its safe turns raising the wrong stat.
   assertEqual(pick(244, ["calmmind", "sacredfire", "crunch"], "setup").helper, null, "a setup move that raises only the weaker attacking stat isn't one");
-  assertEqual(pick(244, ["calmmind", "agility", "sacredfire"], "setup").helper, "agility", "one that raises Speed is");
+  // A Speed raise only for a Pokémon slower than the average one, as the AI
+  // plays it only against a faster foe (utils/battle/ai/choose.js).
+  assertEqual(pick(76, ["calmmind", "agility", "rockslide"], "setup").helper, "agility", "one that raises Speed is, on a slow Golem");
+  assertEqual(pick(244, ["calmmind", "agility", "sacredfire"], "setup").helper, null, "but not on a fast Entei");
+  assertEqual(pick(386, ["agility", "psychic", "superpower"], "setup").helper, null, "nor a Deoxys, faster than almost anything it meets");
   // Mew is as good at both, so the plan's move decides which attacks hit harder.
   const mew = (helper) => pick(151, [helper, "crunch", "darkpulse", "flamethrower", "thunderpunch"], "setup").moves;
   assertTrue(mew("swordsdance").includes("crunch") && !mew("swordsdance").includes("darkpulse"), "after Swords Dance, the physical Dark attack");
@@ -111,10 +115,13 @@ section("Every species, plan and Level");
 {
   const isAttack = (id) => getMove(id, ON).category !== "Status";
   const helps = (id, plan) => moveRoles(id).some((role) => plan.roles.includes(role));
-  // A setup move that raises Speed or the attacking stat the Pokémon is better at (either, when even).
+  // A setup move that raises the attacking stat the Pokémon is better at (either,
+  // when even), or Speed when it's slower than the average Pokémon.
+  let speeds = 0, n = 0;
+  for (let id = 1; getSpecies(id, ON); id++, n++) speeds += getSpecies(id, ON).baseStats.spe;
   const raisesUseful = (speciesId, m) => {
-    const { atk, spa } = getSpecies(speciesId, ON).baseStats;
-    return ["spe", ...(atk >= spa ? ["atk"] : []), ...(spa >= atk ? ["spa"] : [])].some((s) => getMove(m, ON).boosts?.[s] > 0);
+    const { atk, spa, spe } = getSpecies(speciesId, ON).baseStats;
+    return [...(spe < speeds / n ? ["spe"] : []), ...(atk >= spa ? ["atk"] : []), ...(spa >= atk ? ["spa"] : [])].some((s) => getMove(m, ON).boosts?.[s] > 0);
   };
   const bad = [];
   let runs = 0;
@@ -126,14 +133,14 @@ section("Every species, plan and Level");
         const r = pick(id, ids, plan.id);
         runs++;
         const ok = r.moves.length >= 1 && r.moves.length <= 4 && new Set(r.moves).size === r.moves.length && r.moves.every((m) => ids.includes(m))
-          && (r.helper == null || (r.moves[0] === r.helper && helps(r.helper, plan)))
+          && (r.helper == null || (r.moves[0] === r.helper && helps(r.helper, plan) && (plan.id !== "setup" || raisesUseful(id, r.helper))))
           && (!ids.some(isAttack) || r.moves.some(isAttack))
           && (!["setup", "status"].includes(plan.id) || r.helper != null || !ids.some((m) => helps(m, plan) && (plan.id !== "setup" || raisesUseful(id, m))));
         if (!ok) bad.push(`#${id} Lv ${lv} ${plan.id}: ${r.moves.join(",")}`);
       }
     }
   }
-  assertEqual(bad.slice(0, 5), [], `${runs} picks: 1–4 distinct moves it has learned, the plan's move first, an attack whenever it knows one, a status move whenever it knows one, and a setup move whenever it knows one that raises Speed or its better attacking stat`);
+  assertEqual(bad.slice(0, 5), [], `${runs} picks: 1–4 distinct moves it has learned, the plan's move first, an attack whenever it knows one, a status move whenever it knows one, and a setup move whenever it knows one that raises its better attacking stat, or Speed when it's slow, and no other setup move`);
 }
 
 finish();

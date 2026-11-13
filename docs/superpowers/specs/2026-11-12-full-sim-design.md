@@ -109,7 +109,7 @@ Run with `FULL_SIM_ENABLED` on and `TM_ENABLED` on unless a step says otherwise.
 1. With the switch off, run `/battle` against a friend. The replay, the moves, the Teams page (no plan row) and `/inspectpokemon` look exactly as they do on master.
 2. Turn the switch on and restart. Open the dashboard Teams page, Casual tab. The plan row shows All-out attack. A Team member with no picked Moveset shows the same four moves it had before the restart.
 3. Open the plan menu. All six plans are listed with a readiness line each. Pick Speed control on a Team where nobody knows Trick Room or Tailwind. The line says it plays as All-out attack and how to get Trick Room.
-4. Open a Pokémon's Moveset editor. Moves the plan suggests are marked "Suggested". Take one. The Moveset saves, the readiness line turns ready, and no other Pokémon's moves changed.
+4. Open a Pokémon's Moveset editor. The plan's recommended moves carry a gold "Recommended" tag. Press Use recommended moves, then Save. The Moveset saves, the readiness line names that Pokémon and its plan move, and no other Pokémon's moves changed.
 5. Run `/battle` (Casual). The replay has about 20 updates, narrates status, hazard and weather events, and after a U-turn or a faint shows the right Pokémon in front. The private EXP message arrives after the replay.
 6. Open Battle Records and replay that fight. Switches, status and hazard damage show step by step, and your plan is named. Log in as the opponent and open the same record. Your plan isn't shown anywhere.
 7. Replay a Fight record from before the switch. It plays as it did on master.

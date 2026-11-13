@@ -1,12 +1,12 @@
 // ==========================================================
 // tests/teamsPlans.test.js
 // The Teams page's Battle plan row (public/teams/plans.js), DOM-free: the
-// plan menu, the readiness line, which moves the Moveset editor marks
-// as suggested, and the recommended moves it fills in.
+// plan menu, the readiness line, and the recommended moves the Moves
+// editor marks and fills in.
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { planRowHtml, readinessLine, suggestedFor, recommendedFor } from "../public/teams/plans.js";
+import { planRowHtml, readinessLine, recommendedFor } from "../public/teams/plans.js";
 
 const PLANS = [
   { id: "allout", name: "All-out attack", blurb: "Uses its strongest move every turn." },
@@ -16,8 +16,15 @@ const view = (plan, readiness, slots = []) => ({ plan, readiness, slots });
 const state = (teams) => ({ enabled: true, plans: PLANS, teams });
 
 section("Readiness line");
-assertEqual(readinessLine(view("allout", { ready: true, helpers: 6, missing: [], missingNames: [] })), "", "All-out attack needs no line");
-assertEqual(readinessLine(view("speed", { ready: true, helpers: 1, missing: [], missingNames: [] })), "Ready · 1 Pokémon helps", "a ready plan says how many Pokémon help");
+assertEqual(readinessLine(view("allout", { ready: true, helpers: [], missing: [], missingNames: [] })), "", "All-out attack needs no line");
+const ready = (...helpers) => readinessLine(view("setup", { ready: true, helpers, missing: [], missingNames: [] }));
+const h = (name, moveNames, ability = null) => ({ name, moveNames, ability });
+assertEqual(ready(h("Deoxys", ["Agility"])), "Deoxys (Agility) helps this plan.", "a ready plan names who helps, and with what");
+assertEqual(ready(h("Rayquaza", ["Dragon Dance"]), h("Deoxys", ["Agility"])), "Rayquaza (Dragon Dance) and Deoxys (Agility) help this plan.", "two of them");
+assertEqual(ready(h("Latias", ["Reflect", "Light Screen"]), h("Skarmory", ["Spikes"]), h("Pelipper", [], "Drizzle")),
+  "Latias (Reflect, Light Screen), Skarmory (Spikes) and Pelipper (Drizzle) help this plan.", "several moves, three Pokémon, and an ability that sets the weather");
+assertEqual(readinessLine(view("weather", { ready: false, helpers: [], missing: [], missingNames: [], noWeather: true })),
+  "No weather helps this Team's types or abilities, so it plays as All-out attack.", "Weather on a Team no weather helps says why it can't run");
 assertEqual(readinessLine(view("speed", { ready: false, helpers: 0, missing: ["trickroom", "tailwind"], missingNames: ["Trick Room", "Tailwind"] })),
   "Plays as All-out attack until a Pokémon brings Trick Room or Tailwind. Nobody on this Team learns one by leveling up.", "a plan that can't run yet says what it plays as, what it needs, and that no one learns it");
 const notReady = (howTo) => view("speed", { ready: false, helpers: 0, missing: ["trickroom", "tailwind"], missingNames: ["Trick Room", "Tailwind"], howTo });
@@ -36,20 +43,12 @@ section("Plan row");
   assertEqual(planRowHtml("display", { enabled: false, plans: [], teams: {} }), "", "nor does any Team while the full sim is off");
 }
 
-section("Suggested moves");
-{
-  const s = state({ display: view("speed", { ready: false }, [{ speciesId: 437, variant: "normal", suggestions: ["trickroom"] }, { speciesId: 25, variant: "shiny", uid: "c_abc", suggestions: ["thunderwave"] }]) });
-  assertEqual(suggestedFor(s, "display", { id: 437, variant: "normal" }), ["trickroom"], "the editor marks the slot's suggestions");
-  assertEqual(suggestedFor(s, "display", { id: 25, variant: "shiny", uid: "c_abc" }), ["thunderwave"], "matched by copy when the slot names one");
-  assertEqual(suggestedFor(s, "battle", { id: 437, variant: "normal" }), [], "another Team's suggestions don't leak in");
-}
-
 section("Recommended moves");
 {
   const rec = (moves) => ({ moves, helper: moves[0] });
   const s = state({ display: view("speed", { ready: false }, [
-    { speciesId: 437, variant: "normal", suggestions: [], recommended: rec(["trickroom", "flashcannon"]) },
-    { speciesId: 25, variant: "shiny", uid: "c_abc", suggestions: [], recommended: rec(["thunderbolt"]) },
+    { speciesId: 437, variant: "normal", recommended: rec(["trickroom", "flashcannon"]) },
+    { speciesId: 25, variant: "shiny", uid: "c_abc", recommended: rec(["thunderbolt"]) },
   ]) });
   assertEqual(recommendedFor(s, "display", { id: 437, variant: "normal" }), { moves: ["trickroom", "flashcannon"], planName: "Speed control" }, "the editor gets the slot's recommended moves and the plan they're for");
   assertEqual(recommendedFor(s, "display", { id: 25, variant: "shiny", uid: "c_abc" }).moves, ["thunderbolt"], "matched by copy when the slot names one");

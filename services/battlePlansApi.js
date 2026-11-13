@@ -2,8 +2,9 @@
 // services/battlePlansApi.js — the dashboard's Battle plan endpoints
 // (Teams page). Wired in bot_final.js:
 //   GET  /api/battle-plans?id=…   plans, and each fighting Team's plan,
-//                                 readiness, and per-member suggestions and
-//                                 recommended moves (the Moves editor's fill)
+//                                 readiness (who helps, by name), and each
+//                                 member's recommended moves (the Moves
+//                                 editor marks them and can fill them in)
 //   POST /api/battle-plan         { id, team: "display"|"battle", plan }
 // Session-checked like every dashboard route. A plan is only ever set
 // here, validated under the player's lock, never through the dashboard
@@ -12,7 +13,7 @@
 // ==========================================================
 
 import { isFullSimEnabled } from "../config/fullSim.js";
-import { BATTLE_PLANS, PLAN_TEAMS, setPlan, teamPlanView, suggestions, recommended } from "./battlePlans.js";
+import { BATTLE_PLANS, PLAN_TEAMS, setPlan, teamPlanView, recommended } from "./battlePlans.js";
 import { normalizeTeam } from "../utils/teamNormalize.js";
 import { getMove } from "../utils/battle/data.js";
 
@@ -30,12 +31,12 @@ export function createBattlePlanHandlers({ getTrainerData, isAuthorized, lockUse
     const field = team === "battle" ? "battleTeam" : "displayedPokemon";
     const slots = normalizeTeam(user[field] ?? [], 6).map((slot) => ({
       speciesId: slot.id, variant: slot.variant, ...(slot.uid && { uid: slot.uid }),
-      suggestions: suggestions(user, team, slot.id, slot.variant, { uid: slot.uid ?? null }),
       recommended: recommended(user, team, slot.id, slot.variant, { uid: slot.uid ?? null }),
     }));
     const view = teamPlanView(user, team);
-    const missingNames = view.readiness.missing.map((id) => getMove(id)?.name ?? id);
-    return { ...view, readiness: { ...view.readiness, missingNames }, slots };
+    const nameOf = (id) => getMove(id)?.name ?? id;
+    const helpers = view.readiness.helpers.map((h) => ({ name: h.name, moveNames: h.moves.map(nameOf), ability: h.ability }));
+    return { ...view, readiness: { ...view.readiness, helpers, missingNames: view.readiness.missing.map(nameOf) }, slots };
   };
 
   return {

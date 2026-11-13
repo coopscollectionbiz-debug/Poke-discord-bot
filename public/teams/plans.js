@@ -1,21 +1,27 @@
 // ==========================================================
 // public/teams/plans.js — the Teams page's Battle plan row (full sim).
-// The Casual and Ranked tabs show the Team's plan, what it does, and
-// whether the Team can run it yet; the Moveset editor marks the moves the
-// plan suggests and can fill in its recommended moves. The row is absent while the full sim is off, and on the
-// Showcase team, which never fights. GET /api/battle-plans and POST
+// The Casual and Ranked tabs show the Team's plan, what it does, and who
+// on the Team helps it, or how to get it going; the Moves editor marks the
+// recommended moves and can fill them in. The row is absent while the full
+// sim is off, and on the Showcase team, which never fights. GET /api/battle-plans and POST
 // /api/battle-plan (services/battlePlansApi.js); the server checks every rule.
 // The render helpers are pure, so tests/teamsPlans.test.js runs them in Node.
 // ==========================================================
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-const or = (names) => (names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} or ${names.at(-1)}`);
+const list = (word) => (names) => (names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} ${word} ${names.at(-1)}`);
+const or = list("or");
+const and = list("and");
 
 /** The readiness line under the plan, or "" for All-out attack. */
 export function readinessLine(view) {
   if (!view || view.plan === "allout") return "";
   const r = view.readiness;
-  if (r.ready) return `Ready · ${r.helpers} Pokémon ${r.helpers === 1 ? "helps" : "help"}`;
+  if (r.ready) {
+    const who = r.helpers.map((h) => `${h.name} (${[...h.moveNames, ...(h.ability ? [h.ability] : [])].join(", ")})`);
+    return `${and(who)} ${who.length === 1 ? "helps" : "help"} this plan.`;
+  }
+  if (r.noWeather) return "No weather helps this Team's types or abilities, so it plays as All-out attack.";
   const how = r.howTo
     ? (r.howTo.known ? `${r.howTo.name} already knows ${r.howTo.moveName}, so add it to its Moveset.` : `${r.howTo.name} learns ${r.howTo.moveName} at Lv ${r.howTo.level}.`)
     : "Nobody on this Team learns one by leveling up.";
@@ -44,12 +50,7 @@ function slotRow(plans, team, s) {
     ?? slots.find((x) => x.speciesId === Number(s.id) && x.variant === s.variant);
 }
 
-/** Move ids the Moveset editor marks "Suggested" for this slot on this Team. */
-export function suggestedFor(plans, team, s) {
-  return slotRow(plans, team, s)?.suggestions ?? [];
-}
-
-/** What "Use recommended moves" fills in for this slot: { moves, planName }, or null. */
+/** The moves the Moves editor marks Recommended and "Use recommended moves" fills in: { moves, planName }, or null. */
 export function recommendedFor(plans, team, s) {
   const rec = slotRow(plans, team, s)?.recommended;
   if (!rec?.moves?.length) return null;

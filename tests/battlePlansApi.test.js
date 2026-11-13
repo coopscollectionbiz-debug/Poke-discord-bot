@@ -2,13 +2,16 @@
 // tests/battlePlansApi.test.js
 // The dashboard's Battle plan endpoints (services/battlePlansApi.js):
 // sessions are checked, a plan is validated and saved under the player's
-// lock, and the page gets each fighting Team's plan, readiness and
-// per-Pokémon suggestions — but only while the full sim is on.
+// lock, and the page gets each fighting Team's plan, readiness (who helps,
+// by name) and per-Pokémon recommended moves, but only while the full sim is on.
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { createBattlePlanHandlers } from "../services/battlePlansApi.js";
 import { createNewUser } from "../utils/userSchema.js";
+import { setPlan } from "../services/battlePlans.js";
+import { setMoveset } from "../services/movesets.js";
+import { autoMoveset } from "../utils/battle/moveset.js";
 
 function player(id, speciesIds, level) {
   const u = createNewUser(id, `Trainer ${id}`);
@@ -47,10 +50,25 @@ section("Reading");
   assertEqual([res.code, res.body.enabled, res.body.plans.map((p) => p.id).length], [200, true, 6], "the page gets the six plans");
   assertEqual(Object.keys(res.body.teams), ["display", "battle"], "and both fighting Teams");
   assertEqual(res.body.teams.display.plan, "allout", "each with its plan");
-  assertTrue(Array.isArray(res.body.teams.display.slots) && res.body.teams.display.slots.length === 2, "and one row per Team member for suggestions");
+  assertTrue(Array.isArray(res.body.teams.display.slots) && res.body.teams.display.slots.length === 2, "and one row per Team member");
   const pika = res.body.teams.display.slots[0];
   assertTrue(pika.recommended.moves.length >= 1 && pika.recommended.moves.length <= 4 && pika.recommended.helper === null,
     "each row carries its recommended moves (All-out attack: no plan move)");
+  assertEqual("suggestions" in pika, false, "and nothing else to mark: the Moves editor marks the recommended moves");
+}
+{
+  const { api, trainerData } = setup();
+  const u = trainerData.A;
+  setPlan(u, "display", "status");
+  // Teams are built from the process's switch, as the bot runs them.
+  const saved = process.env.FULL_SIM_ENABLED;
+  process.env.FULL_SIM_ENABLED = "1";
+  const res = response();
+  try {
+    setMoveset(u, "display", 25, "normal", ["thunderwave", ...autoMoveset(25, 50).slice(0, 3)]);
+    await api.get({ query: { id: "A" }, session: "A" }, res);
+  } finally { if (saved === undefined) delete process.env.FULL_SIM_ENABLED; else process.env.FULL_SIM_ENABLED = saved; }
+  assertEqual(res.body.teams.display.readiness.helpers, [{ name: "Pikachu", moveNames: ["Thunder Wave"], ability: null }], "readiness names who helps, with each move's name");
   const denied = response();
   await api.get({ query: { id: "A" }, session: "B" }, denied);
   assertEqual(denied.code, 403, "another player's session is refused");

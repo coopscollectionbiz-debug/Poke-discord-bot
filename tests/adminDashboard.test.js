@@ -161,10 +161,11 @@ section("Level");
 section("Cooldowns");
 {
   const now = Date.parse("2026-11-11T12:00:00Z");
-  const u = player({ lastDaily: now - 1000, daily: { streak: 7 }, weeklyPackClaimed: true, lastQuest: now - 5, lastRecruit: now - 5, battle: { day: "2026-11-11", started: 10, vs: { 2: 3 }, rating: 1100 } });
+  const u = player({ lastDaily: now - 1000, daily: { streak: 7 }, weeklyPackClaimed: true, lastQuest: now - 5, lastRecruit: now - 5, battle: { day: "2026-11-11", started: 10, vs: { 2: 3 }, rating: 1100 }, rematchBlocked: { 2: "2026-11-11" } });
   const r = C.applyChange(u, change({ kind: "cooldown", cooldowns: ["daily", "weekly", "quest", "recruit", "battle"] }), { now });
   assertTrue(r.ok && u.lastDaily === 0 && u.daily.streak === 7 && u.weeklyPackClaimed === false && u.lastQuest === 0 && u.lastRecruit === 0, "daily/weekly/quest/recruit reset; the daily streak is kept");
   assertTrue(u.battle.started === 0 && Object.keys(u.battle.vs).length === 0 && u.battle.rating === 1100, "Battle cap reset; Battle rating untouched");
+  assertEqual(u.rematchBlocked, undefined, "Rematch request blocks are cleared with the Battle cap");
   assertEqual([r.before.daily, r.after.daily, r.before.battle, r.after.battle], ["claimed today", "ready", "10 started today", "0 started today"], "before/after states are readable");
   assertTrue(!C.parseChange({ kind: "cooldown", cooldowns: [] }).ok && !C.parseChange({ kind: "cooldown", cooldowns: ["nap"] }).ok, "empty or unknown cooldowns are rejected");
 }

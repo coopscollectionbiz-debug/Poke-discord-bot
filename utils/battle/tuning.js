@@ -55,6 +55,9 @@ export const ELO = { start: 1000, k: 32 };
 export const RANKED = { level: 50, season: 1 };
 export const CAPS = { perDay: 10, perOpponent: 3 };
 export const WAGER = { minStake: 1, windowMs: 15 * 60 * 1000 };
+// Rematch requests (utils/battle/rematch.js): how long the Defender has to
+// answer (owner decision 2026-11-12).
+export const REMATCH = { windowMs: 5 * 60 * 1000 };
 // Challenges (/challenge): attempts per UTC day, share of CC lost on a loss,
 // and how long the private preview's buttons work.
 // pickMs: how long a Revive pick stays open. staleRunMs: an Elite Four run

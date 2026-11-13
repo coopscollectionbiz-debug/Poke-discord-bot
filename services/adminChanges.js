@@ -422,6 +422,7 @@ function resetCooldown(user, c) {
   else if (c === "battle" && user.battle && typeof user.battle === "object") {
     user.battle.started = 0;
     user.battle.vs = {};
+    delete user.rematchBlocked; // a declined Rematch request no longer blocks asking again
   }
 }
 

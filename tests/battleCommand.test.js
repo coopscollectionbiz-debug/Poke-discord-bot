@@ -111,21 +111,38 @@ function harness({ sendFails = false, perms = true, offeredReplyFails = false, f
 
 const replaceRecord = (t, id) => ensureUserInitialized(id, id, t.trainerData, null); // e.g. /daily or a dashboard save
 
-section("The battle channel");
+section("The casual channel, past the Battle cap");
 {
-  // CASUAL_BATTLE_CHANNEL_ID keeps casual /battle in one channel; unset, it works anywhere (every other section).
+  // CASUAL_BATTLE_CHANNEL_ID: past the Battle cap, a casual battle runs only there.
+  // Within the cap, and unset (every other section), casual battles work anywhere.
+  const day = utcDay(new Date());
   process.env.CASUAL_BATTLE_CHANNEL_ID = "elsewhere";
-  const t = harness();
-  await t.run("A", "B");
-  assertEqual(t.log.replies, ["Casual battles happen in <#elsewhere>. Ranked and wager battles work anywhere."], "a casual battle outside it is refused privately");
-  assertEqual([t.log.messages.length, t.log.edits.length, t.trainerData.A.battles], [0, 0, undefined], "nothing posted or counted");
+  const within = harness();
+  await within.run("A", "B");
+  assertTrue(within.log.replies.length === 0 && within.log.edits[0]?.startsWith("⚔️ Your battle is starting below."), "within the cap, a casual battle runs anywhere");
+
+  const daily = harness();
+  getBattleRecord(daily.trainerData.A, day).started = 10;
+  await daily.run("A", "B");
+  assertEqual(daily.log.replies, ["You've used all 10 battles for today. Casual battles past that earn no EXP and happen in <#elsewhere>."], "past the daily cap, it's refused privately");
+  assertEqual([daily.log.messages.length, daily.log.edits.length, getBattleRecord(daily.trainerData.A, day).vs.B ?? 0], [0, 0, 0], "nothing posted or counted");
+
+  const vs = harness();
+  getBattleRecord(vs.trainerData.A, day).vs.B = 3;
+  await vs.run("A", "B");
+  assertEqual(vs.log.replies, ["You've battled <@B> 3 times today. More casual battles with them need a Rematch request in <#elsewhere>."], "past 3 against them, the Rematch request is refused too");
+  assertEqual(vs.log.messages.length, 0, "no Rematch request is posted");
+
   const w = harness();
+  getBattleRecord(w.trainerData.A, day).started = 10;
   await w.run("A", "B", 50);
-  assertTrue(w.log.replies.length === 0 && w.log.messages.length === 1, "a wager offer still posts anywhere");
+  assertTrue(!w.log.replies.some((r) => r?.includes("<#elsewhere>")), "ranked and wager refusals don't point to the casual channel");
+
   process.env.CASUAL_BATTLE_CHANNEL_ID = "chan";
   const home = harness();
+  getBattleRecord(home.trainerData.A, day).started = 10;
   await home.run("A", "B");
-  assertTrue(home.log.edits[0]?.startsWith("⚔️ Your battle is starting below."), "in the battle channel, the battle runs");
+  assertTrue(home.log.edits[0]?.includes("so this one earns no EXP"), "in the casual channel, it runs with no EXP");
   delete process.env.CASUAL_BATTLE_CHANNEL_ID;
 }
 

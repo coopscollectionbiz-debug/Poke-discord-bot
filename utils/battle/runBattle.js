@@ -196,6 +196,14 @@ export const RANKED_TEAM_SIZE = 6;
 // The Battle cap never blocks a casual battle; runBattle withholds its rewards
 // instead. Past the per-Defender cap a casual battle needs a Rematch request
 // ("rematch_needed") unless the Defender accepted one (`rematch`).
+// "daily" or "opponent" when the Challenger is already past today's Battle
+// cap (with this Defender), else null. A casual battle then earns no EXP and,
+// with CASUAL_BATTLE_CHANNEL_ID set, has to run in the casual channel.
+export function pastCap(trainerData, challengerId, defenderId, now = new Date()) {
+  const record = trainerData[challengerId]?.battle;
+  return record?.day === utcDay(now) ? capBlock(record, defenderId) : null;
+}
+
 export function battleBlock({ trainerData, challengerId, defenderId, mode, rematch = false, now = new Date(), env = process.env }) {
   if (challengerId === defenderId) return "self";
   const prefix = mode === "open" ? "no_team" : "no_battle_team";

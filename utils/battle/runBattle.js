@@ -23,7 +23,7 @@ import { teamPower, rollSurge, cuteSurgeBoost } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, getCasualRecord, capBlock, recordStart } from "./rewards.js";
 import { RANKED, CUTE } from "./tuning.js";
 import { teamCuteness } from "./cuteness.js";
-import { chosenMoves } from "../../services/movesets.js";
+import { chosenMoves, keepMovesOnLevelUp } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
 import { megaBattleEligibility, megaBattleProfile } from "../megas.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
@@ -164,6 +164,8 @@ export function applyGains(user, members, gains, base = gains, fx = liveEffects(
     // before copies existed falls back to the line's best copy.
     const target = m.copyUid && user.box?.[m.copyUid] ? m.copyUid : bestCopyUid(user, m.speciesId, m.variant);
     const { fromLevel, toLevel } = target ? addCopyExp(user, target, gained) : addExp(user, m.speciesId, m.variant, gained);
+    // New moves are learned, not equipped: teams keep the moves they had.
+    keepMovesOnLevelUp(user, m.speciesId, m.variant, { uid: target ?? null, fromLevel, toLevel });
     return {
       key: trainingKey(m.speciesId, m.variant),
       name: m.name,

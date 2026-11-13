@@ -5,10 +5,10 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { learnableMoves, chosenMoves, validateMoveset, setMoveset, MAX_MOVES } from "../services/movesets.js";
+import { learnableMoves, chosenMoves, validateMoveset, setMoveset, keepMovesOnLevelUp, MAX_MOVES } from "../services/movesets.js";
 import { buildTeam, buildBattleTeam } from "../utils/battle/runBattle.js";
 import { buildMon, memberMoves } from "../utils/battle/sim.js";
-import { autoMoveset } from "../utils/battle/moveset.js";
+import { autoMoveset, movesLearned } from "../utils/battle/moveset.js";
 import { getSpecies } from "../utils/battle/data.js";
 import { pokemonDetail } from "../services/pokemonDetail.js";
 import { battleInfo, inspectSlots } from "../commands/inspectpokemon.js";
@@ -98,6 +98,24 @@ section("/inspectpokemon shows the chosen moves");
   const text = battleInfo(u, 6);
   assertTrue(text.includes(`Moves: ${name(ids[0])}, ${name(ids[1])}`) && text.includes(`Battle team moves: ${name(ids[2])}`), "text: Display moves, plus the Battle team's");
   assertEqual(inspectSlots(u, { id: 6 })[0].moves, [name(ids[0]), name(ids[1])], "card: the Display team's moves");
+}
+
+section("a level-up never equips a newly learned move");
+{
+  // Charizard: find a Level step where a new move is learned.
+  let from = 58;
+  while (from < 99 && !movesLearned(6, from, from + 1).length) from++;
+  const to = from + 1;
+  const u = player();
+  u.training["6:normal"] = exp(from);
+  setMoveset(u, "battle", 6, "normal", autoMoveset(6, from).slice(0, 2)); // chosen on one team
+  const before = autoMoveset(6, from);
+  u.training["6:normal"] = exp(to);
+  assertEqual(keepMovesOnLevelUp(u, 6, "normal", { fromLevel: from, toLevel: to }), ["display"], "only the team on automatic moves is pinned");
+  assertEqual(chosenMoves(u, "display", 6, "normal"), before, "Display keeps the moves it had before the Level-up");
+  assertEqual(chosenMoves(u, "battle", 6, "normal"), autoMoveset(6, from).slice(0, 2), "a chosen moveset is untouched");
+  assertTrue(learnableMoves(u, 6, "normal").some((m) => movesLearned(6, from, to).includes(m.id)), "the new move is learned and can be equipped");
+  assertEqual(keepMovesOnLevelUp(player(), 6, "normal", { fromLevel: 58, toLevel: 58 }), [], "no Level gained: nothing pinned");
 }
 
 finish();

@@ -13,7 +13,7 @@ import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { recommendMoves, recommended, setPlan } from "../services/battlePlans.js";
 import { chosenMoves, validateMoveset } from "../services/movesets.js";
 import { getSpecies, getMove } from "../utils/battle/data.js";
-import { moveRoles, BATTLE_PLANS } from "../catalog/battlePlans.js";
+import { moveRoles, BATTLE_PLANS, planReadiness } from "../catalog/battlePlans.js";
 import { createNewUser } from "../utils/userSchema.js";
 
 const ON = { FULL_SIM_ENABLED: "1" };
@@ -115,13 +115,19 @@ section("Every species, plan and Level");
 {
   const isAttack = (id) => getMove(id, ON).category !== "Status";
   const helps = (id, plan) => moveRoles(id).some((role) => plan.roles.includes(role));
-  // A setup move that raises the attacking stat the Pokémon is better at (either,
-  // when even), or Speed when it's slower than the average Pokémon.
+  // A setup move worth recommending: it raises the attacking stat the Pokémon
+  // is better at (either, when even) and a raise powers an attack it knows
+  // (one not left out; Growth's Attack on a Bulbasaur with physical attacks),
+  // or it raises Speed and the Pokémon is slower than the average one.
   let speeds = 0, n = 0;
   for (let id = 1; getSpecies(id, ON); id++, n++) speeds += getSpecies(id, ON).baseStats.spe;
-  const raisesUseful = (speciesId, m) => {
+  const CATEGORY = { atk: "Physical", spa: "Special" };
+  const raisesUseful = (speciesId, m, ids) => {
     const { atk, spa, spe } = getSpecies(speciesId, ON).baseStats;
-    return [...(spe < speeds / n ? ["spe"] : []), ...(atk >= spa ? ["atk"] : []), ...(spa >= atk ? ["spa"] : [])].some((s) => getMove(m, ON).boosts?.[s] > 0);
+    const raises = (stat) => getMove(m, ON).boosts?.[stat] > 0;
+    const knows = (stat) => ids.some((x) => getMove(x, ON).category === CATEGORY[stat] && !["selfKO", "conditional"].includes(getMove(x, ON).drawback));
+    return (spe < speeds / n && raises("spe"))
+      || ([...(atk >= spa ? ["atk"] : []), ...(spa >= atk ? ["spa"] : [])].some(raises) && ["atk", "spa"].some((s) => raises(s) && knows(s)));
   };
   const bad = [];
   let runs = 0;
@@ -133,14 +139,16 @@ section("Every species, plan and Level");
         const r = pick(id, ids, plan.id);
         runs++;
         const ok = r.moves.length >= 1 && r.moves.length <= 4 && new Set(r.moves).size === r.moves.length && r.moves.every((m) => ids.includes(m))
-          && (r.helper == null || (r.moves[0] === r.helper && helps(r.helper, plan) && (plan.id !== "setup" || raisesUseful(id, r.helper))))
+          && (r.helper == null || (r.moves[0] === r.helper && helps(r.helper, plan) && (plan.id !== "setup" || raisesUseful(id, r.helper, ids))
+            // Saving the picks makes the readiness line name the plan's move.
+            && planReadiness([{ speciesId: id, moves: r.moves }], plan.id).helpers.some((h) => h.moves.includes(r.helper))))
           && (!ids.some(isAttack) || r.moves.some(isAttack))
-          && (!["setup", "status"].includes(plan.id) || r.helper != null || !ids.some((m) => helps(m, plan) && (plan.id !== "setup" || raisesUseful(id, m))));
+          && (!["setup", "status"].includes(plan.id) || r.helper != null || !ids.some((m) => helps(m, plan) && (plan.id !== "setup" || raisesUseful(id, m, ids))));
         if (!ok) bad.push(`#${id} Lv ${lv} ${plan.id}: ${r.moves.join(",")}`);
       }
     }
   }
-  assertEqual(bad.slice(0, 5), [], `${runs} picks: 1–4 distinct moves it has learned, the plan's move first, an attack whenever it knows one, a status move whenever it knows one, and a setup move whenever it knows one that raises its better attacking stat, or Speed when it's slow, and no other setup move`);
+  assertEqual(bad.slice(0, 5), [], `${runs} picks: 1–4 distinct moves it has learned, the plan's move first, an attack whenever it knows one, a status move whenever it knows one, and a setup move whenever it knows one that raises its better attacking stat (and powers an attack it knows), or Speed when it's slow, and no other setup move; saved, the picks make the readiness line name the plan's move`);
 }
 
 finish();

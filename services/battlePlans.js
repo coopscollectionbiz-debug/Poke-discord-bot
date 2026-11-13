@@ -14,7 +14,7 @@
 
 import {
   BATTLE_PLANS, DEFAULT_PLAN, isPlanId, moveRoles, planById, planReadiness,
-  moveHelps, teamWeatherOf, weatherAbility, averageBaseSpeed, isSlow, betterAttackStats, setupSuits,
+  moveHelps, teamWeatherOf, weatherAbility, averageBaseSpeed, isSlow, betterAttackStats, setupSuits, setupMatters,
 } from "../catalog/battlePlans.js";
 import { TEAM_TYPES, MAX_MOVES, learnableMoves } from "./movesets.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
@@ -128,12 +128,14 @@ function planHelper(speciesId, ids, plan, mates, env) {
   const notBrought = (id) => !mates.some((m) => m.moves.includes(id));
   switch (plan.id) {
     case "setup": {
-      // A move that raises the attacking stat it's better at (either, when even),
-      // else, for a slow Pokémon, one that raises Speed. Calm Mind on a physical
-      // attacker raises nothing it hits with, and the AI plays Agility only
-      // against a faster foe, which a fast Pokémon rarely meets.
+      // A move that raises the attacking stat it's better at (either, when even)
+      // when it knows an attack that stat powers, else, for a slow Pokémon, one
+      // that raises Speed. Calm Mind on a physical attacker raises nothing it
+      // hits with, and the AI plays Agility only against a faster foe, which a
+      // fast Pokémon rarely meets.
+      const attacks = ids.filter((id) => getMove(id, env).category !== "Status" && !LEFT_OUT.has(getMove(id, env).drawback));
       const raises = (id, list) => list.some((s) => getMove(id, env).boosts?.[s] > 0);
-      return newest(helping.filter((id) => raises(id, betterAttackStats(speciesId, env))))
+      return newest(helping.filter((id) => raises(id, betterAttackStats(speciesId, env)) && setupMatters(speciesId, id, attacks, env)))
         ?? (isSlow(speciesId, env) ? newest(helping.filter((id) => raises(id, ["spe"]))) : null);
     }
     case "hazards": {
@@ -196,6 +198,13 @@ export function recommendMoves(speciesId, ids, planId, { mates = [], env = proce
     if (picked.length < slots && a.score >= best * NEW_TYPE_SHARE && !picked.some((p) => p.type === a.type)) picked.push(a);
   }
   for (const a of ranked) if (picked.length < slots && !picked.includes(a)) picked.push(a);
+  // A setup move needs a picked attack its raise powers, or the AI never plays
+  // it and the Teams page wouldn't count it (catalog setupMatters): swap that
+  // attack in for the weakest pick.
+  if (plan.id === "setup" && helper && !setupMatters(speciesId, helper, picked.map((a) => a.id), env)) {
+    const powered = ranked.find((a) => !picked.includes(a) && setupMatters(speciesId, helper, [a.id], env));
+    if (powered) picked.splice(picked.indexOf(picked.reduce((low, a) => (a.score < low.score ? a : low))), 1, powered);
+  }
   // Its only attacks are ones usually left out: the best of them beats none.
   if (!picked.length && attacks.length) picked.push(byScore(attacks)[0]);
   const moves = [...(helper ? [helper] : []), ...picked.map((a) => a.id)];

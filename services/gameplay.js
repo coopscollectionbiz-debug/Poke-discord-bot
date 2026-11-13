@@ -30,6 +30,7 @@ import { rollForShiny } from "../shinyOdds.js";
 import { grantCatch } from "../utils/training.js";
 import { canTransformCopy, transformCopy } from "./ownership.js";
 import { canFeed, feedCopy } from "./box.js";
+import { keepMovesOnLevelUp } from "./movesets.js";
 import { spritePaths } from "../spriteconfig.js";
 import { normVariant, isDisplayedVariant, tierKey, shinyEvolveDustCost, SHINY_CRAFT_COST_BY_TIER, ensureWeeklyReset } from "../utils/economyRules.js";
 import { getQuantity, grantItem, consumeItems, runInventoryTransaction, REQUEST_ID_PATTERN } from "./inventory.js";
@@ -344,6 +345,8 @@ export function createGameplayHandlers(deps) {
         const species = user.box[to].id;
         const done = feedCopy(user, { from, to, confirmRev: rev });
         if (!done.ok) throw new Error(`feed: refused after validation (${done.code})`);
+        // New moves are learned, not equipped: teams keep the moves they had.
+        keepMovesOnLevelUp(user, species, user.box[to].shiny ? "shiny" : "normal", { uid: to, fromLevel: done.fromLevel, toLevel: done.toLevel });
         return { ok: true, fed: { speciesId: species, to, gained: done.gained, fromLevel: done.fromLevel, toLevel: done.toLevel } };
       },
     });

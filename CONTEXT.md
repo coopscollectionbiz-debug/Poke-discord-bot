@@ -93,8 +93,16 @@ The animated background an owned Epic, Legendary or Mythic trainer sprite brings
 _Avoid_: aura, glow, trainer background
 
 **Moveset**:
-The up to 4 moves a player picks for one Pokémon on one **Team**, from the moves it has learned by its real **Level**. A Pokémon with none picked uses the last four moves it learned.
+The up to 4 moves a player picks for one Pokémon on one **Team**, from the moves it has learned by its real **Level** or from a **TM**. A Pokémon with none picked uses the last four attacks it learned.
 _Avoid_: move set, loadout
+
+**Battle plan**:
+The strategy a player sets for the **Casual team** or **Ranked team**, such as All-out attack or Trick Room, that decides how that **Team** plays its moves once a fight starts. It suggests **Moveset** changes that suit it but never makes them; only the player does. Computer-run opponents have one too, and theirs does pick their moves. The **Showcase team** has none.
+_Avoid_: strategy, tactic, game plan, playstyle, AI mode
+
+**Ability**:
+A Pokémon's built-in battle trait, such as Levitate or Swift Swim. An ordinary Pokémon fights with whichever of its species' regular abilities best suits its **Team's** **Battle plan**, chosen fresh for each fight; a **Mega form** always has its own. Hidden abilities are never used.
+_Avoid_: trait, passive, skill
 
 **Region**:
 A named set of Pokémon that share a home region: Kanto, Johto, Hoenn, Sinnoh, Unova, Kalos, Alola, Galar, or Paldea. The game's Pokémon data puts every Pokémon in exactly one region, by National Dex number: the Hisui-introduced species #899–905 belong to Galar, and alternate forms (Galarian Meowth, Mega Charizard…) count toward their base species, never as extra Pokémon. Kalos, Alola, Galar and Paldea only appear once their generation is released.

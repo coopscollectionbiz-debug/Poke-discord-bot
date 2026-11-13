@@ -45,6 +45,12 @@ export function acceptStake(challenger, defender, nonce, now) {
   return { ok: true, stake, refunded };
 }
 
+/** Undoes acceptStake when the fight can't run: each player gets `stake` back. */
+export function returnStakes(challenger, defender, stake) {
+  challenger.cc = (challenger.cc ?? 0) + stake;
+  defender.cc = (defender.cc ?? 0) + stake;
+}
+
 export function refundAllPending(trainerData) {
   const refunded = [];
   for (const [userId, user] of Object.entries(trainerData)) {

@@ -18,7 +18,7 @@ import { createFightStore, KEEP_PER_GROUP } from "../utils/fightRecords.js";
 import { liteRecord } from "../services/fightRecordsApi.js";
 
 const players = Number(process.argv[2] ?? 100);
-const { me, records } = fixtureRecords({ days: 30 });
+const { me, records } = await fixtureRecords({ days: 30 });
 
 const bytes = (r) => Buffer.byteLength(JSON.stringify(r));
 const byKind = new Map();

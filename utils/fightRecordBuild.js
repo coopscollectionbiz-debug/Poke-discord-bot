@@ -19,6 +19,7 @@
 // recordFight() wraps a builder so a bug here can never break a fight.
 // ==========================================================
 
+import { gzipSync, gunzipSync } from "zlib";
 import { getMove } from "./battle/data.js";
 import { memberMoves } from "./battle/sim.js";
 import { RANKED } from "./battle/tuning.js";
@@ -26,6 +27,8 @@ import { withMegaStats } from "./battle/runBattle.js";
 import { CHALLENGES, opponentName, displaySprite } from "./challenge/roster.js";
 import { simulateChallenge } from "./challenge/runChallenge.js";
 import { fightRecords, newFightId } from "./fightRecords.js";
+import { simulateAsync, after } from "./battle/simPool.js";
+import { planById } from "../catalog/battlePlans.js";
 
 export const RECORD_VERSION = 1;
 
@@ -50,7 +53,18 @@ export function memberView(m) {
   };
 }
 
-const resultView = (r) => ({
+// Full-sim (v2) results also keep their steps, end status and the raw
+// Showdown log, gzipped (Node's zlib, base64) once it is over RAW_GZIP_OVER
+// bytes. v1 results keep exactly the fields they always had.
+export const RAW_GZIP_OVER = 16 * 1024;
+const rawField = (raw) => {
+  const text = raw.join("\n");
+  return Buffer.byteLength(text) > RAW_GZIP_OVER ? { rawGz: gzipSync(text).toString("base64") } : { raw };
+};
+/** A stored result's raw Showdown log as lines (v2), or [] (v1). */
+export const rawLines = (r) => r.raw ?? (r.rawGz ? gunzipSync(Buffer.from(r.rawGz, "base64")).toString().split("\n") : []);
+
+export const resultView = (r) => ({
   winner: r.winner,
   turns: r.turns,
   endedBy: r.endedBy,
@@ -58,6 +72,7 @@ const resultView = (r) => ({
   log: r.log,
   snapshots: r.snapshots,
   ...(r.turnNotes && { turnNotes: r.turnNotes }),
+  ...(r.v === 2 && { v: 2, steps: r.steps, endStatus: r.endStatus, ...rawField(r.raw ?? []) }),
 });
 
 // EXP rows as the expanded row shows them.
@@ -67,10 +82,13 @@ const expView = (rows) => (rows ?? []).map((g) => ({
   ...(g.megaForm && { megaForm: g.megaForm }),
 }));
 
-const playerSide = (userId, name, trainerData) => ({
+// `plan`: the Battle plan a player's side played (full-sim fights only).
+// The server shows it to that player alone (services/fightRecordsApi.js forViewer).
+const playerSide = (userId, name, trainerData, plan = null) => ({
   id: String(userId),
   name: name || trainerData?.[userId]?.name || "Trainer",
   trainer: trainerData?.[userId]?.displayedTrainer ?? null,
+  ...(planById(plan) && { plan: { id: plan, name: planById(plan).name } }),
 });
 
 const base = (kind, now) => ({ v: RECORD_VERSION, id: newFightId(), at: now.getTime(), kind, group: groupOf(kind) });
@@ -95,7 +113,7 @@ export function battleRecord(outcome, names, trainerData, { now = new Date() } =
     ...base(kind, now),
     season: kind === "casual" ? null : RANKED.season,
     players: ids,
-    sides: ids.map((id) => playerSide(id, names?.[id], trainerData)),
+    sides: ids.map((id, i) => playerSide(id, names?.[id], trainerData, outcome.sides[i].plan)),
     fights: [{
       members: outcome.sides.map((s) => s.members.map(memberView)),
       result: resultView(outcome.result),
@@ -113,29 +131,37 @@ const sameResult = (a, b) => a.winner === b.winner && a.turns === b.turns && JSO
 // The fights are deterministic (seed, frozen team, Revive picks), so the
 // earlier ones are re-run here and accepted only if the re-run reaches
 // the same last fight. Otherwise the earlier fights are marked missing.
+// The re-run uses the engine the run fought on (outcome.engine; runs from
+// before the full sim have none and fought on the legacy engine). A
+// full-sim re-run goes to the sim worker, so this returns a Promise then.
 function runFights(outcome) {
   const full = (f) => !!f.result;
   if (outcome.fights.every(full)) return outcome.fights.map((f) => ({ opponentKey: f.opponentKey, members: f.sides.map((s) => s.members), result: f.result, surge: f.surge }));
   const opponents = CHALLENGES.elite4.opponents.slice(0, outcome.fights.length);
   const last = outcome.fights.at(-1);
-  if (Array.isArray(outcome.runTeam)) {
-    try {
-      const sim = simulateChallenge({
-        team: withMegaStats(outcome.runTeam),
-        opponents,
-        seed: outcome.seed,
-        pick: ({ next }) => outcome.breaks?.[opponents.indexOf(next) - 1]?.slot ?? null,
-      });
-      if (sim.fights.length === outcome.fights.length && sameResult(sim.fights.at(-1).result, last.result)) {
-        return sim.fights.map((f) => ({ opponentKey: f.opponentKey, members: [f.members, f.foes], result: f.result, surge: f.surge }));
-      }
-    } catch (err) {
-      console.warn("⚠️ fight record: E4 re-run failed:", err?.message || err);
-    }
-  }
-  return outcome.fights.map((f) => (full(f)
+  const asRecorded = () => outcome.fights.map((f) => (full(f)
     ? { opponentKey: f.opponentKey, members: f.sides.map((s) => s.members), result: f.result, surge: f.surge }
     : { opponentKey: f.opponentKey, missing: true }));
+  if (!Array.isArray(outcome.runTeam)) return asRecorded();
+  const engine = outcome.engine ?? "legacy";
+  const warn = (err) => { console.warn("⚠️ fight record: E4 re-run failed:", err?.message || err); return asRecorded(); };
+  try {
+    const sim = simulateChallenge({
+      team: withMegaStats(outcome.runTeam),
+      opponents,
+      seed: outcome.seed,
+      plan: outcome.plan,
+      engine,
+      pick: ({ next }) => outcome.breaks?.[opponents.indexOf(next) - 1]?.slot ?? null,
+      ...(engine === "full" && { simulate: (input) => simulateAsync({ ...input, engine }) }),
+    });
+    const settled = after(sim, (s) => (s.fights.length === outcome.fights.length && sameResult(s.fights.at(-1).result, last.result)
+      ? s.fights.map((f) => ({ opponentKey: f.opponentKey, members: [f.members, f.foes], result: f.result, surge: f.surge }))
+      : asRecorded()));
+    return typeof settled?.then === "function" ? settled.catch(warn) : settled;
+  } catch (err) {
+    return warn(err);
+  }
 }
 
 /** A Challenge (Gym, Elite Four run, Blue, Red) from its final outcome. */
@@ -143,7 +169,11 @@ export function challengeRecord(outcome, playerName, trainerData, { now = new Da
   const challenge = CHALLENGES[outcome.key];
   const userId = String(outcome.userId);
   const byKey = Object.fromEntries(challenge.opponents.map((o) => [o.key, o]));
-  const fights = runFights(outcome).map((f) => {
+  return after(runFights(outcome), (ran) => challengeRecordFrom(outcome, playerName, trainerData, now, challenge, userId, byKey, ran));
+}
+
+function challengeRecordFrom(outcome, playerName, trainerData, now, challenge, userId, byKey, ran) {
+  const fights = ran.map((f) => {
     const foe = foeOf(byKey[f.opponentKey]);
     if (f.missing) return { foe, missing: true };
     return { foe, members: f.members.map((side) => side.map(memberView)), result: resultView(f.result), surge: f.surge ?? null };
@@ -157,7 +187,7 @@ export function challengeRecord(outcome, playerName, trainerData, { now = new Da
     season: null,
     players: [userId],
     sides: [
-      playerSide(userId, playerName, trainerData),
+      playerSide(userId, playerName, trainerData, outcome.engine === "full" ? outcome.plan : null),
       { id: null, key: outcome.key, name: challenge.kind === "elite4" ? "Elite Four" : opponentName(lead), trainer: displaySprite(lead) ?? null },
     ],
     fights,
@@ -184,7 +214,7 @@ export function encounterRecord(outcome, playerName, trainerData, { now = new Da
     season: null,
     players: [userId],
     sides: [
-      playerSide(userId, playerName, trainerData),
+      playerSide(userId, playerName, trainerData, outcome.sides[0].plan),
       { id: null, key: t.classKey, name: `${t.title} ${t.name}`, trainer: t.spriteFile ?? null },
     ],
     fights: [{
@@ -202,10 +232,14 @@ export function encounterRecord(outcome, playerName, trainerData, { now = new Da
  * a failed build or write only logs a warning, so the fight stands.
  */
 export function recordFight(build, { store = fightRecords } = {}) {
-  try {
-    return store.add(build());
-  } catch (err) {
+  const failed = (err) => {
     console.warn("⚠️ fight record build failed:", err?.message || err);
-    return Promise.resolve(false);
+    return false;
+  };
+  try {
+    const record = build(); // a Promise when an Elite Four re-run used the sim worker
+    return typeof record?.then === "function" ? record.then((r) => store.add(r)).catch(failed) : store.add(record);
+  } catch (err) {
+    return Promise.resolve(failed(err));
   }
 }

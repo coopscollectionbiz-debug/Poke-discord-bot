@@ -403,14 +403,14 @@ export function onAnyFaint(fx, fainted) {
 // ----------------------------------------------------------
 // The battle loop for battles with effects (mirrors sim.js's legacy loop)
 // ----------------------------------------------------------
-export function prepareBattler(mon, moveIds, name) {
+export function prepareBattler(mon, moveIds, name, env = process.env) {
   mon.ability ??= null;
   mon.types = [...mon.types];
   mon.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 };
   mon.status = null;
   mon.flashFire = false;
   mon.itemUsed = false; // once-per-battle items reset every battle
-  mon.moves = moveIds.map((id) => withFlags(getMove(id), id));
+  mon.moves = moveIds.map((id) => withFlags(getMove(id, env), id));
   mon.name ??= name ?? `#${mon.speciesId}`;
   return mon;
 }

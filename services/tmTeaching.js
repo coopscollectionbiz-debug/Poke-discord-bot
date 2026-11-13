@@ -22,7 +22,7 @@ import { getCatalogItem } from "../catalog/items.js";
 import { getQuantity, consumeItem } from "./inventory.js";
 import { canLearnByTm, moveIdForTmItem } from "../utils/battle/tmData.js";
 import { getSpecies } from "../utils/battle/data.js";
-import { autoMoveset } from "../utils/battle/moveset.js";
+import { defaultMoves } from "./fullSimCutover.js";
 import { getTraining } from "../utils/training.js";
 import { isTmEnabled } from "../config/tmFeatures.js";
 import { learnableMoves, chosenMoves, setMoveset, moveInfo, MAX_MOVES, TEAM_TYPES } from "./movesets.js";
@@ -41,9 +41,9 @@ function slotOf(user, team, id, variant, uid) {
   return i < 0 ? null : i + 1;
 }
 
-/** The moves this copy battles with on `team` now (its selection, else automatic). */
+/** The moves this copy battles with on `team` now (its selection, else automatic; full sim: as recorded at cutover). */
 function effectiveMoves(user, team, id, variant, uid) {
-  return chosenMoves(user, team, id, variant, { uid }) ?? autoMoveset(id, (uid && copyTraining(user, uid)?.level) ?? getTraining(user, id, variant).level);
+  return chosenMoves(user, team, id, variant, { uid }) ?? defaultMoves(user, { id, variant, uid }, (uid && copyTraining(user, uid)?.level) ?? getTraining(user, id, variant).level);
 }
 
 /** Teams the target copy is on → { team: { slot, moves } }. */

@@ -19,7 +19,7 @@
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { GifReader } from "omggif";
 import { pickFrameTurns } from "./render.js";
-import { PLAYBACK, CUTE } from "./tuning.js";
+import { PLAYBACK, CUTE, FULL_SIM } from "./tuning.js";
 import { teamCuteness } from "./cuteness.js";
 import { trainingKey } from "../training.js";
 import { CHALLENGES, opponentName, displaySprite } from "../challenge/roster.js";
@@ -129,6 +129,24 @@ function header(outcome) {
   return `${intro}\n🔥 The crowd is behind ${underdog}! Underdog surge!`;
 }
 
+/** How many updates a replay gets: more for a full-sim (v2) result. */
+export const updatesFor = (result) => (result?.v === 2 ? FULL_SIM.maxUpdates : PLAYBACK.maxUpdates);
+
+/**
+ * The slot in front on each side as turn `turn` starts. A full-sim result
+ * says so in its switch steps (U-turn, drags, replacements); in today's
+ * results the first Pokémon with HP left is always in front.
+ */
+export function activeAt(result, turn) {
+  const firstUp = (row) => row.findIndex((h) => h > 0);
+  if (!result.steps) return result.snapshots[turn - 1].map(firstUp);
+  const active = result.snapshots[0].map(firstUp);
+  const before = [...result.steps.slice(0, turn - 1).flat()];
+  for (const s of result.steps[turn - 1] ?? []) { if (s.kind === "move") break; before.push(s); }
+  for (const s of before) if (s.kind === "switch") active[s.side] = s.slot;
+  return active;
+}
+
 // First come, first served: at most `limit` holders at once. acquire()
 // resolves to a release function; while waiting, onPlace(n) hears the
 // caller's place in line each time it changes (1 = next).
@@ -221,9 +239,11 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
   try {
     let shown = 0;
     // A fight lost before anyone moves (0 turns) goes straight to the result.
-    for (const turn of total ? pickFrameTurns(total, maxUpdates) : []) {
+    const updates = fight.result.v === 2 ? Math.max(maxUpdates, FULL_SIM.maxUpdates) : maxUpdates;
+    for (const turn of total ? pickFrameTurns(total, updates) : []) {
       const badge = turn - shown > 1 ? `TURNS ${shown + 1}–${turn}` : `TURN ${turn}`;
-      const file = await paced(() => image(turn, { hpBefore: snapshots[turn - 1], events: log[turn - 1], badge }), wait);
+      const active = fight.result.steps ? { active: activeAt(fight.result, turn) } : {}; // today's results: first with HP left
+      const file = await paced(() => image(turn, { hpBefore: snapshots[turn - 1], events: log[turn - 1], badge, ...active }), wait);
       wait = delayMs;
       await message.edit({ files: [file] });
       shown = turn;

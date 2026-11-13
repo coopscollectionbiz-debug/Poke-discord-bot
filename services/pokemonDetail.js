@@ -10,7 +10,8 @@
 import { getSpeciesEntry, isGenerationLive } from "../utils/speciesCatalog.js";
 import { getSpecies, getMove, TYPE_ID_TO_NAME } from "../utils/battle/data.js";
 import { computeStats } from "../utils/battle/stats.js";
-import { autoMoveset, movesLearned } from "../utils/battle/moveset.js";
+import { movesLearned } from "../utils/battle/moveset.js";
+import { defaultMoves } from "./fullSimCutover.js";
 import { getTraining } from "../utils/training.js";
 import { slotView } from "../utils/render/teamView.js";
 import { displaySpeciesName } from "../utils/render/names.js";
@@ -95,7 +96,7 @@ export function pokemonDetail(user, speciesId, { env = process.env } = {}) {
       power: v.statTotal,
       stats50,
       power50: sum(stats50),
-      moves: species ? autoMoveset(id, level).map(moveInfo) : [], // the automatic moveset (slotView uses the same function)
+      moves: species ? defaultMoves(user, { id, variant }, level).map(moveInfo) : [], // the moves it fights with when none are picked (slotView agrees)
       // Chosen movesets per team (null = automatic) and every move it may equip.
       movesets: {
         display: chosenMoves(user, "display", id, variant)?.map(movesetMoveInfo) ?? null,
@@ -114,7 +115,7 @@ export function pokemonDetail(user, speciesId, { env = process.env } = {}) {
         uid: c.uid,
         level: c.level,
         trained: c.trained,
-        moves: autoMoveset(id, c.level).map(moveInfo),
+        moves: defaultMoves(user, { id, variant, uid: c.uid }, c.level).map(moveInfo),
         nextMoves: movesLearned(id, c.level, Math.min(100, c.level + 20)).map(moveInfo),
         learnable: learnableMoves(user, id, variant, { uid: c.uid }).map((m) => ({ ...movesetMoveInfo(m.id), learnedAt: m.learnedAt, source: m.source })),
         movesets: {

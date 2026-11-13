@@ -50,7 +50,7 @@ async function postMoveset(userId, team, s, moves) {
  * Open the editor for copy `s` ({ id, variant, name }) on team `team`.
  * onSaved(): called after a successful save (the page re-renders).
  */
-export async function openMovesEditor({ userId, team, s, name, onSaved, onTaught }) {
+export async function openMovesEditor({ userId, team, s, name, suggested = [], onSaved, onTaught }) {
   lastFocus = document.activeElement;
   saving = false;
   ensureDialog();
@@ -81,6 +81,9 @@ export async function openMovesEditor({ userId, team, s, name, onSaved, onTaught
   const other = copy.movesets?.[OTHER[team]];
   // Start from this team's moveset, else the automatic one it battles with now.
   let picked = (chosen ?? copy.moves).map((m) => m.id).filter((id) => copy.learnable.some((l) => l.id === id));
+  // Full sim: moves picked before the switch that its learnset no longer
+  // teaches still fight until this Moveset is saved again.
+  const kept = (chosen ?? []).filter((m) => !copy.learnable.some((l) => l.id === m.id));
 
   const draw = () => {
     const full = picked.length >= MAX;
@@ -91,6 +94,7 @@ export async function openMovesEditor({ userId, team, s, name, onSaved, onTaught
         <button type="button" class="tm-ib" data-close aria-label="Close">✕</button>
       </div>
       <div class="tm-moves-picked" aria-live="polite"><b>${picked.length}/${MAX}</b> ${picked.map((id) => `<span class="tm-movechip">${esc(copy.learnable.find((l) => l.id === id)?.name ?? id)}</span>`).join("") || "<span class=\"tm-sub\">No moves picked</span>"}</div>
+      ${kept.length ? `<p class="tm-sub tm-moves-kept">${esc(kept.map((m) => m.name ?? m.id).join(", "))} can't be picked again. ${kept.length === 1 ? "It stays" : "They stay"} until you save new moves.</p>` : ""}
       <div class="tm-moves-tools">
         ${d.tm?.enabled ? `<button type="button" class="cc-btn" data-teach>Teach a TM</button>` : ""}
         ${other ? `<button type="button" class="cc-btn" data-copy>Copy from ${esc(LABEL[OTHER[team]])}</button>` : ""}
@@ -101,7 +105,7 @@ export async function openMovesEditor({ userId, team, s, name, onSaved, onTaught
           const on = picked.includes(m.id);
           return `<li><label class="tm-move${on ? " is-on" : ""}${!on && full ? " is-full" : ""}">
             <input type="checkbox" value="${esc(m.id)}"${on ? " checked" : ""}${!on && full ? " disabled" : ""}>
-            <span class="tm-move-name">${esc(m.name)}${moveMeta(m, { extra: [m.source === "tm" ? "TM" : m.learnedAt ? `Lv ${m.learnedAt}` : ""] })}</span>
+            <span class="tm-move-name">${esc(m.name)}${moveMeta(m, { extra: [m.source === "tm" ? "TM" : m.learnedAt ? `Lv ${m.learnedAt}` : "", suggested.includes(m.id) ? "Suggested" : ""] })}</span>
           </label></li>`;
         }).join("")}
       </ul>

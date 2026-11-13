@@ -43,6 +43,7 @@ const REFUSALS = {
   no_team: "None of the Pokémon on this card are yours anymore.",
   run_open: "Finish your Elite Four run first.",
   pending_wager: "Finish your pending wager first.",
+  fight_failed: "The battle couldn't run. Try again.",
 };
 
 const n = (x) => x.toLocaleString("en-US");
@@ -191,9 +192,18 @@ export function createEncounterService({
     // command's save; Discord fails a click left unanswered for 3 s. After
     // this, the buttons go with editReply and private replies are followUps.
     await i.deferUpdate().catch(() => {});
-    const outcome = await lockUser(e.userId, () => {
+    const outcome = await lockUser(e.userId, async () => {
       const trainerData = getTrainerData();
-      const result = fightEncounter({ trainerData, userId: e.userId, encounter: { team: chosen.team, trainer: chosen.trainer, pick }, seed: e.seed + 1, now: now() });
+      // Awaited under the lock: a Promise from the sim worker under the full sim.
+      let result;
+      try {
+        result = await fightEncounter({ trainerData, userId: e.userId, encounter: { team: chosen.team, trainer: chosen.trainer, pick }, seed: e.seed + 1, now: now() });
+      } catch (err) {
+        // The full sim's worker can fail a fight (crash, out of memory). Nothing
+        // changed, so the card stays open and can be fought again.
+        console.warn("⚠️ encounter fight failed:", err?.message || err);
+        return { ok: false, reason: "fight_failed" };
+      }
       if (result.ok) enqueueSave(trainerData);
       return result;
     });

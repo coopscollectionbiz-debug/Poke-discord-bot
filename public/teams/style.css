@@ -112,6 +112,16 @@
 .tm-notice { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cc-gold); background: var(--cc-gold-soft); }
 .tm-notice p { margin: 0; flex: 1 1 240px; color: var(--cc-text); font-size: 13.5px; }
 
+/* Battle plan row (full sim): the Team's plan, what it does, and its readiness. */
+.tm-plan { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; align-items: center; margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cc-line); background: var(--cc-surface-sunken); }
+.tm-plan-label { font-weight: 800; font-size: 13.5px; color: var(--cc-text); }
+.tm-plan-select { min-height: 44px; min-width: 0; max-width: 100%; border-radius: 10px; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text); font-weight: 700; padding: 0 10px; }
+.tm-plan-select:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--cc-ring-blue); }
+.tm-plan-blurb, .tm-plan-ready { grid-column: 1 / -1; margin: 0; }
+.tm-plan-ready { font-size: 13.5px; font-weight: 700; color: var(--cc-red); }
+.tm-plan-ready.is-ready { color: var(--cc-green); }
+.tm-moves-kept { padding: 0 16px; margin: 0 0 8px; }
+
 
 /* ---------- Box ---------- */
 .tm-boxbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }

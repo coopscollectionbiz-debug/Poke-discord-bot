@@ -104,17 +104,18 @@ section("A one-Pokémon Team");
 {
   // Challenges have no Underdog surge. With /battle's surge, a Team of one
   // surged to Lv 100 and beat every Gym through Blaine (the spec's Measured
-  // section has the numbers); now it fights at its own Level.
+  // section has the numbers); now it fights at its own Level, which
+  // tests/runChallenge.test.js checks. This is a measurement, not a rule: a
+  // Pokémon strong enough, with the right type matchup, can win alone
+  // (owner decision, 2026-11-12).
   const lone = [{ speciesId: 6, variant: "normal", level: 30 }];
-  const rates = CHALLENGE_KEYS.map((key) => {
+  for (const key of CHALLENGE_KEYS) {
     let wins = 0;
     for (let i = 0; i < N; i++) {
       if (simulateChallenge({ team: lone, opponents: CHALLENGES[key].opponents, seed: simSeed(i) }).cleared) wins++;
     }
     console.log(`  ${CHALLENGES[key].label.padEnd(10)} lone Lv 30 Charizard wins ${Math.round((100 * wins) / N)}%`);
-    return wins / N;
-  });
-  assertTrue(rates.every((r) => r === 0), "a lone Lv 30 Charizard never clears a challenge");
+  }
 }
 
 section("Leveling pace");

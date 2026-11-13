@@ -88,6 +88,8 @@ const MEGA_USERS = [
   "services/megaUnlocks.js", "utils/megas.js", "utils/userSchema.js", "public/picker-pokemon/script.js", "public/picker-pokemon/mega.js",
   // Phase M2: the battle engine (Mega participants, abilities, rendering).
   "utils/battle/runBattle.js", "utils/battle/sim.js", "utils/battle/effects.js", "utils/battle/abilities.js", "utils/battle/power.js", "utils/battle/render.js",
+  // Full sim: a Mega slot's set fights as its Showdown forme (showdownName).
+  "utils/battle/showdown/sets.js",
   // Phase M3: presentation only (shared Mega display rules, Mega sprite files, the EXP card).
   "utils/megaDisplay.js", "utils/render/sprites.js", "utils/render/expCard.js",
   // Teams: the Battle team reuses team validation and cleaning (one Mega per team).

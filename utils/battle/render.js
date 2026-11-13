@@ -401,7 +401,7 @@ function frameState(f, { hpBefore, events }) {
  *   the center pill, or null), award: { screen, badgeFile, title } on the
  *   text screen at index `screen`, or null }
  */
-export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], tiers = [null, null], theme = null, clockMs = 0, env = process.env }) {
+export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], tiers = [null, null], theme = null, clockMs = 0, env = process.env, active: inFront = null }) {
   const fx = cardTrainerFx(env);
   const fitted = pokemonLoopFit(env);
   const clock = fitted ? clockMs : 0;
@@ -420,7 +420,8 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
   const gray = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>
     (hpBefore[s][i] > 0 && faints(s, i) ? load(s, i, "grayscale") : null)))));
   // The fighting pair: each side's first Pokémon still standing (as in the sim).
-  const active = winnerSide === null ? hpBefore.map((row) => row.findIndex((f) => f > 0)) : [-1, -1];
+  // inFront: who's in front (full sim, after a U-turn or a drag); otherwise the first with HP left.
+  const active = winnerSide === null ? inFront ?? hpBefore.map((row) => row.findIndex((f) => f > 0)) : [-1, -1];
   const cached = (key, load) => {
     if (!sprites.has(key)) sprites.set(key, load());
     return sprites.get(key);

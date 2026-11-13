@@ -64,6 +64,12 @@ From `node tools/measure-fight-record.js 100`, run 2026-11-12 on 228 records bui
 
 **Still open:** how many players actually fight, which sets the real file size. Count players with any `battle`, `casual`, `challenge` or `encounter` record in `/srv/pokebot/data/trainerData.json` on the VPS, then multiply by the per-player figure above.
 
+## Full-sim records (v2 results)
+
+Fights on the full sim (`FULL_SIM_ENABLED`) store a v2 `result`: today's fields (`winner`, `turns`, `endedBy`, `knockouts`, `log`, `snapshots`) plus `v: 2`, `steps` (per turn: move, hp, switch, status, faint, note), `endStatus`, and the raw Showdown log as `raw`, or `rawGz` (gzip, base64) once it's over 16 KB (`utils/fightRecordBuild.js`). Both replayers read the v1 fields, so v1 and v2 records replay through the same code; v2 narration rides in each hit's `preNotes` and `notes`. The records list (`liteRecord`) leaves the turn-by-turn fields out. Each player's side of a full-sim fight keeps `plan: { id, name }`, the Battle plan it played, and the page names it in the expanded row and the replay's first caption. A Battle's record is stored once, and the API removes the other side's Battle plan before it sends one (`forViewer`, `services/fightRecordsApi.js`).
+
+From `FULL_SIM_ENABLED=1 node tools/measure-fight-record.js 100` (2026-11-12, synthetic players): medians casual 16.6 KB, ranked 18.6 KB, gym 8.3 KB, encounter 14.8 KB, wager 18.1 KB, Elite Four 50.1 KB; 100 players at the cap at most 205.3 MB; one player's list read in 19.2 ms with a 426 KB lite payload.
+
 ## Implementation notes
 
 - Store: `utils/fightRecords.js`. The file is `fight-records.ndjson` in `TRAINERDATA_DIR`, with an in-memory index of byte offsets. Every read and write goes through one queue. A compaction runs once dead lines outnumber live ones (and there are at least 200).

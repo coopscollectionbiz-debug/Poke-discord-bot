@@ -19,7 +19,7 @@ import { vsSide, battleVsAltText } from "../utils/render/battleVsCard.js";
 import { trainerTier, cardTrainerFx } from "../utils/render/trainerTier.js";
 import { playBattle, expSummary } from "../utils/battle/playback.js";
 import { teamPower } from "../utils/battle/power.js";
-import { offerWager, attachMessage, refundWager, acceptStake } from "../utils/battle/wager.js";
+import { offerWager, attachMessage, refundWager, acceptStake, returnStakes } from "../utils/battle/wager.js";
 import { WAGER, PLAYBACK } from "../utils/battle/tuning.js";
 import { peekNotices, clearNotices, NOTICE_KINDS } from "../services/notices.js";
 import { expView } from "../utils/render/expCard.js";
@@ -176,7 +176,8 @@ async function executeBattle(interaction, trainerData, lockUser, enqueueSave) {
   const seed = randomInt(0, 2 ** 31 - 1);
   const outcome = await withBothLocks(lockUser, challengerId, opponent.id, async () => {
     const before = vsRecords(trainerData, [challengerId, opponent.id], mode); // for the VS card
-    const out = runBattle({ trainerData, challengerId, defenderId: opponent.id, mode, seed });
+    // Awaited under the locks: a Promise from the sim worker under the full sim.
+    const out = await runBattle({ trainerData, challengerId, defenderId: opponent.id, mode, seed });
     if (out.ok) out.vsRecords = before;
     // Results are applied and saved before the replay, so a failed or slow
     // replay never changes them. (A hard crash before the next Discord backup
@@ -318,9 +319,18 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
       const accepted = acceptStake(live(), trainerData[defenderId], nonce, Date.now());
       if (!accepted.ok) return { error: accepted.reason };
       const before = vsRecords(trainerData, [challengerId, defenderId], "wager"); // for the VS card
-      const out = runBattle({
-        trainerData, challengerId, defenderId, mode: "wager", stake: accepted.stake, seed: randomInt(0, 2 ** 31 - 1),
-      });
+      let out;
+      try {
+        out = await runBattle({
+          trainerData, challengerId, defenderId, mode: "wager", stake: accepted.stake, seed: randomInt(0, 2 ** 31 - 1),
+        });
+      } catch (err) {
+        // The full sim's worker can fail a fight (crash, out of memory): the Stakes are already taken, so give them back.
+        console.warn("⚠️ wager fight failed:", err?.message || err);
+        returnStakes(live(), trainerData[defenderId], accepted.stake);
+        await save();
+        return { canceled: "fight_failed" };
+      }
       if (out.ok) out.vsRecords = before;
       await save();
       return out;
@@ -332,6 +342,7 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
       return i.followUp({ content: text, flags: MessageFlags.Ephemeral });
     }
     collector.stop("answered");
+    if (outcome.canceled === "fight_failed") return closeOffer("Wager canceled. The fight couldn't run, so both Stakes are refunded.");
     if (outcome.canceled) {
       const why = outcome.canceled === "team_changed" ? `<@${challengerId}>'s Team got stronger since the offer`
         : outcome.canceled.startsWith("no_team") ? "a Team is empty" : "one of you is out of battles";

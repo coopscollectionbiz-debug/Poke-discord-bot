@@ -175,7 +175,7 @@ async function expand(li) {
       <div class="br-actions"><button type="button" class="cc-btn cc-btn--primary" data-watch>▶ Watch</button></div>
       ${fightsHtml(r, p)}
       <div class="br-tables">
-        ${teamTable(`${p.me?.name ?? "You"}`, p.team, { kos: p.kos, dmg: damageBySlot(r, p.mine) })}
+        ${teamTable(`${p.me?.name ?? "You"}${p.plan ? ` · ${p.plan}` : ""}`, p.team, { kos: p.kos, dmg: damageBySlot(r, p.mine) })}
         ${lastFight ? teamTable(lastFight.foe?.name ?? p.foe?.name ?? "Opponent", lastFight.members[p.theirs], {
           kos: lastFight.members[p.theirs].map((_, i) => lastFight.result.knockouts.filter((k) => k.bySide === p.theirs && k.bySlot === i).length),
           dmg: r.fights.length > 1 ? [] : damageBySlot(r, p.theirs),

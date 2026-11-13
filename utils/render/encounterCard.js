@@ -24,6 +24,7 @@ import { drawHalves, drawVs, drawTeamGrid } from "./challengeCard.js";
 import { spriteStage } from "./stage.js";
 import { trainerTier, cardTrainerFx } from "./trainerTier.js";
 import { backdropTint, hasBackdrop } from "./trainerBackdrop.js";
+import { trainerLight } from "./auraArt.js";
 import { placeTrainer, occupancy, halfBackdrop } from "./vsField.js";
 
 export const ENCOUNTER_CARD_SIZE = Object.freeze({ w: 1200, h: 600 });
@@ -166,7 +167,7 @@ export async function renderEncounterCard(v, { animate = false, env = process.en
   const slots = await encounterSlots(v);
   const tint = fx ? backdropTint(v.player.tier) : null;
   const look = fx && hasBackdrop(v.player.tier) ? v.player.tier : null; // a tint is optional
-  const player = await placeTrainer(f, stage, { file: v.player.trainerFile, cx: slots.player.cx, floor: slots.player.floor, box: BOX, tint, idle: fx });
+  const player = await placeTrainer(f, stage, { file: v.player.trainerFile, cx: slots.player.cx, floor: slots.player.floor, box: BOX, tint, idle: fx, light: look ? trainerLight(look) : null });
   if (!player) noTrainer(f, slots.player.cx, slots.player.floor);
   await drawTeamGrid(f, v.player.team, 348, 96, stage);
   const trainer = await drawEncounterTrainer(f, v, slots, stage, fx);

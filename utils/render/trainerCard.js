@@ -14,6 +14,7 @@ import { createCanvas as makeCanvas } from "@napi-rs/canvas";
 import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadBadgeSprite, loadPlaceholder, spriteScale } from "./sprites.js";
 import { spriteStage, FRAMES } from "./stage.js";
 import { createBackdrop, hasBackdrop, drawTierSky } from "./trainerBackdrop.js";
+import { trainerLight } from "./auraArt.js";
 import { poseAtFrame } from "../trainerIdle.js";
 import { trainersAnimated } from "../trainerAssets.js";
 import { buildTeamView, buildShowcaseView } from "./teamView.js";
@@ -163,7 +164,7 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
     const idle = await loadTrainerPoses(v.trainerFile);
     const box = { w: LEFT_W - 40, h: 330, floor: floor + 6, scale: 4 };
     if (fancy) trainerBackdrop(ctx, stage, { tier: look, sprite: t, cx, box, panel: { x: M, y: M, w: LEFT_W }, floor });
-    stage.placePosed(ctx, idle?.poses ?? [t], idle?.poseAt ?? poseAtFrame, cx, box.floor, box.w, box.h, { scale: box.scale });
+    stage.placePosed(ctx, idle?.poses ?? [t], idle?.poseAt ?? poseAtFrame, cx, box.floor, box.w, box.h, { scale: box.scale, light: fancy ? trainerLight(look) : null });
   } else { ctx.globalAlpha = 0.35; drawBall(ctx, cx, floor - 70, 40, false); ctx.globalAlpha = 1; }
   ctx.textAlign = "center";
   ctx.font = font(15, 800);

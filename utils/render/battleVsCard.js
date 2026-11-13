@@ -18,6 +18,7 @@ import { drawHalves, drawVs, drawTeamGrid } from "./challengeCard.js";
 import { spriteStage } from "./stage.js";
 import { cardTrainerFx } from "./trainerTier.js";
 import { backdropTint, hasBackdrop } from "./trainerBackdrop.js";
+import { trainerLight } from "./auraArt.js";
 import { placeTrainer, occupancy, halfBackdrop } from "./vsField.js";
 
 export const BATTLE_VS_SIZE = Object.freeze({ w: 1200, h: 640 });
@@ -147,7 +148,8 @@ export async function renderBattleVsCard(v, { animate = false, env = process.env
   const placed = [];
   for (const [i, s] of v.sides.entries()) {
     const slot = SLOTS[i];
-    const t = await placeTrainer(f, stage, { file: s.trainerFile, cx: slot.cx, floor: FLOOR, box: BOX, tint: tints[i], idle: fx, env });
+    const light = looks[i] ? trainerLight(looks[i], { mirror: i === 1, env }) : null;
+    const t = await placeTrainer(f, stage, { file: s.trainerFile, cx: slot.cx, floor: FLOOR, box: BOX, tint: tints[i], idle: fx, light, env });
     if (!t) noTrainer(f, slot.cx);
     placed.push(t);
     await drawTeamGrid(f, s.team, ...slot.grid, stage);

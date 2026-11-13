@@ -18,6 +18,7 @@ import { fileURLToPath } from "url";
 import { loadTrimmedTrainerSprite, loadTrimmedTrainerPoses, loadBadgeSprite } from "../render/sprites.js";
 import { drawSparkle, drawTypeChip, drawSoftPlatform } from "../render/primitives.js";
 import { regionBackdrop, backdropTint, hasBackdrop, drawTierSky } from "../render/trainerBackdrop.js";
+import { trainerLight } from "../render/auraArt.js";
 import { cardTrainerFx } from "../render/trainerTier.js";
 import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
@@ -431,8 +432,10 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
   // The trainers idle (trimmed to the box all their poses fit, like the still).
   const idles = await Promise.all(trainers.map((f) => (f && fx ? cached(`trainer-idle/${f}`, () => loadTrimmedTrainerPoses(f, { env })) : null)));
   const tints = tiers.map((t) => (fx ? backdropTint(t) : null));
-  // Whether each row has a backdrop (a tint is optional: an art Aura without one still draws).
+  // Whether each row has a backdrop (a tint is optional: an art Aura without one still draws),
+  // and its trainer lighting. Rows are never mirrored: both trainers stand at the left.
   const looks = tiers.map((t) => (fx && hasBackdrop(t) ? t : null));
+  const lights = looks.map((t) => (t ? trainerLight(t, { env }) : null));
   const badgeIcon = (f) => (f ? cached(`badge/${f}`, () => loadBadgeSprite(f)) : null);
   const pillIcon = await badgeIcon(theme?.badgeFile);
   const awardIcon = await badgeIcon(theme?.award?.badgeFile);
@@ -479,7 +482,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
       ctx.stroke();
 
       drawPortraitBack(ctx, s, rowColor(s), tints[s], Boolean(looks[s]));
-      if (!(idles[s]?.poses?.length > 1)) drawPortraitSprite(ctx, s, portraits[s]);
+      if (!(idles[s]?.poses?.length > 1) && !lights[s]) drawPortraitSprite(ctx, s, portraits[s]);
 
       // Nameplate: trainer name and the opponent's type (challenges); the
       // balls after them change, so they are drawn per frame.
@@ -559,8 +562,9 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
       // On the replay's clock, like the sprites, so they don't restart each update.
       const f100 = Math.floor(ms / ANIMATION.delayMs);
       rowBackdrops[s]?.draw(ctx, f100);
-      const idle = idles[s];
-      if (idle?.poses?.length > 1) drawPortraitSprite(ctx, s, idle.poses[idle.poseAt(f100 % 24, 24)] ?? idle.poses[0]);
+      const idle = idles[s], light = lights[s];
+      const pose = idle?.poses?.length > 1 ? idle.poses[idle.poseAt(f100 % 24, 24)] ?? idle.poses[0] : light ? portraits[s] : null;
+      if (pose) drawPortraitSprite(ctx, s, light ? light(pose, f100 % 24) : pose);
     }
 
     for (let s = 0; s < 2; s++) {

@@ -3,6 +3,7 @@
 //   • the opponent's VS half shows its art mirrored (placement and motion, once)
 //   • an Aura without a tint still draws on VS cards and battle playback
 //   • back.png's feet row lands on the trainer's feet (the coordinate contract)
+//   • trainer lighting: off by default, validated, follows the pose, mirrored
 //   • every sheet plays once per 2.4 s loop
 //   • backdrop, trainer pose and composite closure, kept apart
 // Synthetic sheets with marker pixels, written to a temp folder.
@@ -31,13 +32,13 @@ function writeArt(id, meta, { frames = 24 } = {}) {
   fs.writeFileSync(path.join(d, "aura.json"), JSON.stringify({ id, name: id, frames, layers: { back: "back.png", vs: "vs.png", row: "row.png" }, ...meta }));
 }
 writeArt("gymBlaine", {}); // no tint, no palette, no light
-writeArt("e4Lorelei", { tint: "#9ab9e4" });
+writeArt("e4Lorelei", { tint: "#9ab9e4", light: { color: "#ffeec0", from: [-1, -0.6], strength: 1 } });
 // 48 frames: sheet frame k carries marker x = k (back.png row 10)
 writeArt("milestoneShiny25", { tint: "#e0c48c" }, { frames: 48 });
 
-const { loadAuraArt, resetAuraArtForTesting } = await import("../utils/render/auraArt.js");
+const { loadAuraArt, trainerLight, resetAuraArtForTesting } = await import("../utils/render/auraArt.js");
 const { hasBackdrop, backdropTint, createBackdrop, regionBackdrop } = await import("../utils/render/trainerBackdrop.js");
-const { sheetFrame, auraFrameAt, AURA_LOOP_MS, BACK_FEET_FROM_BOTTOM } = await import("../public/shared/auraArt.js");
+const { normalizeLight, lightPose, sheetFrame, auraFrameAt, AURA_LOOP_MS, BACK_FEET_FROM_BOTTOM } = await import("../public/shared/auraArt.js");
 const { renderBattleVsCard, vsSide } = await import("../utils/render/battleVsCard.js");
 const { renderBattleFrame } = await import("../utils/battle/render.js");
 const { loadTrainerPoses } = await import("../utils/render/sprites.js");
@@ -119,6 +120,37 @@ section("Anchoring: back.png's feet row on the trainer's feet");
   if (feet.length) assertEqual(Math.min(...feet), solesY, "…starting exactly at the bottom edge of the trainer's feet");
 }
 
+section("Lighting: optional, validated, pose-following, mirrored");
+{
+  assertEqual(normalizeLight(undefined), null, "no light key: no lighting");
+  for (const bad of [{ color: "red" }, { color: "#fff000", from: [0, 0] }, { color: "#fff000", from: "above" }, { color: "#fff000", strength: [1, 2] }, { color: "#fff000", strength: 2 }])
+    assertTrue((() => { try { normalizeLight(bad); return false; } catch { return true; } })(), `rejects ${JSON.stringify(bad)}`);
+  const L = normalizeLight({ color: "#ffffff", from: [-1, 0], strength: 1 });
+  assertEqual(L.strength.length, 24, "a single strength becomes a 24-frame track");
+  assertEqual(trainerLight("art:gymBlaine"), null, "an Aura without light: trainers are drawn untouched (default off)");
+  assertEqual(trainerLight("legendary"), null, "tier Auras never light the trainer");
+  // a 9×9 block: dark outline ring, mid-grey inside
+  const w = 9, h = 9, rgba = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const o = (y * w + x) * 4, edge = x === 0 || y === 0 || x === w - 1 || y === h - 1; rgba.set(edge ? [10, 10, 10, 255] : [100, 60, 60, 255], o); }
+  const out = lightPose(rgba, w, h, L, 1), outM = lightPose(rgba, w, h, L, 1, { mirror: true });
+  const at = (a, x, y) => [...a.slice((y * w + x) * 4, (y * w + x) * 4 + 3)];
+  assertTrue(at(out, 1, 6)[0] > 100 && at(out, 7, 6)[0] === 100, "light from the left brightens the pixel inside the left outline, not the right");
+  assertTrue(at(outM, 7, 6)[0] > 100 && at(outM, 1, 6)[0] === 100, "mirrored: the right side lights instead");
+  assertTrue(at(out, 0, 6)[0] < 70, "the outline itself stays dark (tinted a little, never washed out)");
+  assertTrue(at(out, 4, 6)[0] === 100, "the interior is untouched");
+  assertTrue(at(out, 1, 6)[0] >= at(out, 1, 6)[1], "screen blending keeps the cloth's own hue (red stays red)");
+  const off = lightPose(rgba, w, h, L, 0);
+  assertEqual([...off], [...rgba], "strength 0 changes nothing");
+  // follows the pose: a different silhouette lights different pixels
+  const shifted = new Uint8ClampedArray(w * h * 4); for (let y = 0; y < h; y++) for (let x = 2; x < w; x++) shifted.set(rgba.slice((y * w + x - 2) * 4, (y * w + x - 2) * 4 + 4), (y * w + x) * 4);
+  const os = lightPose(shifted, w, h, L, 1);
+  assertTrue(at(os, 3, 6)[0] > 100 && at(os, 1, 6)[0] === 0, "the lit edge moves with the pose's silhouette");
+  const light = trainerLight("art:e4Lorelei");
+  assertTrue(typeof light === "function", "an Aura with light gives a lighting function");
+  const sprite = { image: (() => { const c = createCanvas(w, h); c.getContext("2d").putImageData(new ImageData(rgba, w, h), 0, 0); return c; })(), width: w, height: h };
+  assertTrue(light(sprite, 0) !== sprite && light(sprite, 0) === light(sprite, 0), "lit poses are made once and cached");
+}
+
 section("Timing: every sheet plays once per 2.4 s");
 {
   assertEqual(AURA_LOOP_MS, 2400, "the aura loop is 2.4 s");
@@ -146,7 +178,9 @@ section("Closure: backdrop, trainer pose and composite (kept apart)");
     assertEqual(poses.poseAt(24, 24), poses.poseAt(0, 24), "trainer pose closure: the idle restarts on the same 2.4 s loop");
     assertEqual(Array.from({ length: 24 }, (_, f) => poses.poseAt(f, 24)), Array.from({ length: 24 }, (_, f) => poses.poseAt(f + 24, 24)), "…pose for pose");
   } else assertTrue(true, "lass.png has no idle here (TRAINERS_ANIMATED off): pose closure not applicable");
-  assertEqual(sheetFrame(24, 24), sheetFrame(0, 24), "composite closure: backdrop and pose both restart on aura frame 24 = 0");
+  const light = trainerLight("art:e4Lorelei");
+  const s = { image: createCanvas(4, 4), width: 4, height: 4 };
+  assertTrue(light(s, 24) === light(s, 0), "composite closure: the lit trainer on frame 24 is the frame-0 one, over the frame-0 backdrop");
 }
 
 fs.rmSync(DIR, { recursive: true, force: true });

@@ -7,6 +7,7 @@
 //                sky?: ["#rrggbb", ...]   top → bottom, the static wash
 //                tint?: "#rrggbb"         the floor / accent colour (default palette[0];
 //                                         optional: art draws without it, platforms stay neutral)
+//                light?: { ... }          optional trainer lighting (public/shared/auraArt.js)
 //                layers: { back: "back.png", row?: "row.png", vs?: "vs.png" } }
 //   back.png   a horizontal spritesheet of frames, transparent, 1 px = 1 sprite
 //              pixel, sized for the trainer card panel (90×105 cells), the
@@ -25,6 +26,7 @@ import fs from "fs";
 import path from "path";
 import zlib from "zlib";
 import { createCanvas, ImageData } from "@napi-rs/canvas";
+import { normalizeLight, lightPose, lightStrengthAt } from "../../public/shared/auraArt.js";
 import { auraArtDir } from "../../services/auras.js";
 import { getAura } from "../../catalog/auras.js";
 
@@ -99,7 +101,9 @@ export function loadAuraArt(id, env = process.env) {
     if (!layers.back) throw new Error("aura.json has no back layer");
     const sky = Array.isArray(meta.sky) && meta.sky.length >= 2 && meta.sky.every((h) => HEX.test(h)) ? meta.sky : null;
     const tint = HEX.test(meta.tint ?? "") ? meta.tint : Array.isArray(meta.palette) && HEX.test(meta.palette[0] ?? "") ? meta.palette[0] : null;
-    art = { id: String(id), sky, tint, layers };
+    let light = null;
+    try { light = normalizeLight(meta.light); } catch (err) { console.warn(`⚠️ Aura art ${id}: ${err.message}; drawn unlit`); }
+    art = { id: String(id), sky, tint, light, layers };
   } catch (err) {
     if (err?.code !== "ENOENT") console.warn(`⚠️ Aura art ${id}: ${err?.message || err}`);
   }
@@ -108,3 +112,30 @@ export function loadAuraArt(id, env = process.env) {
 }
 export const resetAuraArtForTesting = () => { cache = new Map(); };
 
+/**
+ * The trainer lighting for a look, or null (tier looks, no art, or no "light").
+ * → (sprite, f) => a lit copy of that sprite for aura frame f (0–23), cached per
+ *   sprite and strength step; the sprite itself when that frame's strength is 0.
+ * `mirror`: the opponent's VS half (the light comes from the other side).
+ */
+export function trainerLight(look, { mirror = false, env = process.env } = {}) {
+  const s = String(look ?? "");
+  const art = s.startsWith("art:") ? loadAuraArt(s.slice(4), env) : null;
+  const light = art?.light;
+  if (!light) return null;
+  const lit = new WeakMap(); // sprite -> Map(strength -> sprite)
+  return (sprite, f) => {
+    const k = lightStrengthAt(light, f);
+    if (!sprite?.image || !(k > 0)) return sprite;
+    if (!lit.has(sprite)) lit.set(sprite, new Map());
+    const m = lit.get(sprite);
+    if (!m.has(k)) {
+      const { width: w, height: h } = sprite, c = createCanvas(w, h), x = c.getContext("2d");
+      x.drawImage(sprite.image, 0, 0, w, h);
+      const px = lightPose(x.getImageData(0, 0, w, h).data, w, h, light, k, { mirror });
+      x.putImageData(new ImageData(px, w, h), 0, 0);
+      m.set(k, { ...sprite, image: c });
+    }
+    return m.get(k);
+  };
+}

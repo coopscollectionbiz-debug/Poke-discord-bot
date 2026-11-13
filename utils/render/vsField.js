@@ -48,7 +48,7 @@ export function halfPath(ctx, side, field, W, inset = 9) {
  * false draws the still even on an animated card (CARD_TRAINER_FX=0).
  * Returns the sprites it may draw (every pose), for the backdrop's mask.
  */
-export async function placeTrainer(fg, stage, { file, cx, floor, box, scale = 4, tint = null, idle = true, platform = null, env = process.env }) {
+export async function placeTrainer(fg, stage, { file, cx, floor, box, scale = 4, tint = null, idle = true, platform = null, light = null, env = process.env }) {
   const [rx, ry] = platform ?? (scale === 4 ? [118, 20] : [52, 10]);
   drawSoftPlatform(fg, cx, floor, rx, ry, tint, { u: scale === 4 ? 4 : 2 });
   // Trimmed to the opaque pixels (every pose's), so the feet land on the floor: real
@@ -58,10 +58,11 @@ export async function placeTrainer(fg, stage, { file, cx, floor, box, scale = 4,
   const poses = idle ? await loadTrimmedTrainerPoses(file, { env }) : null;
   const bw = typeof box === "number" ? box : box.w, bh = typeof box === "number" ? box : box.h;
   if (poses?.poses?.length > 1) {
-    stage.placePosed(fg, poses.poses, poses.poseAt, cx, floor + 6, bw, bh, { scale });
+    stage.placePosed(fg, poses.poses, poses.poseAt, cx, floor + 6, bw, bh, { scale, light });
     return { sprites: poses.poses, cx, floorY: floor + 6, bw, bh, scale };
   }
-  drawSprite(fg, still, cx, floor + 6, bw, bh, { scale });
+  if (light) stage.placePosed(fg, [still], () => 0, cx, floor + 6, bw, bh, { scale, light });
+  else drawSprite(fg, still, cx, floor + 6, bw, bh, { scale });
   return { sprites: [still], cx, floorY: floor + 6, bw, bh, scale };
 }
 

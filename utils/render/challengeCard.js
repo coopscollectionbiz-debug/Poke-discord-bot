@@ -24,6 +24,7 @@ import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.
 import { spriteStage } from "./stage.js";
 import { trainerTier, cardTrainerFx } from "./trainerTier.js";
 import { backdropTint, hasBackdrop } from "./trainerBackdrop.js";
+import { trainerLight } from "./auraArt.js";
 import { placeTrainer, occupancy, halfBackdrop } from "./vsField.js";
 
 export const CHALLENGE_CARD_SIZE = Object.freeze({ w: 1200, h: 640 });
@@ -191,7 +192,8 @@ async function drawPlayer(ctx, v, { player: slot, badges }, stage, fx) {
   ctx.globalAlpha = 1;
   ctx.imageSmoothingEnabled = true;
   const tint = fx ? backdropTint(v.player.tier) : null;
-  const placed = await placeTrainer(ctx, stage, { file: v.player.trainerFile, cx: slot.cx, floor: slot.floor, box: TRAINER_BOX, tint, idle: fx });
+  const light = fx && hasBackdrop(v.player.tier) ? trainerLight(v.player.tier) : null;
+  const placed = await placeTrainer(ctx, stage, { file: v.player.trainerFile, cx: slot.cx, floor: slot.floor, box: TRAINER_BOX, tint, idle: fx, light });
   if (!placed) noTrainer(ctx, slot.cx, slot.floor);
   await drawTeamGrid(ctx, v.player.team, 348, 176, stage); // clear of the VS on the seam
   return placed;

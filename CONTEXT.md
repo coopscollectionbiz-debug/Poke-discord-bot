@@ -39,7 +39,7 @@ A **Copy** that has learned at least one move from a **TM**. It keeps those move
 _Avoid_: custom copy, customized copy, instance, TM copy
 
 **Collection**:
-Every **Copy** a player owns right now, one box slot per copy, like a PC box in the games. It shrinks when a copy is donated, gifted, fed or evolved away.
+Every **Copy** a player owns right now, one box slot per copy, like a PC box in the games. It shrinks when a copy is donated, gifted, fed or evolved away, and while a copy is out on an **Expedition**: a sent copy leaves every **Team** and the Collection, and comes back unchanged (plus EXP) when the Expedition is claimed.
 _Avoid_: Pokédex (that is what the player has ever caught), box (as the term), inventory
 
 **Pokédex**:
@@ -287,6 +287,20 @@ _Avoid_: Key Stone, mega item
 **Achievement**:
 A goal reached through play, such as a catch count or a win streak, that earns Achievement Points (AP), a score with no other use, and may list a reward.
 _Avoid_: trophy, quest
+
+### Quests
+
+**Daily board**:
+Three tasks a player can finish each day, each one free or paying for itself (chat, battles, `/daily`, donating), never a chance roll. Each claimed task pays CC, all three open a chest, and enough in a week earn a weekly bonus. It resets at 00:00 UTC.
+_Avoid_: dailies (that is `/daily`)
+
+**Mission**:
+One trip on the day's mission board, the same for every player: a length, a **Level**, and one to three threat types. A player can take each Mission once a day.
+_Avoid_: quest, expedition (that is the trip in progress)
+
+**Expedition**:
+A party of up to three **Copies** sent on a **Mission**. Copies whose types beat its threats raise the chance of success. Success pays loot and **EXP**; failure pays a little of each.
+_Avoid_: venture, dispatch, run (that is the **Elite Four run**)
 
 ## Flagged ambiguities
 

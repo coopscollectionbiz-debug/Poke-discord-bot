@@ -79,6 +79,7 @@ import { createGameplayHandlers } from "./services/gameplay.js";
 import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
 import { createAchievementHandlers } from "./services/achievementsApi.js";
 import { createQuestHandlers } from "./services/questsApi.js";
+import { createExpeditionHandlers } from "./services/expeditionsApi.js";
 import { questProgress, questsEnabled } from "./services/quests.js";
 import { createMegaHandlers } from "./services/megaApi.js";
 import { createHeldItemHandlers } from "./services/heldItemsApi.js";
@@ -1483,6 +1484,22 @@ app.post("/api/quests/claim", express.json({ limit: "4kb" }), async (req, res) =
     return res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
+// 🧭 EXPEDITIONS (Quests Phase 2; services/expeditions.js). Sending needs
+// QUESTS_ENABLED and QUESTS_EXPEDITIONS_ENABLED; claiming always works, so a
+// switch turned off never strands a Pokémon.
+const expeditions = createExpeditionHandlers({ getTrainerData: () => trainerData, lockUser, save: saveAndAck, loadPool: getAcquirablePokemon, logEvent });
+const expeditionRoute = (fn, label) => async (req, res) => {
+  try {
+    const { status, body } = await fn(req);
+    return res.status(status).json(body);
+  } catch (err) {
+    console.error(`❌ ${label}:`, err?.message || err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
+  }
+};
+app.get("/api/expeditions", expeditionRoute((req) => expeditions.view({ query: req.query, isAuthorized: (id) => requireDashboardSession(req, id) }), "/api/expeditions"));
+app.post("/api/expeditions/send", express.json({ limit: "4kb" }), expeditionRoute((req) => expeditions.send({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) }), "/api/expeditions/send"));
+app.post("/api/expeditions/claim", express.json({ limit: "4kb" }), expeditionRoute((req) => expeditions.claim({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) }), "/api/expeditions/claim"));
 app.post("/api/achievements/claim", express.json({ limit: "4kb" }), async (req, res) => {
   try {
     const { status, body } = await achievements.claim({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });

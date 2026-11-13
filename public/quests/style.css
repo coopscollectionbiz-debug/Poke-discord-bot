@@ -26,3 +26,37 @@
 .quest-reward .desc { margin: 0 0 6px; color: var(--cc-text-muted); }
 .quest-claim { margin-top: 12px; background: var(--cc-gold); color: var(--cc-ink); }
 .quest-claim:hover:not(:disabled) { background: #f7d36e; }
+
+/* Tabs (Daily board / Expeditions) */
+.quest-tabs { display: flex; gap: 6px; margin: 12px 0 4px; }
+.quest-tabs button { min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text-muted); font-weight: 800; font-size: 13.5px; }
+.quest-tabs button[aria-selected="true"] { border-color: var(--cc-blue); background: var(--cc-blue-soft); color: var(--cc-text); }
+
+/* Expeditions */
+.exp-sub { margin: 16px 0 0; }
+.exp-running { display: grid; gap: 10px; margin: 12px 0 0; }
+.exp-run.done { border-color: var(--cc-gold); }
+.exp-mission .tier { margin: 0 0 6px; font-size: 0.85rem; font-weight: 700; color: var(--cc-text-faint); }
+.exp-threats { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0 0 6px; }
+.exp-label { font-size: 0.8rem; color: var(--cc-text-muted); }
+.exp-mission .buy-btn { margin-top: 10px; }
+.exp-picker { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); }
+.exp-mission-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0 0 10px; }
+.exp-picker-controls { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; font-size: 0.85rem; }
+.exp-picker-controls label { display: grid; gap: 2px; }
+.exp-picker-controls input[type="search"], .exp-picker-controls select { min-height: 36px; }
+.exp-check { display: flex !important; align-items: center; gap: 6px; }
+.exp-chance { margin: 10px 0 6px; font-weight: 800; color: var(--cc-gold); }
+.exp-party, .exp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.exp-party { margin-bottom: 8px; }
+.exp-list { max-height: 40vh; overflow-y: auto; border-top: 1px solid var(--cc-line); padding-top: 6px; }
+.exp-pick button { width: 100%; min-height: 40px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text); text-align: left; }
+.exp-pick button:hover:not(:disabled) { border-color: var(--cc-blue); }
+.exp-pick.picked button { border-color: var(--cc-gold); }
+.exp-name { font-weight: 700; }
+.exp-lv { color: var(--cc-text-muted); font-size: 0.85rem; }
+.exp-tag { font-size: 0.75rem; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--cc-line); color: var(--cc-text-muted); }
+.exp-tag.good { border-color: var(--cc-gold); color: var(--cc-gold); }
+.exp-empty { color: var(--cc-text-muted); padding: 6px; }
+.exp-warn { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: var(--cc-surface-sunken); font-size: 0.85rem; }
+.cc-dialog p { white-space: pre-line; }

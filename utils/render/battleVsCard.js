@@ -17,7 +17,8 @@ import { font, fitFont, drawBackground, drawCard, drawBall } from "./primitives.
 import { drawHalves, drawVs, drawTeamGrid } from "./challengeCard.js";
 import { spriteStage } from "./stage.js";
 import { cardTrainerFx } from "./trainerTier.js";
-import { backdropTint } from "./trainerBackdrop.js";
+import { backdropTint, hasBackdrop } from "./trainerBackdrop.js";
+import { trainerLight } from "./auraArt.js";
 import { placeTrainer, occupancy, halfBackdrop } from "./vsField.js";
 
 export const BATTLE_VS_SIZE = Object.freeze({ w: 1200, h: 640 });
@@ -140,20 +141,23 @@ export async function renderBattleVsCard(v, { animate = false, env = process.env
   const fg = createCanvas(W, H);
   const f = fg.getContext("2d");
   const tints = v.sides.map((s) => (fx ? backdropTint(s.tier) : null));
+  // Whether each half has a backdrop (a tint is optional: an art Aura without one still draws).
+  const looks = v.sides.map((s) => (fx && hasBackdrop(s.tier) ? s.tier : null));
   drawSideHeader(f, "CHALLENGER", v.sides[0].name, m.team, M + 16, "left");
   drawSideHeader(f, "DEFENDER", v.sides[1].name, m.team, W - M - 16, "right");
   const placed = [];
   for (const [i, s] of v.sides.entries()) {
     const slot = SLOTS[i];
-    const t = await placeTrainer(f, stage, { file: s.trainerFile, cx: slot.cx, floor: FLOOR, box: BOX, tint: tints[i], idle: fx, env });
+    const light = looks[i] ? trainerLight(looks[i], { mirror: i === 1, env }) : null;
+    const t = await placeTrainer(f, stage, { file: s.trainerFile, cx: slot.cx, floor: FLOOR, box: BOX, tint: tints[i], idle: fx, light, env });
     if (!t) noTrainer(f, slot.cx);
     placed.push(t);
     await drawTeamGrid(f, s.team, ...slot.grid, stage);
   }
   drawVs(f, FIELD);
   drawBar(f, v, m, tints);
-  const occupied = tints.some(Boolean) ? occupancy(W, H, fg, placed) : null;
-  const backdrops = ["left", "right"].map((side, i) => (tints[i]
+  const occupied = looks.some(Boolean) ? occupancy(W, H, fg, placed) : null;
+  const backdrops = ["left", "right"].map((side, i) => (looks[i]
     ? halfBackdrop(ctx, { side, tier: v.sides[i].tier, field: FIELD, W, H, floor: FLOOR + 12, occupied })
     : null)).filter(Boolean);
   if (backdrops.length) stage.layer(ctx, (c, frame) => { backdrops.forEach((b) => b.draw(c, frame)); c.drawImage(fg, 0, 0); });

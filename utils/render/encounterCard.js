@@ -23,7 +23,8 @@ import { loadTrimmedTrainerSprite } from "./sprites.js";
 import { drawHalves, drawVs, drawTeamGrid } from "./challengeCard.js";
 import { spriteStage } from "./stage.js";
 import { trainerTier, cardTrainerFx } from "./trainerTier.js";
-import { backdropTint } from "./trainerBackdrop.js";
+import { backdropTint, hasBackdrop } from "./trainerBackdrop.js";
+import { trainerLight } from "./auraArt.js";
 import { placeTrainer, occupancy, halfBackdrop } from "./vsField.js";
 
 export const ENCOUNTER_CARD_SIZE = Object.freeze({ w: 1200, h: 600 });
@@ -165,14 +166,15 @@ export async function renderEncounterCard(v, { animate = false, env = process.en
   const f = fg.getContext("2d");
   const slots = await encounterSlots(v);
   const tint = fx ? backdropTint(v.player.tier) : null;
-  const player = await placeTrainer(f, stage, { file: v.player.trainerFile, cx: slots.player.cx, floor: slots.player.floor, box: BOX, tint, idle: fx });
+  const look = fx && hasBackdrop(v.player.tier) ? v.player.tier : null; // a tint is optional
+  const player = await placeTrainer(f, stage, { file: v.player.trainerFile, cx: slots.player.cx, floor: slots.player.floor, box: BOX, tint, idle: fx, light: look ? trainerLight(look) : null });
   if (!player) noTrainer(f, slots.player.cx, slots.player.floor);
   await drawTeamGrid(f, v.player.team, 348, 96, stage);
   const trainer = await drawEncounterTrainer(f, v, slots, stage, fx);
   drawVs(f, FIELD);
   drawTextBox(f, v, slots.textBox);
   drawStakes(f, v, slots.stakes);
-  const backdrop = tint
+  const backdrop = look
     ? halfBackdrop(ctx, { side: "left", tier: v.player.tier, field: FIELD, W, H, floor: FLOOR + 12, occupied: occupancy(W, H, fg, [player, trainer]) })
     : null;
   if (backdrop) stage.layer(ctx, (c, frame) => { backdrop.draw(c, frame); c.drawImage(fg, 0, 0); });

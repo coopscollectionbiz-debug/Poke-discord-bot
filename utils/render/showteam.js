@@ -22,7 +22,7 @@ import { loadStaticSprite, loadPlaceholder, loadTrainerSprite, drawSprite } from
 import { loadAnimatedSprite, spritePlayer } from "../battle/render.js";
 import { encodeGif } from "./gif.js";
 import { shinyFxEnabled } from "./shinyBackdrop.js";
-import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS, MAX_GIF_BYTES } from "./spriteLoops.js";
+import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS, MAX_GIF_BYTES, SINGLE_CLOCK_CAP_MS } from "./spriteLoops.js";
 import { refinedLayout } from "./showteamRefined.js";
 
 export const LAYOUTS = Object.freeze({
@@ -474,7 +474,7 @@ export async function renderShowteam(view, { layout = "hybrid", animate = false,
   const plans = players.map((pl, i) => (pl ? loopPlan(anim[i]) : null));
   // A shiny backdrop plays on the trainers' 2.4 s clock, so it keeps L whole.
   const trainerClock = fx.enabled && view.slots.some((s, i) => s.variant === "shiny" && !sprites[i]?.placeholder);
-  const { L, fit } = fitLoop(plans.map((pl) => pl?.period ?? null), { trainerClock });
+  const { L, fit } = fitLoop(plans.map((pl) => pl?.period ?? null), { trainerClock, singleCapMs: SINGLE_CLOCK_CAP_MS });
   const total = Math.max(1, Math.round(L / STEP_MS));
   const gif = await encodeGif(canvas, (f) => {
     const t = f * STEP_MS;

@@ -212,3 +212,16 @@ main:focus { outline: none; }
   .tmx-grid { grid-template-columns: 1fr; }
   .tmx-field, .tmx-field select { flex: 1 1 140px; width: 100%; }
 }
+
+/* Focus type: a "Focused Throw" under each ball, and its type-pill popup */
+.focus-btn { margin-top: 6px; background: transparent; border: 1.5px solid var(--cc-gold); color: var(--cc-gold); }
+.focus-btn:hover:not(:disabled) { background: #f5c84c1f; }
+.focus-dialog { width: min(520px, calc(100vw - 32px)); }
+.focus-dialog h2 { display: flex; align-items: center; gap: 8px; }
+.focus-ball { width: 28px; height: 28px; image-rendering: pixelated; }
+.focus-note { margin: 0 0 12px; font-size: 0.9rem; color: var(--cc-text-muted); }
+.focus-pills { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.focus-pill { font-family: inherit; justify-content: center; text-align: center; min-height: 36px; padding: 0 10px; border: 2px solid transparent; cursor: pointer; } /* keeps the shared .cc-type look (chip radius, uppercase, weight) */
+.focus-pill:hover { filter: brightness(1.1); }
+.focus-pill[aria-checked="true"] { border-color: var(--cc-text); box-shadow: inset 0 1px 0 #ffffff40, 0 0 0 2px var(--cc-blue); }
+.focus-pill:focus-visible { outline: 2px solid var(--cc-blue); outline-offset: 2px; }

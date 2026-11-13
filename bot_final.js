@@ -75,7 +75,7 @@ import { tmShopView, buyTms, tmLearners } from "./services/tmShop.js";
 import { auraView, equipAura, buyAura, auraArtDir, normalizeAuras, syncTierAuras } from "./services/auras.js";
 import { trainerTier } from "./utils/render/trainerTier.js";
 import { teachOptions, teachTm } from "./services/tmTeaching.js";
-import { createGameplayHandlers } from "./services/gameplay.js";
+import { createGameplayHandlers, focusTypeEnabled, focusSurcharge, BALL_COST } from "./services/gameplay.js";
 import { normalizeProgression, retroEvaluate, trackProgress } from "./progression/achievements.js";
 import { createAchievementHandlers } from "./services/achievementsApi.js";
 import { createQuestHandlers } from "./services/questsApi.js";
@@ -1732,6 +1732,11 @@ const gameplay = createGameplayHandlers({
   },
 });
 
+// Focus type on the Poké Ball buy (FOCUS_TYPE_ENABLED): is it on, and what it adds per ball. No player data.
+app.get("/api/focus-type", (_req, res) => res.json({
+  enabled: focusTypeEnabled(),
+  surcharge: Object.fromEntries(Object.keys(BALL_COST).map((b) => [b, focusSurcharge(b)])),
+}));
 app.post("/api/rewardPokemon", express.json(), async (req, res) => {
   try {
     const r = await gameplay.rewardPokemon({ body: req.body || {}, isAuthorized: (id) => requireDashboardSession(req, id) });

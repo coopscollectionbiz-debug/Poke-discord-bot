@@ -158,13 +158,6 @@ async function limitToReleasedGenerations(data, owned) {
   return out;
 }
 
-// Official level requirement for Gen 6–9 level-up evolutions (enforced by the server).
-function requiredEvolutionLevel(base, target) {
-  const e = target?.evolution;
-  if (!e || Number(target.generation) < 6 || Number(e.from) !== Number(base?.id)) return null;
-  return (e.trigger === "level-up" || e.trigger === "in-battle-level-up") && e.minLevel > 0 ? e.minLevel : null;
-}
-
 function getEvoList(p) {
   return p?.evolvesTo || p?.evolves_to || [];
 }
@@ -2013,7 +2006,6 @@ function openEvolutionModal(baseId) {
         </div>
 
         ${dustRow}
-        ${requiredEvolutionLevel(base, target) ? `<div style="margin-top:6px;color:var(--cc-text-muted);font-weight:800;">Requires Lv. ${requiredEvolutionLevel(base, target)}</div>` : ""}
       `;
 
       if (allowed) {

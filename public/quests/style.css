@@ -61,3 +61,7 @@
 .exp-warn { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: var(--cc-surface-sunken); font-size: 0.85rem; }
 .cc-dialog p { white-space: pre-line; }
 .exp-timer { font-variant-numeric: tabular-nums; color: var(--cc-gold); font-weight: 700; }
+.exp-party-sprites { list-style: none; margin: 6px 0 4px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.exp-member { display: grid; justify-items: center; gap: 2px; width: 84px; padding: 6px 4px; border-radius: 10px; background: var(--cc-surface-sunken); }
+.exp-member img { width: 56px; height: 56px; object-fit: contain; image-rendering: pixelated; }
+.exp-member-name { font-size: 0.78rem; font-weight: 700; text-align: center; overflow-wrap: anywhere; }

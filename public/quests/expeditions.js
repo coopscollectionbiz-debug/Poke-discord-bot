@@ -67,7 +67,20 @@ function render() {
     r.done = r.done || serverNow() >= r.endsAt; // the clock may pass endsAt between loads
     const card = el("article", `quest-reward exp-run${r.done ? " done" : ""}`);
     card.append(el("h3", null, `${r.done ? "🏁" : "🧭"} ${r.mission.name} · ${r.mission.hours} h`));
-    card.append(el("p", "desc", `${r.party.map((p) => `${p.shiny ? "✨" : ""}${p.name}`).join(", ")} · ${pct(r.chance)} chance`));
+    // The party, with sprites (same paths as the Collection page).
+    const party = el("ul", "exp-party-sprites");
+    party.setAttribute("aria-label", "Party");
+    for (const p of r.party) {
+      const li = el("li", "exp-member");
+      const img = el("img");
+      img.src = `/public/sprites/pokemon/${p.shiny ? "shiny" : "normal"}/${p.id}.gif`;
+      img.alt = "";
+      img.loading = "lazy";
+      img.addEventListener("error", () => { img.src = "/public/sprites/items/pokeball.png"; }, { once: true });
+      li.append(img, el("span", "exp-member-name", `${p.shiny ? "✨" : ""}${p.name}`));
+      party.append(li);
+    }
+    card.append(party, el("p", "desc", `${pct(r.chance)} chance`));
     if (r.done) {
       const b = el("button", "buy-btn quest-claim", "Bring them back");
       b.onclick = () => claim(r.id, b);

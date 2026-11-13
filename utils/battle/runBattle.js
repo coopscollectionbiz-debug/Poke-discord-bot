@@ -27,6 +27,7 @@ import { teamExp, eloUpdate, utcDay, getBattleRecord, getCasualRecord, capBlock,
 import { RANKED, CUTE, CAPS } from "./tuning.js";
 import { liftRematchBlock } from "./rematch.js";
 import { wagerEligibility } from "./wager.js";
+import { questProgress } from "../../services/quests.js";
 import { teamCuteness } from "./cuteness.js";
 import { chosenMoves, keepMovesOnLevelUp } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
@@ -267,6 +268,8 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, rematch
       else r.losses++;
     });
     rating = { [ids[0]]: { from: from[0], to: to[0] }, [ids[1]]: { from: from[1], to: to[1] } };
+    // Daily board: the Challenger's Ranked battles (not Wagers).
+    if (mode === "ranked") questProgress(challenger, challengerId, "ranked", 1, { now: now.getTime() });
 
     // Release C: battle achievements (wins, rating, levels, streaks) for both
     // players — ranked and wager battles only (owner decision). Runs exactly
@@ -293,6 +296,8 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, rematch
       }
       trackProgress(u, [{ type: "casual" }], now.getTime());
     });
+    // Daily board: only the Challenger's battles count (a battle you're pulled into isn't on purpose).
+    questProgress(challenger, challengerId, "casual", 1, { now: now.getTime() });
   }
 
   // Every casual battle counts against this Defender, even past the daily

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Quests · Coop’s Collection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/public/shared/tokens.css" />
+  <link rel="stylesheet" href="/public/shared/components.css" />
+  <link rel="stylesheet" href="/public/dashboardshop/style.css" />
+  <link rel="stylesheet" href="/public/quests/style.css" />
+</head>
+<body data-page="quests">
+  <header class="cc-page-head">
+    <p class="cc-eyebrow">Every day</p>
+    <h1>Quests</h1>
+    <p>Three tasks a day. Claim each one, then open the chest.</p>
+  </header>
+
+  <main id="ccMain" tabindex="-1">
+    <div id="questTabs" class="quest-tabs" role="tablist" aria-label="Quests" hidden>
+      <button type="button" role="tab" id="tabDaily" aria-controls="dailyPanel" aria-selected="true">📋 Daily board</button>
+      <button type="button" role="tab" id="tabExp" aria-controls="expPanel" aria-selected="false">🧭 Expeditions</button>
+    </div>
+    <section id="dailyPanel" class="shop-section" role="tabpanel" aria-labelledby="dailyTitle">
+      <div class="quest-head">
+        <h2 id="dailyTitle">Daily board</h2>
+        <p id="questReset" class="subtitle"></p>
+      </div>
+      <p id="questStatus" class="subtitle" aria-live="polite">Loading…</p>
+      <div id="questTasks" class="quest-tasks"></div>
+      <div id="questChest" class="quest-reward"></div>
+      <div id="questWeek" class="quest-reward"></div>
+    </section>
+
+    <section id="expPanel" class="shop-section" role="tabpanel" aria-labelledby="expTitle" hidden>
+      <div class="quest-head">
+        <h2 id="expTitle">Expeditions</h2>
+        <p id="expSlots" class="subtitle"></p>
+      </div>
+      <p class="subtitle">Send up to 3 Pokémon on a Mission. Types that beat its threats raise the chance. Sent Pokémon leave every Team and come back when you claim.</p>
+      <p id="expStatus" class="subtitle" aria-live="polite"></p>
+      <div id="expRunning" class="exp-running"></div>
+      <h3 class="exp-sub">Today's Missions</h3>
+      <div id="expMissions" class="quest-tasks"></div>
+      <p id="expCaps" class="subtitle"></p>
+    </section>
+
+    <dialog id="expPicker" class="cc-dialog exp-picker" aria-labelledby="expPickerTitle">
+      <h2 id="expPickerTitle">Send a party</h2>
+      <p id="expPickerMission" class="exp-mission-line"></p>
+      <div class="exp-picker-controls">
+        <label>Search <input id="expSearch" type="search" placeholder="Name" autocomplete="off" /></label>
+        <label>Type <select id="expType"><option value="">Any type</option></select></label>
+        <label class="exp-check"><input id="expCounters" type="checkbox" /> Counters only</label>
+      </div>
+      <p id="expChance" class="exp-chance" aria-live="polite"></p>
+      <ul id="expParty" class="exp-party" aria-label="Party"></ul>
+      <ul id="expList" class="exp-list" aria-label="Your Pokémon"></ul>
+      <p id="expWarn" class="exp-warn" hidden></p>
+      <div class="cc-dialog-actions">
+        <button type="button" class="cc-btn" id="expCancel">Cancel</button>
+        <button type="button" class="cc-btn cc-btn--primary" id="expSend" disabled>Send</button>
+      </div>
+    </dialog>
+  </main>
+
+  <script type="module" src="/public/shared/shell.js"></script>
+  <script type="module" src="/public/quests/script.js"></script>
+  <script type="module" src="/public/quests/expeditions.js"></script>
+</body>
+</html>

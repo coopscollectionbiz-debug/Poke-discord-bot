@@ -468,3 +468,14 @@ body.multi-select-on #pokemonPanel { padding-bottom: 110px; }
 .team-badges .mem-b { background: var(--cc-blue); color: #fff; }
 /* Unowned: a dark silhouette (a real Pokédex), not a grey copy. */
 .pokemon-card.unowned .poke-sprite { filter: brightness(0) invert(.22); opacity: .9; }
+
+/* Copies out on an Expedition (Quests): shown, locked, with a live countdown. */
+.pokemon-card.on-expedition { opacity: 0.8; }
+.pokemon-card.on-expedition .poke-sprite { filter: grayscale(0.6); }
+.expedition-badge {
+  position: absolute; left: 6px; bottom: 6px;
+  padding: 2px 6px; border-radius: 999px;
+  background: #000000b0; color: var(--cc-gold);
+  font-size: 10.5px; font-weight: 800; white-space: nowrap;
+}
+.expedition-timer { margin-top: 4px; font-size: 11.5px; font-weight: 700; color: var(--cc-gold); font-variant-numeric: tabular-nums; }

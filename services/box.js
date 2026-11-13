@@ -237,6 +237,39 @@ export function adoptCopy(user, { rec, custom = null }) {
   return made;
 }
 
+/**
+ * An Expedition leaving (services/expeditions.js): the copy comes off every
+ * Team (its slots are removed, not left empty) and out of the Collection, so
+ * nothing can feed, evolve, donate, gift, teach or field it while it's away.
+ * Returns what returnCopy needs to put it back unchanged, or null.
+ */
+export function sendCopyAway(user, uid) {
+  if (!user?.box?.[uid]) return null;
+  const teams = [];
+  for (const field of TEAM_FIELDS) {
+    const team = user[field];
+    if (!Array.isArray(team)) continue;
+    const kept = team.filter((s) => !(s && typeof s === "object" && s.uid === uid));
+    if (kept.length !== team.length) { teams.push(field); user[field] = kept; }
+  }
+  const taken = takeCopy(user, uid);
+  return taken ? { uid, rec: taken.rec, custom: taken.custom, teams } : null;
+}
+
+/** An Expedition returning: the same copy, same uid, EXP and TM record. */
+export function returnCopy(user, { uid, rec, custom = null }) {
+  user.box ??= {};
+  const useUid = COPY_UID_PATTERN.test(uid) && !user.box[uid] ? uid : newCopyUid(user);
+  user.box[useUid] = { ...rec, id: Number(rec.id), exp: clampExp(rec.exp) };
+  if (custom) {
+    user.customPokemon ??= {};
+    user.customPokemon[useUid] = { ...custom, uid: useUid };
+  }
+  syncLine(user, Number(rec.id), variantOf(rec));
+  registerDex(user, Number(rec.id), variantOf(rec));
+  return useUid;
+}
+
 /** Add EXP to one copy (battle EXP). @returns {{ fromLevel, toLevel }} */
 export function addCopyExp(user, uid, amount) {
   const rec = copyOf(user, uid);

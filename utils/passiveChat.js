@@ -12,6 +12,7 @@
 
 import { liveEffects } from "../services/liveEvents.js";
 import { scaleEarned } from "./liveEventRules.js";
+import { questProgress } from "../services/quests.js";
 
 /**
  * @param {object} deps
@@ -71,6 +72,7 @@ export function createMessageHandler({
     // 🪙 Give base TP for chatting
     userObj.tp += scaleEarned(config.tpGain, fx.tp);
     userObj.lastActiveAt = t; // Last active (saved with the TP below)
+    questProgress(userObj, userId, "chat", 1, { now: t }); // Daily board (no-op while Quests are off)
 
     // 💰 Chance to earn CC
     if (random() < config.ccChance) {

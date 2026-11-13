@@ -747,6 +747,24 @@ function renderPokemonGrid() {
 // current mode's action with that copy preselected in "Which one?".
 // ===========================================================
 const boxRows = () => (Array.isArray(userData.copies) ? userData.copies : []);
+// Copies out on an Expedition (Quests): shown, locked, never offered to an action.
+const awayRows = () => {
+  if (Number.isFinite(userData.serverNow) && !userData.serverNowApplied) { awaySkew = userData.serverNow - Date.now(); userData.serverNowApplied = true; }
+  return Array.isArray(userData.awayCopies) ? userData.awayCopies : [];
+};
+const escAway = (v) => String(v).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+// "Returns in: 1:02:03", or a note to claim once it's back. Ticks every second (below).
+let awaySkew = 0; // server clock minus this device's (set from userData.serverNow)
+function returnsIn(at) {
+  const secs = Math.max(0, Math.ceil((at - (Date.now() + awaySkew)) / 1000));
+  if (secs === 0) return "Back! Claim it on the Quests page";
+  const h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), sec = secs % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `Returns in: ${h ? `${h}:${pad(m)}` : m}:${pad(sec)}`;
+}
+setInterval(() => {
+  for (const t of document.querySelectorAll(".expedition-timer[data-ends]")) t.textContent = returnsIn(Number(t.dataset.ends));
+}, 1000);
 
 function boxTileLocked(c, tier) {
   if (currentMode === "evolve") return !isEvolutionEligibleAnyVariant(c.id);
@@ -767,7 +785,8 @@ function renderBoxTiles(container) {
   const sortOrder = document.getElementById("sortOrder")?.value || "dex";
 
   const tiles = [];
-  for (const [uid, id, shiny, level, at, trained, teams] of boxRows()) {
+  const rows = [...boxRows(), ...awayRows().map((r) => [...r.slice(0, 8), { endsAt: r[8], mission: r[9] }])];
+  for (const [uid, id, shiny, level, at, trained, teams, , away] of rows) {
     const p = pokemonData[id];
     if (!p) continue;
     const tier = tierOf(p);
@@ -776,7 +795,7 @@ function renderBoxTiles(container) {
     if (typeFilter && !(p.types ?? []).map((t) => TYPE_MAP[t]).includes(typeFilter)) continue;
     if (regionFilter && p.region !== regionFilter) continue;
     if (shinyOnly && !shiny) continue;
-    tiles.push({ uid, id, shiny: !!shiny, level, at, trained: !!trained, teams, p, tier });
+    tiles.push({ uid, id, shiny: !!shiny, level, at, trained: !!trained, teams, p, tier, away: away ?? null });
   }
 
   const byDex = (a, b) => a.id - b.id || b.level - a.level || a.uid.localeCompare(b.uid);
@@ -791,11 +810,11 @@ function renderBoxTiles(container) {
   tiles.sort(sorts[sortOrder] ?? byDex);
 
   const tile = (c) => {
-    const locked = boxTileLocked(c, c.tier);
+    const locked = !!c.away || boxTileLocked(c, c.tier);
     const name = c.p.name || `#${c.id}`;
     const onTeams = teamNames(c.teams);
     const el = document.createElement("div");
-    el.className = `pokemon-card owned box-tile${c.shiny ? " shiny-view" : ""}${locked ? " locked" : ""}`;
+    el.className = `pokemon-card owned box-tile${c.shiny ? " shiny-view" : ""}${locked ? " locked" : ""}${c.away ? " on-expedition" : ""}`;
     el.dataset.id = c.id;
     el.dataset.uid = c.uid;
     const stone = (src, n) => `<div class="evolve-cost" style="bottom:6px;right:6px;"><img src="${src}" style="width:16px;height:16px;vertical-align:middle;image-rendering:pixelated;" alt="">${n}</div>`;
@@ -812,23 +831,26 @@ function renderBoxTiles(container) {
         ${teamBadge}
         ${c.trained ? `<div class="count-label bottom-left" title="Has TM-trained moves">★ TM</div>` : ""}
         ${locked ? `<div class="lock-overlay">${LOCK_ICON}</div>` : ""}
-        ${badge}
+        ${c.away ? "" : badge}
+        ${c.away ? `<div class="expedition-badge" title="On an Expedition to ${escAway(c.away.mission)}">🧭 On Expedition</div>` : ""}
       </div>
       <div class="dex-no">#${String(c.id).padStart(4, "0")}</div>
       <div class="pokemon-name">${c.shiny ? "✨ " : ""}${name}</div>
       <div class="poke-levels"><span class="poke-level${c.shiny ? " shiny" : ""}">Lv ${c.level}</span></div>
-      <div class="pokemon-tier"><span class="cc-tier" data-tier="${c.tier}">${capitalize(c.tier)}</span></div>`;
+      <div class="pokemon-tier"><span class="cc-tier" data-tier="${c.tier}">${capitalize(c.tier)}</span></div>
+      ${c.away ? `<div class="expedition-timer" data-ends="${Number(c.away.endsAt)}" aria-live="off">${returnsIn(c.away.endsAt)}</div>` : ""}`;
     const states = [`Level ${c.level}`];
     if (c.shiny) states.push("shiny");
     if (c.trained) states.push("TM-trained");
     if (onTeams.length) states.push(`on ${onTeams.join(" and ")} team`);
-    if (locked) states.push("unavailable in this mode");
+    if (c.away) states.push(`on an Expedition to ${c.away.mission}, ${returnsIn(c.away.endsAt)}`);
+    else if (locked) states.push("unavailable in this mode");
     el.tabIndex = 0;
     el.setAttribute("role", "button");
     el.dataset.ccActivate = "1";
     el.setAttribute("aria-label", `#${c.id} ${name}, ${states.join(", ")}`);
     if (locked) el.setAttribute("aria-disabled", "true");
-    el.addEventListener("click", () => onBoxTileClick(c, locked));
+    el.addEventListener("click", () => (c.away ? showAway(c) : onBoxTileClick(c, locked)));
     el.querySelector(".poke-sprite").addEventListener("error", (e) => { e.currentTarget.src = "/public/sprites/items/pokeball.png"; }, { once: true });
     return el;
   };
@@ -854,6 +876,14 @@ function renderBoxTiles(container) {
     header.innerHTML = `${region.name} <span class="region-count">${list.length}<span class="sr-only"> Pokémon</span></span>`;
     container.append(header, ...list.map(tile));
   }
+}
+
+function showAway(c) {
+  const name = c.p?.name || `#${c.id}`;
+  showMessage({
+    title: `${c.shiny ? "✨ " : ""}${name} is on an Expedition`,
+    message: `Gone to ${c.away.mission}. ${returnsIn(c.away.endsAt)}. It can't be fed, evolved, donated, gifted, taught a TM or put on a Team until you claim the Expedition on the Quests page.`,
+  });
 }
 
 function onBoxTileClick(c, locked) {

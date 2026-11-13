@@ -195,6 +195,7 @@ NODE_ENV=development
 PORT=3000
 REGISTER_COMMANDS=true     # set true on first run; flip to false afterwards to skip re-registration
 CHALLENGE_CHANNEL_ID=      # optional: the only channel /challenge works in (unset: any channel)
+CASUAL_BATTLE_CHANNEL_ID=  # optional: the only channel casual /battle works in (unset: any channel)
 REWARD_CHANNEL_ID=         # optional: gets every catch and recruit broadcast (they also post where they happened)
 RARE_SIGHTINGS_CHANNEL_ID= # optional: also gets the Rare-and-up and shiny ones
 ADMIN_ROLE_NAME=Developer  # the role allowed to use /admindashboard (default: Developer)
@@ -228,6 +229,8 @@ In your test server, run `/dashboard` — the bot should reply with an ephemeral
 ### 8. Pick the challenge channel (optional)
 
 `/challenge` works only in the channel `CHALLENGE_CHANNEL_ID` names, or in any channel when it's unset. Right-click the channel → **Copy Channel ID** and add it to `.env`. For production, set it in `fly.toml` under `[env]`, where it's commented out until a channel is chosen.
+
+Casual battles work the same way with `CASUAL_BATTLE_CHANNEL_ID`: set, casual battles and Rematch requests happen only in that channel, and a casual `/battle` anywhere else privately points the player there. Ranked and wager battles still work in any channel. In production both go in `/etc/pokebot.env`, followed by `sudo systemctl restart pokebot`.
 
 ## Generations 6–9
 

@@ -45,8 +45,14 @@ const CHANNEL_PERMISSIONS = [
   PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles,
 ];
 
+// Casual battles (and so Rematch requests) work only in this channel when
+// it's set (/etc/pokebot.env in production, .env locally), keeping them out of
+// #general. Ranked and wager battles work anywhere. Unset, casual works anywhere too.
+const casualChannelId = () => process.env.CASUAL_BATTLE_CHANNEL_ID || null;
+
 export function refusal(reason, opponentId) {
   return {
+    wrong_channel: `Casual battles happen in <#${casualChannelId()}>. Ranked and wager battles work anywhere.`,
     self: "You can't battle yourself.",
     bot: "You can't battle a bot.",
     no_perms: "I can't post battles in this channel. Try another one.",
@@ -183,6 +189,8 @@ async function executeBattle(interaction, trainerData, lockUser, enqueueSave) {
   if (interaction.appPermissions && !interaction.appPermissions.has(CHANNEL_PERMISSIONS)) return refuse("no_perms");
 
   const mode = wager != null ? "wager" : interaction.options.getBoolean("ranked") ? "ranked" : "open";
+  const casualHome = casualChannelId();
+  if (mode === "open" && casualHome && interaction.channelId !== casualHome) return refuse("wrong_channel");
   const early = battleBlock({ trainerData, challengerId, defenderId: opponent.id, mode });
   if (early && early !== "rematch_needed") return refuse(early);
   if (mode === "wager") return offer(interaction, trainerData, lockUser, enqueueSave, opponent, wager);

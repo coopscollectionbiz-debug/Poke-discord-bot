@@ -109,6 +109,24 @@ function harness({ sendFails = false, perms = true, offeredReplyFails = false, f
 
 const replaceRecord = (t, id) => ensureUserInitialized(id, id, t.trainerData, null); // e.g. /daily or a dashboard save
 
+section("The battle channel");
+{
+  // CASUAL_BATTLE_CHANNEL_ID keeps casual /battle in one channel; unset, it works anywhere (every other section).
+  process.env.CASUAL_BATTLE_CHANNEL_ID = "elsewhere";
+  const t = harness();
+  await t.run("A", "B");
+  assertEqual(t.log.replies, ["Casual battles happen in <#elsewhere>. Ranked and wager battles work anywhere."], "a casual battle outside it is refused privately");
+  assertEqual([t.log.messages.length, t.log.edits.length, t.trainerData.A.battles], [0, 0, undefined], "nothing posted or counted");
+  const w = harness();
+  await w.run("A", "B", 50);
+  assertTrue(w.log.replies.length === 0 && w.log.messages.length === 1, "a wager offer still posts anywhere");
+  process.env.CASUAL_BATTLE_CHANNEL_ID = "chan";
+  const home = harness();
+  await home.run("A", "B");
+  assertTrue(home.log.edits[0]?.startsWith("⚔️ Your battle is starting below."), "in the battle channel, the battle runs");
+  delete process.env.CASUAL_BATTLE_CHANNEL_ID;
+}
+
 section("Accept after the Challenger's record was replaced");
 {
   const t = harness();

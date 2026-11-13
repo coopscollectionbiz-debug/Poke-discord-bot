@@ -29,7 +29,7 @@ Each line has a recommendation. Nothing here is built yet.
 | D4 | Wager guard (R3 from 11-10) | **Build an account age gate (7 days, 25 Pokédex entries) before Quests ship.** Wagers are the only way to move CC between players, and Quests make an alt worth farming. A max stake is optional. | Defer (1 Wager battle in 334) |
 | D5 | Challenge prizes for the Elite Four, Blue and Red | **Keep them as they are.** They are one-time. A recurring net sink (F1) absorbs them over weeks. Re-check supply after the first Elite Four clears. | Halve the Elite Four, Blue and Red CC before anyone clears; or pay part in stones and dust |
 | D6 | Evolution Stone access | **Add stones to Expeditions, capped at 5 a week.** Keep the shop at 5,000 CC. | Cap 3 or 7; or cut the shop price |
-| D7 | Focus type odds (this changes a locked decision) | **Filter the pool by type and leave out Legendary and Mythic.** Keeping each ball's Tier odds makes one legendary or mythic 10x (median) to 21x more likely, at only 1.5x the price (F5). | Keep +50% with both Tiers in; or +200% |
+| D7 | Focus odds and price | **Decided by the owner (2026-11-13): keep the ball's Tier odds, Focus applies at every Tier (Mythic included), a type or a Region, flat +50%.** Players may chase a specific Legendary or Mythic; Q4b shows what that costs and why it can't make a profit. | Leave Legendary and Mythic out (the audit's first recommendation); size-based or concentration-based prices |
 | D8 | Daily board pay | **50 CC per task.** The chest catch is worth more than the task CC (Q2). The mockup's 150 would come to about 30% of an active player's gross income. | 100 or 150 CC per task |
 | D9 | Expedition loot table and weekly caps | **Use the Q3 table**: 15 CC/hour, stones 10 to 60% by length, dust 0 to 3, Pokémon 5 to 10% on 8 h and 12 h, rare basic TM. Weekly caps: 5 stones, 15 dust, 2 Pokémon, 1 TM. | 25 CC/hour (mockup) |
 | D10 | Logging gaps | **Log trainer purchases, Mega Shard purchases, challenge prize amounts and a daily chat CC total in Phase 0.** About 3% of supply change can't be traced today. | Leave as is |
@@ -42,7 +42,7 @@ Each line has a recommendation. Nothing here is built yet.
 2. **A Live event can turn Poké Balls into a CC printer.** Throwing has no cooldown, donations have no CC cap, and the admin form allows a 1 to 100% discount (`utils/liveEventRules.js:120`). A Poké Ball donates back 575 CC on average at Master Rank (Model), so any discount above 42.5% pays for itself. A CC multiplier of 1.58 or more does the same for Legend Rank with no discount (Model). No event has ever run (there is no `live-events.json` on the server), so this is a footgun, not an exploit.
 3. **The old `/recruit` and `/quest` must never reach players as written.** `/recruit` sells a Poké Ball roll for 100 CC (`commands/recruit.js:44`) that donates back 532 CC (Model, Advanced Rank). That is +432 CC every 30 s, about 1.2M CC a day. `/quest` pays 50 CC plus a free Pokémon or trainer every minute (`commands/quest.js:30-31`), which is 72,000 CC and 1,440 free rolls a day. Only Discord's Administrator default keeps players out.
 4. **Evolution Stones run out once Challenge prizes are spent.** In the window, 73% of new stones (101 of 138) and 94% of new Shiny Dust (790 of 837) came from first-win prizes (Live). After that, the free supply is the `/daily` 25% roll: 1.75 stones a week (`commands/daily.js:40`). A Rare to Epic evolution costs 5 stones, which is 25,000 CC at the shop or 20 days of dailies (Model).
-5. **Focus type at +50% makes chasing one legendary or mythic 7 to 14x cheaper per CC.** Inside a type pool, one Legendary or Mythic species is 10.3x (median of 127) and up to 21x more likely than with a plain ball (Model). Examples: Xerneas in Fairy, Zapdos in Electric. Leaving those two Tiers out of Focus keeps the chase on plain balls and events (D7).
+5. **Focused Throws make chasing one Legendary or Mythic up to 49x more likely, but never profitable.** A Focus keeps the ball's Tier odds, so every Focus donates back the same; the cheapest chases still cost about a month (Legendary) to four months (Mythic) of income (Q4b). The owner chose to allow chases at a flat +50% (D7).
 
 Also worth knowing: chat catches are not a flat 1%. A pity meter adds 0.3% per rewarded message up to 5%, so a catch comes every 24.6 rewarded messages on average (median 19, 90% within 50) (Model; `bot_final.js:1127-1136`).
 
@@ -174,7 +174,7 @@ Once a player has collected their Challenge prizes (28 stones and 325 dust each)
 - Expeditions work like a mission table: a shared board of 4 **Missions** a day (seeded by the date), 2 running at once, a party of up to 3 **Copies**, threat types, and a success chance from type counters and Level.
 - Team copies can be sent. Sending one takes it off every Team, and until it returns it can't be fed, evolved, donated, gifted, taught a TM or put on a Team.
 - Expedition loot is a mixed table with weekly caps. Copies earn EXP. A bonus roll can add EXP or loot, and a failure pays a little EXP.
-- `/recruit` is retired. It's replaced by **Focus type** on the dashboard Poké Ball buy, at the ball's price +50%. (D7 asks to change how the odds work.)
+- `/recruit` is retired. It's replaced by **Focused Throws** (a type or a Region) on the dashboard Poké Ball buy, at the ball's price +50% (D7, Q4, Q4b).
 - The new terms are in `CONTEXT.md`: Quests, Daily board, Mission, Expedition, Focus type.
 
 ## Q2. Daily board
@@ -299,28 +299,36 @@ In Discord, `/quest` lists running Expeditions with time left, Claim buttons for
 - An account reset: Expeditions are cleared with everything else.
 - Gen flag changes: loot Pokémon roll from live Gens only.
 
-## Q4. Focus type (replaces `/recruit`)
+## Q4. Focused Throws (replace `/recruit`)
 
-**Player loop.** On the dashboard Poké Ball buy, an optional "Focus type" picker. Choose a ball and a type, see the price and odds, and throw.
+**Player loop.** In the Shop, each ball has a 🎯 Focused Throw button under Buy. Its popup has two tabs, Types (the 18 type pills) and Regions (the live Regions). Pick one Focus and throw.
 
-**Price.** The ball price +50%: Poké 1,500, Great 3,000, Ultra 6,000. A Live event discount applies to the base price.
+**Price.** The ball +50% of its list price: Poké 1,500, Great 3,000, Ultra 6,000. A Live event discount applies to the ball, not the surcharge.
 
-**Odds (D7).** There are two ways to build the roll. The model compares them for every type:
+**Odds (D7, decided).** The Tier is rolled from the whole pool, exactly as a plain throw. The Pokémon is then picked from that Tier's species in the Focus, at every Tier, Legendary and Mythic included. If the Focus has nothing at the rolled Tier for that ball (for example, no Fairy Legendary in Gens 1 to 6), the Tier is re-rolled among the Focus's own Tiers.
 
-- **A. Keep the ball's Tier odds, then pick within the type.** This was the locked idea. A type with only 1 or 2 species in a high Tier makes each of them far likelier. For example, a focused Ultra Ball gives Xerneas 0.81% against 0.038% plain, 21x the chance (Model).
-- **B. Filter the pool by type, with normal weights.** This is simpler, and the Tier odds become the type's own. It still raises one legendary's chance about 10x, because the pool is smaller.
+**Data.** None new. A throw logs `roll` with `focus` and `focusKind`.
 
-Recommendation: **B, with the Legendary and Mythic Tiers left out of Focus rolls.** Players who chase a legendary keep using plain balls and events. Focus helps build Expedition counters, which is its job. Without those two Tiers, a focused Ultra Ball rolls Rare and Epic only. That is still a 6,000 CC sink that returns 1,206 to 1,608 CC if donated, depending on the type (`focusType.*.perBall.ultraball.recommended_filterNoLegendaryMythic` in `model.json`).
+## Q4b. Can Focused Throws be gamed?
 
-**Small pools.** The smallest type pools are Ice (33 species), Ghost (35), Fairy (35) and Dragon (38) (Model). If a ball leaves out the Tiers a type has (for example, Dragon has 1 Common), the roll uses the Tiers left. A type with nothing for a ball shows that ball greyed out, as the Catch limit code already does (`utils/weightedRandom.js`, `emptyBalls`).
+All figures come from `tools/economy-audit/focus-analysis.mjs` (exact chances, no sampling; written to `focus-analysis.json`), Gens 1 to 6, Master Rank unless noted.
 
-**Data.** None new. A throw logs `roll` with `focus: "<type>"`.
+**No profit path.** Every Focus has the same donation value per throw (1,708 CC on an Ultra Ball), because the Tier odds are kept and a donation pays by Tier. The best case anywhere is 0.54 CC back per CC spent (Legend Rank, Poké Ball, during a 30% ball sale). No Focus is better than another for CC.
 
-**Retiring `/recruit`.**
-- Remove `commands/recruit.js` and its registration.
-- Keep `recruitPool`, which `/quest` imports, by moving it to `utils/speciesCatalog.js` or deleting it with the old `/quest`.
-- Remove the `recruit` Live event discount category (`utils/liveEventRules.js:27`), and use `balls` for Focus.
-- Update CONTEXT.md's random catch note.
+**Chasing one Pokémon.** The risk is concentration, not pool size: a Focus that holds one species at a Tier sends every roll of that Tier to it. Average CC to land one specific Pokémon with an Ultra Ball (days = gross income of an active player, 3,760 CC a day, section 1.2):
+
+| | Cheapest | Median | Priciest | Plain throws |
+|---|---|---|---|---|
+| Legendary (49) | Regigigas via Normal, Venusaur via Poison: about 120k (32 days) | Goodra via Kalos: about 600k (160 days) | Tornadus via Flying: about 1.08M (288 days) | about 3.9M |
+| Mythic (30) | Genesect via Bug: about 500k (134 days) | Mew via Kanto: about 1.06M (281 days) | Manaphy via Water: about 3.2M (844 days) | about 10.6M |
+
+Even the cheapest Mythic is months of income, and the median one is about a third of all CC in the game today. Chases are a long-term CC sink, which the economy needs (section 1.2). Pricing by pool size wouldn't help: Normal has 97 species but one Legendary.
+
+**Pokédex completion.** A Region Focus registers a Region's non-Mythic species 3 to 6 times cheaper (Kalos 6x, Kanto 4x). That is the feature's purpose; it only matters if the Region Pokédex Achievement rewards are approved later.
+
+**Live events.** A Catch boost on the same species raises its plain chance too, so a Focus adds less on top (x17 instead of x49 for Regigigas). Ball sales are capped at 30% (D2).
+
+**Not allowed.** One Focus per throw: combining a type and a Region would make single-species pools common.
 
 ## Q5. Economy cost, all of Part 2
 

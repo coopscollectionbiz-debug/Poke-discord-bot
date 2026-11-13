@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 process.env.FOCUS_TYPE_ENABLED = "1";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const { createGameplayHandlers, focusTypeEnabled, focusSurcharge, BALL_COST } = await import("../../services/gameplay.js");
+const { createGameplayHandlers, focusTypeEnabled, focusSurcharge, focusRegions, BALL_COST } = await import("../../services/gameplay.js");
 const { lockUser } = await import("../../utils/userLocks.js");
 const { createNewUser } = await import("../../utils/userSchema.js");
 
@@ -32,7 +32,7 @@ app.use("/public", express.static(path.join(root, "public")));
 app.get("/public/dashboardshop", (_q, res) => res.sendFile(path.join(root, "public", "dashboardshop", "index.html")));
 app.get("/api/user", (_q, res) => res.json({ ...u, weeklyPackClaimed: true }));
 app.get("/api/live-events", (_q, res) => res.json({ ok: true, running: [], upcoming: [], discounts: {}, paidChoice: null, catchEvents: [] }));
-app.get("/api/focus-type", (_q, res) => res.json({ enabled: focusTypeEnabled(), surcharge: Object.fromEntries(Object.keys(BALL_COST).map((b) => [b, focusSurcharge(b)])) }));
+app.get("/api/focus-type", (_q, res) => res.json({ enabled: focusTypeEnabled(), surcharge: Object.fromEntries(Object.keys(BALL_COST).map((b) => [b, focusSurcharge(b)])), regions: focusRegions() }));
 app.post("/api/rewardPokemon", express.json(), async (req, res) => { const r = await h.rewardPokemon({ body: req.body, isAuthorized: () => true }); res.status(r.status).json(r.body); });
 for (const p of ["/api/tm-shop", "/api/held-items", "/api/mega"]) app.get(p, (_q, res) => res.json({ success: true, enabled: false }));
 const port = Number(process.argv[2] || 5246);

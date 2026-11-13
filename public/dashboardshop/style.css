@@ -225,3 +225,9 @@ main:focus { outline: none; }
 .focus-pill:hover { filter: brightness(1.1); }
 .focus-pill[aria-checked="true"] { border-color: var(--cc-text); box-shadow: inset 0 1px 0 #ffffff40, 0 0 0 2px var(--cc-blue); }
 .focus-pill:focus-visible { outline: 2px solid var(--cc-blue); outline-offset: 2px; }
+.focus-tabs { display: flex; gap: 6px; margin: 0 0 10px; }
+.focus-tabs button { min-height: 36px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text-muted); font-family: inherit; font-weight: 800; font-size: 13px; cursor: pointer; }
+.focus-tabs button[aria-selected="true"] { border-color: var(--cc-blue); background: var(--cc-blue-soft); color: var(--cc-text); }
+/* Regions have no type color: same pill, neutral fill. */
+.focus-region { background: var(--cc-surface-sunken); color: var(--cc-text); border-color: var(--cc-line); }
+.focus-pills[hidden] { display: none; }

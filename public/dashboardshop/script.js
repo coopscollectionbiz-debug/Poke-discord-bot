@@ -39,12 +39,12 @@ const PRICE_CATEGORY = { pokeball: "balls", greatball: "balls", ultraball: "ball
 // 🎪 Live events: banner, discounted prices, and the "Use Live event"
 // choice for Poké Balls (the server charges and rolls; this only shows it).
 // ======================================================
-// Focus type (GET /api/focus-type): under each ball, a "Focused Throw" for
-// the ball's price plus a surcharge. Its popup shows the 18 types as colored
-// pills; the server prices, rolls and refunds the Focus on a Mythic.
+// Focused Throw (GET /api/focus-type): under each ball, a throw focused on a
+// type or a Region, for the ball's price plus a surcharge. Its popup shows the
+// 18 types as colored pills and the live Regions; the server prices and rolls.
 const FOCUS_TYPES = ["Normal", "Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Ghost", "Steel", "Fire", "Water", "Grass", "Electric", "Psychic", "Ice", "Dragon", "Dark", "Fairy"];
 const BALL_NAME = { pokeball: "Poké Ball", greatball: "Great Ball", ultraball: "Ultra Ball" };
-let focus = { enabled: false, surcharge: {} };
+let focus = { enabled: false, surcharge: {}, regions: [] };
 const focusedCost = (ball) => Number(window.ITEM_COSTS?.[ball] ?? LIST_COSTS[ball]) + Number(focus.surcharge[ball] || 0);
 
 async function loadFocusUI() {
@@ -83,33 +83,48 @@ function openFocusPicker(ball) {
   d.className = "cc-dialog focus-dialog";
   d.setAttribute("aria-labelledby", "focusTitle");
   const cost = focusedCost(ball);
-  const extra = Number(focus.surcharge[ball] || 0);
   d.innerHTML = `
     <h2 id="focusTitle"><img src="/public/sprites/items/${ball}.png" alt="" class="focus-ball"> Focused Throw: ${BALL_NAME[ball]}</h2>
-    <p class="focus-note">Pick a type. The throw only catches that type, at the ${BALL_NAME[ball]}'s usual Tier odds. If it lands on a Mythic, the Focus doesn't apply and the ${extra.toLocaleString()} CC extra is refunded.</p>
-    <div class="focus-pills" role="radiogroup" aria-label="Type"></div>
+    <p class="focus-note">Pick a type or a Region. The throw only catches Pokémon from it, at the ${BALL_NAME[ball]}'s usual Tier odds, Legendary and Mythic included.</p>
+    <div class="focus-tabs" role="tablist" aria-label="Focus on">
+      <button type="button" role="tab" data-tab="type" aria-selected="true">Types</button>
+      <button type="button" role="tab" data-tab="region" aria-selected="false">Regions</button>
+    </div>
+    <div class="focus-pills" data-panel="type" role="radiogroup" aria-label="Type"></div>
+    <div class="focus-pills" data-panel="region" role="radiogroup" aria-label="Region" hidden></div>
     <div class="cc-dialog-actions">
       <button type="button" class="cc-btn" data-act="cancel">Cancel</button>
-      <button type="button" class="cc-btn cc-btn--primary" data-act="throw" disabled>Pick a type</button>
+      <button type="button" class="cc-btn cc-btn--primary" data-act="throw" disabled>Pick a type or Region</button>
     </div>`;
-  const pills = d.querySelector(".focus-pills");
   const go = d.querySelector('[data-act="throw"]');
   let picked = null;
-  for (const t of FOCUS_TYPES) {
+  const allPills = () => d.querySelectorAll(".focus-pill");
+  const addPill = (panel, name, cls, dataType) => {
     const p = document.createElement("button");
     p.type = "button";
-    p.className = "cc-type focus-pill";
-    p.dataset.type = t.toLowerCase();
+    p.className = cls;
+    if (dataType) p.dataset.type = dataType;
     p.setAttribute("role", "radio");
     p.setAttribute("aria-checked", "false");
-    p.textContent = t;
+    p.textContent = name;
     p.onclick = () => {
-      picked = t;
-      for (const q of pills.children) q.setAttribute("aria-checked", String(q === p));
+      picked = name;
+      for (const q of allPills()) q.setAttribute("aria-checked", String(q === p));
       go.disabled = (user?.cc ?? 0) < cost;
       go.textContent = go.disabled ? `Not enough CC (${cost.toLocaleString()})` : `Throw for ${cost.toLocaleString()} CC`;
     };
-    pills.append(p);
+    panel.append(p);
+  };
+  const typePanel = d.querySelector('[data-panel="type"]');
+  const regionPanel = d.querySelector('[data-panel="region"]');
+  for (const t of FOCUS_TYPES) addPill(typePanel, t, "cc-type focus-pill", t.toLowerCase());
+  for (const r of focus.regions ?? []) addPill(regionPanel, r, "cc-type focus-pill focus-region", null);
+  for (const tab of d.querySelectorAll("[data-tab]")) {
+    tab.onclick = () => {
+      for (const t of d.querySelectorAll("[data-tab]")) t.setAttribute("aria-selected", String(t === tab));
+      typePanel.hidden = tab.dataset.tab !== "type";
+      regionPanel.hidden = tab.dataset.tab !== "region";
+    };
   }
   d.querySelector('[data-act="cancel"]').onclick = () => d.close();
   go.onclick = () => { d.close(); if (picked) throwBall(ball, picked); };
@@ -436,8 +451,8 @@ async function buyPokeball(type, cost) {
   });
 }
 
-// One throw, plain or focused (the server prices it, rolls it and refunds the
-// Focus on a Mythic). Shows the catch, or the error.
+// One throw, plain or focused (the server prices and rolls it). Shows the
+// catch, or the error.
 async function throwBall(type, focusType) {
   const reward = await fetch("/api/rewardPokemon", {
     method: "POST",
@@ -458,7 +473,7 @@ async function throwBall(type, focusType) {
 
   const rarityHTML = tierPill(reward.pokemon.rarity);
   const f = reward.focus;
-  const focusLine = f && !f.applied ? `<br><small>A Mythic! The ${escapeHtml(f.type)} Focus didn't apply, so ${Number(f.refunded).toLocaleString()} CC was refunded.</small>` : "";
+  const focusLine = f ? `<br><small>Focused on ${escapeHtml(f.name)}</small>` : "";
 
   showShopModal({
     title: "You caught a Pokémon!",

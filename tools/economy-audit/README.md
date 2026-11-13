@@ -6,6 +6,7 @@ These scripts back `docs/audits/economy-2026-11/`. They are read-only. They neve
 |---|---|---|
 | `model.mjs` | no | `docs/audits/economy-2026-11/model.json`: Tier odds per ball and Rank, donation payback, chat catch pity, player profiles, one-time pools, Focus type pools, and the Quests proposal sims |
 | `aggregate.mjs` | yes, on the server | stdout: aggregates only (counts, totals, percentiles). No ids, no names, no per-player rows. p95, p99 and max are rounded. |
+| `focus-analysis.mjs` | no | `docs/audits/economy-2026-11/focus-analysis.json`: exact Focused Throw odds for every type and Region: profit check, cost to chase one Legendary or Mythic, Region Pokédex speed-up, Catch boost stacking (report Q4b) |
 | `build-html.mjs` | no | `REPORT.html` from `REPORT.md` |
 
 ## Reproduce

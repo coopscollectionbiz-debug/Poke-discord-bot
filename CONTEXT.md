@@ -110,9 +110,9 @@ _Avoid_: dex count, owned count, seen/caught
 
 ### Economy
 
-**Focus type**:
-An option on a Poké Ball throw (a Focused Throw) that limits the catch to one type, for half the ball's price on top. The ball's **Tier** odds stay the same: the Tier is rolled first, then the Pokémon is picked from that Tier's species of the chosen type. A Mythic roll ignores the Focus, picks any Mythic, and refunds the extra.
-_Avoid_: recruit, targeted ball
+**Focused Throw**:
+A Poké Ball throw limited to one type or one **Region** (its Focus), for half the ball's list price on top. The ball's **Tier** odds stay the same: the Tier is rolled first, then the Pokémon is picked from that Tier's species in the Focus, Legendary and Mythic included.
+_Avoid_: recruit, targeted ball, Focus type (the older name)
 
 **Donation**:
 Permanently giving up a **Copy** in exchange for CC, and sometimes **Shiny Dust**. The species stays **Registered**.

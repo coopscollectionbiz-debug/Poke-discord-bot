@@ -33,9 +33,10 @@ export const ANIMATION = { delayMs: 100, eventFrames: 7, holdFrames: 10, idleFra
 
 // A beat's frames, the floor a capped beat keeps, the read margin after an
 // image's last beat (today's margin after a two-hit turn: 2,000 − 2 × 700 ms),
-// and the beat frames one image may use before its beats share them (set
-// from tools/bench-battle-fx.mjs).
-export const FX = Object.freeze({ beatFrames: 8, minBeatFrames: 4, readMs: 600, capFrames: Infinity });
+// and the beat frames one image may use before its beats share them: the
+// p95 of beat frames per image in tools/bench-battle-fx.mjs (2026-11-13, 24),
+// so 95% of images play every beat at full length.
+export const FX = Object.freeze({ beatFrames: 8, minBeatFrames: 4, readMs: 600, capFrames: 24 });
 
 /** Battle FX is on unless BATTLE_FX=0. */
 export const battleFx = (env = process.env) => env.BATTLE_FX !== "0";

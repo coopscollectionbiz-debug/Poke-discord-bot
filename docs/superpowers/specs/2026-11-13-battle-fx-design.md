@@ -135,6 +135,25 @@ The n-th move step in `steps[turn − 1]` is the n-th event in `log[turn − 1]`
 
 The render.js comment gives "~2.5–2.8 s between playback updates" from a screen recording, and that was never measured again. The bench reports the computed interval, `max(wait, render time)`, instead.
 
+### Measured
+
+`FULL_SIM_ENABLED=1 node tools/bench-battle-fx.mjs 40 5` ran on 2026-11-13 on a development Mac (darwin arm64, Node 22.22.3, 3 render threads), with no cap set. That covered 40 fights per plan, 5 Elite Four runs, and 1,758 turn images each way.
+
+| Check | BATTLE_FX on | BATTLE_FX=0 |
+|---|---|---|
+| beat time per image, p50 / p95 / max | 800 / 2,400 / 4,000 ms | 0 |
+| largest turn GIF | 989 KB | 881 KB |
+| render per turn image, p50 / p95 / max | 237 / 365 / 769 ms | 215 / 289 / 758 ms |
+| images that would loop back | 0 of 1,758 | 0 of 1,758 |
+| replay per fight, p50 / p95 / max | 49 / 62 / 67 s | 42 / 42 / 42 s |
+| worst Elite Four fight | 59.6 s | 42.0 s |
+
+- **The cap** is the p95, 24 frames (`FX.capFrames`). An image with more than three beats shares 2.4 s among them.
+- **GIF size.** The largest turn GIF is an eighth of `MAX_GIF_BYTES`, so there's no fallback.
+- **Render time.** The slowest render, 769 ms, is well under the 2,000 ms wait it happens in.
+- **Replay length.** A fight's replay grows by about 7 s at the median and 25 s at worst. That's far inside an Elite Four fight's 15-minute reply window.
+- **Not measured yet:** the VPS, whose CPU is shared with other services.
+
 ## Tests
 
 - **`tests/battleTimeline.test.js` (new).** Each beat kind, from real steps, with one test per condition. It also covers:

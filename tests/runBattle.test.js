@@ -5,11 +5,13 @@
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { buildTeam, buildBattleTeam, runBattle, battleBlock, withBothLocks } from "../utils/battle/runBattle.js";
-import { RANKED } from "../utils/battle/tuning.js";
+import { RANKED, PLAYBACK, FULL_SIM } from "../utils/battle/tuning.js";
 import { rankedRecord, lifetimeRanked, getBattleRecord, utcDay } from "../utils/battle/rewards.js";
 import { blockRematch, isRematchBlocked } from "../utils/battle/rematch.js";
 import { battleImageName, buildResultEmbed, createQueue, expSummary, playBattle, resultScreens } from "../utils/battle/playback.js";
 import { pickFrameTurns } from "../utils/battle/render.js";
+import { simulateFull } from "../utils/battle/showdown/simulate.js";
+import { turnTimeline, marksAt } from "../utils/battle/timeline.js";
 import { lockUser } from "../utils/userLocks.js";
 import { createNewUser } from "../utils/userSchema.js";
 import { grantCatch } from "../utils/training.js";
@@ -360,6 +362,39 @@ section("Playback");
   const failing = { send: async () => ({ edit: async () => { throw new Error("Unknown Message"); } }) };
   await playBattle(failing, out, { A: "Ash", B: "Gary" }, { maxUpdates: 12, delayMs: 0 });
   assertTrue(true, "a failed edit stops playback without throwing");
+}
+
+section("Playback: Battle FX paces by each image's timeline");
+{
+  // A full-sim fight with a burn, a Swords Dance and burn ticks; render is stubbed, so only the pacing is timed.
+  const fxMon = (speciesId, name, moves, extra = {}) => ({ speciesId, variant: "normal", name, level: 50, moves, ...extra });
+  const seq = (moves) => (req, b) => (req.forceSwitch ? null : moves[Math.min(b.turn, moves.length) - 1]);
+  const teams = [[fxMon(94, "Gengar", ["willowisp", "splash"])], [fxMon(143, "Snorlax", ["swordsdance", "splash"], { hpFraction: 0.2 })]];
+  const r = simulateFull({ sides: teams.map((members) => ({ members })), seed: 5, ai: [seq(["move 1", "move 2"]), seq(["move 1", "move 2"])] });
+  const names = teams.map((s) => s.map((m) => m.name));
+  const base = open(world(), 4);
+  const outcome = { ...base, result: r, sides: [{ ...base.sides[0], members: teams[0] }, { ...base.sides[1], members: teams[1] }], winnerId: r.winner === 0 ? "A" : "B", exp: { A: [] } };
+  const calls = [];
+  const render = async (opts) => { calls.push(opts); return Buffer.from("GIF89a stub"); };
+  const at = [];
+  const channel = { send: async () => ({ edit: async () => { at.push(Date.now()); } }) };
+  const delayMs = 200;
+  await playBattle(channel, outcome, { A: "Ash", B: "Gary" }, { maxUpdates: 12, delayMs, render });
+  const turns = pickFrameTurns(r.turns, Math.max(12, FULL_SIM.maxUpdates));
+  const turnCalls = calls.slice(1, -1);
+  assertTrue(turnCalls.length === turns.length && turnCalls.every((c, k) => JSON.stringify(c.timeline) === JSON.stringify(turnTimeline(r, turns[k], names))), "each turn image gets its timeline");
+  assertEqual([calls[0].marks, calls.at(-1).marks], [marksAt(r, 0), marksAt(r, r.turns)], "the start and result images get the recorded marks");
+  const short = [];
+  turns.forEach((turn, k) => {
+    const wait = Math.round((turnTimeline(r, turn, names).waitMs * delayMs) / PLAYBACK.delayMs);
+    if (at[k + 1] - at[k] < wait - 50) short.push(`after turn ${turn}: ${at[k + 1] - at[k]} ms, wanted ${wait}`);
+  });
+  assertTrue(turns.some((turn) => turnTimeline(r, turn, names).waitMs > PLAYBACK.delayMs), "some image waits longer than today (it has beats)");
+  assertEqual(short, [], "the next update waits for the shown image's waitMs, scaled by the delayMs passed");
+
+  const plain = [];
+  await playBattle(channel, base, { A: "Ash", B: "Gary" }, { maxUpdates: 12, delayMs: 0, render: async (opts) => { plain.push(opts); return Buffer.from("GIF89a stub"); } });
+  assertTrue(plain.every((c) => !c.timeline && !c.marks), "a result from today's engine gets no timeline and no marks");
 }
 
 section("Replay line");

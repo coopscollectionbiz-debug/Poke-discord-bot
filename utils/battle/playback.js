@@ -19,7 +19,7 @@
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { GifReader } from "omggif";
 import { pickFrameTurns } from "./render.js";
-import { activeAt } from "./timeline.js";
+import { activeAt, turnTimeline, marksAt, battleFx } from "./timeline.js";
 import { PLAYBACK, CUTE, FULL_SIM } from "./tuning.js";
 import { teamCuteness } from "./cuteness.js";
 import { trainingKey } from "../training.js";
@@ -183,9 +183,15 @@ const replays = createQueue(PLAYBACK.maxAtOnce);
 // opponent): their rows get the tier backdrop. `vs` (/battle only) is the
 // VS card's view: it opens the replay in place of the start image, held for
 // vsHoldMs; if it can't render, the start image goes as before.
-async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], tiers = [null, null], theme = null, award = null, namePrefix = "", vs = null }) {
+// Battle FX (full sim): each turn image plays its timeline, and the next
+// update waits for that image's beats (its waitMs, scaled by delayMs).
+// `render` draws each image (the render threads; tests stub it).
+async function replayFight({ channel, message, heading, fight, names, sprites, maxUpdates, delayMs, finalEmbed, paceStart = false, trainers = [null, null], tiers = [null, null], theme = null, award = null, namePrefix = "", vs = null, render = threaded.battleFrame }) {
   const sides = fight.sides.map((s) => ({ name: names[s.userId], members: s.members }));
   const { snapshots, log, turns: total } = fight.result;
+  const fx = battleFx() && Boolean(fight.result.steps); // full sim, BATTLE_FX on
+  const memberNames = sides.map((s) => s.members.map((m) => m.name ?? `#${m.speciesId}`));
+  const marks = (i) => (fx ? { marks: marksAt(fight.result, i) } : {});
   // Each update gets its own file name (battleImageName). With one shared
   // "battle.gif", a desktop client whose first load failed kept showing the
   // broken image for every later edit, result included.
@@ -193,7 +199,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
   // goes up, so each image's sprites carry on where the last left off.
   let clockMs = 0;
   const image = async (step, opts) => new AttachmentBuilder(
-    await threaded.battleFrame({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, tiers, theme, clockMs, ...opts }),
+    await render({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, tiers, theme, clockMs, ...opts }),
     { name: namePrefix + battleImageName(step) },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.
@@ -218,7 +224,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
 
   // In an Elite Four run, a Pokémon that fainted in an earlier fight can't lead off.
   const leads = sides.map((s, i) => s.members[snapshots[0][i].findIndex((hp) => hp > 0)]?.name).join(" and ");
-  const startImage = () => image("start", { hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]] });
+  const startImage = () => image("start", { hpBefore: snapshots[0], screens: [["The battle begins!", `${leads} lead off.`]], ...marks(0) });
   const opening = await vsCard();
   const start = { content: heading, files: [opening ? opening.file : paceStart ? await paced(startImage) : await startImage()] };
   if (message) await message.edit(start);
@@ -231,9 +237,12 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
     const updates = fight.result.v === 2 ? Math.max(maxUpdates, FULL_SIM.maxUpdates) : maxUpdates;
     for (const turn of total ? pickFrameTurns(total, updates) : []) {
       const badge = turn - shown > 1 ? `TURNS ${shown + 1}–${turn}` : `TURN ${turn}`;
+      const timeline = fx ? turnTimeline(fight.result, turn, memberNames) : null;
       const active = fight.result.steps ? { active: activeAt(fight.result, turn) } : {}; // today's results: first with HP left
-      const file = await paced(() => image(turn, { hpBefore: snapshots[turn - 1], events: log[turn - 1], badge, ...active }), wait);
-      wait = delayMs;
+      const plays = timeline ? { timeline } : { events: log[turn - 1], ...active };
+      const file = await paced(() => image(turn, { hpBefore: snapshots[turn - 1], badge, ...plays }), wait);
+      // The next update waits for this image's beats (never less than today).
+      wait = timeline ? Math.round((timeline.waitMs * delayMs) / PLAYBACK.delayMs) : delayMs;
       await message.edit({ files: [file] });
       shown = turn;
     }
@@ -249,7 +258,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
     const screens = resultScreens(fight, names);
     if (award) screens.splice(1, 0, award.lines);
     const file = await paced(() => image("final", {
-      sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(fight), screens,
+      sides: grownSides, hpBefore: snapshots[total], badge: "FINAL", winnerSide: winnerSideOf(fight), screens, ...marks(total),
       ...(award && { theme: { ...theme, award: { screen: 1, badgeFile: award.badgeFile, title: award.title } } }),
     }), wait);
     await message.edit({ files: [file], ...(finalEmbed && { embeds: [finalEmbed] }) });
@@ -284,11 +293,11 @@ async function waitForSlot(channel, queue, heading, message = null) {
 // `trainers` are the two sides' displayed trainer files (null: none); both
 // are players, so each has its tier. `vs` is the VS card's view (see
 // replayFight), built with the records from before the battle.
-export async function playBattle(channel, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null], auras = null, vs = null } = PLAYBACK) {
+export async function playBattle(channel, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null], auras = null, vs = null, render = threaded.battleFrame } = PLAYBACK) {
   const { message, release } = await waitForSlot(channel, queue, header(outcome));
   try {
     await replayFight({
-      channel, message, heading: header(outcome), fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers, vs,
+      channel, message, heading: header(outcome), fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers, vs, render,
       tiers: auras ?? trainers.map((f) => trainerTier(f)), // each player's equipped Aura (services/auras.js auraLook)
       finalEmbed: buildResultEmbed(outcome, names),
     });

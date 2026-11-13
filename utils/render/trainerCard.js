@@ -14,6 +14,7 @@ import { createCanvas as makeCanvas } from "@napi-rs/canvas";
 import { loadStaticSprite, loadTrainerSprite, loadTrainerPoses, loadBadgeSprite, loadPlaceholder, spriteScale } from "./sprites.js";
 import { spriteStage, FRAMES } from "./stage.js";
 import { createBackdrop, hasBackdrop, drawTierSky } from "./trainerBackdrop.js";
+import { trainerLight } from "./auraArt.js";
 import { poseAtFrame } from "../trainerIdle.js";
 import { trainersAnimated } from "../trainerAssets.js";
 import { buildTeamView, buildShowcaseView } from "./teamView.js";
@@ -80,8 +81,10 @@ export function trainerBackdrop(ctx, stage, { tier, sprite, cx, box, panel, floo
   px.getContext("2d").drawImage(sprite.image, 0, 0);
   const rgba = px.getContext("2d").getImageData(0, 0, sprite.width, sprite.height).data;
   const mask = new Uint8Array(gridW * gridH);
+  let soles = 0; // one past the sprite's lowest opaque row: where its feet really end (PNGs can have empty rows below)
   for (let sy = 0; sy < sprite.height; sy++) for (let sx = 0; sx < sprite.width; sx++) {
     if (rgba[(sy * sprite.width + sx) * 4 + 3] < 8) continue;
+    soles = sy + 1;
     for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
       const gx = ox + sx + dx, gy = oy + sy + dy;
       if (gx >= 0 && gy >= 0 && gx < gridW && gy < gridH) mask[gy * gridW + gx] = 1;
@@ -91,6 +94,7 @@ export function trainerBackdrop(ctx, stage, { tier, sprite, cx, box, panel, floo
     tier, gridW, gridH, mask, frames: FRAMES,
     halo: { cx: (cx - X0) / u, cy: (y + h * 0.45 - Y0) / u, rx: 40, ry: 54 },
     floorRow: Math.floor((floor - Y0) / u),
+    feetRow: oy + Math.round((soles * h) / sprite.height / u), // the bottom edge of the trainer's feet: an art Aura's back.png feet row lands here
   });
   if (!bd) return;
   const draw = (c, f) => {
@@ -160,7 +164,7 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
     const idle = await loadTrainerPoses(v.trainerFile);
     const box = { w: LEFT_W - 40, h: 330, floor: floor + 6, scale: 4 };
     if (fancy) trainerBackdrop(ctx, stage, { tier: look, sprite: t, cx, box, panel: { x: M, y: M, w: LEFT_W }, floor });
-    stage.placePosed(ctx, idle?.poses ?? [t], idle?.poseAt ?? poseAtFrame, cx, box.floor, box.w, box.h, { scale: box.scale });
+    stage.placePosed(ctx, idle?.poses ?? [t], idle?.poseAt ?? poseAtFrame, cx, box.floor, box.w, box.h, { scale: box.scale, light: fancy ? trainerLight(look) : null });
   } else { ctx.globalAlpha = 0.35; drawBall(ctx, cx, floor - 70, 40, false); ctx.globalAlpha = 1; }
   ctx.textAlign = "center";
   ctx.font = font(15, 800);

@@ -3,12 +3,16 @@
 // Lists every Aura (services/auras.js auraView), previews each one behind
 // the displayed trainer, and equips or buys. The server is authoritative.
 //   Tier Auras preview with the same pixel backdrop as the bot (spriteFx.js);
-//   art Auras play their spritesheet (/auras-art/<id>/aura.json).
+//   art Auras play their spritesheet (/auras-art/<id>/aura.json) on a canvas,
+//   with the bot's own timing, placement and trainer lighting
+//   (/public/shared/auraArt.js: one implementation for both; drawn by
+//   /public/shared/auraPreview.js, which the Battle page uses too).
 // ===========================================================
 
 import { showExpired, toast, confirmDialog } from "/public/shared/shell.js";
 import { scanFx } from "/public/shared/spriteFx.js";
-import { auraPreview, loadAuraArt } from "/public/shared/auraPreview.js";
+import { auraPreview, loadAuraArt, startAuraPreviews } from "/public/shared/auraPreview.js";
+
 const GROUPS = [
   ["tier", "Tier Auras", "Unlocked for good by owning a trainer of that tier."],
   ["gym", "Gym Leaders", "Beat each Gym Leader in /challenge."],
@@ -66,10 +70,11 @@ async function load() {
   }
 }
 
+// ---------- previews ----------
+// The trainer over the Aura: public/shared/auraPreview.js (shared with the Battle page).
 const loadArt = loadAuraArt;
-
-// The trainer over the Aura (public/shared/auraPreview.js, shared with the Battle page).
 const preview = (look, trainerFile) => auraPreview(look, trainerFile);
+const startArtPreviews = startAuraPreviews;
 
 function render() {
   const s = state;
@@ -96,6 +101,7 @@ function render() {
       return `<section class="aura-group"><h2>${title}</h2><p class="muted">${blurb}</p><div class="aura-grid">${list.map(card).join("")}</div></section>`;
     }).join("")}`;
   scanFx(panel);
+  startArtPreviews(panel);
 }
 
 function card(a) {

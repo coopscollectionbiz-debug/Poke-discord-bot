@@ -9,7 +9,7 @@
 
 import { playerId, pageHref, showExpired, toast } from "/public/shared/shell.js";
 import { scanFx } from "/public/shared/spriteFx.js";
-import { auraPreview, loadAuraLooks } from "/public/shared/auraPreview.js";
+import { auraPreview, loadAuraLooks, startAuraPreviews } from "/public/shared/auraPreview.js";
 
 const id = playerId();
 const $ = (sel) => document.getElementById(sel);
@@ -158,6 +158,7 @@ async function fillTeam(panel) {
       <div><p class="bt-team-head">${esc(t.name)}'s ${t.mode === "ranked" ? "Ranked team · Lv 50" : "Casual team"}</p>
       ${teamList(t.members, { label: `${t.name}'s team` })}</div></div>`;
   scanFx(panel);
+  startAuraPreviews(panel);
 }
 
 document.addEventListener("click", (e) => {
@@ -334,6 +335,7 @@ function renderPreview({ scroll = true } = {}) {
     </div>`;
   el.hidden = false;
   scanFx(el);
+  startAuraPreviews(el);
   if (scroll) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 

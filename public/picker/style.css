@@ -263,8 +263,8 @@ main:focus { outline: none; }
 .aura-state { font-size: 0.85rem; color: var(--cc-text-muted); }
 .aura-state.is-on { color: var(--cc-blue); font-weight: 700; }
 
-/* The preview: the trainer over the Aura, pixel-sharp (art is 90×105 sprite px, shown 2×). */
-.aura-preview { width: 180px; } /* the rest is shared: components.css */
+/* The preview (trainer over Aura) is shared: components.css. Here it shows 2×. */
+.aura-preview { width: 180px; }
 @media (max-width: 560px) {
   .aura-now { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .aura-quicks { justify-content: center; }

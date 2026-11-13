@@ -512,3 +512,11 @@ dialog.cc-dialog .cc-dialog-actions { display: flex; gap: 10px; justify-content:
 .cc-live-choice { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-weight: 600; }
 .cc-live-choice small { font-weight: 400; color: var(--cc-text-muted); }
 .cc-was { color: var(--cc-text-faint); font-weight: 600; margin-right: 4px; }
+
+/* ---------- A trainer over an Aura (public/shared/auraPreview.js) ---------- */
+.aura-preview { position: relative; max-width: 100%; aspect-ratio: 90 / 105; border-radius: 12px; overflow: hidden; background: var(--cc-surface-sunken); display: grid; place-items: end center; }
+.aura-preview img { position: relative; z-index: 1; width: auto; height: 82%; margin-bottom: 6%; image-rendering: pixelated; }
+.aura-art { background: var(--sky); }
+.aura-art .aura-sheet { position: absolute; inset: 0; background-image: var(--sheet); background-repeat: no-repeat; background-size: calc(var(--frames) * 100%) 100%; image-rendering: pixelated; animation: aura-steps calc(var(--frames) * 100ms) steps(var(--frames), jump-none) infinite; }
+@keyframes aura-steps { from { background-position: 0 0; } to { background-position: 100% 0; } }
+@media (prefers-reduced-motion: reduce) { .aura-art .aura-sheet { animation: none; } }

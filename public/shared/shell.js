@@ -6,8 +6,8 @@
 //   • toasts (role="status") and in-page dialogs replacing alert()
 //   • keyboard/screen-reader support for the pages' JS-built modals
 // Import it first: <script type="module" src="/public/shared/shell.js">.
-// The page is chosen by <body data-page="overview|pokemon|teams|records|trainers|bag|achievements|shop">.
-// No API calls and no game logic live here.
+// The page is chosen by <body data-page="overview|pokemon|teams|battle|records|trainers|bag|achievements|shop">.
+// No game logic lives here; the only API call is GET /api/battle/enabled for the nav.
 // ==========================================================
 
 export const EXPIRED_MESSAGE = "Your dashboard link expired — run /dashboard in Discord.";
@@ -18,6 +18,8 @@ export const NAV_ITEMS = Object.freeze([
   { key: "pokemon", label: "Collection", short: "Box", href: "/public/picker-pokemon/", icon: "box" },
   { key: "pokedex", label: "Pokédex", short: "Dex", href: "/public/pokedex/", icon: "dex" },
   { key: "teams", label: "Teams", href: "/public/teams/", icon: "teams" },
+  // Shown only while DASHBOARD_FIGHTS_ENABLED is on (GET /api/battle/enabled).
+  { key: "battle", label: "Battle", href: "/public/battle/", icon: "bolt", flag: "battle" },
   { key: "records", label: "Battle Records", short: "Records", href: "/public/battlerecords/", icon: "swords" },
   { key: "trainers", label: "Trainers", href: "/public/picker/", icon: "person" },
   { key: "bag", label: "Bag", href: "/public/bag/", icon: "bag" },
@@ -32,6 +34,7 @@ const ICONS = `
   <symbol id="cc-i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></symbol>
   <symbol id="cc-i-teams" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" d="M3 12h6m6 0h6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
   <symbol id="cc-i-swords" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 4l10 10M4 4h4M4 4v4M20 4 10 14M20 4h-4M20 4v4M7 17l3-3M14 14l3 3M5 19l2-2M19 19l-2-2"/></symbol>
+  <symbol id="cc-i-bolt" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
   <symbol id="cc-i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2"/></symbol>
   <symbol id="cc-i-star" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
   <symbol id="cc-i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" d="M4 21c1-4 4-6 8-6s7 2 8 6"/></symbol>
@@ -51,6 +54,10 @@ function navList(active, id, { short = false } = {}) {
   ul.className = "cc-nav-list";
   for (const item of NAV_ITEMS) {
     const li = document.createElement("li");
+    if (item.flag) {
+      li.dataset.flag = item.flag;
+      li.hidden = !flagOn(item.flag) && item.key !== active;
+    }
     const a = document.createElement("a");
     a.className = "cc-nav-link";
     a.href = pageHref(item.href, id);
@@ -64,6 +71,20 @@ function navList(active, id, { short = false } = {}) {
     ul.append(li);
   }
   return ul;
+}
+
+// Flagged nav items: remembered for the tab's session so the nav doesn't jump on every page.
+const FLAG_KEY = (flag) => `cc-flag-${flag}`;
+function flagOn(flag) {
+  try { return sessionStorage.getItem(FLAG_KEY(flag)) === "1"; } catch { return false; }
+}
+async function syncFlags() {
+  try {
+    const res = await fetch("/api/battle/enabled", { credentials: "same-origin" });
+    const on = res.ok && (await res.json()).enabled === true;
+    try { sessionStorage.setItem(FLAG_KEY("battle"), on ? "1" : "0"); } catch { /* storage blocked */ }
+    for (const li of document.querySelectorAll('li[data-flag="battle"]')) li.hidden = !on;
+  } catch { /* offline: keep what's shown */ }
 }
 
 function mountShell() {
@@ -122,6 +143,7 @@ function mountShell() {
   body.append(toasts);
 
   if (!id) showBanner(MISSING_ID_MESSAGE, { tone: "error", key: "missing-id" });
+  syncFlags();
 }
 
 // ----------------------------------------------------------

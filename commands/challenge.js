@@ -53,7 +53,7 @@ const n = (x) => x.toLocaleString("en-US");
 
 // /challenge works only in this channel when it's set (fly.toml in production,
 // .env locally); unset, it works anywhere.
-const challengeChannelId = () => process.env.CHALLENGE_CHANNEL_ID || null;
+export const challengeChannelId = () => process.env.CHALLENGE_CHANNEL_ID || null;
 
 export function refusal(reason, user) {
   return {
@@ -192,7 +192,7 @@ export async function challengeExpMessage(outcome, names, user, { render = threa
 }
 
 // The event log line, and the Fight record for Battle Records (never throws).
-const logChallenge = (userId, outcome, extra, { playerName, trainerData }) => {
+export const logChallenge = (userId, outcome, extra, { playerName, trainerData }) => {
   logEvent("challenge", userId, { ...challengeLogEntry(outcome), ...extra });
   recordFight(() => challengeRecord(outcome, playerName, trainerData));
 };
@@ -203,12 +203,12 @@ const LATE_CLICKS_MS = 15 * 60 * 1000;
 // Nonces of the runs this process is playing. A run's step can stay put for
 // over CHALLENGE.staleRunMs while its replay waits in a long queue; only a run
 // whose command died (a restart finishes all of those) may be finished as stale.
-const playing = new Set();
+export const playing = new Set();
 
 // A run with no step for CHALLENGE.staleRunMs, and no command playing it,
 // stopped unexpectedly. Finishes it with no Revives and saves; the run's
 // message gets the result after the caller's reply, which has 3 seconds.
-async function finishStaleRun({ trainerData, userId, lockUser, enqueueSave, client, playerName }) {
+export async function finishStaleRun({ trainerData, userId, lockUser, enqueueSave, client, playerName }) {
   const done = await lockUser(userId, async () => {
     const run = trainerData[userId]?.challenge?.run;
     if (!isRunStale(trainerData[userId]) || playing.has(run.nonce)) return null;
@@ -284,13 +284,19 @@ async function askRevive(latest, step) {
 // A replay that fails (a deleted message) stops only the replay. Resolves to
 // { outcome, posted, latest } (latest: the newest click, whose reply window
 // is freshest), or null if the run was finished elsewhere meanwhile.
-async function playRun({ channel, fightClick, step, trainerData, userId, lockUser, enqueueSave, playerName, trainer, aura }) {
+// `revive(latest, step)` asks for the pick (the private Discord menu by
+// default; the dashboard passes its own). With no `channel` nothing is posted
+// and, when given, `pace(shown, i)` waits as long as that fight's replay would
+// have taken, so the Revive window opens at the same point either way.
+export async function playRun({ channel, fightClick, step, trainerData, userId, lockUser, enqueueSave, playerName, trainer, aura, revive = askRevive, pace = null, onStep = null }) {
   let message = null;
-  let replaying = true;
-  let posted = true;
+  let replaying = !!channel;
+  let posted = !!channel;
   let latest = fightClick;
   for (;;) {
     const shown = step.ended ? step.outcome : step.view;
+    onStep?.(step);
+    if (!replaying && pace) await pace(shown, step.step);
     if (replaying) {
       const names = challengeNames(shown, playerName);
       const played = await playChallengeFight(channel, message, shown, step.step, names, { ...PLAYBACK, last: step.ended, trainer, aura })
@@ -299,7 +305,10 @@ async function playRun({ channel, fightClick, step, trainerData, userId, lockUse
           posted = false;
           return null;
         });
-      if (!played) replaying = false;
+      if (!played) {
+        replaying = false;
+        if (pace) await pace(shown, step.step);
+      }
       else if (!message && !step.ended) {
         message = played;
         // So a restart or a stale finish can put the result on this message.
@@ -313,7 +322,7 @@ async function playRun({ channel, fightClick, step, trainerData, userId, lockUse
     let slot;
     if (step.fainted.length) {
       if (replaying) await showChoosing(message, step.view, step.step);
-      const answer = await askRevive(latest, step);
+      const answer = await revive(latest, step);
       slot = answer.slot;
       latest = answer.click;
     }

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Battle · Coop’s Collection</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/public/shared/tokens.css" />
+    <link rel="stylesheet" href="/public/shared/components.css" />
+    <link rel="stylesheet" href="/public/battle/style.css" />
+  </head>
+
+  <body data-page="battle">
+    <header class="cc-page-head">
+      <p class="cc-eyebrow">Battles</p>
+      <h1>Battle</h1>
+      <p>Fights you start here are posted in Discord, the same as /battle and /challenge.</p>
+    </header>
+
+    <main id="ccMain" tabindex="-1">
+      <div id="btTabs" class="bt-tabs" role="tablist" aria-label="Fight type">
+        <button type="button" role="tab" id="btTabBattle" aria-controls="btBattle" aria-selected="true">Battle</button>
+        <button type="button" role="tab" id="btTabChallenges" aria-controls="btChallenges" aria-selected="false" tabindex="-1">Challenges</button>
+      </div>
+
+      <p id="btStatus" class="bt-status" aria-live="polite">Loading…</p>
+
+      <!-- Result of the last fight -->
+      <section id="btResult" class="bt-result cc-card" aria-live="polite" hidden></section>
+
+      <!-- Battle tab -->
+      <section id="btBattle" role="tabpanel" aria-labelledby="btTabBattle" hidden>
+        <div class="bt-bar">
+          <div id="btMode" class="bt-toggle" role="group" aria-label="Mode">
+            <button type="button" data-mode="open" aria-pressed="true">Casual</button>
+            <button type="button" data-mode="ranked" aria-pressed="false">Ranked</button>
+          </div>
+          <p id="btBattleCount" class="bt-count"></p>
+        </div>
+        <p id="btBattleWhere" class="bt-where"></p>
+
+        <label class="bt-search">
+          <span class="sr-only">Search players</span>
+          <input id="btSearch" type="search" placeholder="Search players" autocomplete="off" spellcheck="false" maxlength="32" />
+        </label>
+
+        <h2 id="btRecentHead" class="bt-h2" hidden>Recent</h2>
+        <ul id="btRecent" class="bt-players" aria-labelledby="btRecentHead"></ul>
+        <h2 id="btFoundHead" class="bt-h2" hidden>Players</h2>
+        <ul id="btFound" class="bt-players" aria-labelledby="btFoundHead"></ul>
+        <p id="btFoundEmpty" class="bt-muted" hidden></p>
+      </section>
+
+      <!-- Challenges tab -->
+      <section id="btChallenges" role="tabpanel" aria-labelledby="btTabChallenges" hidden>
+        <div class="bt-bar">
+          <p id="btChallengeCount" class="bt-count"></p>
+        </div>
+        <p id="btChallengeWhere" class="bt-where"></p>
+
+        <section id="btRun" class="bt-run cc-card" aria-live="polite" hidden></section>
+
+        <ul id="btBoard" class="bt-board" aria-label="Challenges"></ul>
+
+        <section id="btPreview" class="bt-preview cc-card" aria-live="polite" hidden></section>
+      </section>
+    </main>
+
+    <script type="module" src="/public/shared/shell.js"></script>
+    <script type="module" src="/public/battle/script.js"></script>
+  </body>
+</html>

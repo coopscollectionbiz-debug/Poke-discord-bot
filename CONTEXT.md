@@ -272,6 +272,10 @@ _Avoid_: match, match history entry, battle record (that is a player's W/L and r
 The dashboard page where a player sees their own **Fight records** and replays them. Only its owner can see it.
 _Avoid_: match history, battle history
 
+**Battle page**:
+The dashboard page where a player starts a **Casual battle**, a **Ranked battle** or a **Challenge**, as they would with `/battle` or `/challenge`. The fight is posted to Discord as if the command had been used. It holds **Challenges** too, though a **Challenge** is not a **Battle**. **Wager battles** and **Rematch requests** start only from `/battle`.
+_Avoid_: arena, fight page, battle hub
+
 ### Mega Evolution
 
 **Mega form**:

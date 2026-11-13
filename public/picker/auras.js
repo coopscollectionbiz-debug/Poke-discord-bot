@@ -8,8 +8,7 @@
 
 import { showExpired, toast, confirmDialog } from "/public/shared/shell.js";
 import { scanFx } from "/public/shared/spriteFx.js";
-
-const SPRITES = "/public/sprites/trainers_2/";
+import { auraPreview, loadAuraArt } from "/public/shared/auraPreview.js";
 const GROUPS = [
   ["tier", "Tier Auras", "Unlocked for good by owning a trainer of that tier."],
   ["gym", "Gym Leaders", "Beat each Gym Leader in /challenge."],
@@ -25,7 +24,6 @@ const userId = params.get("id");
 const panel = document.getElementById("aurasPanel");
 let state = null;
 let busy = false;
-const artMeta = new Map();
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
@@ -68,36 +66,10 @@ async function load() {
   }
 }
 
-async function loadArt(id) {
-  if (artMeta.has(id)) return artMeta.get(id);
-  const meta = await fetch(`/auras-art/${encodeURIComponent(id)}/aura.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  artMeta.set(id, meta);
-  return meta;
-}
+const loadArt = loadAuraArt;
 
-// ---------- previews ----------
-// The trainer over the Aura: a tier backdrop (the bot's own pixel recipe) or
-// an art Aura's spritesheet, stepping through its frames on the card loop.
-function preview(look, trainerFile, art = null) {
-  const img = trainerFile ? `<img src="${SPRITES}${esc(trainerFile)}" alt="" loading="lazy" />` : "";
-  if (!look) return `<div class="aura-preview">${img}</div>`;
-  if (!look.startsWith("art:")) return `<div class="aura-preview" data-fx="trainer" data-fx-tier="${esc(look)}">${img}</div>`;
-  const id = look.slice(4), meta = art ?? artMeta.get(id);
-  if (!meta) return `<div class="aura-preview">${img}</div>`;
-  const frames = Number.isInteger(meta.frames) && meta.frames > 0 ? meta.frames : 24;
-  const sky = Array.isArray(meta.sky) && meta.sky.length > 1 ? meta.sky : null;
-  const bands = sky ? `linear-gradient(${skyBands(sky).map((c, i, all) => `${c} ${(i / all.length) * 100}% ${((i + 1) / all.length) * 100}%`).join(", ")})` : "none";
-  return `<div class="aura-preview aura-art" style="--sky:${bands};--frames:${frames};--sheet:url('/auras-art/${encodeURIComponent(id)}/${encodeURIComponent(meta.layers?.back ?? "back.png")}')"><span class="aura-sheet"></span>${img}</div>`;
-}
-
-// Six solid bands interpolated from the sky stops, as the bot draws it (trainerBackdrop.js drawTierSky).
-function skyBands(stops, bands = 6) {
-  const rgb = stops.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
-  return Array.from({ length: bands }, (_, b) => {
-    const q = (b / (bands - 1)) * (rgb.length - 1), i = Math.min(rgb.length - 2, Math.floor(q)), f = q - i;
-    return `rgb(${[0, 1, 2].map((k) => Math.round(rgb[i][k] + (rgb[i + 1][k] - rgb[i][k]) * f)).join(",")})`;
-  });
-}
+// The trainer over the Aura (public/shared/auraPreview.js, shared with the Battle page).
+const preview = (look, trainerFile) => auraPreview(look, trainerFile);
 
 function render() {
   const s = state;

@@ -60,3 +60,4 @@
 .exp-empty { color: var(--cc-text-muted); padding: 6px; }
 .exp-warn { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: var(--cc-surface-sunken); font-size: 0.85rem; }
 .cc-dialog p { white-space: pre-line; }
+.exp-timer { font-variant-numeric: tabular-nums; color: var(--cc-gold); font-weight: 700; }

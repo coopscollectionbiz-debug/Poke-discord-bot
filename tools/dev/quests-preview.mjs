@@ -60,6 +60,24 @@ app.post("/api/quests/claim", express.json(), async (req, res) => send(res, awai
 app.get("/api/expeditions", async (req, res) => send(res, await x.view({ query: req.query, ...auth })));
 app.post("/api/expeditions/send", express.json(), async (req, res) => send(res, await x.send({ body: req.body, ...auth })));
 app.post("/api/expeditions/claim", express.json(), async (req, res) => send(res, await x.claim({ body: req.body, ...auth })));
+// The Collection page (public/picker-pokemon), enough of /api/user-pokemon to show
+// copies out on an Expedition next to the ones at home.
+const { allCopies, slotsHolding } = await import("../../services/box.js");
+const { awayCopyRows } = await import("../../services/expeditions.js");
+const { liveGenerations } = await import("../../utils/speciesCatalog.js");
+const TEAM_BIT = { displayedPokemon: 1, battleTeam: 2, showcaseTeam: 4 };
+app.get("/public/picker-pokemon", (_q, res) => res.sendFile(path.join(root, "public", "picker-pokemon", "index.html")));
+app.get("/api/pokedex-status", (_q, res) => res.json({ liveGenerations: liveGenerations(), maxDex: 1025 }));
+app.get("/api/live-events", (_q, res) => res.json({ ok: true, running: [], upcoming: [], discounts: {}, paidChoice: null }));
+app.get("/api/mega", (_q, res) => res.json({ enabled: false }));
+app.get("/api/user-pokemon", (_q, res) => res.json({
+  id: ID, cc: u.cc, tp: u.tp, rank: "Advanced Trainer", items: u.items, pokemon: u.pokemon,
+  currentTeam: u.displayedPokemon, battleTeam: u.battleTeam, showcaseTeam: u.showcaseTeam ?? [],
+  levels: {}, powers: {}, trained: {}, pokedex: u.pokedex ?? {}, notices: [],
+  copies: allCopies(u).map((c) => [c.uid, c.id, c.variant === "shiny" ? 1 : 0, c.level, c.at ?? 0, c.trained ? 1 : 0, slotsHolding(u, c.uid).reduce((m, s) => m | (TEAM_BIT[s.field] ?? 0), 0), c.exp]),
+  awayCopies: awayCopyRows(u),
+  serverNow: now(),
+}));
 app.post("/dev/finish", (_q, res) => {
   for (const t of u.quests.tasks) questProgress(u, ID, kind(t).kind, kind(t).target);
   u.quests.week.done = Math.max(u.quests.week.done, 14);

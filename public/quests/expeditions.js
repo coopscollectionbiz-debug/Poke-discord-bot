@@ -26,10 +26,12 @@ const typeChip = (t) => { const s = el("span", "cc-type", t); s.dataset.type = t
 const newRequestId = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`);
 const pct = (p) => `${Math.round(p * 100)}%`;
 
-function timeLeft(at) {
-  const mins = Math.max(0, Math.ceil((at - serverNow()) / 60000));
-  const h = Math.floor(mins / 60), m = mins % 60;
-  return h ? `${h} h ${m} min` : `${m} min`;
+// "Returns in: 1:02:03" (live; ticks every second below).
+function returnsIn(at) {
+  const secs = Math.max(0, Math.ceil((at - serverNow()) / 1000));
+  const h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), sec = secs % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `Returns in: ${h ? `${h}:${pad(m)}` : m}:${pad(sec)}`;
 }
 
 // Same formula as services/expeditions.js successChance.
@@ -71,7 +73,9 @@ function render() {
       b.onclick = () => claim(r.id, b);
       card.append(b);
     } else {
-      card.append(el("p", "usage", `Back in ${timeLeft(r.endsAt)}`));
+      const timer = el("p", "usage exp-timer", returnsIn(r.endsAt));
+      timer.dataset.ends = String(r.endsAt);
+      card.append(timer);
     }
     running.append(card);
   }
@@ -179,7 +183,7 @@ async function send() {
   const body = await post("/api/expeditions/send", { mission: mission.index, uids: party });
   if (!body) { $("expSend").disabled = false; return; }
   $("expPicker").close();
-  toast(`Party sent to ${mission.name}. Back in ${mission.hours} h. Chance ${pct(body.expedition.chance)}.`, { tone: "success" });
+  toast(`Party sent to ${mission.name}. Returns in ${mission.hours} h. Chance ${pct(body.expedition.chance)}.`, { tone: "success" });
   await load();
 }
 
@@ -240,5 +244,14 @@ if (userId) {
     try { saved = localStorage.getItem("questsTab"); } catch {}
     if (data && saved === "exp") selectTab("exp");
   });
-  setInterval(() => { if (data && !$("expPanel").hidden) render(); }, 60_000);
+  // Live countdowns: tick every second; when one reaches zero, redraw so its card offers the claim.
+  setInterval(() => {
+    let finished = false;
+    for (const t of document.querySelectorAll(".exp-timer[data-ends]")) {
+      const ends = Number(t.dataset.ends);
+      if (serverNow() >= ends) finished = true;
+      else t.textContent = returnsIn(ends);
+    }
+    if (finished && data) render();
+  }, 1000);
 }

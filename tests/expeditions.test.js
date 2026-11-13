@@ -4,7 +4,7 @@
 
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
 import {
-  missionsFor, successChance, missionExp, sendExpedition, claimExpedition, ensureExpeditions, expeditionView,
+  missionsFor, successChance, missionExp, sendExpedition, claimExpedition, ensureExpeditions, expeditionView, awayCopyRows,
   expeditionsEnabled, LOOT, WEEK_CAPS, RUNNING_MAX, countersOf,
 } from "../services/expeditions.js";
 import { createExpeditionHandlers, pickerCopies } from "../services/expeditionsApi.js";
@@ -89,6 +89,21 @@ section("Sending takes the party off every Team and out of the Collection");
   normalizeBox(u);
   assertEqual(u.box[squirtle], undefined, "loading the data again doesn't bring it back");
   assertTrue(!pickerCopies(u).some((c) => c.uid === squirtle), "the party picker doesn't offer it");
+}
+
+section("Away copies still show in the Collection, locked");
+{
+  const { u, uidOf } = player();
+  const squirtle = uidOf(7);
+  const level = copyTraining(u, squirtle).level;
+  const s = sendExpedition(u, { mission: 1, uids: [squirtle] }, { now: NOW, env: ON, rand: () => 0.5 });
+  const rows = awayCopyRows(u);
+  assertEqual(rows.length, 1, "one row per copy away");
+  const [uid, id, shiny, lv, , trained, teams, , endsAt, mission] = rows[0];
+  assertEqual([uid, id, shiny, lv, trained, teams], [squirtle, 7, 0, level, 0, 0], "same copy, same Level, on no Team");
+  assertEqual([endsAt, mission], [s.expedition.endsAt, s.expedition.mission.name], "with when it returns and where it went");
+  claimExpedition(u, s.expedition.id, { now: s.expedition.endsAt, ...deps() });
+  assertEqual(awayCopyRows(u), [], "none once claimed");
 }
 
 section("Send rules");

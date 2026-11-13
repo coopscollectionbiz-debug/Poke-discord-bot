@@ -80,6 +80,7 @@ import { normalizeProgression, retroEvaluate, trackProgress } from "./progressio
 import { createAchievementHandlers } from "./services/achievementsApi.js";
 import { createQuestHandlers } from "./services/questsApi.js";
 import { createExpeditionHandlers } from "./services/expeditionsApi.js";
+import { awayCopyRows } from "./services/expeditions.js";
 import { questProgress, questsEnabled } from "./services/quests.js";
 import { createMegaHandlers } from "./services/megaApi.js";
 import { createHeldItemHandlers } from "./services/heldItemsApi.js";
@@ -2457,6 +2458,9 @@ app.get("/api/user-pokemon", (req, res) => {
     // Collection: every copy, one entry each (docs/adr/0001), for the box grid.
     // [uid, id, shiny 0|1, level, caughtAt|0, trained 0|1, teams bitmask (1 casual, 2 ranked, 4 showcase), exp]
     copies: copyRows(u),
+    // Copies out on an Expedition: shown in the Collection, locked, not in `copies` (no action can pick them).
+    awayCopies: awayCopyRows(u),
+    serverNow: Date.now(), // for the Expedition countdowns, so they don't depend on the device's clock
     nonShinyDustEarnedThisWeek: u.nonShinyDustEarnedThisWeek ?? 0,
     // One-time notices (services/notices.js); the Teams page shows the
     // Battle team ones and dismisses them via /api/dismiss-notices.

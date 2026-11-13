@@ -39,7 +39,7 @@ export function questEmbed(v, exp = null) {
     .setTitle("🗺️ Daily board")
     .setDescription([...lines, "", chest, week, "", `New tasks <t:${Math.floor(v.resetsAt / 1000)}:R>.`].join("\n"));
   if (exp) {
-    const runs = exp.running.map((r) => `${r.done ? "🏁" : "🧭"} **${r.mission.name}** (${r.party.map((p) => p.name).join(", ")}): ${r.done ? "back, ready to claim" : `back <t:${Math.floor(r.endsAt / 1000)}:R>`}`);
+    const runs = exp.running.map((r) => `${r.done ? "🏁" : "🧭"} **${r.mission.name}** (${r.party.map((p) => p.name).join(", ")}): ${r.done ? "back, ready to claim" : `returns <t:${Math.floor(r.endsAt / 1000)}:R>`}`);
     const free = exp.enabled ? exp.slots.max - exp.slots.used : 0;
     if (free > 0) runs.push(`${free} free slot${free > 1 ? "s" : ""}. Send a party from the Quests page.`);
     embed.addFields({ name: "Expeditions", value: runs.join("\n") || "None running." });

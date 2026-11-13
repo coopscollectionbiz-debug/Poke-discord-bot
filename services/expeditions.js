@@ -31,6 +31,7 @@ import { createRng } from "../utils/battle/rng.js";
 import { TYPE_ID_TO_NAME, effectiveness } from "../utils/battle/data.js";
 import { koExp } from "../utils/battle/rewards.js";
 import { WIN_EXP_MULT } from "../utils/battle/tuning.js";
+import { levelForExp } from "../utils/training.js";
 import { getISOWeekKeyUTC } from "../utils/economyRules.js";
 import { getSpeciesEntry } from "../utils/speciesCatalog.js";
 import { sendCopyAway, returnCopy, copyTraining } from "./box.js";
@@ -249,6 +250,23 @@ function runningView(e, now) {
     chance: e.chance,
     party: e.party.map((p) => ({ uid: p.uid, id: Number(p.rec.id), shiny: !!p.rec.shiny, name: getSpeciesEntry(p.rec.id)?.name ?? `#${p.rec.id}` })),
   };
+}
+
+/**
+ * Copies out on an Expedition, as rows for the Collection grid (same shape as
+ * bot_final.js copyRows, plus when they're back and where they went). They are
+ * shown there but locked: they aren't in the box until the Expedition is claimed.
+ * [uid, id, shiny 0|1, level, caughtAt|0, trained 0|1, 0, exp, endsAt, missionName]
+ */
+export function awayCopyRows(user) {
+  const out = [];
+  for (const e of user?.expeditions?.running ?? []) {
+    for (const p of e.party ?? []) {
+      const exp = Math.max(0, Number(p.rec?.exp) || 0);
+      out.push([p.uid, Number(p.rec?.id), p.rec?.shiny ? 1 : 0, levelForExp(exp), p.rec?.at ?? 0, p.custom ? 1 : 0, 0, exp, e.endsAt, e.mission?.name ?? "an Expedition"]);
+    }
+  }
+  return out;
 }
 
 /** What the dashboard and /quest show (call ensureExpeditions first). */

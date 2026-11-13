@@ -10,6 +10,9 @@
 // queued, or synced.
 // ==========================================================
 
+import { liveEffects } from "../services/liveEvents.js";
+import { scaleEarned } from "./liveEventRules.js";
+
 /**
  * @param {object} deps
  * @param {() => boolean} deps.isReady
@@ -24,6 +27,7 @@
  * @param {() => number} [deps.random]
  * @param {() => number} [deps.now]
  * @param {(fn: () => void) => void} [deps.defer]
+ * @param {(now: number) => object} [deps.effects] - running Live event effects
  */
 export function createMessageHandler({
   isReady,
@@ -38,6 +42,7 @@ export function createMessageHandler({
   random = Math.random,
   now = Date.now,
   defer = setImmediate,
+  effects = liveEffects,
 }) {
   return async function onMessage(message) {
     if (message.author.bot || !message.guild) return;
@@ -58,14 +63,17 @@ export function createMessageHandler({
 
     const userObj = trainerData[userId];
 
+    // A running Live event may multiply chat TP and CC.
+    const fx = effects(t);
+
     // 🪙 Give base TP for chatting
-    userObj.tp += config.tpGain;
+    userObj.tp += scaleEarned(config.tpGain, fx.tp);
     userObj.lastActiveAt = t; // Last active (saved with the TP below)
 
     // 💰 Chance to earn CC
     if (random() < config.ccChance) {
       userObj.cc ??= 0;
-      userObj.cc += config.ccGain;
+      userObj.cc += scaleEarned(config.ccGain, fx.cc);
 
       try {
         await message.react("💰").catch(() => {});

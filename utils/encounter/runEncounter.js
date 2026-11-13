@@ -17,6 +17,8 @@ import { teamExp, utcDay } from "../battle/rewards.js";
 import { speciesName } from "../training.js";
 import { trackProgress } from "../../progression/achievements.js";
 import { ENCOUNTER } from "../battle/tuning.js";
+import { liveEffects } from "../../services/liveEvents.js";
+import { scaleEarned } from "../liveEventRules.js";
 
 // user.encounter = { day, count, lastAt }: cards posted on that UTC day, and
 // when the last one posted (ms). lastAt survives the day change for the gap.
@@ -81,8 +83,11 @@ export function fightEncounter({ trainerData, userId, encounter: { team, trainer
     const exp = { [userId]: applyGains(user, members, teamExp({ members, knockedOut, won })) };
 
     let paid = 0;
+    // A Live event's Prize money multiplier pays out on wins only; a loss
+    // costs the normal amount.
+    const winnings = scaleEarned(trainer.prize, liveEffects(now.getTime()).prize);
     if (won) {
-      user.cc = (user.cc ?? 0) + trainer.prize;
+      user.cc = (user.cc ?? 0) + winnings;
     } else {
       paid = Math.min(trainer.prize, Math.max(0, user.cc ?? 0));
       user.cc = (user.cc ?? 0) - paid;
@@ -92,7 +97,7 @@ export function fightEncounter({ trainerData, userId, encounter: { team, trainer
     return {
       ok: true, userId, trainer,
       sides: [{ userId, members, ...(result.v === 2 && { plan }) }, { userId: "trainer", members: foes }],
-      surge: null, result, winnerId: won ? userId : "trainer", won, exp, prize: trainer.prize, paid,
+      surge: null, result, winnerId: won ? userId : "trainer", won, exp, prize: won ? winnings : trainer.prize, paid,
     };
   });
 }

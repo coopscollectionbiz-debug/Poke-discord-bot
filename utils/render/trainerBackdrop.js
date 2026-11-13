@@ -20,6 +20,11 @@
 // ==========================================================
 
 import { createCanvas, ImageData } from "@napi-rs/canvas";
+import { loadAuraArt } from "./auraArt.js";
+
+// A look is a tier key ("epic" …) or an Aura's art ("art:<id>", ids are case-sensitive). See catalog/auras.js.
+const lookKey = (k) => { const s = String(k ?? ""); return s.startsWith("art:") ? s : s.toLowerCase(); };
+const artOf = (k) => (k.startsWith("art:") ? loadAuraArt(k.slice(4)) : null);
 
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const C = (...h) => h.map(hex);
@@ -32,10 +37,10 @@ const TIERS = {
 };
 /** Stepped glow: three still bands (never swells), at these radii and tint amounts. */
 const GLOW_R = [0.42, 0.68, 0.95], GLOW_A = [0.12, 0.07, 0.04];
-export const hasBackdrop = (tier) => Boolean(TIERS[String(tier ?? "").toLowerCase()]);
+export const hasBackdrop = (tier) => { const k = lookKey(tier); return Boolean(TIERS[k] || artOf(k)); };
 /** Each backdrop tier's colour (its halo), for things that match it: floors, borders, records. */
 export const BACKDROP_TINT = Object.freeze({ epic: "#a855f7", legendary: "#f59e0b", mythic: "#ef4444" });
-export const backdropTint = (tier) => BACKDROP_TINT[String(tier ?? "").toLowerCase()] ?? null;
+export const backdropTint = (tier) => { const k = lookKey(tier); return BACKDROP_TINT[k] ?? artOf(k)?.tint ?? null; };
 
 const BAYER = [[0, 2], [3, 1]];
 const LEVELS = [0, 0.07, 0.13, 0.2, 0.3, 0.45, 0.7, 0.85];
@@ -67,8 +72,10 @@ function rand(seed) {
  *                 evenly across the width
  * @returns { frame(f) → canvas (gridW×gridH, RGBA, transparent where empty) } or null
  */
-export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frames, spread = false }) {
-  const recipe = TIERS[String(tier ?? "").toLowerCase()];
+export function createBackdrop({ tier, gridW, gridH, mask, halo, floorRow, frames, spread = false, variant = null }) {
+  const art = artOf(lookKey(tier));
+  if (art) return artBackdrop(art, { gridW, gridH, halo, floorRow, frames, variant });
+  const recipe = TIERS[lookKey(tier)];
   if (!recipe) return null;
   const W = gridW, H = gridH, N = frames;
   const inner = { x0: 2, y0: 2, x1: W - 3, y1: Math.min(H - 3, floorRow - 2) };
@@ -249,7 +256,7 @@ function skyAt(stops, t) {
   const q = Math.min(1, Math.max(0, t)) * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(q)), f = q - i;
   return [0, 1, 2].map((k) => Math.round(stops[i][k] + (stops[i + 1][k] - stops[i][k]) * f));
 }
-export const tierSky = (tier) => TIERS[String(tier ?? "").toLowerCase()]?.sky ?? null;
+export const tierSky = (tier) => { const k = lookKey(tier); return TIERS[k]?.sky ?? artOf(k)?.sky?.map(hex) ?? null; };
 
 /**
  * The tier's sky: a static banded gradient over `rect` in u-pixel cells, six
@@ -286,9 +293,9 @@ export function drawTierSky(ctx, tier, rect, { u = 4, clip = null, bands = 6 } =
  * `clip(ctx)` traces the region's shape (a path) when it isn't a rectangle.
  * Returns { drawWash(ctx), draw(ctx, frame) } or null below Epic.
  */
-export function regionBackdrop({ tier, rect, u = 4, occupied, from, to, floor, frames, dil = 2, clip = null }) {
-  const t = String(tier ?? "").toLowerCase();
-  if (!TIERS[t]) return null;
+export function regionBackdrop({ tier, rect, u = 4, occupied, from, to, floor, frames, dil = 2, clip = null, variant = null }) {
+  const t = lookKey(tier);
+  if (!hasBackdrop(t)) return null;
   const gridW = Math.floor(rect.w / u), gridH = Math.floor(rect.h / u);
   const raw = new Uint8Array(gridW * gridH), mask = new Uint8Array(gridW * gridH);
   for (let gy = 0; gy < gridH; gy++) for (let gx = 0; gx < gridW; gx++) {
@@ -305,7 +312,7 @@ export function regionBackdrop({ tier, rect, u = 4, occupied, from, to, floor, f
   }
   const g = (p) => [(p[0] - rect.x) / u, (p[1] - rect.y) / u];
   const bd = createBackdrop({
-    tier: t, gridW, gridH, mask, frames, spread: true,
+    tier: t, gridW, gridH, mask, frames, spread: true, variant,
     halo: { from: g(from), to: g(to) },
     floorRow: Math.min(gridH - 2, Math.floor((floor - rect.y) / u)),
   });
@@ -314,7 +321,7 @@ export function regionBackdrop({ tier, rect, u = 4, occupied, from, to, floor, f
     else { ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); }
   };
   return {
-    tint: BACKDROP_TINT[t],
+    tint: backdropTint(t),
     /** The tier's sky over the region: static, so cards draw it once under everything. */
     drawWash(ctx) {
       drawTierSky(ctx, t, rect, { u, clip: shape });
@@ -329,5 +336,35 @@ export function regionBackdrop({ tier, rect, u = 4, occupied, from, to, floor, f
       ctx.imageSmoothingEnabled = true;
       ctx.restore();
     },
+  };
+}
+
+/**
+ * An Aura's art as a backdrop (same shape as the tier backdrops): one frame
+ * of its spritesheet per card frame, retimed when the sheet has a different
+ * count. The panel art (back) is centred on the trainer with its bottom on
+ * the floor; a region's own variant ("row", "vs") fills the region from its
+ * bottom-left. Art is drawn behind the trainer, so it ignores the mask.
+ */
+function artBackdrop(art, { gridW, gridH, halo, floorRow, frames, variant }) {
+  const own = variant && art.layers[variant];
+  const layer = own || art.layers.back;
+  const cx = halo?.cx ?? gridW / 2;
+  const x = own ? 0 : Math.round(cx - layer.fw / 2);
+  const y = own ? gridH - layer.fh : Math.min(gridH, floorRow + 2) - layer.fh;
+  const made = new Map();
+  return {
+    frame(f) {
+      const i = Math.floor(((((f % frames) + frames) % frames) * layer.n) / frames);
+      if (!made.has(i)) {
+        const c = createCanvas(gridW, gridH);
+        c.getContext("2d").drawImage(layer.sheet, i * layer.fw, 0, layer.fw, layer.fh, x, y, layer.fw, layer.fh);
+        made.set(i, c);
+      }
+      return made.get(i);
+    },
+    meteors: 0,
+    hero: null,
+    twinkles: 0,
   };
 }

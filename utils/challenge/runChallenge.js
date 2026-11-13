@@ -24,7 +24,10 @@ import { speciesName } from "../training.js";
 import { TRAINER_COSTS } from "../trainerCosts.js";
 import { trackProgress } from "../../progression/achievements.js";
 import { ownsTrainer, grantTrainer } from "../../services/assets.js";
+import { grantChallengeAuras } from "../../services/auras.js";
 import { grantItem } from "../../services/inventory.js";
+import { liveEffects } from "../../services/liveEvents.js";
+import { scaleEarned } from "../liveEventRules.js";
 
 export const challengeLoss = (cc) => Math.floor((cc ?? 0) * CHALLENGE.lossShare);
 
@@ -67,10 +70,17 @@ export function prizeSprite(user, trainerKey) {
   return file ? { trainerKey, file } : { trainerKey, cc: TRAINER_COSTS[tier] / 2 };
 }
 
-const prizeFor = (user, key) => ({
-  ...CHALLENGES[key].prize,
-  sprites: CHALLENGES[key].opponents.map((o) => prizeSprite(user, o.trainerKey)),
-});
+// A Live event's CC and Shiny Dust multipliers scale the prize here, so the
+// preview shows exactly what a win pays (stones and sprites never change).
+const prizeFor = (user, key, fx = liveEffects()) => {
+  const base = CHALLENGES[key].prize;
+  return {
+    ...base,
+    cc: scaleEarned(base.cc, fx.cc),
+    dust: scaleEarned(base.dust, fx.dust),
+    sprites: CHALLENGES[key].opponents.map((o) => prizeSprite(user, o.trainerKey)).map((s) => (s.cc != null ? { ...s, cc: scaleEarned(s.cc, fx.cc) } : s)),
+  };
+};
 
 export function previewChallenge(user, key) {
   const firstWin = !(key in (user.challenge?.won ?? {}));
@@ -176,7 +186,7 @@ const owns = (user, m) => (user.pokemon?.[m.speciesId]?.[m.variant] ?? 0) > 0;
 // Applies a finished challenge: EXP (`totals` per Team slot) to the members
 // the player still owns, then the first-win prize, Badge, and unlock, or the
 // loss of min(maxLoss, 10%). The attempt was counted already.
-function settle({ user, userId, key, team, totals, cleared, day, maxLoss, now }) {
+function settle({ user, userId, key, team, totals, cleared, day, maxLoss, now, beaten = [] }) {
   const kept = team.flatMap((m, i) => (owns(user, m) ? [i] : []));
   const exp = { [userId]: applyGains(user, kept.map((i) => team[i]), kept.map((i) => totals[i])) };
   const challenge = CHALLENGES[key];
@@ -199,7 +209,10 @@ function settle({ user, userId, key, team, totals, cleared, day, maxLoss, now })
   // Achievements for Levels gained and prize sprites. Not a "battle" event:
   // that moves Battle win streaks, and challenges never touch the Battle record.
   trackProgress(user, [{ type: "pokemon" }, { type: "trainers" }], now.getTime());
-  return { exp, prize, badge, unlocked, ccLost };
+  // Auras: every Gym Leader, Elite Four member, Blue and Red beaten (Elite
+  // Four members count even in a run that is lost later).
+  const auras = grantChallengeAuras(user, key, beaten, now.getTime());
+  return { exp, prize, badge, unlocked, ccLost, auras };
 }
 
 export function runChallenge({ trainerData, userId, key, seed, maxLoss = Infinity, now = new Date(), pick = "casual" }) {
@@ -213,7 +226,8 @@ export function runChallenge({ trainerData, userId, key, seed, maxLoss = Infinit
     const totals = team.map((_, i) => fights.reduce((t, f) => t + f.gains[i], 0));
     const day = utcDay(now);
     getChallengeRecord(user, day).attempts++;
-    const settled = settle({ user, userId, key, team, totals, cleared, day, maxLoss, now });
+    const beaten = fights.filter((f) => f.won).map((f) => f.opponentKey);
+    const settled = settle({ user, userId, key, team, totals, cleared, day, maxLoss, now, beaten });
     return { ok: true, key, userId, seed, engine, plan, fights: fights.map((f) => outcomeFight(userId, f)), cleared, ...settled };
   });
 }
@@ -260,6 +274,7 @@ function playStep(user, userId, members, now) {
     delete user.challenge.run;
     const settled = settle({
       user, userId, key: "elite4", team: run.team, totals: run.gains, cleared, day: run.day, maxLoss: run.maxLoss ?? Infinity, now,
+      beaten: run.fights.filter((f) => f.won).map((f) => f.opponentKey),
     });
     // runTeam: the frozen team, so Battle Records can re-run the earlier
     // fights (utils/fightRecordBuild.js); only the last one's result is kept here.

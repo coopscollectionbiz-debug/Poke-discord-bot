@@ -6,6 +6,7 @@
 // (see the wager flow below).
 // ==========================================================
 
+import { auraLook } from "../services/auras.js";
 import {
   SlashCommandBuilder, MessageFlags, EmbedBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType,
   PermissionFlagsBits,
@@ -24,6 +25,7 @@ import { WAGER, PLAYBACK } from "../utils/battle/tuning.js";
 import { peekNotices, clearNotices, NOTICE_KINDS } from "../services/notices.js";
 import { expView } from "../utils/render/expCard.js";
 import { cardImage } from "../utils/render/stage.js";
+import { shardDropLine } from "../services/megaShards.js";
 import { threaded } from "../utils/render/renderers.js";
 
 export const data = new SlashCommandBuilder()
@@ -49,6 +51,8 @@ export function refusal(reason, opponentId) {
     no_team_defender: `<@${opponentId}> hasn't set a team yet.`,
     no_battle_team_challenger: "Ranked and wager battles use your Battle team. Set it on the Teams page: run /dashboard.",
     no_battle_team_defender: `<@${opponentId}> hasn't set a Battle team yet, so you can't play a ranked or wager battle with them.`,
+    short_battle_team_challenger: "Ranked and wager battles need a full Ranked team of 6. Fill it on the Teams page: run /dashboard.",
+    short_battle_team_defender: `<@${opponentId}>'s Ranked team isn't full (6 Pokémon), so you can't play a ranked or wager battle with them.`,
     cap_daily: "You've used all 10 battles for today. Battles reset at midnight UTC.",
     cap_opponent: `You've battled <@${opponentId}> 3 times today. Try someone else.`,
     defender_cap_daily: `<@${opponentId}> has no battles left today.`,
@@ -74,18 +78,22 @@ export function displayNames(interaction, opponent) {
 // one-line caption; if rendering fails, the plain-text summary goes instead.
 export async function expMessage(outcome, userId, names, user, { render = threaded.exp } = {}) {
   const text = expSummary(outcome, userId, names);
+  const shards = shardDropLine(outcome.megaShards?.[userId] ?? 0); // "" unless a Mega Shard dropped
+  const withShards = (s) => (shards ? `${s}\n${shards}` : s);
   try {
     const view = expView(outcome, userId, names, user);
     const card = await cardImage((animate) => render(view, { animate }), "exp");
-    return { content: text.split("\n")[0], files: [new AttachmentBuilder(card.buffer, { name: card.name })], flags: MessageFlags.Ephemeral };
+    return { content: withShards(text.split("\n")[0]), files: [new AttachmentBuilder(card.buffer, { name: card.name })], flags: MessageFlags.Ephemeral };
   } catch (err) {
     console.warn("⚠️ EXP card render failed; sending text:", err?.message || err);
-    return { content: text, flags: MessageFlags.Ephemeral };
+    return { content: withShards(text), flags: MessageFlags.Ephemeral };
   }
 }
 
 // Each side's displayed trainer, for the replay's portraits.
 export const trainersOf = (trainerData, outcome) => outcome.sides.map((s) => trainerData[s.userId]?.displayedTrainer ?? null);
+/** Both players' equipped Aura looks, in side order. */
+export const aurasOf = (trainerData, outcome) => outcome.sides.map((s) => auraLook(trainerData[s.userId]));
 
 /**
  * A player's record for the VS card, read (never created) before the battle
@@ -115,7 +123,7 @@ export function vsView(mode, sides, names, trainerData, records, pot = null) {
     pot: mode === "wager" ? pot : null,
     sides: sides.map((s) => {
       const file = trainerData[s.userId]?.displayedTrainer ?? null;
-      return vsSide({ name: names[s.userId], trainerFile: file, tier: trainerTier(file), members: s.members, record: records[s.userId] ?? vsRecord(null, mode) });
+      return vsSide({ name: names[s.userId], trainerFile: file, tier: auraLook(trainerData[s.userId]), members: s.members, record: records[s.userId] ?? vsRecord(null, mode) });
     }),
   };
 }
@@ -202,7 +210,7 @@ async function executeBattle(interaction, trainerData, lockUser, enqueueSave) {
 /** The replay, then the Challenger's private EXP card (only they earn EXP in casual and ranked battles). Never throws. */
 export async function replayThenExp(interaction, outcome, challengerId, names, trainerData, { play = playBattle, exp = sendExp } = {}) {
   try {
-    await play(interaction.channel, outcome, names, { ...PLAYBACK, trainers: trainersOf(trainerData, outcome), vs: vsOf(outcome, names, trainerData) });
+    await play(interaction.channel, outcome, names, { ...PLAYBACK, trainers: trainersOf(trainerData, outcome), auras: aurasOf(trainerData, outcome), vs: vsOf(outcome, names, trainerData) });
   } catch (err) {
     console.warn("⚠️ battle post failed:", err?.message || err);
     await interaction.editReply("Your battle counted, but I couldn't post it in this channel.").catch(() => {});
@@ -354,7 +362,7 @@ async function offer(interaction, trainerData, lockUser, enqueueSave, opponent, 
     });
     recordFight(() => battleRecord(outcome, names, trainerData)); // Battle Records; never throws
     await closeOffer(`✅ <@${defenderId}> accepted! The battle is below.`);
-    await playBattle(interaction.channel, outcome, names, { ...PLAYBACK, trainers: trainersOf(trainerData, outcome), vs: vsOf(outcome, names, trainerData) }).catch((err) =>
+    await playBattle(interaction.channel, outcome, names, { ...PLAYBACK, trainers: trainersOf(trainerData, outcome), auras: aurasOf(trainerData, outcome), vs: vsOf(outcome, names, trainerData) }).catch((err) =>
       console.warn("⚠️ wager battle post failed:", err?.message || err));
     // The Challenger's /battle and the Defender's Accept click are the two interactions to reply on.
     await Promise.all([sendExp(interaction, outcome, challengerId, names, trainerData[challengerId]), sendExp(i, outcome, defenderId, names, trainerData[defenderId])]);

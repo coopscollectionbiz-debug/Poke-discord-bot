@@ -6,13 +6,13 @@
 //   POST /api/pokemon/teach-tm                         the teach (one transaction)
 //
 // Steps in one dialog: which copy (only when there's a choice) → which TM →
-// for each team that copy is on, add / replace / keep (nothing replaced
-// without a tap) → confirm. The server re-checks everything; if anything
+// for each team that copy is on, add / replace / keep (keep by default:
+// nothing added or replaced without a tap) → confirm. The server re-checks everything; if anything
 // changed meanwhile it refuses (TM kept) and the dialog reloads.
 // ==========================================================
 
 import { toast, showExpired, pageHref } from "/public/shared/shell.js";
-import { moveMeta } from "/public/shared/moveMeta.js";
+import { moveMeta, tmDisc } from "/public/shared/moveMeta.js";
 
 const LABEL = { display: "Display team", battle: "Battle team" };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -122,19 +122,21 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
           const st = x.status[sel.target];
           const why = st === "known" ? "Already knows it" : st === "incompatible" ? `${esc(name)} can’t learn it` : `You have ${x.owned}`;
           return `<label class="tt-opt${st === "teachable" ? "" : " is-off"}"><input type="radio" name="tt-tm" value="${esc(x.item)}"${sel.item === x.item ? " checked" : ""}${st === "teachable" ? "" : " disabled"}>
-            ${moveRow(x)}<small>${why}</small></label>`;
+            ${tmDisc(x.type)}${moveRow(x)}<small>${why}</small></label>`;
         }).join("")}</fieldset>`;
     const m = tm();
     const equipStep = !t || !m || m.status[sel.target] !== "teachable" ? "" : teamsOn().length === 0
       ? `<p class="tt-muted">This ${esc(name)} isn’t on a team. ${esc(m.name)} will be learned, and you can pick it in a team’s moves later.</p>`
       : teamsOn().map(([team, on]) => on.moves.length < data.maxMoves
           ? `<fieldset><legend>${LABEL[team]} (slot ${on.slot})</legend><p class="tt-muted">Now: ${on.moves.map((x) => esc(x.name)).join(", ")}</p>
-              <label class="tt-opt"><input type="checkbox" data-team="${team}" data-add${sel.equip[team] === "keep" ? "" : " checked"}><span>Add ${esc(m.name)} to these moves</span></label></fieldset>`
+              <label class="tt-opt"><input type="checkbox" data-team="${team}" data-add${sel.equip[team] === "add" ? " checked" : ""}><span>Add ${esc(m.name)} to these moves</span></label></fieldset>`
           : `<fieldset><legend>${LABEL[team]} (slot ${on.slot}): replace a move?</legend>
               ${on.moves.map((x) => `<label class="tt-opt"><input type="radio" name="tt-eq-${team}" data-team="${team}" value="${esc(x.id)}"${sel.equip[team]?.replace === x.id ? " checked" : ""}>${moveRow(x, "Replace ")}</label>`).join("")}
               <label class="tt-opt"><input type="radio" name="tt-eq-${team}" data-team="${team}" value=""${sel.equip[team] === "keep" ? " checked" : ""}><span>Keep current moves</span></label></fieldset>`).join("");
-    // Teams under 4 moves default to "add" (pre-checked, can untick).
-    for (const [team, on] of teamsOn()) if (on.moves.length < data.maxMoves && sel.equip[team] == null) sel.equip[team] = "add";
+    // A learned move is never equipped by default: every team starts on
+    // "keep" (owner decision, 2026-11-12); the player ticks Add or picks a
+    // move to replace.
+    for (const [team] of teamsOn()) if (sel.equip[team] == null) sel.equip[team] = "keep";
     dialog.innerHTML = `<form method="dialog">
       <div class="tt-head"><div><p class="cc-eyebrow">Teach a TM</p><h2 id="ttTitle">${esc(name)}${variant === "shiny" ? " ✨" : ""}</h2></div>
         <button class="tm-ib dt-close" value="close" aria-label="Close" formnovalidate>✕</button></div>

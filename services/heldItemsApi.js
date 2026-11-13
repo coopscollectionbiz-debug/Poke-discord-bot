@@ -26,6 +26,8 @@ import {
   ensureStarterHeldItems, starterPending, applyEquip, describeLoadout, equipmentRev, teamSlots,
   EDITABLE_TEAMS, lineKey, ownsHeldItem,
 } from "./heldItems.js";
+import { liveEffects } from "./liveEvents.js";
+import { discountedPrice } from "../utils/liveEventRules.js";
 
 const reply = (status, body) => ({ status, body });
 const ID_RE = /^\d{5,25}$/;
@@ -49,7 +51,7 @@ export function heldCatalogRows(user) {
     restrictSpecies: e.held.restrictSpecies,
     boostsType: e.held.boostsType,
     rarity: e.rarity,
-    price: e.shop?.price?.cc ?? null,
+    price: e.shop?.price?.cc != null ? discountedPrice(liveEffects(), "heldItems", e.shop.price.cc) : null, // a Live event's discount
     owned: getQuantity(user, e.id) > 0,
   }));
 }
@@ -189,8 +191,9 @@ export function createHeldItemHandlers({ getTrainerData, lockUser, save, getEnv 
     const itemId = str(body?.itemId, 64);
     const entry = itemId ? getCatalogItem(itemId) : null;
     if (!isHeldItem(entry)) return reply(400, { success: false, error: "That isn't a held item." });
-    const price = entry.shop?.eligible ? entry.shop?.price?.cc : null;
-    if (!Number.isSafeInteger(price) || price <= 0) return reply(400, { success: false, error: `${entry.name} isn't sold in the shop.`, code: "not_for_sale" });
+    const listPrice = entry.shop?.eligible ? entry.shop?.price?.cc : null;
+    if (!Number.isSafeInteger(listPrice) || listPrice <= 0) return reply(400, { success: false, error: `${entry.name} isn't sold in the shop.`, code: "not_for_sale" });
+    const price = discountedPrice(liveEffects(), "heldItems", listPrice); // a Live event's discount
     const env = getEnv();
     const tx = await runInventoryTransaction({
       trainerData: getTrainerData(), userId: g.id, lock: lockUser, save, requestId: g.requestId, payloadKey: `held-buy:${itemId}`,

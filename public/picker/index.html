@@ -15,7 +15,11 @@
     <header class="cc-page-head">
       <p class="cc-eyebrow">Your profile</p>
       <h1>Trainers</h1>
-      <p>Choose the Trainer shown on your profile. Only owned Trainers can be equipped.</p>
+      <p>Choose the Trainer shown on your profile, and the Aura behind them.</p>
+      <div class="page-tabs" role="tablist" aria-label="Trainers or Auras">
+        <button type="button" role="tab" id="tabTrainers" aria-controls="trainersPanel" aria-selected="true">Trainers</button>
+        <button type="button" role="tab" id="tabAuras" aria-controls="aurasPanel" aria-selected="false">Auras</button>
+      </div>
     </header>
 
     <main id="ccMain" tabindex="-1">
@@ -25,6 +29,7 @@
         <span id="ccDisplay">…</span>
       </div>
 
+      <div id="trainersPanel" role="tabpanel" aria-labelledby="tabTrainers">
       <section class="controls" aria-label="Filters">
         <label class="sr-only" for="search">Search Trainers</label>
         <input type="search" id="search" placeholder="Search Trainers…" autocomplete="off" />
@@ -49,6 +54,11 @@
       <div id="trainerGrid" class="grid">
         <p class="notice cc-empty">Loading Trainers…</p>
       </div>
+      </div>
+
+      <section id="aurasPanel" role="tabpanel" aria-labelledby="tabAuras" hidden>
+        <p class="notice cc-empty">Loading Auras…</p>
+      </section>
 
       <p class="fine-print">Opened from /dashboard in Discord · Links last 10 minutes</p>
     </main>
@@ -70,5 +80,6 @@
 
     <script type="module" src="/public/shared/shell.js"></script>
     <script type="module" src="/public/picker/script.js"></script>
+    <script type="module" src="/public/picker/auras.js"></script>
   </body>
 </html>

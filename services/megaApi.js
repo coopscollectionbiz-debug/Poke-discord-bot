@@ -4,6 +4,9 @@
 //   GET  /api/mega            view: Mega cards + stones (capability "dashboard")
 //   POST /api/mega/unlock     use a Mega Stone (capability "unlock")
 //   POST /api/mega/preferred  choose a line's preferred Mega (capability "dashboard")
+//   GET  /api/mega/shop             Mega Shard shop view (capability "rewards")
+//   POST /api/mega/shop/buy-shards  buy shards with CC (capability "rewards")
+//   POST /api/mega/shop/buy-stone   spend shards on a Mega Stone (capability "rewards")
 //
 // Every check is server-side; the client's idea of what is unlocked is never
 // trusted. Writes go through runInventoryTransaction: lockUser → requestId
@@ -20,6 +23,7 @@ import { setPreferredMega, LINE_PATTERN } from "./megaUnlocks.js";
 import { MEGA_ID_PATTERN } from "../utils/megas.js";
 import { isMegaCapabilityEnabled, megaCapabilities } from "../config/features.js";
 import { megaCollectionProgress } from "../utils/megaDisplay.js";
+import { megaShopView, buyShards, buyMegaStone } from "./megaShards.js";
 
 const reply = (status, body) => ({ status, body });
 const ownKey = (o, k) => typeof k === "string" && Object.prototype.hasOwnProperty.call(o, k);
@@ -124,5 +128,49 @@ export function createMegaHandlers({ getTrainerData, lockUser, save, getEnv = ()
     return reply(200, { ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...tx.result, ok: undefined });
   }
 
-  return { view, unlock, preferred };
+  // ---------------- Mega Shard shop (capability "rewards") ----------------
+
+  /** Read-only: balance, prices and the battle-eligible stones. */
+  function shop({ query, isAuthorized }) {
+    const id = str(query?.id, 30) ?? "";
+    const bad = authUser(id, isAuthorized);
+    if (bad) return bad;
+    const env = getEnv();
+    if (!isMegaCapabilityEnabled("rewards", env)) return reply(200, { success: true, enabled: false });
+    return reply(200, { success: true, ...megaShopView(getTrainerData()[id], { env }) });
+  }
+
+  async function shopWrite({ body, isAuthorized }, kind) {
+    const id = str(body?.id, 30) ?? "";
+    const bad = authUser(id, isAuthorized);
+    if (bad) return bad;
+    const env = getEnv();
+    if (!isMegaCapabilityEnabled("rewards", env)) return reply(403, { success: false, error: "The Mega shop isn't open yet." });
+    const requestId = body?.requestId;
+    if (typeof requestId !== "string" || !REQUEST_ID_PATTERN.test(requestId)) return reply(400, { success: false, error: "A request id is required" });
+    let payloadKey, mutate;
+    if (kind === "shards") {
+      const qty = body?.quantity;
+      if (!Number.isSafeInteger(qty)) return reply(400, { success: false, error: "Invalid quantity" });
+      payloadKey = `mega-buy-shards:${qty}`;
+      mutate = (user) => buyShards(user, qty, { env });
+    } else {
+      const stoneId = str(body?.stoneId, 60);
+      if (!stoneId || !STONE_ID_PATTERN.test(stoneId)) return reply(400, { success: false, error: "Invalid Mega Stone" });
+      payloadKey = `mega-buy-stone:${stoneId}`;
+      mutate = (user) => buyMegaStone(user, stoneId, { env });
+    }
+    const tx = await runInventoryTransaction({ trainerData: getTrainerData(), userId: id, lock: lockUser, save, requestId, payloadKey, mutate });
+    if (!tx.ok) {
+      const { ok, status = 400, code, ...rest } = tx;
+      return reply(status, { success: false, code, ...rest });
+    }
+    return reply(200, { ...saveAckFields(tx), success: true, replayed: !!tx.replayed, ...tx.result, ok: undefined });
+  }
+
+  return {
+    view, unlock, preferred, shop,
+    buyShards: (req) => shopWrite(req, "shards"),
+    buyStone: (req) => shopWrite(req, "stone"),
+  };
 }

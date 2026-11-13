@@ -16,6 +16,8 @@ import { normalizeShowcase, prepareShowcaseSelection } from "../../services/show
 import { prepareTeamSelection } from "../../services/megaTeam.js";
 import { prepareBattleTeamSelection } from "../../services/battleTeam.js";
 import { carryCopyUids } from "../../services/ownership.js";
+import { bulkDonate } from "../../utils/bulkDonate.js";
+import { readFileSync } from "fs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const PORT = Number(process.argv[2] ?? 5200);
@@ -44,7 +46,7 @@ const payload = () => {
     id: ID, cc: user.cc, tp: user.tp, rank: "Advanced Trainer", items: user.items,
     pokemon: user.pokemon, currentTeam: user.displayedPokemon, battleTeam: user.battleTeam, showcaseTeam: user.showcaseTeam,
     levels, powers: {}, trained: {}, pokedex: user.pokedex ?? {},
-    copies: allCopies(user).map((c) => [c.uid, c.id, c.variant === "shiny" ? 1 : 0, c.level, c.at ?? 0, c.trained ? 1 : 0, slotsHolding(user, c.uid).reduce((m, s) => m | (TEAM_BIT[s.field] ?? 0), 0)]),
+    copies: allCopies(user).map((c) => [c.uid, c.id, c.variant === "shiny" ? 1 : 0, c.level, c.at ?? 0, c.trained ? 1 : 0, slotsHolding(user, c.uid).reduce((m, s) => m | (TEAM_BIT[s.field] ?? 0), 0), c.exp]),
     ranked: { wins: 0, losses: 0, rating: 1000, position: null, players: 1, streak: 0 },
     casual: { wins: 0, losses: 0, streak: 0, bestStreak: 0 }, challenge: { badges: [] },
     nonShinyDustEarnedThisWeek: 0, notices: [],
@@ -86,5 +88,17 @@ app.post("/api/pokemon/feed", (req, res) => {
   const species = user.box[to].id;
   const r = feedCopy(user, { from, to, confirmRev: rev });
   res.json({ success: true, fed: { speciesId: species, to, gained: r.gained, fromLevel: r.fromLevel, toLevel: r.toLevel } });
+});
+// Donate Duplicates / Multi-select through the real rules (flat rewards, no dust).
+const pokemonData = JSON.parse(readFileSync(path.join(ROOT, "public", "pokemonData.json"), "utf8"));
+app.post("/api/pokemon/donate-bulk", (req, res) => {
+  const { mode, items } = req.body ?? {};
+  const r = bulkDonate({
+    user, mode, items, pokemonData,
+    economy: { ccByTier: { common: 250, uncommon: 500, rare: 1000, epic: 2500, legendary: 5000, mythic: 10000 }, shinyDustByTier: {}, normalDustChanceByTier: {}, normalDustWeeklyCap: 0, rollDust: () => 0 },
+    isOnTeam: (pid, variant) => allCopies(user).some((c) => c.id === pid && c.variant === variant && slotsHolding(user, c.uid).length > 0),
+  });
+  if (r.error) return res.status(400).json({ error: r.error });
+  res.json({ success: true, donatedCopies: r.donatedCopies, gainedCC: r.gainedCC, shinyDustGained: r.shinyDustGained });
 });
 app.listen(PORT, "127.0.0.1", () => console.log(`dex/box preview: http://localhost:${PORT}/public/picker-pokemon?id=${ID}`));

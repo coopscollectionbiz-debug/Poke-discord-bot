@@ -295,12 +295,12 @@ async function waitForSlot(channel, queue, heading, message = null) {
 // `trainers` are the two sides' displayed trainer files (null: none); both
 // are players, so each has its tier. `vs` is the VS card's view (see
 // replayFight), built with the records from before the battle.
-export async function playBattle(channel, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null], vs = null } = PLAYBACK) {
+export async function playBattle(channel, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null], auras = null, vs = null } = PLAYBACK) {
   const { message, release } = await waitForSlot(channel, queue, header(outcome));
   try {
     await replayFight({
       channel, message, heading: header(outcome), fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers, vs,
-      tiers: trainers.map((f) => trainerTier(f)),
+      tiers: auras ?? trainers.map((f) => trainerTier(f)), // each player's equipped Aura (services/auras.js auraLook)
       finalEmbed: buildResultEmbed(outcome, names),
     });
   } finally {
@@ -404,7 +404,7 @@ export function challengeAward(outcome, playerName) {
 // result frame gets the EXP, any award, and the result embed. `trainer` is
 // the challenger's displayed trainer file (null: an empty portrait). A first
 // post that fails throws; a later failed edit stops the replay and returns null.
-export async function playChallengeFight(channel, message, outcome, i, names, { last, maxUpdates, delayMs, queue = replays, trainer = null } = PLAYBACK) {
+export async function playChallengeFight(channel, message, outcome, i, names, { last, maxUpdates, delayMs, queue = replays, trainer = null, aura } = PLAYBACK) {
   const heading = challengeHeader(outcome, i);
   const { trainers, ...theme } = challengeTheme(outcome, i, trainer);
   const posted = message;
@@ -417,7 +417,7 @@ export async function playChallengeFight(channel, message, outcome, i, names, { 
       fight: { ...outcome.fights[i], exp: last ? outcome.exp : {} },
       finalEmbed: last ? buildChallengeEmbed(outcome, names) : null,
       trainers,
-      tiers: [trainerTier(trainer), null], // the Gym Leader, run by the computer, gets none
+      tiers: [aura === undefined ? trainerTier(trainer) : aura, null], // the player's Aura; the Gym Leader, run by the computer, gets none
       theme,
       award: last ? challengeAward(outcome, names[outcome.userId]) : null,
       // Several fights share one message, so each one's file names differ.
@@ -488,13 +488,13 @@ export const buildEncounterEmbed = (outcome, names) => new EmbedBuilder().setCol
 // Battle! on it. `trainers` are the player's displayed trainer file (or null)
 // and the Trainer's sprite. A start frame that can't be shown throws; a later
 // failed edit stops the replay and returns null.
-export async function playEncounter(channel, message, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null] } = PLAYBACK) {
+export async function playEncounter(channel, message, outcome, names, { maxUpdates, delayMs, queue = replays, trainers = [null, null], aura } = PLAYBACK) {
   const heading = `⚔️ <@${outcome.userId}> vs ${names.trainer}!`;
   const slot = await waitForSlot(channel, queue, heading, message);
   try {
     return await replayFight({
       channel, message: slot.message, heading, fight: outcome, names, sprites: new Map(), maxUpdates, delayMs, trainers,
-      tiers: [trainerTier(trainers[0]), null], // the Trainer, run by the computer, gets none
+      tiers: [aura === undefined ? trainerTier(trainers[0]) : aura, null], // the player's Aura; the Trainer, run by the computer, gets none
       finalEmbed: buildEncounterEmbed(outcome, names),
     });
   } finally {

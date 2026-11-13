@@ -49,21 +49,43 @@ export function generateToken(userId, channelId, type = "dashboard", meta = {}) 
 
 /** A link from /dashboard or /admindashboard works for 10 minutes. */
 export const LINK_TTL_MS = 10 * 60 * 1000;
-/** Admin sessions slide: each use moves expiry this far out… */
-export const ADMIN_IDLE_MS = 30 * 60 * 1000;
+/** Opened sessions slide: each use moves expiry this far out… */
+export const SESSION_IDLE_MS = 30 * 60 * 1000;
 /** …but never past this long after the link was opened. */
-export const ADMIN_MAX_MS = 4 * 60 * 60 * 1000;
+export const SESSION_MAX_MS = 4 * 60 * 60 * 1000;
+// Admin and player sessions share the same window.
+export const ADMIN_IDLE_MS = SESSION_IDLE_MS;
+export const ADMIN_MAX_MS = SESSION_MAX_MS;
+export const DASHBOARD_IDLE_MS = SESSION_IDLE_MS;
+export const DASHBOARD_MAX_MS = SESSION_MAX_MS;
+
+function slide(entry, now) {
+  entry.expires = Math.min(now + SESSION_IDLE_MS, entry.sessionStart + SESSION_MAX_MS);
+}
+
+function activate(token, type, now) {
+  const entry = activeTokens.get(token);
+  if (!entry || entry.type !== type) return false;
+  if (entry.sessionStart == null) entry.sessionStart = now;
+  slide(entry, now);
+  return true;
+}
 
 /**
  * Start an admin session from a just-validated admin link (/auth/admin).
  * From here on requireAdminSession slides the expiry.
  */
 export function activateAdminSession(token, now = Date.now()) {
-  const entry = activeTokens.get(token);
-  if (!entry || entry.type !== "admin") return false;
-  if (entry.sessionStart == null) entry.sessionStart = now;
-  entry.expires = Math.min(now + ADMIN_IDLE_MS, entry.sessionStart + ADMIN_MAX_MS);
-  return true;
+  return activate(token, "admin", now);
+}
+
+/**
+ * Start a player dashboard session from a just-validated link
+ * (/auth/dashboard). From here on requireDashboardSession slides the
+ * expiry: 30 minutes after the last use, 4 hours at most.
+ */
+export function activateDashboardSession(token, now = Date.now()) {
+  return activate(token, "dashboard", now);
 }
 
 /**
@@ -96,11 +118,25 @@ export function getChannelIdForToken(token) {
   return entry ? entry.channelId : null;
 }
 
-export function requireDashboardSession(req, userId) {
-  const sessionToken = req.cookies?.dashboard_session;
+/**
+ * Player dashboard check: the dashboard_session cookie must belong to
+ * userId. A valid opened session slides (see activateDashboardSession);
+ * a link that was never opened still dies 10 minutes after /dashboard.
+ */
+export function requireDashboardSession(req, userId, now = Date.now()) {
+  const sessionToken = req?.cookies?.dashboard_session;
   if (!sessionToken) return false;
+  const entry = activeTokens.get(sessionToken);
+  if (!entry) return false;
   // Player dashboard tokens are the legacy default "dashboard" type.
-  return validateToken(String(userId), sessionToken, "dashboard");
+  if (entry.type !== "dashboard") return false;
+  if (entry.id !== String(userId)) return false;
+  if (now > entry.expires) {
+    activeTokens.delete(sessionToken);
+    return false;
+  }
+  if (entry.sessionStart != null) slide(entry, now);
+  return true;
 }
 
 /**
@@ -131,9 +167,7 @@ export function adminSessionOf(req, now = Date.now()) {
     activeTokens.delete(sessionToken);
     return null;
   }
-  if (entry.sessionStart != null) {
-    entry.expires = Math.min(now + ADMIN_IDLE_MS, entry.sessionStart + ADMIN_MAX_MS);
-  }
+  if (entry.sessionStart != null) slide(entry, now);
   return { id: entry.id, name: entry.name || "", expires: entry.expires };
 }
 

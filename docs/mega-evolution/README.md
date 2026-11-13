@@ -8,6 +8,7 @@ Read-only audit of production `master` 5157cfe6 (Fly v21, `POKEMON_GENERATIONS` 
 | `MEGA-CATALOGUE.csv` | 99 rows: 93 Mega forms (97 rows with gender/appearance/colour variants) + 2 Primal (out of scope) |
 | `MEGA-SPRITE-AVAILABILITY.md` | Per-form sprite probe, coverage by group, missing list |
 | `MEGA-STONE-ECONOMY.md` | Channels, scenarios, caps (all proposals) |
+| `MEGA-SHARDS.md` | **Current economy (2026-11-11):** Mega Shards (daily, battle wins, CC) and the shard shop for battle-eligible stones; replaces the stone-drop proposals |
 | `MEGA-BATTLE-DESIGN.md` | Team-slot selection, transformation point, HP rule, the 69 abilities classified |
 | `MEGA-INVENTORY-AND-PERSISTENCE.md` | Stone items, the unlock transaction, duplication safety, migration |
 | `MEGA-DISCORD-AND-DASHBOARD.md` | `/mega` commands, Mega cards, team rules, API |

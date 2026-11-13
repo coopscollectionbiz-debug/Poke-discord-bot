@@ -58,6 +58,7 @@ export function tmItemDefinitions() {
       storage: "inventory",
       shop: { eligible: m.status === "launch", channel: "dashboard", price: { cc: TM_PRICE_BY_TIER[tier] }, tier },
       sources: ["shop"],
+      icon: `items/tm/${String(mv.type).toLowerCase()}.png`, // PokéAPI bag disc, one per type
       tm: Object.freeze({ move: moveId, number: m.tm, type: mv.type, category: mv.category, power: mv.power, accuracy: mv.accuracy, ...(m.holdReason && { holdReason: m.holdReason }) }),
       sinceRelease: "TM",
     });

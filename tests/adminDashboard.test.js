@@ -73,6 +73,22 @@ section("Items");
   const full = player({ items: { shiny_dust: 999_999_999 } });
   const cap = C.applyChange(full, change({ kind: "item", op: "add", itemId: "shiny_dust", amount: 5 }));
   assertTrue(!cap.ok && cap.error.startsWith("They can't hold") && full.items.shiny_dust === 999_999_999, "the stack limit is enforced and reads as the player's limit");
+
+  // Any bag item, live or not (2026-11-12): TMs, Mega Stones, Mega Shards, held items.
+  const off = { env: {} };
+  const any = player();
+  for (const [itemId, amount] of [["tm_aerialace", 2], ["tm_closecombat", 1], ["megastone_charizarditex", 1], ["mega_shard", 25], ["leftovers", 1], ["rare_candy", 3]]) {
+    const r = C.applyChange(any, change({ kind: "item", op: "add", itemId, amount }), off);
+    assertTrue(r.ok && any.items[itemId] === amount, `admin can grant ${itemId}`);
+  }
+  const live = C.applyChange(player(), change({ kind: "item", op: "add", itemId: "tm_aerialace", amount: 1 }), off);
+  const notLive = C.applyChange(player(), change({ kind: "item", op: "add", itemId: "megastone_charizarditex", amount: 1 }), off);
+  assertTrue(live.ok && !live.warnings.some((w) => /isn't live/.test(w)), "a live TM grants without a warning");
+  assertTrue(notLive.ok && notLive.warnings.some((w) => /isn't live for players yet/.test(w)), "a Mega Stone grant with the switches off warns that players can't use it yet");
+  const twice = player();
+  C.applyChange(twice, change({ kind: "item", op: "add", itemId: "leftovers", amount: 1 }), off);
+  const dup = C.applyChange(twice, change({ kind: "item", op: "add", itemId: "leftovers", amount: 1 }), off);
+  assertTrue(!dup.ok && /already own/.test(dup.error) && twice.items.leftovers === 1, "held items keep their one-each limit");
 }
 
 // ======================= Pokémon =======================
@@ -334,6 +350,31 @@ section("Admin sessions");
   assertTrue(auth.adminSessionOf({ cookies: { admin_session: player_ } }, t0) === null, "a player dashboard token is not an admin session");
 }
 
+section("Player dashboard sessions");
+{
+  const t0 = Date.now();
+  const unopened = auth.generateToken("1", "c");
+  assertTrue(auth.requireDashboardSession({ cookies: { dashboard_session: unopened } }, "1", t0 + 11 * 60_000) === false, "an unopened link dies after 10 minutes");
+  const token = auth.generateToken("1", "c");
+  const req = { cookies: { dashboard_session: token } };
+  auth.activateDashboardSession(token, t0);
+  assertTrue(auth.requireDashboardSession(req, "2", t0) === false, "another player's id is refused");
+  assertTrue(auth.requireDashboardSession(req, "1", t0 + 25 * 60_000) === true, "still open 25 minutes in");
+  assertTrue(auth.requireDashboardSession(req, 1, t0 + 54 * 60_000) === true, "each save slides expiry to 30 minutes later");
+  let t = t0 + 54 * 60_000;
+  while (t + 29 * 60_000 < t0 + 4 * 60 * 60_000) {
+    t += 29 * 60_000;
+    assertTrue(auth.requireDashboardSession(req, "1", t), "keeps sliding while in use");
+  }
+  assertTrue(auth.requireDashboardSession(req, "1", t0 + 4 * 60 * 60_000 + 1) === false, "after 4 hours the session ends");
+  const idle = auth.generateToken("1", "c");
+  auth.activateDashboardSession(idle, t0);
+  assertTrue(auth.requireDashboardSession({ cookies: { dashboard_session: idle } }, "1", t0 + 31 * 60_000) === false, "30 idle minutes end the session");
+  const admin = auth.generateToken("1", "c", "admin");
+  assertTrue(auth.activateDashboardSession(admin, t0) === false, "an admin token can't open a player session");
+  assertTrue(auth.requireDashboardSession({ cookies: { dashboard_session: admin } }, "1", t0) === false, "an admin token is not a player session");
+}
+
 // ======================= Route guards =======================
 section("Route guards");
 {
@@ -373,7 +414,9 @@ section("Route guards");
   const pl = await (await fetch(`${base}/api/admin/player/1`, { headers: { cookie: "admin_session=good" } })).json();
   assertTrue(pl.ok && pl.player.cc === 1005 && Array.isArray(pl.pokemon) && pl.cooldowns.length === 5, "player view is shaped for the page");
   const cat = await (await fetch(`${base}/api/admin/catalog`, { headers: { cookie: "admin_session=good" } })).json();
-  assertTrue(cat.species.some((s) => s.id === 25 && s.released) && cat.species.some((s) => s.id === UNRELEASED && !s.released) && cat.items.every((i) => i.id !== "pokeball") && cat.trainers.length > 100, "catalog marks unreleased Pokémon and lists only holdable items");
+  assertTrue(cat.species.some((s) => s.id === 25 && s.released) && cat.species.some((s) => s.id === UNRELEASED && !s.released) && cat.items.every((i) => i.id !== "pokeball") && cat.trainers.length > 100, "catalog marks unreleased Pokémon and lists only bag items");
+  const byId = new Map(cat.items.map((i) => [i.id, i]));
+  assertTrue(["tm_closecombat", "megastone_charizarditex", "mega_shard", "leftovers"].every((id) => byId.has(id)) && byId.get("evolution_stone").live === true && byId.get("megastone_charizarditex").live === false, "catalog lists TMs, Mega Stones, Mega Shards and held items, marking which are live");
   server.close();
   delete process.env.ADMIN_DASH_TOKEN;
 }

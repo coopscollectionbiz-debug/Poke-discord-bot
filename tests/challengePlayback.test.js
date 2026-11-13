@@ -11,7 +11,7 @@ import {
   challengeNames, challengeHeader, buildChallengeEmbed, playChallenge, prizeText, createQueue,
   playChallengeFight, showChoosing, showRunResult, challengeTheme, challengeAward,
 } from "../utils/battle/playback.js";
-import { pickFrameTurns, portraitBox, AWARD, ANIMATION, FRAME_WIDTH, LAYOUT } from "../utils/battle/render.js";
+import { pickFrameTurns, portraitBox, AWARD, FRAME_WIDTH, LAYOUT } from "../utils/battle/render.js";
 import { GifReader } from "omggif";
 import { runChallenge, startRun, continueRun } from "../utils/challenge/runChallenge.js";
 import { CHALLENGES } from "../utils/challenge/roster.js";
@@ -154,12 +154,15 @@ section("Themed replay frames");
 
   const result = gifOf(win.edits.at(-1));
   const { r } = composite(result, 0);
-  assertEqual(r.numFrames(), 2 * ANIMATION.idleFrames, "a first win's result frame has the award screen after the result");
-  assertTrue(bright(composite(result, ANIMATION.idleFrames + 5).px, AWARD.cx, AWARD.cy) > 600, "presenting the Badge");
+  // Two text screens split the loop evenly (POKEMON_LOOP_FIT on): the award is the second half.
+  const awardAt = Math.ceil(r.numFrames() / 2);
+  assertTrue(bright(composite(result, 5).px, AWARD.cx, AWARD.cy) < 600 && bright(composite(result, awardAt + 5).px, AWARD.cx, AWARD.cy) > 600,
+    "a first win's result frame has the award screen after the result, presenting the Badge");
   const again = recorder();
   const rematch = outcomeOf(player(STRONG, 100, { brock: "d" }), "brock");
   await playChallenge(again.channel, rematch, challengeNames(rematch, "A"));
-  assertEqual(new GifReader(gifOf(again.edits.at(-1))).numFrames(), ANIMATION.idleFrames, "a rematch's result has no award screen");
+  const rematchGif = gifOf(again.edits.at(-1)), n = new GifReader(rematchGif).numFrames();
+  assertTrue([0, Math.ceil(n / 2) + 5, n - 1].every((f) => bright(composite(rematchGif, f).px, AWARD.cx, AWARD.cy) < 600), "a rematch's result has no award screen");
 }
 
 section("Run loss");

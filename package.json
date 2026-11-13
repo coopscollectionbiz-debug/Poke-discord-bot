@@ -35,7 +35,6 @@
   "dependencies": {
     "@napi-rs/canvas": "^0.1.84",
     "@pkmn/sim": "0.10.12",
-    "canvas": "^3.2.0",
     "cookie-parser": "^1.4.7",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",

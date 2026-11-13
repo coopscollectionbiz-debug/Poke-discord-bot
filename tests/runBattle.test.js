@@ -16,16 +16,20 @@ import { grantCatch } from "../utils/training.js";
 const NOW = new Date("2026-11-02T12:00:00Z");
 const fixed = () => 0.5;
 
-function trainer(id, team) {
+// Ranked and wager battles need a full Ranked team (6), so `battle` defaults
+// to the Display team only where a test doesn't care about rated modes.
+function trainer(id, team, battle = team) {
   const u = createNewUser(id, `Trainer ${id}`);
-  for (const [speciesId] of team) grantCatch(u, speciesId, "normal", fixed);
+  for (const [speciesId] of [...team, ...battle]) if (!u.pokemon?.[speciesId]?.normal) grantCatch(u, speciesId, "normal", fixed);
   u.displayedPokemon = team.map(([speciesId]) => ({ id: speciesId, variant: "normal" }));
-  u.battleTeam = team.map(([speciesId]) => ({ id: speciesId, variant: "normal" })); // ranked/wager team
+  u.battleTeam = battle.map(([speciesId]) => ({ id: speciesId, variant: "normal" })); // ranked/wager team
   return u;
 }
+const FULL_A = [[6], [25], [1], [4], [7], [133]];
+const FULL_B = [[19], [9], [16], [10], [13], [129]];
 const world = () => ({
-  A: trainer("A", [[6], [25], [1]]),
-  B: trainer("B", [[19], [9]]),
+  A: trainer("A", [[6], [25], [1]], FULL_A),
+  B: trainer("B", [[19], [9]], FULL_B),
   C: trainer("C", []),
 });
 const open = (td, seed = 1, c = "A", d = "B") =>
@@ -62,7 +66,7 @@ section("The Underdog surge is casual-only");
 {
   // A lone Caterpie against six legendaries is the Underdog by far, so a
   // casual battle surges at the top chance; ranked and wager battles never do.
-  const lopsided = () => ({ A: trainer("A", [[10]]), B: trainer("B", [[150], [249], [250], [384], [483], [484]]) });
+  const lopsided = () => ({ A: trainer("A", [[10]], [[10], [13], [129], [11], [14], [16]]), B: trainer("B", [[150], [249], [250], [384], [483], [484]]) });
   const seeds = Array.from({ length: 40 }, (_, i) => i + 1);
   const surges = (mode) => seeds.filter((seed) =>
     runBattle({ trainerData: lopsided(), challengerId: "A", defenderId: "B", mode, stake: mode === "wager" ? 1 : 0, seed, now: NOW }).surge).length;
@@ -73,11 +77,10 @@ section("The Underdog surge is casual-only");
 section("Ranked battle: Battle teams at Lv 50, rated, no surge");
 {
   const td = world();
-  td.A.battleTeam = [{ id: 6, variant: "normal" }]; // differs from the Display team
   const before = JSON.stringify(td.A.training);
   const out = ranked(td);
   assertTrue(out.ok && out.rated, "ranked battle runs, rated");
-  assertEqual(out.sides[0].members.map((m) => m.speciesId), [6], "the Battle team fights, not the Display team");
+  assertEqual(out.sides[0].members.map((m) => m.speciesId), FULL_A.map(([id]) => id), "the Battle team fights, not the Display team");
   assertTrue(out.sides.every((s) => s.members.every((m) => m.level === RANKED.level && Number.isInteger(m.realLevel))), "every fighter is Lv 50 and keeps its real Level");
   assertEqual(out.surge, null, "no Underdog surge");
   const dA = td.A.battle.rating - 1000, dB = td.B.battle.rating - 1000;
@@ -93,6 +96,17 @@ section("Ranked battle: Battle teams at Lv 50, rated, no surge");
   delete noBT.A.battleTeam;
   assertEqual(ranked(noBT).reason, "no_battle_team_challenger", "a Challenger needs a Battle team");
   assertTrue(open(noBT).ok, "casual battles don't need a Battle team");
+  const short = world();
+  short.B.battleTeam = short.B.battleTeam.slice(0, 5);
+  assertEqual(ranked(short).reason, "short_battle_team_defender", "a Defender with 5 of 6 can't be challenged to ranked");
+  assertEqual(runBattle({ trainerData: short, challengerId: "A", defenderId: "B", mode: "wager", stake: 1, seed: 1, now: NOW }).reason,
+    "short_battle_team_defender", "or to a wager");
+  short.A.battleTeam = short.A.battleTeam.slice(0, 1);
+  assertEqual(ranked(short).reason, "short_battle_team_challenger", "a Challenger needs a full Ranked team");
+  short.A.pokemon[133].normal = 0;
+  short.A.battleTeam = FULL_A.map(([id]) => ({ id, variant: "normal" }));
+  assertEqual(ranked(short).reason, "short_battle_team_challenger", "an unowned slot doesn't count toward the 6");
+  assertTrue(open(short).ok, "casual battles don't need a full team");
   assertEqual(buildBattleTeam(noBT.A), [], "no Battle team, no fighters");
 }
 

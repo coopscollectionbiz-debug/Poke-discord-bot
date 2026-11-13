@@ -1,7 +1,8 @@
 // ======================================================================
 // Shop · Technical Machines (TM system phase T3)
 //
-// GET  /api/tms?id=…          catalog, prices, owned counts, "teaches N"
+// GET  /api/tm-shop?id=…      catalog, prices, owned counts, "teaches N"
+//      (not /api/tms: blockers' EasyPrivacy list blocks "/tms?id=")
 // POST /api/shop/buy-tm       { id, item, qty, requestId }
 //
 // Everything shown comes from the server (prices, compatibility, owned
@@ -11,7 +12,7 @@
 // ======================================================================
 
 import { showMessage, isExpired, showExpired } from "/public/shared/shell.js";
-import { moveMeta } from "/public/shared/moveMeta.js";
+import { moveMeta, tmDisc } from "/public/shared/moveMeta.js";
 
 const TYPES = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"];
 const TIER_LABEL = { basic: "Basic", standard: "Standard", power: "Power", premium: "Premium", elite: "Elite" };
@@ -26,7 +27,7 @@ async function load() {
   if (!state.userId) return;
   let res;
   try {
-    res = await fetch(`/api/tms?id=${encodeURIComponent(state.userId)}`, { credentials: "same-origin" });
+    res = await fetch(`/api/tm-shop?id=${encodeURIComponent(state.userId)}`, { credentials: "same-origin" });
   } catch {
     return; // the main shop script already reports connection problems
   }
@@ -81,10 +82,10 @@ function visible() {
 function card(t) {
   const affordable = (state.data.cc ?? 0) >= t.price;
   return `<div class="shop-item tmx-item" data-tier="${esc(t.tier)}">
-    <div class="tmx-top"><span class="tmx-tier">${esc(TIER_LABEL[t.tier] ?? t.tier)}</span></div>
+    <div class="tmx-top">${tmDisc(t.type, { size: 60 })}<span class="tmx-tier">${esc(TIER_LABEL[t.tier] ?? t.tier)}</span></div>
     <h3>${esc(t.name)}</h3>
     <p class="desc">${moveMeta(t)}</p>
-    <p class="tmx-meta">${t.teaches > 0 ? `Teaches ${fmt(t.teaches)} of your Pokémon` : "None of your Pokémon can learn it"}${t.owned ? ` · <b>You have ${fmt(t.owned)}</b>` : ""}</p>
+    <p class="tmx-meta">${t.teaches > 0 ? `${fmt(t.teaches)} of your Pokémon can learn it` : "None of your Pokémon can learn it"}${t.owned ? ` · <b>You have ${fmt(t.owned)}</b>` : ""}</p>
     <p class="price">${fmt(t.price)} CC</p>
     <button type="button" class="buy-btn" data-tm="${esc(t.item)}"${affordable ? "" : " disabled"} aria-label="Buy ${esc(t.name)} for ${fmt(t.price)} CC">${affordable ? "Buy" : "Not enough CC"}</button>
   </div>`;

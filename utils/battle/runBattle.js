@@ -26,13 +26,18 @@ import { teamPower, rollSurge, cuteSurgeBoost } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, getCasualRecord, capBlock, recordStart } from "./rewards.js";
 import { RANKED, CUTE } from "./tuning.js";
 import { teamCuteness } from "./cuteness.js";
-import { chosenMoves } from "../../services/movesets.js";
+import { chosenMoves, keepMovesOnLevelUp } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
 import { megaBattleEligibility, megaBattleProfile } from "../megas.js";
 import { isMegaCapabilityEnabled } from "../../config/features.js";
+import { rewardsOn, rollBattleShards } from "../../services/megaShards.js";
+import { createRng } from "./rng.js";
 import { toTeamObj } from "../economyRules.js";
 import { slotCopyUid, slotBoxUid } from "../../services/ownership.js";
 import { copyTraining, addCopyExp, copiesOf } from "../../services/box.js";
+import { liveEffects } from "../../services/liveEvents.js";
+import { expMultiplier } from "../liveEventRules.js";
+import { getSpeciesEntry } from "../speciesCatalog.js";
 
 const bestCopyUid = (user, id, variant) => copiesOf(user, id, variant)[0]?.uid ?? null;
 import { battleItems } from "../../services/heldItems.js";
@@ -157,20 +162,27 @@ function applyExp(user, side, result, sideIndex) {
 
 // Adds gains[i] EXP to members[i] and reports each one's Level change and new
 // moves. base[i] (held items): the gain before an EXP item, reported when it differs.
-export function applyGains(user, members, gains, base = gains) {
+// A running Live event's EXP multiplier (optionally only for some types, by
+// the type of the Pokémon gaining) applies here, on top of held items.
+export function applyGains(user, members, gains, base = gains, fx = liveEffects()) {
   return members.map((m, i) => {
+    const eventMult = expMultiplier(fx, getSpeciesEntry(m.speciesId) ?? { id: m.speciesId, types: [] });
+    const gained = eventMult === 1 ? gains[i] : Math.floor(gains[i] * eventMult);
     // EXP goes to the copy that fought (docs/adr/0001); a member saved
     // before copies existed falls back to the line's best copy.
     const target = m.copyUid && user.box?.[m.copyUid] ? m.copyUid : bestCopyUid(user, m.speciesId, m.variant);
-    const { fromLevel, toLevel } = target ? addCopyExp(user, target, gains[i]) : addExp(user, m.speciesId, m.variant, gains[i]);
+    const { fromLevel, toLevel } = target ? addCopyExp(user, target, gained) : addExp(user, m.speciesId, m.variant, gained);
+    // New moves are learned, not equipped: teams keep the moves they had.
+    keepMovesOnLevelUp(user, m.speciesId, m.variant, { uid: target ?? null, fromLevel, toLevel });
     return {
       key: trainingKey(m.speciesId, m.variant),
       name: m.name,
       fromLevel,
       toLevel,
-      gained: gains[i],
+      gained,
       learned: movesLearned(m.speciesId, fromLevel, toLevel).map((id) => getMove(id).name),
       ...(gains[i] !== base[i] ? { bonusFrom: m.item, baseGained: base[i] } : {}),
+      ...(eventMult !== 1 ? { eventMult } : {}),
       // Display only (the EXP card): which Mega this member battled as. The
       // EXP itself always goes to the base line above. Absent for ordinary
       // members, so their results are byte-for-byte unchanged.
@@ -179,6 +191,9 @@ export function applyGains(user, members, gains, base = gains) {
   });
 }
 
+/** Ranked and wager battles need this many Pokémon on each Ranked team. */
+export const RANKED_TEAM_SIZE = 6;
+
 // Read-only: why this battle can't happen right now, or null. /battle runs it
 // before deferring (instant ephemeral refusals) and runBattle re-runs it under lock.
 export function battleBlock({ trainerData, challengerId, defenderId, mode, now = new Date(), env = process.env }) {
@@ -186,6 +201,11 @@ export function battleBlock({ trainerData, challengerId, defenderId, mode, now =
   const prefix = mode === "open" ? "no_team" : "no_battle_team";
   if (!teamFor(trainerData[challengerId], mode, { env }).length) return `${prefix}_challenger`;
   if (!teamFor(trainerData[defenderId], mode, { env }).length) return `${prefix}_defender`;
+  // Ranked and wager battles need a full Ranked team on both sides.
+  if (mode !== "open") {
+    if (teamFor(trainerData[challengerId], mode, { env }).length < RANKED_TEAM_SIZE) return "short_battle_team_challenger";
+    if (teamFor(trainerData[defenderId], mode, { env }).length < RANKED_TEAM_SIZE) return "short_battle_team_defender";
+  }
   const day = utcDay(now);
   const blockFor = (user, opponentId) => (user?.battle?.day === day ? capBlock(user.battle, opponentId) : null);
   const block = blockFor(trainerData[challengerId], defenderId);
@@ -270,6 +290,15 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
       trainerData[winnerId].cc = (trainerData[winnerId].cc ?? 0) + 2 * stake;
     }
 
+    // Mega Shards: a chance for the winner, if they chose to play (the
+    // Challenger, or either side of an accepted wager). Its own seeded RNG, so
+    // the battle itself is unchanged; while the rewards switch is off nothing
+    // is rolled and the result has no megaShards key.
+    const shardResult = {};
+    if (rewardsOn(env) && (winnerId === challengerId || mode === "wager")) {
+      shardResult.megaShards = { [winnerId]: rollBattleShards(trainerData[winnerId], { rng: createRng((seed ^ 0x5a17d) >>> 0).next, now: now.getTime(), env }) };
+    }
+
     return {
       ok: true,
       seed,
@@ -284,6 +313,7 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
       exp,
       rated,
       rating, // {} for casual battles
+      ...shardResult, // megaShards: { [winnerId]: n } only while Mega rewards are on
     };
   });
 }

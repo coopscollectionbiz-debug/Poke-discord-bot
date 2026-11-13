@@ -6,6 +6,7 @@
 // Showcase strip (the Showcase team, from buildShowcaseView, same as /showcase). Read-only.
 // ==========================================================
 
+import { auraLook } from "../../services/auras.js";
 import { createCanvas } from "@napi-rs/canvas";
 import { COLOR, TIER, tierColor } from "./tokens.js";
 import { rr, font, fitText, fitFont, drawBall, drawShinyMark, drawMegaTag, fillTextMid, drawSoftPlatform } from "./primitives.js";
@@ -46,6 +47,7 @@ export function trainerCardView(user, { displayName, trainer, luck = null }) {
     displayName,
     trainerFile: user?.displayedTrainer ?? null,
     trainer: trainer ?? null,
+    aura: auraLook(user), // what's drawn behind the trainer (services/auras.js)
     rank: getRankProgress(user?.tp ?? 0),
     tp: user?.tp ?? 0,
     cc: user?.cc ?? 0,
@@ -143,9 +145,10 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
   // Epic and above get the pixel-art tier backdrop; Rare and below a plain
   // panel. (The old smooth spotlight banded into rings once the breathing
   // trainer made every card a GIF.) The tier-lit platform below stays for all.
-  const fancy = Boolean(t && hasBackdrop(tier));
-  if (fancy) { // the tier's sky fills the panel, under the platform and the trainer
-    drawTierSky(ctx, tier, { x: M, y: M, w: LEFT_W, h: H - 2 * M }, { u: 4, clip: (c) => rr(c, M, M, LEFT_W, H - 2 * M, 18) });
+  const look = "aura" in v ? v.aura : tier; // the equipped Aura; older views: the trainer's tier
+  const fancy = Boolean(t && hasBackdrop(look));
+  if (fancy) { // the Aura's sky fills the panel, under the platform and the trainer
+    drawTierSky(ctx, look, { x: M, y: M, w: LEFT_W, h: H - 2 * M }, { u: 4, clip: (c) => rr(c, M, M, LEFT_W, H - 2 * M, 18) });
     ctx.lineWidth = 2;
     ctx.strokeStyle = `${accent}88`;
     rr(ctx, M, M, LEFT_W, H - 2 * M, 18);
@@ -156,7 +159,7 @@ export async function renderTrainerCard(v, { animate = false } = {}) {
   if (t) {
     const idle = await loadTrainerPoses(v.trainerFile);
     const box = { w: LEFT_W - 40, h: 330, floor: floor + 6, scale: 4 };
-    if (fancy) trainerBackdrop(ctx, stage, { tier, sprite: t, cx, box, panel: { x: M, y: M, w: LEFT_W }, floor });
+    if (fancy) trainerBackdrop(ctx, stage, { tier: look, sprite: t, cx, box, panel: { x: M, y: M, w: LEFT_W }, floor });
     stage.placePosed(ctx, idle?.poses ?? [t], idle?.poseAt ?? poseAtFrame, cx, box.floor, box.w, box.h, { scale: box.scale });
   } else { ctx.globalAlpha = 0.35; drawBall(ctx, cx, floor - 70, 40, false); ctx.globalAlpha = 1; }
   ctx.textAlign = "center";

@@ -33,7 +33,7 @@ const app = express();
 app.use("/public", express.static(path.join(ROOT, "public"), { etag: false, maxAge: 0 }));
 app.get("/public/dashboardshop", (_, res) => res.sendFile(path.join(ROOT, "public", "dashboardshop", "index.html")));
 app.get("/api/user", (_, res) => res.json(trainerData[ID]));
-app.get("/api/tms", (_, res) => res.json(tmShopView(trainerData[ID], { env })));
+app.get("/api/tm-shop", (_, res) => res.json(tmShopView(trainerData[ID], { env })));
 app.post("/api/shop/buy-tm", express.json(), async (req, res) => {
   const { item, qty = 1, requestId = null } = req.body || {};
   const tx = await runInventoryTransaction({

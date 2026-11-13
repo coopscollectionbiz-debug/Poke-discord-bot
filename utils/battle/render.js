@@ -16,13 +16,13 @@ import { GifReader } from "omggif";
 import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import { loadTrimmedTrainerSprite, loadTrimmedTrainerPoses, loadBadgeSprite } from "../render/sprites.js";
-import { drawSparkle, drawTypeChip, drawSoftPlatform } from "../render/primitives.js";
+import { drawSparkle, drawTypeChip, drawSoftPlatform, drawStamp } from "../render/primitives.js";
 import { regionBackdrop, backdropTint, drawTierSky } from "../render/trainerBackdrop.js";
 import { cardTrainerFx } from "../render/trainerTier.js";
 import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
 import { encodeFrames } from "../render/gif.js";
-import { unionBox, pokemonLoopFit } from "../render/spriteLoops.js";
+import { unionBox, pokemonLoopFit, loopPlan, fitLoop, spriteTime, STEP_MS, MAX_GIF_BYTES } from "../render/spriteLoops.js";
 
 const FONT = "system-ui, 'DejaVu Sans', 'Noto Sans', Arial, sans-serif";
 const SPRITES = new URL("../../public/sprites/pokemon/", import.meta.url);
@@ -44,7 +44,9 @@ const MEGA_TAG = TOKENS.mega; // the shared Mega colour (dashboard --cc-mega)
 // up), so each turn runs turnMs on regular frames: longer than the ~2.5-2.8 s
 // a screen recording measured between playback updates. The final frame
 // still asks for the GIF maximum (~11 min) for viewers that honor it.
-// Start and result images loop.
+// Start and result images loop: with POKEMON_LOOP_FIT on, over one fitted
+// loop of their sprites at 50 ms steps (idleTiming); else idleFrames per
+// text screen.
 export const ANIMATION = { delayMs: 100, eventFrames: 7, holdFrames: 10, idleFrames: 20, turnMs: 4000, freezeMs: 655_350 };
 
 export function pickFrameTurns(totalTurns, frames) {
@@ -173,8 +175,16 @@ function fitText(ctx, text, maxWidth) {
 }
 
 // Game-style HP bar: an "HP" tag and a rounded bar that turns yellow below
-// half and red below a fifth.
+// half and red below a fifth. Drawn once per HP value and copied (drawStamp).
 function drawHpBar(ctx, cx, y, frac) {
+  if (!drawStamp(ctx, `hp:${frac}`, cx, y, 61, 3, 122, 20, (c, x, yy) => paintHpBar(c, x, yy, frac))) return paintHpBar(ctx, cx, y, frac);
+  ctx.font = `800 8px ${FONT}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = frac <= 0 ? "#3a4256" : frac > 0.5 ? "#9af5b4" : frac > 0.2 ? "#fde48b" : "#f9a3a3";
+}
+
+function paintHpBar(ctx, cx, y, frac) {
   const w = 116, h = 8, tag = 22, x = cx - w / 2;
   ctx.fillStyle = INK;
   pill(ctx, x, y, w, h + 6);
@@ -202,8 +212,17 @@ function drawHpBar(ctx, cx, y, frac) {
   ctx.fill();
 }
 
-// A Poké Ball per Team member: red and white while it can battle, gray once fainted.
+// A Poké Ball per Team member: red and white while it can battle, gray once
+// fainted. Drawn once per state and copied (see drawStamp).
 function drawBall(ctx, cx, cy, alive) {
+  if (!drawStamp(ctx, `ball:${alive}`, cx, cy, 9, 9, 18, 18, (c, x, y) => paintBall(c, x, y, alive))) return paintBall(ctx, cx, cy, alive);
+  // The state paintBall leaves behind, for anything drawn after it.
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = INK;
+  ctx.fillStyle = alive ? "#f4f4f4" : "#555b6e";
+}
+
+function paintBall(ctx, cx, cy, alive) {
   const r = 6;
   ctx.lineWidth = 1.5;
   ctx.strokeStyle = INK;
@@ -278,16 +297,28 @@ function drawPortraitSprite(ctx, s, sprite) {
 
 /**
  * The fighting Pokémon's ring: a fixed pixel ring on the ground whose glow
- * breathes in and out once every PULSE_MS (1 s divides every playback
- * image's length, so start and result images loop without a jump). A solid
+ * breathes in and out once every PULSE_MS (`phase`: 0–1 through a breath).
+ * A fitted start image stretches the breath so a whole number fit its loop. A solid
  * core line plus a fainter band either side that widens as it brightens, in
  * the trainer's tier colour lightened 35% toward white (light gray without
  * a backdrop), so it reads on its own row.
  */
 const PULSE_MS = 1000;
-function drawRing(ctx, cx, cy, ms, color) {
+function drawRing(ctx, cx, cy, phase, color) {
+  const glow = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2); // 0 → 1 → 0
+  // Its pulse repeats every PULSE_MS, so each brightness is drawn once and
+  // copied (keyed by the exact opacities painted; the last ring draws below).
+  const alphas = [0.45 + 0.5 * glow, 0.35 * glow, 0.35 * glow, 0.15 * glow * glow].map((a) => (a <= 0.02 ? "-" : a.toFixed(3))).join("|");
+  // The ring snaps to an absolute 2-px grid, and its dots are placed from the
+  // real centre (shifting the centre first can flip a rounding tie), so the
+  // stamp is keyed by the centre and paints at an offset.
+  const ox = Math.floor(cx) - 66, oy = Math.floor(cy) - 20;
+  if (drawStamp(ctx, `ring:${color}:${alphas}:${cx},${cy}`, cx, cy, 66, 20, 134, 42, (c) => paintRing(c, cx, cy, glow, color, ox, oy))) return;
+  paintRing(ctx, cx, cy, glow, color);
+}
+
+function paintRing(ctx, cx, cy, glow, color, ox = 0, oy = 0) {
   const [r, g, b] = [1, 3, 5].map((i) => Math.round(parseInt(color.slice(i, i + 2), 16) * 0.65 + 255 * 0.35));
-  const glow = 0.5 - 0.5 * Math.cos(((ms % PULSE_MS) / PULSE_MS) * Math.PI * 2); // 0 → 1 → 0
   const ring = (rx, alpha) => {
     if (alpha <= 0.02) return;
     ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
@@ -297,7 +328,7 @@ function drawRing(ctx, cx, cy, ms, color) {
       const x = Math.round((cx + Math.cos(a) * rx) / 2) * 2, y = Math.round((cy + Math.sin(a) * ry) / 2) * 2;
       if (seen.has(x * 4096 + y)) continue; // no double-plotted (brighter) pixels
       seen.add(x * 4096 + y);
-      ctx.fillRect(x - 1, y - 1, 2, 2);
+      ctx.fillRect(x - 1 - ox, y - 1 - oy, 2, 2);
     }
   };
   ring(56, 0.45 + 0.5 * glow);
@@ -444,9 +475,6 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     if (!players.has(sprite)) players.set(sprite, spritePlayer(sprite));
     return players.get(sprite)(ms);
   };
-  const total = events.length
-    ? Math.max(events.length * ANIMATION.eventFrames + ANIMATION.holdFrames, ANIMATION.turnMs / ANIMATION.delayMs)
-    : ANIMATION.idleFrames * screens.length;
   // What stays the same in every frame is drawn once on `base` and copied
   // in first: the background, each row's panel and portrait, and its trainer
   // name and type chip. Everything else in a row is drawn after its panel, so
@@ -533,14 +561,47 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     return regionBackdrop({
       tier: tiers[s], rect, u: 2, occupied: (x, y) => occ[(y - top) * rect.w + (x - PAD)] === 1,
       from: [PAD, top + ROW_H], to: [PAD + rect.w * 0.85, top - ROW_H * 0.6],
-      floor: pc.floor + 8, frames: 24, dil: 2,
+      floor: pc.floor + 8, frames: 24, dil: 2, variant: "row", // an art Aura's row.png, if it has one
       clip: (c) => pill(c, rect.x, rect.y, rect.w, rect.h, 16),
     });
   });
 
+  // Each frame's time: the old 100 ms steps (turn images, and everything
+  // with POKEMON_LOOP_FIT=0), or a start or result image's fitted loop.
+  const stepped = steppedTiming({ events, screens, clock });
+  let timing = stepped;
+  if (fitted && !events.length) {
+    // The sprites that animate: every standing Pokémon's (a fainted one shows its first frame).
+    const anims = [...new Set(sides.flatMap((side, s) => side.members.map((_, i) => (hpBefore[s][i] > 0 ? live[s][i] : null))))]
+      .filter((a) => a && a.gif.numFrames() > 1);
+    const trainerClock = rowBackdrops.some(Boolean) || idles.some((idle) => idle?.poses?.length > 1);
+    timing = fittedTiming({ anims, trainerClock, screens: screens.length, clock });
+  }
+
+  // Each Pokémon's label and its widths, measured on first use (the same every frame).
+  const labels = new Map();
+  const labelOf = (s, i) => {
+    const key = s * 16 + i;
+    let v = labels.get(key);
+    if (v) return v;
+    const m = sides[s].members[i];
+    ctx.font = `700 13px ${FONT}`;
+    // A Mega shows its base name (+ X/Y/Z) and a MEGA tag, so it fits the
+    // tile: 80 px leaves room for the Level in a 124 px tile.
+    const megaSuffix = m.megaForm ? (m.name?.match(/ ([XYZ])$/)?.[1] ?? "") : "";
+    const label = fitText(ctx, m.megaForm ? `${m.baseName ?? m.name}${megaSuffix ? ` ${megaSuffix}` : ""}` : (m.name ?? `#${m.speciesId}`), 80);
+    const level = `Lv${m.level}`;
+    const nameW = ctx.measureText(label).width;
+    ctx.font = `600 12px ${FONT}`;
+    v = { label, level, nameW, levelW: ctx.measureText(level).width };
+    labels.set(key, v);
+    return v;
+  };
+
+  let T = timing;
   const draw = (f) => {
     const state = frameState(f, { hpBefore, events });
-    const ms = clock + f * ANIMATION.delayMs;
+    const ms = T.ms(f);
     ctx.drawImage(base, 0, 0);
     for (let s = 0; s < 2; s++) {
       // On the replay's clock, like the sprites, so they don't restart each update.
@@ -568,13 +629,13 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
         // A soft floor in the trainer's tier colour (neutral without one),
         // stronger under the fighting Pokémon, which also stands in the ring.
         drawSoftPlatform(ctx, cx, floor, fighting ? 56 : 52, fighting ? 14 : 12, tints[s], { u: 2, peak: fighting ? 0.9 : 0.4 });
-        if (fighting && frac > 0) drawRing(ctx, cx, floor, ms, tints[s] ?? "#c9cfe0");
+        if (fighting && frac > 0) drawRing(ctx, cx, floor, T.ringPhase(f), tints[s] ?? "#c9cfe0");
 
         // Sprite: animated while standing, grayscale once fainted.
         const hidden = state.hidden?.side === s && state.hidden.slot === i;
         const sprite = frac <= 0 ? (gray[s][i] ?? live[s][i]) : live[s][i];
         if (sprite && !hidden) {
-          const img = play(sprite, frac <= 0 ? 0 : ms);
+          const img = play(sprite, frac <= 0 ? 0 : T.spriteMs(sprite, f));
           const dy = state.lunge?.side === s && state.lunge.slot === i ? state.lunge.dy : 0;
           ctx.globalAlpha = frac <= 0 ? 0.45 : fighting || active[s] === -1 ? 1 : 0.7;
           // Anchored on the box every frame fits in, so a flyer rests above
@@ -586,25 +647,29 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
           ctx.globalAlpha = 1;
         }
 
-        // Name, Level, and HP.
-        ctx.textBaseline = "alphabetic";
-        ctx.font = `700 13px ${FONT}`;
-        // A Mega shows its base name (+ X/Y/Z) and a MEGA tag, so it fits the
-        // tile: 80 px leaves room for the Level in a 124 px tile.
-        const megaSuffix = m.megaForm ? (m.name?.match(/ ([XYZ])$/)?.[1] ?? "") : "";
-        const label = fitText(ctx, m.megaForm ? `${m.baseName ?? m.name}${megaSuffix ? ` ${megaSuffix}` : ""}` : (m.name ?? `#${m.speciesId}`), 80);
-        const level = `Lv${m.level}`;
-        const nameW = ctx.measureText(label).width;
-        ctx.font = `600 12px ${FONT}`;
-        const levelW = ctx.measureText(level).width;
+        // Name, Level, and HP. The label and its widths are the same every
+        // frame, so they're measured once; the text is drawn once per colour
+        // and copied (drawStamp).
+        const { label, level, nameW, levelW } = labelOf(s, i);
         const startX = cx - (nameW + 6 + levelW) / 2;
-        ctx.textAlign = "left";
-        ctx.font = `700 13px ${FONT}`;
-        ctx.fillStyle = frac <= 0 ? "#7d8396" : "#ffffff";
-        ctx.fillText(label, startX, top + 152);
-        ctx.font = `600 12px ${FONT}`;
-        ctx.fillStyle = m.levelUp ? "#5ee08a" : frac <= 0 ? "#7d8396" : "#c9cfe0";
-        ctx.fillText(level, startX + nameW + 6, top + 152);
+        const nameColor = frac <= 0 ? "#7d8396" : "#ffffff";
+        const levelColor = m.levelUp ? "#5ee08a" : frac <= 0 ? "#7d8396" : "#c9cfe0";
+        const paintLabel = (c, x, y) => {
+          c.textBaseline = "alphabetic";
+          c.textAlign = "left";
+          c.font = `700 13px ${FONT}`;
+          c.fillStyle = nameColor;
+          c.fillText(label, x, y);
+          c.font = `600 12px ${FONT}`;
+          c.fillStyle = levelColor;
+          c.fillText(level, x + nameW + 6, y);
+        };
+        if (drawStamp(ctx, `label:${label}|${level}|${nameColor}|${levelColor}`, startX, top + 152, 4, 18, Math.ceil(nameW + 6 + levelW) + 10, 26, paintLabel)) {
+          ctx.textBaseline = "alphabetic";
+          ctx.textAlign = "left";
+          ctx.font = `600 12px ${FONT}`;
+          ctx.fillStyle = levelColor;
+        } else paintLabel(ctx, startX, top + 152);
         drawHpBar(ctx, cx, top + 158, frac);
         if (m.megaForm) drawTag(ctx, "MEGA", Math.round(cx + LAYOUT.tileW / 2 - 8), top + 30, frac <= 0 ? "#7d8396" : MEGA_TAG);
       }
@@ -632,8 +697,8 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     ctx.textBaseline = "middle";
     ctx.fillText(badge, bx + icon + (bw - icon) / 2, by + bh / 2 + 0.5);
 
-    const screen = Math.floor(f / ANIMATION.idleFrames);
-    if (theme?.award && !events.length && screen === theme.award.screen) drawAward(ctx, theme.award, awardIcon, f % ANIMATION.idleFrames);
+    const screen = T.screen(f);
+    if (theme?.award && !events.length && screen === theme.award.screen) drawAward(ctx, theme.award, awardIcon, T.awardTick(f));
 
     // Text box, like the games'.
     const ty = ROW_TOP[1] + ROW_H + PAD;
@@ -650,7 +715,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     const lineW = W - 2 * PAD - 36;
     const [line1, line2] = state.lines?.partial ? [turnText(state.lines, sides)[0], ""]
       : state.lines ? wrapLines(...turnText(state.lines, sides), (t) => ctx.measureText(t).width <= lineW)
-      : screens[Math.floor(f / ANIMATION.idleFrames)];
+      : screens[screen];
     ctx.fillText(fitText(ctx, line1 ?? "", lineW), PAD + 18, ty + 27);
     ctx.fillText(fitText(ctx, line2 ?? "", lineW), PAD + 18, ty + 51);
 
@@ -660,10 +725,82 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
   // plus the award screen's first frame when there is one (its gold and the
   // dimmed field). Frames are opaque, so the canvas's premultiplied alpha
   // changes nothing. utils/render/gif.js writes only what changed per frame.
-  const award = theme?.award && !events.length ? [theme.award.screen * ANIMATION.idleFrames] : [];
-  return encodeFrames(canvas, draw, total, {
-    background: base.getContext("2d").getImageData(0, 0, W, H).data,
-    sample: [0, ...award, total - 1],
-    delay: (f) => (events.length && f === total - 1 ? ANIMATION.freezeMs : ANIMATION.delayMs),
-  });
+  const background = base.getContext("2d").getImageData(0, 0, W, H).data;
+  const encode = (timing) => {
+    T = timing;
+    const award = theme?.award && !events.length ? [timing.screenStart(theme.award.screen)] : [];
+    return encodeFrames(canvas, draw, timing.total, { background, sample: [0, ...award, timing.total - 1], delay: timing.delay });
+  };
+  const gif = await encode(timing);
+  // Too big (8 MB, as for cards): the old 2 s per screen.
+  return timing === stepped || gif.length <= MAX_GIF_BYTES ? gif : encode(stepped);
+}
+
+/**
+ * The old timing: ANIMATION.delayMs frames; a turn image runs its hits then
+ * holds to turnMs and freezes; a start or result image shows each text
+ * screen for idleFrames. Sprites, the ring and backdrops follow `clock`.
+ */
+function steppedTiming({ events, screens, clock }) {
+  const { delayMs, idleFrames } = ANIMATION;
+  const total = events.length
+    ? Math.max(events.length * ANIMATION.eventFrames + ANIMATION.holdFrames, ANIMATION.turnMs / delayMs)
+    : idleFrames * screens.length;
+  const ms = (f) => clock + f * delayMs;
+  return {
+    total,
+    delay: (f) => (events.length && f === total - 1 ? ANIMATION.freezeMs : delayMs),
+    ms,
+    spriteMs: (sprite, f) => ms(f),
+    ringPhase: (f) => (ms(f) % PULSE_MS) / PULSE_MS,
+    screen: (f) => Math.floor(f / idleFrames),
+    screenStart: (i) => i * idleFrames,
+    awardTick: (f) => f % idleFrames,
+  };
+}
+
+// A text screen's time in a fitted image: about what the old timing gave
+// (idleFrames × delayMs, 2 s), never under MIN_SCREEN_MS.
+const SCREEN_MS = ANIMATION.idleFrames * ANIMATION.delayMs;
+const MIN_SCREEN_MS = 1500;
+
+/**
+ * How many times a start or result image plays its sprites' loop L so its
+ * `screens` text screens each get about 2 s, split evenly across the image.
+ * → { loops, total (frames of STEP_MS) }
+ */
+export function idleLoops(L, screens) {
+  let loops = Math.max(1, Math.round((screens * SCREEN_MS) / L));
+  while ((loops * L) / screens < MIN_SCREEN_MS) loops++;
+  return { loops, total: Math.max(1, Math.round((loops * L) / STEP_MS)) };
+}
+
+/**
+ * A start or result image's fitted timing (POKEMON_LOOP_FIT on): one loop
+ * length L for its animated sprites (fitLoop; whole 2.4 s multiples when a
+ * trainer idles or a tier backdrop plays), played `loops` times at STEP_MS,
+ * so the GIF loops with no seam. The text screens split it evenly; the ring
+ * breathes a whole number of times over it, starting where `clock` has it.
+ */
+function fittedTiming({ anims, trainerClock, screens, clock }) {
+  const plans = anims.map((a) => loopPlan(a));
+  const { L, fit } = fitLoop(plans.map((p) => p.period), { trainerClock });
+  const { total } = idleLoops(L, screens);
+  const length = total * STEP_MS;
+  const breaths = Math.max(1, Math.round(length / PULSE_MS));
+  const index = new Map(anims.map((a, i) => [a, i]));
+  const ms = (f) => clock + f * STEP_MS;
+  const screen = (f) => Math.min(screens - 1, Math.floor((f * screens) / total));
+  const screenStart = (i) => Math.ceil((i * total) / screens);
+  return {
+    total,
+    L,
+    delay: STEP_MS,
+    ms,
+    spriteMs: (sprite, f) => (index.has(sprite) ? spriteTime(plans[index.get(sprite)], fit[index.get(sprite)], ms(f)) : ms(f)),
+    ringPhase: (f) => ((clock % PULSE_MS) / PULSE_MS + (f * STEP_MS * breaths) / length) % 1,
+    screen,
+    screenStart,
+    awardTick: (f) => Math.floor(((f - screenStart(screen(f))) * STEP_MS) / ANIMATION.delayMs),
+  };
 }

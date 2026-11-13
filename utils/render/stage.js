@@ -25,11 +25,11 @@ import { encodeGif } from "./gif.js";
 import { createRenderGate } from "./renderGate.js";
 import { getRenderPool, renderOptions } from "./renderPool.js";
 import { shinyBackdrop, shinyFxEnabled } from "./shinyBackdrop.js";
-import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS } from "./spriteLoops.js";
+import { loopPlan, fitLoop, spriteTime, pokemonLoopFit, STEP_MS, MAX_GIF_BYTES } from "./spriteLoops.js";
 
 export const FRAMES = 24, DELAY_MS = 100;
 // Discord takes up to 10 MB a file; past this, the card falls back (see above).
-export const MAX_GIF_BYTES = 8 * 1024 * 1024;
+export { MAX_GIF_BYTES };
 
 /** Stable layout seed per Pokémon, so a shiny's stars sit in the same places every time. */
 export const backdropSeed = (id) => [...String(id)].reduce((s, c) => (s * 31 + c.charCodeAt(0)) % 9973, 7);

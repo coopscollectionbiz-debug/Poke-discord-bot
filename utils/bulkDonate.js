@@ -12,8 +12,10 @@
 // one failing row rejects the whole request and the user is untouched.
 //
 // Each mode has its own rule, so the server can catch a stale list:
-//   duplicates  — must leave at least 1 plain copy of that variant. Team
-//                 variants are allowed: the copy kept is the Team copy.
+//   duplicates  — only copies on no team, without TM moves, and never the
+//                 best untrained copy (donatableDuplicates). A row may name
+//                 its exact copies in `uids` (the player unticked some in
+//                 the confirmation); otherwise the lowest Levels go first.
 //   multiselect — exactly 1 copy of that Pokémon in total, not on Team.
 //
 // TM safety (services/ownership.js): only PLAIN copies are ever donated
@@ -26,7 +28,9 @@
 
 import { grantItem } from "../services/inventory.js";
 import { plainCount, customCopiesOf, canRemoveCopies, removeCopies } from "../services/ownership.js";
-import { spareCopies, normalizeBox } from "../services/box.js";
+import { spareCopies, copiesOf, normalizeBox } from "../services/box.js";
+import { liveEffects } from "../services/liveEvents.js";
+import { scaleEarned } from "./liveEventRules.js";
 
 const VARIANTS = new Set(["normal", "shiny"]);
 
@@ -34,7 +38,7 @@ const VARIANTS = new Set(["normal", "shiny"]);
  * @param {object} args
  * @param {object} args.user - normalized trainer record (mutated on success only)
  * @param {"duplicates"|"multiselect"} args.mode
- * @param {Array<{pokeId:number, variant:"normal"|"shiny", count:number}>} args.items
+ * @param {Array<{pokeId:number, variant:"normal"|"shiny", count:number, uids?:string[]}>} args.items
  * @param {object} args.pokemonData - id → { name, tier }
  * @param {object} args.economy - { ccByTier, shinyDustByTier, normalDustChanceByTier,
  *                                  normalDustWeeklyCap, rollDust(table) }
@@ -71,6 +75,7 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
     const trained = customCopiesOf(user, pid, variant).length;
     const label = variant === "shiny" ? `shiny ${p.name}` : p.name;
 
+    let uids = null;
     if (mode === "duplicates") {
       if (plain - count < 1) {
         if (trained > 0) {
@@ -78,9 +83,23 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
         }
         return { error: `You have ${owned} ${label} now, so donating ${count} would leave none.` };
       }
-      // Copies on a Team are never donated (docs/adr/0001).
-      const spare = spareCopies(user, pid, variant).length;
-      if (count > spare) return { error: `Only ${spare} of your ${label} can be donated: the others are on a team or have TM-trained moves.` };
+      // Copies on a Team are never donated (docs/adr/0001), and neither is
+      // the best untrained copy (see donatableDuplicates).
+      if (item.uids != null) {
+        // The player chose which copies (the confirmation lists each one).
+        if (!Array.isArray(item.uids) || item.uids.length !== count) return { error: "Invalid copy list." };
+        if (new Set(item.uids).size !== count) return { error: "A copy is listed twice." };
+        if (!namedCopiesDonatable(user, pid, variant, item.uids)) {
+          return { error: `One of those ${label} can't be donated now: it's your best copy, on a team, has TM-trained moves, or is gone.` };
+        }
+        uids = [...item.uids];
+      } else {
+        const donatable = donatableDuplicates(user, pid, variant);
+        if (count > donatable.length) {
+          return { error: `Only ${donatable.length} of your ${label} can be donated: your best copy, team copies and TM-trained copies are kept.` };
+        }
+        uids = donatable.slice(0, count); // lowest Level first
+      }
     } else {
       if (count !== 1) return { error: "Multi-select donates one copy of each Pokémon." };
       if (owned < 1) return { error: `You no longer have a ${label}.` };
@@ -93,7 +112,7 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
       }
     }
 
-    rows.push({ pid, p, variant, count });
+    rows.push({ pid, p, variant, count, uids });
   }
 
   // ---------- apply: same per-copy rewards as POST /api/pokemon/donate ----------
@@ -101,7 +120,7 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
   let shinyDustGained = 0;
   const events = [];
 
-  for (const { pid, p, variant, count } of rows) {
+  for (const { pid, p, variant, count, uids } of rows) {
     for (let i = 0; i < count; i++) {
       const ev = copyReward(user, pid, p, variant, economy);
       gainedCC += ev.ccGained;
@@ -109,7 +128,8 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
       events.push(ev);
     }
     // Plain copies only (validated above), so this cannot be refused.
-    const removed = removeCopies(user, { id: pid, variant, n: count });
+    // Duplicates name their exact copies; Multi-select's only copy needs none.
+    const removed = removeCopies(user, uids ? { id: pid, variant, n: count, uids, exact: true } : { id: pid, variant, n: count });
     if (!removed.ok) throw new Error(`bulkDonate: removal refused after validation (${removed.code})`);
   }
 
@@ -120,6 +140,34 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
   }
 
   return { donatedCopies: events.length, gainedCC, shinyDustGained, events };
+}
+
+/**
+ * Copies Donate Duplicates may take from one line, lowest Level first:
+ * untrained, on no team, and never the line's best untrained copy (highest
+ * EXP; copiesOf order on ties). If the best copy is on a team it's kept
+ * anyway, so every other spare is donatable. Donation rewards don't depend
+ * on Level, so keeping the best copy never costs the player.
+ * The dashboard applies the same rule (public/picker-pokemon/bulkRules.js).
+ * @returns {string[]} uids
+ */
+export function donatableDuplicates(user, id, variant) {
+  const best = copiesOf(user, id, variant).find((c) => !c.trained); // highest EXP first
+  return spareCopies(user, id, variant).filter((c) => c.uid !== best?.uid).map((c) => c.uid);
+}
+
+/**
+ * Whether these named copies may go. Each must be a spare (untrained, on no
+ * team), and an untrained copy with the line's top EXP must stay. Ties are
+ * fine either way, so the dashboard need not break them the way we do.
+ */
+function namedCopiesDonatable(user, id, variant, uids) {
+  const spare = new Set(spareCopies(user, id, variant).map((c) => c.uid));
+  if (!uids.every((u) => spare.has(u))) return false;
+  const untrained = copiesOf(user, id, variant).filter((c) => !c.trained);
+  const top = untrained[0]?.exp ?? 0;
+  const going = new Set(uids);
+  return untrained.some((c) => !going.has(c.uid) && c.exp === top);
 }
 
 // One donated copy's reward (CC, Shiny Dust with the weekly normal-dust cap).
@@ -140,7 +188,10 @@ function copyReward(user, pid, p, variant, economy) {
       user.nonShinyDustEarnedThisWeek = earned + dust;
     }
   }
-  return { pokemonId: pid, pokemonName: p.name, tier, variant, ccGained: cc, dustGained: dust };
+  // Live event multipliers on what a Donation earns. The weekly normal-dust
+  // cap counts the dust before the multiplier, so an event never eats it.
+  const fx = liveEffects();
+  return { pokemonId: pid, pokemonName: p.name, tier, variant, ccGained: scaleEarned(cc, fx.cc), dustGained: scaleEarned(dust, fx.dust) };
 }
 
 /**

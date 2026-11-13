@@ -117,7 +117,7 @@ export function createTrainerRewardEmbed(trainer, spriteUrl, options = {}) {
   return new EmbedBuilder()
     .setTitle(`👥 ${displayName}`)
     .setDescription(
-      `🎖️ **Rarity:** ${tierDisplay}\n🧢 **Trainer Type:** ${typeLabel}`
+      `🎖️ **Tier:** ${tierDisplay}\n🧢 **Trainer Type:** ${typeLabel}`
     )
     .setColor(color)
     .setThumbnail(spriteUrl)

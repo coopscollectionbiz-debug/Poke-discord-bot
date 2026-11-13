@@ -108,7 +108,7 @@ export function bulkDonate({ user, mode, items, pokemonData, economy, isOnTeam }
       if (total > 1) return { error: `You have more than one ${p.name} now.` };
       if (plain < 1) return { error: `Your ${label} has TM-trained moves. Donate it on its own to confirm.` };
       if (isOnTeam(pid, variant)) {
-        return { error: `${p.name} is on one of your teams (Display or Battle). Remove it from that team first.` };
+        return { error: `${p.name} is on one of your teams. Take it off that team first.` };
       }
     }
 

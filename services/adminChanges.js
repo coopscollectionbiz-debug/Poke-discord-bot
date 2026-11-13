@@ -176,8 +176,8 @@ export function isBulkable(change) {
 // Team helpers
 // ----------------------------------------------------------
 const TEAM_FIELDS = [
-  ["displayedPokemon", "Team"],
-  ["battleTeam", "Battle team"],
+  ["displayedPokemon", "Casual team"],
+  ["battleTeam", "Ranked team"],
 ];
 
 /** Slots (1-based) holding this species + Variant on each team. */

@@ -11,7 +11,7 @@ import { saveAndAck, withSaveNote } from "../utils/saveManager.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("resetteam")
-    .setDescription("Admin: Reset a user's Display and Battle teams.")
+    .setDescription("Admin: Reset a user's Casual and Ranked teams.")
     .addUserOption(option =>
       option
         .setName("user")
@@ -72,7 +72,7 @@ export default {
         const saveAck = await saveAndAck(trainerData);
 
         return safeReply(interaction, {
-          content: withSaveNote(`✅ Reset **${target.username}'s** Display and Battle teams (and their chosen moves).\nThey can now pick new teams on the dashboard's Teams page.`, saveAck),
+          content: withSaveNote(`✅ Reset **${target.username}'s** Casual and Ranked teams (and their chosen moves).\nThey can now pick new teams on the dashboard's Teams page.`, saveAck),
           flags: MessageFlags.Ephemeral
         });
 

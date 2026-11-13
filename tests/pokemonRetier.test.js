@@ -64,7 +64,7 @@ const player = (battleTeam) => ({
   assertEqual(u.pokemon[483].shiny + u.pokemon[484].normal, 2, "removed Pokémon stay in the collection");
   const notes = N.peekNotices(u, N.NOTICE_KINDS.BATTLE_TEAM_TRIM);
   assertEqual(notes.length, 1, "one notice stored");
-  assertTrue(/shiny Dialga and Palkia were removed from your Battle team/.test(notes[0].text) && /you kept Mewtwo/.test(notes[0].text), `notice names what was removed and kept: ${notes[0].text}`);
+  assertTrue(/shiny Dialga and Palkia were removed from your Ranked team/.test(notes[0].text) && /you kept Mewtwo/.test(notes[0].text), `notice names what was removed and kept: ${notes[0].text}`);
   B.normalizeBattleTeam(u);
   assertEqual(N.peekNotices(u).length, 1, "idempotent: a second pass adds nothing");
 }

@@ -179,7 +179,7 @@ export async function challengeExpMessage(outcome, names, user, { render = threa
     const png = await render({
       opponent: CHALLENGES[outcome.key].kind === "elite4" ? "the Elite Four" : names[outcome.fights.at(-1).opponentKey],
       won: outcome.cleared,
-      rating: null, // challenges never change Battle rating
+      rating: null, // challenges never change Ranked rating
       surge: false,
       pot: 0,
       members: expMembers(outcome.exp[outcome.userId], user),

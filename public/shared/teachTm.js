@@ -14,7 +14,7 @@
 import { toast, showExpired, pageHref } from "/public/shared/shell.js";
 import { moveMeta, tmDisc } from "/public/shared/moveMeta.js";
 
-const LABEL = { display: "Display team", battle: "Battle team" };
+const LABEL = { display: "Casual team", battle: "Ranked team" };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const newRequestId = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`);
 // Standard move row: name on top, type · category · power · accuracy below.

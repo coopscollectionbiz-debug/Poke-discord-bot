@@ -293,7 +293,7 @@ function drawHybrid(ctx, view, sprites, frameFor, trainer) {
   // Stat rows.
   const rows = [
     ["Team Power", fmt(view.power), COLOR.gold],
-    ["Battle Rating", view.battle ? fmt(view.battle.rating) : "—", COLOR.text],
+    ["Ranked rating", view.battle ? fmt(view.battle.rating) : "—", COLOR.text],
     ["Record", view.battle ? `${view.battle.wins}W – ${view.battle.losses}L` : "—", COLOR.text],
     ["Trainer Points", fmt(view.tp), COLOR.text],
   ];

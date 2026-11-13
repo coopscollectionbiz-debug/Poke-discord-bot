@@ -79,7 +79,7 @@ function drawHeader(ctx, v) {
     ctx.textAlign = "right";
     ctx.font = font(15, 800);
     ctx.fillStyle = COLOR.textFaint;
-    ctx.fillText("BATTLE RATING", W - M - 8, M + 28);
+    ctx.fillText("RANKED RATING", W - M - 8, M + 28);
     ctx.font = font(40, 800);
     ctx.fillStyle = COLOR.text;
     ctx.fillText(fmt(v.rating.to), W - M - 8, M + 74);

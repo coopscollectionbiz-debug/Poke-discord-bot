@@ -177,7 +177,15 @@ main:focus { outline: none; }
 .tmx-item { min-height: 0; text-align: left; }
 .tmx-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
 .tmx-tier { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--cc-text-muted); }
-.tmx-item[data-tier="premium"] .tmx-tier, .tmx-item[data-tier="elite"] .tmx-tier { color: var(--cc-gold); }
+/* Price tier → rarity colour (catalog/tms.js TIER_RARITY): outline + label. */
+.tmx-item[data-tier="basic"] { --tmx-tier: var(--cc-tier-common); }
+.tmx-item[data-tier="standard"] { --tmx-tier: var(--cc-tier-uncommon); }
+.tmx-item[data-tier="power"] { --tmx-tier: var(--cc-tier-rare); }
+.tmx-item[data-tier="premium"] { --tmx-tier: var(--cc-tier-epic); }
+.tmx-item[data-tier="elite"] { --tmx-tier: var(--cc-tier-legendary); }
+.tmx-item[data-tier] { border-color: var(--tmx-tier); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tmx-tier) 35%, transparent); }
+.tmx-item[data-tier] .tmx-tier { color: var(--tmx-tier); }
+.tm-disc { image-rendering: pixelated; flex: none; }
 .tmx-meta { margin: 0 0 8px; font-size: 13px; color: var(--cc-text-muted); }
 .tmx-meta b { color: var(--cc-text); }
 .tmx-empty { grid-column: 1 / -1; color: var(--cc-text-muted); }

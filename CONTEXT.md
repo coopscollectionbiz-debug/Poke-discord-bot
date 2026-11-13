@@ -112,6 +112,14 @@ _Avoid_: strategy, tactic, game plan, playstyle, AI mode
 A Pokémon's built-in battle trait, such as Levitate or Swift Swim. An ordinary Pokémon fights with whichever of its species' regular abilities best suits its **Team's** **Battle plan**, chosen fresh for each fight; a **Mega form** always has its own. Hidden abilities are never used.
 _Avoid_: trait, passive, skill
 
+**Status condition**:
+One of the six major statuses a battling Pokémon can have: burned, poisoned, badly poisoned, paralyzed, asleep, or frozen. It stays through switching out.
+_Avoid_: ailment, status effect
+
+**Stat change**:
+A battling Pokémon's temporary raise or drop to one stat, from −6 to +6, that ends when it leaves the field.
+_Avoid_: stat stage, stage, stat boost (that's the hidden boost Challenge opponents get), buff
+
 **Region**:
 A named set of Pokémon that share a home region: Kanto, Johto, Hoenn, Sinnoh, Unova, Kalos, Alola, Galar, or Paldea. The game's Pokémon data puts every Pokémon in exactly one region, by National Dex number: the Hisui-introduced species #899–905 belong to Galar, and alternate forms (Galarian Meowth, Mega Charizard…) count toward their base species, never as extra Pokémon. Kalos, Alola, Galar and Paldea only appear once their generation is released.
 _Avoid_: region group, generation, gen

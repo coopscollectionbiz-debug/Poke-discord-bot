@@ -9,6 +9,8 @@
 import { assertEqual, assertTrue, assertBetween, section, finish } from "./harness.js";
 import { Dex } from "@pkmn/sim";
 import { createBattle, drive, slotOf, publicLog } from "../utils/battle/showdown/engine.js";
+import { readConditions } from "../utils/battle/showdown/conditions.js";
+import { buildResult } from "../utils/battle/showdown/result.js";
 import { computeStats } from "../utils/battle/stats.js";
 
 const set = (species, moves, slot, o = {}) => ({
@@ -97,6 +99,47 @@ section("A refused choice");
   let threw = false;
   try { drive(b, [() => "move 4", first]); } catch { threw = true; }
   assertTrue(!threw && b.ended, "a choice the engine refuses falls back to its default and the fight finishes");
+}
+
+section("Conditions after each turn");
+{
+  // conditions[0] before the leads come in, then one per turn (drive's onTurn).
+  const play = (sets, choosers, { seed = 3, turnCap = 6 } = {}) => {
+    let conditions;
+    const b = createBattle({ sets, seed, beforeStart: (bb) => { conditions = [readConditions(bb, { before: true })]; } });
+    const { cappedAt } = drive(b, choosers, { turnCap, onTurn: (bb) => conditions.push(readConditions(bb)) });
+    return { b, conditions, cappedAt };
+  };
+  const byTurn = (moves) => (req, b) => (req.forceSwitch ? null : moves[Math.min(b.turn, moves.length) - 1]);
+  const idle = () => "move 1";
+  const wall = () => set("Snorlax", ["splash"], 0, { level: 60 });
+
+  const tw = play([[set("Pikachu", ["thunderwave"], 0)], [wall()]], [idle, idle]);
+  assertEqual(tw.conditions[0], { status: [[""], [""]], active: [null, null] }, "before the leads: statuses only, nobody in front");
+  assertTrue(tw.conditions.slice(1).some((c) => c.status[1][0] === "par"), "Thunder Wave's paralysis is recorded on the target's slot");
+
+  const sd = play([[set("Scizor", ["swordsdance"], 0)], [wall()]], [idle, idle]);
+  assertEqual(sd.conditions[1].active[0], { slot: 0, boosts: { atk: 2 }, confused: false, seeded: false }, "Swords Dance: Attack +2 on the active Pokémon");
+
+  const intim = play([[set("Gyarados", ["splash"], 0, { ability: "Intimidate" })], [wall()]], [idle, idle]);
+  assertEqual(intim.conditions[1].active[1].boosts, { atk: -1 }, "Intimidate on the lead: the foe's Attack -1");
+
+  const out = play([[set("Scizor", ["swordsdance"], 0), set("Snorlax", ["splash"], 1)], [wall()]], [(req, b) => (req.forceSwitch ? null : b.turn === 1 ? "move 1" : "switch 2"), idle]);
+  assertEqual(out.conditions[2].active[0], { slot: 1, boosts: {}, confused: false, seeded: false }, "switching out leaves the stat changes behind");
+
+  const haze = play([[set("Scizor", ["swordsdance", "splash"], 0)], [set("Weezing", ["haze", "splash"], 0, { level: 60 })]], [byTurn(["move 1", "move 2"]), byTurn(["move 2", "move 1"])]);
+  assertEqual([haze.conditions[1].active[0].boosts, haze.conditions[2].active[0].boosts], [{ atk: 2 }, {}], "Haze clears them");
+
+  const pass = play([[set("Scizor", ["swordsdance", "batonpass"], 0), set("Snorlax", ["splash"], 1)], [wall()]], [byTurn(["move 1", "move 2", "move 1"]), idle]);
+  assertEqual([pass.conditions[2].active[0].slot, pass.conditions[2].active[0].boosts.atk], [1, 2], "Baton Pass hands them to the Pokémon coming in");
+
+  const seed = play([[set("Gengar", ["confuseray", "leechseed"], 0)], [wall()]], [byTurn(["move 1", "move 2", "move 2", "move 2"]), idle]);
+  assertTrue(seed.conditions[1].active[1].confused, "Confuse Ray: the target is confused");
+  assertTrue(seed.conditions.slice(2).some((c) => c.active[1]?.seeded), "Leech Seed: the target is seeded");
+
+  const capped = play([[set("Shuckle", ["splash"], 0)], [set("Shuckle", ["splash"], 0)]], [first, first], { turnCap: 5 });
+  const r = buildResult(capped.b, { initial: [[1], [1]], cappedAt: capped.cappedAt, conditions: capped.conditions });
+  assertEqual([r.endedBy, r.conditions.length, r.snapshots.length], ["turnCap", 6, 6], "a capped fight has one condition record per snapshot");
 }
 
 finish();

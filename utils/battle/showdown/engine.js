@@ -100,9 +100,12 @@ export function nextSlotChoice(req) {
  * choosers[i](request, battle, side) returns a choice string for a move
  * request; switch requests never reach it (slot order decides). A choice
  * the engine refuses (Choice lock, Taunt, no PP) becomes its default.
+ * onTurn(b) runs each time a turn ends (its replacements in, the next
+ * `|turn|` logged), and once more if the battle ends mid-turn.
  */
-export function drive(b, choosers, { turnCap = TURN_CAP } = {}) {
+export function drive(b, choosers, { turnCap = TURN_CAP, onTurn = null } = {}) {
   const limit = 40 * turnCap + 100; // requests, not turns: a turn can ask several times
+  let seen = b.turn;
   for (let n = 0; !b.ended; n++) {
     if (b.turn > turnCap) return { cappedAt: turnCap };
     if (n > limit) throw new Error(`full sim: no progress after ${limit} requests`);
@@ -117,6 +120,10 @@ export function drive(b, choosers, { turnCap = TURN_CAP } = {}) {
       if (choices[i] !== null && !side.choose(choices[i])) side.choose("default");
     });
     if (!b.ended && b.allChoicesDone()) b.commitChoices();
+    if (onTurn && (b.turn !== seen || b.ended)) {
+      seen = b.turn;
+      onTurn(b);
+    }
   }
   return { cappedAt: null };
 }

@@ -21,6 +21,7 @@ section("Result shape");
   assertTrue(r.winner === 0 || r.winner === 1, "the winner is side 0 or 1");
   assertEqual(r.snapshots.length, r.turns + 1, "one HP snapshot before the battle and one per turn");
   assertEqual(r.log.length, r.turns, "one event list per turn");
+  assertEqual(r.conditions.length, r.snapshots.length, "one condition record per snapshot (a fight won by knockout)");
   assertTrue(r.knockouts.every((k) => k.bySide === 1 - k.side), "every knockout counts for the other side");
   assertTrue(r.raw.every((l) => !l.startsWith("|t:|")), "the raw log has no timestamps");
   const hit = r.log.flat().find((e) => e.damage > 0);
@@ -60,6 +61,8 @@ section("Carried HP and status (Elite Four)");
   assertTrue(!r.raw.some((l) => l.startsWith("|switch|p1a: s1|")), "a fainted member never comes in");
   const out = fight([mon(143, 50, ["bodyslam"], { hpFraction: 0 })], [mon(16, 30, ["gust"])], 6);
   assertEqual([out.winner, out.turns, out.endedBy], [1, 0, "knockout"], "a side with nobody left loses before the first turn");
+  assertEqual(out.conditions, [{ status: [[""], [""]], active: [null, null] }], "…with one condition record: before the leads");
+  assertEqual([r.conditions[0].status[0], r.conditions[0].active], [["psn", ""], [null, null]], "the carried poison is recorded before the leads come in, a fainted member has none");
 }
 
 section("Sets");

@@ -59,8 +59,9 @@ const NOTE_KINDS = new Set([
  * @param initial  [side][slot] HP fraction each member started with (0 for one left out)
  * @param cappedAt the turn cap, if drive() stopped there
  * @param names    [side][slot] each member's name, for the narration
+ * @param conditions what drive's onTurn recorded (showdown/conditions.js), kept as result.conditions
  */
-export function buildResult(b, { initial, cappedAt = null, names = initial.map((s) => s.map((_, i) => `#${i}`)) }) {
+export function buildResult(b, { initial, cappedAt = null, names = initial.map((s) => s.map((_, i) => `#${i}`)), conditions = null }) {
   const lines = exactLog(b);
   const hp = initial.map((s) => [...s]);
   const hpPoints = initial.map((s) => s.map(() => null)); // exact HP once seen
@@ -184,10 +185,10 @@ export function buildResult(b, { initial, cappedAt = null, names = initial.map((
   if (cappedAt !== null) {
     // The last `|turn|` marker (cap + 1) already closed the final turn.
     const total = (i) => snapshots.at(-1)[i].reduce((a, v) => a + v, 0);
-    return { winner: total(0) > total(1) ? 0 : 1, turns: cappedAt, endedBy: "turnCap", snapshots, knockouts, log, v: 2, steps, raw, endStatus };
+    return { winner: total(0) > total(1) ? 0 : 1, turns: cappedAt, endedBy: "turnCap", snapshots, knockouts, log, v: 2, steps, raw, endStatus, ...(conditions && { conditions }) };
   }
   closeTurn();
   const winner = b.winner === "p1" ? 0 : b.winner === "p2" ? 1 : lastFaintSide;
-  return { winner, turns: Math.max(1, turn), endedBy: "knockout", snapshots, knockouts, log, v: 2, steps, raw, endStatus };
+  return { winner, turns: Math.max(1, turn), endedBy: "knockout", snapshots, knockouts, log, v: 2, steps, raw, endStatus, ...(conditions && { conditions }) };
 }
 

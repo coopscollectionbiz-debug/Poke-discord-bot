@@ -14,6 +14,7 @@
 import { createBattle, drive } from "./engine.js";
 import { memberSet, applyCarryOver } from "./sets.js";
 import { buildResult } from "./result.js";
+import { readConditions } from "./conditions.js";
 import { makeChooser } from "../ai/choose.js";
 import { pickAbility } from "../ai/abilities.js";
 import { DEFAULT_PLAN } from "../../../catalog/battlePlans.js";
@@ -39,9 +40,18 @@ export function simulateFull({ sides, seed, surge = null, env = { FULL_SIM_ENABL
     return {
       winner: out.includes(0) ? 1 : 0, turns: 0, endedBy: "knockout", snapshots: [initial], knockouts: [], log: [],
       v: 2, steps: [], raw: [], endStatus: initial.map((s) => s.map(() => "")),
+      conditions: [{ status: sides.map((s, i) => s.members.map((m, slot) => (initial[i][slot] > 0 ? m.status ?? "" : ""))), active: [null, null] }],
     };
   }
-  const b = createBattle({ sets, seed, beforeStart: (battle) => sides.forEach((s, i) => applyCarryOver(battle, i, s.members)) });
-  const { cappedAt } = drive(b, ai);
-  return buildResult(b, { initial, cappedAt, names: sides.map((side) => side.members.map((m) => m.name ?? `#${m.speciesId}`)) });
+  // Status tags and stat chips (Battle FX): read before the leads come in, then after every turn.
+  const sizes = initial.map((s) => s.length);
+  let conditions = null;
+  const b = createBattle({
+    sets, seed, beforeStart: (battle) => {
+      sides.forEach((s, i) => applyCarryOver(battle, i, s.members));
+      conditions = [readConditions(battle, { before: true, sizes })];
+    },
+  });
+  const { cappedAt } = drive(b, ai, { onTurn: (battle) => conditions.push(readConditions(battle, { sizes })) });
+  return buildResult(b, { initial, cappedAt, conditions, names: sides.map((side) => side.members.map((m) => m.name ?? `#${m.speciesId}`)) });
 }

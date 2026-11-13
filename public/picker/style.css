@@ -267,9 +267,8 @@ main:focus { outline: none; }
 .aura-preview { position: relative; width: 180px; max-width: 100%; aspect-ratio: 90 / 105; border-radius: 12px; overflow: hidden; background: var(--cc-surface-sunken); display: grid; place-items: end center; }
 .aura-preview img { position: relative; z-index: 1; width: auto; height: 82%; margin-bottom: 6%; image-rendering: pixelated; }
 .aura-art { background: var(--sky); }
-.aura-art .aura-sheet { position: absolute; inset: 0; background-image: var(--sheet); background-repeat: no-repeat; background-size: calc(var(--frames) * 100%) 100%; image-rendering: pixelated; animation: aura-steps calc(var(--frames) * 100ms) steps(var(--frames), jump-none) infinite; }
-@keyframes aura-steps { from { background-position: 0 0; } to { background-position: 100% 0; } }
-@media (prefers-reduced-motion: reduce) { .aura-art .aura-sheet { animation: none; } }
+/* Art Auras: the sheet and the trainer on one canvas (public/picker/auras.js), timed like the bot: once per 2.4 s. */
+.aura-art .aura-canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 @media (max-width: 560px) {
   .aura-now { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .aura-quicks { justify-content: center; }

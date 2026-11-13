@@ -2,7 +2,7 @@
 // public/shared/auraArt.js — the parts of an art Aura that the bot's
 // renderers (Node) and the dashboard (browser) must agree on exactly, so the
 // two can't drift. Pure functions over numbers and RGBA arrays: no canvas,
-// no DOM. Imported by utils/render/trainerBackdrop.js and utils/render/auraArt.js.
+// no DOM. Imported by utils/render/auraArt.js and public/picker/auras.js.
 //
 // Timing. Every Aura plays once per 2.4 s card loop: 24 aura frames of
 // 100 ms. A sheet of n frames is sampled onto those 24 (n = 48 shows every

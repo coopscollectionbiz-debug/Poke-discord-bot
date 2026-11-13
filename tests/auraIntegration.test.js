@@ -4,7 +4,7 @@
 //   • an Aura without a tint still draws on VS cards and battle playback
 //   • back.png's feet row lands on the trainer's feet (the coordinate contract)
 //   • trainer lighting: off by default, validated, follows the pose, mirrored
-//   • every sheet plays once per 2.4 s loop
+//   • every sheet plays once per 2.4 s loop, on Discord and the dashboard alike
 //   • backdrop, trainer pose and composite closure, kept apart
 // Synthetic sheets with marker pixels, written to a temp folder.
 // ==========================================================
@@ -167,6 +167,9 @@ section("Timing: every sheet plays once per 2.4 s");
   const bd = createBackdrop({ tier: "art:milestoneShiny25", gridW: 90, gridH: 105, mask: new Uint8Array(90 * 105), halo: { cx: 45 }, floorRow: 96, feetRow: 98, frames: 24 });
   const markX = (f) => find(frameData(bd, f, 90, 105), 90, MARK)[0]?.[0];
   assertEqual([markX(0), markX(1), markX(23), markX(24)], [0, 2, 46, 0], "the backdrop shows sheet frames 0, 2 … 46, then closes on 0");
+  const dash = fs.readFileSync(path.join(HERE, "..", "public", "picker", "auras.js"), "utf8");
+  assertTrue(/import \{[^}]*\bsheetFrame\b[^}]*\} from "\/public\/shared\/auraArt\.js"/.test(dash) && /sheetFrame\(f, n\)/.test(dash), "the dashboard maps frames with the same function");
+  assertTrue(!/aura-steps|--frames/.test(fs.readFileSync(path.join(HERE, "..", "public", "picker", "style.css"), "utf8")), "…and no longer runs a CSS animation of frames × 100 ms");
 }
 
 section("Closure: backdrop, trainer pose and composite (kept apart)");

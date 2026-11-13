@@ -110,7 +110,7 @@ On the full sim, a Discord replay also animates status conditions and stat chang
 - Leech Seed: orbs;
 - a stat raise or drop: red or blue chevrons.
 
-Burn, poison, and Leech Seed damage at the end of a turn drains the HP bar during its moment. A status shows as a tag (`BRN`, `PSN`, `TOX`, `PAR`, `SLP`, `FRZ`) in place of "HP" at the HP bar's left, on every image while it lasts, benched Pokémon too. The fighting Pokémon's stat changes show as chips at its tile's top-left, such as `ATK+2`. The spotlight follows switches inside a turn, so Intimidate lands on the Pokémon that just came in. An image with these moments holds until they've played, never less than the usual 2 seconds. Its moments share at most 2.4 seconds, the 95th percentile that `tools/bench-battle-fx.mjs` measured (`FX` in `utils/battle/timeline.js`).
+Burn, poison, and Leech Seed damage at the end of a turn drains the HP bar during its moment. A status shows as a tag (`BRN`, `PSN`, `TOX`, `PAR`, `SLP`, `FRZ`) in place of "HP" at the HP bar's left, on every image while it lasts, benched Pokémon too. The fighting Pokémon's stat changes show as chips at its tile's top-left, such as `ATK+2`. The spotlight follows switches inside a turn, so Intimidate lands on the Pokémon that just came in. An image with these moments holds until they've played, never less than the usual 2 seconds. Each moment takes 0.8 seconds. An image with more than three shares 2.4 seconds among them, each keeping at least 0.4 seconds. The 2.4 seconds is the 95th percentile that `tools/bench-battle-fx.mjs` measured (`FX` in `utils/battle/timeline.js`).
 
 The engine records each turn's statuses and stat changes in the fight result (`utils/battle/showdown/conditions.js`). `utils/battle/timeline.js` turns each shown turn into its image's timeline, and `utils/battle/fx.js` draws the effects. The Battle Records page replays without them. The design and the measurements are in [`docs/superpowers/specs/2026-11-13-battle-fx-design.md`](docs/superpowers/specs/2026-11-13-battle-fx-design.md).
 
@@ -240,6 +240,7 @@ Set any of these to `0` to turn animation off:
 - `SHINY_FX`: no shiny backdrop.
 - `CARD_TRAINER_FX`: the challenge, encounter, and `/battle` VS cards and the battle rows lose their Tier backdrops and idle trainers, and `/battle` opens without its VS card.
 - `POKEMON_LOOP_FIT`: sprites go back to a fixed 2.4-second loop, and each replay image starts its sprites over.
+- `BATTLE_FX`: full-sim replays play no status or stat-change moments and show no status tags or stat chips (see [Full sim and Battle plans](#full-sim-and-battle-plans)).
 
 ## Trainer sprites
 

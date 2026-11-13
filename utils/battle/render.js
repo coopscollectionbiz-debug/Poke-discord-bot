@@ -24,7 +24,7 @@ import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
 import { encodeFrames } from "../render/gif.js";
 import { unionBox, pokemonLoopFit, loopPlan, fitLoop, spriteTime, STEP_MS, MAX_GIF_BYTES } from "../render/spriteLoops.js";
-import { ANIMATION, hitsTimeline, battleFx, STAT_LABELS } from "./timeline.js";
+import { ANIMATION, hitsTimeline, STAT_LABELS } from "./timeline.js";
 import { drawEffect, tinted, tintAt, jitterAt, STATUS_COLORS, CHIP_COLORS } from "./fx.js";
 
 const FONT = "system-ui, 'DejaVu Sans', 'Noto Sans', Arial, sans-serif";
@@ -486,8 +486,11 @@ const beatLines = (text) => {
  *   in place of `events`; without it, `events` play as today
  * - marks: status tags and stat chips for a start or result image
  *   (marksAt); a turn image takes them from its timeline
+ * - chipRoom: keep a tier backdrop's effects off the stat chips' corner.
+ *   Playback sets it on every image of a full-sim replay with Battle FX on,
+ *   so the backdrop doesn't move between that replay's images
  */
-export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], tiers = [null, null], theme = null, clockMs = 0, env = process.env, active: inFront = null, timeline = null, marks: still = null }) {
+export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], tiers = [null, null], theme = null, clockMs = 0, env = process.env, active: inFront = null, timeline = null, marks: still = null, chipRoom = false }) {
   const fx = cardTrainerFx(env);
   const fitted = pokemonLoopFit(env);
   const clock = fitted ? clockMs : 0;
@@ -503,11 +506,11 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     load(s, i, hpBefore[s][i] > 0 ? m.variant : "grayscale")))));
   const tl = timeline ?? hitsTimeline(events, hpBefore, inFront);
   const isTurn = tl.segments.length > 0; // a turn whose only moments are beats is still a turn image
-  const fxOn = battleFx(env);
   // Who faints in this image: a hit's knockout, or a beat's (a burn KO).
   const faints = (s, i) => tl.segments.some((seg) => (seg.kind === "hit"
     ? (seg.event.fainted && 1 - seg.event.side === s && seg.event.targetSlot === i) || (seg.event.userFainted && seg.event.side === s && seg.event.slot === i)
-    : seg.kind === "beat" && seg.hpChanges.some(([ss, ii, , to]) => ss === s && ii === i && to === 0)));
+    : seg.kind === "beat" && seg.hpChanges.some(([ss, ii, , to]) => ss === s && ii === i && to === 0))
+    || tl.end.hp[s]?.[i] === 0); // a knockout that's neither (sandstorm, hazards, a self-KO by an item)
   const gray = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>
     (hpBefore[s][i] > 0 && faints(s, i) ? load(s, i, "grayscale") : null)))));
   // The fighting pair: each side's first Pokémon still standing (as in the sim).
@@ -619,7 +622,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
       fill(cx - 66, floor - 20, 132, 40); // floor + ring
       fill(cx - 62, top + 136, 124, 40); // name, Level, HP
       fill(cx + LAYOUT.tileW / 2 - 70, top + 28, 64, 22); // MEGA tag
-      if (fxOn) fill(cx - LAYOUT.tileW / 2 + 4, top + 28, LAYOUT.tileW / 2 + 2, 34); // stat chips (Battle FX)
+      if (chipRoom) fill(cx - LAYOUT.tileW / 2 + 4, top + 28, LAYOUT.tileW / 2 + 2, 34); // stat chips (Battle FX)
       for (const sp of [live[s][i], gray[s][i]]) if (sp) fill(cx - sp.width / 2, floor + 6 - sp.height - 8, sp.width, sp.height + 16);
     });
     fill(W / 2 - 110, LAYOUT.pillY - 4, 220, 44); // the turn badge

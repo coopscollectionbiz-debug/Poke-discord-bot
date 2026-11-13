@@ -199,7 +199,7 @@ async function replayFight({ channel, message, heading, fight, names, sprites, m
   // goes up, so each image's sprites carry on where the last left off.
   let clockMs = 0;
   const image = async (step, opts) => new AttachmentBuilder(
-    await render({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, tiers, theme, clockMs, ...opts }),
+    await render({ sides, surgeSide: fight.surge?.side ?? null, sprites, trainers, tiers, theme, clockMs, ...(fx && { chipRoom: true }), ...opts }),
     { name: namePrefix + battleImageName(step) },
   );
   // Renders the next image during the wait, so rendering doesn't stretch the pace.

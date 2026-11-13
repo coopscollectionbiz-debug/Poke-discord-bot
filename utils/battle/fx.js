@@ -131,6 +131,7 @@ const DRAW = {
     }
   },
   stats(ctx, b, phase, seg) {
+    if (!seg.up && !seg.down) return; // "won't go any higher": nothing moved, so no chevrons
     const marks = seg.up && seg.down ? ["up", "down", "up"] : [seg.up ? "up" : "down", seg.up ? "up" : "down", seg.up ? "up" : "down"];
     [-24, 0, 24].forEach((dx, k) => {
       const t = cycle(phase, k, 3);

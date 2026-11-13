@@ -147,6 +147,15 @@ section("Faints");
   assertEqual([ko?.ko, ko?.hpChanges[0][3]], [true, 0], "the burn's last tick is a knockout beat");
   assertEqual([tl.end.marks.status[0][0], tl.end.hp[0][0]], ["", 0], "after it, no tag and no HP");
   assertEqual(r.endedBy, "knockout", "and the fight is over");
+  // Final review I3: the knockout's line goes with its beat, not before it in the hit's box.
+  assertTrue(ko?.text.endsWith("Snorlax fainted!") && !hitText(tl).includes("Snorlax fainted!"), "the beat says it fainted, after the burn's line");
+}
+{
+  // Final review I3: an ability's line before the turn's first hit goes with the beat it causes.
+  const { r, names } = run([mon(130, "Gyarados", 50, ["splash"])], [mon(143, "Snorlax", 50, ["splash"])], 1);
+  const tl = turnTimeline(r, 1, names);
+  const intim = beats(tl).find((b) => b.fx === "stats" && b.side === 1);
+  assertTrue(intim?.text.startsWith("Gyarados's Intimidate!") && !hitText(tl).includes("Gyarados's Intimidate!"), "Intimidate's line opens its beat instead of following it");
 }
 
 section("Hitless turns");
@@ -160,6 +169,18 @@ section("Hitless turns");
     const shown = hitText(turnTimeline(r, t, names));
     assertTrue(shown.every((line) => own.includes(line) || !told.includes(line)), `turn ${t} doesn't repeat an earlier hitless turn's lines`);
   }
+}
+
+{
+  // Final review M1: a hitless turn of lines only (both recharging) waits for its lines.
+  let found = null;
+  for (let seed = 1; seed <= 40 && !found; seed++) {
+    const f = run([mon(143, "Snorlax", 50, ["hyperbeam"])], [mon(143, "Snorlax", 50, ["hyperbeam"])], seed);
+    const t = f.r.log.findIndex((events, i) => i > 0 && events.length === 0 && turnTimeline(f.r, i + 1, f.names).segments.filter((s) => s.kind === "line").length >= 2);
+    if (t >= 0) found = { ...f, turn: t + 1 };
+  }
+  const tl = turnTimeline(found.r, found.turn, found.names);
+  assertTrue(tl.segments.every((s) => s.kind === "line") && tl.waitMs === Math.max(2000, tl.frames * 100 + 600), "both recharging: the next update waits for every line");
 }
 
 section("The cap");
@@ -214,7 +235,8 @@ section("Invariants over seeded fights");
         if (JSON.stringify(tl.end.marks.status) !== JSON.stringify(r.conditions[t].status)) bad.status.push(where);
         if (hits(tl).length !== r.log[t - 1].length) bad.hits.push(where); // Review Focus 3
         if (JSON.stringify(structuredClone(tl)) !== JSON.stringify(tl)) bad.clone.push(where); // Review Focus 5
-        const wait = tl.hasBeats ? Math.max(2000, tl.frames * 100 + 600) : 2000;
+        const paced = tl.hasBeats || (r.log[t - 1].length === 0 && tl.segments.length > 0); // beats, or a hitless turn's lines
+        const wait = paced ? Math.max(2000, tl.frames * 100 + 600) : 2000;
         if (tl.waitMs !== wait || tl.minFrames !== Math.max(tl.frames + 10, Math.ceil((wait + 2000) / 100))) bad.pace.push(where);
         const kinds = [...new Set(beats(tl).map((s) => s.fx))];
         const firsts = kinds.map((k) => { const s = beats(tl).find((x) => x.fx === k); return s.start + Math.floor(s.frames / 2); });

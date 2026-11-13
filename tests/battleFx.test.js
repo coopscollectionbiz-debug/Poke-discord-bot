@@ -71,6 +71,12 @@ for (const [seg, color] of CASES) {
   assertTrue(Buffer.from(render(seg, 0.5)).equals(Buffer.from(px)), `${name}: the same phase draws the same frame`);
 }
 
+{
+  // Final review M2: "won't go any higher" changes nothing, so no chevrons claim it did.
+  const flat = render({ fx: "stats", up: false, down: false, pop: null }, 0.5);
+  assertTrue(flat.every((v, i) => i % 4 !== 3 || v === 0), "a stat change at its limit draws no chevrons");
+}
+
 section("Sprite tint and jitter");
 {
   const sprite = createCanvas(20, 20);

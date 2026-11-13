@@ -76,13 +76,14 @@ export function marksAt(result, index) {
   return { status: copy(c.status), chips: c.active.map((a) => (a && Object.keys(a.boosts).length ? { ...a.boosts } : null)) };
 }
 
-// Start frames, and what pacing and the GIF need. Only an image with beats
-// waits longer than PLAYBACK.delayMs; each GIF keeps today's margin of
-// regular frames past the next update (ANIMATION.turnMs − PLAYBACK.delayMs).
-function timed(segments, end, hasBeats) {
+// Start frames, and what pacing and the GIF need. Only an image with beats,
+// or a hitless turn's lines, waits longer than PLAYBACK.delayMs; each GIF
+// keeps today's margin of regular frames past the next update
+// (ANIMATION.turnMs − PLAYBACK.delayMs).
+function timed(segments, end, hasBeats, paced = hasBeats) {
   let at = 0;
   for (const s of segments) { s.start = at; at += s.frames; }
-  const waitMs = hasBeats ? Math.max(PLAYBACK.delayMs, at * ANIMATION.delayMs + FX.readMs) : PLAYBACK.delayMs;
+  const waitMs = paced ? Math.max(PLAYBACK.delayMs, at * ANIMATION.delayMs + FX.readMs) : PLAYBACK.delayMs;
   const minFrames = Math.max(at + ANIMATION.holdFrames, Math.ceil((waitMs + ANIMATION.turnMs - PLAYBACK.delayMs) / ANIMATION.delayMs));
   const sample = [];
   const seen = new Set();
@@ -129,7 +130,9 @@ export function turnTimeline(result, turn, names, { env = process.env, capFrames
   let hit = null; // the latest hit segment: later lines go in its notes
   let next = 0; // the next log event (the n-th move step is the n-th event)
   const at = () => ({ start: 0, hp: copy(hp), marks: known && copyMarks(marks), active: [...active] });
-  const beat = (fx, who, text, extra = {}) => {
+  const beat = (fx, who, own, extra = {}) => {
+    // Lines from before the turn's first hit (an ability announcing itself) open the beat they lead to.
+    const text = pre.length && !hit ? [...pre.splice(0), own].join(" ") : own;
     const seg = { kind: "beat", ...at(), frames: FX.beatFrames, fx, side: who.side, slot: who.slot, text, hpChanges: [], ko: false, ...extra };
     segments.push(seg);
     return seg;
@@ -259,7 +262,11 @@ export function turnTimeline(result, turn, names, { env = process.env, capFrames
       hp[s.side][s.slot] = 0;
       marks.status[s.side][s.slot] = "";
       if (active[s.side] === s.slot) marks.chips[s.side] = null;
-      line(s);
+      // A beat that knocked it out (a burn KO) says so after its own line.
+      const ko = segments.findLast((x) => x.kind === "beat" && x.hpChanges.some(([ss, ii, , to]) => ss === s.side && ii === s.slot && to === 0));
+      const text = stepText(s, names);
+      if (ko && text) ko.text = `${ko.text} ${text}`;
+      else line(s);
       continue;
     }
     line(s);
@@ -271,5 +278,5 @@ export function turnTimeline(result, turn, names, { env = process.env, capFrames
     const each = Math.max(FX.minBeatFrames, Math.floor(capFrames / beatSegs.length));
     for (const x of beatSegs) x.frames = each;
   }
-  return timed(segments, { hp, marks: known && copyMarks(marks), active: [...active] }, beatSegs.length > 0);
+  return timed(segments, { hp, marks: known && copyMarks(marks), active: [...active] }, beatSegs.length > 0, beatSegs.length > 0 || (hitless && segments.length > 0));
 }

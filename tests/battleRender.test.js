@@ -397,6 +397,18 @@ section("Battle FX");
   const final = frameAt(await renderBattleFrame({ sides: fxSides, hpBefore: r.snapshots[r.turns], badge: "FINAL", winnerSide: 0, marks: marksAt(r, r.turns), env: on }), 0);
   assertTrue(count(final, capsule(1), STATUS_COLORS.brn) === 0, "the result image shows no tag on the fainted Snorlax");
 
+  // Final review I1: today's engine (no timeline) renders the same with Battle FX on as off, Aura backdrops included.
+  const legacy = (env) => renderBattleFrame({ sides, hpBefore: [[1, 0.5, 0, 0.1, 1, 1], [0.25]], events: [hit({ hpAfter: 0.1 })], badge: "TURN 2", tiers: ["mythic", "legendary"], env });
+  assertTrue(Buffer.from(await legacy(on)).equals(Buffer.from(await legacy(off))), "today's engine with Aura rows: the same bytes with BATTLE_FX on and off");
+
+  // Final review I2: a knockout that isn't a beat (sandstorm on the last mover) still grays the sprite.
+  const sand = [[fxMon(248, "Tyranitar", ["splash"], { level: 100 })], [fxMon(143, "Snorlax", ["splash"], { hpFraction: 0.03 })]];
+  const rs = simulateFull({ sides: sand.map((members) => ({ members })), seed: 2 });
+  const sandTl = turnTimeline(rs, rs.turns, sand.map((s) => s.map((m) => m.name)));
+  assertTrue(!sandTl.segments.some((s) => s.kind === "beat" && s.ko) && sandTl.end.hp[1][0] === 0, "the sandstorm knockout is no beat");
+  const gs = await renderBattleFrame({ sides: [{ name: "A", members: sand[0] }, { name: "B", members: sand[1] }], hpBefore: rs.snapshots[rs.turns - 1], timeline: sandTl, env: on });
+  assertTrue(colored(frameAt(gs, new GifReader(gs).numFrames() - 1)) < 5, "and its sprite ends gray");
+
   const carried = [[fxMon(143, "Snorlax", ["splash"], { status: "brn" })], [fxMon(94, "Gengar", ["splash"])]];
   const r3 = simulateFull({ sides: carried.map((members) => ({ members })), seed: 1 });
   const start = frameAt(await renderBattleFrame({ sides: [{ name: "A", members: carried[0] }, { name: "B", members: carried[1] }], hpBefore: r3.snapshots[0], marks: marksAt(r3, 0), screens: [["The battle begins!", ""]], env: on }), 0);

@@ -1,6 +1,6 @@
 # Battle FX: status and stat-change animations
 
-Status: designed 2026-11-13 in a `/grill-with-docs` session, not built.
+Status: designed 2026-11-13 in a `/grill-with-docs` session, and built the same day (plan: `docs/superpowers/plans/2026-11-13-battle-fx.md`).
 Branch: `design/full-sim`.
 
 ## Goal
@@ -37,7 +37,9 @@ Each beat's line uses the games' and Showdown's wording (`utils/battle/narrate.j
 
 The spotlight is the ring under the fighting Pokémon, which is also the only one drawn at full opacity. It follows switches inside a turn image: a U-turn, a Red Card or Roar drag, or a faint replacement. Today it stays on one Pokémon for the whole image. With it following, Intimidate, Toxic Spikes, and Sticky Web land on the Pokémon that's visibly in front.
 
-A turn whose only lines can't be beats (a flinch, a recharge, "But it failed!") and that has no hit shows those lines one after another. Today such a turn's lines show up a turn late, in the next hit's box.
+A turn whose only lines can't be beats (a flinch, a recharge, "But it failed!") and that has no hit shows those lines one after another, and the next update waits for them. Today such a turn's lines show up a turn late, in the next hit's box.
+
+A line from before the turn's first hit, such as "Gyarados's Intimidate!", opens the beat it leads to. A beat that knocks a Pokémon out ends with "… fainted!". So neither line shows on the wrong side of its beat.
 
 ### Look: games-style pixel effects
 
@@ -73,7 +75,7 @@ All frame counts are at `ANIMATION.delayMs`, 100 ms (`utils/battle/render.js:51`
 
 - **Segments.** A beat is 8 frames, 0.8 s (design value, locked in the grill). A hit stays `ANIMATION.eventFrames`, 7 frames (`render.js:51`). A line on a turn with no hit is also 8 frames. A switch takes no frames: the spotlight moves at the next segment.
 - **Cap per image.** When an image's beats add up to more than the cap, they share it evenly, and each keeps at least 4 frames. The 4-frame floor is a design value: a hit's impact plays over its frames 2 to 5 (`frameState` in `render.js`). The cap's value is an open check, see below.
-- **Pacing.** Only an image with beats changes the pace. The next update after it waits for its content to play, plus a read margin, and never less than `PLAYBACK.delayMs`, 2,000 ms (`tuning.js:81`). The read margin is 600 ms, a design value: it's today's margin after a two-hit turn, 2,000 − 2 × 700 ms. An image without beats waits exactly `PLAYBACK.delayMs`, even when its hits run past 2 s, as today. The wait before image N+1 is image N's `waitMs`, carried in the loop's `wait` variable as the VS card's hold is today. The wait scales with the `delayMs` a caller passes, as `waitMs × delayMs / PLAYBACK.delayMs`. That way the tests that replay with `delayMs: 0` (`tests/runBattle.test.js`, Playback) still run instantly.
+- **Pacing.** Only an image with beats, or a hitless turn's lines, changes the pace. The next update after it waits for its content to play, plus a read margin, and never less than `PLAYBACK.delayMs`, 2,000 ms (`tuning.js:81`). The read margin is 600 ms, a design value: it's today's margin after a two-hit turn, 2,000 − 2 × 700 ms. An image without beats waits exactly `PLAYBACK.delayMs`, even when its hits run past 2 s, as today. The wait before image N+1 is image N's `waitMs`, carried in the loop's `wait` variable as the VS card's hold is today. The wait scales with the `delayMs` a caller passes, as `waitMs × delayMs / PLAYBACK.delayMs`. That way the tests that replay with `delayMs: 0` (`tests/runBattle.test.js`, Playback) still run instantly.
 - **GIF length.** Discord loops a GIF once its regular frames run out, which replays the turn so HP jumps back up (`render.js:42-47`). So each turn GIF keeps today's margin of regular frames past the next update: `ANIMATION.turnMs − PLAYBACK.delayMs`, 4,000 − 2,000 = 2,000 ms (`render.js:51`, `tuning.js:81`). Its regular frames last at least its content plus `ANIMATION.holdFrames` (10 frames, `render.js:51`), and at least its wait plus that margin. With no beats, that's today's `max(hits × 7 + 10, 40)` frames.
 - **GIF size.** Today turn images have no size fallback, and beats add frames, not bigger ones. The bench reports the largest turn GIF. If any passes `MAX_GIF_BYTES`, 8 MB (`utils/render/spriteLoops.js`), the build stops for a decision on a fallback that cuts frames or animation. Otherwise there's no fallback.
 
@@ -118,7 +120,7 @@ The n-th move step in `steps[turn − 1]` is the n-th event in `log[turn − 1]`
 - A beat that knocks a Pokémon out, such as a burn KO, grays its sprite, as a hit's faint does.
 - The new `utils/battle/fx.js` draws the effects: one pure function per kind, `(ctx, box, phase)` with the phase from 0 to 1.
 - `drawHpBar`'s stamp key includes the tag, so a tagged bar isn't copied from an untagged one.
-- The chips' box joins the MEGA tag's box in the row backdrop's occupancy map, so a tier backdrop's effects stay off it.
+- The chips' box joins the MEGA tag's box in the row backdrop's occupancy map, so a tier backdrop's effects stay off it. Playback sets that (`chipRoom`) on every image of a full-sim replay with Battle FX on, and on no other image, so today's engine and the Mega engine draw backdrops exactly as before.
 - The palette also samples one mid-beat frame for each effect kind in the image, with today's first, award, and last frames, so flame orange and ice blue are in it.
 
 ## Open checks

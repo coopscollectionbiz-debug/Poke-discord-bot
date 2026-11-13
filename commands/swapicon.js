@@ -109,7 +109,7 @@ export default {
           embeds: [
             new EmbedBuilder()
               .setTitle("🔧 Rank Icon Restored")
-              .setDescription(`You were missing a rank icon — **${baseRank}** has been assigned.`)
+              .setDescription(`You had no rank icon, so you now have **${baseRank}**.`)
               .setColor(0x43b581)
               .setTimestamp()
           ],

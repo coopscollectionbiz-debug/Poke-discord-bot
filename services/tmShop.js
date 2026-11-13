@@ -148,7 +148,7 @@ export function buyTms(user, { item, qty = 1 } = {}, { env = process.env, now = 
   const price = discountedPrice(liveEffects(now.getTime()), "tms", entry.shop.price.cc); // a Live event's discount
   const cost = price * qty;
   const cc = Number(user.cc) || 0;
-  if (cc < cost) return fail(400, `Not enough CC — ${qty > 1 ? `${qty} × ` : ""}${entry.name} costs ${cost.toLocaleString("en-US")} CC.`, "insufficient_cc", { cc });
+  if (cc < cost) return fail(400, `Not enough CC. ${qty > 1 ? `${qty} × ` : ""}${entry.name} costs ${cost.toLocaleString("en-US")} CC.`, "insufficient_cc", { cc });
 
   const granted = grantItem(user, entry.id, qty);
   if (!granted.ok) return fail(400, granted.error ?? "Couldn't add the TM to your bag.", granted.code ?? "grant_refused");

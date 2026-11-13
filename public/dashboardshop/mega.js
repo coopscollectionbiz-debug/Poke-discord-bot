@@ -67,8 +67,8 @@ function render() {
   // --- Shard packs (CC), limited per week ---
   const weekly = section.querySelector("#megaWeekly");
   weekly.textContent = state.weeklyRemaining > 0
-    ? `You can buy ${state.weeklyRemaining} more with CC this week (limit ${state.weeklyLimit}, resets Monday 00:00 UTC). Shards from /daily and battles don’t count.`
-    : `You’ve bought this week’s ${state.weeklyLimit} shards with CC. The limit resets Monday 00:00 UTC. Shards from /daily and battles don’t count.`;
+    ? `You can buy ${state.weeklyRemaining} more with CC this week (limit ${state.weeklyLimit}, resets Monday 00:00 UTC). Shards from /daily and battles don't count.`
+    : `You've bought this week's ${state.weeklyLimit} shards with CC. The limit resets Monday 00:00 UTC. Shards from /daily and battles don't count.`;
   const packs = section.querySelector("#megaShardPacks");
   packs.replaceChildren(...state.shardPacks.map((qty) => {
     const cost = qty * state.ccPerShard;
@@ -122,13 +122,13 @@ async function run(path, body, onDone) {
     const r = await api(path, { id: userId, requestId: reqId(), ...body });
     if (!r) return;
     if (!r.ok) {
-      await showMessage({ title: "Couldn’t complete the purchase", message: r.data.error || "Please try again.", tone: "error" });
+      await showMessage({ title: "Couldn't complete the purchase", message: r.data.error || "Please try again.", tone: "error" });
       return load();
     }
     onDone(r.data);
     render();
   } catch (err) {
-    showActionError(err, "Couldn’t reach the server");
+    showActionError(err, "Couldn't reach the server");
   } finally {
     busy = false;
   }

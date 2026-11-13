@@ -20,7 +20,7 @@ let data = {}, regions = [], dex = {}, owned = {};
 async function getJSON(url) {
   const res = await fetch(url, { credentials: "same-origin" });
   if (res.status === 403) { const e = new Error("expired"); e.expired = true; throw e; }
-  if (!res.ok) throw new Error(`Couldn’t load the Pokédex (${res.status}).`);
+  if (!res.ok) throw new Error(`Couldn't load the Pokédex (${res.status}).`);
   return res.json();
 }
 
@@ -103,7 +103,7 @@ async function load() {
   } catch (err) {
     app.innerHTML = "";
     if (err.expired) return showExpired();
-    return showBanner(err.message, { title: "Couldn’t load the Pokédex" });
+    return showBanner(err.message, { title: "Couldn't load the Pokédex" });
   }
   dex = up.pokedex ?? {};
   owned = up.pokemon ?? {};

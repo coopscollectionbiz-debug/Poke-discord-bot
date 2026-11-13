@@ -1,5 +1,5 @@
 // ==========================================================
-// weightedRandom.js — Coop’s Collection (Gacha-Aligned Version)
+// weightedRandom.js — Coop's Collection (Gacha-Aligned Version)
 // Tier-First · Rank-Aware · Ball-Aware · Fractional Safe
 // ==========================================================
 

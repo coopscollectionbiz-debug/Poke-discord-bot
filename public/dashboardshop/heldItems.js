@@ -55,7 +55,7 @@ grid.addEventListener("click", async (e) => {
     toast(`${it.name} unlocked! Equip it on the Teams page.`, { tone: "success" });
     if (r.saveDelayed || r.saved === false) toast(r.notice || "Saved with a delay. Your purchase is kept and will be written shortly.");
   } catch (err) {
-    if (!err.silent) showActionError(err, "Couldn’t buy that item");
+    if (!err.silent) showActionError(err, "Couldn't buy that item");
   } finally {
     state.busy = false;
     render();

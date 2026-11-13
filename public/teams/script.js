@@ -147,7 +147,7 @@ function itemControls(t, s, i, name) {
     // Inside the stage, which is itself a button (details): an indicator only.
     // The slot's item button below changes the item.
     badge: it ? `<span class="hi-badge" title="${esc(name)} holds ${esc(it.name)}">${itemIcon(it, { size: "sm" })}</span>` : "",
-    button: `<button type="button" class="hi-slotbtn${it ? " is-set" : ""}" data-act="item" data-team="${t}" data-i="${i}" aria-label="${esc(name)}’s item on your ${LABEL[t]}: ${it ? esc(it.name) : "none"}. Change">${it ? `${itemIcon(it, { size: "xs" })} ${esc(it.name)}` : "＋ Add item"}</button>`,
+    button: `<button type="button" class="hi-slotbtn${it ? " is-set" : ""}" data-act="item" data-team="${t}" data-i="${i}" aria-label="${esc(name)}'s item on your ${LABEL[t]}: ${it ? esc(it.name) : "none"}. Change">${it ? `${itemIcon(it, { size: "xs" })} ${esc(it.name)}` : "＋ Add item"}</button>`,
   };
 }
 /** The team's equipment at a glance (saved loadout). */
@@ -194,7 +194,7 @@ function blockReason(t, s, { replaceAt = -1 } = {}) {
         code: "mythic",
         short: "Mythic limit",
         title: "One mythic-tier Pokémon per Ranked team",
-        text: `${species(s.id).name} can’t join your Ranked team: it already has a mythic-tier Pokémon (${species(other.id).name}). Remove ${species(other.id).name} first, or add ${species(s.id).name} to your Casual team.`,
+        text: `${species(s.id).name} can't join your Ranked team: it already has a mythic-tier Pokémon (${species(other.id).name}). Remove ${species(other.id).name} first, or add ${species(s.id).name} to your Casual team.`,
       };
     }
   }
@@ -343,7 +343,7 @@ async function copyFrom(target, source = SOURCES[target].find((t) => team(t).len
     kept.push(s);
   }
   const current = state.draft[target];
-  const movesNote = isShowcase(source) || isShowcase(target) ? "Moves and held items aren’t copied (the Showcase has none)." : `Each Pokémon brings its ${LABEL[source]} moves.`;
+  const movesNote = isShowcase(source) || isShowcase(target) ? "Moves and held items aren't copied (the Showcase has none)." : `Each Pokémon brings its ${LABEL[source]} moves.`;
   const msg = [
     current?.length ? `This replaces your ${LABEL[target]} (${current.length} Pokémon). ${movesNote}` : `This fills your ${LABEL[target]}. ${movesNote}`,
     isDirty(target) ? `Your unsaved changes to the ${LABEL[target]} will be replaced.` : "",
@@ -399,7 +399,7 @@ async function save() {
       try { body = await res.json(); } catch { /* non-JSON */ }
       if (res.status === 403) { showExpired(); return; }
       if (!res.ok || !body.success) {
-        const err = new Error(body.error || `Couldn’t save your ${LABEL[t]} (${res.status}).`);
+        const err = new Error(body.error || `Couldn't save your ${LABEL[t]} (${res.status}).`);
         err.team = t;
         throw err;
       }
@@ -423,7 +423,7 @@ async function save() {
       state.active = err.team;
       if (/mythic/i.test(err.message)) state.error[err.team] = { title: "One mythic-tier Pokémon per Ranked team", text: err.message };
     }
-    showActionError(err, `Couldn’t save your ${err.team ? LABEL[err.team] : "teams"}`);
+    showActionError(err, `Couldn't save your ${err.team ? LABEL[err.team] : "teams"}`);
   } finally {
     state.saving = false;
     render();
@@ -493,7 +493,7 @@ function slotCard(t, s, i) {
       <div class="tm-slot-meta">${lvl}</div>
       ${typeChips(s.id)}
       <div class="tm-slot-tags">${tags}</div>
-      ${sc ? "" : `<button type="button" class="tm-movesbtn" data-act="moves" data-team="${t}" data-i="${i}" aria-label="${esc(species(s.id).name)}’s moves on your ${LABEL[t]}">Moves</button>`}
+      ${sc ? "" : `<button type="button" class="tm-movesbtn" data-act="moves" data-team="${t}" data-i="${i}" aria-label="${esc(species(s.id).name)}'s moves on your ${LABEL[t]}">Moves</button>`}
       ${copies > 1 ? `<button type="button" class="tm-movesbtn" data-act="pickcopy" data-team="${t}" data-i="${i}" aria-label="Change which ${esc(species(s.id).name)} is in this slot (you have ${copies})">Change copy</button>` : ""}
       ${ic.button}
       ${state.megaOn && megaFormsFor(s).length ? `<button type="button" class="tm-megabtn${s.mega ? " is-on" : ""}" data-act="mega" data-team="${t}" data-i="${i}" aria-label="Mega form for ${esc(species(s.id).name)}: ${s.mega ? esc(megaCard(s.mega)?.name ?? s.mega) : "off"}. Change">${s.mega ? `Mega: ${esc((megaCard(s.mega)?.name ?? s.mega).replace(/^Mega /, ""))}` : "Mega: off"}</button>` : ""}
@@ -547,7 +547,7 @@ function teamPanel() {
     ? `<div class="tm-notice" role="status"><p>${state.notices.map((n) => esc(n.text)).join("<br>")}</p><button type="button" class="cc-btn" data-act="dismiss">Got it</button></div>`
     : "";
   const e = state.error[t];
-  const err = e ? `<div class="tm-error" role="alert"><svg class="tm-ic" aria-hidden="true"><use href="#tm-lock"/></svg><p><strong>${esc(e.title ?? "Can’t add that Pokémon")}</strong>${esc(e.text)}</p></div>` : "";
+  const err = e ? `<div class="tm-error" role="alert"><svg class="tm-ic" aria-hidden="true"><use href="#tm-lock"/></svg><p><strong>${esc(e.title ?? "Can't add that Pokémon")}</strong>${esc(e.text)}</p></div>` : "";
   const copyBtn = list.length
     ? SOURCES[t].filter((o) => team(o).length).map((o) => `<button type="button" class="cc-btn tm-copyteam" data-act="copy" data-team="${t}" data-source="${o}">Copy from ${LABEL[o].replace(" team", "")}</button>`).join("")
     : "";
@@ -633,7 +633,7 @@ function boxPanel(where) {
       </select>
       <div class="tm-seg" role="group" aria-label="Show">${seg("all", "All")}${seg("shiny", "Shiny")}${seg("free", "Not on a team")}</div>
     </div>
-    ${items.length ? `<ul class="tm-box">${items.map(boxTile).join("")}</ul>` : `<p class="cc-empty">${Object.keys(state.pokemon).length ? "No Pokémon match." : "You haven’t caught any Pokémon yet. Try /daily in Discord."}</p>`}`;
+    ${items.length ? `<ul class="tm-box">${items.map(boxTile).join("")}</ul>` : `<p class="cc-empty">${Object.keys(state.pokemon).length ? "No Pokémon match." : "You haven't caught any Pokémon yet. Try /daily in Discord."}</p>`}`;
 }
 
 function saveBar() {
@@ -650,7 +650,7 @@ function saveBar() {
     return `${LABEL[t]}: ${bits.join(" · ")}`;
   });
   return `<div class="tm-savebar" role="region" aria-label="Unsaved changes">
-    <p><strong>Unsaved changes</strong><span>${esc(parts.join(" — "))}</span></p>
+    <p><strong>Unsaved changes</strong><span>${esc(parts.join(". "))}</span></p>
     <div class="tm-savebar-actions">
       <button type="button" class="cc-btn" data-act="discard"${state.saving ? " disabled" : ""}>Discard</button>
       <button type="button" class="cc-btn cc-btn--primary" data-act="save"${state.saving ? " disabled" : ""}>${state.saving ? "Saving…" : TEAMS.filter(isDirty).length > 1 ? "Save teams" : "Save"}</button>
@@ -726,7 +726,7 @@ function onClick(e) {
         // Allowed but unwise picks, said plainly (the server allows them, as the games do).
         warningFor: (itemId) => {
           const sp = species(s.id);
-          if (itemId === "eviolite" && !(sp.evolvesTo ?? []).length) return `No effect: ${sp.name} can’t evolve.`;
+          if (itemId === "eviolite" && !(sp.evolvesTo ?? []).length) return `No effect: ${sp.name} can't evolve.`;
           if (itemId === "black_sludge" && !(sp.types ?? []).includes(4)) return `Hurts ${sp.name} every turn: only Poison types are healed.`;
           return null;
         },
@@ -877,7 +877,7 @@ async function leaveTo(href) {
   if (anyDirty()) {
     const leave = await confirmDialog({
       title: "Leave without saving?",
-      message: "Your team changes aren’t saved yet.",
+      message: "Your team changes aren't saved yet.",
       okText: "Leave",
       cancelText: "Stay",
       tone: "error",
@@ -926,7 +926,7 @@ const apiJSON = async (url) => {
   let body = {};
   try { body = await res.json(); } catch { /* non-JSON */ }
   if (res.status === 403) { showExpired(); throw new Error("Your dashboard link expired."); }
-  if (!res.ok) throw new Error(body.error || `Couldn’t load this Pokémon (${res.status}).`);
+  if (!res.ok) throw new Error(body.error || `Couldn't load this Pokémon (${res.status}).`);
   return body;
 };
 /** Where each copy of a species sits on screen right now (maybe unsaved). */
@@ -987,7 +987,7 @@ async function load() {
       fetch(`/api/user-pokemon?id=${encodeURIComponent(userId)}`, { credentials: "same-origin" }),
     ]);
     if (userRes.status === 403) { app.innerHTML = ""; showExpired(); return; }
-    if (!pdRes.ok || !userRes.ok) throw new Error(`Couldn’t load your teams (${userRes.status}).`);
+    if (!pdRes.ok || !userRes.ok) throw new Error(`Couldn't load your teams (${userRes.status}).`);
     const data = await pdRes.json();
     for (const [id, p] of Object.entries(data)) {
       p.storedName = p.name;
@@ -1008,7 +1008,7 @@ async function load() {
     state.active = TEAMS.includes(want) ? want : state.notices.length ? "battle" : "display";
   } catch (err) {
     app.innerHTML = "";
-    showBanner(err?.message || "Couldn’t load your teams. Please try again.", { title: "Couldn’t load your teams" });
+    showBanner(err?.message || "Couldn't load your teams. Please try again.", { title: "Couldn't load your teams" });
     return;
   }
   // Mega sprites only while Mega Evolution is switched on server-side.
@@ -1026,7 +1026,7 @@ async function load() {
       const r = await claimStarter(userId);
       applyHeld(r);
       if (r.granted?.length) toast(`You unlocked ${r.granted.length} free held items! Equip them with the Item button on each Pokémon.`, { tone: "success" });
-    } catch (err) { if (!err.silent) showActionError(err, "Couldn’t unlock your starter items"); }
+    } catch (err) { if (!err.silent) showActionError(err, "Couldn't unlock your starter items"); }
   }
   render();
 }

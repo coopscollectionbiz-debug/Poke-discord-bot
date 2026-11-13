@@ -125,7 +125,7 @@ function renderList() {
 // ---------- Expanded row ----------
 function teamTable(title, members, { kos = [], dmg = [] } = {}) {
   return `<div class="br-table"><h3>${esc(title)}</h3><div class="br-scroll"><table>
-    <thead><tr><th>Pokémon</th><th>Moves</th><th>Item</th><th class="num">KOs</th><th class="num" title="Damage dealt, as a share of one Pokémon’s full HP">Damage<br><span class="br-muted">% of HP</span></th></tr></thead>
+    <thead><tr><th>Pokémon</th><th>Moves</th><th>Item</th><th class="num">KOs</th><th class="num" title="Damage dealt, as a share of one Pokémon's full HP">Damage<br><span class="br-muted">% of HP</span></th></tr></thead>
     <tbody>${members.map((m, i) => `<tr>
       <td class="mon"><img src="${pokemonSprite(m)}" alt="" ${FALLBACK}>${esc(m.name)}${m.variant === "shiny" ? " ✨" : ""} <span class="br-muted">Lv ${m.level}${m.realLevel ? ` (real ${m.realLevel})` : ""}</span></td>
       <td class="moves">${esc((m.moves ?? []).join(", "))}</td>
@@ -201,7 +201,7 @@ async function syncHash() {
     openReplay(r, id, { onClose: () => { if (fightFromHash()) history.back(); } });
   } catch (err) {
     if (err.expired) return showExpired();
-    showBanner(err.status === 404 ? "That fight isn’t in your Battle Records anymore." : err.message, { title: "Couldn’t open the replay", key: "replay" });
+    showBanner(err.status === 404 ? "That fight isn't in your Battle Records anymore." : err.message, { title: "Couldn't open the replay", key: "replay" });
     history.replaceState(null, "", location.pathname + location.search);
   }
 }
@@ -234,7 +234,7 @@ async function load() {
   } catch (err) {
     statusEl.textContent = "";
     if (err.expired) return showExpired();
-    return showBanner(err.message, { title: "Couldn’t load Battle Records" });
+    return showBanner(err.message, { title: "Couldn't load Battle Records" });
   }
   renderList();
   if (fightFromHash()) syncHash();

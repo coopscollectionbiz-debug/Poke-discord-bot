@@ -27,7 +27,7 @@ export default {
       let user = trainerData[userId];
       if (!user) {
         return safeReply(interaction, {
-          content: "⚠️ You don’t have a Trainer Card yet! Use `/trainercard` to create one.",
+          content: "⚠️ You don't have a Trainer Card yet! Use `/trainercard` to create one.",
           flags: MessageFlags.Ephemeral
         });
       }

@@ -43,7 +43,7 @@ export function createFightRecordHandlers({ store, isAuthorized }) {
         return res.json({ records: records.map(liteRecord) });
       } catch (err) {
         console.warn("⚠️ fight records list failed:", err?.message || err);
-        return res.status(500).json({ error: "Couldn’t load your Battle Records." });
+        return res.status(500).json({ error: "Couldn't load your Battle Records." });
       }
     },
 
@@ -56,7 +56,7 @@ export function createFightRecordHandlers({ store, isAuthorized }) {
         return res.json({ record });
       } catch (err) {
         console.warn("⚠️ fight record read failed:", err?.message || err);
-        return res.status(500).json({ error: "Couldn’t load that fight." });
+        return res.status(500).json({ error: "Couldn't load that fight." });
       }
     },
   };

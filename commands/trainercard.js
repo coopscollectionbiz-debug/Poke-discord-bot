@@ -1,12 +1,12 @@
 // commands/trainercard.js
 
 // ==========================================================
-// 🤖 Coop’s Collection Discord Bot — Trainer Card Command
+// 🤖 Coop's Collection Discord Bot — Trainer Card Command
 // ==========================================================
 // Canvas removed
 // Cleaned, de-duplicated, shiny-correct, and supports /dashboard
 // ✅ PATCHED: supports new team format [{id, variant:"normal"|"shiny"}]
-// ✅ PATCHED: lead sprite + team grid use TEAM VARIANT (not “do I own shiny?”)
+// ✅ PATCHED: lead sprite + team grid use TEAM VARIANT (not "do I own shiny?")
 // ✅ Backward compatible with legacy arrays like [1,2,3] and strings
 // ✅ Uses CANONICAL FIELD: user.displayedPokemon (NOT user.currentTeam)
 //    (currentTeam is only an API response alias of displayedPokemon)

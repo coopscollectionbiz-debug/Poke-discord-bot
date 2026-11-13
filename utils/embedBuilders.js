@@ -93,7 +93,7 @@ export function createPokemonRewardEmbed(pokemon, isShiny, spriteUrl, options = 
     .setDescription(desc)
     .setColor(color)
     .setThumbnail(spriteUrl)
-    .setFooter({ text: "🌟 Coop’s Collection Reward" })
+    .setFooter({ text: "🌟 Coop's Collection Reward" })
     .setTimestamp();
 }
 
@@ -121,7 +121,7 @@ export function createTrainerRewardEmbed(trainer, spriteUrl, options = {}) {
     )
     .setColor(color)
     .setThumbnail(spriteUrl)
-    .setFooter({ text: "🌟 Coop’s Collection Reward" })
+    .setFooter({ text: "🌟 Coop's Collection Reward" })
     .setTimestamp();
 }
 

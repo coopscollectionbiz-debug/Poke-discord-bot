@@ -86,7 +86,7 @@ function mountShell() {
   side.setAttribute("aria-label", "Dashboard");
   const brand = document.createElement("div");
   brand.className = "cc-brand";
-  brand.innerHTML = `<i aria-hidden="true"></i><span>Coop’s Collection</span>`;
+  brand.innerHTML = `<i aria-hidden="true"></i><span>Coop's Collection</span>`;
   const foot = document.createElement("p");
   foot.className = "cc-sidebar-foot";
   foot.textContent = "Opened from /dashboard in Discord. Sessions last 30 minutes after your last action, up to 4 hours. ";

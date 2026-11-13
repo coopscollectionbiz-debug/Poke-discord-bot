@@ -117,7 +117,7 @@ export function multiSelectBlock(pid, { pokemon, pokemonData, savedTeam, trained
       message: `You have a normal and a shiny ${name}. Turn off Multi-select and tap it to choose which one to donate.`,
     };
   }
-  if (owned.any !== 1) return { title: "🔒 Not Owned", message: `You don’t own ${name}.` };
+  if (owned.any !== 1) return { title: "🔒 Not Owned", message: `You don't own ${name}.` };
 
   const variant = onlyVariant(pokemon, pid);
   if (trainedCount(trained, pid, variant) > 0) {

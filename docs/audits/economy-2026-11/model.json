@@ -1,0 +1,3327 @@
+{
+  "generatedAt": "2026-11-13T14:03:57.930Z",
+  "liveGenerations": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "acquirableSpecies": 721,
+  "speciesByTier": {
+    "common": 180,
+    "uncommon": 163,
+    "rare": 184,
+    "epic": 115,
+    "legendary": 49,
+    "mythic": 30
+  },
+  "baseWeightsPerSpecies": {
+    "common": 52,
+    "uncommon": 34,
+    "rare": 8,
+    "epic": 4,
+    "legendary": 1.5,
+    "mythic": 0.5
+  },
+  "tierOdds": {
+    "Novice (0 TP)": {
+      "pokeball": {
+        "common": 0.5531,
+        "uncommon": 0.3275,
+        "rare": 0.087,
+        "epic": 0.0272,
+        "legendary": 0.0043,
+        "mythic": 0.0009
+      },
+      "greatball": {
+        "common": 0,
+        "uncommon": 0.6774,
+        "rare": 0.231,
+        "epic": 0.0758,
+        "legendary": 0.0132,
+        "mythic": 0.0026
+      },
+      "ultraball": {
+        "common": 0,
+        "uncommon": 0,
+        "rare": 0.6926,
+        "epic": 0.2485,
+        "legendary": 0.048,
+        "mythic": 0.0109
+      }
+    },
+    "Advanced (5k TP)": {
+      "pokeball": {
+        "common": 0.5278,
+        "uncommon": 0.3125,
+        "rare": 0.1162,
+        "epic": 0.0376,
+        "legendary": 0.005,
+        "mythic": 0.0009
+      },
+      "greatball": {
+        "common": 0,
+        "uncommon": 0.5975,
+        "rare": 0.2853,
+        "epic": 0.0969,
+        "legendary": 0.0169,
+        "mythic": 0.0033
+      },
+      "ultraball": {
+        "common": 0,
+        "uncommon": 0,
+        "rare": 0.685,
+        "epic": 0.2546,
+        "legendary": 0.0491,
+        "mythic": 0.0112
+      }
+    },
+    "Master (25k TP)": {
+      "pokeball": {
+        "common": 0.5046,
+        "uncommon": 0.2988,
+        "rare": 0.1429,
+        "epic": 0.0471,
+        "legendary": 0.0055,
+        "mythic": 0.0011
+      },
+      "greatball": {
+        "common": 0,
+        "uncommon": 0.5345,
+        "rare": 0.3282,
+        "epic": 0.1136,
+        "legendary": 0.0198,
+        "mythic": 0.0039
+      },
+      "ultraball": {
+        "common": 0,
+        "uncommon": 0,
+        "rare": 0.6809,
+        "epic": 0.2579,
+        "legendary": 0.0498,
+        "mythic": 0.0113
+      }
+    },
+    "Legend (250k TP)": {
+      "pokeball": {
+        "common": 0.4731,
+        "uncommon": 0.2801,
+        "rare": 0.1786,
+        "epic": 0.0605,
+        "legendary": 0.0065,
+        "mythic": 0.0012
+      },
+      "greatball": {
+        "common": 0,
+        "uncommon": 0.4608,
+        "rare": 0.3772,
+        "epic": 0.134,
+        "legendary": 0.0234,
+        "mythic": 0.0046
+      },
+      "ultraball": {
+        "common": 0,
+        "uncommon": 0,
+        "rare": 0.6753,
+        "epic": 0.2625,
+        "legendary": 0.0507,
+        "mythic": 0.0115
+      }
+    }
+  },
+  "donationPayback": {
+    "Novice (0 TP)": {
+      "pokeball": {
+        "donateCcEV": 488,
+        "price": 1000,
+        "paybackShare": 0.49,
+        "netCostPerCatch": 512,
+        "nonShinyDustEV": 0.06
+      },
+      "greatball": {
+        "donateCcEV": 851,
+        "price": 2000,
+        "paybackShare": 0.43,
+        "netCostPerCatch": 1149,
+        "nonShinyDustEV": 0.12
+      },
+      "ultraball": {
+        "donateCcEV": 1663,
+        "price": 4000,
+        "paybackShare": 0.42,
+        "netCostPerCatch": 2337,
+        "nonShinyDustEV": 0.25
+      }
+    },
+    "Advanced (5k TP)": {
+      "pokeball": {
+        "donateCcEV": 532,
+        "price": 1000,
+        "paybackShare": 0.53,
+        "netCostPerCatch": 468,
+        "nonShinyDustEV": 0.07
+      },
+      "greatball": {
+        "donateCcEV": 944,
+        "price": 2000,
+        "paybackShare": 0.47,
+        "netCostPerCatch": 1056,
+        "nonShinyDustEV": 0.13
+      },
+      "ultraball": {
+        "donateCcEV": 1679,
+        "price": 4000,
+        "paybackShare": 0.42,
+        "netCostPerCatch": 2321,
+        "nonShinyDustEV": 0.25
+      }
+    },
+    "Master (25k TP)": {
+      "pokeball": {
+        "donateCcEV": 575,
+        "price": 1000,
+        "paybackShare": 0.57,
+        "netCostPerCatch": 425,
+        "nonShinyDustEV": 0.08
+      },
+      "greatball": {
+        "donateCcEV": 1017,
+        "price": 2000,
+        "paybackShare": 0.51,
+        "netCostPerCatch": 983,
+        "nonShinyDustEV": 0.14
+      },
+      "ultraball": {
+        "donateCcEV": 1688,
+        "price": 4000,
+        "paybackShare": 0.42,
+        "netCostPerCatch": 2312,
+        "nonShinyDustEV": 0.25
+      }
+    },
+    "Legend (250k TP)": {
+      "pokeball": {
+        "donateCcEV": 633,
+        "price": 1000,
+        "paybackShare": 0.63,
+        "netCostPerCatch": 367,
+        "nonShinyDustEV": 0.09
+      },
+      "greatball": {
+        "donateCcEV": 1106,
+        "price": 2000,
+        "paybackShare": 0.55,
+        "netCostPerCatch": 894,
+        "nonShinyDustEV": 0.16
+      },
+      "ultraball": {
+        "donateCcEV": 1700,
+        "price": 4000,
+        "paybackShare": 0.43,
+        "netCostPerCatch": 2300,
+        "nonShinyDustEV": 0.25
+      }
+    }
+  },
+  "eventBreakEvenCcMultiplier": {
+    "pokeball": {
+      "discount0": 1.58,
+      "discount25": 1.18,
+      "discount50": 0.79
+    },
+    "greatball": {
+      "discount0": 1.81,
+      "discount25": 1.36,
+      "discount50": 0.9
+    },
+    "ultraball": {
+      "discount0": 2.35,
+      "discount25": 1.76,
+      "discount50": 1.18
+    }
+  },
+  "chatCatch": {
+    "expectedMessagesPerCatch": 24.58,
+    "medianMessages": 19,
+    "p90Messages": 50,
+    "chanceAtCap": 0.05,
+    "messagesToCap": 14
+  },
+  "chatCeilingPerDay": {
+    "maxRewardedMessagesPerDay": 12342,
+    "tp": 24684,
+    "ccEV": 24684,
+    "catchesEV": 502,
+    "donateCcOfCatchesEV": 317839
+  },
+  "profilesPerDay": {
+    "casual_20msgs": {
+      "messages": 20,
+      "chatCC": 40,
+      "daily": 1000,
+      "encounterCC": 126,
+      "donateFreeCatchesCC": 1890,
+      "totalCC": 3056,
+      "catchesPerDay": 2.81,
+      "stonesPerWeek": 1.75
+    },
+    "active_100msgs": {
+      "messages": 100,
+      "chatCC": 200,
+      "daily": 1000,
+      "encounterCC": 630,
+      "donateFreeCatchesCC": 3621,
+      "totalCC": 5451,
+      "catchesPerDay": 6.07,
+      "stonesPerWeek": 1.75
+    },
+    "grinder_400msgs": {
+      "messages": 400,
+      "chatCC": 800,
+      "daily": 1000,
+      "encounterCC": 2520,
+      "donateFreeCatchesCC": 10114,
+      "totalCC": 14434,
+      "catchesPerDay": 18.27,
+      "stonesPerWeek": 1.75
+    },
+    "spammer_cap": {
+      "messages": 12342,
+      "chatCC": 24684,
+      "daily": 1000,
+      "encounterCC": 3360,
+      "donateFreeCatchesCC": 268582,
+      "totalCC": 297626,
+      "catchesPerDay": 504.12,
+      "stonesPerWeek": 1.75
+    }
+  },
+  "oneTime": {
+    "challengeFirstWins": {
+      "cc": 229000,
+      "stones": 28,
+      "dust": 325
+    },
+    "achievements": {
+      "count": 154,
+      "withReward": 73,
+      "cc": 70000,
+      "items": {
+        "ball_voucher_poke": 1,
+        "evolution_stone": 4,
+        "shiny_dust": 227,
+        "lucky_egg": 1
+      },
+      "approvedRewardIds": 0
+    }
+  },
+  "stoneCost": {
+    "common-common": {
+      "stones": 1,
+      "ccAtShop": 5000,
+      "daysOfDailyRolls": 4
+    },
+    "uncommon-uncommon": {
+      "stones": 2,
+      "ccAtShop": 10000,
+      "daysOfDailyRolls": 8
+    },
+    "rare-rare": {
+      "stones": 3,
+      "ccAtShop": 15000,
+      "daysOfDailyRolls": 12
+    },
+    "epic-epic": {
+      "stones": 4,
+      "ccAtShop": 20000,
+      "daysOfDailyRolls": 16
+    },
+    "legendary-legendary": {
+      "stones": 6,
+      "ccAtShop": 30000,
+      "daysOfDailyRolls": 24
+    },
+    "mythic-mythic": {
+      "stones": 8,
+      "ccAtShop": 40000,
+      "daysOfDailyRolls": 32
+    },
+    "common-uncommon": {
+      "stones": 1,
+      "ccAtShop": 5000,
+      "daysOfDailyRolls": 4
+    },
+    "uncommon-rare": {
+      "stones": 2,
+      "ccAtShop": 10000,
+      "daysOfDailyRolls": 8
+    },
+    "rare-epic": {
+      "stones": 5,
+      "ccAtShop": 25000,
+      "daysOfDailyRolls": 20
+    },
+    "epic-legendary": {
+      "stones": 8,
+      "ccAtShop": 40000,
+      "daysOfDailyRolls": 32
+    },
+    "legendary-mythic": {
+      "stones": 12,
+      "ccAtShop": 60000,
+      "daysOfDailyRolls": 48
+    },
+    "common-rare": {
+      "stones": 4,
+      "ccAtShop": 20000,
+      "daysOfDailyRolls": 16
+    },
+    "common-epic": {
+      "stones": 8,
+      "ccAtShop": 40000,
+      "daysOfDailyRolls": 32
+    },
+    "common-legendary": {
+      "stones": 12,
+      "ccAtShop": 60000,
+      "daysOfDailyRolls": 48
+    },
+    "uncommon-epic": {
+      "stones": 8,
+      "ccAtShop": 40000,
+      "daysOfDailyRolls": 32
+    },
+    "uncommon-legendary": {
+      "stones": 12,
+      "ccAtShop": 60000,
+      "daysOfDailyRolls": 48
+    },
+    "uncommon-mythic": {
+      "stones": 14,
+      "ccAtShop": 70000,
+      "daysOfDailyRolls": 56
+    },
+    "rare-legendary": {
+      "stones": 8,
+      "ccAtShop": 40000,
+      "daysOfDailyRolls": 32
+    },
+    "rare-mythic": {
+      "stones": 14,
+      "ccAtShop": 70000,
+      "daysOfDailyRolls": 56
+    },
+    "epic-mythic": {
+      "stones": 12,
+      "ccAtShop": 60000,
+      "daysOfDailyRolls": 48
+    }
+  },
+  "dust": {
+    "donationShiny": {
+      "common": 4,
+      "uncommon": 7,
+      "rare": 12,
+      "epic": 18,
+      "legendary": 22,
+      "mythic": 30
+    },
+    "craft": {
+      "common": 15,
+      "uncommon": 25,
+      "rare": 40,
+      "epic": 60,
+      "legendary": 80,
+      "mythic": 120
+    },
+    "nonShinyWeeklyCap": 8,
+    "nonShinyEV": {
+      "common": 0.03,
+      "uncommon": 0.06,
+      "rare": 0.14,
+      "epic": 0.38,
+      "legendary": 0.8,
+      "mythic": 1.53
+    }
+  },
+  "megaShards": {
+    "version": 2,
+    "shardItem": "mega_shard",
+    "daily": {
+      "chance": 0.25,
+      "shards": 2
+    },
+    "battleWin": {
+      "chance": 0.1,
+      "shards": 1,
+      "maxPerUtcDay": 2
+    },
+    "shop": {
+      "ccPerShard": 1000,
+      "shardPacks": [
+        1,
+        5,
+        25
+      ],
+      "maxShardsPerPurchase": 25,
+      "maxCcShardsPerWeek": 25,
+      "stonePrice": {
+        "regular": 25,
+        "legendary": 50
+      }
+    }
+  },
+  "battleCaps": {
+    "perDay": 10,
+    "perOpponent": 3,
+    "challengePerDay": 5,
+    "challengeLossShare": 0.1,
+    "encounter": {
+      "chance": 0.015,
+      "perDay": 8
+    }
+  },
+  "expReference": {
+    "Lv15": {
+      "wonBattle3Foes": 328,
+      "wonBattle6Foes": 657,
+      "expToNextLevel": 721
+    },
+    "Lv30": {
+      "wonBattle3Foes": 652,
+      "wonBattle6Foes": 1305,
+      "expToNextLevel": 2791
+    },
+    "Lv40": {
+      "wonBattle3Foes": 868,
+      "wonBattle6Foes": 1737,
+      "expToNextLevel": 4921
+    },
+    "Lv60": {
+      "wonBattle3Foes": 1300,
+      "wonBattle6Foes": 2601,
+      "expToNextLevel": 10981
+    }
+  },
+  "shinyOdds": {
+    "tp0": "1/500",
+    "tp1000": "1/460",
+    "tp10000": "1/380",
+    "tp50000": "1/320",
+    "tp250000": "1/250"
+  },
+  "focusType": {
+    "Normal": {
+      "species": 97,
+      "byTier": {
+        "common": 30,
+        "uncommon": 36,
+        "rare": 21,
+        "epic": 7,
+        "legendary": 1,
+        "mythic": 2
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.4969,
+              "uncommon": 0.3899,
+              "rare": 0.0963,
+              "epic": 0.0169,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 458
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.4963,
+              "uncommon": 0.3894,
+              "rare": 0.0962,
+              "epic": 0.0169,
+              "legendary": 0.0007,
+              "mythic": 0.0004
+            },
+            "donateCcEV": 465,
+            "maxOneSpecies": 0.0165
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0168
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.7268,
+              "rare": 0.2306,
+              "epic": 0.0426,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 700
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.7239,
+              "rare": 0.2297,
+              "epic": 0.0424,
+              "legendary": 0.0025,
+              "mythic": 0.0016
+            },
+            "donateCcEV": 726,
+            "maxOneSpecies": 0.0201
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0198
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.8319,
+              "epic": 0.1681,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1252
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.8164,
+              "epic": 0.1649,
+              "legendary": 0.0107,
+              "mythic": 0.0079
+            },
+            "donateCcEV": 1362,
+            "maxOneSpecies": 0.0389
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0498
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Fighting": {
+      "species": 44,
+      "byTier": {
+        "common": 9,
+        "uncommon": 6,
+        "rare": 11,
+        "epic": 10,
+        "legendary": 7,
+        "mythic": 1
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.5163,
+              "uncommon": 0.2251,
+              "rare": 0.1748,
+              "epic": 0.0838,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 626
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.5077,
+              "uncommon": 0.2213,
+              "rare": 0.1718,
+              "epic": 0.0825,
+              "legendary": 0.0159,
+              "mythic": 0.0007
+            },
+            "donateCcEV": 702,
+            "maxOneSpecies": 0.0564
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0561
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.4001,
+              "rare": 0.399,
+              "epic": 0.2009,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1101
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.3774,
+              "rare": 0.3763,
+              "epic": 0.1894,
+              "legendary": 0.0544,
+              "mythic": 0.0025
+            },
+            "donateCcEV": 1335,
+            "maxOneSpecies": 0.0629
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0891
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6447,
+              "epic": 0.3553,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1533
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.5764,
+              "epic": 0.3176,
+              "legendary": 0.1007,
+              "mythic": 0.0054
+            },
+            "donateCcEV": 1927,
+            "maxOneSpecies": 0.0524
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0619
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Flying": {
+      "species": 90,
+      "byTier": {
+        "common": 19,
+        "uncommon": 25,
+        "rare": 24,
+        "epic": 9,
+        "legendary": 9,
+        "mythic": 4
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.4387,
+              "uncommon": 0.3774,
+              "rare": 0.1535,
+              "epic": 0.0304,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 528
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.4346,
+              "uncommon": 0.3739,
+              "rare": 0.152,
+              "epic": 0.0301,
+              "legendary": 0.0083,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 576,
+            "maxOneSpecies": 0.0229
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0266
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.6133,
+              "rare": 0.3202,
+              "epic": 0.0665,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 793
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5947,
+              "rare": 0.3105,
+              "epic": 0.0645,
+              "legendary": 0.0264,
+              "mythic": 0.0038
+            },
+            "donateCcEV": 939,
+            "maxOneSpecies": 0.0238
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0214
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.8148,
+              "epic": 0.1852,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1278
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7422,
+              "epic": 0.1687,
+              "legendary": 0.0764,
+              "mythic": 0.0126
+            },
+            "donateCcEV": 1672,
+            "maxOneSpecies": 0.0309
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0287
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Poison": {
+      "species": 59,
+      "byTier": {
+        "common": 23,
+        "uncommon": 13,
+        "rare": 14,
+        "epic": 8,
+        "legendary": 1,
+        "mythic": 0
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.6293,
+              "uncommon": 0.2326,
+              "rare": 0.1061,
+              "epic": 0.032,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 460
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.6286,
+              "uncommon": 0.2323,
+              "rare": 0.106,
+              "epic": 0.032,
+              "legendary": 0.0011,
+              "mythic": 0
+            },
+            "donateCcEV": 465,
+            "maxOneSpecies": 0.0273
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5052,
+              "uncommon": 0.2991,
+              "rare": 0.1431,
+              "epic": 0.0472,
+              "legendary": 0.0055,
+              "mythic": 0
+            },
+            "donateCcEV": 564,
+            "maxOneSpecies": 0.023
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5646,
+              "rare": 0.3307,
+              "epic": 0.1046,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 875
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5616,
+              "rare": 0.329,
+              "epic": 0.1041,
+              "legendary": 0.0053,
+              "mythic": 0
+            },
+            "donateCcEV": 897,
+            "maxOneSpecies": 0.0432
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5366,
+              "rare": 0.3295,
+              "epic": 0.114,
+              "legendary": 0.0199,
+              "mythic": 0
+            },
+            "donateCcEV": 982,
+            "maxOneSpecies": 0.0413
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7428,
+              "epic": 0.2572,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1386
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7321,
+              "epic": 0.2536,
+              "legendary": 0.0144,
+              "mythic": 0
+            },
+            "donateCcEV": 1438,
+            "maxOneSpecies": 0.0523
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6888,
+              "epic": 0.2609,
+              "legendary": 0.0504,
+              "mythic": 0
+            },
+            "donateCcEV": 1593,
+            "maxOneSpecies": 0.0504
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.001
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Ground": {
+      "species": 60,
+      "byTier": {
+        "common": 14,
+        "uncommon": 12,
+        "rare": 16,
+        "epic": 12,
+        "legendary": 5,
+        "mythic": 1
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.4995,
+              "uncommon": 0.2799,
+              "rare": 0.1581,
+              "epic": 0.0626,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 579
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.4957,
+              "uncommon": 0.2778,
+              "rare": 0.1569,
+              "epic": 0.0621,
+              "legendary": 0.0071,
+              "mythic": 0.0004
+            },
+            "donateCcEV": 615,
+            "maxOneSpecies": 0.0354
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.036
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.4935,
+              "rare": 0.3579,
+              "epic": 0.1486,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 976
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.4805,
+              "rare": 0.3485,
+              "epic": 0.1447,
+              "legendary": 0.0247,
+              "mythic": 0.0016
+            },
+            "donateCcEV": 1090,
+            "maxOneSpecies": 0.04
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0445
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6875,
+              "epic": 0.3125,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1469
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6465,
+              "epic": 0.2939,
+              "legendary": 0.0555,
+              "mythic": 0.0041
+            },
+            "donateCcEV": 1700,
+            "maxOneSpecies": 0.0404
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0426
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Rock": {
+      "species": 55,
+      "byTier": {
+        "common": 7,
+        "uncommon": 7,
+        "rare": 20,
+        "epic": 17,
+        "legendary": 3,
+        "mythic": 1
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.3571,
+              "uncommon": 0.2335,
+              "rare": 0.2826,
+              "epic": 0.1268,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 806
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.3547,
+              "uncommon": 0.2319,
+              "rare": 0.2807,
+              "epic": 0.1259,
+              "legendary": 0.0061,
+              "mythic": 0.0006
+            },
+            "donateCcEV": 837,
+            "maxOneSpecies": 0.0507
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0721
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.3044,
+              "rare": 0.473,
+              "epic": 0.2226,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1182
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.299,
+              "rare": 0.4647,
+              "epic": 0.2187,
+              "legendary": 0.0158,
+              "mythic": 0.0017
+            },
+            "donateCcEV": 1257,
+            "maxOneSpecies": 0.0427
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0764
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.66,
+              "epic": 0.34,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1510
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6404,
+              "epic": 0.3299,
+              "legendary": 0.0264,
+              "mythic": 0.0033
+            },
+            "donateCcEV": 1630,
+            "maxOneSpecies": 0.032
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.034
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Bug": {
+      "species": 66,
+      "byTier": {
+        "common": 20,
+        "uncommon": 21,
+        "rare": 19,
+        "epic": 5,
+        "legendary": 0,
+        "mythic": 1
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.5035,
+              "uncommon": 0.3457,
+              "rare": 0.1325,
+              "epic": 0.0184,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 477
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.5033,
+              "uncommon": 0.3456,
+              "rare": 0.1324,
+              "epic": 0.0184,
+              "legendary": 0,
+              "mythic": 0.0003
+            },
+            "donateCcEV": 480,
+            "maxOneSpecies": 0.0252
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5074,
+              "uncommon": 0.3005,
+              "rare": 0.1437,
+              "epic": 0.0474,
+              "legendary": 0,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 550,
+            "maxOneSpecies": 0.0254
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.6395,
+              "rare": 0.3147,
+              "epic": 0.0459,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 749
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.6387,
+              "rare": 0.3143,
+              "epic": 0.0458,
+              "legendary": 0,
+              "mythic": 0.0012
+            },
+            "donateCcEV": 760,
+            "maxOneSpecies": 0.0304
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5453,
+              "rare": 0.3348,
+              "epic": 0.1159,
+              "legendary": 0,
+              "mythic": 0.004
+            },
+            "donateCcEV": 937,
+            "maxOneSpecies": 0.026
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.8624,
+              "epic": 0.1376,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1206
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.8585,
+              "epic": 0.1369,
+              "legendary": 0,
+              "mythic": 0.0046
+            },
+            "donateCcEV": 1247,
+            "maxOneSpecies": 0.0452
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7167,
+              "epic": 0.2714,
+              "legendary": 0,
+              "mythic": 0.0119
+            },
+            "donateCcEV": 1514,
+            "maxOneSpecies": 0.0543
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Ghost": {
+      "species": 35,
+      "byTier": {
+        "common": 9,
+        "uncommon": 6,
+        "rare": 11,
+        "epic": 7,
+        "legendary": 0,
+        "mythic": 2
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.5297,
+              "uncommon": 0.2309,
+              "rare": 0.1793,
+              "epic": 0.0602,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 578
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.5289,
+              "uncommon": 0.2305,
+              "rare": 0.179,
+              "epic": 0.0601,
+              "legendary": 0,
+              "mythic": 0.0015
+            },
+            "donateCcEV": 591,
+            "maxOneSpecies": 0.0588
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5074,
+              "uncommon": 0.3005,
+              "rare": 0.1437,
+              "epic": 0.0474,
+              "legendary": 0,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 550,
+            "maxOneSpecies": 0.0564
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.4258,
+              "rare": 0.4246,
+              "epic": 0.1496,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1012
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.4234,
+              "rare": 0.4222,
+              "epic": 0.1488,
+              "legendary": 0,
+              "mythic": 0.0056
+            },
+            "donateCcEV": 1062,
+            "maxOneSpecies": 0.0706
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5453,
+              "rare": 0.3348,
+              "epic": 0.1159,
+              "legendary": 0,
+              "mythic": 0.004
+            },
+            "donateCcEV": 937,
+            "maxOneSpecies": 0.0909
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7217,
+              "epic": 0.2783,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1418
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7121,
+              "epic": 0.2747,
+              "legendary": 0,
+              "mythic": 0.0132
+            },
+            "donateCcEV": 1531,
+            "maxOneSpecies": 0.0647
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7167,
+              "epic": 0.2714,
+              "legendary": 0,
+              "mythic": 0.0119
+            },
+            "donateCcEV": 1514,
+            "maxOneSpecies": 0.0652
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Steel": {
+      "species": 41,
+      "byTier": {
+        "common": 6,
+        "uncommon": 5,
+        "rare": 13,
+        "epic": 9,
+        "legendary": 5,
+        "mythic": 3
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.423,
+              "uncommon": 0.2305,
+              "rare": 0.2538,
+              "epic": 0.0927,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 707
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.416,
+              "uncommon": 0.2267,
+              "rare": 0.2496,
+              "epic": 0.0912,
+              "legendary": 0.014,
+              "mythic": 0.0026
+            },
+            "donateCcEV": 791,
+            "maxOneSpecies": 0.0693
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0841
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.3383,
+              "rare": 0.4784,
+              "epic": 0.1834,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1106
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.3222,
+              "rare": 0.4556,
+              "epic": 0.1747,
+              "legendary": 0.0398,
+              "mythic": 0.0077
+            },
+            "donateCcEV": 1329,
+            "maxOneSpecies": 0.0644
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.1069
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7044,
+              "epic": 0.2956,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1443
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6457,
+              "epic": 0.2709,
+              "legendary": 0.0682,
+              "mythic": 0.0152
+            },
+            "donateCcEV": 1816,
+            "maxOneSpecies": 0.0497
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0524
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Fire": {
+      "species": 56,
+      "byTier": {
+        "common": 9,
+        "uncommon": 4,
+        "rare": 18,
+        "epic": 12,
+        "legendary": 9,
+        "mythic": 4
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.4904,
+              "uncommon": 0.1425,
+              "rare": 0.2716,
+              "epic": 0.0956,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 704
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.4796,
+              "uncommon": 0.1394,
+              "rare": 0.2656,
+              "epic": 0.0935,
+              "legendary": 0.0194,
+              "mythic": 0.0027
+            },
+            "donateCcEV": 812,
+            "maxOneSpecies": 0.0533
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0747
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.2298,
+              "rare": 0.5625,
+              "epic": 0.2077,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1197
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.2142,
+              "rare": 0.5242,
+              "epic": 0.1935,
+              "legendary": 0.0595,
+              "mythic": 0.0085
+            },
+            "donateCcEV": 1498,
+            "maxOneSpecies": 0.0535
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.1336
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7122,
+              "epic": 0.2878,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1432
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6394,
+              "epic": 0.2583,
+              "legendary": 0.0878,
+              "mythic": 0.0145
+            },
+            "donateCcEV": 1869,
+            "maxOneSpecies": 0.0355
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0378
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Water": {
+      "species": 118,
+      "byTier": {
+        "common": 32,
+        "uncommon": 26,
+        "rare": 26,
+        "epic": 21,
+        "legendary": 7,
+        "mythic": 6
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.5399,
+              "uncommon": 0.2868,
+              "rare": 0.1215,
+              "epic": 0.0518,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 529
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.5367,
+              "uncommon": 0.2851,
+              "rare": 0.1208,
+              "epic": 0.0515,
+              "legendary": 0.0047,
+              "mythic": 0.0013
+            },
+            "donateCcEV": 562,
+            "maxOneSpecies": 0.0168
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0158
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5595,
+              "rare": 0.3043,
+              "epic": 0.1361,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 924
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5466,
+              "rare": 0.2973,
+              "epic": 0.133,
+              "legendary": 0.0182,
+              "mythic": 0.005
+            },
+            "donateCcEV": 1044,
+            "maxOneSpecies": 0.021
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0206
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6713,
+              "epic": 0.3287,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1493
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6301,
+              "epic": 0.3085,
+              "legendary": 0.0466,
+              "mythic": 0.0149
+            },
+            "donateCcEV": 1783,
+            "maxOneSpecies": 0.0242
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0262
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Grass": {
+      "species": 84,
+      "byTier": {
+        "common": 23,
+        "uncommon": 21,
+        "rare": 18,
+        "epic": 13,
+        "legendary": 7,
+        "mythic": 2
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.5273,
+              "uncommon": 0.3148,
+              "rare": 0.1143,
+              "epic": 0.0436,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 512
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.5236,
+              "uncommon": 0.3126,
+              "rare": 0.1135,
+              "epic": 0.0433,
+              "legendary": 0.0064,
+              "mythic": 0.0006
+            },
+            "donateCcEV": 547,
+            "maxOneSpecies": 0.0228
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0219
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.6051,
+              "rare": 0.2821,
+              "epic": 0.1128,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 867
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5891,
+              "rare": 0.2746,
+              "epic": 0.1098,
+              "legendary": 0.0243,
+              "mythic": 0.0022
+            },
+            "donateCcEV": 987,
+            "maxOneSpecies": 0.0281
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0255
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6955,
+              "epic": 0.3045,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1457
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6427,
+              "epic": 0.2813,
+              "legendary": 0.0686,
+              "mythic": 0.0073
+            },
+            "donateCcEV": 1762,
+            "maxOneSpecies": 0.0357
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0378
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Electric": {
+      "species": 42,
+      "byTier": {
+        "common": 11,
+        "uncommon": 12,
+        "rare": 8,
+        "epic": 7,
+        "legendary": 3,
+        "mythic": 1
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.4981,
+              "uncommon": 0.3553,
+              "rare": 0.1003,
+              "epic": 0.0463,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 518
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.4951,
+              "uncommon": 0.3531,
+              "rare": 0.0997,
+              "epic": 0.046,
+              "legendary": 0.0055,
+              "mythic": 0.0006
+            },
+            "donateCcEV": 548,
+            "maxOneSpecies": 0.045
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0459
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.6501,
+              "rare": 0.2357,
+              "epic": 0.1142,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 846
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.6359,
+              "rare": 0.2306,
+              "epic": 0.1117,
+              "legendary": 0.0196,
+              "mythic": 0.0021
+            },
+            "donateCcEV": 947,
+            "maxOneSpecies": 0.053
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0445
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6535,
+              "epic": 0.3465,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1520
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6075,
+              "epic": 0.3222,
+              "legendary": 0.0625,
+              "mythic": 0.0078
+            },
+            "donateCcEV": 1803,
+            "maxOneSpecies": 0.0759
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0851
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Psychic": {
+      "species": 74,
+      "byTier": {
+        "common": 19,
+        "uncommon": 12,
+        "rare": 19,
+        "epic": 7,
+        "legendary": 8,
+        "mythic": 9
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.5735,
+              "uncommon": 0.2368,
+              "rare": 0.1588,
+              "epic": 0.0309,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 498
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.566,
+              "uncommon": 0.2338,
+              "rare": 0.1568,
+              "epic": 0.0305,
+              "legendary": 0.0096,
+              "mythic": 0.0034
+            },
+            "donateCcEV": 573,
+            "maxOneSpecies": 0.0298
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0266
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.491,
+              "rare": 0.4228,
+              "epic": 0.0863,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 884
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.4653,
+              "rare": 0.4007,
+              "epic": 0.0818,
+              "legendary": 0.0383,
+              "mythic": 0.0139
+            },
+            "donateCcEV": 1168,
+            "maxOneSpecies": 0.0388
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0445
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.8175,
+              "epic": 0.1825,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1274
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7208,
+              "epic": 0.161,
+              "legendary": 0.0833,
+              "mythic": 0.0349
+            },
+            "donateCcEV": 1889,
+            "maxOneSpecies": 0.0379
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0368
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Ice": {
+      "species": 33,
+      "byTier": {
+        "common": 7,
+        "uncommon": 6,
+        "rare": 8,
+        "epic": 9,
+        "legendary": 2,
+        "mythic": 1
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.4843,
+              "uncommon": 0.2714,
+              "rare": 0.1533,
+              "epic": 0.091,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 638
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.4812,
+              "uncommon": 0.2697,
+              "rare": 0.1523,
+              "epic": 0.0904,
+              "legendary": 0.0056,
+              "mythic": 0.0009
+            },
+            "donateCcEV": 670,
+            "maxOneSpecies": 0.0687
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0721
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.4594,
+              "rare": 0.3331,
+              "epic": 0.2075,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1082
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.4495,
+              "rare": 0.326,
+              "epic": 0.2031,
+              "legendary": 0.0185,
+              "mythic": 0.003
+            },
+            "donateCcEV": 1181,
+            "maxOneSpecies": 0.0749
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0891
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.5946,
+              "epic": 0.4054,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1608
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.5671,
+              "epic": 0.3867,
+              "legendary": 0.0389,
+              "mythic": 0.0072
+            },
+            "donateCcEV": 1801,
+            "maxOneSpecies": 0.0709
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0851
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Dragon": {
+      "species": 38,
+      "byTier": {
+        "common": 1,
+        "uncommon": 2,
+        "rare": 10,
+        "epic": 10,
+        "legendary": 8,
+        "mythic": 7
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.1529,
+              "uncommon": 0.2,
+              "rare": 0.4235,
+              "epic": 0.2235,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1121
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.1439,
+              "uncommon": 0.1882,
+              "rare": 0.3985,
+              "epic": 0.2103,
+              "legendary": 0.0465,
+              "mythic": 0.0126
+            },
+            "donateCcEV": 1413,
+            "maxOneSpecies": 0.1439
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.5046
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.1914,
+              "rare": 0.5204,
+              "epic": 0.2882,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1337
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.1707,
+              "rare": 0.4642,
+              "epic": 0.257,
+              "legendary": 0.0843,
+              "mythic": 0.0237
+            },
+            "donateCcEV": 1851,
+            "maxOneSpecies": 0.0853
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.2673
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.6226,
+              "epic": 0.3774,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1566
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.5271,
+              "epic": 0.3195,
+              "legendary": 0.1158,
+              "mythic": 0.0377
+            },
+            "donateCcEV": 2281,
+            "maxOneSpecies": 0.0527
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.0681
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Dark": {
+      "species": 44,
+      "byTier": {
+        "common": 6,
+        "uncommon": 10,
+        "rare": 17,
+        "epic": 6,
+        "legendary": 3,
+        "mythic": 2
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.3311,
+              "uncommon": 0.3608,
+              "rare": 0.2598,
+              "epic": 0.0484,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 644
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.3284,
+              "uncommon": 0.3579,
+              "rare": 0.2577,
+              "epic": 0.048,
+              "legendary": 0.0066,
+              "mythic": 0.0014
+            },
+            "donateCcEV": 686,
+            "maxOneSpecies": 0.0547
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5046,
+              "uncommon": 0.2988,
+              "rare": 0.1429,
+              "epic": 0.0471,
+              "legendary": 0.0055,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 575,
+            "maxOneSpecies": 0.0841
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.475,
+              "rare": 0.4392,
+              "epic": 0.0858,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 891
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.465,
+              "rare": 0.43,
+              "epic": 0.084,
+              "legendary": 0.0172,
+              "mythic": 0.0037
+            },
+            "donateCcEV": 996,
+            "maxOneSpecies": 0.0465
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5345,
+              "rare": 0.3282,
+              "epic": 0.1136,
+              "legendary": 0.0198,
+              "mythic": 0.0039
+            },
+            "donateCcEV": 1017,
+            "maxOneSpecies": 0.0535
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.8238,
+              "epic": 0.1762,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1264
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7847,
+              "epic": 0.1679,
+              "legendary": 0.038,
+              "mythic": 0.0094
+            },
+            "donateCcEV": 1489,
+            "maxOneSpecies": 0.0462
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.681,
+              "epic": 0.2579,
+              "legendary": 0.0498,
+              "mythic": 0.0113
+            },
+            "donateCcEV": 1688,
+            "maxOneSpecies": 0.043
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    },
+    "Fairy": {
+      "species": 35,
+      "byTier": {
+        "common": 13,
+        "uncommon": 6,
+        "rare": 10,
+        "epic": 4,
+        "legendary": 0,
+        "mythic": 2
+      },
+      "perBall": {
+        "pokeball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0.6411,
+              "uncommon": 0.1935,
+              "rare": 0.1366,
+              "epic": 0.0288,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 466
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0.6403,
+              "uncommon": 0.1932,
+              "rare": 0.1364,
+              "epic": 0.0288,
+              "legendary": 0,
+              "mythic": 0.0012
+            },
+            "donateCcEV": 477,
+            "maxOneSpecies": 0.0493
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0.5074,
+              "uncommon": 0.3005,
+              "rare": 0.1437,
+              "epic": 0.0474,
+              "legendary": 0,
+              "mythic": 0.0011
+            },
+            "donateCcEV": 550,
+            "maxOneSpecies": 0.0501
+          },
+          "plainBall": {
+            "donateCcEV": 575,
+            "oneSpeciesOfTopTier": 0
+          },
+          "price": {
+            "plain": 1000,
+            "focused": 1500
+          }
+        },
+        "greatball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.4745,
+              "rare": 0.4302,
+              "epic": 0.0953,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 906
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.4716,
+              "rare": 0.4275,
+              "epic": 0.0947,
+              "legendary": 0,
+              "mythic": 0.0062
+            },
+            "donateCcEV": 962,
+            "maxOneSpecies": 0.0786
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0.5453,
+              "rare": 0.3348,
+              "epic": 0.1159,
+              "legendary": 0,
+              "mythic": 0.004
+            },
+            "donateCcEV": 937,
+            "maxOneSpecies": 0.0909
+          },
+          "plainBall": {
+            "donateCcEV": 1017,
+            "oneSpeciesOfTopTier": 0.0001
+          },
+          "price": {
+            "plain": 2000,
+            "focused": 3000
+          }
+        },
+        "ultraball": {
+          "recommended_filterNoLegendaryMythic": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.8049,
+              "epic": 0.1951,
+              "legendary": 0,
+              "mythic": 0
+            },
+            "donateCcEV": 1293
+          },
+          "optionB_filterOnly": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7918,
+              "epic": 0.192,
+              "legendary": 0,
+              "mythic": 0.0162
+            },
+            "donateCcEV": 1434,
+            "maxOneSpecies": 0.0792
+          },
+          "optionA_keepTierOdds": {
+            "tierOdds": {
+              "common": 0,
+              "uncommon": 0,
+              "rare": 0.7167,
+              "epic": 0.2714,
+              "legendary": 0,
+              "mythic": 0.0119
+            },
+            "donateCcEV": 1514,
+            "maxOneSpecies": 0.0717
+          },
+          "plainBall": {
+            "donateCcEV": 1688,
+            "oneSpeciesOfTopTier": 0.0004
+          },
+          "price": {
+            "plain": 4000,
+            "focused": 6000
+          }
+        }
+      }
+    }
+  },
+  "quests": {
+    "proposal": {
+      "board": {
+        "ccPerTask": 50,
+        "tasks": 3,
+        "chest": "1 free random catch (Poke Ball odds)",
+        "weekly": {
+          "need": 15,
+          "of": 21,
+          "reward": "1 free Great Ball throw"
+        }
+      },
+      "missions": {
+        "lengthsH": [
+          2,
+          4,
+          8,
+          12
+        ],
+        "levels": "player-independent, from the date seed: 15 / 30 / 40 / 60 typical",
+        "running": 2,
+        "offered": 4
+      },
+      "successChance": "35% + 60% x (threats countered / threats) + Level adj (+1%/Lv above, -3%/Lv below the mission Level, party average), clamped 5%..95%",
+      "lootPerSuccess": {
+        "ccPerHour": 15,
+        "stoneChanceByLength": {
+          "2": 0.1,
+          "4": 0.2,
+          "8": 0.4,
+          "12": 0.6
+        },
+        "dustByLength": {
+          "2": 0,
+          "4": 1,
+          "8": 2,
+          "12": 3
+        },
+        "pokemonChanceByLength": {
+          "2": 0,
+          "4": 0,
+          "8": 0.05,
+          "12": 0.1
+        },
+        "tmChance12h": 0.02,
+        "bonusRoll": {
+          "chance": 0.2,
+          "effect": "x2 EXP, or one extra draw of the loot table"
+        }
+      },
+      "failure": {
+        "ccPerHour": 5,
+        "expShare": 0.25
+      },
+      "weeklyCaps": {
+        "stones": 5,
+        "dust": 15,
+        "pokemon": 2,
+        "tms": 1
+      }
+    },
+    "expeditions": {
+      "casual_one12hPerDay": {
+        "uncapped": {
+          "cc": 1096.2,
+          "stones": 3.23,
+          "dust": 16.17,
+          "pokemon": 0.54,
+          "tms": 0.11
+        },
+        "capped": {
+          "cc": 1096.2,
+          "stones": 3.23,
+          "dust": 15,
+          "pokemon": 0.54,
+          "tms": 0.11
+        },
+        "ccEquivalentPerWeek": 17715,
+        "ccOnlyPerDay": 157
+      },
+      "active_8hAnd12h": {
+        "uncapped": {
+          "cc": 1988,
+          "stones": 6.16,
+          "dust": 30.8,
+          "pokemon": 0.92,
+          "tms": 0.12
+        },
+        "capped": {
+          "cc": 1988,
+          "stones": 5,
+          "dust": 15,
+          "pokemon": 0.92,
+          "tms": 0.12
+        },
+        "ccEquivalentPerWeek": 27664,
+        "ccOnlyPerDay": 284
+      },
+      "maxed_all4Missions_2slots": {
+        "uncapped": {
+          "cc": 2793.7,
+          "stones": 9.01,
+          "dust": 41.58,
+          "pokemon": 1.04,
+          "tms": 0.14
+        },
+        "capped": {
+          "cc": 2793.7,
+          "stones": 5,
+          "dust": 15,
+          "pokemon": 1.04,
+          "tms": 0.14
+        },
+        "ccEquivalentPerWeek": 28555,
+        "ccOnlyPerDay": 399
+      }
+    },
+    "board": {
+      "allDays": {
+        "cc": 1050,
+        "chestDonateEV": 3724,
+        "weeklyGreatBallDonateEV": 944,
+        "perDayCC": 817
+      },
+      "fiveDays": {
+        "cc": 750,
+        "chestDonateEV": 2660,
+        "weeklyGreatBallDonateEV": 944,
+        "perDayCC": 622
+      }
+    },
+    "oldQuestIfReleased": {
+      "cooldownSec": 60,
+      "perDayMax": 1440,
+      "ccPerDay": 72000,
+      "freeCatchesOrTrainersPerDay": 1440
+    },
+    "oldRecruitIfReleased": {
+      "priceCC": 100,
+      "pokeballEquivalent": 1000,
+      "discount": 0.9,
+      "donateEV": 532,
+      "profitPerRecruitWhenDonated": 432,
+      "trainerRollVsCheapestTrainer": 2500
+    }
+  }
+}

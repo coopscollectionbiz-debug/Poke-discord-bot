@@ -284,6 +284,28 @@ _Avoid_: Key Stone, mega item
 A goal reached through play, such as a catch count or a win streak, that earns Achievement Points (AP), a score with no other use, and may list a reward.
 _Avoid_: trophy, quest
 
+### Quests
+
+**Quests**:
+Repeatable things to do each day: the **Daily board** and **Expeditions**. Planned, not yet released.
+_Avoid_: missions (for the whole system), achievements
+
+**Daily board**:
+Three tasks a player can finish each day, each one under the player's control (send messages, win a **Casual battle**, donate), never a chance roll. Each task pays CC, all three open a chest, and finishing enough in a week earns a weekly bonus. It resets at 00:00 UTC.
+_Avoid_: dailies (that is `/daily`), challenges
+
+**Mission**:
+One trip on the day's shared mission board, the same for every player: a length, a **Level**, and one to three threat types. A player can take each Mission once a day.
+_Avoid_: quest, expedition (that is the trip in progress)
+
+**Expedition**:
+A party of up to three **Copies** sent on a **Mission**. Sending a copy takes it off every **Team**, and until it returns it can't be fed, evolved, donated, gifted, taught a **TM** or put on a **Team**. Copies whose types counter the threats raise the chance of success. Success pays loot and **EXP**; failure pays a little EXP and a consolation.
+_Avoid_: venture, dispatch, run (that is the **Elite Four run**)
+
+**Focus type**:
+An option on a Poké Ball throw that limits the roll to species of one type, at the ball's price plus half. The ball's **Tier** odds stay the same.
+_Avoid_: recruit, targeted ball
+
 ## Flagged ambiguities
 
 - "Duplicate" is counted per variant, not per Pokémon. A player holding one normal and one shiny Pikachu has no duplicates.

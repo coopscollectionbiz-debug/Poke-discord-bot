@@ -89,6 +89,17 @@ for (const [move, from, fx] of [["willowisp", "brn", "brn"], ["poisonpowder", "p
   assertTrue(!all.includes("Venusaur had its HP restored."), "the seeder's heal has no line of its own");
 }
 
+{
+  // buildResult credits a later HP change of the attacker to its own move (userHpAfter):
+  // a burn tick after the burned Pokémon's Splash belongs to the beat, not the Splash.
+  const { r, names } = run([mon(94, "Gengar", 50, ["willowisp", "splash"])], [mon(143, "Snorlax", 50, ["swordsdance", "splash"], { hpFraction: 0.2 })], 5, [seq(["move 1", "move 2"]), seq(["move 1", "move 2"])]);
+  const tl = turnTimeline(r, 2, names);
+  const splash = hits(tl).find((h) => h.event.side === 1);
+  const tick = beats(tl).find((b) => b.fx === "brn");
+  assertTrue(!("userHpAfter" in splash.event) && !splash.event.userFainted, "the Splash carries no HP change of its own");
+  assertEqual([tick.hpChanges[0][2], tick.hpChanges[0][3]], [r.snapshots[1][1][0], r.snapshots[2][1][0]], "the burn tick drains from where the turn started");
+}
+
 section("Cures");
 {
   const wake = find((seed) => run([mon(94, "Gengar", 50, ["spore", "splash"])], [wall(["tackle"])], seed, [seq(["move 1", "move 2"]), seq(["move 1"])]), (s) => s.kind === "status" && s.cured === "slp");

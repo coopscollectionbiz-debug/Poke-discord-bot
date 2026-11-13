@@ -9,8 +9,11 @@ import { GifReader } from "omggif";
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import {
   pickFrameTurns, renderBattleFrame, tileCenter, turnText, wrapLines, loadSprite, spritePlayer, ANIMATION, FRAME_WIDTH,
-  LAYOUT, portraitBox, AWARD, idleLoops,
+  LAYOUT, portraitBox, AWARD, idleLoops, ROW_TOP,
 } from "../utils/battle/render.js";
+import { simulateFull } from "../utils/battle/showdown/simulate.js";
+import { turnTimeline, marksAt, activeAt } from "../utils/battle/timeline.js";
+import { STATUS_COLORS, CHIP_COLORS } from "../utils/battle/fx.js";
 import { STEP_MS, TRAINER_LOOP_MS } from "../utils/render/spriteLoops.js";
 
 section("Frame turns");
@@ -329,6 +332,75 @@ section("Sprite files");
     }
   }
   assertEqual(bad, [], "no sprite uses GIF disposal 3");
+}
+
+section("Battle FX");
+{
+  // A burn, a Swords Dance, and burn ticks until the burned Snorlax (at 20%) faints.
+  const fxMon = (speciesId, name, moves, extra = {}) => ({ speciesId, variant: "normal", name, level: 50, moves, ...extra });
+  const seq = (moves) => (req, b) => (req.forceSwitch ? null : moves[Math.min(b.turn, moves.length) - 1]);
+  const teams = [[fxMon(94, "Gengar", ["willowisp", "splash"])], [fxMon(143, "Snorlax", ["swordsdance", "splash"], { hpFraction: 0.2 })]];
+  const r = simulateFull({ sides: teams.map((members) => ({ members })), seed: 5, ai: [seq(["move 1", "move 2"]), seq(["move 1", "move 2"])] });
+  const names = teams.map((s) => s.map((m) => m.name));
+  const fxSides = [{ name: "Ash", members: teams[0] }, { name: "Gary", members: teams[1] }];
+  const on = { ...process.env, BATTLE_FX: "1" };
+  const turnGif = (t, o = {}) => renderBattleFrame({ sides: fxSides, hpBefore: r.snapshots[t - 1], timeline: turnTimeline(r, t, names), badge: `TURN ${t}`, env: on, ...o });
+  // Every frame up to i, composited as a viewer sees it (each frame stores only what changed).
+  const frameAt = (gif, i) => { const g = new GifReader(gif); const px = new Uint8Array(g.width * g.height * 4); for (let k = 0; k <= i; k++) g.decodeAndBlitFrameRGBA(k, px); return px; };
+  const rgb = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+  const near = (px, i, c) => rgb(c).every((v, k) => Math.abs(px[i + k] - v) <= 12);
+  const count = (px, [x0, y0, w, h], c) => { let n = 0; for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) if (near(px, (y * FRAME_WIDTH + x) * 4, c)) n++; return n; };
+  const cx = tileCenter(1, 0);
+  const capsule = (s) => [cx - 58 + 3, ROW_TOP[s] + 158 + 3, 22, 8];
+  const chipArea = (s) => [cx - LAYOUT.tileW / 2 + 4, ROW_TOP[s] + 28, LAYOUT.tileW / 2 + 2, 34];
+
+  const off = { ...process.env, BATTLE_FX: "0" };
+  const plain = await renderBattleFrame({ sides: fxSides, hpBefore: r.snapshots[0], events: r.log[0], active: activeAt(r, 1), badge: "TURN 1", env: off });
+  const viaTimeline = await renderBattleFrame({ sides: fxSides, hpBefore: r.snapshots[0], timeline: turnTimeline(r, 1, names, { env: off }), badge: "TURN 1", env: off });
+  assertTrue(Buffer.from(plain).equals(Buffer.from(viaTimeline)), "BATTLE_FX=0: a timeline of today's hits renders the same bytes as the events");
+
+  const asleep = [[fxMon(143, "Snorlax", ["tackle"], { status: "slp" })], [fxMon(143, "Snorlax", ["tackle"], { status: "slp" })]];
+  const r2 = simulateFull({ sides: asleep.map((members) => ({ members })), seed: 3 });
+  const tl2 = turnTimeline(r2, 1, asleep.map((s) => s.map((m) => m.name)));
+  const g2 = new GifReader(await renderBattleFrame({ sides: [{ name: "A", members: asleep[0] }, { name: "B", members: asleep[1] }], hpBefore: r2.snapshots[0], timeline: tl2, env: on }));
+  assertEqual([g2.numFrames(), g2.frameInfo(g2.numFrames() - 1).delay * 10], [tl2.minFrames, ANIMATION.freezeMs], "a turn with beats and no hits is a turn image: its full length, then the freeze");
+
+  const t2 = await turnGif(2);
+  const f0 = frameAt(t2, 0);
+  assertTrue(count(f0, capsule(1), STATUS_COLORS.brn) > 0.3 * 22 * 8, "the burned Snorlax's bar shows BRN in the burn's color");
+  assertTrue(count(f0, capsule(0), "#f6b73c") > 0.3 * 22 * 8, "Gengar's bar keeps its HP label");
+  assertTrue(count(f0, chipArea(1), CHIP_COLORS.up) > 10, "the Swords Dance chip shows at the fighting Snorlax's top-left");
+
+  const megaSides = [fxSides[0], { name: "Gary", members: [{ ...teams[1][0], megaForm: "mega-charizard-x" }] }];
+  const fm = frameAt(await turnGif(2, { sides: megaSides }), 0);
+  const tag = [cx + LAYOUT.tileW / 2 - 8 - 56, ROW_TOP[1] + 30, 56, 18];
+  assertTrue(count(fm, chipArea(1), CHIP_COLORS.up) > 10 && count(fm, tag, CHIP_COLORS.up) === 0, "on a Mega slot the chips stay clear of the MEGA tag");
+
+  const tl1 = turnTimeline(r, 1, names);
+  const t1 = await turnGif(1);
+  const stats = tl1.segments.find((s) => s.kind === "beat" && s.fx === "stats");
+  const last = new GifReader(t1).numFrames() - 1;
+  assertTrue(!Buffer.from(frameAt(t1, stats.start + 4)).equals(Buffer.from(frameAt(t1, last))), "a beat's frames differ from the hold");
+  const flames = tl1.segments.find((s) => s.kind === "beat" && s.fx === "brn");
+  assertTrue(count(frameAt(t1, flames.start + 4), [cx - 70, ROW_TOP[1] + 20, 140, 120], "#ffd34d") > 5, "the flames' yellow survives the palette (a mid-beat frame is sampled)");
+
+  const tick = turnTimeline(r, 2, names).segments.find((s) => s.kind === "beat" && s.fx === "brn");
+  const bar = (px) => { let n = 0; const y = ROW_TOP[1] + 158 + 3 + 4; for (let x = cx - 58 + 28; x < cx + 58 - 3; x++) if (["#3fd46c", "#f5c431", "#ef4b4b"].some((c) => near(px, (y * FRAME_WIDTH + x) * 4, c))) n++; return n; };
+  assertTrue(bar(frameAt(t2, tick.start + 5)) < bar(frameAt(t2, tick.start + 1)), "the HP bar drains during a burn tick");
+
+  const tlLast = turnTimeline(r, r.turns, names);
+  assertTrue(tlLast.segments.some((s) => s.kind === "beat" && s.ko), "the last turn ends on a burn knockout");
+  const gLast = await turnGif(r.turns);
+  const spriteArea = [cx - 34, ROW_TOP[1] + 60, 68, 66];
+  const colored = (px) => { let n = 0; const [x0, y0, w, h] = spriteArea; for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) { const i = (y * FRAME_WIDTH + x) * 4; const mx = Math.max(px[i], px[i + 1], px[i + 2]), mn = Math.min(px[i], px[i + 1], px[i + 2]); if (mx > 90 && (mx - mn) / mx > 0.3) n++; } return n; };
+  assertTrue(colored(frameAt(gLast, new GifReader(gLast).numFrames() - 1)) < 5 && colored(frameAt(gLast, 0)) > 50, "a burn knockout grays the sprite");
+  const final = frameAt(await renderBattleFrame({ sides: fxSides, hpBefore: r.snapshots[r.turns], badge: "FINAL", winnerSide: 0, marks: marksAt(r, r.turns), env: on }), 0);
+  assertTrue(count(final, capsule(1), STATUS_COLORS.brn) === 0, "the result image shows no tag on the fainted Snorlax");
+
+  const carried = [[fxMon(143, "Snorlax", ["splash"], { status: "brn" })], [fxMon(94, "Gengar", ["splash"])]];
+  const r3 = simulateFull({ sides: carried.map((members) => ({ members })), seed: 1 });
+  const start = frameAt(await renderBattleFrame({ sides: [{ name: "A", members: carried[0] }, { name: "B", members: carried[1] }], hpBefore: r3.snapshots[0], marks: marksAt(r3, 0), screens: [["The battle begins!", ""]], env: on }), 0);
+  assertTrue(count(start, capsule(0), STATUS_COLORS.brn) > 0.3 * 22 * 8, "a burn carried into the fight shows on its start image");
 }
 
 finish();

@@ -153,7 +153,14 @@ export function turnTimeline(result, turn, names, { env = process.env, capFrames
   for (let i = 0; i < steps.length; i++) {
     const s = steps[i];
     if (s.kind === "move") {
-      const { preNotes, notes, endNotes, ...rest } = events[next++];
+      const { preNotes, notes, endNotes, userHpAfter, userFainted, ...rest } = events[next++];
+      // buildResult credits any later HP change of the attacker this turn to
+      // its hit (a burn tick after its own Splash); only drain and recoil are the hit's.
+      for (let j = i + 1; j < steps.length && steps[j].kind !== "move"; j++) {
+        const h = steps[j];
+        if (h.kind === "hp" && h.side === rest.side && h.slot === rest.slot && (h.from === "drain" || h.from === "Recoil")) rest.userHpAfter = h.hpAfter;
+      }
+      if (rest.userHpAfter === 0) rest.userFainted = true;
       hit = { kind: "hit", ...at(), frames: ANIMATION.eventFrames, event: { ...rest, ...(pre.length && !segments.some((x) => x.kind === "hit") && { preNotes: pre.splice(0) }) } };
       segments.push(hit);
       applyHit(hp, rest);

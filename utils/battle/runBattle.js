@@ -6,7 +6,10 @@
 //
 // Modes (owner decision, docs/design/TEAMS-COLLECTION-REDESIGN.md):
 //   open    casual: Display teams at real Levels, Underdog surge, unrated
-//           (user.casual W/L), no battle achievements
+//           (user.casual W/L), no battle achievements. Past the Challenger's
+//           Battle cap it still runs, but earns no rewards and doesn't count
+//           toward the daily cap. Past the per-Defender cap it runs only as an
+//           accepted Rematch request (`rematch`, utils/battle/rematch.js).
 //   ranked  Battle teams at Lv 50, no surge, rated (user.battle), battle
 //           achievements; no consent needed
 //   wager   as ranked, plus the accepted pot
@@ -21,7 +24,8 @@ import { movesLearned } from "./moveset.js";
 import { simulateBattle } from "./sim.js";
 import { teamPower, rollSurge, cuteSurgeBoost } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, getCasualRecord, capBlock, recordStart } from "./rewards.js";
-import { RANKED, CUTE } from "./tuning.js";
+import { RANKED, CUTE, CAPS } from "./tuning.js";
+import { liftRematchBlock } from "./rematch.js";
 import { teamCuteness } from "./cuteness.js";
 import { chosenMoves, keepMovesOnLevelUp } from "../../services/movesets.js";
 import { resolveBattleMega } from "../../services/megaTeam.js";
@@ -188,7 +192,10 @@ export const RANKED_TEAM_SIZE = 6;
 
 // Read-only: why this battle can't happen right now, or null. /battle runs it
 // before deferring (instant ephemeral refusals) and runBattle re-runs it under lock.
-export function battleBlock({ trainerData, challengerId, defenderId, mode, now = new Date(), env = process.env }) {
+// The Battle cap never blocks a casual battle; runBattle withholds its rewards
+// instead. Past the per-Defender cap a casual battle needs a Rematch request
+// ("rematch_needed") unless the Defender accepted one (`rematch`).
+export function battleBlock({ trainerData, challengerId, defenderId, mode, rematch = false, now = new Date(), env = process.env }) {
   if (challengerId === defenderId) return "self";
   const prefix = mode === "open" ? "no_team" : "no_battle_team";
   if (!teamFor(trainerData[challengerId], mode, { env }).length) return `${prefix}_challenger`;
@@ -200,15 +207,18 @@ export function battleBlock({ trainerData, challengerId, defenderId, mode, now =
   }
   const day = utcDay(now);
   const blockFor = (user, opponentId) => (user?.battle?.day === day ? capBlock(user.battle, opponentId) : null);
-  const block = blockFor(trainerData[challengerId], defenderId);
+  const block = mode !== "open" && blockFor(trainerData[challengerId], defenderId);
   if (block) return `cap_${block}`;
+  const challengerBattle = trainerData[challengerId]?.battle;
+  const vsToday = challengerBattle?.day === day ? (challengerBattle.vs?.[defenderId] ?? 0) : 0;
+  if (mode === "open" && !rematch && vsToday >= CAPS.perOpponent) return "rematch_needed";
   const defenderBlock = mode === "wager" && blockFor(trainerData[defenderId], challengerId);
   if (defenderBlock) return `defender_cap_${defenderBlock}`;
   return null;
 }
 
-export function runBattle({ trainerData, challengerId, defenderId, mode, stake = 0, seed, now = new Date(), env = process.env }) {
-  const reason = battleBlock({ trainerData, challengerId, defenderId, mode, now, env });
+export function runBattle({ trainerData, challengerId, defenderId, mode, rematch = false, stake = 0, seed, now = new Date(), env = process.env }) {
+  const reason = battleBlock({ trainerData, challengerId, defenderId, mode, rematch, now, env });
   if (reason) return { ok: false, reason };
   const challenger = trainerData[challengerId];
   const defender = trainerData[defenderId];
@@ -216,6 +226,10 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
   const teams = [teamFor(challenger, mode, { env }), teamFor(defender, mode, { env })];
   const day = utcDay(now);
   const records = [getBattleRecord(challenger, day), getBattleRecord(defender, day)];
+  // "daily" or "opponent" when a casual battle runs past the Challenger's
+  // Battle cap. It skips only the rewards (EXP, Mega Shards) and the daily
+  // count, so it never uses up a battle the player could still play ranked.
+  const overCap = mode === "open" ? capBlock(records[0], defenderId) : null;
 
   // Power at the Levels they fight at (Lv 50 in ranked/wager). The Underdog
   // surge, and the cute surge with it, is a casual-only feature.
@@ -230,7 +244,8 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
   const loserId = ids[1 - result.winner];
 
   const exp = {};
-  for (const i of mode === "wager" ? [0, 1] : [0]) {
+  const earners = mode === "wager" ? [0, 1] : overCap ? [] : [0];
+  for (const i of earners) {
     exp[ids[i]] = applyExp(users[i], { members: teams[i], opponent: teams[1 - i], ...(surge?.cute && surge.side === i && { levelMult: surge.levelMult }) }, result, i);
   }
 
@@ -272,7 +287,12 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
     });
   }
 
-  recordStart(records[0], defenderId);
+  // Every casual battle counts against this Defender, even past the daily
+  // cap, so the 4th against them always needs a Rematch request.
+  if (!overCap) recordStart(records[0], defenderId);
+  else records[0].vs[defenderId] = (records[0].vs[defenderId] ?? 0) + 1;
+  // The Challenger battled the Defender, so the Defender may ask them for a rematch again.
+  liftRematchBlock(defender, challengerId);
   if (mode === "wager") {
     recordStart(records[1], challengerId);
     trainerData[winnerId].cc = (trainerData[winnerId].cc ?? 0) + 2 * stake;
@@ -283,7 +303,7 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
   // the battle itself is unchanged; while the rewards switch is off nothing
   // is rolled and the result has no megaShards key.
   const shardResult = {};
-  if (rewardsOn(env) && (winnerId === challengerId || mode === "wager")) {
+  if (rewardsOn(env) && !overCap && (winnerId === challengerId || mode === "wager")) {
     shardResult.megaShards = { [winnerId]: rollBattleShards(trainerData[winnerId], { rng: createRng((seed ^ 0x5a17d) >>> 0).next, now: now.getTime(), env }) };
   }
 
@@ -298,6 +318,7 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, stake =
     winnerId,
     loserId,
     exp,
+    overCap, // null unless a casual battle ran past the Battle cap (an accepted rematch: "opponent" or "daily")
     rated,
     rating, // {} for casual battles
     ...shardResult, // megaShards: { [winnerId]: n } only while Mega rewards are on

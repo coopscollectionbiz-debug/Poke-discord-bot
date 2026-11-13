@@ -133,7 +133,7 @@ assertEqual(megaRefs.filter((f) => !MEGA_USERS.includes(f)), [], "only the M1–
 const NEVER = live.filter((f) => /^(utils\/battle\/(rewards|playback|data|moveset|stats|tuning|wager|rng)\.js|commands\/(quest|recruit|shop|gift)\.js|progression\/|services\/gameplay\.js|utils\/weightedRandom\.js)/.test(f));
 assertEqual(NEVER.filter((f) => /mega/i.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), [], `EXP/rewards, playback, battle data and acquisition code (${NEVER.length} files) never mentions Mega`);
 assertEqual(live.filter((f) => /megaRewards/.test(fs.readFileSync(path.join(ROOT, f), "utf8"))), ["services/megaShards.js"], "only the shard service reads the Mega reward config");
-for (const [file, call] of [["commands/daily.js", /rollDailyShards\(user\)/], ["utils/battle/runBattle.js", /rewardsOn\(env\) && \(winnerId === challengerId \|\| mode === "wager"\)/]]) {
+for (const [file, call] of [["commands/daily.js", /rollDailyShards\(user\)/], ["utils/battle/runBattle.js", /rewardsOn\(env\) && !overCap && \(winnerId === challengerId \|\| mode === "wager"\)/]]) {
   assertTrue(call.test(fs.readFileSync(path.join(ROOT, file), "utf8")), `${file}: the shard roll is the gated helper call`);
 }
 section("Routes and dashboard: gated, session-checked, nothing rendered while off");

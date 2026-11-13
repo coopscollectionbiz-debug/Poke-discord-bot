@@ -175,8 +175,12 @@ The player a **Challenger** names as their opponent.
 _Avoid_: target, opponent (when the role matters)
 
 **Casual battle**:
-A **Battle** between two **Casual teams** at their real **Levels** that runs immediately without the **Defender's** consent. It is unrated, no CC changes hands, and only the **Challenger** can earn EXP.
+A **Battle** between two **Casual teams** at their real **Levels** that runs immediately without the **Defender's** consent, unless it needs a **Rematch request**. It is unrated, no CC changes hands, and only the **Challenger** can earn EXP.
 _Avoid_: auto-battle, friendly
+
+**Rematch request**:
+A **Challenger's** ask for another **Casual battle** with a **Defender** after reaching the per-**Defender** **Battle cap** with them that UTC day. The **Battle** runs only if the **Defender** accepts, and earns no rewards. A declined or expired one stops the **Challenger** from sending that **Defender** another until the next UTC day, or until the **Defender** challenges them.
+_Avoid_: rematch (alone), consent request, battle request
 
 **Ranked battle**:
 A **Battle** between two **Ranked teams**, every Pokémon at Lv 50, that runs immediately and moves both players' **Ranked rating**. Only the **Challenger** can earn EXP.
@@ -203,7 +207,7 @@ A numbered period of ranked play. A new **Season** starts every player's **Ranke
 _Avoid_: ladder reset, split
 
 **Battle cap**:
-The limit on how many **Battles** a player may start per UTC day, across all three kinds together and against any one **Defender**.
+The limit on how many **Battles** a player may start per UTC day, across all three kinds together and against any one **Defender**. Past either limit, **Ranked battles** and **Wager battles** can't start. Past the daily limit, a **Casual battle** still runs but earns no rewards. Past the per-**Defender** limit, it needs a **Rematch request** first.
 _Avoid_: stamina, energy, battle limit
 
 **Power rating**:

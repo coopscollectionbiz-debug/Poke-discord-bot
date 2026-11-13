@@ -472,6 +472,7 @@ import { createMessageHandler, createRoleFlush } from "./utils/passiveChat.js";
 import { createEncounterService, isEncounterButton } from "./utils/encounter/service.js";
 import { grantCatch, levelsForUser } from "./utils/training.js";
 import { refundAllPending } from "./utils/battle/wager.js";
+import { closeAllRematches } from "./utils/battle/rematch.js";
 import { finishAllOpenRuns, challengeLogEntry, hideOpenRun, challengeProgress } from "./utils/challenge/runChallenge.js";
 import { recordFight, challengeRecord } from "./utils/fightRecordBuild.js";
 import { fightRecords } from "./utils/fightRecords.js";
@@ -2829,6 +2830,26 @@ async function refundPendingWagersOnStartup() {
 }
 
 // ==========================================================
+// ⚔️ Rematch requests: close requests left open by a restart
+// Their buttons die with the old process, so every open request is closed
+// (blocking nobody) and its message edited.
+// ==========================================================
+async function closeRematchRequestsOnStartup() {
+  const closed = closeAllRematches(trainerData);
+  if (!closed.length) return;
+  await enqueueSave(trainerData, { force: true });
+  console.log(`⚔️ Closed ${closed.length} open rematch request(s) after restart`);
+  for (const { channelId, messageId } of closed) {
+    if (!channelId || !messageId) continue;
+    try {
+      const channel = await client.channels.fetch(channelId);
+      const message = await channel.messages.fetch(messageId);
+      await message.edit({ content: "Rematch request expired because the bot restarted.", components: [] });
+    } catch {}
+  }
+}
+
+// ==========================================================
 // An Elite Four run waits on the player's record between fights, and the
 // command playing it dies with the old process, so every open run is
 // finished at startup with no Revives, and its replay message gets the result.
@@ -2960,6 +2981,7 @@ async function retryLoadLoop() {
 
   if (ok2) {
     await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
+    await closeRematchRequestsOnStartup().catch((e) => console.warn("⚠️ closing rematch requests failed:", e?.message || e));
     await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
     isReady = true;
     console.log("✨ Bot is now READY (trainerData loaded)!");
@@ -2978,6 +3000,7 @@ setTimeout(retryLoadLoop, retryMs);
   }
 
   await refundPendingWagersOnStartup().catch((e) => console.warn("⚠️ wager refund failed:", e?.message || e));
+  await closeRematchRequestsOnStartup().catch((e) => console.warn("⚠️ closing rematch requests failed:", e?.message || e));
   await finishOpenRunsOnStartup().catch((e) => console.warn("⚠️ finishing open runs failed:", e?.message || e));
   isReady = true;
   console.log("✨ Bot ready and accepting commands!");

@@ -88,7 +88,10 @@ export function occupancy(W, H, fg, trainers = [], rects = []) {
  * A player's tier backdrop over their half: the half's own colour replaced
  * by the plain background plus the tier wash (drawn now, on `ctx`), and
  * { draw(ctx, f) } for the glow and effects, or null below Epic. The glow
- * runs diagonally from the half's outer bottom corner toward the seam.
+ * runs diagonally from the half's outer bottom corner toward the seam. An art
+ * Aura's vs.png is drawn mirrored on the right half, so it sits around that
+ * half's trainer (at the mirror of the left trainer's place) and moves the
+ * mirrored way; text and trainers are drawn elsewhere and never flip.
  */
 export function halfBackdrop(ctx, { side, tier, field, W, H, occupied, floor }) {
   if (!hasBackdrop(tier)) return null;
@@ -96,7 +99,7 @@ export function halfBackdrop(ctx, { side, tier, field, W, H, occupied, floor }) 
   const x0 = left ? 0 : Math.floor(field.bottom / 4) * 4;
   const rect = { x: x0, y: 0, w: (left ? field.top : W) - x0, h: field.h };
   const bd = regionBackdrop({
-    tier, rect, u: 4, occupied, floor, frames: FRAMES, variant: "vs", // an art Aura's vs.png, if it has one
+    tier, rect, u: 4, occupied, floor, frames: FRAMES, variant: "vs", mirror: !left, // an art Aura's vs.png, if it has one
     from: left ? [0, field.h] : [W, field.h],
     to: left ? [field.top * 0.95, -field.h * 0.3] : [x0 + (W - x0) * 0.05, -field.h * 0.3],
     clip: (c) => halfPath(c, side, field, W),

@@ -5,13 +5,15 @@
 // auraArtDir; AURA_ART_DIR overrides it):
 //   aura.json  { id, name, credit: [...], palette: ["#rrggbb", ...],
 //                sky?: ["#rrggbb", ...]   top → bottom, the static wash
-//                tint?: "#rrggbb"         the floor / accent colour (default palette[0])
+//                tint?: "#rrggbb"         the floor / accent colour (default palette[0];
+//                                         optional: art draws without it, platforms stay neutral)
 //                layers: { back: "back.png", row?: "row.png", vs?: "vs.png" } }
-//   back.png   a horizontal spritesheet of frames (24 at 100 ms is the card
-//              loop; other counts are retimed), transparent, 1 px = 1 sprite
-//              pixel, sized for the trainer card panel (90×105 cells)
+//   back.png   a horizontal spritesheet of frames, transparent, 1 px = 1 sprite
+//              pixel, sized for the trainer card panel (90×105 cells), the
+//              trainer's feet 7 rows above its bottom (row 98)
 //   row.png / vs.png  optional versions sized for a whole playback row / VS half
-// Frame width = sheet width / frames ("frames" in aura.json, default 24).
+// Frame width = sheet width / frames ("frames" in aura.json, default 24). Any
+// count plays once per 2.4 s loop (public/shared/auraArt.js: timing, placement).
 //
 // Loaded synchronously (the backdrop code is synchronous) with a small PNG
 // decoder: 8-bit greyscale/RGB/RGBA/palette, non-interlaced, which is what
@@ -105,3 +107,4 @@ export function loadAuraArt(id, env = process.env) {
   return art;
 }
 export const resetAuraArtForTesting = () => { cache = new Map(); };
+

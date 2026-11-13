@@ -23,7 +23,7 @@ import { prizeText } from "../battle/playback.js";
 import { GYM_BADGES, earnedBadgeKeys } from "../../public/picker-pokemon/badges.js";
 import { spriteStage } from "./stage.js";
 import { trainerTier, cardTrainerFx } from "./trainerTier.js";
-import { backdropTint } from "./trainerBackdrop.js";
+import { backdropTint, hasBackdrop } from "./trainerBackdrop.js";
 import { placeTrainer, occupancy, halfBackdrop } from "./vsField.js";
 
 export const CHALLENGE_CARD_SIZE = Object.freeze({ w: 1200, h: 640 });
@@ -366,7 +366,7 @@ export async function renderChallengeCard(v, { animate = false, env = process.en
   const opponents = await drawOpponents(f, v, slots, stage, fx);
   drawVs(f);
   drawPrizeBar(f, v);
-  const backdrop = fx && backdropTint(v.player.tier)
+  const backdrop = fx && hasBackdrop(v.player.tier) // a tint is optional
     ? halfBackdrop(ctx, {
       side: "left", tier: v.player.tier, field: FIELD, W, H, floor: FLOOR + 12,
       occupied: occupancy(W, H, fg, [player, ...opponents]),

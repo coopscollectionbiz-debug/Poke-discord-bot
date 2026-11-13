@@ -80,8 +80,10 @@ export function trainerBackdrop(ctx, stage, { tier, sprite, cx, box, panel, floo
   px.getContext("2d").drawImage(sprite.image, 0, 0);
   const rgba = px.getContext("2d").getImageData(0, 0, sprite.width, sprite.height).data;
   const mask = new Uint8Array(gridW * gridH);
+  let soles = 0; // one past the sprite's lowest opaque row: where its feet really end (PNGs can have empty rows below)
   for (let sy = 0; sy < sprite.height; sy++) for (let sx = 0; sx < sprite.width; sx++) {
     if (rgba[(sy * sprite.width + sx) * 4 + 3] < 8) continue;
+    soles = sy + 1;
     for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
       const gx = ox + sx + dx, gy = oy + sy + dy;
       if (gx >= 0 && gy >= 0 && gx < gridW && gy < gridH) mask[gy * gridW + gx] = 1;
@@ -91,6 +93,7 @@ export function trainerBackdrop(ctx, stage, { tier, sprite, cx, box, panel, floo
     tier, gridW, gridH, mask, frames: FRAMES,
     halo: { cx: (cx - X0) / u, cy: (y + h * 0.45 - Y0) / u, rx: 40, ry: 54 },
     floorRow: Math.floor((floor - Y0) / u),
+    feetRow: oy + Math.round((soles * h) / sprite.height / u), // the bottom edge of the trainer's feet: an art Aura's back.png feet row lands here
   });
   if (!bd) return;
   const draw = (c, f) => {

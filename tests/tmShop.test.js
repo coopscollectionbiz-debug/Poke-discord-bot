@@ -9,7 +9,7 @@ import { listCatalog, getCatalogItem, CATEGORIES } from "../catalog/items.js";
 import { TM_PRICE_BY_TIER, tmTierOf } from "../catalog/tms.js";
 import { tmMoveIds } from "../utils/battle/tmData.js";
 import { grantItem, runInventoryTransaction, listInventory } from "../services/inventory.js";
-import { tmShopView, buyTms, sellableTms, tmBoughtThisWeek } from "../services/tmShop.js";
+import { tmShopView, buyTms, sellableTms, tmBoughtThisWeek, tmLearners } from "../services/tmShop.js";
 import { isTmEnabled, tmWeeklyCap } from "../config/tmFeatures.js";
 
 const ON = { TM_ENABLED: "1" };
@@ -117,6 +117,36 @@ section("The shop page's request isn't one ad blockers stop");
   assertTrue(fetched.length > 0 && fetched.every((u) => !u.includes("/tms?")), `no fetch URL contains /tms? (${fetched.join(", ")})`);
   const server = fs.readFileSync(new URL("../bot_final.js", import.meta.url), "utf8");
   assertTrue(server.includes('app.get(["/api/tm-shop", "/api/tms"]'), "the server answers the new path (and the old one for open tabs)");
+}
+
+section("buy dialog: which of my Pokémon can learn it (team members first)");
+{
+  const u = {
+    pokemon: { 6: { normal: 2, shiny: 0 }, 25: { normal: 1, shiny: 1 }, 26: { normal: 1, shiny: 0 }, 145: { normal: 1, shiny: 0 }, 135: { normal: 1, shiny: 0 }, 181: { normal: 1, shiny: 0 }, 133: { normal: 3, shiny: 0 }, 180: { normal: 1, shiny: 0 } },
+    training: { "181:normal": { exp: 60000 } },
+    customPokemon: { c_TrainedPk1: { uid: "c_TrainedPk1", speciesId: 25, variant: "shiny", tmMoves: ["thunderbolt"], rev: 1 } },
+    displayedPokemon: [{ id: 6, variant: "normal" }, { id: 26, variant: "normal" }],
+    battleTeam: [{ id: 145, variant: "normal" }, { id: 135, variant: "normal" }, { id: 25, variant: "shiny" }, { id: 6, variant: "normal" }],
+    showcaseTeam: [{ id: 180, variant: "normal" }],
+  };
+  const before = clone(u);
+  const r = tmLearners(u, "tm_thunderbolt", { env: ON });
+  assertTrue(r.ok, "lists learners");
+  const keys = r.learners.map((l) => `${l.speciesId}:${l.variant}`);
+  assertEqual(keys.slice(0, 4), ["26:normal", "145:normal", "135:normal", "25:shiny"], "Casual team first, then Ranked, in slot order");
+  assertTrue(r.learners.slice(0, 4).every((l) => l.priority) && r.learners.slice(4).every((l) => !l.priority), "only Casual/Ranked members are priority");
+  assertTrue(!keys.includes("6:normal") && !keys.includes("133:normal"), "Pokémon that can’t learn it are left out, even on a team");
+  const rest = r.learners.slice(4);
+  assertTrue(rest.every((l, i) => i === 0 || rest[i - 1].level >= l.level), "the rest by Level, highest first");
+  assertEqual(r.learners.find((l) => l.speciesId === 180)?.teams, ["showcase"], "Showcase is tagged but not prioritised");
+  assertEqual(r.learners.find((l) => l.speciesId === 25 && l.variant === "shiny")?.known, true, "a copy trained with the TM counts as already knowing it");
+  assertEqual(r.learners.find((l) => l.speciesId === 25 && l.variant === "normal")?.known, false, "an untrained Pikachu doesn’t know it");
+  assertEqual(r.learners.length, tmShopView(u, { env: ON }).tms.find((t) => t.item === "tm_thunderbolt").teaches + 1, "one row per owned species + Variant (the count is per species)");
+  assertEqual(u, before, "read-only: the player is unchanged");
+  assertEqual(tmLearners(u, "tm_nope", { env: ON }).code, "bad_item", "unknown TM refused");
+  assertEqual(tmLearners(u, "tm_thunderbolt", { env: OFF }).code, "disabled", "nothing while TMs are off");
+  const server = fs.readFileSync(new URL("../bot_final.js", import.meta.url), "utf8");
+  assertTrue(server.includes('app.get("/api/tm-shop/learners"'), "route lives under /api/tm-shop/ (blocklist-safe)");
 }
 
 finish();

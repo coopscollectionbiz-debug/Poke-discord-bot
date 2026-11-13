@@ -14,7 +14,7 @@
 import { toast, showExpired, pageHref } from "/public/shared/shell.js";
 import { moveMeta, tmDisc } from "/public/shared/moveMeta.js";
 
-const LABEL = { display: "Display team", battle: "Battle team" };
+const LABEL = { display: "Casual team", battle: "Ranked team" }; // the names on the Teams page
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const newRequestId = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`);
 // Standard move row: name on top, type · category · power · accuracy below.
@@ -37,6 +37,8 @@ const STYLE = `
 .tmx-teach .tt-muted{color:var(--cc-text-muted);font-size:14px;margin:4px 0}
 .tmx-teach .tt-note{margin:0 0 12px;padding:8px 10px;border-radius:10px;background:var(--cc-surface-raised);font-size:14px}
 .tmx-teach .tt-note.is-error{border:1px solid var(--cc-red,#e5534b)}
+.tmx-teach .tt-note.is-warn{border:1px solid var(--cc-gold,#facc15)}
+.tmx-teach .tt-later{color:var(--cc-gold,#facc15);font-weight:700}
 .tmx-teach .tt-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center;padding:12px 16px;border-top:1px solid var(--cc-line)}
 .tmx-teach .tt-foot p{flex:1 1 200px;margin:0;font-size:13px;color:var(--cc-text-muted)}
 @media (max-width:520px){.tmx-teach{width:100vw;max-width:100vw;max-height:100dvh;height:100dvh;border-radius:0}.tmx-teach form{max-height:100dvh;height:100%}.tmx-teach .tt-body{flex:1}}`;
@@ -120,12 +122,18 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
       ? `<p class="tt-note">You don’t have any TMs. <a href="${pageHref("/public/dashboardshop/", userId)}">Buy TMs in the Shop</a>.</p>`
       : `<fieldset><legend>Which TM?</legend>${data.tms.map((x) => {
           const st = x.status[sel.target];
-          const why = st === "known" ? "Already knows it" : st === "incompatible" ? `${esc(name)} can’t learn it` : `You have ${x.owned}`;
+          const later = st === "teachable" ? x.learnsAt?.[sel.target] : null;
+          const why = st === "known" ? "Already knows it" : st === "incompatible" ? `${esc(name)} can’t learn it` : `You have ${x.owned}${later ? `<br><span class="tt-later">Learns it at Lv ${Number(later)}</span>` : ""}`;
           return `<label class="tt-opt${st === "teachable" ? "" : " is-off"}"><input type="radio" name="tt-tm" value="${esc(x.item)}"${sel.item === x.item ? " checked" : ""}${st === "teachable" ? "" : " disabled"}>
             ${tmDisc(x.type)}${moveRow(x)}<small>${why}</small></label>`;
         }).join("")}</fieldset>`;
     const m = tm();
-    const equipStep = !t || !m || m.status[sel.target] !== "teachable" ? "" : teamsOn().length === 0
+    // Warn before spending a TM on a move this copy gets by level-up later (owner, 2026-11-13).
+    const laterAt = t && m && m.status[sel.target] === "teachable" ? m.learnsAt?.[sel.target] : null;
+    const laterNote = laterAt
+      ? `<p class="tt-note is-warn" role="status"><b>${esc(name)} learns ${esc(m.name)} on its own at Lv ${Number(laterAt)}</b>${Number.isFinite(t.level) ? ` (it’s Lv ${Number(t.level)} now)` : ""}. Teaching it now uses up the TM for a move it will get for free.</p>`
+      : "";
+    const equipStep =!t || !m || m.status[sel.target] !== "teachable" ? "" : teamsOn().length === 0
       ? `<p class="tt-muted">This ${esc(name)} isn’t on a team. ${esc(m.name)} will be learned, and you can pick it in a team’s moves later.</p>`
       : teamsOn().map(([team, on]) => on.moves.length < data.maxMoves
           ? `<fieldset><legend>${LABEL[team]} (slot ${on.slot})</legend><p class="tt-muted">Now: ${on.moves.map((x) => esc(x.name)).join(", ")}</p>
@@ -140,7 +148,7 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
     dialog.innerHTML = `<form method="dialog">
       <div class="tt-head"><div><p class="cc-eyebrow">Teach a TM</p><h2 id="ttTitle">${esc(name)}${variant === "shiny" ? " ✨" : ""}</h2></div>
         <button class="tm-ib dt-close" value="close" aria-label="Close" formnovalidate>✕</button></div>
-      <div class="tt-body">${note ? `<p class="tt-note is-error" role="alert">${esc(note)}</p>` : ""}${copyStep}${tmStep}${equipStep}</div>
+      <div class="tt-body">${note ? `<p class="tt-note is-error" role="alert">${esc(note)}</p>` : ""}${copyStep}${tmStep}${laterNote}${equipStep}</div>
       <div class="tt-foot"><p>${m && t ? `Uses 1 ${esc(m.name)} TM (you have ${m.owned}). It stays learned by this ${esc(name)}.` : ""}</p>
         <button class="cc-btn" value="close" formnovalidate>Cancel</button>
         <button type="button" class="cc-btn cc-btn--primary" data-teach${ready() && !busy ? "" : " disabled"}>${busy ? "Teaching…" : m ? `Teach ${esc(m.name)}` : "Teach"}</button></div></form>`;

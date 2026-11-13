@@ -121,7 +121,7 @@ The player-data format is unchanged across these releases, so older code can loa
 
 ## Production host (VPS)
 
-Production is moving from Fly to the VPS that also runs the WoW server (`ssh ubuntu@147.135.113.217`, Ubuntu 26.04). Until the cutover below is done, Fly is still production and the sections above still apply.
+Production is moving from Fly to a VPS (Ubuntu 26.04). SSH in through the `pokebot-vps` alias: add `Host pokebot-vps` with the real `HostName` and `User` to your own `~/.ssh/config`. Keep the address and login out of the repo. Until the cutover below is done, Fly is still production and the sections above still apply.
 
 | What | Where |
 |---|---|
@@ -136,14 +136,14 @@ Production is moving from Fly to the VPS that also runs the WoW server (`ssh ubu
 
 ### Deploy
 1. `/adminsave` in Discord at a quiet time.
-2. `ssh ubuntu@147.135.113.217 /opt/pokebot/deploy-vps.sh` (deploys `master`; pass a branch, tag or sha to deploy something else).
+2. `ssh pokebot-vps /opt/pokebot/deploy-vps.sh` (deploys `master`; pass a branch, tag or sha to deploy something else).
    - The script builds `/opt/pokebot/releases/<sha>`, checks that both canvas libraries render, switches `current`, restarts `pokebot` and waits for `/readyz`.
 3. `curl -s https://bot.coopscollection.com/readyz` shows `"ready":true`, `dataDir` `/srv/pokebot/data`, `durableVolume` `true`.
 
-`/opt/pokebot/deploy-vps.sh` is a copy of `tools/deploy-vps.sh`. After changing the script in the repo, copy it over again: `scp tools/deploy-vps.sh ubuntu@147.135.113.217:/opt/pokebot/deploy-vps.sh`.
+`/opt/pokebot/deploy-vps.sh` is a copy of `tools/deploy-vps.sh`. After changing the script in the repo, copy it over again: `scp tools/deploy-vps.sh pokebot-vps:/opt/pokebot/deploy-vps.sh`.
 
 ### Roll back code
-`ssh ubuntu@147.135.113.217 /opt/pokebot/deploy-vps.sh --rollback` points `current` at the previous release and restarts. Then revert the bad merge on `master` through a PR.
+`ssh pokebot-vps /opt/pokebot/deploy-vps.sh --rollback` points `current` at the previous release and restarts. Then revert the bad merge on `master` through a PR.
 
 ### Overrides and restores
 The Fly `flyctl secrets set X=1` steps above become: add `X=1` to `/etc/pokebot.env` (`sudo nano /etc/pokebot.env`), `sudo systemctl restart pokebot`, and remove the line once the bot is ready. A file restore uses `RESTORE_FROM=file:/srv/pokebot/data/snapshots/trainerData-YYYY-MM-DD.json` with a matching `CONFIRM_RESTORE`.

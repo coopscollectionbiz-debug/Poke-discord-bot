@@ -49,3 +49,20 @@
 @media (max-width: 1100px) { .ov-rank, .ov-teams, .ov-dex { grid-column: span 12; } .ov-casual, .ov-rewards { grid-column: span 6; } }
 @media (max-width: 820px) { .ov-casual, .ov-rewards { grid-column: span 12; } .ov-strip img { height: 40px; } .ov-strip li { height: 74px; } .ov-strip { gap: 4px; } }
 .ov-wl.is-empty { background: var(--cc-surface-sunken); }
+/* Showcase team: six pedestals across the top. */
+.ov-showcase { grid-column: span 12; border-color: #f5c84c66; background: linear-gradient(180deg, #f5c84c14, transparent 140px), var(--cc-surface); }
+.ov-showcase .ov-teamhead { font-size: 18px !important; }
+.ov-showcase .ov-note { margin-top: -4px; }
+.ov-showcase .ov-note a { font-weight: 700; }
+.ov-peds { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+.ov-ped { position: relative; display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 8px 6px 10px; border-radius: 12px; background: var(--cc-surface-raised); border: 1.5px solid var(--cc-line); overflow: hidden; }
+.ov-ped.shiny { border-color: #f5c84caa; }
+.ov-ped-stage { position: relative; display: flex; align-items: flex-end; justify-content: center; width: 100%; height: 96px; border-radius: 10px; background: radial-gradient(ellipse 60% 18% at 50% 88%, #00000033, transparent 70%), var(--cc-surface-sunken); }
+.ov-ped.mega .ov-ped-stage { background: radial-gradient(circle at 50% 70%, #c084fc2e, transparent 65%), var(--cc-surface-sunken); }
+.ov-ped-stage img { position: relative; z-index: 1; max-height: 84px; max-width: 100%; object-fit: contain; image-rendering: pixelated; margin-bottom: 6px; }
+.ov-ped-name { margin-top: 6px; max-width: 100%; font-weight: 800; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-ped small { font-size: 12px; font-weight: 800; color: var(--cc-text-muted); }
+.ov-ped.is-empty { border-style: dashed; background: transparent; }
+.ov-ped.is-empty .ov-ped-stage { background: radial-gradient(ellipse 60% 18% at 50% 88%, #00000022, transparent 70%); }
+.ov-ped.is-empty .ov-ped-name { color: var(--cc-text-muted); font-weight: 700; }
+@media (max-width: 820px) { .ov-peds { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } .ov-ped-stage { height: 76px; } .ov-ped-stage img { max-height: 64px; } }

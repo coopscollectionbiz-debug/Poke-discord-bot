@@ -331,8 +331,8 @@ function tabSummary(body, data) {
         <dt>Onboarding</dt><dd>${p.onboardingComplete ? "Complete" : "Not finished"}</dd>
         <dt>Pokémon</dt><dd>${fmt(p.copies)} copies, ${fmt(data.pokemon.length)} species + Variant rows</dd>
         <dt>Team</dt><dd>${p.teamSize} of 6</dd>
-        <dt>Battle team</dt><dd>${p.battleTeamSize == null ? "Not set" : `${p.battleTeamSize} of 6`}</dd>
-        <dt>Battle rating</dt><dd>${fmt(p.battleRating)} (${p.rankedWins}–${p.rankedLosses} this season)</dd>
+        <dt>Ranked team</dt><dd>${p.battleTeamSize == null ? "Not set" : `${p.battleTeamSize} of 6`}</dd>
+        <dt>Ranked rating</dt><dd>${fmt(p.battleRating)} (${p.rankedWins}–${p.rankedLosses} this season)</dd>
         <dt>Open wager</dt><dd>${p.pendingWager ? `${fmt(p.pendingWager.stake)} CC held until ${when(p.pendingWager.expiresAt)}` : "None"}</dd>
       </dl>
     </section>
@@ -623,7 +623,7 @@ function tabCooldowns(body, data) {
       ${data.cooldowns
         .map((c) => `<div class="cooldown-row"><label class="inline"><input type="checkbox" value="${esc(c.key)}" /> ${esc(c.label)}</label><span class="muted">${esc(c.state)}</span></div>`)
         .join("")}
-      <p class="faint">Resetting Daily keeps the daily streak. Resetting the Battle cap lets them earn battle EXP, start ranked and wager battles, and send Rematch requests again today; their Battle rating is untouched.</p>
+      <p class="faint">Resetting Daily keeps the daily streak. Resetting the Battle cap lets them earn battle EXP, start ranked and wager battles, and send Rematch requests again today; their Ranked rating is untouched.</p>
       <div class="sheet-actions"><button class="btn-primary" id="cdReview" type="button" disabled>Review reset</button></div>
     </section>`;
   const boxes = $$("input[type=checkbox]", body);

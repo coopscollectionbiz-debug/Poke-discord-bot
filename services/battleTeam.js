@@ -79,7 +79,7 @@ export function trimBattleTeamMythics(user, now = Date.now()) {
     const names = removed.map((s) => `${s.variant === "shiny" ? "shiny " : ""}${speciesName(s.id)}`);
     const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
     addNotice(user, NOTICE_KINDS.BATTLE_TEAM_TRIM,
-      `${list} ${removed.length === 1 ? "was" : "were"} removed from your Battle team. Some Pokémon are now mythic-tier, and a Battle team can have only one (you kept ${speciesName(kept.id)}). ${removed.length === 1 ? "It's" : "They're"} still in your collection.`,
+      `${list} ${removed.length === 1 ? "was" : "were"} removed from your Ranked team. Some Pokémon are now mythic-tier, and a Ranked team can have only one (you kept ${speciesName(kept.id)}). ${removed.length === 1 ? "It's" : "They're"} still in your collection.`,
       now);
   }
   return removed;
@@ -112,7 +112,7 @@ export function prepareBattleTeamSelection(user, rawTeam, opts = {}) {
       ok: false,
       status: 400,
       code: "too_many_mythics",
-      error: `A Battle team can have only one mythic-tier Pokémon. Your team has ${mythics.length}: ${names}.`,
+      error: `A Ranked team can have only one mythic-tier Pokémon. Your team has ${mythics.length}: ${names}.`,
     };
   }
   return prepared;

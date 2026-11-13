@@ -295,7 +295,7 @@ _Avoid_: trophy, quest
 - "Pokédex" and "Collection" are different. The **Collection** is what a player owns now; the **Pokédex** is what they have ever caught. Achievements named after the Pokédex (region Pokédex Complete, National Pokédex Complete, Prismatic Pokédex) count **Registered** species; the others that say "at the same time" (Living Pokédex, Hall of Legends) count the **Collection**.
 - "Challenge" is not what a **Challenger** does. A **Challenger** starts a **Battle** against another player. A **Challenge** has no **Challenger** or **Defender**, only the player and the Kanto team they face.
 - "Trainer" means a player everywhere except **Trainer encounters**, where it means the computer-run opponent. "Ace Trainer" is not one of the "Elite Four", which belong only to the **Elite Four run**.
-- "Casual battle" and "open battle" are the same thing. The Teams and Overview pages and the code say "open", and `/battle` and the achievements say "casual".
+- "Casual battle" and "open battle" are the same thing. Players only see "casual"; the code still says "open" (the `open` battle mode).
 - "Tier" also names a trainer sprite's price class, Common to Mythic, which is not a species' **Tier**. The 2026-11-10 re-tier changed trainer sprites, and the 2026-11-11 re-tier changed species.
 - "Ranked" has nothing to do with **Rank**. A player's **Rank** comes from chatting; their **Ranked rating** comes from **Ranked battles** and **Wager battles**.
 - Some **Achievements** list a badge as their reward, such as a region's badge for completing its Pokédex. That is not a **Badge**, which only comes from beating a Gym Leader's **Challenge**.

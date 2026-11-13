@@ -68,17 +68,17 @@ function trainedRows(copies) {
     if (!c.trained?.length) continue;
     rows.push(`<p class="dt-muted" style="margin:6px 0 2px">${v === "shiny" ? "✨ Shiny" : "Normal"}: untrained ×${c.plain} · trained ×${c.trained.length}</p>`);
     for (const t of c.trained) {
-      const where = [t.teams.display ? `Display slot ${t.teams.display}` : "", t.teams.battle ? `Battle slot ${t.teams.battle}` : ""].filter(Boolean).join(" · ") || "Not on a team";
+      const where = [t.teams.display ? `Casual slot ${t.teams.display}` : "", t.teams.battle ? `Ranked slot ${t.teams.battle}` : ""].filter(Boolean).join(" · ") || "Not on a team";
       rows.push(`<div class="dt-move"><span>★ Trained · ${t.tmMoves.map((m) => esc(m.name)).join(", ")}</span><small class="dt-muted">${where}</small></div>`);
     }
   }
   return rows.join("");
 }
 
-/** "Display slot 3 · Battle slot 1 (unsaved)" for one copy. */
+/** "Casual slot 3 · Ranked slot 1 (unsaved)" for one copy. */
 function slotLine(copy, v, opts) {
   const s = opts.slotsFor?.(v) ?? { display: copy.teams.display, battle: copy.teams.battle, unsaved: false };
-  const parts = [s.display ? `Display slot ${s.display}` : "", s.battle ? `Battle slot ${s.battle}` : ""].filter(Boolean);
+  const parts = [s.display ? `Casual slot ${s.display}` : "", s.battle ? `Ranked slot ${s.battle}` : ""].filter(Boolean);
   return parts.length ? `${parts.join(" · ")}${s.unsaved ? ' <span class="dt-unsaved">(unsaved)</span>' : ""}` : "Not on a team";
 }
 
@@ -142,7 +142,7 @@ function render(d, ctx, opts) {
       ${["display", "battle"].map((team) => {
         const set = c.movesets?.[team];
         const list = set ?? c.moves;
-        return `<section class="dt-sec"><h3>${team === "battle" ? "Battle team moves" : "Display team moves"}${set ? "" : " · automatic"}</h3><div class="dt-moves">${list.map((m) => `<div class="dt-move"><span>${esc(m.name)}${moveMeta(m)}</span></div>`).join("")}</div></section>`;
+        return `<section class="dt-sec"><h3>${team === "battle" ? "Ranked team moves" : "Casual team moves"}${set ? "" : " · automatic"}</h3><div class="dt-moves">${list.map((m) => `<div class="dt-move"><span>${esc(m.name)}${moveMeta(m)}</span></div>`).join("")}</div></section>`;
       }).join("")}
       <section class="dt-sec"><p class="dt-muted" style="margin:0">${c.nextMoves.length ? `Learns next: ${c.nextMoves.map((m) => esc(m.name)).join(", ")}. ` : ""}${ctx.actionsHTML ? "Each team keeps its own moves." : `Change moves on the <a href="${pageHref("/public/teams/", ctx.userId)}">Teams page</a> (each team keeps its own).`}</p></section>`
     : d.baseStats ? `<section class="dt-sec"><h3>Base stats</h3>${statBars(d.baseStats)}<p class="dt-muted">Total ${d.baseTotal}</p></section>` : ""}

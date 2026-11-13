@@ -12,6 +12,10 @@
 // From then on that member's default moves are those, with every attack
 // the new learnset teaches above that Level learned on top the games' way
 // (newest in, oldest out; the same rule as feat/move-choice's learnMove).
+// A level-up from battle EXP or Feed never equips a new attack, though:
+// services/movesets.js keepMovesOnLevelUp pins the moves it fought with
+// first (master's rule, 2026-11-12), so attacks join that way only on Levels
+// gained otherwise, such as a duplicate catch or an admin Level change.
 // The record belongs to the Pokémon, not to a Team: a picked Moveset takes
 // its place on that Team only, and clearing the pick brings it back, so
 // editing one Team never changes the other's moves.

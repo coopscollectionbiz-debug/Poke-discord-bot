@@ -9,9 +9,9 @@
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { getPlan, setPlan, teamPlanView, suggestions } from "../services/battlePlans.js";
 import { runCutover, cutoverMoves } from "../services/fullSimCutover.js";
-import { chosenMoves, setMoveset } from "../services/movesets.js";
+import { chosenMoves, setMoveset, keepMovesOnLevelUp } from "../services/movesets.js";
 import { buildTeam } from "../utils/battle/runBattle.js";
-import { autoMoveset } from "../utils/battle/moveset.js";
+import { autoMoveset, movesLearned } from "../utils/battle/moveset.js";
 import { getSpecies, getMove } from "../utils/battle/data.js";
 import { createNewUser, validateUserSchema } from "../utils/userSchema.js";
 import { pokemonDetail } from "../services/pokemonDetail.js";
@@ -116,6 +116,31 @@ section("Cutover: nobody's moves change");
     assertEqual(pokemonDetail(u, changed).body.copies.normal.moves.map((m) => m.id), before[0], "and the dashboard shows those moves too");
     setMoveset(u, "display", changed, "normal", [before[0][0]]);
     assertEqual(buildTeam(u)[0].moves, [before[0][0]], "a picked Moveset takes the recorded moves' place");
+  });
+}
+
+section("Cutover: a level-up never equips a newly learned move (master, 2026-11-12)");
+{
+  // A Pokémon and Level where its recorded moves aren't the full sim's
+  // automatic ones, and the full sim teaches it a new move at the next Level.
+  let sid = null, from = null;
+  for (let id = 1; id <= 649 && sid === null; id++) {
+    for (let lv = 20; lv < 80; lv++) {
+      if (JSON.stringify(autoMoveset(id, lv, OFF)) === JSON.stringify(autoMoveset(id, lv, ON))) continue;
+      if (!withSwitch(true, () => movesLearned(id, lv, lv + 1).length)) continue;
+      [sid, from] = [id, lv];
+      break;
+    }
+  }
+  assertTrue(sid !== null, `found #${sid}: learns a move at Lv ${from + 1} on the full sim`);
+  const u = player("C", [sid], from);
+  withSwitch(true, () => {
+    runCutover({ C: u });
+    const before = buildTeam(u)[0].moves;
+    u.training[`${sid}:normal`] = { exp: (from + 1) ** 3 };
+    assertTrue(JSON.stringify(buildTeam(u)[0].moves) !== JSON.stringify(before), "unpinned, the Level-up would change its moves");
+    keepMovesOnLevelUp(u, sid, "normal", { fromLevel: from, toLevel: from + 1 });
+    assertEqual(buildTeam(u)[0].moves, before, `so the Lv ${from + 1} Pokémon keeps the moves it fought with at Lv ${from}, its recorded ones`);
   });
 }
 

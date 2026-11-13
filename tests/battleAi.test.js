@@ -66,6 +66,23 @@ section("Plans");
   assertTrue(chosen(strong, solid("setup")) !== "swordsdance", "it attacks instead when the foe could knock it out");
 }
 {
+  // A raise counts only when it matters now (owner, 2026-11-13: "not sure
+  // agility really counts unless Deoxys is slower than whatever it's fighting").
+  const harmless = (id) => mon(id, 50, ["splash"]);
+  assertEqual(chosen(battleOf([mon(386, 50, ["agility", "pound"])], [harmless(213)], { plan: "setup" }), solid("setup")), "pound",
+    "Deoxys, already faster than Shuckle, attacks instead of using Agility");
+  const faster = battleOf([mon(386, 50, ["agility", "pound"])], [harmless(894)], { plan: "setup" });
+  assertEqual(chosen(faster, solid("setup")), "agility", "against a faster Regieleki, Agility is worth the turn");
+  faster.field.addPseudoWeather("trickroom", faster.sides[1].active[0]);
+  assertEqual(chosen(faster, solid("setup")), "pound", "but not under Trick Room, where the slower Pokémon moves first");
+  assertEqual(chosen(battleOf([mon(244, 50, ["calmmind", "sacredfire"])], [harmless(213)], { plan: "setup" }), solid("setup")), "sacredfire",
+    "Entei, with only a physical attack, doesn't raise its Special Attack");
+  assertEqual(chosen(battleOf([mon(65, 50, ["calmmind", "psychic"])], [harmless(213)], { plan: "setup" }), solid("setup")), "calmmind",
+    "Alakazam, with a special attack, does");
+  assertEqual(chosen(battleOf([mon(149, 50, ["dragondance", "dragonclaw"])], [harmless(213)], { plan: "setup" }), solid("setup")), "dragondance",
+    "one raise that matters is enough: Dragon Dance's Attack, though Dragonite already outspeeds Shuckle");
+}
+{
   const fresh = battleOf([mon(25, 50, ["thunderbolt", "thunderwave"])], [mon(143, 50, ["bodyslam"])], { plan: "status" });
   assertEqual(chosen(fresh, solid("status")), "thunderwave", "Status & stall: paralyze a healthy foe");
   const paralyzed = battleOf([mon(25, 50, ["thunderbolt", "thunderwave"])], [mon(143, 50, ["bodyslam"], { status: "par" })], { plan: "status" });

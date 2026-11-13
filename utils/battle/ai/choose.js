@@ -8,7 +8,8 @@
 //     (utils/battle/ai/estimate.js), plus a bonus for a knockout.
 //   • A status move scores a small general value when it would do
 //     something, a large bonus when it's what the plan is for, and −1 when
-//     it would fail or undo itself (Trick Room while Trick Room is up).
+//     it would fail, undo itself (Trick Room while Trick Room is up) or
+//     raise nothing that matters (Agility on a Pokémon already faster).
 // Skill: Rookie strays to a random move 35% of the time; Solid 10%
 // (MOVE_RANDOM_CHANCE); Expert never strays, and plays Solid's top 3 one
 // turn ahead on copies of the battle, keeping the one that comes out best. The chooser's
@@ -46,6 +47,18 @@ export function teamWeather(side) {
 
 const meanSpeed = (side) => { const ps = alive(side); return ps.reduce((t, p) => t + p.storedStats.spe, 0) / Math.max(1, ps.length); };
 
+// The stats a setup move raises that matter this turn: Attack or Special
+// Attack only with an attack of that kind, Speed only while the foe moves
+// first (a tie included), never under Trick Room, where the slower one does.
+// The other stats a setup move raises (Calm Mind's Special Defense) don't
+// make it worth the turn.
+function usefulRaises(b, me, foe, boosts) {
+  const hasAttack = (category) => me.moveSlots.some((s) => b.dex.moves.get(s.id).category === category);
+  const outsped = foe && !foe.fainted && !b.field.pseudoWeather.trickroom && speedOf(foe) >= speedOf(me);
+  return Object.keys(boosts).filter((stat) => boosts[stat] > 0
+    && ((stat === "atk" && hasAttack("Physical")) || (stat === "spa" && hasAttack("Special")) || (stat === "spe" && outsped)));
+}
+
 function bestHitOn(b, attacker, defender) {
   return Math.max(0, ...attacker.moveSlots.map((s) => estimateDamage(b, attacker, defender, s.id)));
 }
@@ -72,8 +85,8 @@ export function scoreMove(b, side, moveId, plan = DEFAULT_PLAN) {
   const values = roles.map((role) => {
     switch (role) {
       case "setup": {
-        const maxed = Object.entries(move.boosts).every(([stat, v]) => v <= 0 || me.boosts[stat] >= 4);
-        if (maxed) return -1;
+        const useful = usefulRaises(b, me, foe, move.boosts);
+        if (!useful.length || useful.every((stat) => me.boosts[stat] >= 4)) return -1;
         return safe ? 0.15 + bonus("setup") : -0.05;
       }
       case "status": {

@@ -67,7 +67,7 @@ for (const page of ["picker-pokemon", "teams", "dashboardshop", "bag"]) app.get(
 app.get("/api/pokedex-status", (_, res) => res.json({ liveGenerations: [1, 2, 3, 4, 5], maxDex: 649 }));
 app.get("/api/mega", (_, res) => res.json({ success: true, enabled: false }));
 app.get("/api/user", (_, res) => res.json(user()));
-app.get("/api/tms", (_, res) => res.json(tmShopView(user())));
+app.get("/api/tm-shop", (_, res) => res.json(tmShopView(user())));
 app.get("/api/user-pokemon", (_, res) => {
   const u = user();
   normalizeCustomPokemon(u);

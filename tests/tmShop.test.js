@@ -3,6 +3,7 @@
 // the shop (services/tmShop.js).
 // ==========================================================
 
+import fs from "fs";
 import { assertTrue, assertEqual, section, finish } from "./harness.js";
 import { listCatalog, getCatalogItem, CATEGORIES } from "../catalog/items.js";
 import { TM_PRICE_BY_TIER, tmTierOf } from "../catalog/tms.js";
@@ -104,6 +105,18 @@ section("replay: the same request id charges once");
   const b = await runInventoryTransaction(args);
   assertTrue(a.ok && b.ok && b.replayed, "second call is a replay");
   assertEqual([trainerData.u1.cc, trainerData.u1.items.tm_thunderbolt], [4000, 1], "6,000 CC charged once, 1 TM");
+}
+
+section("The shop page's request isn't one ad blockers stop");
+{
+  // EasyPrivacy (on by default in uBlock Origin) blocks any URL containing
+  // "/tms?id=", so the TM shop never showed for players with a blocker.
+  const page = fs.readFileSync(new URL("../public/dashboardshop/tms.js", import.meta.url), "utf8");
+  assertTrue(page.includes("/api/tm-shop?id="), "the Shop page asks /api/tm-shop");
+  const fetched = [...page.matchAll(/fetch\(\s*[`"']([^`"']+)/g)].map((m) => m[1]);
+  assertTrue(fetched.length > 0 && fetched.every((u) => !u.includes("/tms?")), `no fetch URL contains /tms? (${fetched.join(", ")})`);
+  const server = fs.readFileSync(new URL("../bot_final.js", import.meta.url), "utf8");
+  assertTrue(server.includes('app.get(["/api/tm-shop", "/api/tms"]'), "the server answers the new path (and the old one for open tabs)");
 }
 
 finish();

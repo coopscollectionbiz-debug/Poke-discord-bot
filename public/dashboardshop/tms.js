@@ -1,7 +1,8 @@
 // ======================================================================
 // Shop · Technical Machines (TM system phase T3)
 //
-// GET  /api/tms?id=…          catalog, prices, owned counts, "teaches N"
+// GET  /api/tm-shop?id=…      catalog, prices, owned counts, "teaches N"
+//      (not /api/tms: blockers' EasyPrivacy list blocks "/tms?id=")
 // POST /api/shop/buy-tm       { id, item, qty, requestId }
 //
 // Everything shown comes from the server (prices, compatibility, owned
@@ -26,7 +27,7 @@ async function load() {
   if (!state.userId) return;
   let res;
   try {
-    res = await fetch(`/api/tms?id=${encodeURIComponent(state.userId)}`, { credentials: "same-origin" });
+    res = await fetch(`/api/tm-shop?id=${encodeURIComponent(state.userId)}`, { credentials: "same-origin" });
   } catch {
     return; // the main shop script already reports connection problems
   }

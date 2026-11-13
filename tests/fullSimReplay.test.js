@@ -8,7 +8,7 @@
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
 import { simulateFull } from "../utils/battle/showdown/simulate.js";
-import { stepText } from "../utils/battle/narrate.js";
+import { stepText, statChangesText } from "../utils/battle/narrate.js";
 import { activeAt, updatesFor } from "../utils/battle/playback.js";
 import { PLAYBACK, FULL_SIM } from "../utils/battle/tuning.js";
 import { replaySteps } from "../public/battlerecords/records.js";
@@ -36,6 +36,13 @@ section("Narration");
 }
 assertEqual(stepText({ kind: "note", type: "boost", args: ["p1a: s0", "atk", "2"] }, [["Scizor"], ["Pidgey"]]), "Scizor's Attack rose sharply!", "a stat boost reads like the games");
 assertEqual(stepText({ kind: "note", type: "message", args: ["anything"] }, [["A"], ["B"]]), null, "steps with nothing to say stay silent");
+// Battle FX: one beat for a run of stat changes, told in grouped sentences.
+const up = (stat, n) => ({ stat, n, dir: "boost" }), down = (stat, n) => ({ stat, n, dir: "unboost" });
+assertEqual(statChangesText("Cloyster", [down("def", 1), down("spd", 1), up("atk", 2), up("spa", 2), up("spe", 2)]),
+  "Cloyster's Defense and Sp. Def fell! Cloyster's Attack, Sp. Atk, and Speed rose sharply!", "Shell Smash reads as two sentences");
+assertEqual(statChangesText("Scizor", [up("atk", 2)]), "Scizor's Attack rose sharply!", "one stat reads as today's line");
+assertEqual(statChangesText("Scizor", [up("atk", 0)]), "Scizor's Attack won't go any higher!", "a capped raise");
+assertEqual(statChangesText("Gyarados", [down("atk", 1), down("def", 2)]), "Gyarados's Attack fell! Gyarados's Defense harshly fell!", "different amounts are separate sentences");
 
 section("Who is in front");
 {

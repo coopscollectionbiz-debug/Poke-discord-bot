@@ -61,6 +61,28 @@ export function stepText(step, names) {
   }
 }
 
+const statList = new Intl.ListFormat("en", { type: "conjunction" });
+const changeWords = (dir, n) => {
+  if (n === 0) return `won't go any ${dir === "boost" ? "higher" : "lower"}!`;
+  return (dir === "boost" ? ["rose!", "rose sharply!", "rose drastically!"] : ["fell!", "harshly fell!", "severely fell!"])[Math.min(n, 3) - 1];
+};
+
+/**
+ * One line for a run of stat changes on one Pokémon (a Battle FX beat):
+ * consecutive changes with the same direction and amount share a sentence,
+ * as the games group them ("Cloyster's Defense and Sp. Def fell!").
+ * changes: [{ stat, n, dir: "boost" | "unboost" }], one per -boost/-unboost note.
+ */
+export function statChangesText(name, changes) {
+  const groups = [];
+  for (const c of changes) {
+    const last = groups.at(-1);
+    if (last && last.dir === c.dir && last.n === c.n) last.stats.push(c.stat);
+    else groups.push({ dir: c.dir, n: c.n, stats: [c.stat] });
+  }
+  return groups.map((g) => `${name}'s ${statList.format(g.stats.map((s) => STAT[s] ?? s))} ${changeWords(g.dir, g.n)}`).join(" ");
+}
+
 function noteText(type, args, names) {
   const who = whoIn(args[0], names);
   switch (type) {
@@ -77,11 +99,7 @@ function noteText(type, args, names) {
       return SIDE_OFF[effectName(args[1])] ?? null;
     case "boost":
     case "unboost": {
-      const n = Number(args[2]);
-      const stat = STAT[args[1]] ?? args[1];
-      if (n === 0) return `${who}'s ${stat} won't go any ${type === "boost" ? "higher" : "lower"}!`;
-      const how = type === "boost" ? ["rose!", "rose sharply!", "rose drastically!"] : ["fell!", "harshly fell!", "severely fell!"];
-      return `${who}'s ${stat} ${how[Math.min(n, 3) - 1]}`;
+      return `${who}'s ${STAT[args[1]] ?? args[1]} ${changeWords(type, Number(args[2]))}`;
     }
     case "cant":
       return who ? `${who} ${CANT[args[1]] ?? "can't move!"}` : null;

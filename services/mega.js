@@ -19,6 +19,8 @@ import { getQuantity, consumeItems } from "./inventory.js";
 import { getMega, megasOfSpecies, megaFormGate, megaBattleEligibility, megaSpritePath, megaAbility, allMegaStones } from "../utils/megas.js";
 import { parseLineKey, ownsLine, checkMegaUnlock, recordMegaUnlock, variantChoiceOf, readMegaUnlocks, megaLineKey, REQUEST_ID_PATTERN } from "./megaUnlocks.js";
 import { getTraining } from "../utils/training.js";
+import { powerOfStats, pokemonPower } from "../utils/battle/power.js";
+import { RANKED } from "../utils/battle/tuning.js";
 import { megaFieldOf } from "./megaTeam.js";
 import { isMegaCapabilityEnabled } from "../config/features.js";
 import { megaBattleStatus, megaShortName } from "../utils/megaDisplay.js";
@@ -100,8 +102,13 @@ export function useMegaStone(user, { line, stoneId, formId, choice, requestId, n
 // ----------------------------------------------------------
 const stoneInfo = (user, stoneId) => ({ id: stoneId, name: getCatalogItem(stoneId)?.name ?? stoneId, have: getQuantity(user, stoneId) });
 
+function power50Of(f, battle) {
+  return battle.battleReady ? powerOfStats(f.baseStats, RANKED.level) : pokemonPower(f.species, RANKED.level);
+}
+
 function formView(f, variant, env) {
   const a = megaAbility(f.ability);
+  const battle = megaBattleEligibility(f.id, { env });
   return {
     formId: f.id,
     name: f.name,
@@ -117,7 +124,10 @@ function formView(f, variant, env) {
     shortName: megaShortName(f),
     sprite: megaSpritePath(f.id, variant),
     stone: f.prerequisite.kind === "stone" ? f.prerequisite.item : null,
-    battle: megaBattleEligibility(f.id, { env }),
+    battle,
+    // Power at the Ranked level: Mega stats when the form can battle, else the
+    // base form's (withMegaStats fights a not-ready form as its base form).
+    power50: power50Of(f, battle),
   };
 }
 

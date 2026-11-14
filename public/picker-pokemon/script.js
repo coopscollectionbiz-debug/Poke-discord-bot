@@ -37,6 +37,7 @@ const multiSelected = new Set(); // Pokémon IDs
 // The box tile the player tapped (docs/adr/0001): preselected in "Which one?".
 let pendingCopyUid = null;
 
+import "/public/shared/powerInfo.js"; // the ⓘ "What is Power?" buttons
 import { rarityEmojis } from "/public/spriteconfig.js";
 import { getNextMondayUTC, formatCountdown } from "/public/weeklyReset.js";
 import { getRegions, countOwned, countRegistered } from "/public/picker-pokemon/regions.js";
@@ -732,7 +733,9 @@ const bestLevel = (id) => bestOwned(userData.levels, id);
 // Power = six-stat total at Level, computed by the server with the same
 // functions as /showteam's Team Power (GET /api/user-pokemon `powers`).
 const bestPower = (id) => bestOwned(userData.powers, id);
-const SORT_KEYS = { level: bestLevel, power: bestPower };
+// Power at Lv 50: what Ranked and wager battles use (GET /api/user-pokemon `powers50`, one per species).
+const power50 = (id) => (ownedCounts(id).any > 0 ? userData.powers50?.[id] ?? null : null);
+const SORT_KEYS = { level: bestLevel, power: bestPower, power50 };
 
 // Renders the grid, then the shiny backdrops (the Discord cards' motes + stars).
 function renderPokemonGrid() {
@@ -780,13 +783,17 @@ function renderBoxTiles(container) {
   }
 
   const byDex = (a, b) => a.id - b.id || b.level - a.level || a.uid.localeCompare(b.uid);
+  const copyPower = (c) => userData.copyPowers?.[c.uid] ?? 0;
   const sorts = {
     "level-desc": (a, b) => b.level - a.level || byDex(a, b),
     "level-asc": (a, b) => a.level - b.level || byDex(a, b),
     newest: (a, b) => (b.at || 0) - (a.at || 0) || byDex(a, b),
     name: (a, b) => String(a.p.name).localeCompare(String(b.p.name)) || byDex(a, b),
-    "power-desc": (a, b) => (bestPower(b.id) ?? 0) - (bestPower(a.id) ?? 0) || byDex(a, b),
-    "power-asc": (a, b) => (bestPower(a.id) ?? 0) - (bestPower(b.id) ?? 0) || byDex(a, b),
+    // Each copy's own Power at its own Level (`copyPowers`), not the line's best.
+    "power-desc": (a, b) => copyPower(b) - copyPower(a) || byDex(a, b),
+    "power-asc": (a, b) => copyPower(a) - copyPower(b) || byDex(a, b),
+    // Ranked: every copy of a species ties at Lv 50; the higher real Level first (it knows more moves).
+    "power50-desc": (a, b) => (userData.powers50?.[b.id] ?? 0) - (userData.powers50?.[a.id] ?? 0) || b.level - a.level || byDex(a, b),
   };
   tiles.sort(sorts[sortOrder] ?? byDex);
 
@@ -817,6 +824,8 @@ function renderBoxTiles(container) {
       <div class="dex-no">#${String(c.id).padStart(4, "0")}</div>
       <div class="pokemon-name">${c.shiny ? "✨ " : ""}${name}</div>
       <div class="poke-levels"><span class="poke-level${c.shiny ? " shiny" : ""}">Lv ${c.level}</span></div>
+      ${sortOrder.startsWith("power50") ? `<div class="poke-power" title="Power at Lv 50: Ranked and wager battles set every Pokémon to Lv 50">Lv 50 <b>${(userData.powers50?.[c.id] ?? 0).toLocaleString("en-US")}</b></div>`
+        : sortOrder.startsWith("power") ? `<div class="poke-power" title="Power: total of all six stats at this copy's Level">Power <b>${copyPower(c).toLocaleString("en-US")}</b></div>` : ""}
       <div class="pokemon-tier"><span class="cc-tier" data-tier="${c.tier}">${capitalize(c.tier)}</span></div>`;
     const states = [`Level ${c.level}`];
     if (c.shiny) states.push("shiny");
@@ -1099,8 +1108,13 @@ function renderPokemonGridCards() {
       if (owned.shiny > 0) tags.push(`<span class="poke-level shiny${viewing("shiny")}">✨ Lv ${lv("shiny")}</span>`);
       levelHTML = `<div class="poke-levels">${tags.join("")}</div>`;
       // While sorting by Power, show the number being sorted on.
-      const power = sortOrder.startsWith("power") ? bestPower(id) : null;
-      if (power != null) levelHTML += `<div class="poke-power" title="Power: total of all six stats at its Level (highest owned copy)">Power <b>${power.toLocaleString("en-US")}</b></div>`;
+      if (sortOrder.startsWith("power50")) {
+        const p50 = power50(id);
+        if (p50 != null) levelHTML += `<div class="poke-power" title="Power at Lv 50: Ranked and wager battles set every Pokémon to Lv 50">Lv 50 <b>${p50.toLocaleString("en-US")}</b></div>`;
+      } else {
+        const power = sortOrder.startsWith("power") ? bestPower(id) : null;
+        if (power != null) levelHTML += `<div class="poke-power" title="Power: total of all six stats at its Level (highest owned copy)">Power <b>${power.toLocaleString("en-US")}</b></div>`;
+      }
     }
 
     // Team badges: C = Casual team slot, R = Ranked team slot (read-only; teams are edited on the Teams page).

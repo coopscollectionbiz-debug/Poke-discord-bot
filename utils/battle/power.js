@@ -1,6 +1,6 @@
 import { getSpecies } from "./data.js";
 import { computeStats } from "./stats.js";
-import { SURGE, CUTE } from "./tuning.js";
+import { SURGE, CUTE, RANKED } from "./tuning.js";
 import { createRng } from "./rng.js";
 import { cuteFactor } from "./cuteness.js";
 
@@ -16,10 +16,29 @@ export function teamPower(members) {
 // One Pokémon's Power: its six-stat total at its Level (the same sum
 // teamPower adds up per member). null when the species has no battle data.
 export function pokemonPower(speciesId, level) {
-  const species = getSpecies(Number(speciesId));
-  if (!species?.baseStats || !Number.isFinite(Number(level))) return null;
-  const s = computeStats(species.baseStats, Number(level));
+  return powerOfStats(getSpecies(Number(speciesId))?.baseStats, level);
+}
+
+// Six-stat total of a stat profile (species or Mega battleProfile) at `level`.
+export function powerOfStats(baseStats, level) {
+  if (!baseStats || !Number.isFinite(Number(level))) return null;
+  const s = computeStats(baseStats, Number(level));
   return s.hp + s.atk + s.def + s.spa + s.spd + s.spe;
+}
+
+// Power at the Ranked level (RANKED.level, 50) for every species in a levels
+// map ({ "25:normal": 16, "25:shiny": 70 } → { "25": 427 }). Ranked and wager
+// battles set every member to that Level (runBattle.js), so every copy of a
+// species has the same Ranked Power. Read-only, for the dashboard.
+export function powersAtRanked(levels) {
+  const out = {};
+  for (const key of Object.keys(levels ?? {})) {
+    const id = String(key).split(":")[0];
+    if (id in out) continue;
+    const p = pokemonPower(id, RANKED.level);
+    if (p != null) out[id] = p;
+  }
+  return out;
 }
 
 // Power for every entry of a levels map ({ "25:normal": 16 } → { "25:normal": 160 }).

@@ -105,13 +105,15 @@
           <label class="sr-only" for="sortOrder">Sort</label>
           <select id="sortOrder">
             <option value="dex">Sort: Pokédex #</option>
-            <option value="power-desc">Sort: Power (high → low)</option>
-            <option value="power-asc">Sort: Power (low → high)</option>
+            <option value="power-desc">Sort: Power at your Level (high → low)</option>
+            <option value="power-asc">Sort: Power at your Level (low → high)</option>
+            <option value="power50-desc">Sort: Power at Lv 50, Ranked (high → low)</option>
             <option value="level-desc">Sort: Level (high → low)</option>
             <option value="level-asc">Sort: Level (low → high)</option>
             <option value="newest">Sort: Newest first</option>
             <option value="name">Sort: Name (A → Z)</option>
           </select>
+          <button type="button" class="cc-info-btn" data-power-info aria-label="What is Power?" title="What is Power?">i</button>
 
           <!-- The box shows owned Pokémon only; missing ones are on the Pokédex page. -->
           <div class="toggle-group" role="group" aria-label="Show">

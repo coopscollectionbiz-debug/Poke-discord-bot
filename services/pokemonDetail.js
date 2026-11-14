@@ -15,7 +15,7 @@ import { getTraining } from "../utils/training.js";
 import { slotView } from "../utils/render/teamView.js";
 import { displaySpeciesName } from "../utils/render/names.js";
 import { RANKED } from "../utils/battle/tuning.js";
-import { megasOfSpecies } from "../utils/megas.js";
+import { megasOfSpecies, megaBattleEligibility } from "../utils/megas.js";
 import { unlockedForms, megaLineKey } from "./megaUnlocks.js";
 import { isMegaCapabilityEnabled } from "../config/features.js";
 import { toTeamObj } from "../utils/economyRules.js";
@@ -132,6 +132,9 @@ export function pokemonDetail(user, speciesId, { env = process.env } = {}) {
       id: f.id,
       name: f.name,
       unlocked: { normal: unlockedForms(user, megaLineKey(id, "normal")).includes(f.id), shiny: unlockedForms(user, megaLineKey(id, "shiny")).includes(f.id) },
+      // Ranked Power with this form in the slot: its Mega stats once it can
+      // battle; until then it fights as the base form (withMegaStats).
+      power50: megaBattleEligibility(f.id, { env }).battleReady ? sum(computeStats(f.baseStats, RANKED.level)) : null,
     }))
     : [];
 

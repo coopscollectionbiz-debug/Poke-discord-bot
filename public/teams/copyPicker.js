@@ -13,7 +13,7 @@ import { mountCopyChoice } from "/public/picker-pokemon/copyChoice.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-export function chooseCopy({ userData, pokeId, variant, name, current, exclude = [] }) {
+export function chooseCopy({ userData, pokeId, variant, name, current, exclude = [], note = null }) {
   return new Promise((resolve) => {
     const lastFocus = document.activeElement;
     const d = document.createElement("dialog");
@@ -22,6 +22,7 @@ export function chooseCopy({ userData, pokeId, variant, name, current, exclude =
     d.innerHTML = `
       <h2 id="copyPickTitle">${esc(name)}${variant === "shiny" ? " ✨" : ""}</h2>
       <p class="tm-sub">Which one goes in this slot? Each has its own Level. Trained ones (★) battle with the moves they learned from TMs.</p>
+      ${note ? `<p class="tm-sub"><b>${esc(note)}</b></p>` : ""}
       <div data-slot></div>
       <div class="tm-moves-actions" style="margin-top:12px"><button type="button" class="cc-btn" data-cancel>Cancel</button><button type="button" class="cc-btn cc-btn--primary" data-ok>Use this copy</button></div>`;
     document.body.append(d);

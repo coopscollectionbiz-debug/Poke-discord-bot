@@ -12,7 +12,7 @@
 // ==========================================================
 
 import { toast, showExpired, pageHref } from "/public/shared/shell.js";
-import { moveMeta, tmDisc } from "/public/shared/moveMeta.js";
+import { moveMeta, tmDisc, categoryBadge } from "/public/shared/moveMeta.js";
 
 const LABEL = { display: "Casual team", battle: "Ranked team" };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -78,7 +78,7 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
   ensureDialog();
   const ids = new Map(); // one request id per (copy, TM) choice
   const idFor = (k) => { if (!ids.has(k)) ids.set(k, newRequestId()); return ids.get(k); };
-  const sel = { target: uid === undefined ? null : uid === null ? "untrained" : uid, item: null, equip: {} };
+  const sel = { target: uid === undefined ? null : uid === null ? "untrained" : uid, item: null, equip: {}, cat: "" };
   let data = null;
   let note = null;
   let busy = false;
@@ -111,6 +111,13 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
     return teamsOn().every(([team, on]) => sel.equip[team] === "keep" || sel.equip[team] === "add" || (sel.equip[team]?.replace && on.moves.some((m) => m.id === sel.equip[team].replace)));
   };
 
+  // Physical / Special / Status filter, once the bag holds enough TMs to need one.
+  function catChips() {
+    if (data.tms.length < 5) return "";
+    const chip = (c, label) => `<button type="button" class="tmx-chip" data-tt-cat="${c}" aria-pressed="${sel.cat === c}">${label}</button>`;
+    return `<div class="tmx-chips tt-chips" role="group" aria-label="Move category">${chip("", "All")}${["Physical", "Special", "Status"].map((c) => chip(c, categoryBadge(c))).join("")}</div>`;
+  }
+
   function draw() {
     const keepScroll = dialog.querySelector(".tt-body")?.scrollTop ?? 0; // redraws must not jump to the top
     const t = target();
@@ -120,7 +127,7 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
         <small>${Object.entries(x.teams).map(([team, on]) => `${LABEL[team]} slot ${on.slot}`).join(" · ") || "Not on a team"}</small></label>`).join("")}</fieldset>` : "";
     const tmStep = !t ? "" : data.tms.length === 0
       ? `<p class="tt-note">You don't have any TMs. <a href="${pageHref("/public/dashboardshop/", userId)}">Buy TMs in the Shop</a>.</p>`
-      : `<fieldset><legend>Which TM?</legend>${data.tms.map((x) => {
+      : `<fieldset><legend>Which TM?</legend>${catChips()}${data.tms.filter((x) => !sel.cat || x.category === sel.cat || x.item === sel.item).map((x) => {
           const st = x.status[sel.target];
           const later = st === "teachable" ? x.learnsAt?.[sel.target] : null;
           const why = st === "known" ? "Already knows it" : st === "incompatible" ? `${esc(name)} can't learn it` : `You have ${x.owned}${later ? `<br><span class="tt-later">Learns it at Lv ${Number(later)}</span>` : ""}`;
@@ -170,6 +177,8 @@ export async function openTeachDialog({ userId, speciesId, variant, name, uid = 
   };
 
   dialog.onclick = async (e) => {
+    const chip = e.target.closest("[data-tt-cat]");
+    if (chip) { sel.cat = chip.dataset.ttCat; draw(); dialog.querySelector(`[data-tt-cat="${CSS.escape(sel.cat)}"]`)?.focus({ preventScroll: true }); return; }
     if (!e.target.closest("[data-teach]") || !ready() || busy) return;
     const t = target();
     const m = tm();

@@ -30,6 +30,7 @@ import { openMovesEditor } from "/public/teams/moves.js";
 import { chooseCopy } from "/public/teams/copyPicker.js";
 import { openItemPicker, itemIcon, claimStarter } from "/public/teams/items.js";
 import { openDetail } from "/public/picker-pokemon/detail.js";
+import { powerInfoButton } from "/public/shared/powerInfo.js";
 
 const TEAMS = ["showcase", "display", "battle"];
 const LABEL = { showcase: "Showcase team", display: "Casual team", battle: "Ranked team" };
@@ -58,7 +59,8 @@ const state = {
   data: {},              // pokemonData by id
   pokemon: {},           // owned counts
   levels: {},            // "6:normal" → Level
-  powers: {},            // "6:normal" → Power
+  powers: {},            // "6:normal" → Power at the line's real Level
+  powers50: {},          // "6" → Power at Lv 50 (Ranked and wager battles)
   trained: {},           // "6:normal" → [trained copies] (TM system)
   megaOn: false,
   megaCards: [], // GET /api/mega cards (only while Mega Evolution is on)
@@ -97,6 +99,9 @@ const isTrainedCopy = (s) => !!(s.uid && state.copies.find((r) => r[0] === s.uid
 /** The slot's own Level (its copy), else the line's best. */
 const levelOf = (s) => (s.uid && state.copies.find((r) => r[0] === s.uid)?.[3]) ?? state.levels[keyOf(s)] ?? "?";
 const powerOf = (s) => state.powers[keyOf(s)] ?? 0;
+/** Power at Lv 50, the Level Ranked battles use: the Mega form's when the slot uses one. */
+const power50Of = (s) => (s.mega && state.megaOn ? megaCard(s.mega)?.power50 : null) ?? state.powers50[s.id] ?? 0;
+const fmt = (n) => Number(n).toLocaleString("en-US");
 const megaCard = (formId) => state.megaCards.find((c) => c.formId === formId);
 const slotName = (s) => (s.mega && state.megaOn ? megaCard(s.mega)?.name ?? megaName(s) : species(s.id).name);
 /** Mega forms this exact copy can use on a team (unlocked on its line, allowed for teams). */
@@ -216,6 +221,8 @@ let focusAfter = null;
  * replace: swap out the Pokémon at that slot (drag onto a filled slot of a
  * full team). Same rules as the server.
  */
+/** The copy picker's Ranked line: every copy has the same Power there. */
+const rankedCopyNote = (t, s) => (t === "battle" ? `In Ranked, every copy has ${fmt(power50Of(s))} power at Lv ${BATTLE_LEVEL}. A higher real Level knows more moves.` : null);
 const trainedOf = (s) => state.trained[keyOf(s)] ?? [];
 
 function add(t, s, { at = null, replace = false } = {}) {
@@ -227,7 +234,7 @@ function add(t, s, { at = null, replace = false } = {}) {
     const used = list.map((m) => m.uid).filter(Boolean);
     const free = copiesOfLine(s.id, s.variant).filter((c) => !used.includes(c.uid));
     if (free.length > 1) {
-      chooseCopy({ userData: state, pokeId: s.id, variant: s.variant, name: species(s.id).name, exclude: used })
+      chooseCopy({ userData: state, pokeId: s.id, variant: s.variant, name: species(s.id).name, exclude: used, note: rankedCopyNote(t, s) })
         .then((uid) => { if (uid !== undefined) add(t, { ...s, uid }, { at, replace }); });
       return;
     }
@@ -469,7 +476,7 @@ function slotCard(t, s, i) {
   const wasAt = savedList.findIndex((m) => (s.uid && m.uid ? m.uid === s.uid : keyOf(m) === keyOf(s)));
   const change = wasAt === -1 ? "New" : wasAt !== i ? "Moved" : null;
   const lvl = isB
-    ? `<span class="tm-lv tm-lv--fixed" title="Ranked and wager battles use Lv ${BATTLE_LEVEL}"><b>Lv ${BATTLE_LEVEL}</b><small>yours Lv ${levelOf(s)}</small></span>`
+    ? `<span class="tm-lv tm-lv--fixed" title="Ranked and wager battles use Lv ${BATTLE_LEVEL}"><b>Lv ${BATTLE_LEVEL}</b><small>${fmt(power50Of(s))} power · yours Lv ${levelOf(s)}</small></span>`
     : `<span class="tm-lv"><b>Lv ${levelOf(s)}</b></span>`;
   const tags = [
     i === 0 && !sc ? `<span class="tm-tag tm-tag--lead">Lead</span>` : "",
@@ -517,6 +524,7 @@ function rules() {
     <li class="tm-rule${err ? " is-error" : mythic >= 1 ? " is-full" : ""}">Mythic <b>${mythic}/1</b></li>
     ${state.megaOn ? `<li class="tm-rule${mega >= 1 ? " is-full" : ""}">Mega <b>${mega}/1</b></li>` : ""}
     <li class="tm-rule">Slots <b>${list.length}/6</b></li>
+    ${list.length ? `<li class="tm-rule">Team power at Lv ${BATTLE_LEVEL} <b>${fmt(list.reduce((n, s) => n + power50Of(s), 0))}</b>${powerInfoButton()}</li>` : ""}
   </ul>`;
 }
 
@@ -579,6 +587,7 @@ function boxItems() {
     if ((v?.shiny ?? 0) > 0) out.push({ id, variant: "shiny", count: v.shiny });
   }
   const { q, show, sort } = state.filter;
+  const ranked = state.active === "battle";
   const qq = q.trim().toLowerCase();
   const list = out.filter((s) => {
     if (show === "shiny" && s.variant !== "shiny") return false;
@@ -587,7 +596,10 @@ function boxItems() {
     return true;
   });
   const by = {
-    power: (a, b) => powerOf(b) - powerOf(a) || a.id - b.id,
+    // Ranked fights at Lv 50: sort on that, then real Level (it decides the moves).
+    power: ranked
+      ? (a, b) => power50Of(b) - power50Of(a) || (Number(levelOf(b)) || 0) - (Number(levelOf(a)) || 0) || a.id - b.id
+      : (a, b) => powerOf(b) - powerOf(a) || a.id - b.id,
     level: (a, b) => (Number(levelOf(b)) || 0) - (Number(levelOf(a)) || 0) || a.id - b.id,
     dex: (a, b) => a.id - b.id || (a.variant === "shiny") - (b.variant === "shiny"),
     name: (a, b) => species(a.id).name.localeCompare(species(b.id).name),
@@ -603,7 +615,8 @@ function boxTile(s) {
   const shiny = s.variant === "shiny";
   const blocked = why && why.code === "mythic";
   const n = copiesOfLine(s.id, s.variant).length;
-  const label = `${sp.name}${shiny ? " (shiny)" : ""}, Lv ${levelOf(s)}${n > 1 ? `, you have ${n}` : ""}${why ? `. ${why.short}` : `. Add to your ${LABEL[t]}`}`;
+  const ranked = t === "battle";
+  const label = `${sp.name}${shiny ? " (shiny)" : ""}, ${ranked ? `${fmt(power50Of(s))} power at Lv ${BATTLE_LEVEL}, yours Lv ${levelOf(s)}` : `Lv ${levelOf(s)}`}${n > 1 ? `, you have ${n}` : ""}${why ? `. ${why.short}` : `. Add to your ${LABEL[t]}`}`;
   return `<li class="tm-tile${shiny ? " is-shiny" : ""}${blocked ? " is-blocked" : ""}${why?.code === "on" ? " is-on" : ""}">
     <button type="button" class="tm-tile-btn" data-act="add" data-id="${s.id}" data-variant="${s.variant}" aria-label="${esc(label)}" draggable="true">
       <span class="tm-tile-badges">${badges}</span>
@@ -612,7 +625,8 @@ function boxTile(s) {
       <span class="tm-tile-art"${shiny ? ` data-fx="shiny" data-fx-seed="${s.id}"` : ""}><img class="cc-sprite" src="/public/sprites/pokemon/${shiny ? "shiny" : "normal"}/${s.id}.gif" alt="" loading="lazy" onerror="this.onerror=null;this.src='/public/sprites/items/pokeball.png'"></span>
       <span class="tm-tile-name">${esc(sp.name)}</span>
       ${typeChips(s.id)}
-      <span class="tm-tile-lv">Lv ${levelOf(s)}${n > 1 ? ` · ×${n}` : ""}${isMythic(s.id) && !blocked ? ` · <b class="tier-text mythic">Mythic</b>` : ""}</span>
+      ${ranked ? `<span class="tm-tile-pw"><b>${fmt(power50Of(s))}</b> at Lv ${BATTLE_LEVEL}</span>` : ""}
+      <span class="tm-tile-lv">${ranked ? "yours " : ""}Lv ${levelOf(s)}${n > 1 ? ` · ×${n}` : ""}${isMythic(s.id) && !blocked ? ` · <b class="tier-text mythic">Mythic</b>` : ""}</span>
     </button>
     <button type="button" class="tm-tile-info" data-act="details-box" data-id="${s.id}" data-variant="${s.variant}" aria-label="${esc(sp.name)}${shiny ? " (shiny)" : ""}: details">i</button></li>`;
 }
@@ -623,13 +637,13 @@ function boxPanel(where) {
   const f = state.filter;
   const seg = (v, label) => `<button type="button" data-act="show" data-show="${v}" aria-pressed="${f.show === v}">${label}</button>`;
   return `<div class="tm-panel-head"><div>${where === "sheet" ? "" : `<h2 class="tm-h2" id="boxHeading">Add to ${LABEL[t]}</h2>`}
-      <p class="tm-sub">Tap to add.${t === "battle" ? " Locked: would break a Ranked team rule." : ""} S = Showcase, C = Casual, R = Ranked slot.</p></div></div>
+      <p class="tm-sub">Tap to add.${t === "battle" ? ` Locked: would break a Ranked team rule. Power is at Lv ${BATTLE_LEVEL}, the Level Ranked battles use. ${powerInfoButton()}` : ""} S = Showcase, C = Casual, R = Ranked slot.</p></div></div>
     <div class="tm-boxbar">
       <label class="sr-only" for="boxSearch-${where}">Search your Pokémon</label>
       <input id="boxSearch-${where}" type="search" placeholder="Search…" value="${esc(f.q)}" data-act="search" autocomplete="off">
       <label class="sr-only" for="boxSort-${where}">Sort</label>
       <select id="boxSort-${where}" data-act="sort">
-        ${[["power", "Power"], ["level", "Level"], ["dex", "Pokédex #"], ["name", "Name"]].map(([v, l]) => `<option value="${v}"${f.sort === v ? " selected" : ""}>Sort: ${l}</option>`).join("")}
+        ${[["power", t === "battle" ? `Power at Lv ${BATTLE_LEVEL}` : "Power"], ["level", "Level"], ["dex", "Pokédex #"], ["name", "Name"]].map(([v, l]) => `<option value="${v}"${f.sort === v ? " selected" : ""}>Sort: ${l}</option>`).join("")}
       </select>
       <div class="tm-seg" role="group" aria-label="Show">${seg("all", "All")}${seg("shiny", "Shiny")}${seg("free", "Not on a team")}</div>
     </div>
@@ -706,7 +720,7 @@ function onClick(e) {
     const s = team(t)[i];
     if (s) {
       const others = team(t).filter((_, k) => k !== i).map((m) => m.uid).filter(Boolean);
-      chooseCopy({ userData: state, pokeId: s.id, variant: s.variant, name: species(s.id).name, current: s.uid ?? null, exclude: others })
+      chooseCopy({ userData: state, pokeId: s.id, variant: s.variant, name: species(s.id).name, current: s.uid ?? null, exclude: others, note: rankedCopyNote(t, s) })
         .then((uid) => {
           if (uid === undefined) return;
           const list = [...team(t)];
@@ -998,6 +1012,7 @@ async function load() {
     state.pokemon = u.pokemon ?? {};
     state.levels = u.levels ?? {};
     state.powers = u.powers ?? {};
+    state.powers50 = u.powers50 ?? {};
     state.trained = u.trained ?? {};
     state.copies = Array.isArray(u.copies) ? u.copies : [];
     const norm = (list) => (Array.isArray(list) ? list.map(slotFromServer) : null);

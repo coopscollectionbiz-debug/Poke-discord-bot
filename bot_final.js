@@ -478,7 +478,7 @@ import { recordFight, challengeRecord } from "./utils/fightRecordBuild.js";
 import { fightRecords } from "./utils/fightRecords.js";
 import { createFightRecordHandlers } from "./services/fightRecordsApi.js";
 import { showRunResult, challengeNames } from "./utils/battle/playback.js";
-import { powersFromLevels } from "./utils/battle/power.js";
+import { powersFromLevels, powersAtRanked, pokemonPower } from "./utils/battle/power.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2401,6 +2401,11 @@ app.get("/api/user-pokemon", (req, res) => {
     // Read-only: each owned variant's Level and Power (six-stat total, same as /showteam).
     levels,
     powers: powersFromLevels(levels), // { "6:normal": 410 }
+    // Power at Lv 50 per species ({ "6": 534 }): Ranked and wager battles set
+    // every member to RANKED.level, so the Ranked team sorts on this.
+    powers50: powersAtRanked(levels),
+    // Each copy's Power at its own Level ({ uid: 410 }), for the Collection box.
+    copyPowers: Object.fromEntries(allCopies(u).map((c) => [c.uid, pokemonPower(c.id, c.level)]).filter(([, p]) => p != null)),
     // TM system (T5): trained copies per line, for the copy choosers in
     // donate / evolve / shiny craft / Teams. { "6:normal": [{ uid, rev, tmMoves, teams }] }
     trained: trainedSummary(u),

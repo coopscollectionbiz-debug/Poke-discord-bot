@@ -12,11 +12,15 @@
 // ======================================================================
 
 import { showMessage, isExpired, showExpired } from "/public/shared/shell.js";
-import { moveMeta, tmDisc } from "/public/shared/moveMeta.js";
+import { moveMeta, tmDisc, categoryBadge } from "/public/shared/moveMeta.js";
+import { filterTms } from "/public/dashboardshop/tmFilter.js";
 
 const TYPES = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"];
 const TIER_LABEL = { basic: "Basic", standard: "Standard", power: "Power", premium: "Premium", elite: "Elite" };
-const state = { userId: null, data: null, filter: { q: "", type: "", tier: "", mine: true } };
+const CATEGORIES = ["Physical", "Special", "Status"];
+const SORTS = { learners: "Most learners", power: "Power", "price-asc": "Price: low → high", "price-desc": "Price: high → low", name: "Name" };
+const DEFAULT_FILTER = { q: "", type: "", tier: "", mine: true, cat: "", sort: "learners" };
+const state = { userId: null, data: null, filter: { ...DEFAULT_FILTER } };
 
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const fmt = (n) => Number(n ?? 0).toLocaleString("en-US");
@@ -54,9 +58,17 @@ function mount() {
         <select id="tmxType"><option value="">All types</option>${TYPES.map((t) => `<option>${t}</option>`).join("")}</select></label>
       <label class="tmx-field"><span class="sr-only">Price tier</span>
         <select id="tmxTier"><option value="">All prices</option>${Object.entries(TIER_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></label>
+      <label class="tmx-field"><span class="sr-only">Sort</span>
+        <select id="tmxSort">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}">Sort: ${v}</option>`).join("")}</select></label>
+    </div>
+    <div class="tmx-filters">
+      <div class="tmx-chips" role="group" aria-label="Move category">
+        <button type="button" class="tmx-chip" data-cat="" aria-pressed="true">All</button>
+        ${CATEGORIES.map((c) => `<button type="button" class="tmx-chip" data-cat="${c}" aria-pressed="false">${categoryBadge(c)}</button>`).join("")}
+      </div>
       <label class="tmx-check"><input type="checkbox" id="tmxMine" checked /> Only TMs my Pokémon can learn</label>
     </div>
-    <p class="tmx-count" id="tmxCount" aria-live="polite"></p>
+    <p class="tmx-count"><span id="tmxCount" aria-live="polite"></span> <button type="button" class="tmx-clear" id="tmxClear" hidden>Clear filters</button></p>
     <div class="shop-grid tmx-grid" id="tmxGrid"></div>`;
   const weekly = main.querySelector('[aria-labelledby="weeklyHeading"]');
   main.insertBefore(section, weekly ?? null);
@@ -65,6 +77,21 @@ function mount() {
   section.querySelector("#tmxType").addEventListener("change", (e) => { state.filter.type = e.target.value; render(); });
   section.querySelector("#tmxTier").addEventListener("change", (e) => { state.filter.tier = e.target.value; render(); });
   section.querySelector("#tmxMine").addEventListener("change", (e) => { state.filter.mine = e.target.checked; render(); });
+  section.querySelector("#tmxSort").addEventListener("change", (e) => { state.filter.sort = e.target.value; render(); });
+  section.querySelector(".tmx-chips").addEventListener("click", (e) => {
+    const chip = e.target.closest("[data-cat]");
+    if (!chip) return;
+    state.filter.cat = chip.dataset.cat;
+    render();
+  });
+  section.querySelector("#tmxClear").addEventListener("click", () => {
+    state.filter = { ...DEFAULT_FILTER, sort: state.filter.sort };
+    section.querySelector("#tmxQ").value = "";
+    section.querySelector("#tmxType").value = "";
+    section.querySelector("#tmxTier").value = "";
+    section.querySelector("#tmxMine").checked = true;
+    render();
+  });
   section.querySelector("#tmxGrid").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-tm]");
     if (btn) confirmBuy(btn.dataset.tm);
@@ -72,11 +99,13 @@ function mount() {
   render();
 }
 
-function visible() {
-  const { q, type, tier, mine } = state.filter;
-  return state.data.tms
-    .filter((t) => (!q || t.name.toLowerCase().includes(q)) && (!type || t.type === type) && (!tier || t.tier === tier) && (!mine || t.teaches > 0))
-    .sort((a, b) => b.teaches - a.teaches || a.price - b.price || a.name.localeCompare(b.name));
+const visible = () => filterTms(state.data.tms, state.filter);
+
+/** "12 of 96 TMs · Physical · Fire" — what is filtered, so it is clear how to undo it. */
+function countLine(n) {
+  const f = state.filter;
+  const parts = [f.cat, f.type, f.tier && TIER_LABEL[f.tier], f.q && `"${f.q}"`, f.mine && "My Pokémon can learn"].filter(Boolean);
+  return [`${fmt(n)} of ${fmt(state.data.tms.length)} TMs`, ...parts].join(" · ");
 }
 
 function card(t) {
@@ -95,7 +124,10 @@ function render() {
   const grid = document.getElementById("tmxGrid");
   if (!grid) return;
   const list = visible();
-  document.getElementById("tmxCount").textContent = `${list.length} of ${state.data.tms.length} TMs`;
+  document.getElementById("tmxCount").textContent = countLine(list.length);
+  const f = state.filter;
+  document.getElementById("tmxClear").hidden = !(f.q || f.type || f.tier || f.cat || !f.mine);
+  for (const chip of document.querySelectorAll(".tmx-chip")) chip.setAttribute("aria-pressed", String(chip.dataset.cat === f.cat));
   grid.innerHTML = list.length ? list.map(card).join("") : `<p class="tmx-empty">No TMs match these filters.</p>`;
 }
 

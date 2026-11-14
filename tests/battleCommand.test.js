@@ -19,6 +19,7 @@ import { blockRematch, isRematchBlocked } from "../utils/battle/rematch.js";
 import { PLAYBACK } from "../utils/battle/tuning.js";
 import { GifReader } from "omggif";
 import { portraitBox, FRAME_WIDTH } from "../utils/battle/render.js";
+import { registerHooks } from "module";
 
 PLAYBACK.delayMs = 0;
 
@@ -454,6 +455,61 @@ section("Missing channel permissions");
   await t.run("A", "B", 50);
   assertEqual(t.log.replies.length, 2, "both modes are refused up front");
   assertEqual([t.trainerData.A.cc, t.trainerData.A.battle], [100, null], "nothing is held or recorded");
+}
+
+section("A wager fight that fails returns both Stakes (review I4)");
+{
+  // The full sim, swapped for one that always throws (as tests/fightFailure.test.js
+  // does), run inline: the fight fails the way a crashed sim worker would.
+  registerHooks({
+    load(url, context, next) {
+      if (url.endsWith("/utils/battle/showdown/simulate.js")) {
+        return { format: "module", shortCircuit: true, source: 'export function simulateFull() { throw new Error("test: the sim failed"); }' };
+      }
+      return next(url, context);
+    },
+  });
+  process.env.FULL_SIM_ENABLED = "1";
+  process.env.SIM_THREADS = "0";
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const t = harness();
+    await t.run("A", "B", 50);
+    const click = t.button("B", `wager_accept:${t.trainerData.A.pendingWager.nonce}`);
+    await t.collectors[0].h.collect(click);
+    assertEqual([t.trainerData.A.cc, t.trainerData.B.cc, t.trainerData.A.pendingWager], [100, 100, null], "both players get their Stake back");
+    assertEqual(t.log.messages.length, 1, "no battle is posted");
+    assertTrue(t.log.messages[0].edits.at(-1)?.content.includes("couldn't run"), "the offer says the fight couldn't run");
+  } finally {
+    console.warn = warn;
+    delete process.env.FULL_SIM_ENABLED;
+    delete process.env.SIM_THREADS;
+  }
+}
+
+section("A Rematch fight that fails closes the request and counts nothing");
+{
+  // The same always-failing sim as above (the hook stays registered).
+  process.env.FULL_SIM_ENABLED = "1";
+  process.env.SIM_THREADS = "0";
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const t = harness();
+    atLimit(t);
+    await t.run("A", "B");
+    const [request] = t.log.messages;
+    await t.collectors[0].h.collect(t.button("B", `rematch_accept:${requestNonce(t)}`));
+    assertEqual(request.edits.at(-1), { content: "Rematch canceled. The fight couldn't run.", components: [] }, "the request says the fight couldn't run");
+    assertEqual(t.log.messages.length, 1, "no battle is posted");
+    assertEqual([t.trainerData.A.rematchRequests, t.trainerData.A.battle.vs.B], [undefined, 3], "the request is settled and no battle is counted");
+    assertTrue(!isRematchBlocked(t.trainerData.A, "B", today()), "nobody is blocked from asking again");
+  } finally {
+    console.warn = warn;
+    delete process.env.FULL_SIM_ENABLED;
+    delete process.env.SIM_THREADS;
+  }
 }
 
 console.log = quiet;

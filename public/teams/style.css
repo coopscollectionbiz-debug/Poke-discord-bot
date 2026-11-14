@@ -112,6 +112,16 @@
 .tm-notice { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cc-gold); background: var(--cc-gold-soft); }
 .tm-notice p { margin: 0; flex: 1 1 240px; color: var(--cc-text); font-size: 13.5px; }
 
+/* Battle plan row (full sim): the Team's plan, what it does, and its readiness. */
+.tm-plan { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; align-items: center; margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--cc-line); background: var(--cc-surface-sunken); }
+.tm-plan-label { font-weight: 800; font-size: 13.5px; color: var(--cc-text); }
+.tm-plan-select { min-height: 44px; min-width: 0; max-width: 100%; border-radius: 10px; border: 1.5px solid var(--cc-line); background: var(--cc-surface); color: var(--cc-text); font-weight: 700; padding: 0 10px; }
+.tm-plan-select:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--cc-ring-blue); }
+.tm-plan-blurb, .tm-plan-ready { grid-column: 1 / -1; margin: 0; }
+.tm-plan-ready { font-size: 13.5px; font-weight: 700; color: var(--cc-red); }
+.tm-plan-ready.is-ready { color: var(--cc-green); }
+.tm-moves-kept { padding: 0 16px; margin: 0 0 8px; }
+
 
 /* ---------- Box ---------- */
 .tm-boxbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
@@ -274,9 +284,13 @@ dialog.tm-moves::backdrop { background: #05070fcc; }
 .tm-movechip { padding: 4px 10px; border-radius: 999px; background: var(--cc-blue-soft); border: 1px solid var(--cc-blue); font-size: 12.5px; font-weight: 800; }
 .tm-moves-tools { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 16px 0; }
 .tm-moves-tools .cc-btn { padding: 0 12px; font-size: 13px; }
-.tm-movelist { list-style: none; margin: 0; padding: 10px 16px; display: grid; gap: 6px; max-height: 46dvh; overflow: auto; }
-.tm-move { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 10px; border-radius: 10px; border: 1.5px solid var(--cc-line); background: var(--cc-surface-raised); cursor: pointer; }
+.tm-movelist { list-style: none; margin: 0; padding: 10px 16px; display: grid; gap: 9px; max-height: 46dvh; overflow: auto; }
+.tm-move { position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 10px; border-radius: 10px; border: 1.5px solid var(--cc-line); background: var(--cc-surface-raised); cursor: pointer; }
 .tm-move input { width: 20px; height: 20px; accent-color: var(--cc-blue); }
+/* Recommended moves: a gold border and a tab on the row's top-right edge,
+   sized to sit in the gap above the row (.tm-movelist gap). */
+.tm-move.is-rec { border-color: var(--cc-gold); background: linear-gradient(90deg, var(--cc-surface-raised) 60%, var(--cc-gold-soft)); }
+.tm-move-rec { position: absolute; top: -8px; right: 12px; padding: 2px 8px; border-radius: 999px; background: var(--cc-gold); color: var(--cc-ink); font-size: 9.5px; font-weight: 900; line-height: 1.2; letter-spacing: .06em; text-transform: uppercase; pointer-events: none; }
 .tm-move.is-on { border-color: var(--cc-blue); background: #4f8cff1f; }
 .tm-move.is-full { opacity: .5; cursor: not-allowed; }
 .tm-move-name { flex: 1; font-weight: 800; font-size: 14px; }

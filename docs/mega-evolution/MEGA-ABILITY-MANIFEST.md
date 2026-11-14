@@ -1,5 +1,7 @@
 # Mega Evolution: ability implementation manifest (Phase M0)
 
+> **Full sim.** With `FULL_SIM_ENABLED` on, Mega abilities run on Pokémon Showdown's engine, and its behavior is the rule. Six differ from `utils/battle/abilities.js`: Sheer Force also removes secondary effects, Berserk ignores multi-hit moves, Intimidate is blocked by more abilities (Clear Body, Oblivious, Own Tempo, Guard Dog, Mirror Armor and others), Trace copies a random foe's ability with Showdown's ban list, and Protean and Speed Boost re-arm and skip the switch-in turn now that Pokémon switch. The 13 no-effect abilities (Prankster, Magic Bounce, Regenerator and the rest) take effect. See `docs/superpowers/specs/2026-11-12-full-sim-design.md`.
+>
 > **Superseded in Phase M2.** Abilities are now implemented in `utils/battle/abilities.js` (57 implemented, 13 no-effect). The current per-ability coverage table is in `M2-IMPLEMENTATION-REPORT.md` §6; the classification changed for Trace (now has an effect) and Inner Focus (blocks Intimidate). The text below is the M0 plan.
 
 Generated from `data/pokedex/mega-abilities.json` (authoritative; built by `tools/generate-megas.mjs` from `tools/lib/megaRules.mjs`). **No ability is implemented in M0.** Per D-5, Mega gameplay cannot launch until every battle-relevant ability (categories 2 and 3) is implemented and tested.

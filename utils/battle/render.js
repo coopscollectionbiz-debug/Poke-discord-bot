@@ -24,6 +24,8 @@ import { typeStyle, COLOR as TOKENS } from "../render/tokens.js";
 import { isMegaId, megaSpriteRecord } from "../megas.js";
 import { encodeFrames } from "../render/gif.js";
 import { unionBox, pokemonLoopFit, loopPlan, fitLoop, spriteTime, STEP_MS, MAX_GIF_BYTES } from "../render/spriteLoops.js";
+import { ANIMATION, hitsTimeline, STAT_LABELS } from "./timeline.js";
+import { drawEffect, tinted, tintAt, jitterAt, STATUS_COLORS, CHIP_COLORS } from "./fx.js";
 
 const FONT = "system-ui, 'DejaVu Sans', 'Noto Sans', Arial, sans-serif";
 const SPRITES = new URL("../../public/sprites/pokemon/", import.meta.url);
@@ -34,21 +36,13 @@ const ROW_H = 178;
 const GAP = 18; // between the rows, where the turn badge sits
 const TEXT_H = 64;
 const H = PAD + ROW_H * 2 + GAP + PAD + TEXT_H + PAD;
-const ROW_TOP = [PAD, PAD + ROW_H + GAP];
+export const ROW_TOP = [PAD, PAD + ROW_H + GAP];
 const GOLD = "#f5c84c";
 const INK = "#0e1120";
 const MEGA_TAG = TOKENS.mega; // the shared Mega colour (dashboard --cc-mega)
 
-// GIF timing: 100 ms frames; an attack takes 7 of them, then the scene holds
-// with sprites still moving. Discord ignores a long last-frame delay and loops
-// a GIF once its regular frames run out, replaying the turn (HP jumps back
-// up), so each turn runs turnMs on regular frames: longer than the ~2.5-2.8 s
-// a screen recording measured between playback updates. The final frame
-// still asks for the GIF maximum (~11 min) for viewers that honor it.
-// Start and result images loop: with POKEMON_LOOP_FIT on, over one fitted
-// loop of their sprites at 50 ms steps (idleTiming); else idleFrames per
-// text screen.
-export const ANIMATION = { delayMs: 100, eventFrames: 7, holdFrames: 10, idleFrames: 20, turnMs: 4000, freezeMs: 655_350 };
+// GIF timing (ANIMATION) lives with the replay's timeline, which paces by it.
+export { ANIMATION };
 
 export function pickFrameTurns(totalTurns, frames) {
   const turns = Array.from({ length: frames }, (_, i) => Math.max(1, Math.round((totalTurns * (i + 1)) / frames)));
@@ -176,28 +170,36 @@ function fitText(ctx, text, maxWidth) {
 }
 
 // Game-style HP bar: an "HP" tag and a rounded bar that turns yellow below
-// half and red below a fifth. Drawn once per HP value and copied (drawStamp).
-function drawHpBar(ctx, cx, y, frac) {
-  if (!drawStamp(ctx, `hp:${frac}`, cx, y, 61, 3, 122, 20, (c, x, yy) => paintHpBar(c, x, yy, frac))) return paintHpBar(ctx, cx, y, frac);
+// half and red below a fifth. A status condition (Battle FX) takes the HP
+// tag's place, in its color: BRN, PSN, TOX, PAR, SLP, FRZ. Drawn once per
+// HP value and tag and copied (drawStamp).
+function drawHpBar(ctx, cx, y, frac, status = "") {
+  if (!drawStamp(ctx, status ? `hp:${frac}:${status}` : `hp:${frac}`, cx, y, 61, 3, 122, 20, (c, x, yy) => paintHpBar(c, x, yy, frac, status))) return paintHpBar(ctx, cx, y, frac, status);
   ctx.font = `800 8px ${FONT}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = frac <= 0 ? "#3a4256" : frac > 0.5 ? "#9af5b4" : frac > 0.2 ? "#fde48b" : "#f9a3a3";
 }
 
-function paintHpBar(ctx, cx, y, frac) {
+// Dark text on a light tag (paralysis, sleep, freeze), white on a dark one.
+const tagInk = (color) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? INK : "#ffffff";
+};
+
+function paintHpBar(ctx, cx, y, frac, status = "") {
   const w = 116, h = 8, tag = 22, x = cx - w / 2;
   ctx.fillStyle = INK;
   pill(ctx, x, y, w, h + 6);
   ctx.fill();
-  ctx.fillStyle = "#f6b73c";
+  ctx.fillStyle = status ? STATUS_COLORS[status] : "#f6b73c";
   pill(ctx, x + 3, y + 3, tag, h);
   ctx.fill();
-  ctx.fillStyle = "#3b2a05";
-  ctx.font = `800 8px ${FONT}`;
+  ctx.fillStyle = status ? tagInk(STATUS_COLORS[status]) : "#3b2a05";
+  ctx.font = status ? `800 7px ${FONT}` : `800 8px ${FONT}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("HP", x + 3 + tag / 2, y + 3 + h / 2 + 0.5);
+  ctx.fillText(status ? status.toUpperCase() : "HP", x + 3 + tag / 2, y + 3 + h / 2 + 0.5);
   const tx = x + tag + 6, tw = w - tag - 9;
   ctx.fillStyle = "#3a4256";
   pill(ctx, tx, y + 3, tw, h);
@@ -249,6 +251,35 @@ function paintBall(ctx, cx, cy, alive) {
   ctx.arc(cx, cy, 2.2, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
+}
+
+// Stat chips (Battle FX): the fighting Pokémon's stat changes at its tile's
+// top-left, red for a raise and blue for a drop ("ATK+2"), in stat order, at
+// most two lines. On a Mega slot they stop short of the MEGA tag at the top-right.
+const CHIP_ORDER = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"];
+function drawChips(ctx, cx, top, chips, mega) {
+  ctx.font = `800 9px ${FONT}`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  const x0 = cx - LAYOUT.tileW / 2 + 6, limit = mega ? cx - 6 : cx + LAYOUT.tileW / 2 - 6;
+  let x = x0, line = 0;
+  for (const stat of CHIP_ORDER) {
+    const n = chips[stat];
+    if (!n) continue;
+    const text = `${STAT_LABELS[stat]}${n > 0 ? "+" : ""}${n}`;
+    const w = Math.ceil(ctx.measureText(text).width) + 8;
+    if (x + w > limit) {
+      if (++line > 1 || x0 + w > limit) return; // the text box names whatever doesn't fit
+      x = x0;
+    }
+    const y = top + 30 + line * 15;
+    ctx.fillStyle = n > 0 ? CHIP_COLORS.up : CHIP_COLORS.down;
+    pill(ctx, x, y, w, 13);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(text, x + 4, y + 7);
+    x += w + 2;
+  }
 }
 
 function drawTag(ctx, text, right, y, color) {
@@ -384,22 +415,32 @@ function drawAward(ctx, award, icon, k) {
   spots.forEach(([x, y], j) => drawSparkle(ctx, x, y, 4 + 10 * Math.abs(Math.sin(((k + 3 * j) * Math.PI) / 12)), GOLD));
 }
 
-// What one GIF frame shows: everyone's HP, who is mid-attack, and the text.
-function frameState(f, { hpBefore, events }) {
-  const hp = hpBefore.map((row) => [...row]);
-  if (!events.length) return { hp, lunge: null, hidden: null, lines: null };
-  const done = Math.min(events.length, Math.floor(f / ANIMATION.eventFrames));
-  for (let e = 0; e < done; e++) {
-    hp[1 - events[e].side][events[e].targetSlot] = events[e].hpAfter;
-    if ("userHpAfter" in events[e]) hp[events[e].side][events[e].slot] = events[e].userHpAfter;
+// What one GIF frame shows: everyone's HP, who is mid-attack, the text, the
+// status tags and stat chips, who is in front, and a beat's effect. The
+// timeline (utils/battle/timeline.js) gives each segment's frames and its
+// state at its start; past the last one, its end state holds.
+function frameState(f, tl) {
+  const seg = tl.segments.find((s) => f >= s.start && f < s.start + s.frames);
+  if (!seg) {
+    const last = tl.segments.at(-1);
+    const lines = !last ? null : last.kind === "hit" ? last.event : { text: last.text };
+    return { hp: tl.end.hp.map((row) => [...row]), lunge: null, hidden: null, lines, marks: tl.end.marks, active: tl.end.active, fx: null };
   }
-  if (done === events.length) return { hp, lunge: null, hidden: null, lines: events.at(-1) };
-  const e = events[done];
-  const phase = f % ANIMATION.eventFrames;
+  const hp = seg.hp.map((row) => [...row]);
+  const phase = f - seg.start;
+  if (seg.kind === "beat") {
+    // HP moves over the beat's frames 2-5 (fewer when the image's beats are capped); the tag or chip pops in at frame 2.
+    const k = Math.min(1, Math.max(0, (phase - 2) / Math.max(1, seg.frames - 5)));
+    for (const [s, i, from, to] of seg.hpChanges) hp[s][i] = from + (to - from) * k;
+    return { hp, lunge: null, hidden: null, lines: { text: seg.text }, marks: phase >= 2 ? seg.marksAfter : seg.marks, active: seg.active, fx: { seg, phase: phase / seg.frames } };
+  }
+  if (seg.kind === "line") return { hp, lunge: null, hidden: null, lines: { text: seg.text }, marks: seg.marks, active: seg.active, fx: null };
+  const e = seg.event;
   const from = hp[1 - e.side][e.targetSlot];
   // Lunge (frames 0-1), flash on impact (2, 4), HP drains (2-5), effect text (4+),
-  // then the attacker's own HP moves for drain, recoil or a crash (4-6).
-  if (phase >= 2) hp[1 - e.side][e.targetSlot] = from + (e.hpAfter - from) * Math.min(1, (phase - 2) / 3);
+  // then the attacker's own HP moves for drain, recoil or a crash (4-6). A
+  // status move has no hpAfter: the target's HP stays as it was.
+  if ("hpAfter" in e && phase >= 2) hp[1 - e.side][e.targetSlot] = from + (e.hpAfter - from) * Math.min(1, (phase - 2) / 3);
   if ("userHpAfter" in e && phase >= 4) {
     const own = hp[e.side][e.slot];
     hp[e.side][e.slot] = own + (e.userHpAfter - own) * Math.min(1, (phase - 4) / 2);
@@ -409,8 +450,17 @@ function frameState(f, { hpBefore, events }) {
     lunge: phase < 2 ? { side: e.side, slot: e.slot, dy: (e.side === 0 ? 1 : -1) * (phase === 0 ? 4 : 8) } : null,
     hidden: e.damage > 0 && (phase === 2 || phase === 4) ? { side: 1 - e.side, slot: e.targetSlot } : null,
     lines: phase >= 4 ? e : { ...e, partial: true },
+    marks: seg.marks,
+    active: seg.active,
+    fx: null,
   };
 }
+
+// A beat's line in the text box: its first sentence on top, as the games wrap.
+const beatLines = (text) => {
+  const [first, ...rest] = text.split(/(?<=!|\.\.\.) /);
+  return [first, rest.join(" ")];
+};
 
 /**
  * Renders one playback update as an animated GIF.
@@ -432,8 +482,15 @@ function frameState(f, { hpBefore, events }) {
  * - theme (/challenge only): { type (the opponent's, or null), badgeFile (in
  *   the center pill, or null), award: { screen, badgeFile, title } on the
  *   text screen at index `screen`, or null }
+ * - timeline (Battle FX, full sim): the turn's segments from turnTimeline,
+ *   in place of `events`; without it, `events` play as today
+ * - marks: status tags and stat chips for a start or result image
+ *   (marksAt); a turn image takes them from its timeline
+ * - chipRoom: keep a tier backdrop's effects off the stat chips' corner.
+ *   Playback sets it on every image of a full-sim replay with Battle FX on,
+ *   so the backdrop doesn't move between that replay's images
  */
-export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], tiers = [null, null], theme = null, clockMs = 0, env = process.env }) {
+export async function renderBattleFrame({ sides, hpBefore, events = [], badge = "VS", screens = [["", ""]], surgeSide = null, winnerSide = null, sprites = new Map(), trainers = [null, null], tiers = [null, null], theme = null, clockMs = 0, env = process.env, active: inFront = null, timeline = null, marks: still = null, chipRoom = false }) {
   const fx = cardTrainerFx(env);
   const fitted = pokemonLoopFit(env);
   const clock = fitted ? clockMs : 0;
@@ -447,12 +504,19 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
   };
   const live = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>
     load(s, i, hpBefore[s][i] > 0 ? m.variant : "grayscale")))));
-  const faints = (s, i) => events.some((e) =>
-    (e.fainted && 1 - e.side === s && e.targetSlot === i) || (e.userFainted && e.side === s && e.slot === i));
+  const tl = timeline ?? hitsTimeline(events, hpBefore, inFront);
+  const isTurn = tl.segments.length > 0; // a turn whose only moments are beats is still a turn image
+  // Who faints in this image: a hit's knockout, or a beat's (a burn KO).
+  const faints = (s, i) => tl.segments.some((seg) => (seg.kind === "hit"
+    ? (seg.event.fainted && 1 - seg.event.side === s && seg.event.targetSlot === i) || (seg.event.userFainted && seg.event.side === s && seg.event.slot === i)
+    : seg.kind === "beat" && seg.hpChanges.some(([ss, ii, , to]) => ss === s && ii === i && to === 0))
+    || tl.end.hp[s]?.[i] === 0); // a knockout that's neither (sandstorm, hazards, a self-KO by an item)
   const gray = await Promise.all(sides.map((side, s) => Promise.all(side.members.map((m, i) =>
     (hpBefore[s][i] > 0 && faints(s, i) ? load(s, i, "grayscale") : null)))));
   // The fighting pair: each side's first Pokémon still standing (as in the sim).
-  const active = winnerSide === null ? hpBefore.map((row) => row.findIndex((f) => f > 0)) : [-1, -1];
+  // inFront: who's in front (full sim, after a U-turn or a drag); otherwise the first with HP left.
+  const inFrontAtStart = inFront ?? hpBefore.map((row) => row.findIndex((f) => f > 0));
+  const activeOf = (state) => (winnerSide === null ? state.active ?? inFrontAtStart : [-1, -1]);
   const cached = (key, load) => {
     if (!sprites.has(key)) sprites.set(key, load());
     return sprites.get(key);
@@ -558,6 +622,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
       fill(cx - 66, floor - 20, 132, 40); // floor + ring
       fill(cx - 62, top + 136, 124, 40); // name, Level, HP
       fill(cx + LAYOUT.tileW / 2 - 70, top + 28, 64, 22); // MEGA tag
+      if (chipRoom) fill(cx - LAYOUT.tileW / 2 + 4, top + 28, LAYOUT.tileW / 2 + 2, 34); // stat chips (Battle FX)
       for (const sp of [live[s][i], gray[s][i]]) if (sp) fill(cx - sp.width / 2, floor + 6 - sp.height - 8, sp.width, sp.height + 16);
     });
     fill(W / 2 - 110, LAYOUT.pillY - 4, 220, 44); // the turn badge
@@ -572,9 +637,9 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 
   // Each frame's time: the old 100 ms steps (turn images, and everything
   // with POKEMON_LOOP_FIT=0), or a start or result image's fitted loop.
-  const stepped = steppedTiming({ events, screens, clock });
+  const stepped = steppedTiming({ turnFrames: isTurn ? tl.minFrames : 0, screens, clock });
   let timing = stepped;
-  if (fitted && !events.length) {
+  if (fitted && !isTurn) {
     // The sprites that animate: every standing Pokémon's (a fainted one shows its first frame).
     const anims = [...new Set(sides.flatMap((side, s) => side.members.map((_, i) => (hpBefore[s][i] > 0 ? live[s][i] : null))))]
       .filter((a) => a && a.gif.numFrames() > 1);
@@ -604,7 +669,9 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 
   let T = timing;
   const draw = (f) => {
-    const state = frameState(f, { hpBefore, events });
+    const state = frameState(f, tl);
+    const active = activeOf(state);
+    const marks = isTurn ? state.marks : still;
     const ms = T.ms(f);
     ctx.drawImage(base, 0, 0);
     for (let s = 0; s < 2; s++) {
@@ -636,21 +703,32 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
         drawSoftPlatform(ctx, cx, floor, fighting ? 56 : 52, fighting ? 14 : 12, tints[s], { u: 2, peak: fighting ? 0.9 : 0.4 });
         if (fighting && frac > 0) drawRing(ctx, cx, floor, T.ringPhase(f), tints[s] ?? "#c9cfe0");
 
-        // Sprite: animated while standing, grayscale once fainted.
+        // Sprite: animated while standing, grayscale once fainted. During a
+        // beat on this Pokémon it may be tinted (freeze, a burn's flash) or shake (paralysis).
         const hidden = state.hidden?.side === s && state.hidden.slot === i;
         const sprite = frac <= 0 ? (gray[s][i] ?? live[s][i]) : live[s][i];
+        const beat = state.fx?.seg.side === s && state.fx.seg.slot === i ? state.fx : null;
+        let spriteBox = { cx, top: floor - 60, floor, w: 64, h: 60 };
         if (sprite && !hidden) {
-          const img = play(sprite, frac <= 0 ? 0 : T.spriteMs(sprite, f));
+          let img = play(sprite, frac <= 0 ? 0 : T.spriteMs(sprite, f));
+          const tint = beat && frac > 0 ? tintAt(beat.seg, beat.phase) : null;
+          if (tint?.alpha > 0) img = tinted(img, tint.color, tint.alpha);
           const dy = state.lunge?.side === s && state.lunge.slot === i ? state.lunge.dy : 0;
+          const dx = beat ? jitterAt(beat.seg, beat.phase) : 0;
           ctx.globalAlpha = frac <= 0 ? 0.45 : fighting || active[s] === -1 ? 1 : 0.7;
           // Anchored on the box every frame fits in, so a flyer rests above
           // the floor and never sinks through it (POKEMON_LOOP_FIT=0: the GIF's own frame).
           if (fitted) {
             const ub = unionBox(sprite);
-            ctx.drawImage(img, Math.round(cx - (ub.x + ub.w / 2)), Math.round(floor + 4 - (ub.y + ub.h) + dy));
-          } else ctx.drawImage(img, Math.round(cx - sprite.width / 2), Math.round(floor + 6 - sprite.height + dy));
+            ctx.drawImage(img, Math.round(cx - (ub.x + ub.w / 2)) + dx, Math.round(floor + 4 - (ub.y + ub.h) + dy));
+            spriteBox = { cx, top: floor + 4 - ub.h + dy, floor, w: ub.w, h: ub.h };
+          } else {
+            ctx.drawImage(img, Math.round(cx - sprite.width / 2) + dx, Math.round(floor + 6 - sprite.height + dy));
+            spriteBox = { cx, top: floor + 6 - sprite.height + dy, floor, w: sprite.width, h: sprite.height };
+          }
           ctx.globalAlpha = 1;
         }
+        if (beat) drawEffect(ctx, beat.seg, spriteBox, beat.phase);
 
         // Name, Level, and HP. The label and its widths are the same every
         // frame, so they're measured once; the text is drawn once per colour
@@ -675,8 +753,9 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
           ctx.font = `600 12px ${FONT}`;
           ctx.fillStyle = levelColor;
         } else paintLabel(ctx, startX, top + 152);
-        drawHpBar(ctx, cx, top + 158, frac);
+        drawHpBar(ctx, cx, top + 158, frac, frac > 0 ? marks?.status?.[s]?.[i] ?? "" : "");
         if (m.megaForm) drawTag(ctx, "MEGA", Math.round(cx + LAYOUT.tileW / 2 - 8), top + 30, frac <= 0 ? "#7d8396" : MEGA_TAG);
+        if (fighting && frac > 0 && marks?.chips?.[s]) drawChips(ctx, cx, top, marks.chips[s], Boolean(m.megaForm));
       }
     }
 
@@ -703,7 +782,7 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     ctx.fillText(badge, bx + icon + (bw - icon) / 2, by + bh / 2 + 0.5);
 
     const screen = T.screen(f);
-    if (theme?.award && !events.length && screen === theme.award.screen) drawAward(ctx, theme.award, awardIcon, T.awardTick(f));
+    if (theme?.award && !isTurn && screen === theme.award.screen) drawAward(ctx, theme.award, awardIcon, T.awardTick(f));
 
     // Text box, like the games'.
     const ty = ROW_TOP[1] + ROW_H + PAD;
@@ -718,8 +797,10 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
     ctx.textBaseline = "alphabetic";
     ctx.font = `600 17px ${FONT}`;
     const lineW = W - 2 * PAD - 36;
-    const [line1, line2] = state.lines?.partial ? [turnText(state.lines, sides)[0], ""]
-      : state.lines ? wrapLines(...turnText(state.lines, sides), (t) => ctx.measureText(t).width <= lineW)
+    const fits = (t) => ctx.measureText(t).width <= lineW;
+    const [line1, line2] = state.lines?.text != null ? wrapLines(...beatLines(state.lines.text), fits)
+      : state.lines?.partial ? [turnText(state.lines, sides)[0], ""]
+      : state.lines ? wrapLines(...turnText(state.lines, sides), fits)
       : screens[screen];
     ctx.fillText(fitText(ctx, line1 ?? "", lineW), PAD + 18, ty + 27);
     ctx.fillText(fitText(ctx, line2 ?? "", lineW), PAD + 18, ty + 51);
@@ -728,13 +809,14 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
   // One palette for the whole image, from its first and last frames, so a
   // color that only shows up later (a red HP bar, a fainted gray) is in it,
   // plus the award screen's first frame when there is one (its gold and the
-  // dimmed field). Frames are opaque, so the canvas's premultiplied alpha
+  // dimmed field), and the middle of each kind of beat (flame orange, ice blue). Frames are opaque, so the canvas's premultiplied alpha
   // changes nothing. utils/render/gif.js writes only what changed per frame.
   const background = base.getContext("2d").getImageData(0, 0, W, H).data;
   const encode = (timing) => {
     T = timing;
-    const award = theme?.award && !events.length ? [timing.screenStart(theme.award.screen)] : [];
-    return encodeFrames(canvas, draw, timing.total, { background, sample: [0, ...award, timing.total - 1], delay: timing.delay });
+    const award = theme?.award && !isTurn ? [timing.screenStart(theme.award.screen)] : [];
+    const beats = isTurn ? tl.sample : [];
+    return encodeFrames(canvas, draw, timing.total, { background, sample: [0, ...award, ...beats, timing.total - 1], delay: timing.delay });
   };
   const gif = await encode(timing);
   // Too big (8 MB, as for cards): the old 2 s per screen.
@@ -742,19 +824,18 @@ export async function renderBattleFrame({ sides, hpBefore, events = [], badge = 
 }
 
 /**
- * The old timing: ANIMATION.delayMs frames; a turn image runs its hits then
- * holds to turnMs and freezes; a start or result image shows each text
- * screen for idleFrames. Sprites, the ring and backdrops follow `clock`.
+ * The old timing: ANIMATION.delayMs frames; a turn image runs its timeline's
+ * minFrames (its hits and beats, then the hold to past the next update) and
+ * freezes; a start or result image shows each text screen for idleFrames.
+ * Sprites, the ring and backdrops follow `clock`.
  */
-function steppedTiming({ events, screens, clock }) {
+function steppedTiming({ turnFrames, screens, clock }) {
   const { delayMs, idleFrames } = ANIMATION;
-  const total = events.length
-    ? Math.max(events.length * ANIMATION.eventFrames + ANIMATION.holdFrames, ANIMATION.turnMs / delayMs)
-    : idleFrames * screens.length;
+  const total = turnFrames || idleFrames * screens.length;
   const ms = (f) => clock + f * delayMs;
   return {
     total,
-    delay: (f) => (events.length && f === total - 1 ? ANIMATION.freezeMs : delayMs),
+    delay: (f) => (turnFrames && f === total - 1 ? ANIMATION.freezeMs : delayMs),
     ms,
     spriteMs: (sprite, f) => ms(f),
     ringPhase: (f) => (ms(f) % PULSE_MS) / PULSE_MS,

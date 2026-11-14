@@ -21,7 +21,10 @@ import { normalizeTeam } from "../teamNormalize.js";
 import { getTraining, addExp, trainingKey, speciesName } from "../training.js";
 import { getMove } from "./data.js";
 import { movesLearned } from "./moveset.js";
-import { simulateBattle } from "./sim.js";
+import { simulateLive, after } from "./simPool.js";
+import { isFullSimEnabled } from "../../config/fullSim.js";
+import { cutoverRecord, cutoverMoves } from "../../services/fullSimCutover.js";
+import { getPlan } from "../../services/battlePlans.js";
 import { teamPower, rollSurge, cuteSurgeBoost } from "./power.js";
 import { teamExp, eloUpdate, utcDay, getBattleRecord, getCasualRecord, capBlock, recordStart } from "./rewards.js";
 import { RANKED, CUTE, CAPS } from "./tuning.js";
@@ -90,6 +93,11 @@ export function buildTeam(user, { env = process.env, team = user.displayedPokemo
       // The slot's own copy's moves (any copy, docs/adr/0001), else the line's.
       const moves = chosenMoves(user, movesetTeam, slot.id, slot.variant, { uid: copyUid ?? uid });
       if (moves) member.moves = moves;
+      // Full sim: a member with no picked Moveset keeps the moves it had at cutover (services/fullSimCutover.js).
+      else if (isFullSimEnabled(env)) {
+        const record = cutoverRecord(user, slot, member.level);
+        if (record) member.moves = cutoverMoves(record, slot.id, member.level);
+      }
       // A slot battling as a Mega never uses a regular item (its Mega Stone fills the slot).
       const item = items.get(key) ?? (copyUid ? items.get(`${slot.id}:${slot.variant}`) : undefined);
       if (item && !(mega?.ok && mega.key === key)) member.item = item;
@@ -252,91 +260,97 @@ export function runBattle({ trainerData, challengerId, defenderId, mode, rematch
   const powers = teams.map(teamPower);
   const surge = rated ? null : rollSurge(powers, seed, teams.map(teamCuteness));
   if (surge?.cute) Object.assign(surge, cuteSurgeBoost(teams[surge.side], CUTE.margin * powers[1 - surge.side]));
-  const result = simulateBattle({ sides: teams.map((members) => ({ members })), seed: seed + 1, surge });
+  // Synchronous with the full sim off; a Promise from the sim worker with it on.
+  // Each side plays its Team's Battle plan (Casual team for casual battles, Ranked team otherwise).
+  const planTeam = mode === "open" ? "display" : "battle";
+  const sides = teams.map((members, i) => ({ members, plan: getPlan([challenger, defender][i], planTeam) }));
+  return after(simulateLive({ sides, seed: seed + 1, surge }), (result) => {
 
-  const ids = [challengerId, defenderId];
-  const users = [challenger, defender];
-  const winnerId = ids[result.winner];
-  const loserId = ids[1 - result.winner];
+    const ids = [challengerId, defenderId];
+    const users = [challenger, defender];
+    const winnerId = ids[result.winner];
+    const loserId = ids[1 - result.winner];
 
-  const exp = {};
-  const earners = mode === "wager" ? [0, 1] : overCap ? [] : [0];
-  for (const i of earners) {
-    exp[ids[i]] = applyExp(users[i], { members: teams[i], opponent: teams[1 - i], ...(surge?.cute && surge.side === i && { levelMult: surge.levelMult }) }, result, i);
-  }
+    const exp = {};
+    const earners = mode === "wager" ? [0, 1] : overCap ? [] : [0];
+    for (const i of earners) {
+      exp[ids[i]] = applyExp(users[i], { members: teams[i], opponent: teams[1 - i], ...(surge?.cute && surge.side === i && { levelMult: surge.levelMult }) }, result, i);
+    }
 
-  let rating = {};
-  if (rated) {
-    const from = records.map((r) => r.rating);
-    const to = eloUpdate(from[0], from[1], result.winner === 0 ? 1 : 0);
-    records.forEach((r, i) => {
-      r.rating = to[i];
-      if (i === result.winner) r.wins++;
-      else r.losses++;
-    });
-    rating = { [ids[0]]: { from: from[0], to: to[0] }, [ids[1]]: { from: from[1], to: to[1] } };
+    let rating = {};
+    if (rated) {
+      const from = records.map((r) => r.rating);
+      const to = eloUpdate(from[0], from[1], result.winner === 0 ? 1 : 0);
+      records.forEach((r, i) => {
+        r.rating = to[i];
+        if (i === result.winner) r.wins++;
+        else r.losses++;
+      });
+      rating = { [ids[0]]: { from: from[0], to: to[0] }, [ids[1]]: { from: from[1], to: to[1] } };
 
-    // Release C: battle achievements (wins, rating, levels, streaks) for both
-    // players — ranked and wager battles only (owner decision). Runs exactly
-    // once per completed battle, in the same synchronous block as
-    // wins++/losses++ and inside the caller's withBothLocks, so a streak can
-    // never move without the win/loss it belongs to. "upset" uses the
-    // pre-battle ratings.
-    users.forEach((u, i) => {
-      const won = i === result.winner;
-      trackProgress(u, [{ type: "battle", won, upset: won && from[1 - i] - from[i] >= 200 }], now.getTime());
-    });
-  } else {
-    // Casual: unrated W/L and streaks for both players, then the casual
-    // achievements (same block, inside the caller's locks).
-    users.forEach((u, i) => {
-      const c = getCasualRecord(u);
-      if (i === result.winner) {
-        c.wins++;
-        c.streak = (c.streak ?? 0) + 1;
-        if (c.streak > (c.bestStreak ?? 0)) c.bestStreak = c.streak;
-      } else {
-        c.losses++;
-        c.streak = 0;
-      }
-      trackProgress(u, [{ type: "casual" }], now.getTime());
-    });
-  }
+      // Release C: battle achievements (wins, rating, levels, streaks) for both
+      // players — ranked and wager battles only (owner decision). Runs exactly
+      // once per completed battle, in the same synchronous block as
+      // wins++/losses++ and inside the caller's withBothLocks, so a streak can
+      // never move without the win/loss it belongs to. "upset" uses the
+      // pre-battle ratings.
+      users.forEach((u, i) => {
+        const won = i === result.winner;
+        trackProgress(u, [{ type: "battle", won, upset: won && from[1 - i] - from[i] >= 200 }], now.getTime());
+      });
+    } else {
+      // Casual: unrated W/L and streaks for both players, then the casual
+      // achievements (same block, inside the caller's locks).
+      users.forEach((u, i) => {
+        const c = getCasualRecord(u);
+        if (i === result.winner) {
+          c.wins++;
+          c.streak = (c.streak ?? 0) + 1;
+          if (c.streak > (c.bestStreak ?? 0)) c.bestStreak = c.streak;
+        } else {
+          c.losses++;
+          c.streak = 0;
+        }
+        trackProgress(u, [{ type: "casual" }], now.getTime());
+      });
+    }
 
-  // Every casual battle counts against this Defender, even past the daily
-  // cap, so the 4th against them always needs a Rematch request.
-  if (!overCap) recordStart(records[0], defenderId);
-  else records[0].vs[defenderId] = (records[0].vs[defenderId] ?? 0) + 1;
-  // The Challenger battled the Defender, so the Defender may ask them for a rematch again.
-  liftRematchBlock(defender, challengerId);
-  if (mode === "wager") {
-    recordStart(records[1], challengerId);
-    trainerData[winnerId].cc = (trainerData[winnerId].cc ?? 0) + 2 * stake;
-  }
+    // Every casual battle counts against this Defender, even past the daily
+    // cap, so the 4th against them always needs a Rematch request.
+    if (!overCap) recordStart(records[0], defenderId);
+    else records[0].vs[defenderId] = (records[0].vs[defenderId] ?? 0) + 1;
+    // The Challenger battled the Defender, so the Defender may ask them for a rematch again.
+    liftRematchBlock(defender, challengerId);
+    if (mode === "wager") {
+      recordStart(records[1], challengerId);
+      trainerData[winnerId].cc = (trainerData[winnerId].cc ?? 0) + 2 * stake;
+    }
 
-  // Mega Shards: a chance for the winner, if they chose to play (the
-  // Challenger, or either side of an accepted wager). Its own seeded RNG, so
-  // the battle itself is unchanged; while the rewards switch is off nothing
-  // is rolled and the result has no megaShards key.
-  const shardResult = {};
-  if (rewardsOn(env) && !overCap && (winnerId === challengerId || mode === "wager")) {
-    shardResult.megaShards = { [winnerId]: rollBattleShards(trainerData[winnerId], { rng: createRng((seed ^ 0x5a17d) >>> 0).next, now: now.getTime(), env }) };
-  }
+    // Mega Shards: a chance for the winner, if they chose to play (the
+    // Challenger, or either side of an accepted wager). Its own seeded RNG, so
+    // the battle itself is unchanged; while the rewards switch is off nothing
+    // is rolled and the result has no megaShards key.
+    const shardResult = {};
+    if (rewardsOn(env) && !overCap && (winnerId === challengerId || mode === "wager")) {
+      shardResult.megaShards = { [winnerId]: rollBattleShards(trainerData[winnerId], { rng: createRng((seed ^ 0x5a17d) >>> 0).next, now: now.getTime(), env }) };
+    }
 
-  return {
-    ok: true,
-    seed,
-    mode,
-    stake,
-    sides: ids.map((userId, i) => ({ userId, members: teams[i], power: powers[i] })),
-    surge,
-    result,
-    winnerId,
-    loserId,
-    exp,
-    overCap, // null unless a casual battle ran past the Battle cap (an accepted rematch: "opponent" or "daily")
-    rated,
-    rating, // {} for casual battles
-    ...shardResult, // megaShards: { [winnerId]: n } only while Mega rewards are on
-  };
+    return {
+      ok: true,
+      seed,
+      mode,
+      stake,
+      // A full-sim (v2) fight's sides keep the plan they played, for the Fight record.
+      sides: ids.map((userId, i) => ({ userId, members: teams[i], power: powers[i], ...(result.v === 2 && { plan: sides[i].plan }) })),
+      surge,
+      result,
+      winnerId,
+      loserId,
+      exp,
+      overCap, // null unless a casual battle ran past the Battle cap (an accepted rematch: "opponent" or "daily")
+      rated,
+      rating, // {} for casual battles
+      ...shardResult, // megaShards: { [winnerId]: n } only while Mega rewards are on
+    };
+  });
 }

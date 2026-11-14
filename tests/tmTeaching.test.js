@@ -11,6 +11,8 @@ import { runInventoryTransaction } from "../services/inventory.js";
 import { buildTeam, buildBattleTeam } from "../utils/battle/runBattle.js";
 import { getSpecies } from "../utils/battle/data.js";
 import { canLearnByTm } from "../utils/battle/tmData.js";
+import { autoMoveset } from "../utils/battle/moveset.js";
+import { runCutover } from "../services/fullSimCutover.js";
 
 const ON = { TM_ENABLED: "1" };
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -50,6 +52,25 @@ section("options");
   const st = Object.fromEntries(o.tms.map((x) => [x.item, x.status.untrained]));
   assertEqual([st.tm_thunderpunch, st.tm_flamethrower, st.tm_surf, st.tm_dragonclaw], ["teachable", "known", "incompatible", "known"], "Thunder Punch teachable; Flamethrower and Dragon Claw already known at Lv 50; Surf incompatible");
   assertTrue(!o.tms.some((x) => x.item === "tm_overheat"), "held TMs are not offered");
+}
+
+section("full sim: teaching a TM keeps the moves recorded at cutover (review I3)");
+{
+  const u = player();
+  const before = autoMoveset(6, 50, {}); // Charizard's moves today; the full sim's learnset would change them
+  process.env.FULL_SIM_ENABLED = "1";
+  try {
+    runCutover({ u });
+    const { expect } = view(u);
+    assertEqual([expect.display, expect.battle], [before, before], "the teach dialog starts from the moves it fights with");
+    const r = teachTm(u, { item: "tm_thunderpunch", pokeId: 6, variant: "normal", uid: null, expect, equip: { display: { replace: before[0] }, battle: "keep" } }, { env: ON });
+    assertTrue(r.ok, "taught");
+    const moves = (team) => buildTeam(u, team === "battle" ? { team: u.battleTeam, movesetTeam: "battle" } : {}).find((m) => m.speciesId === 6).moves;
+    assertEqual([...moves("display")].sort(), [...before.slice(1), "thunderpunch"].sort(), "the taught Team keeps its other 3 moves");
+    assertEqual(moves("battle"), before, "the kept Team keeps all 4");
+  } finally {
+    delete process.env.FULL_SIM_ENABLED;
+  }
 }
 
 section("teaching an untrained copy");

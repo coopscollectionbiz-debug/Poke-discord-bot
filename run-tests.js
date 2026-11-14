@@ -31,6 +31,10 @@ const STRIPPED_ENV = [
   "REWARD_CHANNEL_ID",
   "RARE_SIGHTINGS_CHANNEL_ID",
   "REGISTER_COMMANDS",
+  // The suite covers today's engines; the full-sim tests switch the full
+  // sim on themselves, so a developer's own setting can't leak in.
+  "FULL_SIM_ENABLED",
+  "SIM_THREADS",
   "FLY_API_TOKEN",
   "RESTORE_FROM",
   "CONFIRM_RESTORE",

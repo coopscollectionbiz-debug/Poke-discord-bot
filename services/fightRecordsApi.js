@@ -18,7 +18,8 @@ export function liteRecord(r) {
     ...r,
     fights: r.fights.map((f) => {
       if (!f.result) return f;
-      const { log, snapshots, turnNotes, ...result } = f.result;
+      // The list shows summaries; the turn-by-turn data (v1 and v2) comes with the full record.
+      const { log, snapshots, turnNotes, steps, raw, rawGz, endStatus, ...result } = f.result;
       return { ...f, result };
     }),
   };
@@ -40,7 +41,7 @@ export function createFightRecordHandlers({ store, isAuthorized }) {
       if (group && !FIGHT_GROUPS.includes(group)) return res.status(400).json({ error: "Unknown group" });
       try {
         const records = await store.list(id, { group });
-        return res.json({ records: records.map(liteRecord) });
+        return res.json({ records: records.map((r) => liteRecord(forViewer(r, id))) });
       } catch (err) {
         console.warn("⚠️ fight records list failed:", err?.message || err);
         return res.status(500).json({ error: "Couldn't load your Battle Records." });
@@ -53,11 +54,21 @@ export function createFightRecordHandlers({ store, isAuthorized }) {
       try {
         const record = await store.get(id, req.params.fightId);
         if (!record) return res.status(404).json({ error: "Fight record not found" });
-        return res.json({ record });
+        return res.json({ record: forViewer(record, id) });
       } catch (err) {
         console.warn("⚠️ fight record read failed:", err?.message || err);
         return res.status(500).json({ error: "Couldn't load that fight." });
       }
     },
   };
+}
+
+/**
+ * A record as one player may see it. A Battle's record is stored once for
+ * both players, so every side but the viewer's loses its Battle plan
+ * (owner only, full-sim spec). The stored record is never changed.
+ */
+export function forViewer(record, viewerId) {
+  if (!Array.isArray(record?.sides)) return record;
+  return { ...record, sides: record.sides.map((side) => (side.id === viewerId || side.plan === undefined ? side : (({ plan, ...rest }) => rest)(side))) };
 }

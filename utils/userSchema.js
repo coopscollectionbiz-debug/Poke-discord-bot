@@ -6,6 +6,7 @@ import { normalizeAuras, syncTierAuras } from "../services/auras.js";
 import { normalizeCustomPokemon } from "../services/ownership.js";
 import { normalizeBox } from "../services/box.js";
 import { normalizeShowcase } from "../services/showcaseTeam.js";
+import { isFullSimEnabled, CUTOVER_VERSION } from "../config/fullSim.js";
 // ==========================================================
 // utils/userSchema.js
 // Unified user data schema and initialization
@@ -103,6 +104,8 @@ export function createNewUser(userId, username) {
 luck: 0,
 luckTimestamp: 0,
 
+    // Joining with the full sim on: no moves from before it to keep (services/fullSimCutover.js).
+    ...(isFullSimEnabled() && { fullSimCutover: CUTOVER_VERSION }),
   };
 }
 

@@ -132,6 +132,12 @@ export async function renderInspectCard(slot, { owner, eyebrow: eyebrowText = nu
     ctx.font = font(15, 800);
     ctx.fillStyle = COLOR.textFaint;
     ctx.fillText("BATTLE MOVES", x, 352);
+    // Full sim: the ability its Team's Battle plan picks (commands/inspectpokemon.js).
+    if (slot.ability) {
+      ctx.textAlign = "right";
+      ctx.fillText(fitText(ctx, `ABILITY · ${slot.ability.toUpperCase()}`, (right - x) / 2), right, 352);
+      ctx.textAlign = "left";
+    }
   }
   const mw = (right - x - 8 * 3) / 4;
   slot.moves.slice(0, 4).forEach((mv, i) => {

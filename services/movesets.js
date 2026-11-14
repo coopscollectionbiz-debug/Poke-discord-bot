@@ -23,10 +23,13 @@
 // ==========================================================
 
 import { getSpecies, getMove } from "../utils/battle/data.js";
+import { isFullSimEnabled } from "../config/fullSim.js";
 import { getTraining } from "../utils/training.js";
-import { autoMoveset, movesLearned } from "../utils/battle/moveset.js";
+import { movesLearned } from "../utils/battle/moveset.js";
 import { slotCopyUid, slotBoxUid } from "./ownership.js";
 import { copyTraining } from "./box.js";
+// fullSimCutover imports this module back; each uses the other only inside functions.
+import { defaultMoves } from "./fullSimCutover.js";
 
 export const TEAM_TYPES = Object.freeze(["display", "battle"]);
 export const MAX_MOVES = 4;
@@ -57,8 +60,8 @@ export function tmMovesFor(user, speciesId, variant, { uid = null } = {}) {
  * Every move this copy may equip: level-up moves learned at or below its
  * real Level (earliest Level kept), then its TM moves. [{ id, learnedAt|null, source }]
  */
-export function learnableMoves(user, speciesId, variant, { level = null, uid = null } = {}) {
-  const species = getSpecies(Number(speciesId));
+export function learnableMoves(user, speciesId, variant, { level = null, uid = null, env } = {}) {
+  const species = getSpecies(Number(speciesId), env);
   if (!species) return [];
   // The copy's own Level when one is named; else the line's best copy.
   const own = uid != null ? copyUid(user, speciesId, variant, uid) : null;
@@ -66,7 +69,7 @@ export function learnableMoves(user, speciesId, variant, { level = null, uid = n
   const seen = new Map();
   for (const [at, moveId] of species.levelMoves ?? []) {
     if (at > lv) break;
-    if (!seen.has(moveId) && getMove(moveId)) seen.set(moveId, { id: moveId, learnedAt: at, source: "level" });
+    if (!seen.has(moveId) && getMove(moveId, env)) seen.set(moveId, { id: moveId, learnedAt: at, source: "level" });
   }
   for (const moveId of tmMovesFor(user, speciesId, variant, { uid })) {
     if (!seen.has(moveId)) seen.set(moveId, { id: moveId, learnedAt: null, source: "tm" });
@@ -85,6 +88,10 @@ export function chosenMoves(user, team, speciesId, variant, { uid = null } = {})
   const raw = (u && stored[copyKey(u)]) || stored[lineKey(speciesId, variant)];
   if (!Array.isArray(raw) || !raw.length) return null;
   const allowed = new Set(learnableMoves(user, speciesId, variant, { uid: u }).map((m) => m.id));
+  // Full sim: a move picked before the switch that the new learnsets no
+  // longer teach is kept until the player edits this Moveset (saving runs
+  // validateMoveset, which allows only the new pool).
+  if (isFullSimEnabled()) for (const m of learnableMoves(user, speciesId, variant, { uid: u, env: {} })) allowed.add(m.id);
   const out = [...new Set(raw)].filter((m) => allowed.has(m)).slice(0, MAX_MOVES);
   return out.length ? out : null;
 }
@@ -155,7 +162,10 @@ export function keepMovesOnLevelUp(user, speciesId, variant, { uid = null, fromL
   if (!(toLevel > fromLevel) || !movesLearned(speciesId, fromLevel, toLevel).length) return [];
   const u = copyUid(user, speciesId, variant, uid);
   const allowed = new Set(learnableMoves(user, speciesId, variant, { uid: u }).map((m) => m.id));
-  const before = autoMoveset(speciesId, fromLevel).filter((m) => allowed.has(m));
+  // Full sim: recorded moves the new learnsets don't teach still count, as in chosenMoves.
+  if (isFullSimEnabled()) for (const m of learnableMoves(user, speciesId, variant, { uid: u, env: {} })) allowed.add(m.id);
+  // The moves it fought with: on the full sim, from its cutover record when it has one.
+  const before = defaultMoves(user, { id: Number(speciesId), variant: normV(variant), ...(u && { uid: u }) }, fromLevel).filter((m) => allowed.has(m));
   if (!before.length) return []; // no real move yet: its first move is used
   const pinned = [];
   for (const team of TEAM_TYPES) {

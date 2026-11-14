@@ -25,7 +25,7 @@ const EMPTY = "100000000000000002";
 
 const dir = await fs.mkdtemp(path.join(os.tmpdir(), "battle-records-preview-"));
 const store = createFightStore({ dir: () => dir });
-const { me, records } = fixtureRecords({ days: 14 });
+const { me, records } = await fixtureRecords({ days: 14 });
 for (const r of records) await store.add(r);
 const stats = await store.stats();
 

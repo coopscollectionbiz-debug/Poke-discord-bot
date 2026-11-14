@@ -18,6 +18,7 @@ import { PLAYBACK } from "../utils/battle/tuning.js";
 import { createEncounterService, isEncounterButton } from "../utils/encounter/service.js";
 import { RAN, LOST_INTEREST, STALE_LINE, fill } from "../utils/encounter/lines.js";
 import { lockUser } from "../utils/userLocks.js";
+import { registerHooks } from "module";
 
 PLAYBACK.delayMs = 0;
 const quiet = console.log;
@@ -354,6 +355,39 @@ section("The card's Mega");
   await w.service.handleButton(w.click(battle));
   for (const k of Object.keys(ON)) delete process.env[k];
   assertEqual(played?.sides[0].members[0].megaForm, "mega-charizard-x", "Battle! fights the Display team's Mega as a Mega");
+}
+
+section("A Battle! whose fight fails (review I4)");
+{
+  // The full sim, swapped for one that always throws (as tests/fightFailure.test.js
+  // does), run inline: the fight fails the way a crashed sim worker would.
+  registerHooks({
+    load(url, context, next) {
+      if (url.endsWith("/utils/battle/showdown/simulate.js")) {
+        return { format: "module", shortCircuit: true, source: 'export function simulateFull() { throw new Error("test: the sim failed"); }' };
+      }
+      return next(url, context);
+    },
+  });
+  const w = world();
+  await w.service.maybeSpot(w.message());
+  const [battle] = w.ids(w.log.sent[0]);
+  process.env.FULL_SIM_ENABLED = "1";
+  process.env.SIM_THREADS = "0";
+  const warn = console.warn;
+  console.warn = () => {};
+  const failed = w.click(battle);
+  try {
+    await w.service.handleButton(failed);
+  } finally {
+    console.warn = warn;
+    delete process.env.FULL_SIM_ENABLED;
+    delete process.env.SIM_THREADS;
+  }
+  assertEqual(failed.followUps, [{ content: "The battle couldn't run. Try again.", flags: 64 }], "the player hears the battle couldn't run");
+  assertEqual([w.service.openCount(), w.log.sent[0].edits.length], [1, 0], "and the card stays open as it was");
+  await w.service.handleButton(w.click(battle));
+  assertEqual(w.log.events.filter((e) => e.phase === "result").length, 1, "so it can still be fought");
 }
 
 finish();

@@ -15,6 +15,8 @@
     "repair": "node repairTrainerData.js",
     "cleanup": "node cleanupTrainerData.js",
     "generate:battle-data": "node tools/generate-battle-data.mjs",
+    "generate:full-sim-data": "node tools/generate-full-sim-data.mjs",
+    "test:full-sim-balance": "for f in tests/*.slow.js; do d=$(mktemp -d) && TRAINERDATA_DIR=$d node \"$f\" || exit 1; done",
     "generate:pokedex": "node tools/generate-pokedex.mjs",
     "generate:megas": "node tools/generate-megas.mjs",
     "generate:move-flags": "node tools/generate-move-flags.mjs",
@@ -32,6 +34,7 @@
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.84",
+    "@pkmn/sim": "0.10.12",
     "cookie-parser": "^1.4.7",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",

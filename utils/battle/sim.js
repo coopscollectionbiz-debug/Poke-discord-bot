@@ -13,6 +13,7 @@ import { autoMoveset } from "./moveset.js";
 import { createRng } from "./rng.js";
 import { simulateBattleFx, prepareBattler } from "./effects.js";
 import { isCombatItem } from "./items.js";
+import { isFullSimEnabled } from "../../config/fullSim.js";
 import {
   DAMAGE_ROLL_MIN, CRIT_CHANCE, HIGH_CRIT_CHANCE, CRIT_MULT, MOVE_RANDOM_CHANCE, TURN_CAP,
 } from "./tuning.js";
@@ -33,14 +34,14 @@ const MULTIHIT_ODDS = [2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 5, 5, 
  * but only knows what it has learned). Casual members carry neither, so
  * their moves are exactly as before.
  */
-export const memberMoves = (member) =>
-  (Array.isArray(member.moves) && member.moves.length ? member.moves : autoMoveset(member.speciesId, member.realLevel ?? member.level));
+export const memberMoves = (member, env = process.env) =>
+  (Array.isArray(member.moves) && member.moves.length ? member.moves : autoMoveset(member.speciesId, member.realLevel ?? member.level, env));
 
 // member.statMult raises every stat, HP included, without changing the
 // Level: challenge opponents fight with CHALLENGE.statBoost. `statMult` does
 // the same for a cute surge, past where Lv 100 stops its `levelMult`.
-export function buildMon(member, levelMult = 1, statMult = 1) {
-  const species = getSpecies(member.speciesId);
+export function buildMon(member, levelMult = 1, statMult = 1, env = process.env) {
+  const species = getSpecies(member.speciesId, env);
   const profile = member.battleProfile ?? null;
   const level = Math.min(100, Math.round(member.level * levelMult));
   const k = (member.statMult ?? 1) * statMult;
@@ -57,7 +58,7 @@ export function buildMon(member, levelMult = 1, statMult = 1) {
     hp: member.hpFraction === undefined ? maxHp
       : member.hpFraction <= 0 ? 0
       : Math.max(1, Math.round(maxHp * member.hpFraction)),
-    moves: memberMoves(member).map(getMove),
+    moves: memberMoves(member, env).map((id) => getMove(id, env)),
     ...(profile && { ability: profile.ability, megaForm: profile.formId, name: profile.name }),
     // Held item (validated in runBattle.buildTeam). Absent for members
     // without one, so their battler is exactly as before.
@@ -151,10 +152,32 @@ export function useMove(move, attacker, target, rng) {
   return result;
 }
 
-export function simulateBattle({ sides, seed, surge }) {
+// The full sim (Showdown's engine, about 160 MB of memory) loads only when a
+// fight needs it: the sim worker loads it at start, and simPool's inline
+// mode awaits it, so a bot with the switch off never loads it.
+let fullSim = null;
+export async function loadFullSim() {
+  fullSim ??= await import("./showdown/simulate.js");
+  return fullSim;
+}
+
+/** The data an engine fights with, whatever the switch says now: battleData.json, or the full sim's. */
+export const engineEnv = (engine) => ({ FULL_SIM_ENABLED: engine === "full" ? "1" : "" });
+
+// engine: "full" (Showdown, utils/battle/showdown) or "legacy" (this file
+// and effects.js). Unset, FULL_SIM_ENABLED decides. An Elite Four run
+// passes the engine it started on, so a flipped switch can't mix engines,
+// or their data (tests/fullSimFlip.test.js).
+export function simulateBattle({ sides, seed, surge, engine }) {
+  const resolved = engine ?? (isFullSimEnabled() ? "full" : "legacy");
+  const env = engineEnv(resolved);
+  if (resolved === "full") {
+    if (!fullSim) throw new Error("The full sim isn't loaded: await loadFullSim() first.");
+    return fullSim.simulateFull({ sides, seed, surge, env });
+  }
   const rng = createRng(seed);
   const teams = sides.map((side, i) =>
-    side.members.map((m) => (surge && surge.side === i ? buildMon(m, surge.levelMult, surge.statMult ?? 1) : buildMon(m))));
+    side.members.map((m) => (surge && surge.side === i ? buildMon(m, surge.levelMult, surge.statMult ?? 1, env) : buildMon(m, 1, 1, env))));
 
   // Battles with abilities (a Mega Evolution is present) or a held item
   // that acts in combat run on the effect-aware engine (effects.js), which
@@ -165,7 +188,7 @@ export function simulateBattle({ sides, seed, surge }) {
     sides.forEach((side, i) => side.members.forEach((member, j) => {
       const mon = teams[i][j];
       if (mon.speciesId === SHEDINJA) mon.ability ??= "Wonder Guard";
-      prepareBattler(mon, memberMoves(member), member.name);
+      prepareBattler(mon, memberMoves(member, env), member.name, env);
     }));
     return simulateBattleFx({ teams, rng });
   }

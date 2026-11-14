@@ -61,6 +61,8 @@ export function perspective(record, me) {
     won: record.winner === mine,
     me: record.sides[mine],
     foe: record.sides[theirs],
+    // Your Battle plan (full-sim fights); the server never sends the other side's.
+    plan: record.sides[mine]?.plan?.name ?? null,
     team, kos, fainted,
     foeTeam: last?.members[theirs] ?? [],
     foes: record.fights.map((f) => f.foe).filter(Boolean),
@@ -195,7 +197,8 @@ export function replaySteps(record, me) {
     const push = (extra) => steps.push({ ...base, hp: copyHp(hp), active: [...active], ...extra });
 
     const surge = f.surge ? ` Underdog surge for ${record.sides[f.surge.side]?.name ?? "the underdog"}!` : "";
-    push({ kind: "intro", turn: 0, caption: `${record.sides[mine].name} vs ${foe.name}!${reviveText}${surge}` });
+    const plan = record.sides[mine]?.plan?.name ? ` Your Battle plan: ${record.sides[mine].plan.name}.` : "";
+    push({ kind: "intro", turn: 0, caption: `${record.sides[mine].name} vs ${foe.name}!${reviveText}${surge}${plan}` });
 
     r.log.forEach((events, t) => {
       const turn = t + 1;

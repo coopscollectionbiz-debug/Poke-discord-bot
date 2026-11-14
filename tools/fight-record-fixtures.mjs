@@ -35,7 +35,7 @@ const day = (base, n) => new Date(base.getTime() + n * 86400000);
  * wager Battles (as Challenger and as Defender), Gyms, Elite Four runs
  * (one with Revives), and Trainer encounters, spread over `days` days.
  */
-export function fixtureRecords({ me = "100000000000000001", days = 12, now = new Date() } = {}) {
+export async function fixtureRecords({ me = "100000000000000001", days = 12, now = new Date() } = {}) {
   const td = {
     [me]: fixturePlayer(me, "Coop", [6, 9, 3, 25, 149, 94], 62, { trainer: "red-masters.png", shiny: [25] }),
     R1: fixturePlayer("R1", "Misty Fan", [130, 131, 121, 55, 134, 91], 58, { trainer: "misty.png" }),
@@ -51,27 +51,27 @@ export function fixtureRecords({ me = "100000000000000001", days = 12, now = new
     const at = (h) => new Date(day(start, d).getTime() + h * 3600000);
     for (const [opp, mode, flip] of [["R1", "open", false], ["R2", "ranked", false], ["R3", "open", true], ["R1", "ranked", true]]) {
       const [c, def] = flip ? [opp, me] : [me, opp];
-      const o = runBattle({ trainerData: td, challengerId: c, defenderId: def, mode, seed: seed++, now: at(2 + out.length % 8) });
+      const o = await runBattle({ trainerData: td, challengerId: c, defenderId: def, mode, seed: seed++, now: at(2 + out.length % 8) });
       if (o.ok) out.push(battleRecord(o, names, td, { now: at(2 + out.length % 8) }));
     }
     if (d % 3 === 0) {
       td[me].pendingWager = null;
-      const o = runBattle({ trainerData: td, challengerId: me, defenderId: "R2", mode: "wager", stake: 500, seed: seed++, now: at(20) });
+      const o = await runBattle({ trainerData: td, challengerId: me, defenderId: "R2", mode: "wager", stake: 500, seed: seed++, now: at(20) });
       if (o.ok) out.push(battleRecord(o, names, td, { now: at(20) }));
     }
     const gym = GYMS[d % GYMS.length];
-    const g = runChallenge({ trainerData: td, userId: me, key: gym, seed: seed++, now: at(9) });
-    if (g.ok) out.push(challengeRecord(g, "Coop", td, { now: at(9) }));
+    const g = await runChallenge({ trainerData: td, userId: me, key: gym, seed: seed++, now: at(9) });
+    if (g.ok) out.push(await challengeRecord(g, "Coop", td, { now: at(9) }));
     if (d % 4 === 1) {
       td[me].challenge.won = Object.fromEntries(GYMS.map((k) => [k, "2026-11-01"]));
-      let step = startRun({ trainerData: td, userId: me, seed: seed++, now: at(15) });
-      while (step.ok && !step.ended) step = continueRun({ trainerData: td, userId: me, nonce: step.nonce, step: step.step + 1, slot: step.fainted[0]?.slot, now: at(15) });
-      if (step.ok) out.push(challengeRecord(step.outcome, "Coop", td, { now: at(15) }));
+      let step = await startRun({ trainerData: td, userId: me, seed: seed++, now: at(15) });
+      while (step.ok && !step.ended) step = await continueRun({ trainerData: td, userId: me, nonce: step.nonce, step: step.step + 1, slot: step.fainted[0]?.slot, now: at(15) });
+      if (step.ok) out.push(await challengeRecord(step.outcome, "Coop", td, { now: at(15) }));
     }
     for (const h of [11, 17]) {
       const team = buildTeam(td[me]);
       const trainer = rollTrainer({ team, seed: seed++ });
-      const e = fightEncounter({ trainerData: td, userId: me, encounter: { team: team.map(({ speciesId, variant }) => ({ speciesId, variant })), trainer }, seed: seed++, now: at(h) });
+      const e = await fightEncounter({ trainerData: td, userId: me, encounter: { team: team.map(({ speciesId, variant }) => ({ speciesId, variant })), trainer }, seed: seed++, now: at(h) });
       if (e.ok) out.push(encounterRecord(e, "Coop", td, { now: at(h) }));
     }
   }

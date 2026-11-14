@@ -9,7 +9,10 @@
 // ==========================================================
 
 import { buildTeam, availablePicks, applyGains } from "../battle/runBattle.js";
-import { simulateBattle } from "../battle/sim.js";
+import { simulateLive, after } from "../battle/simPool.js";
+import { getPlan, planMoves } from "../../services/battlePlans.js";
+import { classPlan } from "../../catalog/opponentPlans.js";
+import { isFullSimEnabled } from "../../config/fullSim.js";
 import { teamExp, utcDay } from "../battle/rewards.js";
 import { speciesName } from "../training.js";
 import { trackProgress } from "../../progression/achievements.js";
@@ -65,27 +68,36 @@ export function fightEncounter({ trainerData, userId, encounter: { team, trainer
   const members = buildTeam(user, { ...side, team: team.map((m) => ({ id: m.speciesId, variant: m.variant, ...(m.copyUid && { uid: m.copyUid }), ...(m.megaForm && { mega: m.megaForm }) })) });
   if (!members.length) return { ok: false, reason: "no_team" };
 
-  const foes = trainer.party.map((m) => ({ speciesId: m.speciesId, variant: "normal", name: speciesName(m.speciesId), level: m.level }));
-  const result = simulateBattle({ sides: [{ members }, { members: foes }], seed, surge: null });
-  const won = result.winner === 0;
-  const knockedOut = result.knockouts.filter((k) => k.bySide === 0).map((k) => foes[k.slot]);
-  const exp = { [userId]: applyGains(user, members, teamExp({ members, knockedOut, won })) };
+  // Full sim: the Trainer class's plan (catalog/opponentPlans.js) picks the party's moves and how it plays.
+  const cpu = classPlan(trainer.classKey);
+  const full = isFullSimEnabled();
+  const foes = trainer.party.map((m) => ({
+    speciesId: m.speciesId, variant: "normal", name: speciesName(m.speciesId), level: m.level,
+    ...(full && { moves: planMoves(m.speciesId, m.level, cpu.plan) }),
+  }));
+  // Synchronous with the full sim off; a Promise from the sim worker with it on.
+  const plan = getPlan(user, pick === "ranked" ? "battle" : "display");
+  return after(simulateLive({ sides: [{ members, plan }, { members: foes, ...cpu }], seed, surge: null }), (result) => {
+    const won = result.winner === 0;
+    const knockedOut = result.knockouts.filter((k) => k.bySide === 0).map((k) => foes[k.slot]);
+    const exp = { [userId]: applyGains(user, members, teamExp({ members, knockedOut, won })) };
 
-  let paid = 0;
-  // A Live event's Prize money multiplier pays out on wins only; a loss
-  // costs the normal amount.
-  const winnings = scaleEarned(trainer.prize, liveEffects(now.getTime()).prize);
-  if (won) {
-    user.cc = (user.cc ?? 0) + winnings;
-  } else {
-    paid = Math.min(trainer.prize, Math.max(0, user.cc ?? 0));
-    user.cc = (user.cc ?? 0) - paid;
-  }
-  // Achievements for Levels gained. Not a "battle" event: that moves Battle win streaks.
-  trackProgress(user, [{ type: "pokemon" }], now.getTime());
-  return {
-    ok: true, userId, trainer,
-    sides: [{ userId, members }, { userId: "trainer", members: foes }],
-    surge: null, result, winnerId: won ? userId : "trainer", won, exp, prize: won ? winnings : trainer.prize, paid,
-  };
+    let paid = 0;
+    // A Live event's Prize money multiplier pays out on wins only; a loss
+    // costs the normal amount.
+    const winnings = scaleEarned(trainer.prize, liveEffects(now.getTime()).prize);
+    if (won) {
+      user.cc = (user.cc ?? 0) + winnings;
+    } else {
+      paid = Math.min(trainer.prize, Math.max(0, user.cc ?? 0));
+      user.cc = (user.cc ?? 0) - paid;
+    }
+    // Achievements for Levels gained. Not a "battle" event: that moves Battle win streaks.
+    trackProgress(user, [{ type: "pokemon" }], now.getTime());
+    return {
+      ok: true, userId, trainer,
+      sides: [{ userId, members, ...(result.v === 2 && { plan }) }, { userId: "trainer", members: foes }],
+      surge: null, result, winnerId: won ? userId : "trainer", won, exp, prize: won ? winnings : trainer.prize, paid,
+    };
+  });
 }

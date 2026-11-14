@@ -5,6 +5,11 @@
 // ==========================================================
 
 import { showExpired } from "/public/shared/shell.js";
+import { viewState } from "/public/shared/viewState.js";
+
+// Category, sort and search survive a trip to another page (this browser tab only).
+const view = viewState("bag", { category: "", sort: "", q: "" });
+let pendingCategory = view.get().category; // applied once the category list has loaded
 
 const params = new URLSearchParams(window.location.search);
 const userId = params.get("id");
@@ -56,8 +61,12 @@ function render() {
   }
 }
 
+function remember() {
+  view.set({ category: $("bagCategory").value, sort: $("bagSort").value, q: $("bagSearch").value });
+}
+
 async function load() {
-  const category = $("bagCategory").value;
+  const category = $("bagCategory").value || pendingCategory;
   const url = `/api/inventory?id=${encodeURIComponent(userId)}${category ? `&category=${encodeURIComponent(category)}` : ""}`;
   $("bagStatus").textContent = "Loading…";
   let res;
@@ -82,15 +91,24 @@ async function load() {
       select.append(o);
     }
   }
+  if (pendingCategory) {
+    select.value = pendingCategory;
+    if (select.value !== pendingCategory) select.value = ""; // a category that no longer exists
+    pendingCategory = "";
+  }
   rows = Array.isArray(data.items) ? data.items : [];
   render();
+  remember();
 }
 
 if (!userId) {
   $("bagStatus").textContent = ""; // the shared shell shows the missing-link banner
 } else {
-  $("bagCategory").onchange = load;
-  $("bagSort").onchange = render;
-  $("bagSearch").oninput = render;
+  const kept = view.get();
+  if (kept.sort) { $("bagSort").value = kept.sort; if ($("bagSort").value !== kept.sort) $("bagSort").selectedIndex = 0; }
+  $("bagSearch").value = kept.q;
+  $("bagCategory").onchange = () => { remember(); load(); };
+  $("bagSort").onchange = () => { remember(); render(); };
+  $("bagSearch").oninput = () => { remember(); render(); };
   load();
 }

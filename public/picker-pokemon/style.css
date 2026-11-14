@@ -468,3 +468,11 @@ body.multi-select-on #pokemonPanel { padding-bottom: 110px; }
 .team-badges .mem-b { background: var(--cc-blue); color: #fff; }
 /* Unowned: a dark silhouette (a real Pokédex), not a grey copy. */
 .pokemon-card.unowned .poke-sprite { filter: brightness(0) invert(.22); opacity: .9; }
+
+/* Active filters: what is applied, one tap to undo each (shared/viewState.js keeps them) */
+.active-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 900px; margin: 4px auto 10px; padding: 0 4px; }
+.active-filters[hidden] { display: none; }
+.af-count { font-size: 13px; color: var(--cc-text-muted, #9aa3b5); margin-right: 4px; }
+.af-chip, .af-clear { min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--cc-line, #2a3348); background: var(--cc-surface-sunken, #141a28); color: var(--cc-text, #e8ecf4); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.af-chip span { color: var(--cc-text-muted, #9aa3b5); margin-left: 2px; }
+.af-clear { background: transparent; color: var(--cc-blue, #6ea8ff); }

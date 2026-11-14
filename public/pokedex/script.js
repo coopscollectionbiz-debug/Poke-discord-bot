@@ -8,6 +8,7 @@
 import { playerId, pageHref, showBanner, showExpired } from "/public/shared/shell.js";
 import { displaySpeciesName } from "/public/shared/names.js";
 import { getRegions, countRegistered } from "/public/picker-pokemon/regions.js";
+import { viewState, debounce } from "/public/shared/viewState.js";
 
 const app = document.getElementById("dxApp");
 const id = playerId();
@@ -15,6 +16,9 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const fmt = (n) => Number(n ?? 0).toLocaleString("en-US");
 
 const state = { show: "all", region: "", search: "", shinyView: new Set() };
+// Show, region and search survive a trip to another page (this browser tab only).
+const view = viewState("pokedex", { show: "all", region: "", search: "" });
+const remember = () => view.set({ show: state.show, region: state.region }); // search is saved as typed, on input
 let data = {}, regions = [], dex = {}, owned = {};
 
 async function getJSON(url) {
@@ -117,13 +121,22 @@ async function load() {
   }
   data = shown;
   regions = getRegions(data);
+  const kept = view.get();
+  if (["all", "caught", "missing", "shiny"].includes(kept.show)) state.show = kept.show;
+  if (regions.some((r) => r.name === kept.region)) state.region = kept.region;
+  state.search = kept.search.trim().toLowerCase();
+  document.getElementById("dxSearch").value = kept.search;
+  for (const x of document.querySelectorAll("[data-show]")) x.setAttribute("aria-pressed", String(x.dataset.show === state.show));
   render();
+  view.trackScroll();
+  view.restoreScroll();
 }
 
 document.querySelector(".dx-seg").addEventListener("click", (e) => {
   const b = e.target.closest("[data-show]");
   if (!b) return;
   state.show = b.dataset.show;
+  remember();
   for (const x of document.querySelectorAll("[data-show]")) x.setAttribute("aria-pressed", String(x === b));
   render();
 });
@@ -131,11 +144,14 @@ document.getElementById("dxRegions").addEventListener("click", (e) => {
   const b = e.target.closest("[data-region]");
   if (!b) return;
   state.region = b.dataset.region;
+  remember();
   render();
 });
+const renderSoon = debounce(render, 120);
 document.getElementById("dxSearch").addEventListener("input", (e) => {
   state.search = e.target.value.trim().toLowerCase();
-  render();
+  view.set({ search: e.target.value });
+  renderSoon();
 });
 app.addEventListener("click", (e) => {
   const b = e.target.closest("[data-shiny]");

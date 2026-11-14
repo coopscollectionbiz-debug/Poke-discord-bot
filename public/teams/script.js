@@ -30,6 +30,7 @@ import { openMovesEditor } from "/public/teams/moves.js";
 import { chooseCopy } from "/public/teams/copyPicker.js";
 import { openItemPicker, itemIcon, claimStarter } from "/public/teams/items.js";
 import { openDetail } from "/public/picker-pokemon/detail.js";
+import { viewState, setUrlParam, debounce } from "/public/shared/viewState.js";
 
 const TEAMS = ["showcase", "display", "battle"];
 const LABEL = { showcase: "Showcase team", display: "Casual team", battle: "Ranked team" };
@@ -50,6 +51,11 @@ const clone = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 const app = document.getElementById("teamsApp");
+// Phones show the box in a bottom sheet, wider screens in the side panel:
+// draw it in one place only (it is ~370 tiles for a big collection).
+const NARROW = window.matchMedia("(max-width: 820px)");
+// Filters, sort and team survive a trip to another page (this browser tab only).
+const view = viewState("teams", { q: "", show: "all", sort: "power", active: "" });
 const sheet = document.getElementById("boxSheet");
 const sheetBody = document.getElementById("boxSheetBody");
 const userId = playerId();
@@ -619,7 +625,6 @@ function boxTile(s) {
 
 function boxPanel(where) {
   const t = state.active;
-  const items = boxItems();
   const f = state.filter;
   const seg = (v, label) => `<button type="button" data-act="show" data-show="${v}" aria-pressed="${f.show === v}">${label}</button>`;
   return `<div class="tm-panel-head"><div>${where === "sheet" ? "" : `<h2 class="tm-h2" id="boxHeading">Add to ${LABEL[t]}</h2>`}
@@ -633,8 +638,26 @@ function boxPanel(where) {
       </select>
       <div class="tm-seg" role="group" aria-label="Show">${seg("all", "All")}${seg("shiny", "Shiny")}${seg("free", "Not on a team")}</div>
     </div>
-    ${items.length ? `<ul class="tm-box">${items.map(boxTile).join("")}</ul>` : `<p class="cc-empty">${Object.keys(state.pokemon).length ? "No Pokémon match." : "You haven't caught any Pokémon yet. Try /daily in Discord."}</p>`}`;
+    <div class="tm-boxlist" data-boxlist="${where}">${boxList(items)}</div>`;
 }
+
+function boxList(items = boxItems()) {
+  return items.length ? `<ul class="tm-box">${items.map(boxTile).join("")}</ul>` : `<p class="cc-empty">${Object.keys(state.pokemon).length ? "No Pokémon match." : "You haven't caught any Pokémon yet. Try /daily in Discord."}</p>`;
+}
+
+/** Search, sort and Show change only the box: redraw its list, not the page. */
+function refreshBox() {
+  const html = boxList();
+  for (const list of document.querySelectorAll("[data-boxlist]")) {
+    list.innerHTML = html;
+    scanFx(list);
+  }
+  for (const b of document.querySelectorAll('[data-act="show"]')) b.setAttribute("aria-pressed", String(b.dataset.show === state.filter.show));
+  for (const sel of document.querySelectorAll('[data-act="sort"]')) sel.value = state.filter.sort;
+  for (const q of document.querySelectorAll('[data-act="search"]')) if (q !== document.activeElement) q.value = state.filter.q;
+}
+const refreshBoxSoon = debounce(refreshBox, 120);
+const rememberFilter = () => view.set({ q: state.filter.q, show: state.filter.show, sort: state.filter.sort });
 
 function saveBar() {
   if (!anyDirty()) return "";
@@ -673,7 +696,8 @@ document.body.insertAdjacentHTML("afterbegin", ICONS);
 
 function render() {
   const searchFocus = document.activeElement?.dataset?.act === "search" ? { where: document.activeElement.id, pos: document.activeElement.selectionStart } : null;
-  app.innerHTML = `${switcher()}<div class="tm-layout">${teamPanel()}<aside class="tm-panel tm-boxpanel" aria-labelledby="boxHeading">${boxPanel("side")}</aside></div>${saveBar()}`;
+  app.innerHTML = `${switcher()}<div class="tm-layout">${teamPanel()}<aside class="tm-panel tm-boxpanel" aria-labelledby="boxHeading">${NARROW.matches ? "" : boxPanel("side")}</aside></div>${saveBar()}`;
+  if (view.get().active !== state.active) { view.set({ active: state.active }); setUrlParam("team", state.active); }
   if (sheet.open) { sheetBody.innerHTML = boxPanel("sheet"); scanFx(sheetBody); }
   scanFx(app); // shiny backdrops (same as the Discord cards)
   document.getElementById("boxSheetTitle").textContent = `Add to your ${LABEL[state.active]}`;
@@ -740,14 +764,14 @@ function onClick(e) {
   }
   else if (act === "discard") discard();
   else if (act === "save") save();
-  else if (act === "show") { state.filter.show = el.dataset.show; render(); }
+  else if (act === "show") { state.filter.show = el.dataset.show; rememberFilter(); refreshBox(); }
   else if (act === "openbox") openSheet();
   else if (act === "dismiss") dismissNotices();
 }
 function onInput(e) {
   const el = e.target;
-  if (el.dataset?.act === "search") { state.filter.q = el.value; render(); }
-  if (el.dataset?.act === "sort") { state.filter.sort = el.value; render(); }
+  if (el.dataset?.act === "search") { state.filter.q = el.value; rememberFilter(); refreshBoxSoon(); }
+  if (el.dataset?.act === "sort") { state.filter.sort = el.value; rememberFilter(); refreshBox(); }
 }
 app.addEventListener("click", onClick);
 app.addEventListener("input", onInput);
@@ -1005,7 +1029,10 @@ async function load() {
     state.notices = Array.isArray(u.notices) ? u.notices.filter((n) => n.kind === "battle_team_trim") : [];
     state.draft = clone(state.saved);
     const want = new URLSearchParams(location.search).get("team");
-    state.active = TEAMS.includes(want) ? want : state.notices.length ? "battle" : "display";
+    const kept = view.get();
+    state.filter = { q: kept.q, show: ["all", "shiny", "free"].includes(kept.show) ? kept.show : "all", sort: ["power", "level", "dex", "name"].includes(kept.sort) ? kept.sort : "power" };
+    // The link's ?team= first, then a notice about the Ranked team, then the last team viewed.
+    state.active = TEAMS.includes(want) ? want : state.notices.length ? "battle" : TEAMS.includes(kept.active) ? kept.active : "display";
   } catch (err) {
     app.innerHTML = "";
     showBanner(err?.message || "Couldn't load your teams. Please try again.", { title: "Couldn't load your teams" });
@@ -1029,6 +1056,9 @@ async function load() {
     } catch (err) { if (!err.silent) showActionError(err, "Couldn't unlock your starter items"); }
   }
   render();
+  view.trackScroll();
+  view.restoreScroll();
 }
 
+NARROW.addEventListener?.("change", () => { if (Object.keys(state.data).length) render(); });
 load();

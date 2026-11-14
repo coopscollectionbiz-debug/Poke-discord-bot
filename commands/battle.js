@@ -16,7 +16,7 @@ import {
 import { randomInt, randomUUID } from "crypto";
 import { logEvent } from "../utils/eventLog.js";
 import { recordFight, battleRecord } from "../utils/fightRecordBuild.js";
-import { battleBlock, buildBattleTeam, runBattle, withBothLocks, teamFor } from "../utils/battle/runBattle.js";
+import { battleBlock, buildBattleTeam, pastCap, runBattle, withBothLocks, teamFor } from "../utils/battle/runBattle.js";
 import { rankedRecord, utcDay } from "../utils/battle/rewards.js";
 import { vsSide, battleVsAltText } from "../utils/render/battleVsCard.js";
 import { trainerTier, cardTrainerFx } from "../utils/render/trainerTier.js";
@@ -45,14 +45,16 @@ const CHANNEL_PERMISSIONS = [
   PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles,
 ];
 
-// Casual battles (and so Rematch requests) work only in this channel when
-// it's set (/etc/pokebot.env in production, .env locally), keeping them out of
-// #general. Ranked and wager battles work anywhere. Unset, casual works anywhere too.
+// Casual battles past the Battle cap (no EXP, and so every Rematch request)
+// work only in this channel when it's set (/etc/pokebot.env in production,
+// .env locally), keeping them out of #general. Casual battles within the cap,
+// and ranked and wager battles, work anywhere. Unset, everything works anywhere.
 const casualChannelId = () => process.env.CASUAL_BATTLE_CHANNEL_ID || null;
 
 export function refusal(reason, opponentId) {
   return {
-    wrong_channel: `Casual battles happen in <#${casualChannelId()}>. Ranked and wager battles work anywhere.`,
+    wrong_channel_daily: `You've used all 10 battles for today. Casual battles past that earn no EXP and happen in <#${casualChannelId()}>.`,
+    wrong_channel_opponent: `You've battled <@${opponentId}> 3 times today. More casual battles with them need a Rematch request in <#${casualChannelId()}>.`,
     self: "You can't battle yourself.",
     bot: "You can't battle a bot.",
     no_perms: "I can't post battles in this channel. Try another one.",
@@ -193,8 +195,15 @@ async function executeBattle(interaction, trainerData, lockUser, enqueueSave) {
   if (interaction.appPermissions && !interaction.appPermissions.has(CHANNEL_PERMISSIONS)) return refuse("no_perms");
 
   const mode = wager != null ? "wager" : interaction.options.getBoolean("ranked") ? "ranked" : "open";
+  // Past the Battle cap, a casual battle only runs in the casual channel (if one is set).
   const casualHome = casualChannelId();
-  if (mode === "open" && casualHome && interaction.channelId !== casualHome) return refuse("wrong_channel");
+  const wrongChannel = () => {
+    if (mode !== "open" || !casualHome || interaction.channelId === casualHome) return null;
+    const cap = pastCap(trainerData, challengerId, opponent.id);
+    return cap ? `wrong_channel_${cap}` : null;
+  };
+  const elsewhere = wrongChannel();
+  if (elsewhere) return refuse(elsewhere);
   const early = battleBlock({ trainerData, challengerId, defenderId: opponent.id, mode });
   if (early && early !== "rematch_needed") return refuse(early);
   if (mode === "wager") return offer(interaction, trainerData, lockUser, enqueueSave, opponent, wager);
@@ -203,6 +212,9 @@ async function executeBattle(interaction, trainerData, lockUser, enqueueSave) {
   if (early === "rematch_needed") return requestRematch(interaction, trainerData, lockUser, enqueueSave, opponent);
   const seed = randomInt(0, 2 ** 31 - 1);
   const outcome = await withBothLocks(lockUser, challengerId, opponent.id, async () => {
+    // A quick /battle before this one may have just used up the cap.
+    const late = wrongChannel();
+    if (late) return { ok: false, reason: late };
     const before = vsRecords(trainerData, [challengerId, opponent.id], mode); // for the VS card
     // Awaited under the locks: a Promise from the sim worker under the full sim.
     const out = await runBattle({ trainerData, challengerId, defenderId: opponent.id, mode, seed });

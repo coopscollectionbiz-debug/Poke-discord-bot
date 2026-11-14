@@ -8,7 +8,7 @@ Glossary: `CONTEXT.md`.
 - `/battle @user wager:N` = **Wager battle**: Defender must accept; both earn EXP; winner takes the pot.
 - Fight = the existing **Team** (displayedPokemon, ≤6) in slot order, 6v6 singles, next mon on faint.
 - Blocked: Defender with no Team; Challenger with no Team; self; bots.
-- Any channel. When `CASUAL_BATTLE_CHANNEL_ID` is set, casual battles (and Rematch requests) only run in that channel; a casual `/battle` elsewhere is refused privately. Ranked and wager stay in any channel. Defender is @mentioned. No opt-out.
+- Any channel. When `CASUAL_BATTLE_CHANNEL_ID` is set, casual battles past either Battle cap (and so every Rematch request) only run in that channel; such a `/battle` elsewhere is refused privately. Casual battles within the cap, and ranked and wager, stay in any channel. Defender is @mentioned. No opt-out.
 - **Battle cap**: 10 battles started per UTC day (same reset as /daily, `commands/daily.js:35-36`), max 3 per opponent per day (your call).
   - Open battle: counts for Challenger only.
   - Open battle past either cap (changed 2026-11-12): ranked and wager battles stay refused.

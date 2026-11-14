@@ -374,3 +374,24 @@ button.tm-stage:focus-visible { outline: 2px solid var(--cc-blue); outline-offse
   .tm-switch--3 .tm-tab-title { font-size: 13px; }
   .tm-switch--3 .tm-tab-title small { display: none; } /* counts don't fit three tabs on a phone */
 }
+
+/* Team check (POST /api/team-check) */
+.tm-check { margin-top: 14px; border: 1px solid var(--cc-line); border-radius: 12px; background: var(--cc-surface-sunken); }
+.tm-check > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; min-height: 44px; padding: 10px 14px; cursor: pointer; list-style: none; }
+.tm-check > summary::-webkit-details-marker { display: none; }
+.tm-check > summary::before { content: "▸"; color: var(--cc-text-muted); }
+.tm-check[open] > summary::before { content: "▾"; }
+.tm-check-title { font-weight: 800; }
+.tm-check-head { color: var(--cc-text-muted); font-size: 14px; }
+.tm-check > :not(summary) { margin-left: 14px; margin-right: 14px; }
+.tm-check > :last-child { margin-bottom: 12px; }
+.tm-check h4 { margin: 12px 14px 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--cc-text-muted); }
+.tm-check-tip { margin: 0 14px 8px; font-size: 14px; }
+.tm-check-scroll { overflow-x: auto; }
+.tm-check-table { border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tm-check-table th, .tm-check-table td { padding: 4px 6px; text-align: center; white-space: nowrap; }
+.tm-check-table tbody th { text-align: left; color: var(--cc-text-muted); font-weight: 700; }
+.tm-check-table td.is-weak { color: var(--cc-red); font-weight: 800; }
+.tm-check-table td.is-resist { color: var(--cc-green, #5fd38a); font-weight: 800; }
+.tm-check-table td.is-zero { color: var(--cc-text-muted); opacity: .5; }
+.tm-check-types { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 14px 6px; }

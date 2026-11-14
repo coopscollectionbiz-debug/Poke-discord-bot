@@ -6,7 +6,7 @@
 // ==========================================================
 
 import { assertEqual, assertTrue, section, finish } from "./harness.js";
-import { perspective, summarize, replaySteps, stepForTurn, damageBySlot, moveText, timeAgo, itemLabel } from "../public/battlerecords/records.js";
+import { perspective, summarize, replaySteps, stepForTurn, damageBySlot, moveText, timeAgo, itemLabel, filterRecords } from "../public/battlerecords/records.js";
 import { battleRecord, challengeRecord } from "../utils/fightRecordBuild.js";
 import { runBattle } from "../utils/battle/runBattle.js";
 import { startRun, continueRun } from "../utils/challenge/runChallenge.js";
@@ -112,6 +112,20 @@ assertEqual(itemLabel("life_orb"), "Life Orb", "item label");
 {
   const dmg = damageBySlot(battles[0], 0);
   assertTrue(dmg.every((x) => x >= 0) && dmg.reduce((a, b) => a + b, 0) > 0, "damage per slot, in % of HP");
+}
+
+section("Filters: result, mode, opponent");
+{
+  const wins = filterRecords(battles, { result: "win" }, "A"), losses = filterRecords(battles, { result: "loss" }, "A");
+  assertEqual(wins.length + losses.length, battles.length, "wins + losses = every fight");
+  assertTrue(wins.every((r) => perspective(r, "A").won) && losses.every((r) => !perspective(r, "A").won), "each side of the split is right");
+  assertEqual(filterRecords(battles, { result: "win" }, "B").length, losses.length, "B's wins are A's losses");
+  assertEqual(filterRecords(battles, { q: " gAR " }, "A").length, battles.length, "opponent search: case-insensitive substring, trimmed");
+  assertEqual(filterRecords(battles, { q: "nobody" }, "A").length, 0, "no match: nothing");
+  assertEqual(filterRecords(battles, { kind: battles[0].kind }, "A").length, battles.length, `mode filter keeps ${battles[0].kind}`);
+  assertEqual(filterRecords(battles, { kind: "ranked" === battles[0].kind ? "wager" : "ranked" }, "A").length, 0, "another mode: nothing");
+  assertEqual(filterRecords(battles, { group: battles[0].group }, "A").length, battles.length, "the tab's group still applies");
+  assertEqual(filterRecords(battles, {}, "A"), battles, "no filters: every fight, same order");
 }
 
 finish();

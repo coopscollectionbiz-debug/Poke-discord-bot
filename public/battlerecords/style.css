@@ -178,3 +178,10 @@
   .rv-side.foe { right: 2%; }
   .rv-side.me { left: 2%; }
 }
+
+/* Filters: result, mode, opponent */
+.br-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: -6px 0 16px; }
+.br-filters select, .br-filters input { min-height: 44px; padding: 0 12px; border: 1.5px solid var(--cc-line); border-radius: 10px; background: var(--cc-surface); color: var(--cc-text); font: inherit; }
+.br-filters input { flex: 1 1 180px; min-width: 0; }
+.br-filters [hidden] { display: none; }
+.br-clear { min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--cc-blue); font: inherit; font-weight: 700; cursor: pointer; }

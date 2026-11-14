@@ -250,3 +250,27 @@ export function stepForTurn(steps, at, dir) {
   while (p > 0 && key(steps[p - 1]) === prevKey) p--;
   return p;
 }
+
+/**
+ * The fights a Battle Records view shows. Pure, so tests can call it.
+ *   group  "" | "battles" | "challenges" | "encounters" (the tabs)
+ *   result "" | "win" | "loss"
+ *   kind   "" | "ranked" | "casual" | "wager" (battles only)
+ *   q      opponent name, case-insensitive substring (any foe of a run)
+ */
+export function filterRecords(records, { group = "", result = "", kind = "", q = "" } = {}, me) {
+  const needle = String(q).trim().toLowerCase();
+  return records.filter((r) => {
+    if (group && r.group !== group) return false;
+    if (kind && r.kind !== kind) return false;
+    if (!result && !needle) return true;
+    const p = perspective(r, me);
+    if (result === "win" && !p.won) return false;
+    if (result === "loss" && p.won) return false;
+    if (needle) {
+      const names = [p.foe?.name, ...p.foes.map((f) => f?.name)].filter(Boolean).map((n) => String(n).toLowerCase());
+      if (!names.some((n) => n.includes(needle))) return false;
+    }
+    return true;
+  });
+}

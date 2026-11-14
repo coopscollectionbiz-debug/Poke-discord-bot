@@ -82,6 +82,9 @@ export async function openMovesEditor({ userId, team, s, name, onSaved, onTaught
   // Start from this team's moveset, else the automatic one it battles with now.
   let picked = (chosen ?? copy.moves).map((m) => m.id).filter((id) => copy.learnable.some((l) => l.id === id));
 
+  // Same-type attack bonus: a damaging move of one of the Pokémon's own types hits ×1.5.
+  const ownTypes = new Set((d.types ?? []).map((t) => String(t).toLowerCase()));
+  const isStab = (m) => m.category !== "Status" && Number(m.power) > 0 && ownTypes.has(String(m.type ?? "").toLowerCase());
   const draw = () => {
     const full = picked.length >= MAX;
     dialog.innerHTML = `
@@ -101,7 +104,7 @@ export async function openMovesEditor({ userId, team, s, name, onSaved, onTaught
           const on = picked.includes(m.id);
           return `<li><label class="tm-move${on ? " is-on" : ""}${!on && full ? " is-full" : ""}">
             <input type="checkbox" value="${esc(m.id)}"${on ? " checked" : ""}${!on && full ? " disabled" : ""}>
-            <span class="tm-move-name">${esc(m.name)}${moveMeta(m, { extra: [m.source === "tm" ? "TM" : m.learnedAt ? `Lv ${m.learnedAt}` : ""] })}</span>
+            <span class="tm-move-name">${esc(m.name)}${moveMeta(m, { extra: [m.source === "tm" ? "TM" : m.learnedAt ? `Lv ${m.learnedAt}` : "", isStab(m) ? "STAB ×1.5" : ""] })}</span>
           </label></li>`;
         }).join("")}
       </ul>

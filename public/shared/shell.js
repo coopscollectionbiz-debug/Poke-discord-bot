@@ -14,15 +14,15 @@ export const EXPIRED_MESSAGE = "Your dashboard link expired — run /dashboard i
 export const MISSING_ID_MESSAGE = "This page needs your dashboard link — run /dashboard in Discord.";
 
 export const NAV_ITEMS = Object.freeze([
-  { key: "overview", label: "Overview", short: "Home", href: "/public/overview/", icon: "home" },
-  { key: "pokemon", label: "Collection", short: "Box", href: "/public/picker-pokemon/", icon: "box" },
+  { key: "overview", label: "Overview", short: "Home", href: "/public/overview/", icon: "home" , tab: true },
+  { key: "pokemon", label: "Collection", short: "Box", href: "/public/picker-pokemon/", icon: "box" , tab: true },
   { key: "pokedex", label: "Pokédex", short: "Dex", href: "/public/pokedex/", icon: "dex" },
-  { key: "teams", label: "Teams", href: "/public/teams/", icon: "teams" },
+  { key: "teams", label: "Teams", href: "/public/teams/", icon: "teams" , tab: true },
   { key: "records", label: "Battle Records", short: "Records", href: "/public/battlerecords/", icon: "swords" },
   { key: "trainers", label: "Trainers", href: "/public/picker/", icon: "person" },
   { key: "bag", label: "Bag", href: "/public/bag/", icon: "bag" },
   { key: "achievements", label: "Achievements", short: "Awards", href: "/public/achievements/", icon: "star" },
-  { key: "shop", label: "Shop", href: "/public/dashboardshop/", icon: "shop" },
+  { key: "shop", label: "Shop", href: "/public/dashboardshop/", icon: "shop" , tab: true },
 ]);
 
 const ICONS = `
@@ -35,6 +35,7 @@ const ICONS = `
   <symbol id="cc-i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2"/></symbol>
   <symbol id="cc-i-star" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
   <symbol id="cc-i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" d="M4 21c1-4 4-6 8-6s7 2 8 6"/></symbol>
+  <symbol id="cc-i-more" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></g></symbol>
   <symbol id="cc-i-shop" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M4 9h16l-1-5H5zM5 9v11h14V9M9 20v-6h6v6"/></symbol>
 </svg>`;
 
@@ -45,11 +46,11 @@ export function pageHref(href, id = playerId()) {
   return id ? `${href}?id=${encodeURIComponent(id)}` : href;
 }
 
-// short: the phone tab bar's label when the full one doesn't fit six tabs.
-function navList(active, id, { short = false } = {}) {
+// short: the phone tab bar's label. `items`: which pages to list.
+function navList(active, id, { short = false, items = NAV_ITEMS } = {}) {
   const ul = document.createElement("ul");
   ul.className = "cc-nav-list";
-  for (const item of NAV_ITEMS) {
+  for (const item of items) {
     const li = document.createElement("li");
     const a = document.createElement("a");
     a.className = "cc-nav-link";
@@ -98,13 +99,37 @@ function mountShell() {
   foot.append(credits);
   side.append(brand, navList(active, id), foot);
 
+  // Phone: the pages marked `tab` stay one tap away; the rest are in More.
+  // Ten or more tabs at 375 px came out ~34 px wide with 10 px labels.
   const tabs = document.createElement("nav");
   tabs.className = "cc-tabbar";
   tabs.setAttribute("aria-label", "Dashboard");
-  tabs.append(navList(active, id, { short: true }));
+  const tabList = navList(active, id, { short: true, items: NAV_ITEMS.filter((x) => x.tab) });
+  const moreItems = NAV_ITEMS.filter((x) => !x.tab);
+  const moreActive = moreItems.find((x) => x.key === active);
+  const moreLi = document.createElement("li");
+  const moreBtn = document.createElement("button");
+  moreBtn.type = "button";
+  moreBtn.className = "cc-nav-link cc-more-btn";
+  moreBtn.setAttribute("aria-haspopup", "dialog");
+  moreBtn.setAttribute("aria-label", moreActive ? `More pages (now on ${moreActive.label})` : "More pages");
+  if (moreActive) moreBtn.dataset.current = "true";
+  moreBtn.innerHTML = `<svg aria-hidden="true" focusable="false"><use href="#cc-i-more"/></svg><span>More</span>`;
+  moreLi.append(moreBtn);
+  tabList.append(moreLi);
+  tabs.append(tabList);
+
+  const sheet = document.createElement("dialog");
+  sheet.className = "cc-more-sheet";
+  sheet.setAttribute("aria-label", "More pages");
+  sheet.innerHTML = `<div class="cc-more-head"><b>More</b><button type="button" class="cc-more-close" aria-label="Close">✕</button></div>`;
+  sheet.append(navList(active, id, { items: moreItems }));
+  moreBtn.addEventListener("click", () => sheet.showModal());
+  sheet.querySelector(".cc-more-close").addEventListener("click", () => sheet.close());
+  sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.close(); });
 
   body.prepend(skip, side);
-  body.append(tabs);
+  body.append(tabs, sheet);
 
   // Status area (banners) sits right under the page header.
   if (!document.getElementById("ccStatus")) {

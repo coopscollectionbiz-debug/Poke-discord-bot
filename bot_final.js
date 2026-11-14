@@ -479,6 +479,7 @@ import { fightRecords } from "./utils/fightRecords.js";
 import { createFightRecordHandlers } from "./services/fightRecordsApi.js";
 import { showRunResult, challengeNames } from "./utils/battle/playback.js";
 import { powersFromLevels } from "./utils/battle/power.js";
+import { modulePreloadPages } from "./utils/modulePreload.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -545,9 +546,15 @@ import { TRAINER_COSTS } from "./utils/trainerCosts.js";
 export { TRAINER_COSTS };
 
 
-// ✅ Serve all /public assets with correct MIME headers
+// ✅ Serve all /public assets with correct MIME headers.
+// Dashboard pages get modulepreload hints (utils/modulePreload.js). Images
+// (sprites, item art) are cached for a day instead of being revalidated on
+// every page change; scripts, styles and JSON keep revalidating (ETag) so a
+// deploy shows up on the next page load.
+const IMAGE_CACHE = "public, max-age=86400";
 app.use(
   "/public",
+  modulePreloadPages(staticPath),
   express.static(staticPath, {
     setHeaders: (res, filePath) => {
       if (filePath.endsWith(".js")) res.type("application/javascript");
@@ -555,6 +562,7 @@ app.use(
       if (filePath.endsWith(".json")) res.type("application/json");
       if (filePath.endsWith(".png")) res.type("image/png");
       if (filePath.endsWith(".gif")) res.type("image/gif");
+      if (/\.(gif|png|webp|jpe?g|svg)$/i.test(filePath)) res.setHeader("Cache-Control", IMAGE_CACHE);
     },
   })
 );

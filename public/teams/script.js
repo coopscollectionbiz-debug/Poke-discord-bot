@@ -981,6 +981,11 @@ function openBoxDetails(s) {
 // ---------- load ----------
 async function load() {
   if (!userId) { app.innerHTML = ""; return; }
+  // Mega cards and held items start with the main data, not after it: each
+  // step in a row costs a round trip on a phone (dashboard UX audit).
+  const megaP = fetch(`/api/mega?id=${encodeURIComponent(userId)}`, { credentials: "same-origin" })
+    .then((m) => (m.ok ? m.json() : null)).catch(() => null);
+  const heldP = refreshHeld();
   try {
     const [pdRes, userRes] = await Promise.all([
       fetch("/public/pokemonData.json", { credentials: "same-origin" }),
@@ -1012,15 +1017,12 @@ async function load() {
     return;
   }
   // Mega sprites only while Mega Evolution is switched on server-side.
-  try {
-    const m = await fetch(`/api/mega?id=${encodeURIComponent(userId)}`, { credentials: "same-origin" });
-    const md = m.ok ? await m.json() : null;
-    state.megaOn = !!md?.enabled;
-    state.megaCards = state.megaOn && Array.isArray(md.cards) ? md.cards : [];
-  } catch { state.megaOn = false; }
+  const md = await megaP;
+  state.megaOn = !!md?.enabled;
+  state.megaCards = state.megaOn && Array.isArray(md.cards) ? md.cards : [];
   // Held items (only while switched on server-side). The eight free starter
   // unlocks are claimed on the first visit (idempotent on the server).
-  await refreshHeld();
+  await heldP;
   if (state.held.enabled && state.held.starterPending) {
     try {
       const r = await claimStarter(userId);
